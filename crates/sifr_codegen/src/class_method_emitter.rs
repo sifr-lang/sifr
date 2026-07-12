@@ -2,6 +2,7 @@ use crate::{
     function_emitter::{is_result_int_type, result_int_return_type_to_sifr_int, result_method_key},
     helpers::{body_contains_field_assign_codegen, collect_mutated_vars_with_sigs},
     hir_analysis::traversal::{self, TraversalConfig},
+    python_interop_direct::python_interop_method_body,
     rust_interop_direct::rust_interop_method_body,
     RustEmitter, RustExpr, RustItem, RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
@@ -640,9 +641,17 @@ impl RustEmitter {
         let mut params = Vec::new();
         match method.method_kind {
             MethodKind::Regular if method.name != "new" => {
-                params.push(RustParam::SelfParam {
-                    mutable: self.class_method_requires_mutable_self(class, method),
-                });
+                if method
+                    .python_interop
+                    .first()
+                    .is_some_and(|declaration| declaration.consumes_receiver)
+                {
+                    params.push(RustParam::SelfValue);
+                } else {
+                    params.push(RustParam::SelfParam {
+                        mutable: self.class_method_requires_mutable_self(class, method),
+                    });
+                }
             }
             _ => {}
         }
@@ -669,7 +678,11 @@ impl RustEmitter {
             );
         }
 
-        let mut body = if let Some(interop_body) = rust_interop_method_body(method) {
+        let mut body = if let Some(interop_body) =
+            python_interop_method_body(method, &self.python_opaque_classes)
+        {
+            interop_body
+        } else if let Some(interop_body) = rust_interop_method_body(method) {
             interop_body
         } else if method.method_kind == MethodKind::Regular && method.name == "new" {
             self.lower_constructor_body(method, class)

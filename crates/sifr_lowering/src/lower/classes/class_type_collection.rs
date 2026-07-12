@@ -690,15 +690,22 @@ pub(in crate::lower) fn collect_class_type(
         );
     }
 
+    let is_python_opaque = ctx.python_opaque_classes.contains_key(&class_name);
     let class_ty = Type::Class {
         name: class_name.clone(),
         fields: fields.clone(),
         methods: methods.clone(),
-        parent_class: parent_class_chain.clone(),
+        parent_class: if is_python_opaque {
+            Some("NonSend".to_string())
+        } else {
+            parent_class_chain.clone()
+        },
     };
 
     // Update the constructor function to return the class type
-    if let Some(ft) = ctx.functions.get_mut(&class_name) {
+    if is_python_opaque {
+        ctx.functions.remove(&class_name);
+    } else if let Some(ft) = ctx.functions.get_mut(&class_name) {
         *ft.return_type = class_ty.clone();
     } else {
         // No __init__ defined -- create a default constructor from fields

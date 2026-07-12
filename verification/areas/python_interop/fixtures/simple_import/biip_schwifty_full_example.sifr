@@ -1,68 +1,90 @@
-from sifr.python import (
-    Object,
-    PythonError,
-    call,
-    call_attr,
-    close,
-    from_str,
-    get_attr,
-    import_module,
-    to_int,
-    to_str,
-)
+from sifr.python import PythonError
+
+
+class Summary:
+    label: str
+    scores: list[int]
+
+
+@python.opaque(type=biip.gtin.GtinFormat, cleanup=drop)
+class GtinFormat:
+    @python.attr(Self.value)
+    def value(self) -> Result[int, PythonError]: ...
+
+
+@python.opaque(type=biip.gtin.Gtin, cleanup=drop)
+class Gtin:
+    @python.attr(Self.value)
+    def value(self) -> Result[str, PythonError]: ...
+
+    @python.attr(Self.format)
+    def format(self) -> Result[GtinFormat, PythonError]: ...
+
+    @python.attr(Self.check_digit)
+    def check_digit(self) -> Result[int, PythonError]: ...
+
+
+@python.opaque(type=biip._parser.ParseResult, cleanup=drop)
+class ParseResult:
+    @python.attr(Self.gtin)
+    def gtin(self) -> Result[Gtin, PythonError]: ...
+
+
+@python.opaque(type=schwifty.BIC, cleanup=drop)
+class Bic:
+    @python.attr(Self.country_code)
+    def country_code(self) -> Result[str, PythonError]: ...
+
+    @python.attr(Self.bank_code)
+    def bank_code(self) -> Result[str, PythonError]: ...
+
+
+@python(biip.parse)
+def parse_identifier(text: str) -> Result[ParseResult, PythonError]: ...
+
+
+@python(schwifty.BIC)
+def bic(text: str) -> Result[Bic, PythonError]: ...
+
+
+@python(builtins.tuple)
+def tuple_copy(values: list[Summary]) -> Result[tuple[Summary | None, Summary], PythonError]: ...
 
 
 @blocking_io
 def main() -> Result[None, PythonError]:
     try:
-        biip: Object = import_module("biip")
-        schwifty: Object = import_module("schwifty")
+        parsed: ParseResult = parse_identifier("7032069804988")
+        gtin: Gtin = parsed.gtin()
+        gtin_value: str = gtin.value()
+        gtin_format: GtinFormat = gtin.format()
+        gtin_format_value: int = gtin_format.value()
+        check_digit: int = gtin.check_digit()
 
-        gtin_text: Object = from_str("7032069804988")
-        parsed: Object = call_attr(biip, "parse", [gtin_text], [])
-        gtin: Object = get_attr(parsed, "gtin")
-        gtin_value_obj: Object = get_attr(gtin, "value")
-        gtin_value: str = to_str(gtin_value_obj)
-        gtin_format_obj: Object = get_attr(gtin, "format")
-        gtin_format_value_obj: Object = get_attr(gtin_format_obj, "value")
-        gtin_format: int = to_int(gtin_format_value_obj)
-        check_digit_obj: Object = get_attr(gtin, "check_digit")
-        check_digit: int = to_int(check_digit_obj)
+        bank_id: Bic = bic("DEUTDEFF")
+        bic_country: str = bank_id.country_code()
+        bic_bank: str = bank_id.bank_code()
 
-        bic_class: Object = get_attr(schwifty, "BIC")
-        bic_text: Object = from_str("DEUTDEFF")
-        bic: Object = call(bic_class, [bic_text], [])
-        bic_country_obj: Object = get_attr(bic, "country_code")
-        bic_country: str = to_str(bic_country_obj)
-        bic_bank_obj: Object = get_attr(bic, "bank_code")
-        bic_bank: str = to_str(bic_bank_obj)
+        first_summary: Summary = Summary("first", [1])
+        second_summary: Summary = Summary("typed", [7, 8])
+        copied: tuple[Summary | None, Summary] = tuple_copy([first_summary, second_summary])
+        maybe_first: Summary | None = copied[0]
+        copied_summary: Summary = copied[1]
 
         passed: bool = (
             gtin_value == "7032069804988"
-            and gtin_format == 13
+            and gtin_format_value == 13
             and check_digit == 8
             and bic_country == "DE"
             and bic_bank == "DEUT"
+            and maybe_first is not None
+            and copied_summary.label == "typed"
+            and copied_summary.scores == [7, 8]
         )
-
-        closed_bic_bank_obj: None = close(bic_bank_obj)
-        closed_bic_country_obj: None = close(bic_country_obj)
-        closed_bic: None = close(bic)
-        closed_bic_text: None = close(bic_text)
-        closed_bic_class: None = close(bic_class)
-        closed_check_digit_obj: None = close(check_digit_obj)
-        closed_gtin_format_value_obj: None = close(gtin_format_value_obj)
-        closed_gtin_format_obj: None = close(gtin_format_obj)
-        closed_gtin_value_obj: None = close(gtin_value_obj)
-        closed_gtin: None = close(gtin)
-        closed_parsed: None = close(parsed)
-        closed_gtin_text: None = close(gtin_text)
-        closed_schwifty: None = close(schwifty)
-        closed_biip: None = close(biip)
         if passed:
             print("sifr-python-interop:biip-schwifty:gtin=7032069804988:bic=DEUTDEFF")
         else:
-            raise PythonError("biip/schwifty full example did not validate expected identifiers")
-    except PythonError as e:
-        raise e
+            raise PythonError("biip/schwifty declarations returned unexpected identifiers")
+    except PythonError as error:
+        raise error
     return None

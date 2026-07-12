@@ -2,10 +2,10 @@ use super::LowerCtx;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{
-    HirParam, PythonInteropDeclaration, PythonInteropDecoratorKind, PythonInteropEffect,
-    PythonInteropParameter, PythonParameterKind, PythonTargetPath,
+    HirParam, PythonCleanupPolicy, PythonInteropDeclaration, PythonInteropDecoratorKind,
+    PythonInteropEffect, PythonInteropParameter, PythonParameterKind, PythonTargetPath,
 };
-use sifr_python_ast::{Decorator, Expr, ExprCall, Parameters, Stmt};
+use sifr_python_ast::{AstParamOwnership, Decorator, Expr, ExprCall, Parameters, Stmt};
 use sifr_type_system::Type;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -119,6 +119,299 @@ pub(in crate::lower) fn collect_python_interop_declarations(
     declarations
 }
 
+pub(in crate::lower) fn collect_python_method_declarations(
+    decorators: &[Decorator],
+    parameters: &Parameters,
+    is_async_decl: bool,
+    ctx: &mut LowerCtx,
+) -> Vec<PythonInteropDeclaration> {
+    let mut declarations = Vec::new();
+    for decorator in decorators {
+        if decorator_path(&decorator.expression)
+            .is_some_and(|path| path.as_slice() == ["python", "item"])
+        {
+            declarations.push(PythonInteropDeclaration {
+                kind: PythonInteropDecoratorKind::Item,
+                target: None,
+                span: decorator.expression.range(),
+                effect: PythonInteropEffect::BlockingIo,
+                cleanup: None,
+                consumes_receiver: receiver_is_owned(parameters),
+                parameters: parameter_metadata(parameters).into_iter().skip(1).collect(),
+                required_import_root: None,
+            });
+            continue;
+        }
+        let Some((kind, call, span)) = classify_decorator(&decorator.expression, ctx) else {
+            continue;
+        };
+        if is_async_decl {
+            invalid_shape(
+                ctx,
+                "opaque Python methods must use synchronous `def`",
+                span,
+            );
+            continue;
+        }
+        let declaration = match kind {
+            PythonInteropDecoratorKind::Function => parse_sync_method(call, parameters, ctx),
+            PythonInteropDecoratorKind::Attribute => parse_attribute_method(call, parameters, ctx),
+            PythonInteropDecoratorKind::Item => {
+                invalid_shape(ctx, "`@python.item` does not take arguments", span);
+                None
+            }
+            _ => {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION,
+                    format!(
+                        "Python declaration lowering is not active yet: `{}` belongs to a later phase",
+                        decorator_label(kind)
+                    ),
+                    span,
+                );
+                None
+            }
+        };
+        if let Some(declaration) = declaration {
+            declarations.push(declaration);
+        }
+    }
+    if declarations.len() > 1 {
+        invalid_shape(
+            ctx,
+            "a method may have only one Python implementation declaration",
+            declarations[1].span,
+        );
+        declarations.truncate(1);
+    }
+    declarations
+}
+
+fn parse_sync_method(
+    call: &ExprCall,
+    parameters: &Parameters,
+    ctx: &mut LowerCtx,
+) -> Option<PythonInteropDeclaration> {
+    if call.arguments.args.len() != 1 || !call.arguments.keywords.is_empty() {
+        invalid_shape(
+            ctx,
+            "`@python(Self.method)` requires one target",
+            call.range,
+        );
+        return None;
+    }
+    let target = parse_method_target_path(&call.arguments.args[0], ctx)?;
+    Some(PythonInteropDeclaration {
+        kind: PythonInteropDecoratorKind::Function,
+        target: Some(target),
+        span: call.range,
+        effect: PythonInteropEffect::BlockingIo,
+        cleanup: None,
+        consumes_receiver: receiver_is_owned(parameters),
+        parameters: parameter_metadata(parameters).into_iter().skip(1).collect(),
+        required_import_root: None,
+    })
+}
+
+fn parse_attribute_method(
+    call: &ExprCall,
+    parameters: &Parameters,
+    ctx: &mut LowerCtx,
+) -> Option<PythonInteropDeclaration> {
+    if call.arguments.args.len() != 1 || !call.arguments.keywords.is_empty() {
+        invalid_shape(
+            ctx,
+            "`@python.attr(Self.name)` requires one target",
+            call.range,
+        );
+        return None;
+    }
+    let target = parse_method_target_path(&call.arguments.args[0], ctx)?;
+    let consumes_receiver = receiver_is_owned(parameters);
+    let parameters = parameter_metadata(parameters)
+        .into_iter()
+        .skip(1)
+        .collect::<Vec<_>>();
+    if !parameters.is_empty() {
+        invalid_shape(
+            ctx,
+            "a Python attribute declaration takes no parameters",
+            call.range,
+        );
+        return None;
+    }
+    Some(PythonInteropDeclaration {
+        kind: PythonInteropDecoratorKind::Attribute,
+        target: Some(target),
+        span: call.range,
+        effect: PythonInteropEffect::BlockingIo,
+        cleanup: None,
+        consumes_receiver,
+        parameters,
+        required_import_root: None,
+    })
+}
+
+fn parse_method_target_path(expr: &Expr, ctx: &mut LowerCtx) -> Option<PythonTargetPath> {
+    let segments = decorator_path(expr)?;
+    if segments.len() != 2 || segments[0] != "Self" {
+        invalid_target(
+            ctx,
+            "opaque method targets must be `Self.name`",
+            expr.range(),
+        );
+        return None;
+    }
+    Some(PythonTargetPath {
+        segments,
+        span: expr.range(),
+    })
+}
+
+pub(in crate::lower) fn collect_python_opaque_declaration(
+    decorators: &[Decorator],
+    ctx: &mut LowerCtx,
+) -> Option<PythonInteropDeclaration> {
+    let mut result = None;
+    for decorator in decorators {
+        let Expr::Call(call) = &decorator.expression else {
+            continue;
+        };
+        if !decorator_path(&call.func).is_some_and(|path| path.as_slice() == ["python", "opaque"]) {
+            continue;
+        }
+        if result.is_some() {
+            invalid_shape(
+                ctx,
+                "a class may have only one `@python.opaque` declaration",
+                call.range,
+            );
+            continue;
+        }
+        result = parse_opaque_class(call, ctx);
+    }
+    result
+}
+
+fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInteropDeclaration> {
+    if !call.arguments.args.is_empty() {
+        invalid_shape(
+            ctx,
+            "`@python.opaque` accepts only `type=` and `cleanup=` keyword arguments",
+            call.arguments.args[0].range(),
+        );
+        return None;
+    }
+    let mut target = None;
+    let mut cleanup = None;
+    let mut reserved_cleanup_seen = false;
+    for keyword in &call.arguments.keywords {
+        let Some(name) = keyword.arg.as_ref() else {
+            invalid_shape(
+                ctx,
+                "`@python.opaque` does not accept `**kwargs`",
+                keyword.range(),
+            );
+            return None;
+        };
+        match name.as_str() {
+            "type" if target.is_none() => target = parse_target_path(&keyword.value, ctx),
+            "cleanup" if cleanup.is_none() => {
+                let Some(path) = decorator_path(&keyword.value) else {
+                    invalid_shape(
+                        ctx,
+                        "opaque cleanup must be a closed policy atom",
+                        keyword.value.range(),
+                    );
+                    return None;
+                };
+                cleanup = match path.as_slice() {
+                    [name] if name == "drop" => Some(PythonCleanupPolicy::Drop),
+                    [name] if name == "close" => Some(PythonCleanupPolicy::Close),
+                    [name] if name == "async_close" => {
+                        reserved_cleanup(ctx, "async_close", keyword.value.range());
+                        reserved_cleanup_seen = true;
+                        None
+                    }
+                    [name] if name == "context" => {
+                        reserved_cleanup(ctx, "context", keyword.value.range());
+                        reserved_cleanup_seen = true;
+                        None
+                    }
+                    [name] if name == "async_context" => {
+                        reserved_cleanup(ctx, "async_context", keyword.value.range());
+                        reserved_cleanup_seen = true;
+                        None
+                    }
+                    _ => {
+                        invalid_shape(ctx, "unknown opaque cleanup policy", keyword.value.range());
+                        None
+                    }
+                };
+            }
+            "type" | "cleanup" => {
+                invalid_shape(
+                    ctx,
+                    &format!("duplicate `@python.opaque` argument `{name}`"),
+                    keyword.range(),
+                );
+                return None;
+            }
+            _ => {
+                invalid_shape(
+                    ctx,
+                    &format!("unknown `@python.opaque` argument `{name}`"),
+                    keyword.range(),
+                );
+                return None;
+            }
+        }
+    }
+    let Some(target) = target else {
+        invalid_shape(ctx, "`@python.opaque` requires `type=`", call.range);
+        return None;
+    };
+    let Some(cleanup) = cleanup else {
+        if !reserved_cleanup_seen {
+            invalid_shape(ctx, "`@python.opaque` requires `cleanup=`", call.range);
+        }
+        return None;
+    };
+    if matches!(target.root(), Some("Self" | "bridge")) {
+        let code = if target.root() == Some("bridge") {
+            DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION
+        } else {
+            DiagnosticCode::PYIMP_INVALID_TARGET
+        };
+        ctx.error_with_code_at(
+            code,
+            "invalid Python opaque type target: expected an import-rooted dotted path".to_string(),
+            target.span,
+        );
+        return None;
+    }
+    Some(PythonInteropDeclaration {
+        kind: PythonInteropDecoratorKind::Opaque,
+        required_import_root: target.root().map(str::to_string),
+        target: Some(target),
+        span: call.range,
+        effect: PythonInteropEffect::BlockingIo,
+        cleanup: Some(cleanup),
+        consumes_receiver: false,
+        parameters: Vec::new(),
+    })
+}
+
+fn reserved_cleanup(ctx: &mut LowerCtx, name: &str, span: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION,
+        format!(
+            "Python declaration lowering is not active yet: cleanup policy `{name}` is reserved"
+        ),
+        span,
+    );
+}
+
 pub(in crate::lower) fn validate_python_interop_signature(
     declarations: &[PythonInteropDeclaration],
     params: &[HirParam],
@@ -143,7 +436,7 @@ pub(in crate::lower) fn validate_python_interop_signature(
             declaration.span,
         );
     }
-    if !is_direct_type(ok_type, false) {
+    if !is_direct_type(ok_type, true, ctx) {
         unsupported_conversion(
             ctx,
             &format!(
@@ -167,13 +460,13 @@ pub(in crate::lower) fn validate_python_interop_signature(
         }
         let supported = match shape.kind {
             PythonParameterKind::Positional | PythonParameterKind::KeywordOnly => {
-                is_direct_type(&param.ty, true)
+                is_direct_type(&param.ty, true, ctx)
             }
             PythonParameterKind::PositionalVariadic => {
-                matches!(param.ty.resolve_alias(), Type::List(element) if is_direct_type(element, false))
+                matches!(param.ty.resolve_alias(), Type::List(element) if is_direct_type(element, false, ctx))
             }
             PythonParameterKind::KeywordVariadic => {
-                matches!(param.ty.resolve_alias(), Type::Dict(key, value) if key.resolve_alias() == &Type::Str && is_direct_type(value, false))
+                matches!(param.ty.resolve_alias(), Type::Dict(key, value) if key.resolve_alias() == &Type::Str && is_direct_type(value, false, ctx))
             }
         };
         if !supported {
@@ -191,16 +484,29 @@ pub(in crate::lower) fn validate_python_interop_signature(
     }
 }
 
-fn is_direct_type(ty: &Type, allow_option: bool) -> bool {
+fn is_direct_type(ty: &Type, allow_option: bool, ctx: &LowerCtx) -> bool {
     match ty.resolve_alias() {
         Type::None | Type::Bool | Type::Int | Type::Float | Type::Str | Type::Bytes => true,
         Type::Class { name, .. } if name == "Object" => true,
+        Type::Class { name, .. } if ctx.python_opaque_classes.contains_key(name) => true,
+        Type::Class { name, fields, .. } => {
+            !ctx.error_types.contains(name)
+                && !fields.is_empty()
+                && fields
+                    .iter()
+                    .all(|(_, field)| is_direct_type(field, true, ctx))
+        }
+        Type::List(item) => is_direct_type(item, true, ctx),
+        Type::Tuple(items) => items.iter().all(|item| is_direct_type(item, true, ctx)),
+        Type::Dict(key, value) => {
+            key.resolve_alias() == &Type::Str && is_direct_type(value, true, ctx)
+        }
         Type::Union(variants) if allow_option && variants.len() == 2 => {
             variants
                 .iter()
                 .any(|variant| variant.resolve_alias() == &Type::None)
                 && variants.iter().all(|variant| {
-                    variant.resolve_alias() == &Type::None || is_direct_type(variant, false)
+                    variant.resolve_alias() == &Type::None || is_direct_type(variant, false, ctx)
                 })
         }
         _ => false,
@@ -247,6 +553,8 @@ fn parse_sync_function(
         target: Some(target),
         span: call.range,
         effect: PythonInteropEffect::BlockingIo,
+        cleanup: None,
+        consumes_receiver: false,
         parameters: parameter_metadata(parameters),
         required_import_root,
     })
@@ -291,6 +599,29 @@ fn parameter_metadata(parameters: &Parameters) -> Vec<PythonInteropParameter> {
         });
     }
     result
+}
+
+fn receiver_is_owned(parameters: &Parameters) -> bool {
+    parameters
+        .args
+        .first()
+        .is_some_and(|parameter| parameter.parameter.convention.ownership == AstParamOwnership::Own)
+}
+
+pub(in crate::lower) fn method_consumes_receiver(
+    decorators: &[Decorator],
+    parameters: &Parameters,
+) -> bool {
+    receiver_is_owned(parameters)
+        && decorators.iter().any(|decorator| {
+            let Expr::Call(call) = &decorator.expression else {
+                return false;
+            };
+            decorator_path(&call.func).is_some_and(|path| path.as_slice() == ["python"])
+                && call.arguments.args.first().is_some_and(|target| {
+                    decorator_path(target).is_some_and(|path| path.as_slice() == ["Self", "close"])
+                })
+        })
 }
 
 fn parse_target_path(expr: &Expr, ctx: &mut LowerCtx) -> Option<PythonTargetPath> {

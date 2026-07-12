@@ -46,6 +46,16 @@ pub enum PythonInteropEffect {
     Async,
 }
 
+/// Semantic cleanup obligation attached to an opaque Python class.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PythonCleanupPolicy {
+    Drop,
+    Close,
+    AsyncClose,
+    Context,
+    AsyncContext,
+}
+
 /// How a declared Sifr parameter contributes to the Python call.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PythonParameterKind {
@@ -72,6 +82,9 @@ pub struct PythonInteropDeclaration {
     pub target: Option<PythonTargetPath>,
     pub span: TextRange,
     pub effect: PythonInteropEffect,
+    pub cleanup: Option<PythonCleanupPolicy>,
+    /// Whether an opaque instance method consumes its receiver (`own self`).
+    pub consumes_receiver: bool,
     pub parameters: Vec<PythonInteropParameter>,
     /// The non-reserved import root contributed by this declaration.
     pub required_import_root: Option<String>,

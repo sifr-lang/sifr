@@ -64,6 +64,10 @@ pub(in crate::lower) fn lower_return(
             if ctx.borrowed_params.contains(name.as_str()) && ty.ownership() == OwnershipKind::Move
             {
                 ownership_diagnostics::borrowed_parameter_return_escape(ctx, name, val.range());
+            } else if ty.ownership() == OwnershipKind::Move
+                && ctx.live_must_use_bindings.contains_key(name)
+            {
+                ctx.mark_moved_with_flow(name);
             }
         }
         if !ctx.is_stdlib_lowering() {
@@ -71,6 +75,7 @@ pub(in crate::lower) fn lower_return(
                 ownership_diagnostics::sync_guard_return_escape(ctx, label, val.range());
             }
         }
+        transfer_return_ownership(&expr, ctx);
 
         if let Type::Result(ref ok_ty, _) = *func_type.return_type {
             if expr_ty.is_assignable_to(ok_ty) && !matches!(expr_ty, Type::Result(_, _)) {
@@ -120,4 +125,88 @@ pub(in crate::lower) fn lower_return(
     };
 
     HirStmt::Return { value }
+}
+
+fn transfer_return_ownership(expr: &HirExpr, ctx: &mut LowerCtx) {
+    match expr {
+        HirExpr::Name { name, ty }
+            if ty.ownership() == OwnershipKind::Move
+                && ctx.live_must_use_bindings.contains_key(name) =>
+        {
+            ctx.mark_moved_with_flow(name);
+        }
+        HirExpr::ListLiteral { elements, .. }
+        | HirExpr::SetLiteral { elements, .. }
+        | HirExpr::TupleLiteral { elements, .. } => {
+            for element in elements {
+                transfer_return_ownership(element, ctx);
+            }
+        }
+        HirExpr::DictLiteral { keys, values, .. } => {
+            for element in keys.iter().chain(values) {
+                transfer_return_ownership(element, ctx);
+            }
+        }
+        HirExpr::ConstructorCall { args, .. } => {
+            for argument in args {
+                transfer_return_ownership(argument, ctx);
+            }
+        }
+        HirExpr::IteratorCall { args, .. } => {
+            for argument in args {
+                transfer_return_ownership(argument, ctx);
+            }
+        }
+        HirExpr::OkWrap { value, .. } => transfer_return_ownership(value, ctx),
+        HirExpr::QuestionMark { expr, .. } | HirExpr::ErrWrap { value: expr, .. } => {
+            transfer_return_ownership(expr, ctx);
+        }
+        HirExpr::IfExpr {
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            transfer_return_ownership(then_expr, ctx);
+            transfer_return_ownership(else_expr, ctx);
+        }
+        HirExpr::ListComp {
+            expr, generators, ..
+        }
+        | HirExpr::SetComp {
+            expr, generators, ..
+        } => {
+            transfer_return_ownership(expr, ctx);
+            for (_, iter, filter) in generators {
+                transfer_return_ownership(iter, ctx);
+                if let Some(filter) = filter {
+                    transfer_return_ownership(filter, ctx);
+                }
+            }
+        }
+        HirExpr::DictComp {
+            key_expr,
+            val_expr,
+            generators,
+            ..
+        } => {
+            transfer_return_ownership(key_expr, ctx);
+            transfer_return_ownership(val_expr, ctx);
+            for (_, iter, filter) in generators {
+                transfer_return_ownership(iter, ctx);
+                if let Some(filter) = filter {
+                    transfer_return_ownership(filter, ctx);
+                }
+            }
+        }
+        HirExpr::GeneratorExpr {
+            expr, iter, filter, ..
+        } => {
+            transfer_return_ownership(expr, ctx);
+            transfer_return_ownership(iter, ctx);
+            if let Some(filter) = filter {
+                transfer_return_ownership(filter, ctx);
+            }
+        }
+        _ => {}
+    }
 }

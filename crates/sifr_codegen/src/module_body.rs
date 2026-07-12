@@ -8,6 +8,16 @@ impl RustEmitter {
         module_public: bool,
         test_mode: bool,
     ) {
+        self.python_opaque_classes = module
+            .classes
+            .iter()
+            .filter_map(|class| {
+                class
+                    .python_opaque_declaration()
+                    .cloned()
+                    .map(|declaration| (class.name.clone(), declaration))
+            })
+            .collect();
         self.emit_module_classes(module, module_public);
         self.emit_module_functions(module, module_public, test_mode);
     }

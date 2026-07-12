@@ -163,13 +163,53 @@ pub fn resolve_target(segments: &[String]) -> Result<ObjectHandle, PythonError> 
     .map_err(PythonError::runtime)?
 }
 
-pub fn get_attr(object: &ObjectHandle, name: &str) -> Result<ObjectHandle, PythonError> {
+pub fn expect_instance(
+    object: ObjectHandle,
+    expected_segments: &[String],
+) -> Result<ObjectHandle, PythonError> {
+    let boundary_path = object.boundary_path().to_string();
+    let expected = resolve_target(expected_segments)?;
+    let matches = super::attach(|py| {
+        let object_ref = clone_handle(py, &object)?;
+        let expected_ref = clone_handle(py, &expected)?;
+        let matches = object_ref
+            .bind(py)
+            .is_instance(expected_ref.bind(py))
+            .map_err(|error| {
+                PythonError::from_pyerr(py, error, "conversion", expected_segments.join("."))
+            })?;
+        expected.close();
+        if !matches {
+            object.close();
+        }
+        Ok(matches)
+    })
+    .map_err(PythonError::runtime)??;
+    if matches {
+        Ok(object)
+    } else {
+        Err(conversion_error(
+            format!(
+                "expected Python instance of '{}'",
+                expected_segments.join(".")
+            ),
+            if boundary_path.is_empty() {
+                "opaque factory result".to_string()
+            } else {
+                boundary_path
+            },
+        ))
+    }
+}
+
+pub fn get_attr(object: &ObjectHandle, name: impl AsRef<str>) -> Result<ObjectHandle, PythonError> {
+    let name = name.as_ref().to_string();
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         object
             .bind(py)
-            .getattr(name)
-            .map_err(|error| PythonError::from_pyerr(py, error, "attribute", name))
+            .getattr(name.as_str())
+            .map_err(|error| PythonError::from_pyerr(py, error, "attribute", &name))
             .and_then(|value| store_object(value.unbind()))
     })
     .map_err(PythonError::runtime)?
@@ -388,12 +428,20 @@ pub fn from_record(values: &[(&str, ObjectHandle)]) -> Result<ObjectHandle, Pyth
 }
 
 pub fn to_none(object: &ObjectHandle) -> Result<(), PythonError> {
+    let boundary_path = object.boundary_path().to_string();
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         if object.bind(py).is_none() {
             Ok(())
         } else {
-            Err(conversion_error("expected Python None", "to_none"))
+            Err(conversion_error(
+                "expected Python None",
+                if boundary_path.is_empty() {
+                    "to_none".to_string()
+                } else {
+                    boundary_path.clone()
+                },
+            ))
         }
     })
     .map_err(PythonError::runtime)?
@@ -553,7 +601,7 @@ pub(super) fn store_object(object: Py<PyAny>) -> Result<ObjectHandle, PythonErro
     ForeignObject::new(object).map_err(PythonError::runtime)
 }
 
-fn store_objects(objects: Vec<Py<PyAny>>) -> Result<Vec<ObjectHandle>, PythonError> {
+pub(super) fn store_objects(objects: Vec<Py<PyAny>>) -> Result<Vec<ObjectHandle>, PythonError> {
     objects
         .into_iter()
         .map(ForeignObject::new)
@@ -604,11 +652,16 @@ fn extract_handle<T>(
 where
     for<'py> T: FromPyObject<'py, 'py>,
 {
+    let boundary_path = object.boundary_path().to_string();
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         object.bind(py).extract::<T>().map_err(|error| {
             let mut converted = PythonError::from_pyerr(py, error.into(), "conversion", context);
-            converted.context = format!("{context}: expected {expected}");
+            converted.context = if boundary_path.is_empty() {
+                format!("{context}: expected {expected}")
+            } else {
+                format!("{boundary_path}: expected {expected}")
+            };
             converted
         })
     })

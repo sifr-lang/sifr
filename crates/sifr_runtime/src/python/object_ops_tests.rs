@@ -1,7 +1,7 @@
 use super::object_ops::*;
 use super::{
-    initialize_runtime, reset_runtime_state_for_tests, shutdown_diagnostics, test_config,
-    test_guard, PythonRuntimeDiagnostics,
+    initialize_runtime, list_items, record_field, reset_runtime_state_for_tests, semantic_close,
+    shutdown_diagnostics, test_config, test_guard, PythonRuntimeDiagnostics,
 };
 
 #[test]
@@ -155,6 +155,95 @@ fn declaration_wrapper_failure_points_release_every_temporary_handle() {
     }
     assert_eq!(
         shutdown_diagnostics().expect("diagnostics should be available"),
+        PythonRuntimeDiagnostics {
+            initialized: true,
+            live_objects: 0,
+            leaked_objects: 0,
+        }
+    );
+}
+
+#[test]
+fn recursive_handles_report_exact_nested_paths_and_required_record_fields() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("recursive-paths")).expect("init should succeed");
+
+    let bad = from_str("not-an-int").expect("value should be stored");
+    let inner = from_list(std::slice::from_ref(&bad)).expect("inner list should be stored");
+    let outer = from_list(std::slice::from_ref(&inner)).expect("outer list should be stored");
+    let outer_item = list_items(&outer)
+        .expect("outer list should extract")
+        .into_iter()
+        .next()
+        .expect("outer item");
+    let inner_item = list_items(&outer_item)
+        .expect("inner list should extract")
+        .into_iter()
+        .next()
+        .expect("inner item");
+    let error = to_int(&inner_item).expect_err("nested conversion should fail");
+    assert!(error.context.contains("[0][0]"), "{error:?}");
+
+    let record = from_record(&[("present", bad.clone()), ("extra", bad.clone())])
+        .expect("record should be stored");
+    let present = record_field(&record, "present").expect("required field should extract");
+    let missing = record_field(&record, "missing").expect_err("missing field should fail");
+    assert!(missing.context.contains("missing"));
+
+    for handle in [bad, inner, outer, outer_item, inner_item, record, present] {
+        close_object(handle).expect("object should close");
+    }
+    assert_eq!(
+        shutdown_diagnostics().expect("diagnostics"),
+        PythonRuntimeDiagnostics {
+            initialized: true,
+            live_objects: 0,
+            leaked_objects: 0,
+        }
+    );
+}
+
+#[test]
+fn semantic_close_consumes_identity_and_poison_failure_releases_it() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("semantic-close")).expect("init should succeed");
+
+    let target = resolve_target(&["contextlib".to_string(), "ExitStack".to_string()])
+        .expect("ExitStack should resolve");
+    let stack = call_object_owned(&target, &[], &[]).expect("ExitStack should construct");
+    semantic_close(stack, "close").expect("semantic close should succeed");
+
+    let invalid = from_int(1).expect("invalid receiver should be stored");
+    let error = semantic_close(invalid, "close").expect_err("missing close should fail");
+    assert_eq!(error.kind, "cleanup");
+
+    close_object(target).expect("target should close");
+    assert_eq!(
+        shutdown_diagnostics().expect("diagnostics"),
+        PythonRuntimeDiagnostics {
+            initialized: true,
+            live_objects: 0,
+            leaked_objects: 0,
+        }
+    );
+}
+
+#[test]
+fn opaque_factory_instance_mismatch_releases_the_rejected_identity() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("opaque-instance-mismatch")).expect("init should succeed");
+
+    let integer = from_int(7).expect("integer should be stored");
+    let error = expect_instance(integer, &["builtins".to_string(), "str".to_string()])
+        .expect_err("wrong factory identity should fail");
+    assert_eq!(error.kind, "conversion");
+    assert!(error.message.contains("builtins.str"));
+
+    assert_eq!(
+        shutdown_diagnostics().expect("diagnostics"),
         PythonRuntimeDiagnostics {
             initialized: true,
             live_objects: 0,

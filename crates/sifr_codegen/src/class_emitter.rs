@@ -136,6 +136,12 @@ impl RustEmitter {
         class: &HirClass,
         module_public: bool,
     ) -> Vec<(String, RustType)> {
+        if class.python_opaque_declaration().is_some() {
+            return vec![(
+                "__sifr_python_object".to_string(),
+                RustType::Named("sifr_runtime::python::ObjectHandle".to_string()),
+            )];
+        }
         let mut fields = Vec::new();
         if let Some(parent) = &class.parent_class {
             if parent != "NonSend" {
@@ -389,6 +395,7 @@ impl RustEmitter {
             return;
         }
 
+        let is_python_opaque = class.python_opaque_declaration().is_some();
         let has_custom_eq = class
             .operator_impls
             .iter()
@@ -410,7 +417,7 @@ impl RustEmitter {
         });
         let has_auto_display =
             !class.fields.is_empty() && class.fields.iter().all(|(_, ty)| is_auto_display_type(ty));
-        let derives = if self.is_current_process_resource_class(&class.name) {
+        let derives = if is_python_opaque || self.is_current_process_resource_class(&class.name) {
             vec!["Debug".to_string()]
         } else if has_callable_field || has_affine_field {
             Vec::new()
@@ -444,7 +451,8 @@ impl RustEmitter {
         self.current_class_name = Some(class.name.clone());
         let mut impl_items = Vec::new();
         let has_constructor = class.methods.iter().any(|method| method.name == "new");
-        if !has_constructor
+        if !is_python_opaque
+            && !has_constructor
             && class
                 .parent_class
                 .as_deref()

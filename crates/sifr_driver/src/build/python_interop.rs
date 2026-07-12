@@ -42,13 +42,15 @@ if is_callable:
         ]
     except (TypeError, ValueError):
         pass
-print(json.dumps({"ok": True, "callable": is_callable, "inspectable": inspectable, "parameters": parameters, "error": None}))
+print(json.dumps({"ok": True, "callable": is_callable, "is_type": isinstance(value, type), "inspectable": inspectable, "parameters": parameters, "error": None}))
 "#;
 
 #[derive(Deserialize)]
 struct ProbeOutput {
     ok: bool,
     callable: bool,
+    #[serde(default)]
+    is_type: bool,
     inspectable: bool,
     #[serde(default)]
     parameters: Vec<ProbeParameter>,
@@ -96,6 +98,15 @@ pub(super) fn apply_python_interop_metadata(
                 ),
                 DiagnosticCode::PYCALL_INVALID_SHAPE,
             )),
+            Ok(output) if probe.expects_type && !output.is_type => {
+                diagnostics.push(diagnostic_with_code(
+                    format!(
+                        "invalid Python opaque declaration: target '{}' is not a Python type",
+                        probe.target_path
+                    ),
+                    DiagnosticCode::PYCALL_INVALID_SHAPE,
+                ))
+            }
             Ok(output) if !output.inspectable && probe.requires_inspectable_signature => {
                 diagnostics.push(diagnostic_with_code(
                     format!(
@@ -113,11 +124,13 @@ pub(super) fn apply_python_interop_metadata(
                         .declarations
                         .iter()
                         .filter(|declaration| {
-                            declaration
-                                .declaration
-                                .target
-                                .as_ref()
-                                .is_some_and(|target| target.dotted() == probe.target_path)
+                            declaration.declaration.kind
+                                == sifr_ir::PythonInteropDecoratorKind::Function
+                                && declaration
+                                    .declaration
+                                    .target
+                                    .as_ref()
+                                    .is_some_and(|target| target.dotted() == probe.target_path)
                         })
                         .find_map(|declaration| validate_signature(declaration, &output.parameters))
                     {
@@ -327,6 +340,26 @@ mod tests {
     }
 
     #[test]
+    fn opaque_probe_requires_a_python_type() {
+        let runtime = PackagePythonRuntime::for_tests(python(), "probe");
+        let mut generated = project("math.sqrt");
+        generated.interop.python.target_probes[0].expects_type = true;
+        generated.interop.python.declarations[0].declaration.kind =
+            sifr_ir::PythonInteropDecoratorKind::Opaque;
+        let Err(diagnostics) = apply_python_interop_metadata(generated, Some(&runtime)) else {
+            panic!("opaque target must be a Python type");
+        };
+        assert_eq!(diagnostics[0].code, "SIFR-PYCALL-0001");
+
+        let mut generated = project("builtins.str");
+        generated.interop.python.target_probes[0].expects_type = true;
+        generated.interop.python.declarations[0].declaration.kind =
+            sifr_ir::PythonInteropDecoratorKind::Opaque;
+        apply_python_interop_metadata(generated, Some(&runtime))
+            .expect("Python class target should verify");
+    }
+
+    #[test]
     fn uninspectable_callable_is_runtime_checked() {
         let runtime = PackagePythonRuntime::for_tests(python(), "probe");
         let generated = apply_python_interop_metadata(project("builtins.dir"), Some(&runtime))
@@ -432,6 +465,8 @@ mod tests {
             }),
             span: ruff_text_size::TextRange::default(),
             effect: sifr_ir::PythonInteropEffect::BlockingIo,
+            cleanup: None,
+            consumes_receiver: false,
             parameters: if target == "math.sqrt" {
                 vec![sifr_ir::PythonInteropParameter {
                     name: "value".to_string(),
@@ -450,6 +485,7 @@ mod tests {
             import_root: Some(root),
             target_path: target.to_string(),
             requires_inspectable_signature: false,
+            expects_type: false,
             status: PythonTargetProbeStatus::Planned,
         });
         python

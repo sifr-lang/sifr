@@ -670,18 +670,26 @@ pub(in crate::lower) fn lower_function(
         .current_function_return_type
         .replace(ft.return_type.as_ref().clone());
     let previous_live_join_sets = std::mem::take(&mut ctx.live_join_set_bindings);
+    let previous_must_use_bindings = std::mem::take(&mut ctx.live_must_use_bindings);
     let previous_join_set_terminal_awaitables =
         std::mem::take(&mut ctx.join_set_terminal_awaitables);
     ctx.current_function_is_async = effective_is_async;
     ctx.current_function_is_async_generator = is_async_generator;
     ctx.current_function_trusts_dynamic_python = has_decorator(func, "trust_python_dynamic");
+    for param in &params {
+        if param.convention.is_owned() {
+            ctx.record_must_use_binding(&param.name, &param.ty);
+        }
+    }
     let body = if skips_normal_body_lowering {
         Vec::new()
     } else {
         lower_stmts(&func.body, &ft, ctx)
     };
     reject_live_join_sets_at_function_exit(func, ctx);
+    reject_live_must_use_bindings_at_function_exit(func, ctx);
     ctx.live_join_set_bindings = previous_live_join_sets;
+    ctx.live_must_use_bindings = previous_must_use_bindings;
     ctx.join_set_terminal_awaitables = previous_join_set_terminal_awaitables;
     ctx.current_function_is_async = previous_async;
     ctx.current_function_is_async_generator = previous_async_generator;
@@ -808,6 +816,26 @@ fn reject_live_join_sets_at_function_exit(func: &StmtFunctionDef, ctx: &mut Lowe
     }
     ctx.live_join_set_bindings.clear();
     ctx.join_set_terminal_awaitables.clear();
+}
+
+fn reject_live_must_use_bindings_at_function_exit(func: &StmtFunctionDef, ctx: &mut LowerCtx) {
+    let mut live = ctx
+        .live_must_use_bindings
+        .iter()
+        .filter(|(name, _)| ctx.scope.lookup(name.as_str()).is_some() && !ctx.scope.is_moved(name))
+        .map(|(name, obligation)| (name.clone(), obligation.clone()))
+        .collect::<Vec<_>>();
+    live.sort();
+    for (name, obligation) in live {
+        ctx.error_with_code_at(
+            DiagnosticCode::OWN_USE_AFTER_MOVE,
+            format!(
+                "must-use binding '{name}' owns {obligation} and must be closed or transferred before function exit"
+            ),
+            func.name.range(),
+        );
+    }
+    ctx.live_must_use_bindings.clear();
 }
 
 pub(super) fn requires_exhaustive_return_annotation(

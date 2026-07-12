@@ -5,10 +5,15 @@ use super::{
     HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt, HirTupleTargetBinding,
     LowerCtx, MethodKind, ParamConvention, Ranged, Stmt, StmtClassDef, Type,
 };
+use crate::lower::python_interop::{
+    classify_python_interop_stub_body, collect_python_method_declarations,
+    has_python_interop_decorator_syntax, validate_python_interop_signature,
+};
 use crate::lower::rust_interop::{
     classify_rust_interop_stub_body, collect_rust_interop_declarations,
     has_rust_interop_decorator_syntax, RustInteropOwner,
 };
+use crate::lower::typing_and_functions::ast_convention_to_param;
 /// Second pass: lower class method bodies into `HirClass`.
 pub(in crate::lower) fn lower_class(
     class_def: &StmtClassDef,
@@ -16,6 +21,7 @@ pub(in crate::lower) fn lower_class(
 ) -> Option<HirClass> {
     let class_name = class_def.name.to_string();
     let class_ty = ctx.class_types.get(&class_name)?.clone();
+    let is_python_opaque = ctx.python_opaque_classes.contains_key(&class_name);
     let is_protocol = is_protocol_class(class_def);
     let newtype_inner = get_newtype_inner(class_def);
 
@@ -399,12 +405,17 @@ pub(in crate::lower) fn lower_class(
                     Type::Any
                 };
                 ctx.scope.define(param_name.clone(), param_ty.clone());
+                let convention = if ctx.must_use_obligation_for_type(&param_ty).is_some() {
+                    ast_convention_to_param(param.parameter.convention, &param_ty)
+                } else {
+                    ParamConvention::default()
+                };
                 params.push(HirParam {
                     name: param_name,
                     ty: param_ty,
                     default: None,
                     keyword_only: false,
-                    convention: ParamConvention::default(),
+                    convention,
                 });
             }
 
@@ -433,11 +444,44 @@ pub(in crate::lower) fn lower_class(
                 has_decorator(func, "cpu_heavy"),
                 func.is_async,
             );
-            let stub_body = classify_rust_interop_stub_body(
-                &func.body,
-                has_rust_interop_decorator_syntax(&func.decorator_list),
+            let has_python_interop = has_python_interop_decorator_syntax(&func.decorator_list);
+            let python_interop = collect_python_method_declarations(
+                &func.decorator_list,
+                &func.parameters,
+                func.is_async,
                 ctx,
             );
+            if !python_interop.is_empty() && !is_python_opaque {
+                ctx.error_with_code_at(
+                    sifr_diagnostics::DiagnosticCode::PYIMP_INVALID_TARGET,
+                    "`Self` Python declarations require an enclosing `@python.opaque` class"
+                        .to_string(),
+                    func.name.range(),
+                );
+            }
+            if python_interop.first().is_some_and(|declaration| {
+                declaration.kind == sifr_ir::PythonInteropDecoratorKind::Item
+            }) && params.len() != 1
+            {
+                ctx.error_with_code_at(
+                    sifr_diagnostics::DiagnosticCode::PYCALL_INVALID_SHAPE,
+                    "`@python.item` requires exactly one key parameter after the receiver"
+                        .to_string(),
+                    func.name.range(),
+                );
+            }
+            validate_python_interop_signature(&python_interop, &params, &return_ty, ctx);
+            let skips_normal_body_lowering = if has_python_interop {
+                classify_python_interop_stub_body(&func.body, true, ctx)
+                    .skips_normal_body_lowering()
+            } else {
+                classify_rust_interop_stub_body(
+                    &func.body,
+                    has_rust_interop_decorator_syntax(&func.decorator_list),
+                    ctx,
+                )
+                .skips_normal_body_lowering()
+            };
 
             // Lower method body
             let previous_owner = ctx.current_owner.replace(class_name.clone());
@@ -449,11 +493,36 @@ pub(in crate::lower) fn lower_class(
             ctx.current_function_is_async = func.is_async;
             ctx.current_function_is_async_generator =
                 func.is_async && function_body_contains_yield(&func.body);
-            let body = if stub_body.skips_normal_body_lowering() {
+            let previous_must_use_bindings = std::mem::take(&mut ctx.live_must_use_bindings);
+            for param in &params {
+                if param.convention.is_owned() {
+                    ctx.record_must_use_binding(&param.name, &param.ty);
+                }
+            }
+            let body = if skips_normal_body_lowering {
                 Vec::new()
             } else {
                 lower_stmts(&func.body, &method_ft, ctx)
             };
+            let mut live_must_use = ctx
+                .live_must_use_bindings
+                .iter()
+                .filter(|(name, _)| {
+                    ctx.scope.lookup(name.as_str()).is_some() && !ctx.scope.is_moved(name)
+                })
+                .map(|(name, obligation)| (name.clone(), obligation.clone()))
+                .collect::<Vec<_>>();
+            live_must_use.sort();
+            for (name, obligation) in live_must_use {
+                ctx.error_with_code_at(
+                    sifr_diagnostics::DiagnosticCode::OWN_USE_AFTER_MOVE,
+                    format!(
+                        "must-use binding '{name}' owns {obligation} and must be closed or transferred before method exit"
+                    ),
+                    func.name.range(),
+                );
+            }
+            ctx.live_must_use_bindings = previous_must_use_bindings;
             ctx.current_function_is_async = previous_async;
             ctx.current_function_is_async_generator = previous_async_generator;
             ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
@@ -497,7 +566,7 @@ pub(in crate::lower) fn lower_class(
                 method_kind,
                 decorators: method_decorators,
                 rust_interop,
-                python_interop: Vec::new(),
+                python_interop,
                 compiler_intrinsic: None,
                 type_params: Vec::new(),
             };
@@ -509,6 +578,51 @@ pub(in crate::lower) fn lower_class(
                 hir_methods.push(hir_func);
             }
         }
+    }
+
+    let semantic_close_methods = hir_methods
+        .iter()
+        .filter(|method| {
+            method.python_interop.first().is_some_and(|declaration| {
+                declaration.consumes_receiver
+                    && declaration.kind == sifr_ir::PythonInteropDecoratorKind::Function
+                    && declaration
+                        .target
+                        .as_ref()
+                        .is_some_and(|target| target.segments.as_slice() == ["Self", "close"])
+                    && method.params.is_empty()
+                    && matches!(
+                        method.return_type.resolve_alias(),
+                        Type::Result(ok, _) if ok.resolve_alias() == &Type::None
+                    )
+            })
+        })
+        .count();
+    let cleanup = ctx
+        .python_opaque_classes
+        .get(&class_name)
+        .and_then(|declaration| declaration.cleanup);
+    if cleanup == Some(sifr_ir::PythonCleanupPolicy::Close) && semantic_close_methods != 1 {
+        ctx.error_with_code_at(
+            sifr_diagnostics::DiagnosticCode::PYCALL_INVALID_SHAPE,
+            "`cleanup=close` requires exactly one `@python(Self.close)` method declared as `def close(own self) -> Result[None, PythonError]`".to_string(),
+            class_def.range,
+        );
+    }
+    if cleanup != Some(sifr_ir::PythonCleanupPolicy::Close)
+        && hir_methods.iter().any(|method| {
+            method
+                .python_interop
+                .first()
+                .is_some_and(|declaration| declaration.consumes_receiver)
+        })
+    {
+        ctx.error_with_code_at(
+            sifr_diagnostics::DiagnosticCode::PYCALL_INVALID_SHAPE,
+            "a consuming Python method is reserved for the declared semantic cleanup operation"
+                .to_string(),
+            class_def.range,
+        );
     }
 
     let is_error = ctx.error_types.contains(&class_name);
@@ -547,13 +661,23 @@ pub(in crate::lower) fn lower_class(
         Vec::new()
     };
 
+    let python_opaque = ctx.python_opaque_classes.get(&class_name).cloned();
+    if python_opaque.is_some() && !own_fields.is_empty() {
+        ctx.error_with_code_at(
+            sifr_diagnostics::DiagnosticCode::PYCALL_INVALID_SHAPE,
+            "opaque Python classes cannot declare structural fields".to_string(),
+            class_def.range,
+        );
+    }
+    let kind = python_opaque.map_or(HirClassKind::Regular, HirClassKind::PythonOpaque);
+
     Some(HirClass {
         name: class_name,
         fields: own_fields,
         methods: hir_methods,
         is_hashable,
         is_error_type: is_error,
-        kind: HirClassKind::Regular,
+        kind,
         operator_impls,
         newtype_inner: None,
         implements_protocols,

@@ -36,15 +36,15 @@
       "id": "opaque-lifecycle",
       "surface": "@python.opaque, @python.attr, and @python.item",
       "target_state": "declaration-supported",
-      "implementation_status": "reserved",
+      "implementation_status": "active",
       "activation_owner": "opaque-lifecycle",
       "required_evidence": ["positive", "negative", "cleanup", "live"],
       "evidence": [
-        {"kind": "positive", "status": "planned", "owner": "opaque method/attribute/item matrix"},
-        {"kind": "negative", "status": "planned", "owner": "moved/closed/poison diagnostics"},
-        {"kind": "cleanup", "status": "planned", "owner": "exact-once drop and close fixtures"},
+        {"kind": "positive", "status": "passing", "owner": "opaque factory, method, attribute, item, and recursive conversion matrices"},
+        {"kind": "negative", "status": "passing", "owner": "factory type, abandonment, partial-branch, moved, and poison diagnostics"},
+        {"kind": "cleanup", "status": "passing", "owner": "runtime nested partial-failure and semantic-close exact-release assertions"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "owned async close runtime"},
-        {"kind": "live", "status": "planned", "owner": "biip and schwifty binaries"}
+        {"kind": "live", "status": "passing", "owner": "simple_import/biip_schwifty_full_example.sifr declaration-first binary"}
       ]
     },
     {

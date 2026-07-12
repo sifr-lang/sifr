@@ -11,11 +11,19 @@ static PENDING_RELEASES: LazyLock<Mutex<Vec<Py<PyAny>>>> = LazyLock::new(|| Mute
 #[derive(Clone, Debug)]
 pub struct ForeignObject {
     inner: Arc<ForeignObjectInner>,
+    boundary_path: String,
 }
 
 #[derive(Debug)]
 struct ForeignObjectInner {
-    object: Option<Py<PyAny>>,
+    state: Mutex<ForeignObjectState>,
+}
+
+#[derive(Debug)]
+enum ForeignObjectState {
+    Open(Py<PyAny>),
+    Poisoned(Py<PyAny>),
+    Closed,
 }
 
 impl ForeignObject {
@@ -23,37 +31,87 @@ impl ForeignObject {
         update_object_count(1)?;
         Ok(Self {
             inner: Arc::new(ForeignObjectInner {
-                object: Some(object),
+                state: Mutex::new(ForeignObjectState::Open(object)),
             }),
+            boundary_path: String::new(),
         })
     }
 
     pub(super) fn clone_ref(&self, py: Python<'_>) -> Result<Py<PyAny>, PythonRuntimeError> {
-        self.inner
-            .object
-            .as_ref()
-            .map(|object| object.clone_ref(py))
-            .ok_or(PythonRuntimeError::PythonOperationFailed(
+        match &*lock_state(&self.inner.state) {
+            ForeignObjectState::Open(object) => Ok(object.clone_ref(py)),
+            ForeignObjectState::Poisoned(_) => Err(PythonRuntimeError::PythonOperationFailed(
+                "Python object identity is poisoned after failed semantic cleanup".to_string(),
+            )),
+            ForeignObjectState::Closed => Err(PythonRuntimeError::PythonOperationFailed(
                 "Python object identity is closed".to_string(),
-            ))
+            )),
+        }
+    }
+
+    pub(super) fn poison(&self) {
+        let mut state = lock_state(&self.inner.state);
+        if let ForeignObjectState::Open(object) =
+            std::mem::replace(&mut *state, ForeignObjectState::Closed)
+        {
+            *state = ForeignObjectState::Poisoned(object);
+        }
+    }
+
+    pub(super) fn close(&self) {
+        let object = {
+            let mut state = lock_state(&self.inner.state);
+            match std::mem::replace(&mut *state, ForeignObjectState::Closed) {
+                ForeignObjectState::Open(object) | ForeignObjectState::Poisoned(object) => {
+                    Some(object)
+                }
+                ForeignObjectState::Closed => None,
+            }
+        };
+        if let Some(object) = object {
+            release_object(object);
+        }
     }
 
     pub(super) fn ptr_eq(&self, other: &Self) -> bool {
         Arc::ptr_eq(&self.inner, &other.inner)
     }
+
+    pub(super) fn with_child_path(mut self, child: impl AsRef<str>) -> Self {
+        self.boundary_path.push_str(child.as_ref());
+        self
+    }
+
+    pub(super) fn boundary_path(&self) -> &str {
+        &self.boundary_path
+    }
 }
 
 impl Drop for ForeignObjectInner {
     fn drop(&mut self) {
-        let Some(object) = self.object.take() else {
-            return;
+        let state = match self.state.get_mut() {
+            Ok(state) => std::mem::replace(state, ForeignObjectState::Closed),
+            Err(poisoned) => std::mem::replace(poisoned.into_inner(), ForeignObjectState::Closed),
         };
-        if unsafe { ffi::PyGILState_Check() } != 0 {
-            drop(object);
-            let _ignored = update_object_count(-1);
-            return;
+        if let ForeignObjectState::Open(object) | ForeignObjectState::Poisoned(object) = state {
+            release_object(object);
         }
+    }
+}
+
+fn release_object(object: Py<PyAny>) {
+    if unsafe { ffi::PyGILState_Check() } != 0 {
+        drop(object);
+        let _ignored = update_object_count(-1);
+    } else {
         pending_releases().push(object);
+    }
+}
+
+fn lock_state(state: &Mutex<ForeignObjectState>) -> std::sync::MutexGuard<'_, ForeignObjectState> {
+    match state.lock() {
+        Ok(state) => state,
+        Err(poisoned) => poisoned.into_inner(),
     }
 }
 

@@ -67,6 +67,30 @@ pub(in crate::lower) fn lower_module_impl(
     // This must happen before function signature extraction so that imported error classes
     // (e.g., StatisticsError from sifr.statistics) can be used in Result[T, E] annotations.
     resolve_imports_early(stmts, externals, &mut ctx);
+    // Opaque identity metadata participates in signature validation, so collect it before
+    // function signatures regardless of declaration order.
+    for stmt in stmts {
+        if let Stmt::ClassDef(class_def) = stmt {
+            if let Some(declaration) = python_interop::collect_python_opaque_declaration(
+                &class_def.decorator_list,
+                &mut ctx,
+            ) {
+                ctx.python_opaque_classes
+                    .insert(class_def.name.to_string(), declaration);
+                for body_stmt in &class_def.body {
+                    if let Stmt::FunctionDef(method) = body_stmt {
+                        if python_interop::method_consumes_receiver(
+                            &method.decorator_list,
+                            &method.parameters,
+                        ) {
+                            ctx.python_consuming_methods
+                                .insert(format!("{}.{}", class_def.name, method.name));
+                        }
+                    }
+                }
+            }
+        }
+    }
     let alias_decls = collect_type_alias_decls(stmts, &mut ctx);
     predeclare_type_aliases(&alias_decls, &mut ctx);
     // First class pass materializes full class shapes before alias resolution so aliases like

@@ -418,6 +418,7 @@ pub(in crate::lower) fn lower_ann_assign(
     ctx.pending_container_specialization_patches.remove(&name);
     ctx.scope
         .define_explicit_local(name.clone(), declared_type.clone());
+    ctx.record_must_use_binding(&name, &declared_type);
     if matches!(value.ty(), Type::Int | Type::LiteralInt(_))
         && value.ty().is_assignable_to(&declared_type)
     {
