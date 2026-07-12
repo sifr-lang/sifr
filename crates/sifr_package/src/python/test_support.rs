@@ -71,6 +71,7 @@ pub(super) fn request() -> PythonEnvironmentProbeRequest {
         interpreter: PathBuf::from("/tmp/venv/bin/python"),
         pyproject: None,
         lock: None,
+        required_imports: Vec::new(),
         declared_imports: vec!["sys".to_string()],
         native_imports: Vec::new(),
     }

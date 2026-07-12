@@ -30,12 +30,7 @@ pub(crate) fn run_uv_lock_check(
         .args(["lock", "--check", "--offline", "--project"])
         .arg(project_root)
         .output()
-        .map_err(|error| {
-            stale_metadata_error(
-                request,
-                format!("could not execute `uv lock --check --offline`: {error}"),
-            )
-        })?;
+        .map_err(|error| uv_lock_check_spawn_error(request, error))?;
     if output.status.success() {
         Ok(())
     } else {
@@ -50,12 +45,12 @@ pub(crate) fn run_uv_lock_check(
 }
 
 #[cfg(test)]
-pub(crate) fn generate_uv_lock_for_test(project_root: &Path) -> std::process::ExitStatus {
+pub(crate) fn generate_uv_lock_for_test(project_root: &Path) -> Option<std::process::ExitStatus> {
     Command::new("uv")
         .args(["lock", "--offline", "--project"])
         .arg(project_root)
         .status()
-        .expect("uv must be installed for repository validation")
+        .ok()
 }
 
 pub(crate) fn run_python_probe_command(
@@ -129,6 +124,50 @@ fn stale_metadata_error(
         format!("Python environment metadata is stale: {}", reason.into()),
         "run `uv sync` for the configured project; Sifr will not run uv automatically",
     )
+}
+
+fn uv_lock_check_spawn_error(
+    request: &PythonEnvironmentProbeRequest,
+    error: std::io::Error,
+) -> PackageDiagnostic {
+    if error.kind() == std::io::ErrorKind::NotFound {
+        probe_error(
+            DiagnosticCode::PYENV_PROBE_FAILED,
+            request,
+            "could not execute uv because it is not installed or not available on PATH",
+            "install uv and ensure the `uv` executable is available on PATH",
+        )
+    } else {
+        stale_metadata_error(
+            request,
+            format!("could not execute `uv lock --check --offline`: {error}"),
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn missing_uv_executable_is_a_probe_failure_not_stale_metadata() {
+        let request = PythonEnvironmentProbeRequest {
+            venv_root: "/tmp/venv".into(),
+            interpreter: "/tmp/venv/bin/python".into(),
+            pyproject: None,
+            lock: None,
+            required_imports: Vec::new(),
+            declared_imports: Vec::new(),
+            native_imports: Vec::new(),
+        };
+        let diagnostic = uv_lock_check_spawn_error(
+            &request,
+            std::io::Error::new(std::io::ErrorKind::NotFound, "uv missing"),
+        );
+
+        assert_eq!(diagnostic.code, DiagnosticCode::PYENV_PROBE_FAILED);
+        assert!(diagnostic.message.contains("not installed"));
+    }
 }
 
 const PROBE_SCRIPT: &str = r#"

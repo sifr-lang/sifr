@@ -127,7 +127,7 @@ REQUIRED_DOC_SNIPPETS = [
     "crates/sifr/src/check_and_package_commands.rs:601",
     "crates/sifr/src/check_and_package_commands.rs:658",
     "crates/sifr_package/src/cargo/python_probe.rs:10",
-    "crates/sifr_package/src/python/environment.rs:202",
+    "crates/sifr_package/src/python/environment.rs:204",
     "crates/sifr_package/src/python/selection.rs:118",
     "crates/sifr/src/cli_model_and_entrypoint.rs:634",
     "crates/sifr/src/cli_model_and_entrypoint.rs:690",

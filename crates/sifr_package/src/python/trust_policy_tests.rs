@@ -1,5 +1,8 @@
-use super::resolve_python_environment;
 use super::test_support::{graph, package, package_id};
+use super::{
+    resolve_python_environment, resolve_python_environment_with_requirements,
+    PythonRequirementContribution, PythonRequirementKind,
+};
 use crate::manifest::sifr::{PythonConfig, TrustPolicy};
 use sifr_diagnostics::DiagnosticCode;
 
@@ -83,6 +86,41 @@ fn required_python_root_must_be_authorized_by_root() {
             .as_deref()
             .is_some_and(|help| help.contains("/ws/app/sifr.toml:[python].requires-imports")),
         "unauthorized-root diagnostics must expose requirement provenance"
+    );
+}
+
+#[test]
+fn derived_requirement_provenance_reaches_unauthorized_root_diagnostic() {
+    let graph = graph(vec![package(
+        "app",
+        PythonConfig {
+            venv: Some(".venv".into()),
+            ..PythonConfig::default()
+        },
+        TrustPolicy::default(),
+    )]);
+    let derived = [PythonRequirementContribution {
+        root: "numpy".to_string(),
+        package_id: package_id("app"),
+        kind: PythonRequirementKind::Declaration,
+        source: "src/main.sifr:4:1".to_string(),
+    }];
+
+    let diagnostics =
+        resolve_python_environment_with_requirements(&graph, &package_id("app"), &derived)
+            .expect_err("derived unauthorized requirement must fail");
+
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(
+        diagnostics[0].code,
+        DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED
+    );
+    assert!(
+        diagnostics[0]
+            .help
+            .as_deref()
+            .is_some_and(|help| help.contains("src/main.sifr:4:1")),
+        "derived provenance must reach the unauthorized-root diagnostic"
     );
 }
 

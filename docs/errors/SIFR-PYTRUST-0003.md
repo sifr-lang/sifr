@@ -11,6 +11,6 @@ Native Python import root is trusted but not required.
 | Severity | Error |
 | Owner | `sifr_package::python` |
 | Message template | `native Python import root is trusted but not required: {import_root}` |
-| Representative fixture | `crates/sifr_package/src/python/trust_policy_tests.rs::native_python_trust_requires_a_canonical_requirement` |
+| Representative fixture | `crates/sifr_package/src/python/trust_policy_tests.rs::native_trust_requires_a_canonical_requirement` |
 | Declared args | `import_root (message+json)` |
 | Dedupe args | `import_root` |

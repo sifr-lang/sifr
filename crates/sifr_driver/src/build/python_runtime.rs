@@ -287,6 +287,7 @@ mod tests {
             interpreter: PathBuf::from("/tmp/sifr-py/bin/python"),
             pyproject: None,
             lock: None,
+            required_imports: Vec::new(),
             declared_imports: vec!["numpy".to_string()],
             native_imports: Vec::new(),
         };

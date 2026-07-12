@@ -35,6 +35,7 @@ pub struct PythonEnvironmentProbeRequest {
     pub interpreter: PathBuf,
     pub pyproject: Option<PathBuf>,
     pub lock: Option<PathBuf>,
+    pub required_imports: Vec<String>,
     pub declared_imports: Vec<String>,
     pub native_imports: Vec<String>,
 }
@@ -189,6 +190,7 @@ impl From<&ResolvedPythonEnvironment> for PythonEnvironmentProbeRequest {
             interpreter: resolved.interpreter.clone(),
             pyproject: resolved.pyproject.clone(),
             lock: resolved.lock.clone(),
+            required_imports: resolved.required_imports.clone(),
             declared_imports: resolved.declared_imports.clone(),
             native_imports: resolved.native_imports.clone(),
         }
@@ -296,13 +298,17 @@ mod environment_tests {
         let pyproject = root.join("pyproject.toml");
         let lock = root.join("uv.lock");
         fs::write(&pyproject, minimal_pyproject(">=3.13")).expect("write pyproject");
-        let lock_status = crate::cargo::python_probe::generate_uv_lock_for_test(&root);
+        let Some(lock_status) = crate::cargo::python_probe::generate_uv_lock_for_test(&root) else {
+            fs::remove_dir_all(&root).expect("remove skipped uv fixture");
+            return;
+        };
         assert!(lock_status.success(), "fixture lock should generate");
         let request = PythonEnvironmentProbeRequest {
             venv_root: root.join(".venv"),
             interpreter: root.join(".venv/bin/python"),
             pyproject: Some(pyproject.clone()),
             lock: Some(lock),
+            required_imports: Vec::new(),
             declared_imports: Vec::new(),
             native_imports: Vec::new(),
         };

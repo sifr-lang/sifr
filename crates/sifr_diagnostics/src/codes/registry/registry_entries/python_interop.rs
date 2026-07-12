@@ -155,7 +155,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "PYTRUST",
         "Native Python import root is trusted but not required.",
         Severity::Error,
-        "crates/sifr_package/src/python/trust_policy_tests.rs::native_python_trust_requires_a_canonical_requirement",
+        "crates/sifr_package/src/python/trust_policy_tests.rs::native_trust_requires_a_canonical_requirement",
         "native Python import root is trusted but not required: {import_root}",
         "sifr_package::python",
         [arg!("import_root")],
