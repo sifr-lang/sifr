@@ -433,12 +433,12 @@ fn collect_string_loop_target_use_stmt(
             }
         }
         HirStmt::With { items, body } => {
-            for (name, expr, _) in items {
-                if name == target {
+            for item in items {
+                if item.target == target {
                     usage.valid = false;
                     return;
                 }
-                collect_string_loop_target_use_expr(expr, target, usage);
+                collect_string_loop_target_use_expr(&item.context, target, usage);
             }
             for stmt in body {
                 collect_string_loop_target_use_stmt(stmt, target, usage);

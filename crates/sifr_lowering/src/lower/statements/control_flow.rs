@@ -21,6 +21,7 @@ use super::{
     Type,
 };
 use crate::lower::must_use_obligations;
+use crate::lower::python_interop as pyinterop;
 use crate::lower::task_join_set_calls::record_join_set_terminal_awaitable;
 pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     if assign.targets.len() != 1 {
@@ -64,7 +65,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             let nested_field_name = attr.attr.to_string();
             let nested_field_ty = resolve_field_type_from_type(&field_ty, &nested_field_name)
                 .unwrap_or(Type::Unknown);
-            let value = lower_expr(&assign.value, ctx)?;
+            let value = pyinterop::lower_python_context_owned_expr(&assign.value, ctx)?;
             return Some(HirStmt::NestedFieldAssign {
                 object: obj_name,
                 field: field_name,
@@ -90,7 +91,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
         }
         let field_name = attr.attr.to_string();
         let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
-        let value = lower_expr(&assign.value, ctx)?;
+        let value = pyinterop::lower_python_context_owned_expr(&assign.value, ctx)?;
         return Some(HirStmt::FieldAssign {
             object: obj_name,
             field: field_name,
@@ -145,7 +146,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             }
             let outer_index = lower_expr(&inner_sub.slice, ctx)?;
             let inner_index = lower_expr(&sub.slice, ctx)?;
-            let value = lower_expr(&assign.value, ctx)?;
+            let value = pyinterop::lower_python_context_owned_expr(&assign.value, ctx)?;
             if let Some(field) = field_name {
                 return Some(HirStmt::AttributeNestedSubscriptAssign {
                     object: obj_name,
@@ -190,7 +191,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
                 return None;
             }
             let index = lower_expr(&sub.slice, ctx)?;
-            let value = lower_expr(&assign.value, ctx)?;
+            let value = pyinterop::lower_python_context_owned_expr(&assign.value, ctx)?;
             return Some(HirStmt::AttributeSubscriptAssign {
                 object: obj_name,
                 field: field_name,
@@ -223,7 +224,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             return None;
         }
         let index = lower_expr(&sub.slice, ctx)?;
-        let value = lower_expr(&assign.value, ctx)?;
+        let value = pyinterop::lower_python_context_owned_expr(&assign.value, ctx)?;
         let object_ty = validate_subscript_assignment_target(
             ctx,
             &obj_name,
@@ -256,6 +257,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
     if name == "_" {
         let value = lower_expr(&assign.value, ctx)?;
         let value_ty = value.ty().clone();
+        pyinterop::reject_python_context_borrow_discard(&value, assign.range(), ctx);
         if let Some(obligation) = ctx.must_use_obligation_for_type(&value_ty) {
             ctx.error_with_code_at(
                 DiagnosticCode::OWN_USE_AFTER_MOVE,
@@ -295,6 +297,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
         return None;
     };
     let value_ty = value.ty().clone();
+    pyinterop::reject_python_context_borrow_storage(&value, assign.value.range(), ctx);
 
     // Track move: if RHS is a variable name with Move ownership, mark it as moved
     if let HirExpr::Name {
@@ -706,7 +709,7 @@ pub(in crate::lower) fn lower_for(
     ctx: &mut LowerCtx,
 ) -> Option<HirStmt> {
     // Lower the iterable expression and normalize protocol usage through `iter(...)`.
-    let iterable_expr = lower_expr(&for_stmt.iter, ctx)?;
+    let iterable_expr = pyinterop::lower_python_context_owned_expr(&for_stmt.iter, ctx)?;
     let iter_source_name = match &iterable_expr {
         HirExpr::Name { name, .. } => Some(name.clone()),
         _ => None,

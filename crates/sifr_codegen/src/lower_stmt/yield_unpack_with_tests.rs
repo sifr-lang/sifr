@@ -1,4 +1,5 @@
 use super::*;
+use sifr_ir::{HirWithItem, HirWithItemKind};
 
 #[test]
 fn lowers_simple_yield_inside_generator_closure() {
@@ -68,7 +69,13 @@ fn lowers_simple_star_unpack_from_name() {
 #[test]
 fn lowers_simple_with_without_context_manager_protocol() {
     let stmt = HirStmt::With {
-        items: vec![("x".to_string(), HirExpr::IntLiteral(1), false)],
+        items: vec![HirWithItem {
+            target: "x".to_string(),
+            context: HirExpr::IntLiteral(1),
+            kind: HirWithItemKind::Native {
+                has_context_manager_protocol: false,
+            },
+        }],
         body: vec![HirStmt::Expr {
             expr: HirExpr::Name {
                 name: "x".to_string(),

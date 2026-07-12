@@ -1,4 +1,4 @@
-use super::expressions::lower_expr;
+use super::python_interop::lower_python_context_owned_expr;
 use super::statement_diagnostics;
 use super::statements::lower_stmts;
 use super::LowerCtx;
@@ -192,7 +192,7 @@ pub(in crate::lower) fn lower_async_for(
         return None;
     }
 
-    let iter = lower_expr(&for_stmt.iter, ctx)?;
+    let iter = lower_python_context_owned_expr(&for_stmt.iter, ctx)?;
     let iter_ty = iter.ty().clone();
     let Some((target_ty, iter_error_ty)) = async_iterator_parts(&iter_ty) else {
         statement_diagnostics::invalid_iteration(

@@ -1,6 +1,6 @@
 use crate::{
     lower_module, HirAsyncWithKind, HirExpr, HirFStringPart, HirIteratorOp, HirModule, HirPattern,
-    HirStmt, HirTupleTargetBinding,
+    HirStmt, HirTupleTargetBinding, HirWithItemKind,
 };
 use serde_json::{json, Value};
 use sifr_python_parser::parse_module;
@@ -362,11 +362,31 @@ fn project_stmt(stmt: &HirStmt) -> Value {
             "kind": "With",
             "items": items
                 .iter()
-                .map(|(name, context, has_context_manager_protocol)| {
+                .map(|item| {
+                    let protocol = match &item.kind {
+                        HirWithItemKind::Native {
+                            has_context_manager_protocol,
+                        } => json!({
+                            "kind": "Native",
+                            "has_context_manager_protocol": has_context_manager_protocol,
+                        }),
+                        HirWithItemKind::Python {
+                            entered_type,
+                            enter_error_type,
+                            exit_error_type,
+                            entered_is_opaque_borrow,
+                        } => json!({
+                            "kind": "Python",
+                            "entered_type": type_name(entered_type),
+                            "enter_error_type": type_name(enter_error_type),
+                            "exit_error_type": type_name(exit_error_type),
+                            "entered_is_opaque_borrow": entered_is_opaque_borrow,
+                        }),
+                    };
                     json!({
-                        "name": name,
-                        "context": project_expr(context),
-                        "has_context_manager_protocol": has_context_manager_protocol,
+                        "name": item.target,
+                        "context": project_expr(&item.context),
+                        "protocol": protocol,
                     })
                 })
                 .collect::<Vec<_>>(),

@@ -21,6 +21,14 @@ pub(in crate::lower) fn lower_match(
         let arm = ctx.with_pushed_scope(|ctx| {
             let pattern = lower_pattern(&case.pattern, &subject_ty, ctx)?;
 
+            if pattern_binds_vars(&pattern) {
+                super::python_interop::reject_python_context_borrow_storage(
+                    &subject,
+                    match_stmt.subject.range(),
+                    ctx,
+                );
+            }
+
             bind_pattern_vars(&pattern, ctx);
 
             let guard = if let Some(ref g) = case.guard {
@@ -63,6 +71,18 @@ pub(in crate::lower) fn lower_match(
         subject_ty,
         arms,
     })
+}
+
+fn pattern_binds_vars(pattern: &HirPattern) -> bool {
+    match pattern {
+        HirPattern::Capture { .. } => true,
+        HirPattern::Class { fields, .. } => fields
+            .iter()
+            .any(|(_, field_pattern)| pattern_binds_vars(field_pattern)),
+        HirPattern::Or { patterns } => patterns.iter().any(pattern_binds_vars),
+        HirPattern::Tuple { elements } => elements.iter().any(pattern_binds_vars),
+        _ => false,
+    }
 }
 
 fn report_union_exhaustiveness(

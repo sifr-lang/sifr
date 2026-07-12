@@ -229,12 +229,12 @@ pub(super) fn stmt_effects(stmt: &HirStmt) -> Vec<FlowEffect> {
             expr_effects(index, &mut effects);
         }
         HirStmt::With { items, .. } => {
-            for (name, context_expr, _) in items {
+            for item in items {
                 effects.push(FlowEffect::Define {
-                    binding: name.clone(),
-                    ty: context_expr.ty().clone(),
+                    binding: item.target.clone(),
+                    ty: item.context.ty().clone(),
                 });
-                expr_effects(context_expr, &mut effects);
+                expr_effects(&item.context, &mut effects);
             }
         }
         HirStmt::AsyncWith { kind, target, .. } => {

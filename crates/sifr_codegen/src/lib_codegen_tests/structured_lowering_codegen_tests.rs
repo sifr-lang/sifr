@@ -125,14 +125,16 @@ fn test_structured_with_context_manager_target_is_mutable_when_body_mutates_it()
             params: vec![],
             return_type: Type::None,
             body: vec![HirStmt::With {
-                items: vec![(
-                    "out".to_string(),
-                    HirExpr::Name {
+                items: vec![HirWithItem {
+                    target: "out".to_string(),
+                    context: HirExpr::Name {
                         name: "ctx".to_string(),
                         ty: handle_ty.clone(),
                     },
-                    true,
-                )],
+                    kind: HirWithItemKind::Native {
+                        has_context_manager_protocol: true,
+                    },
+                }],
                 body: vec![HirStmt::Expr {
                     expr: HirExpr::MethodCall {
                         object: Box::new(HirExpr::Name {

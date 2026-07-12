@@ -282,8 +282,8 @@ fn collect_stmt(stmt: &HirStmt, path: &str, facts: &mut NameFacts) {
             collect_expr(index, &format!("{path}/index"), facts);
         }
         HirStmt::With { items, body } => {
-            for (index, (_, context, _)) in items.iter().enumerate() {
-                collect_expr(context, &format!("{path}/with_item[{index}]"), facts);
+            for (index, item) in items.iter().enumerate() {
+                collect_expr(&item.context, &format!("{path}/with_item[{index}]"), facts);
             }
             collect_nested_block(body, path, facts);
         }

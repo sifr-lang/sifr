@@ -6,7 +6,7 @@ use crate::{
 };
 use sifr_ir::{
     HirClass, HirClassKind, HirExceptHandler, HirExpr, HirFunction, HirImport, HirMatchArm,
-    HirModule, HirParam, HirPattern, HirStmt, MethodKind,
+    HirModule, HirParam, HirPattern, HirStmt, HirWithItem, HirWithItemKind, MethodKind,
 };
 use sifr_lowering::lower_module;
 use sifr_python_parser::parse_module;

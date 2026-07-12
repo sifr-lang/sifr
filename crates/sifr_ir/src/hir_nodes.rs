@@ -212,6 +212,28 @@ pub enum HirAsyncWithKind {
     },
 }
 
+/// Synchronous with-item protocol selected during type-directed lowering.
+#[derive(Debug, Clone)]
+pub enum HirWithItemKind {
+    Native {
+        has_context_manager_protocol: bool,
+    },
+    Python {
+        entered_type: Type,
+        enter_error_type: Type,
+        exit_error_type: Type,
+        entered_is_opaque_borrow: bool,
+    },
+}
+
+/// One manager in a synchronous `with` statement.
+#[derive(Debug, Clone)]
+pub struct HirWithItem {
+    pub target: String,
+    pub context: HirExpr,
+    pub kind: HirWithItemKind,
+}
+
 /// A function parameter with its type, convention, and optional default value.
 #[derive(Debug, Clone)]
 pub struct HirParam {
@@ -382,9 +404,9 @@ pub enum HirStmt {
     Yield { value: HirExpr },
     /// With statement: with expr as var: body
     /// Supports multiple context managers: with `A()` as a, `B()` as b: body
-    /// Each item is (`var_name`, `context_expr`, `has_context_manager_protocol`)
+    /// Python context items retain their dedicated protocol and scoped-borrow metadata.
     With {
-        items: Vec<(String, HirExpr, bool)>,
+        items: Vec<HirWithItem>,
         body: Vec<HirStmt>,
     },
     /// Built-in async with forms: `async with task.scope()` and `async with task.timeout(...)`.

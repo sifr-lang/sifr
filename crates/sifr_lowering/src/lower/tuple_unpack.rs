@@ -17,6 +17,22 @@ enum TupleAssignTarget {
     Field { object: String, field: String },
 }
 
+fn reject_python_context_borrow_unpack(
+    value: &crate::hir_nodes::HirExpr,
+    range: TextRange,
+    ctx: &mut LowerCtx,
+) {
+    if let Some(borrowed) = super::python_interop::python_context_borrow_in_owned_expr(value, ctx) {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYCTX_INVALID_DECLARATION,
+            format!(
+                "invalid Python context declaration: entered binding '{borrowed}' is a context-scoped borrow and cannot escape through unpacking"
+            ),
+            range,
+        );
+    }
+}
+
 fn lower_tuple_target(elt: &Expr, ctx: &mut LowerCtx) -> Option<TupleAssignTarget> {
     match elt {
         Expr::Name(n) => Some(TupleAssignTarget::Name {
@@ -68,6 +84,7 @@ pub(in crate::lower) fn lower_tuple_unpack_assign(
     }
 
     let value_expr = lower_expr(value, ctx)?;
+    reject_python_context_borrow_unpack(&value_expr, value.range(), ctx);
     let value_ty = value_expr.ty().clone();
 
     let elem_types = if let sifr_type_system::Type::Tuple(elems) = &value_ty {
@@ -172,6 +189,7 @@ pub(in crate::lower) fn lower_star_unpack_assign(
     ctx: &mut LowerCtx,
 ) -> Option<HirStmt> {
     let value_expr = lower_expr(value, ctx)?;
+    reject_python_context_borrow_unpack(&value_expr, value.range(), ctx);
     let value_ty = value_expr.ty().clone();
 
     let elem_ty = if let sifr_type_system::Type::List(elem) = &value_ty {

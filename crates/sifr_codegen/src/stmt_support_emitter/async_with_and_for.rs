@@ -5,24 +5,35 @@ use super::{
 impl RustEmitter {
     pub(crate) fn try_lower_with_stmt_for_ir(
         &mut self,
-        items: &[(String, HirExpr, bool)],
+        items: &[sifr_ir::HirWithItem],
         body: &[HirStmt],
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
         let mut lowered_items = Vec::with_capacity(items.len());
-        for (var, value, has_cm) in items {
+        for item in items {
+            let (has_cm, value) = match &item.kind {
+                sifr_ir::HirWithItemKind::Native {
+                    has_context_manager_protocol,
+                } => (*has_context_manager_protocol, &item.context),
+                sifr_ir::HirWithItemKind::Python { .. } => {
+                    return Err(crate::CodegenError::new(
+                        "Python context HIR requires dedicated context code generation",
+                    ));
+                }
+            };
+            let var = &item.target;
             let Some(lowered_value) = self.lower_rendered_expr_for_ir(value)? else {
                 return Ok(None);
             };
             let binding = if queries::stmts_reference_var(body, var)
                 || items
                     .iter()
-                    .any(|(other_var, _, _)| other_var != var && other_var.contains(var))
+                    .any(|other| other.target != *var && other.target.contains(var))
             {
                 var.clone()
             } else {
                 format!("_{var}")
             };
-            let class_name = if *has_cm {
+            let class_name = if has_cm {
                 if !matches!(value.ty(), Type::Class { .. }) {
                     return Ok(None);
                 }
@@ -34,7 +45,7 @@ impl RustEmitter {
                 mutable: self.mutated_vars.contains(var),
                 binding,
                 value: lowered_value,
-                has_cm: *has_cm,
+                has_cm,
                 class_name,
             });
         }

@@ -38,23 +38,30 @@ pub(super) fn try_lower_loop_else_stmts(
 }
 
 pub(super) fn try_lower_simple_with_stmt(
-    items: &[(String, HirExpr, bool)],
+    items: &[sifr_ir::HirWithItem],
     body: &[HirStmt],
     in_loop_with_else: bool,
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
-    if items.iter().any(|(_, _, has_cm)| *has_cm) {
+    if items.iter().any(|item| {
+        !matches!(
+            item.kind,
+            sifr_ir::HirWithItemKind::Native {
+                has_context_manager_protocol: false
+            }
+        )
+    }) {
         return None;
     }
 
     let mut block = Vec::new();
-    for (name, value, _) in items {
+    for item in items {
         block.push(RustStmt::Let {
             mutable: false,
-            name: name.clone(),
+            name: item.target.clone(),
             ty: None,
-            value: try_lower_leaf_or_name_expr(value)?,
+            value: try_lower_leaf_or_name_expr(&item.context)?,
         });
     }
 
