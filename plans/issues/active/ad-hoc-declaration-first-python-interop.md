@@ -139,7 +139,7 @@ Implementation progress:
 - [x] M2 environment and trust authority cutover — [PR #2933](https://github.com/sifr-lang/sifr/pull/2933)
 - [x] M3 synchronous declaration core and complete call shapes — [PR #2934](https://github.com/sifr-lang/sifr/pull/2934)
 - [x] M4 recursive conversion and opaque lifecycle — [PR #2935](https://github.com/sifr-lang/sifr/pull/2935)
-- [ ] M5 synchronous Python context managers
+- [x] M5 synchronous Python context managers — [PR #2942](https://github.com/sifr-lang/sifr/pull/2942)
 - [ ] M6 hermetic package-local Python bridges
 - [ ] M7 owned asyncio runtime and async declarations
 - [ ] M8 async context managers
@@ -340,7 +340,8 @@ Implementation waves:
   [PR #2938](https://github.com/sifr-lang/sifr/pull/2938)
 - [x] Closure/outcome codegen and the normative exit decision table —
   [PR #2940](https://github.com/sifr-lang/sifr/pull/2940)
-- [ ] Complete evidence matrices, transaction demo, and milestone closure
+- [x] Complete evidence matrices, transaction demo, and milestone closure —
+  [PR #2942](https://github.com/sifr-lang/sifr/pull/2942)
 
 Tasks:
 
