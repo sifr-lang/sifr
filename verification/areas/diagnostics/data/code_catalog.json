@@ -2465,6 +2465,22 @@
       "suggestion_applicability": "none"
     },
     {
+      "code": "SIFR-PYCTX-0001",
+      "constant": "PYCTX_INVALID_DECLARATION",
+      "docs_link": "docs/errors/SIFR-PYCTX-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lowering/src/lower/python_interop_tests.rs::invalid_python_context_declaration_reports_pyctx_0001",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
       "code": "SIFR-PYRES-0002",
       "constant": "PYRES_UNIMPLEMENTED_DECLARATION",
       "docs_link": "docs/errors/SIFR-PYRES-0002.md",

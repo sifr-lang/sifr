@@ -8,6 +8,10 @@ use sifr_ir::{
 use sifr_python_ast::{AstParamOwnership, Decorator, Expr, ExprCall, Parameters, Stmt};
 use sifr_type_system::Type;
 
+mod context;
+
+pub(in crate::lower) use context::validate_context_class_methods;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(in crate::lower) enum PythonInteropStubBody {
     Bodyless,
@@ -156,6 +160,9 @@ pub(in crate::lower) fn collect_python_method_declarations(
         let declaration = match kind {
             PythonInteropDecoratorKind::Function => parse_sync_method(call, parameters, ctx),
             PythonInteropDecoratorKind::Attribute => parse_attribute_method(call, parameters, ctx),
+            PythonInteropDecoratorKind::ContextEnter | PythonInteropDecoratorKind::ContextExit => {
+                context::parse_context_method(kind, call, parameters, ctx)
+            }
             PythonInteropDecoratorKind::Item => {
                 invalid_shape(ctx, "`@python.item` does not take arguments", span);
                 None
@@ -252,7 +259,10 @@ fn parse_attribute_method(
     })
 }
 
-fn parse_method_target_path(expr: &Expr, ctx: &mut LowerCtx) -> Option<PythonTargetPath> {
+pub(super) fn parse_method_target_path(
+    expr: &Expr,
+    ctx: &mut LowerCtx,
+) -> Option<PythonTargetPath> {
     let segments = decorator_path(expr)?;
     if segments.len() != 2 || segments[0] != "Self" {
         invalid_target(
@@ -291,6 +301,33 @@ pub(in crate::lower) fn collect_python_opaque_declaration(
         result = parse_opaque_class(call, ctx);
     }
     result
+}
+
+/// Collect opaque identity and consuming-method metadata before signature lowering.
+pub(in crate::lower) fn collect_python_opaque_classes(stmts: &[Stmt], ctx: &mut LowerCtx) {
+    for stmt in stmts {
+        let Stmt::ClassDef(class_def) = stmt else {
+            continue;
+        };
+        let Some(declaration) = collect_python_opaque_declaration(&class_def.decorator_list, ctx)
+        else {
+            continue;
+        };
+        ctx.python_opaque_classes
+            .insert(class_def.name.to_string(), declaration);
+        for body_stmt in &class_def.body {
+            let Stmt::FunctionDef(method) = body_stmt else {
+                continue;
+            };
+            let qualified = format!("{}.{}", class_def.name, method.name);
+            if method_consumes_receiver(&method.decorator_list, &method.parameters) {
+                ctx.python_consuming_methods.insert(qualified.clone());
+            }
+            if method_is_context_exit(&method.decorator_list) {
+                ctx.python_context_exit_methods.insert(qualified);
+            }
+        }
+    }
 }
 
 fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInteropDeclaration> {
@@ -333,11 +370,7 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
                         reserved_cleanup_seen = true;
                         None
                     }
-                    [name] if name == "context" => {
-                        reserved_cleanup(ctx, "context", keyword.value.range());
-                        reserved_cleanup_seen = true;
-                        None
-                    }
+                    [name] if name == "context" => Some(PythonCleanupPolicy::Context),
                     [name] if name == "async_context" => {
                         reserved_cleanup(ctx, "async_context", keyword.value.range());
                         reserved_cleanup_seen = true;
@@ -421,6 +454,13 @@ pub(in crate::lower) fn validate_python_interop_signature(
     let Some(declaration) = declarations.first() else {
         return;
     };
+    if matches!(
+        declaration.kind,
+        PythonInteropDecoratorKind::ContextEnter | PythonInteropDecoratorKind::ContextExit
+    ) {
+        context::validate_context_method_signature(declaration, params, return_type, ctx);
+        return;
+    }
     let Type::Result(ok_type, error_type) = return_type.resolve_alias() else {
         unsupported_conversion(
             ctx,
@@ -484,7 +524,7 @@ pub(in crate::lower) fn validate_python_interop_signature(
     }
 }
 
-fn is_direct_type(ty: &Type, allow_option: bool, ctx: &LowerCtx) -> bool {
+pub(super) fn is_direct_type(ty: &Type, allow_option: bool, ctx: &LowerCtx) -> bool {
     match ty.resolve_alias() {
         Type::None | Type::Bool | Type::Int | Type::Float | Type::Str | Type::Bytes => true,
         Type::Class { name, .. } if name == "Object" => true,
@@ -560,7 +600,7 @@ fn parse_sync_function(
     })
 }
 
-fn parameter_metadata(parameters: &Parameters) -> Vec<PythonInteropParameter> {
+pub(super) fn parameter_metadata(parameters: &Parameters) -> Vec<PythonInteropParameter> {
     let mut result = Vec::with_capacity(parameters.len());
     for parameter in parameters.posonlyargs.iter().chain(&parameters.args) {
         result.push(PythonInteropParameter {
@@ -601,7 +641,7 @@ fn parameter_metadata(parameters: &Parameters) -> Vec<PythonInteropParameter> {
     result
 }
 
-fn receiver_is_owned(parameters: &Parameters) -> bool {
+pub(super) fn receiver_is_owned(parameters: &Parameters) -> bool {
     parameters
         .args
         .first()
@@ -617,11 +657,21 @@ pub(in crate::lower) fn method_consumes_receiver(
             let Expr::Call(call) = &decorator.expression else {
                 return false;
             };
-            decorator_path(&call.func).is_some_and(|path| path.as_slice() == ["python"])
-                && call.arguments.args.first().is_some_and(|target| {
-                    decorator_path(target).is_some_and(|path| path.as_slice() == ["Self", "close"])
-                })
+            decorator_path(&call.func).is_some_and(|path| {
+                (path.as_slice() == ["python"]
+                    && call.arguments.args.first().is_some_and(|target| {
+                        decorator_path(target)
+                            .is_some_and(|path| path.as_slice() == ["Self", "close"])
+                    }))
+                    || path.as_slice() == ["python", "context", "exit"]
+            })
         })
+}
+
+pub(in crate::lower) fn method_is_context_exit(decorators: &[Decorator]) -> bool {
+    decorators.iter().any(|decorator| {
+        matches!(&decorator.expression, Expr::Call(call) if decorator_path(&call.func).is_some_and(|path| path.as_slice() == ["python", "context", "exit"]))
+    })
 }
 
 fn parse_target_path(expr: &Expr, ctx: &mut LowerCtx) -> Option<PythonTargetPath> {
@@ -749,7 +799,7 @@ fn invalid_target(ctx: &mut LowerCtx, reason: &str, span: TextRange) {
     );
 }
 
-fn invalid_shape(ctx: &mut LowerCtx, reason: &str, span: TextRange) {
+pub(super) fn invalid_shape(ctx: &mut LowerCtx, reason: &str, span: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::PYCALL_INVALID_SHAPE,
         format!("invalid Python declaration call shape: {reason}"),

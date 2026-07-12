@@ -1,4 +1,33 @@
 # Private _sifr.python native declaration module.
+from enum import Enum
+
+
+class ExitCauseKind(Enum):
+    Normal = 0
+    Return = 1
+    Break = 2
+    Continue = 3
+    OrdinaryError = 4
+    PythonException = 5
+    Timeout = 6
+    Cancellation = 7
+    RuntimeFault = 8
+
+
+class ExitCause(NonSend):
+    kind: ExitCauseKind
+    sifr_type: str
+    message: str
+
+    def __init__(self, kind: ExitCauseKind, sifr_type: str, message: str):
+        self.kind = kind
+        self.sifr_type = sifr_type
+        self.message = message
+
+
+class ExitDecision(Enum):
+    Propagate = 0
+    Suppress = 1
 
 
 @rust.opaque(type=sifr_runtime.python.ForeignObject, send=False, sync=False, clone=none, close=drop)

@@ -49,11 +49,6 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "Reserved for an invalid Python awaitable, cancellation, or loop-ownership declaration.",
         ),
     reserved_code(
-            "SIFR-PYCTX-0001",
-            "PYCTX",
-            "Reserved for an invalid Python context-manager entry, exit, or suppression declaration.",
-        ),
-    reserved_code(
             "SIFR-PYZC-0001",
             "PYZC",
             "Reserved for an invalid advanced-data ownership or hidden-copy declaration.",

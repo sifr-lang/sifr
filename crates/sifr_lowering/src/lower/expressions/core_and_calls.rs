@@ -337,6 +337,15 @@ pub(in crate::lower) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Optio
         );
         return None;
     };
+    if func_name == "ExitCause" && !ctx.is_sysroot_private_declaration() {
+        ctx.error_with_code_at(
+            sifr_diagnostics::DiagnosticCode::PYCTX_INVALID_DECLARATION,
+            "invalid Python context declaration: ExitCause values are compiler-constructed and cannot be created directly"
+                .to_string(),
+            call.range(),
+        );
+        return None;
+    }
     if ctx.explicit_defaultdict_bindings.contains(&func_name)
         && ctx.scope.lookup(&func_name).is_none()
     {

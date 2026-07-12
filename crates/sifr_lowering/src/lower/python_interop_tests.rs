@@ -224,6 +224,144 @@ class Client:
 def make_client() -> Result[Client, PythonError]: ...
 "#;
 
+const CONTEXT_OPAQUE_PREFIX: &str = r#"
+class PythonError(Error):
+    message: str
+
+class ExitCause:
+    pass
+
+class ExitDecision:
+    pass
+
+@python.opaque(type=pkg.Transaction, cleanup=context)
+class Transaction:
+    @python.context.enter(Self.__enter__)
+    def __enter__(self) -> Result[Transaction, PythonError]: ...
+
+    @python.context.exit(Self.__exit__)
+    def __exit__(own self, cause: ExitCause) -> Result[ExitDecision, PythonError]: ...
+
+@python(pkg.Transaction)
+def make_transaction() -> Result[Transaction, PythonError]: ...
+"#;
+
+#[test]
+fn context_opaque_retains_protocol_declarations_and_context_only_obligation() {
+    let module = lower_ok(CONTEXT_OPAQUE_PREFIX);
+    let transaction = module
+        .classes
+        .iter()
+        .find(|class| class.name == "Transaction")
+        .expect("transaction class");
+    let HirClassKind::PythonOpaque(declaration) = &transaction.kind else {
+        panic!("transaction should be Python opaque");
+    };
+    assert_eq!(declaration.cleanup, Some(PythonCleanupPolicy::Context));
+    assert_eq!(
+        transaction.methods[0].python_interop[0].kind,
+        sifr_ir::PythonInteropDecoratorKind::ContextEnter
+    );
+    assert_eq!(
+        transaction.methods[1].python_interop[0].kind,
+        sifr_ir::PythonInteropDecoratorKind::ContextExit
+    );
+}
+
+#[test]
+fn invalid_python_context_declaration_reports_pyctx_0001() {
+    let errors = lower_errors(&CONTEXT_OPAQUE_PREFIX.replace("cause: ExitCause", "cause: int"));
+    assert!(errors
+        .iter()
+        .any(|error| error.code == Some(DiagnosticCode::PYCTX_INVALID_DECLARATION)));
+}
+
+#[test]
+fn context_only_obligation_cannot_transfer_through_return() {
+    let errors = lower_errors(&format!(
+        "{CONTEXT_OPAQUE_PREFIX}\ndef forward() -> Result[Transaction, PythonError]:\n    try:\n        transaction: Transaction = make_transaction()\n        return transaction\n    except PythonError as error:\n        raise error\n"
+    ));
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PYCTX_INVALID_DECLARATION)
+            && error.message.contains("rather than returned or aggregated")
+    }));
+}
+
+#[test]
+fn context_exit_method_cannot_be_called_directly() {
+    let errors = lower_errors(&format!(
+        "{CONTEXT_OPAQUE_PREFIX}\ndef invalid_exit(own transaction: Transaction, cause: ExitCause) -> Result[None, PythonError]:\n    try:\n        _decision: ExitDecision = transaction.__exit__(cause)\n        return None\n    except PythonError as error:\n        raise error\n"
+    ));
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PYCTX_INVALID_DECLARATION)
+            && error.message.contains("cannot be called directly")
+    }));
+}
+
+#[test]
+fn context_enter_rejects_distinct_close_required_opaque_result() {
+    let source = r#"
+class PythonError(Error):
+    message: str
+
+class ExitCause:
+    pass
+
+class ExitDecision:
+    pass
+
+@python.opaque(type=pkg.Session, cleanup=close)
+class Session:
+    @python(Self.close)
+    def close(own self) -> Result[None, PythonError]: ...
+
+@python.opaque(type=pkg.Transaction, cleanup=context)
+class Transaction:
+    @python.context.enter(Self.__enter__)
+    def __enter__(self) -> Result[Session, PythonError]: ...
+
+    @python.context.exit(Self.__exit__)
+    def __exit__(own self, cause: ExitCause) -> Result[ExitDecision, PythonError]: ...
+"#;
+    let errors = lower_errors(source);
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PYCTX_INVALID_DECLARATION)
+            && error.message.contains("distinct opaque `Session`")
+    }));
+}
+
+#[test]
+fn context_enter_rejects_aggregate_hiding_close_required_opaque_result() {
+    let source = r#"
+class PythonError(Error):
+    message: str
+
+class ExitCause:
+    pass
+
+class ExitDecision:
+    pass
+
+@python.opaque(type=pkg.Session, cleanup=close)
+class Session:
+    @python(Self.close)
+    def close(own self) -> Result[None, PythonError]: ...
+
+@python.opaque(type=pkg.Transaction, cleanup=context)
+class Transaction:
+    @python.context.enter(Self.__enter__)
+    def __enter__(self) -> Result[list[Session], PythonError]: ...
+
+    @python.context.exit(Self.__exit__)
+    def __exit__(own self, cause: ExitCause) -> Result[ExitDecision, PythonError]: ...
+"#;
+    let errors = lower_errors(source);
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PYCTX_INVALID_DECLARATION)
+            && error.message.contains("entered aggregates cannot hide")
+    }));
+}
+
 #[test]
 fn close_opaque_obligation_is_discharged_by_consuming_close() {
     lower_ok(&format!(

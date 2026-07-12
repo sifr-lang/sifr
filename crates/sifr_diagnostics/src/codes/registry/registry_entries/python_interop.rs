@@ -227,4 +227,15 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         [arg!("reason")],
         ["reason"]
     ),
+    active_entry!(
+        "SIFR-PYCTX-0001",
+        "PYCTX",
+        "A Python context-manager entry, exit, or entered-value declaration is invalid.",
+        Severity::Error,
+        "crates/sifr_lowering/src/lower/python_interop_tests.rs::invalid_python_context_declaration_reports_pyctx_0001",
+        "invalid Python context declaration: {reason}",
+        "sifr_lowering",
+        [arg!("reason")],
+        ["reason"]
+    ),
 ];

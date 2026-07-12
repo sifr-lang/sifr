@@ -259,6 +259,15 @@ pub(in crate::lower) fn lower_method_call(
     } = object_ty.resolve_alias()
     {
         let qualified = format!("{class_name}.{method_name}");
+        if ctx.python_context_exit_methods.contains(&qualified) {
+            ctx.error_with_code_at(
+                sifr_diagnostics::DiagnosticCode::PYCTX_INVALID_DECLARATION,
+                "invalid Python context declaration: context exit methods are compiler-invoked and cannot be called directly"
+                    .to_string(),
+                call.range(),
+            );
+            return None;
+        }
         if ctx.python_consuming_methods.contains(&qualified) {
             if let HirExpr::Name { name, .. } = &object {
                 ctx.mark_moved_with_flow(name);
