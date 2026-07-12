@@ -320,7 +320,9 @@ Credentialed or service-backed behavior belongs in the external Python interop g
 Compiler diagnostics use stable URLs and structured JSON fields:
 
 - `SIFR-PYENV-0001..0011`: environment selection, probing, interpreter, ABI, import, native-load, and metadata diagnostics.
-- `SIFR-PYTRUST-0001..0004`: Python trust policy and dynamic import diagnostics.
+- `SIFR-PYTRUST-0001`, `0003..0005`: dependency wildcard rejection,
+  stale native trust, dynamic-import annotation, and unauthorized required-root
+  diagnostics. `SIFR-PYTRUST-0002` is retired.
 - `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`, `SIFR-PYZC`, and `SIFR-PYCB`: reserved families for future compiler-emitted diagnostics; current runtime failures in these areas are returned as structured `py.PythonError` values.
 
 Verification lives under `verification/areas/python_interop/`:

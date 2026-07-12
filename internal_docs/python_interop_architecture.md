@@ -138,7 +138,10 @@ The public examples in `docs/python-interop.mdx` are intentionally backed by che
 Active compiler diagnostics:
 
 - `SIFR-PYENV-0001..0011`: malformed config, multiple venvs, missing root env, probe failure, unsupported implementation, prefix mismatch, missing site-packages, missing declared import, native-load failure, free-threaded CPython, and stale project metadata.
-- `SIFR-PYTRUST-0001..0004`: dependency wildcard rejection, allowed-but-untrusted imports, native trust without allow-list, and dynamic import without explicit trust annotation.
+- `SIFR-PYTRUST-0001`, `0003..0005`: dependency requirement wildcard
+  rejection, native trust for a root that is not required, dynamic import
+  without an explicit trust annotation, and a required root not authorized by
+  the root application. `SIFR-PYTRUST-0002` is retired.
 
 Reserved families `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`,
 `SIFR-PYZC`, and `SIFR-PYCB` remain allocated for declaration compiler
