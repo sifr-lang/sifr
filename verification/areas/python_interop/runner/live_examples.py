@@ -286,7 +286,9 @@ def prepare_live_source_package(paths: RunnerPaths) -> Path:
                 "",
                 "[python]",
                 'venv = ".venv"',
-                'allow-imports = ["boto3", "kafka", "psycopg", "redis"]',
+                'pyproject = "pyproject.toml"',
+                'lock = "uv.lock"',
+                'requires-imports = ["boto3", "kafka", "psycopg", "redis"]',
                 "",
                 "[trust]",
                 'python = ["boto3", "kafka", "psycopg", "redis"]',
@@ -304,6 +306,8 @@ def prepare_live_source_package(paths: RunnerPaths) -> Path:
             "run through `uv run --project verification/areas/python_interop --locked ...`"
         )
     venv_link.symlink_to(area_venv, target_is_directory=True)
+    (package_root / "pyproject.toml").symlink_to(paths.area_root / "pyproject.toml")
+    (package_root / "uv.lock").symlink_to(paths.area_root / "uv.lock")
     return package_root
 
 

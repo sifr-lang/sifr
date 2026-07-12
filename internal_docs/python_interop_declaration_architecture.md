@@ -428,9 +428,9 @@ Manifest authority has one model:
 | `[trust].python` | Retained as root-owned authorization to execute required import roots. Dependency packages cannot authorize themselves. |
 | `[trust].python-native` | Retained as separate root-owned native-extension authorization and never inferred from requirements. |
 
-`[python].allow-imports` does not exist in this model. The implementation removes
-it atomically from parsing, docs, manifests, diagnostics, and fixtures rather
-than operating dual authorities. `SIFR-PYTRUST-0002` is retired with its old
+The former Python import allow-list has been removed atomically from parsing,
+docs, manifests, diagnostics, and fixtures, so no dual authorities operate.
+`SIFR-PYTRUST-0002` is retired with its old
 meaning; `SIFR-PYTRUST-0005` covers a required static root not authorized by the
 root application. `SIFR-PYTRUST-0003` diagnoses native trust for a root that is
 not required. Root-only wildcard trust for local control remains, while

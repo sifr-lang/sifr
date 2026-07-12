@@ -15,7 +15,7 @@ pub struct PackagePythonRuntime {
     cpython_version_tuple: Vec<u64>,
     sys_path: Vec<String>,
     site_packages: Vec<String>,
-    allowed_import_roots: Vec<String>,
+    required_import_roots: Vec<String>,
     trusted_import_roots: Vec<String>,
     native_import_roots: Vec<String>,
     trusted_native_roots: Vec<String>,
@@ -28,7 +28,7 @@ impl PackagePythonRuntime {
         request: &sifr_package::PythonEnvironmentProbeRequest,
         probe: &sifr_package::PythonEnvironmentProbe,
         probe_digest: String,
-        allowed_import_roots: Vec<String>,
+        required_import_roots: Vec<String>,
         trusted_import_roots: Vec<String>,
         trusted_native_roots: Vec<String>,
     ) -> Self {
@@ -44,7 +44,7 @@ impl PackagePythonRuntime {
             cpython_version_tuple: probe.cpython_version_tuple.clone(),
             sys_path: probe.sys_path.clone(),
             site_packages: probe.site_packages.clone(),
-            allowed_import_roots,
+            required_import_roots,
             trusted_import_roots,
             native_import_roots: detected_native_import_roots(probe),
             trusted_native_roots,
@@ -66,7 +66,7 @@ impl PackagePythonRuntime {
     pub(super) fn lowering_options(&self) -> LoweringOptions {
         LoweringOptions {
             python_trust_policy: Some(PythonTrustPolicy {
-                allowed_import_roots: self.allowed_import_roots.clone(),
+                required_import_roots: self.required_import_roots.clone(),
                 trusted_import_roots: self.trusted_import_roots.clone(),
             }),
         }
@@ -86,7 +86,7 @@ impl PackagePythonRuntime {
             cpython_version_tuple: vec![3, 13, 1],
             sys_path: vec!["/tmp/sifr-py/lib".to_string()],
             site_packages: vec!["/tmp/sifr-py/site-packages".to_string()],
-            allowed_import_roots: vec!["math".to_string()],
+            required_import_roots: vec!["math".to_string()],
             trusted_import_roots: vec!["math".to_string()],
             native_import_roots: Vec::new(),
             trusted_native_roots: Vec::new(),
@@ -158,7 +158,7 @@ pub(super) fn render_python_runtime_prelude(metadata: &PackagePythonRuntime) -> 
         cpython_version_tuple: vec![{version_tuple}],
         sys_path: vec![{sys_path}],
         site_packages: vec![{site_packages}],
-        allowed_import_roots: vec![{allowed_import_roots}],
+        required_import_roots: vec![{required_import_roots}],
         trusted_import_roots: vec![{trusted_import_roots}],
         native_import_roots: vec![{native_import_roots}],
         trusted_native_roots: vec![{trusted_native_roots}],
@@ -182,7 +182,7 @@ fn __sifr_initialize_python_runtime() -> Result<sifr_runtime::python::PythonRunt
         version_tuple = render_u64_vec(&metadata.cpython_version_tuple),
         sys_path = render_string_vec(&metadata.sys_path),
         site_packages = render_string_vec(&metadata.site_packages),
-        allowed_import_roots = render_string_vec(&metadata.allowed_import_roots),
+        required_import_roots = render_string_vec(&metadata.required_import_roots),
         trusted_import_roots = render_string_vec(&metadata.trusted_import_roots),
         native_import_roots = render_string_vec(&metadata.native_import_roots),
         trusted_native_roots = render_string_vec(&metadata.trusted_native_roots),

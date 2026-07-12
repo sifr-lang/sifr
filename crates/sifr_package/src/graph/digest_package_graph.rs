@@ -52,7 +52,6 @@ struct CanonicalPythonConfig<'a> {
     pyproject: Option<String>,
     lock: Option<String>,
     interpreter: Option<String>,
-    allow_imports: Vec<&'a str>,
     requires_imports: Vec<&'a str>,
 }
 
@@ -186,13 +185,6 @@ impl<'a> From<&'a SifrPackageGraph> for CanonicalGraph<'a> {
                             .interpreter
                             .as_ref()
                             .map(|path| path.display().to_string()),
-                        allow_imports: package
-                            .manifest
-                            .python
-                            .allow_imports
-                            .iter()
-                            .map(String::as_str)
-                            .collect(),
                         requires_imports: package
                             .manifest
                             .python

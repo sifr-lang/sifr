@@ -2427,23 +2427,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_rejects_wildcard_roots",
-      "severity": "Error",
-      "stability": "stable",
-      "suggestion_applicability": "none"
-    },
-    {
-      "code": "SIFR-PYTRUST-0002",
-      "constant": "PYTRUST_UNTRUSTED_IMPORT",
-      "docs_link": "docs/errors/SIFR-PYTRUST-0002.md",
-      "machine_applicable": false,
-      "owner": "compiler/frontend",
-      "renderer_support": [
-        "human",
-        "json",
-        "compact"
-      ],
-      "representative_fixture": "crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_requires_allowed_roots_to_be_trusted",
+      "representative_fixture": "crates/sifr_package/src/python/trust_policy_tests.rs::dependency_python_requirement_wildcard_is_rejected",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2459,7 +2443,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/python/trust_policy_tests.rs::python_trust_requires_native_roots_to_be_allowed",
+      "representative_fixture": "crates/sifr_package/src/python/trust_policy_tests.rs::native_trust_requires_a_canonical_requirement",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2476,6 +2460,22 @@
         "compact"
       ],
       "representative_fixture": "crates/sifr_lowering/src/lower/python_trust_tests.rs::dynamic_python_import_requires_trust_decorator",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PYTRUST-0005",
+      "constant": "PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED",
+      "docs_link": "docs/errors/SIFR-PYTRUST-0005.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_package/src/python/trust_policy_tests.rs::required_python_root_must_be_authorized_by_root",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"

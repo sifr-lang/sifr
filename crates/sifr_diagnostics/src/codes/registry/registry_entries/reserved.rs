@@ -19,6 +19,11 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-PYZC-0000", "PYZC"),
     reserved_family_base("SIFR-PYCB-0000", "PYCB"),
     reserved_family_base("SIFR-PYTRUST-0000", "PYTRUST"),
+    reserved_code(
+        "SIFR-PYTRUST-0002",
+        "PYTRUST",
+        "Retired: import requirements and root authorization now use SIFR-PYTRUST-0005.",
+    ),
     reserved_family_base("SIFR-RUST-CONFIG-0000", "RUST-CONFIG"),
     reserved_family_base("SIFR-RUST-RESOLVE-0000", "RUST-RESOLVE"),
     reserved_family_base("SIFR-RUST-TRUST-0000", "RUST-TRUST"),

@@ -204,7 +204,7 @@ fn package_python_runtime(
         &request,
         &probe,
         digest,
-        resolved.allowed_imports,
+        resolved.required_imports,
         resolved.trusted_imports,
         resolved.trusted_native_imports,
     )))

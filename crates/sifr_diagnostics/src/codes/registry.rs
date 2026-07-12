@@ -73,7 +73,8 @@ impl DiagnosticCode {
     pub const PYENV_FREE_THREADED_UNSUPPORTED: Self = Self::new("SIFR-PYENV-0010", Severity::Error);
     pub const PYENV_LOCK_OR_PROJECT_STALE: Self = Self::new("SIFR-PYENV-0011", Severity::Error);
     pub const PYTRUST_WILDCARD_REJECTED: Self = Self::new("SIFR-PYTRUST-0001", Severity::Error);
-    pub const PYTRUST_UNTRUSTED_IMPORT: Self = Self::new("SIFR-PYTRUST-0002", Severity::Error);
+    pub const PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED: Self =
+        Self::new("SIFR-PYTRUST-0005", Severity::Error);
     pub const PYTRUST_UNTRUSTED_NATIVE_IMPORT: Self =
         Self::new("SIFR-PYTRUST-0003", Severity::Error);
     pub const PYTRUST_DYNAMIC_IMPORT_REQUIRES_TRUST: Self =
@@ -712,7 +713,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PYENV_FREE_THREADED_UNSUPPORTED,
     DiagnosticCode::PYENV_LOCK_OR_PROJECT_STALE,
     DiagnosticCode::PYTRUST_WILDCARD_REJECTED,
-    DiagnosticCode::PYTRUST_UNTRUSTED_IMPORT,
+    DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED,
     DiagnosticCode::PYTRUST_UNTRUSTED_NATIVE_IMPORT,
     DiagnosticCode::PYTRUST_DYNAMIC_IMPORT_REQUIRES_TRUST,
     DiagnosticCode::RUST_CONFIG_MALFORMED_DECORATOR,

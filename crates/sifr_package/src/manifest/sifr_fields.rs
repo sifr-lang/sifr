@@ -115,6 +115,14 @@ pub(super) fn parse_python_config(
     manifest_path: &Path,
     table: &toml::Table,
 ) -> Result<PythonConfig, PackageDiagnostic> {
+    if table.contains_key("allow-imports") {
+        return Err(PackageDiagnostic::python_environment_config(
+            cargo_package_id,
+            manifest_path,
+            "python.allow-imports",
+            "`[python].allow-imports` was removed; publish requirements with `[python].requires-imports` and authorize them from the root `[trust].python` table",
+        ));
+    }
     Ok(PythonConfig {
         venv: optional_relative_path(cargo_package_id, manifest_path, table, "python.venv")?,
         pyproject: optional_relative_path(
@@ -129,12 +137,6 @@ pub(super) fn parse_python_config(
             manifest_path,
             table,
             "python.interpreter",
-        )?,
-        allow_imports: optional_import_root_list(
-            cargo_package_id,
-            manifest_path,
-            table,
-            "python.allow-imports",
         )?,
         requires_imports: optional_import_root_list(
             cargo_package_id,

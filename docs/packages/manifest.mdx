@@ -178,17 +178,15 @@ Embedded Python interop is configured in `sifr.toml`. The root application selec
 Root application example:
 
 ```toml
-[python]
-venv = ".venv"
-pyproject = "pyproject.toml"
-lock = "uv.lock"
-interpreter = ".venv/bin/python"
-allow-imports = ["pandas", "pyarrow", "torch"]
-
 [trust]
 python = ["pandas", "pyarrow", "torch"]
 python-native = ["numpy", "pyarrow", "torch"]
 ```
+
+Normal uv projects need no `[python]` path configuration: Sifr discovers the
+nearest `pyproject.toml` plus `uv.lock`, `.venv`, and its interpreter. The root
+application may set `venv`, `pyproject`, `lock`, or `interpreter` only for a
+non-standard layout.
 
 Library package example:
 
@@ -197,7 +195,12 @@ Library package example:
 requires-imports = ["polars"]
 ```
 
-Sifr verifies the selected interpreter before generated Python-enabled binaries run. It rejects missing root selection, multiple selected virtual environments, non-CPython interpreters, free-threaded CPython, missing declared imports, failed trusted native imports, and stale configured project metadata. Sifr never runs `uv sync` automatically.
+`requires-imports` is reserved for raw/dynamic imports that static declarations
+and bridge inventories cannot derive. Requirements from every package are
+deduplicated with provenance; only the root application may authorize them via
+`[trust]`. Sifr verifies `uv lock --check --offline` and the selected interpreter
+before generated Python-enabled binaries run. It never runs `uv sync` or mutates
+the environment.
 
 See [Embedded Python Interop](/python-interop) for runtime, blocking, callback, resource, and zero-copy semantics.
 

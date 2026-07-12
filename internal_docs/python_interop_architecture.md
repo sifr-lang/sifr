@@ -11,21 +11,33 @@ syntax or behavior.
 
 Python interop is a separate lane from Sifr's Rust-backed packages and raw C ABI interop. The final root application owns one uv-created CPython virtual environment. Sifr verifies and consumes that environment; it never installs packages, runs `uv sync`, or searches host-global Python as a fallback.
 
-Library packages may declare `[python].requires-imports`, but only the root application may select `[python].venv`, `[python].interpreter`, `[python].pyproject`, or `[python].lock`.
+Library packages may declare `[python].requires-imports` for underivable
+raw/dynamic imports, but only the root application may override
+`[python].venv`, `[python].interpreter`, `[python].pyproject`, or `[python].lock`.
+Normal uv layout is discovered from the nearest ancestor containing both
+`pyproject.toml` and `uv.lock`, with `.venv` and its platform interpreter.
 
 ## Environment Probe
 
 The package layer resolves the package graph, validates Python trust policy,
 and builds a `PythonEnvironmentProbeRequest` containing:
 
-- root-selected venv and interpreter;
-- declared Python imports from root allow-list and dependency requirements;
+- discovered or explicitly overridden venv and interpreter;
+- canonical required Python roots with every manual or derived contribution;
 - trusted native Python imports;
-- configured `pyproject.toml` and `uv.lock` paths.
+- discovered or explicitly overridden `pyproject.toml` and `uv.lock` paths.
 
-The selected interpreter is probed before codegen/build. Probe validation rejects non-CPython, free-threaded CPython, prefixes outside the selected venv, missing site-packages, missing declared imports, failed trusted native imports, and missing/stale configured metadata.
+Before codegen/build, Sifr runs read-only `uv lock --check --offline` validation
+and probes the selected interpreter. Validation rejects non-CPython,
+free-threaded CPython, prefixes outside the selected venv, missing
+site-packages, missing required imports, failed trusted native imports, and
+missing or stale project metadata. Sifr never synchronizes or mutates the
+environment.
 
-Probe metadata participates in generated artifact cache keys: interpreter path, CPython version tuple, SOABI, extension suffixes, pointer width, platform, `libpython` when available, project/lock digests, declared imports, and trust config.
+Probe metadata participates in generated artifact cache keys: interpreter path,
+CPython version tuple, SOABI, extension suffixes, pointer width, platform,
+`libpython` when available, project/lock digests, canonical required imports,
+and root-owned trust config.
 
 ## Runtime Lifecycle
 

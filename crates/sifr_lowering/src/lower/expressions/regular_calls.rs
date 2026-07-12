@@ -19,19 +19,19 @@ pub(super) fn lower_regular_call(
                 Expr::StringLiteral(literal) => {
                     let import_name = literal.value.to_str();
                     let root = import_name.split('.').next().unwrap_or_default();
-                    let allowed_roots = ctx
+                    let required_roots = ctx
                         .python_trust_policy
                         .as_ref()
-                        .map_or(&[][..], |policy| policy.allowed_import_roots.as_slice());
+                        .map_or(&[][..], |policy| policy.required_import_roots.as_slice());
                     let trusted_roots = ctx
                         .python_trust_policy
                         .as_ref()
                         .map_or(&[][..], |policy| policy.trusted_import_roots.as_slice());
-                    if !python_root_allowed(allowed_roots, root) {
+                    if !python_root_allowed(required_roots, root) {
                         ctx.error_with_code_at(
-                            DiagnosticCode::PYTRUST_UNTRUSTED_IMPORT,
+                            DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED,
                             format!(
-                                "Python import root '{root}' is not listed in [python].allow-imports"
+                                "Python import root '{root}' is not in the canonical requirement set"
                             ),
                             arg.range(),
                         );
@@ -39,8 +39,8 @@ pub(super) fn lower_regular_call(
                     }
                     if !python_root_allowed(trusted_roots, root) {
                         ctx.error_with_code_at(
-                            DiagnosticCode::PYTRUST_UNTRUSTED_IMPORT,
-                            format!("Python import root '{root}' is not listed in [trust].python"),
+                            DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED,
+                            format!("required Python import root '{root}' is not authorized by root [trust].python"),
                             arg.range(),
                         );
                         return None;

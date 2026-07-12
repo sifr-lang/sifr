@@ -1,13 +1,18 @@
 use crate::diag::PackageDiagnostic;
 use crate::graph::derive::{SifrPackageGraph, SifrPackageId};
+use crate::python::requirements::{
+    canonical_python_requirements, CanonicalPythonRequirements, PythonRequirementContribution,
+};
+use crate::python::selection::{
+    absolutize, non_root_environment_configuration, root_environment_selection, selects_environment,
+};
 use crate::python::trust_policy::{
-    allowed_python_imports, declared_python_imports, native_python_imports, trusted_python_imports,
-    trusted_python_native_policy_imports, validate_python_trust_policy,
+    native_probe_imports, root_python_native_trust, root_python_trust, validate_python_trust_policy,
 };
 use serde::{Deserialize, Serialize};
 use sifr_diagnostics::DiagnosticCode;
 use std::collections::BTreeSet;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ResolvedPythonEnvironment {
@@ -16,9 +21,10 @@ pub struct ResolvedPythonEnvironment {
     pub interpreter: PathBuf,
     pub pyproject: Option<PathBuf>,
     pub lock: Option<PathBuf>,
+    pub requirements: CanonicalPythonRequirements,
+    pub required_imports: Vec<String>,
     pub declared_imports: Vec<String>,
     pub native_imports: Vec<String>,
-    pub allowed_imports: Vec<String>,
     pub trusted_imports: Vec<String>,
     pub trusted_native_imports: Vec<String>,
 }
@@ -68,86 +74,86 @@ pub fn resolve_python_environment(
     graph: &SifrPackageGraph,
     root_package_id: &SifrPackageId,
 ) -> Result<Option<ResolvedPythonEnvironment>, Vec<PackageDiagnostic>> {
-    let selections = python_environment_selections(graph);
-    let declared_imports = declared_python_imports(graph);
-    let native_imports = native_python_imports(graph);
-    let allowed_imports = allowed_python_imports(graph);
-    let trusted_imports = trusted_python_imports(graph);
-    let trusted_native_imports = trusted_python_native_policy_imports(graph);
-    let requires_python = graph.packages.values().any(|package| {
-        !package.manifest.python.requires_imports.is_empty()
-            || !package.manifest.python.allow_imports.is_empty()
-            || !package.manifest.trust.python.is_empty()
-            || !package.manifest.trust.python_native.is_empty()
-    });
+    resolve_python_environment_with_requirements(graph, root_package_id, &[])
+}
 
-    if selections.is_empty() {
-        if requires_python || !declared_imports.is_empty() || !native_imports.is_empty() {
-            return Err(vec![PackageDiagnostic::python_environment_graph(
-                DiagnosticCode::PYENV_MISSING_SELECTION,
-                "Python imports are required but no root [python].venv is selected",
-                None,
-                "select one uv-created virtual environment in the root application [python] table; Sifr will not run uv automatically",
-            )]);
-        }
-        return Ok(None);
-    }
-
-    let distinct_venvs = selections
+pub fn resolve_python_environment_with_requirements(
+    graph: &SifrPackageGraph,
+    root_package_id: &SifrPackageId,
+    derived: &[PythonRequirementContribution],
+) -> Result<Option<ResolvedPythonEnvironment>, Vec<PackageDiagnostic>> {
+    let requirements = canonical_python_requirements(graph, derived);
+    let required_imports = requirements.import_roots();
+    let declared_imports = required_imports
         .iter()
-        .map(|selection| selection.venv_root.clone())
+        .filter(|root| root.as_str() != "*")
+        .cloned()
+        .collect::<Vec<_>>();
+    let trusted_imports = root_python_trust(graph, root_package_id);
+    let trusted_native_imports = root_python_native_trust(graph, root_package_id);
+    let explicit_venvs = graph
+        .packages
+        .values()
+        .filter_map(|package| {
+            package
+                .manifest
+                .python
+                .venv
+                .as_ref()
+                .map(|path| absolutize(&package.package_root, path))
+        })
         .collect::<BTreeSet<_>>();
-    if distinct_venvs.len() > 1 {
-        let venvs = distinct_venvs
-            .iter()
-            .map(|path| path.display().to_string())
-            .collect::<Vec<_>>()
-            .join(", ");
+    if explicit_venvs.len() > 1 {
         return Err(vec![PackageDiagnostic::python_environment_graph(
             DiagnosticCode::PYENV_MULTIPLE_SELECTIONS,
-            format!("multiple Python environments are selected: {venvs}"),
+            format!(
+                "multiple Python environments are selected: {}",
+                explicit_venvs
+                    .iter()
+                    .map(|path| path.display().to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
             None,
-            "select exactly one Python virtual environment for the final process",
+            "select one root-owned Python environment for the final process",
         )]);
     }
-
-    let non_root_selections = selections
-        .iter()
-        .filter(|selection| &selection.package_id != root_package_id)
-        .map(|selection| {
-            PackageDiagnostic::python_environment_config(
-                &selection.cargo_package_id,
-                &selection.manifest_path,
-                "python.venv",
-                "only the root application package may select a Python virtual environment",
-            )
-        })
-        .collect::<Vec<_>>();
+    let non_root_selections = non_root_environment_configuration(graph, root_package_id);
     if !non_root_selections.is_empty() {
         return Err(non_root_selections);
+    }
+    let root_package = graph.packages.get(root_package_id).ok_or_else(|| {
+        vec![PackageDiagnostic::cargo_metadata_parse(
+            "root Python package is missing from the package graph",
+        )]
+    })?;
+    let config = &root_package.manifest.python;
+    let requires_python = !required_imports.is_empty()
+        || !trusted_imports.is_empty()
+        || !trusted_native_imports.is_empty()
+        || selects_environment(config);
+    if !requires_python {
+        return Ok(None);
     }
     validate_python_trust_policy(
         graph,
         root_package_id,
-        &declared_imports,
-        &native_imports,
+        &requirements,
         &trusted_imports,
+        &trusted_native_imports,
     )?;
-
-    let selected = selections.into_iter().next().ok_or_else(|| {
-        vec![PackageDiagnostic::cargo_metadata_parse(
-            "missing Python selection",
-        )]
-    })?;
+    let selected = root_environment_selection(root_package_id, root_package)?;
+    let native_imports = native_probe_imports(&required_imports, &trusted_native_imports);
     Ok(Some(ResolvedPythonEnvironment {
         selected_by: selected.package_id,
         venv_root: selected.venv_root,
         interpreter: selected.interpreter,
         pyproject: selected.pyproject,
         lock: selected.lock,
+        requirements,
+        required_imports,
         declared_imports: declared_imports.clone(),
         native_imports,
-        allowed_imports,
         trusted_imports,
         trusted_native_imports,
     }))
@@ -156,7 +162,9 @@ pub fn resolve_python_environment(
 pub fn probe_python_environment(
     request: &PythonEnvironmentProbeRequest,
 ) -> Result<PythonEnvironmentProbe, PackageDiagnostic> {
+    crate::cargo::python_probe::validate_python_interpreter_exists(request)?;
     validate_configured_digest_inputs(request)?;
+    validate_uv_lock_consistency(request)?;
     let stdout = crate::cargo::python_probe::run_python_probe_command(
         request,
         json_array(request, &request.declared_imports)?,
@@ -187,47 +195,6 @@ impl From<&ResolvedPythonEnvironment> for PythonEnvironmentProbeRequest {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-struct PythonEnvironmentSelection {
-    package_id: SifrPackageId,
-    cargo_package_id: crate::cargo::metadata::CargoPackageId,
-    manifest_path: PathBuf,
-    venv_root: PathBuf,
-    interpreter: PathBuf,
-    pyproject: Option<PathBuf>,
-    lock: Option<PathBuf>,
-}
-
-fn python_environment_selections(graph: &SifrPackageGraph) -> Vec<PythonEnvironmentSelection> {
-    graph
-        .packages
-        .values()
-        .filter_map(|package| {
-            let config = &package.manifest.python;
-            let venv = config.venv.as_ref()?;
-            let venv_root = absolutize(&package.package_root, venv);
-            Some(PythonEnvironmentSelection {
-                package_id: package.package_id.clone(),
-                cargo_package_id: package.cargo_package_id.clone(),
-                manifest_path: package.sifr_manifest.clone(),
-                interpreter: config.interpreter.as_ref().map_or_else(
-                    || default_interpreter(&venv_root),
-                    |path| absolutize(&package.package_root, path),
-                ),
-                pyproject: config
-                    .pyproject
-                    .as_ref()
-                    .map(|path| absolutize(&package.package_root, path)),
-                lock: config
-                    .lock
-                    .as_ref()
-                    .map(|path| absolutize(&package.package_root, path)),
-                venv_root,
-            })
-        })
-        .collect()
-}
-
 fn validate_configured_digest_inputs(
     request: &PythonEnvironmentProbeRequest,
 ) -> Result<(), PackageDiagnostic> {
@@ -243,6 +210,36 @@ fn validate_configured_digest_inputs(
         }
     }
     Ok(())
+}
+
+fn validate_uv_lock_consistency(
+    request: &PythonEnvironmentProbeRequest,
+) -> Result<(), PackageDiagnostic> {
+    let (Some(pyproject), Some(lock)) = (&request.pyproject, &request.lock) else {
+        return Err(stale_metadata_error(
+            request,
+            "both pyproject.toml and uv.lock are required for a uv-managed Python environment",
+        ));
+    };
+    let Some(project_root) = pyproject.parent() else {
+        return Err(stale_metadata_error(
+            request,
+            "configured pyproject.toml has no project directory",
+        ));
+    };
+    if pyproject != &project_root.join("pyproject.toml") {
+        return Err(stale_metadata_error(
+            request,
+            "configured Python project must be a uv-compatible pyproject.toml",
+        ));
+    }
+    if lock != &project_root.join("uv.lock") {
+        return Err(stale_metadata_error(
+            request,
+            "configured uv.lock must be the uv project lock beside pyproject.toml",
+        ));
+    }
+    crate::cargo::python_probe::run_uv_lock_check(request, project_root)
 }
 
 fn stale_metadata_error(
@@ -272,22 +269,6 @@ fn probe_error(
     )
 }
 
-fn absolutize(root: &Path, path: &Path) -> PathBuf {
-    if path.is_absolute() {
-        path.to_path_buf()
-    } else {
-        root.join(path)
-    }
-}
-
-fn default_interpreter(venv_root: &Path) -> PathBuf {
-    if cfg!(windows) {
-        venv_root.join("Scripts").join("python.exe")
-    } else {
-        venv_root.join("bin").join("python")
-    }
-}
-
 fn json_array(
     request: &PythonEnvironmentProbeRequest,
     values: &[String],
@@ -300,4 +281,53 @@ fn json_array(
             "report this as a Sifr probe bug; import roots should be serializable strings",
         )
     })
+}
+
+#[cfg(test)]
+mod environment_tests {
+    use super::*;
+    use std::fs;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn uv_lock_check_accepts_current_lock_and_rejects_stale_project() {
+        let root = temp_root("uv-lock-check");
+        fs::create_dir_all(&root).expect("create project");
+        let pyproject = root.join("pyproject.toml");
+        let lock = root.join("uv.lock");
+        fs::write(&pyproject, minimal_pyproject(">=3.13")).expect("write pyproject");
+        let lock_status = crate::cargo::python_probe::generate_uv_lock_for_test(&root);
+        assert!(lock_status.success(), "fixture lock should generate");
+        let request = PythonEnvironmentProbeRequest {
+            venv_root: root.join(".venv"),
+            interpreter: root.join(".venv/bin/python"),
+            pyproject: Some(pyproject.clone()),
+            lock: Some(lock),
+            declared_imports: Vec::new(),
+            native_imports: Vec::new(),
+        };
+        validate_uv_lock_consistency(&request).expect("current uv lock should pass");
+
+        fs::write(&pyproject, minimal_pyproject(">=3.12")).expect("mutate pyproject");
+        let error = validate_uv_lock_consistency(&request).expect_err("stale lock must fail");
+        assert_eq!(error.code, DiagnosticCode::PYENV_LOCK_OR_PROJECT_STALE);
+        fs::remove_dir_all(&root).expect("remove uv fixture");
+    }
+
+    fn minimal_pyproject(requires_python: &str) -> String {
+        format!(
+            "[project]\nname = \"sifr-uv-fixture\"\nversion = \"0.1.0\"\nrequires-python = \"{requires_python}\"\ndependencies = []\n"
+        )
+    }
+
+    fn temp_root(label: &str) -> PathBuf {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("clock after epoch")
+            .as_nanos();
+        std::env::temp_dir().join(format!(
+            "sifr-python-{label}-{}-{nonce}",
+            std::process::id()
+        ))
+    }
 }

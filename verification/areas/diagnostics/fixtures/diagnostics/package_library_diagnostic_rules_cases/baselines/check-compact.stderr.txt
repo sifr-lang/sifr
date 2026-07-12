@@ -20,5 +20,5 @@ E SIFR-PYENV-0009 <unknown> trusted native Python import root failed to load: pa
 E SIFR-PYENV-0010 <unknown> free-threaded CPython is not supported
 E SIFR-PYENV-0011 <unknown> Python environment metadata is stale: pyproject.toml digest is missing
 E SIFR-PYTRUST-0001 <unknown> Python wildcard import root is rejected
-E SIFR-PYTRUST-0002 <unknown> Python import root is allowed but not trusted: numpy
-E SIFR-PYTRUST-0003 <unknown> native Python import root is trusted without an allow-imports entry: pandas
+E SIFR-PYTRUST-0005 <unknown> required Python import root is not authorized by the root application: numpy
+E SIFR-PYTRUST-0003 <unknown> native Python import root is trusted but not required: pandas
