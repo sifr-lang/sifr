@@ -1,4 +1,4 @@
-use ruff_text_size::Ranged;
+use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::StmtReturn;
 use sifr_type_system::{FunctionType, OwnershipKind, Type};
@@ -64,10 +64,6 @@ pub(in crate::lower) fn lower_return(
             if ctx.borrowed_params.contains(name.as_str()) && ty.ownership() == OwnershipKind::Move
             {
                 ownership_diagnostics::borrowed_parameter_return_escape(ctx, name, val.range());
-            } else if ty.ownership() == OwnershipKind::Move
-                && ctx.live_must_use_bindings.contains_key(name)
-            {
-                ctx.mark_moved_with_flow(name);
             }
         }
         if !ctx.is_stdlib_lowering() {
@@ -75,7 +71,7 @@ pub(in crate::lower) fn lower_return(
                 ownership_diagnostics::sync_guard_return_escape(ctx, label, val.range());
             }
         }
-        transfer_return_ownership(&expr, ctx);
+        transfer_return_ownership(&expr, val.range(), ctx);
 
         if let Type::Result(ref ok_ty, _) = *func_type.return_type {
             if expr_ty.is_assignable_to(ok_ty) && !matches!(expr_ty, Type::Result(_, _)) {
@@ -127,47 +123,62 @@ pub(in crate::lower) fn lower_return(
     HirStmt::Return { value }
 }
 
-fn transfer_return_ownership(expr: &HirExpr, ctx: &mut LowerCtx) {
+fn transfer_return_ownership(expr: &HirExpr, range: TextRange, ctx: &mut LowerCtx) {
+    use super::must_use_obligations::MustUseObligationKind;
+
     match expr {
         HirExpr::Name { name, ty }
             if ty.ownership() == OwnershipKind::Move
                 && ctx.live_must_use_bindings.contains_key(name) =>
         {
-            ctx.mark_moved_with_flow(name);
+            let Some(obligation) = ctx.live_must_use_bindings.get(name).cloned() else {
+                return;
+            };
+            if obligation.kind == MustUseObligationKind::CloseLike {
+                ctx.mark_moved_with_flow(name);
+            } else {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYCTX_INVALID_DECLARATION,
+                    format!(
+                        "invalid Python context declaration: binding '{name}' owns {obligation} and must be consumed by its dedicated context statement rather than returned or aggregated"
+                    ),
+                    range,
+                );
+            }
         }
         HirExpr::ListLiteral { elements, .. }
         | HirExpr::SetLiteral { elements, .. }
         | HirExpr::TupleLiteral { elements, .. } => {
             for element in elements {
-                transfer_return_ownership(element, ctx);
+                transfer_return_ownership(element, range, ctx);
             }
         }
         HirExpr::DictLiteral { keys, values, .. } => {
             for element in keys.iter().chain(values) {
-                transfer_return_ownership(element, ctx);
+                transfer_return_ownership(element, range, ctx);
             }
         }
         HirExpr::ConstructorCall { args, .. } => {
             for argument in args {
-                transfer_return_ownership(argument, ctx);
+                transfer_return_ownership(argument, range, ctx);
             }
         }
         HirExpr::IteratorCall { args, .. } => {
             for argument in args {
-                transfer_return_ownership(argument, ctx);
+                transfer_return_ownership(argument, range, ctx);
             }
         }
-        HirExpr::OkWrap { value, .. } => transfer_return_ownership(value, ctx),
+        HirExpr::OkWrap { value, .. } => transfer_return_ownership(value, range, ctx),
         HirExpr::QuestionMark { expr, .. } | HirExpr::ErrWrap { value: expr, .. } => {
-            transfer_return_ownership(expr, ctx);
+            transfer_return_ownership(expr, range, ctx);
         }
         HirExpr::IfExpr {
             then_expr,
             else_expr,
             ..
         } => {
-            transfer_return_ownership(then_expr, ctx);
-            transfer_return_ownership(else_expr, ctx);
+            transfer_return_ownership(then_expr, range, ctx);
+            transfer_return_ownership(else_expr, range, ctx);
         }
         HirExpr::ListComp {
             expr, generators, ..
@@ -175,11 +186,11 @@ fn transfer_return_ownership(expr: &HirExpr, ctx: &mut LowerCtx) {
         | HirExpr::SetComp {
             expr, generators, ..
         } => {
-            transfer_return_ownership(expr, ctx);
+            transfer_return_ownership(expr, range, ctx);
             for (_, iter, filter) in generators {
-                transfer_return_ownership(iter, ctx);
+                transfer_return_ownership(iter, range, ctx);
                 if let Some(filter) = filter {
-                    transfer_return_ownership(filter, ctx);
+                    transfer_return_ownership(filter, range, ctx);
                 }
             }
         }
@@ -189,22 +200,22 @@ fn transfer_return_ownership(expr: &HirExpr, ctx: &mut LowerCtx) {
             generators,
             ..
         } => {
-            transfer_return_ownership(key_expr, ctx);
-            transfer_return_ownership(val_expr, ctx);
+            transfer_return_ownership(key_expr, range, ctx);
+            transfer_return_ownership(val_expr, range, ctx);
             for (_, iter, filter) in generators {
-                transfer_return_ownership(iter, ctx);
+                transfer_return_ownership(iter, range, ctx);
                 if let Some(filter) = filter {
-                    transfer_return_ownership(filter, ctx);
+                    transfer_return_ownership(filter, range, ctx);
                 }
             }
         }
         HirExpr::GeneratorExpr {
             expr, iter, filter, ..
         } => {
-            transfer_return_ownership(expr, ctx);
-            transfer_return_ownership(iter, ctx);
+            transfer_return_ownership(expr, range, ctx);
+            transfer_return_ownership(iter, range, ctx);
             if let Some(filter) = filter {
-                transfer_return_ownership(filter, ctx);
+                transfer_return_ownership(filter, range, ctx);
             }
         }
         _ => {}

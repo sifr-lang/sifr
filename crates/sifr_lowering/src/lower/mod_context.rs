@@ -14,7 +14,7 @@ use ruff_text_size::TextRange;
 use sequence_guards::SequenceGuard;
 use sequence_pointers::SequencePointerFact;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
-use sifr_ir::{CompilerIntrinsicId, FlowEffect, LoweringResult};
+use sifr_ir::{CompilerIntrinsicId, FlowEffect, LoweringResult, PythonCleanupPolicy};
 use sifr_python_ast::Stmt;
 use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -37,9 +37,12 @@ pub(in crate::lower) struct LowerCtx {
     /// Class name -> declaration metadata for sealed Python-backed identities.
     pub(in crate::lower) python_opaque_classes: HashMap<String, sifr_ir::PythonInteropDeclaration>,
     /// General affine must-use obligations keyed by their current owning binding.
-    pub(in crate::lower) live_must_use_bindings: HashMap<String, String>,
+    pub(in crate::lower) live_must_use_bindings:
+        HashMap<String, super::must_use_obligations::MustUseObligation>,
     /// Qualified opaque methods whose source receiver is declared `own self`.
     pub(in crate::lower) python_consuming_methods: HashSet<String>,
+    /// Qualified context exits callable only from dedicated Python-with lowering.
+    pub(in crate::lower) python_context_exit_methods: HashSet<String>,
     /// Current scope for name resolution
     pub(in crate::lower) scope: Scope,
     /// First non-Never child error type observed for each in-scope `TaskGroup` binding.
@@ -150,6 +153,7 @@ impl LowerCtx {
             python_opaque_classes: HashMap::new(),
             live_must_use_bindings: HashMap::new(),
             python_consuming_methods: HashSet::new(),
+            python_context_exit_methods: HashSet::new(),
             scope: Scope::new(),
             task_group_error_types: HashMap::new(),
             task_handle_group_owners: HashMap::new(),
@@ -213,14 +217,30 @@ impl LowerCtx {
         self.source_origin.is_sysroot_source()
     }
 
-    pub(in crate::lower) fn must_use_obligation_for_type(&self, ty: &Type) -> Option<String> {
+    pub(in crate::lower) fn must_use_obligation_for_type(
+        &self,
+        ty: &Type,
+    ) -> Option<super::must_use_obligations::MustUseObligation> {
+        use super::must_use_obligations::{MustUseObligation, MustUseObligationKind};
         match ty.resolve_alias() {
             Type::Class { name, .. } => self
                 .python_opaque_classes
                 .get(name)
                 .and_then(|declaration| declaration.cleanup)
-                .filter(|cleanup| *cleanup != sifr_ir::PythonCleanupPolicy::Drop)
-                .map(|cleanup| format!("Python opaque {name} ({cleanup:?})")),
+                .filter(|cleanup| *cleanup != PythonCleanupPolicy::Drop)
+                .map(|cleanup| MustUseObligation {
+                    kind: match cleanup {
+                        PythonCleanupPolicy::Context => MustUseObligationKind::ContextOnly,
+                        PythonCleanupPolicy::AsyncContext => {
+                            MustUseObligationKind::AsyncContextOnly
+                        }
+                        PythonCleanupPolicy::Close | PythonCleanupPolicy::AsyncClose => {
+                            MustUseObligationKind::CloseLike
+                        }
+                        PythonCleanupPolicy::Drop => unreachable!("drop was filtered above"),
+                    },
+                    label: format!("Python opaque {name} ({cleanup:?})"),
+                }),
             Type::List(item) => self.must_use_obligation_for_type(item),
             Type::Tuple(items) | Type::Union(items) => items
                 .iter()

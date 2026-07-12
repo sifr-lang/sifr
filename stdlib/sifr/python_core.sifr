@@ -3,6 +3,9 @@
 from typing import Callable
 
 from _sifr.python import (
+    ExitCause,
+    ExitCauseKind,
+    ExitDecision,
     Object,
     PythonError,
     ResourceIdentity,

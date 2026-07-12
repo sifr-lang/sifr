@@ -1572,6 +1572,16 @@
     },
     {
       "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
+      "code": "SIFR-PYCTX-0001",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-PYRES-0002",
       "deferral": null,
       "multi_error_recovery_fixture": null,

@@ -1,4 +1,4 @@
-16 errors, 0 warnings, 0 notes
+17 errors, 0 warnings, 0 notes
 E SIFR-BUILD-0002 <unknown> failed to materialize build file <TMP>/sifr-build/main.rs
 E SIFR-BUILD-0003 <unknown> failed to create temporary build workspace <TMP>/sifr-build
 E SIFR-BUILD-0004 <unknown> failed to generate Cargo manifest at <TMP>/sifr-build/Cargo.toml
@@ -13,5 +13,6 @@ E SIFR-WORKSPACE-0104 <unknown> workspace import cycle detected: main -> helper 
 E SIFR-PYIMP-0001 <unknown> invalid Python declaration target: synthetic invalid target
 E SIFR-PYCALL-0001 <unknown> invalid Python declaration call shape: synthetic incompatible call shape
 E SIFR-PYCONV-0001 <unknown> unsupported Python declaration conversion type: synthetic unsupported type
+E SIFR-PYCTX-0001 <unknown> invalid Python context declaration: synthetic invalid context protocol
 E SIFR-PYRES-0002 <unknown> Python declaration lowering is not active yet: synthetic future decorator
 E SIFR-PYTRUST-0004 <unknown> dynamic Python import requires @trust_python_dynamic

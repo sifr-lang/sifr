@@ -7,7 +7,8 @@ use super::{
 };
 use crate::lower::python_interop::{
     classify_python_interop_stub_body, collect_python_method_declarations,
-    has_python_interop_decorator_syntax, validate_python_interop_signature,
+    has_python_interop_decorator_syntax, validate_context_class_methods,
+    validate_python_interop_signature,
 };
 use crate::lower::rust_interop::{
     classify_rust_interop_stub_body, collect_rust_interop_declarations,
@@ -602,6 +603,7 @@ pub(in crate::lower) fn lower_class(
         .python_opaque_classes
         .get(&class_name)
         .and_then(|declaration| declaration.cleanup);
+    validate_context_class_methods(&class_name, &hir_methods, cleanup, ctx, class_def.range);
     if cleanup == Some(sifr_ir::PythonCleanupPolicy::Close) && semantic_close_methods != 1 {
         ctx.error_with_code_at(
             sifr_diagnostics::DiagnosticCode::PYCALL_INVALID_SHAPE,
@@ -609,14 +611,27 @@ pub(in crate::lower) fn lower_class(
             class_def.range,
         );
     }
-    if cleanup != Some(sifr_ir::PythonCleanupPolicy::Close)
-        && hir_methods.iter().any(|method| {
-            method
-                .python_interop
-                .first()
-                .is_some_and(|declaration| declaration.consumes_receiver)
+    let has_unmatched_consuming_method = hir_methods.iter().any(|method| {
+        method.python_interop.first().is_some_and(|declaration| {
+            if !declaration.consumes_receiver {
+                return false;
+            }
+            match cleanup {
+                Some(sifr_ir::PythonCleanupPolicy::Close) => {
+                    declaration.kind != sifr_ir::PythonInteropDecoratorKind::Function
+                        || declaration
+                            .target
+                            .as_ref()
+                            .is_none_or(|target| target.segments.as_slice() != ["Self", "close"])
+                }
+                Some(sifr_ir::PythonCleanupPolicy::Context) => {
+                    declaration.kind != sifr_ir::PythonInteropDecoratorKind::ContextExit
+                }
+                _ => true,
+            }
         })
-    {
+    });
+    if has_unmatched_consuming_method {
         ctx.error_with_code_at(
             sifr_diagnostics::DiagnosticCode::PYCALL_INVALID_SHAPE,
             "a consuming Python method is reserved for the declared semantic cleanup operation"

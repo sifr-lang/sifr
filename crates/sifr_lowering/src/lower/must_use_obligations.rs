@@ -3,6 +3,25 @@ use crate::scope::MovedSnapshot;
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub(in crate::lower) enum MustUseObligationKind {
+    CloseLike,
+    ContextOnly,
+    AsyncContextOnly,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub(in crate::lower) struct MustUseObligation {
+    pub(in crate::lower) kind: MustUseObligationKind,
+    pub(in crate::lower) label: String,
+}
+
+impl std::fmt::Display for MustUseObligation {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.label)
+    }
+}
+
 pub(in crate::lower) fn validate_branch_join(
     ctx: &mut LowerCtx,
     branch_moved_states: &[MovedSnapshot],

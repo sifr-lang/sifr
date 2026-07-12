@@ -81,6 +81,9 @@ from _sifr.python import (
 
 
 from sifr.python_core import (
+    ExitCause,
+    ExitCauseKind,
+    ExitDecision,
     LocalCallback,
     Object,
     PythonError,

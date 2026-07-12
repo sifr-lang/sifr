@@ -248,6 +248,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PYCALL-0001`](SIFR-PYCALL-0001.md) | Error | A Python declaration or call shape is unsupported or incompatible. |
 | [`SIFR-PYCONV-0001`](SIFR-PYCONV-0001.md) | Error | A Sifr type has no active declaration-first Python conversion. |
 | [`SIFR-PYRES-0002`](SIFR-PYRES-0002.md) | Error | Recognized declaration-first syntax has no active production lowering yet. |
+| [`SIFR-PYCTX-0001`](SIFR-PYCTX-0001.md) | Error | A Python context-manager entry, exit, or entered-value declaration is invalid. |
 | [`SIFR-RUST-CONFIG-0001`](SIFR-RUST-CONFIG-0001.md) | Error | Rust interop decorator syntax is malformed. |
 | [`SIFR-RUST-RESOLVE-0001`](SIFR-RUST-RESOLVE-0001.md) | Error | Rust interop target root cannot be resolved. |
 | [`SIFR-RUST-TRUST-0001`](SIFR-RUST-TRUST-0001.md) | Error | Rust interop trust declaration is missing. |
@@ -295,7 +296,6 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-ENCODING-0000` | `ENCODING` | Reserved family base; not emitted as a diagnostic. |
 | `SIFR-PYRES-0001` | `PYRES` | Reserved for an invalid Python opaque cleanup or ownership policy. |
 | `SIFR-PYASYNC-0001` | `PYASYNC` | Reserved for an invalid Python awaitable, cancellation, or loop-ownership declaration. |
-| `SIFR-PYCTX-0001` | `PYCTX` | Reserved for an invalid Python context-manager entry, exit, or suppression declaration. |
 | `SIFR-PYZC-0001` | `PYZC` | Reserved for an invalid advanced-data ownership or hidden-copy declaration. |
 | `SIFR-PYCB-0001` | `PYCB` | Reserved for an invalid callback lifetime, threading, or shutdown declaration. |
 | `SIFR-INT-0002` | `INT` | Reserved for implicit narrowing from exact or fixed-width integer sources to narrower fixed-width targets. |
