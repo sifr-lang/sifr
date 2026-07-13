@@ -9,32 +9,17 @@ use sifr_python_ast::{AstParamOwnership, Decorator, Expr, ExprCall, Parameters, 
 use sifr_type_system::Type;
 
 mod context;
+mod stub_syntax;
 
 pub(in crate::lower) use context::{
     lower_python_context_owned_expr, python_context_borrow_in_owned_expr, python_context_item_kind,
     reject_python_context_borrow_created_value, reject_python_context_borrow_discard,
     reject_python_context_borrow_storage, validate_context_class_methods,
 };
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(in crate::lower) enum PythonInteropStubBody {
-    Bodyless,
-    Invalid,
-    Normal,
-}
-
-impl PythonInteropStubBody {
-    pub(in crate::lower) const fn skips_normal_body_lowering(self) -> bool {
-        matches!(self, Self::Bodyless | Self::Invalid)
-    }
-}
-
-pub(in crate::lower) fn has_python_interop_decorator_syntax(decorators: &[Decorator]) -> bool {
-    decorators.iter().any(|decorator| {
-        decorator_path(&decorator.expression).is_some_and(|path| path[0] == "python")
-            || matches!(&decorator.expression, Expr::Call(call) if decorator_path(&call.func).is_some_and(|path| path[0] == "python"))
-    })
-}
+pub(in crate::lower) use stub_syntax::{
+    classify_python_interop_stub_body, has_python_interop_decorator_syntax,
+    is_bodyless_python_coroutine,
+};
 
 pub(in crate::lower) fn is_python_omit(expr: &Expr) -> bool {
     decorator_path(expr).is_some_and(|path| path == ["python", "omit"])
@@ -49,39 +34,6 @@ pub(in crate::lower) fn python_parameter_kinds(
         .collect()
 }
 
-pub(in crate::lower) fn classify_python_interop_stub_body(
-    body: &[Stmt],
-    has_python_decorator: bool,
-    ctx: &mut LowerCtx,
-) -> PythonInteropStubBody {
-    let exact = matches!(body, [stmt] if is_ellipsis_stmt(stmt));
-    let contains = body.iter().any(is_ellipsis_stmt);
-    if exact {
-        if has_python_decorator {
-            return PythonInteropStubBody::Bodyless;
-        }
-        ctx.error_with_code_at(
-            DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
-            "ellipsis is only supported as the complete body of an interop declaration".to_string(),
-            body[0].range(),
-        );
-        return PythonInteropStubBody::Invalid;
-    }
-    if contains && has_python_decorator {
-        let span = body
-            .iter()
-            .find(|stmt| is_ellipsis_stmt(stmt))
-            .map_or_else(TextRange::default, Ranged::range);
-        invalid_shape(
-            ctx,
-            "declaration stubs must contain exactly one ellipsis statement and no other statements",
-            span,
-        );
-        return PythonInteropStubBody::Invalid;
-    }
-    PythonInteropStubBody::Normal
-}
-
 pub(in crate::lower) fn collect_python_interop_declarations(
     decorators: &[Decorator],
     parameters: &Parameters,
@@ -93,26 +45,32 @@ pub(in crate::lower) fn collect_python_interop_declarations(
         let Some((kind, call, span)) = classify_decorator(&decorator.expression, ctx) else {
             continue;
         };
-        if kind != PythonInteropDecoratorKind::Function {
-            ctx.error_with_code_at(
-                DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION,
-                format!(
-                    "Python declaration lowering is not active yet: `{}` belongs to a later phase",
-                    decorator_label(kind)
-                ),
-                span,
-            );
-            continue;
-        }
-        if is_async_decl {
-            invalid_shape(
-                ctx,
-                "`@python(path)` requires `def`; use `@python.coroutine(path)` for `async def`",
-                span,
-            );
-            continue;
-        }
-        if let Some(declaration) = parse_sync_function(call, parameters, ctx) {
+        let declaration = match (kind, is_async_decl) {
+            (PythonInteropDecoratorKind::Function, false) => {
+                parse_function(call, parameters, kind, PythonInteropEffect::BlockingIo, ctx)
+            }
+            (PythonInteropDecoratorKind::Function, true) => {
+                invalid_shape(
+                    ctx,
+                    "`@python(path)` requires `def`; use `@python.coroutine(path)` for `async def`",
+                    span,
+                );
+                None
+            }
+            (PythonInteropDecoratorKind::Coroutine, true) => {
+                reserved_declaration(ctx, kind, span);
+                parse_function(call, parameters, kind, PythonInteropEffect::Async, ctx)
+            }
+            (PythonInteropDecoratorKind::Coroutine, false) => {
+                invalid_shape(ctx, "`@python.coroutine(path)` requires `async def`", span);
+                None
+            }
+            _ => {
+                reserved_declaration(ctx, kind, span);
+                None
+            }
+        };
+        if let Some(declaration) = declaration {
             declarations.push(declaration);
         }
     }
@@ -138,6 +96,14 @@ pub(in crate::lower) fn collect_python_method_declarations(
         if decorator_path(&decorator.expression)
             .is_some_and(|path| path.as_slice() == ["python", "item"])
         {
+            if is_async_decl {
+                invalid_shape(
+                    ctx,
+                    "`@python.item` requires synchronous `def`",
+                    decorator.expression.range(),
+                );
+                continue;
+            }
             declarations.push(PythonInteropDeclaration {
                 kind: PythonInteropDecoratorKind::Item,
                 target: None,
@@ -153,33 +119,57 @@ pub(in crate::lower) fn collect_python_method_declarations(
         let Some((kind, call, span)) = classify_decorator(&decorator.expression, ctx) else {
             continue;
         };
-        if is_async_decl {
-            invalid_shape(
-                ctx,
-                "opaque Python methods must use synchronous `def`",
-                span,
-            );
-            continue;
-        }
-        let declaration = match kind {
-            PythonInteropDecoratorKind::Function => parse_sync_method(call, parameters, ctx),
-            PythonInteropDecoratorKind::Attribute => parse_attribute_method(call, parameters, ctx),
-            PythonInteropDecoratorKind::ContextEnter | PythonInteropDecoratorKind::ContextExit => {
-                context::parse_context_method(kind, call, parameters, ctx)
+        let declaration = match (kind, is_async_decl) {
+            (PythonInteropDecoratorKind::Coroutine, true) => {
+                reserved_declaration(ctx, kind, span);
+                parse_method(call, parameters, kind, PythonInteropEffect::Async, ctx)
             }
-            PythonInteropDecoratorKind::Item => {
+            (PythonInteropDecoratorKind::Coroutine, false) => {
+                invalid_shape(
+                    ctx,
+                    "`@python.coroutine(Self.method)` requires `async def`",
+                    span,
+                );
+                None
+            }
+            (PythonInteropDecoratorKind::Function, true) => {
+                invalid_shape(
+                    ctx,
+                    "`@python(Self.method)` requires `def`; use `@python.coroutine(Self.method)` for `async def`",
+                    span,
+                );
+                None
+            }
+            (PythonInteropDecoratorKind::Function, false) => {
+                parse_method(call, parameters, kind, PythonInteropEffect::BlockingIo, ctx)
+            }
+            (PythonInteropDecoratorKind::Attribute, false) => {
+                parse_attribute_method(call, parameters, ctx)
+            }
+            (
+                PythonInteropDecoratorKind::ContextEnter | PythonInteropDecoratorKind::ContextExit,
+                false,
+            ) => context::parse_context_method(kind, call, parameters, ctx),
+            (PythonInteropDecoratorKind::Item, false) => {
                 invalid_shape(ctx, "`@python.item` does not take arguments", span);
                 None
             }
-            _ => {
-                ctx.error_with_code_at(
-                    DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION,
-                    format!(
-                        "Python declaration lowering is not active yet: `{}` belongs to a later phase",
-                        decorator_label(kind)
-                    ),
+            (
+                PythonInteropDecoratorKind::Attribute
+                | PythonInteropDecoratorKind::ContextEnter
+                | PythonInteropDecoratorKind::ContextExit
+                | PythonInteropDecoratorKind::Item,
+                true,
+            ) => {
+                invalid_shape(
+                    ctx,
+                    "opaque Python methods must use synchronous `def`",
                     span,
                 );
+                None
+            }
+            _ => {
+                reserved_declaration(ctx, kind, span);
                 None
             }
         };
@@ -198,9 +188,11 @@ pub(in crate::lower) fn collect_python_method_declarations(
     declarations
 }
 
-fn parse_sync_method(
+fn parse_method(
     call: &ExprCall,
     parameters: &Parameters,
+    kind: PythonInteropDecoratorKind,
+    effect: PythonInteropEffect,
     ctx: &mut LowerCtx,
 ) -> Option<PythonInteropDeclaration> {
     if call.arguments.args.len() != 1 || !call.arguments.keywords.is_empty() {
@@ -213,10 +205,10 @@ fn parse_sync_method(
     }
     let target = parse_method_target_path(&call.arguments.args[0], ctx)?;
     Some(PythonInteropDeclaration {
-        kind: PythonInteropDecoratorKind::Function,
+        kind,
         target: Some(target),
         span: call.range,
-        effect: PythonInteropEffect::BlockingIo,
+        effect,
         cleanup: None,
         consumes_receiver: receiver_is_owned(parameters),
         parameters: parameter_metadata(parameters).into_iter().skip(1).collect(),
@@ -371,8 +363,7 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
                     [name] if name == "close" => Some(PythonCleanupPolicy::Close),
                     [name] if name == "async_close" => {
                         reserved_cleanup(ctx, "async_close", keyword.value.range());
-                        reserved_cleanup_seen = true;
-                        None
+                        Some(PythonCleanupPolicy::AsyncClose)
                     }
                     [name] if name == "context" => Some(PythonCleanupPolicy::Context),
                     [name] if name == "async_context" => {
@@ -466,9 +457,14 @@ pub(in crate::lower) fn validate_python_interop_signature(
         return;
     }
     let Type::Result(ok_type, error_type) = return_type.resolve_alias() else {
+        let declaration_kind = if declaration.effect == PythonInteropEffect::Async {
+            "an asynchronous"
+        } else {
+            "a synchronous"
+        };
         unsupported_conversion(
             ctx,
-            "a synchronous declaration must return `Result[T, PythonError]`",
+            &format!("{declaration_kind} declaration must return `Result[T, PythonError]`"),
             declaration.span,
         );
         return;
@@ -481,10 +477,15 @@ pub(in crate::lower) fn validate_python_interop_signature(
         );
     }
     if !is_direct_type(ok_type, true, ctx) {
+        let declaration_kind = if declaration.effect == PythonInteropEffect::Async {
+            "asynchronous"
+        } else {
+            "synchronous"
+        };
         unsupported_conversion(
             ctx,
             &format!(
-                "return type `{}` is not in the synchronous direct-conversion set",
+                "return type `{}` is not in the {declaration_kind} direct-conversion set",
                 ok_type.display_name()
             ),
             declaration.span,
@@ -565,9 +566,11 @@ fn unsupported_conversion(ctx: &mut LowerCtx, reason: &str, span: TextRange) {
     );
 }
 
-fn parse_sync_function(
+fn parse_function(
     call: &ExprCall,
     parameters: &Parameters,
+    kind: PythonInteropDecoratorKind,
+    effect: PythonInteropEffect,
     ctx: &mut LowerCtx,
 ) -> Option<PythonInteropDeclaration> {
     if call.arguments.args.len() != 1 || !call.arguments.keywords.is_empty() {
@@ -620,15 +623,26 @@ fn parse_sync_function(
         .filter(|root| !matches!(*root, "Self" | "__sifr_bridge__"))
         .map(str::to_string);
     Some(PythonInteropDeclaration {
-        kind: PythonInteropDecoratorKind::Function,
+        kind,
         target: Some(target),
         span: call.range,
-        effect: PythonInteropEffect::BlockingIo,
+        effect,
         cleanup: None,
         consumes_receiver: false,
         parameters: parameter_metadata(parameters),
         required_import_root,
     })
+}
+
+fn reserved_declaration(ctx: &mut LowerCtx, kind: PythonInteropDecoratorKind, span: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION,
+        format!(
+            "Python declaration lowering is not active yet: `{}` belongs to a later phase",
+            decorator_label(kind)
+        ),
+        span,
+    );
 }
 
 pub(super) fn parameter_metadata(parameters: &Parameters) -> Vec<PythonInteropParameter> {

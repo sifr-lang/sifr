@@ -611,26 +611,59 @@ pub(in crate::lower) fn lower_class(
             class_def.range,
         );
     }
-    let has_unmatched_consuming_method = hir_methods.iter().any(|method| {
-        method.python_interop.first().is_some_and(|declaration| {
-            if !declaration.consumes_receiver {
-                return false;
-            }
-            match cleanup {
-                Some(sifr_ir::PythonCleanupPolicy::Close) => {
-                    declaration.kind != sifr_ir::PythonInteropDecoratorKind::Function
-                        || declaration
-                            .target
-                            .as_ref()
-                            .is_none_or(|target| target.segments.as_slice() != ["Self", "close"])
-                }
-                Some(sifr_ir::PythonCleanupPolicy::Context) => {
-                    declaration.kind != sifr_ir::PythonInteropDecoratorKind::ContextExit
-                }
-                _ => true,
-            }
+    let semantic_async_close_methods = hir_methods
+        .iter()
+        .filter(|method| {
+            method.python_interop.first().is_some_and(|declaration| {
+                declaration.consumes_receiver
+                    && declaration.kind == sifr_ir::PythonInteropDecoratorKind::Coroutine
+                    && declaration
+                        .target
+                        .as_ref()
+                        .is_some_and(|target| target.segments.as_slice() == ["Self", "aclose"])
+                    && method.params.is_empty()
+                    && matches!(
+                        method.return_type.resolve_alias(),
+                        Type::Result(ok, _) if ok.resolve_alias() == &Type::None
+                    )
+            })
         })
-    });
+        .count();
+    if cleanup == Some(sifr_ir::PythonCleanupPolicy::AsyncClose)
+        && semantic_async_close_methods != 1
+    {
+        ctx.error_with_code_at(
+            sifr_diagnostics::DiagnosticCode::PYCALL_INVALID_SHAPE,
+            "`cleanup=async_close` requires exactly one `@python.coroutine(Self.aclose)` method declared as `async def aclose(own self) -> Result[None, PythonError]`".to_string(),
+            class_def.range,
+        );
+    }
+    let has_unmatched_consuming_method =
+        hir_methods.iter().any(|method| {
+            method.python_interop.first().is_some_and(|declaration| {
+                if !declaration.consumes_receiver {
+                    return false;
+                }
+                match cleanup {
+                    Some(sifr_ir::PythonCleanupPolicy::Close) => {
+                        declaration.kind != sifr_ir::PythonInteropDecoratorKind::Function
+                            || declaration.target.as_ref().is_none_or(|target| {
+                                target.segments.as_slice() != ["Self", "close"]
+                            })
+                    }
+                    Some(sifr_ir::PythonCleanupPolicy::AsyncClose) => {
+                        declaration.kind != sifr_ir::PythonInteropDecoratorKind::Coroutine
+                            || declaration.target.as_ref().is_none_or(|target| {
+                                target.segments.as_slice() != ["Self", "aclose"]
+                            })
+                    }
+                    Some(sifr_ir::PythonCleanupPolicy::Context) => {
+                        declaration.kind != sifr_ir::PythonInteropDecoratorKind::ContextExit
+                    }
+                    _ => true,
+                }
+            })
+        });
     if has_unmatched_consuming_method {
         ctx.error_with_code_at(
             sifr_diagnostics::DiagnosticCode::PYCALL_INVALID_SHAPE,
