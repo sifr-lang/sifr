@@ -98,6 +98,7 @@ pub(super) fn valid_probe() -> PythonEnvironmentProbe {
             root: "sys".to_string(),
             ok: true,
             origin: None,
+            distributions: Vec::new(),
             error: None,
         }],
         native_imports: Vec::new(),

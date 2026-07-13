@@ -21,7 +21,7 @@ pub use bridge_resolution::{
 };
 pub use environment::{
     probe_python_environment, resolve_python_environment,
-    resolve_python_environment_with_requirements, PythonEnvironmentProbe,
+    resolve_python_environment_with_requirements, PythonDistributionProbe, PythonEnvironmentProbe,
     PythonEnvironmentProbeRequest, PythonImportProbe, ResolvedPythonEnvironment,
 };
 pub use probe_validation::validate_python_environment_probe;

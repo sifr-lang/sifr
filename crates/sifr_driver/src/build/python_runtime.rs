@@ -351,6 +351,10 @@ mod tests {
                 origin: Some(
                     "/tmp/sifr-py/site-packages/numpy/_core.cpython-313-darwin.so".to_string(),
                 ),
+                distributions: vec![sifr_package::python::PythonDistributionProbe {
+                    name: "numpy".to_string(),
+                    version: "2.1.0".to_string(),
+                }],
                 error: None,
             }],
             native_imports: Vec::new(),
