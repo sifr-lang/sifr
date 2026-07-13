@@ -660,6 +660,9 @@ pub(in crate::lower) fn lower_class(
                     Some(sifr_ir::PythonCleanupPolicy::Context) => {
                         declaration.kind != sifr_ir::PythonInteropDecoratorKind::ContextExit
                     }
+                    Some(sifr_ir::PythonCleanupPolicy::AsyncContext) => {
+                        declaration.kind != sifr_ir::PythonInteropDecoratorKind::ContextAsyncExit
+                    }
                     _ => true,
                 }
             })

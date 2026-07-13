@@ -127,6 +127,22 @@ fn test_generate_rust_elides_unreachable_returns_after_always_exit_paths() {
 }
 
 #[test]
+fn test_direct_try_capture_converts_result_none_to_unit() {
+    let rust_code = generate_rust_from_source(
+        r#"async def finish() -> Result[None, ValueError]:
+    try:
+        await task.sleep(0.0)
+        return None
+    except ValueError as error:
+        raise error
+"#,
+    );
+
+    assert!(rust_code.contains("return Ok(Ok(()));"), "{rust_code}");
+    assert!(!rust_code.contains("return Ok(Ok(None));"), "{rust_code}");
+}
+
+#[test]
 fn test_class_method_mutable_self_propagates_through_delegation() {
     let rust_code = generate_rust_from_source(
         "class ConfigParser:\n    text: str\n\n    def __init__(self):\n        self.text = \"\"\n\n    def read_string(self, text: str) -> None:\n        self.text = text\n\n    def read(self, text: str) -> None:\n        self.read_string(text)\n",

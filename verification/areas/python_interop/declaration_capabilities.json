@@ -96,15 +96,15 @@
       "id": "async-context",
       "surface": "@python.context.aenter and @python.context.aexit",
       "target_state": "declaration-supported",
-      "implementation_status": "reserved",
+      "implementation_status": "active",
       "activation_owner": "async-context",
       "required_evidence": ["positive", "negative", "cleanup", "cancellation", "live"],
       "evidence": [
-        {"kind": "positive", "status": "planned", "owner": "async context outcome matrix"},
-        {"kind": "negative", "status": "planned", "owner": "escape and unsuppressible-cause fixtures"},
-        {"kind": "cleanup", "status": "planned", "owner": "exact-once async exit fixtures"},
-        {"kind": "cancellation", "status": "planned", "owner": "masked cleanup and resume matrix"},
-        {"kind": "live", "status": "planned", "owner": "compiled async database session"}
+        {"kind": "positive", "status": "passing", "owner": "async_context/async_context_evidence.json outcome matrix and compiled aiosqlite session"},
+        {"kind": "negative", "status": "passing", "owner": "async context declaration, obligation, direct-exit, distinct-entered-resource, and unsuppressible-cause tests"},
+        {"kind": "cleanup", "status": "passing", "owner": "exact-once enter, exit, close, poison, secondary-error, and nested LIFO matrices"},
+        {"kind": "cancellation", "status": "passing", "owner": "biased cancellation, Python finally, masked terminal exit, nested claim, and parent-resume matrices"},
+        {"kind": "live", "status": "passing", "owner": "async_context/aiosqlite_session.sifr compiled offline against real aiosqlite"}
       ]
     },
     {

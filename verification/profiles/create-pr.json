@@ -118,6 +118,7 @@
         "callbacks",
         "dataframes",
         "async-declaration-examples",
+        "async-context-examples",
         "cloud-boto3"
       ],
       "resource_classes": [

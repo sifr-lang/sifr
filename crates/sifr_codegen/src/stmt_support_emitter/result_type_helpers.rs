@@ -1,4 +1,20 @@
-use super::Type;
+use super::{HirExpr, Type};
+
+pub(super) fn is_none_like_result_value(value: &HirExpr) -> bool {
+    matches!(value, HirExpr::NoneLiteral)
+        || matches!(
+            crate::resolve_alias_type_for_plain_call(value.ty()),
+            Type::None
+        )
+        || matches!(
+            value,
+            HirExpr::OkWrap { value, .. }
+                if matches!(
+                    crate::resolve_alias_type_for_plain_call(value.ty()),
+                    Type::None
+                )
+        )
+}
 
 pub(super) fn is_result_int_division_error_type(ty: &Type) -> bool {
     let Type::Result(ok_ty, err_ty) = ty else {

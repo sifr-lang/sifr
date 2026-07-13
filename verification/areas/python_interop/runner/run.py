@@ -12,6 +12,10 @@ from async_declaration_examples import (
     build_async_declaration_examples_report,
     run_async_declaration_examples_self_tests,
 )
+from async_context_examples import (
+    build_async_context_examples_report,
+    run_async_context_examples_self_tests,
+)
 from certification_matrix import build_certification_report, validate_certification_policy
 from dataframe_examples import build_dataframe_examples_report, run_dataframe_examples_self_tests
 from declaration_capabilities import (
@@ -43,6 +47,7 @@ MATRIX_FILES = (
 REQUIRED_FIXTURES = (
     "declaration_sync",
     "async_declaration",
+    "async_context",
     "simple_import",
     "primitive_conversion",
     "pydantic_models",
@@ -74,6 +79,7 @@ REQUIRED_FIXTURES = (
 REQUIRED_FIXTURE_FILES = (
     "declaration_sync/sync_declaration_contract.json",
     "async_declaration/async_declaration_evidence.json",
+    "async_context/async_context_evidence.json",
     "simple_import/opaque_object_operations.json",
     "primitive_conversion/primitive_roundtrip.json",
     "async_blocking/async_blocking_contract.json",
@@ -104,6 +110,7 @@ REQUIRED_SOURCE_FIXTURES = (
     "declaration_sync/complete_call_shapes.sifr",
     "declaration_sync/pure_and_native.sifr",
     "async_declaration/httpx_client.sifr",
+    "async_context/aiosqlite_session.sifr",
     "async_blocking/direct_python_call_rejected.sifr",
     "async_blocking/object_crossing_rejected.sifr",
     "async_blocking/offloaded_python_calls.sifr",
@@ -167,6 +174,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Run compiled typed async Python declaration examples.",
     )
+    parser.add_argument(
+        "--async-context-examples",
+        action="store_true",
+        help="Run compiled typed async Python context-manager examples.",
+    )
     return parser.parse_args(argv)
 
 
@@ -181,6 +193,7 @@ def main(argv: list[str] | None = None) -> int:
         run_ml_examples_self_tests(paths)
         run_library_examples_self_tests(paths)
         run_async_declaration_examples_self_tests(paths)
+        run_async_context_examples_self_tests(paths)
         print("python interop runner self-test ok")
         return 0
     if args.live_policy:
@@ -231,6 +244,15 @@ def main(argv: list[str] | None = None) -> int:
         write_report(report_path, payload)
         print(
             "python interop async-declaration-examples "
+            f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
+        )
+        return 1 if payload["status"] == "examples-failed" else 0
+    if args.async_context_examples:
+        payload = build_async_context_examples_report(paths)
+        report_path = (paths.area_root / args.report).resolve()
+        write_report(report_path, payload)
+        print(
+            "python interop async-context-examples "
             f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
         )
         return 1 if payload["status"] == "examples-failed" else 0
@@ -364,6 +386,8 @@ def validate_fixture_files(fixtures_root: Path) -> None:
             validate_package_bridge_evidence(payload)
         if name == "async_declaration/async_declaration_evidence.json":
             validate_async_declaration_evidence(payload)
+        if name == "async_context/async_context_evidence.json":
+            validate_async_context_evidence(payload)
     missing_sources = [
         name for name in REQUIRED_SOURCE_FIXTURES if not (fixtures_root / name).is_file()
     ]
@@ -444,6 +468,32 @@ def validate_async_declaration_evidence(payload: object) -> None:
     )
     if not isinstance(live, dict) or live.get("stdout_marker") != expected:
         raise SystemExit("async declaration live evidence must lock the httpx client marker")
+
+
+def validate_async_context_evidence(payload: object) -> None:
+    if not isinstance(payload, dict) or payload.get("capability") != "async-context":
+        raise SystemExit("async context evidence must identify async-context")
+    for matrix_name, minimum in (
+        ("positive", 3),
+        ("negative", 3),
+        ("cleanup", 3),
+        ("cancellation", 3),
+    ):
+        matrix = payload.get(matrix_name)
+        if not isinstance(matrix, list) or len(matrix) < minimum:
+            raise SystemExit(
+                f"async context evidence requires at least {minimum} {matrix_name} rows"
+            )
+        if any(not isinstance(item, str) or not item for item in matrix):
+            raise SystemExit(f"async context {matrix_name} rows require evidence owners")
+    live = payload.get("live")
+    expected = (
+        "sifr-python-interop:async-context:value=sqlite-ready:enter=7:exit=7:"
+        "close=7:loop=shared:suppression=covered:sifr=unsuppressed:"
+        "cancellation=ordered:nested=lifo:exit-failure=covered"
+    )
+    if not isinstance(live, dict) or live.get("stdout_marker") != expected:
+        raise SystemExit("async context live evidence must lock the aiosqlite marker")
 
 
 def select_entries(

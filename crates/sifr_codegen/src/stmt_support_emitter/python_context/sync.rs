@@ -10,7 +10,10 @@ impl RustEmitter {
         items: &[HirWithItem],
         body: &[HirStmt],
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
-        let Some(lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {
+        self.python_context_envelope_depth += 1;
+        let lowered_body = self.try_lower_stmt_block_for_ir(body);
+        self.python_context_envelope_depth -= 1;
+        let Some(lowered_body) = lowered_body? else {
             return Ok(None);
         };
         let wrapped = self.wrap_context_items(items, body, lowered_body)?;
@@ -164,14 +167,20 @@ impl RustEmitter {
         let outcome_type = RustType::Named(format!(
             "Result<Result<Option<{return_expression_type}>, bool>, {active_error_type}>"
         ));
-        let outcome_call = RustExpr::FnCall {
+        let closure_is_async = Self::rust_stmts_contain_await(&closure_body);
+        let closure_call = RustExpr::FnCall {
             func: Box::new(RustExpr::Paren(Box::new(RustExpr::ClosureBlock {
                 params: vec![],
                 body: closure_body,
                 is_move: false,
-                is_async: false,
+                is_async: closure_is_async,
             }))),
             args: vec![],
+        };
+        let outcome_call = if closure_is_async {
+            RustExpr::Await(Box::new(closure_call))
+        } else {
+            closure_call
         };
 
         let normal_exit = || {

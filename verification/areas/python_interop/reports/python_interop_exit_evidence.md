@@ -128,6 +128,30 @@ validation profile and is exposed through the runnable typed-async demo.
 Its first area-runner measurement was 105,034 ms including generated-package
 compilation, so the blocking create-PR Python interop step budget is 180,000 ms.
 
+## Typed Async Context Activation
+
+`@python.context.aenter`, `@python.context.aexit`, and
+`cleanup=async_context` use the application-owned asyncio runtime.
+The compiler retains a dedicated Python async-context HIR and exact-once
+manager obligation, replays originating Python exception triples, ignores
+truthy decisions for ordinary Sifr/timeout/cancellation/fault causes, masks
+async exit until terminal cleanup, and resumes parent cancellation only after
+Python `finally` and exit complete. Focused lowering, codegen, and runtime tests
+own invalid declarations, unentered obligations, distinct entered-resource
+cleanup, direct exit rejection, every concrete body outcome, poison/close,
+secondary evidence, biased cancellation, missing fallback, and nested context
+envelopes.
+
+The capability ledger points to
+`fixtures/async_context/async_context_evidence.json`. Its compiled offline proof
+uses real `aiosqlite` over in-memory SQLite and requires the marker
+`sifr-python-interop:async-context:value=sqlite-ready:enter=7:exit=7:close=7:loop=shared:suppression=covered:sifr=unsuppressed:cancellation=ordered:nested=lifo:exit-failure=covered`.
+The `async-context-examples` suite is blocking in create-PR, merge, nightly, and
+release profiles and is exposed through a runnable checked-in demonstration.
+Its first isolated compiled run completed in 26.5 seconds and the preceding
+create-PR Python interop lane measured 9.5 seconds, so the existing blocking
+180,000 ms lane budget remains sufficient and was not increased.
+
 Repository gates:
 
 ```bash
@@ -141,6 +165,21 @@ scripts/run_all_tests.sh
 
 Latest local validation evidence:
 
+- Typed async-context validation on 2026-07-13:
+  - `cargo test -p sifr_lowering python_async_context_contract_tests`: 9 passed.
+  - `cargo test -p sifr_codegen`: 783 passed.
+  - `cargo test -p sifr_runtime --features python python::async_context_tests`: 5 passed.
+  - `verification/areas/python_interop/run.sh --self-test`: passed.
+  - `uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --async-context-examples`: passed.
+  - The checked-in async-context demonstration script passed with the required
+    exact-once, one-loop, suppression, cancellation, nested-ordering, and
+    exit-failure marker.
+  - `cargo fmt -p sifr_codegen -p sifr_lowering -- --check`, file-size,
+    lowering-maintainability, driver-maintainability, verification-taxonomy,
+    and `git diff --check` guardrails: passed.
+  - `scripts/run_all_tests.sh --profile create-pr`: 130 e2e passed, 0
+    failed; Python interop completed in 27,621 ms against its 180,000 ms
+    budget; zero blocking failures; advisory `warm wall-time budget exceeded`.
 - py11 `create-pr` validation passed on 2026-06-19 with zero failures and advisory `warm wall-time budget exceeded`; this included Python interop package certification code as merged in PR #2676.
 - py12 focused validation on 2026-06-19:
   - `python3 -m py_compile verification/areas/python_interop/runner/*.py`

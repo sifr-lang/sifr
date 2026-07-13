@@ -30,6 +30,7 @@ impl RustEmitter {
 
         let suffix = self.python_context_counter;
         self.python_context_counter += 1;
+        let context_is_nested = self.python_context_envelope_depth > 0;
         let names = AsyncContextNames::new(suffix);
         let manager = crate::render_expr(&manager_value);
         let schema = crate::render_expr(&schema);
@@ -57,8 +58,11 @@ impl RustEmitter {
             ));
         };
         let converted = crate::render_expr(&converted);
+        self.python_context_envelope_depth += 1;
+        let lowered_body = self.try_lower_stmt_block_for_ir(body);
+        self.python_context_envelope_depth -= 1;
         let mut rewritten = rewrite_context_control_flow(
-            self.try_lower_stmt_block_for_ir(body)?.ok_or_else(|| {
+            lowered_body?.ok_or_else(|| {
                 crate::CodegenError::new("Python async context body could not be lowered")
             })?,
             0,
@@ -95,7 +99,11 @@ impl RustEmitter {
             )
         };
         let loop_arms = loop_control_arms(&normal_exit, !self.loop_else_stack.is_empty());
-        let return_arm = if self.try_closure_depth > 0 {
+        let return_arm = if self.try_closure_depth > 0 && context_is_nested {
+            format!(
+                "Some(Ok(Ok(Some(__sifr_context_return)))) => {{ {normal_exit} return Ok(Ok(Some(__sifr_context_return))); }},"
+            )
+        } else if self.try_closure_depth > 0 {
             format!(
                 "Some(Ok(Ok(Some(__sifr_context_return)))) => {{ {normal_exit} return __sifr_context_return; }},"
             )
@@ -383,6 +391,19 @@ fn mapped_internal_error(active_error_type: &Type) -> String {
             RustExpr::Ident("\"async context\"".to_string()),
         ],
     };
+    if matches!(
+        active_error_type.resolve_alias(),
+        Type::Class { name, .. } if name == "Error"
+    ) {
+        return crate::render_expr(&RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Error".to_string(), "new".to_string()])),
+            args: vec![RustExpr::MethodCall {
+                receiver: Box::new(runtime),
+                method: "to_string".to_string(),
+                args: vec![],
+            }],
+        });
+    }
     crate::render_expr(&bridge_error_expr(runtime, active_error_type))
 }
 

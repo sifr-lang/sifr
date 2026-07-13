@@ -321,12 +321,6 @@ pub(in crate::lower) fn validate_context_class_methods(
         return;
     };
     if entered_name == class_name {
-        if cleanup == Some(PythonCleanupPolicy::AsyncContext)
-            && context_signature_is_valid(enter_methods[0])
-            && context_signature_is_valid(exit_methods[0])
-        {
-            super::super::reserved_cleanup(ctx, "async_context", range);
-        }
         return;
     }
     let entered_cleanup = ctx
@@ -344,34 +338,5 @@ pub(in crate::lower) fn validate_context_class_methods(
                 .first()
                 .map_or(range, |declaration| declaration.span),
         );
-        return;
-    }
-    if cleanup == Some(PythonCleanupPolicy::AsyncContext)
-        && context_signature_is_valid(enter_methods[0])
-        && context_signature_is_valid(exit_methods[0])
-    {
-        super::super::reserved_cleanup(ctx, "async_context", range);
-    }
-}
-
-fn context_signature_is_valid(method: &HirFunction) -> bool {
-    let Some(declaration) = method.python_interop.first() else {
-        return false;
-    };
-    let Type::Result(ok_type, error_type) = method.return_type.resolve_alias() else {
-        return false;
-    };
-    if !matches!(error_type.resolve_alias(), Type::Class { name, .. } if name == "PythonError") {
-        return false;
-    }
-    match declaration.kind {
-        PythonInteropDecoratorKind::ContextEnter
-        | PythonInteropDecoratorKind::ContextAsyncEnter => method.params.is_empty(),
-        PythonInteropDecoratorKind::ContextExit | PythonInteropDecoratorKind::ContextAsyncExit => {
-            method.params.len() == 1
-                && matches!(method.params[0].ty.resolve_alias(), Type::Class { name, .. } if name == "ExitCause")
-                && matches!(ok_type.resolve_alias(), Type::Class { name, .. } if name == "ExitDecision")
-        }
-        _ => false,
     }
 }

@@ -353,7 +353,6 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
     }
     let mut target = None;
     let mut cleanup = None;
-    let mut reserved_cleanup_seen = false;
     for keyword in &call.arguments.keywords {
         let Some(name) = keyword.arg.as_ref() else {
             invalid_shape(
@@ -379,10 +378,7 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
                     [name] if name == "close" => Some(PythonCleanupPolicy::Close),
                     [name] if name == "async_close" => Some(PythonCleanupPolicy::AsyncClose),
                     [name] if name == "context" => Some(PythonCleanupPolicy::Context),
-                    [name] if name == "async_context" => {
-                        reserved_cleanup_seen = true;
-                        Some(PythonCleanupPolicy::AsyncContext)
-                    }
+                    [name] if name == "async_context" => Some(PythonCleanupPolicy::AsyncContext),
                     _ => {
                         invalid_shape(ctx, "unknown opaque cleanup policy", keyword.value.range());
                         None
@@ -412,9 +408,7 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
         return None;
     };
     let Some(cleanup) = cleanup else {
-        if !reserved_cleanup_seen {
-            invalid_shape(ctx, "`@python.opaque` requires `cleanup=`", call.range);
-        }
+        invalid_shape(ctx, "`@python.opaque` requires `cleanup=`", call.range);
         return None;
     };
     if matches!(target.root(), Some("Self" | "bridge")) {
@@ -440,16 +434,6 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
         consumes_receiver: false,
         parameters: Vec::new(),
     })
-}
-
-fn reserved_cleanup(ctx: &mut LowerCtx, name: &str, span: TextRange) {
-    ctx.error_with_code_at(
-        DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION,
-        format!(
-            "Python declaration lowering is not active yet: cleanup policy `{name}` is reserved"
-        ),
-        span,
-    );
 }
 
 pub(in crate::lower) fn validate_python_interop_signature(
