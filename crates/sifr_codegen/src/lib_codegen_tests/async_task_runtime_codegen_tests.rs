@@ -45,7 +45,7 @@ fn test_task_gather_lowers_to_private_gather_helper() {
 
     assert!(result.rust_source.contains("async fn __sifr_task_gather"));
     assert!(result.rust_source.contains("__sifr_task_gather(vec!["));
-    assert!(result.rust_source.contains("abort_handle.abort();"));
+    assert!(result.rust_source.contains("cancellation.abort();"));
     assert!(result.rust_source.contains("failure_results"));
     assert!(result.rust_source.contains("push_secondary_message"));
     assert!(result.rust_source.contains("ordered_values.push(value);"));
@@ -290,7 +290,7 @@ fn test_await_task_handle_desugars_to_join_observation() {
 }
 
 #[test]
-fn test_task_handle_cancel_borrows_handle_and_aborts_child() {
+fn test_task_handle_cancel_uses_cooperative_carrier_with_abort_fallback() {
     let source = concat!(
         "async def worker() -> int:\n    await task.sleep(10.0)\n    return 41\n\n",
         "async def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n",
@@ -306,7 +306,25 @@ fn test_task_handle_cancel_borrows_handle_and_aborts_child() {
 
     assert!(result
         .rust_source
-        .contains("abort_handle: tokio::task::AbortHandle"));
+        .contains("cancellation: __SifrCancellationCarrier"));
+    assert!(!result
+        .rust_source
+        .contains("cancellation: tokio::task::AbortHandle"));
+    assert!(result
+        .rust_source
+        .contains("let _ = self.cancellation.request_cancel();"));
+    assert!(result
+        .rust_source
+        .contains("static __SIFR_TASK_CANCELLATION:"));
+    assert!(result
+        .rust_source
+        .contains("const __SIFR_COOPERATIVE_SUPERVISORS_READY: bool = false;"));
+    assert!(result
+        .rust_source
+        .contains("__SIFR_TASK_CANCELLATION.scope(child_cancellation"));
+    assert!(result
+        .rust_source
+        .contains("fallback-only task supervisor observed a claimed cancellation carrier"));
     assert!(result
         .rust_source
         .contains(&format!("fn {}{}", "can", "cel(&self)")));
@@ -316,6 +334,33 @@ fn test_task_handle_cancel_borrows_handle_and_aborts_child() {
     assert!(result.rust_source.contains("struct CancellationError"));
     assert!(result.rust_source.contains("__SifrTaskResult::cancelled()"));
     assert!(result.rust_source.contains("handle.join().await"));
+}
+
+#[test]
+fn test_join_set_extracts_abort_fallback_from_task_cancellation_carrier() {
+    let source = concat!(
+        "async def worker() -> Result[int, ValueError]:\n",
+        "    await task.sleep(0.0)\n    return 41\n\n",
+        "async def main() -> Result[None, ScopeFailure]:\n",
+        "    async with task.scope() as scope:\n",
+        "        handle = scope.spawn(worker())\n",
+        "        joined = task.JoinSet[int, ValueError]()\n",
+        "        entry_id = joined.add(handle)\n",
+        "        outcomes = await joined.cancel_all()\n",
+        "    return None\n",
+    );
+    let result = generate_rust_with_metadata(
+        &lower_module(parse_module(source).expect("parse failed").suite())
+            .expect("lowering failed")
+            .module,
+    );
+
+    assert!(result
+        .rust_source
+        .contains("let __SifrTask { receiver, cancellation, observed, _error } = task;"));
+    assert!(result
+        .rust_source
+        .contains("abort_handle: Some(cancellation.abort_handle())"));
 }
 
 #[test]
@@ -342,6 +387,12 @@ fn test_task_timeout_handle_lowers_to_private_timeout_result() {
     assert!(result
         .rust_source
         .contains("__SifrFailure::new(__SifrTimeoutResult::Timeout)"));
+    assert!(result
+        .rust_source
+        .contains("matches!(request, sifr_runtime::cancellation::CancellationRequest::Claimed)"));
+    assert!(result
+        .rust_source
+        .contains("Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value)"));
     assert!(result.rust_source.contains(
         "let result: __SifrTaskResult<i64, __SifrTimeoutResult<std::convert::Infallible>>"
     ));

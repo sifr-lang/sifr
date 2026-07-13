@@ -123,12 +123,15 @@ preamble_files = [
   "cpu_offload_runtime.rs",
   "join_set_runtime.rs",
   "parallel_runtime.rs",
+  "task_cancellation_runtime.rs",
   "task_context_runtime.rs",
   "task_runtime.rs",
   "task_scope_offload_runtime.rs",
+  "task_supervisor_runtime.rs",
 ]
 exact_intrinsics = ["task_current_context"]
 source_declared_intrinsics = ["task_current_context"]
+direct_runtime_roots = ["sifr_runtime::cancellation"]
 
 [[surface]]
 id = "typed-intrinsic-dispatch-core"

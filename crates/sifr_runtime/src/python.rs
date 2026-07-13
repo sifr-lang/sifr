@@ -8,6 +8,7 @@ use std::sync::{Mutex, MutexGuard};
 
 mod arrow_ops;
 mod async_runtime;
+mod async_terminal;
 mod bridge_loader;
 mod buffer_ops;
 mod call_depth;
@@ -149,6 +150,8 @@ pub enum PythonRuntimeError {
     AsyncRuntimeFailed(String),
     AsyncRuntimeNotRunning,
     AsyncRuntimeStopping,
+    AsyncSubmissionCancelled,
+    AsyncCancellationAlreadyClaimed,
     OutstandingResources {
         live_objects: usize,
         leaked_objects: usize,
@@ -194,6 +197,12 @@ impl fmt::Display for PythonRuntimeError {
             }
             Self::AsyncRuntimeStopping => {
                 write!(f, "owned Python asyncio runtime is stopping")
+            }
+            Self::AsyncSubmissionCancelled => {
+                write!(f, "owned Python asyncio submission was cancelled before start")
+            }
+            Self::AsyncCancellationAlreadyClaimed => {
+                write!(f, "owned Python asyncio cancellation was already claimed")
             }
             Self::OutstandingResources {
                 live_objects,

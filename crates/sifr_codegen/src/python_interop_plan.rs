@@ -161,15 +161,17 @@ fn module_requires_raw_coroutine_loop(module: &HirModule) -> bool {
         .iter()
         .filter(|import| import.module == "sifr.python")
         .flat_map(|import| {
-            import.names.iter().filter_map(|name| {
-                (name == "run_coroutine_blocking").then(|| {
+            import
+                .names
+                .iter()
+                .filter(|name| *name == "run_coroutine_blocking")
+                .map(|name| {
                     import
                         .aliases
                         .iter()
                         .find_map(|(original, alias)| (original == name).then(|| alias.clone()))
                         .unwrap_or_else(|| name.clone())
                 })
-            })
         })
         .collect::<BTreeSet<_>>();
     if raw_call_names.is_empty() {
