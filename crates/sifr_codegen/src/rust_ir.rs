@@ -144,6 +144,7 @@ pub enum RustStmt {
         params: Vec<RustParam>,
         ret: Option<RustType>,
         body: Vec<RustStmt>,
+        is_async: bool,
     },
     Break,
     Continue,

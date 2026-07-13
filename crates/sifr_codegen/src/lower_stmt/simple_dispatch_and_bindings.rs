@@ -579,6 +579,7 @@ pub(super) fn try_lower_simple_nested_function_stmt(
             params: fn_params,
             ret,
             body: lowered_body,
+            is_async: func.is_async,
         }]);
     }
 
@@ -604,7 +605,7 @@ pub(super) fn try_lower_simple_nested_function_stmt(
             params: lowered_params,
             body: lowered_body,
             is_move: false,
-            is_async: false,
+            is_async: func.is_async,
         },
     }])
 }

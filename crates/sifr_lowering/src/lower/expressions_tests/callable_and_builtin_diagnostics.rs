@@ -54,6 +54,9 @@ pub(super) fn test_async_callable_rejects_borrowed_async_function_boundary() {
 
     let owned_source = borrowed_source.replace("echo(value: str)", "echo(own value: str)");
     lower_source(&owned_source).expect("owned async function should satisfy AsyncCallable");
+
+    let nested_source = "async def apply(f: AsyncCallable[[str], str]) -> str:\n    return await f(\"hello\")\n\nasync def main() -> None:\n    async def echo(own value: str) -> str:\n        await task.sleep(0.0)\n        return value\n    result = await apply(echo)\n    return None\n";
+    lower_source(nested_source).expect("nested async function should retain AsyncCallable type");
 }
 
 #[test]

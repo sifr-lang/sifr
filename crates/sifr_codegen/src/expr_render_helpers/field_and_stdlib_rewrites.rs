@@ -800,10 +800,12 @@ impl RustEmitter {
                 params,
                 ret,
                 body,
+                is_async,
             } => crate::RustStmt::LocalFn {
                 name,
                 params,
                 ret,
+                is_async,
                 body: body
                     .into_iter()
                     .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))

@@ -637,6 +637,7 @@ impl RustEmitter {
                     self.lower_function_return_type(func, false)
                 },
                 body: lowered_body,
+                is_async: func.is_async,
             }
         } else {
             let params = func
@@ -660,7 +661,7 @@ impl RustEmitter {
                     params,
                     body: lowered_body,
                     is_move: false,
-                    is_async: false,
+                    is_async: func.is_async,
                 },
             }
         };
