@@ -66,10 +66,9 @@ pub(in crate::lower) fn python_async_context_metadata(
         );
         return None;
     };
-    let entered_type = match entered_type.resolve_alias() {
-        Type::Class { name, .. } => ctx.class_types.get(name).cloned().unwrap_or(entered_type),
-        _ => entered_type,
-    };
+    let entered_type = resolve_class_type(entered_type, ctx);
+    let enter_error_type = resolve_class_type(enter_error_type, ctx);
+    let exit_error_type = resolve_class_type(exit_error_type, ctx);
     let entered_is_opaque_borrow = matches!(
         entered_type.resolve_alias(),
         Type::Class { name, .. } if name == manager_class
@@ -81,6 +80,13 @@ pub(in crate::lower) fn python_async_context_metadata(
         exit_error_type,
         entered_is_opaque_borrow,
     })
+}
+
+fn resolve_class_type(ty: Type, ctx: &LowerCtx) -> Type {
+    match ty.resolve_alias() {
+        Type::Class { name, .. } => ctx.class_types.get(name).cloned().unwrap_or(ty),
+        _ => ty,
+    }
 }
 
 fn method<'a>(methods: &'a [(String, FunctionType)], name: &str) -> Option<&'a FunctionType> {
@@ -249,4 +255,11 @@ fn return_type_accepts_error(return_type: &Type, error_type: &Type) -> bool {
         return false;
     };
     error_type.is_assignable_to(active_error)
+        || matches!(
+            (error_type.resolve_alias(), active_error.resolve_alias()),
+            (
+                Type::Class { name: source, .. },
+                Type::Class { name: target, .. },
+            ) if source == "PythonError" && target == "Error"
+        )
 }

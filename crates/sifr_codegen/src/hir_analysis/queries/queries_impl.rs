@@ -203,9 +203,29 @@ fn stmt_summary(stmt: &HirStmt) -> FlowSummary {
         HirStmt::TryFinally { body, finalbody } => {
             flow_summary(body).sequence(flow_summary(finalbody))
         }
+        HirStmt::With { items, body }
+            if items
+                .iter()
+                .any(|item| matches!(item.kind, sifr_ir::HirWithItemKind::Python { .. })) =>
+        {
+            python_context_flow_summary(body)
+        }
+        HirStmt::AsyncWith {
+            kind: sifr_ir::HirAsyncWithKind::Python { .. },
+            body,
+            ..
+        } => python_context_flow_summary(body),
         HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => flow_summary(body),
         _ => FlowSummary::fallthrough(),
     }
+}
+
+fn python_context_flow_summary(body: &[HirStmt]) -> FlowSummary {
+    let mut summary = flow_summary(body);
+    if summary.has_raise {
+        summary.falls_through = true;
+    }
+    summary
 }
 
 pub(crate) fn body_contains_yield(stmts: &[HirStmt]) -> bool {

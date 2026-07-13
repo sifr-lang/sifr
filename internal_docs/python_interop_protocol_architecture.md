@@ -2,10 +2,10 @@
 
 ## Status And Scope
 
-This document is part of the proposed declaration-first Python interop contract.
-It defines the complete end state for Python coroutine, context-manager,
-callback, buffer, Arrow, and DLPack integration. Ordered changes activate
-this one contract without publishing reduced substitutes.
+This document defines the declaration-first Python interop contract. Typed
+coroutines, synchronous contexts, and asynchronous contexts are implemented;
+callback, buffer, Arrow, and DLPack rows remain reserved and must implement the
+same contract without publishing reduced substitutes.
 
 The common rules in
 [`python_interop_declaration_architecture.md`](./python_interop_declaration_architecture.md)
@@ -295,6 +295,15 @@ Python contexts. Cancellation of the body still runs `__aexit__`; cancellation
 of `__aexit__` is masked until cleanup reaches a terminal state, after which the
 original cancellation always resumes with any exit failure attached as
 secondary evidence. Python truthiness never suppresses it.
+
+Implementation status: asynchronous Python context declarations are active.
+The compiler selects dedicated Python async-context HIR, runs enter and exit on
+the application-owned asyncio loop, preserves original Python exception replay,
+and uses parent/child cancellation claims plus a biased body race so cleanup is
+terminal before cancellation resumes. Mixed synchronous/asynchronous contexts
+preserve lexical LIFO cleanup. The executable evidence ledger is
+`verification/areas/python_interop/fixtures/async_context/async_context_evidence.json`;
+the blocking compiled proof uses real `aiosqlite` over in-memory SQLite.
 
 ## Callback Declarations
 

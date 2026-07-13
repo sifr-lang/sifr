@@ -590,6 +590,7 @@ impl RustEmitter {
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
         let saved_python_context_counter = self.python_context_counter;
+        let saved_python_context_envelope_depth = self.python_context_envelope_depth;
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
             self.sifr_int_forced_local_bindings.borrow().clone();
@@ -604,6 +605,7 @@ impl RustEmitter {
         self.callable_var_conventions.clear();
         self.local_binding_types.clear();
         self.python_context_counter = 0;
+        self.python_context_envelope_depth = 0;
         self.sifr_int_local_bindings.borrow_mut().clear();
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
         self.sifr_int_result_local_bindings.borrow_mut().clear();
@@ -732,6 +734,7 @@ impl RustEmitter {
         self.callable_var_conventions = saved_callable_var_conventions;
         self.local_binding_types = saved_local_binding_types;
         self.python_context_counter = saved_python_context_counter;
+        self.python_context_envelope_depth = saved_python_context_envelope_depth;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
         *self.sifr_int_result_local_bindings.borrow_mut() = saved_sifr_int_result_local_bindings;

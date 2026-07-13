@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "capability": "async-context",
+  "positive": [
+    "active async enter/exit declaration and dedicated Python async-with lowering matrices",
+    "compiled aiosqlite session enter, typed query conversion, and one-loop identity",
+    "nested synchronous Python and asynchronous Python context LIFO ordering"
+  ],
+  "negative": [
+    "async/sync protocol substitution and invalid signature diagnostics",
+    "unentered async-context obligation and invalid distinct entered-resource diagnostics",
+    "direct async exit call rejection and unsuppressible Sifr truthy-exit evidence"
+  ],
+  "cleanup": [
+    "exact-once enter, exit, and aiosqlite close counters across seven managers",
+    "normal, Python suppression, Sifr error, exit failure, and secondary failure outcomes",
+    "semantic close success and poison runtime matrices"
+  ],
+  "cancellation": [
+    "Python body finally precedes async exit under native task cancellation",
+    "async exit reaches terminal close before parent cancellation resumes",
+    "parent-child claim, biased cancellation, nested scope, and fallback runtime matrices"
+  ],
+  "live": {
+    "source": "aiosqlite_session.sifr",
+    "bridge": "python_bridges/session.py",
+    "network": "offline in-memory SQLite",
+    "stdout_marker": "sifr-python-interop:async-context:value=sqlite-ready:enter=7:exit=7:close=7:loop=shared:suppression=covered:sifr=unsuppressed:cancellation=ordered:nested=lifo:exit-failure=covered"
+  }
+}

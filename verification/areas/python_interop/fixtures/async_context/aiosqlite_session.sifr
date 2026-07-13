@@ -1,0 +1,217 @@
+from sifr.python import ExitCause, ExitDecision, PythonError
+
+
+class Stats:
+    events: str
+    loop_identity: str
+    enter_count: int
+    exit_count: int
+    close_count: int
+    python_suppressed: bool
+    sifr_truthy_seen: bool
+    exit_failure_seen: bool
+    secondary_exit_failure_seen: bool
+    cancellation_ordered: bool
+    nested_lifo: bool
+
+
+@python.opaque(type=aiosqlite.Connection, cleanup=async_context)
+class DatabaseSession:
+    @python.context.aenter(Self.__aenter__)
+    async def __aenter__(self) -> Result[DatabaseSession, PythonError]: ...
+
+    @python.context.aexit(Self.__aexit__)
+    async def __aexit__(
+        own self,
+        cause: ExitCause,
+    ) -> Result[ExitDecision, PythonError]: ...
+
+    @python.coroutine(Self.fetch_value)
+    async def fetch_value(self) -> Result[str, PythonError]: ...
+
+
+@python.opaque(type=contextlib.AbstractContextManager, cleanup=context)
+class SyncMarker:
+    @python.context.enter(Self.__enter__)
+    def __enter__(self) -> Result[SyncMarker, PythonError]: ...
+
+    @python.context.exit(Self.__exit__)
+    def __exit__(
+        own self,
+        cause: ExitCause,
+    ) -> Result[ExitDecision, PythonError]: ...
+
+
+@python.coroutine(bridge.session.reset)
+async def reset() -> Result[None, PythonError]: ...
+
+
+@python.coroutine(bridge.session.make_session)
+async def make_session(mode: str) -> Result[DatabaseSession, PythonError]: ...
+
+
+@python.coroutine(bridge.session.make_sync_marker)
+async def make_sync_marker() -> Result[SyncMarker, PythonError]: ...
+
+
+@python.coroutine(bridge.session.originating_python_failure)
+async def originating_python_failure() -> Result[None, PythonError]: ...
+
+
+@python.coroutine(bridge.session.mark)
+async def mark(label: str) -> Result[None, PythonError]: ...
+
+
+@python.coroutine(bridge.session.hold_until_cancelled)
+async def hold_until_cancelled() -> Result[None, PythonError]: ...
+
+
+@python.coroutine(bridge.session.stats)
+async def stats() -> Result[Stats, PythonError]: ...
+
+
+async def normal_case() -> Result[str, PythonError]:
+    try:
+        manager: DatabaseSession = await make_session("normal")
+        async with manager as session:
+            result: str = await session.fetch_value()
+            return result
+        return ""
+    except PythonError as error:
+        raise error
+
+
+async def suppression_case() -> Result[bool, PythonError]:
+    try:
+        manager: DatabaseSession = await make_session("suppress-python")
+        async with manager as session:
+            _value: str = await session.fetch_value()
+            _failure: None = await originating_python_failure()
+        return True
+    except PythonError as error:
+        raise error
+
+
+async def unsuppressible_sifr_case() -> Result[bool, Error]:
+    try:
+        manager: DatabaseSession = await make_session("truthy-sifr")
+        async with manager as session:
+            _value: str = await session.fetch_value()
+            raise ValueError("ordinary Sifr body failure")
+        return False
+    except Error as error:
+        raise error
+
+
+async def exit_failure_case() -> Result[None, PythonError]:
+    try:
+        manager: DatabaseSession = await make_session("exit-failure")
+        async with manager as session:
+            _value: str = await session.fetch_value()
+        return None
+    except PythonError as error:
+        raise error
+
+
+async def secondary_exit_failure_case() -> Result[None, PythonError]:
+    try:
+        manager: DatabaseSession = await make_session("secondary-exit-failure")
+        async with manager as session:
+            _value: str = await session.fetch_value()
+            _failure: None = await originating_python_failure()
+        return None
+    except PythonError as error:
+        assert error.message.endswith("originating Python body failure")
+        raise error
+
+
+async def nested_case() -> Result[None, PythonError]:
+    try:
+        sync_manager: SyncMarker = await make_sync_marker()
+        async_manager: DatabaseSession = await make_session("nested")
+        with sync_manager as sync_marker:
+            async with async_manager as session:
+                _value: str = await session.fetch_value()
+                _marked: None = await mark("nested-body")
+        return None
+    except PythonError as error:
+        raise error
+
+
+async def cancellation_case() -> Result[None, PythonError]:
+    try:
+        manager: DatabaseSession = await make_session("cancel")
+        async with manager as session:
+            _value: str = await session.fetch_value()
+            _held: None = await hold_until_cancelled()
+        return None
+    except PythonError as error:
+        raise error
+
+
+async def main() -> Result[None, Error]:
+    try:
+        _reset: None = await reset()
+        value: str = await normal_case()
+        assert value == "sqlite-ready"
+
+        suppressed: bool = await suppression_case()
+        assert suppressed
+    except PythonError as error:
+        raise error
+
+    try:
+        unexpected_sifr_success: bool = await unsuppressible_sifr_case()
+        assert unexpected_sifr_success
+    except Error as error:
+        _sifr_message: str = str(error)
+
+    try:
+        _unexpected_exit_success: None = await exit_failure_case()
+        assert False
+    except PythonError as error:
+        _exit_message: str = error.message
+
+    try:
+        _unexpected_secondary_success: None = await secondary_exit_failure_case()
+        assert False
+    except PythonError as error:
+        assert error.message.endswith("originating Python body failure")
+
+    try:
+        _nested: None = await nested_case()
+    except PythonError as error:
+        raise error
+
+    async with task.scope() as scope:
+        cancelled = scope.spawn(cancellation_case())
+        await task.sleep(0.05)
+        cancelled.cancel()
+        _cancelled_result = await cancelled
+
+    try:
+        evidence: Stats = await stats()
+        assert evidence.enter_count == 7
+        assert evidence.exit_count == 7
+        assert evidence.close_count == 7
+        assert evidence.loop_identity != "drift"
+        assert evidence.python_suppressed
+        assert evidence.sifr_truthy_seen
+        assert evidence.exit_failure_seen
+        assert evidence.secondary_exit_failure_seen
+        assert evidence.cancellation_ordered
+        assert evidence.nested_lifo
+
+        print(
+            "sifr-python-interop:async-context:value=sqlite-ready:enter="
+            + str(evidence.enter_count)
+            + ":exit="
+            + str(evidence.exit_count)
+            + ":close="
+            + str(evidence.close_count)
+            + ":loop=shared:suppression=covered:sifr=unsuppressed:"
+            + "cancellation=ordered:nested=lifo:exit-failure=covered"
+        )
+    except PythonError as error:
+        raise error
+    return None

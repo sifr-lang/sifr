@@ -132,6 +132,29 @@ fn async_python_context_emits_all_concrete_body_outcomes() {
 }
 
 #[test]
+fn nested_async_python_context_preserves_outer_context_outcome_envelope() {
+    let mut emitter = emitter();
+    emitter.try_closure_depth = 1;
+    emitter.python_context_envelope_depth = 1;
+    let lowered = emitter
+        .try_lower_async_with_stmt_for_ir(
+            &kind(class_type("PythonError")),
+            Some("entered"),
+            &[HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(7)),
+            }],
+        )
+        .expect("lowering should succeed")
+        .expect("Python async context should lower");
+    let rendered = crate::render_stmts(&[lowered]);
+
+    assert!(
+        rendered.contains("return Ok(Ok(Some(__sifr_context_return)))"),
+        "{rendered}"
+    );
+}
+
+#[test]
 fn cancellation_arm_precedes_body_when_both_are_ready() {
     let mut emitter = emitter();
     let lowered = emitter
@@ -163,6 +186,10 @@ fn async_python_context_converts_enter_failures_to_the_active_error_type() {
         "{rendered}"
     );
     assert!(rendered.contains("conversion_error_0.into())"));
+    assert!(
+        rendered.contains("Error::new(") && rendered.contains(".to_string()"),
+        "{rendered}"
+    );
 }
 
 #[test]

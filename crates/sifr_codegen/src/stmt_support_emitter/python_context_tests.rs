@@ -173,6 +173,30 @@ fn entered_binding_preserves_mutability_and_mixed_item_nesting() {
 }
 
 #[test]
+fn sync_python_context_uses_async_closure_when_nested_body_awaits() {
+    let mut emitter = emitter();
+    let lowered = emitter
+        .try_lower_python_context_with_for_ir(
+            &[python_item("entered", "manager")],
+            &[HirStmt::Expr {
+                expr: sifr_ir::HirExpr::Await {
+                    value: Box::new(sifr_ir::HirExpr::Name {
+                        name: "pending".to_string(),
+                        ty: Type::Unknown,
+                    }),
+                    ty: Type::Unknown,
+                },
+            }],
+        )
+        .expect("lowering should succeed")
+        .expect("Python context should lower");
+    let rendered = crate::render_stmts(&[lowered]);
+
+    assert!(rendered.contains("(async || {"), "{rendered}");
+    assert!(rendered.contains("})().await"), "{rendered}");
+}
+
+#[test]
 fn cause_classification_uses_canonical_resolved_types() {
     assert_eq!(
         classify_cause_kind(Some(&class_type("TimeoutError")), "Alias"),

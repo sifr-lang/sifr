@@ -7,8 +7,8 @@ The declaration-first package-authoring layer is specified separately in
 Its synchronous declarations, opaque lifecycle, synchronous contexts,
 hermetic package-local bridge targets, application-owned asyncio runtime,
 typed coroutine declarations, structured cancellation, and consuming async
-close are implemented. Async contexts and the later callback and affine
-protocols are not active yet.
+close are implemented. Typed async contexts are active; the later callback and
+affine protocols are not active yet.
 
 ## Ownership Boundary
 
@@ -57,6 +57,16 @@ Rules:
 - track owned Python object, buffer, Arrow, DLPack, and callback resources for deterministic diagnostics.
 
 Generated package binaries initialize Python before user `main` when Python metadata is present. Generated Cargo metadata threads `PYO3_PYTHON` so PyO3 links/configures against the selected interpreter.
+
+Typed Python async contexts reuse the application-owned asyncio loop. Enter,
+body execution, exit, cancellation handoff, and cleanup stay on that one loop;
+the compiler never creates a nested executor. The entered value may differ
+from the manager object, `__aexit__` receives the original body failure, and a
+truthy exit result suppresses only Python-originated body failures. Sifr
+errors, returns, loop control, and cancellation retain their structured
+meaning. Exit and cleanup run exactly once after a successful enter, including
+on cancellation and nested-context unwinding, and an exit failure supersedes
+the body failure while retaining it as secondary diagnostic context.
 
 Package-local Python bridge modules under `src/python_bridges/` are syntax
 checked, inventoried, archived, and embedded under a resolved package-specific

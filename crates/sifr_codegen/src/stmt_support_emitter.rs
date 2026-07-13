@@ -50,7 +50,9 @@ mod subscript_augassign_delete;
 mod try_error_helpers;
 mod try_handlers;
 use async_cleanup::{inject_async_for_early_exit_cleanup, inject_async_with_return_cleanup};
-use result_type_helpers::{is_result_int_division_error_type, result_int_to_sifr_int_rust_type};
+use result_type_helpers::{
+    is_none_like_result_value, is_result_int_division_error_type, result_int_to_sifr_int_rust_type,
+};
 pub(crate) use stmt_expr_binop_option::binop_with_optional_operands;
 use try_error_helpers::{
     can_construct_error_from_message_for_ir, first_try_error_type_in_stmts,

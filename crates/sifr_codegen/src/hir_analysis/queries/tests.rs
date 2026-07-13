@@ -536,6 +536,48 @@ fn body_contains_return_ignores_unreachable_return() {
 }
 
 #[test]
+fn python_async_context_suppression_keeps_following_return_reachable() {
+    let error_type = Type::Class {
+        name: "PythonError".to_string(),
+        fields: vec![],
+        methods: vec![],
+        parent_class: None,
+    };
+    let stmts = vec![
+        HirStmt::AsyncWith {
+            kind: sifr_ir::HirAsyncWithKind::Python {
+                context: HirExpr::Name {
+                    name: "manager".to_string(),
+                    ty: Type::Unknown,
+                },
+                manager_class: "Manager".to_string(),
+                entered_type: Type::Unknown,
+                enter_error_type: error_type.clone(),
+                exit_error_type: error_type.clone(),
+                entered_is_opaque_borrow: false,
+                active_error_type: error_type,
+            },
+            target: None,
+            body: vec![HirStmt::Raise {
+                value: HirExpr::Name {
+                    name: "error".to_string(),
+                    ty: Type::Unknown,
+                },
+            }],
+        },
+        HirStmt::Return {
+            value: Some(HirExpr::BoolLiteral(false)),
+        },
+    ];
+
+    assert!(body_contains_return(&stmts));
+    assert_eq!(
+        block_control_flow_effect(&stmts),
+        ControlFlowEffect::AlwaysExits
+    );
+}
+
+#[test]
 fn try_body_has_value_return_ignores_unreachable_value_return() {
     let stmts = vec![
         HirStmt::Raise {

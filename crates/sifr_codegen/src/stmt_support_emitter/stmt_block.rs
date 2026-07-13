@@ -1,5 +1,5 @@
 use super::{
-    is_result_int_division_error_type, result_int_to_sifr_int_rust_type,
+    is_none_like_result_value, is_result_int_division_error_type, result_int_to_sifr_int_rust_type,
     should_force_mutable_binding, should_omit_local_type_annotation, type_contains_any_or_unknown,
     HirExpr, HirStmt, RustEmitter, RustStmt, Type,
 };
@@ -566,11 +566,7 @@ impl RustEmitter {
                                 if let Type::Result(ok_ty, _) =
                                     crate::resolve_alias_type_for_plain_call(return_ty)
                                 {
-                                    let value_is_none_like = matches!(value, HirExpr::NoneLiteral)
-                                        || matches!(
-                                            crate::resolve_alias_type_for_plain_call(value.ty()),
-                                            Type::None
-                                        );
+                                    let value_is_none_like = is_none_like_result_value(value);
                                     if value_is_none_like
                                         && matches!(
                                             crate::resolve_alias_type_for_plain_call(

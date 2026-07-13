@@ -1,4 +1,6 @@
-use super::{queries, HirExpr, HirStmt, RustEmitter, RustExpr, RustStmt, Type};
+use super::{
+    is_none_like_result_value, queries, HirExpr, HirStmt, RustEmitter, RustExpr, RustStmt, Type,
+};
 impl RustEmitter {
     pub(crate) fn try_lower_structured_return_stmt(
         &mut self,
@@ -44,11 +46,7 @@ impl RustEmitter {
                         if let Type::Result(ok_ty, _) =
                             crate::resolve_alias_type_for_plain_call(return_ty)
                         {
-                            let value_is_none_like = matches!(value, HirExpr::NoneLiteral)
-                                || matches!(
-                                    crate::resolve_alias_type_for_plain_call(value.ty()),
-                                    Type::None
-                                );
+                            let value_is_none_like = is_none_like_result_value(value);
                             if value_is_none_like
                                 && matches!(
                                     crate::resolve_alias_type_for_plain_call(ok_ty.as_ref()),

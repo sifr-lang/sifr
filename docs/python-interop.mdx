@@ -186,6 +186,32 @@ not a catchable `PythonError`. If Python suppresses cancellation, its later
 return value or different exception wins normally. Runtime shutdown drains
 registered tasks and async cleanup before stopping and joining the loop thread.
 
+Typed Python async context managers use the same owned loop and declare both
+protocol methods explicitly:
+
+```python
+from sifr.python import ExitCause, ExitDecision, PythonError
+
+@python.opaque(type=aiosqlite.Connection, cleanup=async_context)
+class DatabaseSession:
+    @python.context.aenter(Self.__aenter__)
+    async def __aenter__(self) -> Result[DatabaseSession, PythonError]: ...
+
+    @python.context.aexit(Self.__aexit__)
+    async def __aexit__(
+        own self,
+        cause: ExitCause,
+    ) -> Result[ExitDecision, PythonError]: ...
+```
+
+A value with `cleanup=async_context` must be consumed by `async with`; it cannot
+be abandoned, entered twice, or reused after exit. Enter and exit execute on the
+application-owned Python loop. An originating Python exception may be
+suppressed by a truthy `__aexit__`, while ordinary Sifr errors, timeout,
+cancellation, and runtime faults remain primary. Cancellation waits for Python
+`finally` and the masked async exit to reach a terminal state before resuming.
+Exit runs exactly once on fallthrough, return, error, and cancellation paths.
+
 `py.run_coroutine_blocking` is also `@blocking_io`. It is for Python-owned coroutine objects and returns only after Python finishes.
 
 ## Resources

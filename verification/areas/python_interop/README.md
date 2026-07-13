@@ -17,6 +17,7 @@ uv run --project verification/areas/python_interop --locked python verification/
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --ml-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --library-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --async-declaration-examples
+uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --async-context-examples
 verification/areas/python_interop/run.sh --self-test
 scripts/run_all_tests.sh --profile python-interop-live
 ```
@@ -189,3 +190,12 @@ one loop identity, and consuming async close, and requires a deterministic
 binary stdout marker. Cancellation, suppression, failure, conversion, poison,
 and shutdown matrices are owned by the focused lowering/codegen/runtime tests
 named in `fixtures/async_declaration/async_declaration_evidence.json`.
+
+The `async-context-examples` suite is offline and compiled. It runs a real
+`aiosqlite.Connection` subclass over in-memory SQLite and proves one owned-loop
+identity, typed enter/value conversion, Python-only suppression, unsuppressible
+Sifr truthiness, exact-once exit/close, cancellation-finally-exit ordering,
+secondary exit failure, and mixed synchronous/asynchronous LIFO cleanup. Its
+positive, negative, cleanup, cancellation, and live owners are recorded in
+`fixtures/async_context/async_context_evidence.json`. The suite is a blocking,
+unconditional selection in create-PR, merge, nightly, and release profiles.

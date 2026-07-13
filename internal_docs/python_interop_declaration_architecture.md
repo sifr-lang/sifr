@@ -2,9 +2,9 @@
 
 Status: production contract. Synchronous declarations, opaque lifecycle,
 synchronous contexts, package-local bridges, typed coroutine declarations, and
-consuming async close are active. Later protocol sections remain the ordered
-target contract until their implementations activate. The embedded runtime
-contract is also documented in
+consuming async close and async contexts are active. Later protocol sections
+remain the ordered target contract until their implementations activate. The
+embedded runtime contract is also documented in
 [`python_interop_architecture.md`](./python_interop_architecture.md).
 
 ## Problem
@@ -317,6 +317,12 @@ The raw dynamic API uses the same automatic ordinary drop and affine protocol
 resources. It has no generic scope cleanup stack because semantic close, async
 close, context exit, callback shutdown, and one-shot transfer are distinct
 operations that must retain their individual ownership rules.
+
+Typed coroutine, `cleanup=async_close`, synchronous context, and asynchronous
+context declarations are active. For `cleanup=async_context`, exactly one
+borrowed async enter and one consuming async exit are required, and the manager
+must be consumed by `async with`. Callback, buffer, Arrow, and DLPack decorator
+forms remain reserved by their capability rows.
 
 ## Package-Local Python Bridges
 
