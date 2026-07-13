@@ -5,12 +5,10 @@
 In progress. The phase defines one complete end-state architecture and an
 ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
-non-blocking precision refinements are incorporated. M0 through M6 are
-implemented, locally validated, and linked below; M7 is in progress with its
-frontend-contract, owned-loop, cooperative-cancellation-carrier,
-cancellation-aware-supervisor/ordered-shutdown, typed-async-wrapper, and
-consuming-async-close-lifecycle waves merged, while later milestones are not
-yet implemented.
+non-blocking precision refinements are incorporated. M0 through M7 are
+implemented, locally validated, and linked below; typed async declarations,
+owned-loop cancellation, and consuming async close are active on one production
+path, while later milestones are not yet implemented.
 Milestones sequence delivery; they do not create reduced language versions,
 temporary public contracts, dual authorities, or alternate lowering paths.
 
@@ -140,7 +138,7 @@ Implementation progress:
 - [x] M4 recursive conversion and opaque lifecycle — [PR #2935](https://github.com/sifr-lang/sifr/pull/2935)
 - [x] M5 synchronous Python context managers — [PR #2942](https://github.com/sifr-lang/sifr/pull/2942)
 - [x] M6 hermetic package-local Python bridges — [PR #2953](https://github.com/sifr-lang/sifr/pull/2953)
-- [ ] M7 owned asyncio runtime and async declarations
+- [x] M7 owned asyncio runtime and async declarations — [PR #2968](https://github.com/sifr-lang/sifr/pull/2968)
 - [ ] M8 async context managers
 - [ ] M9 typed callback lifetimes and dispatch
 - [ ] M10 typed buffer protocol
@@ -577,7 +575,8 @@ Implementation waves (one locally validated and reviewed PR per wave):
   - Poison on cleanup failure and reject reuse, duplicate close, or abandonment
     of an `async_close` obligation. Cover success, failure, poison,
     use-after-close, cancellation, and shutdown interaction.
-- [ ] Atomically activate async declarations and close M7 evidence:
+- [x] Atomically activate async declarations and close M7 evidence —
+  [PR #2968](https://github.com/sifr-lang/sifr/pull/2968):
   - Lift the `@python.coroutine` and `cleanup=async_close` gates only after the
     owned loop, typed wrappers, cooperative cancellation, terminal shutdown,
     and consuming lifecycle are present in the same production path.
