@@ -50,6 +50,13 @@ pub struct PythonAsyncRequest {
     pub(super) args: Vec<PythonAsyncValue>,
     pub(super) kwargs: Vec<(String, PythonAsyncValue)>,
     pub(super) output: PythonAsyncType,
+    completion: PythonAsyncCompletion,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum PythonAsyncCompletion {
+    ReturnValue,
+    SemanticClose,
 }
 
 #[derive(Debug)]
@@ -82,6 +89,7 @@ impl PythonAsyncRequest {
             args,
             kwargs,
             output,
+            completion: PythonAsyncCompletion::ReturnValue,
         }
     }
 
@@ -101,6 +109,7 @@ impl PythonAsyncRequest {
             args,
             kwargs,
             output,
+            completion: PythonAsyncCompletion::ReturnValue,
         })
     }
 
@@ -120,7 +129,40 @@ impl PythonAsyncRequest {
             args,
             kwargs,
             output,
+            completion: PythonAsyncCompletion::ReturnValue,
         })
+    }
+
+    #[doc(hidden)]
+    pub fn semantic_close_method(
+        receiver: ObjectHandle,
+        member: String,
+    ) -> Result<Self, PythonError> {
+        Ok(Self {
+            target: PythonAsyncTarget::Method {
+                receiver: PythonAsyncObject::semantic_close(receiver)?,
+                member,
+            },
+            args: Vec::new(),
+            kwargs: Vec::new(),
+            output: PythonAsyncType::None,
+            completion: PythonAsyncCompletion::SemanticClose,
+        })
+    }
+
+    pub(super) fn finish_semantic_close(&self, succeeded: bool) {
+        if self.completion != PythonAsyncCompletion::SemanticClose {
+            return;
+        }
+        if let PythonAsyncTarget::Method { receiver, .. } = &self.target {
+            receiver.finish_semantic_close(succeeded);
+        }
+    }
+}
+
+impl Drop for PythonAsyncRequest {
+    fn drop(&mut self) {
+        self.finish_semantic_close(false);
     }
 }
 
@@ -138,6 +180,22 @@ impl PythonAsyncObject {
             lease,
             owner: Some(object),
         })
+    }
+
+    fn semantic_close(object: ObjectHandle) -> Result<Self, PythonError> {
+        let lease = object
+            .begin_semantic_close()
+            .map_err(PythonError::runtime)?;
+        Ok(Self {
+            lease,
+            owner: Some(object),
+        })
+    }
+
+    fn finish_semantic_close(&self, succeeded: bool) {
+        if let Some(owner) = &self.owner {
+            owner.finish_semantic_close(succeeded);
+        }
     }
 
     pub(super) fn clone_ref(&self, py: Python<'_>) -> Result<Py<PyAny>, PythonError> {

@@ -40,6 +40,7 @@ struct ForeignObjectState {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum ForeignObjectStatus {
     Open,
+    Closing,
     Poisoned,
     Closed,
 }
@@ -70,6 +71,9 @@ impl ForeignObject {
                 },
                 |object| Ok(object.clone_ref(py)),
             ),
+            ForeignObjectStatus::Closing => Err(PythonRuntimeError::PythonOperationFailed(
+                "Python object identity is closing".to_string(),
+            )),
             ForeignObjectStatus::Poisoned => Err(PythonRuntimeError::PythonOperationFailed(
                 "Python object identity is poisoned after failed semantic cleanup".to_string(),
             )),
@@ -82,15 +86,48 @@ impl ForeignObject {
     pub(super) fn lease(&self) -> Result<ForeignObjectLease, PythonRuntimeError> {
         let mut state = lock_state(&self.inner.state);
         if state.status != ForeignObjectStatus::Open || state.object.is_none() {
-            return Err(PythonRuntimeError::PythonOperationFailed(
-                "Python object identity is closed".to_string(),
-            ));
+            return Err(unavailable_for_status(state.status));
         }
         state.active_leases = state.active_leases.saturating_add(1);
         Ok(ForeignObjectLease {
             inner: Arc::clone(&self.inner),
             boundary_path: self.boundary_path.clone(),
         })
+    }
+
+    pub(super) fn begin_semantic_close(&self) -> Result<ForeignObjectLease, PythonRuntimeError> {
+        let mut state = lock_state(&self.inner.state);
+        if state.status != ForeignObjectStatus::Open || state.object.is_none() {
+            return Err(unavailable_for_status(state.status));
+        }
+        state.status = ForeignObjectStatus::Closing;
+        state.active_leases = state.active_leases.saturating_add(1);
+        Ok(ForeignObjectLease {
+            inner: Arc::clone(&self.inner),
+            boundary_path: self.boundary_path.clone(),
+        })
+    }
+
+    pub(super) fn finish_semantic_close(&self, succeeded: bool) {
+        let object = {
+            let mut state = lock_state(&self.inner.state);
+            if state.status != ForeignObjectStatus::Closing {
+                return;
+            }
+            state.status = if succeeded {
+                ForeignObjectStatus::Closed
+            } else {
+                ForeignObjectStatus::Poisoned
+            };
+            if succeeded && state.active_leases == 0 {
+                state.object.take()
+            } else {
+                None
+            }
+        };
+        if let Some(object) = object {
+            release_object(object);
+        }
     }
 
     pub(super) fn poison(&self) {
@@ -190,6 +227,16 @@ fn lock_state(state: &Mutex<ForeignObjectState>) -> std::sync::MutexGuard<'_, Fo
         Ok(state) => state,
         Err(poisoned) => poisoned.into_inner(),
     }
+}
+
+fn unavailable_for_status(status: ForeignObjectStatus) -> PythonRuntimeError {
+    let state = match status {
+        ForeignObjectStatus::Open => "unavailable",
+        ForeignObjectStatus::Closing => "closing",
+        ForeignObjectStatus::Poisoned => "poisoned after failed semantic cleanup",
+        ForeignObjectStatus::Closed => "closed",
+    };
+    PythonRuntimeError::PythonOperationFailed(format!("Python object identity is {state}"))
 }
 
 pub(super) fn drain_pending_releases(_py: Python<'_>) {

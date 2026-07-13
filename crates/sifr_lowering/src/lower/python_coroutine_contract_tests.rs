@@ -19,6 +19,19 @@ class PythonError(Error):
     message: str
 ";
 
+const ASYNC_CLOSE_PREFIX: &str = r"
+class PythonError(Error):
+    message: str
+
+@python.opaque(type=pkg.Client, cleanup=async_close)
+class Client:
+    @python.coroutine(Self.aclose)
+    async def aclose(own self) -> Result[None, PythonError]: ...
+
+@python.coroutine(pkg.make_client)
+async def make_client() -> Result[Client, PythonError]: ...
+";
+
 #[test]
 fn valid_coroutine_contract_is_parsed_but_remains_reserved() {
     let errors = lower_errors(&format!(
@@ -106,4 +119,63 @@ fn async_close_requires_one_consuming_aclose_coroutine() {
                 && error.message.contains("cleanup=async_close")
         }));
     }
+}
+
+#[test]
+fn async_close_consumption_discharges_obligation_while_gate_remains_closed() {
+    let errors = lower_errors(&format!(
+        "{ASYNC_CLOSE_PREFIX}\nasync def use_client() -> Result[None, PythonError]:\n    try:\n        client: Client = await make_client()\n        _closed: None = await client.aclose()\n        return None\n    except PythonError as error:\n        raise error\n"
+    ));
+    assert!(has_code(
+        &errors,
+        DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION
+    ));
+    assert!(
+        !errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+                && error.message.contains("client")
+        }),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn async_close_obligation_rejects_abandonment_and_partial_consumption() {
+    let abandoned = lower_errors(&format!(
+        "{ASYNC_CLOSE_PREFIX}\nasync def abandon_client() -> Result[None, PythonError]:\n    try:\n        client: Client = await make_client()\n        return None\n    except PythonError as error:\n        raise error\n"
+    ));
+    assert!(
+        abandoned.iter().any(|error| {
+            error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+                && error.message.contains("must-use binding 'client'")
+        }),
+        "{abandoned:?}"
+    );
+
+    let partial = lower_errors(&format!(
+        "{ASYNC_CLOSE_PREFIX}\nasync def partial_close(flag: bool) -> Result[None, PythonError]:\n    try:\n        client: Client = await make_client()\n        if flag:\n            _closed: None = await client.aclose()\n        return None\n    except PythonError as error:\n        raise error\n"
+    ));
+    assert!(
+        partial.iter().any(|error| {
+            error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+                && error
+                    .message
+                    .contains("only some continuing control-flow branches")
+        }),
+        "{partial:?}"
+    );
+}
+
+#[test]
+fn async_close_obligation_rejects_duplicate_close_and_reuse() {
+    let errors = lower_errors(&format!(
+        "{ASYNC_CLOSE_PREFIX}\nasync def double_close() -> Result[None, PythonError]:\n    try:\n        client: Client = await make_client()\n        _first: None = await client.aclose()\n        _second: None = await client.aclose()\n        return None\n    except PythonError as error:\n        raise error\n"
+    ));
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+                && error.message.contains("client")
+        }),
+        "{errors:?}"
+    );
 }

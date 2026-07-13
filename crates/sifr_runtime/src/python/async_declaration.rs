@@ -65,13 +65,14 @@ fn submit_typed(
         &terminal,
     )
     .map_err(|error| {
+        request.finish_semantic_close(false);
         release_pending_submission(submission_id);
         PythonError::from_pyerr(py, error, "call", "typed asyncio completion callback")
     })?;
     let setup_callback = build_setup_callback(
         py,
         submission_id,
-        request,
+        Arc::clone(&request),
         &loop_object,
         &done_callback,
         &terminal,
@@ -79,6 +80,7 @@ fn submit_typed(
         context,
     )
     .map_err(|error| {
+        request.finish_semantic_close(false);
         release_pending_submission(submission_id);
         PythonError::from_pyerr(py, error, "call", "typed asyncio setup callback")
     })?;
@@ -86,6 +88,7 @@ fn submit_typed(
         .bind(py)
         .call_method1("call_soon_threadsafe", (setup_callback,))
         .map_err(|error| {
+            request.finish_semantic_close(false);
             release_pending_submission(submission_id);
             PythonError::from_pyerr(py, error, "call", "typed asyncio submission")
         })?;
@@ -124,6 +127,7 @@ fn build_done_callback(
                     ),
                 ))
             });
+            request.finish_semantic_close(outcome.is_ok());
             let outcome = match finish_submission(submission_id) {
                 Ok(()) => outcome,
                 Err(error) => Err(PythonTerminalError::Runtime(error)),
@@ -233,6 +237,7 @@ fn build_setup_callback(
             });
 
             if let Err(error) = setup {
+                request.finish_semantic_close(false);
                 if registered {
                     let _ignored = finish_submission(submission_id);
                 } else {
