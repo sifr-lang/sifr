@@ -55,6 +55,8 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     }
     let uses_task_scope = super::module_uses_task_scope(module);
     let uses_join_set = super::module_uses_join_set(module);
+    let uses_async_python =
+        super::python_interop_common::module_uses_async_python_declaration(module);
     let uses_join_set_spawn_cpu = super::module_uses_join_set_spawn_cpu(module);
     let uses_task_scope_offload = super::module_uses_task_scope_offload(module);
     let uses_task_scope_spawn_cpu = super::module_uses_task_scope_spawn_cpu(module);
@@ -68,8 +70,10 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     if super::module_uses_async_exit_cause_type(module) {
         emitted_items.extend(super::build_async_exit_cause_type_items());
     }
-    if uses_task_scope || uses_join_set {
+    if uses_task_scope || uses_join_set || uses_async_python {
         emitted_items.extend(super::build_task_cancellation_items());
+    }
+    if uses_task_scope || uses_join_set {
         emitted_items.extend(super::build_task_scope_items());
         emitted_items.extend(super::build_task_supervisor_items());
         emitted_items.extend(super::build_task_context_scope_extension_items(true));

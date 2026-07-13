@@ -150,6 +150,9 @@ fn cancellation_suppression_result_wins_after_terminal_wait() {
     super::super::attach(|py| {
         let value = super::super::detach(py, || terminal.wait())
             .expect("suppressed cancellation should return normally");
+        let PythonTerminalValue::Raw(value) = value else {
+            panic!("raw submission should return a raw terminal value");
+        };
         assert_eq!(
             value
                 .bind(py)
@@ -560,8 +563,12 @@ fn wait_for_submission_count(expected: usize) {
 
 fn wait_terminal_int(terminal: PythonTerminal) -> i64 {
     super::super::attach(|py| {
-        super::super::detach(py, || terminal.wait())
-            .expect("terminal should contain a value")
+        let value =
+            super::super::detach(py, || terminal.wait()).expect("terminal should contain a value");
+        let PythonTerminalValue::Raw(value) = value else {
+            panic!("raw submission should return a raw terminal value");
+        };
+        value
             .bind(py)
             .extract::<i64>()
             .expect("terminal value should be an integer")

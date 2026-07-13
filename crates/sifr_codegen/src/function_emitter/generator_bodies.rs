@@ -3,8 +3,8 @@ use super::{
     python_callback_bounds::python_callback_bound_param_names, HirFunction, HirStmt, OwnershipKind,
     RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, Type, Visibility,
 };
+use crate::python_interop_common::python_omit_parameter_indices;
 use crate::python_interop_direct::python_interop_function_body;
-use crate::python_interop_direct::python_omit_parameter_indices;
 use crate::rust_interop_direct::rust_interop_function_body;
 use std::collections::HashSet;
 impl RustEmitter {

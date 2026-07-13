@@ -90,6 +90,12 @@ pub(crate) fn python_interop_plan_for_named_modules<'a>(
             );
         }
         for class in &module.classes {
+            plan.requires_async_loop |= class.methods.iter().any(|method| {
+                method
+                    .python_interop
+                    .iter()
+                    .any(|declaration| declaration.effect == sifr_ir::PythonInteropEffect::Async)
+            });
             let Some(declaration) = class.python_opaque_declaration() else {
                 continue;
             };

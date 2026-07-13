@@ -1,8 +1,9 @@
 use crate::{interop_build_plan_for_named_modules, PythonTargetProbeStatus};
 use ruff_text_size::TextRange;
 use sifr_ir::{
-    HirExpr, HirFunction, HirImport, HirModule, HirStmt, MethodKind, PythonInteropDeclaration,
-    PythonInteropDecoratorKind, PythonInteropEffect, PythonRecordExpansion, PythonTargetPath,
+    HirClass, HirClassKind, HirExpr, HirFunction, HirImport, HirModule, HirStmt, MethodKind,
+    PythonInteropDeclaration, PythonInteropDecoratorKind, PythonInteropEffect,
+    PythonRecordExpansion, PythonTargetPath,
 };
 use sifr_type_system::Type;
 
@@ -156,6 +157,45 @@ fn sync_python_declaration_does_not_require_the_owned_async_loop() {
     let plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);
 
     assert!(!plan.python.requires_async_loop);
+}
+
+#[test]
+fn method_only_async_python_declaration_requires_owned_loop() {
+    let mut method = function("work", Vec::new(), Vec::new());
+    method.is_async = true;
+    method.python_interop.push(PythonInteropDeclaration {
+        kind: PythonInteropDecoratorKind::Coroutine,
+        target: Some(PythonTargetPath {
+            segments: vec!["Self".to_string(), "work".to_string()],
+            span: TextRange::default(),
+        }),
+        span: TextRange::default(),
+        effect: PythonInteropEffect::Async,
+        cleanup: None,
+        consumes_receiver: false,
+        parameters: Vec::new(),
+        required_import_root: None,
+    });
+    let mut module = module_with_functions(Vec::new());
+    module.classes.push(HirClass {
+        name: "Client".to_string(),
+        fields: Vec::new(),
+        methods: vec![method],
+        is_hashable: false,
+        is_error_type: false,
+        kind: HirClassKind::Regular,
+        operator_impls: Vec::new(),
+        newtype_inner: None,
+        implements_protocols: Vec::new(),
+        parent_class: Some("NonSend".to_string()),
+        type_params: Vec::new(),
+        enum_variants: Vec::new(),
+        rust_interop: Vec::new(),
+    });
+
+    let plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);
+
+    assert!(plan.python.requires_async_loop);
 }
 
 fn module_with_functions(functions: Vec<HirFunction>) -> HirModule {

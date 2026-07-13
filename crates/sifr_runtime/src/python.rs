@@ -7,8 +7,12 @@ use std::mem::MaybeUninit;
 use std::sync::{Mutex, MutexGuard};
 
 mod arrow_ops;
+mod async_declaration;
+#[cfg(test)]
+mod async_declaration_tests;
 mod async_runtime;
 mod async_terminal;
+mod async_value;
 mod bridge_loader;
 mod buffer_ops;
 mod call_depth;
@@ -35,7 +39,18 @@ pub use arrow_ops::{
     arrow_array, arrow_capsule_names, arrow_schema, arrow_stream, release_arrow, ArrowHandle,
     PythonArrowCapsuleMetadata,
 };
+#[doc(hidden)]
+pub use async_declaration::submit_async_declaration;
 pub use async_runtime::{async_runtime_diagnostics, PythonAsyncRuntimeDiagnostics};
+#[doc(hidden)]
+pub use async_value::{
+    async_dict_items, async_from_bool, async_from_bytes, async_from_dict_results, async_from_float,
+    async_from_int, async_from_list_results, async_from_none, async_from_object,
+    async_from_owned_object, async_from_record_results, async_from_str, async_from_tuple_results,
+    async_list_items, async_record_field, async_to_bool, async_to_bytes, async_to_float,
+    async_to_int, async_to_none, async_to_object, async_to_str, async_tuple_items,
+    async_value_is_none, PythonAsyncRequest, PythonAsyncType, PythonAsyncValue,
+};
 pub use bridge_loader::PythonBridgeSource;
 pub use buffer_ops::{
     buffer_shape, buffer_strides, buffer_suboffsets, buffer_u8, copy_buffer_u8, release_buffer,
