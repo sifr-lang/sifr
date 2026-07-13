@@ -7,8 +7,9 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M6 are
 implemented, locally validated, and linked below; M7 is in progress with its
-frontend-contract, owned-loop, and cooperative-cancellation-carrier waves
-merged, while later milestones are not yet implemented.
+frontend-contract, owned-loop, cooperative-cancellation-carrier, and
+cancellation-aware-supervisor/ordered-shutdown waves merged, while later
+milestones are not yet implemented.
 Milestones sequence delivery; they do not create reduced language versions,
 temporary public contracts, dual authorities, or alternate lowering paths.
 
@@ -544,7 +545,8 @@ Implementation waves (one locally validated and reviewed PR per wave):
   - Prove cancellation-before-registration, claimed terminal waiting,
     unclaimed fallback abort, and timeout without changing the behavior of
     tasks that never enter a Python await.
-- [ ] Complete cancellation-aware supervisors and ordered shutdown substrate:
+- [x] Complete cancellation-aware supervisors and ordered shutdown substrate —
+  [PR #2962](https://github.com/sifr-lang/sifr/pull/2962):
   - Route scope/group fail-fast, race/select losers, and join-set cancellation
     through the same carrier, preserving current abort behavior for unclaimed
     ordinary Sifr tasks while terminally waiting for claimed Python work.
