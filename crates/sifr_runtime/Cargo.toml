@@ -37,6 +37,7 @@ unicode_names2 = { workspace = true, optional = true }
 
 [dev-dependencies]
 rcgen = { workspace = true }
+tokio = { workspace = true }
 
 [features]
 default = []

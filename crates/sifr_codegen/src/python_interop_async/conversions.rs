@@ -65,7 +65,7 @@ pub(crate) fn async_python_method_body(
         return None;
     };
     let target = declaration.target.as_ref()?;
-    let member = target.segments.get(1)?.to_string();
+    let member = target.segments.get(1)?.clone();
     let mut body = argument_frame(func, declaration, error_type, opaque_classes)?;
     let receiver = RustExpr::Field {
         expr: Box::new(RustExpr::Ident("self".to_string())),
@@ -677,7 +677,10 @@ fn async_output_value(
                                 mutable: true,
                                 expr: Box::new(RustExpr::Ident("__sifr_python_record".to_string())),
                             },
-                            RustExpr::Literal(RustLiteral::Str(field.clone())),
+                            RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(RustExpr::Literal(RustLiteral::Str(field.clone()))),
+                            },
                         ],
                     ),
                     error_type,
@@ -695,21 +698,21 @@ fn async_output_value(
                 })),
             })
         }
-        Type::None => primitive_output(name, "async_to_none", error_type),
-        Type::Bool => primitive_output(name, "async_to_bool", error_type),
-        Type::Int => primitive_output(name, "async_to_int", error_type),
-        Type::Float => primitive_output(name, "async_to_float", error_type),
-        Type::Str => primitive_output(name, "async_to_str", error_type),
-        Type::Bytes => primitive_output(name, "async_to_bytes", error_type),
+        Type::None => Some(primitive_output(name, "async_to_none", error_type)),
+        Type::Bool => Some(primitive_output(name, "async_to_bool", error_type)),
+        Type::Int => Some(primitive_output(name, "async_to_int", error_type)),
+        Type::Float => Some(primitive_output(name, "async_to_float", error_type)),
+        Type::Str => Some(primitive_output(name, "async_to_str", error_type)),
+        Type::Bytes => Some(primitive_output(name, "async_to_bytes", error_type)),
         _ => None,
     }
 }
 
-fn primitive_output(name: &str, function: &str, error_type: &Type) -> Option<RustExpr> {
-    Some(mapped_try(
+fn primitive_output(name: &str, function: &str, error_type: &Type) -> RustExpr {
+    mapped_try(
         runtime_call(function, vec![RustExpr::Ident(name.to_string())]),
         error_type,
-    ))
+    )
 }
 
 fn schema_variant(name: &str, args: Vec<RustExpr>) -> RustExpr {
@@ -791,10 +794,16 @@ fn mapped_mutable_let(name: &str, value: RustExpr, error_type: &Type) -> RustStm
 }
 
 fn vector_let(name: &str) -> RustStmt {
+    let value_type = RustType::Named("sifr_runtime::python::PythonAsyncValue".to_string());
+    let item_type = if name == "__sifr_python_kwargs" {
+        RustType::Tuple(vec![RustType::String_, value_type])
+    } else {
+        value_type
+    };
     RustStmt::Let {
         mutable: true,
         name: name.to_string(),
-        ty: None,
+        ty: Some(RustType::Vec(Box::new(item_type))),
         value: RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
             args: Vec::new(),

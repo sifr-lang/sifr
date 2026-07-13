@@ -14,6 +14,7 @@ struct CancellationState {
     fallback: Option<CancellationHook>,
     exact: Option<ExactCancellation>,
     requested: bool,
+    fallback_resumed: bool,
     next_generation: u64,
 }
 
@@ -52,6 +53,16 @@ pub enum CancellationRequest {
     StateUnavailable,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CancellationResume {
+    Invoked,
+    AlreadyResumed,
+    NotRequested,
+    ExactClaimActive,
+    FallbackUnavailable,
+    StateUnavailable,
+}
+
 impl CancellationCarrier {
     #[must_use]
     pub fn new() -> Self {
@@ -67,7 +78,8 @@ impl CancellationCarrier {
                     return CancellationBind::AlreadyBound;
                 }
                 state.fallback = Some(Arc::clone(&hook));
-                if state.requested && state.exact.is_none() {
+                if state.requested && state.exact.is_none() && !state.fallback_resumed {
+                    state.fallback_resumed = true;
                     (CancellationBind::InvokedPendingCancellation, Some(hook))
                 } else {
                     (CancellationBind::Bound, None)
@@ -112,8 +124,9 @@ impl CancellationCarrier {
                 state.requested = true;
                 if let Some(exact) = state.exact.as_ref() {
                     (CancellationRequest::Claimed, Some(Arc::clone(&exact.hook)))
-                } else if let Some(hook) = state.fallback.as_ref() {
-                    (CancellationRequest::Fallback, Some(Arc::clone(hook)))
+                } else if let Some(hook) = state.fallback.as_ref().map(Arc::clone) {
+                    state.fallback_resumed = true;
+                    (CancellationRequest::Fallback, Some(hook))
                 } else {
                     (CancellationRequest::FallbackPending, None)
                 }
@@ -124,6 +137,30 @@ impl CancellationCarrier {
             hook();
         }
         outcome
+    }
+
+    pub fn resume_fallback_after_claim(&self) -> CancellationResume {
+        let hook = match self.state.lock() {
+            Ok(mut state) => {
+                if !state.requested {
+                    return CancellationResume::NotRequested;
+                }
+                if state.exact.is_some() {
+                    return CancellationResume::ExactClaimActive;
+                }
+                if state.fallback_resumed {
+                    return CancellationResume::AlreadyResumed;
+                }
+                let Some(hook) = state.fallback.as_ref().map(Arc::clone) else {
+                    return CancellationResume::FallbackUnavailable;
+                };
+                state.fallback_resumed = true;
+                hook
+            }
+            Err(_) => return CancellationResume::StateUnavailable,
+        };
+        hook();
+        CancellationResume::Invoked
     }
 }
 
@@ -212,6 +249,54 @@ mod tests {
         assert_eq!(carrier.request_cancel(), CancellationRequest::Claimed);
         assert_eq!(fallback_calls.load(Ordering::SeqCst), 0);
         assert_eq!(exact_calls.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn claimed_terminal_resume_invokes_fallback_once_after_lease_release() {
+        let carrier = CancellationCarrier::new();
+        let fallback_calls = Arc::new(AtomicUsize::new(0));
+        let exact_calls = Arc::new(AtomicUsize::new(0));
+        assert_eq!(
+            carrier.bind_fallback(counting_hook(&fallback_calls)),
+            CancellationBind::Bound
+        );
+        let claim = carrier
+            .claim(counting_hook(&exact_calls))
+            .expect("fresh carrier should be claimable");
+
+        assert_eq!(carrier.request_cancel(), CancellationRequest::Claimed);
+        assert_eq!(
+            carrier.resume_fallback_after_claim(),
+            CancellationResume::ExactClaimActive
+        );
+        drop(claim);
+        assert_eq!(
+            carrier.resume_fallback_after_claim(),
+            CancellationResume::Invoked
+        );
+        assert_eq!(
+            carrier.resume_fallback_after_claim(),
+            CancellationResume::AlreadyResumed
+        );
+        assert_eq!(fallback_calls.load(Ordering::SeqCst), 1);
+        assert_eq!(exact_calls.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn resume_requires_request_and_bound_fallback() {
+        let carrier = CancellationCarrier::new();
+        assert_eq!(
+            carrier.resume_fallback_after_claim(),
+            CancellationResume::NotRequested
+        );
+        assert_eq!(
+            carrier.request_cancel(),
+            CancellationRequest::FallbackPending
+        );
+        assert_eq!(
+            carrier.resume_fallback_after_claim(),
+            CancellationResume::FallbackUnavailable
+        );
     }
 
     #[test]

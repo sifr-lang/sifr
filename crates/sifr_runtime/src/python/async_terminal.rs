@@ -16,6 +16,7 @@ pub(super) enum PythonTerminalValue {
 
 #[derive(Debug)]
 pub(super) enum PythonTerminalError {
+    ActiveCancellation,
     Python(PyErr),
     Mapped(Box<PythonError>),
     Runtime(PythonRuntimeError),
@@ -123,6 +124,9 @@ pub(super) fn terminal_error_to_python(
     operation: &str,
 ) -> PythonError {
     match error {
+        PythonTerminalError::ActiveCancellation => {
+            PythonError::runtime(PythonRuntimeError::AsyncSubmissionCancelled)
+        }
         PythonTerminalError::Python(error) => {
             PythonError::from_pyerr(py, error, "await", operation)
         }

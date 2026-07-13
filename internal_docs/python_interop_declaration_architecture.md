@@ -1,8 +1,10 @@
 # Declaration-First Python Interop Architecture
 
-Status: proposed. This document defines the intended successor to the current
-raw-object authoring experience. The implemented embedded runtime contract
-remains documented in
+Status: production contract. Synchronous declarations, opaque lifecycle,
+synchronous contexts, package-local bridges, typed coroutine declarations, and
+consuming async close are active. Later protocol sections remain the ordered
+target contract until their implementations activate. The embedded runtime
+contract is also documented in
 [`python_interop_architecture.md`](./python_interop_architecture.md).
 
 ## Problem

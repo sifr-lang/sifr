@@ -104,6 +104,10 @@ impl SubmissionCancellationBridge {
             let _ignored = cancel_submission(submission_id);
         }
     }
+
+    pub(super) fn was_requested(&self) -> bool {
+        self.state.lock().map_or(true, |state| state.requested)
+    }
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -189,7 +193,8 @@ pub(super) fn submit_coroutine(
     coroutine: &Py<PyAny>,
     carrier: Option<&CancellationCarrier>,
 ) -> Result<PythonTerminal, PythonError> {
-    let (terminal, cancellation) = terminal_for_submission(carrier)?;
+    let (terminal, cancellation) = terminal_for_submission(carrier)
+        .map_err(|error| terminal_error_to_python(py, error, "owned asyncio submission"))?;
     let (submission_id, loop_object) =
         reserve_submission(py, &terminal).map_err(PythonError::runtime)?;
     let done_callback = build_done_callback(py, submission_id, &terminal).map_err(|error| {
@@ -230,23 +235,23 @@ pub(super) fn submit_coroutine(
 
 pub(super) fn terminal_for_submission(
     carrier: Option<&CancellationCarrier>,
-) -> Result<(PythonTerminal, Arc<SubmissionCancellationBridge>), PythonError> {
+) -> Result<(PythonTerminal, Arc<SubmissionCancellationBridge>), PythonTerminalError> {
     let cancellation = Arc::new(SubmissionCancellationBridge::default());
     let cancellation_claim = if let Some(carrier) = carrier {
         match carrier.claim(cancellation_hook(&cancellation)) {
             Ok(claim) => Some(claim),
             Err(CancellationClaimError::CancelledBeforeClaim) => {
-                return Err(PythonError::runtime(
-                    PythonRuntimeError::AsyncSubmissionCancelled,
-                ));
+                return Err(PythonTerminalError::ActiveCancellation);
             }
             Err(CancellationClaimError::AlreadyClaimed) => {
-                return Err(PythonError::runtime(
+                return Err(PythonTerminalError::Runtime(
                     PythonRuntimeError::AsyncCancellationAlreadyClaimed,
                 ));
             }
             Err(CancellationClaimError::StateUnavailable) => {
-                return Err(PythonError::runtime(PythonRuntimeError::StateUnavailable));
+                return Err(PythonTerminalError::Runtime(
+                    PythonRuntimeError::StateUnavailable,
+                ));
             }
         }
     } else {
@@ -679,7 +684,7 @@ fn fail_live_runtime(message: &str) {
         ASYNC_STATE_CHANGED.notify_all();
         (pending, active)
     };
-    complete_drained_submissions(pending, active, &message);
+    complete_drained_submissions(pending, active, message);
 }
 
 fn complete_drained_submissions(

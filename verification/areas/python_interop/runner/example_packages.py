@@ -168,6 +168,9 @@ def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCa
     source_path = paths.fixtures_root / case.relative_source
     if source_path.is_file():
         shutil.copy2(source_path, source_root / "main.sifr")
+    bridge_source = source_path.parent / "python_bridges"
+    if bridge_source.is_dir():
+        shutil.copytree(bridge_source, source_root / "python_bridges")
     (source_root / "lib.rs").write_text(
         "// Cargo package marker required for metadata discovery; runnable Sifr source is src/main.sifr.\n",
         encoding="utf-8",

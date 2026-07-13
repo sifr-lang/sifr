@@ -152,6 +152,40 @@ def fetch_status_sync() -> Result[str, PythonError]:
         raise e
 ```
 
+Libraries with genuine coroutine APIs use typed async declarations instead of
+blocking offload. The generated application owns one asyncio loop on one
+dedicated thread; declaration calls submit to that loop without blocking a Sifr
+executor thread:
+
+```python
+from sifr.python import PythonError
+
+@python.opaque(type=httpx.AsyncClient, cleanup=async_close)
+class AsyncClient:
+    @python.coroutine(Self.aclose)
+    async def aclose(own self) -> Result[None, PythonError]: ...
+
+@python.coroutine(bridge.http.make_client)
+async def make_client() -> Result[AsyncClient, PythonError]: ...
+
+@python.coroutine(bridge.http.get_status)
+async def get_status(client: AsyncClient, path: str) -> Result[int, PythonError]: ...
+```
+
+`@python.coroutine` is valid only on `async def`; synchronous declarations do
+not silently become asynchronous. Inputs and outputs use the same recursive
+typed conversion contract as synchronous declarations, and opaque values stay
+non-send. A class using `cleanup=async_close` must declare exactly one
+consuming `aclose(own self)` coroutine and the value cannot be abandoned,
+closed twice, or reused after close.
+
+Cancelling a Sifr task cancels its exact asyncio task and waits for Python
+`finally` cleanup before native task cancellation completes. A terminal
+`CancelledError` caused by that request is the active Sifr cancellation cause,
+not a catchable `PythonError`. If Python suppresses cancellation, its later
+return value or different exception wins normally. Runtime shutdown drains
+registered tasks and async cleanup before stopping and joining the loop thread.
+
 `py.run_coroutine_blocking` is also `@blocking_io`. It is for Python-owned coroutine objects and returns only after Python finishes.
 
 ## Resources
@@ -355,7 +389,8 @@ Compiler diagnostics use stable URLs and structured JSON fields:
 - `SIFR-PYTRUST-0001`, `0003..0005`: dependency wildcard rejection,
   stale native trust, dynamic-import annotation, and unauthorized required-root
   diagnostics. `SIFR-PYTRUST-0002` is retired.
-- `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`, `SIFR-PYZC`, and `SIFR-PYCB`: reserved families for future compiler-emitted diagnostics; current runtime failures in these areas are returned as structured `py.PythonError` values.
+- `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, and `SIFR-PYRES`: active declaration, target, conversion, resource, and sequenced activation diagnostics.
+- `SIFR-PYZC` and `SIFR-PYCB`: reserved for their later zero-copy declaration and callback protocol milestones.
 
 Verification lives under `verification/areas/python_interop/`:
 
@@ -364,6 +399,7 @@ verification/areas/python_interop/run.sh --group env
 verification/areas/python_interop/run.sh --tier tier1
 verification/areas/python_interop/run.sh --group callbacks
 verification/areas/python_interop/run.sh --group dataframes
+uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --async-declaration-examples
 verification/areas/python_interop/run.sh --self-test
 scripts/run_all_tests.sh --profile python-interop-live
 ```

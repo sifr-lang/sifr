@@ -81,15 +81,15 @@
       "id": "coroutine-declaration",
       "surface": "@python.coroutine(path)",
       "target_state": "declaration-supported",
-      "implementation_status": "reserved",
+      "implementation_status": "active",
       "activation_owner": "async-runtime",
       "required_evidence": ["positive", "negative", "cleanup", "cancellation", "live"],
       "evidence": [
-        {"kind": "positive", "status": "planned", "owner": "async declaration matrix"},
-        {"kind": "negative", "status": "planned", "owner": "sync/async kind mismatch fixtures"},
-        {"kind": "cleanup", "status": "planned", "owner": "loop, task, and async-close shutdown fixtures"},
-        {"kind": "cancellation", "status": "planned", "owner": "bidirectional cancellation matrix"},
-        {"kind": "live", "status": "planned", "owner": "compiled httpx-style client"}
+        {"kind": "positive", "status": "passing", "owner": "async declaration lowering, codegen, runtime, and compiled httpx client matrices"},
+        {"kind": "negative", "status": "passing", "owner": "sync/async kind mismatch, non-awaitable, Python failure, and conversion fixtures"},
+        {"kind": "cleanup", "status": "passing", "owner": "consuming async-close success, failure, poison, abandonment, and ordered-shutdown fixtures"},
+        {"kind": "cancellation", "status": "passing", "owner": "pre-registration, in-flight, finally ordering, suppression, and native-cause runtime matrix"},
+        {"kind": "live", "status": "passing", "owner": "async_declaration/httpx_client.sifr compiled against an offline ASGI transport"}
       ]
     },
     {

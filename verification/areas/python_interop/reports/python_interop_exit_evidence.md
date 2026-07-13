@@ -18,6 +18,8 @@ fixtures pass the consumed Python object to `threadsafe_callback` handlers.
 - Opaque object import/attribute/item/call helpers, kwargs, Python traceback capture, and typed `Result` errors.
 - Primitive, list/tuple/dict, record, bytes, and fixed-width conversion contracts.
 - Async blocking classification, offload constraints, and Python coroutine blocking.
+- Application-owned asyncio execution, typed coroutine declarations, native
+  cancellation-cause mapping, and consuming async close.
 - Context-manager cleanup, explicit close/release, resource diagnostics, and double-release coverage.
 - `Py_buffer`, Arrow PyCapsule, DLPack, and array-interface zero-copy contracts with explicit copy-vs-view evidence.
 - Local and threadsafe Python-to-Sifr callbacks.
@@ -64,6 +66,7 @@ verification/areas/python_interop/run.sh --tier tier4 --report ../../../target/v
 verification/areas/python_interop/run.sh --group callbacks --report ../../../target/verification/areas/python_interop/callbacks.latest.json
 verification/areas/python_interop/run.sh --group dataframes --report ../../../target/verification/areas/python_interop/dataframes.latest.json
 verification/areas/python_interop/run.sh --group cloud --package boto3 --report ../../../target/verification/areas/python_interop/package.latest.json
+uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --async-declaration-examples
 scripts/run_all_tests.sh --profile python-interop-live
 ```
 
@@ -101,6 +104,29 @@ installed bridge source before execution, and runs with an empty read-only
 working and temporary directory. It requires the marker
 `sifr-python-interop:package-bridge:gtin=7032069804988:format=13:check=8` and is
 exposed through the package bridge showcase script.
+
+## Typed Async Declaration Activation
+
+`@python.coroutine(path)` and `cleanup=async_close` are active on one production
+path. The generated application owns one asyncio loop thread and one submission
+registry; typed functions, factories, methods, package bridges, recursive
+conversion, and opaque results submit through it. Focused runtime tests cover
+Python failure, conversion and awaitable-shape failure, pre-registration and
+in-flight cancellation, Python `finally` ordering, cancellation suppression,
+later-exception precedence, independent `CancelledError`, bounded malformed
+fallbacks, shutdown drain, and async-close success/failure/poison/exact-once
+behavior. Lowering tests own sync/async substitution and affine abandonment,
+partial close, duplicate close, and reuse rejection.
+
+The capability ledger points to
+`fixtures/async_declaration/async_declaration_evidence.json`. Its compiled
+httpx-style client uses a real `httpx.AsyncClient` with an offline ASGI
+transport and requires the marker
+`sifr-python-interop:async-declaration:status=207:message=async-ready:close=1:loop=shared:failure=covered:conversion=covered`.
+The `async-declaration-examples` suite is a blocking selection in every required
+validation profile and is exposed through the runnable typed-async demo.
+Its first area-runner measurement was 105,034 ms including generated-package
+compilation, so the blocking create-PR Python interop step budget is 180,000 ms.
 
 Repository gates:
 

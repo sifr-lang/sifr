@@ -12,6 +12,7 @@ dependencies = [
     "fakeredis>=2.25,<3",
     "fastapi>=0.115,<1",
     "hiredis>=3,<4",
+    "httpx>=0.27,<1",
     "kafka-python>=2.0,<3",
     "numpy>=2,<3",
     "packaging>=24,<26",

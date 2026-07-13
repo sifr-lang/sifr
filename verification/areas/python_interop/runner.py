@@ -81,6 +81,11 @@ COMMAND_ARGS: dict[str, list[str]] = {
         "--report",
         "../../../target/verification/areas/python_interop/library-examples.latest.json",
     ],
+    "python-interop-async-declaration-examples": [
+        "--async-declaration-examples",
+        "--report",
+        "../../../target/verification/areas/python_interop/async-declaration-examples.latest.json",
+    ],
     "python-interop-cloud-boto3": [
         "--group",
         "cloud",
@@ -104,6 +109,7 @@ COMMAND_ARGS: dict[str, list[str]] = {
 AREA_PROJECT_COMMANDS = {
     "python-interop-dataframe-examples",
     "python-interop-library-examples",
+    "python-interop-async-declaration-examples",
     "python-interop-ml-examples",
     "python-interop-live-examples",
 }
