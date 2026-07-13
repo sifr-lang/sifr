@@ -97,6 +97,38 @@ def main() -> Result[None, PythonError]:
 
 Every Python boundary operation returns `Result`. Python exceptions are captured as structured `py.PythonError` values with exception type, message, traceback, operation context, and conversion/resource/zero-copy metadata where relevant. Python exceptions do not unwind through Sifr user code.
 
+## Typed Declarations And Package Bridges
+
+Package authors can expose Python libraries as ordinary typed Sifr functions.
+The Sifr signature is the conversion contract, the target is a structured path,
+and the declaration body is exactly `...`:
+
+```python
+from sifr.python import PythonError
+
+@python(json.dumps)
+def dumps(value: dict[str, int]) -> Result[str, PythonError]: ...
+```
+
+Adaptation code belongs under the owning package's canonical
+`src/python_bridges/` directory. A source target such as
+`bridge.identifiers.parse_gtin` resolves only against that package's inventoried
+bridge modules:
+
+```python
+@python(bridge.identifiers.parse_gtin)
+def parse_gtin(text: str) -> Result[GtinInfo, PythonError]: ...
+```
+
+Sifr inventories ordinary static imports, rejects dynamic imports, includes
+third-party roots in the canonical requirement set, and requires the root
+application to authorize them with `[trust].python`. Bridge sources and their
+generated inventory are package archive inputs. Generated binaries embed the
+selected package graph under isolated `__sifr_bridge__.p_*` namespaces, install
+the reserved loader before user `main`, and do not read or extract bridge files
+at runtime. Two dependencies can therefore own the same bridge module path
+without collision.
+
 ## Blocking And Async
 
 Every public `sifr.python` operation is classified as `@blocking_io`. Direct Python calls in async Sifr code are rejected unless the work is explicitly offloaded through Sifr's blocking offload primitive.

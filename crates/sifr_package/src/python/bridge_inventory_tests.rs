@@ -108,6 +108,31 @@ fn dynamic_import_calls_and_aliases_are_rejected() {
             "import importlib\nvalue = getattr(importlib, 'import_module')('json')\n",
             "getattr(importlib, import_module)",
         ),
+        (
+            "importlib_dunder",
+            "import importlib\nvalue = importlib.__import__('json')\n",
+            "importlib.__import__",
+        ),
+        (
+            "importlib_dunder_alias",
+            "from importlib import __import__ as load\nvalue = load('json')\n",
+            "load",
+        ),
+        (
+            "builtin_assignment",
+            "load = __import__\nvalue = load('json')\n",
+            "load",
+        ),
+        (
+            "importlib_star",
+            "from importlib import *\nvalue = import_module('json')\n",
+            "import_module",
+        ),
+        (
+            "builtins_star",
+            "from builtins import *\nvalue = __import__('json')\n",
+            "__import__",
+        ),
     ] {
         let fixture = BridgeFixture::new(case);
         fixture.write("dynamic.py", source);

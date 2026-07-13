@@ -2,10 +2,11 @@
 
 This note records the production contract implemented by the embedded CPython interop phase. It complements the public guide in `docs/python-interop.mdx` and the verification surface in `verification/areas/python_interop/`.
 
-The proposed declaration-first package-authoring layer is specified separately
-in [`python_interop_declaration_architecture.md`](./python_interop_declaration_architecture.md).
-That document is a future contract, not a description of currently implemented
-syntax or behavior.
+The declaration-first package-authoring layer is specified separately in
+[`python_interop_declaration_architecture.md`](./python_interop_declaration_architecture.md).
+Its synchronous declarations, opaque lifecycle, synchronous contexts, and
+hermetic package-local bridge targets are implemented. Async declarations and
+the later callback and affine protocols are not active yet.
 
 ## Ownership Boundary
 
@@ -37,7 +38,7 @@ environment.
 Probe metadata participates in generated artifact cache keys: interpreter path,
 CPython version tuple, SOABI, extension suffixes, pointer width, platform,
 `libpython` when available, project/lock digests, canonical required imports,
-and root-owned trust config.
+root-owned trust config, and sorted owning distribution names and versions.
 
 ## Runtime Lifecycle
 
@@ -54,6 +55,18 @@ Rules:
 - track owned Python object, buffer, Arrow, DLPack, and callback resources for deterministic diagnostics.
 
 Generated package binaries initialize Python before user `main` when Python metadata is present. Generated Cargo metadata threads `PYO3_PYTHON` so PyO3 links/configures against the selected interpreter.
+
+Package-local Python bridge modules under `src/python_bridges/` are syntax
+checked, inventoried, archived, and embedded under a resolved package-specific
+`__sifr_bridge__.p_<resolved_package_key>` namespace. A first-position runtime
+loader owns that namespace before user `main`, rejects collisions, rewrites
+same-package `bridge.*` imports, preserves stable virtual traceback filenames,
+and never falls back to filesystem lookup or extraction. The generated binary
+embeds every bridge module in the selected normal dependency graph, independent
+of declaration reachability; dev-only and otherwise unselected packages are
+excluded. Bridge source/inventory digests, resolved package identity, the
+versioned binding contract, authoritative Sifr types, distribution versions,
+and interpreter ABI all participate in composed cache identity.
 
 ## Object And Error Model
 
@@ -121,6 +134,7 @@ The public examples in `docs/python-interop.mdx` are intentionally backed by che
 | Example family | Evidence |
 | --- | --- |
 | biip / schwifty package calls | `library-examples` runs `simple_import/biip_schwifty_full_example.sifr`; Tier 1a package matrix entries and `simple_import` contract coverage remain inventory evidence. |
+| installed package-local biip bridge | `package_bridge_archive/package_bridge_evidence.json` records the archive/unpack/build/run proof; the package bridge showcase runs the compiled fixture after checkout and installed bridge-source removal. |
 | FastAPI app construction | `library-examples` runs `fastapi_app/fastapi_pydantic_full_example.sifr`; `fastapi_app_contract.json` remains the contract inventory. |
 | Pydantic / pydantic-core validation | `library-examples` runs `fastapi_app/fastapi_pydantic_full_example.sifr`; `pydantic_models_contract.json` remains the contract inventory. |
 | pandas / pyarrow / polars Arrow bridge | `dataframe-examples` runs pandas and Polars examples; `library-examples` runs `pyarrow_capsule/pyarrow_full_example.sifr`; Arrow capsule fixtures remain contract inventory. |
@@ -143,8 +157,7 @@ Active compiler diagnostics:
   without an explicit trust annotation, and a required root not authorized by
   the root application. `SIFR-PYTRUST-0002` is retired.
 
-Reserved families `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES`,
-`SIFR-PYZC`, and `SIFR-PYCB` remain allocated for declaration compiler
-diagnostics. The complete declaration proposal additionally reserves
-`SIFR-PYASYNC` and `SIFR-PYCTX`; those families become active only with their
-documented declaration contracts and are not descriptions of current behavior.
+Declaration diagnostics are activated with their owning compiler surfaces. `PYIMP`,
+`PYCALL`, `PYCONV`, `PYRES`, and `PYCTX` currently cover synchronous
+declarations, opaque values, contexts, and package bridges. `PYASYNC`, `PYCB`,
+and `PYZC` remain reserved until their sequenced runtime protocols activate.

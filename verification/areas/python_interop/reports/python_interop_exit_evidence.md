@@ -31,18 +31,22 @@ Active compiler diagnostic families:
 | Family | Codes | Evidence |
 | --- | --- | --- |
 | `SIFR-PYENV` | `0001..0011` | `crates/sifr_package/src/python/tests.rs`; generated docs under `docs/errors/`; registry rows in `internal_docs/diagnostic_codes.md`. |
-| `SIFR-PYTRUST` | `0001..0004` | `crates/sifr_package/src/python/trust_policy_tests.rs`, `crates/sifr_lowering/src/lower/python_trust_tests.rs`; generated docs under `docs/errors/`; registry rows in `internal_docs/diagnostic_codes.md`. |
+| `SIFR-PYTRUST` | `0001`, `0003..0005` | `crates/sifr_package/src/python/trust_policy_tests.rs`, `crates/sifr_lowering/src/lower/python_trust_tests.rs`; generated docs under `docs/errors/`; registry rows in `internal_docs/diagnostic_codes.md`. |
+| `SIFR-PYIMP` | `0001..0003` | declaration target validation, package bridge inventory, and reserved runtime collision tests. |
+| `SIFR-PYCALL` | `0001` | declaration call-shape lowering and driver target-probe tests. |
+| `SIFR-PYCONV` | `0001` | recursive declaration conversion lowering/codegen/runtime tests. |
+| `SIFR-PYRES` | `0002` | sequenced declaration activation tests. |
+| `SIFR-PYCTX` | `0001` | synchronous context declaration, ownership, and cleanup tests. |
 
-Reserved runtime-adjacent families:
+Reserved later-protocol families:
 
-- `SIFR-PYIMP`
-- `SIFR-PYCALL`
-- `SIFR-PYCONV`
-- `SIFR-PYRES`
+- `SIFR-PYASYNC`
 - `SIFR-PYZC`
 - `SIFR-PYCB`
 
-Runtime failures in those areas currently return structured `py.PythonError` family values. They are not compiler diagnostics unless a future compiler-emitted failure mode requires a stable diagnostic code.
+Runtime Python exceptions continue to return structured `PythonError` values;
+compiler diagnostics own invalid declarations, trust, bridge setup, and protocol
+contracts.
 
 ## Verification Commands
 
@@ -78,6 +82,25 @@ The registered `sqlite-context` library example is the runnable transaction evid
 compiles and runs normal, no-return, early-return, narrowing, break, continue,
 and Python-error paths and requires the marker
 `sifr-python-interop:sqlite-context:total=71`.
+
+## Hermetic Package Bridge Activation
+
+The `bridge.*` package target namespace is active. Its evidence ledger is
+`fixtures/package_bridge_archive/package_bridge_evidence.json`. Focused tests
+cover loader-before-main ordering, first-position restoration after
+`sys.meta_path` mutation, collision rejection, sibling import rewriting,
+deterministic virtual filenames, cache invalidation, invalid syntax, rejected
+dynamic imports, misplaced sources, and reserved target ambiguity. Package graph
+tests cover root-owned authorization of dependency bridge imports, while the
+compiled isolation fixture executes two packages that both own
+`bridge.identifiers` under distinct resolved runtime namespaces.
+
+The runnable archive proof packages the biip-backed bridge, unpacks it into a
+distinct install root, removes the source checkout before build, removes the
+installed bridge source before execution, and runs with an empty read-only
+working and temporary directory. It requires the marker
+`sifr-python-interop:package-bridge:gtin=7032069804988:format=13:check=8` and is
+exposed through the package bridge showcase script.
 
 Repository gates:
 

@@ -1,6 +1,7 @@
 use super::{PythonRuntimeError, PythonRuntimeError::ReservedBridgeCollision};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
+use std::collections::BTreeSet;
 
 const RUNTIME_ROOT: &str = "__sifr_bridge__";
 
@@ -19,7 +20,13 @@ pub(super) fn install(
 ) -> Result<(), PythonRuntimeError> {
     reject_reserved_collisions(py)?;
     let entries = PyDict::new(py);
+    let mut modules = BTreeSet::new();
     for source in sources {
+        if !modules.insert(source.module.as_str()) {
+            return Err(ReservedBridgeCollision {
+                module: source.module.clone(),
+            });
+        }
         entries
             .set_item(
                 &source.module,
@@ -37,6 +44,7 @@ pub(super) fn install(
         cr#"
 import ast
 import builtins
+import importlib
 import importlib.util
 import sys
 
@@ -64,7 +72,7 @@ class _BridgeImportRewriter(ast.NodeTransformer):
                     )]))
                 rewritten.append(ast.Import(names=[ast.alias(
                     name=mapped,
-                    asname=alias.asname,
+                    asname=alias.asname or "__sifr_bridge_imported",
                 )]))
             else:
                 rewritten.append(ast.Import(names=[alias]))
@@ -126,15 +134,28 @@ def install(entries):
         "__sifr_bridge_original_import__",
         builtins.__import__,
     )
+    original_import_module = getattr(
+        builtins,
+        "__sifr_bridge_original_import_module__",
+        importlib.import_module,
+    )
 
     def guarded_import(name, globals=None, locals=None, fromlist=(), level=0):
         if name == _ROOT or name.startswith(_ROOT + "."):
             _put_finder_first(finder)
         return original_import(name, globals, locals, fromlist, level)
 
+    def guarded_import_module(name, package=None):
+        absolute_name = importlib.util.resolve_name(name, package) if name.startswith(".") else name
+        if absolute_name == _ROOT or absolute_name.startswith(_ROOT + "."):
+            _put_finder_first(finder)
+        return original_import_module(name, package)
+
     builtins.__sifr_bridge_finder__ = finder
     builtins.__sifr_bridge_original_import__ = original_import
+    builtins.__sifr_bridge_original_import_module__ = original_import_module
     builtins.__import__ = guarded_import
+    importlib.import_module = guarded_import_module
 "#,
         c"<sifr-bridge-loader>",
         c"__sifr_bridge_loader__",
@@ -152,12 +173,20 @@ pub(super) fn reset_for_tests(py: Python<'_>) {
     let _ignored = py.run(
         cr#"
 import builtins
+import importlib
 import sys
 
 original = getattr(builtins, "__sifr_bridge_original_import__", None)
 if original is not None:
     builtins.__import__ = original
-for name in ("__sifr_bridge_finder__", "__sifr_bridge_original_import__"):
+original_import_module = getattr(builtins, "__sifr_bridge_original_import_module__", None)
+if original_import_module is not None:
+    importlib.import_module = original_import_module
+for name in (
+    "__sifr_bridge_finder__",
+    "__sifr_bridge_original_import__",
+    "__sifr_bridge_original_import_module__",
+):
     if hasattr(builtins, name):
         delattr(builtins, name)
 sys.meta_path[:] = [
@@ -165,7 +194,11 @@ sys.meta_path[:] = [
     if not getattr(item, "_sifr_bridge_finder", False)
 ]
 for name in list(sys.modules):
-    if name == "__sifr_bridge__" or name.startswith("__sifr_bridge__."):
+    if (
+        name == "__sifr_bridge__"
+        or name.startswith("__sifr_bridge__.")
+        or name == "__sifr_bridge_loader__"
+    ):
         del sys.modules[name]
 "#,
         None,
@@ -243,6 +276,10 @@ mod tests {
                 install(py, &config.bridge_sources),
                 Err(ReservedBridgeCollision { .. })
             ));
+            assert!(py
+                .import("builtins")
+                .and_then(|builtins| builtins.hasattr("__sifr_bridge_finder__"))
+                .is_ok_and(|present| !present));
             modules
                 .del_item(RUNTIME_ROOT)
                 .expect("collision fixture should clear");
@@ -272,6 +309,20 @@ mod tests {
                 .and_then(|sys| sys.getattr("meta_path"))
                 .and_then(|meta_path| meta_path.call_method1("pop", (0,)))
                 .expect("test should mutate sys.meta_path");
+
+            let imported = py
+                .import("importlib")
+                .and_then(|importlib| importlib.getattr("import_module"))
+                .and_then(|import_module| import_module.call1((format!("{PACKAGE}.late"),)))
+                .expect("guarded importlib.import_module should restore the finder");
+            assert_eq!(
+                imported
+                    .getattr("answer")
+                    .and_then(|answer| answer.call0())
+                    .and_then(|value| value.extract::<i32>())
+                    .expect("dynamically imported target should execute"),
+                7
+            );
         })
         .expect("CPython should be attached");
 
@@ -286,6 +337,32 @@ mod tests {
             .and_then(|value| crate::python::to_i32(&value))
             .expect("late embedded target should execute");
         assert_eq!(value, 7);
+    }
+
+    #[test]
+    fn duplicate_embedded_module_names_are_rejected_before_installation() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        let config = test_config("bridge-loader-duplicates");
+        initialize_cpython_with_config(&config).expect("CPython should initialize");
+        let duplicate = PythonBridgeSource {
+            module: format!("{PACKAGE}.duplicate"),
+            source: "VALUE = 1\n".to_string(),
+            filename: format!("<{PACKAGE}.duplicate>"),
+            is_package: false,
+            package_prefix: PACKAGE.to_string(),
+        };
+
+        Python::try_attach(|py| {
+            let error = install(py, &[duplicate.clone(), duplicate])
+                .expect_err("duplicate embedded module names must fail");
+            assert!(matches!(error, ReservedBridgeCollision { .. }));
+            assert!(py
+                .import("builtins")
+                .and_then(|builtins| builtins.hasattr("__sifr_bridge_finder__"))
+                .is_ok_and(|present| !present));
+        })
+        .expect("CPython should be attached");
     }
 
     fn bridge_sources() -> Vec<PythonBridgeSource> {

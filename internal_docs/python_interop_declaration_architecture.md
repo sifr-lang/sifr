@@ -397,7 +397,7 @@ authorization. Package-aware lowering activates a public `bridge.*` target only
 when the declaration's owning resolved package has an inventoried bridge. It
 replaces the source-level `bridge` segment with that package's full reserved
 runtime prefix before wrapper codegen; bridge targets without package bridge
-authority remain a `SIFR-PYRES-0002` error.
+authority remain a `SIFR-PYIMP-0001` error.
 
 Generated runtime metadata contains an embedded UTF-8 source table keyed by
 the full runtime module name, including synthetic package entries and stable
