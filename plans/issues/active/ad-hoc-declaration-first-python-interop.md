@@ -5,13 +5,11 @@
 In progress. The phase defines one complete end-state architecture and an
 ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
-non-blocking precision refinements are incorporated. M0 through M7 are
-implemented, locally validated, and linked below. M8 Wave 1 has landed the
-reviewed async-context declaration, ownership, cancellation, runtime, and
-codegen substrate behind the existing public reservation; typed async
-declarations, owned-loop cancellation, and consuming async close remain active
-on one production path, while M8 public activation and later milestones are not
-yet implemented.
+non-blocking precision refinements are incorporated. M0 through M8 are
+implemented, locally validated, reviewed, and linked below. Typed synchronous
+and asynchronous declarations and context managers run on the application-owned
+Python loop with structured cancellation and consuming cleanup; M9 and later
+milestones are not yet implemented.
 Milestones sequence delivery; they do not create reduced language versions,
 temporary public contracts, dual authorities, or alternate lowering paths.
 
@@ -142,7 +140,7 @@ Implementation progress:
 - [x] M5 synchronous Python context managers — [PR #2942](https://github.com/sifr-lang/sifr/pull/2942)
 - [x] M6 hermetic package-local Python bridges — [PR #2953](https://github.com/sifr-lang/sifr/pull/2953)
 - [x] M7 owned asyncio runtime and async declarations — [PR #2968](https://github.com/sifr-lang/sifr/pull/2968)
-- [ ] M8 async context managers
+- [x] M8 async context managers — [PR #2970](https://github.com/sifr-lang/sifr/pull/2970), [PR #2972](https://github.com/sifr-lang/sifr/pull/2972)
 - [ ] M9 typed callback lifetimes and dispatch
 - [ ] M10 typed buffer protocol
 - [ ] M11 Arrow C Data Interface
@@ -644,7 +642,8 @@ Implementation waves (one locally validated and reviewed PR per wave):
     generated async-main carrier installation.
   - Cover lowering, codegen, runtime, cancellation, conversion, and ownership
     contracts while leaving all three M8 public surfaces reserved.
-- [ ] Atomically activate async contexts and close M8 evidence:
+- [x] Atomically activate async contexts and close M8 evidence —
+  [PR #2972](https://github.com/sifr-lang/sifr/pull/2972):
   - Lift only the async enter, async exit, and `cleanup=async_context`
     reservations; retain all M9-M12 gates and M8 diagnostics.
   - Add the compiled offline `aiosqlite` database/session matrix,
