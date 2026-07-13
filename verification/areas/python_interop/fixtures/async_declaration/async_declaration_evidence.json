@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "capability": "coroutine-declaration",
+  "positive": [
+    "compiled async function, factory, borrowed method, and recursive record result",
+    "two typed declarations report one application loop and thread identity",
+    "real httpx.AsyncClient request over an offline ASGI transport"
+  ],
+  "negative": [
+    "sync/async declaration shape lowering matrix",
+    "Python exception and output conversion runtime matrices",
+    "non-awaitable and independent CancelledError runtime tests"
+  ],
+  "cleanup": [
+    "compiled consuming Client.aclose exact-once assertion",
+    "async close abandonment, partial branch, duplicate close, and reuse lowering tests",
+    "success, failure, poison, cancellation, and shutdown runtime matrix"
+  ],
+  "cancellation": [
+    "cancellation-before-claim and registration race tests",
+    "Python finally completes before native task cancellation",
+    "suppressed cancellation return and later exception outcome tests"
+  ],
+  "live": {
+    "source": "httpx_client.sifr",
+    "bridge": "python_bridges/client.py",
+    "network": "offline in-process ASGI transport",
+    "stdout_marker": "sifr-python-interop:async-declaration:status=207:message=async-ready:close=1:loop=shared:failure=covered:conversion=covered"
+  }
+}

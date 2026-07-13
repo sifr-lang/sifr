@@ -171,6 +171,35 @@ fn resolved_bridge_target_stays_structured_in_typed_request() {
     for segment in ["__sifr_bridge__", "p_abc123", "adapter", "value"] {
         assert!(rendered.contains(&format!("\"{segment}\".to_string()")));
     }
+    assert!(rendered.contains("Vec<sifr_runtime::python::PythonAsyncValue> = Vec::new()"));
+    assert!(rendered.contains("Vec<(String, sifr_runtime::python::PythonAsyncValue)> = Vec::new()"));
+}
+
+#[test]
+fn zero_argument_record_wrapper_emits_concrete_frames_and_borrowed_field_names() {
+    let response = Type::Class {
+        name: "Response".to_string(),
+        fields: vec![
+            ("status".to_string(), Type::Int),
+            ("message".to_string(), Type::Str),
+        ],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let function = function(
+        "response",
+        Vec::new(),
+        response,
+        declaration(vec!["pkg", "response"], Vec::new()),
+    );
+    let rendered = render_stmts(
+        &python_interop_function_body(&function, &Default::default())
+            .expect("zero-argument record wrapper should lower"),
+    );
+
+    assert!(rendered.contains("Vec<sifr_runtime::python::PythonAsyncValue> = Vec::new()"));
+    assert!(rendered.contains("&\"status\".to_string()"));
+    assert!(rendered.contains("&\"message\".to_string()"));
 }
 
 #[test]

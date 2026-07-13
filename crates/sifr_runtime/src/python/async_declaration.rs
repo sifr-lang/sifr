@@ -24,8 +24,15 @@ pub async fn submit_async_declaration(
 ) -> Result<PythonAsyncValue, PythonError> {
     super::async_runtime::ensure_started().map_err(PythonError::runtime)?;
     validate_keywords(&request)?;
-    let terminal =
-        super::attach(|py| submit_typed(py, request, carrier)).map_err(PythonError::runtime)??;
+    let submitted =
+        super::attach(|py| submit_typed(py, request, carrier)).map_err(PythonError::runtime)?;
+    let terminal = match submitted {
+        Ok(terminal) => terminal,
+        Err(PythonTerminalError::ActiveCancellation) => {
+            return super::async_cancellation::propagate(carrier).await;
+        }
+        Err(error) => return Err(terminal_error(error)),
+    };
     match terminal.await {
         Ok(PythonTerminalValue::Typed(value)) => Ok(value),
         Ok(PythonTerminalValue::Raw(_)) => Err(PythonError::runtime(
@@ -35,6 +42,9 @@ pub async fn submit_async_declaration(
         )),
         Err(PythonTerminalError::Mapped(error)) => Err(*error),
         Err(PythonTerminalError::Runtime(error)) => Err(PythonError::runtime(error)),
+        Err(PythonTerminalError::ActiveCancellation) => {
+            super::async_cancellation::propagate(carrier).await
+        }
         Err(PythonTerminalError::Python(error)) => Python::try_attach(|py| {
             Err(PythonError::from_pyerr(
                 py,
@@ -51,10 +61,10 @@ fn submit_typed(
     py: Python<'_>,
     request: PythonAsyncRequest,
     carrier: Option<&CancellationCarrier>,
-) -> Result<PythonTerminal, PythonError> {
+) -> Result<PythonTerminal, PythonTerminalError> {
     let (terminal, cancellation) = terminal_for_submission(carrier)?;
     let (submission_id, loop_object) =
-        reserve_submission(py, &terminal).map_err(PythonError::runtime)?;
+        reserve_submission(py, &terminal).map_err(PythonTerminalError::Runtime)?;
     let context = request_context(&request);
     let request = Arc::new(request);
     let done_callback = build_done_callback(
@@ -63,11 +73,17 @@ fn submit_typed(
         Arc::clone(&request),
         context.clone(),
         &terminal,
+        &cancellation,
     )
     .map_err(|error| {
         request.finish_semantic_close(false);
         release_pending_submission(submission_id);
-        PythonError::from_pyerr(py, error, "call", "typed asyncio completion callback")
+        mapped_error(PythonError::from_pyerr(
+            py,
+            error,
+            "call",
+            "typed asyncio completion callback",
+        ))
     })?;
     let setup_callback = build_setup_callback(
         py,
@@ -82,7 +98,12 @@ fn submit_typed(
     .map_err(|error| {
         request.finish_semantic_close(false);
         release_pending_submission(submission_id);
-        PythonError::from_pyerr(py, error, "call", "typed asyncio setup callback")
+        mapped_error(PythonError::from_pyerr(
+            py,
+            error,
+            "call",
+            "typed asyncio setup callback",
+        ))
     })?;
     loop_object
         .bind(py)
@@ -90,7 +111,12 @@ fn submit_typed(
         .map_err(|error| {
             request.finish_semantic_close(false);
             release_pending_submission(submission_id);
-            PythonError::from_pyerr(py, error, "call", "typed asyncio submission")
+            mapped_error(PythonError::from_pyerr(
+                py,
+                error,
+                "call",
+                "typed asyncio submission",
+            ))
         })?;
     Ok(terminal)
 }
@@ -101,8 +127,10 @@ fn build_done_callback(
     request: Arc<PythonAsyncRequest>,
     context: String,
     terminal: &PythonTerminal,
+    cancellation: &Arc<SubmissionCancellationBridge>,
 ) -> PyResult<Py<PyAny>> {
     let terminal = terminal.clone();
+    let cancellation = Arc::clone(cancellation);
     PyCFunction::new_closure(
         py,
         Some(c"__sifr_python_typed_task_done"),
@@ -114,7 +142,12 @@ fn build_done_callback(
                     mapped_error(PythonError::from_pyerr(py, error, "await", &context))
                 })?;
                 let value = task.call_method0("result").map_err(|error| {
-                    mapped_error(PythonError::from_pyerr(py, error, "await", &context))
+                    super::async_cancellation::classify_task_error(
+                        py,
+                        error,
+                        &cancellation,
+                        &context,
+                    )
                 })?;
                 super::async_value::convert_output(py, &value, &request.output, &context)
                     .map(PythonTerminalValue::Typed)
@@ -307,4 +340,20 @@ fn mapped_pyerr(
 
 fn mapped_error(error: PythonError) -> PythonTerminalError {
     PythonTerminalError::Mapped(Box::new(error))
+}
+
+fn terminal_error(error: PythonTerminalError) -> PythonError {
+    match error {
+        PythonTerminalError::ActiveCancellation => {
+            PythonError::runtime(PythonRuntimeError::AsyncRuntimeFailed(
+                "active cancellation reached ordinary typed error mapping".to_string(),
+            ))
+        }
+        PythonTerminalError::Mapped(error) => *error,
+        PythonTerminalError::Runtime(error) => PythonError::runtime(error),
+        PythonTerminalError::Python(error) => Python::try_attach(|py| {
+            PythonError::from_pyerr(py, error, "await", "typed Python declaration")
+        })
+        .unwrap_or_else(|| PythonError::runtime(PythonRuntimeError::NotInitialized)),
+    }
 }

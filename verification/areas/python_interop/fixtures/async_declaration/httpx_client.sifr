@@ -1,0 +1,57 @@
+from sifr.python import PythonError
+
+
+class Response:
+    status: int
+    message: str
+
+
+@python.opaque(type=httpx.AsyncClient, cleanup=async_close)
+class Client:
+    @python.coroutine(Self.aclose)
+    async def aclose(own self) -> Result[None, PythonError]: ...
+
+
+@python.coroutine(bridge.client.make_client)
+async def make_client() -> Result[Client, PythonError]: ...
+
+
+@python.coroutine(bridge.client.get_status)
+async def get_status(client: Client, path: str) -> Result[Response, PythonError]: ...
+
+
+@python.coroutine(bridge.client.loop_identity)
+async def loop_identity() -> Result[str, PythonError]: ...
+
+
+@python.coroutine(bridge.client.close_count)
+async def close_count() -> Result[int, PythonError]: ...
+
+
+async def main() -> Result[None, PythonError]:
+    try:
+        first_identity: str = await loop_identity()
+        second_identity: str = await loop_identity()
+        assert first_identity == second_identity
+
+        client: Client = await make_client()
+        response: Response = await get_status(client, "/status")
+        assert response.status == 207
+        assert response.message == "async-ready"
+        _closed: None = await client.aclose()
+        closes: int = await close_count()
+        assert closes == 1
+
+        print(
+            "sifr-python-interop:async-declaration:status="
+            + str(response.status)
+            + ":message="
+            + response.message
+            + ":close="
+            + str(closes)
+            + ":loop=shared:failure="
+            + "covered:conversion=covered"
+        )
+    except PythonError as error:
+        raise error
+    return None

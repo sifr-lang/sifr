@@ -113,9 +113,8 @@ sync results and remain non-send at the Sifr level; the runtime's internal
 loop-to-task handoff does not grant user-visible sendability.
 
 The raw coroutine API submits to this same loop and follows the same
-cancellation registry. The current per-call `asyncio.run` implementation is
-removed when the owned loop lands; the runtime never retains two coroutine
-execution paths.
+cancellation registry. The former per-call `asyncio.run` implementation has
+been removed; the runtime retains one coroutine execution path.
 
 ## Opaque Lifecycle And Context Managers
 

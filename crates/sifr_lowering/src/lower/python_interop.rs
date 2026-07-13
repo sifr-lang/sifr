@@ -58,7 +58,6 @@ pub(in crate::lower) fn collect_python_interop_declarations(
                 None
             }
             (PythonInteropDecoratorKind::Coroutine, true) => {
-                reserved_declaration(ctx, kind, span);
                 parse_function(call, parameters, kind, PythonInteropEffect::Async, ctx)
             }
             (PythonInteropDecoratorKind::Coroutine, false) => {
@@ -121,7 +120,6 @@ pub(in crate::lower) fn collect_python_method_declarations(
         };
         let declaration = match (kind, is_async_decl) {
             (PythonInteropDecoratorKind::Coroutine, true) => {
-                reserved_declaration(ctx, kind, span);
                 parse_method(call, parameters, kind, PythonInteropEffect::Async, ctx)
             }
             (PythonInteropDecoratorKind::Coroutine, false) => {
@@ -361,10 +359,7 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
                 cleanup = match path.as_slice() {
                     [name] if name == "drop" => Some(PythonCleanupPolicy::Drop),
                     [name] if name == "close" => Some(PythonCleanupPolicy::Close),
-                    [name] if name == "async_close" => {
-                        reserved_cleanup(ctx, "async_close", keyword.value.range());
-                        Some(PythonCleanupPolicy::AsyncClose)
-                    }
+                    [name] if name == "async_close" => Some(PythonCleanupPolicy::AsyncClose),
                     [name] if name == "context" => Some(PythonCleanupPolicy::Context),
                     [name] if name == "async_context" => {
                         reserved_cleanup(ctx, "async_context", keyword.value.range());

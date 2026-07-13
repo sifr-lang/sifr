@@ -8,6 +8,10 @@ from pathlib import Path
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from async_declaration_examples import (
+    build_async_declaration_examples_report,
+    run_async_declaration_examples_self_tests,
+)
 from certification_matrix import build_certification_report, validate_certification_policy
 from dataframe_examples import build_dataframe_examples_report, run_dataframe_examples_self_tests
 from declaration_capabilities import (
@@ -38,6 +42,7 @@ MATRIX_FILES = (
 
 REQUIRED_FIXTURES = (
     "declaration_sync",
+    "async_declaration",
     "simple_import",
     "primitive_conversion",
     "pydantic_models",
@@ -68,6 +73,7 @@ REQUIRED_FIXTURES = (
 
 REQUIRED_FIXTURE_FILES = (
     "declaration_sync/sync_declaration_contract.json",
+    "async_declaration/async_declaration_evidence.json",
     "simple_import/opaque_object_operations.json",
     "primitive_conversion/primitive_roundtrip.json",
     "async_blocking/async_blocking_contract.json",
@@ -97,6 +103,7 @@ REQUIRED_FIXTURE_FILES = (
 REQUIRED_SOURCE_FIXTURES = (
     "declaration_sync/complete_call_shapes.sifr",
     "declaration_sync/pure_and_native.sifr",
+    "async_declaration/httpx_client.sifr",
     "async_blocking/direct_python_call_rejected.sifr",
     "async_blocking/object_crossing_rejected.sifr",
     "async_blocking/offloaded_python_calls.sifr",
@@ -155,6 +162,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--dataframe-examples", action="store_true", help="Run full NumPy/pandas/Polars Sifr examples.")
     parser.add_argument("--ml-examples", action="store_true", help="Run full torch/scikit-learn Sifr examples.")
     parser.add_argument("--library-examples", action="store_true", help="Run full library-family Sifr examples.")
+    parser.add_argument(
+        "--async-declaration-examples",
+        action="store_true",
+        help="Run compiled typed async Python declaration examples.",
+    )
     return parser.parse_args(argv)
 
 
@@ -168,6 +180,7 @@ def main(argv: list[str] | None = None) -> int:
         run_dataframe_examples_self_tests(paths)
         run_ml_examples_self_tests(paths)
         run_library_examples_self_tests(paths)
+        run_async_declaration_examples_self_tests(paths)
         print("python interop runner self-test ok")
         return 0
     if args.live_policy:
@@ -209,6 +222,15 @@ def main(argv: list[str] | None = None) -> int:
         write_report(report_path, payload)
         print(
             "python interop library-examples "
+            f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
+        )
+        return 1 if payload["status"] == "examples-failed" else 0
+    if args.async_declaration_examples:
+        payload = build_async_declaration_examples_report(paths)
+        report_path = (paths.area_root / args.report).resolve()
+        write_report(report_path, payload)
+        print(
+            "python interop async-declaration-examples "
             f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
         )
         return 1 if payload["status"] == "examples-failed" else 0
@@ -340,6 +362,8 @@ def validate_fixture_files(fixtures_root: Path) -> None:
             validate_sync_context_evidence(payload)
         if name == "package_bridge_archive/package_bridge_evidence.json":
             validate_package_bridge_evidence(payload)
+        if name == "async_declaration/async_declaration_evidence.json":
+            validate_async_declaration_evidence(payload)
     missing_sources = [
         name for name in REQUIRED_SOURCE_FIXTURES if not (fixtures_root / name).is_file()
     ]
@@ -395,6 +419,31 @@ def validate_package_bridge_evidence(payload: object) -> None:
         "sifr-python-interop:package-bridge:gtin=7032069804988:format=13:check=8"
     ):
         raise SystemExit("package bridge live evidence must lock the biip archive marker")
+
+
+def validate_async_declaration_evidence(payload: object) -> None:
+    if not isinstance(payload, dict) or payload.get("capability") != "coroutine-declaration":
+        raise SystemExit("async declaration evidence must identify coroutine-declaration")
+    for matrix_name, minimum in (
+        ("positive", 3),
+        ("negative", 3),
+        ("cleanup", 3),
+        ("cancellation", 3),
+    ):
+        matrix = payload.get(matrix_name)
+        if not isinstance(matrix, list) or len(matrix) < minimum:
+            raise SystemExit(
+                f"async declaration evidence requires at least {minimum} {matrix_name} rows"
+            )
+        if any(not isinstance(item, str) or not item for item in matrix):
+            raise SystemExit(f"async declaration {matrix_name} rows require evidence owners")
+    live = payload.get("live")
+    expected = (
+        "sifr-python-interop:async-declaration:status=207:message=async-ready:"
+        "close=1:loop=shared:failure=covered:conversion=covered"
+    )
+    if not isinstance(live, dict) or live.get("stdout_marker") != expected:
+        raise SystemExit("async declaration live evidence must lock the httpx client marker")
 
 
 def select_entries(

@@ -16,6 +16,7 @@ verification/areas/python_interop/run.sh --package pandas
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --dataframe-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --ml-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --library-examples
+uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --async-declaration-examples
 verification/areas/python_interop/run.sh --self-test
 scripts/run_all_tests.sh --profile python-interop-live
 ```
@@ -180,3 +181,11 @@ Library example reports use the same schema and include:
 - `cases`: `sifr run` results for each compiled example.
 - `stdout_marker`: deterministic per-example output required for a passing case.
 - `dependencies`: the Python import roots trusted by at least one temporary package.
+
+The `async-declaration-examples` suite is offline and compiled. It embeds a
+package-local bridge, runs a real `httpx.AsyncClient` against an in-process ASGI
+transport, proves typed coroutine functions/factories, recursive conversion,
+one loop identity, and consuming async close, and requires a deterministic
+binary stdout marker. Cancellation, suppression, failure, conversion, poison,
+and shutdown matrices are owned by the focused lowering/codegen/runtime tests
+named in `fixtures/async_declaration/async_declaration_evidence.json`.

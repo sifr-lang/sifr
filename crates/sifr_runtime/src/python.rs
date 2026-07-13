@@ -7,6 +7,7 @@ use std::mem::MaybeUninit;
 use std::sync::{Mutex, MutexGuard};
 
 mod arrow_ops;
+mod async_cancellation;
 mod async_declaration;
 #[cfg(test)]
 mod async_declaration_tests;

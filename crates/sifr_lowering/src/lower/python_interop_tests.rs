@@ -113,8 +113,8 @@ fn later_python_decorator_is_a_hard_error() {
 class PythonError(Error):
     message: str
 
-@python.coroutine(pkg.compute)
-async def compute(value: int) -> Result[int, PythonError]: ...
+@python.callback(pkg.compute)
+def compute(value: int) -> Result[int, PythonError]: ...
 ",
     );
     assert!(errors

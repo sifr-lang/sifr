@@ -4,9 +4,11 @@ This note records the production contract implemented by the embedded CPython in
 
 The declaration-first package-authoring layer is specified separately in
 [`python_interop_declaration_architecture.md`](./python_interop_declaration_architecture.md).
-Its synchronous declarations, opaque lifecycle, synchronous contexts, and
-hermetic package-local bridge targets are implemented. Async declarations and
-the later callback and affine protocols are not active yet.
+Its synchronous declarations, opaque lifecycle, synchronous contexts,
+hermetic package-local bridge targets, application-owned asyncio runtime,
+typed coroutine declarations, structured cancellation, and consuming async
+close are implemented. Async contexts and the later callback and affine
+protocols are not active yet.
 
 ## Ownership Boundary
 
@@ -158,6 +160,7 @@ Active compiler diagnostics:
   the root application. `SIFR-PYTRUST-0002` is retired.
 
 Declaration diagnostics are activated with their owning compiler surfaces. `PYIMP`,
-`PYCALL`, `PYCONV`, `PYRES`, and `PYCTX` currently cover synchronous
-declarations, opaque values, contexts, and package bridges. `PYASYNC`, `PYCB`,
-and `PYZC` remain reserved until their sequenced runtime protocols activate.
+`PYCALL`, `PYCONV`, `PYRES`, and `PYCTX` currently cover synchronous and async
+declarations, opaque values, sync contexts, package bridges, consuming async
+close, and sequenced later-protocol reservations. `PYASYNC`, `PYCB`, and `PYZC`
+remain reserved until their owning later protocols activate.

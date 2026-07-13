@@ -1,5 +1,5 @@
 use super::*;
-use crate::cancellation::{CancellationCarrier, CancellationRequest};
+use crate::cancellation::{CancellationBind, CancellationCarrier, CancellationRequest};
 use pyo3::types::{PyDict, PyModule};
 use std::future::Future;
 use std::pin::pin;
@@ -159,6 +159,16 @@ fn typed_failures_and_concurrent_calls_use_one_terminal_registry_and_loop() {
         .expect_err("Python exception should fail");
     assert_eq!(error.exception_type, "ValueError");
 
+    let independent_cancellation = PythonAsyncRequest::function(
+        vec![MODULE.to_string(), "raises_cancelled".to_string()],
+        Vec::new(),
+        Vec::new(),
+        PythonAsyncType::None,
+    );
+    let error = block_on(submit_async_declaration(independent_cancellation, None))
+        .expect_err("independently raised CancelledError should remain a Python failure");
+    assert!(error.exception_type.contains("CancelledError"), "{error:?}");
+
     let conversion_failure = PythonAsyncRequest::function(
         vec![MODULE.to_string(), "identity".to_string()],
         Vec::new(),
@@ -300,55 +310,146 @@ fn semantic_async_close_uses_python_terminal_outcome_after_cancellation() {
     let suppressed = close_client("suppress");
     let suppressed_alias = suppressed.clone();
     let suppressed_carrier = CancellationCarrier::new();
-    let suppressed_worker = {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("Tokio test runtime should build");
+    runtime.block_on(async {
         let carrier = suppressed_carrier.clone();
-        std::thread::spawn(move || {
+        let suppressed_worker = tokio::spawn(async move {
             let request =
                 PythonAsyncRequest::semantic_close_method(suppressed, "aclose".to_string())
                     .expect("suppressed close request");
-            block_on(submit_async_declaration(request, Some(&carrier)))
-        })
-    };
-    wait_for_typed_submission();
-    assert_eq!(
-        suppressed_carrier.request_cancel(),
-        CancellationRequest::Claimed
-    );
-    async_to_none(
-        suppressed_worker
-            .join()
-            .expect("suppressed worker should not panic")
-            .expect("suppressed cancellation should return normally"),
-    )
-    .expect("suppressed close should return None");
+            submit_async_declaration(request, Some(&carrier)).await
+        });
+        bind_abort_fallback(&suppressed_carrier, &suppressed_worker);
+        tokio::task::yield_now().await;
+        wait_for_typed_submission();
+        assert_eq!(
+            suppressed_carrier.request_cancel(),
+            CancellationRequest::Claimed
+        );
+        async_to_none(
+            suppressed_worker
+                .await
+                .expect("suppressed worker should not be cancelled")
+                .expect("suppressed cancellation should return normally"),
+        )
+        .expect("suppressed close should return None");
+    });
     let closed = async_from_object(&suppressed_alias).expect_err("successful close is sealed");
     assert!(closed.message.contains("closed"), "{closed:?}");
 
     let observed = close_client("wait");
     let observed_alias = observed.clone();
     let observed_carrier = CancellationCarrier::new();
-    let observed_worker = {
+    runtime.block_on(async {
         let carrier = observed_carrier.clone();
-        std::thread::spawn(move || {
+        let observed_worker = tokio::spawn(async move {
             let request = PythonAsyncRequest::semantic_close_method(observed, "aclose".to_string())
                 .expect("observed close request");
-            block_on(submit_async_declaration(request, Some(&carrier)))
-        })
-    };
-    wait_for_typed_submission();
-    assert_eq!(
-        observed_carrier.request_cancel(),
-        CancellationRequest::Claimed
-    );
-    let error = observed_worker
-        .join()
-        .expect("observed worker should not panic")
-        .expect_err("observed cancellation should fail");
-    assert!(error.exception_type.contains("CancelledError"), "{error:?}");
+            submit_async_declaration(request, Some(&carrier)).await
+        });
+        bind_abort_fallback(&observed_carrier, &observed_worker);
+        tokio::task::yield_now().await;
+        wait_for_typed_submission();
+        assert_eq!(
+            observed_carrier.request_cancel(),
+            CancellationRequest::Claimed
+        );
+        let cancelled = observed_worker
+            .await
+            .expect_err("observed Python cancellation should abort the native task");
+        assert!(cancelled.is_cancelled(), "{cancelled:?}");
+    });
     let poisoned = async_from_object(&observed_alias).expect_err("cancelled close is poisoned");
     assert!(poisoned.message.contains("poisoned"), "{poisoned:?}");
     assert!(close_events().iter().any(|event| event == "wait:finally"));
+
+    let suppressed_failure = close_client("suppress_fail");
+    let suppressed_failure_alias = suppressed_failure.clone();
+    let suppressed_failure_carrier = CancellationCarrier::new();
+    runtime.block_on(async {
+        let carrier = suppressed_failure_carrier.clone();
+        let worker = tokio::spawn(async move {
+            let request =
+                PythonAsyncRequest::semantic_close_method(suppressed_failure, "aclose".to_string())
+                    .expect("suppression failure close request");
+            submit_async_declaration(request, Some(&carrier)).await
+        });
+        bind_abort_fallback(&suppressed_failure_carrier, &worker);
+        tokio::task::yield_now().await;
+        wait_for_typed_submission();
+        assert_eq!(
+            suppressed_failure_carrier.request_cancel(),
+            CancellationRequest::Claimed
+        );
+        let error = worker
+            .await
+            .expect("suppressed cancellation exception should not cancel native task")
+            .expect_err("later Python exception should win");
+        assert_eq!(error.exception_type, "ValueError");
+    });
+    let poisoned = async_from_object(&suppressed_failure_alias)
+        .expect_err("suppression followed by failure poisons close identity");
+    assert!(poisoned.message.contains("poisoned"), "{poisoned:?}");
+    assert!(close_events()
+        .iter()
+        .any(|event| event == "suppress_fail:finally"));
     shutdown_typed_runtime();
+}
+
+#[test]
+fn active_cancellation_propagation_failures_are_explicit_and_bounded() {
+    let pre_cancelled = CancellationCarrier::new();
+    assert_eq!(
+        pre_cancelled.request_cancel(),
+        CancellationRequest::FallbackPending
+    );
+    assert!(matches!(
+        super::async_runtime::terminal_for_submission(Some(&pre_cancelled)),
+        Err(super::async_terminal::PythonTerminalError::ActiveCancellation)
+    ));
+
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_typed_runtime("active-cancellation-propagation-errors");
+
+    for (mode, bind_noop, expected) in [
+        ("wait", false, "FallbackUnavailable"),
+        ("wait", true, "fallback returned without terminating"),
+    ] {
+        let client = close_client(mode);
+        let carrier = CancellationCarrier::new();
+        if bind_noop {
+            assert_eq!(
+                carrier.bind_fallback(Arc::new(|| {})),
+                CancellationBind::Bound
+            );
+        }
+        let worker_carrier = carrier.clone();
+        let worker = std::thread::spawn(move || {
+            let request = PythonAsyncRequest::semantic_close_method(client, "aclose".to_string())
+                .expect("active cancellation request");
+            block_on(submit_async_declaration(request, Some(&worker_carrier)))
+        });
+        wait_for_typed_submission();
+        assert_eq!(carrier.request_cancel(), CancellationRequest::Claimed);
+        let error = worker
+            .join()
+            .expect("propagation worker should not panic")
+            .expect_err("malformed fallback must return an explicit runtime error");
+        assert!(error.message.contains(expected), "{error:?}");
+    }
+    shutdown_typed_runtime();
+}
+
+fn bind_abort_fallback<T>(carrier: &CancellationCarrier, task: &tokio::task::JoinHandle<T>) {
+    let abort = task.abort_handle();
+    assert_eq!(
+        carrier.bind_fallback(Arc::new(move || abort.abort())),
+        CancellationBind::Bound
+    );
 }
 
 #[test]
@@ -381,7 +482,14 @@ fn semantic_async_close_shutdown_and_submission_rejection_poison_safely() {
 
     super::async_runtime::ensure_started().expect("owned loop should restart for rejection race");
     let (held_terminal, pending_id) = attach(|py| {
-        let (terminal, _cancellation) = super::async_runtime::terminal_for_submission(None)?;
+        let (terminal, _cancellation) = super::async_runtime::terminal_for_submission(None)
+            .map_err(|error| {
+                super::async_terminal::terminal_error_to_python(
+                    py,
+                    error,
+                    "typed shutdown test reservation",
+                )
+            })?;
         let (submission_id, _loop_object) = super::async_runtime::reserve_submission(py, &terminal)
             .map_err(PythonError::runtime)?;
         Ok::<_, PythonError>((terminal, submission_id))
@@ -420,7 +528,7 @@ fn install_module() {
     attach(|py| {
         let module = PyModule::from_code(
             py,
-            c"import asyncio\nimport threading\n\nclose_log = []\n\nasync def collect(a, *rest, label=None, **extra):\n    await asyncio.sleep(0)\n    values = [a, *rest, *extra.values()]\n    return {'total': sum(values), 'label': label, 'nested': values, 'identity': f'{id(asyncio.get_running_loop())}:{threading.get_ident()}'}\n\nasync def identity():\n    await asyncio.sleep(0)\n    return f'{id(asyncio.get_running_loop())}:{threading.get_ident()}'\n\ndef not_awaitable():\n    return 1\n\nasync def fails():\n    raise ValueError('typed boom')\n\nclass Client:\n    def __init__(self, value):\n        self.value = value\n\n    async def increment(self, amount):\n        await asyncio.sleep(0)\n        return self.value + amount\n\nclass CloseClient:\n    def __init__(self, mode):\n        self.mode = mode\n\n    def not_awaitable(self):\n        close_log.append(f'{self.mode}:start')\n        return None\n\n    async def aclose(self):\n        close_log.append(f'{self.mode}:start')\n        try:\n            if self.mode == 'fail':\n                raise ValueError('close boom')\n            if self.mode == 'non_none':\n                return 1\n            if self.mode == 'suppress':\n                try:\n                    await asyncio.Event().wait()\n                except asyncio.CancelledError:\n                    return None\n            if self.mode == 'wait':\n                await asyncio.Event().wait()\n            await asyncio.sleep(0)\n            return None\n        finally:\n            close_log.append(f'{self.mode}:finally')\n\nasync def make_client(value):\n    await asyncio.sleep(0)\n    return Client(value)\n",
+            c"import asyncio\nimport threading\n\nclose_log = []\n\nasync def collect(a, *rest, label=None, **extra):\n    await asyncio.sleep(0)\n    values = [a, *rest, *extra.values()]\n    return {'total': sum(values), 'label': label, 'nested': values, 'identity': f'{id(asyncio.get_running_loop())}:{threading.get_ident()}'}\n\nasync def identity():\n    await asyncio.sleep(0)\n    return f'{id(asyncio.get_running_loop())}:{threading.get_ident()}'\n\ndef not_awaitable():\n    return 1\n\nasync def fails():\n    raise ValueError('typed boom')\n\nasync def raises_cancelled():\n    raise asyncio.CancelledError()\n\nclass Client:\n    def __init__(self, value):\n        self.value = value\n\n    async def increment(self, amount):\n        await asyncio.sleep(0)\n        return self.value + amount\n\nclass CloseClient:\n    def __init__(self, mode):\n        self.mode = mode\n\n    def not_awaitable(self):\n        close_log.append(f'{self.mode}:start')\n        return None\n\n    async def aclose(self):\n        close_log.append(f'{self.mode}:start')\n        try:\n            if self.mode == 'fail':\n                raise ValueError('close boom')\n            if self.mode == 'non_none':\n                return 1\n            if self.mode in ('suppress', 'suppress_fail'):\n                try:\n                    await asyncio.Event().wait()\n                except asyncio.CancelledError:\n                    if self.mode == 'suppress_fail':\n                        raise ValueError('suppressed cancellation failure')\n                    return None\n            if self.mode == 'wait':\n                await asyncio.Event().wait()\n            await asyncio.sleep(0)\n            return None\n        finally:\n            close_log.append(f'{self.mode}:finally')\n\nasync def make_client(value):\n    await asyncio.sleep(0)\n    return Client(value)\n",
             c"<sifr-typed-async>",
             c"__sifr_typed_async__",
         )
