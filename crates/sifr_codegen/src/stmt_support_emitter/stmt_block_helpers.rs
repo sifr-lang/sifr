@@ -525,6 +525,7 @@ impl RustEmitter {
                 | HirStmt::For { .. }
                 | HirStmt::AsyncFor { .. }
                 | HirStmt::Delete { .. }
+                | HirStmt::Raise { .. }
         ) || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty))
             || matches!(stmt, HirStmt::TupleUnpack { targets, .. } if targets.iter().any(|target| {
                 let sifr_ir::HirTupleTargetBinding::Name(name) = &target.binding else {

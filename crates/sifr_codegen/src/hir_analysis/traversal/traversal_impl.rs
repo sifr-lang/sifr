@@ -602,7 +602,8 @@ where
                         return TraversalControl::Stop;
                     }
                 }
-                sifr_ir::HirAsyncWithKind::UserDefined { context, .. } => {
+                sifr_ir::HirAsyncWithKind::UserDefined { context, .. }
+                | sifr_ir::HirAsyncWithKind::Python { context, .. } => {
                     if matches!(walk_expr_until(context, on_expr), TraversalControl::Stop) {
                         return TraversalControl::Stop;
                     }

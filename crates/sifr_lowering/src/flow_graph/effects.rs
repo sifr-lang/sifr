@@ -246,7 +246,8 @@ pub(super) fn stmt_effects(stmt: &HirStmt) -> Vec<FlowEffect> {
             }
             match kind {
                 HirAsyncWithKind::TaskTimeout { duration } => expr_effects(duration, &mut effects),
-                HirAsyncWithKind::UserDefined { context, .. } => {
+                HirAsyncWithKind::UserDefined { context, .. }
+                | HirAsyncWithKind::Python { context, .. } => {
                     expr_effects(context, &mut effects);
                 }
                 HirAsyncWithKind::TaskGroup {

@@ -68,6 +68,28 @@ impl RustEmitter {
         target: Option<&str>,
         body: &[HirStmt],
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        if let sifr_ir::HirAsyncWithKind::Python {
+            context,
+            manager_class,
+            entered_type,
+            enter_error_type,
+            exit_error_type,
+            entered_is_opaque_borrow,
+            active_error_type,
+        } = kind
+        {
+            return self.try_lower_python_async_context_for_ir(
+                context,
+                manager_class,
+                entered_type,
+                enter_error_type,
+                exit_error_type,
+                *entered_is_opaque_borrow,
+                active_error_type,
+                target,
+                body,
+            );
+        }
         if let sifr_ir::HirAsyncWithKind::UserDefined { context, .. } = kind {
             let body_always_exits = queries::block_control_flow_effect(body).always_exits();
             let Some(mut lowered_body) = self.try_lower_stmt_block_for_ir(body)? else {

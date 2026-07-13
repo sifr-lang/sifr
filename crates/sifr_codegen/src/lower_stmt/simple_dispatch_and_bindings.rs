@@ -156,10 +156,14 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
                 msg: lowered_msg,
             }])
         }
-        HirStmt::Raise { value } => Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
-            args: vec![try_lower_leaf_or_name_expr(value)?],
-        }))]),
+        HirStmt::Raise { value } => {
+            let lowered = try_lower_leaf_or_name_expr(value)?;
+            let lowered = coerce_simple_raised_error(value, lowered, ctx.return_type);
+            Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+                args: vec![lowered],
+            }))])
+        }
         HirStmt::If {
             condition,
             then_body,
@@ -307,6 +311,27 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
             }
         }
         _ => None,
+    }
+}
+
+fn coerce_simple_raised_error(
+    value: &HirExpr,
+    lowered: RustExpr,
+    return_type: Option<&Type>,
+) -> RustExpr {
+    let Some(Type::Result(_, target)) = return_type.map(Type::resolve_alias) else {
+        return lowered;
+    };
+    let source_name = crate::render_type(&crate::sifr_type_to_rust_type(value.ty()));
+    let target_name = crate::render_type(&crate::sifr_type_to_rust_type(target));
+    if source_name == target_name {
+        lowered
+    } else {
+        RustExpr::MethodCall {
+            receiver: Box::new(lowered),
+            method: "into".to_string(),
+            args: Vec::new(),
+        }
     }
 }
 

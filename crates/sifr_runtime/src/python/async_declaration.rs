@@ -6,6 +6,7 @@ use super::async_terminal::{
     PythonTerminal, PythonTerminalError, PythonTerminalOutcome, PythonTerminalValue,
 };
 use super::async_value::{materialize, PythonAsyncRequest, PythonAsyncTarget, PythonAsyncValue};
+use super::context_ops::PythonExitDecision;
 use super::object_ops::clone_handle;
 use super::{PythonError, PythonRuntimeError};
 use crate::cancellation::CancellationCarrier;
@@ -35,11 +36,11 @@ pub async fn submit_async_declaration(
     };
     match terminal.await {
         Ok(PythonTerminalValue::Typed(value)) => Ok(value),
-        Ok(PythonTerminalValue::Raw(_)) => Err(PythonError::runtime(
-            PythonRuntimeError::AsyncRuntimeFailed(
-                "typed asyncio submission produced a raw terminal value".to_string(),
-            ),
-        )),
+        Ok(PythonTerminalValue::Raw(_) | PythonTerminalValue::ExitDecision(_)) => Err(
+            PythonError::runtime(PythonRuntimeError::AsyncRuntimeFailed(
+                "typed asyncio submission produced the wrong terminal value".to_string(),
+            )),
+        ),
         Err(PythonTerminalError::Mapped(error)) => Err(*error),
         Err(PythonTerminalError::Runtime(error)) => Err(PythonError::runtime(error)),
         Err(PythonTerminalError::ActiveCancellation) => {
@@ -51,6 +52,44 @@ pub async fn submit_async_declaration(
                 error,
                 "await",
                 "typed Python declaration",
+            ))
+        })
+        .unwrap_or_else(|| Err(PythonError::runtime(PythonRuntimeError::NotInitialized))),
+    }
+}
+
+pub(super) async fn submit_async_context_request(
+    request: PythonAsyncRequest,
+    carrier: Option<&CancellationCarrier>,
+) -> Result<PythonExitDecision, PythonError> {
+    super::async_runtime::ensure_started().map_err(PythonError::runtime)?;
+    let submitted =
+        super::attach(|py| submit_typed(py, request, carrier)).map_err(PythonError::runtime)?;
+    let terminal = match submitted {
+        Ok(terminal) => terminal,
+        Err(PythonTerminalError::ActiveCancellation) => {
+            return super::async_cancellation::propagate(carrier).await;
+        }
+        Err(error) => return Err(terminal_error(error)),
+    };
+    match terminal.await {
+        Ok(PythonTerminalValue::ExitDecision(decision)) => Ok(decision),
+        Ok(PythonTerminalValue::Raw(_) | PythonTerminalValue::Typed(_)) => Err(
+            PythonError::runtime(PythonRuntimeError::AsyncRuntimeFailed(
+                "async context exit produced the wrong terminal value".to_string(),
+            )),
+        ),
+        Err(PythonTerminalError::Mapped(error)) => Err(*error),
+        Err(PythonTerminalError::Runtime(error)) => Err(PythonError::runtime(error)),
+        Err(PythonTerminalError::ActiveCancellation) => {
+            super::async_cancellation::propagate(carrier).await
+        }
+        Err(PythonTerminalError::Python(error)) => Python::try_attach(|py| {
+            Err(PythonError::from_pyerr(
+                py,
+                error,
+                "await",
+                "typed Python async context exit",
             ))
         })
         .unwrap_or_else(|| Err(PythonError::runtime(PythonRuntimeError::NotInitialized))),
@@ -149,9 +188,15 @@ fn build_done_callback(
                         &context,
                     )
                 })?;
-                super::async_value::convert_output(py, &value, &request.output, &context)
-                    .map(PythonTerminalValue::Typed)
-                    .map_err(mapped_error)
+                if request.context_exit_cause().is_some() {
+                    super::context_ops::exit_decision(&value)
+                        .map(PythonTerminalValue::ExitDecision)
+                        .map_err(|error| mapped_pyerr(py, error, "context", &context))
+                } else {
+                    super::async_value::convert_output(py, &value, &request.output, &context)
+                        .map(PythonTerminalValue::Typed)
+                        .map_err(mapped_error)
+                }
             }))
             .unwrap_or_else(|_| {
                 Err(PythonTerminalError::Runtime(
@@ -198,15 +243,20 @@ fn build_setup_callback(
             let setup = catch_unwind(AssertUnwindSafe(|| -> Result<(), PythonTerminalError> {
                 let callable =
                     resolve_callable(py, &request.target, &context).map_err(mapped_error)?;
-                let positional = request
-                    .args
-                    .iter()
-                    .enumerate()
-                    .map(|(index, value)| {
-                        materialize(py, value, &format!("{context}.arg[{index}]"))
-                    })
-                    .collect::<Result<Vec<_>, _>>()
-                    .map_err(mapped_error)?;
+                let positional = if let Some(cause) = request.context_exit_cause() {
+                    super::async_context::materialize_exit_cause(py, cause, &context)
+                        .map_err(mapped_error)?
+                } else {
+                    request
+                        .args
+                        .iter()
+                        .enumerate()
+                        .map(|(index, value)| {
+                            materialize(py, value, &format!("{context}.arg[{index}]"))
+                        })
+                        .collect::<Result<Vec<_>, _>>()
+                        .map_err(mapped_error)?
+                };
                 let positional = PyTuple::new(py, positional.iter())
                     .map_err(|error| mapped_pyerr(py, error, "conversion", &context))?;
                 let keywords = PyDict::new(py);

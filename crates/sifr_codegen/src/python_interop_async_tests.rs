@@ -2,9 +2,9 @@ use crate::python_interop_direct::{python_interop_function_body, python_interop_
 use crate::{generate_rust, render_stmts};
 use ruff_text_size::TextRange;
 use sifr_ir::{
-    HirFunction, HirModule, HirParam, MethodKind, PythonCleanupPolicy, PythonInteropDeclaration,
-    PythonInteropDecoratorKind, PythonInteropEffect, PythonInteropParameter, PythonParameterKind,
-    PythonTargetPath,
+    HirExpr, HirFunction, HirModule, HirParam, HirStmt, MethodKind, PythonCleanupPolicy,
+    PythonInteropDeclaration, PythonInteropDecoratorKind, PythonInteropEffect,
+    PythonInteropParameter, PythonParameterKind, PythonTargetPath,
 };
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashMap;
@@ -222,6 +222,79 @@ fn standalone_typed_wrapper_emits_cancellation_carrier_preamble() {
     let rendered = generate_rust(&module);
     assert!(rendered.contains("fn __sifr_current_task_cancellation"));
     assert!(rendered.contains("submit_async_declaration"));
+}
+
+#[test]
+fn async_python_error_converts_to_an_active_error_supertype() {
+    let wrapper = function(
+        "value",
+        Vec::new(),
+        Type::Int,
+        declaration(vec!["pkg", "value"], Vec::new()),
+    );
+    let main = HirFunction {
+        name: "main".to_string(),
+        params: Vec::new(),
+        return_type: Type::Result(
+            Box::new(Type::None),
+            Box::new(Type::Class {
+                name: "Error".to_string(),
+                fields: vec![("message".to_string(), Type::Str)],
+                methods: Vec::new(),
+                parent_class: None,
+            }),
+        ),
+        body: vec![HirStmt::Raise {
+            value: HirExpr::Name {
+                name: "python_error".to_string(),
+                ty: python_error_type(),
+            },
+        }],
+        is_async: true,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
+        python_interop: Vec::new(),
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+    let module = HirModule {
+        functions: vec![wrapper, main],
+        classes: Vec::new(),
+        imports: Vec::new(),
+        constants: Vec::new(),
+        generic_functions: HashMap::new(),
+        type_param_bounds: HashMap::new(),
+    };
+
+    let rendered = generate_rust(&module);
+    assert_eq!(
+        rendered.matches("impl From<PythonError> for Error").count(),
+        1
+    );
+    assert!(rendered.contains("Self::new(err.message)"));
+    assert!(
+        rendered.contains("return Err(python_error.into());"),
+        "{rendered}"
+    );
+}
+
+#[test]
+fn async_main_is_scoped_under_root_cancellation_carrier() {
+    let mut items = vec![crate::RustItem::Fn {
+        name: "main".to_string(),
+        visibility: crate::Visibility::Private,
+        type_params: Vec::new(),
+        params: Vec::new(),
+        ret: None,
+        body: vec![crate::RustStmt::Expr(crate::RustExpr::Tuple(Vec::new()))],
+        is_async: true,
+    }];
+    crate::scope_async_main_cancellation(&mut items);
+    let rendered = crate::render_items(&items);
+    assert!(rendered.contains("let __sifr_root_cancellation"));
+    assert!(rendered.contains("__SIFR_TASK_CANCELLATION.scope"));
+    syn::parse_file(&rendered).expect("root-scoped async main should be valid Rust syntax");
 }
 
 fn function(

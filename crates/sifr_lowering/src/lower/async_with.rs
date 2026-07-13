@@ -1,4 +1,5 @@
 use super::expressions::lower_expr;
+use super::python_interop::try_lower_python_async_with;
 use super::statement_diagnostics;
 use super::statements::lower_stmts;
 use super::task_context_keywords::lower_task_context_keyword;
@@ -131,9 +132,25 @@ fn lower_user_async_with(
 ) -> Option<HirStmt> {
     ctx.with_pushed_scope(|ctx| {
         let context = lower_expr(&item.context_expr, ctx)?;
-        let context_ty = context.ty().clone();
-        let Some((enter_ft, exit_ft)) = async_context_methods(&context_ty) else {
-            ctx.error_with_code_at(
+        if let Some(lowered) =
+            try_lower_python_async_with(with_stmt, item, func_type, &context, ctx)
+        {
+            return lowered;
+        }
+        lower_native_user_async_with(with_stmt, item, func_type, context, ctx)
+    })
+}
+
+fn lower_native_user_async_with(
+    with_stmt: &StmtWith,
+    item: &sifr_python_ast::WithItem,
+    func_type: &FunctionType,
+    context: crate::hir_nodes::HirExpr,
+    ctx: &mut LowerCtx,
+) -> Option<HirStmt> {
+    let context_ty = context.ty().clone();
+    let Some((enter_ft, exit_ft)) = async_context_methods(&context_ty) else {
+        ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,
                 format!(
                     "async with requires an async context manager with __aenter__() and __aexit__(AsyncExitCause), got '{}'",
@@ -141,82 +158,81 @@ fn lower_user_async_with(
                 ),
                 item.context_expr.range(),
             );
-            return None;
-        };
-        if !enter_ft.params.is_empty() {
-            ctx.error_with_code_at(
-                DiagnosticCode::TYPE_MISMATCH,
-                "__aenter__ for async with must take no arguments".to_string(),
-                item.context_expr.range(),
-            );
-            return None;
-        }
-        if exit_ft.params.len() != 1 || !async_exit_cause_type().is_assignable_to(&exit_ft.params[0].1) {
-            ctx.error_with_code_at(
-                DiagnosticCode::TYPE_MISMATCH,
-                "__aexit__ for async with must take exactly one AsyncExitCause argument".to_string(),
-                item.context_expr.range(),
-            );
-            return None;
-        }
-        let Some((enter_value_ty, enter_error_ty)) = async_result_parts(&enter_ft.return_type)
-        else {
-            ctx.error_with_code_at(
-                DiagnosticCode::TYPE_MISMATCH,
-                "__aenter__ for async with must be async and return Result[T, E]".to_string(),
-                item.context_expr.range(),
-            );
-            return None;
-        };
-        let Some((exit_value_ty, exit_error_ty)) = async_result_parts(&exit_ft.return_type) else {
-            ctx.error_with_code_at(
-                DiagnosticCode::TYPE_MISMATCH,
-                "__aexit__ for async with must be async and return Result[None, E]".to_string(),
-                item.context_expr.range(),
-            );
-            return None;
-        };
-        if !matches!(exit_value_ty.resolve_alias(), Type::None) {
-            ctx.error_with_code_at(
-                DiagnosticCode::TYPE_MISMATCH,
-                "__aexit__ for async with must return Result[None, E]".to_string(),
-                item.context_expr.range(),
-            );
-            return None;
-        }
-        if !return_type_accepts_error(&func_type.return_type, &enter_error_ty)
-            || !return_type_accepts_error(&func_type.return_type, &exit_error_ty)
-        {
-            ctx.error_with_code_at(
+        return None;
+    };
+    if !enter_ft.params.is_empty() {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "__aenter__ for async with must take no arguments".to_string(),
+            item.context_expr.range(),
+        );
+        return None;
+    }
+    if exit_ft.params.len() != 1 || !async_exit_cause_type().is_assignable_to(&exit_ft.params[0].1)
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "__aexit__ for async with must take exactly one AsyncExitCause argument".to_string(),
+            item.context_expr.range(),
+        );
+        return None;
+    }
+    let Some((enter_value_ty, enter_error_ty)) = async_result_parts(&enter_ft.return_type) else {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "__aenter__ for async with must be async and return Result[T, E]".to_string(),
+            item.context_expr.range(),
+        );
+        return None;
+    };
+    let Some((exit_value_ty, exit_error_ty)) = async_result_parts(&exit_ft.return_type) else {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "__aexit__ for async with must be async and return Result[None, E]".to_string(),
+            item.context_expr.range(),
+        );
+        return None;
+    };
+    if !matches!(exit_value_ty.resolve_alias(), Type::None) {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "__aexit__ for async with must return Result[None, E]".to_string(),
+            item.context_expr.range(),
+        );
+        return None;
+    }
+    if !return_type_accepts_error(&func_type.return_type, &enter_error_ty)
+        || !return_type_accepts_error(&func_type.return_type, &exit_error_ty)
+    {
+        ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,
                 "fallible async context manager enter/exit requires the enclosing function to return a compatible Result error type".to_string(),
                 item.context_expr.range(),
             );
-            return None;
-        }
-        let target = simple_with_target_name(item.optional_vars.as_deref(), ctx);
-        if let Some(name) = &target {
-            ctx.scope.define(name.clone(), enter_value_ty.clone());
-        }
-        let body = lower_stmts(&with_stmt.body, func_type, ctx);
-        if body.iter().any(stmt_contains_user_async_with_blocked_exit) {
-            ctx.error_with_code_at(
+        return None;
+    }
+    let target = simple_with_target_name(item.optional_vars.as_deref(), ctx);
+    if let Some(name) = &target {
+        ctx.scope.define(name.clone(), enter_value_ty.clone());
+    }
+    let body = lower_stmts(&with_stmt.body, func_type, ctx);
+    if body.iter().any(stmt_contains_user_async_with_blocked_exit) {
+        ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,
                 "user-defined async context managers cannot use raise or yield inside the body until abnormal-exit cleanup lowering is implemented".to_string(),
                 item.context_expr.range(),
             );
-            return None;
-        }
-        Some(HirStmt::AsyncWith {
-            kind: HirAsyncWithKind::UserDefined {
-                context,
-                enter_value_ty,
-                enter_error_ty,
-                exit_error_ty,
-            },
-            target,
-            body,
-        })
+        return None;
+    }
+    Some(HirStmt::AsyncWith {
+        kind: HirAsyncWithKind::UserDefined {
+            context,
+            enter_value_ty,
+            enter_error_ty,
+            exit_error_ty,
+        },
+        target,
+        body,
     })
 }
 

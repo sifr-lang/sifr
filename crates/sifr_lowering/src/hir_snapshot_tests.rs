@@ -802,6 +802,24 @@ fn async_with_kind_name(kind: &HirAsyncWithKind) -> Value {
             "enter_error_ty": type_name(enter_error_ty),
             "exit_error_ty": type_name(exit_error_ty),
         }),
+        HirAsyncWithKind::Python {
+            context,
+            manager_class,
+            entered_type,
+            enter_error_type,
+            exit_error_type,
+            entered_is_opaque_borrow,
+            active_error_type,
+        } => json!({
+            "kind": "Python",
+            "context": project_expr(context),
+            "manager_class": manager_class,
+            "entered_type": type_name(entered_type),
+            "enter_error_type": type_name(enter_error_type),
+            "exit_error_type": type_name(exit_error_type),
+            "entered_is_opaque_borrow": entered_is_opaque_borrow,
+            "active_error_type": type_name(active_error_type),
+        }),
     }
 }
 

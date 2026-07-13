@@ -433,7 +433,7 @@ fn async_input_value(
     })
 }
 
-fn output_schema(
+pub(crate) fn output_schema(
     ty: &Type,
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
 ) -> Option<RustExpr> {
@@ -512,7 +512,7 @@ fn output_schema(
     }
 }
 
-fn async_output_value(
+pub(crate) fn async_output_value(
     name: &str,
     ty: &Type,
     error_type: &Type,

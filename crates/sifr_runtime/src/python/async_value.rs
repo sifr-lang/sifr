@@ -1,3 +1,4 @@
+use super::async_context::PythonAsyncExitCause;
 use super::foreign_object::ForeignObjectLease;
 use super::object_ops::{clone_handle, store_object};
 use super::{ObjectHandle, PythonError};
@@ -51,6 +52,7 @@ pub struct PythonAsyncRequest {
     pub(super) kwargs: Vec<(String, PythonAsyncValue)>,
     pub(super) output: PythonAsyncType,
     completion: PythonAsyncCompletion,
+    context_exit_cause: Option<PythonAsyncExitCause>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -90,6 +92,7 @@ impl PythonAsyncRequest {
             kwargs,
             output,
             completion: PythonAsyncCompletion::ReturnValue,
+            context_exit_cause: None,
         }
     }
 
@@ -110,6 +113,7 @@ impl PythonAsyncRequest {
             kwargs,
             output,
             completion: PythonAsyncCompletion::ReturnValue,
+            context_exit_cause: None,
         })
     }
 
@@ -130,6 +134,7 @@ impl PythonAsyncRequest {
             kwargs,
             output,
             completion: PythonAsyncCompletion::ReturnValue,
+            context_exit_cause: None,
         })
     }
 
@@ -147,7 +152,29 @@ impl PythonAsyncRequest {
             kwargs: Vec::new(),
             output: PythonAsyncType::None,
             completion: PythonAsyncCompletion::SemanticClose,
+            context_exit_cause: None,
         })
+    }
+
+    pub(super) fn semantic_context_exit_method(
+        receiver: ObjectHandle,
+        cause: PythonAsyncExitCause,
+    ) -> Result<Self, PythonError> {
+        Ok(Self {
+            target: PythonAsyncTarget::Method {
+                receiver: PythonAsyncObject::semantic_close(receiver)?,
+                member: "__aexit__".to_string(),
+            },
+            args: Vec::new(),
+            kwargs: Vec::new(),
+            output: PythonAsyncType::None,
+            completion: PythonAsyncCompletion::SemanticClose,
+            context_exit_cause: Some(cause),
+        })
+    }
+
+    pub(super) fn context_exit_cause(&self) -> Option<&PythonAsyncExitCause> {
+        self.context_exit_cause.as_ref()
     }
 
     pub(super) fn finish_semantic_close(&self, succeeded: bool) {

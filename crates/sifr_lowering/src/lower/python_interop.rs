@@ -14,7 +14,8 @@ mod stub_syntax;
 pub(in crate::lower) use context::{
     lower_python_context_owned_expr, python_context_borrow_in_owned_expr, python_context_item_kind,
     reject_python_context_borrow_created_value, reject_python_context_borrow_discard,
-    reject_python_context_borrow_storage, validate_context_class_methods,
+    reject_python_context_borrow_storage, try_lower_python_async_with,
+    validate_context_class_methods,
 };
 pub(in crate::lower) use stub_syntax::{
     classify_python_interop_stub_body, has_python_interop_decorator_syntax,
@@ -148,6 +149,11 @@ pub(in crate::lower) fn collect_python_method_declarations(
                 PythonInteropDecoratorKind::ContextEnter | PythonInteropDecoratorKind::ContextExit,
                 false,
             ) => context::parse_context_method(kind, call, parameters, ctx),
+            (
+                PythonInteropDecoratorKind::ContextAsyncEnter
+                | PythonInteropDecoratorKind::ContextAsyncExit,
+                true,
+            ) => context::parse_context_method(kind, call, parameters, ctx),
             (PythonInteropDecoratorKind::Item, false) => {
                 invalid_shape(ctx, "`@python.item` does not take arguments", span);
                 None
@@ -162,6 +168,18 @@ pub(in crate::lower) fn collect_python_method_declarations(
                 invalid_shape(
                     ctx,
                     "opaque Python methods must use synchronous `def`",
+                    span,
+                );
+                None
+            }
+            (
+                PythonInteropDecoratorKind::ContextAsyncEnter
+                | PythonInteropDecoratorKind::ContextAsyncExit,
+                false,
+            ) => {
+                invalid_shape(
+                    ctx,
+                    "asynchronous Python context methods require `async def`",
                     span,
                 );
                 None
@@ -362,9 +380,8 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
                     [name] if name == "async_close" => Some(PythonCleanupPolicy::AsyncClose),
                     [name] if name == "context" => Some(PythonCleanupPolicy::Context),
                     [name] if name == "async_context" => {
-                        reserved_cleanup(ctx, "async_context", keyword.value.range());
                         reserved_cleanup_seen = true;
-                        None
+                        Some(PythonCleanupPolicy::AsyncContext)
                     }
                     _ => {
                         invalid_shape(ctx, "unknown opaque cleanup policy", keyword.value.range());
@@ -446,7 +463,10 @@ pub(in crate::lower) fn validate_python_interop_signature(
     };
     if matches!(
         declaration.kind,
-        PythonInteropDecoratorKind::ContextEnter | PythonInteropDecoratorKind::ContextExit
+        PythonInteropDecoratorKind::ContextEnter
+            | PythonInteropDecoratorKind::ContextExit
+            | PythonInteropDecoratorKind::ContextAsyncEnter
+            | PythonInteropDecoratorKind::ContextAsyncExit
     ) {
         context::validate_context_method_signature(declaration, params, return_type, ctx);
         return;
@@ -715,7 +735,10 @@ pub(in crate::lower) fn method_consumes_receiver(
 
 pub(in crate::lower) fn method_is_context_exit(decorators: &[Decorator]) -> bool {
     decorators.iter().any(|decorator| {
-        matches!(&decorator.expression, Expr::Call(call) if decorator_path(&call.func).is_some_and(|path| path.as_slice() == ["python", "context", "exit"]))
+        matches!(&decorator.expression, Expr::Call(call) if decorator_path(&call.func).is_some_and(|path| {
+            path.as_slice() == ["python", "context", "exit"]
+                || path.as_slice() == ["python", "context", "aexit"]
+        }))
     })
 }
 

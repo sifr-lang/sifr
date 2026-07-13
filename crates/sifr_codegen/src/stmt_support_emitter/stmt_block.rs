@@ -677,6 +677,7 @@ impl RustEmitter {
                 let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
                     return Ok(None);
                 };
+                let lowered = self.coerce_raised_error_for_ir(value, lowered);
                 (
                     vec![RustStmt::Return(Some(crate::RustExpr::FnCall {
                         func: Box::new(crate::RustExpr::Path(vec!["Err".to_string()])),

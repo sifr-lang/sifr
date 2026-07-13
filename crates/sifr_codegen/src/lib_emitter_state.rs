@@ -361,14 +361,16 @@ impl RustEmitter {
             stmt,
             HirStmt::AsyncWith {
                 kind: sifr_ir::HirAsyncWithKind::TaskTimeout { .. }
-                    | sifr_ir::HirAsyncWithKind::UserDefined { .. },
+                    | sifr_ir::HirAsyncWithKind::UserDefined { .. }
+                    | sifr_ir::HirAsyncWithKind::Python { .. },
                 body,
                 ..
             } if body_contains_await(body)
         ) || matches!(
             stmt,
             HirStmt::AsyncWith {
-                kind: sifr_ir::HirAsyncWithKind::UserDefined { .. },
+                kind: sifr_ir::HirAsyncWithKind::UserDefined { .. }
+                    | sifr_ir::HirAsyncWithKind::Python { .. },
                 ..
             }
         ) || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty))

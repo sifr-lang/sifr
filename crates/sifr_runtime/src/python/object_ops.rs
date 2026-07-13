@@ -308,6 +308,13 @@ pub fn close_object(object: ObjectHandle) -> Result<(), PythonError> {
     Ok(())
 }
 
+/// Compiler-private terminal path when an async semantic owner cannot reach
+/// its consuming cleanup operation after acquisition has not completed.
+#[doc(hidden)]
+pub fn poison_object(object: ObjectHandle) {
+    object.poison();
+}
+
 pub fn from_none() -> Result<ObjectHandle, PythonError> {
     super::attach(|py| store_object(py.None())).map_err(PythonError::runtime)?
 }

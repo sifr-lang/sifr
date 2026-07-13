@@ -185,6 +185,11 @@ pub(super) fn run_coroutine_blocking(
                 "raw asyncio submission produced a typed terminal value".to_string(),
             ),
         )),
+        PythonTerminalValue::ExitDecision(_) => Err(PythonError::runtime(
+            PythonRuntimeError::AsyncRuntimeFailed(
+                "raw asyncio submission produced an exit-decision terminal value".to_string(),
+            ),
+        )),
     }
 }
 

@@ -23,7 +23,7 @@ pub enum SifrExitCauseKind {
 }
 
 impl SifrExitCauseKind {
-    const fn label(self) -> &'static str {
+    pub(super) const fn label(self) -> &'static str {
         match self {
             Self::OrdinaryError => "ordinary-error",
             Self::Timeout => "timeout",
@@ -210,7 +210,7 @@ fn finish_context_exit(
     }
 }
 
-fn exit_decision(value: &Bound<'_, PyAny>) -> PyResult<PythonExitDecision> {
+pub(super) fn exit_decision(value: &Bound<'_, PyAny>) -> PyResult<PythonExitDecision> {
     value.is_truthy().map(|truthy| {
         if truthy {
             PythonExitDecision::Suppress
@@ -220,7 +220,7 @@ fn exit_decision(value: &Bound<'_, PyAny>) -> PyResult<PythonExitDecision> {
     })
 }
 
-fn boundary_error_type(py: Python<'_>) -> Result<Bound<'_, PyType>, PythonError> {
+pub(super) fn boundary_error_type(py: Python<'_>) -> Result<Bound<'_, PyType>, PythonError> {
     BOUNDARY_ERROR_TYPE
         .get()
         .map(|error_type| error_type.bind(py).clone())

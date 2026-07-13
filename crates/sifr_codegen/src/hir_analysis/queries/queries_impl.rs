@@ -416,6 +416,10 @@ pub(crate) fn collect_mutated_vars(
                 sifr_ir::HirAsyncWithKind::UserDefined {
                     context: HirExpr::Name { name, .. },
                     ..
+                }
+                | sifr_ir::HirAsyncWithKind::Python {
+                    context: HirExpr::Name { name, .. },
+                    ..
                 },
             ..
         } => {

@@ -293,7 +293,8 @@ fn collect_stmt_error_refs(
                         referenced.insert("TimeoutError".to_string());
                         collect_expr_error_refs(duration, referenced, builtin_error_classes);
                     }
-                    sifr_ir::HirAsyncWithKind::UserDefined { context, .. } => {
+                    sifr_ir::HirAsyncWithKind::UserDefined { context, .. }
+                    | sifr_ir::HirAsyncWithKind::Python { context, .. } => {
                         collect_expr_error_refs(context, referenced, builtin_error_classes);
                     }
                     sifr_ir::HirAsyncWithKind::TaskGroup {

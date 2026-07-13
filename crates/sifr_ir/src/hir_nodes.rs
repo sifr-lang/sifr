@@ -210,6 +210,17 @@ pub enum HirAsyncWithKind {
         enter_error_ty: Type,
         exit_error_ty: Type,
     },
+    /// Dedicated declaration-first Python async context protocol, distinct
+    /// from native user-defined async context semantics.
+    Python {
+        context: HirExpr,
+        manager_class: String,
+        entered_type: Type,
+        enter_error_type: Type,
+        exit_error_type: Type,
+        entered_is_opaque_borrow: bool,
+        active_error_type: Type,
+    },
 }
 
 /// Synchronous with-item protocol selected during type-directed lowering.

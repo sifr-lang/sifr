@@ -1,4 +1,5 @@
 use super::async_value::PythonAsyncValue;
+use super::context_ops::PythonExitDecision;
 use super::{PythonError, PythonRuntimeError};
 use crate::cancellation::CancellationClaimLease;
 use pyo3::prelude::*;
@@ -12,6 +13,7 @@ pub(super) type PythonTerminalOutcome = Result<PythonTerminalValue, PythonTermin
 pub(super) enum PythonTerminalValue {
     Raw(Py<PyAny>),
     Typed(PythonAsyncValue),
+    ExitDecision(PythonExitDecision),
 }
 
 #[derive(Debug)]

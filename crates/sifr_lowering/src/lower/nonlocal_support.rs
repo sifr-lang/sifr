@@ -195,7 +195,8 @@ fn hir_stmt_calls_function(stmt: &HirStmt, func_name: &str) -> bool {
                 crate::hir_nodes::HirAsyncWithKind::TaskTimeout { duration } => {
                     hir_expr_calls_function(duration, func_name)
                 }
-                crate::hir_nodes::HirAsyncWithKind::UserDefined { context, .. } => {
+                crate::hir_nodes::HirAsyncWithKind::UserDefined { context, .. }
+                | crate::hir_nodes::HirAsyncWithKind::Python { context, .. } => {
                     hir_expr_calls_function(context, func_name)
                 }
                 crate::hir_nodes::HirAsyncWithKind::TaskGroup {
