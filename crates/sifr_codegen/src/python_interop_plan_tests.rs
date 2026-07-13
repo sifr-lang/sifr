@@ -1,7 +1,7 @@
 use crate::{interop_build_plan_for_named_modules, PythonTargetProbeStatus};
 use ruff_text_size::TextRange;
 use sifr_ir::{
-    HirExpr, HirFunction, HirModule, HirStmt, MethodKind, PythonInteropDeclaration,
+    HirExpr, HirFunction, HirImport, HirModule, HirStmt, MethodKind, PythonInteropDeclaration,
     PythonInteropDecoratorKind, PythonInteropEffect, PythonRecordExpansion, PythonTargetPath,
 };
 use sifr_type_system::Type;
@@ -94,6 +94,68 @@ fn python_cache_identity_changes_with_authoritative_sifr_types() {
         string_plan.cache_key_fragment(),
         integer_plan.cache_key_fragment()
     );
+}
+
+#[test]
+fn raw_coroutine_call_requires_the_owned_async_loop() {
+    let mut module = module_with_functions(vec![function(
+        "main",
+        vec![HirStmt::Expr {
+            expr: HirExpr::Call {
+                func: "run_coroutine_blocking".to_string(),
+                args: Vec::new(),
+                ty: Type::None,
+            },
+        }],
+        Vec::new(),
+    )]);
+    module.imports.push(HirImport {
+        module: "sifr.python".to_string(),
+        names: vec!["run_coroutine_blocking".to_string()],
+        aliases: Vec::new(),
+    });
+
+    let plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);
+
+    assert!(plan.python.requires_async_loop);
+    assert!(plan
+        .cache_key_fragment()
+        .contains("python.requires_async_loop=yes"));
+}
+
+#[test]
+fn aliased_raw_coroutine_call_requires_the_owned_async_loop() {
+    let mut module = module_with_functions(vec![function(
+        "main",
+        vec![HirStmt::Expr {
+            expr: HirExpr::Call {
+                func: "run_owned".to_string(),
+                args: Vec::new(),
+                ty: Type::None,
+            },
+        }],
+        Vec::new(),
+    )]);
+    module.imports.push(HirImport {
+        module: "sifr.python".to_string(),
+        names: vec!["run_coroutine_blocking".to_string()],
+        aliases: vec![(
+            "run_coroutine_blocking".to_string(),
+            "run_owned".to_string(),
+        )],
+    });
+
+    let plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);
+
+    assert!(plan.python.requires_async_loop);
+}
+
+#[test]
+fn sync_python_declaration_does_not_require_the_owned_async_loop() {
+    let module = module_with_functions(vec![function("main", Vec::new(), Vec::new())]);
+    let plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);
+
+    assert!(!plan.python.requires_async_loop);
 }
 
 fn module_with_functions(functions: Vec<HirFunction>) -> HirModule {

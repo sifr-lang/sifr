@@ -243,6 +243,13 @@ fn package_entrypoint(
 }
 
 fn local_python_runtime(project_root: &Path) -> crate::PackagePythonRuntime {
+    local_python_runtime_with_roots(project_root, &[])
+}
+
+fn local_python_runtime_with_roots(
+    project_root: &Path,
+    roots: &[&str],
+) -> crate::PackagePythonRuntime {
     let pyproject = project_root.join("pyproject.toml");
     let lock = project_root.join("uv.lock");
     std::fs::write(
@@ -293,12 +300,14 @@ fn local_python_runtime(project_root: &Path) -> crate::PackagePythonRuntime {
         &request,
         &probe,
         digest,
-        Vec::new(),
-        Vec::new(),
+        roots.iter().map(|root| (*root).to_string()).collect(),
+        roots.iter().map(|root| (*root).to_string()).collect(),
         Vec::new(),
     )
 }
 
+#[path = "package_python_async_runtime_tests.rs"]
+mod python_async_runtime_tests;
 #[path = "package_python_bridge_archive_tests.rs"]
 mod python_bridge_archive_tests;
 

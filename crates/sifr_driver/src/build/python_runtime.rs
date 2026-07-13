@@ -22,6 +22,7 @@ pub struct PackagePythonRuntime {
     trusted_native_roots: Vec<String>,
     libpython: Option<String>,
     bridge_sources: Vec<EmbeddedPythonBridgeSource>,
+    start_async_loop: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -61,6 +62,7 @@ impl PackagePythonRuntime {
             trusted_native_roots,
             libpython: probe.libpython.clone(),
             bridge_sources: Vec::new(),
+            start_async_loop: false,
         }
     }
 
@@ -105,6 +107,7 @@ impl PackagePythonRuntime {
             trusted_native_roots: Vec::new(),
             libpython: None,
             bridge_sources: Vec::new(),
+            start_async_loop: false,
         }
     }
 
@@ -136,6 +139,10 @@ impl PackagePythonRuntime {
 
     pub(super) fn set_bridge_sources(&mut self, sources: Vec<EmbeddedPythonBridgeSource>) {
         self.bridge_sources = sources;
+    }
+
+    pub(super) fn set_start_async_loop(&mut self, required: bool) {
+        self.start_async_loop = required;
     }
 }
 
@@ -181,6 +188,7 @@ pub(super) fn render_python_runtime_prelude(metadata: &PackagePythonRuntime) -> 
         native_import_roots: vec![{native_import_roots}],
         trusted_native_roots: vec![{trusted_native_roots}],
         bridge_sources: vec![{bridge_sources}],
+        start_async_loop: {start_async_loop},
     }}
 }}
 
@@ -206,6 +214,7 @@ fn __sifr_initialize_python_runtime() -> Result<sifr_runtime::python::PythonRunt
         native_import_roots = render_string_vec(&metadata.native_import_roots),
         trusted_native_roots = render_string_vec(&metadata.trusted_native_roots),
         bridge_sources = render_bridge_sources(&metadata.bridge_sources),
+        start_async_loop = metadata.start_async_loop,
     )
 }
 

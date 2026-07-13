@@ -14,6 +14,7 @@ pub struct PythonInteropPlan {
     pub required_import_roots: Vec<String>,
     pub target_probes: Vec<PythonTargetProbe>,
     pub bridge_packages: Vec<PythonBridgePackagePlan>,
+    pub requires_async_loop: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -79,6 +80,7 @@ pub(crate) fn python_interop_plan_for_named_modules<'a>(
     let modules = modules.into_iter().collect::<Vec<_>>();
     let record_expansion_functions = record_expansion_functions(&modules);
     for (module_name, module) in modules {
+        plan.requires_async_loop |= module_requires_raw_coroutine_loop(module);
         for function in &module.functions {
             collect_function(
                 module_name,
@@ -91,6 +93,7 @@ pub(crate) fn python_interop_plan_for_named_modules<'a>(
             let Some(declaration) = class.python_opaque_declaration() else {
                 continue;
             };
+            plan.requires_async_loop |= declaration.effect == sifr_ir::PythonInteropEffect::Async;
             if let Some(root) = &declaration.required_import_root {
                 plan.required_import_roots.push(root.clone());
             }
@@ -124,6 +127,7 @@ fn collect_function(
     plan: &mut PythonInteropPlan,
 ) {
     for declaration in &function.python_interop {
+        plan.requires_async_loop |= declaration.effect == sifr_ir::PythonInteropEffect::Async;
         if let Some(root) = &declaration.required_import_root {
             plan.required_import_roots.push(root.clone());
         }
@@ -149,6 +153,54 @@ fn collect_function(
             return_type: function.return_type.clone(),
         });
     }
+}
+
+fn module_requires_raw_coroutine_loop(module: &HirModule) -> bool {
+    let raw_call_names = module
+        .imports
+        .iter()
+        .filter(|import| import.module == "sifr.python")
+        .flat_map(|import| {
+            import.names.iter().filter_map(|name| {
+                (name == "run_coroutine_blocking").then(|| {
+                    import
+                        .aliases
+                        .iter()
+                        .find_map(|(original, alias)| (original == name).then(|| alias.clone()))
+                        .unwrap_or_else(|| name.clone())
+                })
+            })
+        })
+        .collect::<BTreeSet<_>>();
+    if raw_call_names.is_empty() {
+        return false;
+    }
+    let mut required = false;
+    let mut inspect = |expression: &sifr_ir::HirExpr| {
+        if matches!(expression, sifr_ir::HirExpr::Call { func, .. } if raw_call_names.contains(func))
+        {
+            required = true;
+        }
+    };
+    for function in &module.functions {
+        walk_stmts(
+            &function.body,
+            TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+            &mut |_| {},
+            &mut inspect,
+        );
+    }
+    for class in &module.classes {
+        for method in &class.methods {
+            walk_stmts(
+                &method.body,
+                TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+                &mut |_| {},
+                &mut inspect,
+            );
+        }
+    }
+    required
 }
 
 fn record_expansion_functions(modules: &[(Option<&str>, &HirModule)]) -> BTreeSet<String> {
@@ -183,6 +235,13 @@ pub(crate) fn push_python_plan_cache_key(out: &mut String, plan: &PythonInteropP
     out.push('\n');
     out.push_str("python.declarations=");
     out.push_str(&plan.declarations.len().to_string());
+    out.push('\n');
+    out.push_str("python.requires_async_loop=");
+    out.push_str(if plan.requires_async_loop {
+        "yes"
+    } else {
+        "no"
+    });
     out.push('\n');
     for declaration in &plan.declarations {
         out.push_str("python.module=");
