@@ -540,8 +540,12 @@ pub fn generate_rust_with_stdlib_for_module(
             preamble_items.extend(build_file_handle_struct_items());
         }
     }
-    if uses_task_scope || uses_join_set {
+    let uses_async_python =
+        crate::python_interop_common::module_uses_async_python_declaration(module);
+    if uses_task_scope || uses_join_set || uses_async_python {
         preamble_items.extend(build_task_cancellation_items());
+    }
+    if uses_task_scope || uses_join_set {
         preamble_items.extend(build_task_scope_items());
         preamble_items.extend(build_task_supervisor_items());
         preamble_items.extend(build_task_context_scope_extension_items(

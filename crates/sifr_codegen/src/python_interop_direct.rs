@@ -12,6 +12,9 @@ pub(crate) fn python_interop_function_body(
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
 ) -> Option<Vec<RustStmt>> {
     let declaration = func.python_interop.first()?;
+    if declaration.kind == PythonInteropDecoratorKind::Coroutine {
+        return crate::python_interop_async::async_python_function_body(func, opaque_classes);
+    }
     if declaration.kind != PythonInteropDecoratorKind::Function {
         return None;
     }
@@ -175,6 +178,9 @@ pub(crate) fn python_interop_method_body(
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
 ) -> Option<Vec<RustStmt>> {
     let declaration = func.python_interop.first()?;
+    if declaration.kind == PythonInteropDecoratorKind::Coroutine {
+        return crate::python_interop_async::async_python_method_body(func, opaque_classes);
+    }
     let Type::Result(ok_type, error_type) = func.return_type.resolve_alias() else {
         return None;
     };
@@ -291,16 +297,6 @@ pub(crate) fn python_interop_method_body(
         args: vec![converted],
     })));
     Some(body)
-}
-
-pub(crate) fn python_omit_parameter_indices(
-    declaration: &PythonInteropDeclaration,
-) -> impl Iterator<Item = usize> + '_ {
-    declaration
-        .parameters
-        .iter()
-        .enumerate()
-        .filter_map(|(index, parameter)| parameter.omit_when_absent.then_some(index))
 }
 
 pub(crate) fn input_conversion(

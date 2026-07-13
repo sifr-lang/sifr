@@ -14,15 +14,33 @@ pub struct ForeignObject {
     boundary_path: String,
 }
 
+/// Runtime-private pin for an identity used by an in-flight async declaration.
+///
+/// The pin is deliberately not exposed through the Sifr type model. It keeps the
+/// exact identity resolvable on the owned asyncio thread even if runtime cleanup
+/// concurrently marks the public handle closed.
+#[derive(Debug)]
+pub(super) struct ForeignObjectLease {
+    inner: Arc<ForeignObjectInner>,
+    boundary_path: String,
+}
+
 #[derive(Debug)]
 struct ForeignObjectInner {
     state: Mutex<ForeignObjectState>,
 }
 
 #[derive(Debug)]
-enum ForeignObjectState {
-    Open(Py<PyAny>),
-    Poisoned(Py<PyAny>),
+struct ForeignObjectState {
+    status: ForeignObjectStatus,
+    object: Option<Py<PyAny>>,
+    active_leases: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ForeignObjectStatus {
+    Open,
+    Poisoned,
     Closed,
 }
 
@@ -31,41 +49,65 @@ impl ForeignObject {
         update_object_count(1)?;
         Ok(Self {
             inner: Arc::new(ForeignObjectInner {
-                state: Mutex::new(ForeignObjectState::Open(object)),
+                state: Mutex::new(ForeignObjectState {
+                    status: ForeignObjectStatus::Open,
+                    object: Some(object),
+                    active_leases: 0,
+                }),
             }),
             boundary_path: String::new(),
         })
     }
 
     pub(super) fn clone_ref(&self, py: Python<'_>) -> Result<Py<PyAny>, PythonRuntimeError> {
-        match &*lock_state(&self.inner.state) {
-            ForeignObjectState::Open(object) => Ok(object.clone_ref(py)),
-            ForeignObjectState::Poisoned(_) => Err(PythonRuntimeError::PythonOperationFailed(
+        let state = lock_state(&self.inner.state);
+        match state.status {
+            ForeignObjectStatus::Open => state.object.as_ref().map_or_else(
+                || {
+                    Err(PythonRuntimeError::PythonOperationFailed(
+                        "Python object identity is unavailable".to_string(),
+                    ))
+                },
+                |object| Ok(object.clone_ref(py)),
+            ),
+            ForeignObjectStatus::Poisoned => Err(PythonRuntimeError::PythonOperationFailed(
                 "Python object identity is poisoned after failed semantic cleanup".to_string(),
             )),
-            ForeignObjectState::Closed => Err(PythonRuntimeError::PythonOperationFailed(
+            ForeignObjectStatus::Closed => Err(PythonRuntimeError::PythonOperationFailed(
                 "Python object identity is closed".to_string(),
             )),
         }
     }
 
+    pub(super) fn lease(&self) -> Result<ForeignObjectLease, PythonRuntimeError> {
+        let mut state = lock_state(&self.inner.state);
+        if state.status != ForeignObjectStatus::Open || state.object.is_none() {
+            return Err(PythonRuntimeError::PythonOperationFailed(
+                "Python object identity is closed".to_string(),
+            ));
+        }
+        state.active_leases = state.active_leases.saturating_add(1);
+        Ok(ForeignObjectLease {
+            inner: Arc::clone(&self.inner),
+            boundary_path: self.boundary_path.clone(),
+        })
+    }
+
     pub(super) fn poison(&self) {
         let mut state = lock_state(&self.inner.state);
-        if let ForeignObjectState::Open(object) =
-            std::mem::replace(&mut *state, ForeignObjectState::Closed)
-        {
-            *state = ForeignObjectState::Poisoned(object);
+        if state.status == ForeignObjectStatus::Open {
+            state.status = ForeignObjectStatus::Poisoned;
         }
     }
 
     pub(super) fn close(&self) {
         let object = {
             let mut state = lock_state(&self.inner.state);
-            match std::mem::replace(&mut *state, ForeignObjectState::Closed) {
-                ForeignObjectState::Open(object) | ForeignObjectState::Poisoned(object) => {
-                    Some(object)
-                }
-                ForeignObjectState::Closed => None,
+            state.status = ForeignObjectStatus::Closed;
+            if state.active_leases == 0 {
+                state.object.take()
+            } else {
+                None
             }
         };
         if let Some(object) = object {
@@ -90,10 +132,45 @@ impl ForeignObject {
 impl Drop for ForeignObjectInner {
     fn drop(&mut self) {
         let state = match self.state.get_mut() {
-            Ok(state) => std::mem::replace(state, ForeignObjectState::Closed),
-            Err(poisoned) => std::mem::replace(poisoned.into_inner(), ForeignObjectState::Closed),
+            Ok(state) => state,
+            Err(poisoned) => poisoned.into_inner(),
         };
-        if let ForeignObjectState::Open(object) | ForeignObjectState::Poisoned(object) = state {
+        if let Some(object) = state.object.take() {
+            release_object(object);
+        }
+    }
+}
+
+impl ForeignObjectLease {
+    pub(super) fn clone_ref(&self, py: Python<'_>) -> Result<Py<PyAny>, PythonRuntimeError> {
+        let state = lock_state(&self.inner.state);
+        state.object.as_ref().map_or_else(
+            || {
+                Err(PythonRuntimeError::PythonOperationFailed(
+                    "leased Python object identity is unavailable".to_string(),
+                ))
+            },
+            |object| Ok(object.clone_ref(py)),
+        )
+    }
+
+    pub(super) fn boundary_path(&self) -> &str {
+        &self.boundary_path
+    }
+}
+
+impl Drop for ForeignObjectLease {
+    fn drop(&mut self) {
+        let object = {
+            let mut state = lock_state(&self.inner.state);
+            state.active_leases = state.active_leases.saturating_sub(1);
+            if state.active_leases == 0 && state.status == ForeignObjectStatus::Closed {
+                state.object.take()
+            } else {
+                None
+            }
+        };
+        if let Some(object) = object {
             release_object(object);
         }
     }

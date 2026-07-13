@@ -1,3 +1,4 @@
+use super::async_value::PythonAsyncValue;
 use super::{PythonError, PythonRuntimeError};
 use crate::cancellation::CancellationClaimLease;
 use pyo3::prelude::*;
@@ -6,11 +7,17 @@ use std::pin::Pin;
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::task::{Context, Poll, Waker};
 
-pub(super) type PythonTerminalOutcome = Result<Py<PyAny>, PythonTerminalError>;
+pub(super) type PythonTerminalOutcome = Result<PythonTerminalValue, PythonTerminalError>;
+
+pub(super) enum PythonTerminalValue {
+    Raw(Py<PyAny>),
+    Typed(PythonAsyncValue),
+}
 
 #[derive(Debug)]
 pub(super) enum PythonTerminalError {
     Python(PyErr),
+    Mapped(Box<PythonError>),
     Runtime(PythonRuntimeError),
 }
 
@@ -119,6 +126,7 @@ pub(super) fn terminal_error_to_python(
         PythonTerminalError::Python(error) => {
             PythonError::from_pyerr(py, error, "await", operation)
         }
+        PythonTerminalError::Mapped(error) => *error,
         PythonTerminalError::Runtime(error) => PythonError::runtime(error),
     }
 }

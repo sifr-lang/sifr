@@ -1,5 +1,6 @@
 use super::async_terminal::{
     terminal_error_to_python, PythonTerminal, PythonTerminalError, PythonTerminalOutcome,
+    PythonTerminalValue,
 };
 use super::{PythonError, PythonRuntimeError};
 use crate::cancellation::{CancellationCarrier, CancellationClaimError, CancellationHook};
@@ -61,7 +62,7 @@ struct SubmissionCancellationState {
 }
 
 #[derive(Default)]
-struct SubmissionCancellationBridge {
+pub(super) struct SubmissionCancellationBridge {
     state: Mutex<SubmissionCancellationState>,
 }
 
@@ -80,7 +81,7 @@ impl AsyncRuntimeState {
 }
 
 impl SubmissionCancellationBridge {
-    fn publish(&self, submission_id: u64) -> bool {
+    pub(super) fn publish(&self, submission_id: u64) -> bool {
         let Ok(mut state) = self.state.lock() else {
             return true;
         };
@@ -173,7 +174,14 @@ pub(super) fn run_coroutine_blocking(
     // `run_coroutine_blocking` is classified as blocking_io and must be explicitly
     // offloaded by async Sifr code. Releasing the GIL here lets the loop thread run.
     let outcome = super::detach(py, || terminal.wait());
-    outcome.map_err(|error| terminal_error_to_python(py, error, "owned asyncio coroutine"))
+    match outcome.map_err(|error| terminal_error_to_python(py, error, "owned asyncio coroutine"))? {
+        PythonTerminalValue::Raw(value) => Ok(value),
+        PythonTerminalValue::Typed(_) => Err(PythonError::runtime(
+            PythonRuntimeError::AsyncRuntimeFailed(
+                "raw asyncio submission produced a typed terminal value".to_string(),
+            ),
+        )),
+    }
 }
 
 pub(super) fn submit_coroutine(
@@ -181,29 +189,7 @@ pub(super) fn submit_coroutine(
     coroutine: &Py<PyAny>,
     carrier: Option<&CancellationCarrier>,
 ) -> Result<PythonTerminal, PythonError> {
-    let cancellation = Arc::new(SubmissionCancellationBridge::default());
-    let cancellation_claim = if let Some(carrier) = carrier {
-        match carrier.claim(cancellation_hook(&cancellation)) {
-            Ok(claim) => Some(claim),
-            Err(CancellationClaimError::CancelledBeforeClaim) => {
-                return Err(PythonError::runtime(
-                    PythonRuntimeError::AsyncSubmissionCancelled,
-                ));
-            }
-            Err(CancellationClaimError::AlreadyClaimed) => {
-                return Err(PythonError::runtime(
-                    PythonRuntimeError::AsyncCancellationAlreadyClaimed,
-                ));
-            }
-            Err(CancellationClaimError::StateUnavailable) => {
-                return Err(PythonError::runtime(PythonRuntimeError::StateUnavailable));
-            }
-        }
-    } else {
-        None
-    };
-
-    let terminal = PythonTerminal::with_cancellation_claim(cancellation_claim);
+    let (terminal, cancellation) = terminal_for_submission(carrier)?;
     let (submission_id, loop_object) =
         reserve_submission(py, &terminal).map_err(PythonError::runtime)?;
     let done_callback = build_done_callback(py, submission_id, &terminal).map_err(|error| {
@@ -242,6 +228,37 @@ pub(super) fn submit_coroutine(
     Ok(terminal)
 }
 
+pub(super) fn terminal_for_submission(
+    carrier: Option<&CancellationCarrier>,
+) -> Result<(PythonTerminal, Arc<SubmissionCancellationBridge>), PythonError> {
+    let cancellation = Arc::new(SubmissionCancellationBridge::default());
+    let cancellation_claim = if let Some(carrier) = carrier {
+        match carrier.claim(cancellation_hook(&cancellation)) {
+            Ok(claim) => Some(claim),
+            Err(CancellationClaimError::CancelledBeforeClaim) => {
+                return Err(PythonError::runtime(
+                    PythonRuntimeError::AsyncSubmissionCancelled,
+                ));
+            }
+            Err(CancellationClaimError::AlreadyClaimed) => {
+                return Err(PythonError::runtime(
+                    PythonRuntimeError::AsyncCancellationAlreadyClaimed,
+                ));
+            }
+            Err(CancellationClaimError::StateUnavailable) => {
+                return Err(PythonError::runtime(PythonRuntimeError::StateUnavailable));
+            }
+        }
+    } else {
+        None
+    };
+
+    Ok((
+        PythonTerminal::with_cancellation_claim(cancellation_claim),
+        cancellation,
+    ))
+}
+
 fn build_done_callback(
     py: Python<'_>,
     submission_id: u64,
@@ -261,7 +278,7 @@ fn build_done_callback(
                 );
                 let task = args.get_item(0).map_err(PythonTerminalError::Python)?;
                 task.call_method0("result")
-                    .map(Bound::unbind)
+                    .map(|value| PythonTerminalValue::Raw(value.unbind()))
                     .map_err(PythonTerminalError::Python)
             }))
             .unwrap_or_else(|_| {
@@ -536,7 +553,7 @@ fn run_loop_thread(ready_sender: std::sync::mpsc::SyncSender<Result<Py<PyAny>, S
     }
 }
 
-fn reserve_submission(
+pub(super) fn reserve_submission(
     py: Python<'_>,
     terminal: &PythonTerminal,
 ) -> Result<(u64, Py<PyAny>), PythonRuntimeError> {
@@ -561,7 +578,7 @@ fn reserve_submission(
     Ok((submission_id, loop_object))
 }
 
-fn register_submission(
+pub(super) fn register_submission(
     py: Python<'_>,
     submission_id: u64,
     loop_object: &Py<PyAny>,
@@ -588,7 +605,7 @@ fn register_submission(
     Ok(())
 }
 
-fn release_pending_submission(submission_id: u64) {
+pub(super) fn release_pending_submission(submission_id: u64) {
     let terminal = {
         let Ok(mut state) = ASYNC_STATE.lock() else {
             return;
@@ -600,7 +617,7 @@ fn release_pending_submission(submission_id: u64) {
     drop(terminal);
 }
 
-fn finish_submission(submission_id: u64) -> Result<(), PythonRuntimeError> {
+pub(super) fn finish_submission(submission_id: u64) -> Result<(), PythonRuntimeError> {
     let removed = {
         let mut state = lock_state()?;
         let removed = state.submissions.remove(&submission_id);
