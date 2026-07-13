@@ -158,7 +158,10 @@ impl RustEmitter {
                     && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
                         || matches!(
                             resolved_param,
-                            Type::TypeVar(_) | Type::Any | Type::Callable(..)
+                            Type::TypeVar(_)
+                                | Type::Any
+                                | Type::Callable(..)
+                                | Type::AsyncCallable(..)
                         )));
             let needs_mut_borrow = expects_mut_ref_type
                 || (convention.is_mut_borrow()

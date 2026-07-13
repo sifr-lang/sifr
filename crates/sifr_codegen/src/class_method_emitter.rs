@@ -289,7 +289,7 @@ impl RustEmitter {
                         .unwrap_or_else(|| self.rust_type_with_generics(param_ty)),
                 );
             }
-            if matches!(param_ty, Type::Callable(..)) {
+            if matches!(param_ty, Type::Callable(..) | Type::AsyncCallable(..)) {
                 return RustType::Named(format!(
                     "{} + 'static",
                     self.rust_type_with_generics(param_ty)
@@ -422,17 +422,20 @@ impl RustEmitter {
                     value,
                     "class constructor field assignment value lowering",
                 );
+                let lowered_value = field_ty.map_or(lowered_value.clone(), |ty| {
+                    self.wrap_recursive_constructor_field_value(
+                        class,
+                        method,
+                        field_name,
+                        ty,
+                        value,
+                        lowered_value,
+                    )
+                });
                 fields.push((
                     (*field_name).to_string(),
                     field_ty.map_or(lowered_value.clone(), |ty| {
-                        self.wrap_recursive_constructor_field_value(
-                            class,
-                            method,
-                            field_name,
-                            ty,
-                            value,
-                            lowered_value,
-                        )
+                        Self::box_constructor_callable_value(ty, lowered_value)
                     }),
                 ));
             }
@@ -524,14 +527,9 @@ impl RustEmitter {
                     lowered_value,
                 )
             });
-            let final_value = if field_ty.is_some_and(|ty| matches!(ty, Type::Callable(..))) {
-                RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
-                    args: vec![lowered_value],
-                }
-            } else {
-                lowered_value
-            };
+            let final_value = field_ty.map_or(lowered_value.clone(), |ty| {
+                Self::box_constructor_callable_value(ty, lowered_value)
+            });
             fields.push(((*field_name).to_string(), final_value));
         }
 
@@ -542,11 +540,8 @@ impl RustEmitter {
             if !method.params.iter().any(|param| &param.name == field_name) {
                 continue;
             }
-            let value = if matches!(field_ty, Type::Callable(..)) {
-                RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
-                    args: vec![RustExpr::Ident(field_name.clone())],
-                }
+            let value = if matches!(field_ty, Type::Callable(..) | Type::AsyncCallable(..)) {
+                Self::box_constructor_callable_value(field_ty, RustExpr::Ident(field_name.clone()))
             } else {
                 self.wrap_recursive_constructor_field_value(
                     class,
@@ -575,6 +570,86 @@ impl RustEmitter {
             fields,
         })));
         body
+    }
+
+    fn box_constructor_callable_value(field_ty: &Type, value: RustExpr) -> RustExpr {
+        let boxed_value = match field_ty {
+            Type::AsyncCallable(params, _, _) => {
+                let closure_params = (0..params.len())
+                    .map(|index| RustParam::Named {
+                        name: format!("__sifr_async_arg_{index}"),
+                        ty: RustType::Named("_".to_string()),
+                    })
+                    .collect::<Vec<_>>();
+                let call_args = (0..params.len())
+                    .map(|index| RustExpr::Ident(format!("__sifr_async_arg_{index}")))
+                    .collect::<Vec<_>>();
+                let async_call = RustExpr::AsyncBlock {
+                    body: vec![RustStmt::Return(Some(RustExpr::Await(Box::new(
+                        RustExpr::FnCall {
+                            func: Box::new(RustExpr::Ident("__sifr_async_callable".to_string())),
+                            args: call_args,
+                        },
+                    ))))],
+                    is_move: true,
+                };
+                RustExpr::Block {
+                    stmts: vec![RustStmt::Let {
+                        mutable: false,
+                        name: "__sifr_async_callable".to_string(),
+                        ty: None,
+                        value: RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                "std".to_string(),
+                                "sync".to_string(),
+                                "Arc".to_string(),
+                                "new".to_string(),
+                            ])),
+                            args: vec![value],
+                        },
+                    }],
+                    expr: Some(Box::new(RustExpr::ClosureBlock {
+                        params: closure_params,
+                        body: vec![
+                            RustStmt::Let {
+                                mutable: false,
+                                name: "__sifr_async_callable".to_string(),
+                                ty: None,
+                                value: RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "std".to_string(),
+                                        "sync".to_string(),
+                                        "Arc".to_string(),
+                                        "clone".to_string(),
+                                    ])),
+                                    args: vec![RustExpr::Ref {
+                                        mutable: false,
+                                        expr: Box::new(RustExpr::Ident(
+                                            "__sifr_async_callable".to_string(),
+                                        )),
+                                    }],
+                                },
+                            },
+                            RustStmt::Return(Some(RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec![
+                                    "Box".to_string(),
+                                    "pin".to_string(),
+                                ])),
+                                args: vec![async_call],
+                            })),
+                        ],
+                        is_move: true,
+                        is_async: false,
+                    })),
+                }
+            }
+            Type::Callable(..) => value,
+            _ => return value,
+        };
+        RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+            args: vec![boxed_value],
+        }
     }
 
     pub(crate) fn lower_class_method_item(
@@ -632,7 +707,9 @@ impl RustEmitter {
             {
                 self.mut_borrowed_params.insert(param.name.clone());
             }
-            if let Type::Callable(ref param_types, ref conventions, _) = param.ty {
+            if let Type::Callable(ref param_types, ref conventions, _)
+            | Type::AsyncCallable(ref param_types, ref conventions, _) = param.ty
+            {
                 let conv_list = param_types
                     .iter()
                     .zip(conventions.iter())

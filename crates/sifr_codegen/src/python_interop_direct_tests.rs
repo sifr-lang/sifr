@@ -266,6 +266,7 @@ fn declaration() -> PythonInteropDeclaration {
             shape("extra", PythonParameterKind::KeywordVariadic, false),
         ],
         required_import_root: Some("pkg".to_string()),
+        callbacks: Vec::new(),
     }
 }
 

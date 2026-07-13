@@ -399,7 +399,7 @@ fn non_send_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Option<St
             .find_map(|elem| non_send_reason_inner(elem.resolve_alias(), visiting)),
         Type::Alias { body, .. } => non_send_reason_inner(body.resolve_alias(), visiting),
         Type::Newtype { inner, .. } => non_send_reason_inner(inner.resolve_alias(), visiting),
-        Type::Callable(params, _, ret) => params
+        Type::Callable(params, _, ret) | Type::AsyncCallable(params, _, ret) => params
             .iter()
             .find_map(|param| non_send_reason_inner(param.resolve_alias(), visiting))
             .or_else(|| non_send_reason_inner(ret.resolve_alias(), visiting)),

@@ -70,7 +70,7 @@ pub(in crate::lower) fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
                 collect_type_vars(&method_ft.return_type, vars);
             }
         }
-        Type::Callable(params, _, ret) => {
+        Type::Callable(params, _, ret) | Type::AsyncCallable(params, _, ret) => {
             for p in params {
                 collect_type_vars(p, vars);
             }

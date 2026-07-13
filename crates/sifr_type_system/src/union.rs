@@ -238,10 +238,11 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
         Type::Newtype { name, .. } => (34, name.clone()),
         Type::TypeVar(name) => (35, name.clone()),
         Type::Callable(..) => (36, String::new()),
-        Type::Enum { name, .. } => (37, name.clone()),
-        Type::BigInt => (38, String::new()),
-        Type::Decimal => (39, String::new()),
-        Type::BigDecimal => (40, String::new()),
+        Type::AsyncCallable(..) => (37, String::new()),
+        Type::Enum { name, .. } => (38, name.clone()),
+        Type::BigInt => (39, String::new()),
+        Type::Decimal => (40, String::new()),
+        Type::BigDecimal => (41, String::new()),
     }
 }
 

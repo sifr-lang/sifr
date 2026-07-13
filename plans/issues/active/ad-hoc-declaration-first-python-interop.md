@@ -674,6 +674,17 @@ Tasks:
 - Reject owner close from within an accepted invocation statically where visible
   and through a runtime reentrancy guard otherwise.
 
+Delivery waves:
+
+- [ ] Wave 1 — gated declaration/type contract, `AsyncCallable`, lifecycle
+  substrate, and callback attachment plans (implementation complete; review in
+  progress).
+- [ ] Wave 2 — gated current/foreign execution and retained-owner integration.
+- [ ] Wave 3 — asyncio execution, atomic activation, compiled evidence, demo,
+  and documentation.
+- [ ] Milestone review — review the complete merged M9 implementation before
+  closing the milestone checkbox.
+
 Acceptance:
 
 - No callback can outlive its declared owner.

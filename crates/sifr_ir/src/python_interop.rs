@@ -1,6 +1,7 @@
 //! Declaration-first Python interop metadata carried through HIR.
 
 use ruff_text_size::TextRange;
+use sifr_type_system::{ParamConvention, Type};
 
 /// A Python declaration target written as a structured dotted path.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -65,6 +66,46 @@ pub enum PythonParameterKind {
     KeywordVariadic,
 }
 
+/// Dynamic scope that owns a generated Python callback trampoline.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PythonCallbackLifetime {
+    Call,
+    Result,
+    Receiver,
+}
+
+/// Executor/thread authority used to invoke a declared callback.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PythonCallbackDispatch {
+    Current,
+    Foreign,
+    Asyncio,
+}
+
+/// Admission policy for callback invocations that may overlap.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PythonCallbackConcurrency {
+    Serial,
+    Parallel,
+}
+
+/// Typed callback adjunct attached to one Python implementation declaration.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PythonCallbackDeclaration {
+    pub parameter_name: String,
+    pub span: TextRange,
+    pub lifetime: PythonCallbackLifetime,
+    pub dispatch: PythonCallbackDispatch,
+    pub concurrency: Option<PythonCallbackConcurrency>,
+    pub argument_types: Vec<Type>,
+    pub argument_conventions: Vec<ParamConvention>,
+    pub success_type: Type,
+    pub handler_error_type: Option<Type>,
+    pub is_async: bool,
+    pub owner_class: Option<String>,
+    pub owner_cleanup: Option<PythonCleanupPolicy>,
+}
+
 /// Call-shape metadata retained independently of the ordinary function type.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PythonInteropParameter {
@@ -88,4 +129,6 @@ pub struct PythonInteropDeclaration {
     pub parameters: Vec<PythonInteropParameter>,
     /// The non-reserved import root contributed by this declaration.
     pub required_import_root: Option<String>,
+    /// Callback adjuncts validated against this implementation declaration.
+    pub callbacks: Vec<PythonCallbackDeclaration>,
 }

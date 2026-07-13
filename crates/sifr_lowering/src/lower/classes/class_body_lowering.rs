@@ -446,7 +446,7 @@ pub(in crate::lower) fn lower_class(
                 func.is_async,
             );
             let has_python_interop = has_python_interop_decorator_syntax(&func.decorator_list);
-            let python_interop = collect_python_method_declarations(
+            let mut python_interop = collect_python_method_declarations(
                 &func.decorator_list,
                 &func.parameters,
                 func.is_async,
@@ -471,7 +471,7 @@ pub(in crate::lower) fn lower_class(
                     func.name.range(),
                 );
             }
-            validate_python_interop_signature(&python_interop, &params, &return_ty, ctx);
+            validate_python_interop_signature(&mut python_interop, &params, &return_ty, ctx);
             let skips_normal_body_lowering = if has_python_interop {
                 classify_python_interop_stub_body(&func.body, true, ctx)
                     .skips_normal_body_lowering()

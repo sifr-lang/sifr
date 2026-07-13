@@ -66,14 +66,25 @@ pub(super) fn lower_regular_call(
     }
 
     // Check if this is a Callable-typed variable being called
-    let callable_info = ctx.scope.lookup(&func_name).and_then(|info| {
-        if let Type::Callable(ref param_types, ref conventions, ref ret_type) = info.ty {
-            Some((param_types.clone(), conventions.clone(), *ret_type.clone()))
-        } else {
-            None
-        }
-    });
-    if let Some((param_types, conventions, ret_type)) = callable_info {
+    let callable_info = ctx
+        .scope
+        .lookup(&func_name)
+        .and_then(|info| match &info.ty {
+            Type::Callable(param_types, conventions, ret_type) => Some((
+                param_types.clone(),
+                conventions.clone(),
+                *ret_type.clone(),
+                false,
+            )),
+            Type::AsyncCallable(param_types, conventions, ret_type) => Some((
+                param_types.clone(),
+                conventions.clone(),
+                *ret_type.clone(),
+                true,
+            )),
+            _ => None,
+        });
+    if let Some((param_types, conventions, ret_type, is_async_callable)) = callable_info {
         // Lower arguments
         let mut args = Vec::new();
         for arg in &call.arguments.args {
@@ -131,7 +142,11 @@ pub(super) fn lower_regular_call(
         return Some(HirExpr::Call {
             func: func_name,
             args,
-            ty: ret_type,
+            ty: if is_async_callable {
+                coroutine_result_type(&ret_type)
+            } else {
+                ret_type
+            },
         });
     }
 

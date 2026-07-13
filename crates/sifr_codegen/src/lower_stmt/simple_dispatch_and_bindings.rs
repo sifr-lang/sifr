@@ -781,7 +781,7 @@ pub(super) fn append_recursive_capture_args_to_expr(
         RustExpr::Closure { body, .. } => {
             append_recursive_capture_args_to_expr(body, fn_name, capture_names);
         }
-        RustExpr::ClosureBlock { body, .. } => {
+        RustExpr::ClosureBlock { body, .. } | RustExpr::AsyncBlock { body, .. } => {
             append_recursive_capture_args_to_stmts(body, fn_name, capture_names);
         }
         RustExpr::StructInit { fields, .. } => {

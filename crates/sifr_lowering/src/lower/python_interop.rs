@@ -3,13 +3,17 @@ use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{
     HirParam, PythonCleanupPolicy, PythonInteropDeclaration, PythonInteropDecoratorKind,
-    PythonInteropEffect, PythonInteropParameter, PythonParameterKind, PythonTargetPath,
+    PythonInteropEffect, PythonParameterKind, PythonTargetPath,
 };
-use sifr_python_ast::{AstParamOwnership, Decorator, Expr, ExprCall, Parameters, Stmt};
+use sifr_python_ast::{Decorator, Expr, ExprCall, Parameters, Stmt};
 use sifr_type_system::Type;
 
+mod callbacks;
 mod context;
+mod parameters;
 mod stub_syntax;
+
+pub(super) use parameters::{parameter_metadata, receiver_is_owned};
 
 pub(in crate::lower) use context::{
     lower_python_context_owned_expr, python_context_borrow_in_owned_expr, python_context_item_kind,
@@ -42,11 +46,21 @@ pub(in crate::lower) fn collect_python_interop_declarations(
     ctx: &mut LowerCtx,
 ) -> Vec<PythonInteropDeclaration> {
     let mut declarations = Vec::new();
+    let mut callbacks = Vec::new();
+    let mut callback_parse_failed = false;
     for decorator in decorators {
         let Some((kind, call, span)) = classify_decorator(&decorator.expression, ctx) else {
             continue;
         };
         let declaration = match (kind, is_async_decl) {
+            (PythonInteropDecoratorKind::Callback, _) => {
+                if let Some(callback) = callbacks::parse(call, parameters, false, ctx) {
+                    callbacks.push(callback);
+                } else {
+                    callback_parse_failed = true;
+                }
+                None
+            }
             (PythonInteropDecoratorKind::Function, false) => {
                 parse_function(call, parameters, kind, PythonInteropEffect::BlockingIo, ctx)
             }
@@ -82,6 +96,10 @@ pub(in crate::lower) fn collect_python_interop_declarations(
         );
         declarations.truncate(1);
     }
+    if callback_parse_failed {
+        callbacks.clear();
+    }
+    self::callbacks::attach(&mut declarations, callbacks, ctx);
     declarations
 }
 
@@ -92,6 +110,8 @@ pub(in crate::lower) fn collect_python_method_declarations(
     ctx: &mut LowerCtx,
 ) -> Vec<PythonInteropDeclaration> {
     let mut declarations = Vec::new();
+    let mut callbacks = Vec::new();
+    let mut callback_parse_failed = false;
     for decorator in decorators {
         if decorator_path(&decorator.expression)
             .is_some_and(|path| path.as_slice() == ["python", "item"])
@@ -113,6 +133,7 @@ pub(in crate::lower) fn collect_python_method_declarations(
                 consumes_receiver: receiver_is_owned(parameters),
                 parameters: parameter_metadata(parameters).into_iter().skip(1).collect(),
                 required_import_root: None,
+                callbacks: Vec::new(),
             });
             continue;
         }
@@ -120,6 +141,14 @@ pub(in crate::lower) fn collect_python_method_declarations(
             continue;
         };
         let declaration = match (kind, is_async_decl) {
+            (PythonInteropDecoratorKind::Callback, _) => {
+                if let Some(callback) = callbacks::parse(call, parameters, true, ctx) {
+                    callbacks.push(callback);
+                } else {
+                    callback_parse_failed = true;
+                }
+                None
+            }
             (PythonInteropDecoratorKind::Coroutine, true) => {
                 parse_method(call, parameters, kind, PythonInteropEffect::Async, ctx)
             }
@@ -201,6 +230,10 @@ pub(in crate::lower) fn collect_python_method_declarations(
         );
         declarations.truncate(1);
     }
+    if callback_parse_failed {
+        callbacks.clear();
+    }
+    self::callbacks::attach(&mut declarations, callbacks, ctx);
     declarations
 }
 
@@ -229,6 +262,7 @@ fn parse_method(
         consumes_receiver: receiver_is_owned(parameters),
         parameters: parameter_metadata(parameters).into_iter().skip(1).collect(),
         required_import_root: None,
+        callbacks: Vec::new(),
     })
 }
 
@@ -268,6 +302,7 @@ fn parse_attribute_method(
         consumes_receiver,
         parameters,
         required_import_root: None,
+        callbacks: Vec::new(),
     })
 }
 
@@ -433,16 +468,17 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
         cleanup: Some(cleanup),
         consumes_receiver: false,
         parameters: Vec::new(),
+        callbacks: Vec::new(),
     })
 }
 
 pub(in crate::lower) fn validate_python_interop_signature(
-    declarations: &[PythonInteropDeclaration],
+    declarations: &mut [PythonInteropDeclaration],
     params: &[HirParam],
     return_type: &Type,
     ctx: &mut LowerCtx,
 ) {
-    let Some(declaration) = declarations.first() else {
+    let Some(declaration) = declarations.first_mut() else {
         return;
     };
     if matches!(
@@ -455,6 +491,7 @@ pub(in crate::lower) fn validate_python_interop_signature(
         context::validate_context_method_signature(declaration, params, return_type, ctx);
         return;
     }
+    let validation_start = ctx.errors.len();
     let Type::Result(ok_type, error_type) = return_type.resolve_alias() else {
         let declaration_kind = if declaration.effect == PythonInteropEffect::Async {
             "an asynchronous"
@@ -468,10 +505,21 @@ pub(in crate::lower) fn validate_python_interop_signature(
         );
         return;
     };
-    if !matches!(error_type.resolve_alias(), Type::Class { name, .. } if name == "PythonError") {
+    callbacks::validate(declaration, params, ok_type, error_type, ctx);
+    if declaration.callbacks.is_empty()
+        && !matches!(error_type.resolve_alias(), Type::Class { name, .. } if name == "PythonError")
+    {
         unsupported_conversion(
             ctx,
             "the declaration error type must be `PythonError`",
+            declaration.span,
+        );
+    } else if !declaration.callbacks.is_empty()
+        && !callbacks::error_channel_contains(error_type, &callbacks::python_error_type(ctx))
+    {
+        callbacks::invalid(
+            ctx,
+            "the enclosing declaration error channel must contain `PythonError`",
             declaration.span,
         );
     }
@@ -492,6 +540,13 @@ pub(in crate::lower) fn validate_python_interop_signature(
     }
     let mut saw_omittable_positional = false;
     for (param, shape) in params.iter().zip(&declaration.parameters) {
+        if declaration
+            .callbacks
+            .iter()
+            .any(|callback| callback.parameter_name == param.name)
+        {
+            continue;
+        }
         if shape.kind == PythonParameterKind::Positional && shape.omit_when_absent {
             saw_omittable_positional = true;
         }
@@ -525,6 +580,9 @@ pub(in crate::lower) fn validate_python_interop_signature(
                 shape.span,
             );
         }
+    }
+    if !declaration.callbacks.is_empty() && ctx.errors.len() == validation_start {
+        reserved_declaration(ctx, PythonInteropDecoratorKind::Callback, declaration.span);
     }
 }
 
@@ -630,6 +688,7 @@ fn parse_function(
         consumes_receiver: false,
         parameters: parameter_metadata(parameters),
         required_import_root,
+        callbacks: Vec::new(),
     })
 }
 
@@ -642,54 +701,6 @@ fn reserved_declaration(ctx: &mut LowerCtx, kind: PythonInteropDecoratorKind, sp
         ),
         span,
     );
-}
-
-pub(super) fn parameter_metadata(parameters: &Parameters) -> Vec<PythonInteropParameter> {
-    let mut result = Vec::with_capacity(parameters.len());
-    for parameter in parameters.posonlyargs.iter().chain(&parameters.args) {
-        result.push(PythonInteropParameter {
-            name: parameter.parameter.name.to_string(),
-            kind: PythonParameterKind::Positional,
-            has_default: parameter.default.is_some(),
-            omit_when_absent: parameter.default.as_deref().is_some_and(is_python_omit),
-            span: parameter.range(),
-        });
-    }
-    if let Some(parameter) = &parameters.vararg {
-        result.push(PythonInteropParameter {
-            name: parameter.name.to_string(),
-            kind: PythonParameterKind::PositionalVariadic,
-            has_default: false,
-            omit_when_absent: false,
-            span: parameter.range(),
-        });
-    }
-    for parameter in &parameters.kwonlyargs {
-        result.push(PythonInteropParameter {
-            name: parameter.parameter.name.to_string(),
-            kind: PythonParameterKind::KeywordOnly,
-            has_default: parameter.default.is_some(),
-            omit_when_absent: parameter.default.as_deref().is_some_and(is_python_omit),
-            span: parameter.range(),
-        });
-    }
-    if let Some(parameter) = &parameters.kwarg {
-        result.push(PythonInteropParameter {
-            name: parameter.name.to_string(),
-            kind: PythonParameterKind::KeywordVariadic,
-            has_default: false,
-            omit_when_absent: false,
-            span: parameter.range(),
-        });
-    }
-    result
-}
-
-pub(super) fn receiver_is_owned(parameters: &Parameters) -> bool {
-    parameters
-        .args
-        .first()
-        .is_some_and(|parameter| parameter.parameter.convention.ownership == AstParamOwnership::Own)
 }
 
 pub(in crate::lower) fn method_consumes_receiver(

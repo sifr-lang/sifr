@@ -94,6 +94,30 @@ pub(in crate::lower) fn infer_type_var_bindings(
             }
             infer_type_var_bindings(p_ret, a_ret, bindings);
         }
+        (Type::AsyncCallable(p_params, _, p_ret), Type::AsyncCallable(a_params, _, a_ret))
+            if p_params.len() == a_params.len() =>
+        {
+            for (p_param, a_param) in p_params.iter().zip(a_params.iter()) {
+                infer_type_var_bindings(p_param, a_param, bindings);
+            }
+            infer_type_var_bindings(p_ret, a_ret, bindings);
+        }
+        (Type::AsyncCallable(p_params, _, p_ret), Type::AsyncFunction(a_ft))
+            if p_params.len() == a_ft.params.len() =>
+        {
+            for (p_param, (_, a_param, _)) in p_params.iter().zip(a_ft.params.iter()) {
+                infer_type_var_bindings(p_param, a_param, bindings);
+            }
+            infer_type_var_bindings(p_ret, &a_ft.return_type, bindings);
+        }
+        (Type::AsyncFunction(p_ft), Type::AsyncCallable(a_params, _, a_ret))
+            if p_ft.params.len() == a_params.len() =>
+        {
+            for ((_, p_param, _), a_param) in p_ft.params.iter().zip(a_params.iter()) {
+                infer_type_var_bindings(p_param, a_param, bindings);
+            }
+            infer_type_var_bindings(&p_ft.return_type, a_ret, bindings);
+        }
         (Type::Callable(p_params, _, p_ret), Type::Function(a_ft))
             if p_params.len() == a_ft.params.len() =>
         {

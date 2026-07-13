@@ -238,6 +238,10 @@ pub enum RustExpr {
         is_move: bool,
         is_async: bool,
     },
+    AsyncBlock {
+        body: Vec<RustStmt>,
+        is_move: bool,
+    },
     StructInit {
         name: String,
         fields: Vec<(String, RustExpr)>,

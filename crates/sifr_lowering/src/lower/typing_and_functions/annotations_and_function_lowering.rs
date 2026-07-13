@@ -258,14 +258,21 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                     // will recognize TypeGuard and mark it as a type predicate
                     resolve_annotation_expr(&sub.slice, ctx)
                 }
-                "Callable" => {
-                    // Callable[[param_types], return_type]
+                "Callable" | "AsyncCallable" => {
+                    // Callable[[param_types], return_type] and
+                    // AsyncCallable[[param_types], return_type].
+                    let is_async = base_name == "AsyncCallable";
+                    let label = if is_async {
+                        "AsyncCallable"
+                    } else {
+                        "Callable"
+                    };
                     // The slice is a Tuple of [List[param_types], return_type]
                     if let Expr::Tuple(tuple) = sub.slice.as_ref() {
                         if tuple.elts.len() != 2 {
                             invalid_type_annotation(
                                 ctx,
-                                "Callable type requires exactly 2 type parameters: [[param_types], return_type]",
+                                format!("{label} type requires exactly 2 type parameters: [[param_types], return_type]"),
                                 sub.slice.range(),
                             );
                             return Type::Any;
@@ -279,7 +286,7 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                         } else {
                             invalid_type_annotation(
                                 ctx,
-                                "Callable parameter types must be a list: Callable[[int, str], bool]",
+                                format!("{label} parameter types must be a list: {label}[[int, str], bool]"),
                                 tuple.elts[0].range(),
                             );
                             return Type::Any;
@@ -288,18 +295,25 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                         let conventions = param_types
                             .iter()
                             .map(|ty| {
-                                if ty.ownership() == OwnershipKind::Copy {
+                                if is_async || ty.ownership() == OwnershipKind::Copy {
+                                    // An async callable future must own its boundary
+                                    // values; a borrowed argument cannot outlive the
+                                    // closure call that constructs the future.
                                     ParamConvention::own()
                                 } else {
                                     ParamConvention::borrow()
                                 }
                             })
                             .collect();
-                        Type::Callable(param_types, conventions, Box::new(return_type))
+                        if is_async {
+                            Type::AsyncCallable(param_types, conventions, Box::new(return_type))
+                        } else {
+                            Type::Callable(param_types, conventions, Box::new(return_type))
+                        }
                     } else {
                         invalid_type_annotation(
                             ctx,
-                            "Callable type requires [[param_types], return_type] syntax",
+                            format!("{label} type requires [[param_types], return_type] syntax"),
                             sub.slice.range(),
                         );
                         Type::Any
@@ -571,7 +585,7 @@ pub(in crate::lower) fn lower_function(
         has_decorator(func, "cpu_heavy"),
         effective_is_async,
     );
-    let python_interop = collect_python_interop_declarations(
+    let mut python_interop = collect_python_interop_declarations(
         &func.decorator_list,
         &func.parameters,
         effective_is_async,
@@ -756,7 +770,7 @@ pub(in crate::lower) fn lower_function(
             },
         )
     };
-    validate_python_interop_signature(&python_interop, &params, &inferred_return_type, ctx);
+    validate_python_interop_signature(&mut python_interop, &params, &inferred_return_type, ctx);
 
     // Collect user-defined decorators (excluding classmethod/staticmethod)
     let decorators: Vec<String> = func

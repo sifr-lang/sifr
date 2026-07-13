@@ -54,11 +54,6 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "Reserved for an invalid advanced-data ownership or hidden-copy declaration.",
         ),
     reserved_code(
-            "SIFR-PYCB-0001",
-            "PYCB",
-            "Reserved for an invalid callback lifetime, threading, or shutdown declaration.",
-        ),
-    reserved_code(
             "SIFR-INT-0002",
             "INT",
             "Reserved for implicit narrowing from exact or fixed-width integer sources to narrower fixed-width targets.",

@@ -172,6 +172,29 @@ impl RustEmitter {
                     format!("impl Fn({}) -> {}", param_types.join(", "), ret_type)
                 }
             }
+            Type::AsyncCallable(params, conventions, ret) => {
+                let param_types = params
+                    .iter()
+                    .zip(conventions.iter())
+                    .map(|(param_ty, convention)| {
+                        let rendered = self.rust_type_with_generics(param_ty);
+                        if param_ty.ownership() == OwnershipKind::Move && convention.is_borrowed() {
+                            if convention.is_mut_borrow() {
+                                format!("&mut {rendered}")
+                            } else {
+                                format!("&{rendered}")
+                            }
+                        } else {
+                            rendered
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                format!(
+                    "impl std::ops::AsyncFn({}) -> {} + Send + Sync",
+                    param_types.join(", "),
+                    self.rust_type_with_generics(ret)
+                )
+            }
             _ => ty.rust_type(),
         }
     }
@@ -202,6 +225,29 @@ impl RustEmitter {
                     format!("Box<dyn Fn({}) -> {}>", param_types.join(", "), ret_type)
                 }
             }
+            Type::AsyncCallable(params, conventions, ret) => {
+                let param_types = params
+                    .iter()
+                    .zip(conventions.iter())
+                    .map(|(param_ty, convention)| {
+                        let rendered = self.rust_type_with_generics(param_ty);
+                        if param_ty.ownership() == OwnershipKind::Move && convention.is_borrowed() {
+                            if convention.is_mut_borrow() {
+                                format!("&mut {rendered}")
+                            } else {
+                                format!("&{rendered}")
+                            }
+                        } else {
+                            rendered
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                format!(
+                    "Box<dyn Fn({}) -> std::pin::Pin<Box<dyn std::future::Future<Output = {}>>> + Send + Sync>",
+                    param_types.join(", "),
+                    self.rust_type_with_generics(ret)
+                )
+            }
             _ => self.rust_type_with_generics(ty),
         }
     }
@@ -230,7 +276,7 @@ impl RustEmitter {
             Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => items
                 .iter()
                 .any(|item| self.type_contains_generic_class(item)),
-            Type::Callable(params, _, ret) => {
+            Type::Callable(params, _, ret) | Type::AsyncCallable(params, _, ret) => {
                 params
                     .iter()
                     .any(|param| self.type_contains_generic_class(param))
@@ -413,6 +459,22 @@ impl RustEmitter {
             (
                 Type::Callable(template_params, _, template_ret),
                 Type::Callable(concrete_params, _, concrete_ret),
+            ) => {
+                for (template_param, concrete_param) in
+                    template_params.iter().zip(concrete_params.iter())
+                {
+                    self.collect_typevar_bindings(
+                        template_param,
+                        concrete_param,
+                        bindings,
+                        visiting,
+                    );
+                }
+                self.collect_typevar_bindings(template_ret, concrete_ret, bindings, visiting);
+            }
+            (
+                Type::AsyncCallable(template_params, _, template_ret),
+                Type::AsyncCallable(concrete_params, _, concrete_ret),
             ) => {
                 for (template_param, concrete_param) in
                     template_params.iter().zip(concrete_params.iter())

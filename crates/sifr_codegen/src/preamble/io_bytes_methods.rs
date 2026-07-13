@@ -506,7 +506,9 @@ mod tests {
                         .sum::<usize>()
             }
             RustExpr::Closure { body, .. } => count_raw_in_expr(body),
-            RustExpr::ClosureBlock { body, .. } => body.iter().map(count_raw_in_stmt).sum(),
+            RustExpr::ClosureBlock { body, .. } | RustExpr::AsyncBlock { body, .. } => {
+                body.iter().map(count_raw_in_stmt).sum()
+            }
             RustExpr::StructInit { fields, .. } => {
                 fields.iter().map(|(_, v)| count_raw_in_expr(v)).sum()
             }

@@ -500,6 +500,13 @@ impl RustEmitter {
                     is_async,
                 }
             }
+            crate::RustExpr::AsyncBlock { body, is_move } => crate::RustExpr::AsyncBlock {
+                body: body
+                    .into_iter()
+                    .map(|stmt| self.rewrite_stdlib_constant_idents_in_stmt(stmt))
+                    .collect(),
+                is_move,
+            },
             crate::RustExpr::StructInit { name, fields } => crate::RustExpr::StructInit {
                 name,
                 fields: fields

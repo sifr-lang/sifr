@@ -440,7 +440,7 @@ pub(crate) fn type_contains_by(ty: &Type, predicate: fn(&Type) -> bool) -> bool 
                 .any(|(_, param_ty, _)| type_contains_by(param_ty, predicate))
                 || type_contains_by(&sig.return_type, predicate)
         }
-        Type::Callable(params, _, ret) => {
+        Type::Callable(params, _, ret) | Type::AsyncCallable(params, _, ret) => {
             params
                 .iter()
                 .any(|param| type_contains_by(param, predicate))

@@ -1,4 +1,7 @@
-use sifr_ir::{HirFunction, HirModule, PythonInteropDeclaration};
+use sifr_ir::{
+    HirFunction, HirModule, PythonCallbackConcurrency, PythonCallbackDispatch,
+    PythonCallbackLifetime, PythonCleanupPolicy, PythonInteropDeclaration,
+};
 use sifr_type_system::Type;
 use std::collections::BTreeSet;
 use std::fmt::Write;
@@ -55,6 +58,20 @@ pub struct PythonInteropPlanDeclaration {
     pub declaration: PythonInteropDeclaration,
     pub parameter_types: Vec<Type>,
     pub return_type: Type,
+    pub callback_attachments: Vec<PythonCallbackAttachmentPlan>,
+}
+
+/// Ownership and execution metadata used when callback wrappers are generated.
+///
+/// Retained in the build plan even while callback declarations remain gated.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PythonCallbackAttachmentPlan {
+    pub parameter_name: String,
+    pub lifetime: PythonCallbackLifetime,
+    pub dispatch: PythonCallbackDispatch,
+    pub concurrency: Option<PythonCallbackConcurrency>,
+    pub owner_class: Option<String>,
+    pub owner_cleanup: Option<PythonCleanupPolicy>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -117,6 +134,7 @@ pub(crate) fn python_interop_plan_for_named_modules<'a>(
                     declaration: declaration.clone(),
                     parameter_types: Vec::new(),
                     return_type: Type::None,
+                    callback_attachments: callback_attachments(declaration),
                 });
             }
         }
@@ -134,6 +152,10 @@ fn collect_function(
 ) {
     for declaration in &function.python_interop {
         plan.requires_async_loop |= declaration.effect == sifr_ir::PythonInteropEffect::Async;
+        plan.requires_async_loop |= declaration
+            .callbacks
+            .iter()
+            .any(|callback| callback.dispatch == PythonCallbackDispatch::Asyncio);
         if let Some(root) = &declaration.required_import_root {
             plan.required_import_roots.push(root.clone());
         }
@@ -157,8 +179,26 @@ fn collect_function(
                 .map(|param| param.ty.clone())
                 .collect(),
             return_type: function.return_type.clone(),
+            callback_attachments: callback_attachments(declaration),
         });
     }
+}
+
+fn callback_attachments(
+    declaration: &PythonInteropDeclaration,
+) -> Vec<PythonCallbackAttachmentPlan> {
+    declaration
+        .callbacks
+        .iter()
+        .map(|callback| PythonCallbackAttachmentPlan {
+            parameter_name: callback.parameter_name.clone(),
+            lifetime: callback.lifetime,
+            dispatch: callback.dispatch,
+            concurrency: callback.concurrency,
+            owner_class: callback.owner_class.clone(),
+            owner_cleanup: callback.owner_cleanup,
+        })
+        .collect()
 }
 
 fn module_requires_raw_coroutine_loop(module: &HirModule) -> bool {
@@ -304,6 +344,21 @@ pub(crate) fn push_python_plan_cache_key(out: &mut String, plan: &PythonInteropP
             } else {
                 "required"
             });
+            out.push('\n');
+        }
+        for callback in &declaration.callback_attachments {
+            out.push_str("python.callback=");
+            out.push_str(&callback.parameter_name);
+            out.push(':');
+            let _ = write!(out, "{:?}", callback.lifetime);
+            out.push(':');
+            let _ = write!(out, "{:?}", callback.dispatch);
+            out.push(':');
+            let _ = write!(out, "{:?}", callback.concurrency);
+            out.push(':');
+            out.push_str(callback.owner_class.as_deref().unwrap_or("<call-scope>"));
+            out.push(':');
+            let _ = write!(out, "{:?}", callback.owner_cleanup);
             out.push('\n');
         }
     }

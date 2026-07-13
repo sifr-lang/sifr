@@ -23,6 +23,38 @@ pub(super) fn test_callable_variable_call_errors_have_codes() {
 }
 
 #[test]
+pub(super) fn test_async_callable_is_distinct_and_produces_awaitable_call() {
+    let source = "async def apply(f: AsyncCallable[[int], int]) -> int:\n    return await f(4)\n";
+    let module = lower_source(source).expect("AsyncCallable call should lower");
+    let apply = module
+        .functions
+        .iter()
+        .find(|function| function.name == "apply")
+        .expect("apply function should exist");
+    assert!(matches!(apply.params[0].ty, Type::AsyncCallable(_, _, _)));
+
+    let sync_source = "def apply(f: AsyncCallable[[int], int]) -> int:\n    return f(4)\n";
+    let errors = lower_source(sync_source).expect_err("async callable result must be awaited");
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message.contains("Coroutine[int, Never]")),
+        "unexpected diagnostics: {errors:?}"
+    );
+}
+
+#[test]
+pub(super) fn test_async_callable_shape_diagnostic_is_specific() {
+    let source = "async def apply(f: AsyncCallable[int, str]) -> str:\n    return await f(4)\n";
+    let errors = lower_source(source).expect_err("malformed AsyncCallable must fail");
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "AsyncCallable parameter types must be a list: AsyncCallable[[int, str], bool]"
+            && error.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
+    }));
+}
+
+#[test]
 pub(super) fn test_iter_keyword_has_call_code() {
     let source = "def main():\n    values: list[int] = [1, 2, 3]\n    _it = iter(source=values)\n";
     let result = lower_source(source);

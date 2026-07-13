@@ -1,0 +1,18 @@
+class AsyncRunner:
+    handler: AsyncCallable[[int], int]
+
+    def __init__(self, handler: AsyncCallable[[int], int]):
+        self.handler = handler
+
+    async def run(self, value: int) -> int:
+        return await self.handler(value)
+
+
+async def plus_one(value: int) -> int:
+    await task.sleep(0.0)
+    return value + 1
+
+
+async def main() -> None:
+    runner = AsyncRunner(plus_one)
+    print(await runner.run(41))

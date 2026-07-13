@@ -155,6 +155,27 @@ macro_rules! stmt_expr_method_call {
                 lowered_args.push(lowered_arg);
             }
             let effective_object_ty = $emitter.effective_method_object_ty(object);
+            let is_callable_field = match crate::resolve_alias_type_for_plain_call(
+                &effective_object_ty,
+            ) {
+                Type::Class { fields, .. } => fields.iter().any(|(field_name, field_ty)| {
+                    field_name == method
+                        && matches!(
+                            crate::resolve_alias_type_for_plain_call(field_ty),
+                            Type::Callable(..) | Type::AsyncCallable(..)
+                        )
+                }),
+                _ => false,
+            };
+            if is_callable_field {
+                return Ok(Some(crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Paren(Box::new(crate::RustExpr::Field {
+                        expr: Box::new(lowered_object),
+                        field: method.clone(),
+                    }))),
+                    args: lowered_args,
+                }));
+            }
             if method == "append"
                 && lowered_args.len() == 1
                 && matches!(

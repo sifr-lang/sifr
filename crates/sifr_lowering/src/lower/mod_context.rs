@@ -508,6 +508,14 @@ pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<Strin
             conventions.clone(),
             Box::new(substitute_type_vars(ret, bindings)),
         ),
+        Type::AsyncCallable(params, conventions, ret) => Type::AsyncCallable(
+            params
+                .iter()
+                .map(|p| substitute_type_vars(p, bindings))
+                .collect(),
+            conventions.clone(),
+            Box::new(substitute_type_vars(ret, bindings)),
+        ),
         Type::Result(ok, err) => Type::Result(
             Box::new(substitute_type_vars(ok, bindings)),
             Box::new(substitute_type_vars(err, bindings)),

@@ -319,7 +319,7 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
             }
         }
         RustExpr::Closure { body, .. } => validate_expr(body, issues, in_function),
-        RustExpr::ClosureBlock { body, .. } => {
+        RustExpr::ClosureBlock { body, .. } | RustExpr::AsyncBlock { body, .. } => {
             for stmt in body {
                 validate_stmt(stmt, issues, in_function);
             }

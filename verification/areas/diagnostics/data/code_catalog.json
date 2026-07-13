@@ -2481,6 +2481,22 @@
       "suggestion_applicability": "none"
     },
     {
+      "code": "SIFR-PYCB-0001",
+      "constant": "PYCB_INVALID_DECLARATION",
+      "docs_link": "docs/errors/SIFR-PYCB-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lowering/src/lower/python_interop_callback_tests.rs::callback_policy_validates_before_reservation",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
       "code": "SIFR-PYCONV-0001",
       "constant": "PYCONV_UNSUPPORTED_DECLARATION_TYPE",
       "docs_link": "docs/errors/SIFR-PYCONV-0001.md",
