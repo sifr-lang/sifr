@@ -223,7 +223,9 @@ pub(in crate::lower) fn lower_module_impl(
             {
                 ctx.function_workload_annotations
                     .insert(function_name.clone(), workload);
-            } else if python_interop::has_python_interop_decorator_syntax(&func.decorator_list) {
+            } else if !func.is_async
+                && python_interop::has_python_interop_decorator_syntax(&func.decorator_list)
+            {
                 ctx.function_workload_annotations.insert(
                     function_name.clone(),
                     workload_annotations::WorkloadKind::BlockingIo,

@@ -1,0 +1,22 @@
+I've reviewed the working-tree implementation across all five modified files, the new contract test module, and the surrounding lowering paths (validation, class body, async effects, workload annotations, bridge authority, and consuming-receiver bookkeeping).
+
+## Verification results
+
+- **HIR metadata for valid coroutines** — `parse_function`/`parse_method` are now shared between sync/async, so a valid `@python.coroutine(...)` on `async def` (function, factory, or method) constructs `PythonInteropDeclaration { kind: Coroutine, effect: Async, ... }` with parameter shapes and required import root. `validate_python_interop_signature` runs target/call-shape/conversion validation via the shared path and emits async-flavored messages when `declaration.effect == Async` (python_interop.rs:504-536). Reserved gate at python_interop.rs:118-121 and 181-184 always fires before parse, so compilation cannot succeed. ✓
+- **Sync/async substitution diagnostics** — `(Function, true)` and `(Coroutine, false)` at python_interop.rs:110-125 (functions) and 181-200 (methods) hard-error with `PYCALL_INVALID_SHAPE` and the correct suggestion. Covered by the new tests. ✓
+- **Bodyless coroutine summaries** — `is_bodyless_python_coroutine` (python_interop.rs:41-47) requires `is_async` + single-ellipsis body + `@python.coroutine(...)` call decorator. `collect_async_suspension_summaries` seeds those as `Suspends` and the fix-point loop skips them, preserving normal async identity for everything else (async_effects.rs:24-59). ✓
+- **No blocking_io stamp on async** — mod_impl.rs:226-232 now gates the `BlockingIo` fallback on `!func.is_async`, so `@python.coroutine` async defs are not stamped. ✓
+- **AsyncClose metadata + reserved gate** — `parse_opaque_class` returns `Some(PythonCleanupPolicy::AsyncClose)` after emitting `PYRES_UNIMPLEMENTED_DECLARATION` (python_interop.rs:408-411), so the class carries the metadata for downstream checks and cannot compile. ✓
+- **Exactly one consuming async `Self.aclose`** — class_body_lowering.rs:614-640 counts methods matching `Coroutine + ["Self","aclose"] + own self + Result[None, _]` and requires exactly one; `has_unmatched_consuming_method` (654-659) rejects any other consuming coroutine when cleanup is `AsyncClose`. Both negative test cases (`self` without `own`, wrong name `shutdown`) trigger the diagnostic. ✓
+- **No public syntax / codegen activation leaked** — Diff touches only lowering + new lowering tests + one review artifact. No changes in `sifr_codegen`, `sifr_driver`, `sifr_runtime`, `sifr_package`, or grammar. ✓
+- **Package bridge authority preserved** — `parse_function` still resolves `bridge.*` via `ctx.python_bridge_authorities` and rewrites into `runtime_package` (python_interop.rs:629-664), shared between sync and async. ✓
+- **Existing synchronous behavior** — Functional behavior for sync `@python(...)`, `@python.attr`, `@python.context.enter/exit`, `@python.item`, `@python.opaque` is byte-equivalent to prior code paths; only the message emitted for async-misuse changed (see finding 1 below). ✓ functional, ⚠ diagnostic
+- **Files maintainable** — python_interop.rs is 897/900, class_body_lowering.rs 836/900, async_effects.rs 453/900. Under the cap but tight (finding 2). ✓
+
+## Findings
+
+**1 — Low severity, non-blocking (diagnostic regression).** In `collect_python_method_declarations`, the wildcard arm at python_interop.rs:215-218 sends `(Attribute, true)`, `(ContextEnter | ContextExit, true)`, and `(Item, true)` (when spelled `@python.item(...)` with parens) through `reserved_declaration`, producing e.g. `"Python declaration lowering is not active yet: 'python.attr' belongs to a later phase"`. But `python.attr` and `python.context.enter/exit` are active (M4, M5) — the prior single async-guard emitted the accurate `PYCALL_INVALID_SHAPE "opaque Python methods must use synchronous 'def'"`. Compilation still fails correctly; the error message is misleading. Fix: add explicit `(Attribute | ContextEnter | ContextExit | Item, true) => { invalid_shape(ctx, "opaque Python methods must use synchronous 'def'", span); None }` above the wildcard.
+
+**2 — Very low severity, non-blocking (headroom).** `crates/sifr_lowering/src/lower/python_interop.rs` is at 897 lines against the 900-line cap. Later M7 waves (typed async wrappers, async-close lifecycle) will need to land helpers here; refactor headroom is effectively gone.
+
+SATISFIED

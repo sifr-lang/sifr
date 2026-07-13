@@ -21,9 +21,21 @@ pub(in crate::lower) fn collect_async_suspension_summaries(
     stmts: &[Stmt],
 ) -> HashMap<String, AsyncSuspensionSummary> {
     let async_functions = collect_top_level_async_functions(stmts);
-    let mut summaries = async_functions
+    let mut summaries = stmts
         .iter()
-        .map(|name| (name.clone(), AsyncSuspensionSummary::NoSuspend))
+        .filter_map(|stmt| {
+            let Stmt::FunctionDef(func) = stmt else {
+                return None;
+            };
+            func.is_async.then(|| {
+                let summary = if super::python_interop::is_bodyless_python_coroutine(func) {
+                    AsyncSuspensionSummary::Suspends
+                } else {
+                    AsyncSuspensionSummary::NoSuspend
+                };
+                (func.name.to_string(), summary)
+            })
+        })
         .collect::<HashMap<_, _>>();
 
     let mut changed = true;
@@ -35,6 +47,9 @@ pub(in crate::lower) fn collect_async_suspension_summaries(
             };
             let name = func.name.to_string();
             if !async_functions.contains(&name) {
+                continue;
+            }
+            if super::python_interop::is_bodyless_python_coroutine(func) {
                 continue;
             }
             let next = summarize_stmts(&func.body, &async_functions, &summaries);
@@ -418,6 +433,20 @@ async def values() -> AsyncGenerator[int, GeneratorCloseError]:
         );
         assert_eq!(
             summaries.get("values"),
+            Some(&AsyncSuspensionSummary::Suspends)
+        );
+    }
+
+    #[test]
+    fn marks_bodyless_python_coroutine_stub_as_suspending() {
+        let summaries = summaries(
+            r"
+@python.coroutine(pkg.compute)
+async def compute(value: int) -> int: ...
+",
+        );
+        assert_eq!(
+            summaries.get("compute"),
             Some(&AsyncSuspensionSummary::Suspends)
         );
     }
