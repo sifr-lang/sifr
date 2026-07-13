@@ -104,6 +104,7 @@ pub(super) fn apply_package_runtime_metadata(
     python_runtime: Option<PackagePythonRuntime>,
 ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
     if let Some(mut metadata) = python_runtime {
+        metadata.set_start_async_loop(generated.interop.python.requires_async_loop);
         metadata.set_bridge_sources(embedded_bridge_sources(
             &generated.interop.python.bridge_packages,
         ));
@@ -173,6 +174,31 @@ mod tests {
             .main_rs
             .contains("__sifr_initialize_python_runtime"));
         assert!(generated.python_runtime.is_some());
+    }
+
+    #[test]
+    fn package_python_runtime_starts_owned_loop_only_when_planned() {
+        let mut project = base_project();
+        project.interop.python.requires_async_loop = true;
+        let generated = apply_package_runtime_metadata(
+            project,
+            Some(PackagePythonRuntime::for_tests(
+                "/tmp/sifr-py/bin/python",
+                "digest-a",
+            )),
+        )
+        .expect("metadata should apply");
+        assert!(generated.main_rs.contains("start_async_loop: true"));
+
+        let generated = apply_package_runtime_metadata(
+            base_project(),
+            Some(PackagePythonRuntime::for_tests(
+                "/tmp/sifr-py/bin/python",
+                "digest-a",
+            )),
+        )
+        .expect("metadata should apply");
+        assert!(generated.main_rs.contains("start_async_loop: false"));
     }
 
     #[test]

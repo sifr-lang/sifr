@@ -7,6 +7,7 @@ use std::mem::MaybeUninit;
 use std::sync::{Mutex, MutexGuard};
 
 mod arrow_ops;
+mod async_runtime;
 mod bridge_loader;
 mod buffer_ops;
 mod call_depth;
@@ -32,6 +33,7 @@ pub use arrow_ops::{
     arrow_array, arrow_capsule_names, arrow_schema, arrow_stream, release_arrow, ArrowHandle,
     PythonArrowCapsuleMetadata,
 };
+pub use async_runtime::{async_runtime_diagnostics, PythonAsyncRuntimeDiagnostics};
 pub use bridge_loader::PythonBridgeSource;
 pub use buffer_ops::{
     buffer_shape, buffer_strides, buffer_suboffsets, buffer_u8, copy_buffer_u8, release_buffer,
@@ -96,6 +98,7 @@ pub struct PythonRuntimeConfig {
     pub native_import_roots: Vec<String>,
     pub trusted_native_roots: Vec<String>,
     pub bridge_sources: Vec<PythonBridgeSource>,
+    pub start_async_loop: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -111,6 +114,7 @@ pub struct PythonRuntimeGuard {
 
 impl Drop for PythonRuntimeGuard {
     fn drop(&mut self) {
+        let _ignored = async_runtime::shutdown();
         let _ignored = Python::try_attach(foreign_object::drain_pending_releases);
     }
 }
@@ -142,6 +146,9 @@ pub enum PythonRuntimeError {
     ReservedBridgeCollision {
         module: String,
     },
+    AsyncRuntimeFailed(String),
+    AsyncRuntimeNotRunning,
+    AsyncRuntimeStopping,
     OutstandingResources {
         live_objects: usize,
         leaked_objects: usize,
@@ -179,6 +186,15 @@ impl fmt::Display for PythonRuntimeError {
                 f,
                 "reserved Python bridge namespace collision at '{module}'"
             ),
+            Self::AsyncRuntimeFailed(message) => {
+                write!(f, "owned Python asyncio runtime failed: {message}")
+            }
+            Self::AsyncRuntimeNotRunning => {
+                write!(f, "owned Python asyncio runtime is not running")
+            }
+            Self::AsyncRuntimeStopping => {
+                write!(f, "owned Python asyncio runtime is stopping")
+            }
             Self::OutstandingResources {
                 live_objects,
                 leaked_objects,
@@ -235,6 +251,9 @@ pub fn initialize_runtime(
         .ok_or(PythonRuntimeError::NotInitialized)??;
     Python::try_attach(context_ops::register_boundary_error)
         .ok_or(PythonRuntimeError::NotInitialized)??;
+    if config.start_async_loop {
+        async_runtime::start()?;
+    }
     state.initialized = true;
     Ok(PythonRuntimeInitStatus::Initialized)
 }
@@ -531,6 +550,8 @@ fn py_error(error: &PyErr) -> PythonRuntimeError {
 
 #[cfg(test)]
 fn reset_runtime_state_for_tests() {
+    let _ignored = async_runtime::shutdown();
+    async_runtime::reset_for_tests();
     let _ignored = Python::try_attach(bridge_loader::reset_for_tests);
     let mut state = runtime_state().expect("runtime state should be available");
     *state = RuntimeState::new();
