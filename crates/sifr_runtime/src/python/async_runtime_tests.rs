@@ -162,6 +162,31 @@ fn cancellation_suppression_result_wins_after_terminal_wait() {
 }
 
 #[test]
+fn completed_submission_releases_carrier_for_sequential_python_await() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    let mut config = test_config("sequential-cancellation-claim");
+    config.start_async_loop = true;
+    initialize_runtime(config).expect("init should start the owned loop");
+    let carrier = CancellationCarrier::new();
+
+    for expected in [11_i64, 29_i64] {
+        let terminal = super::super::attach(|py| {
+            let module = cancellation_test_module(py);
+            let coroutine = module
+                .getattr("immediate")
+                .expect("immediate should resolve")
+                .call1((expected,))
+                .expect("immediate coroutine should be created")
+                .unbind();
+            submit_coroutine(py, &coroutine, Some(&carrier)).expect("submit should succeed")
+        })
+        .expect("runtime should attach");
+        assert_eq!(wait_terminal_int(terminal), expected);
+    }
+}
+
+#[test]
 fn independent_exact_tasks_cancel_without_cross_talk() {
     let _guard = test_guard();
     reset_runtime_state_for_tests();
@@ -236,6 +261,19 @@ fn shutdown_terminally_drains_claimed_task_and_finally() {
     wait_for_active_submission();
 
     shutdown().expect("shutdown should cancel and drain the exact task");
+    assert_eq!(
+        *SHUTDOWN_PHASE_TRACE
+            .lock()
+            .expect("shutdown phase trace should lock"),
+        vec![
+            ShutdownPhase::AdmissionsStopped,
+            ShutdownPhase::CallbackShutdown,
+            ShutdownPhase::AsyncCleanup,
+            ShutdownPhase::SubmissionCancellation,
+            ShutdownPhase::LoopStop,
+            ShutdownPhase::LoopJoin,
+        ]
+    );
     let outcome = super::super::attach(|py| {
         let outcome = super::super::detach(py, || terminal.wait());
         assert_eq!(marker.bind(py).len().expect("marker should have length"), 1);
@@ -257,13 +295,14 @@ fn invalid_awaitable_setup_resolves_without_leaking_submission_counts() {
     config.start_async_loop = true;
     initialize_runtime(config).expect("init should start the owned loop");
 
+    let carrier = CancellationCarrier::new();
     let terminal = super::super::attach(|py| {
         let not_a_coroutine = 42_i64
             .into_pyobject(py)
             .expect("integer should convert")
             .into_any()
             .unbind();
-        submit_coroutine(py, &not_a_coroutine, None).expect("queueing should succeed")
+        submit_coroutine(py, &not_a_coroutine, Some(&carrier)).expect("queueing should succeed")
     })
     .expect("runtime should attach");
     let outcome = super::super::attach(|py| super::super::detach(py, || terminal.wait()))
@@ -280,6 +319,9 @@ fn invalid_awaitable_setup_resolves_without_leaking_submission_counts() {
             pending_submissions: 0,
         }
     );
+
+    let terminal = immediate_submission(&carrier, 31);
+    assert_eq!(wait_terminal_int(terminal), 31);
 }
 
 #[test]
@@ -290,6 +332,7 @@ fn submission_queue_failure_releases_pending_reservation() {
     config.start_async_loop = true;
     initialize_runtime(config).expect("init should start the owned loop");
     FORCE_SUBMISSION_QUEUE_FAILURE.store(true, Ordering::SeqCst);
+    let carrier = CancellationCarrier::new();
 
     super::super::attach(|py| {
         let asyncio = py.import("asyncio").expect("asyncio should import");
@@ -297,7 +340,7 @@ fn submission_queue_failure_releases_pending_reservation() {
             .call_method1("sleep", (0.0,))
             .expect("sleep coroutine should be created")
             .unbind();
-        let Err(error) = submit_coroutine(py, &coroutine, None) else {
+        let Err(error) = submit_coroutine(py, &coroutine, Some(&carrier)) else {
             panic!("forced queue failure should reject submission");
         };
         assert!(error.message.contains("forced owned asyncio submission"));
@@ -313,6 +356,129 @@ fn submission_queue_failure_releases_pending_reservation() {
             .pending_submissions,
         0
     );
+    let terminal = immediate_submission(&carrier, 37);
+    assert_eq!(wait_terminal_int(terminal), 37);
+}
+
+#[test]
+fn pending_reservations_unwind_by_exact_submission_id() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    let mut config = test_config("pending-id-unwind");
+    config.start_async_loop = true;
+    initialize_runtime(config).expect("init should start the owned loop");
+
+    let (first_id, second_id, first_terminal, second_terminal) = super::super::attach(|py| {
+        let first = PythonTerminal::new();
+        let second = PythonTerminal::new();
+        let (first_id, _) =
+            reserve_submission(py, &first).expect("first reservation should succeed");
+        let (second_id, _) =
+            reserve_submission(py, &second).expect("second reservation should succeed");
+        (first_id, second_id, first, second)
+    })
+    .expect("runtime should attach");
+
+    release_pending_submission(first_id);
+    assert_eq!(
+        async_runtime_diagnostics()
+            .expect("diagnostics should remain available")
+            .pending_submissions,
+        1
+    );
+    release_pending_submission(second_id);
+    assert_eq!(
+        async_runtime_diagnostics()
+            .expect("diagnostics should remain available")
+            .pending_submissions,
+        0
+    );
+    drop((first_terminal, second_terminal));
+}
+
+#[test]
+fn shutdown_errors_do_not_skip_cancel_drain_stop_or_join() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    let mut config = test_config("ordered-shutdown-errors");
+    config.start_async_loop = true;
+    initialize_runtime(config).expect("init should start the owned loop");
+    let carrier = CancellationCarrier::new();
+    let terminal = super::super::attach(|py| {
+        let module = cancellation_test_module(py);
+        let coroutine = module
+            .getattr("cancellable")
+            .expect("cancellable should resolve")
+            .call0()
+            .expect("cancellable coroutine should be created")
+            .unbind();
+        submit_coroutine(py, &coroutine, Some(&carrier)).expect("submit should succeed")
+    })
+    .expect("runtime should attach");
+    wait_for_active_submission();
+    super::super::shutdown_hooks::force_callback_shutdown_failure();
+    super::super::shutdown_hooks::force_async_cleanup_failure();
+    FORCE_SUBMISSION_CANCEL_FAILURE.store(true, Ordering::SeqCst);
+
+    let error = shutdown().expect_err("the first shutdown phase error should be returned");
+    assert!(
+        matches!(error, PythonRuntimeError::AsyncRuntimeFailed(message) if message.contains("callback shutdown"))
+    );
+    assert!(matches!(
+        terminal.wait(),
+        Err(PythonTerminalError::Runtime(
+            PythonRuntimeError::AsyncRuntimeFailed(_)
+        ))
+    ));
+    assert_eq!(
+        *SHUTDOWN_PHASE_TRACE
+            .lock()
+            .expect("shutdown phase trace should lock"),
+        vec![
+            ShutdownPhase::AdmissionsStopped,
+            ShutdownPhase::CallbackShutdown,
+            ShutdownPhase::AsyncCleanup,
+            ShutdownPhase::SubmissionCancellation,
+            ShutdownPhase::LoopStop,
+            ShutdownPhase::LoopJoin,
+        ]
+    );
+    assert_eq!(
+        async_runtime_diagnostics().expect("shutdown should normalize diagnostics"),
+        PythonAsyncRuntimeDiagnostics::default()
+    );
+}
+
+#[test]
+fn live_loop_failure_terminally_drains_pending_reservations() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    let terminal = PythonTerminal::new();
+    {
+        let mut state = ASYNC_STATE.lock().expect("async state should lock");
+        state.lifecycle = AsyncLifecycle::Running;
+        state.pending_submissions.insert(41, terminal.clone());
+    }
+
+    fail_live_runtime("forced live loop failure");
+
+    assert!(matches!(
+        terminal.wait(),
+        Err(PythonTerminalError::Runtime(
+            PythonRuntimeError::AsyncRuntimeFailed(message)
+        )) if message.contains("forced live loop failure")
+    ));
+    assert_eq!(
+        async_runtime_diagnostics()
+            .expect("failure diagnostics should remain available")
+            .pending_submissions,
+        0
+    );
+    assert!(matches!(
+        shutdown(),
+        Err(PythonRuntimeError::AsyncRuntimeFailed(message))
+            if message.contains("forced live loop failure")
+    ));
 }
 
 #[test]
@@ -353,11 +519,25 @@ fn terminal_callback_panic_is_contained_and_removes_registration() {
 fn cancellation_test_module(py: Python<'_>) -> Bound<'_, PyModule> {
     PyModule::from_code(
         py,
-        c"import asyncio\nmarker = []\n\nasync def cancellable():\n    try:\n        await asyncio.sleep(60)\n    finally:\n        marker.append('done')\n\nasync def suppresses():\n    try:\n        await asyncio.sleep(60)\n    except asyncio.CancelledError:\n        return 73\n",
+        c"import asyncio\nmarker = []\n\nasync def cancellable():\n    try:\n        await asyncio.sleep(60)\n    finally:\n        marker.append('done')\n\nasync def suppresses():\n    try:\n        await asyncio.sleep(60)\n    except asyncio.CancelledError:\n        return 73\n\nasync def immediate(value):\n    return value\n",
         c"<sifr-cancellation-test>",
         c"__sifr_cancellation_test__",
     )
     .expect("cancellation test module should compile")
+}
+
+fn immediate_submission(carrier: &CancellationCarrier, value: i64) -> PythonTerminal {
+    super::super::attach(|py| {
+        let module = cancellation_test_module(py);
+        let coroutine = module
+            .getattr("immediate")
+            .expect("immediate should resolve")
+            .call1((value,))
+            .expect("immediate coroutine should be created")
+            .unbind();
+        submit_coroutine(py, &coroutine, Some(carrier)).expect("submit should succeed")
+    })
+    .expect("runtime should attach")
 }
 
 fn wait_for_active_submission() {

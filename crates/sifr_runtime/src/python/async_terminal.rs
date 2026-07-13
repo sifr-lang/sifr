@@ -1,4 +1,5 @@
 use super::{PythonError, PythonRuntimeError};
+use crate::cancellation::CancellationClaimLease;
 use pyo3::prelude::*;
 use std::future::Future;
 use std::pin::Pin;
@@ -27,27 +28,40 @@ struct PythonTerminalShared {
 struct PythonTerminalState {
     outcome: Option<PythonTerminalOutcome>,
     waker: Option<Waker>,
+    cancellation_claim: Option<CancellationClaimLease>,
 }
 
 impl PythonTerminal {
+    #[cfg(test)]
     pub(super) fn new() -> Self {
+        Self::with_cancellation_claim(None)
+    }
+
+    pub(super) fn with_cancellation_claim(
+        cancellation_claim: Option<CancellationClaimLease>,
+    ) -> Self {
         Self {
             shared: Arc::new(PythonTerminalShared {
-                state: Mutex::new(PythonTerminalState::default()),
+                state: Mutex::new(PythonTerminalState {
+                    outcome: None,
+                    waker: None,
+                    cancellation_claim,
+                }),
                 changed: Condvar::new(),
             }),
         }
     }
 
     pub(super) fn complete(&self, outcome: PythonTerminalOutcome) -> bool {
-        let waker = {
+        let (waker, cancellation_claim) = {
             let mut state = self.lock_state();
             if state.outcome.is_some() {
                 return false;
             }
             state.outcome = Some(outcome);
-            state.waker.take()
+            (state.waker.take(), state.cancellation_claim.take())
         };
+        drop(cancellation_claim);
         self.shared.changed.notify_all();
         if let Some(waker) = waker {
             waker.wake();
@@ -112,6 +126,7 @@ pub(super) fn terminal_error_to_python(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::cancellation::{CancellationHook, CancellationRequest};
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::task::{Wake, Waker};
 
@@ -171,5 +186,25 @@ mod tests {
                 PythonRuntimeError::AsyncRuntimeStopping
             )))
         ));
+    }
+
+    #[test]
+    fn terminal_completion_releases_claim_before_waking_waiter() {
+        let carrier = crate::cancellation::CancellationCarrier::new();
+        let hook: CancellationHook = Arc::new(|| {});
+        let claim = carrier.claim(hook).expect("claim should succeed");
+        let terminal = PythonTerminal::with_cancellation_claim(Some(claim));
+
+        assert!(terminal.complete(Err(PythonTerminalError::Runtime(
+            PythonRuntimeError::AsyncRuntimeStopping,
+        ))));
+        let second_claim = carrier
+            .claim(Arc::new(|| {}))
+            .expect("terminal completion should release the exact claim");
+        drop(second_claim);
+        assert_eq!(
+            carrier.request_cancel(),
+            CancellationRequest::FallbackPending
+        );
     }
 }
