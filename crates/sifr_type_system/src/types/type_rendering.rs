@@ -602,21 +602,27 @@ impl Type {
                         .all(|((_, at, _), (_, bt, _))| at.is_assignable_to(bt))
                     && a.return_type.is_assignable_to(&b.return_type)
             }
-            (Self::AsyncCallable(params_a, _, ret_a), Self::AsyncCallable(params_b, _, ret_b)) => {
+            (
+                Self::AsyncCallable(params_a, conventions_a, ret_a),
+                Self::AsyncCallable(params_b, conventions_b, ret_b),
+            ) => {
                 params_a.len() == params_b.len()
+                    && conventions_a == conventions_b
                     && params_a
                         .iter()
                         .zip(params_b.iter())
                         .all(|(a, b)| a.is_assignable_to(b))
                     && ret_a.is_assignable_to(ret_b)
             }
-            (Self::AsyncFunction(ft), Self::AsyncCallable(params, _, ret)) => {
+            (Self::AsyncFunction(ft), Self::AsyncCallable(params, conventions, ret)) => {
                 ft.params.len() == params.len()
                     && ft
                         .params
                         .iter()
-                        .zip(params.iter())
-                        .all(|((_, pt, _), ct)| pt.is_assignable_to(ct))
+                        .zip(params.iter().zip(conventions.iter()))
+                        .all(|((_, pt, source_convention), (ct, target_convention))| {
+                            source_convention == target_convention && pt.is_assignable_to(ct)
+                        })
                     && ft.return_type.is_assignable_to(ret)
             }
             // Protocol: a class satisfies a protocol if it has all required methods

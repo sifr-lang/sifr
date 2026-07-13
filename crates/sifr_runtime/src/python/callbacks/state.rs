@@ -189,6 +189,11 @@ impl CallbackOwnerState {
     }
 
     pub fn close_call_scope(&self) -> Result<(), PythonError> {
+        if self.inner.retained {
+            return Err(errors::unavailable(
+                "retained owner close without unregister authority",
+            ));
+        }
         self.close_after_unregister(false)
     }
 

@@ -563,4 +563,28 @@ mod tests {
             .rust_type()
             .contains("AsyncFn(i64) -> String"));
     }
+
+    #[test]
+    fn test_async_callable_requires_matching_owned_parameter_conventions() {
+        let target = Type::AsyncCallable(
+            vec![Type::Str],
+            vec![crate::ParamConvention::own()],
+            Box::new(Type::Str),
+        );
+        let borrowed = Type::AsyncFunction(FunctionType::new(
+            vec![("value".to_string(), Type::Str)],
+            Type::Str,
+        ));
+        let owned = Type::AsyncFunction(FunctionType {
+            params: vec![(
+                "value".to_string(),
+                Type::Str,
+                crate::ParamConvention::own(),
+            )],
+            return_type: Box::new(Type::Str),
+        });
+
+        assert!(!borrowed.is_assignable_to(&target));
+        assert!(owned.is_assignable_to(&target));
+    }
 }

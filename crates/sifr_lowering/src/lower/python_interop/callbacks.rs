@@ -25,6 +25,18 @@ pub(super) fn attach(
         );
         return;
     };
+    if !matches!(
+        declaration.kind,
+        sifr_ir::PythonInteropDecoratorKind::Function
+            | sifr_ir::PythonInteropDecoratorKind::Coroutine
+    ) {
+        invalid(
+            ctx,
+            "`@python.callback` requires one ordinary `@python(...)` or `@python.coroutine(...)` implementation declaration",
+            callbacks[0].span,
+        );
+        return;
+    }
     let mut duplicate = false;
     for callback in callbacks {
         if declaration

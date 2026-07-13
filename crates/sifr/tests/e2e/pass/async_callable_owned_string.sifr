@@ -1,0 +1,13 @@
+async def apply(handler: AsyncCallable[[str], str]) -> str:
+    return await handler("hello")
+
+
+async def echo(own value: str) -> str:
+    await task.sleep(0.0)
+    return value
+
+
+async def main() -> None:
+    result = await apply(echo)
+    assert result == "hello"
+    return None

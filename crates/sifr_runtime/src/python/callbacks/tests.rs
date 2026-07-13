@@ -227,6 +227,10 @@ fn retained_owner_close_requires_unregister_authority_claim() {
         .close_after_owner_unregister()
         .expect_err("retained close must not bypass unregister authority");
     assert!(error.message.contains("unregister authority"));
+    let call_scope_error = owner
+        .close_call_scope()
+        .expect_err("retained owner must not use call-scoped close");
+    assert!(call_scope_error.message.contains("unregister authority"));
     owner
         .shutdown_from_runtime()
         .expect("runtime should still close owner");
