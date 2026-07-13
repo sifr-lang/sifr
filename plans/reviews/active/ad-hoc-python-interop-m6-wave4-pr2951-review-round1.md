@@ -1,0 +1,20 @@
+## Review of PR #2951: Close Python bridge deployment cache identity
+
+### Scope validation
+- **Embedding independent of declaration reachability** — Confirmed. `resolve_python_bridge_graph` (`crates/sifr_package/src/python/bridge_resolution.rs:66-102`) walks runtime-scope packages via `direct_dependency_scopes`, which the graph layer already filters to `dependency_kind.is_none()` (`crates/sifr_package/src/graph/scopes.rs:74`). `resolve_package` iterates the full `inventory.modules` list (bridge_resolution.rs:121-190) without any declaration filter. `apply_package_python_bridge_metadata` (`crates/sifr_driver/src/build/python_bridges.rs:11-29`) maps every package and every module. The extended unit test asserts `generated.interop.python.declarations.is_empty()` yet still finds `__sifr_bridge__.p_abc123.unused` in `embedded_bridge_sources`, proving reachability independence.
+
+- **Cache identity: probe layer** — Confirmed. `PythonImportProbe.distributions` (`environment.rs:71`) and `PythonDistributionProbe` (`environment.rs:75-79`) are `Serialize`; `digest_python_environment_probe` serializes the probe directly via `CanonicalPythonEnvironmentProbe` (`graph/digest_build_cache.rs:29-35, 93-97`), so distributions and SOABI both participate. `PackageBuildCacheInputs.python_probe_digest` (`digest_build_cache.rs:12,43,73`) propagates it into the package build cache. The new `python_probe_digest_includes_resolved_distribution_versions_and_abi` test verifies both.
+
+- **Cache identity: driver + generated-artifact layer** — Confirmed. `apply_package_runtime_metadata` calls `push_cache_key_fragment("python-runtime", metadata.probe_digest())` (`project_codegen.rs:120-124`), and `binary_project_cache_key` folds `generated_project.cache_key_fragment` and `generated_project.interop.cache_key_fragment()` into the final key (`materialize.rs:414-426`). The rendered `main.rs` also embeds `probe_digest` via `render_python_runtime_prelude` (`python_runtime.rs:173,198`), so any probe drift flips the main.rs content and cache key together.
+
+- **Cache identity: interop plan layer** — Confirmed. `push_python_plan_cache_key` (`python_interop_plan.rs:180-321`) emits `python.binding_contract=sifr-python-binding-v1`, kind/effect/cleanup/consumes_receiver, per-parameter `default|required`, and authoritative `parameter_type`/`return_type` alongside pre-existing bridge module identity/digest lines. The `python_cache_identity_changes_with_authoritative_sifr_types` test proves return-type-only edits change the fragment.
+
+- **Hermetic archive/unpack/build/run** — Confirmed. `archived_package_python_bridge_builds_and_runs_without_extraction` (`package_project_build_check.rs:428-528`) archives via `cargo package --allow-dirty --no-verify`, tar-unpacks into a distinct root, asserts `__sifr_inventory__.json` shipped, removes the source checkout, rebuilds against `installed_app.root`, removes the bridge source directory again, then runs the binary with CWD and `TMPDIR` in a `0o555` directory. The trailing `read_dir(&run_root).count() == 0` proves the loader consumed no writable extraction directory. `#[cfg(unix)]` correctly guards `PermissionsExt`.
+
+- **Maintainability / size guardrail** — Confirmed. Largest touched file is `package_project_build_check.rs` at 875 lines (< 900). No new fallback branches; `let _ = write!(&mut String, …)` is infallible. TS-Go guardrail entry updated in both `internal_docs/typescript_go_architecture_transfer_guardrails.md` and `verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` to track the 7-line shift in `environment.rs`.
+
+- **Plan alignment** — Matches the "Deployment graph and cache closure" wave contract in `plans/issues/active/ad-hoc-declaration-first-python-interop.md:417-425` (embed every module in the selected runtime graph excluding dev; fingerprint distribution versions/ABI/binding contract/typing inputs across package/driver/generated layers; prove archive→build→run with no writable extraction directory).
+
+No actionable correctness, hermeticity, cache-completeness, archive-test-validity, or maintainability findings.
+
+SATISFIED
