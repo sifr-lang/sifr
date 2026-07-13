@@ -547,7 +547,7 @@ pub fn generate_rust_with_stdlib_for_module(
         }
     }
     if uses_task_scope || uses_join_set || uses_async_python {
-        preamble_items.extend(build_task_cancellation_items());
+        preamble_items.extend(build_task_cancellation_items(uses_async_python));
     }
     if uses_task_scope || uses_join_set {
         preamble_items.extend(build_task_scope_items());

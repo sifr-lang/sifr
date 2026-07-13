@@ -1,8 +1,7 @@
 use super::RustItem;
 
-pub fn build_task_cancellation_items() -> Vec<RustItem> {
-    vec![RustItem::Attr(
-        r#"tokio::task_local! {
+pub fn build_task_cancellation_items(include_current_accessor: bool) -> Vec<RustItem> {
+    let mut source = r#"tokio::task_local! {
     static __SIFR_TASK_CANCELLATION: sifr_runtime::cancellation::CancellationCarrier;
 }
 
@@ -25,14 +24,20 @@ impl __SifrCancellationCarrier {
         self.inner.request_cancel()
     }
 }
+"#
+    .to_string();
 
-#[allow(dead_code)]
+    if include_current_accessor {
+        source.push_str(
+            r#"
 fn __sifr_current_task_cancellation(
 ) -> Option<sifr_runtime::cancellation::CancellationCarrier> {
     __SIFR_TASK_CANCELLATION
         .try_with(Clone::clone)
         .ok()
-}"#
-        .to_string(),
-    )]
+}"#,
+        );
+    }
+
+    vec![RustItem::Attr(source)]
 }
