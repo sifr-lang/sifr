@@ -7,9 +7,9 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M6 are
 implemented, locally validated, and linked below; M7 is in progress with its
-frontend-contract, owned-loop, cooperative-cancellation-carrier, and
-cancellation-aware-supervisor/ordered-shutdown waves merged, while later
-milestones are not yet implemented.
+frontend-contract, owned-loop, cooperative-cancellation-carrier,
+cancellation-aware-supervisor/ordered-shutdown, and typed-async-wrapper waves
+merged, while later milestones are not yet implemented.
 Milestones sequence delivery; they do not create reduced language versions,
 temporary public contracts, dual authorities, or alternate lowering paths.
 
@@ -556,7 +556,8 @@ Implementation waves (one locally validated and reviewed PR per wave):
     shutdown hook (a no-op ordered slot until M9); run registered async cleanup
     while the loop is live; cancel and terminally drain remaining submissions;
     stop the loop; join its thread.
-- [ ] Generate typed async declaration wrappers behind the public gate:
+- [x] Generate typed async declaration wrappers behind the public gate —
+  [PR #2964](https://github.com/sifr-lang/sifr/pull/2964):
   - Submit compiler-private owned inputs and object-store identities; resolve
     targets, convert arguments, invoke, require an awaitable, await, and convert
     the owned result on the loop thread.
