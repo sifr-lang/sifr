@@ -30,6 +30,7 @@ mod python_test_support;
 mod recursive_ops;
 mod resource_identity;
 mod resource_ops;
+mod shutdown_hooks;
 pub use arrow_ops::{
     arrow_array, arrow_capsule_names, arrow_schema, arrow_stream, release_arrow, ArrowHandle,
     PythonArrowCapsuleMetadata,

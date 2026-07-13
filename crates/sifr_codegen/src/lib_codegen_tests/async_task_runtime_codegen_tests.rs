@@ -25,6 +25,12 @@ fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
         .rust_source
         .contains("if let Err(__sifr_scope_failure) = group.__sifr_join_all().await"));
     assert!(result
+        .rust_source
+        .contains("else if let Some(cancellation) = child.cancellation.take()"));
+    assert!(result
+        .rust_source
+        .contains("let _ = cancellation.request_cancel();"));
+    assert!(result
         .required_features
         .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
 }
@@ -45,7 +51,9 @@ fn test_task_gather_lowers_to_private_gather_helper() {
 
     assert!(result.rust_source.contains("async fn __sifr_task_gather"));
     assert!(result.rust_source.contains("__sifr_task_gather(vec!["));
-    assert!(result.rust_source.contains("cancellation.abort();"));
+    assert!(result
+        .rust_source
+        .contains("let _ = cancellation.request_cancel();"));
     assert!(result.rust_source.contains("failure_results"));
     assert!(result.rust_source.contains("push_secondary_message"));
     assert!(result.rust_source.contains("ordered_values.push(value);"));
@@ -145,6 +153,9 @@ fn test_task_race_lowers_to_private_race_helper() {
     assert!(result.rust_source.contains("let Some(mut first)"));
     assert!(result
         .rust_source
+        .contains("let _ = cancellation.request_cancel();"));
+    assert!(result
+        .rust_source
         .contains("race loser task failed\".to_string()"));
     assert!(result
         .rust_source
@@ -207,6 +218,12 @@ fn test_task_select_lowers_to_private_select_helper() {
     assert!(result
         .rust_source
         .contains("select loser task was cancelled\".to_string()"));
+    assert!(result
+        .rust_source
+        .contains("let _ = second_cancellation.request_cancel();"));
+    assert!(result
+        .rust_source
+        .contains("let _ = first_cancellation.request_cancel();"));
     assert!(result
         .rust_source
         .contains("second_observed.store(false, std::sync::atomic::Ordering::SeqCst)"));
@@ -318,13 +335,13 @@ fn test_task_handle_cancel_uses_cooperative_carrier_with_abort_fallback() {
         .contains("static __SIFR_TASK_CANCELLATION:"));
     assert!(result
         .rust_source
-        .contains("const __SIFR_COOPERATIVE_SUPERVISORS_READY: bool = false;"));
+        .contains("fn __sifr_current_task_cancellation"));
     assert!(result
         .rust_source
         .contains("__SIFR_TASK_CANCELLATION.scope(child_cancellation"));
-    assert!(result
+    assert!(!result
         .rust_source
-        .contains("fallback-only task supervisor observed a claimed cancellation carrier"));
+        .contains("__SIFR_COOPERATIVE_SUPERVISORS_READY"));
     assert!(result
         .rust_source
         .contains(&format!("fn {}{}", "can", "cel(&self)")));
@@ -337,7 +354,7 @@ fn test_task_handle_cancel_uses_cooperative_carrier_with_abort_fallback() {
 }
 
 #[test]
-fn test_join_set_extracts_abort_fallback_from_task_cancellation_carrier() {
+fn test_join_set_preserves_task_cancellation_carrier_until_terminal_drain() {
     let source = concat!(
         "async def worker() -> Result[int, ValueError]:\n",
         "    await task.sleep(0.0)\n    return 41\n\n",
@@ -360,7 +377,15 @@ fn test_join_set_extracts_abort_fallback_from_task_cancellation_carrier() {
         .contains("let __SifrTask { receiver, cancellation, observed, _error } = task;"));
     assert!(result
         .rust_source
-        .contains("abort_handle: Some(cancellation.abort_handle())"));
+        .contains("cancellation: Some(cancellation)"));
+    assert!(result.rust_source.contains("blocking_abort: None"));
+    assert!(result
+        .rust_source
+        .contains("if let Some(cancellation) = entry.cancellation"));
+    assert!(result
+        .rust_source
+        .contains("let _ = cancellation.request_cancel();"));
+    assert!(!result.rust_source.contains("cancellation.abort_handle()"));
 }
 
 #[test]
