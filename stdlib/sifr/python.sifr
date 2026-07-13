@@ -208,8 +208,8 @@ def get_item(obj: Object, key: str) -> Result[Object, PythonError]:
 @blocking_io
 def call(
     callable_obj: Object,
-    own args: list[Object],
-    own kwargs: list[tuple[str, Object]],
+    args: list[Object],
+    kwargs: list[tuple[str, Object]],
 ) -> Result[Object, PythonError]:
     try:
         kwargs_keys: list[str] = _keys_from_keyed_objects(kwargs)
@@ -229,8 +229,8 @@ def call(
 def call_attr(
     obj: Object,
     name: str,
-    own args: list[Object],
-    own kwargs: list[tuple[str, Object]],
+    args: list[Object],
+    kwargs: list[tuple[str, Object]],
 ) -> Result[Object, PythonError]:
     try:
         kwargs_keys: list[str] = _keys_from_keyed_objects(kwargs)

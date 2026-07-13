@@ -71,7 +71,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
         emitted_items.extend(super::build_async_exit_cause_type_items());
     }
     if uses_task_scope || uses_join_set || uses_async_python {
-        emitted_items.extend(super::build_task_cancellation_items());
+        emitted_items.extend(super::build_task_cancellation_items(uses_async_python));
     }
     if uses_task_scope || uses_join_set {
         emitted_items.extend(super::build_task_scope_items());

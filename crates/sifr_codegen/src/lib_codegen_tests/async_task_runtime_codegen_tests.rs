@@ -333,7 +333,7 @@ fn test_task_handle_cancel_uses_cooperative_carrier_with_abort_fallback() {
     assert!(result
         .rust_source
         .contains("static __SIFR_TASK_CANCELLATION:"));
-    assert!(result
+    assert!(!result
         .rust_source
         .contains("fn __sifr_current_task_cancellation"));
     assert!(result
