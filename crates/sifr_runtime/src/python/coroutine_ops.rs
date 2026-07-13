@@ -68,7 +68,7 @@ mod tests {
         config
             .trusted_import_roots
             .push("__sifr_async_identity__".to_string());
-        initialize_runtime(config).expect("init should start the owned loop");
+        initialize_runtime(config).expect("init should preserve lazy owned-loop startup");
         install_identity_module();
 
         let start_barrier = Arc::new(Barrier::new(3));
