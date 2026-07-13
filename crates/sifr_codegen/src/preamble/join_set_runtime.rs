@@ -247,7 +247,7 @@ pub fn build_join_set_items() -> Vec<RustItem> {
                     ],
                     ret: Some(RustType::Named("JoinItemId".to_string())),
                     body: vec![RustStmt::Expr(RustExpr::Ident(
-                        "let id = self.__sifr_next_id();\n        let __SifrTask { receiver, abort_handle, observed, _error } = task;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        let handle = tokio::spawn(async move {\n            let Some(receiver) = receiver else {\n                return __SifrTaskResult::cancelled();\n            };\n            return match receiver.await {\n                Ok(result) => result,\n                Err(_) => __SifrTaskResult::cancelled(),\n            };\n        });\n        self.entries.push(__SifrJoinEntry { id, handle, abort_handle: Some(abort_handle) });\n        return id"
+                        "let id = self.__sifr_next_id();\n        let __SifrTask { receiver, cancellation, observed, _error } = task;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        let handle = tokio::spawn(async move {\n            let Some(receiver) = receiver else {\n                return __SifrTaskResult::cancelled();\n            };\n            return match receiver.await {\n                Ok(result) => result,\n                Err(_) => __SifrTaskResult::cancelled(),\n            };\n        });\n        self.entries.push(__SifrJoinEntry { id, handle, abort_handle: Some(cancellation.abort_handle()) });\n        return id"
                             .to_string(),
                     ))],
                     is_async: false,

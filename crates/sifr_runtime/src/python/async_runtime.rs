@@ -1,8 +1,13 @@
+use super::async_terminal::{
+    terminal_error_to_python, PythonTerminal, PythonTerminalError, PythonTerminalOutcome,
+};
 use super::{PythonError, PythonRuntimeError};
+use crate::cancellation::{CancellationCarrier, CancellationClaim, CancellationHook};
 use pyo3::prelude::*;
-use pyo3::types::PyAnyMethods;
+use pyo3::types::{PyAnyMethods, PyCFunction, PyDict, PyTuple};
 use std::collections::BTreeMap;
-use std::sync::{Condvar, Mutex, MutexGuard};
+use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread::JoinHandle;
 
 #[cfg(test)]
@@ -14,6 +19,10 @@ static ASYNC_STATE: Mutex<AsyncRuntimeState> = Mutex::new(AsyncRuntimeState::new
 static ASYNC_STATE_CHANGED: Condvar = Condvar::new();
 #[cfg(test)]
 static FORCE_LOOP_SETUP_FAILURE: AtomicBool = AtomicBool::new(false);
+#[cfg(test)]
+static FORCE_SUBMISSION_QUEUE_FAILURE: AtomicBool = AtomicBool::new(false);
+#[cfg(test)]
+static FORCE_TERMINAL_CALLBACK_PANIC: AtomicBool = AtomicBool::new(false);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum AsyncLifecycle {
@@ -31,8 +40,24 @@ struct AsyncRuntimeState {
     loop_thread: Option<JoinHandle<()>>,
     next_submission_id: u64,
     pending_submissions: usize,
-    submissions: BTreeMap<u64, Py<PyAny>>,
+    submissions: BTreeMap<u64, RegisteredSubmission>,
     failure: Option<String>,
+}
+
+struct RegisteredSubmission {
+    loop_object: Py<PyAny>,
+    exact_task: Py<PyAny>,
+}
+
+#[derive(Default)]
+struct SubmissionCancellationState {
+    requested: bool,
+    submission_id: Option<u64>,
+}
+
+#[derive(Default)]
+struct SubmissionCancellationBridge {
+    state: Mutex<SubmissionCancellationState>,
 }
 
 impl AsyncRuntimeState {
@@ -45,6 +70,32 @@ impl AsyncRuntimeState {
             pending_submissions: 0,
             submissions: BTreeMap::new(),
             failure: None,
+        }
+    }
+}
+
+impl SubmissionCancellationBridge {
+    fn publish(&self, submission_id: u64) -> bool {
+        let Ok(mut state) = self.state.lock() else {
+            return true;
+        };
+        state.submission_id = Some(submission_id);
+        state.requested
+    }
+
+    fn request(&self) {
+        let submission_id = {
+            let Ok(mut state) = self.state.lock() else {
+                return;
+            };
+            if state.requested {
+                return;
+            }
+            state.requested = true;
+            state.submission_id
+        };
+        if let Some(submission_id) = submission_id {
+            let _ignored = cancel_submission(submission_id);
         }
     }
 }
@@ -113,33 +164,183 @@ pub(super) fn run_coroutine_blocking(
     py: Python<'_>,
     coroutine: &Py<PyAny>,
 ) -> Result<Py<PyAny>, PythonError> {
+    let terminal = submit_coroutine(py, coroutine, None)?;
+    // `run_coroutine_blocking` is classified as blocking_io and must be explicitly
+    // offloaded by async Sifr code. Releasing the GIL here lets the loop thread run.
+    let outcome = super::detach(py, || terminal.wait());
+    outcome.map_err(|error| terminal_error_to_python(py, error, "owned asyncio coroutine"))
+}
+
+pub(super) fn submit_coroutine(
+    py: Python<'_>,
+    coroutine: &Py<PyAny>,
+    carrier: Option<&CancellationCarrier>,
+) -> Result<PythonTerminal, PythonError> {
+    let cancellation = Arc::new(SubmissionCancellationBridge::default());
+    if let Some(carrier) = carrier {
+        match carrier.claim(cancellation_hook(&cancellation)) {
+            CancellationClaim::Claimed => {}
+            CancellationClaim::CancelledBeforeClaim => {
+                return Err(PythonError::runtime(
+                    PythonRuntimeError::AsyncSubmissionCancelled,
+                ));
+            }
+            CancellationClaim::AlreadyClaimed => {
+                return Err(PythonError::runtime(
+                    PythonRuntimeError::AsyncCancellationAlreadyClaimed,
+                ));
+            }
+            CancellationClaim::StateUnavailable => {
+                return Err(PythonError::runtime(PythonRuntimeError::StateUnavailable));
+            }
+        }
+    }
+
     let (submission_id, loop_object) = reserve_submission(py).map_err(PythonError::runtime)?;
-    let scheduled = py
-        .import("asyncio")
-        .and_then(|asyncio| {
-            asyncio.call_method1(
-                "run_coroutine_threadsafe",
-                (coroutine.bind(py), loop_object.bind(py)),
-            )
-        })
-        .map(Bound::unbind)
+    let terminal = PythonTerminal::new();
+    let done_callback = build_done_callback(py, submission_id, &terminal).map_err(|error| {
+        release_pending_submission();
+        PythonError::from_pyerr(py, error, "call", "owned asyncio completion callback")
+    })?;
+    let setup_callback = build_setup_callback(
+        py,
+        submission_id,
+        coroutine,
+        &loop_object,
+        &done_callback,
+        &terminal,
+        &cancellation,
+    )
+    .map_err(|error| {
+        release_pending_submission();
+        PythonError::from_pyerr(py, error, "call", "owned asyncio setup callback")
+    })?;
+    #[cfg(test)]
+    if FORCE_SUBMISSION_QUEUE_FAILURE.swap(false, Ordering::SeqCst) {
+        release_pending_submission();
+        return Err(PythonError::runtime(
+            PythonRuntimeError::AsyncRuntimeFailed(
+                "forced owned asyncio submission queue failure".to_string(),
+            ),
+        ));
+    }
+    loop_object
+        .bind(py)
+        .call_method1("call_soon_threadsafe", (setup_callback,))
         .map_err(|error| {
             release_pending_submission();
             PythonError::from_pyerr(py, error, "call", "owned asyncio submission")
         })?;
-    if let Err(error) = register_submission(py, submission_id, &scheduled) {
-        let _ignored = scheduled.bind(py).call_method0("cancel");
-        release_pending_submission();
-        return Err(PythonError::runtime(error));
-    }
+    Ok(terminal)
+}
 
-    let result = scheduled
-        .bind(py)
-        .call_method0("result")
-        .map(Bound::unbind)
-        .map_err(|error| PythonError::from_pyerr(py, error, "await", "owned asyncio coroutine"));
-    finish_submission(submission_id);
-    result
+fn build_done_callback(
+    py: Python<'_>,
+    submission_id: u64,
+    terminal: &PythonTerminal,
+) -> PyResult<Py<PyAny>> {
+    let terminal = terminal.clone();
+    PyCFunction::new_closure(
+        py,
+        Some(c"__sifr_python_task_done"),
+        None,
+        move |args: &Bound<'_, PyTuple>, _kwargs: Option<&Bound<'_, PyDict>>| -> PyResult<()> {
+            let outcome = catch_unwind(AssertUnwindSafe(|| -> PythonTerminalOutcome {
+                #[cfg(test)]
+                if FORCE_TERMINAL_CALLBACK_PANIC.swap(false, Ordering::SeqCst) {
+                    panic!("forced terminal callback panic");
+                }
+                let task = args.get_item(0).map_err(PythonTerminalError::Python)?;
+                task.call_method0("result")
+                    .map(Bound::unbind)
+                    .map_err(PythonTerminalError::Python)
+            }))
+            .unwrap_or_else(|_| {
+                Err(PythonTerminalError::Runtime(
+                    PythonRuntimeError::AsyncRuntimeFailed(
+                        "owned asyncio terminal callback panicked".to_string(),
+                    ),
+                ))
+            });
+            let outcome = match finish_submission(submission_id) {
+                Ok(()) => outcome,
+                Err(error) => Err(PythonTerminalError::Runtime(error)),
+            };
+            let _completed = terminal.complete(outcome);
+            Ok(())
+        },
+    )
+    .map(|callback| callback.into_any().unbind())
+}
+
+#[allow(clippy::too_many_arguments)]
+fn build_setup_callback(
+    py: Python<'_>,
+    submission_id: u64,
+    coroutine: &Py<PyAny>,
+    loop_object: &Py<PyAny>,
+    done_callback: &Py<PyAny>,
+    terminal: &PythonTerminal,
+    cancellation: &Arc<SubmissionCancellationBridge>,
+) -> PyResult<Py<PyAny>> {
+    let coroutine = coroutine.clone_ref(py);
+    let loop_object = loop_object.clone_ref(py);
+    let done_callback = done_callback.clone_ref(py);
+    let terminal = terminal.clone();
+    let cancellation = Arc::clone(cancellation);
+    PyCFunction::new_closure(
+        py,
+        Some(c"__sifr_python_task_setup"),
+        None,
+        move |args: &Bound<'_, PyTuple>, _kwargs: Option<&Bound<'_, PyDict>>| -> PyResult<()> {
+            let py = args.py();
+            let mut registered = false;
+            let mut exact_task: Option<Py<PyAny>> = None;
+            let setup = catch_unwind(AssertUnwindSafe(|| -> Result<(), PythonTerminalError> {
+                let task = loop_object
+                    .bind(py)
+                    .call_method1("create_task", (coroutine.bind(py),))
+                    .map_err(PythonTerminalError::Python)?;
+                exact_task = Some(task.clone().unbind());
+                task.call_method1("add_done_callback", (done_callback.bind(py),))
+                    .map_err(PythonTerminalError::Python)?;
+                register_submission(py, submission_id, &loop_object, &task.clone().unbind())
+                    .map_err(PythonTerminalError::Runtime)?;
+                registered = true;
+                if cancellation.publish(submission_id) {
+                    task.call_method0("cancel")
+                        .map_err(PythonTerminalError::Python)?;
+                }
+                Ok(())
+            }))
+            .unwrap_or_else(|_| {
+                Err(PythonTerminalError::Runtime(
+                    PythonRuntimeError::AsyncRuntimeFailed(
+                        "owned asyncio setup callback panicked".to_string(),
+                    ),
+                ))
+            });
+
+            if let Err(error) = setup {
+                if registered {
+                    let _ignored = finish_submission(submission_id);
+                } else {
+                    release_pending_submission();
+                }
+                if let Some(task) = exact_task {
+                    let _ignored = task.bind(py).call_method0("cancel");
+                }
+                let _completed = terminal.complete(Err(error));
+            }
+            Ok(())
+        },
+    )
+    .map(|callback| callback.into_any().unbind())
+}
+
+fn cancellation_hook(bridge: &Arc<SubmissionCancellationBridge>) -> CancellationHook {
+    let bridge = Arc::clone(bridge);
+    Arc::new(move || bridge.request())
 }
 
 pub(super) fn shutdown() -> Result<(), PythonRuntimeError> {
@@ -282,13 +483,18 @@ fn reserve_submission(py: Python<'_>) -> Result<(u64, Py<PyAny>), PythonRuntimeE
 fn register_submission(
     py: Python<'_>,
     submission_id: u64,
-    future: &Py<PyAny>,
+    loop_object: &Py<PyAny>,
+    exact_task: &Py<PyAny>,
 ) -> Result<(), PythonRuntimeError> {
     let mut state = lock_state()?;
     state.pending_submissions = state.pending_submissions.saturating_sub(1);
-    state
-        .submissions
-        .insert(submission_id, future.clone_ref(py));
+    state.submissions.insert(
+        submission_id,
+        RegisteredSubmission {
+            loop_object: loop_object.clone_ref(py),
+            exact_task: exact_task.clone_ref(py),
+        },
+    );
     ASYNC_STATE_CHANGED.notify_all();
     Ok(())
 }
@@ -300,32 +506,73 @@ fn release_pending_submission() {
     }
 }
 
-fn finish_submission(submission_id: u64) {
-    if let Ok(mut state) = ASYNC_STATE.lock() {
-        state.submissions.remove(&submission_id);
+fn finish_submission(submission_id: u64) -> Result<(), PythonRuntimeError> {
+    let removed = {
+        let mut state = lock_state()?;
+        let removed = state.submissions.remove(&submission_id);
         ASYNC_STATE_CHANGED.notify_all();
-    }
+        removed
+    };
+    drop(removed);
+    Ok(())
 }
 
 fn cancel_registered_submissions() -> Result<(), PythonRuntimeError> {
     Python::try_attach(|py| {
-        let futures = {
+        let submissions = {
             let state = lock_state()?;
             state
                 .submissions
                 .values()
-                .map(|future| future.clone_ref(py))
+                .map(|submission| {
+                    (
+                        submission.loop_object.clone_ref(py),
+                        submission.exact_task.clone_ref(py),
+                    )
+                })
                 .collect::<Vec<_>>()
         };
-        for future in futures {
-            future
-                .bind(py)
-                .call_method0("cancel")
-                .map_err(|error| PythonRuntimeError::AsyncRuntimeFailed(error.to_string()))?;
+        for (loop_object, exact_task) in submissions {
+            queue_exact_task_cancel(py, &loop_object, &exact_task)?;
         }
         Ok(())
     })
     .ok_or(PythonRuntimeError::NotInitialized)?
+}
+
+fn cancel_submission(submission_id: u64) -> Result<(), PythonRuntimeError> {
+    Python::try_attach(|py| {
+        let submission = {
+            let state = lock_state()?;
+            state.submissions.get(&submission_id).map(|submission| {
+                (
+                    submission.loop_object.clone_ref(py),
+                    submission.exact_task.clone_ref(py),
+                )
+            })
+        };
+        if let Some((loop_object, exact_task)) = submission {
+            queue_exact_task_cancel(py, &loop_object, &exact_task)?;
+        }
+        Ok(())
+    })
+    .ok_or(PythonRuntimeError::NotInitialized)?
+}
+
+fn queue_exact_task_cancel(
+    py: Python<'_>,
+    loop_object: &Py<PyAny>,
+    exact_task: &Py<PyAny>,
+) -> Result<(), PythonRuntimeError> {
+    let cancel = exact_task
+        .bind(py)
+        .getattr("cancel")
+        .map_err(|error| PythonRuntimeError::AsyncRuntimeFailed(error.to_string()))?;
+    loop_object
+        .bind(py)
+        .call_method1("call_soon_threadsafe", (cancel,))
+        .map_err(|error| PythonRuntimeError::AsyncRuntimeFailed(error.to_string()))?;
+    Ok(())
 }
 
 fn fail_start(message: String) -> PythonRuntimeError {
@@ -360,37 +607,10 @@ pub(super) fn reset_for_tests() {
         ASYNC_STATE_CHANGED.notify_all();
     }
     FORCE_LOOP_SETUP_FAILURE.store(false, Ordering::SeqCst);
+    FORCE_SUBMISSION_QUEUE_FAILURE.store(false, Ordering::SeqCst);
+    FORCE_TERMINAL_CALLBACK_PANIC.store(false, Ordering::SeqCst);
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::python::{
-        initialize_runtime, reset_runtime_state_for_tests, test_config, test_guard,
-    };
-
-    #[test]
-    fn loop_setup_failure_is_joined_and_leaves_no_live_thread() {
-        let _guard = test_guard();
-        reset_runtime_state_for_tests();
-        initialize_runtime(test_config("async-loop-failure"))
-            .expect("CPython should initialize without the loop");
-        FORCE_LOOP_SETUP_FAILURE.store(true, Ordering::SeqCst);
-
-        let error = start().expect_err("forced loop setup should fail");
-
-        assert!(matches!(error, PythonRuntimeError::AsyncRuntimeFailed(_)));
-        assert_eq!(
-            async_runtime_diagnostics().expect("diagnostics should remain available"),
-            PythonAsyncRuntimeDiagnostics::default()
-        );
-        assert!(matches!(
-            shutdown(),
-            Err(PythonRuntimeError::AsyncRuntimeFailed(_))
-        ));
-        assert_eq!(
-            async_runtime_diagnostics().expect("failed runtime should normalize to stopped"),
-            PythonAsyncRuntimeDiagnostics::default()
-        );
-    }
-}
+#[path = "async_runtime_tests.rs"]
+mod tests;
