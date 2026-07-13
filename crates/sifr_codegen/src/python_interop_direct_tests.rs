@@ -223,7 +223,7 @@ fn consuming_opaque_close_emits_semantic_close_operation() {
         type_params: Vec::new(),
     };
     let rendered = render_stmts(
-        &python_interop_method_body(&method, &Default::default())
+        &python_interop_method_body(&method, &Default::default(), None)
             .expect("consuming close should lower"),
     );
     assert!(rendered.contains("semantic_close(self.__sifr_python_object"));

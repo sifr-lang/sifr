@@ -695,9 +695,11 @@ impl RustEmitter {
             );
         }
 
-        let mut body = if let Some(interop_body) =
-            python_interop_method_body(method, &self.python_opaque_classes)
-        {
+        let mut body = if let Some(interop_body) = python_interop_method_body(
+            method,
+            &self.python_opaque_classes,
+            class.python_opaque_declaration(),
+        ) {
             interop_body
         } else if let Some(interop_body) = rust_interop_method_body(method) {
             interop_body

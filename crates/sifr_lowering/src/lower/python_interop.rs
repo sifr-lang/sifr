@@ -708,6 +708,11 @@ pub(in crate::lower) fn method_consumes_receiver(
                         decorator_path(target)
                             .is_some_and(|path| path.as_slice() == ["Self", "close"])
                     }))
+                    || (path.as_slice() == ["python", "coroutine"]
+                        && call.arguments.args.first().is_some_and(|target| {
+                            decorator_path(target)
+                                .is_some_and(|path| path.as_slice() == ["Self", "aclose"])
+                        }))
                     || path.as_slice() == ["python", "context", "exit"]
             })
         })

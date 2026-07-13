@@ -2,7 +2,7 @@ use crate::python_interop_direct::{python_interop_function_body, python_interop_
 use crate::{generate_rust, render_stmts};
 use ruff_text_size::TextRange;
 use sifr_ir::{
-    HirFunction, HirModule, HirParam, MethodKind, PythonInteropDeclaration,
+    HirFunction, HirModule, HirParam, MethodKind, PythonCleanupPolicy, PythonInteropDeclaration,
     PythonInteropDecoratorKind, PythonInteropEffect, PythonInteropParameter, PythonParameterKind,
     PythonTargetPath,
 };
@@ -110,19 +110,47 @@ fn borrowed_and_consuming_async_methods_select_distinct_identity_transfers() {
     let consuming = method_function(true);
 
     let borrowed = render_stmts(
-        &python_interop_method_body(&borrowed, &Default::default())
+        &python_interop_method_body(&borrowed, &Default::default(), None)
             .expect("borrowed method should lower"),
     );
     assert!(borrowed.contains("PythonAsyncRequest::borrowed_method"));
     assert!(borrowed.contains("&self.__sifr_python_object"));
 
     let consuming = render_stmts(
-        &python_interop_method_body(&consuming, &Default::default())
+        &python_interop_method_body(&consuming, &Default::default(), None)
             .expect("consuming method should lower"),
     );
     assert!(consuming.contains("PythonAsyncRequest::owned_method"));
     assert!(consuming.contains("self.__sifr_python_object"));
     assert!(!consuming.contains("&self.__sifr_python_object"));
+}
+
+#[test]
+fn async_close_selects_identity_finalization_only_for_complete_class_contract() {
+    let mut close_declaration = declaration(vec!["Self", "aclose"], Vec::new());
+    close_declaration.consumes_receiver = true;
+    let close = function("aclose", Vec::new(), Type::None, close_declaration);
+    let mut owner = opaque_declaration();
+    owner.cleanup = Some(PythonCleanupPolicy::AsyncClose);
+
+    let rendered = render_stmts(
+        &python_interop_method_body(&close, &Default::default(), Some(&owner))
+            .expect("valid async close should lower"),
+    );
+    assert!(rendered.contains("PythonAsyncRequest::semantic_close_method"));
+    assert!(rendered.contains("self.__sifr_python_object"));
+    assert!(!rendered.contains("PythonAsyncRequest::owned_method"));
+
+    let borrowed = method_function(false);
+    let borrowed = render_stmts(
+        &python_interop_method_body(&borrowed, &Default::default(), Some(&owner))
+            .expect("borrowed methods on async-close classes remain ordinary typed requests"),
+    );
+    assert!(borrowed.contains("PythonAsyncRequest::borrowed_method"));
+    assert!(!borrowed.contains("PythonAsyncRequest::semantic_close_method"));
+
+    let wrong_method = method_function(true);
+    assert!(python_interop_method_body(&wrong_method, &Default::default(), Some(&owner)).is_none());
 }
 
 #[test]

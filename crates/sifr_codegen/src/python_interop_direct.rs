@@ -176,10 +176,15 @@ pub(crate) fn python_interop_function_body(
 pub(crate) fn python_interop_method_body(
     func: &HirFunction,
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
+    owner_declaration: Option<&PythonInteropDeclaration>,
 ) -> Option<Vec<RustStmt>> {
     let declaration = func.python_interop.first()?;
     if declaration.kind == PythonInteropDecoratorKind::Coroutine {
-        return crate::python_interop_async::async_python_method_body(func, opaque_classes);
+        return crate::python_interop_async::async_python_method_body(
+            func,
+            opaque_classes,
+            owner_declaration,
+        );
     }
     let Type::Result(ok_type, error_type) = func.return_type.resolve_alias() else {
         return None;

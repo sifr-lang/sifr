@@ -1,4 +1,5 @@
 use super::*;
+use crate::cancellation::{CancellationCarrier, CancellationRequest};
 use pyo3::types::{PyDict, PyModule};
 use std::future::Future;
 use std::pin::pin;
@@ -222,6 +223,190 @@ fn typed_bridge_target_resolves_inside_owned_loop() {
     shutdown_typed_runtime();
 }
 
+#[test]
+fn semantic_async_close_is_exact_once_and_seals_retained_alias() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_typed_runtime("semantic-close-success");
+    let client = close_client("success");
+    let alias = client.clone();
+    let request = PythonAsyncRequest::semantic_close_method(client, "aclose".to_string())
+        .expect("open identity should begin semantic close");
+    let closing = async_from_object(&alias).expect_err("closing identity must reject new leases");
+    assert!(closing.message.contains("closing"), "{closing:?}");
+    assert!(
+        PythonAsyncRequest::semantic_close_method(alias.clone(), "aclose".to_string()).is_err(),
+        "closing identity must reject a second semantic close"
+    );
+
+    let result =
+        block_on(submit_async_declaration(request, None)).expect("semantic close should complete");
+    async_to_none(result).expect("close should return None");
+
+    assert_eq!(close_events(), vec!["success:start", "success:finally"]);
+    let error = async_from_object(&alias).expect_err("closed alias must reject reuse");
+    assert!(error.message.contains("closed"), "{error:?}");
+    assert!(
+        PythonAsyncRequest::semantic_close_method(alias, "aclose".to_string()).is_err(),
+        "duplicate close must be rejected"
+    );
+    shutdown_typed_runtime();
+}
+
+#[test]
+fn semantic_async_close_failures_poison_identity() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_typed_runtime("semantic-close-failures");
+
+    let abandoned = close_client("success");
+    let abandoned_alias = abandoned.clone();
+    let abandoned_request =
+        PythonAsyncRequest::semantic_close_method(abandoned, "aclose".to_string())
+            .expect("open identity should begin semantic close");
+    drop(abandoned_request);
+    let poisoned =
+        async_from_object(&abandoned_alias).expect_err("dropped close request must poison");
+    assert!(poisoned.message.contains("poisoned"), "{poisoned:?}");
+
+    for (mode, member, expected) in [
+        ("fail", "aclose", "close boom"),
+        ("non_none", "aclose", "expected Python None"),
+        ("non_awaitable", "not_awaitable", "non-awaitable"),
+    ] {
+        let client = close_client(mode);
+        let alias = client.clone();
+        let request = PythonAsyncRequest::semantic_close_method(client, member.to_string())
+            .expect("open identity should begin semantic close");
+        let error = block_on(submit_async_declaration(request, None))
+            .expect_err("failed semantic close should return an error");
+        assert!(error.message.contains(expected), "{mode}: {error:?}");
+        let poisoned = async_from_object(&alias).expect_err("failed close must poison identity");
+        assert!(poisoned.message.contains("poisoned"), "{poisoned:?}");
+        assert!(
+            PythonAsyncRequest::semantic_close_method(alias, member.to_string()).is_err(),
+            "poisoned identity must reject duplicate close"
+        );
+    }
+    shutdown_typed_runtime();
+}
+
+#[test]
+fn semantic_async_close_uses_python_terminal_outcome_after_cancellation() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_typed_runtime("semantic-close-cancellation");
+
+    let suppressed = close_client("suppress");
+    let suppressed_alias = suppressed.clone();
+    let suppressed_carrier = CancellationCarrier::new();
+    let suppressed_worker = {
+        let carrier = suppressed_carrier.clone();
+        std::thread::spawn(move || {
+            let request =
+                PythonAsyncRequest::semantic_close_method(suppressed, "aclose".to_string())
+                    .expect("suppressed close request");
+            block_on(submit_async_declaration(request, Some(&carrier)))
+        })
+    };
+    wait_for_typed_submission();
+    assert_eq!(
+        suppressed_carrier.request_cancel(),
+        CancellationRequest::Claimed
+    );
+    async_to_none(
+        suppressed_worker
+            .join()
+            .expect("suppressed worker should not panic")
+            .expect("suppressed cancellation should return normally"),
+    )
+    .expect("suppressed close should return None");
+    let closed = async_from_object(&suppressed_alias).expect_err("successful close is sealed");
+    assert!(closed.message.contains("closed"), "{closed:?}");
+
+    let observed = close_client("wait");
+    let observed_alias = observed.clone();
+    let observed_carrier = CancellationCarrier::new();
+    let observed_worker = {
+        let carrier = observed_carrier.clone();
+        std::thread::spawn(move || {
+            let request = PythonAsyncRequest::semantic_close_method(observed, "aclose".to_string())
+                .expect("observed close request");
+            block_on(submit_async_declaration(request, Some(&carrier)))
+        })
+    };
+    wait_for_typed_submission();
+    assert_eq!(
+        observed_carrier.request_cancel(),
+        CancellationRequest::Claimed
+    );
+    let error = observed_worker
+        .join()
+        .expect("observed worker should not panic")
+        .expect_err("observed cancellation should fail");
+    assert!(error.exception_type.contains("CancelledError"), "{error:?}");
+    let poisoned = async_from_object(&observed_alias).expect_err("cancelled close is poisoned");
+    assert!(poisoned.message.contains("poisoned"), "{poisoned:?}");
+    assert!(close_events().iter().any(|event| event == "wait:finally"));
+    shutdown_typed_runtime();
+}
+
+#[test]
+fn semantic_async_close_shutdown_and_submission_rejection_poison_safely() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_typed_runtime("semantic-close-shutdown");
+
+    let client = close_client("wait");
+    let alias = client.clone();
+    let worker = std::thread::spawn(move || {
+        let request = PythonAsyncRequest::semantic_close_method(client, "aclose".to_string())
+            .expect("shutdown close request");
+        block_on(submit_async_declaration(request, None))
+    });
+    wait_for_typed_submission();
+    super::async_runtime::shutdown().expect("shutdown should terminally drain close");
+    let error = worker
+        .join()
+        .expect("shutdown worker should not panic")
+        .expect_err("shutdown cancellation should fail close");
+    assert!(error.exception_type.contains("CancelledError"), "{error:?}");
+    let poisoned = async_from_object(&alias).expect_err("shutdown close must poison identity");
+    assert!(poisoned.message.contains("poisoned"), "{poisoned:?}");
+    assert!(close_events().iter().any(|event| event == "wait:finally"));
+    assert_eq!(
+        async_runtime_diagnostics().expect("async diagnostics"),
+        PythonAsyncRuntimeDiagnostics::default()
+    );
+
+    super::async_runtime::ensure_started().expect("owned loop should restart for rejection race");
+    let (held_terminal, pending_id) = attach(|py| {
+        let (terminal, _cancellation) = super::async_runtime::terminal_for_submission(None)?;
+        let (submission_id, _loop_object) = super::async_runtime::reserve_submission(py, &terminal)
+            .map_err(PythonError::runtime)?;
+        Ok::<_, PythonError>((terminal, submission_id))
+    })
+    .expect("runtime should attach")
+    .expect("pending reservation should succeed");
+    let rejected = close_client("success");
+    let rejected_alias = rejected.clone();
+    let request = PythonAsyncRequest::semantic_close_method(rejected, "aclose".to_string())
+        .expect("identity can enter closing before submission rejection");
+    let shutdown = std::thread::spawn(super::async_runtime::shutdown);
+    wait_for_runtime_stopping();
+    block_on(submit_async_declaration(request, None))
+        .expect_err("stopping runtime must reject semantic close");
+    let poisoned =
+        async_from_object(&rejected_alias).expect_err("rejected submission must poison identity");
+    assert!(poisoned.message.contains("poisoned"), "{poisoned:?}");
+    super::async_runtime::release_pending_submission(pending_id);
+    shutdown
+        .join()
+        .expect("shutdown thread should not panic")
+        .expect("shutdown should finish after pending reservation releases");
+    drop(held_terminal);
+}
+
 fn initialize_typed_runtime(label: &str) {
     let mut config = test_config(label);
     config.start_async_loop = true;
@@ -235,7 +420,7 @@ fn install_module() {
     attach(|py| {
         let module = PyModule::from_code(
             py,
-            c"import asyncio\nimport threading\n\nasync def collect(a, *rest, label=None, **extra):\n    await asyncio.sleep(0)\n    values = [a, *rest, *extra.values()]\n    return {'total': sum(values), 'label': label, 'nested': values, 'identity': f'{id(asyncio.get_running_loop())}:{threading.get_ident()}'}\n\nasync def identity():\n    await asyncio.sleep(0)\n    return f'{id(asyncio.get_running_loop())}:{threading.get_ident()}'\n\ndef not_awaitable():\n    return 1\n\nasync def fails():\n    raise ValueError('typed boom')\n\nclass Client:\n    def __init__(self, value):\n        self.value = value\n\n    async def increment(self, amount):\n        await asyncio.sleep(0)\n        return self.value + amount\n\nasync def make_client(value):\n    await asyncio.sleep(0)\n    return Client(value)\n",
+            c"import asyncio\nimport threading\n\nclose_log = []\n\nasync def collect(a, *rest, label=None, **extra):\n    await asyncio.sleep(0)\n    values = [a, *rest, *extra.values()]\n    return {'total': sum(values), 'label': label, 'nested': values, 'identity': f'{id(asyncio.get_running_loop())}:{threading.get_ident()}'}\n\nasync def identity():\n    await asyncio.sleep(0)\n    return f'{id(asyncio.get_running_loop())}:{threading.get_ident()}'\n\ndef not_awaitable():\n    return 1\n\nasync def fails():\n    raise ValueError('typed boom')\n\nclass Client:\n    def __init__(self, value):\n        self.value = value\n\n    async def increment(self, amount):\n        await asyncio.sleep(0)\n        return self.value + amount\n\nclass CloseClient:\n    def __init__(self, mode):\n        self.mode = mode\n\n    def not_awaitable(self):\n        close_log.append(f'{self.mode}:start')\n        return None\n\n    async def aclose(self):\n        close_log.append(f'{self.mode}:start')\n        try:\n            if self.mode == 'fail':\n                raise ValueError('close boom')\n            if self.mode == 'non_none':\n                return 1\n            if self.mode == 'suppress':\n                try:\n                    await asyncio.Event().wait()\n                except asyncio.CancelledError:\n                    return None\n            if self.mode == 'wait':\n                await asyncio.Event().wait()\n            await asyncio.sleep(0)\n            return None\n        finally:\n            close_log.append(f'{self.mode}:finally')\n\nasync def make_client(value):\n    await asyncio.sleep(0)\n    return Client(value)\n",
             c"<sifr-typed-async>",
             c"__sifr_typed_async__",
         )
@@ -252,6 +437,51 @@ fn install_module() {
             .expect("typed module should install");
     })
     .expect("runtime should attach");
+}
+
+fn close_client(mode: &str) -> ObjectHandle {
+    attach(|py| {
+        let module = py.import(MODULE).expect("typed module should import");
+        let object = module
+            .getattr("CloseClient")
+            .expect("CloseClient should resolve")
+            .call1((mode,))
+            .expect("CloseClient should construct");
+        super::object_ops::store_object(object.unbind().into())
+    })
+    .expect("runtime should attach")
+    .expect("close client should store")
+}
+
+fn close_events() -> Vec<String> {
+    attach(|py| {
+        py.import(MODULE)?
+            .getattr("close_log")?
+            .extract::<Vec<String>>()
+    })
+    .expect("runtime should attach")
+    .expect("close log should extract")
+}
+
+fn wait_for_typed_submission() {
+    for _ in 0..2_000 {
+        if async_runtime_diagnostics().is_ok_and(|diagnostics| diagnostics.active_submissions == 1)
+        {
+            return;
+        }
+        std::thread::yield_now();
+    }
+    panic!("typed submission did not register");
+}
+
+fn wait_for_runtime_stopping() {
+    for _ in 0..2_000 {
+        if async_runtime_diagnostics().is_ok_and(|diagnostics| diagnostics.stopping) {
+            return;
+        }
+        std::thread::yield_now();
+    }
+    panic!("owned asyncio runtime did not enter stopping state");
 }
 
 fn shutdown_typed_runtime() {
