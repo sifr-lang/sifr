@@ -164,3 +164,27 @@ fn async_python_context_converts_enter_failures_to_the_active_error_type() {
     );
     assert!(rendered.contains("conversion_error_0.into())"));
 }
+
+#[test]
+fn async_python_context_resumes_parent_cancellation_after_enter_failure() {
+    let mut emitter = emitter();
+    let lowered = emitter
+        .try_lower_async_with_stmt_for_ir(&kind(class_type("PythonError")), None, &[])
+        .expect("lowering should succeed")
+        .expect("Python async context should lower");
+    let rendered = crate::render_stmts(&[lowered]);
+    let enter_failure = rendered
+        .split("Err(error) =>")
+        .nth(1)
+        .and_then(|tail| {
+            tail.split("let __sifr_python_async_context_conversion_0")
+                .next()
+        })
+        .expect("generated enter-failure arm");
+
+    assert!(enter_failure.contains("notification().is_notified()"));
+    assert!(enter_failure.contains("release_and_resume_parent()"));
+    assert!(enter_failure.contains("tokio::task::yield_now().await"));
+    assert!(enter_failure.contains("SifrPythonAsyncContextError"));
+    assert!(enter_failure.contains("return Err((error).into());"));
+}

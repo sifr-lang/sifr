@@ -70,6 +70,7 @@ impl RustEmitter {
 
         let internal_error = mapped_internal_error(active_error_type);
         let enter_error = mapped_result_error(enter_error_type);
+        let resume_parent_cancellation = resume_parent_cancellation(&names.scope);
         let normal_exit = normal_exit(&names, exit_error_type);
         let conversion_exit = sifr_error_exit(
             &names,
@@ -127,6 +128,10 @@ let {entered_raw} = match __SIFR_TASK_CANCELLATION.scope(
     Ok(value) => value,
     Err(error) => {{
         sifr_runtime::python::poison_object({manager_name}.__sifr_python_object);
+        if {scope}.notification().is_notified() {{
+            {resume_parent_cancellation}
+            return Err({internal_error});
+        }}
         return Err(({enter_error}).into());
     }},
 }};
@@ -181,16 +186,7 @@ match {outcome} {{
                 &{cleanup_error},
             ),
         }}
-        match {scope}.release_and_resume_parent() {{
-            sifr_runtime::cancellation::CancellationResume::Invoked
-            | sifr_runtime::cancellation::CancellationResume::AlreadyResumed => {{
-                tokio::task::yield_now().await;
-            }},
-            sifr_runtime::cancellation::CancellationResume::NotRequested
-            | sifr_runtime::cancellation::CancellationResume::ExactClaimActive
-            | sifr_runtime::cancellation::CancellationResume::FallbackUnavailable
-            | sifr_runtime::cancellation::CancellationResume::StateUnavailable => {{}},
-        }}
+        {resume_parent_cancellation}
         return Err({internal_error});
     }},
 }}
@@ -211,9 +207,25 @@ drop({scope});
             cleanup_carrier = names.cleanup_carrier,
             cleanup_result = names.cleanup_result,
             cleanup_error = names.cleanup_error,
+            resume_parent_cancellation = resume_parent_cancellation,
         );
         Ok(Some(RustStmt::Expr(RustExpr::Ident(rendered))))
     }
+}
+
+fn resume_parent_cancellation(scope: &str) -> String {
+    format!(
+        r#"match {scope}.release_and_resume_parent() {{
+    sifr_runtime::cancellation::CancellationResume::Invoked
+    | sifr_runtime::cancellation::CancellationResume::AlreadyResumed => {{
+        tokio::task::yield_now().await;
+    }},
+    sifr_runtime::cancellation::CancellationResume::NotRequested
+    | sifr_runtime::cancellation::CancellationResume::ExactClaimActive
+    | sifr_runtime::cancellation::CancellationResume::FallbackUnavailable
+    | sifr_runtime::cancellation::CancellationResume::StateUnavailable => {{}},
+}}"#
+    )
 }
 
 struct AsyncContextNames {
