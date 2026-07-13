@@ -8,8 +8,9 @@ a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M6 are
 implemented, locally validated, and linked below; M7 is in progress with its
 frontend-contract, owned-loop, cooperative-cancellation-carrier,
-cancellation-aware-supervisor/ordered-shutdown, and typed-async-wrapper waves
-merged, while later milestones are not yet implemented.
+cancellation-aware-supervisor/ordered-shutdown, typed-async-wrapper, and
+consuming-async-close-lifecycle waves merged, while later milestones are not
+yet implemented.
 Milestones sequence delivery; they do not create reduced language versions,
 temporary public contracts, dual authorities, or alternate lowering paths.
 
@@ -568,7 +569,8 @@ Implementation waves (one locally validated and reviewed PR per wave):
     full await without moving raw Python pointers across threads.
   - Prove two concurrent typed wrappers observe the same loop/thread identity,
     while the syntax remains gated until cancellation and cleanup are complete.
-- [ ] Complete consuming async-close lifecycle behind the public gate:
+- [x] Complete consuming async-close lifecycle behind the public gate —
+  [PR #2966](https://github.com/sifr-lang/sifr/pull/2966):
   - Require a consuming `@python.coroutine(Self.<member>)` close declaration for
     `cleanup=async_close`; transfer exclusive ownership before submission and
     close exactly once.
