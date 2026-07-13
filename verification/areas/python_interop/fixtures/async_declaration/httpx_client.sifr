@@ -28,7 +28,7 @@ async def loop_identity() -> Result[str, PythonError]: ...
 async def close_count() -> Result[int, PythonError]: ...
 
 
-async def main() -> Result[None, PythonError]:
+async def main() -> Result[None, Error]:
     try:
         first_identity: str = await loop_identity()
         second_identity: str = await loop_identity()

@@ -148,11 +148,44 @@ impl RustEmitter {
         let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
             return Ok(false);
         };
+        let lowered = self.coerce_raised_error_for_ir(value, lowered);
         self.push_captured_stmt(&RustStmt::Return(Some(crate::RustExpr::FnCall {
             func: Box::new(crate::RustExpr::Path(vec!["Err".to_string()])),
             args: vec![lowered],
         })));
         Ok(true)
+    }
+
+    pub(crate) fn coerce_raised_error_for_ir(
+        &self,
+        value: &HirExpr,
+        lowered: RustExpr,
+    ) -> RustExpr {
+        let target = self
+            .try_closure_error_type_info
+            .last()
+            .and_then(Option::as_ref)
+            .or_else(|| {
+                let Type::Result(_, error) = self.current_return_type.as_ref()?.resolve_alias()
+                else {
+                    return None;
+                };
+                Some(error.as_ref())
+            });
+        let Some(target) = target else {
+            return lowered;
+        };
+        let source_name = crate::render_type(&crate::sifr_type_to_rust_type(value.ty()));
+        let target_name = crate::render_type(&crate::sifr_type_to_rust_type(target));
+        if source_name == target_name {
+            lowered
+        } else {
+            RustExpr::MethodCall {
+                receiver: Box::new(lowered),
+                method: "into".to_string(),
+                args: Vec::new(),
+            }
+        }
     }
 
     pub(crate) fn try_lower_structured_if_stmt(

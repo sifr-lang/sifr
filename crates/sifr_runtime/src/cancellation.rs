@@ -1,6 +1,9 @@
 //! Cooperative cancellation handoff between generated tasks and foreign runtimes.
 
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::{Arc, Mutex};
+use std::task::{Context, Poll, Waker};
 
 pub type CancellationHook = Arc<dyn Fn() + Send + Sync + 'static>;
 
@@ -61,6 +64,36 @@ pub enum CancellationResume {
     ExactClaimActive,
     FallbackUnavailable,
     StateUnavailable,
+}
+
+/// Sticky notification used by generated cancellation races. Once notified,
+/// every current and future waiter observes readiness.
+#[derive(Clone, Default)]
+pub struct StickyCancellation {
+    state: Arc<Mutex<StickyCancellationState>>,
+}
+
+#[derive(Default)]
+struct StickyCancellationState {
+    notified: bool,
+    waker: Option<Waker>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CancellationScopeError {
+    CancelledBeforeClaim,
+    AlreadyClaimed,
+    StateUnavailable,
+    ChildFallbackUnavailable,
+}
+
+/// Parent/child cancellation claim used by generated async cleanup scopes.
+#[must_use = "dropping the scope lease releases its parent cancellation claim"]
+pub struct CancellationScopeLease {
+    parent: CancellationCarrier,
+    child: CancellationCarrier,
+    notification: StickyCancellation,
+    parent_claim: Option<CancellationClaimLease>,
 }
 
 impl CancellationCarrier {
@@ -164,6 +197,103 @@ impl CancellationCarrier {
     }
 }
 
+impl StickyCancellation {
+    #[must_use]
+    pub fn is_notified(&self) -> bool {
+        self.state.lock().map_or(true, |state| state.notified)
+    }
+
+    pub fn notify(&self) {
+        let waker = match self.state.lock() {
+            Ok(mut state) => {
+                if state.notified {
+                    return;
+                }
+                state.notified = true;
+                state.waker.take()
+            }
+            Err(_) => return,
+        };
+        if let Some(waker) = waker {
+            waker.wake();
+        }
+    }
+}
+
+impl Future for StickyCancellation {
+    type Output = ();
+
+    fn poll(self: Pin<&mut Self>, context: &mut Context<'_>) -> Poll<Self::Output> {
+        let Ok(mut state) = self.state.lock() else {
+            return Poll::Ready(());
+        };
+        if state.notified {
+            return Poll::Ready(());
+        }
+        if state
+            .waker
+            .as_ref()
+            .is_none_or(|waker| !waker.will_wake(context.waker()))
+        {
+            state.waker = Some(context.waker().clone());
+        }
+        Poll::Pending
+    }
+}
+
+impl CancellationScopeLease {
+    pub fn claim(parent: &CancellationCarrier) -> Result<Self, CancellationScopeError> {
+        let child = CancellationCarrier::new();
+        let notification = StickyCancellation::default();
+        let notify = notification.clone();
+        match child.bind_fallback(Arc::new(move || notify.notify())) {
+            CancellationBind::Bound => {}
+            CancellationBind::AlreadyBound | CancellationBind::InvokedPendingCancellation => {
+                return Err(CancellationScopeError::ChildFallbackUnavailable);
+            }
+            CancellationBind::StateUnavailable => {
+                return Err(CancellationScopeError::StateUnavailable);
+            }
+        }
+        let requested_child = child.clone();
+        let parent_claim = parent
+            .claim(Arc::new(move || {
+                let _outcome = requested_child.request_cancel();
+            }))
+            .map_err(|error| match error {
+                CancellationClaimError::CancelledBeforeClaim => {
+                    CancellationScopeError::CancelledBeforeClaim
+                }
+                CancellationClaimError::AlreadyClaimed => CancellationScopeError::AlreadyClaimed,
+                CancellationClaimError::StateUnavailable => {
+                    CancellationScopeError::StateUnavailable
+                }
+            })?;
+        Ok(Self {
+            parent: parent.clone(),
+            child,
+            notification,
+            parent_claim: Some(parent_claim),
+        })
+    }
+
+    #[must_use]
+    pub fn child(&self) -> &CancellationCarrier {
+        &self.child
+    }
+
+    #[must_use]
+    pub fn notification(&self) -> StickyCancellation {
+        self.notification.clone()
+    }
+
+    /// Release the exact parent claim before resuming its native fallback.
+    pub fn release_and_resume_parent(mut self) -> CancellationResume {
+        drop(self.parent_claim.take());
+        self.parent.resume_fallback_after_claim()
+    }
+}
+
 impl Drop for CancellationClaimLease {
     fn drop(&mut self) {
         let mut state = self
@@ -192,6 +322,7 @@ mod tests {
     use super::*;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Barrier;
+    use std::task::{Wake, Waker};
 
     fn counting_hook(counter: &Arc<AtomicUsize>) -> CancellationHook {
         let counter = Arc::clone(counter);
@@ -297,6 +428,115 @@ mod tests {
             carrier.resume_fallback_after_claim(),
             CancellationResume::FallbackUnavailable
         );
+    }
+
+    #[test]
+    fn cancellation_scope_routes_parent_request_through_child_sticky_fallback() {
+        let parent = CancellationCarrier::new();
+        let parent_fallback_calls = Arc::new(AtomicUsize::new(0));
+        assert_eq!(
+            parent.bind_fallback(counting_hook(&parent_fallback_calls)),
+            CancellationBind::Bound
+        );
+        let scope = CancellationScopeLease::claim(&parent).expect("scope should claim parent");
+        let notification = scope.notification();
+
+        assert_eq!(parent.request_cancel(), CancellationRequest::Claimed);
+        assert!(notification.is_notified());
+        assert_eq!(parent_fallback_calls.load(Ordering::SeqCst), 0);
+        assert_eq!(
+            scope.release_and_resume_parent(),
+            CancellationResume::Invoked
+        );
+        assert_eq!(parent_fallback_calls.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn cancellation_scope_waits_for_child_exact_claim_before_notifying() {
+        let parent = CancellationCarrier::new();
+        let _bound = parent.bind_fallback(Arc::new(|| {}));
+        let scope = CancellationScopeLease::claim(&parent).expect("scope should claim parent");
+        let exact_calls = Arc::new(AtomicUsize::new(0));
+        let child_claim = scope
+            .child()
+            .claim(counting_hook(&exact_calls))
+            .expect("Python await should claim child");
+
+        assert_eq!(parent.request_cancel(), CancellationRequest::Claimed);
+        assert_eq!(exact_calls.load(Ordering::SeqCst), 1);
+        assert!(!scope.notification().is_notified());
+        drop(child_claim);
+        assert_eq!(
+            scope.child().resume_fallback_after_claim(),
+            CancellationResume::Invoked
+        );
+        assert!(scope.notification().is_notified());
+    }
+
+    struct CountingWake(AtomicUsize);
+
+    impl Wake for CountingWake {
+        fn wake(self: Arc<Self>) {
+            self.0.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    #[test]
+    fn sticky_notification_wakes_latest_waiter_and_remains_ready() {
+        let notification = StickyCancellation::default();
+        let wake = Arc::new(CountingWake(AtomicUsize::new(0)));
+        let waker = Waker::from(Arc::clone(&wake));
+        let mut context = Context::from_waker(&waker);
+        let mut first = notification.clone();
+        assert!(Pin::new(&mut first).poll(&mut context).is_pending());
+
+        notification.notify();
+        assert_eq!(wake.0.load(Ordering::SeqCst), 1);
+        assert!(Pin::new(&mut first).poll(&mut context).is_ready());
+        let mut late = notification.clone();
+        assert!(Pin::new(&mut late).poll(&mut context).is_ready());
+    }
+
+    #[test]
+    fn cancellation_scope_rejects_cancelled_parent_before_acquisition() {
+        let parent = CancellationCarrier::new();
+        assert_eq!(
+            parent.request_cancel(),
+            CancellationRequest::FallbackPending
+        );
+        assert!(matches!(
+            CancellationScopeLease::claim(&parent),
+            Err(CancellationScopeError::CancelledBeforeClaim)
+        ));
+    }
+
+    #[test]
+    fn nested_cancellation_scopes_unwind_in_lexical_lifo_order() {
+        let root = CancellationCarrier::new();
+        let root_fallbacks = Arc::new(AtomicUsize::new(0));
+        assert_eq!(
+            root.bind_fallback(counting_hook(&root_fallbacks)),
+            CancellationBind::Bound
+        );
+        let outer = CancellationScopeLease::claim(&root).expect("outer scope");
+        let inner = CancellationScopeLease::claim(outer.child()).expect("inner scope");
+
+        assert_eq!(root.request_cancel(), CancellationRequest::Claimed);
+        assert!(inner.notification().is_notified());
+        assert!(!outer.notification().is_notified());
+        assert_eq!(root_fallbacks.load(Ordering::SeqCst), 0);
+
+        assert_eq!(
+            inner.release_and_resume_parent(),
+            CancellationResume::Invoked
+        );
+        assert!(outer.notification().is_notified());
+        assert_eq!(root_fallbacks.load(Ordering::SeqCst), 0);
+        assert_eq!(
+            outer.release_and_resume_parent(),
+            CancellationResume::Invoked
+        );
+        assert_eq!(root_fallbacks.load(Ordering::SeqCst), 1);
     }
 
     #[test]

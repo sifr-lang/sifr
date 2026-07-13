@@ -8,6 +8,9 @@ use std::sync::{Mutex, MutexGuard};
 
 mod arrow_ops;
 mod async_cancellation;
+mod async_context;
+#[cfg(test)]
+mod async_context_tests;
 mod async_declaration;
 #[cfg(test)]
 mod async_declaration_tests;
@@ -39,6 +42,10 @@ mod shutdown_hooks;
 pub use arrow_ops::{
     arrow_array, arrow_capsule_names, arrow_schema, arrow_stream, release_arrow, ArrowHandle,
     PythonArrowCapsuleMetadata,
+};
+#[doc(hidden)]
+pub use async_context::{
+    submit_async_context_enter, submit_async_context_exit, PythonAsyncExitCause,
 };
 #[doc(hidden)]
 pub use async_declaration::submit_async_declaration;
@@ -83,9 +90,9 @@ pub use object_ops::{
     copy_tuple_bool, copy_tuple_bytes, copy_tuple_float, copy_tuple_i32, copy_tuple_int,
     copy_tuple_str, copy_tuple_u8, enter_context, exit_context, expect_instance, from_bool,
     from_bytes, from_dict_str, from_float, from_int, from_list, from_none, from_record, from_str,
-    from_tuple, get_attr, get_item_str, import_module, resolve_target, temporary_argument_handle,
-    to_bool, to_bytes, to_float, to_i16, to_i32, to_i64, to_i8, to_int, to_isize, to_none, to_str,
-    to_u16, to_u32, to_u64, to_u8, to_usize, ObjectHandle,
+    from_tuple, get_attr, get_item_str, import_module, poison_object, resolve_target,
+    temporary_argument_handle, to_bool, to_bytes, to_float, to_i16, to_i32, to_i64, to_i8, to_int,
+    to_isize, to_none, to_str, to_u16, to_u32, to_u64, to_u8, to_usize, ObjectHandle,
 };
 pub use opaque_ops::semantic_close;
 pub use python_error::PythonError;

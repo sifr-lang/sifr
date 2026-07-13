@@ -337,7 +337,8 @@ pub(super) fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), Codegen
                 sifr_ir::HirAsyncWithKind::TaskTimeout { duration } => {
                     validate_expr_lowering_shape(duration)?;
                 }
-                sifr_ir::HirAsyncWithKind::UserDefined { context, .. } => {
+                sifr_ir::HirAsyncWithKind::UserDefined { context, .. }
+                | sifr_ir::HirAsyncWithKind::Python { context, .. } => {
                     validate_expr_lowering_shape(context)?;
                 }
                 sifr_ir::HirAsyncWithKind::TaskGroup {

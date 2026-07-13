@@ -1,5 +1,6 @@
-use super::{queries, HirStmt, RustEmitter, RustExpr, RustStmt, Type};
+use crate::hir_analysis::queries;
 use crate::python_interop_direct::{mapped_try, output_value_expr, runtime_call};
+use crate::{HirStmt, RustEmitter, RustExpr, RustStmt, Type};
 use crate::{RustLiteral, RustMatchArm, RustType, RustWithItem};
 use sifr_ir::{HirWithItem, HirWithItemKind};
 
@@ -337,7 +338,7 @@ impl RustEmitter {
         ])
     }
 
-    fn context_return_expression_type(&self, error_type: &str) -> String {
+    pub(super) fn context_return_expression_type(&self, error_type: &str) -> String {
         if self.try_closure_depth == 0 {
             return "()".to_string();
         }
@@ -520,7 +521,10 @@ impl RustEmitter {
     }
 }
 
-fn rewrite_context_control_flow(stmts: Vec<RustStmt>, loop_depth: usize) -> Vec<RustStmt> {
+pub(super) fn rewrite_context_control_flow(
+    stmts: Vec<RustStmt>,
+    loop_depth: usize,
+) -> Vec<RustStmt> {
     stmts
         .into_iter()
         .map(|stmt| match stmt {
@@ -606,7 +610,7 @@ fn is_error_return(expr: &RustExpr) -> bool {
     )
 }
 
-fn classify_cause_kind(error_type: Option<&Type>, rendered: &str) -> &'static str {
+pub(super) fn classify_cause_kind(error_type: Option<&Type>, rendered: &str) -> &'static str {
     let class_name = match error_type.map(Type::resolve_alias) {
         Some(Type::Class { name, .. }) => name.as_str(),
         _ => rendered,
@@ -669,7 +673,3 @@ fn simple_arm(pattern: &str, body: Vec<RustStmt>) -> RustMatchArm {
         body,
     }
 }
-
-#[cfg(test)]
-#[path = "python_context_tests.rs"]
-mod tests;

@@ -13,8 +13,9 @@ use super::{
     module_uses_spawn_cpu, module_uses_task_scope, module_uses_task_scope_offload,
     module_uses_task_scope_process, module_uses_task_scope_spawn_cpu, module_uses_task_sleep,
     module_uses_timeout_result_type, replace_parallel_runtime_items,
-    replace_sync_channel_runtime_items, sifr_type_to_rust_type, sync_channel_runtime_needed,
-    Renderer, RustEmitter, RustExpr, RustFile, RustItem, RustLiteral, BUILTIN_ERROR_CLASSES,
+    replace_sync_channel_runtime_items, scope_async_main_cancellation, sifr_type_to_rust_type,
+    sync_channel_runtime_needed, Renderer, RustEmitter, RustExpr, RustFile, RustItem, RustLiteral,
+    BUILTIN_ERROR_CLASSES,
 };
 use crate::error_refs::collect_referenced_builtin_error_classes;
 use crate::ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
@@ -395,6 +396,8 @@ pub fn generate_rust_with_stdlib_for_module(
     let uses_failure_type = module_uses_failure_type(module);
     let uses_cancellation_error_type = module_uses_cancellation_error_type(module);
     let uses_async_exit_cause_type = module_uses_async_exit_cause_type(module);
+    let uses_async_python =
+        crate::python_interop_common::module_uses_async_python_declaration(module);
     let uses_timeout_result_type = module_uses_timeout_result_type(module);
     let uses_async_generator_type = module_uses_async_generator_type(module);
     let mut referenced_error_classes = collect_referenced_builtin_error_classes(
@@ -517,6 +520,9 @@ pub fn generate_rust_with_stdlib_for_module(
             }
         }
     }
+    if uses_async_python && referenced_error_classes.contains("Error") {
+        preamble_items.push(build_error_into_error_impl("PythonError"));
+    }
     if uses_task_scope || uses_join_set || uses_failure_type {
         preamble_items.extend(build_failure_type_items());
     }
@@ -540,8 +546,6 @@ pub fn generate_rust_with_stdlib_for_module(
             preamble_items.extend(build_file_handle_struct_items());
         }
     }
-    let uses_async_python =
-        crate::python_interop_common::module_uses_async_python_declaration(module);
     if uses_task_scope || uses_join_set || uses_async_python {
         preamble_items.extend(build_task_cancellation_items());
     }
@@ -587,6 +591,9 @@ pub fn generate_rust_with_stdlib_for_module(
     }
     if !emitter.body_items.is_empty() {
         assembled_body_items.extend(emitter.body_items.clone());
+    }
+    if uses_async_python {
+        scope_async_main_cancellation(&mut assembled_body_items);
     }
     remove_trivial_clones_in_items(&mut assembled_body_items);
     let has_async_main_entrypoint = annotate_async_main_entrypoint(&mut assembled_body_items);
