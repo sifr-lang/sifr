@@ -76,10 +76,11 @@ pub use crate::python::{
     resolved_python_bridge_package_key, resolved_python_bridge_runtime_package,
     validate_python_bridge_inventory_manifest, validate_python_environment_probe,
     write_python_bridge_inventory, PythonBridgeImport, PythonBridgeInventory, PythonBridgeModule,
-    PythonEnvironmentProbe, PythonEnvironmentProbeRequest, PythonRequirementContribution,
-    PythonRequirementKind, ResolvedPythonBridgeGraph, ResolvedPythonBridgeImport,
-    ResolvedPythonBridgeModule, ResolvedPythonBridgePackage, ResolvedPythonEnvironment,
-    PYTHON_BRIDGE_INVENTORY, PYTHON_BRIDGE_ROOT, PYTHON_BRIDGE_RUNTIME_ROOT,
+    PythonDistributionProbe, PythonEnvironmentProbe, PythonEnvironmentProbeRequest,
+    PythonRequirementContribution, PythonRequirementKind, ResolvedPythonBridgeGraph,
+    ResolvedPythonBridgeImport, ResolvedPythonBridgeModule, ResolvedPythonBridgePackage,
+    ResolvedPythonEnvironment, PYTHON_BRIDGE_INVENTORY, PYTHON_BRIDGE_ROOT,
+    PYTHON_BRIDGE_RUNTIME_ROOT,
 };
 pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
 

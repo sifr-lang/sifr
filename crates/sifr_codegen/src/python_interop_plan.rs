@@ -5,6 +5,8 @@ use std::fmt::Write;
 
 use crate::hir_analysis::traversal::{walk_stmts, TraversalConfig};
 
+const PYTHON_BINDING_CONTRACT_VERSION: &str = "sifr-python-binding-v1";
+
 /// Build-time authority for declaration-first Python probing and wrapper inputs.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct PythonInteropPlan {
@@ -176,6 +178,9 @@ fn record_expansion_functions(modules: &[(Option<&str>, &HirModule)]) -> BTreeSe
 }
 
 pub(crate) fn push_python_plan_cache_key(out: &mut String, plan: &PythonInteropPlan) {
+    out.push_str("python.binding_contract=");
+    out.push_str(PYTHON_BINDING_CONTRACT_VERSION);
+    out.push('\n');
     out.push_str("python.declarations=");
     out.push_str(&plan.declarations.len().to_string());
     out.push('\n');
@@ -191,6 +196,30 @@ pub(crate) fn push_python_plan_cache_key(out: &mut String, plan: &PythonInteropP
             out.push_str(&target.dotted());
             out.push('\n');
         }
+        out.push_str("python.declaration_kind=");
+        let _ = write!(out, "{:?}", declaration.declaration.kind);
+        out.push('\n');
+        out.push_str("python.effect=");
+        let _ = write!(out, "{:?}", declaration.declaration.effect);
+        out.push('\n');
+        out.push_str("python.cleanup=");
+        let _ = write!(out, "{:?}", declaration.declaration.cleanup);
+        out.push('\n');
+        out.push_str("python.consumes_receiver=");
+        out.push_str(if declaration.declaration.consumes_receiver {
+            "yes"
+        } else {
+            "no"
+        });
+        out.push('\n');
+        for parameter_type in &declaration.parameter_types {
+            out.push_str("python.parameter_type=");
+            let _ = write!(out, "{parameter_type}");
+            out.push('\n');
+        }
+        out.push_str("python.return_type=");
+        let _ = write!(out, "{}", declaration.return_type);
+        out.push('\n');
         for parameter in &declaration.declaration.parameters {
             out.push_str("python.param=");
             out.push_str(&parameter.name);
@@ -201,6 +230,12 @@ pub(crate) fn push_python_plan_cache_key(out: &mut String, plan: &PythonInteropP
                 "omit"
             } else {
                 "pass"
+            });
+            out.push(':');
+            out.push_str(if parameter.has_default {
+                "default"
+            } else {
+                "required"
             });
             out.push('\n');
         }

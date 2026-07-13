@@ -187,17 +187,28 @@ mod tests {
             resolved_package_key: "abc123".to_string(),
             runtime_package: "__sifr_bridge__.p_abc123".to_string(),
             inventory_digest: "inventory-a".to_string(),
-            modules: vec![ResolvedPythonBridgeModule {
-                module: "adapter".to_string(),
-                runtime_module: "__sifr_bridge__.p_abc123.adapter".to_string(),
-                source_path: "src/python_bridges/adapter.py".to_string(),
-                source_digest: "source-a".to_string(),
-                source: "def value():\n    return 1\n".to_string(),
-                is_package: false,
-                imports: vec![ResolvedPythonBridgeImport::ThirdParty {
-                    root: "requests".to_string(),
-                }],
-            }],
+            modules: vec![
+                ResolvedPythonBridgeModule {
+                    module: "adapter".to_string(),
+                    runtime_module: "__sifr_bridge__.p_abc123.adapter".to_string(),
+                    source_path: "src/python_bridges/adapter.py".to_string(),
+                    source_digest: "source-a".to_string(),
+                    source: "def value():\n    return 1\n".to_string(),
+                    is_package: false,
+                    imports: vec![ResolvedPythonBridgeImport::ThirdParty {
+                        root: "requests".to_string(),
+                    }],
+                },
+                ResolvedPythonBridgeModule {
+                    module: "unused".to_string(),
+                    runtime_module: "__sifr_bridge__.p_abc123.unused".to_string(),
+                    source_path: "src/python_bridges/unused.py".to_string(),
+                    source_digest: "source-unused".to_string(),
+                    source: "VALUE = 2\n".to_string(),
+                    is_package: false,
+                    imports: Vec::new(),
+                },
+            ],
         };
         let graph = ResolvedPythonBridgeGraph {
             packages: vec![package],
@@ -210,6 +221,7 @@ mod tests {
         };
 
         let generated = apply_package_python_bridge_metadata(base_project(), Some(&graph));
+        assert!(generated.interop.python.declarations.is_empty());
         let bridge = &generated.interop.python.bridge_packages[0];
 
         assert_eq!(bridge.runtime_package, "__sifr_bridge__.p_abc123");
@@ -227,5 +239,8 @@ mod tests {
         assert_eq!(sources[1].module, "__sifr_bridge__.p_abc123");
         assert_eq!(sources[2].filename, "<__sifr_bridge__.p_abc123.adapter>");
         assert_eq!(sources[2].source, "def value():\n    return 1\n");
+        assert!(sources
+            .iter()
+            .any(|source| source.module == "__sifr_bridge__.p_abc123.unused"));
     }
 }

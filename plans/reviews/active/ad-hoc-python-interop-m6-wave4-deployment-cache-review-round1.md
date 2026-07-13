@@ -1,0 +1,8 @@
+The M6 wave 4 implementation meets the four contract dimensions:
+
+- **Embedding independent of declaration reachability**: `resolve_python_bridge_graph` selects packages via normal dependency traversal (dev-filtered), iterates the full inventory per package, and `apply_package_python_bridge_metadata` passes every module to `bridge_packages` / `embedded_bridge_sources`. The extended unit test proves an "unused" module still flows through and its digest and imports participate in cache identity.
+- **Fingerprint coverage**: probe struct now carries resolved distribution name/version; probe digest (which includes SOABI/extension suffixes/pointer width/impl version/platform/machine + distributions) is threaded into `PackageBuildCacheInputs`, the driver's `cache_key_fragment`, and the generated-artifact `binary_project_cache_key`. `push_python_plan_cache_key` now also emits `python.binding_contract=sifr-python-binding-v1`, declaration kind/effect/cleanup/consumes_receiver, per-parameter `default/required`, and authoritative `parameter_type`/`return_type` — alongside the pre-existing bridge inventory/source digests and package identity.
+- **Hermetic archive/unpack/build/run**: the new `archived_package_python_bridge_builds_and_runs_without_extraction` test archives via `cargo package`, unpacks, asserts the archived inventory, removes the source checkout, builds, removes bridge sources, then runs the binary with CWD and `TMPDIR` inside a `0o555` directory and asserts the run root remains empty.
+- **Single authority / no fallback / no panics / <900 lines**: no new branches or fallback paths; new probe-side code uses infallible writes and returns structured errors; largest touched file is 875 lines.
+
+SATISFIED

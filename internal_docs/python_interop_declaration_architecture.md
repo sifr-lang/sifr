@@ -422,6 +422,20 @@ generated binaries embed only the resolved graph's bridge table. Bridge source
 digests, package identity, imported distribution versions, interpreter ABI,
 and the binding contract participate in cache identity.
 
+The environment probe resolves each required import root to its sorted owning
+distribution names and installed versions. Those values are serialized beside
+SOABI, extension suffixes, pointer width, implementation version, platform,
+and machine in the canonical probe digest. The package build cache consumes
+that digest, and the driver carries it into the generated-artifact key.
+
+The interop plan separately fingerprints the versioned Python binding contract,
+declaration kind and effect, cleanup and receiver-consumption policy, complete
+parameter call shape, and authoritative Sifr parameter and return types. Bridge
+package identity, inventory and source digests, runtime names, and classified
+imports remain in the same plan fingerprint. Source bytes are accepted for
+embedding only after matching their inventoried digest, so the composed package,
+driver, and generated-artifact cache identities cover every embedded input.
+
 Bridge source is parsed for ordinary static `import` and `from ... import ...`
 requirements. Dynamic import calls are rejected in package bridges because they
 cannot participate in hermetic requirement inventory. Root-application raw

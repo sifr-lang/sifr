@@ -344,6 +344,7 @@ fn probe_rejects_missing_declared_import_with_pyenv_0008() {
         root: "numpy".to_string(),
         ok: false,
         origin: None,
+        distributions: Vec::new(),
         error: Some("module spec not found".to_string()),
     }];
 
@@ -364,6 +365,7 @@ fn probe_rejects_native_import_failure_with_pyenv_0009() {
         root: "numpy".to_string(),
         ok: false,
         origin: None,
+        distributions: Vec::new(),
         error: Some("ImportError: broken extension".to_string()),
     }];
 

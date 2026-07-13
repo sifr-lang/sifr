@@ -59,8 +59,52 @@ fn plan_retains_deferred_probe_requirements_record_constraint_and_cache_identity
     assert!(plan.python.target_probes[0].requires_inspectable_signature);
     let cache_key = plan.cache_key_fragment();
     assert!(cache_key.contains("python.target=json.dumps"));
+    assert!(cache_key.contains("python.binding_contract=sifr-python-binding-v1"));
+    assert!(cache_key.contains("python.return_type=None"));
     assert!(cache_key.contains("python.required_import=json"));
     assert!(cache_key.contains("python.probe=json.dumps:inspectable:callable:planned"));
+}
+
+#[test]
+fn python_cache_identity_changes_with_authoritative_sifr_types() {
+    let declaration = PythonInteropDeclaration {
+        kind: PythonInteropDecoratorKind::Function,
+        target: Some(PythonTargetPath {
+            segments: vec!["json".to_string(), "loads".to_string()],
+            span: TextRange::default(),
+        }),
+        span: TextRange::default(),
+        effect: PythonInteropEffect::BlockingIo,
+        cleanup: None,
+        consumes_receiver: false,
+        parameters: Vec::new(),
+        required_import_root: Some("json".to_string()),
+    };
+    let mut string_result = function("loads", Vec::new(), vec![declaration.clone()]);
+    string_result.return_type = Type::Str;
+    let mut integer_result = function("loads", Vec::new(), vec![declaration]);
+    integer_result.return_type = Type::Int;
+    let string_module = module_with_functions(vec![string_result]);
+    let integer_module = module_with_functions(vec![integer_result]);
+
+    let string_plan = interop_build_plan_for_named_modules([(Some("main"), &string_module)]);
+    let integer_plan = interop_build_plan_for_named_modules([(Some("main"), &integer_module)]);
+
+    assert_ne!(
+        string_plan.cache_key_fragment(),
+        integer_plan.cache_key_fragment()
+    );
+}
+
+fn module_with_functions(functions: Vec<HirFunction>) -> HirModule {
+    HirModule {
+        functions,
+        classes: Vec::new(),
+        imports: Vec::new(),
+        constants: Vec::new(),
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    }
 }
 
 fn function(

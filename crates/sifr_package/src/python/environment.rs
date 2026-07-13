@@ -68,7 +68,14 @@ pub struct PythonImportProbe {
     pub root: String,
     pub ok: bool,
     pub origin: Option<String>,
+    pub distributions: Vec<PythonDistributionProbe>,
     pub error: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PythonDistributionProbe {
+    pub name: String,
+    pub version: String,
 }
 
 pub fn resolve_python_environment(

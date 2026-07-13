@@ -174,6 +174,7 @@ const PROBE_SCRIPT: &str = r#"
 import hashlib
 import importlib
 import importlib.machinery
+import importlib.metadata
 import importlib.util
 import json
 import platform
@@ -202,18 +203,37 @@ def real(path):
     except OSError:
         return str(path)
 
+def distributions(root):
+    names = importlib.metadata.packages_distributions().get(root, [])
+    return [
+        {"name": name, "version": importlib.metadata.version(name)}
+        for name in sorted(set(names), key=str.casefold)
+    ]
+
 def import_probe(root, do_import):
     try:
         if do_import:
             module = importlib.import_module(root)
             origin = getattr(module, "__file__", None)
-            return {"root": root, "ok": True, "origin": real(origin) if origin else None, "error": None}
+            return {
+                "root": root,
+                "ok": True,
+                "origin": real(origin) if origin else None,
+                "distributions": distributions(root),
+                "error": None,
+            }
         spec = importlib.util.find_spec(root)
         if spec is None:
-            return {"root": root, "ok": False, "origin": None, "error": "module spec not found"}
-        return {"root": root, "ok": True, "origin": real(spec.origin) if spec.origin else None, "error": None}
+            return {"root": root, "ok": False, "origin": None, "distributions": [], "error": "module spec not found"}
+        return {
+            "root": root,
+            "ok": True,
+            "origin": real(spec.origin) if spec.origin else None,
+            "distributions": distributions(root),
+            "error": None,
+        }
     except BaseException as exc:
-        return {"root": root, "ok": False, "origin": None, "error": f"{type(exc).__name__}: {exc}"}
+        return {"root": root, "ok": False, "origin": None, "distributions": [], "error": f"{type(exc).__name__}: {exc}"}
 
 libdir = sysconfig.get_config_var("LIBDIR")
 ldlibrary = sysconfig.get_config_var("LDLIBRARY")
