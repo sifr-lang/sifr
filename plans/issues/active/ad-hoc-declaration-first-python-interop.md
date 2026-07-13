@@ -136,7 +136,7 @@ Implementation progress:
 - [x] M3 synchronous declaration core and complete call shapes — [PR #2934](https://github.com/sifr-lang/sifr/pull/2934)
 - [x] M4 recursive conversion and opaque lifecycle — [PR #2935](https://github.com/sifr-lang/sifr/pull/2935)
 - [x] M5 synchronous Python context managers — [PR #2942](https://github.com/sifr-lang/sifr/pull/2942)
-- [x] M6 hermetic package-local Python bridges
+- [x] M6 hermetic package-local Python bridges — [PR #2953](https://github.com/sifr-lang/sifr/pull/2953)
 - [ ] M7 owned asyncio runtime and async declarations
 - [ ] M8 async context managers
 - [ ] M9 typed callback lifetimes and dispatch
@@ -419,7 +419,7 @@ Implementation waves:
     inputs in package, driver, and generated-artifact caches.
   - Prove archive unpack/install/build/run uses only archived bridge inputs and
     the generated binary uses no writable extraction directory.
-- [x] Complete bridge evidence and milestone closure:
+- [x] Complete bridge evidence and milestone closure — [PR #2953](https://github.com/sifr-lang/sifr/pull/2953):
   - Cover loader-before-main ordering, first-position and post-mutation reserved
     resolution, collision rejection, sibling import rewriting, deterministic
     traceback filenames, cache invalidation, invalid syntax, rejected dynamic
