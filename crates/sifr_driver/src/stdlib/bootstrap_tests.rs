@@ -131,6 +131,35 @@ fn python_core_re_exports_preserve_callable_metadata() {
 }
 
 #[test]
+fn python_call_helpers_borrow_argument_collections() {
+    let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let functions = compiled
+        .defs
+        .functions
+        .get("sifr.python")
+        .expect("sifr.python functions should be exported");
+
+    for function_name in ["call", "call_attr"] {
+        let function = functions
+            .get(function_name)
+            .unwrap_or_else(|| panic!("sifr.python.{function_name} should be exported"));
+        for parameter_name in ["args", "kwargs"] {
+            let convention = function
+                .params
+                .iter()
+                .find_map(|(name, _, convention)| (name == parameter_name).then_some(*convention))
+                .unwrap_or_else(|| {
+                    panic!("sifr.python.{function_name} should export {parameter_name}")
+                });
+            assert!(
+                convention.is_shared_borrow(),
+                "sifr.python.{function_name} must borrow {parameter_name} so temporary argument lists clone their handles"
+            );
+        }
+    }
+}
+
+#[test]
 fn retained_public_declarations_export_typed_compiler_identity() {
     let compiled = compile_stdlib_uncached().expect("stdlib should compile");
     assert_eq!(
