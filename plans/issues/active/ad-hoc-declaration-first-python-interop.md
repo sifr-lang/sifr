@@ -7,8 +7,8 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M6 are
 implemented, locally validated, and linked below; M7 is in progress with its
-frontend-contract and owned-loop waves merged, while later milestones are not
-yet implemented.
+frontend-contract, owned-loop, and cooperative-cancellation-carrier waves
+merged, while later milestones are not yet implemented.
 Milestones sequence delivery; they do not create reduced language versions,
 temporary public contracts, dual authorities, or alternate lowering paths.
 
@@ -530,7 +530,8 @@ Implementation waves (one locally validated and reviewed PR per wave):
     owned-loop submission while preserving the raw API's synchronous
     `blocking_io` classification and explicit-offload requirement.
   - Prove repeated and concurrent raw calls use one loop/thread identity.
-- [ ] Land the cooperative cancellation carrier and direct task paths:
+- [x] Land the cooperative cancellation carrier and direct task paths —
+  [PR #2960](https://github.com/sifr-lang/sifr/pull/2960):
   - Replace the direct generated-task abort handle with a cancellation carrier
     for `task.cancel`, cancel-and-join, and timeout. At Python-await entry the
     submission atomically claims that carrier and registers its exact-task
