@@ -167,6 +167,72 @@ fn concurrent_close_joiners_release_captures_exactly_once() {
 }
 
 #[test]
+fn semantic_unregister_claim_excludes_runtime_unregister_and_delays_release() {
+    let _guard = test_guard();
+    let runtime_unregisters = Arc::new(AtomicUsize::new(0));
+    let runtime_unregisters_for_owner = Arc::clone(&runtime_unregisters);
+    let releases = Arc::new(AtomicUsize::new(0));
+    let releases_for_owner = Arc::clone(&releases);
+    let owner = CallbackOwnerState::new_retained_with_release(
+        move || {
+            runtime_unregisters_for_owner.fetch_add(1, Ordering::SeqCst);
+            Ok(())
+        },
+        move || {
+            releases_for_owner.fetch_add(1, Ordering::SeqCst);
+        },
+    )
+    .expect("owner should create");
+    let semantic_unregister = owner
+        .begin_owner_unregister()
+        .expect("claim should succeed")
+        .expect("semantic cleanup should claim unregister authority");
+
+    let shutdown_owner = owner.clone();
+    let shutdown_finished = Arc::new(AtomicUsize::new(0));
+    let shutdown_finished_in_thread = Arc::clone(&shutdown_finished);
+    let shutdown_started = Arc::new(Barrier::new(2));
+    let shutdown_started_in_thread = Arc::clone(&shutdown_started);
+    let shutdown_thread = std::thread::spawn(move || {
+        shutdown_started_in_thread.wait();
+        shutdown_owner
+            .shutdown_from_runtime()
+            .expect("runtime shutdown should join semantic unregister");
+        shutdown_finished_in_thread.store(1, Ordering::SeqCst);
+    });
+    shutdown_started.wait();
+    for _ in 0..100 {
+        assert!(!shutdown_thread.is_finished());
+        std::thread::yield_now();
+    }
+    assert_eq!(runtime_unregisters.load(Ordering::SeqCst), 0);
+    assert_eq!(releases.load(Ordering::SeqCst), 0);
+    assert_eq!(shutdown_finished.load(Ordering::SeqCst), 0);
+
+    drop(semantic_unregister);
+    shutdown_thread
+        .join()
+        .expect("runtime shutdown should finish");
+    assert_eq!(runtime_unregisters.load(Ordering::SeqCst), 0);
+    assert_eq!(releases.load(Ordering::SeqCst), 1);
+    assert_eq!(shutdown_finished.load(Ordering::SeqCst), 1);
+    assert_eq!(owner.status(), CallbackOwnerStatus::Closed);
+}
+
+#[test]
+fn retained_owner_close_requires_unregister_authority_claim() {
+    let _guard = test_guard();
+    let owner = CallbackOwnerState::new_retained(|| Ok(())).expect("owner should create");
+    let error = owner
+        .close_after_owner_unregister()
+        .expect_err("retained close must not bypass unregister authority");
+    assert!(error.message.contains("unregister authority"));
+    owner
+        .shutdown_from_runtime()
+        .expect("runtime should still close owner");
+}
+
+#[test]
 fn failure_evidence_is_selected_by_entry_sequence_not_completion() {
     let _guard = test_guard();
     let owner = CallbackOwnerState::new_call_scoped().expect("owner should create");

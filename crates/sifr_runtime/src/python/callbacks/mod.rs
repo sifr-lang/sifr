@@ -4,7 +4,7 @@ mod state;
 
 pub use state::{
     CallbackFailureEvidence, CallbackInvocationGuard, CallbackInvocationLease, CallbackOwnerState,
-    CallbackOwnerStatus,
+    CallbackOwnerStatus, CallbackOwnerUnregisterGuard,
 };
 
 pub(super) fn shutdown_registered_callback_owners() -> Result<(), super::PythonRuntimeError> {

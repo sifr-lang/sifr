@@ -276,6 +276,13 @@ cleanup operation is the unregister authority; M9 adds no undeclared Python
 method or callback-specific unregister target. All consuming cleanup paths
 compose callback shutdown with the M4 semantic Python close:
 
+Before invoking that semantic cleanup, the owner claims a joinable unregister
+guard shared with runtime shutdown. Exactly one path runs unregister; dropping
+the guard records completion and wakes the other path. Closing and capture
+release wait for unregister completion, so concurrent semantic/runtime teardown
+cannot double-unregister or release a callable while unregister is still using
+it.
+
 1. enter M4 semantic close and invoke the owner's declared `close`, `aclose`,
    `__exit__`, or `__aexit__` while the callback group remains open, because
    that operation is contractually responsible for unregistering callbacks;

@@ -50,9 +50,9 @@ fn callback_type(
 }
 
 fn callback_registration_error(error: PyErr) -> PythonRuntimeError {
-    PythonRuntimeError::PythonOperationFailed(format!(
-        "failed to register callback exceptions: {error}"
-    ))
+    let message = format!("failed to register callback exceptions: {error}");
+    drop(error);
+    PythonRuntimeError::PythonOperationFailed(message)
 }
 
 #[cfg(test)]

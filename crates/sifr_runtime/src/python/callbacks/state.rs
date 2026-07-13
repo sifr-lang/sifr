@@ -47,7 +47,14 @@ struct OwnerData {
     next_sequence: u64,
     first_failure: Option<CallbackFailureEvidence>,
     captures_released: bool,
-    unregister_started: bool,
+    unregister_status: CallbackUnregisterStatus,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CallbackUnregisterStatus {
+    NotStarted,
+    Running,
+    Finished,
 }
 
 pub struct CallbackInvocationLease {
@@ -61,6 +68,11 @@ pub struct CallbackInvocationGuard {
     owner_id: u64,
     callback_id: u64,
     lease: Option<CallbackInvocationLease>,
+    active: bool,
+}
+
+pub struct CallbackOwnerUnregisterGuard {
+    owner: CallbackOwnerState,
     active: bool,
 }
 
@@ -108,7 +120,7 @@ impl CallbackOwnerState {
                 next_sequence: 0,
                 first_failure: None,
                 captures_released: false,
-                unregister_started: false,
+                unregister_status: CallbackUnregisterStatus::NotStarted,
             }),
             changed: Condvar::new(),
             unregister,
@@ -181,7 +193,33 @@ impl CallbackOwnerState {
     }
 
     pub fn close_after_owner_unregister(&self) -> Result<(), PythonError> {
+        if self.inner.unregister.is_some() {
+            let state = lock_state(&self.inner);
+            if state.unregister_status == CallbackUnregisterStatus::NotStarted {
+                return Err(errors::unavailable("owner unregister authority"));
+            }
+        }
         self.close_after_unregister(false)
+    }
+
+    pub fn begin_owner_unregister(
+        &self,
+    ) -> Result<Option<CallbackOwnerUnregisterGuard>, PythonError> {
+        if owner_is_active(self.inner.id) {
+            return Err(errors::close_from_invocation(self.inner.id));
+        }
+        let mut state = lock_state(&self.inner);
+        if self.inner.unregister.is_none()
+            || state.status == CallbackOwnerStatus::Closed
+            || state.unregister_status != CallbackUnregisterStatus::NotStarted
+        {
+            return Ok(None);
+        }
+        state.unregister_status = CallbackUnregisterStatus::Running;
+        Ok(Some(CallbackOwnerUnregisterGuard {
+            owner: self.clone(),
+            active: true,
+        }))
     }
 
     pub fn record_failure(
@@ -212,19 +250,11 @@ impl CallbackOwnerState {
     pub(super) fn shutdown_from_runtime(&self) -> Result<(), PythonError> {
         let mut unregister_error = None;
         if let Some(unregister) = &self.inner.unregister {
-            let should_unregister = {
-                let mut state = lock_state(&self.inner);
-                if state.status == CallbackOwnerStatus::Closed || state.unregister_started {
-                    false
-                } else {
-                    state.unregister_started = true;
-                    true
-                }
-            };
-            if should_unregister {
+            if let Some(unregister_guard) = self.begin_owner_unregister()? {
                 if let Err(error) = unregister() {
                     unregister_error = Some(error);
                 }
+                drop(unregister_guard);
             }
         }
         self.close_after_unregister(true)?;
@@ -236,6 +266,13 @@ impl CallbackOwnerState {
             return Err(errors::close_from_invocation(self.inner.id));
         }
         let mut state = lock_state(&self.inner);
+        while state.unregister_status == CallbackUnregisterStatus::Running {
+            state = self
+                .inner
+                .changed
+                .wait(state)
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+        }
         match state.status {
             CallbackOwnerStatus::Closed => return Ok(()),
             CallbackOwnerStatus::Closing => {
@@ -337,13 +374,22 @@ impl Drop for CallbackInvocationGuard {
     }
 }
 
+impl Drop for CallbackOwnerUnregisterGuard {
+    fn drop(&mut self) {
+        if !self.active {
+            return;
+        }
+        self.active = false;
+        let mut state = lock_state(&self.owner.inner);
+        if state.unregister_status == CallbackUnregisterStatus::Running {
+            state.unregister_status = CallbackUnregisterStatus::Finished;
+            self.owner.inner.changed.notify_all();
+        }
+    }
+}
+
 fn callback_is_active(owner_id: u64, callback_id: u64) -> bool {
-    ACTIVE_CALLBACKS.with(|active| {
-        active
-            .borrow()
-            .iter()
-            .any(|entry| *entry == (owner_id, callback_id))
-    })
+    ACTIVE_CALLBACKS.with(|active| active.borrow().contains(&(owner_id, callback_id)))
 }
 
 fn owner_is_active(owner_id: u64) -> bool {
