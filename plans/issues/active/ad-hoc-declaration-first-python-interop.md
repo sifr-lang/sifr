@@ -414,7 +414,7 @@ Implementation waves:
   - In the same merge unit, rewrite `bridge.*` call targets to their resolved
     runtime names and lift `SIFR-PYRES-0002`; a distribution literally named
     `bridge` remains reachable only through a non-reserved declared target.
-- [ ] Deployment graph and cache closure:
+- [x] Deployment graph and cache closure — [PR #2951](https://github.com/sifr-lang/sifr/pull/2951):
   - Embed every bridge module from every runtime package in the selected target's
     resolved graph, excluding dev-only and otherwise unselected packages; do
     not depend on declaration reachability or a source checkout at runtime.
