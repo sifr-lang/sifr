@@ -501,6 +501,88 @@ Validation:
 - Concurrent coroutine target tests proving one loop identity.
 - Compiled httpx-style async client example.
 
+Implementation waves (one locally validated and reviewed PR per wave):
+
+- [ ] Prepare coroutine and async-close frontend contracts behind the existing
+  `SIFR-PYRES-0002` gate:
+  - Parse and validate the internal contract for bodyless
+    `@python.coroutine(path)` `async def` functions, factories, and methods;
+    retain `PythonInteropEffect::Async`, call-shape metadata, package/bridge
+    target authority, and the ordinary declaration conversion contract without
+    making the syntax publicly executable yet.
+  - Mark bodyless async interop declarations as `Suspends` in the existing
+    suspension summary so they bypass normal body lowering and the `NoSuspend`
+    fake-async diagnostic without adding a summary variant or removing their
+    ordinary async function identity.
+  - Prepare stable diagnostics for sync/async decorator substitution, borrowed
+    async results, non-consuming close, and unsupported cleanup shapes. Keep
+    `cleanup=async_close` gated until its runtime lifecycle is complete.
+- [ ] Add the application-owned asyncio runtime and raw submission path:
+  - Start one loop on one named OS thread after CPython and bridge-loader setup;
+    publish a thread-safe submission handle only after loop readiness.
+  - Maintain an explicit accepting/running/stopping/stopped state machine and a
+    registry keyed by monotonically assigned submission ids. Reject work once
+    shutdown starts, and prove initialization failure cannot leave a thread.
+  - Wire loop bootstrap only when the resolved target uses an async Python
+    declaration or the raw coroutine intrinsic. Replace raw `asyncio.run` with
+    owned-loop submission while preserving the raw API's synchronous
+    `blocking_io` classification and explicit-offload requirement.
+  - Prove repeated and concurrent raw calls use one loop/thread identity.
+- [ ] Land the cooperative cancellation carrier and direct task paths:
+  - Replace the direct generated-task abort handle with a cancellation carrier
+    for `task.cancel`, cancel-and-join, and timeout. At Python-await entry the
+    submission atomically claims that carrier and registers its exact-task
+    cancellation hook.
+  - A claimed cancellation signals the exact asyncio task and makes the Sifr
+    supervisor await the child and Python terminal latch; an unclaimed
+    cancellation keeps the existing Tokio-abort behavior. A cancellation racing
+    registration either aborts before Python submission or is observed by the
+    newly registered submission, never leaving untracked Python work.
+  - Prove cancellation-before-registration, claimed terminal waiting,
+    unclaimed fallback abort, and timeout without changing the behavior of
+    tasks that never enter a Python await.
+- [ ] Complete cancellation-aware supervisors and ordered shutdown substrate:
+  - Route scope/group fail-fast, race/select losers, and join-set cancellation
+    through the same carrier, preserving current abort behavior for unclaimed
+    ordinary Sifr tasks while terminally waiting for claimed Python work.
+  - Add fail-fast sibling, race/select loser, join-set, cancellation suppression,
+    and terminal-latch ordering tests before typed wrappers depend on them.
+  - Define shutdown phases now: stop external admissions; invoke the M9 callback
+    shutdown hook (a no-op ordered slot until M9); run registered async cleanup
+    while the loop is live; cancel and terminally drain remaining submissions;
+    stop the loop; join its thread.
+- [ ] Generate typed async declaration wrappers behind the public gate:
+  - Submit compiler-private owned inputs and object-store identities; resolve
+    targets, convert arguments, invoke, require an awaitable, await, and convert
+    the owned result on the loop thread.
+  - Cover functions, opaque factories, borrowed methods, consuming methods,
+    positional/keyword/variadic/omitted arguments, recursive values, opaque
+    results, package bridges, and Python/conversion/awaitable-shape failures.
+  - Keep opaque values non-send in Sifr and freeze borrowed receivers for the
+    full await without moving raw Python pointers across threads.
+  - Prove two concurrent typed wrappers observe the same loop/thread identity,
+    while the syntax remains gated until cancellation and cleanup are complete.
+- [ ] Complete consuming async-close lifecycle behind the public gate:
+  - Require a consuming `@python.coroutine(Self.<member>)` close declaration for
+    `cleanup=async_close`; transfer exclusive ownership before submission and
+    close exactly once.
+  - Poison on cleanup failure and reject reuse, duplicate close, or abandonment
+    of an `async_close` obligation. Cover success, failure, poison,
+    use-after-close, cancellation, and shutdown interaction.
+- [ ] Atomically activate async declarations and close M7 evidence:
+  - Lift the `@python.coroutine` and `cleanup=async_close` gates only after the
+    owned loop, typed wrappers, cooperative cancellation, terminal shutdown,
+    and consuming lifecycle are present in the same production path.
+  - Map `CancelledError` to the active Sifr cancellation cause and prove that
+    cancellation waits Python `finally`; if Python suppresses cancellation, its
+    later return or exception wins normally.
+  - Add the full success/failure/conversion/cancellation/suppression/shutdown and
+    async-close matrices, a compiled httpx-style client fixture, concurrent
+    one-loop identity proof, and `demos/m7_demo` using real binary output.
+  - Activate coroutine and async-close capability evidence; update user and
+    architecture docs, exit evidence, roadmap, review records, milestone
+    checkboxes, and merged PR links.
+
 ### M8. Async Context Managers
 
 Depends on M5 context semantics and M7 loop ownership.
