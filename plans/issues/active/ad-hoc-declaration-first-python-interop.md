@@ -5,12 +5,8 @@
 In progress. The phase defines one complete end-state architecture and an
 ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
-non-blocking precision refinements are incorporated. M0 is implemented and
-locally validated in [PR #2930](https://github.com/sifr-lang/sifr/pull/2930).
-M1 is implemented and locally validated in
-[PR #2932](https://github.com/sifr-lang/sifr/pull/2932). M2 is implemented,
-locally validated, and Opus-approved in
-[PR #2933](https://github.com/sifr-lang/sifr/pull/2933); later milestones are
+non-blocking precision refinements are incorporated. M0 through M6 are
+implemented, locally validated, and linked below; M7 and later milestones are
 not yet implemented.
 Milestones sequence delivery; they do not create reduced language versions,
 temporary public contracts, dual authorities, or alternate lowering paths.
@@ -140,7 +136,7 @@ Implementation progress:
 - [x] M3 synchronous declaration core and complete call shapes — [PR #2934](https://github.com/sifr-lang/sifr/pull/2934)
 - [x] M4 recursive conversion and opaque lifecycle — [PR #2935](https://github.com/sifr-lang/sifr/pull/2935)
 - [x] M5 synchronous Python context managers — [PR #2942](https://github.com/sifr-lang/sifr/pull/2942)
-- [ ] M6 hermetic package-local Python bridges
+- [x] M6 hermetic package-local Python bridges
 - [ ] M7 owned asyncio runtime and async declarations
 - [ ] M8 async context managers
 - [ ] M9 typed callback lifetimes and dispatch
@@ -423,7 +419,7 @@ Implementation waves:
     inputs in package, driver, and generated-artifact caches.
   - Prove archive unpack/install/build/run uses only archived bridge inputs and
     the generated binary uses no writable extraction directory.
-- [ ] Complete bridge evidence and milestone closure:
+- [x] Complete bridge evidence and milestone closure:
   - Cover loader-before-main ordering, first-position and post-mutation reserved
     resolution, collision rejection, sibling import rewriting, deterministic
     traceback filenames, cache invalidation, invalid syntax, rejected dynamic

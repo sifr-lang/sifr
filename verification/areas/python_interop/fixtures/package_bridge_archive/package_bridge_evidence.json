@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "capability": "package-bridge",
+  "positive": [
+    "package runtime bootstrap injects bridge-loader initialization before the first user main statement",
+    "bridge_loader loader_is_hermetic_rewrites_imports_and_restores_first_position covers first position and post-mutation restoration",
+    "bridge_loader sibling import execution preserves deterministic virtual co_filename",
+    "bridge inventory and interop plan tests prove source, inventory, package identity, typing, distribution, and ABI cache invalidation",
+    "package_python_bridge_target_activates_only_for_owning_package",
+    "two_packages_can_execute_the_same_bridge_module_path_without_collision"
+  ],
+  "negative": [
+    "bridge loader reserved sys.modules collision rejection",
+    "bridge inventory invalid syntax, dynamic import, misplaced source, and reserved namespace rejection",
+    "reserved bridge target cannot be reinterpreted as an external distribution",
+    "dependency bridge import requires root-owned Python trust"
+  ],
+  "cleanup": [
+    "bridge loader collision and duplicate-input failures occur before finder installation",
+    "reset_runtime_state_for_tests restores builtins and importlib hooks and removes reserved modules",
+    "generated binary runs after installed bridge sources are removed",
+    "read-only runtime root remains empty after execution"
+  ],
+  "live": {
+    "test": "archived_biip_bridge_builds_and_runs_without_checkout_or_extraction",
+    "stdout_marker": "sifr-python-interop:package-bridge:gtin=7032069804988:format=13:check=8",
+    "package": "biip>=5,<6",
+    "deployment": "cargo package archive unpacked into a distinct install root; source checkout removed before build"
+  }
+}

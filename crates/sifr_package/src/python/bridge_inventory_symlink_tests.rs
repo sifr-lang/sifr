@@ -43,3 +43,23 @@ fn symbolic_link_bridge_root_is_rejected() {
             )
     }));
 }
+
+#[test]
+fn symbolic_link_bridge_ancestor_is_rejected() {
+    let fixture = BridgeFixture::new("symlink_ancestor");
+    fixture.write_at("outside_src/python_bridges/adapter.py", "VALUE = 1\n");
+    fs::remove_dir_all(fixture.root.join("src")).expect("remove canonical source root");
+    symlink(fixture.root.join("outside_src"), fixture.root.join("src"))
+        .expect("create source-root symlink");
+
+    let diagnostics = discover_python_bridge_inventory(&fixture.package)
+        .expect_err("a symlinked bridge ancestor must fail");
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.message.contains("package-relative ancestors")
+            && matches!(
+                diagnostic.origin.as_ref(),
+                crate::diag::PackageDiagnosticOrigin::PythonBridgeSource { path, .. }
+                    if path.ends_with("src")
+            )
+    }));
+}

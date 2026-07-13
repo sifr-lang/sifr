@@ -1,0 +1,24 @@
+from sifr.python import PythonError
+
+
+class GtinInfo:
+    value: str
+    format: int
+    check_digit: int
+
+
+@python(bridge.identifiers.parse_gtin)
+def parse_gtin(text: str) -> Result[GtinInfo, PythonError]: ...
+
+
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        parsed: GtinInfo = parse_gtin("7032069804988")
+        assert parsed.value == "7032069804988"
+        assert parsed.format == 13
+        assert parsed.check_digit == 8
+        print("sifr-python-interop:package-bridge:gtin=7032069804988:format=13:check=8")
+    except PythonError as error:
+        raise error
+    return None

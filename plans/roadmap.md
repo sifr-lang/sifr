@@ -126,3 +126,4 @@ flowchart LR
 ## Completed Sequence-Independent Interop Work
 - [ad-hoc-embedded-python-interop.md](./issues/active/ad-hoc-embedded-python-interop.md) (complete for the sequence-independent embedded CPython/uv interop lane; py0-py12 are merged through PR #2677 with public/internal docs, diagnostic evidence, py12 and phase-level Opus reviews, and local validation)
 - [python-interop-verification-production.md](./issues/active/python-interop-verification-production.md) (complete follow-up: first-class area wiring, explicit live/container policy, testcontainers-backed Redis/Postgres/Kafka-compatible/LocalStack SNS-SQS examples, and final status evidence)
+- [ad-hoc-declaration-first-python-interop.md](./issues/active/ad-hoc-declaration-first-python-interop.md) (in progress; M0-M6 complete through hermetic package-local bridge deployment, with async and advanced protocol milestones sequenced next)

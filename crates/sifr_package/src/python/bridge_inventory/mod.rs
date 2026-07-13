@@ -63,7 +63,8 @@ fn discover_python_bridge_inventory_at(
     let root = package_root.join(PYTHON_BRIDGE_ROOT);
     let mut diagnostics =
         misplaced_root_diagnostics(package_root, cargo_package_id, source_roots, &root);
-    let source_paths = discover_source_paths(cargo_package_id, &root, &mut diagnostics);
+    let source_paths =
+        discover_source_paths(package_root, cargo_package_id, &root, &mut diagnostics);
     let mut parsed_modules = Vec::new();
     let mut modules_by_name = BTreeMap::<String, PathBuf>::new();
 

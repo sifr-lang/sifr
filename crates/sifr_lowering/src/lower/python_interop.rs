@@ -587,7 +587,7 @@ fn parse_sync_function(
             .cloned();
         let Some(authority) = authority else {
             ctx.error_with_code_at(
-                DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION,
+                DiagnosticCode::PYIMP_INVALID_TARGET,
                 "package-local `bridge` target has no bridge source in its resolved package"
                     .to_string(),
                 target.span,

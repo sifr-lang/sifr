@@ -133,14 +133,18 @@ impl ImportCollector {
             _ => return,
         };
         for alias in &import.names {
-            if alias.name.as_str() == expected {
-                self.dynamic_function_aliases.insert(
-                    alias
-                        .asname
-                        .as_ref()
-                        .map_or(alias.name.as_str(), |value| value.as_str())
-                        .to_string(),
-                );
+            if matches!(alias.name.as_str(), name if name == expected || name == "__import__" || name == "*")
+            {
+                self.dynamic_function_aliases
+                    .insert(if alias.name.as_str() == "*" {
+                        expected.to_string()
+                    } else {
+                        alias
+                            .asname
+                            .as_ref()
+                            .map_or(alias.name.as_str(), |value| value.as_str())
+                            .to_string()
+                    });
             }
         }
     }
@@ -165,10 +169,13 @@ impl ImportCollector {
             if self.builtins_aliases.contains(&value_name) {
                 self.builtins_aliases.insert(target.clone());
             }
-            if self.dynamic_function_aliases.contains(&value_name)
+            if value_name == "__import__"
+                || self.dynamic_function_aliases.contains(&value_name)
                 || value_name.rsplit_once('.').is_some_and(|(prefix, member)| {
                     (member == "import_module" && self.importlib_aliases.contains(prefix))
-                        || (member == "__import__" && self.builtins_aliases.contains(prefix))
+                        || (member == "__import__"
+                            && (self.builtins_aliases.contains(prefix)
+                                || self.importlib_aliases.contains(prefix)))
                 })
             {
                 self.dynamic_function_aliases.insert(target);
@@ -214,7 +221,9 @@ impl DynamicImportVisitor {
             let dynamic = self.dynamic_function_aliases.contains(&name)
                 || name.rsplit_once('.').is_some_and(|(prefix, member)| {
                     (member == "import_module" && self.importlib_aliases.contains(prefix))
-                        || (member == "__import__" && self.builtins_aliases.contains(prefix))
+                        || (member == "__import__"
+                            && (self.builtins_aliases.contains(prefix)
+                                || self.importlib_aliases.contains(prefix)))
                 });
             return dynamic.then_some(name);
         }
@@ -231,7 +240,9 @@ impl DynamicImportVisitor {
         };
         let member = member.value.to_str();
         ((member == "import_module" && self.importlib_aliases.contains(&owner))
-            || (member == "__import__" && self.builtins_aliases.contains(&owner)))
+            || (member == "__import__"
+                && (self.builtins_aliases.contains(&owner)
+                    || self.importlib_aliases.contains(&owner))))
         .then(|| format!("getattr({owner}, {member})"))
     }
 }

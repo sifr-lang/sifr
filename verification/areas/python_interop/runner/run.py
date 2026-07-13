@@ -62,6 +62,7 @@ REQUIRED_FIXTURES = (
     "cryptography_tls",
     "resource_cleanup",
     "sqlite_context",
+    "package_bridge_archive",
     "env_probe",
 )
 
@@ -90,6 +91,7 @@ REQUIRED_FIXTURE_FILES = (
     "tensorflow_dlpack/tensorflow_dlpack_contract.json",
     "resource_cleanup/context_manager_cleanup.json",
     "sqlite_context/sync_context_evidence.json",
+    "package_bridge_archive/package_bridge_evidence.json",
 )
 
 REQUIRED_SOURCE_FIXTURES = (
@@ -126,6 +128,7 @@ REQUIRED_SOURCE_FIXTURES = (
     "resource_cleanup/context_manager_success.sifr",
     "resource_cleanup/resource_diagnostics.sifr",
     "sqlite_context/context_codegen_smoke.sifr",
+    "package_bridge_archive/main.sifr",
     "redis/redis_live_roundtrip.sifr",
     "sqlalchemy_psycopg/postgres_live_roundtrip.sifr",
     "kafka/kafka_live_roundtrip.sifr",
@@ -335,6 +338,8 @@ def validate_fixture_files(fixtures_root: Path) -> None:
             raise SystemExit(f"invalid python interop fixture JSON {path}: {error}") from error
         if name == "sqlite_context/sync_context_evidence.json":
             validate_sync_context_evidence(payload)
+        if name == "package_bridge_archive/package_bridge_evidence.json":
+            validate_package_bridge_evidence(payload)
     missing_sources = [
         name for name in REQUIRED_SOURCE_FIXTURES if not (fixtures_root / name).is_file()
     ]
@@ -372,6 +377,24 @@ def validate_sync_context_evidence(payload: object) -> None:
         "sifr-python-interop:sqlite-context:total=71"
     ):
         raise SystemExit("sync context live evidence must lock the SQLite transaction marker")
+
+
+def validate_package_bridge_evidence(payload: object) -> None:
+    if not isinstance(payload, dict) or payload.get("capability") != "package-bridge":
+        raise SystemExit("package bridge evidence must identify the package-bridge capability")
+    for matrix_name, minimum in (("positive", 3), ("negative", 3), ("cleanup", 3)):
+        matrix = payload.get(matrix_name)
+        if not isinstance(matrix, list) or len(matrix) < minimum:
+            raise SystemExit(
+                f"package bridge evidence requires at least {minimum} {matrix_name} rows"
+            )
+        if any(not isinstance(item, str) or not item for item in matrix):
+            raise SystemExit(f"package bridge evidence {matrix_name} rows require owners")
+    live = payload.get("live")
+    if not isinstance(live, dict) or live.get("stdout_marker") != (
+        "sifr-python-interop:package-bridge:gtin=7032069804988:format=13:check=8"
+    ):
+        raise SystemExit("package bridge live evidence must lock the biip archive marker")
 
 
 def select_entries(

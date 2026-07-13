@@ -66,15 +66,15 @@
       "id": "package-bridge",
       "surface": "bridge.* target namespace",
       "target_state": "bridge-supported",
-      "implementation_status": "reserved",
+      "implementation_status": "active",
       "activation_owner": "package-bridge",
       "required_evidence": ["positive", "negative", "cleanup", "live"],
       "evidence": [
-        {"kind": "positive", "status": "planned", "owner": "loader, sibling import, and archive fixtures"},
-        {"kind": "negative", "status": "planned", "owner": "collision and dynamic-import rejection"},
-        {"kind": "cleanup", "status": "planned", "owner": "failed-loader state cleanup"},
+        {"kind": "positive", "status": "passing", "owner": "package_bridge_archive/package_bridge_evidence.json positive matrix"},
+        {"kind": "negative", "status": "passing", "owner": "package_bridge_archive/package_bridge_evidence.json negative matrix"},
+        {"kind": "cleanup", "status": "passing", "owner": "package_bridge_archive/package_bridge_evidence.json cleanup matrix"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "bridge loading is synchronous initialization"},
-        {"kind": "live", "status": "planned", "owner": "installed package run without source checkout"}
+        {"kind": "live", "status": "passing", "owner": "package_bridge_archive/package_bridge_evidence.json installed biip archive run"}
       ]
     },
     {

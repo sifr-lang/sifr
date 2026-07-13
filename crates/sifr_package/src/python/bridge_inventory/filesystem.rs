@@ -34,11 +34,20 @@ pub(super) fn misplaced_root_diagnostics(
 }
 
 pub(super) fn discover_source_paths(
+    package_root: &Path,
     cargo_package_id: &CargoPackageId,
     root: &Path,
     diagnostics: &mut Vec<PackageDiagnostic>,
 ) -> BTreeSet<PathBuf> {
     let mut paths = BTreeSet::new();
+    if let Some(symlink) = symlinked_bridge_component(package_root, root) {
+        diagnostics.push(PackageDiagnostic::invalid_python_bridge_source(
+            cargo_package_id,
+            &symlink,
+            "symbolic links are not allowed in bridge source roots or their package-relative ancestors",
+        ));
+        return paths;
+    }
     match fs::symlink_metadata(root) {
         Ok(metadata) if metadata.file_type().is_symlink() => {
             diagnostics.push(PackageDiagnostic::invalid_python_bridge_source(
@@ -61,6 +70,21 @@ pub(super) fn discover_source_paths(
     }
     collect_python_paths(root, &mut paths, diagnostics, Some(cargo_package_id));
     paths
+}
+
+fn symlinked_bridge_component(package_root: &Path, root: &Path) -> Option<PathBuf> {
+    let relative = root.strip_prefix(package_root).ok()?;
+    let mut current = package_root.to_path_buf();
+    for component in relative.components() {
+        current.push(component.as_os_str());
+        match fs::symlink_metadata(&current) {
+            Ok(metadata) if metadata.file_type().is_symlink() => return Some(current),
+            Ok(_) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return None,
+            Err(_) => return None,
+        }
+    }
+    None
 }
 
 pub(super) fn collect_python_paths(

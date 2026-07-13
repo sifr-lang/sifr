@@ -299,6 +299,9 @@ fn local_python_runtime(project_root: &Path) -> crate::PackagePythonRuntime {
     )
 }
 
+#[path = "package_python_bridge_archive_tests.rs"]
+mod python_bridge_archive_tests;
+
 #[test]
 fn test_check_package_project_resolves_public_namespace_reexports() {
     let dir = mktemp_dir("package_public_reexports");
@@ -421,109 +424,6 @@ fn package_python_bridge_target_activates_only_for_owning_package() {
         errors.is_empty(),
         "package-owned bridge target should activate: {errors:?}"
     );
-    let _ = std::fs::remove_dir_all(dir);
-}
-
-#[test]
-#[cfg(unix)]
-#[ignore = "generated build integration coverage runs in full validation profiles"]
-fn archived_package_python_bridge_builds_and_runs_without_extraction() {
-    use std::os::unix::fs::PermissionsExt as _;
-
-    let dir = mktemp_dir("archived_package_python_bridge");
-    let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
-    write_package_source(
-        &app,
-        "main.sifr",
-        "from sifr.python import PythonError\n\n@python(bridge.adapter.value)\ndef value() -> Result[int, PythonError]: ...\n\ndef main():\n    succeeded: bool = False\n    try:\n        result: int = value()\n        succeeded = result == 42\n    except PythonError as error:\n        print(error.message)\n    assert succeeded\n    print(\"embedded-bridge-ok\")\n",
-    );
-    write_package_source(&app, "python_bridges/helper.py", "VALUE = 41\n");
-    write_package_source(
-        &app,
-        "python_bridges/adapter.py",
-        "import bridge.helper\n\ndef value():\n    return bridge.helper.VALUE + 1\n",
-    );
-    let source_graph = package_graph(&dir, &[&app], &[]);
-    let package = source_graph
-        .packages
-        .values()
-        .next()
-        .expect("source package metadata");
-    let inventory = sifr_package::discover_python_bridge_inventory(package)
-        .expect("bridge inventory should be generated from package inputs");
-    sifr_package::write_python_bridge_inventory(package, &inventory)
-        .expect("bridge inventory should be written");
-    let packaged = std::process::Command::new("cargo")
-        .args(["package", "--allow-dirty", "--no-verify", "--manifest-path"])
-        .arg(app.root.join("Cargo.toml"))
-        .output()
-        .expect("cargo package should run");
-    assert!(
-        packaged.status.success(),
-        "cargo package should pass: {}",
-        String::from_utf8_lossy(&packaged.stderr)
-    );
-    let install_root = dir.join("installed");
-    std::fs::create_dir_all(&install_root).expect("install root should be created");
-    let archive = app.root.join("target/package/sifr-demo-app-0.1.0.crate");
-    let unpacked = std::process::Command::new("tar")
-        .args(["-xzf"])
-        .arg(&archive)
-        .arg("-C")
-        .arg(&install_root)
-        .output()
-        .expect("package archive should unpack");
-    assert!(unpacked.status.success(), "package archive should unpack");
-    let mut installed_app = app.clone();
-    installed_app.root = install_root.join("sifr-demo-app-0.1.0");
-    assert!(installed_app
-        .root
-        .join("src/python_bridges/__sifr_inventory__.json")
-        .is_file());
-    std::fs::remove_dir_all(&app.root).expect("source checkout should be removed before build");
-
-    let graph = package_graph(&dir, &[&installed_app], &[]);
-    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
-    let mut entrypoint = package_entrypoint(
-        &graph,
-        &source_map,
-        &installed_app,
-        installed_app.root.join("src/main.sifr"),
-    );
-    entrypoint.python_runtime = Some(local_python_runtime(&dir));
-
-    let artifact = build_cached_package_project(&entrypoint)
-        .expect("installed package bridge binary should build from archived source");
-    std::fs::remove_dir_all(installed_app.root.join("src/python_bridges"))
-        .expect("installed bridge sources should be removable after build");
-    let run_root = dir.join("read-only-run-root");
-    std::fs::create_dir_all(&run_root).expect("run root should be created");
-    std::fs::set_permissions(&run_root, std::fs::Permissions::from_mode(0o555))
-        .expect("run root should become read-only");
-    let output = std::process::Command::new(artifact.binary_path())
-        .current_dir(&run_root)
-        .env("TMPDIR", &run_root)
-        .output()
-        .expect("package bridge binary should run");
-
-    assert!(
-        output.status.success(),
-        "binary should pass: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    assert_eq!(
-        String::from_utf8_lossy(&output.stdout).trim(),
-        "embedded-bridge-ok"
-    );
-    assert_eq!(
-        std::fs::read_dir(&run_root)
-            .expect("run root should be readable")
-            .count(),
-        0,
-        "embedded bridge loading must not extract files"
-    );
-    std::fs::set_permissions(&run_root, std::fs::Permissions::from_mode(0o755))
-        .expect("run root should become removable");
     let _ = std::fs::remove_dir_all(dir);
 }
 
