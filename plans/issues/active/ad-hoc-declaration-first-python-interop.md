@@ -6,8 +6,9 @@ In progress. The phase defines one complete end-state architecture and an
 ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M6 are
-implemented, locally validated, and linked below; M7 and later milestones are
-not yet implemented.
+implemented, locally validated, and linked below; M7 is in progress with its
+frontend-contract and owned-loop waves merged, while later milestones are not
+yet implemented.
 Milestones sequence delivery; they do not create reduced language versions,
 temporary public contracts, dual authorities, or alternate lowering paths.
 
@@ -517,7 +518,8 @@ Implementation waves (one locally validated and reviewed PR per wave):
   - Prepare stable diagnostics for sync/async decorator substitution, borrowed
     async results, non-consuming close, and unsupported cleanup shapes. Keep
     `cleanup=async_close` gated until its runtime lifecycle is complete.
-- [ ] Add the application-owned asyncio runtime and raw submission path:
+- [x] Add the application-owned asyncio runtime and raw submission path —
+  [PR #2958](https://github.com/sifr-lang/sifr/pull/2958):
   - Start one loop on one named OS thread after CPython and bridge-loader setup;
     publish a thread-safe submission handle only after loop readiness.
   - Maintain an explicit accepting/running/stopping/stopped state machine and a
