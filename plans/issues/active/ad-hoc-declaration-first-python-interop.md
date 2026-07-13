@@ -503,8 +503,8 @@ Validation:
 
 Implementation waves (one locally validated and reviewed PR per wave):
 
-- [ ] Prepare coroutine and async-close frontend contracts behind the existing
-  `SIFR-PYRES-0002` gate:
+- [x] Prepare coroutine and async-close frontend contracts behind the existing
+  `SIFR-PYRES-0002` gate — [PR #2956](https://github.com/sifr-lang/sifr/pull/2956):
   - Parse and validate the internal contract for bodyless
     `@python.coroutine(path)` `async def` functions, factories, and methods;
     retain `PythonInteropEffect::Async`, call-shape metadata, package/bridge
