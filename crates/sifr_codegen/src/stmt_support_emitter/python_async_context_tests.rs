@@ -78,6 +78,7 @@ fn async_python_context_emits_biased_cancellation_and_masked_exit() {
     assert!(rendered.contains("CancellationScopeLease::claim"));
     assert!(rendered.contains("__SIFR_TASK_CANCELLATION.scope"));
     assert!(rendered.contains("submit_async_context_enter"));
+    assert!(rendered.contains("abandon_callback_owner_after_error_async"));
     assert!(rendered.contains("submit_async_context_exit"));
     assert!(rendered.contains("PythonAsyncExitCause::Python(replay.clone())"));
     assert!(rendered.contains("release_and_resume_parent"));
@@ -130,6 +131,35 @@ fn async_python_context_emits_all_concrete_body_outcomes() {
     }
     assert!(rendered.contains("PythonAsyncExitCause::Sifr"));
     assert!(rendered.contains("record_context_ignored_suppression"));
+}
+
+#[test]
+fn normal_async_context_exit_observes_typed_retained_callback_failure() {
+    let mut emitter = emitter();
+    emitter
+        .python_retained_callback_errors
+        .insert("Manager".to_string(), vec![class_type("HandlerError")]);
+    let lowered = emitter
+        .try_lower_async_with_stmt_for_ir(
+            &kind(class_type("PythonError")),
+            Some("entered"),
+            &[HirStmt::Pass],
+        )
+        .expect("lowering should succeed")
+        .expect("Python async context should lower");
+    let rendered = crate::render_stmts(&[lowered]);
+
+    assert!(
+        rendered.contains("__sifr_python_async_context_manager_0.__sifr_python_callbacks.owner()"),
+        "{rendered}"
+    );
+    assert!(
+        rendered.contains(
+            "__sifr_python_async_context_manager_0.__sifr_python_callback_failure_0.clone()"
+        ),
+        "{rendered}"
+    );
+    assert!(rendered.contains("take_if_owner_first"), "{rendered}");
 }
 
 #[test]
@@ -210,7 +240,7 @@ fn async_python_context_resumes_parent_cancellation_after_enter_failure() {
         })
         .expect("generated enter-failure arm");
 
-    assert!(enter_failure.contains("notification().is_notified()"));
+    assert!(!enter_failure.contains("notification().is_notified()"));
     assert!(enter_failure.contains("release_and_resume_parent()"));
     assert!(enter_failure.contains("tokio::task::yield_now().await"));
     assert!(enter_failure.contains("SifrPythonAsyncContextError"));

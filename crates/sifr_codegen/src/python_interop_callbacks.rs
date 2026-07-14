@@ -1,5 +1,5 @@
 use crate::python_interop_direct::{callback_output_value_expr, input_conversion, runtime_call};
-use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
+use crate::{RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType};
 use sifr_ir::{
     PythonCallbackConcurrency, PythonCallbackDeclaration, PythonCallbackDispatch,
     PythonCallbackLifetime, PythonCleanupPolicy, PythonInteropDeclaration,
@@ -13,6 +13,7 @@ pub(crate) struct CallbackSetup {
     pub(crate) failure_slot: Option<(String, Type)>,
     pub(crate) dispatch: PythonCallbackDispatch,
     pub(crate) lifetime: PythonCallbackLifetime,
+    pub(crate) provisional_var: Option<String>,
 }
 
 pub(crate) fn callback_setup(
@@ -23,6 +24,7 @@ pub(crate) fn callback_setup(
     opaque_classes: &HashMap<String, sifr_ir::PythonInteropDeclaration>,
     owner: RustExpr,
     failure_slot_source: Option<RustExpr>,
+    owner_retained_errors: &[Type],
 ) -> Option<CallbackSetup> {
     if callback.dispatch == PythonCallbackDispatch::Current
         && callback.lifetime != PythonCallbackLifetime::Call
@@ -30,6 +32,9 @@ pub(crate) fn callback_setup(
         return None;
     }
     let callback_var = format!("__sifr_callback_{callback_index}");
+    let provisional_var = (callback.dispatch == PythonCallbackDispatch::Asyncio
+        && callback.lifetime == PythonCallbackLifetime::Receiver)
+        .then(|| format!("__sifr_provisional_callback_{callback_index}"));
     let handler_capture_var = format!("__sifr_callback_handler_{callback_index}");
     let slot_var = format!("__sifr_callback_failure_{callback_index}");
     let handler_slot_var = format!("__sifr_callback_failure_for_handler_{callback_index}");
@@ -108,12 +113,35 @@ pub(crate) fn callback_setup(
             .map(|_| handler_slot_var.as_str()),
     ));
     factory_args.push(encoder(callback, opaque_classes)?);
-    statements.push(RustStmt::Let {
-        mutable: false,
-        name: callback_var.clone(),
-        ty: None,
-        value: mapped_try(runtime_call(factory, factory_args), error_type),
-    });
+    let factory = mapped_try(
+        owner_outcome_with_evidence(runtime_call(factory, factory_args), owner_retained_errors),
+        error_type,
+    );
+    if let Some(provisional) = &provisional_var {
+        statements.push(RustStmt::Assign {
+            target: RustExpr::Ident(provisional.clone()),
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                args: vec![factory],
+            },
+        });
+        statements.push(RustStmt::LetElse {
+            pattern: format!("Some(ref {callback_var})"),
+            value: RustExpr::Ident(provisional.clone()),
+            else_body: vec![RustStmt::Expr(RustExpr::FormatMacro {
+                name: "unreachable".to_string(),
+                format_str: "provisional asyncio callback was just assigned".to_string(),
+                args: Vec::new(),
+            })],
+        });
+    } else {
+        statements.push(RustStmt::Let {
+            mutable: false,
+            name: callback_var.clone(),
+            ty: None,
+            value: factory,
+        });
+    }
     Some(CallbackSetup {
         statements,
         callback_var,
@@ -123,7 +151,48 @@ pub(crate) fn callback_setup(
             .map(|error| (slot_var, error)),
         dispatch: callback.dispatch,
         lifetime: callback.lifetime,
+        provisional_var,
     })
+}
+
+pub(crate) fn owner_outcome_with_evidence(outcome: RustExpr, errors: &[Type]) -> RustExpr {
+    if errors.is_empty() {
+        return outcome;
+    }
+    RustExpr::Match {
+        expr: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(
+                "__sifr_callback_owner_for_later_failure".to_string(),
+            )),
+            method: "as_ref".to_string(),
+            args: Vec::new(),
+        }),
+        arms: vec![
+            RustMatchArm {
+                pattern: "Some(__sifr_callback_owner_evidence_value)".to_string(),
+                bindings: Vec::new(),
+                guard: None,
+                body: vec![RustStmt::Expr(runtime_call(
+                    "attach_callback_failure_evidence",
+                    vec![
+                        outcome.clone(),
+                        RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Array(vec![RustExpr::Ident(
+                                "__sifr_callback_owner_evidence_value".to_string(),
+                            )])),
+                        },
+                    ],
+                ))],
+            },
+            RustMatchArm {
+                pattern: "None".to_string(),
+                bindings: Vec::new(),
+                guard: None,
+                body: vec![RustStmt::Expr(outcome)],
+            },
+        ],
+    }
 }
 
 pub(crate) fn retained_failure_field(
@@ -266,10 +335,130 @@ pub(crate) fn callback_outcome_with_evidence(
     )
 }
 
-pub(crate) fn callback_cleanup_expr(setup: &CallbackSetup) -> RustExpr {
+pub(crate) fn callback_outcome_after_cleanup(
+    outcome: RustExpr,
+    callbacks: &[CallbackSetup],
+    cleanup_names: &[String],
+) -> RustExpr {
+    runtime_call(
+        "reconcile_callback_outcome",
+        vec![
+            outcome,
+            RustExpr::Vec(
+                cleanup_names
+                    .iter()
+                    .map(|name| RustExpr::Ident(name.clone()))
+                    .collect(),
+            ),
+            RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(RustExpr::Array(
+                    callbacks
+                        .iter()
+                        .map(|callback| RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(callback_owner_expr(callback)),
+                        })
+                        .collect(),
+                )),
+            },
+        ],
+    )
+}
+
+pub(crate) fn append_owner_failure_observer_setup(body: &mut Vec<RustStmt>, errors: &[Type]) {
+    if errors.is_empty() {
+        return;
+    }
+    body.push(RustStmt::Let {
+        mutable: false,
+        name: "__sifr_callback_owner_for_later_failure".to_string(),
+        ty: None,
+        value: RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Field {
+                expr: Box::new(RustExpr::Ident("self".to_string())),
+                field: "__sifr_python_callbacks".to_string(),
+            }),
+            method: "owner".to_string(),
+            args: Vec::new(),
+        },
+    });
+    for index in 0..errors.len() {
+        body.push(RustStmt::Let {
+            mutable: false,
+            name: format!("__sifr_callback_later_failure_{index}"),
+            ty: None,
+            value: RustExpr::Clone(Box::new(RustExpr::Field {
+                expr: Box::new(RustExpr::Ident("self".to_string())),
+                field: format!("__sifr_python_callback_failure_{index}"),
+            })),
+        });
+    }
+}
+
+pub(crate) fn append_owner_failure_evidence(body: &mut Vec<RustStmt>, errors: &[Type]) {
+    if errors.is_empty() {
+        return;
+    }
+    body.push(RustStmt::IfLet {
+        pattern: "Some(ref __sifr_callback_owner_for_later_failure_value)".to_string(),
+        expr: RustExpr::Ident("__sifr_callback_owner_for_later_failure".to_string()),
+        then_body: vec![RustStmt::Assign {
+            target: RustExpr::Ident("__sifr_python_outcome".to_string()),
+            value: runtime_call(
+                "attach_callback_failure_evidence",
+                vec![
+                    RustExpr::Ident("__sifr_python_outcome".to_string()),
+                    RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Array(vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                                "__sifr_callback_owner_for_later_failure_value".to_string(),
+                            )))),
+                        }])),
+                    },
+                ],
+            ),
+        }],
+        else_body: None,
+    });
+}
+
+pub(crate) fn append_owner_failure_reconciliation(
+    body: &mut Vec<RustStmt>,
+    errors: &[Type],
+    error_type: &Type,
+) {
+    if errors.is_empty() {
+        return;
+    }
+    body.push(RustStmt::IfLet {
+        pattern: "Some(ref __sifr_callback_owner_for_later_failure_value)".to_string(),
+        expr: RustExpr::Ident("__sifr_callback_owner_for_later_failure".to_string()),
+        then_body: errors
+            .iter()
+            .enumerate()
+            .map(|(index, handler_error_type)| {
+                failure_reconciliation_stmt(
+                    &format!("__sifr_callback_later_failure_{index}"),
+                    handler_error_type,
+                    error_type,
+                    RustExpr::Deref(Box::new(RustExpr::Ident(
+                        "__sifr_callback_owner_for_later_failure_value".to_string(),
+                    ))),
+                )
+            })
+            .collect(),
+        else_body: None,
+    });
+}
+
+pub(crate) fn callback_cleanup_expr(setup: &CallbackSetup, async_wrapper: bool) -> RustExpr {
     debug_assert_eq!(setup.lifetime, PythonCallbackLifetime::Call);
     let method = match setup.dispatch {
         PythonCallbackDispatch::Current => "close",
+        PythonCallbackDispatch::Foreign if async_wrapper => "close_call_scope_async",
         PythonCallbackDispatch::Foreign => "close_call_scope",
         PythonCallbackDispatch::Asyncio => "close_call_scope",
     };
@@ -278,7 +467,9 @@ pub(crate) fn callback_cleanup_expr(setup: &CallbackSetup) -> RustExpr {
         method: method.to_string(),
         args: Vec::new(),
     };
-    if setup.dispatch == PythonCallbackDispatch::Asyncio {
+    if setup.dispatch == PythonCallbackDispatch::Asyncio
+        || (async_wrapper && setup.dispatch == PythonCallbackDispatch::Foreign)
+    {
         RustExpr::Await(Box::new(close))
     } else {
         close
@@ -374,6 +565,7 @@ fn handler_adapter(
     handler_name: &str,
     failure_slot: Option<&str>,
 ) -> RustExpr {
+    const INVOCATION_FAILURE_SLOT: &str = "__sifr_callback_failure_for_invocation";
     let handler_args = callback
         .argument_conventions
         .iter()
@@ -404,9 +596,7 @@ fn handler_adapter(
             ],
         }));
     }
-    let result = if let (Some(error_type), Some(slot)) =
-        (&callback.handler_error_type, failure_slot)
-    {
+    let result = if let (Some(error_type), Some(_)) = (&callback.handler_error_type, failure_slot) {
         RustExpr::MethodCall {
             receiver: Box::new(handler_call),
             method: "map_err".to_string(),
@@ -417,7 +607,7 @@ fn handler_adapter(
                 }],
                 body: vec![
                     RustStmt::Expr(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(slot.to_string())),
+                        receiver: Box::new(RustExpr::Ident(INVOCATION_FAILURE_SLOT.to_string())),
                         method: "record".to_string(),
                         args: vec![
                             RustExpr::Ident("__sifr_callback_sequence".to_string()),
@@ -474,11 +664,17 @@ fn handler_adapter(
             ty: RustType::Named("_".to_string()),
         });
     }
+    let failure_slot_clone = failure_slot.map(|slot| RustStmt::Let {
+        mutable: false,
+        name: INVOCATION_FAILURE_SLOT.to_string(),
+        ty: None,
+        value: RustExpr::Clone(Box::new(RustExpr::Ident(slot.to_string()))),
+    });
     RustExpr::Closure {
         params,
         body: Box::new(if callback.dispatch == PythonCallbackDispatch::Asyncio {
             RustExpr::Block {
-                stmts: vec![RustStmt::Let {
+                stmts: std::iter::once(RustStmt::Let {
                     mutable: false,
                     name: "__sifr_callback_handler".to_string(),
                     ty: None,
@@ -494,14 +690,19 @@ fn handler_adapter(
                             expr: Box::new(RustExpr::Ident(handler_name.to_string())),
                         }],
                     },
-                }],
+                })
+                .chain(failure_slot_clone.clone())
+                .collect(),
                 expr: Some(Box::new(RustExpr::AsyncBlock {
                     body: vec![RustStmt::Return(Some(result))],
                     is_move: true,
                 })),
             }
         } else {
-            result
+            failure_slot_clone.map_or(result.clone(), |clone_stmt| RustExpr::Block {
+                stmts: vec![clone_stmt],
+                expr: Some(Box::new(result)),
+            })
         }),
         is_move: true,
     }

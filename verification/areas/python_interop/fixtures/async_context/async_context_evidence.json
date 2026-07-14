@@ -17,7 +17,7 @@
     "semantic close success and poison runtime matrices"
   ],
   "cancellation": [
-    "Python body finally precedes async exit under native task cancellation",
+    "Python body finally precedes async exit under same-loop Python task cancellation",
     "async exit reaches terminal close before parent cancellation resumes",
     "parent-child claim, biased cancellation, nested scope, and fallback runtime matrices"
   ],

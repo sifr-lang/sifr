@@ -400,6 +400,88 @@ fn semantic_async_close_uses_python_terminal_outcome_after_cancellation() {
 }
 
 #[test]
+fn retained_owner_close_drains_before_native_cancellation_resumes() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_typed_runtime("retained-owner-close-cancellation-mask");
+
+    let captures_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let captures_released_by_owner = Arc::clone(&captures_released);
+    let owner = CallbackOwnerState::new_retained_with_release(
+        || Ok(()),
+        move || {
+            captures_released_by_owner.store(true, std::sync::atomic::Ordering::SeqCst);
+        },
+    )
+    .expect("retained owner should create");
+    let active = owner
+        .accept(1, false)
+        .expect("active retained callback should enter");
+
+    let parent = CancellationCarrier::new();
+    let resumed_after_close = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let resumed_after_close_by_fallback = Arc::clone(&resumed_after_close);
+    let owner_at_resume = owner.clone();
+    let captures_at_resume = Arc::clone(&captures_released);
+    assert_eq!(
+        parent.bind_fallback(Arc::new(move || {
+            resumed_after_close_by_fallback.store(
+                owner_at_resume.status() == CallbackOwnerStatus::Closed
+                    && captures_at_resume.load(std::sync::atomic::Ordering::SeqCst),
+                std::sync::atomic::Ordering::SeqCst,
+            );
+        })),
+        CancellationBind::Bound
+    );
+    let scope = retained_callback_finalization_scope(Some(&parent))
+        .expect("owner-close cancellation scope should create")
+        .expect("parent carrier should produce an owner-close scope");
+    let child = scope.child().clone();
+    let request = PythonAsyncRequest::function(
+        vec![MODULE.to_string(), "identity".to_string()],
+        Vec::new(),
+        Vec::new(),
+        PythonAsyncType::Str,
+    );
+
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("Tokio test runtime should build");
+    runtime.block_on(async {
+        let finalization = async {
+            let outcome = submit_async_declaration_with_callbacks(
+                request,
+                Some(&child),
+                CallbackOwnerSlot::from_owner(owner.clone()),
+            )
+            .await;
+            finish_retained_callback_finalization(outcome, Some(scope)).await
+        };
+        let cancel = async {
+            for _ in 0..4_000 {
+                if owner.status() == CallbackOwnerStatus::Closing {
+                    assert_eq!(parent.request_cancel(), CancellationRequest::Claimed);
+                    assert!(!resumed_after_close.load(std::sync::atomic::Ordering::SeqCst));
+                    drop(active);
+                    return;
+                }
+                tokio::task::yield_now().await;
+            }
+            panic!("retained owner close did not begin");
+        };
+        let (outcome, ()) = tokio::join!(finalization, cancel);
+        async_to_str(outcome.expect("primary result should survive masked owner close"))
+            .expect("identity result should remain typed");
+    });
+
+    assert_eq!(owner.status(), CallbackOwnerStatus::Closed);
+    assert!(captures_released.load(std::sync::atomic::Ordering::SeqCst));
+    assert!(resumed_after_close.load(std::sync::atomic::Ordering::SeqCst));
+    shutdown_typed_runtime();
+}
+
+#[test]
 fn active_cancellation_propagation_failures_are_explicit_and_bounded() {
     let pre_cancelled = CancellationCarrier::new();
     assert_eq!(

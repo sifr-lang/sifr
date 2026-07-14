@@ -1,0 +1,79 @@
+from sifr.python import ExitCause, ExitDecision, PythonError
+
+
+class HandlerError(Error):
+    message: str
+
+
+@python.opaque(type=types.SimpleNamespace, cleanup=context)
+class SyncManager:
+    @python.callback(handler, lifetime=Self, dispatch=foreign, concurrency=serial)
+    @python(Self.install)
+    def install(
+        self,
+        own handler: Callable[[int], int],
+    ) -> Result[None, PythonError]: ...
+
+    @python.context.enter(Self.__enter__)
+    def __enter__(self) -> Result[SyncManager, PythonError]: ...
+
+    @python.context.exit(Self.__exit__)
+    def __exit__(
+        own self,
+        cause: ExitCause,
+    ) -> Result[ExitDecision, PythonError]: ...
+
+
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
+@python(bridge.callback_reconciliation.swallow_sync_handler_error)
+def swallow_sync_handler_error(
+    own handler: Callable[[int], Result[int, HandlerError]],
+) -> Result[None, PythonError | HandlerError]: ...
+
+
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
+@python(bridge.callback_reconciliation.observe_sync_handler_release)
+def observe_sync_handler_release(
+    own handler: Callable[[int], Result[int, HandlerError]],
+) -> Result[None, PythonError | HandlerError]: ...
+
+
+@python(bridge.callback_reconciliation.make_sync_manager)
+def make_sync_manager() -> Result[SyncManager, PythonError]: ...
+
+
+@python(bridge.callback_reconciliation.sync_status)
+def sync_status() -> Result[str, PythonError]: ...
+
+
+def fail(value: int) -> Result[int, HandlerError]:
+    raise HandlerError("sync handler failed: " + str(value))
+
+
+def add_one(value: int) -> int:
+    return value + 1
+
+
+def main() -> Result[None, PythonError]:
+    try:
+        _swallowed: Result[None, PythonError | HandlerError] = swallow_sync_handler_error(fail)
+        typed_evidence: str = "sifr-handler-error-missing"
+        match _swallowed:
+            case HandlerError():
+                typed_evidence = "sifr-handler-error"
+            case _:
+                pass
+        _released: Result[None, PythonError | HandlerError] = observe_sync_handler_release(fail)
+
+        manager: SyncManager = make_sync_manager()
+        _installed: None = manager.install(add_one)
+        try:
+            with manager as entered:
+                pass
+        except PythonError:
+            pass
+        proof: str = sync_status()
+        print("sifr-python-interop:callback:sync-context=" + proof + ":" + typed_evidence)
+    except PythonError as error:
+        raise error
+    return None

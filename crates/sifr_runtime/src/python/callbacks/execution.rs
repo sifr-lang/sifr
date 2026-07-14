@@ -146,6 +146,14 @@ pub fn attach_callback_failure_evidence<T>(
     let Err(primary) = &mut outcome else {
         return outcome;
     };
+    attach_callback_failure_evidence_to_error(primary, owners);
+    outcome
+}
+
+pub(crate) fn attach_callback_failure_evidence_to_error(
+    primary: &mut PythonError,
+    owners: &[&CallbackOwnerState],
+) {
     let mut seen_owners = Vec::new();
     for owner in owners {
         if seen_owners.contains(&owner.owner_id()) {
@@ -159,6 +167,9 @@ pub fn attach_callback_failure_evidence<T>(
             "secondary Sifr callback failure {} at entry {}: {}",
             evidence.exception_type, evidence.entry_sequence, evidence.message
         );
+        if primary.context.contains(&secondary) {
+            continue;
+        }
         if primary.context.is_empty() {
             primary.context = secondary;
         } else {
@@ -166,7 +177,33 @@ pub fn attach_callback_failure_evidence<T>(
             primary.context.push_str(&secondary);
         }
     }
-    outcome
+}
+
+pub fn reconcile_callback_outcome<T>(
+    outcome: Result<T, PythonError>,
+    cleanup: Vec<Result<(), PythonError>>,
+    owners: &[&CallbackOwnerState],
+) -> Result<T, PythonError> {
+    let mut cleanup_errors = cleanup.into_iter().filter_map(Result::err);
+    match outcome {
+        Err(primary) => {
+            let mut primary = primary;
+            attach_callback_failure_evidence_to_error(&mut primary, owners);
+            for secondary in cleanup_errors {
+                super::super::attach_secondary_python_error(&mut primary, &secondary);
+            }
+            Err(primary)
+        }
+        Ok(value) => {
+            let Some(mut primary) = cleanup_errors.next() else {
+                return Ok(value);
+            };
+            for secondary in cleanup_errors {
+                super::super::attach_secondary_python_error(&mut primary, &secondary);
+            }
+            attach_callback_failure_evidence(Err(primary), owners)
+        }
+    }
 }
 
 pub(super) fn execution_error(

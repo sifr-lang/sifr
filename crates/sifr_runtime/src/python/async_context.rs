@@ -67,7 +67,16 @@ pub async fn submit_async_context_exit_with_callbacks(
         owner.close_after_owner_unregister_async().await
     };
     match primary {
-        Err(primary) => Err(primary),
+        Err(mut primary) => {
+            super::callbacks::execution::attach_callback_failure_evidence_to_error(
+                &mut primary,
+                &[&owner],
+            );
+            if let Err(secondary) = callback_close {
+                super::attach_secondary_python_error(&mut primary, &secondary);
+            }
+            Err(primary)
+        }
         Ok(decision) => callback_close.map(|()| decision),
     }
 }

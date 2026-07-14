@@ -3159,6 +3159,7 @@ dependencies = [
  "sifr_lowering",
  "sifr_stdlib_manifest",
  "sifr_type_system",
+ "static_assertions",
  "syn 2.0.117",
 ]
 

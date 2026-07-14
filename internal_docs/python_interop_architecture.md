@@ -152,7 +152,7 @@ The public examples in `docs/python-interop.mdx` are intentionally backed by che
 | Pydantic / pydantic-core validation | `library-examples` runs `fastapi_app/fastapi_pydantic_full_example.sifr`; `pydantic_models_contract.json` remains the contract inventory. |
 | pandas / pyarrow / polars Arrow bridge | `dataframe-examples` runs pandas and Polars examples; `library-examples` runs `pyarrow_capsule/pyarrow_full_example.sifr`; Arrow capsule fixtures remain contract inventory. |
 | torch / TensorFlow DLPack | `ml-examples` runs `torch_dlpack/torch_full_example.sifr`; TensorFlow remains host-dependent matrix/contract evidence through `tensorflow_dlpack_contract.json`. |
-| Kafka callbacks | `kafka` and `cffi_callback` contracts plus callback source fixtures. |
+| Kafka / CFFI / asyncio / Pub/Sub callbacks | `callback-examples` compiles and runs all four offline examples, including foreign-thread CFFI and Kafka dispatch plus active retained Pub/Sub close/drain. |
 | cryptography / CFFI / certifi | `library-examples` runs `cryptography_tls/cryptography_cffi_full_example.sifr`; `cryptography_tls_contract.json` remains the contract inventory. |
 | boto3 / botocore cloud clients | `library-examples` runs `aws_sqs/boto3_botocore_full_example.sifr`; live LocalStack SNS/SQS examples cover service-backed delivery. |
 | redis / fakeredis / hiredis | `library-examples` runs `redis/redis_fakeredis_full_example.sifr`; live Redis examples cover container-backed service behavior. |
@@ -171,7 +171,7 @@ Active compiler diagnostics:
   the root application. `SIFR-PYTRUST-0002` is retired.
 
 Declaration diagnostics are activated with their owning compiler surfaces. `PYIMP`,
-`PYCALL`, `PYCONV`, `PYRES`, and `PYCTX` currently cover synchronous and async
-declarations, opaque values, sync contexts, package bridges, consuming async
-close, and sequenced later-protocol reservations. `PYASYNC`, `PYCB`, and `PYZC`
-remain reserved until their owning later protocols activate.
+`PYCALL`, `PYCONV`, `PYRES`, `PYCTX`, `PYASYNC`, and `PYCB` cover synchronous and
+async declarations, opaque values, sync/async contexts, package bridges,
+consuming async close, and typed current/foreign/asyncio callbacks. `PYZC`
+remains reserved until the later zero-copy protocols activate.

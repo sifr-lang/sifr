@@ -17,6 +17,10 @@ async def subscribe(
 ) -> Result[Subscription, PythonError]: ...
 
 
+@python.coroutine(bridge.pubsub.last_close_result)
+async def last_close_result() -> Result[int, PythonError]: ...
+
+
 async def double(value: int) -> int:
     await task.sleep(0.0)
     return value * 2
@@ -25,9 +29,9 @@ async def double(value: int) -> int:
 async def main() -> Result[None, PythonError]:
     try:
         subscription: Subscription = await subscribe(double)
-        value: int = await subscription.emit(21)
         _closed: None = await subscription.aclose()
-        print("sifr-python-interop:callback:pubsub=" + str(value) + ":close=drained")
+        proof: int = await last_close_result()
+        print(f"sifr-python-interop:callback:pubsub={proof}:close=drained")
     except PythonError as error:
         raise error
     return None

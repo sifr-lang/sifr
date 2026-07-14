@@ -1,7 +1,7 @@
 from sifr.python import PythonError
 
 
-@python.callback(handler, lifetime=call, dispatch=current)
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
 @python(bridge.cffi_declaration.apply)
 def cffi_apply(
     handler: Callable[[int], int],

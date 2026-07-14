@@ -84,7 +84,10 @@ pub(super) fn try_lower_simple_async_with_stmt(
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
-    if matches!(kind, sifr_ir::HirAsyncWithKind::UserDefined { .. }) {
+    if matches!(
+        kind,
+        sifr_ir::HirAsyncWithKind::UserDefined { .. } | sifr_ir::HirAsyncWithKind::Python { .. }
+    ) {
         return None;
     }
 
@@ -186,6 +189,10 @@ pub(super) fn try_lower_simple_match_stmt(
                 if matches!(resolve_alias_type(subject_ty), Type::Str) {
                     try_lower_match_pattern_for_string_subject(&arm.pattern)?
                 } else if let Some((pattern, bindings)) =
+                    try_lower_result_error_class_match_pattern(&arm.pattern, subject_ty)
+                {
+                    (pattern, bindings, None)
+                } else if let Some((pattern, bindings)) =
                     try_lower_union_class_match_pattern(&arm.pattern, subject_ty)
                 {
                     (pattern, bindings, None)
@@ -231,6 +238,29 @@ pub(super) fn try_lower_simple_match_stmt(
         expr: lowered_subject,
         arms: lowered_arms,
     }])
+}
+
+pub(super) fn try_lower_result_error_class_match_pattern(
+    pattern: &HirPattern,
+    subject_ty: &Type,
+) -> Option<(String, Vec<String>)> {
+    let Type::Result(_, error_ty) = resolve_alias_type(subject_ty) else {
+        return None;
+    };
+    let HirPattern::Class { class_name, .. } = pattern else {
+        return None;
+    };
+
+    if matches!(resolve_alias_type(error_ty), Type::Union(_)) {
+        let (error_pattern, bindings) = try_lower_union_class_match_pattern(pattern, error_ty)?;
+        return Some((format!("Err({error_pattern})"), bindings));
+    }
+
+    if !matches!(resolve_alias_type(error_ty), Type::Class { name, .. } if name == class_name) {
+        return None;
+    }
+    let (error_pattern, bindings) = try_lower_match_pattern(pattern)?;
+    Some((format!("Err({error_pattern})"), bindings))
 }
 
 pub(super) fn try_lower_match_pattern_for_string_subject(

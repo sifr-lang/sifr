@@ -15,6 +15,7 @@ use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll, Waker};
+use tokio::sync::Notify;
 
 type BoxCallbackFuture<'a> = Pin<
     Box<
@@ -147,9 +148,96 @@ pub enum AsyncioCallbackConcurrency {
 pub struct AsyncioCallback<'a> {
     object: ObjectHandle,
     owner: CallbackOwnerState,
+    callback_id: u64,
     target: Mutex<Option<Box<dyn AsyncioTarget<'a> + 'a>>>,
-    admission: Arc<AtomicBool>,
+    admission: Arc<AsyncioAdmission>,
     retained: AtomicBool,
+}
+
+#[derive(Default)]
+struct AsyncioAdmission {
+    state: Mutex<AsyncioAdmissionState>,
+    changed: Notify,
+}
+
+#[derive(Default)]
+struct AsyncioAdmissionState {
+    open: bool,
+    active_setups: usize,
+}
+
+struct AsyncioAdmissionLease {
+    admission: Arc<AsyncioAdmission>,
+    active: bool,
+}
+
+impl AsyncioAdmission {
+    fn open() -> Self {
+        Self {
+            state: Mutex::new(AsyncioAdmissionState {
+                open: true,
+                active_setups: 0,
+            }),
+            changed: Notify::new(),
+        }
+    }
+
+    fn enter(admission: &Arc<Self>) -> Result<AsyncioAdmissionLease, ()> {
+        let mut state = admission
+            .state
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !state.open {
+            return Err(());
+        }
+        state.active_setups = state.active_setups.checked_add(1).ok_or(())?;
+        drop(state);
+        Ok(AsyncioAdmissionLease {
+            admission: Arc::clone(admission),
+            active: true,
+        })
+    }
+
+    fn close(&self) {
+        self.state
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .open = false;
+    }
+
+    async fn close_and_wait(&self) {
+        self.close();
+        loop {
+            let notified = self.changed.notified();
+            if self
+                .state
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .active_setups
+                == 0
+            {
+                return;
+            }
+            notified.await;
+        }
+    }
+}
+
+impl Drop for AsyncioAdmissionLease {
+    fn drop(&mut self) {
+        if !self.active {
+            return;
+        }
+        self.active = false;
+        let mut state = self
+            .admission
+            .state
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.active_setups = state.active_setups.saturating_sub(1);
+        drop(state);
+        self.admission.changed.notify_waiters();
+    }
 }
 
 impl AsyncioCallback<'_> {
@@ -164,14 +252,29 @@ impl AsyncioCallback<'_> {
     }
 
     pub async fn close_call_scope(&self) -> Result<(), PythonError> {
+        self.admission.close_and_wait().await;
         self.owner.close_call_scope_async().await?;
-        self.admission.store(false, Ordering::Release);
         object_ops::close_object(self.object.clone())
     }
 
     pub async fn close_after_owner_unregister(&self) -> Result<(), PythonError> {
+        self.admission.close_and_wait().await;
         self.owner.close_after_owner_unregister_async().await?;
-        self.admission.store(false, Ordering::Release);
+        object_ops::close_object(self.object.clone())
+    }
+
+    pub async fn rollback_provisional(&self) -> Result<(), PythonError> {
+        if self.retained.swap(true, Ordering::AcqRel) {
+            return Ok(());
+        }
+        self.admission.close_and_wait().await;
+        self.owner.cancel_callback_entries(self.callback_id).await;
+        drop(
+            self.target
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .take(),
+        );
         object_ops::close_object(self.object.clone())
     }
 }
@@ -202,7 +305,7 @@ impl Drop for AsyncioCallback<'_> {
         }
         if self.owner.active_calls() == 0 {
             let _ignored = self.owner.close_call_scope();
-            self.admission.store(false, Ordering::Release);
+            self.admission.close();
             let _ignored = object_ops::close_object(self.object.clone());
         } else if let Some(target) = self
             .target
@@ -218,7 +321,7 @@ impl Drop for AsyncioCallback<'_> {
 #[allow(clippy::too_many_arguments)]
 pub fn asyncio_callback_scoped_with_owner<'a, A, R, Decode, Handler, Encode, HandlerFuture>(
     owner: CallbackOwnerState,
-    callback_id: u64,
+    _callback_id: u64,
     expected_arity: usize,
     concurrency: AsyncioCallbackConcurrency,
     decode: Decode,
@@ -233,6 +336,7 @@ where
     HandlerFuture: Future<Output = Result<R, CallbackExecutionError>> + Send + 'a,
     Encode: Fn(R) -> Result<ObjectHandle, PythonError> + Send + Sync + 'a,
 {
+    let callback_id = owner.allocate_callback_id()?;
     crate::python::async_runtime::ensure_started().map_err(PythonError::runtime)?;
     let runtime = tokio::runtime::Handle::try_current().map_err(|error| {
         PythonError::runtime(PythonRuntimeError::AsyncRuntimeFailed(format!(
@@ -247,7 +351,7 @@ where
     let target_ptr: *const (dyn AsyncioTarget<'a> + 'a) = &*target;
     let target_ptr = Arc::new(unsafe { erase_target_lifetime(target_ptr) });
     let fifo = Arc::new(AsyncFifo::default());
-    let admission = Arc::new(AtomicBool::new(true));
+    let admission = Arc::new(AsyncioAdmission::open());
     let shell_admission = Arc::clone(&admission);
     let shell_owner = owner.clone();
     let object = crate::python::attach(|py| {
@@ -256,9 +360,8 @@ where
             Some(c"sifr_asyncio_callback"),
             None,
             move |args: &Bound<'_, PyTuple>, kwargs: Option<&Bound<'_, PyDict>>| {
-                if !shell_admission.load(Ordering::Acquire) {
-                    return Err(python_error(errors::closed(shell_owner.owner_id())));
-                }
+                let _admission = AsyncioAdmission::enter(&shell_admission)
+                    .map_err(|()| python_error(errors::closed(shell_owner.owner_id())))?;
                 validate_call_shape(args, kwargs, expected_arity)?;
                 let py = args.py();
                 let asyncio = py.import("asyncio")?;
@@ -293,6 +396,7 @@ where
                 let future = loop_object.call_method0("create_future")?;
                 let entry = AsyncioCallbackEntry::register(
                     &shell_owner,
+                    callback_id,
                     entry_sequence,
                     cancellation,
                     loop_object.clone().unbind(),
@@ -377,6 +481,7 @@ where
     Ok(AsyncioCallback {
         object,
         owner,
+        callback_id,
         target: Mutex::new(Some(target)),
         admission,
         retained: AtomicBool::new(false),

@@ -563,3 +563,34 @@ def run() -> Result[int, PythonError]:
 ",
     );
 }
+
+#[test]
+fn foreign_and_asyncio_callbacks_accept_top_level_handlers() {
+    lower_success(
+        r"
+class PythonError(Error):
+    message: str
+
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
+@python(pkg.compute)
+def compute(handler: Callable[[int], int]) -> Result[int, PythonError]: ...
+
+@python.callback(handler, lifetime=call, dispatch=asyncio, concurrency=serial)
+@python.coroutine(pkg.compute_async)
+async def compute_async(handler: AsyncCallable[[int], int]) -> Result[int, PythonError]: ...
+
+def sync_handler(value: int) -> int:
+    return value + 1
+
+async def async_handler(value: int) -> int:
+    await task.sleep(0.0)
+    return value + 1
+
+def run_sync() -> Result[int, PythonError]:
+    return compute(sync_handler)
+
+async def run_async() -> Result[int, PythonError]:
+    return await compute_async(async_handler)
+",
+    );
+}

@@ -381,6 +381,14 @@ handler-state lock, and executes on the invoking thread in that acceptance
 order. Reentrant invocation is detected before locking and rejected with
 `SifrCallbackReentrancyError` rather than deadlocking. Parallel dispatch permits
 concurrent invocations and therefore requires immutable `Sync` captures.
+Each retained foreign trampoline receives a distinct owner-local runtime
+identity when it is created. Declaration parameter positions are not runtime
+callback identities: the same receiver method may register more than one
+trampoline, and those registrations must never be mistaken for recursive entry
+into one callback. A call-scoped foreign trampoline drains synchronously for a
+synchronous declaration, while an async declaration awaits the drain so an
+accepted foreign invocation cannot block the current-thread executor that must
+complete its handler.
 Asyncio dispatch maps cancellation in both directions using the same
 terminal-state rule as `@python.coroutine`. Serial asyncio dispatch is ordered per
 owner; a recursive invocation from the active handler is rejected before it can
@@ -402,6 +410,25 @@ callback before stopping the Python loop or reporting outstanding resources.
 Semantic owner close from within one of that owner's accepted callback
 invocations is rejected statically where visible and by a runtime reentrancy
 guard otherwise, so shutdown never waits for the invocation that initiated it.
+
+Context entry is part of the same ownership boundary. If synchronous or
+asynchronous entry fails after a receiver callback owner exists, the wrapper
+closes and drains that owner, releases its captures, and attaches retained
+handler-failure evidence to the entry error. It marks unregister authority
+complete without calling `__exit__` or `__aexit__`, because a failed entry never
+established a context. The async error path releases its exact native
+cancellation claim unconditionally and decides the returned error from the
+terminal `CancellationResume` state. A cancellation request arriving after an
+earlier notification observation therefore resumes the parent instead of being
+lost behind the Python entry error.
+
+An asyncio receiver callback remains provisional until the Python registration
+operation succeeds and transfers it into the receiver owner. On failure or
+cancellation, generated code closes that callback's admission gate, waits for
+in-progress setup, cancels and joins only its accepted entries, and releases
+the target and Python callable. This terminal rollback prevents the emergency
+drop path from leaking captured state when Python starts a callback before
+rejecting registration.
 
 ## Buffer Protocol
 

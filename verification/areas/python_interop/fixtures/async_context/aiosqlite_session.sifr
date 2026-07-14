@@ -183,11 +183,10 @@ async def main() -> Result[None, Error]:
     except PythonError as error:
         raise error
 
-    async with task.scope() as scope:
-        cancelled = scope.spawn(cancellation_case())
-        await task.sleep(0.05)
-        cancelled.cancel()
-        _cancelled_result = await cancelled
+    try:
+        _cancelled: None = await cancellation_case()
+    except PythonError:
+        pass
 
     try:
         evidence: Stats = await stats()

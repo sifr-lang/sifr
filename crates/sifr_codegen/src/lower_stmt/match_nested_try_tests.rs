@@ -104,6 +104,42 @@ fn lowers_match_with_class_patterns_and_captures() {
 }
 
 #[test]
+fn lowers_result_error_union_class_pattern() {
+    let handler_error = Type::Class {
+        name: "HandlerError".to_string(),
+        fields: vec![("message".to_string(), Type::Str)],
+        methods: vec![],
+        parent_class: Some("Error".to_string()),
+    };
+    let python_error = Type::Class {
+        name: "PythonError".to_string(),
+        fields: vec![("message".to_string(), Type::Str)],
+        methods: vec![],
+        parent_class: Some("Error".to_string()),
+    };
+    let error_union = Type::Union(vec![python_error, handler_error.clone()]);
+    let result_ty = Type::Result(Box::new(Type::None), Box::new(error_union.clone()));
+    let pattern = HirPattern::Class {
+        class_name: "HandlerError".to_string(),
+        fields: vec![],
+    };
+
+    let (lowered, bindings) =
+        with_yield_and_match::try_lower_result_error_class_match_pattern(&pattern, &result_ty)
+            .expect("result error class pattern should lower");
+
+    assert_eq!(
+        lowered,
+        format!(
+            "Err({}::{}(..))",
+            error_union.union_enum_name(),
+            handler_error.union_variant_name()
+        )
+    );
+    assert!(bindings.is_empty());
+}
+
+#[test]
 fn lowers_match_with_string_literal_patterns() {
     let stmt = HirStmt::Match {
         subject: HirExpr::Name {

@@ -452,6 +452,25 @@ mod tests {
     }
 
     #[test]
+    fn cancellation_scope_release_observes_request_after_earlier_notification_check() {
+        let parent = CancellationCarrier::new();
+        let parent_fallback_calls = Arc::new(AtomicUsize::new(0));
+        assert_eq!(
+            parent.bind_fallback(counting_hook(&parent_fallback_calls)),
+            CancellationBind::Bound
+        );
+        let scope = CancellationScopeLease::claim(&parent).expect("scope should claim parent");
+
+        assert!(!scope.notification().is_notified());
+        assert_eq!(parent.request_cancel(), CancellationRequest::Claimed);
+        assert_eq!(
+            scope.release_and_resume_parent(),
+            CancellationResume::Invoked
+        );
+        assert_eq!(parent_fallback_calls.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
     fn cancellation_scope_waits_for_child_exact_claim_before_notifying() {
         let parent = CancellationCarrier::new();
         let _bound = parent.bind_fallback(Arc::new(|| {}));

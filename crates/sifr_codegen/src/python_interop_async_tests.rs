@@ -1,4 +1,7 @@
-use crate::python_interop_direct::{python_interop_function_body, python_interop_method_body};
+use crate::python_interop_direct::{
+    python_interop_function_body, python_interop_method_body,
+    python_interop_method_body_with_retained_errors,
+};
 use crate::{generate_rust, render_stmts};
 use ruff_text_size::TextRange;
 use sifr_ir::{
@@ -141,6 +144,33 @@ fn async_close_selects_identity_finalization_only_for_complete_class_contract() 
     assert!(rendered.contains("PythonAsyncRequest::semantic_close_method"));
     assert!(rendered.contains("self.__sifr_python_object"));
     assert!(!rendered.contains("PythonAsyncRequest::owned_method"));
+    for required in [
+        "retained_callback_finalization_scope",
+        "scope.child().clone()",
+        "submit_async_declaration_with_callbacks",
+        "finish_retained_callback_finalization",
+    ] {
+        assert!(
+            rendered.contains(required),
+            "missing {required}\n{rendered}"
+        );
+    }
+    let claim = rendered
+        .find("retained_callback_finalization_scope")
+        .expect("owner-close cancellation claim");
+    let request = rendered
+        .find("PythonAsyncRequest::semantic_close_method")
+        .expect("semantic owner-close request");
+    let close = rendered
+        .find("submit_async_declaration_with_callbacks")
+        .expect("async owner close submission");
+    let resume = rendered
+        .find("finish_retained_callback_finalization")
+        .expect("native cancellation resumption");
+    assert!(
+        claim < request && request < close && close < resume,
+        "{rendered}"
+    );
 
     let borrowed = method_function(false);
     let borrowed = render_stmts(
@@ -152,6 +182,47 @@ fn async_close_selects_identity_finalization_only_for_complete_class_contract() 
 
     let wrong_method = method_function(true);
     assert!(python_interop_method_body(&wrong_method, &Default::default(), Some(&owner)).is_none());
+}
+
+#[test]
+fn async_owner_methods_observe_typed_retained_callback_failures() {
+    let mut close_declaration = declaration(vec!["Self", "aclose"], Vec::new());
+    close_declaration.consumes_receiver = true;
+    let close = function("aclose", Vec::new(), Type::None, close_declaration);
+    let mut owner = opaque_declaration();
+    owner.cleanup = Some(PythonCleanupPolicy::AsyncClose);
+    let errors = vec![Type::Class {
+        name: "HandlerError".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: None,
+    }];
+
+    for method in [&close, &method_function(false)] {
+        let rendered = render_stmts(
+            &python_interop_method_body_with_retained_errors(
+                method,
+                &Default::default(),
+                Some(&owner),
+                &Default::default(),
+                &errors,
+            )
+            .expect("async owner method should lower"),
+        );
+        assert!(
+            rendered.contains("__sifr_python_callbacks.owner()"),
+            "{rendered}"
+        );
+        assert!(
+            rendered.contains("__sifr_python_callback_failure_0.clone()"),
+            "{rendered}"
+        );
+        assert!(rendered.contains("take_if_owner_first"), "{rendered}");
+        assert!(
+            rendered.contains("attach_callback_failure_evidence"),
+            "{rendered}"
+        );
+    }
 }
 
 #[test]
@@ -275,9 +346,229 @@ fn asyncio_callback_emits_owned_loop_factory_async_handler_and_async_drain() {
     );
     assert!(rendered.contains("close_call_scope().await"), "{rendered}");
     assert!(
-        rendered.contains("attach_callback_failure_evidence"),
+        rendered.contains("reconcile_callback_outcome"),
         "{rendered}"
     );
+    for required in [
+        "retained_callback_finalization_scope",
+        "scope.child().clone()",
+        "finish_retained_callback_finalization",
+    ] {
+        assert!(
+            rendered.contains(required),
+            "missing {required}\n{rendered}"
+        );
+    }
+    let request = rendered
+        .find("submit_async_declaration")
+        .expect("async declaration request");
+    let drain = rendered
+        .find("close_call_scope().await")
+        .expect("asyncio callback drain");
+    let resume = rendered
+        .find("finish_retained_callback_finalization")
+        .expect("native cancellation resumption");
+    assert!(request < drain && drain < resume, "{rendered}");
+}
+
+#[test]
+fn foreign_callback_in_async_wrapper_uses_nonblocking_drain() {
+    let handler_type = Type::Callable(
+        vec![Type::Int],
+        vec![ParamConvention::own()],
+        Box::new(Type::Int),
+    );
+    let mut declaration = declaration(
+        vec!["pkg", "apply"],
+        vec![shape("handler", PythonParameterKind::Positional, false)],
+    );
+    declaration.callbacks.push(PythonCallbackDeclaration {
+        parameter_name: "handler".to_string(),
+        span: TextRange::default(),
+        lifetime: PythonCallbackLifetime::Call,
+        dispatch: PythonCallbackDispatch::Foreign,
+        concurrency: Some(PythonCallbackConcurrency::Serial),
+        argument_types: vec![Type::Int],
+        argument_conventions: vec![ParamConvention::own()],
+        success_type: Type::Int,
+        handler_error_type: None,
+        is_async: false,
+        owner_class: None,
+        owner_cleanup: None,
+    });
+    let wrapper = function(
+        "apply",
+        vec![param("handler", handler_type, ParamConvention::borrow())],
+        Type::Int,
+        declaration,
+    );
+
+    let rendered = render_stmts(
+        &python_interop_function_body(&wrapper, &Default::default())
+            .expect("foreign callback wrapper should lower"),
+    );
+    assert!(
+        rendered.contains("close_call_scope_async().await"),
+        "{rendered}"
+    );
+    assert!(!rendered.contains("close_call_scope();"), "{rendered}");
+    for required in [
+        "retained_callback_finalization_scope",
+        "scope.child().clone()",
+        "finish_retained_callback_finalization",
+    ] {
+        assert!(
+            rendered.contains(required),
+            "missing {required}\n{rendered}"
+        );
+    }
+    let request = rendered
+        .find("submit_async_declaration")
+        .expect("async declaration request");
+    let drain = rendered
+        .find("close_call_scope_async().await")
+        .expect("foreign callback drain");
+    let resume = rendered
+        .find("finish_retained_callback_finalization")
+        .expect("native cancellation resumption");
+    assert!(request < drain && drain < resume, "{rendered}");
+}
+
+#[test]
+fn receiver_asyncio_registration_has_terminal_provisional_rollback() {
+    let handler_type = Type::AsyncCallable(
+        vec![Type::Int],
+        vec![ParamConvention::own()],
+        Box::new(Type::Int),
+    );
+    let mut declaration = declaration(
+        vec!["Self", "install"],
+        vec![shape("handler", PythonParameterKind::Positional, false)],
+    );
+    declaration.callbacks.push(PythonCallbackDeclaration {
+        parameter_name: "handler".to_string(),
+        span: TextRange::default(),
+        lifetime: PythonCallbackLifetime::Receiver,
+        dispatch: PythonCallbackDispatch::Asyncio,
+        concurrency: Some(PythonCallbackConcurrency::Parallel),
+        argument_types: vec![Type::Int],
+        argument_conventions: vec![ParamConvention::own()],
+        success_type: Type::Int,
+        handler_error_type: None,
+        is_async: true,
+        owner_class: Some("Client".to_string()),
+        owner_cleanup: Some(PythonCleanupPolicy::AsyncClose),
+    });
+    let method = function(
+        "install",
+        vec![param("handler", handler_type, ParamConvention::borrow())],
+        Type::None,
+        declaration,
+    );
+    let mut owner = opaque_declaration();
+    owner.cleanup = Some(PythonCleanupPolicy::AsyncClose);
+
+    let rendered = render_stmts(
+        &python_interop_method_body(&method, &Default::default(), Some(&owner))
+            .expect("receiver callback method should lower"),
+    );
+    for required in [
+        "let mut __sifr_provisional_callback_0 = None",
+        "__sifr_provisional_callback_0 = Some(",
+        "rollback_provisional().await",
+        "receiver-callback-registration",
+        "retained_callback_finalization_scope",
+        "scope.child().clone()",
+        "finish_retained_callback_finalization",
+    ] {
+        assert!(
+            rendered.contains(required),
+            "missing {required}\n{rendered}"
+        );
+    }
+    let request = rendered
+        .find("submit_async_declaration")
+        .expect("registration request");
+    let rollback = rendered
+        .find("rollback_provisional().await")
+        .expect("terminal rollback");
+    let resume = rendered
+        .find("finish_retained_callback_finalization")
+        .expect("native cancellation resumption");
+    assert!(request < rollback && rollback < resume, "{rendered}");
+    syn::parse_file(&format!(
+        "async fn generated() -> Result<(), PythonError> {{ {rendered} }}"
+    ))
+    .expect("provisional receiver wrapper should be valid Rust syntax");
+}
+
+#[test]
+fn retained_asyncio_result_masks_native_cancellation_until_rollback_finishes() {
+    let handler_type = Type::AsyncCallable(
+        vec![Type::Int],
+        vec![ParamConvention::own()],
+        Box::new(Type::Int),
+    );
+    let mut declaration = declaration(
+        vec!["pkg", "subscribe"],
+        vec![shape("handler", PythonParameterKind::Positional, false)],
+    );
+    declaration.callbacks.push(PythonCallbackDeclaration {
+        parameter_name: "handler".to_string(),
+        span: TextRange::default(),
+        lifetime: PythonCallbackLifetime::Result,
+        dispatch: PythonCallbackDispatch::Asyncio,
+        concurrency: Some(PythonCallbackConcurrency::Parallel),
+        argument_types: vec![Type::Int],
+        argument_conventions: vec![ParamConvention::own()],
+        success_type: Type::Int,
+        handler_error_type: None,
+        is_async: true,
+        owner_class: Some("Subscription".to_string()),
+        owner_cleanup: Some(PythonCleanupPolicy::AsyncClose),
+    });
+    let owner_type = Type::Class {
+        name: "Subscription".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("NonSend".to_string()),
+    };
+    let wrapper = function(
+        "subscribe",
+        vec![param("handler", handler_type, ParamConvention::borrow())],
+        owner_type,
+        declaration,
+    );
+    let mut owner = opaque_declaration();
+    owner.cleanup = Some(PythonCleanupPolicy::AsyncClose);
+    owner.target = Some(PythonTargetPath {
+        segments: vec!["pkg".to_string(), "Subscription".to_string()],
+        span: TextRange::default(),
+    });
+    let opaque_classes = HashMap::from([("Subscription".to_string(), owner)]);
+
+    let rendered = render_stmts(
+        &python_interop_function_body(&wrapper, &opaque_classes)
+            .expect("retained asyncio wrapper should lower"),
+    );
+    for required in [
+        "retained_callback_finalization_scope",
+        "scope.child().clone()",
+        "finalize_retained_callbacks",
+        "finish_retained_callback_finalization",
+    ] {
+        assert!(
+            rendered.contains(required),
+            "missing {required}\n{rendered}"
+        );
+    }
+    let rollback = rendered
+        .find("finalize_retained_callbacks")
+        .expect("awaited rollback");
+    let resume = rendered
+        .find("finish_retained_callback_finalization")
+        .expect("native cancellation resumption");
+    assert!(rollback < resume, "{rendered}");
 }
 
 #[test]

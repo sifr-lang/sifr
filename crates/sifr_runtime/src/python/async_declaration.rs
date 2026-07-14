@@ -151,10 +151,16 @@ pub async fn submit_async_declaration_with_callbacks(
         .close_after_owner_unregister_with_typed_observer_async()
         .await;
     match primary {
-        Err(primary) => super::callbacks::attach_callback_failure_evidence::<PythonAsyncValue>(
-            Err(primary),
-            &[&owner],
-        ),
+        Err(mut primary) => {
+            super::callbacks::execution::attach_callback_failure_evidence_to_error(
+                &mut primary,
+                &[&owner],
+            );
+            if let Err(secondary) = callback_close {
+                super::attach_secondary_python_error(&mut primary, &secondary);
+            }
+            Err(primary)
+        }
         Ok(value) => callback_close.map(|()| value),
     }
 }
