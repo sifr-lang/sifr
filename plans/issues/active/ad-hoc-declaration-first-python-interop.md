@@ -676,9 +676,9 @@ Tasks:
 
 Delivery waves:
 
-- [ ] Wave 1 — gated declaration/type contract, `AsyncCallable`, lifecycle
-  substrate, and callback attachment plans ([draft PR #2974](https://github.com/sifr-lang/sifr/pull/2974);
-  implementation, local validation, and manual review in progress).
+- [x] Wave 1 — gated declaration/type contract, `AsyncCallable`, lifecycle
+  substrate, and callback attachment plans ([PR #2974](https://github.com/sifr-lang/sifr/pull/2974);
+  merged after focused coverage, frozen-diff review, and both authoritative local gates).
 - [ ] Wave 2 — gated current/foreign execution and retained-owner integration.
 - [ ] Wave 3 — asyncio execution, atomic activation, compiled evidence, demo,
   and documentation.
