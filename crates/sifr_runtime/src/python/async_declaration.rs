@@ -1,6 +1,6 @@
 use super::async_runtime::{
-    finish_submission, register_submission, release_pending_submission, reserve_submission,
-    terminal_for_submission, SubmissionCancellationBridge,
+    finish_submission, register_submission, release_pending_submission, reserve_cleanup_submission,
+    reserve_submission, terminal_for_submission, SubmissionCancellationBridge,
 };
 use super::async_terminal::{
     PythonTerminal, PythonTerminalError, PythonTerminalOutcome, PythonTerminalValue,
@@ -26,7 +26,7 @@ pub async fn submit_async_declaration(
     let callback_origin = super::callbacks::current_callback_origin();
     super::async_runtime::ensure_started().map_err(PythonError::runtime)?;
     validate_keywords(&request)?;
-    let submitted = super::attach(|py| submit_typed(py, request, carrier, callback_origin))
+    let submitted = super::attach(|py| submit_typed(py, request, carrier, callback_origin, false))
         .map_err(PythonError::runtime)?;
     let terminal = match submitted {
         Ok(terminal) => terminal,
@@ -59,13 +59,13 @@ pub async fn submit_async_declaration(
     }
 }
 
-pub(super) fn submit_async_declaration_blocking(
+pub(super) fn submit_async_declaration_cleanup_blocking(
     request: PythonAsyncRequest,
 ) -> Result<PythonAsyncValue, PythonError> {
-    super::async_runtime::ensure_started().map_err(PythonError::runtime)?;
+    super::async_runtime::ensure_cleanup_submission_available().map_err(PythonError::runtime)?;
     validate_keywords(&request)?;
-    let submitted =
-        super::attach(|py| submit_typed(py, request, None, None)).map_err(PythonError::runtime)?;
+    let submitted = super::attach(|py| submit_typed(py, request, None, None, true))
+        .map_err(PythonError::runtime)?;
     let terminal = submitted.map_err(terminal_error)?;
     match terminal.wait() {
         Ok(PythonTerminalValue::Typed(value)) => Ok(value),
@@ -84,7 +84,7 @@ pub(super) async fn submit_async_context_request(
 ) -> Result<PythonExitDecision, PythonError> {
     let callback_origin = super::callbacks::current_callback_origin();
     super::async_runtime::ensure_started().map_err(PythonError::runtime)?;
-    let submitted = super::attach(|py| submit_typed(py, request, carrier, callback_origin))
+    let submitted = super::attach(|py| submit_typed(py, request, carrier, callback_origin, false))
         .map_err(PythonError::runtime)?;
     let terminal = match submitted {
         Ok(terminal) => terminal,
@@ -117,12 +117,12 @@ pub(super) async fn submit_async_context_request(
     }
 }
 
-pub(super) fn submit_async_context_request_blocking(
+pub(super) fn submit_async_context_cleanup_blocking(
     request: PythonAsyncRequest,
 ) -> Result<PythonExitDecision, PythonError> {
-    super::async_runtime::ensure_started().map_err(PythonError::runtime)?;
-    let submitted =
-        super::attach(|py| submit_typed(py, request, None, None)).map_err(PythonError::runtime)?;
+    super::async_runtime::ensure_cleanup_submission_available().map_err(PythonError::runtime)?;
+    let submitted = super::attach(|py| submit_typed(py, request, None, None, true))
+        .map_err(PythonError::runtime)?;
     let terminal = submitted.map_err(terminal_error)?;
     match terminal.wait() {
         Ok(PythonTerminalValue::ExitDecision(decision)) => Ok(decision),
@@ -164,10 +164,15 @@ fn submit_typed(
     request: PythonAsyncRequest,
     carrier: Option<&CancellationCarrier>,
     callback_origin: Option<(u64, u64)>,
+    shutdown_cleanup: bool,
 ) -> Result<PythonTerminal, PythonTerminalError> {
     let (terminal, cancellation) = terminal_for_submission(carrier)?;
-    let (submission_id, loop_object) =
-        reserve_submission(py, &terminal).map_err(PythonTerminalError::Runtime)?;
+    let (submission_id, loop_object) = if shutdown_cleanup {
+        reserve_cleanup_submission(py, &terminal)
+    } else {
+        reserve_submission(py, &terminal)
+    }
+    .map_err(PythonTerminalError::Runtime)?;
     let context = request_context(&request);
     let request = Arc::new(request);
     let done_callback = build_done_callback(

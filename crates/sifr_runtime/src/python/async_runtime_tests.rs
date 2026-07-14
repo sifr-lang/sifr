@@ -291,6 +291,52 @@ fn shutdown_terminally_drains_claimed_task_and_finally() {
 }
 
 #[test]
+fn shutdown_retains_owned_loop_authority_for_async_callback_unregister() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    let mut config = test_config("async-callback-unregister-shutdown");
+    config.start_async_loop = true;
+    initialize_runtime(config).expect("init should start the owned loop");
+
+    let (object, marker) = super::super::attach(|py| {
+        let module = PyModule::from_code(
+            py,
+            c"import asyncio\nmarker = []\n\nclass Resource:\n    async def aclose(self):\n        await asyncio.sleep(0)\n        marker.append('closed')\n",
+            c"<sifr-async-unregister-shutdown-test>",
+            c"__sifr_async_unregister_shutdown_test__",
+        )
+        .expect("async unregister test module should compile");
+        let object = module
+            .getattr("Resource")
+            .expect("resource class should resolve")
+            .call0()
+            .expect("resource should construct");
+        let object = super::super::object_ops::store_object(object.unbind())?;
+        let marker = module
+            .getattr("marker")
+            .expect("marker should resolve")
+            .unbind();
+        Ok::<_, super::super::PythonError>((object, marker))
+    })
+    .expect("runtime should attach")
+    .expect("resource should store");
+    let mut group =
+        super::super::RetainedCallbackGroup::new().expect("retained callback group should create");
+    let owner = group
+        .commit_for_object(&object, super::super::RetainedCallbackCleanup::AsyncClose)
+        .expect("async close unregister should commit");
+    drop(group);
+
+    shutdown().expect("shutdown should run async callback unregister before stopping the loop");
+
+    super::super::attach(|py| {
+        assert_eq!(marker.bind(py).len().expect("marker should have length"), 1);
+    })
+    .expect("runtime should attach");
+    assert_eq!(owner.status(), super::super::CallbackOwnerStatus::Closed);
+}
+
+#[test]
 fn invalid_awaitable_setup_resolves_without_leaking_submission_counts() {
     let _guard = test_guard();
     reset_runtime_state_for_tests();
