@@ -2,6 +2,12 @@ import cffi
 import threading
 
 
+def apply_current(handler, value):
+    ffi = cffi.FFI()
+    callback = ffi.callback("long long(long long)", handler)
+    return callback(value)
+
+
 def apply(handler, value):
     ffi = cffi.FFI()
     callback = ffi.callback("long long(long long)", handler)

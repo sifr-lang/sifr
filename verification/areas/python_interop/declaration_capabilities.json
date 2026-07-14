@@ -119,7 +119,7 @@
         {"kind": "negative", "status": "passing", "owner": "callback policy, escape, shape, and conversion diagnostics"},
         {"kind": "cleanup", "status": "passing", "owner": "call-scoped owner drain and exact-once capture release matrix"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "current-thread callable is synchronous"},
-        {"kind": "live", "status": "passing", "owner": "compiled real CFFI callback example"}
+        {"kind": "live", "status": "passing", "owner": "cffi_callback/current_declaration_callback.sifr compiled against real CFFI with synchronous caller-thread invocation"}
       ]
     },
     {

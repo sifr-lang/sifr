@@ -703,7 +703,7 @@ Delivery waves:
   create-PR `131/131`, signature `7c39b8c1dd4fec7c`; merge `651/651`,
   signature `ee5e5d44306f270c`, 261 hardening variants; addresses review findings
   2 and 3 and the active-close portion of finding 4).
-- [ ] Aggregate-review remediation Wave 3 — cancellation/finalization race
+- [x] Aggregate-review remediation Wave 3 — cancellation/finalization race
   closure, failed context-entry owner reconciliation, terminal provisional
   receiver rollback, and an emitted Rust `!Send`/`!Sync` opaque-identity
   backstop ([PR #2984](https://github.com/sifr-lang/sifr/pull/2984);
@@ -716,6 +716,15 @@ Delivery waves:
   entry, owner-local retained foreign callback identities, awaited foreign
   drains in async wrappers, nested typed-error-union registration/mapping, and
   compiled typed handler-error plus post-call closure evidence.
+- [ ] Aggregate-review remediation Wave 4 — add a distinct compiled CFFI
+  caller-thread fixture for `dispatch=current`, retain the worker-thread CFFI
+  fixture as `dispatch=foreign` evidence, and correct capability ownership and
+  verification documentation after the complete merged M9 review exposed the
+  certification mismatch
+  ([GPT-5.6-Sol High complete review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-complete-codex-5-6-sol-high-review-pass-1.md));
+  focused callback examples pass all seven compiled binaries and the
+  authoritative create-PR gate passes `131/131`, signature
+  `7c39b8c1dd4fec7c`.
 - [ ] Milestone review — review the complete merged M9 implementation before
   closing the milestone checkbox.
 
