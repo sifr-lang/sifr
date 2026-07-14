@@ -685,8 +685,12 @@ Delivery waves:
   ([PR #2977](https://github.com/sifr-lang/sifr/pull/2977); merged after frozen-diff
   review and both authoritative local gates, including 651/651 merge-profile
   E2E fixtures and 261 hardening variants).
-- [ ] Wave 3 — asyncio execution, atomic activation, compiled evidence, demo,
-  and documentation.
+- [x] Wave 3 — asyncio execution, atomic activation, compiled evidence, demo,
+  and documentation ([PR #2979](https://github.com/sifr-lang/sifr/pull/2979);
+  merged after frozen-diff review and both authoritative local gates, including
+  131/131 create-PR and 651/651 merge-profile E2E fixtures, 261 hardening
+  variants, and compiled CFFI, Kafka, asyncio, and Pub/Sub evidence through
+  `demos/m9_demo`).
 - [ ] Milestone review — review the complete merged M9 implementation before
   closing the milestone checkbox.
 
