@@ -1,11 +1,15 @@
 use super::object_ops::clone_handle;
 use super::{ObjectHandle, PythonError, PythonRuntimeError};
-use pyo3::buffer::{Element, PyBuffer};
 use pyo3::exceptions::{PyBufferError, PyIndexError, PyTypeError};
 use pyo3::Python;
 use std::collections::HashMap;
 use std::hash::BuildHasher;
 use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
+
+mod access;
+mod raw;
+pub use access::*;
+use raw::{OwnedPyBuffer, ValidatedBuffer};
 
 static BUFFER_STORE: LazyLock<Mutex<BufferStore>> =
     LazyLock::new(|| Mutex::new(BufferStore::default()));
@@ -98,23 +102,43 @@ struct BufferEntry {
     metadata: PythonBufferMetadata,
 }
 
-enum TrackedBuffer {
-    I8(PyBuffer<i8>),
-    I16(PyBuffer<i16>),
-    I32(PyBuffer<i32>),
-    I64(PyBuffer<i64>),
-    ISize(PyBuffer<isize>),
-    U8(PyBuffer<u8>),
-    U16(PyBuffer<u16>),
-    U32(PyBuffer<u32>),
-    U64(PyBuffer<u64>),
-    USize(PyBuffer<usize>),
-    F64(PyBuffer<f64>),
+struct TrackedBuffer {
+    element: PythonBufferElement,
+    access: PythonBufferAccess,
+    buffer: Mutex<Option<OwnedPyBuffer>>,
+}
+
+impl TrackedBuffer {
+    fn new(buffer: OwnedPyBuffer, request: PythonBufferRequest) -> Self {
+        Self {
+            element: request.element,
+            access: request.access,
+            buffer: Mutex::new(Some(buffer)),
+        }
+    }
+
+    fn release(&self, py: Python<'_>) -> Result<(), PythonError> {
+        let buffer = self
+            .buffer
+            .lock()
+            .map_err(|_| buffer_state_error())?
+            .take()
+            .ok_or_else(|| closed_error(-1))?;
+        buffer.release(py);
+        super::update_object_count(-1).map_err(PythonError::runtime)
+    }
 }
 
 impl Drop for TrackedBuffer {
     fn drop(&mut self) {
-        let _ignored = super::update_object_count(-1);
+        let state = match self.buffer.get_mut() {
+            Ok(state) => state,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+        if let Some(buffer) = state.take() {
+            drop(buffer);
+            let _ignored = super::update_object_count(-1);
+        }
     }
 }
 
@@ -125,19 +149,22 @@ pub fn acquire_buffer(
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         let object = object.bind(py);
-        match request.element {
-            PythonBufferElement::I8 => acquire_typed(object, request, TrackedBuffer::I8),
-            PythonBufferElement::I16 => acquire_typed(object, request, TrackedBuffer::I16),
-            PythonBufferElement::I32 => acquire_typed(object, request, TrackedBuffer::I32),
-            PythonBufferElement::I64 => acquire_typed(object, request, TrackedBuffer::I64),
-            PythonBufferElement::ISize => acquire_typed(object, request, TrackedBuffer::ISize),
-            PythonBufferElement::U8 => acquire_typed(object, request, TrackedBuffer::U8),
-            PythonBufferElement::U16 => acquire_typed(object, request, TrackedBuffer::U16),
-            PythonBufferElement::U32 => acquire_typed(object, request, TrackedBuffer::U32),
-            PythonBufferElement::U64 => acquire_typed(object, request, TrackedBuffer::U64),
-            PythonBufferElement::USize => acquire_typed(object, request, TrackedBuffer::USize),
-            PythonBufferElement::F64 => acquire_typed(object, request, TrackedBuffer::F64),
-        }
+        let buffer =
+            OwnedPyBuffer::acquire(py, object, request.access == PythonBufferAccess::Write)
+                .map_err(|error| {
+                    PythonError::from_pyerr(
+                        py,
+                        error,
+                        "zero-copy",
+                        format!("Py_buffer<{}>", request.element.source_name()),
+                    )
+                })?;
+        let validated = buffer
+            .validate(request.element)
+            .map_err(|message| buffer_error(py, &message, "buffer metadata validation"))?;
+        validate_request(py, &validated, request)?;
+        let metadata = metadata_for_buffer(&validated, request.element)?;
+        store_buffer(buffer, request, metadata)
     })
     .map_err(PythonError::runtime)?
 }
@@ -160,31 +187,12 @@ pub fn buffer_u8(
     )
 }
 
-fn acquire_typed<T: Element>(
-    object: &pyo3::Bound<'_, pyo3::types::PyAny>,
-    request: PythonBufferRequest,
-    wrap: fn(PyBuffer<T>) -> TrackedBuffer,
-) -> Result<PythonBufferMetadata, PythonError> {
-    let py = object.py();
-    let buffer = PyBuffer::<T>::get(object).map_err(|error| {
-        PythonError::from_pyerr(
-            py,
-            error,
-            "zero-copy",
-            format!("Py_buffer<{}>", request.element.source_name()),
-        )
-    })?;
-    validate_request(py, &buffer, request)?;
-    let metadata = metadata_for_buffer(&buffer, request.element)?;
-    store_buffer(wrap(buffer), metadata)
-}
-
-fn validate_request<T: Element>(
+fn validate_request(
     py: Python<'_>,
-    buffer: &PyBuffer<T>,
+    buffer: &ValidatedBuffer,
     request: PythonBufferRequest,
 ) -> Result<(), PythonError> {
-    if request.access == PythonBufferAccess::Write && buffer.readonly() {
+    if request.access == PythonBufferAccess::Write && buffer.readonly {
         return Err(buffer_error(
             py,
             "requested writable buffer from readonly exporter",
@@ -193,8 +201,8 @@ fn validate_request<T: Element>(
     }
     let layout_valid = match request.layout {
         PythonBufferLayout::Any => true,
-        PythonBufferLayout::CContiguous => buffer.is_c_contiguous(),
-        PythonBufferLayout::FContiguous => buffer.is_fortran_contiguous(),
+        PythonBufferLayout::CContiguous => buffer.c_contiguous,
+        PythonBufferLayout::FContiguous => buffer.f_contiguous,
     };
     if !layout_valid {
         return Err(buffer_error(
@@ -203,73 +211,33 @@ fn validate_request<T: Element>(
             "buffer layout validation",
         ));
     }
-    let dimensions = buffer.dimensions();
-    if buffer.shape().len() != dimensions || buffer.strides().len() != dimensions {
-        return Err(buffer_error(
-            py,
-            "exporter returned inconsistent shape or stride metadata",
-            "buffer metadata validation",
-        ));
-    }
-    if buffer
-        .suboffsets()
-        .is_some_and(|suboffsets| suboffsets.len() != dimensions)
-    {
-        return Err(buffer_error(
-            py,
-            "exporter returned inconsistent suboffset metadata",
-            "buffer metadata validation",
-        ));
-    }
-    let logical_items = if dimensions == 0 {
-        1
-    } else {
-        buffer
-            .shape()
-            .iter()
-            .try_fold(1_usize, |count, dimension| {
-                count.checked_mul(*dimension).ok_or_else(|| {
-                    buffer_error(
-                        py,
-                        "buffer shape exceeds the supported address space",
-                        "buffer metadata validation",
-                    )
-                })
-            })?
-    };
-    if logical_items != buffer.item_count() {
-        return Err(buffer_error(
-            py,
-            "exporter length does not match its shape and item size",
-            "buffer metadata validation",
-        ));
-    }
     Ok(())
 }
 
-fn metadata_for_buffer<T: Element>(
-    buffer: &PyBuffer<T>,
+fn metadata_for_buffer(
+    buffer: &ValidatedBuffer,
     element: PythonBufferElement,
 ) -> Result<PythonBufferMetadata, PythonError> {
     Ok(PythonBufferMetadata {
         handle: -1,
         token: 0,
         element,
-        len_bytes: checked_i64(buffer.len_bytes(), "buffer length")?,
-        item_size: checked_i64(buffer.item_size(), "buffer item size")?,
-        readonly: buffer.readonly(),
-        dimensions: checked_i64(buffer.dimensions(), "buffer dimensions")?,
-        shape: checked_i64_vec(buffer.shape(), "buffer shape")?,
-        strides: checked_i64_vec(buffer.strides(), "buffer strides")?,
-        suboffsets: checked_i64_vec(buffer.suboffsets().unwrap_or(&[]), "buffer suboffsets")?,
-        c_contiguous: buffer.is_c_contiguous(),
-        f_contiguous: buffer.is_fortran_contiguous(),
-        format: buffer.format().to_string_lossy().into_owned(),
+        len_bytes: checked_i64(buffer.len_bytes, "buffer length")?,
+        item_size: checked_i64(buffer.item_size, "buffer item size")?,
+        readonly: buffer.readonly,
+        dimensions: checked_i64(buffer.dimensions, "buffer dimensions")?,
+        shape: checked_i64_vec(&buffer.shape, "buffer shape")?,
+        strides: checked_i64_vec(&buffer.strides, "buffer strides")?,
+        suboffsets: checked_i64_vec(&buffer.suboffsets, "buffer suboffsets")?,
+        c_contiguous: buffer.c_contiguous,
+        f_contiguous: buffer.f_contiguous,
+        format: buffer.format.clone(),
     })
 }
 
 fn store_buffer(
-    buffer: TrackedBuffer,
+    buffer: OwnedPyBuffer,
+    request: PythonBufferRequest,
     mut metadata: PythonBufferMetadata,
 ) -> Result<PythonBufferMetadata, PythonError> {
     let mut store = buffer_store()?;
@@ -281,22 +249,11 @@ fn store_buffer(
         handle,
         BufferEntry {
             token,
-            buffer: Arc::new(buffer),
+            buffer: Arc::new(TrackedBuffer::new(buffer, request)),
             metadata: metadata.clone(),
         },
     );
     Ok(metadata)
-}
-
-pub fn copy_buffer_u8(buffer: BufferHandle) -> Result<Vec<u8>, PythonError> {
-    let (tracked, _) = buffer_snapshot(buffer)?;
-    super::attach(|py| match tracked.as_ref() {
-        TrackedBuffer::U8(value) => value.to_vec(py).map_err(|error| {
-            PythonError::from_pyerr(py, error, "zero-copy", "copy Py_buffer<uint8>")
-        }),
-        _ => Err(type_error(py, "buffer element type is not uint8")),
-    })
-    .map_err(PythonError::runtime)?
 }
 
 pub fn buffer_shape(buffer: BufferHandle) -> Result<Vec<i64>, PythonError> {
@@ -311,221 +268,6 @@ pub fn buffer_suboffsets(buffer: BufferHandle) -> Result<Vec<i64>, PythonError> 
     buffer_metadata(buffer).map(|metadata| metadata.suboffsets)
 }
 
-macro_rules! typed_buffer_accessors {
-    ($read:ident, $write:ident, $copy:ident, $variant:ident, $ty:ty) => {
-        pub fn $read(buffer: BufferHandle, index: i64) -> Result<$ty, PythonError> {
-            let (tracked, _) = buffer_snapshot(buffer)?;
-            super::attach(|py| match tracked.as_ref() {
-                TrackedBuffer::$variant(value) => read_typed(py, value, index),
-                _ => Err(type_error(
-                    py,
-                    "buffer element type does not match accessor",
-                )),
-            })
-            .map_err(PythonError::runtime)?
-        }
-
-        pub fn $write(buffer: BufferHandle, index: i64, value: $ty) -> Result<(), PythonError> {
-            let (tracked, _) = buffer_snapshot(buffer)?;
-            super::attach(|py| match tracked.as_ref() {
-                TrackedBuffer::$variant(target) => write_typed(py, target, index, value),
-                _ => Err(type_error(
-                    py,
-                    "buffer element type does not match accessor",
-                )),
-            })
-            .map_err(PythonError::runtime)?
-        }
-
-        pub fn $copy(
-            buffer: BufferHandle,
-            start: i64,
-            length: i64,
-        ) -> Result<Vec<$ty>, PythonError> {
-            let (tracked, _) = buffer_snapshot(buffer)?;
-            super::attach(|py| match tracked.as_ref() {
-                TrackedBuffer::$variant(value) => copy_typed_slice(py, value, start, length),
-                _ => Err(type_error(
-                    py,
-                    "buffer element type does not match accessor",
-                )),
-            })
-            .map_err(PythonError::runtime)?
-        }
-    };
-}
-
-typed_buffer_accessors!(
-    buffer_read_i8,
-    buffer_write_i8,
-    copy_buffer_slice_i8,
-    I8,
-    i8
-);
-typed_buffer_accessors!(
-    buffer_read_i16,
-    buffer_write_i16,
-    copy_buffer_slice_i16,
-    I16,
-    i16
-);
-typed_buffer_accessors!(
-    buffer_read_i32,
-    buffer_write_i32,
-    copy_buffer_slice_i32,
-    I32,
-    i32
-);
-typed_buffer_accessors!(
-    buffer_read_i64,
-    buffer_write_i64,
-    copy_buffer_slice_i64,
-    I64,
-    i64
-);
-typed_buffer_accessors!(
-    buffer_read_isize,
-    buffer_write_isize,
-    copy_buffer_slice_isize,
-    ISize,
-    isize
-);
-typed_buffer_accessors!(
-    buffer_read_u8,
-    buffer_write_u8,
-    copy_buffer_slice_u8,
-    U8,
-    u8
-);
-typed_buffer_accessors!(
-    buffer_read_u16,
-    buffer_write_u16,
-    copy_buffer_slice_u16,
-    U16,
-    u16
-);
-typed_buffer_accessors!(
-    buffer_read_u32,
-    buffer_write_u32,
-    copy_buffer_slice_u32,
-    U32,
-    u32
-);
-typed_buffer_accessors!(
-    buffer_read_u64,
-    buffer_write_u64,
-    copy_buffer_slice_u64,
-    U64,
-    u64
-);
-typed_buffer_accessors!(
-    buffer_read_usize,
-    buffer_write_usize,
-    copy_buffer_slice_usize,
-    USize,
-    usize
-);
-typed_buffer_accessors!(
-    buffer_read_f64,
-    buffer_write_f64,
-    copy_buffer_slice_f64,
-    F64,
-    f64
-);
-
-fn read_typed<T: Element>(
-    py: Python<'_>,
-    buffer: &PyBuffer<T>,
-    index: i64,
-) -> Result<T, PythonError> {
-    let index = checked_index(py, index, buffer.item_count())?;
-    readable_slice(py, buffer)?
-        .get(index)
-        .map(pyo3::buffer::ReadOnlyCell::get)
-        .ok_or_else(|| index_error(py, "buffer index is out of bounds"))
-}
-
-fn write_typed<T: Element>(
-    py: Python<'_>,
-    buffer: &PyBuffer<T>,
-    index: i64,
-    value: T,
-) -> Result<(), PythonError> {
-    let index = checked_index(py, index, buffer.item_count())?;
-    let slice = buffer
-        .as_mut_slice(py)
-        .or_else(|| buffer.as_fortran_mut_slice(py))
-        .ok_or_else(|| {
-            buffer_error(
-                py,
-                "writable typed access requires a writable contiguous buffer",
-                "buffer element write",
-            )
-        })?;
-    slice
-        .get(index)
-        .ok_or_else(|| index_error(py, "buffer index is out of bounds"))?
-        .set(value);
-    Ok(())
-}
-
-fn copy_typed_slice<T: Element>(
-    py: Python<'_>,
-    buffer: &PyBuffer<T>,
-    start: i64,
-    length: i64,
-) -> Result<Vec<T>, PythonError> {
-    let start = checked_index_inclusive(py, start, buffer.item_count())?;
-    let length = usize::try_from(length)
-        .map_err(|_| index_error(py, "buffer slice length must be non-negative"))?;
-    let end = start
-        .checked_add(length)
-        .filter(|end| *end <= buffer.item_count())
-        .ok_or_else(|| index_error(py, "buffer slice is out of bounds"))?;
-    Ok(readable_slice(py, buffer)?[start..end]
-        .iter()
-        .map(pyo3::buffer::ReadOnlyCell::get)
-        .collect())
-}
-
-fn readable_slice<'a, T: Element>(
-    py: Python<'a>,
-    buffer: &'a PyBuffer<T>,
-) -> Result<&'a [pyo3::buffer::ReadOnlyCell<T>], PythonError> {
-    buffer
-        .as_slice(py)
-        .or_else(|| buffer.as_fortran_slice(py))
-        .ok_or_else(|| {
-            buffer_error(
-                py,
-                "typed access requires a contiguous buffer",
-                "buffer element access",
-            )
-        })
-}
-
-fn checked_index(py: Python<'_>, index: i64, length: usize) -> Result<usize, PythonError> {
-    let index =
-        usize::try_from(index).map_err(|_| index_error(py, "buffer index must be non-negative"))?;
-    if index >= length {
-        return Err(index_error(py, "buffer index is out of bounds"));
-    }
-    Ok(index)
-}
-
-fn checked_index_inclusive(
-    py: Python<'_>,
-    index: i64,
-    length: usize,
-) -> Result<usize, PythonError> {
-    let index = usize::try_from(index)
-        .map_err(|_| index_error(py, "buffer slice start must be non-negative"))?;
-    if index > length {
-        return Err(index_error(py, "buffer slice start is out of bounds"));
-    }
-    Ok(index)
-}
-
 pub fn release_buffer((handle, token): BufferHandle) -> Result<(), PythonError> {
     let entry = {
         let mut store = buffer_store()?;
@@ -538,9 +280,9 @@ pub fn release_buffer((handle, token): BufferHandle) -> Result<(), PythonError> 
         } else {
             return Err(closed_error(handle));
         }
-    };
-    super::attach(|_py| drop(entry)).map_err(PythonError::runtime)?;
-    Ok(())
+    }
+    .ok_or_else(|| closed_error(handle))?;
+    super::attach(|py| entry.buffer.release(py)).map_err(PythonError::runtime)?
 }
 
 fn buffer_snapshot(
@@ -608,6 +350,34 @@ where
         .collect()
 }
 
+fn with_live_buffer<R>(
+    buffer: BufferHandle,
+    expected: PythonBufferElement,
+    require_write: bool,
+    operation: impl FnOnce(Python<'_>, &OwnedPyBuffer) -> Result<R, PythonError>,
+) -> Result<R, PythonError> {
+    let (tracked, _) = buffer_snapshot(buffer)?;
+    super::attach(|py| {
+        if tracked.element != expected {
+            return Err(type_error(
+                py,
+                "buffer element type does not match accessor",
+            ));
+        }
+        if require_write && tracked.access != PythonBufferAccess::Write {
+            return Err(buffer_error(
+                py,
+                "buffer was acquired with read-only declaration access",
+                "buffer element write",
+            ));
+        }
+        let state = tracked.buffer.lock().map_err(|_| buffer_state_error())?;
+        let value = state.as_ref().ok_or_else(|| closed_error(buffer.0))?;
+        operation(py, value)
+    })
+    .map_err(PythonError::runtime)?
+}
+
 fn buffer_error(py: Python<'_>, message: &str, context: &str) -> PythonError {
     PythonError::from_pyerr(
         py,
@@ -642,6 +412,17 @@ fn closed_error(handle: i64) -> PythonError {
         message: format!("Python buffer handle {handle} is closed"),
         traceback: String::new(),
         context: "buffer handle lookup".to_string(),
+        replay: None,
+    }
+}
+
+fn buffer_state_error() -> PythonError {
+    PythonError {
+        kind: "runtime".to_string(),
+        exception_type: "SifrPythonRuntimeError".to_string(),
+        message: "Python buffer state is unavailable".to_string(),
+        traceback: String::new(),
+        context: "buffer state".to_string(),
         replay: None,
     }
 }

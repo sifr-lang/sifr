@@ -192,3 +192,153 @@ fn typed_writable_buffer_supports_checked_read_write_and_slice_copy() {
     release_buffer(key).expect("release");
     close_object(object).expect("close exporter");
 }
+
+#[test]
+fn read_declaration_rejects_write_on_mutable_exporter() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("buffer-read-access")).expect("init should succeed");
+
+    let object = python_i32_array([10_i32, 20, 30]);
+    let view = acquire_buffer(
+        &object,
+        PythonBufferRequest {
+            element: PythonBufferElement::I32,
+            access: PythonBufferAccess::Read,
+            layout: PythonBufferLayout::Any,
+        },
+    )
+    .expect("read view should acquire from mutable exporter");
+    let key = (view.handle, view.token);
+
+    let error = buffer_write_i32(key, 1, 25).expect_err("read declaration blocks mutation");
+    assert_eq!(error.exception_type, "BufferError");
+    assert_eq!(buffer_read_i32(key, 1).expect("read remains valid"), 20);
+
+    release_buffer(key).expect("release");
+    close_object(object).expect("close exporter");
+}
+
+#[test]
+fn any_layout_supports_strided_logical_access() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("buffer-any-layout")).expect("init should succeed");
+
+    let object = strided_byte_view();
+    let view = acquire_buffer(
+        &object,
+        PythonBufferRequest {
+            element: PythonBufferElement::U8,
+            access: PythonBufferAccess::Read,
+            layout: PythonBufferLayout::Any,
+        },
+    )
+    .expect("any layout should accept a strided view");
+    let key = (view.handle, view.token);
+
+    assert!(!view.c_contiguous);
+    assert_eq!(buffer_read_u8(key, 0).expect("first logical item"), 1);
+    assert_eq!(buffer_read_u8(key, 1).expect("second logical item"), 3);
+    assert_eq!(
+        copy_buffer_slice_u8(key, 0, 2).expect("logical copy"),
+        vec![1, 3]
+    );
+
+    release_buffer(key).expect("release");
+    close_object(object).expect("close exporter");
+}
+
+#[test]
+fn scalar_native_endian_buffer_has_empty_metadata_vectors() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("buffer-scalar")).expect("init should succeed");
+
+    let object = super::super::attach(|py| {
+        let scalar = py
+            .import("ctypes")?
+            .getattr("c_int32")?
+            .call1((0x0102_0304_i32,))?;
+        super::super::object_ops::store_object(scalar.unbind())
+            .map_err(|error| pyo3::exceptions::PyRuntimeError::new_err(error.to_string()))
+    })
+    .expect("attach should succeed")
+    .expect("ctypes scalar should create");
+    let view = acquire_buffer(
+        &object,
+        PythonBufferRequest {
+            element: PythonBufferElement::I32,
+            access: PythonBufferAccess::Read,
+            layout: PythonBufferLayout::Any,
+        },
+    )
+    .expect("zero-dimensional scalar should acquire");
+    let key = (view.handle, view.token);
+
+    assert_eq!(view.dimensions, 0);
+    assert!(view.shape.is_empty());
+    assert!(view.strides.is_empty());
+    assert!(view.suboffsets.is_empty());
+    assert_eq!(buffer_read_i32(key, 0).expect("scalar read"), 0x0102_0304);
+
+    release_buffer(key).expect("release");
+    close_object(object).expect("close exporter");
+}
+
+#[test]
+fn explicit_release_drops_export_even_when_a_runtime_snapshot_exists() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("buffer-release-linearization")).expect("init should succeed");
+
+    let object = super::super::attach(|py| {
+        let exporter = py
+            .import("builtins")?
+            .getattr("bytearray")?
+            .call1(([1_u8],))?;
+        super::super::object_ops::store_object(exporter.unbind())
+            .map_err(|error| pyo3::exceptions::PyRuntimeError::new_err(error.to_string()))
+    })
+    .expect("attach should succeed")
+    .expect("bytearray should create");
+    let view = buffer_u8(&object, false).expect("view should acquire");
+    let key = (view.handle, view.token);
+    let (snapshot, _) = buffer_snapshot(key).expect("runtime snapshot should exist");
+
+    release_buffer(key).expect("explicit release should drain and release");
+    super::super::attach(|py| {
+        let exporter = clone_handle(py, &object)
+            .map_err(|error| pyo3::exceptions::PyRuntimeError::new_err(error.to_string()))?;
+        exporter.bind(py).call_method1("append", (2_u8,))?;
+        Ok::<(), pyo3::PyErr>(())
+    })
+    .expect("attach should succeed")
+    .expect("resize proves PyBuffer_Release completed");
+
+    drop(snapshot);
+    close_object(object).expect("close exporter");
+}
+
+fn python_i32_array(values: [i32; 3]) -> ObjectHandle {
+    super::super::attach(|py| {
+        let array = py.import("array")?.getattr("array")?.call1(("i", values))?;
+        super::super::object_ops::store_object(array.unbind())
+            .map_err(|error| pyo3::exceptions::PyRuntimeError::new_err(error.to_string()))
+    })
+    .expect("attach should succeed")
+    .expect("array should create")
+}
+
+fn strided_byte_view() -> ObjectHandle {
+    super::super::attach(|py| {
+        let builtins = py.import("builtins")?;
+        let bytes = builtins.getattr("bytearray")?.call1(([1_u8, 2, 3, 4],))?;
+        let view = builtins.getattr("memoryview")?.call1((bytes,))?;
+        let slice = view.call_method1("__getitem__", (pyo3::types::PySlice::new(py, 0, 4, 2),))?;
+        super::super::object_ops::store_object(slice.unbind())
+            .map_err(|error| pyo3::exceptions::PyRuntimeError::new_err(error.to_string()))
+    })
+    .expect("attach should succeed")
+    .expect("strided view should create")
+}
