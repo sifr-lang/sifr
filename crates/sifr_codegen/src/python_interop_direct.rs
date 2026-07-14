@@ -8,8 +8,9 @@ use std::collections::HashMap;
 use crate::python_interop_callbacks::{
     append_retained_callback_retention, append_retained_failure_slots,
     append_retained_failure_transfers, callback_cleanup_expr, callback_object_expr,
-    callback_owner_expr, callback_setup, failure_reconciliation_stmt, retained_cleanup_expr,
-    retained_failure_field, retained_slot_source,
+    callback_outcome_with_evidence, callback_owner_expr, callback_setup,
+    failure_reconciliation_stmt, retained_cleanup_expr, retained_failure_field,
+    retained_slot_source,
 };
 use crate::rust_interop_error_mapping::bridge_error_expr;
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
@@ -33,7 +34,11 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
 ) -> Option<Vec<RustStmt>> {
     let declaration = func.python_interop.first()?;
     if declaration.kind == PythonInteropDecoratorKind::Coroutine {
-        return crate::python_interop_async::async_python_function_body(func, opaque_classes);
+        return crate::python_interop_async::async_python_function_body(
+            func,
+            opaque_classes,
+            retained_callback_errors,
+        );
     }
     if declaration.kind != PythonInteropDecoratorKind::Function {
         return None;
@@ -360,30 +365,6 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
     Some(body)
 }
 
-fn callback_outcome_with_evidence(
-    outcome: RustExpr,
-    callbacks: &[crate::python_interop_callbacks::CallbackSetup],
-) -> RustExpr {
-    runtime_call(
-        "attach_callback_failure_evidence",
-        vec![
-            outcome,
-            RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(RustExpr::Array(
-                    callbacks
-                        .iter()
-                        .map(|callback| RustExpr::Ref {
-                            mutable: false,
-                            expr: Box::new(callback_owner_expr(callback)),
-                        })
-                        .collect(),
-                )),
-            },
-        ],
-    )
-}
-
 pub(crate) fn python_interop_method_body(
     func: &HirFunction,
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
@@ -411,6 +392,8 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
             func,
             opaque_classes,
             owner_declaration,
+            retained_callback_errors,
+            owner_retained_errors,
         );
     }
     let Type::Result(ok_type, error_type) = func.return_type.resolve_alias() else {

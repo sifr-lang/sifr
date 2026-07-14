@@ -190,7 +190,7 @@ impl RustEmitter {
                     })
                     .collect::<Vec<_>>();
                 format!(
-                    "impl std::ops::AsyncFn({}) -> {} + Send + Sync",
+                    "impl Fn({}) -> std::pin::Pin<Box<dyn std::future::Future<Output = {}> + Send>> + Send + Sync",
                     param_types.join(", "),
                     self.rust_type_with_generics(ret)
                 )
@@ -243,7 +243,7 @@ impl RustEmitter {
                     })
                     .collect::<Vec<_>>();
                 format!(
-                    "Box<dyn Fn({}) -> std::pin::Pin<Box<dyn std::future::Future<Output = {}>>> + Send + Sync>",
+                    "Box<dyn Fn({}) -> std::pin::Pin<Box<dyn std::future::Future<Output = {}> + Send>> + Send + Sync>",
                     param_types.join(", "),
                     self.rust_type_with_generics(ret)
                 )

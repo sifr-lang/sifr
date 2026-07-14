@@ -43,6 +43,35 @@ pub async fn submit_async_context_exit(
     super::async_declaration::submit_async_context_request(request, carrier).await
 }
 
+/// Consume an async context manager and its retained callback owner as one
+/// unregister-first terminal cleanup operation.
+#[doc(hidden)]
+pub async fn submit_async_context_exit_with_callbacks(
+    manager: ObjectHandle,
+    cause: PythonAsyncExitCause,
+    carrier: Option<&CancellationCarrier>,
+    callbacks: super::callbacks::CallbackOwnerSlot,
+) -> Result<PythonExitDecision, PythonError> {
+    let Some(owner) = callbacks.take() else {
+        return submit_async_context_exit(manager, cause, carrier).await;
+    };
+    let typed_observer = matches!(cause, PythonAsyncExitCause::Normal);
+    let unregister = owner.begin_owner_unregister()?;
+    let primary = submit_async_context_exit(manager, cause, carrier).await;
+    drop(unregister);
+    let callback_close = if typed_observer {
+        owner
+            .close_after_owner_unregister_with_typed_observer_async()
+            .await
+    } else {
+        owner.close_after_owner_unregister_async().await
+    };
+    match primary {
+        Err(primary) => Err(primary),
+        Ok(decision) => callback_close.map(|()| decision),
+    }
+}
+
 pub(super) fn materialize_exit_cause(
     py: Python<'_>,
     cause: &PythonAsyncExitCause,

@@ -170,6 +170,18 @@ pub(super) fn ensure_started() -> Result<(), PythonRuntimeError> {
     start()
 }
 
+pub(super) fn is_owned_loop(
+    py: Python<'_>,
+    candidate: &Bound<'_, PyAny>,
+) -> Result<bool, PythonRuntimeError> {
+    let state = lock_state()?;
+    let loop_object = state
+        .loop_object
+        .as_ref()
+        .ok_or(PythonRuntimeError::AsyncRuntimeNotRunning)?;
+    Ok(candidate.is(loop_object.bind(py)))
+}
+
 pub(super) fn run_coroutine_blocking(
     py: Python<'_>,
     coroutine: &Py<PyAny>,

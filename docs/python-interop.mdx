@@ -244,14 +244,45 @@ Use `py.close`, `py.with_context`, callback `close`, buffer `release`, Arrow rel
 
 ## Callbacks
 
-Sifr supports two callback lifetimes:
+Package authors attach a callback contract to the parameter that becomes the
+Python callable. The ordinary Sifr signature remains the conversion contract:
 
-- `py.local_callback`: valid only during the active Sifr-to-Python call. It is non-send and cannot be stored by Python beyond the active call.
-- `py.threadsafe_callback`: may be called later from Python-created threads, native extension callback threads, thread pools, or event-loop schedulers. Captured state must satisfy send-like constraints.
+```python
+@python.callback(handler, lifetime=call, dispatch=current)
+@python(bridge.cffi.apply)
+def apply(
+    handler: Callable[[int], int],
+    value: int,
+) -> Result[int, PythonError]: ...
 
-Callback dispatch converts Sifr errors into Python exceptions and maps Python callback-dispatch failures back into `Result` when control returns to Sifr.
+@python.callback(handler, lifetime=call, dispatch=asyncio, concurrency=serial)
+@python.coroutine(bridge.asyncio.apply)
+async def apply_async(
+    handler: AsyncCallable[[int], int],
+    value: int,
+) -> Result[int, PythonError]: ...
+```
 
-Kafka-style and Pub/Sub-style callbacks are represented by contract fixtures in the Python interop verification area. Cloud SDK callback examples use deterministic stubs or structured matrix evidence unless an external integration gate is explicitly selected.
+`lifetime=call` drains the callable before the declaration returns.
+`lifetime=result` retains it in the returned opaque owner, and `lifetime=Self`
+retains it in the receiver. Retained owners must have deterministic `close`,
+`async_close`, `context`, or `async_context` cleanup. Owner shutdown unregisters
+first, rejects new entries, drains accepted invocations, and releases captures
+exactly once.
+
+`dispatch=current` allows non-send call-scoped captures. `dispatch=foreign`
+accepts calls from Python-created threads and requires sendable, thread-safe
+captures. `dispatch=asyncio` exposes an `AsyncCallable` on the application-owned
+loop and propagates cancellation to the exact Sifr handler. Foreign and asyncio
+callbacks require `concurrency=serial | parallel`; serial recursion fails with
+a stable callback error instead of blocking on its own lock or queue.
+
+Handler errors cross Python as `SifrCallbackError` and return through the
+declared `Result` channel even if Python catches the exception. If Python also
+fails, the Python error remains primary and the first handler failure is
+retained as secondary evidence. The lower-level `py.local_callback` and
+`py.threadsafe_callback` helpers remain available for explicit dynamic object
+code.
 
 ## Zero-Copy Interop
 
@@ -416,7 +447,8 @@ Compiler diagnostics use stable URLs and structured JSON fields:
   stale native trust, dynamic-import annotation, and unauthorized required-root
   diagnostics. `SIFR-PYTRUST-0002` is retired.
 - `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, and `SIFR-PYRES`: active declaration, target, conversion, resource, and sequenced activation diagnostics.
-- `SIFR-PYZC` and `SIFR-PYCB`: reserved for their later zero-copy declaration and callback protocol milestones.
+- `SIFR-PYCB`: active callback lifetime, dispatch, conversion, and shutdown diagnostics.
+- `SIFR-PYZC`: reserved for the later zero-copy declaration milestones.
 
 Verification lives under `verification/areas/python_interop/`:
 
@@ -426,6 +458,7 @@ verification/areas/python_interop/run.sh --tier tier1
 verification/areas/python_interop/run.sh --group callbacks
 verification/areas/python_interop/run.sh --group dataframes
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --async-declaration-examples
+uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --callback-examples
 verification/areas/python_interop/run.sh --self-test
 scripts/run_all_tests.sh --profile python-interop-live
 ```

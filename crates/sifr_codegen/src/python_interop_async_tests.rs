@@ -2,7 +2,8 @@ use crate::python_interop_direct::{python_interop_function_body, python_interop_
 use crate::{generate_rust, render_stmts};
 use ruff_text_size::TextRange;
 use sifr_ir::{
-    HirExpr, HirFunction, HirModule, HirParam, HirStmt, MethodKind, PythonCleanupPolicy,
+    HirExpr, HirFunction, HirModule, HirParam, HirStmt, MethodKind, PythonCallbackConcurrency,
+    PythonCallbackDeclaration, PythonCallbackDispatch, PythonCallbackLifetime, PythonCleanupPolicy,
     PythonInteropDeclaration, PythonInteropDecoratorKind, PythonInteropEffect,
     PythonInteropParameter, PythonParameterKind, PythonTargetPath,
 };
@@ -222,6 +223,61 @@ fn standalone_typed_wrapper_emits_cancellation_carrier_preamble() {
     let rendered = generate_rust(&module);
     assert!(rendered.contains("fn __sifr_current_task_cancellation"));
     assert!(rendered.contains("submit_async_declaration"));
+}
+
+#[test]
+fn asyncio_callback_emits_owned_loop_factory_async_handler_and_async_drain() {
+    let handler_type = Type::AsyncCallable(
+        vec![Type::Int],
+        vec![ParamConvention::own()],
+        Box::new(Type::Int),
+    );
+    let mut declaration = declaration(
+        vec!["pkg", "apply"],
+        vec![shape("handler", PythonParameterKind::Positional, false)],
+    );
+    declaration.callbacks.push(PythonCallbackDeclaration {
+        parameter_name: "handler".to_string(),
+        span: TextRange::default(),
+        lifetime: PythonCallbackLifetime::Call,
+        dispatch: PythonCallbackDispatch::Asyncio,
+        concurrency: Some(PythonCallbackConcurrency::Serial),
+        argument_types: vec![Type::Int],
+        argument_conventions: vec![ParamConvention::own()],
+        success_type: Type::Int,
+        handler_error_type: None,
+        is_async: true,
+        owner_class: None,
+        owner_cleanup: None,
+    });
+    let wrapper = function(
+        "apply",
+        vec![param("handler", handler_type, ParamConvention::borrow())],
+        Type::Int,
+        declaration,
+    );
+
+    let rendered = render_stmts(
+        &python_interop_function_body(&wrapper, &Default::default())
+            .expect("asyncio callback wrapper should lower"),
+    );
+    assert!(
+        rendered.contains("asyncio_callback_scoped_with_owner"),
+        "{rendered}"
+    );
+    assert!(
+        rendered.contains("AsyncioCallbackConcurrency::Serial"),
+        "{rendered}"
+    );
+    assert!(
+        rendered.contains("__SIFR_TASK_CANCELLATION.scope"),
+        "{rendered}"
+    );
+    assert!(rendered.contains("close_call_scope().await"), "{rendered}");
+    assert!(
+        rendered.contains("attach_callback_failure_evidence"),
+        "{rendered}"
+    );
 }
 
 #[test]

@@ -1,0 +1,23 @@
+from sifr.python import PythonError
+
+
+@python.callback(handler, lifetime=call, dispatch=asyncio, concurrency=serial)
+@python.coroutine(bridge.asyncio_callback.apply)
+async def apply(
+    handler: AsyncCallable[[int], int],
+    value: int,
+) -> Result[int, PythonError]: ...
+
+
+async def plus_one(value: int) -> int:
+    await task.sleep(0.0)
+    return value + 1
+
+
+async def main() -> Result[None, PythonError]:
+    try:
+        result: int = await apply(plus_one, 41)
+        print("sifr-python-interop:callback:asyncio=" + str(result))
+    except PythonError as error:
+        raise error
+    return None

@@ -54,6 +54,9 @@ impl RustEmitter {
             } else {
                 hir_arg.ty().clone()
             };
+            if let Type::AsyncCallable(params, _, _) = resolved_param {
+                lowered_arg = Self::send_async_callable_adapter(lowered_arg, params.len());
+            }
             let arg_is_option = crate::helpers::is_option_type(&effective_arg_ty);
             let borrowed_name_arg = matches!(hir_arg, HirExpr::Name { name, ty }
                 if self.borrowed_params.contains(name)
@@ -212,6 +215,80 @@ impl RustEmitter {
             adapted.push(lowered_arg);
         }
         adapted
+    }
+
+    pub(crate) fn send_async_callable_adapter(
+        callable: crate::RustExpr,
+        arity: usize,
+    ) -> crate::RustExpr {
+        let params = (0..arity)
+            .map(|index| crate::RustParam::Named {
+                name: format!("__sifr_async_arg_{index}"),
+                ty: crate::RustType::Named("_".to_string()),
+            })
+            .collect::<Vec<_>>();
+        let args = (0..arity)
+            .map(|index| crate::RustExpr::Ident(format!("__sifr_async_arg_{index}")))
+            .collect::<Vec<_>>();
+        crate::RustExpr::Block {
+            stmts: vec![crate::RustStmt::Let {
+                mutable: false,
+                name: "__sifr_send_async_callable".to_string(),
+                ty: None,
+                value: crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec![
+                        "std".to_string(),
+                        "sync".to_string(),
+                        "Arc".to_string(),
+                        "new".to_string(),
+                    ])),
+                    args: vec![callable],
+                },
+            }],
+            expr: Some(Box::new(crate::RustExpr::ClosureBlock {
+                params,
+                body: vec![
+                    crate::RustStmt::Let {
+                        mutable: false,
+                        name: "__sifr_send_async_callable".to_string(),
+                        ty: None,
+                        value: crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec![
+                                "std".to_string(),
+                                "sync".to_string(),
+                                "Arc".to_string(),
+                                "clone".to_string(),
+                            ])),
+                            args: vec![crate::RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(crate::RustExpr::Ident(
+                                    "__sifr_send_async_callable".to_string(),
+                                )),
+                            }],
+                        },
+                    },
+                    crate::RustStmt::Return(Some(crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "Box".to_string(),
+                            "pin".to_string(),
+                        ])),
+                        args: vec![crate::RustExpr::AsyncBlock {
+                            body: vec![crate::RustStmt::Return(Some(crate::RustExpr::Await(
+                                Box::new(crate::RustExpr::FnCall {
+                                    func: Box::new(crate::RustExpr::Ident(
+                                        "__sifr_send_async_callable".to_string(),
+                                    )),
+                                    args,
+                                }),
+                            )))],
+                            is_move: true,
+                        }],
+                    })),
+                ],
+                is_move: true,
+                is_async: false,
+            })),
+        }
     }
 
     pub(crate) fn strip_redundant_borrowed_self_field_clone(

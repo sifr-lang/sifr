@@ -58,6 +58,10 @@ in Python client code. Their checked Sifr source fixtures pass the consumed
 Python object to a Sifr `threadsafe_callback` handler, and the report labels
 that portion as a source-checked callback contract rather than a live Sifr binary
 invocation.
+Declaration-first callback evidence is also compiled offline with
+`runner/run.py --callback-examples`: real CFFI current-thread dispatch,
+kafka-python foreign-thread dispatch, application-owned asyncio dispatch, and a
+retained Pub/Sub-style owner with consuming async-close drain.
 The policy service aliases map to these concrete cases: `pubsub-compatible`
 uses LocalStack SNS fanout to an SQS subscription, `aws-compatible-sns` uses
 LocalStack SNS delivery to SQS, `aws-compatible-sqs` uses direct LocalStack SQS,
@@ -74,7 +78,7 @@ default; live suites must declare their own `network_mode` and resource classes.
 - `imports`: root imports and native extension load diagnostics.
 - `native`: trusted native Python package load/use smoke.
 - `async`: Python event-loop/client behavior under Sifr blocking semantics.
-- `callbacks`: local and threadsafe callback behavior.
+- `callbacks`: local/threadsafe helpers plus declaration-first current, foreign, and asyncio callback behavior.
 - `buffers`: `Py_buffer` ownership, contiguity, readonly/writable, dtype/format.
 - `arrow`: Arrow PyCapsule schema/array/stream and zero-copy-vs-copy diagnostics.
 - `dlpack`: one-shot tensor capsules, dtype/device/stride handling.

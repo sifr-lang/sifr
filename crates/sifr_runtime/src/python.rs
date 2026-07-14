@@ -5,7 +5,6 @@ use std::ffi::{CStr, CString};
 use std::fmt;
 use std::mem::MaybeUninit;
 use std::sync::{Mutex, MutexGuard};
-
 mod arrow_ops;
 mod async_cancellation;
 mod async_context;
@@ -46,10 +45,11 @@ pub use arrow_ops::{
 };
 #[doc(hidden)]
 pub use async_context::{
-    submit_async_context_enter, submit_async_context_exit, PythonAsyncExitCause,
+    submit_async_context_enter, submit_async_context_exit,
+    submit_async_context_exit_with_callbacks, PythonAsyncExitCause,
 };
 #[doc(hidden)]
-pub use async_declaration::submit_async_declaration;
+pub use async_declaration::{submit_async_declaration, submit_async_declaration_with_callbacks};
 pub use async_runtime::{async_runtime_diagnostics, PythonAsyncRuntimeDiagnostics};
 #[doc(hidden)]
 pub use async_value::{

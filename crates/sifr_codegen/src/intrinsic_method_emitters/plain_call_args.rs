@@ -22,6 +22,9 @@ impl RustEmitter {
             let effective_arg_ty = self.effective_registry_expr_ty(arg);
             let arg_is_option = crate::helpers::is_option_type(&effective_arg_ty);
             let mut lowered_arg = self.try_lower_registry_expr_strict(arg)?;
+            if let Type::AsyncCallable(params, _, _) = resolved_param {
+                lowered_arg = Self::send_async_callable_adapter(lowered_arg, params.len());
+            }
             if matches!(
                 arg,
                 HirExpr::Call { func, .. }

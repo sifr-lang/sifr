@@ -1,9 +1,10 @@
 # Declaration-First Python Interop Architecture
 
 Status: production contract. Synchronous declarations, opaque lifecycle,
-synchronous contexts, package-local bridges, typed coroutine declarations, and
-consuming async close and async contexts are active. Later protocol sections
-remain the ordered target contract until their implementations activate. The
+synchronous contexts, package-local bridges, typed coroutine declarations,
+consuming async close and async contexts, and typed callbacks are active. Later
+zero-copy protocol sections remain the ordered target contract until their
+implementations activate. The
 embedded runtime contract is also documented in
 [`python_interop_architecture.md`](./python_interop_architecture.md).
 

@@ -707,8 +707,13 @@ pub(super) fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option
 }
 
 fn await_call_needs_convention_aware_lowering(args: &[HirExpr]) -> bool {
-    args.iter()
-        .any(|arg| !crate::helpers::is_copy_type_for_codegen(arg.ty()))
+    args.iter().any(|arg| {
+        !crate::helpers::is_copy_type_for_codegen(arg.ty())
+            || matches!(
+                arg.ty().resolve_alias(),
+                Type::Function(_) | Type::AsyncFunction(_) | Type::AsyncCallable(..)
+            )
+    })
 }
 
 pub(super) fn try_lower_task_sleep_call_expr(args: &[HirExpr]) -> Option<RustExpr> {

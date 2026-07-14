@@ -1,5 +1,6 @@
 //! Typed async Python declaration lowering.
 
+mod callback_frame;
 mod conversions;
 
 pub(crate) use conversions::{

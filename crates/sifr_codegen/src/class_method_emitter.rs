@@ -283,7 +283,10 @@ impl RustEmitter {
             .flat_map(|declaration| &declaration.callbacks)
             .find(|callback| callback.parameter_name == param_name)
         {
-            if callback.dispatch == sifr_ir::PythonCallbackDispatch::Foreign {
+            if matches!(
+                callback.dispatch,
+                sifr_ir::PythonCallbackDispatch::Foreign | sifr_ir::PythonCallbackDispatch::Asyncio
+            ) {
                 return self.lower_python_callback_param_type(
                     param_ty,
                     convention,

@@ -24,18 +24,32 @@ pub(crate) fn callback_setup(
     owner: RustExpr,
     failure_slot_source: Option<RustExpr>,
 ) -> Option<CallbackSetup> {
-    if callback.dispatch == PythonCallbackDispatch::Asyncio {
-        return None;
-    }
     if callback.dispatch == PythonCallbackDispatch::Current
         && callback.lifetime != PythonCallbackLifetime::Call
     {
         return None;
     }
     let callback_var = format!("__sifr_callback_{callback_index}");
+    let handler_capture_var = format!("__sifr_callback_handler_{callback_index}");
     let slot_var = format!("__sifr_callback_failure_{callback_index}");
     let handler_slot_var = format!("__sifr_callback_failure_for_handler_{callback_index}");
     let mut statements = Vec::new();
+    if callback.dispatch == PythonCallbackDispatch::Asyncio {
+        statements.push(RustStmt::Let {
+            mutable: false,
+            name: handler_capture_var.clone(),
+            ty: None,
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "sync".to_string(),
+                    "Arc".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![RustExpr::Ident(handler_name.to_string())],
+            },
+        });
+    }
     if callback.handler_error_type.is_some() {
         statements.push(RustStmt::Let {
             mutable: false,
@@ -60,7 +74,10 @@ pub(crate) fn callback_setup(
             "foreign_callback_scoped_with_owner"
         }
         PythonCallbackDispatch::Foreign => "foreign_callback_with_owner",
-        PythonCallbackDispatch::Asyncio => return None,
+        PythonCallbackDispatch::Asyncio if callback.lifetime == PythonCallbackLifetime::Call => {
+            "asyncio_callback_scoped_with_owner"
+        }
+        PythonCallbackDispatch::Asyncio => "asyncio_callback_with_owner",
     };
     let mut factory_args = vec![owner];
     factory_args.extend([
@@ -71,13 +88,20 @@ pub(crate) fn callback_setup(
             i64::try_from(callback.argument_types.len()).ok()?,
         )),
     ]);
-    if callback.dispatch == PythonCallbackDispatch::Foreign {
-        factory_args.push(concurrency_expr(callback.concurrency?));
+    if matches!(
+        callback.dispatch,
+        PythonCallbackDispatch::Foreign | PythonCallbackDispatch::Asyncio
+    ) {
+        factory_args.push(concurrency_expr(callback.dispatch, callback.concurrency?));
     }
     factory_args.push(decoder(callback, opaque_classes)?);
     factory_args.push(handler_adapter(
         callback,
-        handler_name,
+        if callback.dispatch == PythonCallbackDispatch::Asyncio {
+            &handler_capture_var
+        } else {
+            handler_name
+        },
         callback
             .handler_error_type
             .as_ref()
@@ -190,9 +214,9 @@ pub(crate) fn retained_cleanup_expr(cleanup: PythonCleanupPolicy) -> Option<Rust
     let variant = match cleanup {
         PythonCleanupPolicy::Close => "Close",
         PythonCleanupPolicy::Context => "Context",
-        PythonCleanupPolicy::Drop
-        | PythonCleanupPolicy::AsyncClose
-        | PythonCleanupPolicy::AsyncContext => return None,
+        PythonCleanupPolicy::AsyncClose => "AsyncClose",
+        PythonCleanupPolicy::AsyncContext => "AsyncContext",
+        PythonCleanupPolicy::Drop => return None,
     };
     Some(RustExpr::Path(vec![
         "sifr_runtime".to_string(),
@@ -218,19 +242,46 @@ pub(crate) fn callback_owner_expr(setup: &CallbackSetup) -> RustExpr {
     }
 }
 
+pub(crate) fn callback_outcome_with_evidence(
+    outcome: RustExpr,
+    callbacks: &[CallbackSetup],
+) -> RustExpr {
+    runtime_call(
+        "attach_callback_failure_evidence",
+        vec![
+            outcome,
+            RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(RustExpr::Array(
+                    callbacks
+                        .iter()
+                        .map(|callback| RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(callback_owner_expr(callback)),
+                        })
+                        .collect(),
+                )),
+            },
+        ],
+    )
+}
+
 pub(crate) fn callback_cleanup_expr(setup: &CallbackSetup) -> RustExpr {
     debug_assert_eq!(setup.lifetime, PythonCallbackLifetime::Call);
     let method = match setup.dispatch {
         PythonCallbackDispatch::Current => "close",
         PythonCallbackDispatch::Foreign => "close_call_scope",
-        PythonCallbackDispatch::Asyncio => {
-            unreachable!("asyncio callback cleanup uses the asynchronous emitter")
-        }
+        PythonCallbackDispatch::Asyncio => "close_call_scope",
     };
-    RustExpr::MethodCall {
+    let close = RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(setup.callback_var.clone())),
         method: method.to_string(),
         args: Vec::new(),
+    };
+    if setup.dispatch == PythonCallbackDispatch::Asyncio {
+        RustExpr::Await(Box::new(close))
+    } else {
+        close
     }
 }
 
@@ -329,10 +380,30 @@ fn handler_adapter(
         .enumerate()
         .map(|(index, convention)| convention_arg(index, *convention))
         .collect();
-    let handler_call = RustExpr::FnCall {
-        func: Box::new(RustExpr::Ident(handler_name.to_string())),
+    let invoked_handler = if callback.dispatch == PythonCallbackDispatch::Asyncio {
+        "__sifr_callback_handler"
+    } else {
+        handler_name
+    };
+    let mut handler_call = RustExpr::FnCall {
+        func: Box::new(RustExpr::Ident(invoked_handler.to_string())),
         args: handler_args,
     };
+    if callback.dispatch == PythonCallbackDispatch::Asyncio {
+        handler_call = RustExpr::Await(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__SIFR_TASK_CANCELLATION".to_string())),
+            method: "scope".to_string(),
+            args: vec![
+                RustExpr::Ident("__sifr_callback_cancellation".to_string()),
+                RustExpr::AsyncBlock {
+                    body: vec![RustStmt::Return(Some(RustExpr::Await(Box::new(
+                        handler_call,
+                    ))))],
+                    is_move: true,
+                },
+            ],
+        }));
+    }
     let result = if let (Some(error_type), Some(slot)) =
         (&callback.handler_error_type, failure_slot)
     {
@@ -376,29 +447,62 @@ fn handler_adapter(
             args: vec![handler_call],
         }
     };
-    RustExpr::Closure {
-        params: vec![
-            RustParam::Named {
-                name: "__sifr_callback_sequence".to_string(),
+    let mut params = vec![
+        RustParam::Named {
+            name: "__sifr_callback_sequence".to_string(),
+            ty: RustType::Named("_".to_string()),
+        },
+        if callback
+            .argument_conventions
+            .iter()
+            .any(|convention| convention.is_mut_borrow())
+        {
+            RustParam::NamedMut {
+                name: "__sifr_callback_values".to_string(),
                 ty: RustType::Named("_".to_string()),
-            },
-            if callback
-                .argument_conventions
-                .iter()
-                .any(|convention| convention.is_mut_borrow())
-            {
-                RustParam::NamedMut {
-                    name: "__sifr_callback_values".to_string(),
-                    ty: RustType::Named("_".to_string()),
-                }
-            } else {
-                RustParam::Named {
-                    name: "__sifr_callback_values".to_string(),
-                    ty: RustType::Named("_".to_string()),
-                }
-            },
-        ],
-        body: Box::new(result),
+            }
+        } else {
+            RustParam::Named {
+                name: "__sifr_callback_values".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }
+        },
+    ];
+    if callback.dispatch == PythonCallbackDispatch::Asyncio {
+        params.push(RustParam::Named {
+            name: "__sifr_callback_cancellation".to_string(),
+            ty: RustType::Named("_".to_string()),
+        });
+    }
+    RustExpr::Closure {
+        params,
+        body: Box::new(if callback.dispatch == PythonCallbackDispatch::Asyncio {
+            RustExpr::Block {
+                stmts: vec![RustStmt::Let {
+                    mutable: false,
+                    name: "__sifr_callback_handler".to_string(),
+                    ty: None,
+                    value: RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "std".to_string(),
+                            "sync".to_string(),
+                            "Arc".to_string(),
+                            "clone".to_string(),
+                        ])),
+                        args: vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Ident(handler_name.to_string())),
+                        }],
+                    },
+                }],
+                expr: Some(Box::new(RustExpr::AsyncBlock {
+                    body: vec![RustStmt::Return(Some(result))],
+                    is_move: true,
+                })),
+            }
+        } else {
+            result
+        }),
         is_move: true,
     }
 }
@@ -436,11 +540,20 @@ fn convention_arg(index: usize, convention: ParamConvention) -> RustExpr {
     }
 }
 
-fn concurrency_expr(concurrency: PythonCallbackConcurrency) -> RustExpr {
-    callback_runtime_path(match concurrency {
-        PythonCallbackConcurrency::Serial => "ForeignCallbackConcurrency::Serial",
-        PythonCallbackConcurrency::Parallel => "ForeignCallbackConcurrency::Parallel",
-    })
+fn concurrency_expr(
+    dispatch: PythonCallbackDispatch,
+    concurrency: PythonCallbackConcurrency,
+) -> RustExpr {
+    let family = if dispatch == PythonCallbackDispatch::Asyncio {
+        "AsyncioCallbackConcurrency"
+    } else {
+        "ForeignCallbackConcurrency"
+    };
+    let variant = match concurrency {
+        PythonCallbackConcurrency::Serial => "Serial",
+        PythonCallbackConcurrency::Parallel => "Parallel",
+    };
+    callback_runtime_path(&format!("{family}::{variant}"))
 }
 
 fn error_channel_value(value: RustExpr, source: &Type, target: &Type) -> RustExpr {
