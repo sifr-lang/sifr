@@ -5,6 +5,8 @@ use crate::python::{
     PythonResourceIdentity,
 };
 use pyo3::types::PyAnyMethods;
+use pyo3::{ffi, Bound};
+use std::{mem::size_of, ptr};
 
 #[test]
 fn buffer_view_tracks_metadata_copy_and_release() {
@@ -250,6 +252,86 @@ fn any_layout_supports_strided_logical_access() {
 }
 
 #[test]
+fn any_layout_supports_negative_stride_read_write_and_release() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("buffer-negative-stride")).expect("init should succeed");
+
+    let object = negative_strided_byte_view();
+    let view = acquire_buffer(
+        &object,
+        PythonBufferRequest {
+            element: PythonBufferElement::U8,
+            access: PythonBufferAccess::Write,
+            layout: PythonBufferLayout::Any,
+        },
+    )
+    .expect("writable negative-stride view should acquire");
+    let key = (view.handle, view.token);
+
+    assert_eq!(view.strides, vec![-1]);
+    assert_eq!(
+        copy_buffer_slice_u8(key, 0, 4).expect("logical copy"),
+        vec![4, 3, 2, 1]
+    );
+    buffer_write_u8(key, 1, 9).expect("logical write through negative stride");
+    assert_eq!(buffer_read_u8(key, 1).expect("read after write"), 9);
+    assert_eq!(
+        buffer_read_u8(key, 4)
+            .expect_err("upper bound must be rejected")
+            .exception_type,
+        "IndexError"
+    );
+
+    release_buffer(key).expect("release");
+    close_object(object).expect("close exporter");
+}
+
+#[test]
+fn any_layout_supports_indirect_pointer_read_write_and_release() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("buffer-indirect-pointer")).expect("init should succeed");
+
+    let (object, storage) = indirect_byte_memoryview();
+    let view = acquire_buffer(
+        &object,
+        PythonBufferRequest {
+            element: PythonBufferElement::U8,
+            access: PythonBufferAccess::Write,
+            layout: PythonBufferLayout::Any,
+        },
+    )
+    .expect("writable indirect view should acquire");
+    let key = (view.handle, view.token);
+
+    assert_eq!(view.shape, vec![2, 2]);
+    assert_eq!(view.suboffsets, vec![0, -1]);
+    assert_eq!(
+        copy_buffer_slice_u8(key, 0, 4).expect("logical copy"),
+        vec![1, 2, 3, 4]
+    );
+    buffer_write_u8(key, 2, 9).expect("write through intermediate row pointer");
+    assert_eq!(buffer_read_u8(key, 2).expect("read after write"), 9);
+    assert_eq!(
+        copy_buffer_slice_u8(key, 1, 2).expect("bounded slice"),
+        vec![2, 9]
+    );
+    assert_eq!(
+        buffer_write_u8(key, 4, 0)
+            .expect_err("upper bound must be rejected")
+            .exception_type,
+        "IndexError"
+    );
+
+    release_buffer(key).expect("release");
+    close_object(object).expect("close exporter");
+    assert_eq!(*storage.first, [1, 2]);
+    assert_eq!(*storage.second, [9, 4]);
+    drop(storage);
+}
+
+#[test]
 fn scalar_native_endian_buffer_has_empty_metadata_vectors() {
     let _guard = test_guard();
     reset_runtime_state_for_tests();
@@ -341,4 +423,68 @@ fn strided_byte_view() -> ObjectHandle {
     })
     .expect("attach should succeed")
     .expect("strided view should create")
+}
+
+fn negative_strided_byte_view() -> ObjectHandle {
+    super::super::attach(|py| {
+        let builtins = py.import("builtins")?;
+        let bytes = builtins.getattr("bytearray")?.call1(([1_u8, 2, 3, 4],))?;
+        let view = builtins.getattr("memoryview")?.call1((bytes,))?;
+        let slice =
+            view.call_method1("__getitem__", (pyo3::types::PySlice::new(py, 3, -5, -1),))?;
+        super::super::object_ops::store_object(slice.unbind())
+            .map_err(|error| pyo3::exceptions::PyRuntimeError::new_err(error.to_string()))
+    })
+    .expect("attach should succeed")
+    .expect("negative-stride view should create")
+}
+
+struct IndirectByteStorage {
+    first: Box<[u8; 2]>,
+    second: Box<[u8; 2]>,
+    rows: Box<[*mut u8; 2]>,
+    shape: Box<[isize; 2]>,
+    strides: Box<[isize; 2]>,
+    suboffsets: Box<[isize; 2]>,
+}
+
+fn indirect_byte_memoryview() -> (ObjectHandle, IndirectByteStorage) {
+    let mut first = Box::new([1_u8, 2]);
+    let mut second = Box::new([3_u8, 4]);
+    let rows = Box::new([first.as_mut_ptr(), second.as_mut_ptr()]);
+    let mut storage = IndirectByteStorage {
+        first,
+        second,
+        rows,
+        shape: Box::new([2_isize, 2]),
+        strides: Box::new([
+            isize::try_from(size_of::<*mut u8>()).expect("pointer width fits Py_ssize_t"),
+            1,
+        ]),
+        suboffsets: Box::new([0_isize, -1]),
+    };
+    let object = super::super::attach(|py| {
+        let view = ffi::Py_buffer {
+            buf: storage.rows.as_mut_ptr().cast(),
+            obj: ptr::null_mut(),
+            len: 4,
+            itemsize: 1,
+            readonly: 0,
+            ndim: 2,
+            format: c"B".as_ptr().cast_mut(),
+            shape: storage.shape.as_mut_ptr(),
+            strides: storage.strides.as_mut_ptr(),
+            suboffsets: storage.suboffsets.as_mut_ptr(),
+            internal: ptr::null_mut(),
+        };
+        // SAFETY: `storage` owns stable boxed data and metadata until after the
+        // returned memoryview and acquired buffer are explicitly closed.
+        let memoryview =
+            unsafe { Bound::from_owned_ptr_or_err(py, ffi::PyMemoryView_FromBuffer(&view))? };
+        super::super::object_ops::store_object(memoryview.unbind())
+            .map_err(|error| pyo3::exceptions::PyRuntimeError::new_err(error.to_string()))
+    })
+    .expect("attach should succeed")
+    .expect("indirect memoryview should create");
+    (object, storage)
 }

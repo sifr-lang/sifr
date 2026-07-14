@@ -1,4 +1,5 @@
 use super::PythonBufferElement;
+use pyo3::exceptions::PyBufferError;
 use pyo3::ffi;
 use pyo3::types::PyAny;
 use pyo3::{Bound, PyErr, Python};
@@ -61,11 +62,19 @@ impl OwnedPyBuffer {
         if result != 0 {
             return Err(PyErr::fetch(py));
         }
+        if raw.as_ref().get_ref().0.obj.is_null() {
+            return Err(PyBufferError::new_err(
+                "exporter returned a successful buffer without an owner",
+            ));
+        }
         Ok(Self { raw })
     }
 
     pub(super) fn validate(&self, element: PythonBufferElement) -> Result<ValidatedBuffer, String> {
         let raw = self.raw();
+        if raw.obj.is_null() {
+            return Err("exporter returned a successful buffer without an owner".to_string());
+        }
         let len_bytes = usize::try_from(raw.len)
             .map_err(|_| "exporter returned a negative buffer length".to_string())?;
         let item_size = usize::try_from(raw.itemsize)
@@ -137,7 +146,9 @@ impl OwnedPyBuffer {
         }
         // SAFETY: the indices vector has exactly `ndim` entries, each within
         // the validated shape. CPython handles strides and suboffsets.
-        let pointer = unsafe { ffi::PyBuffer_GetPointer(raw, indices.as_ptr()) };
+        let pointer = unsafe {
+            ffi::PyBuffer_GetPointer(ptr::from_ref(raw).cast_mut(), indices.as_mut_ptr())
+        };
         (!pointer.is_null()).then_some(pointer)
     }
 
@@ -204,7 +215,13 @@ fn metadata_vectors(raw: &ffi::Py_buffer, dimensions: usize) -> Result<MetadataV
         Vec::new()
     } else {
         // SAFETY: a non-null suboffset vector contains `ndim` entries.
-        unsafe { slice::from_raw_parts(raw.suboffsets, dimensions) }.to_vec()
+        let values = unsafe { slice::from_raw_parts(raw.suboffsets, dimensions) }.to_vec();
+        if values.iter().all(|value| *value < 0) {
+            return Err(
+                "exporter returned a non-null suboffset vector without indirection".to_string(),
+            );
+        }
+        values
     };
     Ok((shape, strides, suboffsets))
 }
@@ -212,6 +229,9 @@ fn metadata_vectors(raw: &ffi::Py_buffer, dimensions: usize) -> Result<MetadataV
 fn shape_item_count(shape: &[usize], dimensions: usize) -> Result<usize, String> {
     if dimensions == 0 {
         return Ok(1);
+    }
+    if shape.contains(&0) {
+        return Ok(0);
     }
     shape.iter().try_fold(1_usize, |count, dimension| {
         count
@@ -407,6 +427,49 @@ mod tests {
     fn byte_length_validation_rejects_floor_division_mismatch() {
         assert!(validate_byte_length(1, 4, 4).is_ok());
         assert!(validate_byte_length(1, 4, 5).is_err());
+    }
+
+    #[test]
+    fn malformed_successful_view_without_owner_is_rejected() {
+        let mut raw = ffi::Py_buffer::new();
+        raw.buf = ptr::dangling_mut::<u8>().cast();
+        raw.len = 1;
+        raw.itemsize = 1;
+        raw.readonly = 1;
+        raw.ndim = 1;
+        raw.format = c"B".as_ptr().cast_mut();
+        raw.shape = &mut raw.len;
+        raw.strides = &mut raw.itemsize;
+
+        let buffer = OwnedPyBuffer {
+            raw: Box::pin(RawBuffer(raw, PhantomPinned)),
+        };
+        let error = buffer
+            .validate(PythonBufferElement::U8)
+            .expect_err("null ownership must not enter the safe buffer API");
+
+        assert!(error.contains("without an owner"));
+    }
+
+    #[test]
+    fn empty_shape_short_circuits_product_overflow() {
+        let shape = [usize::MAX, 2, 0];
+        assert_eq!(shape_item_count(&shape, shape.len()), Ok(0));
+    }
+
+    #[test]
+    fn all_negative_non_null_suboffsets_are_rejected() {
+        let mut raw = ffi::Py_buffer::new();
+        let mut shape = [2_isize, 2];
+        let mut strides = [2_isize, 1];
+        let mut suboffsets = [-1_isize, -1];
+        raw.ndim = 2;
+        raw.shape = shape.as_mut_ptr();
+        raw.strides = strides.as_mut_ptr();
+        raw.suboffsets = suboffsets.as_mut_ptr();
+
+        let error = metadata_vectors(&raw, 2).expect_err("all-negative vector is malformed");
+        assert!(error.contains("without indirection"));
     }
 
     #[test]
