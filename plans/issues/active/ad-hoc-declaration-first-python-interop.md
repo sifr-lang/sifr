@@ -766,6 +766,21 @@ Tasks:
 - Implement exact-once automatic and explicit early `PyBuffer_Release`.
 - Expose checked runtime metadata and typed bounded element/slice accessors.
 
+Delivery waves:
+
+- [ ] Wave 1 — keep `@python.buffer` reserved while replacing the legacy
+  `uint8`-only store with a closed typed buffer request, complete metadata and
+  layout validation, lock-free Python operations, bounded typed access, and
+  exact-once sealed-resource release.
+- [ ] Wave 2 — add the compiler-known affine `python.Buffer[T]` contract,
+  decorator validation, `Self` and call-then-acquire lowering/code generation,
+  exclusive writable borrowing, early release, and atomic public activation.
+- [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
+  import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
+  documentation, and capability-ledger activation.
+- [ ] Milestone review — review the complete merged M10 implementation before
+  closing the milestone checkbox.
+
 Acceptance:
 
 - A buffer view cannot outlive its exporter or be released while borrowed.
