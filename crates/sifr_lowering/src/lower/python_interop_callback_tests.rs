@@ -361,3 +361,32 @@ def create(handler: Callable[[int], int]) -> Result[Client, PythonError]: ...
         "unexpected diagnostics: {errors:?}"
     );
 }
+
+#[test]
+fn receiver_lifetime_rejects_static_and_class_methods() {
+    for (method_decorator, parameters) in [
+        ("@staticmethod", "handler: Callable[[int], int]"),
+        ("@classmethod", "cls, handler: Callable[[int], int]"),
+    ] {
+        let source = format!(
+            r"
+class PythonError(Error):
+    message: str
+
+@python.opaque(type=pkg.Client, cleanup=close)
+class Client:
+    @python.callback(handler, lifetime=Self, dispatch=foreign, concurrency=serial)
+    @python(Self.register)
+    {method_decorator}
+    def register({parameters}) -> Result[None, PythonError]: ...
+
+    @python(Self.close)
+    def close(own self) -> Result[None, PythonError]: ...
+"
+        );
+        assert_callback_error(
+            &source,
+            "`lifetime=Self` is valid only on an opaque receiver method",
+        );
+    }
+}

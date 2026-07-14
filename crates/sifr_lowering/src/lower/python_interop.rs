@@ -112,6 +112,11 @@ pub(in crate::lower) fn collect_python_method_declarations(
     let mut declarations = Vec::new();
     let mut callbacks = Vec::new();
     let mut callback_parse_failed = false;
+    let has_receiver = !decorators.iter().any(|decorator| {
+        decorator_path(&decorator.expression).is_some_and(|path| {
+            matches!(path.as_slice(), [name] if name == "classmethod" || name == "staticmethod")
+        })
+    });
     for decorator in decorators {
         if decorator_path(&decorator.expression)
             .is_some_and(|path| path.as_slice() == ["python", "item"])
@@ -142,7 +147,7 @@ pub(in crate::lower) fn collect_python_method_declarations(
         };
         let declaration = match (kind, is_async_decl) {
             (PythonInteropDecoratorKind::Callback, _) => {
-                if let Some(callback) = callbacks::parse(call, parameters, true, ctx) {
+                if let Some(callback) = callbacks::parse(call, parameters, has_receiver, ctx) {
                     callbacks.push(callback);
                 } else {
                     callback_parse_failed = true;

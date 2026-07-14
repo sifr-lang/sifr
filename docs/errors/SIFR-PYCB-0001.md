@@ -11,6 +11,6 @@ A Python callback lifetime, dispatch, concurrency, or owner declaration is inval
 | Severity | Error |
 | Owner | `sifr_lowering` |
 | Message template | `invalid Python callback declaration: {reason}` |
-| Representative fixture | `crates/sifr_lowering/src/lower/python_interop_tests.rs::callback_policy_validates_before_reservation` |
+| Representative fixture | `crates/sifr_lowering/src/lower/python_interop_callback_tests.rs::callback_policy_validates_before_reservation` |
 | Declared args | `reason (message+json)` |
 | Dedupe args | `reason` |

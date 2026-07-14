@@ -65,7 +65,7 @@ pub(super) fn attach(
 pub(super) fn parse(
     call: &ExprCall,
     parameters: &Parameters,
-    is_method: bool,
+    has_receiver: bool,
     ctx: &mut LowerCtx,
 ) -> Option<PythonCallbackDeclaration> {
     if call.arguments.args.len() != 1 {
@@ -181,7 +181,7 @@ pub(super) fn parse(
     let Some(dispatch) = dispatch else {
         return invalid_none(ctx, "`@python.callback` requires `dispatch=`", call.range);
     };
-    if lifetime == PythonCallbackLifetime::Receiver && !is_method {
+    if lifetime == PythonCallbackLifetime::Receiver && !has_receiver {
         return invalid_none(
             ctx,
             "`lifetime=Self` is valid only on an opaque receiver method",

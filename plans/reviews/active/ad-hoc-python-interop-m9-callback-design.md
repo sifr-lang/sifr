@@ -414,8 +414,8 @@ directions; and proof that neither executor blocks.
 
 ## Review And Closure
 
-Each wave receives design alignment, focused tests, the authoritative local
-create-PR gate, frozen-diff Opus review rounds until satisfied, an actual PR
-review until satisfied, merge, and tracker status/link updates. After Wave 3,
-the complete M9 implementation receives a milestone-level review across all
-merged wave diffs before its tracker checkbox is closed.
+Each wave receives design alignment, focused tests, both authoritative local
+gates, a frozen-diff manual review, merge, and tracker status/link updates.
+After Wave 3, the complete M9 implementation receives one comprehensive Fable
+High milestone review across all merged wave diffs; actionable findings are
+fixed and re-reviewed before its tracker checkbox is closed.

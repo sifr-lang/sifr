@@ -269,7 +269,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "PYCB",
         "A Python callback lifetime, dispatch, concurrency, or owner declaration is invalid.",
         Severity::Error,
-        "crates/sifr_lowering/src/lower/python_interop_tests.rs::callback_policy_validates_before_reservation",
+        "crates/sifr_lowering/src/lower/python_interop_callback_tests.rs::callback_policy_validates_before_reservation",
         "invalid Python callback declaration: {reason}",
         "sifr_lowering",
         [arg!("reason")],
