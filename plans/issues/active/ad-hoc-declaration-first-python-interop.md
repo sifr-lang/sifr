@@ -9,11 +9,11 @@ non-blocking precision refinements are incorporated. M0 through M8 are
 implemented, locally validated, reviewed, and linked below. Typed synchronous
 and asynchronous declarations and context managers run on the application-owned
 Python loop with structured cancellation and consuming cleanup; M9 is in
-progress and later milestones are not yet implemented.
-M9 current-thread and foreign-thread callback execution plus retained-owner
-integration are merged; asyncio dispatch and public activation remain in Wave
-3. Milestones sequence delivery; they do not create reduced language versions,
-temporary public contracts, dual authorities, or alternate lowering paths.
+aggregate-review remediation and later milestones are not yet implemented.
+M9 current-thread, foreign-thread, and asyncio callback execution plus
+retained-owner integration are merged and publicly active. Milestones sequence
+delivery; they do not create reduced language versions, temporary public
+contracts, dual authorities, or alternate lowering paths.
 
 The durable contracts are:
 
@@ -696,6 +696,13 @@ Delivery waves:
   exclusion, parallel share safety, same-owner rejection, and unproven callable
   rejection ([PR #2981](https://github.com/sifr-lang/sifr/pull/2981);
   [GPT-5.6-Sol High review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-codex-5-6-sol-high-review-pass-1.md)).
+- [x] Aggregate-review remediation Wave 2 — per-entry asyncio terminal records,
+  exact bidirectional cancellation, asynchronous owner cancel/join, rollback
+  drain without executor blocking, and retained loop authority for async
+  unregister during shutdown ([PR #2982](https://github.com/sifr-lang/sifr/pull/2982);
+  create-PR `131/131`, signature `7c39b8c1dd4fec7c`; merge `651/651`,
+  signature `ee5e5d44306f270c`, 261 hardening variants; addresses review findings
+  2 and 3 and the active-close portion of finding 4).
 - [ ] Milestone review — review the complete merged M9 implementation before
   closing the milestone checkbox.
 
