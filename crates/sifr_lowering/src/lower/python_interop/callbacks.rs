@@ -5,6 +5,7 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{
     HirParam, PythonCallbackConcurrency, PythonCallbackDeclaration, PythonCallbackDispatch,
     PythonCallbackLifetime, PythonCleanupPolicy, PythonInteropDeclaration, PythonInteropEffect,
+    PythonParameterKind,
 };
 use sifr_python_ast::{ExprCall, Parameters};
 use sifr_type_system::Type;
@@ -85,14 +86,26 @@ pub(super) fn parse(
         );
         return None;
     };
-    if !parameter_metadata(parameters)
+    let parameter_shapes = parameter_metadata(parameters);
+    let Some(parameter_shape) = parameter_shapes
         .iter()
-        .any(|parameter| parameter.name == *parameter_name)
-    {
+        .find(|parameter| parameter.name == *parameter_name)
+    else {
         invalid(
             ctx,
             &format!("unknown callback parameter `{parameter_name}`"),
             call.arguments.args[0].range(),
+        );
+        return None;
+    };
+    if matches!(
+        parameter_shape.kind,
+        PythonParameterKind::PositionalVariadic | PythonParameterKind::KeywordVariadic
+    ) {
+        invalid(
+            ctx,
+            "`@python.callback` requires one ordinary positional or keyword-only callable parameter",
+            parameter_shape.span,
         );
         return None;
     }

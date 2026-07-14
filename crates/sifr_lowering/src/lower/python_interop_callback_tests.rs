@@ -227,6 +227,14 @@ fn callback_parameter_and_dispatch_shapes_are_validated() {
             "more than one `@python.callback` declaration",
         ),
         (
+            "@python.callback(handler, lifetime=call, dispatch=current)\n@python(pkg.compute)\ndef compute(*handler: Callable[[int], int]) -> Result[int, PythonError]: ...",
+            "requires one ordinary positional or keyword-only callable parameter",
+        ),
+        (
+            "@python.callback(handler, lifetime=call, dispatch=current)\n@python(pkg.compute)\ndef compute(**handler: Callable[[int], int]) -> Result[int, PythonError]: ...",
+            "requires one ordinary positional or keyword-only callable parameter",
+        ),
+        (
             "@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)\n@python(pkg.compute)\ndef compute(handler: AsyncCallable[[int], int]) -> Result[int, PythonError]: ...",
             "`dispatch=foreign` requires a synchronous `Callable`",
         ),
