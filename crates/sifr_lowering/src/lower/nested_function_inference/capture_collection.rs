@@ -19,9 +19,10 @@ pub(super) fn collect_nested_function_captures(
             continue;
         };
         let function_captures = collect_function_captures(func, state, env);
-        if !function_captures.is_empty() {
-            captures.insert(func.name.to_string(), function_captures);
-        }
+        // Keep capture-free nested functions in the map as positive evidence
+        // that the callable was inspected. Consumers must distinguish them
+        // from callable values whose closure environment is unknown.
+        captures.insert(func.name.to_string(), function_captures);
     }
     captures
 }

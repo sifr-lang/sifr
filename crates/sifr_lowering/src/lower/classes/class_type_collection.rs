@@ -604,6 +604,15 @@ pub(in crate::lower) fn collect_class_type(
                     // For @classmethod and regular methods, skip `self`/`cls`
                     let is_static = has_decorator(func, "staticmethod");
                     let skip_count = usize::from(!is_static);
+                    let callback_policies = crate::lower::python_interop::callback_call_policies(
+                        &func.decorator_list,
+                        &func.parameters,
+                        !is_static,
+                    );
+                    if !callback_policies.is_empty() {
+                        ctx.python_callback_call_policies
+                            .insert(format!("{class_name}.{method_name}"), callback_policies);
+                    }
                     let mut params = Vec::new();
                     let mut method_locals: HashMap<String, Type> = HashMap::new();
                     for param in func.parameters.args.iter().skip(skip_count) {

@@ -312,6 +312,14 @@ pub(super) fn lower_regular_call(
         call,
         ctx,
     );
+    crate::lower::python_interop::validate_callback_call_captures(
+        &func_name,
+        &args,
+        &arg_ranges,
+        None,
+        call.range(),
+        ctx,
+    );
     if func_name == "require_serializable" {
         // This marker is checked entirely during lowering. Emit a concrete
         // expression so statement-position calls do not generate an ambiguous

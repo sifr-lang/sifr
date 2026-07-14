@@ -9,10 +9,15 @@ use sifr_python_ast::{Decorator, Expr, ExprCall, Parameters, Stmt};
 use sifr_type_system::Type;
 
 mod callbacks;
+mod callsite;
 mod context;
 mod parameters;
 mod stub_syntax;
 
+pub(in crate::lower) use callsite::{
+    callback_call_policies, callback_method_arg_ranges, validate_callback_call_captures,
+    CallbackCallPolicy,
+};
 pub(super) use parameters::{parameter_metadata, receiver_is_owned};
 
 pub(in crate::lower) use context::{

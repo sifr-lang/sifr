@@ -280,7 +280,7 @@ pub(in crate::lower) fn non_send_reason(ty: &Type) -> Option<String> {
     non_send_reason_inner(ty.resolve_alias(), &mut HashSet::new())
 }
 
-fn non_share_safe_reason(ty: &Type) -> Option<String> {
+pub(in crate::lower) fn non_share_safe_reason(ty: &Type) -> Option<String> {
     non_share_safe_reason_inner(ty.resolve_alias(), &mut HashSet::new())
 }
 

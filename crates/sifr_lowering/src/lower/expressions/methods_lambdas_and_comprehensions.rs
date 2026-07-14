@@ -9,13 +9,14 @@ use super::{
     resolve_decimal_method_type, resolve_dict_method_type, resolve_enum_method_type,
     resolve_fixed_width_method_type, resolve_list_method_type, resolve_newtype_method_type,
     resolve_protocol_method_type, resolve_set_method_type, resolve_str_method_type,
-    resolve_tuple_method_type, resolved_method_arg_ranges, str, tsc, ClassMethodSurface,
-    DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp, ExprGenerator, ExprLambda,
-    ExprListComp, ExprNamed, ExprSetComp, FunctionType, HirExpr, HirIteratorOp, HirParam, LowerCtx,
-    ParamConvention, Ranged, TextRange, Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS,
-    DEFAULTDICT_SET_ALIAS,
+    resolve_tuple_method_type, str, tsc, ClassMethodSurface, DiagnosticCode, Expr, ExprAttribute,
+    ExprCall, ExprDictComp, ExprGenerator, ExprLambda, ExprListComp, ExprNamed, ExprSetComp,
+    FunctionType, HirExpr, HirIteratorOp, HirParam, LowerCtx, ParamConvention, Ranged, TextRange,
+    Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
 };
-use crate::lower::python_interop::reject_python_context_borrow_storage;
+use crate::lower::python_interop::{
+    callback_method_arg_ranges, reject_python_context_borrow_storage,
+};
 use crate::lower::{parallel_calls, task_join_set_calls, task_scope_offload_calls};
 use sifr_ir::CompilerIntrinsicId;
 pub(in crate::lower) fn lower_method_call(
@@ -29,7 +30,6 @@ pub(in crate::lower) fn lower_method_call(
             if name.id.as_str() == "super" {
                 let method_name = attr.attr.to_string();
                 if let Some(parent_name) = ctx.current_parent_class.clone() {
-                    // Lower arguments
                     let mut args = Vec::new();
                     for arg in &call.arguments.args {
                         let expr = lower_expr(arg, ctx)?;
@@ -192,7 +192,8 @@ pub(in crate::lower) fn lower_method_call(
     ) {
         return None;
     }
-    let method_arg_ranges = resolved_method_arg_ranges(&object_ty_for_args, &method_name, call);
+    let method_arg_ranges =
+        callback_method_arg_ranges(&object, &object_ty_for_args, &method_name, call, &args, ctx);
     let resolved_method_type = resolve_method_type(
         &object_ty,
         &method_name,

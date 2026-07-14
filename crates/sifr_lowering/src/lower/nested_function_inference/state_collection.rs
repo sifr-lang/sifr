@@ -118,8 +118,16 @@ pub(in crate::lower) fn infer_nested_function_types(
     ctx: &mut LowerCtx,
 ) -> NestedFunctionInference {
     let mut states = collect_nested_function_states(stmts, ctx);
+    let outer_bindings = ctx
+        .scope
+        .visible_local_bindings()
+        .into_iter()
+        .collect::<HashMap<_, _>>();
     if states.is_empty() {
-        let mut env = FunctionEnv::default();
+        let mut env = FunctionEnv {
+            vars: outer_bindings,
+            call_return_origins: HashMap::new(),
+        };
         analyze_block(stmts, &mut env, &mut states, None, ctx);
         return NestedFunctionInference {
             function_types: HashMap::new(),
@@ -128,7 +136,7 @@ pub(in crate::lower) fn infer_nested_function_types(
         };
     }
 
-    let mut binding_hints = HashMap::new();
+    let mut binding_hints = outer_bindings;
     for _ in 0..MAX_INFERENCE_PASSES {
         let previous = snapshot_signatures(&states);
         let mut env = FunctionEnv {

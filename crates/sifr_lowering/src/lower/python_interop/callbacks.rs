@@ -240,7 +240,7 @@ pub(super) fn parse(
     })
 }
 
-fn policy_atom(expr: &sifr_python_ast::Expr) -> Option<String> {
+pub(super) fn policy_atom(expr: &sifr_python_ast::Expr) -> Option<String> {
     decorator_path(expr)
         .filter(|segments| segments.len() == 1)
         .and_then(|segments| segments.into_iter().next())
@@ -598,7 +598,7 @@ pub(super) fn python_error_type(ctx: &LowerCtx) -> Type {
         })
 }
 
-fn contains_python_identity(ty: &Type, ctx: &LowerCtx) -> bool {
+pub(super) fn contains_python_identity(ty: &Type, ctx: &LowerCtx) -> bool {
     match ty.resolve_alias() {
         Type::Class { name, fields, .. } => {
             name == "Object"

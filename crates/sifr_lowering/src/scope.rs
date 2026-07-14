@@ -138,6 +138,25 @@ impl Scope {
         self.frames.len()
     }
 
+    pub(crate) fn visible_local_bindings(&self) -> Vec<(String, Type)> {
+        let mut bindings = HashMap::new();
+        for frame in self.frames.iter().skip(1) {
+            for (name, info) in frame {
+                bindings.insert(name.clone(), info.effective_type().clone());
+            }
+        }
+        bindings.into_iter().collect()
+    }
+
+    pub(crate) fn resolves_to_module_binding(&self, name: &str) -> bool {
+        self.frames
+            .iter()
+            .enumerate()
+            .rev()
+            .find_map(|(index, frame)| frame.contains_key(name).then_some(index == 0))
+            .unwrap_or(false)
+    }
+
     /// Define a variable in the current (innermost) scope.
     pub fn define(&mut self, name: String, ty: Type) {
         self.define_binding(name, ty, true, BindingKind::Local, false);
