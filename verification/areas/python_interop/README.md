@@ -59,9 +59,10 @@ Python object to a Sifr `threadsafe_callback` handler, and the report labels
 that portion as a source-checked callback contract rather than a live Sifr binary
 invocation.
 Declaration-first callback evidence is also compiled offline with
-`runner/run.py --callback-examples`: real CFFI current-thread dispatch,
-kafka-python foreign-thread dispatch, application-owned asyncio dispatch, and a
-retained Pub/Sub-style owner with consuming async-close drain.
+`runner/run.py --callback-examples`: separate real CFFI caller-thread and
+worker-thread fixtures for current and foreign dispatch, kafka-python
+foreign-thread dispatch, application-owned asyncio dispatch, and a retained
+Pub/Sub-style owner with consuming async-close drain.
 The policy service aliases map to these concrete cases: `pubsub-compatible`
 uses LocalStack SNS fanout to an SQS subscription, `aws-compatible-sns` uses
 LocalStack SNS delivery to SQS, `aws-compatible-sqs` uses direct LocalStack SQS,

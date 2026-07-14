@@ -1,0 +1,22 @@
+from sifr.python import PythonError
+
+
+@python.callback(handler, lifetime=call, dispatch=current)
+@python(bridge.cffi_declaration.apply_current)
+def cffi_apply_current(
+    handler: Callable[[int], int],
+    value: int,
+) -> Result[int, PythonError]: ...
+
+
+def plus_one(value: int) -> int:
+    return value + 1
+
+
+def main() -> Result[None, PythonError]:
+    try:
+        result: int = cffi_apply_current(plus_one, 41)
+        print("sifr-python-interop:callback:cffi-current=" + str(result))
+    except PythonError as error:
+        raise error
+    return None
