@@ -1,4 +1,5 @@
 use super::CallbackOwnerState;
+use crate::cancellation::{CancellationCarrier, CancellationScopeLease};
 use crate::python::{
     context_exit_normal, context_exit_python_error, context_exit_sifr_cause, object_ops,
     semantic_close, ObjectHandle, PythonError, PythonExitDecision, SifrExitCause,
@@ -150,6 +151,38 @@ pub async fn finalize_retained_callbacks<T, E>(
             );
         }
     }
+    outcome
+}
+
+pub fn retained_callback_finalization_scope(
+    parent: Option<&CancellationCarrier>,
+) -> Result<Option<CancellationScopeLease>, PythonError> {
+    parent
+        .map(CancellationScopeLease::claim)
+        .transpose()
+        .map_err(|error| {
+            PythonError::without_replay(
+                "runtime",
+                "SifrPythonAsyncCallbackError",
+                format!("retained callback cancellation scope failed: {error:?}"),
+                String::new(),
+                "retained callback finalization",
+            )
+        })
+}
+
+pub async fn finish_retained_callback_finalization<T>(
+    outcome: T,
+    scope: Option<CancellationScopeLease>,
+) -> T {
+    let Some(scope) = scope else {
+        return outcome;
+    };
+    if !scope.notification().is_notified() {
+        return outcome;
+    }
+    let _resume = scope.release_and_resume_parent();
+    tokio::task::yield_now().await;
     outcome
 }
 

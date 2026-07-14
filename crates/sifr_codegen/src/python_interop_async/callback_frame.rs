@@ -5,12 +5,12 @@ use super::conversions::{
     method, push_keyword, push_keyword_expr, push_positional, vector_let,
 };
 use crate::python_interop_callbacks::{
-    append_owner_failure_evidence, append_owner_failure_reconciliation,
-    append_retained_callback_retention, append_retained_failure_slots,
-    append_retained_failure_transfers, callback_cleanup_expr, callback_object_expr,
-    callback_outcome_after_cleanup, callback_owner_expr, callback_setup,
-    failure_reconciliation_stmt, retained_cleanup_expr, retained_failure_field,
-    retained_slot_source, CallbackSetup,
+    append_owner_failure_evidence, append_owner_failure_observer_setup,
+    append_owner_failure_reconciliation, append_retained_callback_retention,
+    append_retained_failure_slots, append_retained_failure_transfers, callback_cleanup_expr,
+    callback_object_expr, callback_outcome_after_cleanup, callback_owner_expr, callback_setup,
+    failure_reconciliation_stmt, owner_outcome_with_evidence, retained_cleanup_expr,
+    retained_failure_field, retained_slot_source, CallbackSetup,
 };
 use crate::python_interop_direct::{mapped_try, runtime_call};
 use crate::{RustExpr, RustStmt};
@@ -30,12 +30,16 @@ pub(super) fn argument_frame<'a>(
     error_type: &Type,
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
     retained_callback_errors: &HashMap<String, Vec<Type>>,
+    owner_retained_errors: &[Type],
     has_receiver: bool,
 ) -> Option<AsyncArgumentFrame<'a>> {
     let mut body = vec![
         vector_let("__sifr_python_args"),
         vector_let("__sifr_python_kwargs"),
     ];
+    if has_receiver {
+        append_owner_failure_observer_setup(&mut body, owner_retained_errors);
+    }
     if declaration
         .callbacks
         .iter()
@@ -43,7 +47,10 @@ pub(super) fn argument_frame<'a>(
     {
         body.push(mapped_let(
             "__sifr_callback_call_owner",
-            runtime_call("CallbackOwnerState::new_call_scoped", Vec::new()),
+            owner_outcome_with_evidence(
+                runtime_call("CallbackOwnerState::new_call_scoped", Vec::new()),
+                owner_retained_errors,
+            ),
             error_type,
         ));
     }
@@ -57,23 +64,26 @@ pub(super) fn argument_frame<'a>(
         }
         body.push(mapped_let(
             "__sifr_callback_owner",
-            RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Field {
-                    expr: Box::new(RustExpr::Ident("self".to_string())),
-                    field: "__sifr_python_callbacks".to_string(),
-                }),
-                method: "owner_or_insert".to_string(),
-                args: vec![
-                    RustExpr::Ref {
-                        mutable: false,
-                        expr: Box::new(RustExpr::Field {
-                            expr: Box::new(RustExpr::Ident("self".to_string())),
-                            field: "__sifr_python_object".to_string(),
-                        }),
-                    },
-                    retained_cleanup_expr(callback.owner_cleanup?)?,
-                ],
-            },
+            owner_outcome_with_evidence(
+                RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Field {
+                        expr: Box::new(RustExpr::Ident("self".to_string())),
+                        field: "__sifr_python_callbacks".to_string(),
+                    }),
+                    method: "owner_or_insert".to_string(),
+                    args: vec![
+                        RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("self".to_string())),
+                                field: "__sifr_python_object".to_string(),
+                            }),
+                        },
+                        retained_cleanup_expr(callback.owner_cleanup?)?,
+                    ],
+                },
+                owner_retained_errors,
+            ),
             error_type,
         ));
     }
@@ -87,7 +97,10 @@ pub(super) fn argument_frame<'a>(
             name: "__sifr_callback_group".to_string(),
             ty: None,
             value: mapped_try(
-                runtime_call("RetainedCallbackGroup::new", Vec::new()),
+                owner_outcome_with_evidence(
+                    runtime_call("RetainedCallbackGroup::new", Vec::new()),
+                    owner_retained_errors,
+                ),
                 error_type,
             ),
         });
@@ -144,11 +157,15 @@ pub(super) fn argument_frame<'a>(
                 opaque_classes,
                 owner,
                 failure_slot_source,
+                owner_retained_errors,
             )?;
             body.extend(setup.statements.clone());
             body.push(mapped_let(
                 &value_name,
-                runtime_call("async_from_object", vec![callback_object_expr(&setup)]),
+                owner_outcome_with_evidence(
+                    runtime_call("async_from_object", vec![callback_object_expr(&setup)]),
+                    owner_retained_errors,
+                ),
                 error_type,
             ));
             body.push(if shape.kind == PythonParameterKind::Positional {
@@ -164,7 +181,10 @@ pub(super) fn argument_frame<'a>(
                 forward_positional_by_name = true;
             }
             let present_name = format!("__sifr_python_value_{index}");
-            let converted = async_input_conversion(&present_name, &param.ty, opaque_classes)?;
+            let converted = owner_outcome_with_evidence(
+                async_input_conversion(&present_name, &param.ty, opaque_classes)?,
+                owner_retained_errors,
+            );
             body.push(RustStmt::IfLet {
                 pattern: format!("Some({present_name})"),
                 expr: RustExpr::Ident(param.name.clone()),
@@ -180,7 +200,10 @@ pub(super) fn argument_frame<'a>(
             PythonParameterKind::Positional | PythonParameterKind::KeywordOnly => {
                 body.push(mapped_let(
                     &value_name,
-                    async_input_conversion(&param.name, &param.ty, opaque_classes)?,
+                    owner_outcome_with_evidence(
+                        async_input_conversion(&param.name, &param.ty, opaque_classes)?,
+                        owner_retained_errors,
+                    ),
                     error_type,
                 ));
                 body.push(
@@ -203,7 +226,14 @@ pub(super) fn argument_frame<'a>(
                     body: vec![
                         mapped_let(
                             &value_name,
-                            async_input_conversion_borrowed(&item_name, item_type, opaque_classes)?,
+                            owner_outcome_with_evidence(
+                                async_input_conversion_borrowed(
+                                    &item_name,
+                                    item_type,
+                                    opaque_classes,
+                                )?,
+                                owner_retained_errors,
+                            ),
                             error_type,
                         ),
                         push_positional(&value_name),
@@ -225,11 +255,14 @@ pub(super) fn argument_frame<'a>(
                     body: vec![
                         mapped_let(
                             &value_name,
-                            async_input_conversion_borrowed(
-                                &item_name,
-                                value_type,
-                                opaque_classes,
-                            )?,
+                            owner_outcome_with_evidence(
+                                async_input_conversion_borrowed(
+                                    &item_name,
+                                    value_type,
+                                    opaque_classes,
+                                )?,
+                                owner_retained_errors,
+                            ),
                             error_type,
                         ),
                         push_keyword_expr(
@@ -262,6 +295,38 @@ pub(super) fn append_submission(
     owner_retained_errors: &[Type],
 ) -> Option<()> {
     if retained_result.is_some() {
+        body.push(RustStmt::Let {
+            mutable: false,
+            name: "__sifr_retained_parent_cancellation".to_string(),
+            ty: None,
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Ident(
+                    "__sifr_current_task_cancellation".to_string(),
+                )),
+                args: Vec::new(),
+            },
+        });
+        body.push(mapped_let(
+            "__sifr_retained_cancellation_scope",
+            runtime_call(
+                "retained_callback_finalization_scope",
+                vec![method(
+                    RustExpr::Ident("__sifr_retained_parent_cancellation".to_string()),
+                    "as_ref",
+                    Vec::new(),
+                )],
+            ),
+            error_type,
+        ));
+        body.push(RustStmt::Let {
+            mutable: false,
+            name: "__sifr_python_cancellation".to_string(),
+            ty: None,
+            value: RustExpr::Ident(
+                "__sifr_retained_cancellation_scope.as_ref().map(|scope| scope.child().clone()).or(__sifr_retained_parent_cancellation)"
+                    .to_string(),
+            ),
+        });
         let mut finalization = Vec::new();
         append_submission_body(
             &mut finalization,
@@ -274,6 +339,7 @@ pub(super) fn append_submission(
             retained_result,
             close_callbacks,
             owner_retained_errors,
+            false,
         )?;
         body.push(RustStmt::Let {
             mutable: false,
@@ -284,8 +350,11 @@ pub(super) fn append_submission(
                 is_move: false,
             })),
         });
-        body.push(RustStmt::Return(Some(RustExpr::Await(Box::new(
-            runtime_call(
+        body.push(RustStmt::Let {
+            mutable: false,
+            name: "__sifr_retained_finalized".to_string(),
+            ty: None,
+            value: RustExpr::Await(Box::new(runtime_call(
                 "finalize_retained_callbacks",
                 vec![
                     RustExpr::Ident("__sifr_retained_finalization".to_string()),
@@ -293,6 +362,15 @@ pub(super) fn append_submission(
                         mutable: true,
                         expr: Box::new(RustExpr::Ident("__sifr_callback_group".to_string())),
                     },
+                ],
+            ))),
+        });
+        body.push(RustStmt::Return(Some(RustExpr::Await(Box::new(
+            runtime_call(
+                "finish_retained_callback_finalization",
+                vec![
+                    RustExpr::Ident("__sifr_retained_finalized".to_string()),
+                    RustExpr::Ident("__sifr_retained_cancellation_scope".to_string()),
                 ],
             ),
         )))));
@@ -309,6 +387,7 @@ pub(super) fn append_submission(
         retained_result,
         close_callbacks,
         owner_retained_errors,
+        true,
     )
 }
 
@@ -324,18 +403,21 @@ fn append_submission_body(
     retained_result: Option<&sifr_ir::PythonCallbackDeclaration>,
     close_callbacks: Option<RustExpr>,
     owner_retained_errors: &[Type],
+    declare_cancellation: bool,
 ) -> Option<()> {
-    body.push(RustStmt::Let {
-        mutable: false,
-        name: "__sifr_python_cancellation".to_string(),
-        ty: None,
-        value: RustExpr::FnCall {
-            func: Box::new(RustExpr::Ident(
-                "__sifr_current_task_cancellation".to_string(),
-            )),
-            args: Vec::new(),
-        },
-    });
+    if declare_cancellation {
+        body.push(RustStmt::Let {
+            mutable: false,
+            name: "__sifr_python_cancellation".to_string(),
+            ty: None,
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Ident(
+                    "__sifr_current_task_cancellation".to_string(),
+                )),
+                args: Vec::new(),
+            },
+        });
+    }
     let mut submit_args = vec![
         RustExpr::Ident("__sifr_python_request".to_string()),
         method(

@@ -1,5 +1,5 @@
 use crate::python_interop_direct::{callback_output_value_expr, input_conversion, runtime_call};
-use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
+use crate::{RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType};
 use sifr_ir::{
     PythonCallbackConcurrency, PythonCallbackDeclaration, PythonCallbackDispatch,
     PythonCallbackLifetime, PythonCleanupPolicy, PythonInteropDeclaration,
@@ -23,6 +23,7 @@ pub(crate) fn callback_setup(
     opaque_classes: &HashMap<String, sifr_ir::PythonInteropDeclaration>,
     owner: RustExpr,
     failure_slot_source: Option<RustExpr>,
+    owner_retained_errors: &[Type],
 ) -> Option<CallbackSetup> {
     if callback.dispatch == PythonCallbackDispatch::Current
         && callback.lifetime != PythonCallbackLifetime::Call
@@ -112,7 +113,10 @@ pub(crate) fn callback_setup(
         mutable: false,
         name: callback_var.clone(),
         ty: None,
-        value: mapped_try(runtime_call(factory, factory_args), error_type),
+        value: mapped_try(
+            owner_outcome_with_evidence(runtime_call(factory, factory_args), owner_retained_errors),
+            error_type,
+        ),
     });
     Some(CallbackSetup {
         statements,
@@ -124,6 +128,46 @@ pub(crate) fn callback_setup(
         dispatch: callback.dispatch,
         lifetime: callback.lifetime,
     })
+}
+
+pub(crate) fn owner_outcome_with_evidence(outcome: RustExpr, errors: &[Type]) -> RustExpr {
+    if errors.is_empty() {
+        return outcome;
+    }
+    RustExpr::Match {
+        expr: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(
+                "__sifr_callback_owner_for_later_failure".to_string(),
+            )),
+            method: "as_ref".to_string(),
+            args: Vec::new(),
+        }),
+        arms: vec![
+            RustMatchArm {
+                pattern: "Some(__sifr_callback_owner_evidence_value)".to_string(),
+                bindings: Vec::new(),
+                guard: None,
+                body: vec![RustStmt::Expr(runtime_call(
+                    "attach_callback_failure_evidence",
+                    vec![
+                        outcome.clone(),
+                        RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Array(vec![RustExpr::Ident(
+                                "__sifr_callback_owner_evidence_value".to_string(),
+                            )])),
+                        },
+                    ],
+                ))],
+            },
+            RustMatchArm {
+                pattern: "None".to_string(),
+                bindings: Vec::new(),
+                guard: None,
+                body: vec![RustStmt::Expr(outcome)],
+            },
+        ],
+    }
 }
 
 pub(crate) fn retained_failure_field(

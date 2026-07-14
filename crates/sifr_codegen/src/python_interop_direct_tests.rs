@@ -517,6 +517,52 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
         "{subscribe_rendered}"
     );
 
+    let mut inspect_declaration = declaration();
+    inspect_declaration.target = Some(PythonTargetPath {
+        segments: vec!["Self".to_string(), "inspect".to_string()],
+        span: TextRange::default(),
+    });
+    inspect_declaration.parameters = vec![shape("value", PythonParameterKind::Positional, false)];
+    let inspect = HirFunction {
+        name: "inspect".to_string(),
+        params: vec![param("value", Type::Int, ParamConvention::own())],
+        return_type: Type::Result(Box::new(Type::Int), Box::new(error_channel.clone())),
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
+        python_interop: vec![inspect_declaration],
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+    let inspect_rendered = render_stmts(
+        &python_interop_method_body_with_retained_errors(
+            &inspect,
+            &opaque_classes,
+            Some(&opaque),
+            &retained_errors,
+            &[handler_error.clone()],
+        )
+        .expect("typed later owner method"),
+    );
+    let observer = inspect_rendered
+        .find("__sifr_python_callbacks.owner()")
+        .expect("owner observer setup");
+    let conversion = inspect_rendered
+        .find("async_from_int")
+        .or_else(|| inspect_rendered.find("from_int"))
+        .expect("argument conversion");
+    let lookup = inspect_rendered.find("get_attr").expect("method lookup");
+    assert!(
+        observer < conversion && observer < lookup,
+        "{inspect_rendered}"
+    );
+    assert!(
+        inspect_rendered[..lookup].contains("attach_callback_failure_evidence"),
+        "{inspect_rendered}"
+    );
+
     let mut close_declaration = declaration();
     close_declaration.target = Some(PythonTargetPath {
         segments: vec!["Self".to_string(), "close".to_string()],
@@ -565,7 +611,7 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
         classes: vec![HirClass {
             name: "Subscription".to_string(),
             fields: Vec::new(),
-            methods: vec![close],
+            methods: vec![inspect, close],
             is_hashable: false,
             is_error_type: false,
             kind: HirClassKind::PythonOpaque(opaque),

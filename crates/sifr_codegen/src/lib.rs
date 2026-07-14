@@ -95,6 +95,7 @@ mod python_interop_direct_tests;
 mod python_interop_plan;
 #[cfg(test)]
 mod python_interop_plan_tests;
+mod python_interop_runtime_exprs;
 pub use python_interop_plan::{
     PythonBridgeImportPlan, PythonBridgeModulePlan, PythonBridgePackagePlan,
     PythonCallbackAttachmentPlan, PythonInteropPlan, PythonInteropPlanDeclaration,

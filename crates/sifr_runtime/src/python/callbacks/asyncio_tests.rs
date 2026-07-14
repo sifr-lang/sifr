@@ -1,8 +1,10 @@
 use super::{
-    asyncio_callback_scoped_with_owner, asyncio_callback_with_owner, AsyncioCallbackConcurrency,
-    CallbackExecutionError, CallbackOwnerState, CallbackOwnerStatus, RetainedCallbackGroup,
+    asyncio_callback_scoped_with_owner, asyncio_callback_with_owner, finalize_retained_callbacks,
+    finish_retained_callback_finalization, retained_callback_finalization_scope,
+    AsyncioCallbackConcurrency, CallbackExecutionError, CallbackOwnerState, CallbackOwnerStatus,
+    RetainedCallbackGroup,
 };
-use crate::cancellation::CancellationCarrier;
+use crate::cancellation::{CancellationBind, CancellationCarrier, CancellationRequest};
 use crate::python::{
     async_from_int, async_from_object, async_to_int, initialize_runtime,
     reset_runtime_state_for_tests, submit_async_declaration, test_config, test_guard,
@@ -10,6 +12,7 @@ use crate::python::{
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyModule};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 const MODULE: &str = "__sifr_asyncio_callback_tests__";
@@ -298,6 +301,91 @@ async fn dropped_retained_group_drains_without_blocking_the_executor() {
         .expect("cancellation result should convert");
     assert_eq!(value, -1);
     assert_eq!(owner.status(), CallbackOwnerStatus::Closed);
+    reset_runtime_state_for_tests();
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn retained_finalization_resumes_native_cancellation_only_after_rollback() {
+    let _guard = test_guard();
+    initialize_callback_runtime("asyncio-callback-retained-cancellation-mask");
+    let started = Arc::new(tokio::sync::Notify::new());
+    let started_by_handler = Arc::clone(&started);
+    let mut group = RetainedCallbackGroup::new().expect("retained group should create");
+    let owner = group.owner().clone();
+    let callback = asyncio_callback_with_owner(
+        owner.clone(),
+        7,
+        1,
+        AsyncioCallbackConcurrency::Parallel,
+        |args| crate::python::to_int(&args[0]),
+        move |_, value, cancellation: CancellationCarrier| {
+            let started = Arc::clone(&started_by_handler);
+            async move {
+                started.notify_one();
+                let notification = Arc::new(tokio::sync::Notify::new());
+                let signal = Arc::clone(&notification);
+                let _claim = cancellation
+                    .claim(Arc::new(move || signal.notify_one()))
+                    .map_err(|_| {
+                        CallbackExecutionError::Infrastructure(
+                            crate::python::PythonError::without_replay(
+                                "callback",
+                                "RuntimeError",
+                                "callback cancellation claim failed",
+                                String::new(),
+                                "retained callback cancellation",
+                            ),
+                        )
+                    })?;
+                notification.notified().await;
+                Ok(value)
+            }
+        },
+        crate::python::from_int,
+    )
+    .expect("retained asyncio callback should create");
+    callback
+        .retain_in_owner()
+        .expect("retained callback should transfer into its owner");
+
+    let parent = CancellationCarrier::new();
+    let resumed_after_close = Arc::new(AtomicBool::new(false));
+    let resumed = Arc::clone(&resumed_after_close);
+    let owner_at_resume = owner.clone();
+    assert_eq!(
+        parent.bind_fallback(Arc::new(move || {
+            resumed.store(
+                owner_at_resume.status() == CallbackOwnerStatus::Closed,
+                Ordering::SeqCst,
+            );
+        })),
+        CancellationBind::Bound
+    );
+    let scope = retained_callback_finalization_scope(Some(&parent))
+        .expect("cancellation scope should create")
+        .expect("parent carrier should produce a scope");
+    let child = scope.child().clone();
+    let request = function_request(
+        "invoke",
+        vec![
+            async_from_object(callback.object()).expect("callback transport"),
+            async_from_int(41).expect("argument transport"),
+        ],
+    );
+
+    let finalization = async {
+        let outcome = submit_async_declaration(request, Some(&child)).await;
+        let outcome = finalize_retained_callbacks(outcome, &mut group).await;
+        finish_retained_callback_finalization(outcome, Some(scope)).await
+    };
+    let cancel = async {
+        started.notified().await;
+        assert_eq!(parent.request_cancel(), CancellationRequest::Claimed);
+    };
+    let (outcome, ()) = tokio::join!(finalization, cancel);
+    outcome.expect_err("native cancellation should terminate the retained operation");
+    assert_eq!(owner.status(), CallbackOwnerStatus::Closed);
+    assert!(resumed_after_close.load(Ordering::SeqCst));
     reset_runtime_state_for_tests();
 }
 

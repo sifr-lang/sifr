@@ -325,6 +325,75 @@ fn asyncio_callback_emits_owned_loop_factory_async_handler_and_async_drain() {
 }
 
 #[test]
+fn retained_asyncio_result_masks_native_cancellation_until_rollback_finishes() {
+    let handler_type = Type::AsyncCallable(
+        vec![Type::Int],
+        vec![ParamConvention::own()],
+        Box::new(Type::Int),
+    );
+    let mut declaration = declaration(
+        vec!["pkg", "subscribe"],
+        vec![shape("handler", PythonParameterKind::Positional, false)],
+    );
+    declaration.callbacks.push(PythonCallbackDeclaration {
+        parameter_name: "handler".to_string(),
+        span: TextRange::default(),
+        lifetime: PythonCallbackLifetime::Result,
+        dispatch: PythonCallbackDispatch::Asyncio,
+        concurrency: Some(PythonCallbackConcurrency::Parallel),
+        argument_types: vec![Type::Int],
+        argument_conventions: vec![ParamConvention::own()],
+        success_type: Type::Int,
+        handler_error_type: None,
+        is_async: true,
+        owner_class: Some("Subscription".to_string()),
+        owner_cleanup: Some(PythonCleanupPolicy::AsyncClose),
+    });
+    let owner_type = Type::Class {
+        name: "Subscription".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("NonSend".to_string()),
+    };
+    let wrapper = function(
+        "subscribe",
+        vec![param("handler", handler_type, ParamConvention::borrow())],
+        owner_type,
+        declaration,
+    );
+    let mut owner = opaque_declaration();
+    owner.cleanup = Some(PythonCleanupPolicy::AsyncClose);
+    owner.target = Some(PythonTargetPath {
+        segments: vec!["pkg".to_string(), "Subscription".to_string()],
+        span: TextRange::default(),
+    });
+    let opaque_classes = HashMap::from([("Subscription".to_string(), owner)]);
+
+    let rendered = render_stmts(
+        &python_interop_function_body(&wrapper, &opaque_classes)
+            .expect("retained asyncio wrapper should lower"),
+    );
+    for required in [
+        "retained_callback_finalization_scope",
+        "scope.child().clone()",
+        "finalize_retained_callbacks",
+        "finish_retained_callback_finalization",
+    ] {
+        assert!(
+            rendered.contains(required),
+            "missing {required}\n{rendered}"
+        );
+    }
+    let rollback = rendered
+        .find("finalize_retained_callbacks")
+        .expect("awaited rollback");
+    let resume = rendered
+        .find("finish_retained_callback_finalization")
+        .expect("native cancellation resumption");
+    assert!(rollback < resume, "{rendered}");
+}
+
+#[test]
 fn async_python_error_converts_to_an_active_error_supertype() {
     let wrapper = function(
         "value",

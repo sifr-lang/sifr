@@ -23,6 +23,7 @@ pub use foreign::{
 pub use ownership::{
     context_exit_normal_with_callbacks, context_exit_python_error_with_callbacks,
     context_exit_sifr_cause_with_callbacks, finalize_retained_callbacks,
+    finish_retained_callback_finalization, retained_callback_finalization_scope,
     rollback_retained_callbacks_on_error, semantic_close_with_callbacks, CallbackOwnerSlot,
     RetainedCallbackCleanup, RetainedCallbackGroup,
 };

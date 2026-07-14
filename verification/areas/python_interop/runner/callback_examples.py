@@ -8,8 +8,8 @@ from example_packages import ExampleCase, build_examples_report, run_examples_se
 
 
 CALLBACK_CASES = {
-    "cffi-current": ExampleCase(
-        case_id="cffi-current",
+    "cffi-foreign-thread": ExampleCase(
+        case_id="cffi-foreign-thread",
         relative_source="cffi_callback/declaration_callback.sifr",
         stdout_marker="sifr-python-interop:callback:cffi=42",
         import_roots=("cffi", "threading"),

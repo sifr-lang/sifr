@@ -7,7 +7,7 @@ use sifr_type_system::Type;
 use std::collections::HashMap;
 
 use super::callback_frame::{append_submission, argument_frame};
-use crate::python_interop_callbacks::append_owner_failure_observer_setup;
+use crate::python_interop_callbacks::owner_outcome_with_evidence;
 use crate::python_interop_direct::{mapped_try, runtime_call};
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
@@ -34,6 +34,7 @@ pub(crate) fn async_python_function_body(
         error_type,
         opaque_classes,
         retained_callback_errors,
+        &[],
         false,
     )?;
     let mut body = frame.body;
@@ -95,10 +96,10 @@ pub(crate) fn async_python_method_body(
         error_type,
         opaque_classes,
         retained_callback_errors,
+        owner_retained_errors,
         true,
     )?;
     let mut body = frame.body;
-    append_owner_failure_observer_setup(&mut body, owner_retained_errors);
     let receiver = RustExpr::Field {
         expr: Box::new(RustExpr::Ident("self".to_string())),
         field: "__sifr_python_object".to_string(),
@@ -152,7 +153,10 @@ pub(crate) fn async_python_method_body(
         mutable: false,
         name: "__sifr_python_request".to_string(),
         ty: None,
-        value: mapped_try(request, error_type),
+        value: mapped_try(
+            owner_outcome_with_evidence(request, owner_retained_errors),
+            error_type,
+        ),
     });
     append_submission(
         &mut body,
