@@ -1,8 +1,8 @@
 use super::{
-    canonicalize_class_surface_type, expression_diagnostics, method_count_range,
-    reject_exact_method_arg_count, reject_method_arg_count, reject_no_method_args,
-    resolve_method_type, resolve_str_encode_method_type, str, DiagnosticCode, FunctionType,
-    HirExpr, LowerCtx, TextRange, Type,
+    canonicalize_class_surface_type, coroutine_result_type, expression_diagnostics,
+    method_count_range, reject_exact_method_arg_count, reject_method_arg_count,
+    reject_no_method_args, resolve_method_type, resolve_str_encode_method_type, str,
+    DiagnosticCode, FunctionType, HirExpr, LowerCtx, TextRange, Type,
 };
 pub(super) fn resolve_str_method_type(
     method: &str,
@@ -260,8 +260,10 @@ pub(super) fn resolve_class_method_type(
         }
         Some(canonicalize_class_surface_type(&ft.return_type))
     } else if let Some((_, field_ty)) = class.fields.iter().find(|(n, _)| n == method) {
-        // Check if the field is a Callable type — allow calling it like a method
-        if let Type::Callable(param_types, _, ret_type) = field_ty {
+        // Callable fields use method-call syntax; async callable fields produce a coroutine.
+        if let Type::Callable(param_types, _, ret_type)
+        | Type::AsyncCallable(param_types, _, ret_type) = field_ty
+        {
             if args.len() != param_types.len() {
                 expression_diagnostics::call_not_callable_or_arity(
                     ctx,
@@ -292,7 +294,12 @@ pub(super) fn resolve_class_method_type(
                     );
                 }
             }
-            Some(canonicalize_class_surface_type(ret_type))
+            let return_type = canonicalize_class_surface_type(ret_type);
+            if matches!(field_ty, Type::AsyncCallable(..)) {
+                Some(coroutine_result_type(&return_type))
+            } else {
+                Some(return_type)
+            }
         } else {
             expression_diagnostics::call_not_callable_or_arity(
                 ctx,

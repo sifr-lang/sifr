@@ -498,6 +498,7 @@ mod tests {
                 Vec::new()
             },
             required_import_root: Some(root.clone()),
+            callbacks: Vec::new(),
         };
         let mut python = PythonInteropPlan::default();
         python.target_probes.push(PythonTargetProbe {
@@ -519,6 +520,7 @@ mod tests {
                     Vec::new()
                 },
                 return_type: sifr_type_system::Type::None,
+                callback_attachments: Vec::new(),
             });
         GeneratedBinaryProject {
             main_rs: "fn main() {}".to_string(),

@@ -23,6 +23,54 @@ pub(super) fn test_callable_variable_call_errors_have_codes() {
 }
 
 #[test]
+pub(super) fn test_async_callable_is_distinct_and_produces_awaitable_call() {
+    let source = "async def apply(f: AsyncCallable[[int], int]) -> int:\n    return await f(4)\n";
+    let module = lower_source(source).expect("AsyncCallable call should lower");
+    let apply = module
+        .functions
+        .iter()
+        .find(|function| function.name == "apply")
+        .expect("apply function should exist");
+    assert!(matches!(apply.params[0].ty, Type::AsyncCallable(_, _, _)));
+
+    let sync_source = "def apply(f: AsyncCallable[[int], int]) -> int:\n    return f(4)\n";
+    let errors = lower_source(sync_source).expect_err("async callable result must be awaited");
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message.contains("Coroutine[int, Never]")),
+        "unexpected diagnostics: {errors:?}"
+    );
+}
+
+#[test]
+pub(super) fn test_async_callable_rejects_borrowed_async_function_boundary() {
+    let borrowed_source = "async def apply(f: AsyncCallable[[str], str]) -> str:\n    return await f(\"hello\")\n\nasync def echo(value: str) -> str:\n    await task.sleep(0.0)\n    return \"ok\"\n\nasync def main() -> None:\n    result = await apply(echo)\n    return None\n";
+    let errors = lower_source(borrowed_source)
+        .expect_err("borrowed async function must not satisfy an owning AsyncCallable");
+    assert!(errors
+        .iter()
+        .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)));
+
+    let owned_source = borrowed_source.replace("echo(value: str)", "echo(own value: str)");
+    lower_source(&owned_source).expect("owned async function should satisfy AsyncCallable");
+
+    let nested_source = "async def apply(f: AsyncCallable[[str], str]) -> str:\n    return await f(\"hello\")\n\nasync def main() -> None:\n    async def echo(own value: str) -> str:\n        await task.sleep(0.0)\n        return value\n    result = await apply(echo)\n    return None\n";
+    lower_source(nested_source).expect("nested async function should retain AsyncCallable type");
+}
+
+#[test]
+pub(super) fn test_async_callable_shape_diagnostic_is_specific() {
+    let source = "async def apply(f: AsyncCallable[int, str]) -> str:\n    return await f(4)\n";
+    let errors = lower_source(source).expect_err("malformed AsyncCallable must fail");
+    assert!(errors.iter().any(|error| {
+        error.message
+            == "AsyncCallable parameter types must be a list: AsyncCallable[[int, str], bool]"
+            && error.code == Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
+    }));
+}
+
+#[test]
 pub(super) fn test_iter_keyword_has_call_code() {
     let source = "def main():\n    values: list[int] = [1, 2, 3]\n    _it = iter(source=values)\n";
     let result = lower_source(source);

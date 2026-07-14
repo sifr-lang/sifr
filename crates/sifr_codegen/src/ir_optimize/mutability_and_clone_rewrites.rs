@@ -240,7 +240,9 @@ pub(super) fn remove_expr_unneeded_mutability(expr: &mut RustExpr) -> usize {
             }
             removed
         }
-        RustExpr::ClosureBlock { body, .. } => remove_unneeded_mutability_in_block(body),
+        RustExpr::ClosureBlock { body, .. } | RustExpr::AsyncBlock { body, .. } => {
+            remove_unneeded_mutability_in_block(body)
+        }
         RustExpr::MethodCall { receiver, args, .. } => {
             remove_expr_unneeded_mutability(receiver)
                 + args
@@ -495,7 +497,9 @@ pub(super) fn expr_mutates_name(expr: &RustExpr, name: &str) -> bool {
                 })
         }
         RustExpr::Closure { body, .. } => expr_mutates_name(body, name),
-        RustExpr::ClosureBlock { body, .. } => stmts_mutate_name(body, name),
+        RustExpr::ClosureBlock { body, .. } | RustExpr::AsyncBlock { body, .. } => {
+            stmts_mutate_name(body, name)
+        }
         RustExpr::StructInit { fields, .. } => fields
             .iter()
             .any(|(_, value)| expr_mutates_name(value, name)),
@@ -763,7 +767,9 @@ pub(super) fn optimize_expr(expr: &mut RustExpr) -> usize {
             removed
         }
         RustExpr::Closure { body, .. } => optimize_expr(body),
-        RustExpr::ClosureBlock { body, .. } => optimize_block(body),
+        RustExpr::ClosureBlock { body, .. } | RustExpr::AsyncBlock { body, .. } => {
+            optimize_block(body)
+        }
         RustExpr::StructInit { fields, .. } => {
             let mut removed = 0usize;
             for (_, value) in fields {

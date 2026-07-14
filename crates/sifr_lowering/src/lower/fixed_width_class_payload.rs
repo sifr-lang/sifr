@@ -20,7 +20,7 @@ fn type_mentions_class(ty: &Type, class_name: &str) -> bool {
         Type::Tuple(elems) | Type::Union(elems) | Type::Intersection(elems) => elems
             .iter()
             .any(|elem| type_mentions_class(elem, class_name)),
-        Type::Callable(params, _, ret) => {
+        Type::Callable(params, _, ret) | Type::AsyncCallable(params, _, ret) => {
             params
                 .iter()
                 .any(|param| type_mentions_class(param, class_name))
@@ -70,7 +70,7 @@ fn type_contains_fixed_width(ty: &Type) -> bool {
         Type::Tuple(elems) | Type::Union(elems) | Type::Intersection(elems) => {
             elems.iter().any(type_contains_fixed_width)
         }
-        Type::Callable(params, _, ret) => {
+        Type::Callable(params, _, ret) | Type::AsyncCallable(params, _, ret) => {
             params.iter().any(type_contains_fixed_width) || type_contains_fixed_width(ret)
         }
         Type::Function(ft) => {

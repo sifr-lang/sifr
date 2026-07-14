@@ -1585,6 +1585,16 @@
     },
     {
       "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
+      "code": "SIFR-PYCB-0001",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "frontend_internal_diagnostic_rules_cases",
       "code": "SIFR-PYCONV-0001",
       "deferral": null,
       "multi_error_recovery_fixture": null,

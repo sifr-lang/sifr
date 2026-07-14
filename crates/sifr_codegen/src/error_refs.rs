@@ -122,7 +122,7 @@ fn collect_type_error_refs(
             }
             collect_type_error_refs(&sig.return_type, referenced, builtin_error_classes);
         }
-        Type::Callable(params, _, ret) => {
+        Type::Callable(params, _, ret) | Type::AsyncCallable(params, _, ret) => {
             for param_ty in params {
                 collect_type_error_refs(param_ty, referenced, builtin_error_classes);
             }

@@ -135,7 +135,10 @@ fn non_ipc_serializable_reason_inner(ty: &Type, visiting: &mut HashSet<String>) 
         | Type::Select2(_, _) => {
             Some("task and async runtime handles are process-local".to_string())
         }
-        Type::Function(_) | Type::AsyncFunction(_) | Type::Callable(..) => {
+        Type::Function(_)
+        | Type::AsyncFunction(_)
+        | Type::Callable(..)
+        | Type::AsyncCallable(..) => {
             Some("callables are process-local code, not IPC payload data".to_string())
         }
         Type::Iterator(_) | Type::Iterable(_) | Type::Range => {

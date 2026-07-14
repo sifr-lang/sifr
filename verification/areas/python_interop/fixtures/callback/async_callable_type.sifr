@@ -1,0 +1,15 @@
+async def plus_one(value: int) -> int:
+    await task.sleep(0.0)
+    return value + 1
+
+
+async def apply_async(
+    handler: AsyncCallable[[int], int],
+    value: int,
+) -> int:
+    return await handler(value)
+
+
+async def main() -> None:
+    result = await apply_async(plus_one, 41)
+    print(result)

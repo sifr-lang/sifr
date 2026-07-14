@@ -15,7 +15,7 @@ pub(super) fn shutdown_registered_callbacks() -> Result<(), PythonRuntimeError> 
             "forced callback shutdown failure".to_string(),
         ));
     }
-    Ok(())
+    super::callbacks::shutdown_registered_callback_owners()
 }
 
 pub(super) fn run_registered_async_cleanup() -> Result<(), PythonRuntimeError> {

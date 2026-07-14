@@ -75,6 +75,7 @@ fn extract_ipc_schema_type_inner(ty: &Type) -> IpcSchemaType {
         | Type::Function(_)
         | Type::AsyncFunction(_)
         | Type::Callable(..)
+        | Type::AsyncCallable(..)
         | Type::Iterator(_)
         | Type::Iterable(_)
         | Type::Range

@@ -2,9 +2,11 @@ use crate::{interop_build_plan_for_named_modules, PythonTargetProbeStatus};
 use ruff_text_size::TextRange;
 use sifr_ir::{
     HirClass, HirClassKind, HirExpr, HirFunction, HirImport, HirModule, HirStmt, MethodKind,
-    PythonInteropDeclaration, PythonInteropDecoratorKind, PythonInteropEffect,
-    PythonRecordExpansion, PythonTargetPath,
+    PythonCallbackConcurrency, PythonCallbackDeclaration, PythonCallbackDispatch,
+    PythonCallbackLifetime, PythonCleanupPolicy, PythonInteropDeclaration,
+    PythonInteropDecoratorKind, PythonInteropEffect, PythonRecordExpansion, PythonTargetPath,
 };
+use sifr_type_system::ParamConvention;
 use sifr_type_system::Type;
 
 #[test]
@@ -21,6 +23,7 @@ fn plan_retains_deferred_probe_requirements_record_constraint_and_cache_identity
         consumes_receiver: false,
         parameters: Vec::new(),
         required_import_root: Some("json".to_string()),
+        callbacks: Vec::new(),
     };
     let module = HirModule {
         functions: vec![
@@ -80,6 +83,7 @@ fn python_cache_identity_changes_with_authoritative_sifr_types() {
         consumes_receiver: false,
         parameters: Vec::new(),
         required_import_root: Some("json".to_string()),
+        callbacks: Vec::new(),
     };
     let mut string_result = function("loads", Vec::new(), vec![declaration.clone()]);
     string_result.return_type = Type::Str;
@@ -160,6 +164,54 @@ fn sync_python_declaration_does_not_require_the_owned_async_loop() {
 }
 
 #[test]
+fn callback_attachment_policy_is_retained_in_plan_and_cache_identity() {
+    let declaration = PythonInteropDeclaration {
+        kind: PythonInteropDecoratorKind::Function,
+        target: Some(PythonTargetPath {
+            segments: vec!["package".to_string(), "register".to_string()],
+            span: TextRange::default(),
+        }),
+        span: TextRange::default(),
+        effect: PythonInteropEffect::BlockingIo,
+        cleanup: None,
+        consumes_receiver: false,
+        parameters: Vec::new(),
+        required_import_root: Some("package".to_string()),
+        callbacks: vec![PythonCallbackDeclaration {
+            parameter_name: "handler".to_string(),
+            span: TextRange::default(),
+            lifetime: PythonCallbackLifetime::Result,
+            dispatch: PythonCallbackDispatch::Foreign,
+            concurrency: Some(PythonCallbackConcurrency::Serial),
+            argument_types: vec![Type::Int],
+            argument_conventions: vec![ParamConvention::own()],
+            success_type: Type::Bool,
+            handler_error_type: None,
+            is_async: false,
+            owner_class: Some("Subscription".to_string()),
+            owner_cleanup: Some(PythonCleanupPolicy::Close),
+        }],
+    };
+    let module = module_with_functions(vec![function("register", Vec::new(), vec![declaration])]);
+
+    let plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);
+
+    let attachment = &plan.python.declarations[0].callback_attachments[0];
+    assert_eq!(attachment.parameter_name, "handler");
+    assert_eq!(attachment.lifetime, PythonCallbackLifetime::Result);
+    assert_eq!(attachment.dispatch, PythonCallbackDispatch::Foreign);
+    assert_eq!(
+        attachment.concurrency,
+        Some(PythonCallbackConcurrency::Serial)
+    );
+    assert_eq!(attachment.owner_class.as_deref(), Some("Subscription"));
+    assert_eq!(attachment.owner_cleanup, Some(PythonCleanupPolicy::Close));
+    assert!(plan
+        .cache_key_fragment()
+        .contains("python.callback=handler:Result:Foreign:Some(Serial):Subscription:Some(Close)"));
+}
+
+#[test]
 fn method_only_async_python_declaration_requires_owned_loop() {
     let mut method = function("work", Vec::new(), Vec::new());
     method.is_async = true;
@@ -175,6 +227,7 @@ fn method_only_async_python_declaration_requires_owned_loop() {
         consumes_receiver: false,
         parameters: Vec::new(),
         required_import_root: None,
+        callbacks: Vec::new(),
     });
     let mut module = module_with_functions(Vec::new());
     module.classes.push(HirClass {

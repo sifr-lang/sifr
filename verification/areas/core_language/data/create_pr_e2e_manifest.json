@@ -29,6 +29,7 @@
     "task_context_propagation_basic",
     "spawn_capture_immutable_shared_ok",
     "await_without_live_borrow",
+    "async_callable_owned_string",
     "task_gather_cleanup_error_secondary",
     "cancellation_cleanup_runs",
     "cheap_sync_helper_in_async_allowed",

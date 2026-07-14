@@ -50,7 +50,9 @@ impl RustEmitter {
         if convention.is_mut_borrow() && ty.ownership() != sifr_type_system::OwnershipKind::Copy {
             self.mut_borrowed_params.insert(name.to_string());
         }
-        if let Type::Callable(ref param_types, ref conventions, _) = ty {
+        if let Type::Callable(ref param_types, ref conventions, _)
+        | Type::AsyncCallable(ref param_types, ref conventions, _) = ty
+        {
             let conv_list: Vec<(Type, ParamConvention)> = param_types
                 .iter()
                 .zip(conventions.iter())
@@ -635,6 +637,7 @@ impl RustEmitter {
                     self.lower_function_return_type(func, false)
                 },
                 body: lowered_body,
+                is_async: func.is_async,
             }
         } else {
             let params = func
@@ -658,7 +661,7 @@ impl RustEmitter {
                     params,
                     body: lowered_body,
                     is_move: false,
-                    is_async: false,
+                    is_async: func.is_async,
                 },
             }
         };
@@ -784,7 +787,10 @@ impl RustEmitter {
         let base = self.rust_ir_type_with_generics(ty);
         if convention.is_borrowed()
             && (ty.ownership() != sifr_type_system::OwnershipKind::Copy
-                || matches!(ty.resolve_alias(), Type::Callable(..)))
+                || matches!(
+                    ty.resolve_alias(),
+                    Type::Callable(..) | Type::AsyncCallable(..)
+                ))
         {
             RustType::Ref {
                 mutable: convention.is_mut_borrow(),

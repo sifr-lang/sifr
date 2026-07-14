@@ -23,6 +23,40 @@ pub(crate) fn generate_rust_from_source_with_stdlib_collections(source: &str) ->
 }
 
 #[test]
+fn async_callable_parameter_emits_stable_async_fn_contract() {
+    let rust_code = generate_rust_from_source(
+        "async def invoke(handler: AsyncCallable[[int], int]) -> int:\n    return await handler(4)\n",
+    );
+
+    assert!(rust_code.contains("std::ops::AsyncFn(i64) -> i64 + Send + Sync"));
+    assert!(rust_code.contains("handler(4_i64).await"));
+    syn::parse_file(&rust_code).expect("AsyncCallable Rust should parse");
+}
+
+#[test]
+fn async_function_argument_satisfies_async_callable_without_erasure() {
+    let rust_code = generate_rust_from_source(
+        "async def plus_one(value: int) -> int:\n    await task.sleep(0.0)\n    return value + 1\n\nasync def invoke(handler: AsyncCallable[[int], int]) -> int:\n    return await handler(4)\n\nasync def main() -> None:\n    value = await invoke(plus_one)\n    print(value)\n",
+    );
+
+    assert!(rust_code.contains("invoke(plus_one).await"));
+}
+
+#[test]
+fn async_callable_class_field_uses_a_boxed_future_adapter() {
+    let rust_code = generate_rust_from_source(
+        "class AsyncRunner:\n    handler: AsyncCallable[[int], int]\n\n    def __init__(self, handler: AsyncCallable[[int], int]):\n        self.handler = handler\n\n    async def run(self, value: int) -> int:\n        return await self.handler(value)\n\nasync def plus_one(value: int) -> int:\n    await task.sleep(0.0)\n    return value + 1\n\nasync def main() -> None:\n    runner = AsyncRunner(plus_one)\n    print(await runner.run(41))\n",
+    );
+
+    assert!(rust_code.contains("Box<dyn Fn(i64) -> std::pin::Pin<Box<dyn std::future::Future<Output = i64>>> + Send + Sync>"));
+    assert!(rust_code.contains("move |__sifr_async_arg_0|"));
+    assert!(rust_code.contains("std::sync::Arc::clone(&__sifr_async_callable)"));
+    assert!(rust_code.contains("__sifr_async_callable(__sifr_async_arg_0).await"));
+    assert!(rust_code.contains("(self.handler)(value).await"));
+    syn::parse_file(&rust_code).expect("stored AsyncCallable Rust should parse");
+}
+
+#[test]
 fn test_async_generator_codegen_uses_lazy_materialization() {
     let rust_code = generate_rust_from_source(
         "async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n    yield 2\n",

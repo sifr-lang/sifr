@@ -322,7 +322,7 @@ fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds) {
             }
         }
         RustExpr::Closure { body, .. } => collect_expr(body, needs),
-        RustExpr::ClosureBlock { body, .. } => {
+        RustExpr::ClosureBlock { body, .. } | RustExpr::AsyncBlock { body, .. } => {
             for stmt in body {
                 collect_stmt(stmt, needs);
             }

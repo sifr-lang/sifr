@@ -558,6 +558,7 @@ impl Renderer {
                 params,
                 ret,
                 body,
+                is_async,
             } => {
                 let rendered_params = params
                     .iter()
@@ -566,13 +567,15 @@ impl Renderer {
                     .join(", ");
                 if let Some(ret) = ret {
                     self.emit_line(&format!(
-                        "fn {}({rendered_params}) -> {} {{",
+                        "{}fn {}({rendered_params}) -> {} {{",
+                        if *is_async { "async " } else { "" },
                         Self::render_identifier(name),
                         Self::render_type_string(ret)
                     ));
                 } else {
                     self.emit_line(&format!(
-                        "fn {}({rendered_params}) {{",
+                        "{}fn {}({rendered_params}) {{",
+                        if *is_async { "async " } else { "" },
                         Self::render_identifier(name)
                     ));
                 }

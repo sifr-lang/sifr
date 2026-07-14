@@ -751,7 +751,8 @@ impl RustEmitter {
                     || arms.iter().any(Self::rust_match_arm_contains_await)
             }
             crate::RustExpr::Closure { body, .. } => Self::rust_expr_contains_await(body),
-            crate::RustExpr::ClosureBlock { body, .. } => Self::rust_stmts_contain_await(body),
+            crate::RustExpr::ClosureBlock { body, .. }
+            | crate::RustExpr::AsyncBlock { body, .. } => Self::rust_stmts_contain_await(body),
             crate::RustExpr::StructInit { fields, .. } => fields
                 .iter()
                 .any(|(_, value)| Self::rust_expr_contains_await(value)),

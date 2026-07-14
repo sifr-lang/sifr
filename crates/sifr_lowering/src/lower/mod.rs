@@ -115,6 +115,8 @@ mod python_context_expression_tests;
 mod python_coroutine_contract_tests;
 mod python_interop;
 #[cfg(test)]
+mod python_interop_callback_tests;
+#[cfg(test)]
 mod python_interop_tests;
 #[cfg(test)]
 mod python_trust_tests;

@@ -38,6 +38,7 @@ fn emitter() -> RustEmitter {
                 consumes_receiver: false,
                 parameters: vec![],
                 required_import_root: Some("fixture".to_string()),
+                callbacks: Vec::new(),
             },
         );
     }

@@ -205,9 +205,9 @@ impl Type {
             Self::Protocol { .. } => OwnershipKind::Move,
             Self::Newtype { inner, .. } => inner.ownership(),
             Self::TypeVar(_) => OwnershipKind::Move, // conservative: treat as Move
-            Self::Callable(..) => OwnershipKind::Copy, // function pointers are Copy
+            Self::Callable(..) | Self::AsyncCallable(..) => OwnershipKind::Copy,
             Self::Enum { .. } => OwnershipKind::Copy, // enums are Copy (repr(i64))
-            Self::BigInt => OwnershipKind::Move,     // heap-allocated, not Copy
+            Self::BigInt => OwnershipKind::Move,      // heap-allocated, not Copy
             Self::BigDecimal => OwnershipKind::Move,
             // Union/Intersection: Move if any member is Move
             Self::Union(members) | Self::Intersection(members) => {
@@ -343,6 +343,14 @@ impl Type {
             Self::Callable(params, _, ret) => {
                 let parts: Vec<String> = params.iter().map(Self::display_name).collect();
                 format!("Callable[[{}], {}]", parts.join(", "), ret.display_name())
+            }
+            Self::AsyncCallable(params, _, ret) => {
+                let parts: Vec<String> = params.iter().map(Self::display_name).collect();
+                format!(
+                    "AsyncCallable[[{}], {}]",
+                    parts.join(", "),
+                    ret.display_name()
+                )
             }
             Self::Enum { name, .. } => name.clone(),
             Self::BigInt => "bigint".to_string(),
@@ -483,6 +491,14 @@ impl Type {
                     format!("impl Fn({}) -> {}", param_types.join(", "), ret_type)
                 }
             }
+            Self::AsyncCallable(params, conventions, ret) => {
+                let param_types = callable_rust_param_types(params, conventions);
+                format!(
+                    "impl std::ops::AsyncFn({}) -> {} + Send + Sync",
+                    param_types.join(", "),
+                    ret.rust_type()
+                )
+            }
         }
     }
 
@@ -522,6 +538,14 @@ impl Type {
                     format!("Box<dyn Fn({}) -> {}>", param_types.join(", "), ret_type)
                 }
             }
+            Self::AsyncCallable(params, conventions, ret) => {
+                let param_types = callable_rust_param_types(params, conventions);
+                format!(
+                    "Box<dyn Fn({}) -> std::pin::Pin<Box<dyn std::future::Future<Output = {}>>> + Send + Sync>",
+                    param_types.join(", "),
+                    ret.rust_type()
+                )
+            }
             _ => self.rust_type(),
         }
     }
@@ -546,4 +570,24 @@ impl Type {
     pub fn union_variant_name(&self) -> String {
         Self::type_to_enum_variant_prefix(self)
     }
+}
+
+fn callable_rust_param_types(
+    params: &[Type],
+    conventions: &[crate::ParamConvention],
+) -> Vec<String> {
+    params
+        .iter()
+        .zip(conventions.iter())
+        .map(|(ty, convention)| {
+            let rust_ty = ty.rust_type();
+            if convention.is_shared_borrow() && ty.ownership() == OwnershipKind::Move {
+                format!("&{rust_ty}")
+            } else if convention.is_mut_borrow() && ty.ownership() == OwnershipKind::Move {
+                format!("&mut {rust_ty}")
+            } else {
+                rust_ty
+            }
+        })
+        .collect()
 }

@@ -426,7 +426,7 @@ impl RustEmitter {
         let has_callable_field = class
             .fields
             .iter()
-            .any(|(_, ty)| matches!(ty, Type::Callable(..)));
+            .any(|(_, ty)| matches!(ty, Type::Callable(..) | Type::AsyncCallable(..)));
         let has_affine_field = class.fields.iter().any(|(_, ty)| {
             matches!(
                 ty.resolve_alias(),

@@ -1,0 +1,33 @@
+async def apply(handler: AsyncCallable[[str], str]) -> str:
+    return await handler("hello")
+
+
+class AsyncRunner:
+    handler: AsyncCallable[[str], str]
+
+    def __init__(self, handler: AsyncCallable[[str], str]):
+        self.handler = handler
+
+    async def run(self) -> str:
+        return await self.handler("stored")
+
+
+async def echo(own value: str) -> str:
+    await task.sleep(0.0)
+    return value
+
+
+async def main() -> None:
+    result = await apply(echo)
+    assert result == "hello"
+    runner = AsyncRunner(echo)
+    assert await runner.run() == "stored"
+
+    prefix: str = "nested:"
+
+    async def nested_echo(own value: str) -> str:
+        await task.sleep(0.0)
+        return prefix + value
+
+    assert await apply(nested_echo) == "nested:hello"
+    return None

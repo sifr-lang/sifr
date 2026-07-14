@@ -48,6 +48,7 @@ impl Type {
             Type::Newtype { name, .. } => name.clone(),
             Type::TypeVar(name) => name.clone(),
             Type::Callable(..) => "Fn".to_string(),
+            Type::AsyncCallable(..) => "AsyncCallable".to_string(),
             Type::Enum { name, .. } => name.clone(),
             Type::BigInt => "BigInt".to_string(),
             Type::Decimal => "Decimal".to_string(),
@@ -388,7 +389,7 @@ impl Type {
                 Type::Tuple(elems) | Type::Union(elems) | Type::Intersection(elems) => {
                     elems.iter().any(contains_any)
                 }
-                Type::Callable(params, _, ret) => {
+                Type::Callable(params, _, ret) | Type::AsyncCallable(params, _, ret) => {
                     params.iter().any(contains_any) || contains_any(ret)
                 }
                 Type::Result(ok, err)
@@ -600,6 +601,29 @@ impl Type {
                         .zip(b.params.iter())
                         .all(|((_, at, _), (_, bt, _))| at.is_assignable_to(bt))
                     && a.return_type.is_assignable_to(&b.return_type)
+            }
+            (
+                Self::AsyncCallable(params_a, conventions_a, ret_a),
+                Self::AsyncCallable(params_b, conventions_b, ret_b),
+            ) => {
+                params_a.len() == params_b.len()
+                    && conventions_a == conventions_b
+                    && params_a
+                        .iter()
+                        .zip(params_b.iter())
+                        .all(|(a, b)| a.is_assignable_to(b))
+                    && ret_a.is_assignable_to(ret_b)
+            }
+            (Self::AsyncFunction(ft), Self::AsyncCallable(params, conventions, ret)) => {
+                ft.params.len() == params.len()
+                    && ft
+                        .params
+                        .iter()
+                        .zip(params.iter().zip(conventions.iter()))
+                        .all(|((_, pt, source_convention), (ct, target_convention))| {
+                            source_convention == target_convention && pt.is_assignable_to(ct)
+                        })
+                    && ft.return_type.is_assignable_to(ret)
             }
             // Protocol: a class satisfies a protocol if it has all required methods
             (

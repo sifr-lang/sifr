@@ -189,6 +189,7 @@ impl RustEmitter {
             | Type::AsyncIterator(_, _)
             | Type::AsyncGenerator(_, _)
             | Type::Callable(..)
+            | Type::AsyncCallable(..)
             | Type::Result(_, _)
             | Type::Protocol { .. }
             | Type::Any

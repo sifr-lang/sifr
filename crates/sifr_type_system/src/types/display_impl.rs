@@ -542,4 +542,49 @@ mod tests {
         let u = Type::Union(vec![Type::Int, Type::Str]);
         assert!(Type::Never.is_assignable_to(&u));
     }
+
+    #[test]
+    fn test_async_callable_is_distinct_from_sync_callable() {
+        let conventions = vec![crate::ParamConvention::own()];
+        let async_callable =
+            Type::AsyncCallable(vec![Type::Int], conventions.clone(), Box::new(Type::Str));
+        let sync_callable =
+            Type::Callable(vec![Type::Int], conventions.clone(), Box::new(Type::Str));
+        let async_function = Type::AsyncFunction(FunctionType::new(
+            vec![("value".to_string(), Type::Int)],
+            Type::Str,
+        ));
+
+        assert_eq!(async_callable.display_name(), "AsyncCallable[[int], str]");
+        assert!(async_function.is_assignable_to(&async_callable));
+        assert!(!sync_callable.is_assignable_to(&async_callable));
+        assert!(!async_callable.is_assignable_to(&sync_callable));
+        assert!(async_callable
+            .rust_type()
+            .contains("AsyncFn(i64) -> String"));
+    }
+
+    #[test]
+    fn test_async_callable_requires_matching_owned_parameter_conventions() {
+        let target = Type::AsyncCallable(
+            vec![Type::Str],
+            vec![crate::ParamConvention::own()],
+            Box::new(Type::Str),
+        );
+        let borrowed = Type::AsyncFunction(FunctionType::new(
+            vec![("value".to_string(), Type::Str)],
+            Type::Str,
+        ));
+        let owned = Type::AsyncFunction(FunctionType {
+            params: vec![(
+                "value".to_string(),
+                Type::Str,
+                crate::ParamConvention::own(),
+            )],
+            return_type: Box::new(Type::Str),
+        });
+
+        assert!(!borrowed.is_assignable_to(&target));
+        assert!(owned.is_assignable_to(&target));
+    }
 }

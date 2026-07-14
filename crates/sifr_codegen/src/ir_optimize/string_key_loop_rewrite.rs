@@ -251,7 +251,7 @@ fn expr_uses_name_only_as_set_key(
                 })
         }
         RustExpr::Closure { body, .. } => expr_uses_name_only_as_set_key(body, name, false, found),
-        RustExpr::ClosureBlock { body, .. } => {
+        RustExpr::ClosureBlock { body, .. } | RustExpr::AsyncBlock { body, .. } => {
             block_uses_name_only_as_set_key_with_found(body, name, found)
         }
         RustExpr::Array(items) | RustExpr::Vec(items) | RustExpr::Tuple(items) => items

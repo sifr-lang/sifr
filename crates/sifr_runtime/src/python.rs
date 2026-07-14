@@ -21,6 +21,7 @@ mod bridge_loader;
 mod buffer_ops;
 mod call_depth;
 mod callback_ops;
+mod callbacks;
 mod config_verify;
 mod context_ops;
 #[cfg(test)]
@@ -69,6 +70,8 @@ pub use callback_ops::{
     close_callback, local_callback, local_callback_echo, threadsafe_callback,
     threadsafe_callback_echo, CallbackHandle, PythonCallbackMetadata,
 };
+#[doc(hidden)]
+pub use callbacks::*;
 use config_verify::verify_interpreter_config;
 pub use context_ops::{
     attach_secondary_python_error, context_exit_normal, context_exit_python_error,
@@ -283,6 +286,8 @@ pub fn initialize_runtime(
     Python::try_attach(|py| bridge_loader::install(py, &config.bridge_sources))
         .ok_or(PythonRuntimeError::NotInitialized)??;
     Python::try_attach(context_ops::register_boundary_error)
+        .ok_or(PythonRuntimeError::NotInitialized)??;
+    Python::try_attach(callbacks::register_callback_errors)
         .ok_or(PythonRuntimeError::NotInitialized)??;
     if config.start_async_loop {
         async_runtime::start()?;

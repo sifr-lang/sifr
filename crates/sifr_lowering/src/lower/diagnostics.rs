@@ -38,6 +38,12 @@ pub(in crate::lower) fn is_error_class(class_def: &StmtClassDef) -> bool {
 pub(in crate::lower) fn is_valid_error_type(ty: &Type, ctx: &LowerCtx) -> bool {
     match ty {
         Type::Class { name, .. } => ctx.error_types.contains(name),
+        Type::Union(members) => {
+            !members.is_empty()
+                && members
+                    .iter()
+                    .all(|member| is_valid_error_type(member, ctx))
+        }
         Type::TimeoutResult(inner) => is_valid_error_type(inner, ctx),
         Type::TypeVar(name) => typevar_is_error_bounded(name, ctx),
         _ => false,

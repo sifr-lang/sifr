@@ -144,6 +144,7 @@ pub enum RustStmt {
         params: Vec<RustParam>,
         ret: Option<RustType>,
         body: Vec<RustStmt>,
+        is_async: bool,
     },
     Break,
     Continue,
@@ -237,6 +238,10 @@ pub enum RustExpr {
         body: Vec<RustStmt>,
         is_move: bool,
         is_async: bool,
+    },
+    AsyncBlock {
+        body: Vec<RustStmt>,
+        is_move: bool,
     },
     StructInit {
         name: String,

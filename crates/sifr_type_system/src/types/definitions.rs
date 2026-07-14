@@ -117,6 +117,10 @@ pub enum Type {
     /// Callable type: `Callable[[int, str], bool]` -> `fn(i64, String) -> bool`
     /// Fields: (`parameter_types`, `parameter_conventions`, `return_type`).
     Callable(Vec<Type>, Vec<ParamConvention>, Box<Type>),
+    /// Async callable type: `AsyncCallable[[int], str]` produces an awaitable
+    /// whose terminal value is `str`. This is distinct from `AsyncFunction`,
+    /// which identifies an async function item rather than a callable value.
+    AsyncCallable(Vec<Type>, Vec<ParamConvention>, Box<Type>),
 
     // --- Enum Types ---
     /// Enum type: `class Color(Enum): RED = 1; GREEN = 2; BLUE = 3`

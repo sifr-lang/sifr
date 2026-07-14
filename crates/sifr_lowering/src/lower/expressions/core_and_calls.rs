@@ -183,6 +183,11 @@ pub(super) fn canonicalize_class_surface_type(ty: &Type) -> Type {
             conventions.clone(),
             Box::new(canonicalize_class_surface_type(ret)),
         ),
+        Type::AsyncCallable(params, conventions, ret) => Type::AsyncCallable(
+            params.iter().map(canonicalize_class_surface_type).collect(),
+            conventions.clone(),
+            Box::new(canonicalize_class_surface_type(ret)),
+        ),
         Type::Function(ft) => Type::Function(FunctionType {
             params: ft
                 .params

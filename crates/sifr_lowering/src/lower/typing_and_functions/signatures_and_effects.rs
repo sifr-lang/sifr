@@ -303,15 +303,18 @@ pub(in crate::lower) fn ast_convention_to_param(
     ParamConvention::new(ownership, mutability)
 }
 
-pub(in crate::lower) fn function_type_to_callable_type(ft: &FunctionType) -> Type {
-    Type::Callable(
-        ft.params.iter().map(|(_, ty, _)| ty.clone()).collect(),
-        ft.params
-            .iter()
-            .map(|(_, _, convention)| *convention)
-            .collect(),
-        ft.return_type.clone(),
-    )
+pub(in crate::lower) fn function_type_to_callable_type(ft: &FunctionType, is_async: bool) -> Type {
+    let params = ft.params.iter().map(|(_, ty, _)| ty.clone()).collect();
+    let conventions = ft
+        .params
+        .iter()
+        .map(|(_, _, convention)| *convention)
+        .collect();
+    if is_async {
+        Type::AsyncCallable(params, conventions, ft.return_type.clone())
+    } else {
+        Type::Callable(params, conventions, ft.return_type.clone())
+    }
 }
 
 pub(super) fn collect_function_defaults(
@@ -573,7 +576,10 @@ pub(in crate::lower) fn register_local_function_signature(
     ctx: &mut LowerCtx,
 ) -> FunctionType {
     let function_name = func.name.to_string();
-    let callable_ty = function_type_to_callable_type(&ft);
+    let callable_ty = function_type_to_callable_type(
+        &ft,
+        func.is_async && !function_body_contains_yield(&func.body),
+    );
     let defaults = collect_function_defaults(func, ctx);
 
     if !defaults.is_empty() {

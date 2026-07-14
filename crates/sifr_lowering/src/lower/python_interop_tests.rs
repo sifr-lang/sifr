@@ -107,22 +107,6 @@ def compute(values: set[int]) -> Result[int, PythonError]: ...
 }
 
 #[test]
-fn later_python_decorator_is_a_hard_error() {
-    let errors = lower_errors(
-        r"
-class PythonError(Error):
-    message: str
-
-@python.callback(pkg.compute)
-def compute(value: int) -> Result[int, PythonError]: ...
-",
-    );
-    assert!(errors
-        .iter()
-        .any(|error| { error.code == Some(DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION) }));
-}
-
-#[test]
 fn positional_variadics_after_omission_are_rejected() {
     let errors = lower_errors(
         r"

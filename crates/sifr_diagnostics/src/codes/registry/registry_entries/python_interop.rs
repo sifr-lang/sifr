@@ -264,4 +264,15 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         [arg!("reason")],
         ["reason"]
     ),
+    active_entry!(
+        "SIFR-PYCB-0001",
+        "PYCB",
+        "A Python callback lifetime, dispatch, concurrency, or owner declaration is invalid.",
+        Severity::Error,
+        "crates/sifr_lowering/src/lower/python_interop_callback_tests.rs::callback_policy_validates_before_reservation",
+        "invalid Python callback declaration: {reason}",
+        "sifr_lowering",
+        [arg!("reason")],
+        ["reason"]
+    ),
 ];

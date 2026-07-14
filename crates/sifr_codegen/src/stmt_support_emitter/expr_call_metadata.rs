@@ -186,7 +186,7 @@ pub(crate) fn type_contains_any_or_unknown(ty: &Type) -> bool {
         Type::Tuple(elements) | Type::Union(elements) | Type::Intersection(elements) => {
             elements.iter().any(type_contains_any_or_unknown)
         }
-        Type::Callable(params, _, ret) => {
+        Type::Callable(params, _, ret) | Type::AsyncCallable(params, _, ret) => {
             params.iter().any(type_contains_any_or_unknown) || type_contains_any_or_unknown(ret)
         }
         Type::Function(ft) => {

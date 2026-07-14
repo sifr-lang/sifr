@@ -305,6 +305,10 @@ impl Renderer {
                 renderer.append("}");
                 renderer.output
             }
+            RustExpr::AsyncBlock { body, is_move } => {
+                let move_kw = if *is_move { "move " } else { "" };
+                format!("async {move_kw}{}", Self::render_block_expr(body, None))
+            }
             RustExpr::StructInit { name, fields } => format!(
                 "{name} {{ {} }}",
                 fields
@@ -507,6 +511,7 @@ impl Renderer {
                 | RustExpr::Match { .. }
                 | RustExpr::Closure { .. }
                 | RustExpr::ClosureBlock { .. }
+                | RustExpr::AsyncBlock { .. }
                 | RustExpr::Block { .. }
                 | RustExpr::Range { .. }
         ) {

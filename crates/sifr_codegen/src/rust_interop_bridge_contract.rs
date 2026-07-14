@@ -476,6 +476,10 @@ fn bridge_type_contract(
             ty,
             "callbacks require explicit callback contract support before they are bridge-compatible",
         ),
+        Type::AsyncCallable(..) => unsupported_type(
+            ty,
+            "async callbacks require explicit callback contract support before they are bridge-compatible",
+        ),
         Type::Set(_) => unsupported_type(ty, "set[T] is not a supported Rust bridge container"),
         Type::Any | Type::Unknown => {
             unsupported_type(ty, "dynamic Any/Unknown values are not Rust bridge-compatible")
