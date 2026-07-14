@@ -722,7 +722,8 @@ Delivery waves:
   verification documentation after the complete merged M9 review exposed the
   certification mismatch
   ([PR #2985](https://github.com/sifr-lang/sifr/pull/2985);
-  [GPT-5.6-Sol High complete review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-complete-codex-5-6-sol-high-review-pass-1.md));
+  [GPT-5.6-Sol High complete review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-complete-codex-5-6-sol-high-review-pass-1.md),
+  [remediation review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-current-dispatch-remediation-codex-5-6-sol-high-review-pass-1.md));
   focused callback examples pass all seven compiled binaries and the
   authoritative create-PR gate passes `131/131`, signature
   `7c39b8c1dd4fec7c`.
