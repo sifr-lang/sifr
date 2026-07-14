@@ -5,13 +5,13 @@
 In progress. The phase defines one complete end-state architecture and an
 ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
-non-blocking precision refinements are incorporated. M0 through M8 are
+non-blocking precision refinements are incorporated. M0 through M9 are
 implemented, locally validated, reviewed, and linked below. Typed synchronous
 and asynchronous declarations and context managers run on the application-owned
-Python loop with structured cancellation and consuming cleanup; M9 is in
-aggregate-review remediation and later milestones are not yet implemented.
-M9 current-thread, foreign-thread, and asyncio callback execution plus
-retained-owner integration are merged and publicly active. Milestones sequence
+Python loop with structured cancellation and consuming cleanup; M9
+current-thread, foreign-thread, and asyncio callback execution plus
+retained-owner integration are merged, publicly active, and milestone-reviewed.
+M10 is next and later milestones are not yet implemented. Milestones sequence
 delivery; they do not create reduced language versions, temporary public
 contracts, dual authorities, or alternate lowering paths.
 
@@ -143,7 +143,7 @@ Implementation progress:
 - [x] M6 hermetic package-local Python bridges — [PR #2953](https://github.com/sifr-lang/sifr/pull/2953)
 - [x] M7 owned asyncio runtime and async declarations — [PR #2968](https://github.com/sifr-lang/sifr/pull/2968)
 - [x] M8 async context managers — [PR #2970](https://github.com/sifr-lang/sifr/pull/2970), [PR #2972](https://github.com/sifr-lang/sifr/pull/2972)
-- [ ] M9 typed callback lifetimes and dispatch
+- [x] M9 typed callback lifetimes and dispatch — [PR #2974](https://github.com/sifr-lang/sifr/pull/2974), [PR #2977](https://github.com/sifr-lang/sifr/pull/2977), [PR #2979](https://github.com/sifr-lang/sifr/pull/2979), remediation [PRs #2981](https://github.com/sifr-lang/sifr/pull/2981), [#2982](https://github.com/sifr-lang/sifr/pull/2982), [#2984](https://github.com/sifr-lang/sifr/pull/2984), and [#2985](https://github.com/sifr-lang/sifr/pull/2985)
 - [ ] M10 typed buffer protocol
 - [ ] M11 Arrow C Data Interface
 - [ ] M12 DLPack one-shot tensor transfer
@@ -727,8 +727,9 @@ Delivery waves:
   focused callback examples pass all seven compiled binaries and the
   authoritative create-PR gate passes `131/131`, signature
   `7c39b8c1dd4fec7c`; merged as `71087cfd948b226d6fba2868d18ebea88f21214a`.
-- [ ] Milestone review — review the complete merged M9 implementation before
-  closing the milestone checkbox.
+- [x] Milestone review — the complete merged M9 implementation passed the
+  [GPT-5.6-Sol High review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-complete-codex-5-6-sol-high-review-pass-2.md)
+  after all pass-1 blockers were remediated and merged.
 
 Acceptance:
 
