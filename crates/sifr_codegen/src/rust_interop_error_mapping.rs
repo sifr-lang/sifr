@@ -16,6 +16,21 @@ pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
         }
     }
     match err_type.resolve_alias() {
+        Type::Union(members) => members
+            .iter()
+            .find(|member| {
+                matches!(
+                    member.resolve_alias(),
+                    Type::Class { name, .. } if name == "PythonError"
+                )
+            })
+            .map_or(value.clone(), |python_error| RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    err_type.resolve_alias().union_enum_name(),
+                    python_error.union_variant_name(),
+                ])),
+                args: vec![bridge_error_expr(value, python_error)],
+            }),
         Type::Class {
             name,
             fields,

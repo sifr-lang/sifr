@@ -34,7 +34,8 @@ CALLBACK_CASES = {
         relative_source="callback/reconciliation.sifr",
         stdout_marker=(
             "sifr-python-interop:callback:reconciliation="
-            "provisional-cancelled:enter-cancelled:exit-skipped"
+            "provisional-cancelled:enter-cancelled:enter-closed:"
+            "call-closed:exit-skipped:typed-observed"
         ),
         import_roots=("asyncio", "types"),
         native_roots=(),
@@ -44,7 +45,8 @@ CALLBACK_CASES = {
         relative_source="callback/sync_context_reconciliation.sifr",
         stdout_marker=(
             "sifr-python-interop:callback:sync-context="
-            "sync-closed:sync-exit-skipped"
+            "sync-closed:sync-handler-success:sync-call-closed:"
+            "sync-exit-skipped:typed-observed"
         ),
         import_roots=("asyncio", "types"),
         native_roots=(),

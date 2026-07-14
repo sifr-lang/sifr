@@ -94,21 +94,62 @@ impl RustEmitter {
 
     pub(crate) fn register_union_type(&mut self, ty: &Type) {
         let resolved = crate::resolve_alias_type_for_plain_call(ty);
-        if let Type::Union(members) = resolved {
-            // Skip Option<T> pattern (T | None with exactly 2 members)
-            let non_none: Vec<&Type> = members
-                .iter()
-                .filter(|m| !matches!(m, Type::None))
-                .collect();
-            let has_none = members.iter().any(|m| matches!(m, Type::None));
-            if has_none && non_none.len() == 1 {
-                return; // This maps to Option<T>, no enum needed
+        match resolved {
+            Type::Union(members) => {
+                let non_none = members
+                    .iter()
+                    .filter(|member| !matches!(member, Type::None))
+                    .count();
+                let is_option =
+                    members.iter().any(|member| matches!(member, Type::None)) && non_none == 1;
+                if !is_option {
+                    self.union_enums
+                        .entry(resolved.union_enum_name())
+                        .or_insert_with(|| members.clone());
+                }
+                for member in members {
+                    self.register_union_type(member);
+                }
             }
-            // Register the enum name and its member types
-            let enum_name = resolved.union_enum_name();
-            self.union_enums
-                .entry(enum_name)
-                .or_insert_with(|| members.clone());
+            Type::List(inner)
+            | Type::Set(inner)
+            | Type::Iterable(inner)
+            | Type::Iterator(inner)
+            | Type::Awaitable(inner)
+            | Type::Newtype { inner, .. }
+            | Type::Failure(inner)
+            | Type::TimeoutResult(inner) => self.register_union_type(inner),
+            Type::Dict(left, right)
+            | Type::Result(left, right)
+            | Type::Coroutine(left, right)
+            | Type::Task(left, right)
+            | Type::TaskResult(left, right)
+            | Type::Select2(left, right)
+            | Type::BlockingTask(left, right)
+            | Type::JoinSet(left, right)
+            | Type::AsyncIterator(left, right)
+            | Type::AsyncGenerator(left, right) => {
+                self.register_union_type(left);
+                self.register_union_type(right);
+            }
+            Type::Tuple(items) | Type::Intersection(items) => {
+                for item in items {
+                    self.register_union_type(item);
+                }
+            }
+            Type::Function(signature) | Type::AsyncFunction(signature) => {
+                for (_, parameter, _) in &signature.params {
+                    self.register_union_type(parameter);
+                }
+                self.register_union_type(&signature.return_type);
+            }
+            Type::Callable(parameters, _, result) | Type::AsyncCallable(parameters, _, result) => {
+                for parameter in parameters {
+                    self.register_union_type(parameter);
+                }
+                self.register_union_type(result);
+            }
+            _ => {}
         }
     }
 
@@ -191,5 +232,38 @@ impl RustEmitter {
                 }],
             });
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn nested_result_error_union_is_registered() {
+        let handler_error = Type::Class {
+            name: "HandlerError".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let python_error = Type::Class {
+            name: "PythonError".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let error = Type::Union(vec![handler_error, python_error]);
+        let mut emitter = RustEmitter::new();
+
+        emitter.register_union_type(&Type::Result(Box::new(Type::None), Box::new(error.clone())));
+
+        assert_eq!(
+            emitter.union_enums.get(&error.union_enum_name()),
+            match error {
+                Type::Union(ref members) => Some(members),
+                _ => None,
+            }
+        );
     }
 }

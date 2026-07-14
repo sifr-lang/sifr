@@ -325,6 +325,49 @@ fn asyncio_callback_emits_owned_loop_factory_async_handler_and_async_drain() {
 }
 
 #[test]
+fn foreign_callback_in_async_wrapper_uses_nonblocking_drain() {
+    let handler_type = Type::Callable(
+        vec![Type::Int],
+        vec![ParamConvention::own()],
+        Box::new(Type::Int),
+    );
+    let mut declaration = declaration(
+        vec!["pkg", "apply"],
+        vec![shape("handler", PythonParameterKind::Positional, false)],
+    );
+    declaration.callbacks.push(PythonCallbackDeclaration {
+        parameter_name: "handler".to_string(),
+        span: TextRange::default(),
+        lifetime: PythonCallbackLifetime::Call,
+        dispatch: PythonCallbackDispatch::Foreign,
+        concurrency: Some(PythonCallbackConcurrency::Serial),
+        argument_types: vec![Type::Int],
+        argument_conventions: vec![ParamConvention::own()],
+        success_type: Type::Int,
+        handler_error_type: None,
+        is_async: false,
+        owner_class: None,
+        owner_cleanup: None,
+    });
+    let wrapper = function(
+        "apply",
+        vec![param("handler", handler_type, ParamConvention::borrow())],
+        Type::Int,
+        declaration,
+    );
+
+    let rendered = render_stmts(
+        &python_interop_function_body(&wrapper, &Default::default())
+            .expect("foreign callback wrapper should lower"),
+    );
+    assert!(
+        rendered.contains("close_call_scope_async().await"),
+        "{rendered}"
+    );
+    assert!(!rendered.contains("close_call_scope();"), "{rendered}");
+}
+
+#[test]
 fn receiver_asyncio_registration_has_terminal_provisional_rollback() {
     let handler_type = Type::AsyncCallable(
         vec![Type::Int],

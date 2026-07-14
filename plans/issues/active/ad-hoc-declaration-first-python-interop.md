@@ -707,10 +707,15 @@ Delivery waves:
   closure, failed context-entry owner reconciliation, terminal provisional
   receiver rollback, and an emitted Rust `!Send`/`!Sync` opaque-identity
   backstop ([PR #2984](https://github.com/sifr-lang/sifr/pull/2984);
-  [GPT-5.6-Sol High review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-remediation-wave3-codex-5-6-sol-high-review-pass-2.md));
+  [GPT-5.6-Sol High review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-remediation-wave3-codex-5-6-sol-high-review-pass-2.md),
+  [pass 3 findings](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-remediation-wave3-codex-5-6-sol-high-review-pass-3.md));
   create-PR `131/131`, signature `7c39b8c1dd4fec7c`, with compiled sync and
   asyncio reconciliation fixtures plus same-loop Python cancellation evidence
-  that keeps identity-bearing context values on their owning task.
+  that keeps identity-bearing context values on their owning task. Pass 3
+  remediation adds unconditional late-cancellation release on failed async
+  entry, owner-local retained foreign callback identities, awaited foreign
+  drains in async wrappers, nested typed-error-union registration/mapping, and
+  compiled typed handler-error plus post-call closure evidence.
 - [ ] Milestone review — review the complete merged M9 implementation before
   closing the milestone checkbox.
 

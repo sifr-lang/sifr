@@ -148,11 +148,21 @@ let {entered_raw} = match __SIFR_TASK_CANCELLATION.scope(
             &{manager_name}.__sifr_python_callbacks,
         ).await;
         sifr_runtime::python::poison_object({manager_name}.__sifr_python_object);
-        if {scope}.notification().is_notified() {{
-            {resume_parent_cancellation}
-            return Err({internal_error});
+        match {scope}.release_and_resume_parent() {{
+            sifr_runtime::cancellation::CancellationResume::Invoked
+            | sifr_runtime::cancellation::CancellationResume::AlreadyResumed => {{
+                tokio::task::yield_now().await;
+                return Err({internal_error});
+            }},
+            sifr_runtime::cancellation::CancellationResume::NotRequested => {{
+                return Err(({enter_error}).into());
+            }},
+            sifr_runtime::cancellation::CancellationResume::ExactClaimActive
+            | sifr_runtime::cancellation::CancellationResume::FallbackUnavailable
+            | sifr_runtime::cancellation::CancellationResume::StateUnavailable => {{
+                return Err({internal_error});
+            }},
         }}
-        return Err(({enter_error}).into());
     }},
 }};
 let {conversion}: Result<{entered_rust_type}, {enter_error_rust_type}> = (|| {{ Ok({converted}) }})();

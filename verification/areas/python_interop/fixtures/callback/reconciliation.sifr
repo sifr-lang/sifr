@@ -1,6 +1,10 @@
 from sifr.python import ExitCause, ExitDecision, PythonError
 
 
+class HandlerError(Error):
+    message: str
+
+
 @python.opaque(type=types.SimpleNamespace, cleanup=async_context)
 class Manager:
     @python.callback(handler, lifetime=Self, dispatch=asyncio, concurrency=parallel)
@@ -27,6 +31,13 @@ class Manager:
     ) -> Result[ExitDecision, PythonError]: ...
 
 
+@python.callback(handler, lifetime=call, dispatch=asyncio, concurrency=parallel)
+@python.coroutine(bridge.callback_reconciliation.swallow_async_handler_error)
+async def swallow_async_handler_error(
+    own handler: AsyncCallable[[int], Result[int, HandlerError]],
+) -> Result[None, PythonError | HandlerError]: ...
+
+
 @python.coroutine(bridge.callback_reconciliation.make_manager)
 async def make_manager() -> Result[Manager, PythonError]: ...
 
@@ -40,8 +51,15 @@ async def hold(value: int) -> int:
     return value
 
 
+async def fail(value: int) -> Result[int, HandlerError]:
+    await task.sleep(0.0)
+    raise HandlerError("async handler failed: " + str(value))
+
+
 async def main() -> Result[None, PythonError]:
     try:
+        _swallowed: Result[None, PythonError | HandlerError] = await swallow_async_handler_error(fail)
+
         manager: Manager = await make_manager()
         try:
             _failed: None = await manager.install_fail(hold)

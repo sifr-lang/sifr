@@ -240,7 +240,7 @@ fn async_python_context_resumes_parent_cancellation_after_enter_failure() {
         })
         .expect("generated enter-failure arm");
 
-    assert!(enter_failure.contains("notification().is_notified()"));
+    assert!(!enter_failure.contains("notification().is_notified()"));
     assert!(enter_failure.contains("release_and_resume_parent()"));
     assert!(enter_failure.contains("tokio::task::yield_now().await"));
     assert!(enter_failure.contains("SifrPythonAsyncContextError"));

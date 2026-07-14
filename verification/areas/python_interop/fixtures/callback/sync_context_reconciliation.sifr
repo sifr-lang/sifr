@@ -1,6 +1,10 @@
 from sifr.python import ExitCause, ExitDecision, PythonError
 
 
+class HandlerError(Error):
+    message: str
+
+
 @python.opaque(type=types.SimpleNamespace, cleanup=context)
 class SyncManager:
     @python.callback(handler, lifetime=Self, dispatch=foreign, concurrency=serial)
@@ -20,6 +24,13 @@ class SyncManager:
     ) -> Result[ExitDecision, PythonError]: ...
 
 
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
+@python(bridge.callback_reconciliation.swallow_sync_handler_error)
+def swallow_sync_handler_error(
+    own handler: Callable[[int], Result[int, HandlerError]],
+) -> Result[None, PythonError | HandlerError]: ...
+
+
 @python(bridge.callback_reconciliation.make_sync_manager)
 def make_sync_manager() -> Result[SyncManager, PythonError]: ...
 
@@ -28,12 +39,18 @@ def make_sync_manager() -> Result[SyncManager, PythonError]: ...
 def sync_status() -> Result[str, PythonError]: ...
 
 
+def fail(value: int) -> Result[int, HandlerError]:
+    raise HandlerError("sync handler failed: " + str(value))
+
+
 def add_one(value: int) -> int:
     return value + 1
 
 
-def main() -> None:
+def main() -> Result[None, PythonError]:
     try:
+        _swallowed: Result[None, PythonError | HandlerError] = swallow_sync_handler_error(fail)
+
         manager: SyncManager = make_sync_manager()
         _installed: None = manager.install(add_one)
         try:
@@ -44,4 +61,5 @@ def main() -> None:
         proof: str = sync_status()
         print("sifr-python-interop:callback:sync-context=" + proof)
     except PythonError as error:
-        print(error.exception_type)
+        raise error
+    return None

@@ -454,10 +454,11 @@ pub(crate) fn append_owner_failure_reconciliation(
     });
 }
 
-pub(crate) fn callback_cleanup_expr(setup: &CallbackSetup) -> RustExpr {
+pub(crate) fn callback_cleanup_expr(setup: &CallbackSetup, async_wrapper: bool) -> RustExpr {
     debug_assert_eq!(setup.lifetime, PythonCallbackLifetime::Call);
     let method = match setup.dispatch {
         PythonCallbackDispatch::Current => "close",
+        PythonCallbackDispatch::Foreign if async_wrapper => "close_call_scope_async",
         PythonCallbackDispatch::Foreign => "close_call_scope",
         PythonCallbackDispatch::Asyncio => "close_call_scope",
     };
@@ -466,7 +467,9 @@ pub(crate) fn callback_cleanup_expr(setup: &CallbackSetup) -> RustExpr {
         method: method.to_string(),
         args: Vec::new(),
     };
-    if setup.dispatch == PythonCallbackDispatch::Asyncio {
+    if setup.dispatch == PythonCallbackDispatch::Asyncio
+        || (async_wrapper && setup.dispatch == PythonCallbackDispatch::Foreign)
+    {
         RustExpr::Await(Box::new(close))
     } else {
         close
@@ -562,6 +565,7 @@ fn handler_adapter(
     handler_name: &str,
     failure_slot: Option<&str>,
 ) -> RustExpr {
+    const INVOCATION_FAILURE_SLOT: &str = "__sifr_callback_failure_for_invocation";
     let handler_args = callback
         .argument_conventions
         .iter()
@@ -592,9 +596,7 @@ fn handler_adapter(
             ],
         }));
     }
-    let result = if let (Some(error_type), Some(slot)) =
-        (&callback.handler_error_type, failure_slot)
-    {
+    let result = if let (Some(error_type), Some(_)) = (&callback.handler_error_type, failure_slot) {
         RustExpr::MethodCall {
             receiver: Box::new(handler_call),
             method: "map_err".to_string(),
@@ -605,7 +607,7 @@ fn handler_adapter(
                 }],
                 body: vec![
                     RustStmt::Expr(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(slot.to_string())),
+                        receiver: Box::new(RustExpr::Ident(INVOCATION_FAILURE_SLOT.to_string())),
                         method: "record".to_string(),
                         args: vec![
                             RustExpr::Ident("__sifr_callback_sequence".to_string()),
@@ -662,11 +664,17 @@ fn handler_adapter(
             ty: RustType::Named("_".to_string()),
         });
     }
+    let failure_slot_clone = failure_slot.map(|slot| RustStmt::Let {
+        mutable: false,
+        name: INVOCATION_FAILURE_SLOT.to_string(),
+        ty: None,
+        value: RustExpr::Clone(Box::new(RustExpr::Ident(slot.to_string()))),
+    });
     RustExpr::Closure {
         params,
         body: Box::new(if callback.dispatch == PythonCallbackDispatch::Asyncio {
             RustExpr::Block {
-                stmts: vec![RustStmt::Let {
+                stmts: std::iter::once(RustStmt::Let {
                     mutable: false,
                     name: "__sifr_callback_handler".to_string(),
                     ty: None,
@@ -682,14 +690,19 @@ fn handler_adapter(
                             expr: Box::new(RustExpr::Ident(handler_name.to_string())),
                         }],
                     },
-                }],
+                })
+                .chain(failure_slot_clone.clone())
+                .collect(),
                 expr: Some(Box::new(RustExpr::AsyncBlock {
                     body: vec![RustStmt::Return(Some(result))],
                     is_move: true,
                 })),
             }
         } else {
-            result
+            failure_slot_clone.map_or(result.clone(), |clone_stmt| RustExpr::Block {
+                stmts: vec![clone_stmt],
+                expr: Some(Box::new(result)),
+            })
         }),
         is_move: true,
     }

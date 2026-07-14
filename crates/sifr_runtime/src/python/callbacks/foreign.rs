@@ -186,6 +186,16 @@ impl ForeignCallback<'_> {
         object_ops::close_object(self.object.clone())
     }
 
+    pub async fn close_call_scope_async(&self) -> Result<(), PythonError> {
+        if self.closed.get() {
+            return Ok(());
+        }
+        self.owner.close_call_scope_async().await?;
+        self.admission.store(false, Ordering::Release);
+        self.closed.set(true);
+        object_ops::close_object(self.object.clone())
+    }
+
     pub fn close_after_owner_unregister(&self) -> Result<(), PythonError> {
         self.owner.close_after_owner_unregister()?;
         self.admission.store(false, Ordering::Release);
@@ -337,7 +347,7 @@ where
 
 pub fn foreign_callback_with_owner<A, R, Decode, Handler, Encode>(
     owner: CallbackOwnerState,
-    callback_id: u64,
+    _callback_id: u64,
     expected_arity: usize,
     concurrency: ForeignCallbackConcurrency,
     decode: Decode,
@@ -351,6 +361,7 @@ where
     Handler: Fn(u64, A) -> Result<R, CallbackExecutionError> + Send + Sync + 'static,
     Encode: Fn(R) -> Result<ObjectHandle, PythonError> + Send + Sync + 'static,
 {
+    let callback_id = owner.allocate_callback_id()?;
     let target: Arc<dyn ForeignTarget<'static> + 'static> = Arc::new(TypedForeignTarget {
         decode: Arc::new(decode),
         handler: Arc::new(handler),
@@ -547,7 +558,7 @@ mod tests {
         initialize_runtime, reset_runtime_state_for_tests, test_config, test_guard,
     };
     use pyo3::types::PyAnyMethods;
-    use std::sync::atomic::AtomicUsize;
+    use std::sync::atomic::{AtomicBool, AtomicUsize};
     use std::sync::Barrier;
 
     struct DropProbe(Arc<AtomicUsize>);
@@ -652,6 +663,105 @@ mod tests {
                 .expect("escaped callable must reject entry after close");
             assert_eq!(exception_name, "SifrCallbackClosedError");
         }
+    }
+
+    #[test]
+    fn retained_foreign_callbacks_allocate_distinct_owner_local_identities() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("retained-foreign-callback-identities"))
+            .expect("runtime should initialize");
+        let owner = CallbackOwnerState::new_retained(|| Ok(())).expect("owner should create");
+        let nested_slot = Arc::new(Mutex::new(None::<ObjectHandle>));
+
+        let nested = foreign_callback_with_owner(
+            owner.clone(),
+            1,
+            1,
+            ForeignCallbackConcurrency::Serial,
+            |args| crate::python::to_int(&args[0]),
+            |_, value| Ok(value + 1),
+            crate::python::from_int,
+        )
+        .expect("nested callback should create");
+        *nested_slot.lock().expect("nested slot") = Some(nested.object().clone());
+
+        let nested_for_handler = Arc::clone(&nested_slot);
+        let outer = foreign_callback_with_owner(
+            owner.clone(),
+            1,
+            1,
+            ForeignCallbackConcurrency::Serial,
+            |args| crate::python::to_int(&args[0]),
+            move |_, value| {
+                let nested = nested_for_handler
+                    .lock()
+                    .expect("nested slot")
+                    .clone()
+                    .expect("nested callback should be installed");
+                let argument = crate::python::from_int(value)?;
+                crate::python::call_object_owned(&nested, &[argument], &[])
+                    .and_then(|result| crate::python::to_int(&result))
+                    .map_err(CallbackExecutionError::from)
+            },
+            crate::python::from_int,
+        )
+        .expect("outer callback should create");
+
+        let argument = crate::python::from_int(41).expect("argument should convert");
+        let result = crate::python::call_object_owned(outer.object(), &[argument], &[])
+            .and_then(|value| crate::python::to_int(&value))
+            .expect("distinct callbacks must not look recursively reentrant");
+        assert_eq!(result, 42);
+
+        drop(outer);
+        drop(nested);
+        owner
+            .shutdown_from_runtime()
+            .expect("owner should remain independently closeable");
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn async_call_scope_close_yields_while_foreign_invocation_drains() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("foreign-async-drain")).expect("runtime should initialize");
+        let entered = Arc::new(Barrier::new(2));
+        let release = Arc::new(Barrier::new(2));
+        let entered_by_handler = Arc::clone(&entered);
+        let release_by_handler = Arc::clone(&release);
+        let callback = foreign_callback(
+            1,
+            1,
+            ForeignCallbackConcurrency::Parallel,
+            |args| crate::python::to_int(&args[0]),
+            move |_, value| {
+                entered_by_handler.wait();
+                release_by_handler.wait();
+                Ok(value)
+            },
+            crate::python::from_int,
+        )
+        .expect("callback should create");
+        let callable = callback.object().clone();
+        let invocation = std::thread::spawn(move || {
+            let argument = crate::python::from_int(42).expect("argument should convert");
+            crate::python::call_object_owned(&callable, &[argument], &[])
+                .expect("foreign invocation should finish");
+        });
+        entered.wait();
+
+        let progressed = Arc::new(AtomicBool::new(false));
+        let progressed_by_release = Arc::clone(&progressed);
+        let release_after_yield = async {
+            tokio::task::yield_now().await;
+            progressed_by_release.store(true, Ordering::SeqCst);
+            release.wait();
+        };
+        let (close, ()) = tokio::join!(callback.close_call_scope_async(), release_after_yield);
+        close.expect("async close should drain without blocking the executor");
+        assert!(progressed.load(Ordering::SeqCst));
+        invocation.join().expect("invocation thread should join");
     }
 
     #[test]

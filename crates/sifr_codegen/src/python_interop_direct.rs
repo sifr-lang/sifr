@@ -283,7 +283,7 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
                     mutable: false,
                     name: name.clone(),
                     ty: None,
-                    value: callback_cleanup_expr(setup),
+                    value: callback_cleanup_expr(setup, false),
                 });
                 cleanup_names.push(name);
             }
@@ -728,7 +728,7 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
                         mutable: false,
                         name: name.clone(),
                         ty: None,
-                        value: callback_cleanup_expr(setup),
+                        value: callback_cleanup_expr(setup, false),
                     });
                     cleanup_names.push(name);
                 }

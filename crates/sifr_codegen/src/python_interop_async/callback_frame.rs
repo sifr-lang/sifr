@@ -455,7 +455,7 @@ fn append_submission_body(
                     mutable: false,
                     name: name.clone(),
                     ty: None,
-                    value: callback_cleanup_expr(setup),
+                    value: callback_cleanup_expr(setup, true),
                 });
                 cleanup_names.push(name);
             }
