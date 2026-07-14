@@ -325,6 +325,69 @@ fn asyncio_callback_emits_owned_loop_factory_async_handler_and_async_drain() {
 }
 
 #[test]
+fn receiver_asyncio_registration_has_terminal_provisional_rollback() {
+    let handler_type = Type::AsyncCallable(
+        vec![Type::Int],
+        vec![ParamConvention::own()],
+        Box::new(Type::Int),
+    );
+    let mut declaration = declaration(
+        vec!["Self", "install"],
+        vec![shape("handler", PythonParameterKind::Positional, false)],
+    );
+    declaration.callbacks.push(PythonCallbackDeclaration {
+        parameter_name: "handler".to_string(),
+        span: TextRange::default(),
+        lifetime: PythonCallbackLifetime::Receiver,
+        dispatch: PythonCallbackDispatch::Asyncio,
+        concurrency: Some(PythonCallbackConcurrency::Parallel),
+        argument_types: vec![Type::Int],
+        argument_conventions: vec![ParamConvention::own()],
+        success_type: Type::Int,
+        handler_error_type: None,
+        is_async: true,
+        owner_class: Some("Client".to_string()),
+        owner_cleanup: Some(PythonCleanupPolicy::AsyncClose),
+    });
+    let method = function(
+        "install",
+        vec![param("handler", handler_type, ParamConvention::borrow())],
+        Type::None,
+        declaration,
+    );
+    let mut owner = opaque_declaration();
+    owner.cleanup = Some(PythonCleanupPolicy::AsyncClose);
+
+    let rendered = render_stmts(
+        &python_interop_method_body(&method, &Default::default(), Some(&owner))
+            .expect("receiver callback method should lower"),
+    );
+    for required in [
+        "let mut __sifr_provisional_callback_0 = None",
+        "__sifr_provisional_callback_0 = Some(",
+        "rollback_provisional().await",
+        "receiver-callback-registration",
+        "return __sifr_receiver_callback_outcome",
+    ] {
+        assert!(
+            rendered.contains(required),
+            "missing {required}\n{rendered}"
+        );
+    }
+    let request = rendered
+        .find("submit_async_declaration")
+        .expect("registration request");
+    let rollback = rendered
+        .find("rollback_provisional().await")
+        .expect("terminal rollback");
+    assert!(request < rollback, "{rendered}");
+    syn::parse_file(&format!(
+        "async fn generated() -> Result<(), PythonError> {{ {rendered} }}"
+    ))
+    .expect("provisional receiver wrapper should be valid Rust syntax");
+}
+
+#[test]
 fn retained_asyncio_result_masks_native_cancellation_until_rollback_finishes() {
     let handler_type = Type::AsyncCallable(
         vec![Type::Int],

@@ -714,7 +714,7 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
         body.push(mapped_let("__sifr_python_result", operation, error_type));
     } else {
         body.push(RustStmt::Let {
-            mutable: !owner_retained_errors.is_empty(),
+            mutable: true,
             name: "__sifr_python_outcome".to_string(),
             ty: None,
             value: operation,

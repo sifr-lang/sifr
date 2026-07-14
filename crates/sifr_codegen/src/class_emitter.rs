@@ -146,6 +146,10 @@ impl RustEmitter {
                     "__sifr_python_callbacks".to_string(),
                     RustType::Named("sifr_runtime::python::CallbackOwnerSlot".to_string()),
                 ),
+                (
+                    "__sifr_python_not_send_sync".to_string(),
+                    RustType::Named("std::marker::PhantomData<std::rc::Rc<()>>".to_string()),
+                ),
             ];
             if let Some(errors) = self.python_retained_callback_errors.get(&class.name) {
                 fields.extend(errors.iter().enumerate().map(|(index, error)| {
@@ -233,6 +237,14 @@ impl RustEmitter {
                     ])),
                     args: Vec::new(),
                 },
+            ),
+            (
+                "__sifr_python_not_send_sync".to_string(),
+                RustExpr::Path(vec![
+                    "std".to_string(),
+                    "marker".to_string(),
+                    "PhantomData".to_string(),
+                ]),
             ),
         ];
         if let Some(errors) = self.python_retained_callback_errors.get(&class.name) {

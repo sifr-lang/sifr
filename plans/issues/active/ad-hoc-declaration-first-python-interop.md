@@ -703,6 +703,14 @@ Delivery waves:
   create-PR `131/131`, signature `7c39b8c1dd4fec7c`; merge `651/651`,
   signature `ee5e5d44306f270c`, 261 hardening variants; addresses review findings
   2 and 3 and the active-close portion of finding 4).
+- [ ] Aggregate-review remediation Wave 3 — cancellation/finalization race
+  closure, failed context-entry owner reconciliation, terminal provisional
+  receiver rollback, and an emitted Rust `!Send`/`!Sync` opaque-identity
+  backstop ([PR #2984](https://github.com/sifr-lang/sifr/pull/2984);
+  [GPT-5.6-Sol High review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-remediation-wave3-codex-5-6-sol-high-review-pass-2.md));
+  create-PR `131/131`, signature `7c39b8c1dd4fec7c`, with compiled sync and
+  asyncio reconciliation fixtures plus same-loop Python cancellation evidence
+  that keeps identity-bearing context values on their owning task.
 - [ ] Milestone review — review the complete merged M9 implementation before
   closing the milestone checkbox.
 

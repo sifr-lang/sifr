@@ -26,7 +26,27 @@ CALLBACK_CASES = {
         case_id="asyncio-roundtrip",
         relative_source="callback/asyncio_roundtrip.sifr",
         stdout_marker="sifr-python-interop:callback:asyncio=42",
-        import_roots=("asyncio",),
+        import_roots=("asyncio", "types"),
+        native_roots=(),
+    ),
+    "callback-reconciliation": ExampleCase(
+        case_id="callback-reconciliation",
+        relative_source="callback/reconciliation.sifr",
+        stdout_marker=(
+            "sifr-python-interop:callback:reconciliation="
+            "provisional-cancelled:enter-cancelled:exit-skipped"
+        ),
+        import_roots=("asyncio", "types"),
+        native_roots=(),
+    ),
+    "sync-context-reconciliation": ExampleCase(
+        case_id="sync-context-reconciliation",
+        relative_source="callback/sync_context_reconciliation.sifr",
+        stdout_marker=(
+            "sifr-python-interop:callback:sync-context="
+            "sync-closed:sync-exit-skipped"
+        ),
+        import_roots=("asyncio", "types"),
         native_roots=(),
     ),
     "pubsub-retained-async-close": ExampleCase(

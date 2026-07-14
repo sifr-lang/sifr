@@ -84,7 +84,10 @@ pub(super) fn try_lower_simple_async_with_stmt(
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
-    if matches!(kind, sifr_ir::HirAsyncWithKind::UserDefined { .. }) {
+    if matches!(
+        kind,
+        sifr_ir::HirAsyncWithKind::UserDefined { .. } | sifr_ir::HirAsyncWithKind::Python { .. }
+    ) {
         return None;
     }
 

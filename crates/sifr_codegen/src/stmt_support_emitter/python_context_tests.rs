@@ -72,9 +72,8 @@ fn python_context_emits_enter_outcome_and_replay_aware_exit() {
         .expect("Python context should lower");
     let rendered = crate::render_stmts(&[lowered]);
 
-    assert!(
-        rendered.contains("enter_context(&__sifr_python_context_manager_0.__sifr_python_object)")
-    );
+    assert!(rendered.contains("context_enter_with_callbacks("));
+    assert!(rendered.contains("&__sifr_python_context_manager_0.__sifr_python_callbacks"));
     assert!(rendered.contains(
         "context_exit_normal_with_callbacks(__sifr_python_context_manager_0.__sifr_python_object"
     ));
@@ -126,10 +125,10 @@ fn multiple_python_contexts_nest_for_reverse_exit_order() {
     let rendered = crate::render_stmts(&[lowered]);
 
     let outer_enter = rendered
-        .find("enter_context(&__sifr_python_context_manager_1.")
+        .find("&__sifr_python_context_manager_1.__sifr_python_object")
         .expect("outer enter");
     let inner_enter = rendered
-        .find("enter_context(&__sifr_python_context_manager_0.")
+        .find("&__sifr_python_context_manager_0.__sifr_python_object")
         .expect("inner enter");
     let inner_exit = rendered
         .find("context_exit_normal_with_callbacks(__sifr_python_context_manager_0.")
@@ -194,7 +193,9 @@ fn entered_binding_preserves_mutability_and_mixed_item_nesting() {
     assert!(rendered.contains("let Some(mut entered)"));
     assert!(
         rendered.find("let _native = 1_i64").expect("native item")
-            < rendered.find("enter_context(").expect("Python enter")
+            < rendered
+                .find("context_enter_with_callbacks(")
+                .expect("Python enter")
     );
 }
 

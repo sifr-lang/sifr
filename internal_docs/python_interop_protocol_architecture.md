@@ -403,6 +403,21 @@ Semantic owner close from within one of that owner's accepted callback
 invocations is rejected statically where visible and by a runtime reentrancy
 guard otherwise, so shutdown never waits for the invocation that initiated it.
 
+Context entry is part of the same ownership boundary. If synchronous or
+asynchronous entry fails after a receiver callback owner exists, the wrapper
+closes and drains that owner, releases its captures, and attaches retained
+handler-failure evidence to the entry error. It marks unregister authority
+complete without calling `__exit__` or `__aexit__`, because a failed entry never
+established a context.
+
+An asyncio receiver callback remains provisional until the Python registration
+operation succeeds and transfers it into the receiver owner. On failure or
+cancellation, generated code closes that callback's admission gate, waits for
+in-progress setup, cancels and joins only its accepted entries, and releases
+the target and Python callable. This terminal rollback prevents the emergency
+drop path from leaking captured state when Python starts a callback before
+rejecting registration.
+
 ## Buffer Protocol
 
 Buffer declarations use a typed affine return:

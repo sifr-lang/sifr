@@ -49,6 +49,7 @@ struct OwnerData {
     status: CallbackOwnerStatus,
     active_calls: usize,
     next_sequence: u64,
+    next_callback_id: u64,
     first_failure: Option<CallbackFailureEvidence>,
     first_failure_observed: bool,
     captures_released: bool,
@@ -57,6 +58,7 @@ struct OwnerData {
 }
 
 struct AsyncEntry {
+    callback_id: u64,
     cancel: AsyncCancellationAction,
     cancellation_requested: bool,
 }
@@ -141,6 +143,7 @@ impl CallbackOwnerState {
                 status: CallbackOwnerStatus::Open,
                 active_calls: 0,
                 next_sequence: 0,
+                next_callback_id: 0,
                 first_failure: None,
                 first_failure_observed: false,
                 captures_released: false,
@@ -214,6 +217,15 @@ impl CallbackOwnerState {
         })
     }
 
+    pub(super) fn allocate_callback_id(&self) -> Result<u64, PythonError> {
+        let mut state = lock_state(&self.inner);
+        state.next_callback_id = state
+            .next_callback_id
+            .checked_add(1)
+            .ok_or_else(|| errors::unavailable("callback identity space"))?;
+        Ok(state.next_callback_id)
+    }
+
     pub fn reject_serial_reentrancy(&self, callback_id: u64) -> Result<(), PythonError> {
         if callback_is_active(self.inner.id, callback_id) {
             return Err(errors::reentrant(self.inner.id, callback_id));
@@ -223,6 +235,7 @@ impl CallbackOwnerState {
 
     pub(super) fn register_async_entry(
         &self,
+        callback_id: u64,
         entry_sequence: u64,
         cancel: AsyncCancellationAction,
     ) -> Result<CallbackAsyncEntryLease, PythonError> {
@@ -235,6 +248,7 @@ impl CallbackOwnerState {
             state.async_entries.insert(
                 entry_sequence,
                 AsyncEntry {
+                    callback_id,
                     cancel: Arc::clone(&cancel),
                     cancellation_requested: cancel_now,
                 },
@@ -251,6 +265,27 @@ impl CallbackOwnerState {
             entry_sequence,
             active: true,
         })
+    }
+
+    pub(super) async fn cancel_callback_entries(&self, callback_id: u64) {
+        loop {
+            let notified = self.inner.async_changed.notified();
+            let (finished, cancellations) = {
+                let mut state = lock_state(&self.inner);
+                let cancellations =
+                    pending_async_cancellations_for_callback(&mut state, callback_id);
+                let finished = !state
+                    .async_entries
+                    .values()
+                    .any(|entry| entry.callback_id == callback_id);
+                (finished, cancellations)
+            };
+            invoke_cancellations(cancellations);
+            if finished {
+                return;
+            }
+            notified.await;
+        }
     }
 
     pub fn close_call_scope(&self) -> Result<(), PythonError> {
@@ -709,6 +744,21 @@ fn pending_async_cancellations(state: &mut OwnerData) -> Vec<AsyncCancellationAc
             }
             entry.cancellation_requested = true;
             Some(Arc::clone(&entry.cancel))
+        })
+        .collect()
+}
+
+fn pending_async_cancellations_for_callback(
+    state: &mut OwnerData,
+    callback_id: u64,
+) -> Vec<AsyncCancellationAction> {
+    state
+        .async_entries
+        .values_mut()
+        .filter(|entry| entry.callback_id == callback_id && !entry.cancellation_requested)
+        .map(|entry| {
+            entry.cancellation_requested = true;
+            Arc::clone(&entry.cancel)
         })
         .collect()
 }

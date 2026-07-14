@@ -21,6 +21,7 @@ proc-macro2 = "1.0.106"
 sifr_lowering = { workspace = true }
 sifr_python_parser = { workspace = true }
 insta = { workspace = true }
+static_assertions = { workspace = true }
 
 [lints]
 workspace = true

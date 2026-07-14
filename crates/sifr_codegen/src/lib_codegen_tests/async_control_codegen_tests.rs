@@ -48,6 +48,23 @@ fn async_function_argument_is_adapted_to_send_future_callable() {
 }
 
 #[test]
+fn async_method_argument_is_adapted_to_send_future_callable() {
+    let rust_code = generate_rust_from_source(
+        "class Runner:\n    async def install(self, own handler: AsyncCallable[[int], int]) -> int:\n        return await handler(4)\n\nasync def plus_one(value: int) -> int:\n    await task.sleep(0.0)\n    return value + 1\n\nasync def main() -> None:\n    runner = Runner()\n    value = await runner.install(plus_one)\n    print(value)\n",
+    );
+
+    assert!(
+        rust_code.contains("let __sifr_send_async_callable = std::sync::Arc::new(plus_one)"),
+        "{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("runner.install(plus_one)"),
+        "{rust_code}"
+    );
+    syn::parse_file(&rust_code).expect("adapted async method callable should parse");
+}
+
+#[test]
 fn nested_async_function_argument_is_adapted_to_send_future_callable() {
     let rust_code = generate_rust_from_source(
         "async def invoke(handler: AsyncCallable[[str], str]) -> str:\n    return await handler(\"value\")\n\nasync def main() -> None:\n    prefix: str = \"nested:\"\n    async def nested(own value: str) -> str:\n        await task.sleep(0.0)\n        return prefix + value\n    result = await invoke(nested)\n    print(result)\n",

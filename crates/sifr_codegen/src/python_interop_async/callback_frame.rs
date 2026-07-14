@@ -22,6 +22,7 @@ pub(super) struct AsyncArgumentFrame<'a> {
     pub(super) body: Vec<RustStmt>,
     pub(super) callbacks: Vec<CallbackSetup>,
     pub(super) retained_result: Option<&'a sifr_ir::PythonCallbackDeclaration>,
+    pub(super) provisional_callbacks: Vec<String>,
 }
 
 pub(super) fn argument_frame<'a>(
@@ -275,6 +276,10 @@ pub(super) fn argument_frame<'a>(
         }
     }
     Some(AsyncArgumentFrame {
+        provisional_callbacks: callbacks
+            .iter()
+            .filter_map(|setup| setup.provisional_var.clone())
+            .collect(),
         body,
         callbacks,
         retained_result,

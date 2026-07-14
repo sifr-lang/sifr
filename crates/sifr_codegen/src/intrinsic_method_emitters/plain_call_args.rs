@@ -412,6 +412,9 @@ impl RustEmitter {
         mut lowered_arg: crate::RustExpr,
     ) -> crate::RustExpr {
         let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
+        if let Type::AsyncCallable(params, _, _) = resolved_param {
+            lowered_arg = Self::send_async_callable_adapter(lowered_arg, params.len());
+        }
         let effective_arg_ty = self.effective_registry_expr_ty(arg);
         let arg_is_option = crate::helpers::is_option_type(&effective_arg_ty);
         if crate::helpers::is_option_type(param_ty)

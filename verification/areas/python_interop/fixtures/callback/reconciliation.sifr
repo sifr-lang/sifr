@@ -1,0 +1,62 @@
+from sifr.python import ExitCause, ExitDecision, PythonError
+
+
+@python.opaque(type=types.SimpleNamespace, cleanup=async_context)
+class Manager:
+    @python.callback(handler, lifetime=Self, dispatch=asyncio, concurrency=parallel)
+    @python.coroutine(Self.install_fail)
+    async def install_fail(
+        self,
+        own handler: AsyncCallable[[int], int],
+    ) -> Result[None, PythonError]: ...
+
+    @python.callback(handler, lifetime=Self, dispatch=asyncio, concurrency=parallel)
+    @python.coroutine(Self.install)
+    async def install(
+        self,
+        own handler: AsyncCallable[[int], int],
+    ) -> Result[None, PythonError]: ...
+
+    @python.context.aenter(Self.__aenter__)
+    async def __aenter__(self) -> Result[Manager, PythonError]: ...
+
+    @python.context.aexit(Self.__aexit__)
+    async def __aexit__(
+        own self,
+        cause: ExitCause,
+    ) -> Result[ExitDecision, PythonError]: ...
+
+
+@python.coroutine(bridge.callback_reconciliation.make_manager)
+async def make_manager() -> Result[Manager, PythonError]: ...
+
+
+@python.coroutine(bridge.callback_reconciliation.status)
+async def status() -> Result[str, PythonError]: ...
+
+
+async def hold(value: int) -> int:
+    await task.sleep(3600.0)
+    return value
+
+
+async def main() -> Result[None, PythonError]:
+    try:
+        manager: Manager = await make_manager()
+        try:
+            _failed: None = await manager.install_fail(hold)
+        except PythonError:
+            pass
+
+        _installed: None = await manager.install(hold)
+        try:
+            async with manager as entered:
+                pass
+        except PythonError:
+            pass
+
+        proof: str = await status()
+        print("sifr-python-interop:callback:reconciliation=" + proof)
+    except PythonError as error:
+        raise error
+    return None

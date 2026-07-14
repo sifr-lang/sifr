@@ -173,7 +173,59 @@ pub(crate) fn async_python_method_body(
         }),
         owner_retained_errors,
     )?;
-    Some(body)
+    Some(wrap_provisional_receiver_callbacks(
+        body,
+        &frame.provisional_callbacks,
+    ))
+}
+
+fn wrap_provisional_receiver_callbacks(
+    body: Vec<RustStmt>,
+    provisional_callbacks: &[String],
+) -> Vec<RustStmt> {
+    if provisional_callbacks.is_empty() {
+        return body;
+    }
+    let mut wrapped = provisional_callbacks
+        .iter()
+        .map(|name| RustStmt::Let {
+            mutable: true,
+            name: name.clone(),
+            ty: None,
+            value: RustExpr::Literal(RustLiteral::None),
+        })
+        .collect::<Vec<_>>();
+    wrapped.push(RustStmt::Let {
+        mutable: false,
+        name: "__sifr_receiver_callback_outcome".to_string(),
+        ty: None,
+        value: RustExpr::Await(Box::new(RustExpr::AsyncBlock {
+            body,
+            is_move: false,
+        })),
+    });
+    wrapped.push(RustStmt::If {
+        cond: RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(
+                "__sifr_receiver_callback_outcome".to_string(),
+            )),
+            method: "is_err".to_string(),
+            args: Vec::new(),
+        },
+        then_body: provisional_callbacks
+            .iter()
+            .map(|name| {
+                RustStmt::Expr(RustExpr::Ident(format!(
+                    "if let Some(__sifr_provisional_callback) = {name}.as_ref() {{ if let Err(__sifr_provisional_cleanup_error) = __sifr_provisional_callback.rollback_provisional().await {{ sifr_runtime::python::record_context_cleanup_evidence(\"receiver-callback-registration\", &__sifr_provisional_cleanup_error); }} }}"
+                )))
+            })
+            .collect(),
+        else_body: None,
+    });
+    wrapped.push(RustStmt::Return(Some(RustExpr::Ident(
+        "__sifr_receiver_callback_outcome".to_string(),
+    ))));
+    wrapped
 }
 
 pub(super) fn async_input_conversion(

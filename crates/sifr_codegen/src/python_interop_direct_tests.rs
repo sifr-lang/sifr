@@ -14,6 +14,12 @@ use sifr_ir::{
 };
 use sifr_type_system::{ParamConvention, Type};
 
+struct PythonOpaqueAutoTraitProbe {
+    _marker: std::marker::PhantomData<std::rc::Rc<()>>,
+}
+
+static_assertions::assert_not_impl_any!(PythonOpaqueAutoTraitProbe: Send, Sync);
+
 #[test]
 fn sync_wrapper_emits_complete_owned_argument_frame() {
     let error_type = Type::Class {
@@ -633,6 +639,11 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
         generated_module.contains(
             "__sifr_python_callback_failure_0: sifr_runtime::python::CallbackFailureSlot<HandlerError>"
         ),
+        "{generated_module}"
+    );
+    assert!(
+        generated_module
+            .contains("__sifr_python_not_send_sync: std::marker::PhantomData<std::rc::Rc<()>>"),
         "{generated_module}"
     );
     assert!(

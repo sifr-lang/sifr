@@ -29,6 +29,7 @@ struct EntryState {
 impl AsyncioCallbackEntry {
     pub(super) fn register(
         owner: &CallbackOwnerState,
+        callback_id: u64,
         entry_sequence: u64,
         cancellation: CancellationCarrier,
         loop_object: Py<PyAny>,
@@ -67,6 +68,7 @@ impl AsyncioCallbackEntry {
 
         let weak_entry = Arc::downgrade(&entry);
         let owner_lease = owner.register_async_entry(
+            callback_id,
             entry_sequence,
             Arc::new(move || {
                 if let Some(entry) = weak_entry.upgrade() {

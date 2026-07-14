@@ -13,6 +13,7 @@ pub(crate) struct CallbackSetup {
     pub(crate) failure_slot: Option<(String, Type)>,
     pub(crate) dispatch: PythonCallbackDispatch,
     pub(crate) lifetime: PythonCallbackLifetime,
+    pub(crate) provisional_var: Option<String>,
 }
 
 pub(crate) fn callback_setup(
@@ -31,6 +32,9 @@ pub(crate) fn callback_setup(
         return None;
     }
     let callback_var = format!("__sifr_callback_{callback_index}");
+    let provisional_var = (callback.dispatch == PythonCallbackDispatch::Asyncio
+        && callback.lifetime == PythonCallbackLifetime::Receiver)
+        .then(|| format!("__sifr_provisional_callback_{callback_index}"));
     let handler_capture_var = format!("__sifr_callback_handler_{callback_index}");
     let slot_var = format!("__sifr_callback_failure_{callback_index}");
     let handler_slot_var = format!("__sifr_callback_failure_for_handler_{callback_index}");
@@ -109,15 +113,35 @@ pub(crate) fn callback_setup(
             .map(|_| handler_slot_var.as_str()),
     ));
     factory_args.push(encoder(callback, opaque_classes)?);
-    statements.push(RustStmt::Let {
-        mutable: false,
-        name: callback_var.clone(),
-        ty: None,
-        value: mapped_try(
-            owner_outcome_with_evidence(runtime_call(factory, factory_args), owner_retained_errors),
-            error_type,
-        ),
-    });
+    let factory = mapped_try(
+        owner_outcome_with_evidence(runtime_call(factory, factory_args), owner_retained_errors),
+        error_type,
+    );
+    if let Some(provisional) = &provisional_var {
+        statements.push(RustStmt::Assign {
+            target: RustExpr::Ident(provisional.clone()),
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                args: vec![factory],
+            },
+        });
+        statements.push(RustStmt::LetElse {
+            pattern: format!("Some(ref {callback_var})"),
+            value: RustExpr::Ident(provisional.clone()),
+            else_body: vec![RustStmt::Expr(RustExpr::FormatMacro {
+                name: "unreachable".to_string(),
+                format_str: "provisional asyncio callback was just assigned".to_string(),
+                args: Vec::new(),
+            })],
+        });
+    } else {
+        statements.push(RustStmt::Let {
+            mutable: false,
+            name: callback_var.clone(),
+            ty: None,
+            value: factory,
+        });
+    }
     Some(CallbackSetup {
         statements,
         callback_var,
@@ -127,6 +151,7 @@ pub(crate) fn callback_setup(
             .map(|error| (slot_var, error)),
         dispatch: callback.dispatch,
         lifetime: callback.lifetime,
+        provisional_var,
     })
 }
 

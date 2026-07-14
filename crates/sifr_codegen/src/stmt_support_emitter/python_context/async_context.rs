@@ -140,9 +140,13 @@ let {entered_raw} = match __SIFR_TASK_CANCELLATION.scope(
         {schema},
         Some(&{child}),
     ),
-).await {{
+    ).await {{
     Ok(value) => value,
     Err(error) => {{
+        let error = sifr_runtime::python::abandon_callback_owner_after_error_async(
+            error,
+            &{manager_name}.__sifr_python_callbacks,
+        ).await;
         sifr_runtime::python::poison_object({manager_name}.__sifr_python_object);
         if {scope}.notification().is_notified() {{
             {resume_parent_cancellation}

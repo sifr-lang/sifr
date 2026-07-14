@@ -1,0 +1,47 @@
+from sifr.python import ExitCause, ExitDecision, PythonError
+
+
+@python.opaque(type=types.SimpleNamespace, cleanup=context)
+class SyncManager:
+    @python.callback(handler, lifetime=Self, dispatch=foreign, concurrency=serial)
+    @python(Self.install)
+    def install(
+        self,
+        own handler: Callable[[int], int],
+    ) -> Result[None, PythonError]: ...
+
+    @python.context.enter(Self.__enter__)
+    def __enter__(self) -> Result[SyncManager, PythonError]: ...
+
+    @python.context.exit(Self.__exit__)
+    def __exit__(
+        own self,
+        cause: ExitCause,
+    ) -> Result[ExitDecision, PythonError]: ...
+
+
+@python(bridge.callback_reconciliation.make_sync_manager)
+def make_sync_manager() -> Result[SyncManager, PythonError]: ...
+
+
+@python(bridge.callback_reconciliation.sync_status)
+def sync_status() -> Result[str, PythonError]: ...
+
+
+def add_one(value: int) -> int:
+    return value + 1
+
+
+def main() -> None:
+    try:
+        manager: SyncManager = make_sync_manager()
+        _installed: None = manager.install(add_one)
+        try:
+            with manager as entered:
+                pass
+        except PythonError:
+            pass
+        proof: str = sync_status()
+        print("sifr-python-interop:callback:sync-context=" + proof)
+    except PythonError as error:
+        print(error.exception_type)

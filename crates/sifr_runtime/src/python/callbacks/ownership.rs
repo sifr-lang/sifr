@@ -1,5 +1,5 @@
 use super::CallbackOwnerState;
-use crate::cancellation::{CancellationCarrier, CancellationScopeLease};
+use crate::cancellation::{CancellationCarrier, CancellationResume, CancellationScopeLease};
 use crate::python::{
     context_exit_normal, context_exit_python_error, context_exit_sifr_cause, object_ops,
     semantic_close, ObjectHandle, PythonError, PythonExitDecision, SifrExitCause,
@@ -178,11 +178,13 @@ pub async fn finish_retained_callback_finalization<T>(
     let Some(scope) = scope else {
         return outcome;
     };
-    if !scope.notification().is_notified() {
-        return outcome;
+    let resume = scope.release_and_resume_parent();
+    if matches!(
+        resume,
+        CancellationResume::Invoked | CancellationResume::AlreadyResumed
+    ) {
+        tokio::task::yield_now().await;
     }
-    let _resume = scope.release_and_resume_parent();
-    tokio::task::yield_now().await;
     outcome
 }
 
@@ -232,6 +234,71 @@ impl CallbackOwnerSlot {
             .into_inner()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
     }
+
+    fn take_owner(&self) -> Option<CallbackOwnerState> {
+        self.owner
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .take()
+    }
+}
+
+pub fn context_enter_with_callbacks(
+    object: &ObjectHandle,
+    callbacks: &CallbackOwnerSlot,
+) -> Result<ObjectHandle, PythonError> {
+    match super::super::enter_context(object) {
+        Ok(entered) => Ok(entered),
+        Err(primary) => Err(abandon_callback_owner_after_error(primary, callbacks)),
+    }
+}
+
+pub fn abandon_callback_owner_after_error(
+    mut primary: PythonError,
+    callbacks: &CallbackOwnerSlot,
+) -> PythonError {
+    let Some(owner) = callbacks.take_owner() else {
+        return primary;
+    };
+    match owner.begin_owner_unregister() {
+        Ok(unregister) => drop(unregister),
+        Err(secondary) => {
+            super::execution::attach_callback_failure_evidence_to_error(&mut primary, &[&owner]);
+            super::super::attach_secondary_python_error(&mut primary, &secondary);
+            return primary;
+        }
+    }
+    let callback_close = owner.close_after_owner_unregister_with_typed_observer();
+    super::execution::attach_callback_failure_evidence_to_error(&mut primary, &[&owner]);
+    if let Err(secondary) = callback_close {
+        super::super::attach_secondary_python_error(&mut primary, &secondary);
+    }
+    primary
+}
+
+pub async fn abandon_callback_owner_after_error_async(
+    mut primary: PythonError,
+    callbacks: &CallbackOwnerSlot,
+) -> PythonError {
+    let Some(owner) = callbacks.take_owner() else {
+        return primary;
+    };
+    match owner.begin_owner_unregister() {
+        Ok(unregister) => drop(unregister),
+        Err(secondary) => {
+            super::execution::attach_callback_failure_evidence_to_error(&mut primary, &[&owner]);
+            super::super::attach_secondary_python_error(&mut primary, &secondary);
+            return primary;
+        }
+    }
+    let callback_close = owner
+        .close_after_owner_unregister_with_typed_observer_async()
+        .await;
+    super::execution::attach_callback_failure_evidence_to_error(&mut primary, &[&owner]);
+    if let Err(secondary) = callback_close {
+        super::super::attach_secondary_python_error(&mut primary, &secondary);
+    }
+    primary
 }
 
 pub fn semantic_close_with_callbacks(

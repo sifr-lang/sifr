@@ -143,6 +143,10 @@ async def mark(label):
 async def hold_until_cancelled():
     _record_loop()
     _record("hold-start:cancel")
+    current = asyncio.current_task()
+    if current is None:
+        raise RuntimeError("missing current asyncio task")
+    asyncio.get_running_loop().call_soon(current.cancel)
     try:
         await asyncio.Future()
     finally:
@@ -165,7 +169,7 @@ async def stats():
         [
             "hold-start:cancel",
             "hold-finally:cancel",
-            "aexit:cancel:SifrBoundaryError",
+            "aexit:cancel:CancelledError",
             "closed:cancel",
         ]
     )

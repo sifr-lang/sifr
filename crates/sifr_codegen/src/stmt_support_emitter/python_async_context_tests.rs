@@ -78,6 +78,7 @@ fn async_python_context_emits_biased_cancellation_and_masked_exit() {
     assert!(rendered.contains("CancellationScopeLease::claim"));
     assert!(rendered.contains("__SIFR_TASK_CANCELLATION.scope"));
     assert!(rendered.contains("submit_async_context_enter"));
+    assert!(rendered.contains("abandon_callback_owner_after_error_async"));
     assert!(rendered.contains("submit_async_context_exit"));
     assert!(rendered.contains("PythonAsyncExitCause::Python(replay.clone())"));
     assert!(rendered.contains("release_and_resume_parent"));

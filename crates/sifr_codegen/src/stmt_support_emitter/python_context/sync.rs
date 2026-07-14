@@ -311,7 +311,10 @@ impl RustEmitter {
                 name: entered_raw.clone(),
                 ty: None,
                 value: mapped_try(
-                    runtime_call("enter_context", vec![reference(manager_handle())]),
+                    runtime_call(
+                        "context_enter_with_callbacks",
+                        vec![reference(manager_handle()), reference(manager_callbacks())],
+                    ),
                     enter_error_type,
                 ),
             },
