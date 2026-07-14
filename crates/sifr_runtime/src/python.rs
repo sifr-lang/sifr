@@ -61,10 +61,7 @@ pub use async_value::{
     async_value_is_none, PythonAsyncRequest, PythonAsyncType, PythonAsyncValue,
 };
 pub use bridge_loader::PythonBridgeSource;
-pub use buffer_ops::{
-    buffer_shape, buffer_strides, buffer_suboffsets, buffer_u8, copy_buffer_u8, release_buffer,
-    BufferHandle, PythonBufferMetadata,
-};
+pub use buffer_ops::*;
 use call_depth::{enter_python_call, python_call_depth};
 pub use callback_ops::{
     close_callback, local_callback, local_callback_echo, threadsafe_callback,
