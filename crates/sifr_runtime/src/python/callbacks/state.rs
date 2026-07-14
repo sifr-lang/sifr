@@ -3,6 +3,7 @@ use super::{errors, registry};
 use std::cell::RefCell;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
+use tokio::sync::Notify;
 
 type UnregisterAction = Arc<dyn Fn() -> Result<(), PythonError> + Send + Sync + 'static>;
 type CaptureReleaseAction = Box<dyn FnOnce() + Send + 'static>;
@@ -36,6 +37,7 @@ pub(super) struct CallbackOwnerInner {
     id: u64,
     state: Mutex<OwnerData>,
     changed: Condvar,
+    async_changed: Notify,
     unregister: Option<UnregisterAction>,
     releases: Mutex<Vec<CaptureReleaseAction>>,
     retained: bool,
@@ -69,6 +71,12 @@ pub struct CallbackInvocationGuard {
     owner_id: u64,
     callback_id: u64,
     lease: Option<CallbackInvocationLease>,
+    active: bool,
+}
+
+pub struct CallbackInvocationPollGuard {
+    owner_id: u64,
+    callback_id: u64,
     active: bool,
 }
 
@@ -125,6 +133,7 @@ impl CallbackOwnerState {
                 unregister_status: CallbackUnregisterStatus::NotStarted,
             }),
             changed: Condvar::new(),
+            async_changed: Notify::new(),
             unregister,
             releases: Mutex::new(release.into_iter().collect()),
             retained,
@@ -206,6 +215,15 @@ impl CallbackOwnerState {
         self.close_after_unregister(false, true)
     }
 
+    pub async fn close_call_scope_async(&self) -> Result<(), PythonError> {
+        if self.inner.retained {
+            return Err(errors::unavailable(
+                "retained owner close without unregister authority",
+            ));
+        }
+        self.close_after_unregister_async(false, true).await
+    }
+
     pub fn close_after_owner_unregister(&self) -> Result<(), PythonError> {
         if self.inner.unregister.is_some() {
             let state = lock_state(&self.inner);
@@ -224,6 +242,28 @@ impl CallbackOwnerState {
             }
         }
         self.close_after_unregister(false, false)
+    }
+
+    pub async fn close_after_owner_unregister_async(&self) -> Result<(), PythonError> {
+        if self.inner.unregister.is_some() {
+            let state = lock_state(&self.inner);
+            if state.unregister_status == CallbackUnregisterStatus::NotStarted {
+                return Err(errors::unavailable("owner unregister authority"));
+            }
+        }
+        self.close_after_unregister_async(false, true).await
+    }
+
+    pub async fn close_after_owner_unregister_with_typed_observer_async(
+        &self,
+    ) -> Result<(), PythonError> {
+        if self.inner.unregister.is_some() {
+            let state = lock_state(&self.inner);
+            if state.unregister_status == CallbackUnregisterStatus::NotStarted {
+                return Err(errors::unavailable("owner unregister authority"));
+            }
+        }
+        self.close_after_unregister_async(false, false).await
     }
 
     pub fn begin_owner_unregister(
@@ -372,6 +412,76 @@ impl CallbackOwnerState {
         state.captures_released = true;
         state.status = CallbackOwnerStatus::Closed;
         self.inner.changed.notify_all();
+        self.inner.async_changed.notify_waiters();
+        drop(state);
+        if self.inner.retained {
+            registry::unregister(self.inner.id);
+        }
+        self.retained_failure_result(surface_retained_failure)
+    }
+
+    async fn close_after_unregister_async(
+        &self,
+        runtime_shutdown: bool,
+        surface_retained_failure: bool,
+    ) -> Result<(), PythonError> {
+        if !runtime_shutdown && owner_is_active(self.inner.id) {
+            return Err(errors::close_from_invocation(self.inner.id));
+        }
+        loop {
+            let notified = self.inner.async_changed.notified();
+            let running =
+                lock_state(&self.inner).unregister_status == CallbackUnregisterStatus::Running;
+            if !running {
+                break;
+            }
+            notified.await;
+        }
+        let is_closer = {
+            let mut state = lock_state(&self.inner);
+            match state.status {
+                CallbackOwnerStatus::Closed => {
+                    drop(state);
+                    return self.retained_failure_result(surface_retained_failure);
+                }
+                CallbackOwnerStatus::Closing => false,
+                CallbackOwnerStatus::Open => {
+                    state.status = CallbackOwnerStatus::Closing;
+                    true
+                }
+            }
+        };
+        if !is_closer {
+            loop {
+                let notified = self.inner.async_changed.notified();
+                if lock_state(&self.inner).status == CallbackOwnerStatus::Closed {
+                    return self.retained_failure_result(surface_retained_failure);
+                }
+                notified.await;
+            }
+        }
+        loop {
+            let notified = self.inner.async_changed.notified();
+            if lock_state(&self.inner).active_calls == 0 {
+                break;
+            }
+            notified.await;
+        }
+        let releases = std::mem::take(
+            &mut *self
+                .inner
+                .releases
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner),
+        );
+        for release in releases {
+            release();
+        }
+        let mut state = lock_state(&self.inner);
+        state.captures_released = true;
+        state.status = CallbackOwnerStatus::Closed;
+        self.inner.changed.notify_all();
+        self.inner.async_changed.notify_waiters();
         drop(state);
         if self.inner.retained {
             registry::unregister(self.inner.id);
@@ -411,6 +521,20 @@ impl CallbackInvocationLease {
             active: true,
         })
     }
+
+    #[must_use]
+    pub fn enter_poll(&self) -> CallbackInvocationPollGuard {
+        ACTIVE_CALLBACKS.with(|active| {
+            active
+                .borrow_mut()
+                .push((self.owner.inner.id, self.callback_id));
+        });
+        CallbackInvocationPollGuard {
+            owner_id: self.owner.inner.id,
+            callback_id: self.callback_id,
+            active: true,
+        }
+    }
 }
 
 impl Drop for CallbackInvocationLease {
@@ -424,6 +548,7 @@ impl Drop for CallbackInvocationLease {
         if state.status == CallbackOwnerStatus::Closing && state.active_calls == 0 {
             self.owner.inner.changed.notify_all();
         }
+        self.owner.inner.async_changed.notify_waiters();
     }
 }
 
@@ -433,18 +558,18 @@ impl Drop for CallbackInvocationGuard {
             return;
         }
         self.active = false;
-        ACTIVE_CALLBACKS.with(|active| {
-            let mut active = active.borrow_mut();
-            if active.last() == Some(&(self.owner_id, self.callback_id)) {
-                active.pop();
-            } else if let Some(index) = active
-                .iter()
-                .rposition(|entry| *entry == (self.owner_id, self.callback_id))
-            {
-                active.remove(index);
-            }
-        });
+        remove_active_callback(self.owner_id, self.callback_id);
         drop(self.lease.take());
+    }
+}
+
+impl Drop for CallbackInvocationPollGuard {
+    fn drop(&mut self) {
+        if !self.active {
+            return;
+        }
+        self.active = false;
+        remove_active_callback(self.owner_id, self.callback_id);
     }
 }
 
@@ -458,6 +583,7 @@ impl Drop for CallbackOwnerUnregisterGuard {
         if state.unregister_status == CallbackUnregisterStatus::Running {
             state.unregister_status = CallbackUnregisterStatus::Finished;
             self.owner.inner.changed.notify_all();
+            self.owner.inner.async_changed.notify_waiters();
         }
     }
 }
@@ -473,6 +599,25 @@ fn owner_is_active(owner_id: u64) -> bool {
             .iter()
             .any(|(active_owner, _)| *active_owner == owner_id)
     })
+}
+
+#[must_use]
+pub fn current_callback_origin() -> Option<(u64, u64)> {
+    ACTIVE_CALLBACKS.with(|active| active.borrow().last().copied())
+}
+
+fn remove_active_callback(owner_id: u64, callback_id: u64) {
+    ACTIVE_CALLBACKS.with(|active| {
+        let mut active = active.borrow_mut();
+        if active.last() == Some(&(owner_id, callback_id)) {
+            active.pop();
+        } else if let Some(index) = active
+            .iter()
+            .rposition(|entry| *entry == (owner_id, callback_id))
+        {
+            active.remove(index);
+        }
+    });
 }
 
 fn lock_state(owner: &CallbackOwnerInner) -> std::sync::MutexGuard<'_, OwnerData> {

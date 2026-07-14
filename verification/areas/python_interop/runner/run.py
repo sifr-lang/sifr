@@ -16,6 +16,7 @@ from async_context_examples import (
     build_async_context_examples_report,
     run_async_context_examples_self_tests,
 )
+from callback_examples import build_callback_examples_report, run_callback_examples_self_tests
 from certification_matrix import build_certification_report, validate_certification_policy
 from dataframe_examples import build_dataframe_examples_report, run_dataframe_examples_self_tests
 from declaration_capabilities import (
@@ -179,6 +180,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Run compiled typed async Python context-manager examples.",
     )
+    parser.add_argument(
+        "--callback-examples",
+        action="store_true",
+        help="Run compiled typed Python callback examples.",
+    )
     return parser.parse_args(argv)
 
 
@@ -194,6 +200,7 @@ def main(argv: list[str] | None = None) -> int:
         run_library_examples_self_tests(paths)
         run_async_declaration_examples_self_tests(paths)
         run_async_context_examples_self_tests(paths)
+        run_callback_examples_self_tests(paths)
         print("python interop runner self-test ok")
         return 0
     if args.live_policy:
@@ -253,6 +260,15 @@ def main(argv: list[str] | None = None) -> int:
         write_report(report_path, payload)
         print(
             "python interop async-context-examples "
+            f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
+        )
+        return 1 if payload["status"] == "examples-failed" else 0
+    if args.callback_examples:
+        payload = build_callback_examples_report(paths)
+        report_path = (paths.area_root / args.report).resolve()
+        write_report(report_path, payload)
+        print(
+            "python interop callback-examples "
             f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
         )
         return 1 if payload["status"] == "examples-failed" else 0

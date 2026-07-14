@@ -12,6 +12,8 @@ type UnregisterAction = Arc<dyn Fn() -> Result<(), PythonError> + Send + Sync + 
 pub enum RetainedCallbackCleanup {
     Close,
     Context,
+    AsyncClose,
+    AsyncContext,
 }
 
 pub struct RetainedCallbackGroup {
@@ -82,6 +84,20 @@ impl RetainedCallbackGroup {
         self.committed = true;
         Ok(self.owner.clone())
     }
+
+    pub async fn rollback_async(&mut self) -> Result<(), PythonError> {
+        if self.committed {
+            return Ok(());
+        }
+        let unregister = self.owner.begin_owner_unregister()?;
+        drop(unregister);
+        let outcome = self
+            .owner
+            .close_after_owner_unregister_with_typed_observer_async()
+            .await;
+        self.committed = true;
+        outcome
+    }
 }
 
 impl Drop for RetainedCallbackGroup {
@@ -94,6 +110,25 @@ impl Drop for RetainedCallbackGroup {
         }
         let _ignored = self.owner.close_after_owner_unregister();
     }
+}
+
+pub async fn rollback_retained_callbacks_on_error<T>(
+    outcome: Result<T, PythonError>,
+    group: &mut RetainedCallbackGroup,
+) -> Result<T, PythonError> {
+    let Err(mut primary) = outcome else {
+        return outcome;
+    };
+    if let Err(secondary) = group.rollback_async().await {
+        let evidence = format!("secondary retained callback rollback failure: {secondary}");
+        if primary.context.is_empty() {
+            primary.context = evidence;
+        } else {
+            primary.context.push_str("; ");
+            primary.context.push_str(&evidence);
+        }
+    }
+    Err(primary)
 }
 
 impl CallbackOwnerSlot {
@@ -137,7 +172,7 @@ impl CallbackOwnerSlot {
             .clone()
     }
 
-    fn take(self) -> Option<CallbackOwnerState> {
+    pub(crate) fn take(self) -> Option<CallbackOwnerState> {
         self.owner
             .into_inner()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
@@ -213,6 +248,23 @@ fn unregister_action(object: ObjectHandle, cleanup: RetainedCallbackCleanup) -> 
     Arc::new(move || match cleanup {
         RetainedCallbackCleanup::Close => semantic_close(object.clone(), "close"),
         RetainedCallbackCleanup::Context => context_exit_normal(object.clone()).map(|_decision| ()),
+        RetainedCallbackCleanup::AsyncClose => {
+            let request = super::super::PythonAsyncRequest::semantic_close_method(
+                object.clone(),
+                "aclose".to_string(),
+            )?;
+            super::super::async_declaration::submit_async_declaration_blocking(request)
+                .map(|_value| ())
+        }
+        RetainedCallbackCleanup::AsyncContext => {
+            let request =
+                super::super::async_value::PythonAsyncRequest::semantic_context_exit_method(
+                    object.clone(),
+                    super::super::PythonAsyncExitCause::Normal,
+                )?;
+            super::super::async_declaration::submit_async_context_request_blocking(request)
+                .map(|_decision| ())
+        }
     })
 }
 

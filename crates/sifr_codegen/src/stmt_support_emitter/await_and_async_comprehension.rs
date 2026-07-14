@@ -5,6 +5,41 @@ impl RustEmitter {
         value: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
         if let HirExpr::Call { func, args, .. } = value {
+            let params = self.resolve_plain_call_param_info(func, args.len());
+            let needs_async_callable_adapter = params.as_ref().is_some_and(|params| {
+                params.iter().any(|(param, _)| {
+                    matches!(
+                        crate::resolve_alias_type_for_plain_call(param),
+                        Type::AsyncCallable(..)
+                    )
+                })
+            }) || args.iter().any(|arg| {
+                matches!(
+                    crate::resolve_alias_type_for_plain_call(arg.ty()),
+                    Type::Function(_) | Type::AsyncFunction(_) | Type::AsyncCallable(..)
+                )
+            });
+            if needs_async_callable_adapter {
+                let Some(params) = params else {
+                    return Ok(None);
+                };
+                let mut lowered = Vec::with_capacity(args.len());
+                for (arg, (param, _)) in args.iter().zip(params.iter()) {
+                    let Some(mut value) = self.lower_stmt_expr_for_ir(arg)? else {
+                        return Ok(None);
+                    };
+                    if let Type::AsyncCallable(callback_args, _, _) =
+                        crate::resolve_alias_type_for_plain_call(param)
+                    {
+                        value = Self::send_async_callable_adapter(value, callback_args.len());
+                    }
+                    lowered.push(value);
+                }
+                return Ok(Some(crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Ident(func.clone())),
+                    args: lowered,
+                }));
+            }
             if func == "__sifr_task_sleep" {
                 let [duration] = args.as_slice() else {
                     return Ok(None);

@@ -11,7 +11,7 @@ pub(super) fn register_callback_errors(py: Python<'_>) -> Result<(), PythonRunti
     }
     let module = PyModule::from_code(
         py,
-        c"class SifrCallbackError(RuntimeError):\n    def __init__(self, handler_type, message):\n        super().__init__(message)\n        self.handler_type = handler_type\n        self.message = message\n\nclass SifrCallbackClosedError(RuntimeError):\n    pass\n\nclass SifrCallbackReentrancyError(RuntimeError):\n    pass\n\nclass SifrCallbackCloseReentrancyError(RuntimeError):\n    pass\n\nclass SifrCallbackThreadError(RuntimeError):\n    pass\n",
+        c"import contextvars\n\n_callback_origin = contextvars.ContextVar('sifr_callback_origin', default=None)\n\ndef callback_origin():\n    return _callback_origin.get()\n\ndef set_callback_origin(owner_id, callback_id):\n    return _callback_origin.set((owner_id, callback_id))\n\ndef reset_callback_origin(token):\n    _callback_origin.reset(token)\n\nclass SifrCallbackError(RuntimeError):\n    def __init__(self, handler_type, message):\n        super().__init__(message)\n        self.handler_type = handler_type\n        self.message = message\n\nclass SifrCallbackClosedError(RuntimeError):\n    pass\n\nclass SifrCallbackReentrancyError(RuntimeError):\n    pass\n\nclass SifrCallbackCloseReentrancyError(RuntimeError):\n    pass\n\nclass SifrCallbackThreadError(RuntimeError):\n    pass\n",
         c"__sifr_callbacks__.py",
         c"__sifr_callbacks__",
     )
@@ -36,6 +36,48 @@ pub(super) fn register_callback_errors(py: Python<'_>) -> Result<(), PythonRunti
         .map_err(callback_registration_error)?;
     let _already_registered = CALLBACK_ERRORS_REGISTERED.set(()).is_err();
     Ok(())
+}
+
+pub(super) fn python_callback_origin(py: Python<'_>) -> Result<Option<(u64, u64)>, PythonError> {
+    let value = py
+        .import("__sifr_callbacks__")
+        .and_then(|module| module.call_method0("callback_origin"))
+        .map_err(|error| PythonError::from_pyerr(py, error, "callback", "callback origin"))?;
+    if value.is_none() {
+        Ok(None)
+    } else {
+        value
+            .extract::<(u64, u64)>()
+            .map(Some)
+            .map_err(|error| PythonError::from_pyerr(py, error, "callback", "callback origin"))
+    }
+}
+
+pub(crate) struct PythonCallbackOriginGuard<'py> {
+    py: Python<'py>,
+    token: Py<PyAny>,
+}
+
+pub(crate) fn install_python_callback_origin(
+    py: Python<'_>,
+    origin: Option<(u64, u64)>,
+) -> PyResult<Option<PythonCallbackOriginGuard<'_>>> {
+    let Some(origin) = origin else {
+        return Ok(None);
+    };
+    let token = py
+        .import("__sifr_callbacks__")?
+        .call_method1("set_callback_origin", origin)
+        .map(Bound::unbind)?;
+    Ok(Some(PythonCallbackOriginGuard { py, token }))
+}
+
+impl Drop for PythonCallbackOriginGuard<'_> {
+    fn drop(&mut self) {
+        let _ignored = self.py.import("__sifr_callbacks__").and_then(|module| {
+            module.call_method1("reset_callback_origin", (self.token.bind(self.py),))
+        });
+    }
 }
 
 fn callback_type(
@@ -110,6 +152,16 @@ pub(super) fn wrong_thread(owner_id: u64, callback_id: u64) -> PythonError {
         "SifrCallbackThreadError",
         format!(
             "current callback {callback_id} for owner {owner_id} was invoked on a foreign thread"
+        ),
+        "callback admission",
+    )
+}
+
+pub(super) fn wrong_asyncio_loop(owner_id: u64, callback_id: u64) -> PythonError {
+    callback_error(
+        "SifrCallbackThreadError",
+        format!(
+            "asyncio callback {callback_id} for owner {owner_id} was invoked outside the application-owned loop"
         ),
         "callback admission",
     )

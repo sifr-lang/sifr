@@ -49,7 +49,7 @@ i18n = [
     "dep:icu_plurals",
 ]
 unicode = ["dep:unicode-normalization", "dep:unicode-segmentation", "dep:unicode_names2"]
-python = ["dep:libc", "dep:pyo3"]
+python = ["dep:libc", "dep:pyo3", "dep:tokio"]
 net = ["dep:tokio"]
 tls = [
     "net",

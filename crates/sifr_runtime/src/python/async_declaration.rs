@@ -23,10 +23,11 @@ pub async fn submit_async_declaration(
     request: PythonAsyncRequest,
     carrier: Option<&CancellationCarrier>,
 ) -> Result<PythonAsyncValue, PythonError> {
+    let callback_origin = super::callbacks::current_callback_origin();
     super::async_runtime::ensure_started().map_err(PythonError::runtime)?;
     validate_keywords(&request)?;
-    let submitted =
-        super::attach(|py| submit_typed(py, request, carrier)).map_err(PythonError::runtime)?;
+    let submitted = super::attach(|py| submit_typed(py, request, carrier, callback_origin))
+        .map_err(PythonError::runtime)?;
     let terminal = match submitted {
         Ok(terminal) => terminal,
         Err(PythonTerminalError::ActiveCancellation) => {
@@ -58,13 +59,33 @@ pub async fn submit_async_declaration(
     }
 }
 
+pub(super) fn submit_async_declaration_blocking(
+    request: PythonAsyncRequest,
+) -> Result<PythonAsyncValue, PythonError> {
+    super::async_runtime::ensure_started().map_err(PythonError::runtime)?;
+    validate_keywords(&request)?;
+    let submitted =
+        super::attach(|py| submit_typed(py, request, None, None)).map_err(PythonError::runtime)?;
+    let terminal = submitted.map_err(terminal_error)?;
+    match terminal.wait() {
+        Ok(PythonTerminalValue::Typed(value)) => Ok(value),
+        Ok(PythonTerminalValue::Raw(_) | PythonTerminalValue::ExitDecision(_)) => Err(
+            PythonError::runtime(PythonRuntimeError::AsyncRuntimeFailed(
+                "blocking typed asyncio submission produced the wrong terminal value".to_string(),
+            )),
+        ),
+        Err(error) => Err(terminal_error(error)),
+    }
+}
+
 pub(super) async fn submit_async_context_request(
     request: PythonAsyncRequest,
     carrier: Option<&CancellationCarrier>,
 ) -> Result<PythonExitDecision, PythonError> {
+    let callback_origin = super::callbacks::current_callback_origin();
     super::async_runtime::ensure_started().map_err(PythonError::runtime)?;
-    let submitted =
-        super::attach(|py| submit_typed(py, request, carrier)).map_err(PythonError::runtime)?;
+    let submitted = super::attach(|py| submit_typed(py, request, carrier, callback_origin))
+        .map_err(PythonError::runtime)?;
     let terminal = match submitted {
         Ok(terminal) => terminal,
         Err(PythonTerminalError::ActiveCancellation) => {
@@ -96,10 +117,53 @@ pub(super) async fn submit_async_context_request(
     }
 }
 
+pub(super) fn submit_async_context_request_blocking(
+    request: PythonAsyncRequest,
+) -> Result<PythonExitDecision, PythonError> {
+    super::async_runtime::ensure_started().map_err(PythonError::runtime)?;
+    let submitted =
+        super::attach(|py| submit_typed(py, request, None, None)).map_err(PythonError::runtime)?;
+    let terminal = submitted.map_err(terminal_error)?;
+    match terminal.wait() {
+        Ok(PythonTerminalValue::ExitDecision(decision)) => Ok(decision),
+        Ok(PythonTerminalValue::Raw(_) | PythonTerminalValue::Typed(_)) => Err(
+            PythonError::runtime(PythonRuntimeError::AsyncRuntimeFailed(
+                "blocking async context exit produced the wrong terminal value".to_string(),
+            )),
+        ),
+        Err(error) => Err(terminal_error(error)),
+    }
+}
+
+#[doc(hidden)]
+pub async fn submit_async_declaration_with_callbacks(
+    request: PythonAsyncRequest,
+    carrier: Option<&CancellationCarrier>,
+    callbacks: super::callbacks::CallbackOwnerSlot,
+) -> Result<PythonAsyncValue, PythonError> {
+    let Some(owner) = callbacks.take() else {
+        return submit_async_declaration(request, carrier).await;
+    };
+    let unregister = owner.begin_owner_unregister()?;
+    let primary = submit_async_declaration(request, carrier).await;
+    drop(unregister);
+    let callback_close = owner
+        .close_after_owner_unregister_with_typed_observer_async()
+        .await;
+    match primary {
+        Err(primary) => super::callbacks::attach_callback_failure_evidence::<PythonAsyncValue>(
+            Err(primary),
+            &[&owner],
+        ),
+        Ok(value) => callback_close.map(|()| value),
+    }
+}
+
 fn submit_typed(
     py: Python<'_>,
     request: PythonAsyncRequest,
     carrier: Option<&CancellationCarrier>,
+    callback_origin: Option<(u64, u64)>,
 ) -> Result<PythonTerminal, PythonTerminalError> {
     let (terminal, cancellation) = terminal_for_submission(carrier)?;
     let (submission_id, loop_object) =
@@ -133,6 +197,7 @@ fn submit_typed(
         &terminal,
         &cancellation,
         context,
+        callback_origin,
     )
     .map_err(|error| {
         request.finish_semantic_close(false);
@@ -227,6 +292,7 @@ fn build_setup_callback(
     terminal: &PythonTerminal,
     cancellation: &Arc<SubmissionCancellationBridge>,
     context: String,
+    callback_origin: Option<(u64, u64)>,
 ) -> PyResult<Py<PyAny>> {
     let loop_object = loop_object.clone_ref(py);
     let done_callback = done_callback.clone_ref(py);
@@ -241,6 +307,9 @@ fn build_setup_callback(
             let mut registered = false;
             let mut exact_task: Option<Py<PyAny>> = None;
             let setup = catch_unwind(AssertUnwindSafe(|| -> Result<(), PythonTerminalError> {
+                let _callback_origin =
+                    super::callbacks::install_python_callback_origin(py, callback_origin)
+                        .map_err(|error| mapped_pyerr(py, error, "callback", &context))?;
                 let callable =
                     resolve_callable(py, &request.target, &context).map_err(mapped_error)?;
                 let positional = if let Some(cause) = request.context_exit_cause() {

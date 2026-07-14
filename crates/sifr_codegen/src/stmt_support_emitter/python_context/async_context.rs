@@ -170,7 +170,7 @@ match {outcome} {{
         let {cleanup_carrier} = sifr_runtime::cancellation::CancellationCarrier::new();
         let {cleanup_result} = __SIFR_TASK_CANCELLATION.scope(
             {cleanup_carrier}.clone(),
-            sifr_runtime::python::submit_async_context_exit(
+            sifr_runtime::python::submit_async_context_exit_with_callbacks(
                 {manager_name}.__sifr_python_object,
                 sifr_runtime::python::PythonAsyncExitCause::Sifr(
                     sifr_runtime::python::SifrExitCause {{
@@ -180,6 +180,7 @@ match {outcome} {{
                     }},
                 ),
                 Some(&{cleanup_carrier}),
+                {manager_name}.__sifr_python_callbacks,
             ),
         ).await;
         match {cleanup_result} {{
@@ -304,10 +305,11 @@ let {cause} = match {body_error}.__sifr_python_error.as_ref() {{
 }};
 match __SIFR_TASK_CANCELLATION.scope(
     {cleanup_carrier}.clone(),
-    sifr_runtime::python::submit_async_context_exit(
+    sifr_runtime::python::submit_async_context_exit_with_callbacks(
         {manager}.__sifr_python_object,
         {cause},
         Some(&{cleanup_carrier}),
+        {manager}.__sifr_python_callbacks,
     ),
 ).await {{
     Ok(sifr_runtime::python::PythonExitDecision::Suppress) => {{}},
@@ -346,7 +348,7 @@ fn sifr_error_exit(
         r#"let {cleanup_carrier} = sifr_runtime::cancellation::CancellationCarrier::new();
 let {cleanup_result} = __SIFR_TASK_CANCELLATION.scope(
     {cleanup_carrier}.clone(),
-    sifr_runtime::python::submit_async_context_exit(
+    sifr_runtime::python::submit_async_context_exit_with_callbacks(
         {manager}.__sifr_python_object,
         sifr_runtime::python::PythonAsyncExitCause::Sifr(sifr_runtime::python::SifrExitCause {{
             kind: sifr_runtime::python::SifrExitCauseKind::{cause_kind},
@@ -354,6 +356,7 @@ let {cleanup_result} = __SIFR_TASK_CANCELLATION.scope(
             message: format!("{{}}", {error}),
         }}),
         Some(&{cleanup_carrier}),
+        {manager}.__sifr_python_callbacks,
     ),
 ).await;
 match {cleanup_result} {{

@@ -111,45 +111,45 @@
       "id": "callback-current",
       "surface": "@python.callback(..., dispatch=current)",
       "target_state": "declaration-supported",
-      "implementation_status": "reserved",
+      "implementation_status": "active",
       "activation_owner": "callback-runtime",
       "required_evidence": ["positive", "negative", "cleanup", "live"],
       "evidence": [
-        {"kind": "positive", "status": "planned", "owner": "current-thread callback matrix"},
-        {"kind": "negative", "status": "planned", "owner": "escape and conversion fixtures"},
-        {"kind": "cleanup", "status": "planned", "owner": "call/result/Self owner shutdown"},
+        {"kind": "positive", "status": "passing", "owner": "current-thread callback conversion and borrowed-capture runtime matrix"},
+        {"kind": "negative", "status": "passing", "owner": "callback policy, escape, shape, and conversion diagnostics"},
+        {"kind": "cleanup", "status": "passing", "owner": "call-scoped owner drain and exact-once capture release matrix"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "current-thread callable is synchronous"},
-        {"kind": "live", "status": "planned", "owner": "compiled CFFI callback example"}
+        {"kind": "live", "status": "passing", "owner": "compiled real CFFI callback example"}
       ]
     },
     {
       "id": "callback-foreign",
       "surface": "@python.callback(..., dispatch=foreign)",
       "target_state": "declaration-supported",
-      "implementation_status": "reserved",
+      "implementation_status": "active",
       "activation_owner": "callback-runtime",
       "required_evidence": ["positive", "negative", "cleanup", "live"],
       "evidence": [
-        {"kind": "positive", "status": "planned", "owner": "foreign serial/parallel matrix"},
-        {"kind": "negative", "status": "planned", "owner": "capture, argument, and reentrancy fixtures"},
-        {"kind": "cleanup", "status": "planned", "owner": "unregister/drain/release shutdown"},
+        {"kind": "positive", "status": "passing", "owner": "foreign serial FIFO and parallel overlap runtime matrix"},
+        {"kind": "negative", "status": "passing", "owner": "sendability, Python identity, shape, and serial reentrancy diagnostics"},
+        {"kind": "cleanup", "status": "passing", "owner": "unregister-first drain, concurrent close, post-close rejection, and runtime shutdown matrix"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "foreign callback is synchronous"},
-        {"kind": "live", "status": "planned", "owner": "compiled Kafka callback example"}
+        {"kind": "live", "status": "passing", "owner": "compiled kafka-python foreign-thread callback example"}
       ]
     },
     {
       "id": "callback-asyncio",
       "surface": "@python.callback(..., dispatch=asyncio)",
       "target_state": "declaration-supported",
-      "implementation_status": "reserved",
+      "implementation_status": "active",
       "activation_owner": "callback-runtime",
       "required_evidence": ["positive", "negative", "cleanup", "cancellation", "live"],
       "evidence": [
-        {"kind": "positive", "status": "planned", "owner": "AsyncCallable dispatch matrix"},
-        {"kind": "negative", "status": "planned", "owner": "async result and reentrancy fixtures"},
-        {"kind": "cleanup", "status": "planned", "owner": "asyncio callback owner shutdown"},
-        {"kind": "cancellation", "status": "planned", "owner": "bidirectional callback cancellation"},
-        {"kind": "live", "status": "planned", "owner": "compiled Pub/Sub callback example"}
+        {"kind": "positive", "status": "passing", "owner": "AsyncCallable owned-loop round-trip and generated wrapper matrices"},
+        {"kind": "negative", "status": "passing", "owner": "async type/target, wrong-loop, conversion, and serial reentrancy matrices"},
+        {"kind": "cleanup", "status": "passing", "owner": "async owner drain, failed-factory rollback, and retained async-close matrices"},
+        {"kind": "cancellation", "status": "passing", "owner": "exact Python Future to Sifr handler cancellation test"},
+        {"kind": "live", "status": "passing", "owner": "compiled asyncio and retained Pub/Sub-style callback examples"}
       ]
     },
     {

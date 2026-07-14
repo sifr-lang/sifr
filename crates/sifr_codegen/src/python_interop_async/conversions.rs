@@ -2,17 +2,18 @@
 
 use sifr_ir::{
     HirFunction, PythonCleanupPolicy, PythonInteropDeclaration, PythonInteropDecoratorKind,
-    PythonParameterKind,
 };
 use sifr_type_system::Type;
 use std::collections::HashMap;
 
+use super::callback_frame::{append_submission, argument_frame};
 use crate::python_interop_direct::{mapped_try, runtime_call};
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
 pub(crate) fn async_python_function_body(
     func: &HirFunction,
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
+    retained_callback_errors: &HashMap<String, Vec<Type>>,
 ) -> Option<Vec<RustStmt>> {
     let declaration = func.python_interop.first()?;
     if declaration.kind != PythonInteropDecoratorKind::Coroutine || !func.is_async {
@@ -26,7 +27,15 @@ pub(crate) fn async_python_function_body(
         return None;
     }
 
-    let mut body = argument_frame(func, declaration, error_type, opaque_classes)?;
+    let frame = argument_frame(
+        func,
+        declaration,
+        error_type,
+        opaque_classes,
+        retained_callback_errors,
+        false,
+    )?;
+    let mut body = frame.body;
     let request = RustExpr::FnCall {
         func: Box::new(python_path(&["PythonAsyncRequest", "function"])),
         args: vec![
@@ -48,7 +57,17 @@ pub(crate) fn async_python_function_body(
         ty: None,
         value: request,
     });
-    append_submission(&mut body, ok_type, error_type, opaque_classes)?;
+    append_submission(
+        &mut body,
+        declaration,
+        &frame.callbacks,
+        ok_type,
+        error_type,
+        opaque_classes,
+        retained_callback_errors,
+        frame.retained_result,
+        None,
+    )?;
     Some(body)
 }
 
@@ -56,6 +75,8 @@ pub(crate) fn async_python_method_body(
     func: &HirFunction,
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
     owner_declaration: Option<&PythonInteropDeclaration>,
+    retained_callback_errors: &HashMap<String, Vec<Type>>,
+    _owner_retained_errors: &[Type],
 ) -> Option<Vec<RustStmt>> {
     let declaration = func.python_interop.first()?;
     if declaration.kind != PythonInteropDecoratorKind::Coroutine || !func.is_async {
@@ -66,7 +87,15 @@ pub(crate) fn async_python_method_body(
     };
     let target = declaration.target.as_ref()?;
     let member = target.segments.get(1)?.clone();
-    let mut body = argument_frame(func, declaration, error_type, opaque_classes)?;
+    let frame = argument_frame(
+        func,
+        declaration,
+        error_type,
+        opaque_classes,
+        retained_callback_errors,
+        true,
+    )?;
+    let mut body = frame.body;
     let receiver = RustExpr::Field {
         expr: Box::new(RustExpr::Ident("self".to_string())),
         field: "__sifr_python_object".to_string(),
@@ -122,151 +151,24 @@ pub(crate) fn async_python_method_body(
         ty: None,
         value: mapped_try(request, error_type),
     });
-    append_submission(&mut body, ok_type, error_type, opaque_classes)?;
-    Some(body)
-}
-
-fn argument_frame(
-    func: &HirFunction,
-    declaration: &PythonInteropDeclaration,
-    error_type: &Type,
-    opaque_classes: &HashMap<String, PythonInteropDeclaration>,
-) -> Option<Vec<RustStmt>> {
-    let mut body = vec![
-        vector_let("__sifr_python_args"),
-        vector_let("__sifr_python_kwargs"),
-    ];
-    let mut forward_positional_by_name = false;
-    for (index, (param, shape)) in func.params.iter().zip(&declaration.parameters).enumerate() {
-        let value_name = format!("__sifr_python_arg_{index}");
-        if shape.omit_when_absent {
-            if shape.kind == PythonParameterKind::Positional {
-                forward_positional_by_name = true;
-            }
-            let present_name = format!("__sifr_python_value_{index}");
-            let converted = async_input_conversion(&present_name, &param.ty, opaque_classes)?;
-            body.push(RustStmt::IfLet {
-                pattern: format!("Some({present_name})"),
-                expr: RustExpr::Ident(param.name.clone()),
-                then_body: vec![
-                    mapped_let(&value_name, converted, error_type),
-                    push_keyword(&shape.name, &value_name),
-                ],
-                else_body: None,
-            });
-            continue;
-        }
-        match shape.kind {
-            PythonParameterKind::Positional | PythonParameterKind::KeywordOnly => {
-                body.push(mapped_let(
-                    &value_name,
-                    async_input_conversion(&param.name, &param.ty, opaque_classes)?,
-                    error_type,
-                ));
-                body.push(
-                    if shape.kind == PythonParameterKind::Positional && !forward_positional_by_name
-                    {
-                        push_positional(&value_name)
-                    } else {
-                        push_keyword(&shape.name, &value_name)
-                    },
-                );
-            }
-            PythonParameterKind::PositionalVariadic => {
-                let Type::List(item_type) = param.ty.resolve_alias() else {
-                    return None;
-                };
-                let item_name = format!("__sifr_python_value_{index}");
-                body.push(RustStmt::For {
-                    var: item_name.clone(),
-                    iter: method(RustExpr::Ident(param.name.clone()), "iter", Vec::new()),
-                    body: vec![
-                        mapped_let(
-                            &value_name,
-                            async_input_conversion_borrowed(&item_name, item_type, opaque_classes)?,
-                            error_type,
-                        ),
-                        push_positional(&value_name),
-                    ],
-                });
-            }
-            PythonParameterKind::KeywordVariadic => {
-                let Type::Dict(key_type, value_type) = param.ty.resolve_alias() else {
-                    return None;
-                };
-                if key_type.resolve_alias() != &Type::Str {
-                    return None;
-                }
-                let key_name = format!("__sifr_python_key_{index}");
-                let item_name = format!("__sifr_python_value_{index}");
-                body.push(RustStmt::For {
-                    var: format!("({key_name}, {item_name})"),
-                    iter: method(RustExpr::Ident(param.name.clone()), "iter", Vec::new()),
-                    body: vec![
-                        mapped_let(
-                            &value_name,
-                            async_input_conversion_borrowed(
-                                &item_name,
-                                value_type,
-                                opaque_classes,
-                            )?,
-                            error_type,
-                        ),
-                        push_keyword_expr(
-                            RustExpr::Clone(Box::new(RustExpr::Ident(key_name))),
-                            &value_name,
-                        ),
-                    ],
-                });
-            }
-        }
-    }
-    Some(body)
-}
-
-fn append_submission(
-    body: &mut Vec<RustStmt>,
-    ok_type: &Type,
-    error_type: &Type,
-    opaque_classes: &HashMap<String, PythonInteropDeclaration>,
-) -> Option<()> {
-    body.push(RustStmt::Let {
-        mutable: false,
-        name: "__sifr_python_cancellation".to_string(),
-        ty: None,
-        value: RustExpr::FnCall {
-            func: Box::new(RustExpr::Ident(
-                "__sifr_current_task_cancellation".to_string(),
-            )),
-            args: Vec::new(),
-        },
-    });
-    let submit = runtime_call(
-        "submit_async_declaration",
-        vec![
-            RustExpr::Ident("__sifr_python_request".to_string()),
-            method(
-                RustExpr::Ident("__sifr_python_cancellation".to_string()),
-                "as_ref",
-                Vec::new(),
-            ),
-        ],
-    );
-    body.push(mapped_let(
-        "__sifr_python_result",
-        RustExpr::Await(Box::new(submit)),
+    append_submission(
+        &mut body,
+        declaration,
+        &frame.callbacks,
+        ok_type,
         error_type,
-    ));
-    let converted =
-        async_output_value("__sifr_python_result", ok_type, error_type, opaque_classes)?;
-    body.push(RustStmt::Return(Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
-        args: vec![converted],
-    })));
-    Some(())
+        opaque_classes,
+        retained_callback_errors,
+        frame.retained_result,
+        semantic_close.then(|| RustExpr::Field {
+            expr: Box::new(RustExpr::Ident("self".to_string())),
+            field: "__sifr_python_callbacks".to_string(),
+        }),
+    )?;
+    Some(body)
 }
 
-fn async_input_conversion(
+pub(super) fn async_input_conversion(
     name: &str,
     ty: &Type,
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
@@ -384,7 +286,7 @@ fn async_input_conversion(
     }
 }
 
-fn async_input_conversion_borrowed(
+pub(super) fn async_input_conversion_borrowed(
     name: &str,
     ty: &Type,
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
@@ -775,7 +677,7 @@ fn mapped_results(iter: RustExpr, parameter: &str, body: RustExpr) -> RustExpr {
     )
 }
 
-fn mapped_let(name: &str, value: RustExpr, error_type: &Type) -> RustStmt {
+pub(super) fn mapped_let(name: &str, value: RustExpr, error_type: &Type) -> RustStmt {
     RustStmt::Let {
         mutable: false,
         name: name.to_string(),
@@ -793,7 +695,7 @@ fn mapped_mutable_let(name: &str, value: RustExpr, error_type: &Type) -> RustStm
     }
 }
 
-fn vector_let(name: &str) -> RustStmt {
+pub(super) fn vector_let(name: &str) -> RustStmt {
     let value_type = RustType::Named("sifr_runtime::python::PythonAsyncValue".to_string());
     let item_type = if name == "__sifr_python_kwargs" {
         RustType::Tuple(vec![RustType::String_, value_type])
@@ -811,15 +713,15 @@ fn vector_let(name: &str) -> RustStmt {
     }
 }
 
-fn push_positional(value: &str) -> RustStmt {
+pub(super) fn push_positional(value: &str) -> RustStmt {
     push_to("__sifr_python_args", value)
 }
 
-fn push_keyword(name: &str, value: &str) -> RustStmt {
+pub(super) fn push_keyword(name: &str, value: &str) -> RustStmt {
     push_keyword_expr(owned_string(name), value)
 }
 
-fn push_keyword_expr(key: RustExpr, value: &str) -> RustStmt {
+pub(super) fn push_keyword_expr(key: RustExpr, value: &str) -> RustStmt {
     RustStmt::Expr(method(
         RustExpr::Ident("__sifr_python_kwargs".to_string()),
         "push",
@@ -853,7 +755,7 @@ fn owned_string(value: &str) -> RustExpr {
     )
 }
 
-fn method(receiver: RustExpr, method: &str, args: Vec<RustExpr>) -> RustExpr {
+pub(super) fn method(receiver: RustExpr, method: &str, args: Vec<RustExpr>) -> RustExpr {
     RustExpr::MethodCall {
         receiver: Box::new(receiver),
         method: method.to_string(),

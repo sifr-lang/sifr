@@ -10,6 +10,11 @@ fn lower_errors(source: &str) -> Vec<HirDiagnostic> {
     }
 }
 
+fn lower_success(source: &str) {
+    let parsed = parse_module(source).expect("source should parse");
+    lower_module(parsed.suite()).expect("source should lower");
+}
+
 fn assert_callback_error(source: &str, message: &str) {
     let errors = lower_errors(source);
     assert!(
@@ -25,8 +30,8 @@ fn assert_callback_error(source: &str, message: &str) {
 }
 
 #[test]
-fn valid_callback_policy_is_retained_before_reservation() {
-    let errors = lower_errors(
+fn valid_callback_policy_is_active() {
+    lower_success(
         r"
 class PythonError(Error):
     message: str
@@ -42,13 +47,6 @@ def compute(
 ) -> Result[int, PythonError | HandlerError]: ...
 ",
     );
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION)));
-    assert!(!errors.iter().any(|error| {
-        error.code == Some(DiagnosticCode::PYCB_INVALID_DECLARATION)
-            || error.code == Some(DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE)
-    }));
 }
 
 #[test]
@@ -81,7 +79,7 @@ def compute(
 
 #[test]
 fn asyncio_callback_requires_async_callable_and_coroutine_target() {
-    let valid = lower_errors(
+    lower_success(
         r"
 class PythonError(Error):
     message: str
@@ -96,13 +94,6 @@ async def compute(
 ) -> Result[int, PythonError | HandlerError]: ...
 ",
     );
-    assert!(valid
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION)));
-    assert!(!valid
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYCB_INVALID_DECLARATION)));
-
     let invalid = lower_errors(
         r"
 class PythonError(Error):
@@ -337,8 +328,8 @@ def compute(handler: Callable[[LocalState], int]) -> Result[int, PythonError]: .
 }
 
 #[test]
-fn retained_result_and_receiver_owners_pass_validation_before_reservation() {
-    let errors = lower_errors(
+fn retained_result_and_receiver_owners_are_active() {
+    lower_success(
         r"
 class PythonError(Error):
     message: str
@@ -356,20 +347,6 @@ class Client:
 @python(pkg.create)
 def create(own handler: Callable[[int], int]) -> Result[Client, PythonError]: ...
 ",
-    );
-    assert!(
-        !errors
-            .iter()
-            .any(|error| error.code == Some(DiagnosticCode::PYCB_INVALID_DECLARATION)),
-        "unexpected diagnostics: {errors:?}"
-    );
-    assert_eq!(
-        errors
-            .iter()
-            .filter(|error| error.code == Some(DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION))
-            .count(),
-        2,
-        "unexpected diagnostics: {errors:?}"
     );
 }
 

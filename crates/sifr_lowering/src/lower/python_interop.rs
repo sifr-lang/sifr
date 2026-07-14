@@ -504,7 +504,6 @@ pub(in crate::lower) fn validate_python_interop_signature(
         context::validate_context_method_signature(declaration, params, return_type, ctx);
         return;
     }
-    let validation_start = ctx.errors.len();
     let Type::Result(ok_type, error_type) = return_type.resolve_alias() else {
         let declaration_kind = if declaration.effect == PythonInteropEffect::Async {
             "an asynchronous"
@@ -593,9 +592,6 @@ pub(in crate::lower) fn validate_python_interop_signature(
                 shape.span,
             );
         }
-    }
-    if !declaration.callbacks.is_empty() && ctx.errors.len() == validation_start {
-        reserved_declaration(ctx, PythonInteropDecoratorKind::Callback, declaration.span);
     }
 }
 

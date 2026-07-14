@@ -12,7 +12,12 @@ fn python_callback_param_names(func: &HirFunction, require_static: bool) -> Hash
     let callable_params = func
         .params
         .iter()
-        .filter(|param| matches!(param.ty.resolve_alias(), Type::Callable(..)))
+        .filter(|param| {
+            matches!(
+                param.ty.resolve_alias(),
+                Type::Callable(..) | Type::AsyncCallable(..)
+            )
+        })
         .map(|param| param.name.clone())
         .collect::<HashSet<_>>();
     if callable_params.is_empty() {

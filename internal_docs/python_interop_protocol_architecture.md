@@ -3,9 +3,9 @@
 ## Status And Scope
 
 This document defines the declaration-first Python interop contract. Typed
-coroutines, synchronous contexts, and asynchronous contexts are implemented;
-callback, buffer, Arrow, and DLPack rows remain reserved and must implement the
-same contract without publishing reduced substitutes.
+coroutines, synchronous and asynchronous contexts, and every callback dispatch
+mode are implemented. Buffer, Arrow, and DLPack rows remain reserved and must
+implement the same contract without publishing reduced substitutes.
 
 The common rules in
 [`python_interop_declaration_architecture.md`](./python_interop_declaration_architecture.md)

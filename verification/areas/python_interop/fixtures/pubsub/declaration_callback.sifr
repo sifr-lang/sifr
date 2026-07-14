@@ -1,0 +1,33 @@
+from sifr.python import PythonError
+
+
+@python.opaque(type=types.SimpleNamespace, cleanup=async_close)
+class Subscription:
+    @python.coroutine(Self.emit)
+    async def emit(self, value: int) -> Result[int, PythonError]: ...
+
+    @python.coroutine(Self.aclose)
+    async def aclose(own self) -> Result[None, PythonError]: ...
+
+
+@python.callback(handler, lifetime=result, dispatch=asyncio, concurrency=parallel)
+@python.coroutine(bridge.pubsub.subscribe)
+async def subscribe(
+    handler: AsyncCallable[[int], int],
+) -> Result[Subscription, PythonError]: ...
+
+
+async def double(value: int) -> int:
+    await task.sleep(0.0)
+    return value * 2
+
+
+async def main() -> Result[None, PythonError]:
+    try:
+        subscription: Subscription = await subscribe(double)
+        value: int = await subscription.emit(21)
+        _closed: None = await subscription.aclose()
+        print("sifr-python-interop:callback:pubsub=" + str(value) + ":close=drained")
+    except PythonError as error:
+        raise error
+    return None

@@ -660,7 +660,7 @@ impl RustEmitter {
                 value: RustExpr::ClosureBlock {
                     params,
                     body: lowered_body,
-                    is_move: false,
+                    is_move: func.is_async,
                     is_async: func.is_async,
                 },
             }
@@ -807,14 +807,20 @@ impl RustEmitter {
         convention: ParamConvention,
         require_static: bool,
     ) -> RustType {
-        let Type::Callable(..) = ty.resolve_alias() else {
+        let resolved = ty.resolve_alias();
+        if !matches!(resolved, Type::Callable(..) | Type::AsyncCallable(..)) {
             return self.lower_function_param_type(ty, convention);
-        };
+        }
         let base = self.rust_type_with_generics(ty);
-        let bounded = if require_static {
-            format!("{base} + Send + Sync + 'static")
+        let send_sync = if matches!(resolved, Type::AsyncCallable(..)) {
+            base
         } else {
             format!("{base} + Send + Sync")
+        };
+        let bounded = if require_static {
+            format!("{send_sync} + 'static")
+        } else {
+            send_sync
         };
         if ty.ownership() != sifr_type_system::OwnershipKind::Copy && convention.is_borrowed() {
             RustType::Ref {
