@@ -1,19 +1,18 @@
 use super::raw::OwnedPyBuffer;
-use super::{index_error, with_live_buffer, BufferHandle, PythonBufferElement, PythonError};
-use pyo3::Python;
+use super::{with_live_buffer, BufferAccessError, BufferHandle, PythonBufferElement, PythonError};
 use std::ptr;
 
 macro_rules! typed_buffer_accessors {
     ($read:ident, $write:ident, $copy:ident, $element:ident, $ty:ty) => {
         pub fn $read(buffer: BufferHandle, index: i64) -> Result<$ty, PythonError> {
-            with_live_buffer(buffer, PythonBufferElement::$element, false, |py, value| {
-                read_typed(py, value, index)
+            with_live_buffer(buffer, PythonBufferElement::$element, false, |value| {
+                read_typed(value, index)
             })
         }
 
         pub fn $write(buffer: BufferHandle, index: i64, value: $ty) -> Result<(), PythonError> {
-            with_live_buffer(buffer, PythonBufferElement::$element, true, |py, target| {
-                write_typed(py, target, index, value)
+            with_live_buffer(buffer, PythonBufferElement::$element, true, |target| {
+                write_typed(target, index, value)
             })
         }
 
@@ -22,8 +21,8 @@ macro_rules! typed_buffer_accessors {
             start: i64,
             length: i64,
         ) -> Result<Vec<$ty>, PythonError> {
-            with_live_buffer(buffer, PythonBufferElement::$element, false, |py, value| {
-                copy_typed_slice(py, value, start, length)
+            with_live_buffer(buffer, PythonBufferElement::$element, false, |value| {
+                copy_typed_slice(value, start, length)
             })
         }
     };
@@ -108,20 +107,16 @@ typed_buffer_accessors!(
 );
 
 pub fn copy_buffer_u8(buffer: BufferHandle) -> Result<Vec<u8>, PythonError> {
-    with_live_buffer(buffer, PythonBufferElement::U8, false, |py, value| {
-        copy_typed_range(py, value, 0, value.item_count())
+    with_live_buffer(buffer, PythonBufferElement::U8, false, |value| {
+        copy_typed_range(value, 0, value.item_count())
     })
 }
 
-fn read_typed<T: Copy>(
-    py: Python<'_>,
-    buffer: &OwnedPyBuffer,
-    index: i64,
-) -> Result<T, PythonError> {
-    let index = checked_index(py, index, buffer.item_count())?;
+fn read_typed<T: Copy>(buffer: &OwnedPyBuffer, index: i64) -> Result<T, BufferAccessError> {
+    let index = checked_index(index, buffer.item_count())?;
     let pointer = buffer
         .item_ptr(index)
-        .ok_or_else(|| index_error(py, "buffer index is out of bounds"))?;
+        .ok_or(BufferAccessError::Index("buffer index is out of bounds"))?;
     // SAFETY: acquisition validated the element format and width. The pointer
     // addresses one logical element and unaligned access handles arbitrary
     // valid PEP 3118 strides.
@@ -129,15 +124,14 @@ fn read_typed<T: Copy>(
 }
 
 fn write_typed<T: Copy>(
-    py: Python<'_>,
     buffer: &OwnedPyBuffer,
     index: i64,
     value: T,
-) -> Result<(), PythonError> {
-    let index = checked_index(py, index, buffer.item_count())?;
+) -> Result<(), BufferAccessError> {
+    let index = checked_index(index, buffer.item_count())?;
     let pointer = buffer
         .item_ptr(index)
-        .ok_or_else(|| index_error(py, "buffer index is out of bounds"))?;
+        .ok_or(BufferAccessError::Index("buffer index is out of bounds"))?;
     // SAFETY: write admission is checked against both the declaration and the
     // exporter request. Format/width validation and unaligned writes make this
     // valid for arbitrary accepted strides.
@@ -146,56 +140,52 @@ fn write_typed<T: Copy>(
 }
 
 fn copy_typed_slice<T: Copy>(
-    py: Python<'_>,
     buffer: &OwnedPyBuffer,
     start: i64,
     length: i64,
-) -> Result<Vec<T>, PythonError> {
-    let start = checked_index_inclusive(py, start, buffer.item_count())?;
+) -> Result<Vec<T>, BufferAccessError> {
+    let start = checked_index_inclusive(start, buffer.item_count())?;
     let length = usize::try_from(length)
-        .map_err(|_| index_error(py, "buffer slice length must be non-negative"))?;
+        .map_err(|_| BufferAccessError::Index("buffer slice length must be non-negative"))?;
     let end = start
         .checked_add(length)
         .filter(|end| *end <= buffer.item_count())
-        .ok_or_else(|| index_error(py, "buffer slice is out of bounds"))?;
-    copy_typed_range(py, buffer, start, end)
+        .ok_or(BufferAccessError::Index("buffer slice is out of bounds"))?;
+    copy_typed_range(buffer, start, end)
 }
 
 fn copy_typed_range<T: Copy>(
-    py: Python<'_>,
     buffer: &OwnedPyBuffer,
     start: usize,
     end: usize,
-) -> Result<Vec<T>, PythonError> {
+) -> Result<Vec<T>, BufferAccessError> {
     let mut values = Vec::with_capacity(end.saturating_sub(start));
     for index in start..end {
         let pointer = buffer
             .item_ptr(index)
-            .ok_or_else(|| index_error(py, "buffer slice is out of bounds"))?;
+            .ok_or(BufferAccessError::Index("buffer slice is out of bounds"))?;
         // SAFETY: identical to `read_typed`, repeated in logical C order.
         values.push(unsafe { ptr::read_unaligned(pointer.cast::<T>()) });
     }
     Ok(values)
 }
 
-fn checked_index(py: Python<'_>, index: i64, length: usize) -> Result<usize, PythonError> {
-    let index =
-        usize::try_from(index).map_err(|_| index_error(py, "buffer index must be non-negative"))?;
+fn checked_index(index: i64, length: usize) -> Result<usize, BufferAccessError> {
+    let index = usize::try_from(index)
+        .map_err(|_| BufferAccessError::Index("buffer index must be non-negative"))?;
     if index >= length {
-        return Err(index_error(py, "buffer index is out of bounds"));
+        return Err(BufferAccessError::Index("buffer index is out of bounds"));
     }
     Ok(index)
 }
 
-fn checked_index_inclusive(
-    py: Python<'_>,
-    index: i64,
-    length: usize,
-) -> Result<usize, PythonError> {
+fn checked_index_inclusive(index: i64, length: usize) -> Result<usize, BufferAccessError> {
     let index = usize::try_from(index)
-        .map_err(|_| index_error(py, "buffer slice start must be non-negative"))?;
+        .map_err(|_| BufferAccessError::Index("buffer slice start must be non-negative"))?;
     if index > length {
-        return Err(index_error(py, "buffer slice start is out of bounds"));
+        return Err(BufferAccessError::Index(
+            "buffer slice start is out of bounds",
+        ));
     }
     Ok(index)
 }

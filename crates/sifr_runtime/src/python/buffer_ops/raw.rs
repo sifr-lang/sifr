@@ -84,7 +84,7 @@ impl OwnedPyBuffer {
         }
         let dimensions = usize::try_from(raw.ndim)
             .map_err(|_| "exporter returned a negative dimension count".to_string())?;
-        if dimensions > ffi::PyBUF_MAX_NDIM {
+        if dimensions > buffer_dimension_limit(ffi::PyBUF_MAX_NDIM)? {
             return Err("exporter exceeds PyBUF_MAX_NDIM".to_string());
         }
         if len_bytes > 0 && raw.buf.is_null() {
@@ -189,6 +189,15 @@ impl Drop for OwnedPyBuffer {
 }
 
 type MetadataVectors = (Vec<usize>, Vec<isize>, Vec<isize>);
+
+fn buffer_dimension_limit<T>(limit: T) -> Result<usize, String>
+where
+    T: TryInto<usize>,
+{
+    limit
+        .try_into()
+        .map_err(|_| "PyBUF_MAX_NDIM does not fit usize".to_string())
+}
 
 fn metadata_vectors(raw: &ffi::Py_buffer, dimensions: usize) -> Result<MetadataVectors, String> {
     if dimensions == 0 {
@@ -421,6 +430,12 @@ mod tests {
         assert_eq!(native_endian(Some(b'<')), cfg!(target_endian = "little"));
         assert_eq!(native_endian(Some(b'>')), cfg!(target_endian = "big"));
         assert_eq!(native_endian(Some(b'!')), cfg!(target_endian = "big"));
+    }
+
+    #[test]
+    fn dimension_limit_accepts_both_supported_ffi_constant_types() {
+        assert_eq!(buffer_dimension_limit(64_i32), Ok(64));
+        assert_eq!(buffer_dimension_limit(64_usize), Ok(64));
     }
 
     #[test]

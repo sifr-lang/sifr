@@ -7,6 +7,13 @@ use crate::python::{
 use pyo3::types::PyAnyMethods;
 use pyo3::{ffi, Bound};
 use std::{mem::size_of, ptr};
+use std::{
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        mpsc, Arc, Barrier,
+    },
+    time::Duration,
+};
 
 #[test]
 fn buffer_view_tracks_metadata_copy_and_release() {
@@ -400,6 +407,51 @@ fn explicit_release_drops_export_even_when_a_runtime_snapshot_exists() {
 
     drop(snapshot);
     close_object(object).expect("close exporter");
+}
+
+#[test]
+fn error_conversion_runs_after_unlock_during_concurrent_release() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("buffer-error-release-race")).expect("init should succeed");
+
+    let object = from_bytes(&[1]).expect("bytes should be stored");
+    let view = buffer_u8(&object, false).expect("view should acquire");
+    let key = (view.handle, view.token);
+    let barrier = Arc::new(Barrier::new(2));
+    let release_barrier = Arc::clone(&barrier);
+    let (released_tx, released_rx) = mpsc::sync_channel(1);
+    let release_thread = std::thread::spawn(move || {
+        release_barrier.wait();
+        let result = release_buffer(key);
+        released_tx
+            .send(result)
+            .expect("error conversion observer should remain live");
+    });
+    let release_completed_during_conversion = Arc::new(AtomicBool::new(false));
+    let observed = Arc::clone(&release_completed_during_conversion);
+
+    let error = with_live_buffer_and_converter(
+        key,
+        PythonBufferElement::U8,
+        false,
+        |_value| Err::<(), _>(BufferAccessError::Index("forced bounds failure")),
+        |error| {
+            barrier.wait();
+            let converted = super::super::attach(|py| error.into_python(py));
+            if let Ok(result) = released_rx.recv_timeout(Duration::from_secs(2)) {
+                result.expect("concurrent release should succeed");
+                observed.store(true, Ordering::SeqCst);
+            }
+            converted
+        },
+    )
+    .expect_err("forced access failure should be converted");
+
+    release_thread.join().expect("release thread should finish");
+    assert!(release_completed_during_conversion.load(Ordering::SeqCst));
+    assert_eq!(error.exception_type, "IndexError");
+    close_object(object).expect("exporter should close");
 }
 
 fn python_i32_array(values: [i32; 3]) -> ObjectHandle {

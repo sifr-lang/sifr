@@ -117,15 +117,12 @@ impl TrackedBuffer {
         }
     }
 
-    fn release(&self, py: Python<'_>) -> Result<(), PythonError> {
-        let buffer = self
-            .buffer
+    fn take_for_release(&self) -> Result<OwnedPyBuffer, PythonError> {
+        self.buffer
             .lock()
             .map_err(|_| buffer_state_error())?
             .take()
-            .ok_or_else(|| closed_error(-1))?;
-        buffer.release(py);
-        super::update_object_count(-1).map_err(PythonError::runtime)
+            .ok_or_else(|| closed_error(-1))
     }
 }
 
@@ -282,7 +279,9 @@ pub fn release_buffer((handle, token): BufferHandle) -> Result<(), PythonError> 
         }
     }
     .ok_or_else(|| closed_error(handle))?;
-    super::attach(|py| entry.buffer.release(py)).map_err(PythonError::runtime)?
+    let buffer = entry.buffer.take_for_release()?;
+    super::attach(|py| buffer.release(py)).map_err(PythonError::runtime)?;
+    super::update_object_count(-1).map_err(PythonError::runtime)
 }
 
 fn buffer_snapshot(
@@ -350,32 +349,76 @@ where
         .collect()
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum BufferAccessError {
+    State,
+    Closed(i64),
+    Type(&'static str),
+    Buffer {
+        message: &'static str,
+        context: &'static str,
+    },
+    Index(&'static str),
+}
+
+impl BufferAccessError {
+    fn into_python(self, py: Python<'_>) -> PythonError {
+        match self {
+            Self::State => buffer_state_error(),
+            Self::Closed(handle) => closed_error(handle),
+            Self::Type(message) => type_error(py, message),
+            Self::Buffer { message, context } => buffer_error(py, message, context),
+            Self::Index(message) => index_error(py, message),
+        }
+    }
+}
+
 fn with_live_buffer<R>(
     buffer: BufferHandle,
     expected: PythonBufferElement,
     require_write: bool,
-    operation: impl FnOnce(Python<'_>, &OwnedPyBuffer) -> Result<R, PythonError>,
+    operation: impl FnOnce(&OwnedPyBuffer) -> Result<R, BufferAccessError>,
+) -> Result<R, PythonError> {
+    with_live_buffer_and_converter(buffer, expected, require_write, operation, |error| {
+        super::attach(|py| error.into_python(py))
+    })
+}
+
+fn with_live_buffer_and_converter<R>(
+    buffer: BufferHandle,
+    expected: PythonBufferElement,
+    require_write: bool,
+    operation: impl FnOnce(&OwnedPyBuffer) -> Result<R, BufferAccessError>,
+    convert_error: impl FnOnce(BufferAccessError) -> Result<PythonError, PythonRuntimeError>,
 ) -> Result<R, PythonError> {
     let (tracked, _) = buffer_snapshot(buffer)?;
-    super::attach(|py| {
-        let state = tracked.buffer.lock().map_err(|_| buffer_state_error())?;
-        let value = state.as_ref().ok_or_else(|| closed_error(buffer.0))?;
+    let outcome = super::attach(|_py| {
+        let state = tracked
+            .buffer
+            .lock()
+            .map_err(|_| BufferAccessError::State)?;
+        let value = state.as_ref().ok_or(BufferAccessError::Closed(buffer.0))?;
         if tracked.element != expected {
-            return Err(type_error(
-                py,
+            return Err(BufferAccessError::Type(
                 "buffer element type does not match accessor",
             ));
         }
         if require_write && tracked.access != PythonBufferAccess::Write {
-            return Err(buffer_error(
-                py,
-                "buffer was acquired with read-only declaration access",
-                "buffer element write",
-            ));
+            return Err(BufferAccessError::Buffer {
+                message: "buffer was acquired with read-only declaration access",
+                context: "buffer element write",
+            });
         }
-        operation(py, value)
+        operation(value)
     })
-    .map_err(PythonError::runtime)?
+    .map_err(PythonError::runtime)?;
+    match outcome {
+        Ok(value) => Ok(value),
+        Err(error) => {
+            let error = convert_error(error).map_err(PythonError::runtime)?;
+            Err(error)
+        }
+    }
 }
 
 fn buffer_error(py: Python<'_>, message: &str, context: &str) -> PythonError {
