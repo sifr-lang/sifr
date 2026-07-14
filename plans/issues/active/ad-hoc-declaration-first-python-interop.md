@@ -8,9 +8,11 @@ a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M8 are
 implemented, locally validated, reviewed, and linked below. Typed synchronous
 and asynchronous declarations and context managers run on the application-owned
-Python loop with structured cancellation and consuming cleanup; M9 and later
-milestones are not yet implemented.
-Milestones sequence delivery; they do not create reduced language versions,
+Python loop with structured cancellation and consuming cleanup; M9 is in
+progress and later milestones are not yet implemented.
+M9 current-thread and foreign-thread callback execution plus retained-owner
+integration are merged; asyncio dispatch and public activation remain in Wave
+3. Milestones sequence delivery; they do not create reduced language versions,
 temporary public contracts, dual authorities, or alternate lowering paths.
 
 The durable contracts are:
@@ -679,7 +681,10 @@ Delivery waves:
 - [x] Wave 1 — gated declaration/type contract, `AsyncCallable`, lifecycle
   substrate, and callback attachment plans ([PR #2974](https://github.com/sifr-lang/sifr/pull/2974);
   merged after focused coverage, frozen-diff review, and both authoritative local gates).
-- [ ] Wave 2 — gated current/foreign execution and retained-owner integration.
+- [x] Wave 2 — gated current/foreign execution and retained-owner integration
+  ([PR #2977](https://github.com/sifr-lang/sifr/pull/2977); merged after frozen-diff
+  review and both authoritative local gates, including 651/651 merge-profile
+  E2E fixtures and 261 hardening variants).
 - [ ] Wave 3 — asyncio execution, atomic activation, compiled evidence, demo,
   and documentation.
 - [ ] Milestone review — review the complete merged M9 implementation before
