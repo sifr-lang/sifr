@@ -170,6 +170,20 @@ pub(super) fn ensure_started() -> Result<(), PythonRuntimeError> {
     start()
 }
 
+pub(super) fn ensure_cleanup_submission_available() -> Result<(), PythonRuntimeError> {
+    {
+        let state = lock_state()?;
+        if matches!(
+            state.lifecycle,
+            AsyncLifecycle::Running | AsyncLifecycle::Stopping
+        ) && state.loop_object.is_some()
+        {
+            return Ok(());
+        }
+    }
+    start()
+}
+
 pub(super) fn is_owned_loop(
     py: Python<'_>,
     candidate: &Bound<'_, PyAny>,
@@ -392,7 +406,7 @@ fn cancellation_hook(bridge: &Arc<SubmissionCancellationBridge>) -> Cancellation
 }
 
 pub(super) fn shutdown() -> Result<(), PythonRuntimeError> {
-    let resources = {
+    let initial_failure = {
         let mut state = lock_state()?;
         match state.lifecycle {
             AsyncLifecycle::Disabled | AsyncLifecycle::Stopped => return Ok(()),
@@ -405,17 +419,11 @@ pub(super) fn shutdown() -> Result<(), PythonRuntimeError> {
         while !state.pending_submissions.is_empty() && state.lifecycle != AsyncLifecycle::Failed {
             state = wait_for_change(state)?;
         }
-        ShutdownResources {
-            loop_object: state.loop_object.take(),
-            loop_thread: state.loop_thread.take(),
-            failure: state.failure.take(),
-        }
+        state.failure.clone()
     };
     record_shutdown_phase(ShutdownPhase::AdmissionsStopped);
 
-    let mut first_error = resources
-        .failure
-        .map(PythonRuntimeError::AsyncRuntimeFailed);
+    let mut first_error = initial_failure.map(PythonRuntimeError::AsyncRuntimeFailed);
     record_shutdown_phase(ShutdownPhase::CallbackShutdown);
     retain_first_error(
         &mut first_error,
@@ -426,6 +434,21 @@ pub(super) fn shutdown() -> Result<(), PythonRuntimeError> {
         &mut first_error,
         super::shutdown_hooks::run_registered_async_cleanup(),
     );
+
+    let resources = {
+        let mut state = lock_state()?;
+        ShutdownResources {
+            loop_object: state.loop_object.take(),
+            loop_thread: state.loop_thread.take(),
+            failure: state.failure.take(),
+        }
+    };
+    if let Some(message) = resources.failure.as_ref() {
+        retain_first_error(
+            &mut first_error,
+            Err(PythonRuntimeError::AsyncRuntimeFailed(message.clone())),
+        );
+    }
 
     record_shutdown_phase(ShutdownPhase::SubmissionCancellation);
     if let Err(error) = cancel_registered_submissions() {
@@ -579,8 +602,25 @@ pub(super) fn reserve_submission(
     py: Python<'_>,
     terminal: &PythonTerminal,
 ) -> Result<(u64, Py<PyAny>), PythonRuntimeError> {
+    reserve_submission_with_admission(py, terminal, false)
+}
+
+pub(super) fn reserve_cleanup_submission(
+    py: Python<'_>,
+    terminal: &PythonTerminal,
+) -> Result<(u64, Py<PyAny>), PythonRuntimeError> {
+    reserve_submission_with_admission(py, terminal, true)
+}
+
+fn reserve_submission_with_admission(
+    py: Python<'_>,
+    terminal: &PythonTerminal,
+    shutdown_cleanup: bool,
+) -> Result<(u64, Py<PyAny>), PythonRuntimeError> {
     let mut state = lock_state()?;
-    if state.lifecycle != AsyncLifecycle::Running {
+    let admitted = state.lifecycle == AsyncLifecycle::Running
+        || (shutdown_cleanup && state.lifecycle == AsyncLifecycle::Stopping);
+    if !admitted {
         return Err(if state.lifecycle == AsyncLifecycle::Stopping {
             PythonRuntimeError::AsyncRuntimeStopping
         } else {

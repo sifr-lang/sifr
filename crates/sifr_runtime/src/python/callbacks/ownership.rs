@@ -253,7 +253,7 @@ fn unregister_action(object: ObjectHandle, cleanup: RetainedCallbackCleanup) -> 
                 object.clone(),
                 "aclose".to_string(),
             )?;
-            super::super::async_declaration::submit_async_declaration_blocking(request)
+            super::super::async_declaration::submit_async_declaration_cleanup_blocking(request)
                 .map(|_value| ())
         }
         RetainedCallbackCleanup::AsyncContext => {
@@ -262,7 +262,7 @@ fn unregister_action(object: ObjectHandle, cleanup: RetainedCallbackCleanup) -> 
                     object.clone(),
                     super::super::PythonAsyncExitCause::Normal,
                 )?;
-            super::super::async_declaration::submit_async_context_request_blocking(request)
+            super::super::async_declaration::submit_async_context_cleanup_blocking(request)
                 .map(|_decision| ())
         }
     })

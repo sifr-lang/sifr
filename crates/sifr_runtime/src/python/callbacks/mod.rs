@@ -1,4 +1,5 @@
 mod asyncio;
+mod asyncio_entry;
 #[cfg(test)]
 mod asyncio_tests;
 mod current;

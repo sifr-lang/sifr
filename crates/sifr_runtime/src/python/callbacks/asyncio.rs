@@ -1,9 +1,10 @@
+use super::asyncio_entry::AsyncioCallbackEntry;
 use super::execution::{
     collect_args, execution_error, python_error, result_object, validate_call_shape,
     CallbackExecutionError,
 };
 use super::{errors, CallbackInvocationLease, CallbackOwnerState};
-use crate::cancellation::{CancellationBind, CancellationCarrier};
+use crate::cancellation::CancellationCarrier;
 use crate::python::{object_ops, ObjectHandle, PythonError, PythonRuntimeError};
 use pyo3::prelude::*;
 use pyo3::types::{PyCFunction, PyDict, PyTuple};
@@ -290,8 +291,16 @@ where
                     erase_future_lifetime(prepared.invoke(entry_sequence, cancellation.clone()))
                 };
                 let future = loop_object.call_method0("create_future")?;
-                let cancel_carrier = cancellation.clone();
-                let cancel_callback = PyCFunction::new_closure(
+                let entry = AsyncioCallbackEntry::register(
+                    &shell_owner,
+                    entry_sequence,
+                    cancellation,
+                    loop_object.clone().unbind(),
+                    future.clone().unbind(),
+                )
+                .map_err(python_error)?;
+                let callback_entry = Arc::clone(&entry);
+                let cancel_callback = match PyCFunction::new_closure(
                     py,
                     Some(c"__sifr_asyncio_callback_cancel"),
                     None,
@@ -300,15 +309,28 @@ where
                             .get_item(0)?
                             .call_method0("cancelled")?
                             .extract::<bool>()?;
-                        if cancelled {
-                            let _outcome = cancel_carrier.request_cancel();
-                        }
+                        callback_entry.python_finished(cancelled);
                         Ok::<(), PyErr>(())
                     },
-                )?;
-                future.call_method1("add_done_callback", (cancel_callback,))?;
+                ) {
+                    Ok(callback) => callback,
+                    Err(error) => {
+                        entry.setup_failed();
+                        return Err(error);
+                    }
+                };
+                if let Err(error) = future.call_method1("add_done_callback", (cancel_callback,)) {
+                    entry.setup_failed();
+                    return Err(error);
+                }
                 let serial_ticket = if concurrency == AsyncioCallbackConcurrency::Serial {
-                    Some(AsyncFifo::reserve(&fifo).map_err(python_error)?)
+                    match AsyncFifo::reserve(&fifo) {
+                        Ok(ticket) => Some(ticket),
+                        Err(error) => {
+                            entry.setup_failed();
+                            return Err(python_error(error));
+                        }
+                    }
                 } else {
                     None
                 };
@@ -319,24 +341,32 @@ where
                 let task_loop = loop_object.clone().unbind();
                 let task_python_future = future.clone().unbind();
                 let task_owner = shell_owner.clone();
-                let task = runtime.spawn(async move {
+                let worker = runtime.spawn(async move {
                     let _permit = match serial_ticket {
                         Some(ticket) => Some(ticket.await),
                         None => None,
                     };
-                    let completion = task_future.await;
-                    schedule_completion(task_loop, task_python_future, task_owner, completion);
+                    task_future.await
                 });
-                let abort = task.abort_handle();
-                match cancellation.bind_fallback(Arc::new(move || abort.abort())) {
-                    CancellationBind::Bound | CancellationBind::InvokedPendingCancellation => {}
-                    CancellationBind::AlreadyBound | CancellationBind::StateUnavailable => {
-                        task.abort();
-                        return Err(python_error(errors::unavailable(
-                            "asyncio cancellation fallback",
-                        )));
+                entry.install_worker_abort(worker.abort_handle());
+                let supervisor_entry = Arc::clone(&entry);
+                let _supervisor = runtime.spawn(async move {
+                    match worker.await {
+                        Ok(completion) => {
+                            if schedule_completion(
+                                task_loop,
+                                task_python_future,
+                                task_owner,
+                                completion,
+                            ) {
+                                supervisor_entry.task_finished();
+                            } else {
+                                supervisor_entry.task_aborted();
+                            }
+                        }
+                        Err(_join_error) => supervisor_entry.task_aborted(),
                     }
-                }
+                });
                 Ok(future.unbind())
             },
         )
@@ -419,7 +449,7 @@ fn schedule_completion(
     future: Py<PyAny>,
     owner: CallbackOwnerState,
     completion: InvocationCompletion,
-) {
+) -> bool {
     let state = Arc::new(Mutex::new(Some(completion)));
     let attached = Python::try_attach(|py| {
         let callback_state = Arc::clone(&state);
@@ -486,7 +516,9 @@ fn schedule_completion(
                 .unwrap_or_else(std::sync::PoisonError::into_inner)
                 .take(),
         );
+        return false;
     }
+    true
 }
 
 #[derive(Default)]

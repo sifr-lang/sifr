@@ -1,6 +1,6 @@
 use super::{
     asyncio_callback_scoped_with_owner, asyncio_callback_with_owner, AsyncioCallbackConcurrency,
-    CallbackExecutionError, CallbackOwnerState, RetainedCallbackGroup,
+    CallbackExecutionError, CallbackOwnerState, CallbackOwnerStatus, RetainedCallbackGroup,
 };
 use crate::cancellation::CancellationCarrier;
 use crate::python::{
@@ -153,7 +153,55 @@ async fn serial_reentrancy_is_rejected_before_waiting_for_the_fifo() {
 }
 
 #[tokio::test(flavor = "current_thread")]
-async fn retained_asyncio_rollback_drains_without_blocking_the_executor() {
+async fn call_scoped_close_cancels_and_joins_an_active_asyncio_callback() {
+    let _guard = test_guard();
+    initialize_callback_runtime("asyncio-callback-call-close");
+    let started = Arc::new(tokio::sync::Notify::new());
+    let release = Arc::new(tokio::sync::Notify::new());
+    let started_by_handler = Arc::clone(&started);
+    let release_by_handler = Arc::clone(&release);
+    let owner = CallbackOwnerState::new_call_scoped().expect("owner should create");
+    let callback = asyncio_callback_scoped_with_owner(
+        owner.clone(),
+        4,
+        1,
+        AsyncioCallbackConcurrency::Parallel,
+        |args| crate::python::to_int(&args[0]),
+        move |_, value, _| {
+            let started = Arc::clone(&started_by_handler);
+            let release = Arc::clone(&release_by_handler);
+            async move {
+                started.notify_one();
+                release.notified().await;
+                Ok(value)
+            }
+        },
+        crate::python::from_int,
+    )
+    .expect("asyncio callback should create");
+    let request = function_request(
+        "invoke_catching_cancel",
+        vec![
+            async_from_object(callback.object()).expect("callback transport"),
+            async_from_int(41).expect("argument transport"),
+        ],
+    );
+
+    let controller = async {
+        started.notified().await;
+        callback.close_call_scope().await
+    };
+    let (invocation, close) = tokio::join!(submit_async_declaration(request, None), controller);
+    close.expect("call-scoped close should cancel and join the invocation");
+    let value = async_to_int(invocation.expect("Python should observe callback cancellation"))
+        .expect("cancellation result should convert");
+    assert_eq!(value, -1);
+    assert_eq!(owner.status(), CallbackOwnerStatus::Closed);
+    reset_runtime_state_for_tests();
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn retained_asyncio_rollback_cancels_and_joins_without_blocking_the_executor() {
     let _guard = test_guard();
     initialize_callback_runtime("asyncio-callback-retained-rollback");
     let started = Arc::new(tokio::sync::Notify::new());
@@ -163,7 +211,7 @@ async fn retained_asyncio_rollback_drains_without_blocking_the_executor() {
     let mut group = RetainedCallbackGroup::new().expect("retained group should create");
     let callback = asyncio_callback_with_owner(
         group.owner().clone(),
-        4,
+        5,
         1,
         AsyncioCallbackConcurrency::Parallel,
         |args| crate::python::to_int(&args[0]),
@@ -183,7 +231,7 @@ async fn retained_asyncio_rollback_drains_without_blocking_the_executor() {
         .retain_in_owner()
         .expect("retained callback should transfer into its owner");
     let request = function_request(
-        "invoke",
+        "invoke_catching_cancel",
         vec![
             async_from_object(callback.object()).expect("callback transport"),
             async_from_int(41).expect("argument transport"),
@@ -192,19 +240,13 @@ async fn retained_asyncio_rollback_drains_without_blocking_the_executor() {
 
     let controller = async {
         started.notified().await;
-        let release_task = tokio::spawn(async move {
-            tokio::task::yield_now().await;
-            release.notify_one();
-        });
-        let outcome = group.rollback_async().await;
-        release_task.await.expect("release task should complete");
-        outcome
+        group.rollback_async().await
     };
     let (invocation, rollback) = tokio::join!(submit_async_declaration(request, None), controller);
-    rollback.expect("retained rollback should drain accepted invocation");
-    let value = async_to_int(invocation.expect("accepted callback should complete"))
-        .expect("callback result should convert");
-    assert_eq!(value, 42);
+    rollback.expect("retained rollback should cancel and join the invocation");
+    let value = async_to_int(invocation.expect("Python should observe callback cancellation"))
+        .expect("cancellation result should convert");
+    assert_eq!(value, -1);
     reset_runtime_state_for_tests();
 }
 
@@ -221,7 +263,7 @@ fn initialize_callback_runtime(label: &str) {
 fn install_module(py: Python<'_>) {
     let module = PyModule::from_code(
         py,
-        c"import asyncio\n\nstored = None\n\nasync def invoke(callback, value):\n    return await callback(value)\n\nasync def cancel(callback):\n    task = asyncio.ensure_future(callback(1))\n    await asyncio.sleep(0)\n    task.cancel()\n    try:\n        await task\n    except asyncio.CancelledError:\n        return 1\n    return 0\n\nasync def install_and_invoke(callback):\n    global stored\n    stored = callback\n    return await callback(1)\n\nasync def reenter():\n    return await stored(2)\n",
+        c"import asyncio\n\nstored = None\n\nasync def invoke(callback, value):\n    return await callback(value)\n\nasync def invoke_catching_cancel(callback, value):\n    try:\n        return await callback(value)\n    except asyncio.CancelledError:\n        return -1\n\nasync def cancel(callback):\n    task = asyncio.ensure_future(callback(1))\n    await asyncio.sleep(0)\n    task.cancel()\n    try:\n        await task\n    except asyncio.CancelledError:\n        return 1\n    return 0\n\nasync def install_and_invoke(callback):\n    global stored\n    stored = callback\n    return await callback(1)\n\nasync def reenter():\n    return await stored(2)\n",
         c"__sifr_asyncio_callback_tests__.py",
         c"__sifr_asyncio_callback_tests__",
     )

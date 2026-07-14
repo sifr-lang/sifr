@@ -1,12 +1,14 @@
 use super::super::PythonError;
 use super::{errors, registry};
 use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use tokio::sync::Notify;
 
 type UnregisterAction = Arc<dyn Fn() -> Result<(), PythonError> + Send + Sync + 'static>;
 type CaptureReleaseAction = Box<dyn FnOnce() + Send + 'static>;
+type AsyncCancellationAction = Arc<dyn Fn() + Send + Sync + 'static>;
 
 static NEXT_OWNER_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -51,6 +53,12 @@ struct OwnerData {
     first_failure_observed: bool,
     captures_released: bool,
     unregister_status: CallbackUnregisterStatus,
+    async_entries: BTreeMap<u64, AsyncEntry>,
+}
+
+struct AsyncEntry {
+    cancel: AsyncCancellationAction,
+    cancellation_requested: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -77,6 +85,12 @@ pub struct CallbackInvocationGuard {
 pub struct CallbackInvocationPollGuard {
     owner_id: u64,
     callback_id: u64,
+    active: bool,
+}
+
+pub(super) struct CallbackAsyncEntryLease {
+    owner: CallbackOwnerState,
+    entry_sequence: u64,
     active: bool,
 }
 
@@ -131,6 +145,7 @@ impl CallbackOwnerState {
                 first_failure_observed: false,
                 captures_released: false,
                 unregister_status: CallbackUnregisterStatus::NotStarted,
+                async_entries: BTreeMap::new(),
             }),
             changed: Condvar::new(),
             async_changed: Notify::new(),
@@ -204,6 +219,38 @@ impl CallbackOwnerState {
             return Err(errors::reentrant(self.inner.id, callback_id));
         }
         Ok(())
+    }
+
+    pub(super) fn register_async_entry(
+        &self,
+        entry_sequence: u64,
+        cancel: AsyncCancellationAction,
+    ) -> Result<CallbackAsyncEntryLease, PythonError> {
+        let cancel_now = {
+            let mut state = lock_state(&self.inner);
+            if state.async_entries.contains_key(&entry_sequence) {
+                return Err(errors::unavailable("async callback entry identity"));
+            }
+            let cancel_now = state.status != CallbackOwnerStatus::Open;
+            state.async_entries.insert(
+                entry_sequence,
+                AsyncEntry {
+                    cancel: Arc::clone(&cancel),
+                    cancellation_requested: cancel_now,
+                },
+            );
+            self.inner.changed.notify_all();
+            self.inner.async_changed.notify_waiters();
+            cancel_now
+        };
+        if cancel_now {
+            cancel();
+        }
+        Ok(CallbackAsyncEntryLease {
+            owner: self.clone(),
+            entry_sequence,
+            active: true,
+        })
     }
 
     pub fn close_call_scope(&self) -> Result<(), PythonError> {
@@ -390,12 +437,22 @@ impl CallbackOwnerState {
                 state.status = CallbackOwnerStatus::Closing;
             }
         }
-        while state.active_calls > 0 {
-            state = self
-                .inner
-                .changed
-                .wait(state)
-                .unwrap_or_else(std::sync::PoisonError::into_inner);
+        loop {
+            let cancellations = pending_async_cancellations(&mut state);
+            if state.active_calls == 0 && state.async_entries.is_empty() {
+                break;
+            }
+            if cancellations.is_empty() {
+                state = self
+                    .inner
+                    .changed
+                    .wait(state)
+                    .unwrap_or_else(std::sync::PoisonError::into_inner);
+            } else {
+                drop(state);
+                invoke_cancellations(cancellations);
+                state = lock_state(&self.inner);
+            }
         }
         drop(state);
         let releases = std::mem::take(
@@ -462,7 +519,16 @@ impl CallbackOwnerState {
         }
         loop {
             let notified = self.inner.async_changed.notified();
-            if lock_state(&self.inner).active_calls == 0 {
+            let (finished, cancellations) = {
+                let mut state = lock_state(&self.inner);
+                let cancellations = pending_async_cancellations(&mut state);
+                (
+                    state.active_calls == 0 && state.async_entries.is_empty(),
+                    cancellations,
+                )
+            };
+            invoke_cancellations(cancellations);
+            if finished {
                 break;
             }
             notified.await;
@@ -552,6 +618,19 @@ impl Drop for CallbackInvocationLease {
     }
 }
 
+impl Drop for CallbackAsyncEntryLease {
+    fn drop(&mut self) {
+        if !self.active {
+            return;
+        }
+        self.active = false;
+        let mut state = lock_state(&self.owner.inner);
+        state.async_entries.remove(&self.entry_sequence);
+        self.owner.inner.changed.notify_all();
+        self.owner.inner.async_changed.notify_waiters();
+    }
+}
+
 impl Drop for CallbackInvocationGuard {
     fn drop(&mut self) {
         if !self.active {
@@ -618,6 +697,26 @@ fn remove_active_callback(owner_id: u64, callback_id: u64) {
             active.remove(index);
         }
     });
+}
+
+fn pending_async_cancellations(state: &mut OwnerData) -> Vec<AsyncCancellationAction> {
+    state
+        .async_entries
+        .values_mut()
+        .filter_map(|entry| {
+            if entry.cancellation_requested {
+                return None;
+            }
+            entry.cancellation_requested = true;
+            Some(Arc::clone(&entry.cancel))
+        })
+        .collect()
+}
+
+fn invoke_cancellations(cancellations: Vec<AsyncCancellationAction>) {
+    for cancel in cancellations {
+        cancel();
+    }
 }
 
 fn lock_state(owner: &CallbackOwnerInner) -> std::sync::MutexGuard<'_, OwnerData> {
