@@ -1,10 +1,13 @@
 use super::{
     body_contains_yield, collect_mutated_vars_with_sigs, collect_reassigned_vars,
-    python_callback_bounds::python_callback_bound_param_names, HirFunction, HirStmt, OwnershipKind,
-    RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, Type, Visibility,
+    python_callback_bounds::{
+        python_callback_bound_param_names, python_callback_static_param_names,
+    },
+    HirFunction, HirStmt, OwnershipKind, RustEmitter, RustExpr, RustItem, RustLiteral, RustParam,
+    RustStmt, RustType, Type, Visibility,
 };
 use crate::python_interop_common::python_omit_parameter_indices;
-use crate::python_interop_direct::python_interop_function_body;
+use crate::python_interop_direct::python_interop_function_body_with_retained_errors;
 use crate::rust_interop_direct::rust_interop_function_body;
 use std::collections::HashSet;
 impl RustEmitter {
@@ -309,6 +312,7 @@ impl RustEmitter {
         self.apply_mutable_param_shadowing(&mutable_param_shadows);
 
         let callback_bound_params = python_callback_bound_param_names(func);
+        let callback_static_params = python_callback_static_param_names(func);
         let python_omit_params = func
             .python_interop
             .first()
@@ -320,7 +324,11 @@ impl RustEmitter {
             .enumerate()
             .map(|(param_idx, param)| {
                 let rust_ty = if callback_bound_params.contains(&param.name) {
-                    self.lower_python_callback_param_type(&param.ty, param.convention)
+                    self.lower_python_callback_param_type(
+                        &param.ty,
+                        param.convention,
+                        callback_static_params.contains(&param.name),
+                    )
                 } else {
                     self.lower_module_function_param_type(&func.name, param_idx, param)
                 };
@@ -343,8 +351,12 @@ impl RustEmitter {
             })
             .collect::<Vec<_>>();
 
-        let interop_body = python_interop_function_body(func, &self.python_opaque_classes)
-            .or_else(|| rust_interop_function_body(func));
+        let interop_body = python_interop_function_body_with_retained_errors(
+            func,
+            &self.python_opaque_classes,
+            &self.python_retained_callback_errors,
+        )
+        .or_else(|| rust_interop_function_body(func));
         let interop_body_supplied = interop_body.is_some();
         let mut lowered_body = if let Some(interop_body) = interop_body {
             interop_body

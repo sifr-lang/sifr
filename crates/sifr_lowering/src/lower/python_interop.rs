@@ -26,6 +26,14 @@ pub(in crate::lower) use stub_syntax::{
     is_bodyless_python_coroutine,
 };
 
+pub(in crate::lower) fn validate_retained_callback_owner_errors(
+    functions: &[sifr_ir::HirFunction],
+    classes: &[sifr_ir::HirClass],
+    ctx: &mut LowerCtx,
+) {
+    callbacks::validate_retained_owner_error_channels(functions, classes, ctx);
+}
+
 pub(in crate::lower) fn is_python_omit(expr: &Expr) -> bool {
     decorator_path(expr).is_some_and(|path| path == ["python", "omit"])
 }

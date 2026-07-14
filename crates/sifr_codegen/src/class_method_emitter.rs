@@ -2,7 +2,7 @@ use crate::{
     function_emitter::{is_result_int_type, result_int_return_type_to_sifr_int, result_method_key},
     helpers::{body_contains_field_assign_codegen, collect_mutated_vars_with_sigs},
     hir_analysis::traversal::{self, TraversalConfig},
-    python_interop_direct::python_interop_method_body,
+    python_interop_direct::python_interop_method_body_with_retained_errors,
     rust_interop_direct::rust_interop_method_body,
     RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
     Visibility,
@@ -277,6 +277,20 @@ impl RustEmitter {
         param_ty: &Type,
         convention: ParamConvention,
     ) -> RustType {
+        if let Some(callback) = method
+            .python_interop
+            .iter()
+            .flat_map(|declaration| &declaration.callbacks)
+            .find(|callback| callback.parameter_name == param_name)
+        {
+            if callback.dispatch == sifr_ir::PythonCallbackDispatch::Foreign {
+                return self.lower_python_callback_param_type(
+                    param_ty,
+                    convention,
+                    callback.lifetime != sifr_ir::PythonCallbackLifetime::Call,
+                );
+            }
+        }
         if method.name == "new" {
             let is_recursive = self
                 .recursive_fields
@@ -774,10 +788,14 @@ impl RustEmitter {
             );
         }
 
-        let mut body = if let Some(interop_body) = python_interop_method_body(
+        let mut body = if let Some(interop_body) = python_interop_method_body_with_retained_errors(
             method,
             &self.python_opaque_classes,
             class.python_opaque_declaration(),
+            &self.python_retained_callback_errors,
+            self.python_retained_callback_errors
+                .get(&class.name)
+                .map_or(&[], Vec::as_slice),
         ) {
             interop_body
         } else if let Some(interop_body) = rust_interop_method_body(method) {

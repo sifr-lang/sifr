@@ -86,8 +86,10 @@ pub use preamble::*;
 mod python_interop_async;
 #[cfg(test)]
 mod python_interop_async_tests;
+mod python_interop_callbacks;
 mod python_interop_common;
 mod python_interop_direct;
+mod python_interop_direct_conversions;
 #[cfg(test)]
 mod python_interop_direct_tests;
 mod python_interop_plan;

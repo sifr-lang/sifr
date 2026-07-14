@@ -1,7 +1,7 @@
 use super::object_ops::*;
 use super::{
     initialize_runtime, list_items, record_field, reset_runtime_state_for_tests, semantic_close,
-    shutdown_diagnostics, test_config, test_guard, PythonRuntimeDiagnostics,
+    shutdown_diagnostics, test_config, test_guard, tuple_items_exact, PythonRuntimeDiagnostics,
 };
 
 #[test]
@@ -190,6 +190,10 @@ fn recursive_handles_report_exact_nested_paths_and_required_record_fields() {
     let error = to_int(&inner_item).expect_err("nested conversion should fail");
     assert!(error.context.contains("[0][0]"), "{error:?}");
 
+    let tuple = from_tuple(std::slice::from_ref(&bad)).expect("tuple should be stored");
+    let tuple_error = tuple_items_exact(&tuple, 2).expect_err("wrong tuple arity should fail");
+    assert!(tuple_error.message.contains("tuple of length 2"));
+
     let record = from_record(&[("present", bad.clone()), ("extra", bad.clone())])
         .expect("record should be stored");
     let present = record_field(&record, "present").expect("required field should extract");
@@ -198,7 +202,9 @@ fn recursive_handles_report_exact_nested_paths_and_required_record_fields() {
     drop(error);
     drop(missing);
 
-    for handle in [bad, inner, outer, outer_item, inner_item, record, present] {
+    for handle in [
+        bad, inner, outer, outer_item, inner_item, tuple, record, present,
+    ] {
         close_object(handle).expect("object should close");
     }
     assert_eq!(

@@ -347,19 +347,22 @@ class PythonError(Error):
 class Client:
     @python.callback(handler, lifetime=Self, dispatch=foreign, concurrency=serial)
     @python(Self.register)
-    def register(self, handler: Callable[[int], int]) -> Result[None, PythonError]: ...
+    def register(self, own handler: Callable[[int], int]) -> Result[None, PythonError]: ...
 
     @python(Self.close)
     def close(own self) -> Result[None, PythonError]: ...
 
 @python.callback(handler, lifetime=result, dispatch=foreign, concurrency=parallel)
 @python(pkg.create)
-def create(handler: Callable[[int], int]) -> Result[Client, PythonError]: ...
+def create(own handler: Callable[[int], int]) -> Result[Client, PythonError]: ...
 ",
     );
-    assert!(!errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYCB_INVALID_DECLARATION)));
+    assert!(
+        !errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::PYCB_INVALID_DECLARATION)),
+        "unexpected diagnostics: {errors:?}"
+    );
     assert_eq!(
         errors
             .iter()
@@ -397,4 +400,29 @@ class Client:
             "`lifetime=Self` is valid only on an opaque receiver method",
         );
     }
+}
+
+#[test]
+fn retained_handler_error_must_be_declared_by_owner_cleanup() {
+    assert_callback_error(
+        r"
+class PythonError(Error):
+    message: str
+
+class HandlerError(Error):
+    message: str
+
+@python.opaque(type=pkg.Subscription, cleanup=close)
+class Subscription:
+    @python(Self.close)
+    def close(own self) -> Result[None, PythonError]: ...
+
+@python.callback(handler, lifetime=result, dispatch=foreign, concurrency=serial)
+@python(pkg.subscribe)
+def subscribe(
+    own handler: Callable[[int], Result[int, HandlerError]],
+) -> Result[Subscription, PythonError | HandlerError]: ...
+",
+        "owner cleanup `Subscription.close` error channel must contain handler error `HandlerError`",
+    );
 }

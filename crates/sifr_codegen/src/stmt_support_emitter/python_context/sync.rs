@@ -1,4 +1,5 @@
 use crate::hir_analysis::queries;
+use crate::python_interop_callbacks::failure_reconciliation_stmt;
 use crate::python_interop_direct::{mapped_try, output_value_expr, runtime_call};
 use crate::{HirStmt, RustEmitter, RustExpr, RustStmt, Type};
 use crate::{RustLiteral, RustMatchArm, RustType, RustWithItem};
@@ -120,10 +121,22 @@ impl RustEmitter {
         let outcome = format!("__sifr_python_context_outcome_{suffix}");
         let error = format!("__sifr_python_context_error_{suffix}");
         let cleanup = format!("__sifr_python_context_cleanup_{suffix}");
+        let owner_retained_errors = match item.context.ty().resolve_alias() {
+            Type::Class { name, .. } => self
+                .python_retained_callback_errors
+                .get(name)
+                .cloned()
+                .unwrap_or_default(),
+            _ => Vec::new(),
+        };
 
         let manager_handle = || RustExpr::Field {
             expr: Box::new(RustExpr::Ident(manager.clone())),
             field: "__sifr_python_object".to_string(),
+        };
+        let manager_callbacks = || RustExpr::Field {
+            expr: Box::new(RustExpr::Ident(manager.clone())),
+            field: "__sifr_python_callbacks".to_string(),
         };
         let entered = output_value_expr(
             &entered_raw,
@@ -152,6 +165,7 @@ impl RustEmitter {
 
         let conversion_error_body = Self::non_python_error_exit_body(
             manager_handle(),
+            manager_callbacks(),
             &error,
             &cleanup,
             &active_error_type,
@@ -184,17 +198,26 @@ impl RustEmitter {
         };
 
         let normal_exit = || {
-            RustStmt::Expr(mapped_try(
-                runtime_call("context_exit_normal", vec![manager_handle()]),
+            Self::normal_context_exit_body(
+                &RustExpr::Ident(manager.clone()),
                 exit_error_type,
-            ))
+                &owner_retained_errors,
+                suffix,
+            )
         };
         let can_break_or_continue = !self.loop_else_stack.is_empty();
         let active_error_body = if active_is_python_error {
-            Self::python_error_exit_body(manager_handle(), &error, &cleanup, &active_error_type)
+            Self::python_error_exit_body(
+                manager_handle(),
+                manager_callbacks(),
+                &error,
+                &cleanup,
+                &active_error_type,
+            )
         } else {
             Self::non_python_error_exit_body(
                 manager_handle(),
+                manager_callbacks(),
                 &error,
                 &cleanup,
                 &active_error_type,
@@ -206,17 +229,20 @@ impl RustEmitter {
             pattern: "Ok(Ok(None))".to_string(),
             bindings: vec![],
             guard: None,
-            body: vec![normal_exit()],
+            body: normal_exit(),
         }];
         if self.try_closure_depth > 0 {
             outcome_arms.push(RustMatchArm {
                 pattern: "Ok(Ok(Some(__sifr_context_return)))".to_string(),
                 bindings: vec!["__sifr_context_return".to_string()],
                 guard: None,
-                body: vec![
-                    normal_exit(),
-                    RustStmt::Return(Some(RustExpr::Ident("__sifr_context_return".to_string()))),
-                ],
+                body: {
+                    let mut exit = normal_exit();
+                    exit.push(RustStmt::Return(Some(RustExpr::Ident(
+                        "__sifr_context_return".to_string(),
+                    ))));
+                    exit
+                },
             });
         } else {
             outcome_arms.push(RustMatchArm {
@@ -237,13 +263,21 @@ impl RustEmitter {
                     pattern: "Ok(Err(false))".to_string(),
                     bindings: vec![],
                     guard: None,
-                    body: vec![normal_exit(), RustStmt::Break],
+                    body: {
+                        let mut exit = normal_exit();
+                        exit.push(RustStmt::Break);
+                        exit
+                    },
                 },
                 RustMatchArm {
                     pattern: "Ok(Err(true))".to_string(),
                     bindings: vec![],
                     guard: None,
-                    body: vec![normal_exit(), RustStmt::Continue],
+                    body: {
+                        let mut exit = normal_exit();
+                        exit.push(RustStmt::Continue);
+                        exit
+                    },
                 },
             ]);
         } else {
@@ -368,8 +402,79 @@ impl RustEmitter {
         format!("Result<{ok_type}, {error_type}>")
     }
 
+    fn normal_context_exit_body(
+        manager: &RustExpr,
+        exit_error_type: &Type,
+        owner_retained_errors: &[Type],
+        suffix: usize,
+    ) -> Vec<RustStmt> {
+        let owner = format!("__sifr_python_context_callback_owner_{suffix}");
+        let manager_handle = RustExpr::Field {
+            expr: Box::new(manager.clone()),
+            field: "__sifr_python_object".to_string(),
+        };
+        let manager_callbacks = RustExpr::Field {
+            expr: Box::new(manager.clone()),
+            field: "__sifr_python_callbacks".to_string(),
+        };
+        let mut body = Vec::new();
+        if !owner_retained_errors.is_empty() {
+            body.push(RustStmt::Let {
+                mutable: false,
+                name: owner.clone(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(manager_callbacks.clone()),
+                    method: "owner".to_string(),
+                    args: Vec::new(),
+                },
+            });
+            for index in 0..owner_retained_errors.len() {
+                body.push(RustStmt::Let {
+                    mutable: false,
+                    name: format!("__sifr_python_context_callback_failure_{suffix}_{index}"),
+                    ty: None,
+                    value: RustExpr::Field {
+                        expr: Box::new(manager.clone()),
+                        field: format!("__sifr_python_callback_failure_{index}"),
+                    },
+                });
+            }
+        }
+        body.push(RustStmt::Expr(mapped_try(
+            runtime_call(
+                "context_exit_normal_with_callbacks",
+                vec![manager_handle, manager_callbacks],
+            ),
+            exit_error_type,
+        )));
+        if !owner_retained_errors.is_empty() {
+            body.push(RustStmt::IfLet {
+                pattern: "Some(__sifr_python_context_callback_owner_value)".to_string(),
+                expr: RustExpr::Ident(owner),
+                then_body: owner_retained_errors
+                    .iter()
+                    .enumerate()
+                    .map(|(index, handler_error_type)| {
+                        failure_reconciliation_stmt(
+                            &format!("__sifr_python_context_callback_failure_{suffix}_{index}"),
+                            handler_error_type,
+                            exit_error_type,
+                            RustExpr::Ident(
+                                "__sifr_python_context_callback_owner_value".to_string(),
+                            ),
+                        )
+                    })
+                    .collect(),
+                else_body: None,
+            });
+        }
+        body
+    }
+
     fn python_error_exit_body(
         manager_handle: RustExpr,
+        manager_callbacks: RustExpr,
         error: &str,
         cleanup: &str,
         primary_type: &str,
@@ -379,10 +484,11 @@ impl RustEmitter {
             expr: method(field(error, "__sifr_python_error"), "as_ref", vec![]),
             then_body: vec![RustStmt::Match {
                 expr: runtime_call(
-                    "context_exit_python_error",
+                    "context_exit_python_error_with_callbacks",
                     vec![
                         manager_handle.clone(),
                         RustExpr::Ident("__sifr_python_replay".into()),
+                        manager_callbacks.clone(),
                     ],
                 ),
                 arms: vec![
@@ -436,6 +542,7 @@ impl RustEmitter {
             }],
             else_body: Some(Self::non_python_error_exit_body(
                 manager_handle,
+                manager_callbacks,
                 error,
                 cleanup,
                 primary_type,
@@ -446,6 +553,7 @@ impl RustEmitter {
 
     fn non_python_error_exit_body(
         manager_handle: RustExpr,
+        manager_callbacks: RustExpr,
         error: &str,
         cleanup: &str,
         primary_type: &str,
@@ -491,10 +599,11 @@ impl RustEmitter {
             },
             RustStmt::Match {
                 expr: runtime_call(
-                    "context_exit_sifr_cause",
+                    "context_exit_sifr_cause_with_callbacks",
                     vec![
                         manager_handle,
                         reference(RustExpr::Ident(cause.to_string())),
+                        manager_callbacks,
                     ],
                 ),
                 arms: vec![

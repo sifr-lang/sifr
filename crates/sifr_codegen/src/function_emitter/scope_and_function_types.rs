@@ -805,12 +805,17 @@ impl RustEmitter {
         &self,
         ty: &Type,
         convention: ParamConvention,
+        require_static: bool,
     ) -> RustType {
         let Type::Callable(..) = ty.resolve_alias() else {
             return self.lower_function_param_type(ty, convention);
         };
         let base = self.rust_type_with_generics(ty);
-        let bounded = format!("{base} + Send + Sync + 'static");
+        let bounded = if require_static {
+            format!("{base} + Send + Sync + 'static")
+        } else {
+            format!("{base} + Send + Sync")
+        };
         if ty.ownership() != sifr_type_system::OwnershipKind::Copy && convention.is_borrowed() {
             RustType::Ref {
                 mutable: convention.is_mut_borrow(),
@@ -830,7 +835,7 @@ impl RustEmitter {
         if matches!(func_name, "py_local_callback" | "py_threadsafe_callback")
             && matches!(param.ty.resolve_alias(), Type::Callable(..))
         {
-            return self.lower_python_callback_param_type(&param.ty, param.convention);
+            return self.lower_python_callback_param_type(&param.ty, param.convention, true);
         }
         if self.function_param_lowers_to_sifr_int(func_name, param_idx)
             && matches!(

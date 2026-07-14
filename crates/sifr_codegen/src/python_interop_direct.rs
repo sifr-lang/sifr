@@ -1,15 +1,35 @@
 use sifr_ir::{
-    HirFunction, PythonInteropDeclaration, PythonInteropDecoratorKind, PythonParameterKind,
+    HirFunction, PythonCallbackLifetime, PythonInteropDeclaration, PythonInteropDecoratorKind,
+    PythonParameterKind,
 };
 use sifr_type_system::Type;
 use std::collections::HashMap;
 
+use crate::python_interop_callbacks::{
+    append_retained_callback_retention, append_retained_failure_slots,
+    append_retained_failure_transfers, callback_cleanup_expr, callback_object_expr,
+    callback_owner_expr, callback_setup, failure_reconciliation_stmt, retained_cleanup_expr,
+    retained_failure_field, retained_slot_source,
+};
 use crate::rust_interop_error_mapping::bridge_error_expr;
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
+
+pub(crate) use crate::python_interop_direct_conversions::{
+    callback_output_value_expr, input_conversion, input_conversion_borrowed, is_python_object,
+    output_value_expr,
+};
 
 pub(crate) fn python_interop_function_body(
     func: &HirFunction,
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
+) -> Option<Vec<RustStmt>> {
+    python_interop_function_body_with_retained_errors(func, opaque_classes, &HashMap::new())
+}
+
+pub(crate) fn python_interop_function_body_with_retained_errors(
+    func: &HirFunction,
+    opaque_classes: &HashMap<String, PythonInteropDeclaration>,
+    retained_callback_errors: &HashMap<String, Vec<Type>>,
 ) -> Option<Vec<RustStmt>> {
     let declaration = func.python_interop.first()?;
     if declaration.kind == PythonInteropDecoratorKind::Coroutine {
@@ -47,9 +67,87 @@ pub(crate) fn python_interop_function_body(
 
     body.push(vector_let("__sifr_python_args"));
     body.push(vector_let("__sifr_python_kwargs"));
+    if declaration
+        .callbacks
+        .iter()
+        .any(|callback| callback.lifetime == PythonCallbackLifetime::Call)
+    {
+        body.push(mapped_let(
+            "__sifr_callback_call_owner",
+            runtime_call("CallbackOwnerState::new_call_scoped", Vec::new()),
+            error_type,
+        ));
+    }
+    let retained_result = declaration
+        .callbacks
+        .iter()
+        .find(|callback| callback.lifetime == PythonCallbackLifetime::Result);
+    if retained_result.is_some() {
+        body.push(RustStmt::Let {
+            mutable: true,
+            name: "__sifr_callback_group".to_string(),
+            ty: None,
+            value: mapped_try(
+                runtime_call("RetainedCallbackGroup::new", Vec::new()),
+                error_type,
+            ),
+        });
+        append_retained_failure_slots(
+            &mut body,
+            declaration,
+            retained_callback_errors,
+            PythonCallbackLifetime::Result,
+        );
+    }
     let mut forward_positional_by_name = false;
+    let mut callback_setups = Vec::new();
     for (index, (param, shape)) in func.params.iter().zip(&declaration.parameters).enumerate() {
         let handle_name = format!("__sifr_python_arg_{index}");
+        if let Some(callback) = declaration
+            .callbacks
+            .iter()
+            .find(|callback| callback.parameter_name == param.name)
+        {
+            let owner = match callback.lifetime {
+                PythonCallbackLifetime::Call => Some(RustExpr::Clone(Box::new(RustExpr::Ident(
+                    "__sifr_callback_call_owner".to_string(),
+                )))),
+                PythonCallbackLifetime::Result => {
+                    Some(RustExpr::Clone(Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__sifr_callback_group".to_string())),
+                        method: "owner".to_string(),
+                        args: Vec::new(),
+                    })))
+                }
+                PythonCallbackLifetime::Receiver => None,
+            }?;
+            let failure_slot_source = retained_slot_source(
+                callback,
+                retained_callback_errors,
+                PythonCallbackLifetime::Result,
+            );
+            let setup = callback_setup(
+                callback,
+                &param.name,
+                index,
+                error_type,
+                opaque_classes,
+                owner,
+                failure_slot_source,
+            )?;
+            body.extend(setup.statements.clone());
+            body.push(mapped_let(
+                &handle_name,
+                runtime_call(
+                    "temporary_argument_handle",
+                    vec![callback_object_expr(&setup)],
+                ),
+                error_type,
+            ));
+            body.push(push_for_shape(shape.kind, &shape.name, &handle_name)?);
+            callback_setups.push(setup);
+            continue;
+        }
         if shape.omit_when_absent {
             if shape.kind == PythonParameterKind::Positional {
                 forward_positional_by_name = true;
@@ -65,7 +163,7 @@ pub(crate) fn python_interop_function_body(
                     push_named_keyword(&shape.name, &handle_name)
                 }
                 PythonParameterKind::PositionalVariadic | PythonParameterKind::KeywordVariadic => {
-                    return None
+                    return None;
                 }
             });
             body.push(RustStmt::IfLet {
@@ -152,20 +250,109 @@ pub(crate) fn python_interop_function_body(
         }
     }
 
-    body.push(mapped_let(
-        "__sifr_python_result",
-        runtime_call(
-            "call_object_owned",
-            vec![
-                reference("__sifr_python_target"),
-                reference("__sifr_python_args"),
-                reference("__sifr_python_kwargs"),
-            ],
-        ),
-        error_type,
-    ));
+    let call = runtime_call(
+        "call_object_owned",
+        vec![
+            reference("__sifr_python_target"),
+            reference("__sifr_python_args"),
+            reference("__sifr_python_kwargs"),
+        ],
+    );
+    if callback_setups.is_empty() {
+        body.push(mapped_let("__sifr_python_result", call, error_type));
+    } else {
+        body.push(RustStmt::Let {
+            mutable: false,
+            name: "__sifr_python_outcome".to_string(),
+            ty: None,
+            value: callback_outcome_with_evidence(call, &callback_setups),
+        });
+        let mut cleanup_names = Vec::new();
+        for (index, setup) in callback_setups.iter().enumerate() {
+            if setup.lifetime == PythonCallbackLifetime::Call {
+                let name = format!("__sifr_callback_cleanup_{index}");
+                body.push(RustStmt::Let {
+                    mutable: false,
+                    name: name.clone(),
+                    ty: None,
+                    value: callback_cleanup_expr(setup),
+                });
+                cleanup_names.push(name);
+            }
+        }
+        body.push(mapped_let(
+            "__sifr_python_result",
+            RustExpr::Ident("__sifr_python_outcome".to_string()),
+            error_type,
+        ));
+        for setup in &callback_setups {
+            if let Some((slot, handler_error_type)) = &setup.failure_slot {
+                body.push(failure_reconciliation_stmt(
+                    slot,
+                    handler_error_type,
+                    error_type,
+                    callback_owner_expr(setup),
+                ));
+            }
+        }
+        append_retained_callback_retention(&mut body, &callback_setups, error_type);
+        for cleanup in cleanup_names {
+            body.push(RustStmt::Expr(mapped_try(
+                RustExpr::Ident(cleanup),
+                error_type,
+            )));
+        }
+    }
 
     let converted = output_value_expr("__sifr_python_result", ok_type, error_type, opaque_classes)?;
+    if let Some(callback) = retained_result {
+        let cleanup = retained_cleanup_expr(callback.owner_cleanup?)?;
+        body.push(RustStmt::Let {
+            mutable: true,
+            name: "__sifr_python_converted".to_string(),
+            ty: None,
+            value: converted,
+        });
+        append_retained_failure_transfers(
+            &mut body,
+            declaration,
+            retained_callback_errors,
+            "__sifr_python_converted",
+        );
+        body.push(mapped_let(
+            "__sifr_callback_owner",
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__sifr_callback_group".to_string())),
+                method: "commit_for_object".to_string(),
+                args: vec![
+                    RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident("__sifr_python_converted".to_string())),
+                            field: "__sifr_python_object".to_string(),
+                        }),
+                    },
+                    cleanup,
+                ],
+            },
+            error_type,
+        ));
+        body.push(RustStmt::Assign {
+            target: RustExpr::Field {
+                expr: Box::new(RustExpr::Ident("__sifr_python_converted".to_string())),
+                field: "__sifr_python_callbacks".to_string(),
+            },
+            value: runtime_call(
+                "CallbackOwnerSlot::from_owner",
+                vec![RustExpr::Ident("__sifr_callback_owner".to_string())],
+            ),
+        });
+        body.push(RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+            args: vec![RustExpr::Ident("__sifr_python_converted".to_string())],
+        })));
+        return Some(body);
+    }
     body.push(RustStmt::Return(Some(RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
         args: vec![converted],
@@ -173,10 +360,50 @@ pub(crate) fn python_interop_function_body(
     Some(body)
 }
 
+fn callback_outcome_with_evidence(
+    outcome: RustExpr,
+    callbacks: &[crate::python_interop_callbacks::CallbackSetup],
+) -> RustExpr {
+    runtime_call(
+        "attach_callback_failure_evidence",
+        vec![
+            outcome,
+            RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(RustExpr::Array(
+                    callbacks
+                        .iter()
+                        .map(|callback| RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(callback_owner_expr(callback)),
+                        })
+                        .collect(),
+                )),
+            },
+        ],
+    )
+}
+
 pub(crate) fn python_interop_method_body(
     func: &HirFunction,
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
     owner_declaration: Option<&PythonInteropDeclaration>,
+) -> Option<Vec<RustStmt>> {
+    python_interop_method_body_with_retained_errors(
+        func,
+        opaque_classes,
+        owner_declaration,
+        &HashMap::new(),
+        &[],
+    )
+}
+
+pub(crate) fn python_interop_method_body_with_retained_errors(
+    func: &HirFunction,
+    opaque_classes: &HashMap<String, PythonInteropDeclaration>,
+    owner_declaration: Option<&PythonInteropDeclaration>,
+    retained_callback_errors: &HashMap<String, Vec<Type>>,
+    owner_retained_errors: &[Type],
 ) -> Option<Vec<RustStmt>> {
     let declaration = func.python_interop.first()?;
     if declaration.kind == PythonInteropDecoratorKind::Coroutine {
@@ -194,8 +421,126 @@ pub(crate) fn python_interop_method_body(
         body.push(vector_let("__sifr_python_args"));
         body.push(vector_let("__sifr_python_kwargs"));
     }
+    if declaration
+        .callbacks
+        .iter()
+        .any(|callback| callback.lifetime == PythonCallbackLifetime::Call)
+    {
+        body.push(mapped_let(
+            "__sifr_callback_call_owner",
+            runtime_call("CallbackOwnerState::new_call_scoped", Vec::new()),
+            error_type,
+        ));
+    }
+    let retained_receiver = declaration
+        .callbacks
+        .iter()
+        .find(|callback| callback.lifetime == PythonCallbackLifetime::Receiver);
+    if let Some(callback) = retained_receiver {
+        body.push(mapped_let(
+            "__sifr_callback_owner",
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Field {
+                    expr: Box::new(RustExpr::Ident("self".to_string())),
+                    field: "__sifr_python_callbacks".to_string(),
+                }),
+                method: "owner_or_insert".to_string(),
+                args: vec![
+                    RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident("self".to_string())),
+                            field: "__sifr_python_object".to_string(),
+                        }),
+                    },
+                    retained_cleanup_expr(callback.owner_cleanup?)?,
+                ],
+            },
+            error_type,
+        ));
+    }
+    let retained_result = declaration
+        .callbacks
+        .iter()
+        .find(|callback| callback.lifetime == PythonCallbackLifetime::Result);
+    if retained_result.is_some() {
+        body.push(RustStmt::Let {
+            mutable: true,
+            name: "__sifr_callback_group".to_string(),
+            ty: None,
+            value: mapped_try(
+                runtime_call("RetainedCallbackGroup::new", Vec::new()),
+                error_type,
+            ),
+        });
+        append_retained_failure_slots(
+            &mut body,
+            declaration,
+            retained_callback_errors,
+            PythonCallbackLifetime::Result,
+        );
+    }
+    let mut callback_setups = Vec::new();
     for (index, (param, shape)) in func.params.iter().zip(&declaration.parameters).enumerate() {
         let handle = format!("__sifr_python_arg_{index}");
+        if let Some(callback) = declaration
+            .callbacks
+            .iter()
+            .find(|callback| callback.parameter_name == param.name)
+        {
+            let retained_owner = match callback.lifetime {
+                PythonCallbackLifetime::Call => Some(RustExpr::Clone(Box::new(RustExpr::Ident(
+                    "__sifr_callback_call_owner".to_string(),
+                )))),
+                PythonCallbackLifetime::Result => {
+                    Some(RustExpr::Clone(Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__sifr_callback_group".to_string())),
+                        method: "owner".to_string(),
+                        args: Vec::new(),
+                    })))
+                }
+                PythonCallbackLifetime::Receiver => Some(RustExpr::Clone(Box::new(
+                    RustExpr::Ident("__sifr_callback_owner".to_string()),
+                ))),
+            };
+            let failure_slot_source = match callback.lifetime {
+                PythonCallbackLifetime::Call => None,
+                PythonCallbackLifetime::Result => retained_slot_source(
+                    callback,
+                    retained_callback_errors,
+                    PythonCallbackLifetime::Result,
+                ),
+                PythonCallbackLifetime::Receiver => {
+                    retained_failure_field(callback, retained_callback_errors).map(|field| {
+                        RustExpr::Clone(Box::new(RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident("self".to_string())),
+                            field,
+                        }))
+                    })
+                }
+            };
+            let setup = callback_setup(
+                callback,
+                &param.name,
+                index,
+                error_type,
+                opaque_classes,
+                retained_owner?,
+                failure_slot_source,
+            )?;
+            body.extend(setup.statements.clone());
+            body.push(mapped_let(
+                &handle,
+                runtime_call(
+                    "temporary_argument_handle",
+                    vec![callback_object_expr(&setup)],
+                ),
+                error_type,
+            ));
+            body.push(push_for_shape(shape.kind, &shape.name, &handle)?);
+            callback_setups.push(setup);
+            continue;
+        }
         body.push(mapped_let(
             &handle,
             input_conversion(&param.name, &param.ty, opaque_classes)?,
@@ -215,22 +560,77 @@ pub(crate) fn python_interop_method_body(
         {
             return None;
         }
+        if !owner_retained_errors.is_empty() {
+            body.push(RustStmt::Let {
+                mutable: false,
+                name: "__sifr_callback_owner_for_failure".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Field {
+                        expr: Box::new(RustExpr::Ident("self".to_string())),
+                        field: "__sifr_python_callbacks".to_string(),
+                    }),
+                    method: "owner".to_string(),
+                    args: Vec::new(),
+                },
+            });
+            for index in 0..owner_retained_errors.len() {
+                body.push(RustStmt::Let {
+                    mutable: false,
+                    name: format!("__sifr_callback_owner_failure_{index}"),
+                    ty: None,
+                    value: RustExpr::Field {
+                        expr: Box::new(RustExpr::Ident("self".to_string())),
+                        field: format!("__sifr_python_callback_failure_{index}"),
+                    },
+                });
+            }
+        }
         let closed = mapped_try(
             runtime_call(
-                "semantic_close",
+                "semantic_close_with_callbacks",
                 vec![
                     RustExpr::Field {
                         expr: Box::new(RustExpr::Ident("self".to_string())),
                         field: "__sifr_python_object".to_string(),
                     },
                     RustExpr::Literal(RustLiteral::Str(member?.to_string())),
+                    RustExpr::Field {
+                        expr: Box::new(RustExpr::Ident("self".to_string())),
+                        field: "__sifr_python_callbacks".to_string(),
+                    },
                 ],
             ),
             error_type,
         );
+        body.push(RustStmt::Let {
+            mutable: false,
+            name: "__sifr_python_closed".to_string(),
+            ty: None,
+            value: closed,
+        });
+        if !owner_retained_errors.is_empty() {
+            body.push(RustStmt::IfLet {
+                pattern: "Some(__sifr_callback_owner_for_failure_value)".to_string(),
+                expr: RustExpr::Ident("__sifr_callback_owner_for_failure".to_string()),
+                then_body: owner_retained_errors
+                    .iter()
+                    .enumerate()
+                    .map(|(index, handler_error_type)| {
+                        failure_reconciliation_stmt(
+                            &format!("__sifr_callback_owner_failure_{index}"),
+                            handler_error_type,
+                            error_type,
+                            RustExpr::Ident("__sifr_callback_owner_for_failure_value".to_string()),
+                        )
+                    })
+                    .collect(),
+                else_body: None,
+            });
+        }
         body.push(RustStmt::Return(Some(RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
-            args: vec![closed],
+            args: vec![RustExpr::Ident("__sifr_python_closed".to_string())],
         })));
         return Some(body);
     }
@@ -295,508 +695,104 @@ pub(crate) fn python_interop_method_body(
         }
         _ => return None,
     };
-    body.push(mapped_let("__sifr_python_result", operation, error_type));
+    if callback_setups.is_empty() {
+        body.push(mapped_let("__sifr_python_result", operation, error_type));
+    } else {
+        body.push(RustStmt::Let {
+            mutable: false,
+            name: "__sifr_python_outcome".to_string(),
+            ty: None,
+            value: callback_outcome_with_evidence(operation, &callback_setups),
+        });
+        let mut cleanup_names = Vec::new();
+        for (index, setup) in callback_setups.iter().enumerate() {
+            if setup.lifetime == PythonCallbackLifetime::Call {
+                let name = format!("__sifr_callback_cleanup_{index}");
+                body.push(RustStmt::Let {
+                    mutable: false,
+                    name: name.clone(),
+                    ty: None,
+                    value: callback_cleanup_expr(setup),
+                });
+                cleanup_names.push(name);
+            }
+        }
+        body.push(mapped_let(
+            "__sifr_python_result",
+            RustExpr::Ident("__sifr_python_outcome".to_string()),
+            error_type,
+        ));
+        for setup in &callback_setups {
+            if let Some((slot, handler_error_type)) = &setup.failure_slot {
+                body.push(failure_reconciliation_stmt(
+                    slot,
+                    handler_error_type,
+                    error_type,
+                    callback_owner_expr(setup),
+                ));
+            }
+        }
+        append_retained_callback_retention(&mut body, &callback_setups, error_type);
+        for cleanup in cleanup_names {
+            body.push(RustStmt::Expr(mapped_try(
+                RustExpr::Ident(cleanup),
+                error_type,
+            )));
+        }
+    }
     let converted = output_value_expr("__sifr_python_result", ok_type, error_type, opaque_classes)?;
+    if let Some(callback) = retained_result {
+        body.push(RustStmt::Let {
+            mutable: true,
+            name: "__sifr_python_converted".to_string(),
+            ty: None,
+            value: converted,
+        });
+        append_retained_failure_transfers(
+            &mut body,
+            declaration,
+            retained_callback_errors,
+            "__sifr_python_converted",
+        );
+        body.push(mapped_let(
+            "__sifr_result_callback_owner",
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__sifr_callback_group".to_string())),
+                method: "commit_for_object".to_string(),
+                args: vec![
+                    RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident("__sifr_python_converted".to_string())),
+                            field: "__sifr_python_object".to_string(),
+                        }),
+                    },
+                    retained_cleanup_expr(callback.owner_cleanup?)?,
+                ],
+            },
+            error_type,
+        ));
+        body.push(RustStmt::Assign {
+            target: RustExpr::Field {
+                expr: Box::new(RustExpr::Ident("__sifr_python_converted".to_string())),
+                field: "__sifr_python_callbacks".to_string(),
+            },
+            value: runtime_call(
+                "CallbackOwnerSlot::from_owner",
+                vec![RustExpr::Ident("__sifr_result_callback_owner".to_string())],
+            ),
+        });
+        body.push(RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+            args: vec![RustExpr::Ident("__sifr_python_converted".to_string())],
+        })));
+        return Some(body);
+    }
     body.push(RustStmt::Return(Some(RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
         args: vec![converted],
     })));
     Some(body)
-}
-
-pub(crate) fn input_conversion(
-    name: &str,
-    ty: &Type,
-    opaque_classes: &HashMap<String, PythonInteropDeclaration>,
-) -> Option<RustExpr> {
-    if let Some(inner) = option_inner(ty) {
-        let receiver = RustExpr::Ident(name.to_string());
-        let borrowed_inner = !matches!(
-            inner.resolve_alias(),
-            Type::None | Type::Bool | Type::Int | Type::Float
-        );
-        let inner_value = RustExpr::MethodCall {
-            receiver: Box::new(if borrowed_inner {
-                RustExpr::MethodCall {
-                    receiver: Box::new(receiver.clone()),
-                    method: "as_ref".to_string(),
-                    args: Vec::new(),
-                }
-            } else {
-                receiver.clone()
-            }),
-            method: "unwrap".to_string(),
-            args: Vec::new(),
-        };
-        return Some(RustExpr::If {
-            cond: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(receiver),
-                method: "is_some".to_string(),
-                args: Vec::new(),
-            }),
-            then_expr: Box::new(input_conversion_value(inner_value, inner, opaque_classes)?),
-            else_expr: Some(Box::new(runtime_call("from_none", Vec::new()))),
-        });
-    }
-    if matches!(ty.resolve_alias(), Type::Class { name: class_name, .. } if opaque_classes.contains_key(class_name))
-    {
-        return Some(runtime_call(
-            "temporary_argument_handle",
-            vec![RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(RustExpr::Field {
-                    expr: Box::new(RustExpr::Ident(name.to_string())),
-                    field: "__sifr_python_object".to_string(),
-                }),
-            }],
-        ));
-    }
-    match ty.resolve_alias() {
-        Type::List(item) => {
-            let iter = RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(name.to_string())),
-                method: "iter".to_string(),
-                args: Vec::new(),
-            };
-            let converted = mapped_collection_results(
-                iter,
-                "__sifr_python_item",
-                input_conversion_borrowed("__sifr_python_item", item, opaque_classes)?,
-            );
-            return Some(runtime_call("from_list_results", vec![converted]));
-        }
-        Type::Tuple(items) => {
-            let values = items
-                .iter()
-                .enumerate()
-                .map(|(index, item)| {
-                    input_conversion(&format!("{name}.{index}"), item, opaque_classes)
-                })
-                .collect::<Option<Vec<_>>>()?;
-            return Some(runtime_call(
-                "from_tuple_results",
-                vec![RustExpr::Vec(values)],
-            ));
-        }
-        Type::Dict(key, value) if key.resolve_alias() == &Type::Str => {
-            let iter = RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(name.to_string())),
-                method: "iter".to_string(),
-                args: Vec::new(),
-            };
-            let pair = RustExpr::Tuple(vec![
-                RustExpr::Clone(Box::new(RustExpr::Ident("__sifr_python_key".to_string()))),
-                input_conversion_borrowed("__sifr_python_value", value, opaque_classes)?,
-            ]);
-            let converted =
-                mapped_collection_results(iter, "(__sifr_python_key, __sifr_python_value)", pair);
-            return Some(runtime_call("from_dict_results", vec![converted]));
-        }
-        Type::Class {
-            name: class_name,
-            fields,
-            ..
-        } if !fields.is_empty() && !opaque_classes.contains_key(class_name) => {
-            let values = fields
-                .iter()
-                .map(|(field, field_type)| {
-                    Some(RustExpr::Tuple(vec![
-                        RustExpr::Literal(RustLiteral::Str(field.clone())),
-                        input_conversion(&format!("{name}.{field}"), field_type, opaque_classes)?,
-                    ]))
-                })
-                .collect::<Option<Vec<_>>>()?;
-            return Some(runtime_call(
-                "from_record_results",
-                vec![RustExpr::Vec(values)],
-            ));
-        }
-        _ => {}
-    }
-    let ident = RustExpr::Ident(name.to_string());
-    let (function, value) = match ty.resolve_alias() {
-        Type::None => ("from_none", None),
-        Type::Bool => ("from_bool", Some(ident)),
-        Type::Int => ("from_int", Some(ident)),
-        Type::Float => ("from_float", Some(ident)),
-        Type::Str => ("from_str", Some(reference(name))),
-        Type::Bytes => ("from_bytes", Some(reference(name))),
-        _ => return None,
-    };
-    Some(runtime_call(function, value.into_iter().collect()))
-}
-
-pub(crate) fn output_value_expr(
-    value_name: &str,
-    ty: &Type,
-    error_type: &Type,
-    opaque_classes: &HashMap<String, PythonInteropDeclaration>,
-) -> Option<RustExpr> {
-    if let Some(inner) = option_inner(ty) {
-        let is_none = mapped_try(
-            runtime_call("object_is_none", vec![reference(value_name)]),
-            error_type,
-        );
-        return Some(RustExpr::Block {
-            stmts: vec![RustStmt::Let {
-                mutable: false,
-                name: "__sifr_python_is_none".to_string(),
-                ty: None,
-                value: is_none,
-            }],
-            expr: Some(Box::new(RustExpr::If {
-                cond: Box::new(RustExpr::Ident("__sifr_python_is_none".to_string())),
-                then_expr: Box::new(RustExpr::Literal(RustLiteral::None)),
-                else_expr: Some(Box::new(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-                    args: vec![output_value_expr(
-                        value_name,
-                        inner,
-                        error_type,
-                        opaque_classes,
-                    )?],
-                })),
-            })),
-        });
-    }
-    if is_python_object(ty) {
-        return Some(RustExpr::Ident(value_name.to_string()));
-    }
-    if let Type::Class { name, .. } = ty.resolve_alias() {
-        if let Some(opaque) = opaque_classes.get(name) {
-            let target = opaque.target.as_ref()?;
-            let checked = mapped_try(
-                runtime_call(
-                    "expect_instance",
-                    vec![
-                        RustExpr::Ident(value_name.to_string()),
-                        RustExpr::Ref {
-                            mutable: false,
-                            expr: Box::new(RustExpr::Array(
-                                target
-                                    .segments
-                                    .iter()
-                                    .map(|segment| {
-                                        RustExpr::Literal(RustLiteral::Str(segment.clone()))
-                                    })
-                                    .collect(),
-                            )),
-                        },
-                    ],
-                ),
-                error_type,
-            );
-            return Some(RustExpr::StructInit {
-                name: name.clone(),
-                fields: vec![("__sifr_python_object".to_string(), checked)],
-            });
-        }
-    }
-    match ty.resolve_alias() {
-        Type::List(item) => {
-            let mut body = vec![RustStmt::Let {
-                mutable: false,
-                name: "__sifr_python_value".to_string(),
-                ty: None,
-                value: output_value_expr("__sifr_python_item", item, error_type, opaque_classes)?,
-            }];
-            body.push(push_to("__sifr_python_values", "__sifr_python_value"));
-            return Some(RustExpr::Block {
-                stmts: vec![
-                    mapped_let(
-                        "__sifr_python_items",
-                        runtime_call("list_items", vec![reference(value_name)]),
-                        error_type,
-                    ),
-                    vector_let("__sifr_python_values"),
-                    RustStmt::For {
-                        var: "__sifr_python_item".to_string(),
-                        iter: RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("__sifr_python_items".to_string())),
-                            method: "into_iter".to_string(),
-                            args: Vec::new(),
-                        },
-                        body,
-                    },
-                ],
-                expr: Some(Box::new(RustExpr::Ident(
-                    "__sifr_python_values".to_string(),
-                ))),
-            });
-        }
-        Type::Tuple(items) => {
-            let mut statements = vec![mapped_let(
-                "__sifr_python_items",
-                runtime_call("tuple_items", vec![reference(value_name)]),
-                error_type,
-            )];
-            let mut values = Vec::with_capacity(items.len());
-            for (index, item) in items.iter().enumerate() {
-                let binding = format!("__sifr_python_tuple_{index}");
-                statements.push(RustStmt::Let {
-                    mutable: false,
-                    name: binding.clone(),
-                    ty: None,
-                    value: RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("__sifr_python_items".to_string())),
-                        method: "remove".to_string(),
-                        args: vec![RustExpr::Literal(RustLiteral::Int(0))],
-                    },
-                });
-                values.push(output_value_expr(
-                    &binding,
-                    item,
-                    error_type,
-                    opaque_classes,
-                )?);
-            }
-            statements.insert(
-                0,
-                RustStmt::Let {
-                    mutable: true,
-                    name: "__sifr_python_items".to_string(),
-                    ty: None,
-                    value: mapped_try(
-                        runtime_call("tuple_items", vec![reference(value_name)]),
-                        error_type,
-                    ),
-                },
-            );
-            statements.remove(1);
-            return Some(RustExpr::Block {
-                stmts: statements,
-                expr: Some(Box::new(RustExpr::Tuple(values))),
-            });
-        }
-        Type::Dict(key, value) if key.resolve_alias() == &Type::Str => {
-            let converted =
-                output_value_expr("__sifr_python_item", value, error_type, opaque_classes)?;
-            return Some(RustExpr::Block {
-                stmts: vec![
-                    mapped_let(
-                        "__sifr_python_items",
-                        runtime_call("dict_str_items", vec![reference(value_name)]),
-                        error_type,
-                    ),
-                    RustStmt::Let {
-                        mutable: true,
-                        name: "__sifr_python_values".to_string(),
-                        ty: None,
-                        value: RustExpr::FnCall {
-                            func: Box::new(RustExpr::Path(vec![
-                                "Default".to_string(),
-                                "default".to_string(),
-                            ])),
-                            args: Vec::new(),
-                        },
-                    },
-                    RustStmt::For {
-                        var: "(__sifr_python_key, __sifr_python_item)".to_string(),
-                        iter: RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("__sifr_python_items".to_string())),
-                            method: "into_iter".to_string(),
-                            args: Vec::new(),
-                        },
-                        body: vec![RustStmt::Expr(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("__sifr_python_values".to_string())),
-                            method: "insert".to_string(),
-                            args: vec![RustExpr::Ident("__sifr_python_key".to_string()), converted],
-                        })],
-                    },
-                ],
-                expr: Some(Box::new(RustExpr::Ident(
-                    "__sifr_python_values".to_string(),
-                ))),
-            });
-        }
-        Type::Class { name, fields, .. } if !fields.is_empty() => {
-            let mut statements = Vec::new();
-            let mut converted_fields = Vec::new();
-            for (field, field_type) in fields {
-                let handle = format!("__sifr_python_field_{field}");
-                statements.push(mapped_let(
-                    &handle,
-                    runtime_call(
-                        "record_field",
-                        vec![
-                            reference(value_name),
-                            RustExpr::Literal(RustLiteral::Str(field.clone())),
-                        ],
-                    ),
-                    error_type,
-                ));
-                converted_fields.push((
-                    field.clone(),
-                    output_value_expr(&handle, field_type, error_type, opaque_classes)?,
-                ));
-            }
-            return Some(RustExpr::Block {
-                stmts: statements,
-                expr: Some(Box::new(RustExpr::StructInit {
-                    name: name.clone(),
-                    fields: converted_fields,
-                })),
-            });
-        }
-        _ => {}
-    }
-    Some(mapped_try(output_conversion(value_name, ty)?, error_type))
-}
-
-fn input_conversion_value(
-    value: RustExpr,
-    ty: &Type,
-    opaque_classes: &HashMap<String, PythonInteropDeclaration>,
-) -> Option<RustExpr> {
-    if is_python_object(ty) {
-        return Some(runtime_call("temporary_argument_handle", vec![value]));
-    }
-    if matches!(ty.resolve_alias(), Type::Class { name, .. } if opaque_classes.contains_key(name)) {
-        return Some(runtime_call(
-            "temporary_argument_handle",
-            vec![RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(RustExpr::Field {
-                    expr: Box::new(value),
-                    field: "__sifr_python_object".to_string(),
-                }),
-            }],
-        ));
-    }
-    if matches!(
-        ty.resolve_alias(),
-        Type::List(_) | Type::Tuple(_) | Type::Dict(_, _) | Type::Class { .. }
-    ) {
-        return Some(RustExpr::Block {
-            stmts: vec![RustStmt::Let {
-                mutable: false,
-                name: "__sifr_python_nested".to_string(),
-                ty: None,
-                value,
-            }],
-            expr: Some(Box::new(input_conversion(
-                "__sifr_python_nested",
-                ty,
-                opaque_classes,
-            )?)),
-        });
-    }
-    let function = match ty.resolve_alias() {
-        Type::Bool => "from_bool",
-        Type::Int => "from_int",
-        Type::Float => "from_float",
-        Type::Str => "from_str",
-        Type::Bytes => "from_bytes",
-        _ => return None,
-    };
-    Some(runtime_call(function, vec![value]))
-}
-
-fn option_inner(ty: &Type) -> Option<&Type> {
-    let Type::Union(variants) = ty.resolve_alias() else {
-        return None;
-    };
-    if variants.len() != 2
-        || !variants
-            .iter()
-            .any(|variant| variant.resolve_alias() == &Type::None)
-    {
-        return None;
-    }
-    variants
-        .iter()
-        .find(|variant| variant.resolve_alias() != &Type::None)
-}
-
-fn input_conversion_borrowed(
-    name: &str,
-    ty: &Type,
-    opaque_classes: &HashMap<String, PythonInteropDeclaration>,
-) -> Option<RustExpr> {
-    if option_inner(ty).is_some() {
-        return input_conversion(name, ty, opaque_classes);
-    }
-    if matches!(
-        ty.resolve_alias(),
-        Type::List(_) | Type::Tuple(_) | Type::Dict(_, _) | Type::Class { .. }
-    ) && !is_python_object(ty)
-        && !matches!(ty.resolve_alias(), Type::Class { name, .. } if opaque_classes.contains_key(name))
-    {
-        return input_conversion(name, ty, opaque_classes);
-    }
-    let value = match ty.resolve_alias() {
-        Type::Bool | Type::Int | Type::Float => {
-            RustExpr::Deref(Box::new(RustExpr::Ident(name.to_string())))
-        }
-        Type::Str | Type::Bytes => RustExpr::Ident(name.to_string()),
-        _ if is_python_object(ty) => {
-            return Some(runtime_call(
-                "temporary_argument_handle",
-                vec![RustExpr::Ident(name.to_string())],
-            ));
-        }
-        Type::Class {
-            name: class_name, ..
-        } if opaque_classes.contains_key(class_name) => {
-            return Some(runtime_call(
-                "temporary_argument_handle",
-                vec![RustExpr::Ref {
-                    mutable: false,
-                    expr: Box::new(RustExpr::Field {
-                        expr: Box::new(RustExpr::Ident(name.to_string())),
-                        field: "__sifr_python_object".to_string(),
-                    }),
-                }],
-            ));
-        }
-        _ => return None,
-    };
-    let function = match ty.resolve_alias() {
-        Type::Bool => "from_bool",
-        Type::Int => "from_int",
-        Type::Float => "from_float",
-        Type::Str => "from_str",
-        Type::Bytes => "from_bytes",
-        _ => return None,
-    };
-    Some(runtime_call(function, vec![value]))
-}
-
-fn mapped_collection_results(iter: RustExpr, parameter: &str, body: RustExpr) -> RustExpr {
-    let mapped = RustExpr::MethodCall {
-        receiver: Box::new(iter),
-        method: "map".to_string(),
-        args: vec![RustExpr::Closure {
-            params: vec![RustParam::Named {
-                name: parameter.to_string(),
-                ty: RustType::Named("_".to_string()),
-            }],
-            body: Box::new(body),
-            is_move: false,
-        }],
-    };
-    RustExpr::MethodCall {
-        receiver: Box::new(mapped),
-        method: "collect".to_string(),
-        args: Vec::new(),
-    }
-}
-
-fn output_conversion(name: &str, ty: &Type) -> Option<RustExpr> {
-    let function = match ty.resolve_alias() {
-        Type::None => "to_none",
-        Type::Bool => "to_bool",
-        Type::Int => "to_int",
-        Type::Float => "to_float",
-        Type::Str => "to_str",
-        Type::Bytes => "to_bytes",
-        _ => return None,
-    };
-    Some(runtime_call(function, vec![reference(name)]))
-}
-
-fn is_python_object(ty: &Type) -> bool {
-    matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "Object")
 }
 
 pub(crate) fn runtime_call(function: &str, args: Vec<RustExpr>) -> RustExpr {
@@ -810,7 +806,7 @@ pub(crate) fn runtime_call(function: &str, args: Vec<RustExpr>) -> RustExpr {
     }
 }
 
-fn mapped_let(name: &str, value: RustExpr, error_type: &Type) -> RustStmt {
+pub(crate) fn mapped_let(name: &str, value: RustExpr, error_type: &Type) -> RustStmt {
     RustStmt::Let {
         mutable: false,
         name: name.to_string(),
@@ -838,14 +834,14 @@ pub(crate) fn mapped_try(value: RustExpr, error_type: &Type) -> RustExpr {
     }))
 }
 
-fn reference(name: &str) -> RustExpr {
+pub(crate) fn reference(name: &str) -> RustExpr {
     RustExpr::Ref {
         mutable: false,
         expr: Box::new(RustExpr::Ident(name.to_string())),
     }
 }
 
-fn vector_let(name: &str) -> RustStmt {
+pub(crate) fn vector_let(name: &str) -> RustStmt {
     RustStmt::Let {
         mutable: true,
         name: name.to_string(),
@@ -880,7 +876,7 @@ fn push_positional(handle: &str) -> RustStmt {
     })
 }
 
-fn push_to(vector: &str, value: &str) -> RustStmt {
+pub(crate) fn push_to(vector: &str, value: &str) -> RustStmt {
     RustStmt::Expr(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident(vector.to_string())),
         method: "push".to_string(),
@@ -888,7 +884,7 @@ fn push_to(vector: &str, value: &str) -> RustStmt {
     })
 }
 
-fn push_keyword_expr(key: RustExpr, handle: &str) -> RustStmt {
+pub(crate) fn push_keyword_expr(key: RustExpr, handle: &str) -> RustStmt {
     RustStmt::Expr(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::Ident("__sifr_python_kwargs".to_string())),
         method: "push".to_string(),

@@ -1,6 +1,14 @@
 use super::{HashSet, HirExpr, HirFunction, HirStmt, Type};
 
 pub(super) fn python_callback_bound_param_names(func: &HirFunction) -> HashSet<String> {
+    python_callback_param_names(func, false)
+}
+
+pub(super) fn python_callback_static_param_names(func: &HirFunction) -> HashSet<String> {
+    python_callback_param_names(func, true)
+}
+
+fn python_callback_param_names(func: &HirFunction, require_static: bool) -> HashSet<String> {
     let callable_params = func
         .params
         .iter()
@@ -12,6 +20,20 @@ pub(super) fn python_callback_bound_param_names(func: &HirFunction) -> HashSet<S
     }
 
     let mut names = HashSet::new();
+    for callback in func
+        .python_interop
+        .iter()
+        .flat_map(|declaration| &declaration.callbacks)
+        .filter(|callback| {
+            (callback.dispatch == sifr_ir::PythonCallbackDispatch::Foreign
+                || callback.dispatch == sifr_ir::PythonCallbackDispatch::Asyncio)
+                && (!require_static
+                    || callback.lifetime != sifr_ir::PythonCallbackLifetime::Call
+                    || callback.dispatch == sifr_ir::PythonCallbackDispatch::Asyncio)
+        })
+    {
+        names.insert(callback.parameter_name.clone());
+    }
     for stmt in &func.body {
         collect_python_callback_bound_names_stmt(stmt, &callable_params, &mut names);
     }

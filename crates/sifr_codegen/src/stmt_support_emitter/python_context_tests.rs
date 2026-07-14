@@ -75,14 +75,39 @@ fn python_context_emits_enter_outcome_and_replay_aware_exit() {
     assert!(
         rendered.contains("enter_context(&__sifr_python_context_manager_0.__sifr_python_object)")
     );
-    assert!(rendered
-        .contains("context_exit_normal(__sifr_python_context_manager_0.__sifr_python_object)"));
-    assert!(rendered.contains("context_exit_python_error("));
-    assert!(rendered.contains("context_exit_sifr_cause("));
+    assert!(rendered.contains(
+        "context_exit_normal_with_callbacks(__sifr_python_context_manager_0.__sifr_python_object"
+    ));
+    assert!(rendered.contains("context_exit_python_error_with_callbacks("));
+    assert!(rendered.contains("context_exit_sifr_cause_with_callbacks("));
     assert!(rendered.contains("Ok(Ok(Some(_)))"));
     assert!(!rendered.contains("return __sifr_context_return"));
     syn::parse_file(&format!("fn generated() {{ {rendered} }}"))
         .expect("rendered context lowering should be valid Rust syntax");
+}
+
+#[test]
+fn normal_context_exit_observes_typed_retained_callback_failure() {
+    let mut emitter = emitter();
+    emitter
+        .python_retained_callback_errors
+        .insert("Manager".to_string(), vec![class_type("HandlerError")]);
+    let lowered = emitter
+        .try_lower_python_context_with_for_ir(&[python_item("entered", "manager")], &[])
+        .expect("lowering should succeed")
+        .expect("Python context should lower");
+    let rendered = crate::render_stmts(&[lowered]);
+    assert!(
+        rendered.contains("__sifr_python_context_manager_0.__sifr_python_callbacks.owner()"),
+        "{rendered}"
+    );
+    assert!(
+        rendered.contains("__sifr_python_context_manager_0.__sifr_python_callback_failure_0"),
+        "{rendered}"
+    );
+    assert!(rendered.contains("take_if_owner_first"), "{rendered}");
+    syn::parse_file(&format!("fn generated() {{ {rendered} }}"))
+        .expect("typed context callback cleanup should be valid Rust syntax");
 }
 
 #[test]
@@ -107,10 +132,10 @@ fn multiple_python_contexts_nest_for_reverse_exit_order() {
         .find("enter_context(&__sifr_python_context_manager_0.")
         .expect("inner enter");
     let inner_exit = rendered
-        .find("context_exit_normal(__sifr_python_context_manager_0.")
+        .find("context_exit_normal_with_callbacks(__sifr_python_context_manager_0.")
         .expect("inner exit");
     let outer_exit = rendered
-        .find("context_exit_normal(__sifr_python_context_manager_1.")
+        .find("context_exit_normal_with_callbacks(__sifr_python_context_manager_1.")
         .expect("outer exit");
     assert!(outer_enter < inner_enter && inner_enter < inner_exit && inner_exit < outer_exit);
 }

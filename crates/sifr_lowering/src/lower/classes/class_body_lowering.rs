@@ -406,8 +406,15 @@ pub(in crate::lower) fn lower_class(
                     Type::Any
                 };
                 ctx.scope.define(param_name.clone(), param_ty.clone());
-                let convention = if ctx.must_use_obligation_for_type(&param_ty).is_some() {
-                    ast_convention_to_param(param.parameter.convention, &param_ty)
+                let declared_convention =
+                    ast_convention_to_param(param.parameter.convention, &param_ty);
+                let convention = if ctx.must_use_obligation_for_type(&param_ty).is_some()
+                    || (matches!(
+                        param_ty.resolve_alias(),
+                        Type::Callable(..) | Type::AsyncCallable(..)
+                    ) && declared_convention.is_owned())
+                {
+                    declared_convention
                 } else {
                     ParamConvention::default()
                 };

@@ -1,11 +1,16 @@
 use crate::python_interop_direct::{
-    input_conversion, output_value_expr, python_interop_function_body, python_interop_method_body,
+    input_conversion, output_value_expr, python_interop_function_body,
+    python_interop_function_body_with_retained_errors, python_interop_method_body,
+    python_interop_method_body_with_retained_errors,
 };
-use crate::render_stmts;
+use crate::{generate_rust, render_stmts};
 use ruff_text_size::TextRange;
 use sifr_ir::{
-    HirFunction, HirParam, MethodKind, PythonInteropDeclaration, PythonInteropDecoratorKind,
-    PythonInteropEffect, PythonInteropParameter, PythonParameterKind, PythonTargetPath,
+    HirClass, HirClassKind, HirFunction, HirModule, HirParam, MethodKind,
+    PythonCallbackConcurrency, PythonCallbackDeclaration, PythonCallbackDispatch,
+    PythonCallbackLifetime, PythonCleanupPolicy, PythonInteropDeclaration,
+    PythonInteropDecoratorKind, PythonInteropEffect, PythonInteropParameter, PythonParameterKind,
+    PythonTargetPath,
 };
 use sifr_type_system::{ParamConvention, Type};
 
@@ -226,7 +231,396 @@ fn consuming_opaque_close_emits_semantic_close_operation() {
         &python_interop_method_body(&method, &Default::default(), None)
             .expect("consuming close should lower"),
     );
-    assert!(rendered.contains("semantic_close(self.__sifr_python_object"));
+    assert!(rendered.contains("semantic_close_with_callbacks(self.__sifr_python_object"));
+    assert!(rendered.contains("self.__sifr_python_callbacks"));
+}
+
+#[test]
+fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup() {
+    let python_error = python_error_type();
+    let handler_error = Type::Class {
+        name: "HandlerError".to_string(),
+        fields: vec![("message".to_string(), Type::Str)],
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    };
+    let error = Type::Union(vec![python_error, handler_error.clone()]);
+    let handler_type = Type::Callable(
+        vec![Type::List(Box::new(Type::Int))],
+        vec![ParamConvention::own()],
+        Box::new(Type::Result(
+            Box::new(Type::Int),
+            Box::new(handler_error.clone()),
+        )),
+    );
+    let mut declaration = declaration();
+    declaration.parameters = vec![shape("handler", PythonParameterKind::Positional, false)];
+    let mut callback = callback_declaration(
+        PythonCallbackLifetime::Call,
+        PythonCallbackDispatch::Current,
+        None,
+        Some(handler_error),
+        None,
+    );
+    callback.argument_types = vec![Type::List(Box::new(Type::Int))];
+    declaration.callbacks = vec![callback];
+    let function = HirFunction {
+        name: "map".to_string(),
+        params: vec![param("handler", handler_type, ParamConvention::own())],
+        return_type: Type::Result(Box::new(Type::Int), Box::new(error)),
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
+        python_interop: vec![declaration],
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+
+    let rendered = render_stmts(
+        &python_interop_function_body(&function, &Default::default()).expect("callback wrapper"),
+    );
+    assert!(rendered.contains("CallbackFailureSlot::new"), "{rendered}");
+    assert!(
+        rendered.contains("current_callback_with_owner"),
+        "{rendered}"
+    );
+    assert!(rendered.contains("list_items"), "{rendered}");
+    assert!(rendered.contains("Sifr callback handler returned an error"));
+    assert!(rendered.contains("__sifr_callback_0.close()"), "{rendered}");
+    assert!(
+        rendered.contains("__sifr_callback_failure_0.take_if_owner_first"),
+        "{rendered}"
+    );
+    syn::parse_file(&format!("fn generated() {{ {rendered} }}"))
+        .expect("generated callback statements should be valid Rust syntax");
+}
+
+#[test]
+fn retained_foreign_callback_is_aggregated_into_the_opaque_result_owner() {
+    let subscription_type = Type::Class {
+        name: "Subscription".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("NonSend".to_string()),
+    };
+    let opaque = PythonInteropDeclaration {
+        kind: PythonInteropDecoratorKind::Opaque,
+        target: Some(PythonTargetPath {
+            segments: vec!["pkg".to_string(), "Subscription".to_string()],
+            span: TextRange::default(),
+        }),
+        span: TextRange::default(),
+        effect: PythonInteropEffect::BlockingIo,
+        cleanup: Some(PythonCleanupPolicy::Close),
+        consumes_receiver: false,
+        parameters: Vec::new(),
+        required_import_root: Some("pkg".to_string()),
+        callbacks: Vec::new(),
+    };
+    let mut opaque_classes = std::collections::HashMap::new();
+    opaque_classes.insert("Subscription".to_string(), opaque);
+    let mut declaration = declaration();
+    declaration.parameters = vec![shape("handler", PythonParameterKind::Positional, false)];
+    declaration.callbacks = vec![callback_declaration(
+        PythonCallbackLifetime::Result,
+        PythonCallbackDispatch::Foreign,
+        Some(PythonCallbackConcurrency::Serial),
+        None,
+        Some(PythonCleanupPolicy::Close),
+    )];
+    let handler_type = Type::Callable(
+        vec![Type::Int],
+        vec![ParamConvention::own()],
+        Box::new(Type::Int),
+    );
+    let function = HirFunction {
+        name: "subscribe".to_string(),
+        params: vec![param("handler", handler_type, ParamConvention::own())],
+        return_type: Type::Result(Box::new(subscription_type), Box::new(python_error_type())),
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
+        python_interop: vec![declaration],
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+
+    let rendered = render_stmts(
+        &python_interop_function_body(&function, &opaque_classes).expect("retained wrapper"),
+    );
+    assert!(
+        rendered.contains("RetainedCallbackGroup::new"),
+        "{rendered}"
+    );
+    assert!(rendered.contains("foreign_callback_with_owner"));
+    assert!(rendered.contains("retain_in_owner"));
+    assert!(rendered.contains("commit_for_object"));
+    assert!(rendered.contains("CallbackOwnerSlot::from_owner"));
+    assert!(!rendered.contains("close_call_scope"));
+    syn::parse_file(&format!("fn generated() {{ {rendered} }}"))
+        .expect("generated retained callback statements should be valid Rust syntax");
+}
+
+#[test]
+fn receiver_retained_callback_reuses_the_opaque_owner_slot() {
+    let mut declaration = declaration();
+    declaration.target = Some(PythonTargetPath {
+        segments: vec!["Self".to_string(), "register".to_string()],
+        span: TextRange::default(),
+    });
+    declaration.parameters = vec![shape("handler", PythonParameterKind::Positional, false)];
+    declaration.callbacks = vec![callback_declaration(
+        PythonCallbackLifetime::Receiver,
+        PythonCallbackDispatch::Foreign,
+        Some(PythonCallbackConcurrency::Parallel),
+        None,
+        Some(PythonCleanupPolicy::Close),
+    )];
+    let method = HirFunction {
+        name: "register".to_string(),
+        params: vec![param(
+            "handler",
+            Type::Callable(
+                vec![Type::Int],
+                vec![ParamConvention::own()],
+                Box::new(Type::Int),
+            ),
+            ParamConvention::own(),
+        )],
+        return_type: Type::Result(Box::new(Type::None), Box::new(python_error_type())),
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
+        python_interop: vec![declaration],
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+
+    let rendered = render_stmts(
+        &python_interop_method_body(&method, &Default::default(), None)
+            .expect("receiver callback wrapper"),
+    );
+    assert!(rendered.contains("__sifr_python_callbacks.owner_or_insert"));
+    assert!(rendered.contains("foreign_callback_with_owner"));
+    assert!(rendered.contains("retain_in_owner"));
+    assert!(!rendered.contains("close_call_scope"));
+    let class = HirClass {
+        name: "Subscription".to_string(),
+        fields: Vec::new(),
+        methods: vec![method.clone()],
+        is_hashable: false,
+        is_error_type: false,
+        kind: HirClassKind::Regular,
+        operator_impls: Vec::new(),
+        newtype_inner: None,
+        implements_protocols: Vec::new(),
+        parent_class: None,
+        type_params: Vec::new(),
+        enum_variants: Vec::new(),
+        rust_interop: Vec::new(),
+    };
+    let emitter = crate::RustEmitter::new();
+    let bounded = emitter.lower_class_method_param_type(
+        &class,
+        &method,
+        "handler",
+        &method.params[0].ty,
+        method.params[0].convention,
+    );
+    let bounded = crate::render_type(&bounded);
+    assert!(bounded.contains("+ Send + Sync + 'static"), "{bounded}");
+    syn::parse_file(&format!("fn generated() {{ {rendered} }}"))
+        .expect("generated receiver callback statements should be valid Rust syntax");
+}
+
+#[test]
+fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it() {
+    let handler_error = Type::Class {
+        name: "HandlerError".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    };
+    let error_channel = Type::Union(vec![python_error_type(), handler_error.clone()]);
+    let subscription_type = Type::Class {
+        name: "Subscription".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("NonSend".to_string()),
+    };
+    let mut opaque = declaration();
+    opaque.kind = PythonInteropDecoratorKind::Opaque;
+    opaque.cleanup = Some(PythonCleanupPolicy::Close);
+    opaque.target = Some(PythonTargetPath {
+        segments: vec!["pkg".to_string(), "Subscription".to_string()],
+        span: TextRange::default(),
+    });
+    let mut opaque_classes = std::collections::HashMap::new();
+    opaque_classes.insert("Subscription".to_string(), opaque.clone());
+    let mut retained_errors = std::collections::HashMap::new();
+    retained_errors.insert("Subscription".to_string(), vec![handler_error.clone()]);
+
+    let mut subscribe_declaration = declaration();
+    subscribe_declaration.parameters =
+        vec![shape("handler", PythonParameterKind::Positional, false)];
+    subscribe_declaration.callbacks = vec![callback_declaration(
+        PythonCallbackLifetime::Result,
+        PythonCallbackDispatch::Foreign,
+        Some(PythonCallbackConcurrency::Serial),
+        Some(handler_error.clone()),
+        Some(PythonCleanupPolicy::Close),
+    )];
+    let subscribe = HirFunction {
+        name: "subscribe".to_string(),
+        params: vec![param(
+            "handler",
+            Type::Callable(
+                vec![Type::Int],
+                vec![ParamConvention::own()],
+                Box::new(Type::Result(
+                    Box::new(Type::Int),
+                    Box::new(handler_error.clone()),
+                )),
+            ),
+            ParamConvention::own(),
+        )],
+        return_type: Type::Result(Box::new(subscription_type), Box::new(error_channel.clone())),
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
+        python_interop: vec![subscribe_declaration],
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+    let subscribe_rendered = render_stmts(
+        &python_interop_function_body_with_retained_errors(
+            &subscribe,
+            &opaque_classes,
+            &retained_errors,
+        )
+        .expect("retained typed wrapper"),
+    );
+    assert!(
+        subscribe_rendered.contains("__sifr_python_callback_failure_0 ="),
+        "{subscribe_rendered}"
+    );
+    assert!(
+        subscribe_rendered.contains("__sifr_retained__sifr_python_callback_failure_0.clone()"),
+        "{subscribe_rendered}"
+    );
+
+    let mut close_declaration = declaration();
+    close_declaration.target = Some(PythonTargetPath {
+        segments: vec!["Self".to_string(), "close".to_string()],
+        span: TextRange::default(),
+    });
+    close_declaration.consumes_receiver = true;
+    close_declaration.parameters.clear();
+    let close = HirFunction {
+        name: "close".to_string(),
+        params: Vec::new(),
+        return_type: Type::Result(Box::new(Type::None), Box::new(error_channel)),
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
+        python_interop: vec![close_declaration],
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+    let close_rendered = render_stmts(
+        &python_interop_method_body_with_retained_errors(
+            &close,
+            &opaque_classes,
+            Some(&opaque),
+            &retained_errors,
+            &[handler_error],
+        )
+        .expect("typed close wrapper"),
+    );
+    assert!(
+        close_rendered.contains("__sifr_python_callbacks.owner()"),
+        "{close_rendered}"
+    );
+    assert!(
+        close_rendered.contains("take_if_owner_first"),
+        "{close_rendered}"
+    );
+    syn::parse_file(&format!(
+        "fn subscribe_generated() {{ {subscribe_rendered} }} fn close_generated() {{ {close_rendered} }}"
+    ))
+    .expect("generated typed owner statements should be valid Rust syntax");
+
+    let module = HirModule {
+        functions: vec![subscribe],
+        classes: vec![HirClass {
+            name: "Subscription".to_string(),
+            fields: Vec::new(),
+            methods: vec![close],
+            is_hashable: false,
+            is_error_type: false,
+            kind: HirClassKind::PythonOpaque(opaque),
+            operator_impls: Vec::new(),
+            newtype_inner: None,
+            implements_protocols: Vec::new(),
+            parent_class: Some("NonSend".to_string()),
+            type_params: Vec::new(),
+            enum_variants: Vec::new(),
+            rust_interop: Vec::new(),
+        }],
+        imports: Vec::new(),
+        constants: Vec::new(),
+        generic_functions: Default::default(),
+        type_param_bounds: Default::default(),
+    };
+    let generated_module = generate_rust(&module);
+    assert!(
+        generated_module.contains(
+            "__sifr_python_callback_failure_0: sifr_runtime::python::CallbackFailureSlot<HandlerError>"
+        ),
+        "{generated_module}"
+    );
+    assert!(
+        generated_module.contains("fn __sifr_from_python_object("),
+        "{generated_module}"
+    );
+    assert!(
+        generated_module.contains("+ Send + Sync + 'static"),
+        "{generated_module}"
+    );
+    syn::parse_file(&generated_module).expect("complete typed owner module should parse as Rust");
+}
+
+fn callback_declaration(
+    lifetime: PythonCallbackLifetime,
+    dispatch: PythonCallbackDispatch,
+    concurrency: Option<PythonCallbackConcurrency>,
+    handler_error_type: Option<Type>,
+    owner_cleanup: Option<PythonCleanupPolicy>,
+) -> PythonCallbackDeclaration {
+    PythonCallbackDeclaration {
+        parameter_name: "handler".to_string(),
+        span: TextRange::default(),
+        lifetime,
+        dispatch,
+        concurrency,
+        argument_types: vec![Type::Int],
+        argument_conventions: vec![ParamConvention::own()],
+        success_type: Type::Int,
+        handler_error_type,
+        is_async: false,
+        owner_class: (lifetime != PythonCallbackLifetime::Call).then(|| "Subscription".to_string()),
+        owner_cleanup,
+    }
 }
 
 fn python_error_type() -> Type {

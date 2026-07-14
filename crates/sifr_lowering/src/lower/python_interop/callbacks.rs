@@ -141,7 +141,7 @@ pub(super) fn parse(
                             ctx,
                             "unknown callback lifetime policy",
                             keyword.value.range(),
-                        )
+                        );
                     }
                 };
             }
@@ -155,7 +155,7 @@ pub(super) fn parse(
                             ctx,
                             "unknown callback dispatch policy",
                             keyword.value.range(),
-                        )
+                        );
                     }
                 };
             }
@@ -168,7 +168,7 @@ pub(super) fn parse(
                             ctx,
                             "unknown callback concurrency policy",
                             keyword.value.range(),
-                        )
+                        );
                     }
                 };
             }
@@ -284,6 +284,16 @@ pub(super) fn validate(
             );
             continue;
         };
+        if callback.lifetime != PythonCallbackLifetime::Call && !parameter.convention.is_owned() {
+            invalid(
+                ctx,
+                &format!(
+                    "retained callback parameter `{}` must be declared with `own` ownership",
+                    callback.parameter_name
+                ),
+                callback.span,
+            );
+        }
         validate_dispatch(callback, is_async, declaration_effect, ctx);
 
         let (success_type, handler_error_type) = match callback_return.resolve_alias() {
@@ -316,6 +326,63 @@ pub(super) fn validate(
         callback.success_type = success_type;
         callback.handler_error_type = handler_error_type;
         callback.is_async = is_async;
+    }
+}
+
+pub(super) fn validate_retained_owner_error_channels(
+    functions: &[sifr_ir::HirFunction],
+    classes: &[sifr_ir::HirClass],
+    ctx: &mut LowerCtx,
+) {
+    let mut invalid_owner_channel = false;
+    let callbacks = functions
+        .iter()
+        .chain(classes.iter().flat_map(|class| class.methods.iter()))
+        .flat_map(|function| &function.python_interop)
+        .flat_map(|declaration| &declaration.callbacks)
+        .filter_map(|callback| {
+            Some((
+                callback.owner_class.as_ref()?,
+                callback.handler_error_type.as_ref()?,
+                callback.span,
+            ))
+        })
+        .collect::<Vec<_>>();
+    for (owner_name, handler_error, span) in callbacks {
+        let Some(owner) = classes.iter().find(|class| &class.name == owner_name) else {
+            continue;
+        };
+        for cleanup in owner.methods.iter().filter(|method| {
+            method.python_interop.first().is_some_and(|declaration| {
+                declaration.consumes_receiver
+                    || matches!(
+                        declaration.kind,
+                        sifr_ir::PythonInteropDecoratorKind::ContextExit
+                            | sifr_ir::PythonInteropDecoratorKind::ContextAsyncExit
+                    )
+            })
+        }) {
+            let Type::Result(_, error_channel) = cleanup.return_type.resolve_alias() else {
+                continue;
+            };
+            if !error_channel_contains(error_channel.as_ref(), handler_error) {
+                invalid_owner_channel = true;
+                invalid(
+                    ctx,
+                    &format!(
+                        "retained callback owner cleanup `{}.{}` error channel must contain handler error `{}`",
+                        owner.name,
+                        cleanup.name,
+                        handler_error.display_name()
+                    ),
+                    span,
+                );
+            }
+        }
+    }
+    if invalid_owner_channel {
+        ctx.errors
+            .retain(|error| error.code != Some(DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION));
     }
 }
 
@@ -354,9 +421,11 @@ fn validate_dispatch(
         PythonCallbackDispatch::Current if is_async => {
             Some("`dispatch=current` requires a synchronous `Callable` parameter")
         }
-        PythonCallbackDispatch::Current if declaration_effect == PythonInteropEffect::Async => Some(
-            "`dispatch=current` requires a synchronous `@python(...)` target so non-send captures remain on their creating thread",
-        ),
+        PythonCallbackDispatch::Current if declaration_effect == PythonInteropEffect::Async => {
+            Some(
+                "`dispatch=current` requires a synchronous `@python(...)` target so non-send captures remain on their creating thread",
+            )
+        }
         PythonCallbackDispatch::Foreign if is_async => {
             Some("`dispatch=foreign` requires a synchronous `Callable` parameter")
         }

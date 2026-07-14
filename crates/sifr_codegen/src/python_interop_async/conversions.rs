@@ -539,14 +539,14 @@ pub(crate) fn async_output_value(
     } = ty.resolve_alias()
     {
         if opaque_classes.contains_key(class_name) {
-            return Some(RustExpr::StructInit {
-                name: class_name.clone(),
-                fields: vec![(
-                    "__sifr_python_object".to_string(),
-                    mapped_try(
-                        runtime_call("async_to_object", vec![RustExpr::Ident(name.to_string())]),
-                        error_type,
-                    ),
+            return Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    class_name.clone(),
+                    "__sifr_from_python_object".to_string(),
+                ])),
+                args: vec![mapped_try(
+                    runtime_call("async_to_object", vec![RustExpr::Ident(name.to_string())]),
+                    error_type,
                 )],
             });
         }

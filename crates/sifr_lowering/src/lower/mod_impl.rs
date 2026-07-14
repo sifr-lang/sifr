@@ -845,6 +845,7 @@ pub(in crate::lower) fn lower_module_impl(
             _ => {}
         }
     }
+    python_interop::validate_retained_callback_owner_errors(&functions, &classes, &mut ctx);
     if ctx.errors.is_empty() {
         let module = HirModule {
             functions,
