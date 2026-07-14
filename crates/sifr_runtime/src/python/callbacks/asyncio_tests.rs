@@ -18,6 +18,14 @@ use std::sync::Arc;
 
 const MODULE: &str = "__sifr_asyncio_callback_tests__";
 
+struct CaptureReleaseProbe(Arc<AtomicBool>);
+
+impl Drop for CaptureReleaseProbe {
+    fn drop(&mut self) {
+        self.0.store(true, Ordering::SeqCst);
+    }
+}
+
 #[tokio::test(flavor = "current_thread")]
 async fn asyncio_callback_round_trips_on_owned_loop_and_drains_asynchronously() {
     let _guard = test_guard();
@@ -313,6 +321,8 @@ async fn retained_finalization_resumes_native_cancellation_only_after_rollback()
     let started_by_handler = Arc::clone(&started);
     let mut group = RetainedCallbackGroup::new().expect("retained group should create");
     let owner = group.owner().clone();
+    let capture_released = Arc::new(AtomicBool::new(false));
+    let capture_probe = CaptureReleaseProbe(Arc::clone(&capture_released));
     let callback = asyncio_callback_with_owner(
         owner.clone(),
         7,
@@ -320,6 +330,7 @@ async fn retained_finalization_resumes_native_cancellation_only_after_rollback()
         AsyncioCallbackConcurrency::Parallel,
         |args| crate::python::to_int(&args[0]),
         move |_, value, cancellation: CancellationCarrier| {
+            let _capture = &capture_probe;
             let started = Arc::clone(&started_by_handler);
             async move {
                 started.notify_one();
@@ -353,10 +364,12 @@ async fn retained_finalization_resumes_native_cancellation_only_after_rollback()
     let resumed_after_close = Arc::new(AtomicBool::new(false));
     let resumed = Arc::clone(&resumed_after_close);
     let owner_at_resume = owner.clone();
+    let capture_at_resume = Arc::clone(&capture_released);
     assert_eq!(
         parent.bind_fallback(Arc::new(move || {
             resumed.store(
-                owner_at_resume.status() == CallbackOwnerStatus::Closed,
+                owner_at_resume.status() == CallbackOwnerStatus::Closed
+                    && capture_at_resume.load(Ordering::SeqCst),
                 Ordering::SeqCst,
             );
         })),
@@ -386,6 +399,7 @@ async fn retained_finalization_resumes_native_cancellation_only_after_rollback()
     let (outcome, ()) = tokio::join!(finalization, cancel);
     outcome.expect_err("native cancellation should terminate the retained operation");
     assert_eq!(owner.status(), CallbackOwnerStatus::Closed);
+    assert!(capture_released.load(Ordering::SeqCst));
     assert!(resumed_after_close.load(Ordering::SeqCst));
     reset_runtime_state_for_tests();
 }

@@ -38,6 +38,13 @@ async def swallow_async_handler_error(
 ) -> Result[None, PythonError | HandlerError]: ...
 
 
+@python.callback(handler, lifetime=call, dispatch=asyncio, concurrency=parallel)
+@python.coroutine(bridge.callback_reconciliation.observe_async_handler_release)
+async def observe_async_handler_release(
+    own handler: AsyncCallable[[int], Result[int, HandlerError]],
+) -> Result[None, PythonError | HandlerError]: ...
+
+
 @python.coroutine(bridge.callback_reconciliation.make_manager)
 async def make_manager() -> Result[Manager, PythonError]: ...
 
@@ -59,6 +66,13 @@ async def fail(value: int) -> Result[int, HandlerError]:
 async def main() -> Result[None, PythonError]:
     try:
         _swallowed: Result[None, PythonError | HandlerError] = await swallow_async_handler_error(fail)
+        typed_evidence: str = "sifr-handler-error-missing"
+        match _swallowed:
+            case HandlerError():
+                typed_evidence = "sifr-handler-error"
+            case _:
+                pass
+        _released: Result[None, PythonError | HandlerError] = await observe_async_handler_release(fail)
 
         manager: Manager = await make_manager()
         try:
@@ -74,7 +88,7 @@ async def main() -> Result[None, PythonError]:
             pass
 
         proof: str = await status()
-        print("sifr-python-interop:callback:reconciliation=" + proof)
+        print("sifr-python-interop:callback:reconciliation=" + proof + ":" + typed_evidence)
     except PythonError as error:
         raise error
     return None

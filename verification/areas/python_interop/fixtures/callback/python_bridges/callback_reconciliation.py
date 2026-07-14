@@ -1,5 +1,7 @@
 import asyncio
+import gc
 from types import SimpleNamespace
+import weakref
 
 
 _provisional_cancelled = False
@@ -9,11 +11,13 @@ _enter_handler_error = False
 _manager = None
 _escaped_async_call_handler = None
 _async_handler_error = False
+_async_release_ref = None
 _sync_manager = None
 _sync_exit_called = False
 _sync_handler_error = False
 _escaped_sync_call_handler = None
 _sync_call_handler_error = False
+_sync_release_ref = None
 
 
 def _record_cancellation(kind):
@@ -67,7 +71,17 @@ async def swallow_async_handler_error(handler):
         _async_handler_error = type(error).__name__ == "SifrCallbackError"
 
 
+async def observe_async_handler_release(handler):
+    global _async_release_ref
+    _async_release_ref = weakref.ref(handler)
+    try:
+        await handler(10)
+    except Exception:
+        pass
+
+
 async def status():
+    gc.collect()
     await asyncio.sleep(0)
     await asyncio.sleep(0)
     provisional = "provisional-cancelled" if _provisional_cancelled else "provisional-live"
@@ -85,8 +99,9 @@ async def status():
     else:
         call = "call-live"
     exited = "exit-called" if _exit_called else "exit-skipped"
-    typed = "typed-observed" if _async_handler_error else "typed-missing"
-    return f"{provisional}:{entered}:{closed}:{call}:{exited}:{typed}"
+    typed = "python-handler-error" if _async_handler_error else "python-handler-error-missing"
+    released = "call-released" if _async_release_ref() is None else "call-retained"
+    return f"{provisional}:{entered}:{closed}:{call}:{exited}:{typed}:{released}"
 
 
 class SyncManager(SimpleNamespace):
@@ -122,7 +137,17 @@ def swallow_sync_handler_error(handler):
         _sync_call_handler_error = type(error).__name__ == "SifrCallbackError"
 
 
+def observe_sync_handler_release(handler):
+    global _sync_release_ref
+    _sync_release_ref = weakref.ref(handler)
+    try:
+        handler(9)
+    except Exception:
+        pass
+
+
 def sync_status():
+    gc.collect()
     try:
         _sync_manager.handler(2)
     except Exception as error:
@@ -137,5 +162,6 @@ def sync_status():
         call = "sync-call-live"
     handler = "sync-handler-success" if _sync_handler_error else "sync-handler-missing"
     exited = "sync-exit-called" if _sync_exit_called else "sync-exit-skipped"
-    typed = "typed-observed" if _sync_call_handler_error else "typed-missing"
-    return f"{callback}:{handler}:{call}:{exited}:{typed}"
+    typed = "python-handler-error" if _sync_call_handler_error else "python-handler-error-missing"
+    released = "sync-call-released" if _sync_release_ref() is None else "sync-call-retained"
+    return f"{callback}:{handler}:{call}:{exited}:{typed}:{released}"

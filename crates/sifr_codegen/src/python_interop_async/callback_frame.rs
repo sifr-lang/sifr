@@ -13,7 +13,7 @@ use crate::python_interop_callbacks::{
     retained_failure_field, retained_slot_source, CallbackSetup,
 };
 use crate::python_interop_direct::{mapped_try, runtime_call};
-use crate::{RustExpr, RustStmt};
+use crate::{RustExpr, RustLiteral, RustStmt};
 use sifr_ir::{HirFunction, PythonCallbackLifetime, PythonInteropDeclaration, PythonParameterKind};
 use sifr_type_system::Type;
 use std::collections::HashMap;
@@ -22,7 +22,6 @@ pub(super) struct AsyncArgumentFrame<'a> {
     pub(super) body: Vec<RustStmt>,
     pub(super) callbacks: Vec<CallbackSetup>,
     pub(super) retained_result: Option<&'a sifr_ir::PythonCallbackDeclaration>,
-    pub(super) provisional_callbacks: Vec<String>,
 }
 
 pub(super) fn argument_frame<'a>(
@@ -276,10 +275,6 @@ pub(super) fn argument_frame<'a>(
         }
     }
     Some(AsyncArgumentFrame {
-        provisional_callbacks: callbacks
-            .iter()
-            .filter_map(|setup| setup.provisional_var.clone())
-            .collect(),
         body,
         callbacks,
         retained_result,
@@ -299,7 +294,24 @@ pub(super) fn append_submission(
     close_callbacks: Option<RustExpr>,
     owner_retained_errors: &[Type],
 ) -> Option<()> {
-    if retained_result.is_some() {
+    if !callbacks.is_empty() || close_callbacks.is_some() {
+        let mut protected_preamble = if close_callbacks.is_some() {
+            std::mem::take(body)
+        } else {
+            let mut preamble = callbacks
+                .iter()
+                .filter_map(|callback| callback.provisional_var.as_ref())
+                .map(|provisional| RustStmt::Let {
+                    mutable: true,
+                    name: provisional.clone(),
+                    ty: None,
+                    value: RustExpr::Literal(RustLiteral::None),
+                })
+                .collect::<Vec<_>>();
+            preamble.append(body);
+            *body = preamble;
+            Vec::new()
+        };
         body.push(RustStmt::Let {
             mutable: false,
             name: "__sifr_retained_parent_cancellation".to_string(),
@@ -333,6 +345,7 @@ pub(super) fn append_submission(
             ),
         });
         let mut finalization = Vec::new();
+        finalization.append(&mut protected_preamble);
         append_submission_body(
             &mut finalization,
             declaration,
@@ -355,26 +368,53 @@ pub(super) fn append_submission(
                 is_move: false,
             })),
         });
-        body.push(RustStmt::Let {
-            mutable: false,
-            name: "__sifr_retained_finalized".to_string(),
-            ty: None,
-            value: RustExpr::Await(Box::new(runtime_call(
-                "finalize_retained_callbacks",
-                vec![
-                    RustExpr::Ident("__sifr_retained_finalization".to_string()),
-                    RustExpr::Ref {
-                        mutable: true,
-                        expr: Box::new(RustExpr::Ident("__sifr_callback_group".to_string())),
-                    },
-                ],
-            ))),
-        });
+        for provisional in callbacks
+            .iter()
+            .filter_map(|callback| callback.provisional_var.as_ref())
+        {
+            body.push(RustStmt::If {
+                cond: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(
+                        "__sifr_retained_finalization".to_string(),
+                    )),
+                    method: "is_err".to_string(),
+                    args: Vec::new(),
+                },
+                then_body: vec![RustStmt::Expr(RustExpr::Ident(format!(
+                    "if let Some(__sifr_provisional_callback) = {provisional}.as_ref() {{ if let Err(__sifr_provisional_cleanup_error) = __sifr_provisional_callback.rollback_provisional().await {{ sifr_runtime::python::record_context_cleanup_evidence(\"receiver-callback-registration\", &__sifr_provisional_cleanup_error); }} }}"
+                )))],
+                else_body: None,
+            });
+        }
+        if retained_result.is_some() {
+            body.push(RustStmt::Let {
+                mutable: false,
+                name: "__sifr_retained_finalized".to_string(),
+                ty: None,
+                value: RustExpr::Await(Box::new(runtime_call(
+                    "finalize_retained_callbacks",
+                    vec![
+                        RustExpr::Ident("__sifr_retained_finalization".to_string()),
+                        RustExpr::Ref {
+                            mutable: true,
+                            expr: Box::new(RustExpr::Ident("__sifr_callback_group".to_string())),
+                        },
+                    ],
+                ))),
+            });
+        }
         body.push(RustStmt::Return(Some(RustExpr::Await(Box::new(
             runtime_call(
                 "finish_retained_callback_finalization",
                 vec![
-                    RustExpr::Ident("__sifr_retained_finalized".to_string()),
+                    RustExpr::Ident(
+                        if retained_result.is_some() {
+                            "__sifr_retained_finalized"
+                        } else {
+                            "__sifr_retained_finalization"
+                        }
+                        .to_string(),
+                    ),
                     RustExpr::Ident("__sifr_retained_cancellation_scope".to_string()),
                 ],
             ),

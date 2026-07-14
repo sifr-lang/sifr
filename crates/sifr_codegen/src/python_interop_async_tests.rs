@@ -144,6 +144,33 @@ fn async_close_selects_identity_finalization_only_for_complete_class_contract() 
     assert!(rendered.contains("PythonAsyncRequest::semantic_close_method"));
     assert!(rendered.contains("self.__sifr_python_object"));
     assert!(!rendered.contains("PythonAsyncRequest::owned_method"));
+    for required in [
+        "retained_callback_finalization_scope",
+        "scope.child().clone()",
+        "submit_async_declaration_with_callbacks",
+        "finish_retained_callback_finalization",
+    ] {
+        assert!(
+            rendered.contains(required),
+            "missing {required}\n{rendered}"
+        );
+    }
+    let claim = rendered
+        .find("retained_callback_finalization_scope")
+        .expect("owner-close cancellation claim");
+    let request = rendered
+        .find("PythonAsyncRequest::semantic_close_method")
+        .expect("semantic owner-close request");
+    let close = rendered
+        .find("submit_async_declaration_with_callbacks")
+        .expect("async owner close submission");
+    let resume = rendered
+        .find("finish_retained_callback_finalization")
+        .expect("native cancellation resumption");
+    assert!(
+        claim < request && request < close && close < resume,
+        "{rendered}"
+    );
 
     let borrowed = method_function(false);
     let borrowed = render_stmts(
@@ -322,6 +349,26 @@ fn asyncio_callback_emits_owned_loop_factory_async_handler_and_async_drain() {
         rendered.contains("reconcile_callback_outcome"),
         "{rendered}"
     );
+    for required in [
+        "retained_callback_finalization_scope",
+        "scope.child().clone()",
+        "finish_retained_callback_finalization",
+    ] {
+        assert!(
+            rendered.contains(required),
+            "missing {required}\n{rendered}"
+        );
+    }
+    let request = rendered
+        .find("submit_async_declaration")
+        .expect("async declaration request");
+    let drain = rendered
+        .find("close_call_scope().await")
+        .expect("asyncio callback drain");
+    let resume = rendered
+        .find("finish_retained_callback_finalization")
+        .expect("native cancellation resumption");
+    assert!(request < drain && drain < resume, "{rendered}");
 }
 
 #[test]
@@ -365,6 +412,26 @@ fn foreign_callback_in_async_wrapper_uses_nonblocking_drain() {
         "{rendered}"
     );
     assert!(!rendered.contains("close_call_scope();"), "{rendered}");
+    for required in [
+        "retained_callback_finalization_scope",
+        "scope.child().clone()",
+        "finish_retained_callback_finalization",
+    ] {
+        assert!(
+            rendered.contains(required),
+            "missing {required}\n{rendered}"
+        );
+    }
+    let request = rendered
+        .find("submit_async_declaration")
+        .expect("async declaration request");
+    let drain = rendered
+        .find("close_call_scope_async().await")
+        .expect("foreign callback drain");
+    let resume = rendered
+        .find("finish_retained_callback_finalization")
+        .expect("native cancellation resumption");
+    assert!(request < drain && drain < resume, "{rendered}");
 }
 
 #[test]
@@ -410,7 +477,9 @@ fn receiver_asyncio_registration_has_terminal_provisional_rollback() {
         "__sifr_provisional_callback_0 = Some(",
         "rollback_provisional().await",
         "receiver-callback-registration",
-        "return __sifr_receiver_callback_outcome",
+        "retained_callback_finalization_scope",
+        "scope.child().clone()",
+        "finish_retained_callback_finalization",
     ] {
         assert!(
             rendered.contains(required),
@@ -423,7 +492,10 @@ fn receiver_asyncio_registration_has_terminal_provisional_rollback() {
     let rollback = rendered
         .find("rollback_provisional().await")
         .expect("terminal rollback");
-    assert!(request < rollback, "{rendered}");
+    let resume = rendered
+        .find("finish_retained_callback_finalization")
+        .expect("native cancellation resumption");
+    assert!(request < rollback && rollback < resume, "{rendered}");
     syn::parse_file(&format!(
         "async fn generated() -> Result<(), PythonError> {{ {rendered} }}"
     ))

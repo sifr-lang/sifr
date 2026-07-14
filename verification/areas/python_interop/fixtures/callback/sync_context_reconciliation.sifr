@@ -31,6 +31,13 @@ def swallow_sync_handler_error(
 ) -> Result[None, PythonError | HandlerError]: ...
 
 
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
+@python(bridge.callback_reconciliation.observe_sync_handler_release)
+def observe_sync_handler_release(
+    own handler: Callable[[int], Result[int, HandlerError]],
+) -> Result[None, PythonError | HandlerError]: ...
+
+
 @python(bridge.callback_reconciliation.make_sync_manager)
 def make_sync_manager() -> Result[SyncManager, PythonError]: ...
 
@@ -50,6 +57,13 @@ def add_one(value: int) -> int:
 def main() -> Result[None, PythonError]:
     try:
         _swallowed: Result[None, PythonError | HandlerError] = swallow_sync_handler_error(fail)
+        typed_evidence: str = "sifr-handler-error-missing"
+        match _swallowed:
+            case HandlerError():
+                typed_evidence = "sifr-handler-error"
+            case _:
+                pass
+        _released: Result[None, PythonError | HandlerError] = observe_sync_handler_release(fail)
 
         manager: SyncManager = make_sync_manager()
         _installed: None = manager.install(add_one)
@@ -59,7 +73,7 @@ def main() -> Result[None, PythonError]:
         except PythonError:
             pass
         proof: str = sync_status()
-        print("sifr-python-interop:callback:sync-context=" + proof)
+        print("sifr-python-interop:callback:sync-context=" + proof + ":" + typed_evidence)
     except PythonError as error:
         raise error
     return None

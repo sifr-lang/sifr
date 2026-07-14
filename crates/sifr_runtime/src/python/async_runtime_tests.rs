@@ -325,6 +325,13 @@ fn shutdown_retains_owned_loop_authority_for_async_callback_unregister() {
     let owner = group
         .commit_for_object(&object, super::super::RetainedCallbackCleanup::AsyncClose)
         .expect("async close unregister should commit");
+    let capture_released = Arc::new(AtomicBool::new(false));
+    let capture_at_shutdown = Arc::clone(&capture_released);
+    owner
+        .retain_capture(move || {
+            capture_at_shutdown.store(true, Ordering::SeqCst);
+        })
+        .expect("shutdown capture should attach");
     drop(group);
 
     shutdown().expect("shutdown should run async callback unregister before stopping the loop");
@@ -333,6 +340,7 @@ fn shutdown_retains_owned_loop_authority_for_async_callback_unregister() {
         assert_eq!(marker.bind(py).len().expect("marker should have length"), 1);
     })
     .expect("runtime should attach");
+    assert!(capture_released.load(Ordering::SeqCst));
     assert_eq!(owner.status(), super::super::CallbackOwnerStatus::Closed);
 }
 

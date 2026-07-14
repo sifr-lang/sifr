@@ -26,7 +26,7 @@ CALLBACK_CASES = {
         case_id="asyncio-roundtrip",
         relative_source="callback/asyncio_roundtrip.sifr",
         stdout_marker="sifr-python-interop:callback:asyncio=42",
-        import_roots=("asyncio", "types"),
+        import_roots=("asyncio", "gc", "types", "weakref"),
         native_roots=(),
     ),
     "callback-reconciliation": ExampleCase(
@@ -35,9 +35,10 @@ CALLBACK_CASES = {
         stdout_marker=(
             "sifr-python-interop:callback:reconciliation="
             "provisional-cancelled:enter-cancelled:enter-closed:"
-            "call-closed:exit-skipped:typed-observed"
+            "call-closed:exit-skipped:python-handler-error:call-released:"
+            "sifr-handler-error"
         ),
-        import_roots=("asyncio", "types"),
+        import_roots=("asyncio", "gc", "types", "weakref"),
         native_roots=(),
     ),
     "sync-context-reconciliation": ExampleCase(
@@ -46,9 +47,10 @@ CALLBACK_CASES = {
         stdout_marker=(
             "sifr-python-interop:callback:sync-context="
             "sync-closed:sync-handler-success:sync-call-closed:"
-            "sync-exit-skipped:typed-observed"
+            "sync-exit-skipped:python-handler-error:sync-call-released:"
+            "sifr-handler-error"
         ),
-        import_roots=("asyncio", "types"),
+        import_roots=("asyncio", "gc", "types", "weakref"),
         native_roots=(),
     ),
     "pubsub-retained-async-close": ExampleCase(
