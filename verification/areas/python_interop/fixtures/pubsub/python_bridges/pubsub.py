@@ -18,7 +18,11 @@ async def subscribe(handler):
     async def aclose():
         state["closed"] = True
         if state["active"]:
-            await asyncio.gather(*tuple(state["active"]), return_exceptions=True)
+            results = await asyncio.gather(*tuple(state["active"]))
+            if results != [42]:
+                raise RuntimeError(f"unexpected active callback results: {results!r}")
         state["handler"] = None
 
-    return SimpleNamespace(emit=emit, aclose=aclose)
+    eager = asyncio.ensure_future(emit(21))
+    await asyncio.sleep(0)
+    return SimpleNamespace(emit=emit, aclose=aclose, eager=eager)

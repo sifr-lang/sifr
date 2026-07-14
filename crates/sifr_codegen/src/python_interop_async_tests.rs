@@ -1,4 +1,7 @@
-use crate::python_interop_direct::{python_interop_function_body, python_interop_method_body};
+use crate::python_interop_direct::{
+    python_interop_function_body, python_interop_method_body,
+    python_interop_method_body_with_retained_errors,
+};
 use crate::{generate_rust, render_stmts};
 use ruff_text_size::TextRange;
 use sifr_ir::{
@@ -155,6 +158,47 @@ fn async_close_selects_identity_finalization_only_for_complete_class_contract() 
 }
 
 #[test]
+fn async_owner_methods_observe_typed_retained_callback_failures() {
+    let mut close_declaration = declaration(vec!["Self", "aclose"], Vec::new());
+    close_declaration.consumes_receiver = true;
+    let close = function("aclose", Vec::new(), Type::None, close_declaration);
+    let mut owner = opaque_declaration();
+    owner.cleanup = Some(PythonCleanupPolicy::AsyncClose);
+    let errors = vec![Type::Class {
+        name: "HandlerError".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: None,
+    }];
+
+    for method in [&close, &method_function(false)] {
+        let rendered = render_stmts(
+            &python_interop_method_body_with_retained_errors(
+                method,
+                &Default::default(),
+                Some(&owner),
+                &Default::default(),
+                &errors,
+            )
+            .expect("async owner method should lower"),
+        );
+        assert!(
+            rendered.contains("__sifr_python_callbacks.owner()"),
+            "{rendered}"
+        );
+        assert!(
+            rendered.contains("__sifr_python_callback_failure_0.clone()"),
+            "{rendered}"
+        );
+        assert!(rendered.contains("take_if_owner_first"), "{rendered}");
+        assert!(
+            rendered.contains("attach_callback_failure_evidence"),
+            "{rendered}"
+        );
+    }
+}
+
+#[test]
 fn resolved_bridge_target_stays_structured_in_typed_request() {
     let function = function(
         "value",
@@ -275,7 +319,7 @@ fn asyncio_callback_emits_owned_loop_factory_async_handler_and_async_drain() {
     );
     assert!(rendered.contains("close_call_scope().await"), "{rendered}");
     assert!(
-        rendered.contains("attach_callback_failure_evidence"),
+        rendered.contains("reconcile_callback_outcome"),
         "{rendered}"
     );
 }

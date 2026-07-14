@@ -124,6 +124,7 @@
         "tier3",
         "tier4",
         "callbacks",
+        "callback-examples",
         "dataframes",
         "dataframe-examples",
         "ml",

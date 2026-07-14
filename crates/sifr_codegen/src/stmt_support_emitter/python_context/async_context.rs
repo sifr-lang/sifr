@@ -2,6 +2,7 @@ use super::cancellation_scope::cleanup_scope_call;
 use super::outcome::{cause_label, cause_variant};
 use super::sync::rewrite_context_control_flow;
 use crate::python_interop_async::{async_output_value, output_schema};
+use crate::python_interop_callbacks::failure_reconciliation_stmt;
 use crate::rust_interop_error_mapping::bridge_error_expr;
 use crate::{HirExpr, HirStmt, RustEmitter, RustExpr, RustStmt, Type};
 
@@ -10,7 +11,7 @@ impl RustEmitter {
     pub(crate) fn try_lower_python_async_context_for_ir(
         &mut self,
         context: &HirExpr,
-        _manager_class: &str,
+        manager_class: &str,
         entered_type: &Type,
         enter_error_type: &Type,
         exit_error_type: &Type,
@@ -32,6 +33,11 @@ impl RustEmitter {
         self.python_context_counter += 1;
         let context_is_nested = self.python_context_envelope_depth > 0;
         let names = AsyncContextNames::new(suffix);
+        let owner_retained_errors = self
+            .python_retained_callback_errors
+            .get(manager_class)
+            .cloned()
+            .unwrap_or_default();
         let manager = crate::render_expr(&manager_value);
         let schema = crate::render_expr(&schema);
         let entered_rust_type = crate::render_type(&crate::sifr_type_to_rust_type(entered_type));
@@ -75,7 +81,8 @@ impl RustEmitter {
         let internal_error = mapped_internal_error(active_error_type);
         let enter_error = mapped_result_error(enter_error_type);
         let resume_parent_cancellation = resume_parent_cancellation(&names.scope);
-        let normal_exit = normal_exit(&names, exit_error_type);
+        let owner_observer_setup = owner_observer_setup(&names, &owner_retained_errors);
+        let normal_exit = normal_exit(&names, exit_error_type, &owner_retained_errors);
         let conversion_exit = sifr_error_exit(
             &names,
             &names.conversion_error,
@@ -116,6 +123,7 @@ impl RustEmitter {
         let rendered = format!(
             r#"{{
 let {manager_name} = {manager};
+{owner_observer_setup}
 let {parent} = match __sifr_current_task_cancellation() {{
     Some(carrier) => carrier,
     None => return Err({internal_error}),
@@ -202,6 +210,7 @@ match {outcome} {{
 drop({scope});
 }}"#,
             manager_name = names.manager,
+            owner_observer_setup = owner_observer_setup,
             parent = names.parent,
             scope = names.scope,
             child = names.child,
@@ -278,15 +287,73 @@ impl AsyncContextNames {
     }
 }
 
-fn normal_exit(names: &AsyncContextNames, exit_error_type: &Type) -> String {
+fn owner_observer_setup(names: &AsyncContextNames, errors: &[Type]) -> String {
+    if errors.is_empty() {
+        return String::new();
+    }
+    let owner = format!("{}_callback_owner", names.manager);
+    let mut statements = vec![RustStmt::Let {
+        mutable: false,
+        name: owner,
+        ty: None,
+        value: RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Field {
+                expr: Box::new(RustExpr::Ident(names.manager.clone())),
+                field: "__sifr_python_callbacks".to_string(),
+            }),
+            method: "owner".to_string(),
+            args: Vec::new(),
+        },
+    }];
+    for index in 0..errors.len() {
+        statements.push(RustStmt::Let {
+            mutable: false,
+            name: format!("{}_callback_failure_{index}", names.manager),
+            ty: None,
+            value: RustExpr::Clone(Box::new(RustExpr::Field {
+                expr: Box::new(RustExpr::Ident(names.manager.clone())),
+                field: format!("__sifr_python_callback_failure_{index}"),
+            })),
+        });
+    }
+    crate::render_stmts(&statements)
+}
+
+fn normal_exit(
+    names: &AsyncContextNames,
+    exit_error_type: &Type,
+    owner_retained_errors: &[Type],
+) -> String {
     let exit = RustExpr::Await(Box::new(RustExpr::Ident(cleanup_scope_call(
         &names.cleanup_carrier,
         &names.manager,
         "sifr_runtime::python::PythonAsyncExitCause::Normal",
     ))));
     let mapped = crate::python_interop_direct::mapped_try(exit, exit_error_type);
+    let reconciliation = if owner_retained_errors.is_empty() {
+        String::new()
+    } else {
+        let owner_value = format!("{}_callback_owner_value", names.manager);
+        crate::render_stmts(&[RustStmt::IfLet {
+            pattern: format!("Some(ref {owner_value})"),
+            expr: RustExpr::Ident(format!("{}_callback_owner", names.manager)),
+            then_body: owner_retained_errors
+                .iter()
+                .enumerate()
+                .map(|(index, handler_error_type)| {
+                    failure_reconciliation_stmt(
+                        &format!("{}_callback_failure_{index}", names.manager),
+                        handler_error_type,
+                        exit_error_type,
+                        RustExpr::Deref(Box::new(RustExpr::Ident(owner_value.clone()))),
+                    )
+                })
+                .collect(),
+            else_body: None,
+        }])
+    };
     format!(
-        "let {cleanup} = sifr_runtime::cancellation::CancellationCarrier::new(); let _decision = {};",
+        "let {cleanup} = sifr_runtime::cancellation::CancellationCarrier::new(); let _decision = {}; {reconciliation}",
         crate::render_expr(&mapped),
         cleanup = names.cleanup_carrier,
     )

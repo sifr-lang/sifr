@@ -6,9 +6,10 @@ use sifr_type_system::Type;
 use std::collections::HashMap;
 
 use crate::python_interop_callbacks::{
-    append_retained_callback_retention, append_retained_failure_slots,
-    append_retained_failure_transfers, callback_cleanup_expr, callback_object_expr,
-    callback_outcome_with_evidence, callback_owner_expr, callback_setup,
+    append_owner_failure_evidence, append_owner_failure_observer_setup,
+    append_owner_failure_reconciliation, append_retained_callback_retention,
+    append_retained_failure_slots, append_retained_failure_transfers, callback_cleanup_expr,
+    callback_object_expr, callback_outcome_after_cleanup, callback_owner_expr, callback_setup,
     failure_reconciliation_stmt, retained_cleanup_expr, retained_failure_field,
     retained_slot_source,
 };
@@ -270,7 +271,7 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
             mutable: false,
             name: "__sifr_python_outcome".to_string(),
             ty: None,
-            value: callback_outcome_with_evidence(call, &callback_setups),
+            value: call,
         });
         let mut cleanup_names = Vec::new();
         for (index, setup) in callback_setups.iter().enumerate() {
@@ -285,6 +286,16 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
                 cleanup_names.push(name);
             }
         }
+        body.push(RustStmt::Let {
+            mutable: false,
+            name: "__sifr_python_outcome".to_string(),
+            ty: None,
+            value: callback_outcome_after_cleanup(
+                RustExpr::Ident("__sifr_python_outcome".to_string()),
+                &callback_setups,
+                &cleanup_names,
+            ),
+        });
         body.push(mapped_let(
             "__sifr_python_result",
             RustExpr::Ident("__sifr_python_outcome".to_string()),
@@ -301,12 +312,6 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
             }
         }
         append_retained_callback_retention(&mut body, &callback_setups, error_type);
-        for cleanup in cleanup_names {
-            body.push(RustStmt::Expr(mapped_try(
-                RustExpr::Ident(cleanup),
-                error_type,
-            )));
-        }
     }
 
     let converted = output_value_expr("__sifr_python_result", ok_type, error_type, opaque_classes)?;
@@ -617,6 +622,7 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
         })));
         return Some(body);
     }
+    append_owner_failure_observer_setup(&mut body, owner_retained_errors);
     let receiver = RustExpr::Ref {
         mutable: false,
         expr: Box::new(RustExpr::Field {
@@ -678,28 +684,39 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
         }
         _ => return None,
     };
-    if callback_setups.is_empty() {
+    if callback_setups.is_empty() && owner_retained_errors.is_empty() {
         body.push(mapped_let("__sifr_python_result", operation, error_type));
     } else {
         body.push(RustStmt::Let {
-            mutable: false,
+            mutable: !owner_retained_errors.is_empty(),
             name: "__sifr_python_outcome".to_string(),
             ty: None,
-            value: callback_outcome_with_evidence(operation, &callback_setups),
+            value: operation,
         });
         let mut cleanup_names = Vec::new();
-        for (index, setup) in callback_setups.iter().enumerate() {
-            if setup.lifetime == PythonCallbackLifetime::Call {
-                let name = format!("__sifr_callback_cleanup_{index}");
-                body.push(RustStmt::Let {
-                    mutable: false,
-                    name: name.clone(),
-                    ty: None,
-                    value: callback_cleanup_expr(setup),
-                });
-                cleanup_names.push(name);
+        if !callback_setups.is_empty() {
+            for (index, setup) in callback_setups.iter().enumerate() {
+                if setup.lifetime == PythonCallbackLifetime::Call {
+                    let name = format!("__sifr_callback_cleanup_{index}");
+                    body.push(RustStmt::Let {
+                        mutable: false,
+                        name: name.clone(),
+                        ty: None,
+                        value: callback_cleanup_expr(setup),
+                    });
+                    cleanup_names.push(name);
+                }
             }
+            body.push(RustStmt::Assign {
+                target: RustExpr::Ident("__sifr_python_outcome".to_string()),
+                value: callback_outcome_after_cleanup(
+                    RustExpr::Ident("__sifr_python_outcome".to_string()),
+                    &callback_setups,
+                    &cleanup_names,
+                ),
+            });
         }
+        append_owner_failure_evidence(&mut body, owner_retained_errors);
         body.push(mapped_let(
             "__sifr_python_result",
             RustExpr::Ident("__sifr_python_outcome".to_string()),
@@ -716,12 +733,7 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
             }
         }
         append_retained_callback_retention(&mut body, &callback_setups, error_type);
-        for cleanup in cleanup_names {
-            body.push(RustStmt::Expr(mapped_try(
-                RustExpr::Ident(cleanup),
-                error_type,
-            )));
-        }
+        append_owner_failure_reconciliation(&mut body, owner_retained_errors, error_type);
     }
     let converted = output_value_expr("__sifr_python_result", ok_type, error_type, opaque_classes)?;
     if let Some(callback) = retained_result {

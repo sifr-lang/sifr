@@ -319,10 +319,13 @@ resources. It has no generic scope cleanup stack because semantic close, async
 close, context exit, callback shutdown, and one-shot transfer are distinct
 operations that must retain their individual ownership rules.
 
-Typed coroutine, `cleanup=async_close`, synchronous context, and asynchronous
-context declarations are active. For `cleanup=async_context`, exactly one
-borrowed async enter and one consuming async exit are required, and the manager
-must be consumed by `async with`. Callback, buffer, Arrow, and DLPack decorator
+Typed coroutine, `cleanup=async_close`, synchronous context, asynchronous
+context, and typed callback declarations are active. For
+`cleanup=async_context`, exactly one borrowed async enter and one consuming
+async exit are required, and the manager must be consumed by `async with`.
+Callback declarations enforce call/result/receiver ownership, current/foreign/
+asyncio dispatch, serial/parallel concurrency, capture safety, deterministic
+drain, and typed failure reconciliation. Buffer, Arrow, and DLPack decorator
 forms remain reserved by their capability rows.
 
 ## Package-Local Python Bridges

@@ -2,9 +2,10 @@ use super::errors::registered_exception_names;
 use super::registry::{retained_owner_count, shutdown_registered_callback_owners};
 use super::{
     attach_callback_failure_evidence, current_callback, current_callback_with_owner,
-    foreign_callback, foreign_callback_with_owner, CallbackExecutionError, CallbackFailureSlot,
-    CallbackHandlerFailure, CallbackOwnerSlot, CallbackOwnerState, CallbackOwnerStatus,
-    ForeignCallbackConcurrency, RetainedCallbackCleanup, RetainedCallbackGroup,
+    foreign_callback, foreign_callback_with_owner, reconcile_callback_outcome,
+    CallbackExecutionError, CallbackFailureSlot, CallbackHandlerFailure, CallbackOwnerSlot,
+    CallbackOwnerState, CallbackOwnerStatus, ForeignCallbackConcurrency, RetainedCallbackCleanup,
+    RetainedCallbackGroup,
 };
 use crate::python::{
     call_object_owned, close_object, context_exit_normal_with_callbacks, enter_context, from_int,
@@ -259,6 +260,31 @@ fn python_error_remains_primary_with_callback_failure_as_secondary_evidence() {
             .count(),
         1
     );
+    owner.close_call_scope().expect("owner should close");
+}
+
+#[test]
+fn callback_reconciliation_drains_before_combining_primary_and_cleanup_failures() {
+    let owner = CallbackOwnerState::new_call_scoped().expect("owner should create");
+    owner.record_failure(5, "LateHandlerError", "handler failed while draining");
+    let primary =
+        PythonError::without_replay("call", "ValueError", "target failed", "", "python target");
+    let cleanup = PythonError::without_replay(
+        "callback",
+        "CleanupError",
+        "callable cleanup failed",
+        "",
+        "callback cleanup",
+    );
+
+    let error = reconcile_callback_outcome::<()>(Err(primary), vec![Err(cleanup)], &[&owner])
+        .expect_err("Python failure should remain primary");
+    assert_eq!(error.exception_type, "ValueError");
+    assert!(error.context.contains("LateHandlerError at entry 5"));
+    assert!(error
+        .context
+        .contains("secondary Python context cleanup failure"));
+    assert!(error.context.contains("CleanupError"));
     owner.close_call_scope().expect("owner should close");
 }
 

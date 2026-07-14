@@ -266,6 +266,125 @@ pub(crate) fn callback_outcome_with_evidence(
     )
 }
 
+pub(crate) fn callback_outcome_after_cleanup(
+    outcome: RustExpr,
+    callbacks: &[CallbackSetup],
+    cleanup_names: &[String],
+) -> RustExpr {
+    runtime_call(
+        "reconcile_callback_outcome",
+        vec![
+            outcome,
+            RustExpr::Vec(
+                cleanup_names
+                    .iter()
+                    .map(|name| RustExpr::Ident(name.clone()))
+                    .collect(),
+            ),
+            RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(RustExpr::Array(
+                    callbacks
+                        .iter()
+                        .map(|callback| RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(callback_owner_expr(callback)),
+                        })
+                        .collect(),
+                )),
+            },
+        ],
+    )
+}
+
+pub(crate) fn append_owner_failure_observer_setup(body: &mut Vec<RustStmt>, errors: &[Type]) {
+    if errors.is_empty() {
+        return;
+    }
+    body.push(RustStmt::Let {
+        mutable: false,
+        name: "__sifr_callback_owner_for_later_failure".to_string(),
+        ty: None,
+        value: RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Field {
+                expr: Box::new(RustExpr::Ident("self".to_string())),
+                field: "__sifr_python_callbacks".to_string(),
+            }),
+            method: "owner".to_string(),
+            args: Vec::new(),
+        },
+    });
+    for index in 0..errors.len() {
+        body.push(RustStmt::Let {
+            mutable: false,
+            name: format!("__sifr_callback_later_failure_{index}"),
+            ty: None,
+            value: RustExpr::Clone(Box::new(RustExpr::Field {
+                expr: Box::new(RustExpr::Ident("self".to_string())),
+                field: format!("__sifr_python_callback_failure_{index}"),
+            })),
+        });
+    }
+}
+
+pub(crate) fn append_owner_failure_evidence(body: &mut Vec<RustStmt>, errors: &[Type]) {
+    if errors.is_empty() {
+        return;
+    }
+    body.push(RustStmt::IfLet {
+        pattern: "Some(ref __sifr_callback_owner_for_later_failure_value)".to_string(),
+        expr: RustExpr::Ident("__sifr_callback_owner_for_later_failure".to_string()),
+        then_body: vec![RustStmt::Assign {
+            target: RustExpr::Ident("__sifr_python_outcome".to_string()),
+            value: runtime_call(
+                "attach_callback_failure_evidence",
+                vec![
+                    RustExpr::Ident("__sifr_python_outcome".to_string()),
+                    RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Array(vec![RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                                "__sifr_callback_owner_for_later_failure_value".to_string(),
+                            )))),
+                        }])),
+                    },
+                ],
+            ),
+        }],
+        else_body: None,
+    });
+}
+
+pub(crate) fn append_owner_failure_reconciliation(
+    body: &mut Vec<RustStmt>,
+    errors: &[Type],
+    error_type: &Type,
+) {
+    if errors.is_empty() {
+        return;
+    }
+    body.push(RustStmt::IfLet {
+        pattern: "Some(ref __sifr_callback_owner_for_later_failure_value)".to_string(),
+        expr: RustExpr::Ident("__sifr_callback_owner_for_later_failure".to_string()),
+        then_body: errors
+            .iter()
+            .enumerate()
+            .map(|(index, handler_error_type)| {
+                failure_reconciliation_stmt(
+                    &format!("__sifr_callback_later_failure_{index}"),
+                    handler_error_type,
+                    error_type,
+                    RustExpr::Deref(Box::new(RustExpr::Ident(
+                        "__sifr_callback_owner_for_later_failure_value".to_string(),
+                    ))),
+                )
+            })
+            .collect(),
+        else_body: None,
+    });
+}
+
 pub(crate) fn callback_cleanup_expr(setup: &CallbackSetup) -> RustExpr {
     debug_assert_eq!(setup.lifetime, PythonCallbackLifetime::Call);
     let method = match setup.dispatch {

@@ -98,7 +98,10 @@ pub(in crate::lower) fn validate_callback_call_captures(
         };
         let range = argument_range(policy.parameter_index, argument_ranges, fallback_range);
         let Some(captures) = ctx.nested_function_captures.get(name).cloned() else {
-            if !ctx.scope.resolves_to_module_binding(name) {
+            let resolves_to_top_level_function = ctx.functions.contains_key(name)
+                && ctx.lookup_current_function_binding(name).is_none()
+                && ctx.lookup_outer_function_binding(name).is_none();
+            if !ctx.scope.resolves_to_module_binding(name) && !resolves_to_top_level_function {
                 reject_unproven_named_handler(name, range, ctx);
             }
             continue;

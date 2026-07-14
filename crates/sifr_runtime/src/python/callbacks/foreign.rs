@@ -6,12 +6,12 @@ use super::CallbackOwnerState;
 use crate::python::{object_ops, ObjectHandle, PythonError};
 use pyo3::prelude::*;
 use pyo3::types::{PyCFunction, PyDict, PyTuple};
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 use std::collections::BTreeSet;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::{Arc, Condvar, Mutex, Weak};
 
 trait ForeignTarget<'a>: Send + Sync {
     fn prepare(
@@ -47,6 +47,32 @@ struct TypedForeignPrepared<A, R, Handler, Encode> {
 struct TypedForeignOutput<R, Encode> {
     value: R,
     encode: Arc<Encode>,
+}
+
+struct RetainedForeignTarget {
+    target: Mutex<Option<Arc<dyn ForeignTarget<'static> + 'static>>>,
+}
+
+impl RetainedForeignTarget {
+    fn new(target: Arc<dyn ForeignTarget<'static> + 'static>) -> Self {
+        Self {
+            target: Mutex::new(Some(target)),
+        }
+    }
+
+    fn target(&self) -> Option<Arc<dyn ForeignTarget<'static> + 'static>> {
+        self.target
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .clone()
+    }
+
+    fn release(&self) {
+        self.target
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .take();
+    }
 }
 
 impl<'a, A, R, Decode, Handler, Encode> ForeignTarget<'a>
@@ -132,6 +158,7 @@ pub struct ForeignCallback<'a> {
     object: ObjectHandle,
     owner: CallbackOwnerState,
     target: Option<Box<dyn ForeignTarget<'a> + 'a>>,
+    retained_target: RefCell<Option<Arc<RetainedForeignTarget>>>,
     closed: Cell<bool>,
     retained: Cell<bool>,
     admission: Arc<AtomicBool>,
@@ -171,8 +198,14 @@ impl ForeignCallback<'_> {
             return Ok(());
         }
         let object = self.object.clone();
-        self.owner
-            .retain_capture(move || super::ownership::release_callable(object))?;
+        let retained_target = self.retained_target.borrow().clone();
+        self.owner.retain_capture(move || {
+            if let Some(target) = retained_target {
+                target.release();
+            }
+            super::ownership::release_callable(object);
+        })?;
+        self.retained_target.borrow_mut().take();
         self.retained.set(true);
         Ok(())
     }
@@ -294,6 +327,7 @@ where
         object,
         owner,
         target: Some(target),
+        retained_target: RefCell::new(None),
         closed: Cell::new(false),
         retained: Cell::new(false),
         admission: callback_admission,
@@ -317,9 +351,13 @@ where
     Handler: Fn(u64, A) -> Result<R, CallbackExecutionError> + Send + Sync + 'static,
     Encode: Fn(R) -> Result<ObjectHandle, PythonError> + Send + Sync + 'static,
 {
-    let decode = Arc::new(decode);
-    let handler = Arc::new(handler);
-    let encode = Arc::new(encode);
+    let target: Arc<dyn ForeignTarget<'static> + 'static> = Arc::new(TypedForeignTarget {
+        decode: Arc::new(decode),
+        handler: Arc::new(handler),
+        encode: Arc::new(encode),
+    });
+    let retained_target = Arc::new(RetainedForeignTarget::new(target));
+    let shell_target: Weak<RetainedForeignTarget> = Arc::downgrade(&retained_target);
     let fifo = Arc::new(FifoSerial::default());
     let admission = Arc::new(Mutex::new(()));
     let callback_admission = Arc::new(AtomicBool::new(true));
@@ -341,15 +379,20 @@ where
                 let invocation = invocation.enter().map_err(python_error)?;
                 validate_call_shape(args, kwargs, expected_arity)?;
                 let args = collect_args(args).map_err(python_error)?;
-                let decoded = decode(args).map_err(python_error)?;
-                let handler = Arc::clone(&handler);
+                let target = shell_target
+                    .upgrade()
+                    .and_then(|target| target.target())
+                    .ok_or_else(|| python_error(super::errors::closed(shell_owner.owner_id())))?;
+                let prepared = target.prepare(args).map_err(python_error)?;
                 let outcome = py.detach(move || {
                     let _permit = serial_ticket.map(FifoTicket::acquire);
-                    handler(entry_sequence, decoded).map(|result| (invocation, result))
+                    prepared
+                        .invoke(entry_sequence)
+                        .map(|result| (invocation, result))
                 });
                 let (invocation, result) = outcome
                     .map_err(|error| execution_error(py, &shell_owner, entry_sequence, error))?;
-                let result = encode(result).map_err(python_error)?;
+                let result = result.encode().map_err(python_error)?;
                 let result = result_object(py, result).map_err(python_error);
                 drop(invocation);
                 result
@@ -363,6 +406,7 @@ where
         object,
         owner,
         target: None,
+        retained_target: RefCell::new(Some(retained_target)),
         closed: Cell::new(false),
         retained: Cell::new(false),
         admission: callback_admission,
@@ -506,6 +550,14 @@ mod tests {
     use std::sync::atomic::AtomicUsize;
     use std::sync::Barrier;
 
+    struct DropProbe(Arc<AtomicUsize>);
+
+    impl Drop for DropProbe {
+        fn drop(&mut self) {
+            self.0.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
     #[test]
     fn uncommitted_retained_callback_invalidates_escaped_shell_without_closing_group() {
         let _guard = test_guard();
@@ -600,6 +652,53 @@ mod tests {
                 .expect("escaped callable must reject entry after close");
             assert_eq!(exception_name, "SifrCallbackClosedError");
         }
+    }
+
+    #[test]
+    fn escaped_retained_callable_does_not_retain_handler_captures_after_owner_close() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        initialize_runtime(test_config("retained-callback-capture-release"))
+            .expect("runtime should initialize");
+        let owner = CallbackOwnerState::new_retained(|| Ok(())).expect("owner should create");
+        let drops = Arc::new(AtomicUsize::new(0));
+        let probe = DropProbe(Arc::clone(&drops));
+        let callback = foreign_callback_with_owner(
+            owner.clone(),
+            32,
+            1,
+            ForeignCallbackConcurrency::Parallel,
+            |args| crate::python::to_int(&args[0]),
+            move |_, value| {
+                let _capture = &probe;
+                Ok(value)
+            },
+            crate::python::from_int,
+        )
+        .expect("callback should create");
+        callback
+            .retain_in_owner()
+            .expect("callable should be retained by owner");
+        let escaped = crate::python::attach(|py| {
+            crate::python::object_ops::clone_handle(py, callback.object())
+        })
+        .expect("runtime should attach")
+        .expect("callable should clone");
+
+        let unregister = owner
+            .begin_owner_unregister()
+            .expect("unregister should begin");
+        drop(unregister);
+        owner
+            .close_after_owner_unregister()
+            .expect("owner should close");
+
+        assert_eq!(drops.load(Ordering::SeqCst), 1);
+        assert!(
+            crate::python::attach(|py| escaped.bind(py).call1((1_i64,)).is_err())
+                .expect("runtime should attach")
+        );
+        assert_eq!(drops.load(Ordering::SeqCst), 1);
     }
 
     #[test]

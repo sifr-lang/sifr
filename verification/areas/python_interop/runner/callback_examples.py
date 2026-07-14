@@ -12,7 +12,7 @@ CALLBACK_CASES = {
         case_id="cffi-current",
         relative_source="cffi_callback/declaration_callback.sifr",
         stdout_marker="sifr-python-interop:callback:cffi=42",
-        import_roots=("cffi",),
+        import_roots=("cffi", "threading"),
         native_roots=("cffi",),
     ),
     "kafka-foreign": ExampleCase(

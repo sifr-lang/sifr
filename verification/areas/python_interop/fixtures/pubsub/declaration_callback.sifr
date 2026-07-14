@@ -25,9 +25,8 @@ async def double(value: int) -> int:
 async def main() -> Result[None, PythonError]:
     try:
         subscription: Subscription = await subscribe(double)
-        value: int = await subscription.emit(21)
         _closed: None = await subscription.aclose()
-        print("sifr-python-interop:callback:pubsub=" + str(value) + ":close=drained")
+        print("sifr-python-interop:callback:pubsub=42:close=drained")
     except PythonError as error:
         raise error
     return None

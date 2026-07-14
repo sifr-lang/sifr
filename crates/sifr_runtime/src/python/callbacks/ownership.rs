@@ -108,7 +108,14 @@ impl Drop for RetainedCallbackGroup {
         if let Ok(guard) = self.owner.begin_owner_unregister() {
             drop(guard);
         }
-        let _ignored = self.owner.close_after_owner_unregister();
+        if let Ok(runtime) = tokio::runtime::Handle::try_current() {
+            let owner = self.owner.clone();
+            std::mem::drop(runtime.spawn(async move {
+                let _ignored = owner.close_after_owner_unregister_async().await;
+            }));
+        } else {
+            let _ignored = self.owner.close_after_owner_unregister();
+        }
     }
 }
 
@@ -129,6 +136,21 @@ pub async fn rollback_retained_callbacks_on_error<T>(
         }
     }
     Err(primary)
+}
+
+pub async fn finalize_retained_callbacks<T, E>(
+    outcome: Result<T, E>,
+    group: &mut RetainedCallbackGroup,
+) -> Result<T, E> {
+    if outcome.is_err() {
+        if let Err(secondary) = group.rollback_async().await {
+            super::super::record_context_cleanup_evidence(
+                "retained-callback-finalization",
+                &secondary,
+            );
+        }
+    }
+    outcome
 }
 
 impl CallbackOwnerSlot {
@@ -192,7 +214,7 @@ pub fn semantic_close_with_callbacks(
     drop(unregister);
     let callback_close = owner.close_after_owner_unregister_with_typed_observer();
     match primary {
-        Err(primary) => super::attach_callback_failure_evidence::<()>(Err(primary), &[&owner]),
+        Err(primary) => finish_primary_with_callback_close(primary, callback_close, &owner),
         Ok(()) => callback_close,
     }
 }
@@ -239,9 +261,22 @@ fn finish_context_callbacks(
         owner.close_after_owner_unregister()
     };
     match primary {
-        Err(primary) => Err(primary),
+        Err(primary) => finish_primary_with_callback_close(primary, callback_close, &owner),
         Ok(decision) => callback_close.map(|()| decision),
     }
+}
+
+fn finish_primary_with_callback_close<T>(
+    primary: PythonError,
+    callback_close: Result<(), PythonError>,
+    owner: &CallbackOwnerState,
+) -> Result<T, PythonError> {
+    let mut primary = primary;
+    super::execution::attach_callback_failure_evidence_to_error(&mut primary, &[owner]);
+    if let Err(secondary) = callback_close {
+        super::super::attach_secondary_python_error(&mut primary, &secondary);
+    }
+    Err(primary)
 }
 
 fn unregister_action(object: ObjectHandle, cleanup: RetainedCallbackCleanup) -> UnregisterAction {

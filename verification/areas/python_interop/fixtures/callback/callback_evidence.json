@@ -7,24 +7,30 @@
     "asyncio AsyncCallable round-trip on the application-owned loop"
   ],
   "negative": [
-    "callback declaration, owner, dispatch, concurrency, and sendability diagnostics",
+    "crates/sifr_lowering/src/lower/python_interop_callback_tests.rs::foreign_callback_rejects_non_send_handler_capture_at_attachment",
+    "crates/sifr_lowering/src/lower/python_interop_callback_tests.rs::foreign_callback_rejects_python_identity_handler_capture_at_attachment",
+    "crates/sifr_lowering/src/lower/python_interop_callback_tests.rs::parallel_callback_rejects_mutable_handler_capture_at_attachment",
+    "crates/sifr_lowering/src/lower/python_interop_callback_tests.rs::receiver_callback_rejects_capturing_its_owner",
     "checked callback argument/result conversion failures",
     "serial foreign and asyncio recursive-entry rejection before lock or await"
   ],
   "cleanup": [
     "call-scoped and retained open/closing/closed owner state matrix",
     "unregister-first close, concurrent close joining, accepted-call drain, and post-close rejection",
-    "async retained-factory rollback and consuming async-close drain without executor blocking"
+    "crates/sifr_runtime/src/python/callbacks/asyncio_tests.rs::call_scoped_close_cancels_and_joins_an_active_asyncio_callback",
+    "crates/sifr_runtime/src/python/callbacks/asyncio_tests.rs::retained_asyncio_rollback_cancels_and_joins_without_blocking_the_executor",
+    "crates/sifr_runtime/src/python/async_runtime_tests.rs::shutdown_retains_owned_loop_authority_for_async_callback_unregister"
   ],
   "cancellation": [
-    "Python Future cancellation reaches the exact Sifr async handler carrier",
+    "crates/sifr_runtime/src/python/callbacks/asyncio_tests.rs::python_future_cancellation_reaches_the_exact_sifr_handler",
+    "crates/sifr_runtime/src/python/callbacks/asyncio_tests.rs::call_scoped_close_cancels_and_joins_an_active_asyncio_callback proves Sifr owner cancellation reaches the exact Python Future and joins both terminals",
     "generated task-local cancellation scope preserves nested declaration identity"
   ],
   "live": [
     {
       "source": "../cffi_callback/declaration_callback.sifr",
       "bridge": "../cffi_callback/python_bridges/cffi_declaration.py",
-      "network": "offline real cffi callback",
+      "network": "offline real cffi callback invoked from a Python foreign thread",
       "stdout_marker": "sifr-python-interop:callback:cffi=42"
     },
     {
@@ -42,7 +48,7 @@
     {
       "source": "../pubsub/declaration_callback.sifr",
       "bridge": "../pubsub/python_bridges/pubsub.py",
-      "network": "offline Pub/Sub-style retained subscription",
+      "network": "offline Pub/Sub-style retained subscription closed while its callback is active",
       "stdout_marker": "sifr-python-interop:callback:pubsub=42:close=drained"
     }
   ]

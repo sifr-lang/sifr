@@ -250,6 +250,57 @@ async fn retained_asyncio_rollback_cancels_and_joins_without_blocking_the_execut
     reset_runtime_state_for_tests();
 }
 
+#[tokio::test(flavor = "current_thread")]
+async fn dropped_retained_group_drains_without_blocking_the_executor() {
+    let _guard = test_guard();
+    initialize_callback_runtime("asyncio-callback-retained-drop");
+    let started = Arc::new(tokio::sync::Notify::new());
+    let release = Arc::new(tokio::sync::Notify::new());
+    let started_by_handler = Arc::clone(&started);
+    let release_by_handler = Arc::clone(&release);
+    let group = RetainedCallbackGroup::new().expect("retained group should create");
+    let owner = group.owner().clone();
+    let callback = asyncio_callback_with_owner(
+        owner.clone(),
+        6,
+        1,
+        AsyncioCallbackConcurrency::Parallel,
+        |args| crate::python::to_int(&args[0]),
+        move |_, value, _| {
+            let started = Arc::clone(&started_by_handler);
+            let release = Arc::clone(&release_by_handler);
+            async move {
+                started.notify_one();
+                release.notified().await;
+                Ok(value + 1)
+            }
+        },
+        crate::python::from_int,
+    )
+    .expect("retained asyncio callback should create");
+    callback
+        .retain_in_owner()
+        .expect("retained callback should transfer into its owner");
+    let request = function_request(
+        "invoke_catching_cancel",
+        vec![
+            async_from_object(callback.object()).expect("callback transport"),
+            async_from_int(41).expect("argument transport"),
+        ],
+    );
+
+    let controller = async {
+        started.notified().await;
+        drop(group);
+    };
+    let (invocation, ()) = tokio::join!(submit_async_declaration(request, None), controller);
+    let value = async_to_int(invocation.expect("Python should observe callback cancellation"))
+        .expect("cancellation result should convert");
+    assert_eq!(value, -1);
+    assert_eq!(owner.status(), CallbackOwnerStatus::Closed);
+    reset_runtime_state_for_tests();
+}
+
 fn initialize_callback_runtime(label: &str) {
     reset_runtime_state_for_tests();
     let mut config = test_config(label);

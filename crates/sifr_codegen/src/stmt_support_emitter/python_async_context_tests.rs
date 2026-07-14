@@ -133,6 +133,35 @@ fn async_python_context_emits_all_concrete_body_outcomes() {
 }
 
 #[test]
+fn normal_async_context_exit_observes_typed_retained_callback_failure() {
+    let mut emitter = emitter();
+    emitter
+        .python_retained_callback_errors
+        .insert("Manager".to_string(), vec![class_type("HandlerError")]);
+    let lowered = emitter
+        .try_lower_async_with_stmt_for_ir(
+            &kind(class_type("PythonError")),
+            Some("entered"),
+            &[HirStmt::Pass],
+        )
+        .expect("lowering should succeed")
+        .expect("Python async context should lower");
+    let rendered = crate::render_stmts(&[lowered]);
+
+    assert!(
+        rendered.contains("__sifr_python_async_context_manager_0.__sifr_python_callbacks.owner()"),
+        "{rendered}"
+    );
+    assert!(
+        rendered.contains(
+            "__sifr_python_async_context_manager_0.__sifr_python_callback_failure_0.clone()"
+        ),
+        "{rendered}"
+    );
+    assert!(rendered.contains("take_if_owner_first"), "{rendered}");
+}
+
+#[test]
 fn nested_async_python_context_preserves_outer_context_outcome_envelope() {
     let mut emitter = emitter();
     emitter.try_closure_depth = 1;
