@@ -716,7 +716,7 @@ Delivery waves:
   entry, owner-local retained foreign callback identities, awaited foreign
   drains in async wrappers, nested typed-error-union registration/mapping, and
   compiled typed handler-error plus post-call closure evidence.
-- [ ] Aggregate-review remediation Wave 4 — add a distinct compiled CFFI
+- [x] Aggregate-review remediation Wave 4 — add a distinct compiled CFFI
   caller-thread fixture for `dispatch=current`, retain the worker-thread CFFI
   fixture as `dispatch=foreign` evidence, and correct capability ownership and
   verification documentation after the complete merged M9 review exposed the
@@ -726,7 +726,7 @@ Delivery waves:
   [remediation review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-current-dispatch-remediation-codex-5-6-sol-high-review-pass-1.md));
   focused callback examples pass all seven compiled binaries and the
   authoritative create-PR gate passes `131/131`, signature
-  `7c39b8c1dd4fec7c`.
+  `7c39b8c1dd4fec7c`; merged as `71087cfd948b226d6fba2868d18ebea88f21214a`.
 - [ ] Milestone review — review the complete merged M9 implementation before
   closing the milestone checkbox.
 
