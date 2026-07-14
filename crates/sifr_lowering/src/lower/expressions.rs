@@ -34,7 +34,7 @@ use super::generic_constructor_specialization::refine_constructor_return_type_fr
 use super::generic_receiver_specialization::refine_generic_class_binding_expr;
 use super::method_call_args::{
     lower_function_call_args, lower_method_call_args, lower_python_function_call_args,
-    lower_signature_call_args, resolved_method_arg_ranges,
+    lower_signature_call_args,
 };
 use super::method_diagnostics::{
     method_count_range, reject_exact_method_arg_count, reject_max_method_arg_count,

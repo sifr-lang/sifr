@@ -169,6 +169,15 @@ pub(in crate::lower) fn lower_module_impl(
 
             collect_function_defaults(&mut ctx, &function_name, func);
             if python_interop::has_python_interop_decorator_syntax(&func.decorator_list) {
+                let callback_policies = python_interop::callback_call_policies(
+                    &func.decorator_list,
+                    &func.parameters,
+                    false,
+                );
+                if !callback_policies.is_empty() {
+                    ctx.python_callback_call_policies
+                        .insert(function_name.clone(), callback_policies);
+                }
                 ctx.python_call_shapes.insert(
                     function_name.clone(),
                     python_interop::python_parameter_kinds(&func.parameters),

@@ -691,6 +691,11 @@ Delivery waves:
   131/131 create-PR and 651/651 merge-profile E2E fixtures, 261 hardening
   variants, and compiled CFFI, Kafka, asyncio, and Pub/Sub evidence through
   `demos/m9_demo`).
+- [x] Aggregate-review remediation Wave 1 — attachment-site proof for foreign
+  and asyncio handler captures, including non-send and Python-identity
+  exclusion, parallel share safety, same-owner rejection, and unproven callable
+  rejection ([PR #2981](https://github.com/sifr-lang/sifr/pull/2981);
+  [GPT-5.6-Sol High review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-codex-5-6-sol-high-review-pass-1.md)).
 - [ ] Milestone review — review the complete merged M9 implementation before
   closing the milestone checkbox.
 

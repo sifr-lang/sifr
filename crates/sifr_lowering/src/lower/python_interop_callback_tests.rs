@@ -2,6 +2,28 @@ use crate::{lower_module, HirDiagnostic};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 
+#[test]
+fn callback_call_policy_is_available_before_body_lowering() {
+    let parsed = parse_module(
+        "@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)\n@python(pkg.compute)\ndef compute(handler: Callable[[int], int]) -> int: ...\n",
+    )
+    .expect("source should parse");
+    let sifr_python_ast::Stmt::FunctionDef(function) = &parsed.suite()[0] else {
+        panic!("expected function");
+    };
+    let policies = crate::lower::python_interop::callback_call_policies(
+        &function.decorator_list,
+        &function.parameters,
+        false,
+    );
+    assert_eq!(policies.len(), 1);
+    assert_eq!(policies[0].parameter_index, 0);
+    assert_eq!(
+        policies[0].dispatch,
+        sifr_ir::PythonCallbackDispatch::Foreign
+    );
+}
+
 fn lower_errors(source: &str) -> Vec<HirDiagnostic> {
     let parsed = parse_module(source).expect("source should parse");
     match lower_module(parsed.suite()) {
@@ -401,5 +423,143 @@ def subscribe(
 ) -> Result[Subscription, PythonError | HandlerError]: ...
 ",
         "owner cleanup `Subscription.close` error channel must contain handler error `HandlerError`",
+    );
+}
+
+#[test]
+fn foreign_callback_rejects_non_send_handler_capture_at_attachment() {
+    assert_callback_error(
+        r"
+class PythonError(Error):
+    message: str
+
+class LocalState(NonSend):
+    value: int
+
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
+@python(pkg.compute)
+def compute(handler: Callable[[int], int]) -> Result[int, PythonError]: ...
+
+def run(state: LocalState) -> Result[int, PythonError]:
+    def handler(value: int) -> int:
+        return value + state.value
+    return compute(handler)
+",
+        "handler `handler` capture `state`",
+    );
+}
+
+#[test]
+fn foreign_callback_rejects_python_identity_handler_capture_at_attachment() {
+    assert_callback_error(
+        r"
+class PythonError(Error):
+    message: str
+
+@python.opaque(type=pkg.Client, cleanup=close)
+class Client:
+    @python(Self.value)
+    def value(self) -> Result[int, PythonError]: ...
+
+    @python(Self.close)
+    def close(own self) -> Result[None, PythonError]: ...
+
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
+@python(pkg.compute)
+def compute(handler: Callable[[int], int]) -> Result[int, PythonError]: ...
+
+def run(client: Client) -> Result[int, PythonError]:
+    def captured(value: int) -> int:
+        _ = client.value()
+        return value
+    return compute(captured)
+",
+        "capture `client` of type `Client`",
+    );
+}
+
+#[test]
+fn parallel_callback_rejects_mutable_handler_capture_at_attachment() {
+    assert_callback_error(
+        r"
+class PythonError(Error):
+    message: str
+
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=parallel)
+@python(pkg.compute)
+def compute(handler: Callable[[int], int]) -> Result[int, PythonError]: ...
+
+def run(values: list[int]) -> Result[int, PythonError]:
+    def handler(value: int) -> int:
+        return value + len(values)
+    return compute(handler)
+",
+        "is not share-safe",
+    );
+}
+
+#[test]
+fn receiver_callback_rejects_capturing_its_owner() {
+    assert_callback_error(
+        r"
+class PythonError(Error):
+    message: str
+
+@python.opaque(type=pkg.Client, cleanup=close)
+class Client:
+    @python.callback(handler, lifetime=Self, dispatch=asyncio, concurrency=serial)
+    @python.coroutine(Self.register)
+    async def register(self, own handler: AsyncCallable[[int], int]) -> Result[None, PythonError]: ...
+
+    @python(Self.value)
+    def value(self) -> Result[int, PythonError]: ...
+
+    @python(Self.close)
+    def close(own self) -> Result[None, PythonError]: ...
+
+async def run(client: Client) -> Result[None, PythonError]:
+    async def handler(value: int) -> int:
+        _ = client.value()
+        return value
+    return await client.register(handler)
+",
+        "captures its retained owner",
+    );
+}
+
+#[test]
+fn foreign_callback_rejects_forwarded_callable_with_unknown_captures() {
+    assert_callback_error(
+        r"
+class PythonError(Error):
+    message: str
+
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
+@python(pkg.compute)
+def compute(handler: Callable[[int], int]) -> Result[int, PythonError]: ...
+
+def run(handler: Callable[[int], int]) -> Result[int, PythonError]:
+    return compute(handler)
+",
+        "callable value whose captures cannot be proven safe",
+    );
+}
+
+#[test]
+fn foreign_callback_accepts_capture_free_nested_handler() {
+    lower_success(
+        r"
+class PythonError(Error):
+    message: str
+
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
+@python(pkg.compute)
+def compute(handler: Callable[[int], int]) -> Result[int, PythonError]: ...
+
+def run() -> Result[int, PythonError]:
+    def handler(value: int) -> int:
+        return value + 1
+    return compute(handler)
+",
     );
 }
