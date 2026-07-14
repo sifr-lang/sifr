@@ -11,7 +11,7 @@ pub(super) fn register_callback_errors(py: Python<'_>) -> Result<(), PythonRunti
     }
     let module = PyModule::from_code(
         py,
-        c"class SifrCallbackError(RuntimeError):\n    def __init__(self, handler_type, message):\n        super().__init__(message)\n        self.handler_type = handler_type\n        self.message = message\n\nclass SifrCallbackClosedError(RuntimeError):\n    pass\n\nclass SifrCallbackReentrancyError(RuntimeError):\n    pass\n\nclass SifrCallbackCloseReentrancyError(RuntimeError):\n    pass\n",
+        c"class SifrCallbackError(RuntimeError):\n    def __init__(self, handler_type, message):\n        super().__init__(message)\n        self.handler_type = handler_type\n        self.message = message\n\nclass SifrCallbackClosedError(RuntimeError):\n    pass\n\nclass SifrCallbackReentrancyError(RuntimeError):\n    pass\n\nclass SifrCallbackCloseReentrancyError(RuntimeError):\n    pass\n\nclass SifrCallbackThreadError(RuntimeError):\n    pass\n",
         c"__sifr_callbacks__.py",
         c"__sifr_callbacks__",
     )
@@ -21,6 +21,7 @@ pub(super) fn register_callback_errors(py: Python<'_>) -> Result<(), PythonRunti
         "SifrCallbackClosedError",
         "SifrCallbackReentrancyError",
         "SifrCallbackCloseReentrancyError",
+        "SifrCallbackThreadError",
     ] {
         let _validated_type = callback_type(&module, name)?;
     }
@@ -64,6 +65,7 @@ pub(super) fn registered_exception_names(py: Python<'_>) -> Option<Vec<String>> 
         "SifrCallbackClosedError",
         "SifrCallbackReentrancyError",
         "SifrCallbackCloseReentrancyError",
+        "SifrCallbackThreadError",
     ]
     .into_iter()
     .map(|name| {
@@ -100,6 +102,30 @@ pub(super) fn close_from_invocation(owner_id: u64) -> PythonError {
         "SifrCallbackCloseReentrancyError",
         format!("callback owner {owner_id} cannot close from an accepted invocation"),
         "callback owner close",
+    )
+}
+
+pub(super) fn wrong_thread(owner_id: u64, callback_id: u64) -> PythonError {
+    callback_error(
+        "SifrCallbackThreadError",
+        format!(
+            "current callback {callback_id} for owner {owner_id} was invoked on a foreign thread"
+        ),
+        "callback admission",
+    )
+}
+
+pub(super) fn recorded_handler_failure(
+    owner_id: u64,
+    evidence: &super::CallbackFailureEvidence,
+) -> PythonError {
+    callback_error(
+        "SifrCallbackError",
+        format!(
+            "retained callback owner {owner_id} recorded {} at entry {}: {}",
+            evidence.exception_type, evidence.entry_sequence, evidence.message
+        ),
+        "retained callback failure",
     )
 }
 

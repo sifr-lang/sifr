@@ -101,7 +101,7 @@ pub use opaque_ops::semantic_close;
 pub use python_error::PythonError;
 pub use recursive_ops::{
     at_path, dict_str_items, from_dict_results, from_list_results, from_record_results,
-    from_tuple_results, list_items, object_is_none, record_field, tuple_items,
+    from_tuple_results, list_items, object_is_none, record_field, tuple_items, tuple_items_exact,
 };
 pub use resource_identity::PythonResourceIdentity;
 pub use resource_ops::{exit_context_with_error, resource_diagnostics, PythonResourceDiagnostics};

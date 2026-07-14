@@ -18,6 +18,7 @@ impl RustEmitter {
                     .map(|declaration| (class.name.clone(), declaration))
             })
             .collect();
+        self.python_retained_callback_errors = collect_retained_callback_errors(module);
         self.emit_module_classes(module, module_public);
         self.emit_module_functions(module, module_public, test_mode);
     }
@@ -41,4 +42,28 @@ impl RustEmitter {
             self.emit_function(func, module_public, test_mode);
         }
     }
+}
+
+fn collect_retained_callback_errors(
+    module: &HirModule,
+) -> std::collections::HashMap<String, Vec<sifr_type_system::Type>> {
+    let mut by_owner = std::collections::HashMap::<String, Vec<sifr_type_system::Type>>::new();
+    let functions = module
+        .functions
+        .iter()
+        .chain(module.classes.iter().flat_map(|class| class.methods.iter()));
+    for callback in functions
+        .flat_map(|function| &function.python_interop)
+        .flat_map(|declaration| &declaration.callbacks)
+    {
+        let (Some(owner), Some(error)) = (&callback.owner_class, &callback.handler_error_type)
+        else {
+            continue;
+        };
+        let errors = by_owner.entry(owner.clone()).or_default();
+        if !errors.iter().any(|existing| existing == error) {
+            errors.push(error.clone());
+        }
+    }
+    by_owner
 }

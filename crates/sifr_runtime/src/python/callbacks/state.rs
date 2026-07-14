@@ -37,7 +37,7 @@ pub(super) struct CallbackOwnerInner {
     state: Mutex<OwnerData>,
     changed: Condvar,
     unregister: Option<UnregisterAction>,
-    release: Mutex<Option<CaptureReleaseAction>>,
+    releases: Mutex<Vec<CaptureReleaseAction>>,
     retained: bool,
 }
 
@@ -46,6 +46,7 @@ struct OwnerData {
     active_calls: usize,
     next_sequence: u64,
     first_failure: Option<CallbackFailureEvidence>,
+    first_failure_observed: bool,
     captures_released: bool,
     unregister_status: CallbackUnregisterStatus,
 }
@@ -119,12 +120,13 @@ impl CallbackOwnerState {
                 active_calls: 0,
                 next_sequence: 0,
                 first_failure: None,
+                first_failure_observed: false,
                 captures_released: false,
                 unregister_status: CallbackUnregisterStatus::NotStarted,
             }),
             changed: Condvar::new(),
             unregister,
-            release: Mutex::new(release),
+            releases: Mutex::new(release.into_iter().collect()),
             retained,
         });
         if retained {
@@ -188,13 +190,20 @@ impl CallbackOwnerState {
         })
     }
 
+    pub fn reject_serial_reentrancy(&self, callback_id: u64) -> Result<(), PythonError> {
+        if callback_is_active(self.inner.id, callback_id) {
+            return Err(errors::reentrant(self.inner.id, callback_id));
+        }
+        Ok(())
+    }
+
     pub fn close_call_scope(&self) -> Result<(), PythonError> {
         if self.inner.retained {
             return Err(errors::unavailable(
                 "retained owner close without unregister authority",
             ));
         }
-        self.close_after_unregister(false)
+        self.close_after_unregister(false, true)
     }
 
     pub fn close_after_owner_unregister(&self) -> Result<(), PythonError> {
@@ -204,7 +213,17 @@ impl CallbackOwnerState {
                 return Err(errors::unavailable("owner unregister authority"));
             }
         }
-        self.close_after_unregister(false)
+        self.close_after_unregister(false, true)
+    }
+
+    pub fn close_after_owner_unregister_with_typed_observer(&self) -> Result<(), PythonError> {
+        if self.inner.unregister.is_some() {
+            let state = lock_state(&self.inner);
+            if state.unregister_status == CallbackUnregisterStatus::NotStarted {
+                return Err(errors::unavailable("owner unregister authority"));
+            }
+        }
+        self.close_after_unregister(false, false)
     }
 
     pub fn begin_owner_unregister(
@@ -244,7 +263,36 @@ impl CallbackOwnerState {
                 exception_type: exception_type.into(),
                 message: message.into(),
             });
+            state.first_failure_observed = false;
         }
+    }
+
+    pub fn observe_failure(&self, entry_sequence: u64) {
+        let mut state = lock_state(&self.inner);
+        if state
+            .first_failure
+            .as_ref()
+            .map(|failure| failure.entry_sequence)
+            == Some(entry_sequence)
+        {
+            state.first_failure_observed = true;
+        }
+    }
+
+    pub fn retain_capture(
+        &self,
+        release: impl FnOnce() + Send + 'static,
+    ) -> Result<(), PythonError> {
+        let state = lock_state(&self.inner);
+        if state.status != CallbackOwnerStatus::Open {
+            return Err(errors::closed(self.inner.id));
+        }
+        self.inner
+            .releases
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .push(Box::new(release));
+        Ok(())
     }
 
     #[must_use]
@@ -262,11 +310,15 @@ impl CallbackOwnerState {
                 drop(unregister_guard);
             }
         }
-        self.close_after_unregister(true)?;
-        unregister_error.map_or(Ok(()), Err)
+        let close_error = self.close_after_unregister(true, true).err();
+        unregister_error.or(close_error).map_or(Ok(()), Err)
     }
 
-    fn close_after_unregister(&self, runtime_shutdown: bool) -> Result<(), PythonError> {
+    fn close_after_unregister(
+        &self,
+        runtime_shutdown: bool,
+        surface_retained_failure: bool,
+    ) -> Result<(), PythonError> {
         if !runtime_shutdown && owner_is_active(self.inner.id) {
             return Err(errors::close_from_invocation(self.inner.id));
         }
@@ -279,7 +331,10 @@ impl CallbackOwnerState {
                 .unwrap_or_else(std::sync::PoisonError::into_inner);
         }
         match state.status {
-            CallbackOwnerStatus::Closed => return Ok(()),
+            CallbackOwnerStatus::Closed => {
+                drop(state);
+                return self.retained_failure_result(surface_retained_failure);
+            }
             CallbackOwnerStatus::Closing => {
                 while state.status != CallbackOwnerStatus::Closed {
                     state = self
@@ -288,7 +343,8 @@ impl CallbackOwnerState {
                         .wait(state)
                         .unwrap_or_else(std::sync::PoisonError::into_inner);
                 }
-                return Ok(());
+                drop(state);
+                return self.retained_failure_result(surface_retained_failure);
             }
             CallbackOwnerStatus::Open => {
                 state.status = CallbackOwnerStatus::Closing;
@@ -302,13 +358,14 @@ impl CallbackOwnerState {
                 .unwrap_or_else(std::sync::PoisonError::into_inner);
         }
         drop(state);
-        let release = self
-            .inner
-            .release
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .take();
-        if let Some(release) = release {
+        let releases = std::mem::take(
+            &mut *self
+                .inner
+                .releases
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner),
+        );
+        for release in releases {
             release();
         }
         let mut state = lock_state(&self.inner);
@@ -318,6 +375,18 @@ impl CallbackOwnerState {
         drop(state);
         if self.inner.retained {
             registry::unregister(self.inner.id);
+        }
+        self.retained_failure_result(surface_retained_failure)
+    }
+
+    fn retained_failure_result(&self, surface: bool) -> Result<(), PythonError> {
+        if self.inner.retained && surface {
+            let state = lock_state(&self.inner);
+            if !state.first_failure_observed {
+                if let Some(evidence) = &state.first_failure {
+                    return Err(errors::recorded_handler_failure(self.inner.id, evidence));
+                }
+            }
         }
         Ok(())
     }

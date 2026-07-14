@@ -101,7 +101,7 @@ fn recursive_factory_emits_loop_thread_schema_and_owned_opaque_result() {
     assert!(rendered.contains("\"pkg\".to_string()"), "{rendered}");
     assert!(rendered.contains("\"Client\".to_string()"), "{rendered}");
     assert!(rendered.contains("async_to_object"), "{rendered}");
-    assert!(rendered.contains("Client { __sifr_python_object:"));
+    assert!(rendered.contains("Client::__sifr_from_python_object("));
 }
 
 #[test]

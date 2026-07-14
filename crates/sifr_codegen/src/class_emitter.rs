@@ -137,10 +137,28 @@ impl RustEmitter {
         module_public: bool,
     ) -> Vec<(String, RustType)> {
         if class.python_opaque_declaration().is_some() {
-            return vec![(
-                "__sifr_python_object".to_string(),
-                RustType::Named("sifr_runtime::python::ObjectHandle".to_string()),
-            )];
+            let mut fields = vec![
+                (
+                    "__sifr_python_object".to_string(),
+                    RustType::Named("sifr_runtime::python::ObjectHandle".to_string()),
+                ),
+                (
+                    "__sifr_python_callbacks".to_string(),
+                    RustType::Named("sifr_runtime::python::CallbackOwnerSlot".to_string()),
+                ),
+            ];
+            if let Some(errors) = self.python_retained_callback_errors.get(&class.name) {
+                fields.extend(errors.iter().enumerate().map(|(index, error)| {
+                    (
+                        format!("__sifr_python_callback_failure_{index}"),
+                        RustType::Named(format!(
+                            "sifr_runtime::python::CallbackFailureSlot<{}>",
+                            self.rust_type_with_generics(error)
+                        )),
+                    )
+                }));
+            }
+            return fields;
         }
         let mut fields = Vec::new();
         if let Some(parent) = &class.parent_class {
@@ -196,6 +214,58 @@ impl RustEmitter {
             ));
         }
         fields
+    }
+
+    fn python_opaque_constructor_item(&self, class: &HirClass) -> RustItem {
+        let mut fields = vec![
+            (
+                "__sifr_python_object".to_string(),
+                RustExpr::Ident("__sifr_python_object".to_string()),
+            ),
+            (
+                "__sifr_python_callbacks".to_string(),
+                RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "sifr_runtime".to_string(),
+                        "python".to_string(),
+                        "CallbackOwnerSlot".to_string(),
+                        "empty".to_string(),
+                    ])),
+                    args: Vec::new(),
+                },
+            ),
+        ];
+        if let Some(errors) = self.python_retained_callback_errors.get(&class.name) {
+            fields.extend(errors.iter().enumerate().map(|(index, _)| {
+                (
+                    format!("__sifr_python_callback_failure_{index}"),
+                    RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "sifr_runtime".to_string(),
+                            "python".to_string(),
+                            "CallbackFailureSlot".to_string(),
+                            "new".to_string(),
+                        ])),
+                        args: Vec::new(),
+                    },
+                )
+            }));
+        }
+        RustItem::Fn {
+            name: "__sifr_from_python_object".to_string(),
+            visibility: Visibility::Private,
+            type_params: Vec::new(),
+            params: vec![RustParam::Named {
+                name: "__sifr_python_object".to_string(),
+                ty: RustType::Named("sifr_runtime::python::ObjectHandle".to_string()),
+            }],
+            ret: Some(RustType::Named("Self".to_string())),
+            body: vec![RustStmt::Return(Some(RustExpr::StructInit {
+                name: "Self".to_string(),
+                fields,
+            }))],
+            is_async: false,
+        }
     }
 
     pub(crate) fn lower_default_constructor_item(
@@ -469,6 +539,9 @@ impl RustEmitter {
         let saved_class_name = self.current_class_name.clone();
         self.current_class_name = Some(class.name.clone());
         let mut impl_items = Vec::new();
+        if is_python_opaque {
+            impl_items.push(self.python_opaque_constructor_item(class));
+        }
         let has_constructor = class.methods.iter().any(|method| method.name == "new");
         if !is_python_opaque
             && !has_constructor

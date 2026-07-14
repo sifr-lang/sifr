@@ -98,6 +98,20 @@ pub fn tuple_items(object: &ObjectHandle) -> Result<Vec<ObjectHandle>, PythonErr
     .map_err(PythonError::runtime)?
 }
 
+pub fn tuple_items_exact(
+    object: &ObjectHandle,
+    expected_len: usize,
+) -> Result<Vec<ObjectHandle>, PythonError> {
+    let items = tuple_items(object)?;
+    if items.len() != expected_len {
+        return Err(conversion_error(
+            format!("expected Python tuple of length {expected_len}"),
+            object.boundary_path(),
+        ));
+    }
+    Ok(items)
+}
+
 pub fn dict_str_items(object: &ObjectHandle) -> Result<Vec<(String, ObjectHandle)>, PythonError> {
     let parent_path = object.boundary_path().to_string();
     super::attach(|py| {
