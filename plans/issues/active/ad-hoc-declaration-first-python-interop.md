@@ -5,13 +5,13 @@
 In progress. The phase defines one complete end-state architecture and an
 ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
-non-blocking precision refinements are incorporated. M0 through M9 are
-implemented, locally validated, reviewed, and linked below. Typed synchronous
-and asynchronous declarations and context managers run on the application-owned
-Python loop with structured cancellation and consuming cleanup; M9
-current-thread, foreign-thread, and asyncio callback execution plus
+non-blocking precision refinements are incorporated. M0 through M9 and M10
+Wave 1 are implemented, locally validated, reviewed, and linked below. Typed
+synchronous and asynchronous declarations and context managers run on the
+application-owned Python loop with structured cancellation and consuming
+cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
 retained-owner integration are merged, publicly active, and milestone-reviewed.
-M10 is next and later milestones are not yet implemented. Milestones sequence
+M10 Wave 2 is next and later milestones are not yet implemented. Milestones sequence
 delivery; they do not create reduced language versions, temporary public
 contracts, dual authorities, or alternate lowering paths.
 
@@ -768,10 +768,18 @@ Tasks:
 
 Delivery waves:
 
-- [ ] Wave 1 — keep `@python.buffer` reserved while replacing the legacy
+- [x] Wave 1 — keep `@python.buffer` reserved while replacing the legacy
   `uint8`-only store with a closed typed buffer request, complete metadata and
   layout validation, lock-free Python operations, bounded typed access, and
-  exact-once sealed-resource release.
+  exact-once sealed-resource release
+  ([PR #2987](https://github.com/sifr-lang/sifr/pull/2987);
+  [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave1-codex-5-6-sol-high-review-pass-1.md),
+  [pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave1-codex-5-6-sol-high-review-pass-2.md),
+  [pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave1-codex-5-6-sol-high-review-pass-3.md),
+  [satisfied pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave1-codex-5-6-sol-high-review-pass-4.md));
+  focused buffer tests pass `19/19`, the complete Python runtime suite passes
+  `145/145`, and the authoritative create-PR gate passes Python interop `10/10`
+  plus E2E `131/131` with signature `7c39b8c1dd4fec7c`.
 - [ ] Wave 2 — add the compiler-known affine `python.Buffer[T]` contract,
   decorator validation, `Self` and call-then-acquire lowering/code generation,
   exclusive writable borrowing, early release, and atomic public activation.
