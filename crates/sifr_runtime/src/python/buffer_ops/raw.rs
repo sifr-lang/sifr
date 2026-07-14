@@ -36,9 +36,6 @@ pub(super) struct OwnedPyBuffer {
 // SAFETY: This matches PyO3's `PyUntypedBuffer` guarantees. The pointer is
 // never dereferenced without attaching to the supported GIL-bound interpreter.
 unsafe impl Send for OwnedPyBuffer {}
-// SAFETY: See the `Send` implementation. Sifr's public buffer identity is
-// non-Send/non-Sync, while the runtime store serializes each view separately.
-unsafe impl Sync for OwnedPyBuffer {}
 
 impl OwnedPyBuffer {
     pub(super) fn acquire(

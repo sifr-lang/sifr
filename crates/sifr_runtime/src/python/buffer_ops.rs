@@ -358,6 +358,8 @@ fn with_live_buffer<R>(
 ) -> Result<R, PythonError> {
     let (tracked, _) = buffer_snapshot(buffer)?;
     super::attach(|py| {
+        let state = tracked.buffer.lock().map_err(|_| buffer_state_error())?;
+        let value = state.as_ref().ok_or_else(|| closed_error(buffer.0))?;
         if tracked.element != expected {
             return Err(type_error(
                 py,
@@ -371,8 +373,6 @@ fn with_live_buffer<R>(
                 "buffer element write",
             ));
         }
-        let state = tracked.buffer.lock().map_err(|_| buffer_state_error())?;
-        let value = state.as_ref().ok_or_else(|| closed_error(buffer.0))?;
         operation(py, value)
     })
     .map_err(PythonError::runtime)?
