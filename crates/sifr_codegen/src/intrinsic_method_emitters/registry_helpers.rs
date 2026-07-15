@@ -451,6 +451,27 @@ pub(super) fn registry_iterable_to_vec_expr_with_hint(
     expr: &HirExpr,
     element_type_hint: Option<&Type>,
 ) -> Option<RustExpr> {
+    if let HirExpr::IfExpr {
+        condition,
+        then_expr,
+        else_expr,
+        ..
+    } = expr
+    {
+        return Some(RustExpr::If {
+            cond: Box::new(emitter.try_lower_registry_expr_strict(condition)?),
+            then_expr: Box::new(registry_iterable_to_vec_expr_with_hint(
+                emitter,
+                then_expr,
+                element_type_hint,
+            )?),
+            else_expr: Some(Box::new(registry_iterable_to_vec_expr_with_hint(
+                emitter,
+                else_expr,
+                element_type_hint,
+            )?)),
+        });
+    }
     let mut iter_expr =
         registry_iterable_to_owned_iter_expr_with_hint(emitter, expr, element_type_hint)?;
     if matches!(

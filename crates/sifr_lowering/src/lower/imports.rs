@@ -110,6 +110,16 @@ pub(in crate::lower) fn resolve_imports_early(
                                         .insert(local.clone(), type_params.clone());
                                 }
                             }
+                            if let Some(module_bounds) =
+                                externals.type_param_bounds.get(&module_key)
+                            {
+                                super::generic_method_requirements::import_generic_method_requirements(
+                                    ctx,
+                                    module_bounds,
+                                    name,
+                                    &local,
+                                );
+                            }
                             // Register as error type if flagged
                             if externals.error_types.contains(name) {
                                 ctx.error_types.insert(local.clone());

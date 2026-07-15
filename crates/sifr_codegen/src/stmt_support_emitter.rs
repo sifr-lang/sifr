@@ -28,6 +28,7 @@ mod assert_and_augassign;
 mod async_cleanup;
 mod async_with_and_for;
 mod await_and_async_comprehension;
+mod borrowed_operand_lowering;
 mod call_args_and_returns;
 mod comprehension_exprs;
 mod condition_lowering;

@@ -104,3 +104,70 @@ def order() -> list[Local]:
     assert!(!rust_code.contains("__left.clone()"), "{rust_code}");
     assert!(!rust_code.contains("__right.clone()"), "{rust_code}");
 }
+
+#[test]
+fn generic_collection_and_arithmetic_bounds_are_recursive_and_exact() {
+    let rust_code = generate_rust_from_source(
+        r#"class Holder[T]:
+    values: list[T]
+
+    def same(self, other: list[T]) -> bool:
+        return self.values == other
+
+class Math[T]:
+    value: T
+
+    def product(self, other: T) -> T:
+        return self.value * other
+"#,
+    );
+
+    assert!(
+        rust_code.contains("impl<T: Clone + PartialEq> Holder<T>"),
+        "{rust_code}"
+    );
+    assert!(
+        rust_code.contains("impl<T: Clone + std::ops::Mul<Output = T>> Math<T>"),
+        "{rust_code}"
+    );
+    assert!(rust_code.contains("self.value.clone() * other.clone()"));
+}
+
+#[test]
+fn generic_operator_protocol_impl_uses_generic_target_and_bounds() {
+    let rust_code = generate_rust_from_source(
+        r#"class Box[T]:
+    value: T
+
+    def __eq__(self, other: Box[T]) -> bool:
+        return self.value == other.value
+
+class Ordered[T]:
+    value: T
+
+    def __lt__(self, other: Ordered[T]) -> bool:
+        return self.value < other.value
+
+class NegBox[T]:
+    value: T
+
+    def __neg__(self) -> int:
+        return 0
+"#,
+    );
+
+    assert!(
+        rust_code.contains("impl<T: Clone + PartialEq> PartialEq for Box<T>"),
+        "{rust_code}"
+    );
+    assert!(rust_code.contains("other: &Box<T>"), "{rust_code}");
+    assert!(!rust_code.contains("impl PartialEq for Box"));
+    assert!(
+        rust_code.contains("impl<T: PartialOrd> PartialOrd for Ordered<T>"),
+        "{rust_code}"
+    );
+    assert!(
+        rust_code.contains("impl<T> std::ops::Neg for NegBox<T>"),
+        "{rust_code}"
+    );
+}

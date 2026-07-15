@@ -599,6 +599,18 @@ impl RustEmitter {
         if requirements.needs_sub {
             extra.push(format!("std::ops::Sub<Output = {tp}>"));
         }
+        if requirements.needs_mul {
+            extra.push(format!("std::ops::Mul<Output = {tp}>"));
+        }
+        if requirements.needs_div {
+            extra.push(format!("std::ops::Div<Output = {tp}>"));
+        }
+        if requirements.needs_rem {
+            extra.push(format!("std::ops::Rem<Output = {tp}>"));
+        }
+        if requirements.needs_neg {
+            extra.push(format!("std::ops::Neg<Output = {tp}>"));
+        }
         if requirements.needs_partial_eq {
             extra.push("PartialEq".to_string());
         }

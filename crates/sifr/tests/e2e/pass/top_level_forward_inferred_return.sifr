@@ -1,0 +1,8 @@
+def caller() -> int:
+    return make() + 1
+
+def make():
+    return 41
+
+def main() -> None:
+    assert caller() == 42

@@ -73,6 +73,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) current_class: Option<String>,
     /// Current function/method owner name while lowering a body.
     pub(in crate::lower) current_owner: Option<String>,
+    /// Current class method name, used to retain generated Rust trait requirements per method.
+    pub(in crate::lower) current_method: Option<String>,
     /// The parent class name of the current class (for `super()` resolution)
     pub(in crate::lower) current_parent_class: Option<String>,
     /// Whether we're inside a try block (auto-unwrap Result values)
@@ -114,6 +116,12 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) python_context_borrows: HashMap<String, ruff_text_size::TextRange>,
     /// Map of class names to their declared type parameters (from PEP 695 class C[T])
     pub(in crate::lower) class_declared_type_params: HashMap<String, Vec<String>>,
+    /// Class -> method -> type parameter -> generated Rust trait requirements.
+    pub(in crate::lower) generic_method_requirements:
+        HashMap<String, HashMap<String, HashMap<String, HashSet<String>>>>,
+    /// Class -> method -> directly delegated `self.method()` calls.
+    pub(in crate::lower) generic_method_dependencies:
+        HashMap<String, HashMap<String, HashSet<String>>>,
     pub(in crate::lower) current_module_name: Option<String>,
     pub(in crate::lower) externals: ExternalDefs,
     pub(in crate::lower) explicit_defaultdict_bindings: HashSet<String>,
@@ -176,6 +184,7 @@ impl LowerCtx {
             warnings: Vec::new(),
             current_class: None,
             current_owner: None,
+            current_method: None,
             current_parent_class: None,
             in_try_block: false,
             current_function_is_async: false,
@@ -195,6 +204,8 @@ impl LowerCtx {
             borrowed_params: std::collections::HashSet::new(),
             python_context_borrows: HashMap::new(),
             class_declared_type_params: HashMap::new(),
+            generic_method_requirements: HashMap::new(),
+            generic_method_dependencies: HashMap::new(),
             current_module_name: None,
             externals: ExternalDefs::default(),
             explicit_defaultdict_bindings: HashSet::new(),

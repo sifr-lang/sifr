@@ -10,6 +10,16 @@ impl RustEmitter {
     ) -> Option<crate::RustExpr> {
         match expr {
             HirExpr::Name { name, .. } => Some(crate::RustExpr::Ident(name.clone())),
+            HirExpr::IfExpr {
+                condition,
+                then_expr,
+                else_expr,
+                ..
+            } => Some(crate::RustExpr::If {
+                cond: Box::new(self.try_lower_registry_expr_strict(condition)?),
+                then_expr: Box::new(self.try_lower_registry_expr_strict(then_expr)?),
+                else_expr: Some(Box::new(self.try_lower_registry_expr_strict(else_expr)?)),
+            }),
             HirExpr::FieldAccess { object, field, ty } => {
                 if let Ok(Some(lowered)) =
                     self.try_lower_structured_field_access_expr(object, field, ty)

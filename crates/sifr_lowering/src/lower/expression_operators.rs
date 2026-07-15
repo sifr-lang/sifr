@@ -106,6 +106,16 @@ pub(in crate::lower) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Op
         }
     };
 
+    if let Some(requirements) =
+        super::generic_method_requirements::requirement_names_for_binary_operator(op_str)
+    {
+        super::generic_method_requirements::record_current_method_requirements(
+            ctx,
+            &[left.ty(), right.ty()],
+            &requirements,
+        );
+    }
+
     if exact_int_division_requires_handling(&left, op_str, &right, ctx, binop.range()) {
         return None;
     }
@@ -312,6 +322,14 @@ pub(in crate::lower) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -
         UnaryOp::Not => "not",
         UnaryOp::Invert => "~",
     };
+
+    if op_str == "-" {
+        super::generic_method_requirements::record_current_method_requirements(
+            ctx,
+            &[operand.ty()],
+            &["Clone", "Neg"],
+        );
+    }
 
     match type_check_unary_op(op_str, operand.ty()) {
         Ok(result_ty) => Some(HirExpr::UnaryOp {
@@ -531,6 +549,15 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
                 return None;
             }
         } else {
+            let requirements =
+                super::generic_method_requirements::requirement_names_for_comparison(&[
+                    op_str.to_string()
+                ]);
+            super::generic_method_requirements::record_current_method_requirements(
+                ctx,
+                &[left.ty(), right.ty()],
+                &requirements.into_iter().collect::<Vec<_>>(),
+            );
             if matches!(op_str, "==" | "!=")
                 && left.ty().supports_structural_equality()
                 && right.ty().supports_structural_equality()

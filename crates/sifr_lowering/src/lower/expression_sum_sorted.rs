@@ -6,7 +6,9 @@ use sifr_type_system::Type;
 
 use super::builtin_calls::{callable_builtin_element_type, callable_builtin_list_output_type};
 use super::expression_diagnostics;
-use super::expressions::{callable_signature, lower_expr, lower_lambda_with_context};
+use super::expressions::{
+    callable_signature, consume_owned_value, lower_expr, lower_lambda_with_context,
+};
 use super::type_bounds::supports_total_order_in_context;
 use super::LowerCtx;
 
@@ -22,6 +24,26 @@ fn call_arity_range(call: &ExprCall) -> TextRange {
         .args
         .last()
         .map_or_else(|| call.func.range(), Ranged::range)
+}
+
+fn sorted_preserves_iterable_source(expr: &HirExpr) -> bool {
+    if matches!(expr.ty().resolve_alias(), Type::Iterator(_))
+        || expr.ty().resolve_alias().ownership() == sifr_type_system::OwnershipKind::Copy
+    {
+        return false;
+    }
+    match expr {
+        HirExpr::Name { .. } | HirExpr::FieldAccess { .. } | HirExpr::Index { .. } => true,
+        HirExpr::IfExpr {
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            sorted_preserves_iterable_source(then_expr)
+                && sorted_preserves_iterable_source(else_expr)
+        }
+        _ => false,
+    }
 }
 
 pub(in crate::lower) fn lower_sum_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
@@ -180,11 +202,7 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
     {
         return None;
     }
-    let preserves_source = matches!(
-        &iterable,
-        HirExpr::Name { .. } | HirExpr::FieldAccess { .. } | HirExpr::Index { .. }
-    ) && !matches!(iterable.ty().resolve_alias(), Type::Iterator(_))
-        && iterable.ty().resolve_alias().ownership() != sifr_type_system::OwnershipKind::Copy;
+    let preserves_source = sorted_preserves_iterable_source(&iterable);
     if preserves_source && !elem_ty.supports_derived_clone() {
         ctx.error_with_code_at(
             DiagnosticCode::TYPE_MISMATCH,
@@ -228,6 +246,18 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
                     ctx,
                     "sorted() key callable cannot require a mutable borrow because sorting compares shared element references"
                         .to_string(),
+                    keyword.value.range(),
+                );
+                return None;
+            }
+            if param_types[0].resolve_alias() != elem_ty.resolve_alias() {
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "sorted() key callable parameter must accept '{}', got '{}'",
+                        elem_ty.display_name(),
+                        param_types[0].display_name()
+                    ),
                     keyword.value.range(),
                 );
                 return None;
@@ -276,6 +306,9 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
         reverse_arg = lowered;
     }
     let list_ty = callable_builtin_list_output_type(iterable.ty())?;
+    if !preserves_source {
+        consume_owned_value(&iterable, iterable_range, ctx);
+    }
     let mut args = vec![iterable];
     if let Some(key_arg) = key_arg {
         args.push(key_arg);

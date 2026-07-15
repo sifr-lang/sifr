@@ -257,6 +257,21 @@ pub(super) fn resolve_class_method_type(
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
     if let Some((_, ft)) = class.methods.iter().find(|(n, _)| n == method) {
+        let concrete_class = Type::Class {
+            name: class.name.to_string(),
+            fields: class.fields.to_vec(),
+            methods: class.methods.to_vec(),
+            parent_class: None,
+        };
+        if !super::super::generic_method_requirements::validate_generic_method_specialization(
+            class.name,
+            &concrete_class,
+            method,
+            method_range,
+            ctx,
+        ) {
+            return None;
+        }
         let specialization_needs_clone = class.fields.iter().any(|(_, ty)| {
             !ty.supports_derived_clone() && type_contains_exact(&ft.return_type, ty)
         }) || ft.params.iter().any(|(_, ty, convention)| {

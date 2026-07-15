@@ -924,6 +924,19 @@ supports them. This is a language rule, not an implementation detail.
   owned key requires a Clone-capable element, mutable-borrow keys are rejected,
   and a preserved source requires Clone-capable elements for result
   materialization; consumed temporaries and iterators retain their elements.
+  Conditional iterable sources are materialized branch-by-branch so preserved
+  branches remain reusable and consumed branches are tracked exactly.
+- **Generic method specialization constraint:** body-derived Clone, equality,
+  partial-order, arithmetic, remainder, division, and negation requirements are
+  recorded per method and per declared type parameter. Direct `self` calls close
+  those requirements transitively, module exports preserve them, and concrete
+  method calls are rejected during lowering when a specialization cannot
+  implement the Rust traits that code generation will emit.
+- **Module return inference:** successful unannotated top-level return types are
+  inferred as a mutually visible declaration group before body lowering, making
+  forward calls source-order neutral. The prepass is diagnostic-neutral; normal
+  reachability-aware body lowering remains authoritative for unresolved or dead
+  return expressions.
 - **Formatting-consumer constraint:** `print`, `str`, f-string interpolation,
   and `repr` validate the exact generated Rust `Display`/`Debug` strategy before
   accepting HIR. `repr` always requires `Debug`; the other surfaces select the

@@ -294,6 +294,12 @@ pub(in crate::lower) fn lower_method_call(
         return None;
     }
 
+    super::super::generic_method_requirements::record_current_method_dependency(
+        ctx,
+        matches!(&object, HirExpr::Name { name, .. } if name == "self"),
+        &method_name,
+    );
+
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: method_name,

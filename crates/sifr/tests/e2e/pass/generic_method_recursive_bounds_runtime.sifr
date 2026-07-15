@@ -1,0 +1,37 @@
+class Holder[T]:
+    values: list[T]
+
+    def same(self, other: list[T]) -> bool:
+        return self.values == other
+
+class Math[T]:
+    value: T
+
+    def product(self, other: T) -> T:
+        return self.value * other
+
+class Box[T]:
+    value: T
+
+    def __eq__(self, other: Box[T]) -> bool:
+        return self.value == other.value
+
+class Ordered[T]:
+    value: T
+
+    def __lt__(self, other: Ordered[T]) -> bool:
+        return self.value < other.value
+
+class NegBox[T]:
+    value: T
+
+    def __neg__(self) -> int:
+        return 0
+
+def main() -> None:
+    holder: Holder[int] = Holder([1, 2])
+    math: Math[int] = Math(6)
+    assert holder.same([1, 2])
+    assert math.product(7) == 42
+    assert Box(9) == Box(9)
+    assert Ordered(1) < Ordered(2)

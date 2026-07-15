@@ -146,6 +146,7 @@ pub(in crate::lower) fn lower_class(
                 );
 
                 let previous_owner = ctx.current_owner.replace(class_name.clone());
+                let previous_method = ctx.current_method.replace(method_name.clone());
                 let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
                 let previous_async = ctx.current_function_is_async;
                 let previous_async_generator = ctx.current_function_is_async_generator;
@@ -162,6 +163,7 @@ pub(in crate::lower) fn lower_class(
                 ctx.current_function_is_async = previous_async;
                 ctx.current_function_is_async_generator = previous_async_generator;
                 ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
+                ctx.current_method = previous_method;
                 ctx.current_owner = previous_owner;
                 ctx.scope.pop();
 
@@ -272,6 +274,7 @@ pub(in crate::lower) fn lower_class(
                 );
 
                 let previous_owner = ctx.current_owner.replace(class_name.clone());
+                let previous_method = ctx.current_method.replace(method_name.clone());
                 let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
                 let previous_async = ctx.current_function_is_async;
                 let previous_async_generator = ctx.current_function_is_async_generator;
@@ -288,6 +291,7 @@ pub(in crate::lower) fn lower_class(
                 ctx.current_function_is_async = previous_async;
                 ctx.current_function_is_async_generator = previous_async_generator;
                 ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
+                ctx.current_method = previous_method;
                 ctx.current_owner = previous_owner;
                 ctx.scope.pop();
                 ctx.current_class = None;
@@ -493,6 +497,7 @@ pub(in crate::lower) fn lower_class(
 
             // Lower method body
             let previous_owner = ctx.current_owner.replace(class_name.clone());
+            let previous_method = ctx.current_method.replace(method_name.clone());
             let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
             let previous_async = ctx.current_function_is_async;
             let previous_async_generator = ctx.current_function_is_async_generator;
@@ -534,6 +539,7 @@ pub(in crate::lower) fn lower_class(
             ctx.current_function_is_async = previous_async;
             ctx.current_function_is_async_generator = previous_async_generator;
             ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
+            ctx.current_method = previous_method;
             ctx.current_owner = previous_owner;
 
             // Determine receiver mutability: if any statement assigns to self.field, it's &mut self

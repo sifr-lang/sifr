@@ -7,12 +7,13 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review passes 14 and 15 reopened
+Wave 2 is implemented; whole-diff review passes 14 through 16 reopened
 generic/inherited Rust-trait, reusable affine-closure ownership, keyed sorting,
-and per-type-parameter bound gaps. Their remediation passes the focused
-compiler, native-positive/negative, full merge-profile E2E, maintainability,
-formatting, and file-size checks plus the authoritative local create-PR gate in
-[PR #2988](https://github.com/sifr-lang/sifr/pull/2988). Typed
+per-type-parameter bound, specialization, generic-operator, conditional-source,
+and top-level inference gaps. Their remediation passes the focused and complete
+compiler suites, native-positive/negative coverage, full merge-profile E2E,
+maintainability, formatting, and file-size checks plus the authoritative local
+create-PR gate in [PR #2988](https://github.com/sifr-lang/sifr/pull/2988). Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1063,6 +1064,36 @@ Delivery waves:
   `7c39b8c1dd4fec7c` and `41/42` cache hits. Its `441.13s` wall time produced
   only the non-blocking warm-wall-time advisory. A fresh whole-diff review of
   the complete remediation remains pending.
+  Full-diff
+  [review pass 16](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-16.md)
+  then found six remaining compiler-wide gaps: emitted generic method
+  requirements were not checked at concrete specialization sites; recursive
+  equality and `*`, `/`, `%`, and unary operator requirements were incomplete;
+  generic operator-protocol impl targets were malformed; keyed `sorted()` did
+  not validate its parameter or safely materialize conditional sources;
+  top-level inferred returns remained source-order dependent; and the evidence
+  overstated closure. Lowering now records exact per-method, per-type-parameter
+  requirements, closes direct `self` dependencies, exports/imports them with
+  module signatures, and rejects unsupported concrete specializations before
+  code generation. Codegen recursively derives exact arithmetic, equality,
+  ordering, and negation bounds and emits generic protocol impl targets.
+  `sorted()` validates the key parameter and preserves conditional branches
+  without untracked moves. A diagnostic-neutral module signature prepass makes
+  successful inferred returns mutually visible while ordinary body lowering
+  remains the reachability-aware diagnostic authority. Five permanent fixtures
+  cover transitive and recursive generic requirements, operator protocols,
+  keyed and conditional sorting, and forward inferred returns. Full codegen
+  passes `824/824`, lowering passes `745` with one ignored, and the complete
+  compile-fail corpus passes `520/520`; all three positive fixtures build and
+  run through the native backend. The `cargo clean` rebuild and responsibility-
+  based splits leave the touched orchestration files at `898` and `892` lines;
+  HIR maintainability and the `900`-line file-size guardrail pass over `2659`
+  files. The authoritative create-PR gate passes every blocking lane, including
+  Python interop `11/11` in `106.69s`, runtime platform `28/28` with one gated
+  skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache
+  hits. Its `489.54s` wall time produced only the non-blocking warm-target
+  advisory; every enforced step budget passed. A fresh whole-diff review of
+  this pass-16 remediation remains pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

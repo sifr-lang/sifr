@@ -6,6 +6,14 @@ use sifr_ir::{HirClass, HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::Type;
 
 impl RustEmitter {
+    fn operator_output_type(class: &HirClass, ty: &Type) -> String {
+        if ty.rust_type() == class.name {
+            Self::class_impl_target(class)
+        } else {
+            ty.rust_type()
+        }
+    }
+
     pub(crate) fn emit_operator_impls(&mut self, class: &HirClass) {
         for (dunder, func) in &class.operator_impls {
             match dunder.as_str() {
@@ -46,11 +54,7 @@ impl RustEmitter {
         } else {
             format!("&{class_with_generics}")
         };
-        let output_ty = if func.return_type.rust_type() == class.name {
-            class_with_generics.clone()
-        } else {
-            func.return_type.rust_type()
-        };
+        let output_ty = Self::operator_output_type(class, &func.return_type);
         let rhs_name = func
             .params
             .first()
@@ -100,25 +104,26 @@ impl RustEmitter {
         method_name: &str,
     ) {
         let body = self.lower_operator_method_body(func);
+        let items = vec![
+            RustItem::TypeAlias {
+                name: "Output".to_string(),
+                ty: RustType::Named(Self::operator_output_type(class, &func.return_type)),
+            },
+            RustItem::Fn {
+                name: method_name.to_string(),
+                visibility: Visibility::Private,
+                type_params: Vec::new(),
+                params: vec![RustParam::SelfValue],
+                ret: Some(RustType::Named("Self::Output".to_string())),
+                body,
+                is_async: false,
+            },
+        ];
         self.body_items.push(RustItem::Impl {
-            target: class.name.clone(),
-            type_params: Vec::new(),
+            target: Self::class_impl_target(class),
+            type_params: Self::class_function_impl_type_params(class, func, &items, None),
             trait_: Some(format!("std::ops::{trait_name}")),
-            items: vec![
-                RustItem::TypeAlias {
-                    name: "Output".to_string(),
-                    ty: RustType::Named(func.return_type.rust_type()),
-                },
-                RustItem::Fn {
-                    name: method_name.to_string(),
-                    visibility: Visibility::Private,
-                    type_params: Vec::new(),
-                    params: vec![RustParam::SelfValue],
-                    ret: Some(RustType::Named("Self::Output".to_string())),
-                    body,
-                    is_async: false,
-                },
-            ],
+            items,
         });
     }
 
@@ -129,28 +134,30 @@ impl RustEmitter {
             .map(|param| param.name.clone())
             .unwrap_or_else(|| "other".to_string());
         let body = self.lower_operator_method_body(func);
-        self.body_items.push(RustItem::Impl {
-            target: class.name.clone(),
+        let class_target = Self::class_impl_target(class);
+        let items = vec![RustItem::Fn {
+            name: "eq".to_string(),
+            visibility: Visibility::Private,
             type_params: Vec::new(),
-            trait_: Some("PartialEq".to_string()),
-            items: vec![RustItem::Fn {
-                name: "eq".to_string(),
-                visibility: Visibility::Private,
-                type_params: Vec::new(),
-                params: vec![
-                    RustParam::SelfParam { mutable: false },
-                    RustParam::Named {
-                        name: other_name,
-                        ty: RustType::Ref {
-                            mutable: false,
-                            inner: Box::new(RustType::Named(class.name.clone())),
-                        },
+            params: vec![
+                RustParam::SelfParam { mutable: false },
+                RustParam::Named {
+                    name: other_name,
+                    ty: RustType::Ref {
+                        mutable: false,
+                        inner: Box::new(RustType::Named(class_target.clone())),
                     },
-                ],
-                ret: Some(RustType::Bool),
-                body,
-                is_async: false,
-            }],
+                },
+            ],
+            ret: Some(RustType::Bool),
+            body,
+            is_async: false,
+        }];
+        self.body_items.push(RustItem::Impl {
+            target: class_target,
+            type_params: Self::class_function_impl_type_params(class, func, &items, None),
+            trait_: Some("PartialEq".to_string()),
+            items,
         });
     }
 
@@ -184,33 +191,35 @@ impl RustEmitter {
             ])
         };
 
-        self.body_items.push(RustItem::Impl {
-            target: class.name.clone(),
+        let class_target = Self::class_impl_target(class);
+        let items = vec![RustItem::Fn {
+            name: "partial_cmp".to_string(),
+            visibility: Visibility::Private,
             type_params: Vec::new(),
-            trait_: Some("PartialOrd".to_string()),
-            items: vec![RustItem::Fn {
-                name: "partial_cmp".to_string(),
-                visibility: Visibility::Private,
-                type_params: Vec::new(),
-                params: vec![
-                    RustParam::SelfParam { mutable: false },
-                    RustParam::Named {
-                        name: other_name,
-                        ty: RustType::Ref {
-                            mutable: false,
-                            inner: Box::new(RustType::Named(class.name.clone())),
-                        },
+            params: vec![
+                RustParam::SelfParam { mutable: false },
+                RustParam::Named {
+                    name: other_name,
+                    ty: RustType::Ref {
+                        mutable: false,
+                        inner: Box::new(RustType::Named(class_target.clone())),
                     },
-                ],
-                ret: Some(RustType::Option(Box::new(RustType::Named(
-                    "std::cmp::Ordering".to_string(),
-                )))),
-                body: vec![RustStmt::Return(Some(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-                    args: vec![ordering_expr],
-                }))],
-                is_async: false,
-            }],
+                },
+            ],
+            ret: Some(RustType::Option(Box::new(RustType::Named(
+                "std::cmp::Ordering".to_string(),
+            )))),
+            body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                args: vec![ordering_expr],
+            }))],
+            is_async: false,
+        }];
+        self.body_items.push(RustItem::Impl {
+            target: class_target,
+            type_params: Self::class_function_impl_type_params(class, func, &items, None),
+            trait_: Some("PartialOrd".to_string()),
+            items,
         });
     }
 

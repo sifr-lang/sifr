@@ -1,0 +1,14 @@
+class Holder[T]:
+    value: T
+
+    def same(self, other: T) -> bool:
+        return self.value == other
+
+    def same_indirect(self, other: T) -> bool:
+        return self.same(other)
+
+class Local(NonSend):
+    pass
+
+def compare(holder: Holder[Local], other: Local) -> bool:
+    return holder.same_indirect(other)

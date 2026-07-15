@@ -110,6 +110,14 @@ fn resolve_class(
     };
     ctx.class_types.insert(local.to_string(), class_ty.clone());
     import_class_type_params(ctx, externals, module_name, name, local);
+    if let Some(module_bounds) = externals.type_param_bounds.get(module_name) {
+        super::generic_method_requirements::import_generic_method_requirements(
+            ctx,
+            module_bounds,
+            name,
+            local,
+        );
+    }
     if externals.error_types.contains(name) {
         ctx.error_types.insert(local.to_string());
     }

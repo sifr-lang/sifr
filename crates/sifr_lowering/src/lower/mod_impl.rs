@@ -3,11 +3,11 @@ use super::{
     async_effects, collect_class_type, collect_function_defaults, collect_type_alias_decls,
     collect_type_vars, compiler_intrinsics, extract_function_type, function_body_contains_yield,
     import_diagnostics, import_resolution, imported_defaults, imports, integer_literal_diagnostics,
-    lower_class, lower_function, module_constants_lowering, module_function_registry,
-    name_diagnostics, parse_typevar_bound_expr, parse_typevar_declaration_specs,
-    predeclare_type_aliases, private_stdlib_imports, register_builtins, resolve_imports_early,
-    resolve_type_aliases, str, workload_annotations, Expr, ExternalDefs, FunctionType,
-    HirDiagnostic, HirExpr, HirImport, HirModule, LowerCtx, Ranged, Stmt, TextRange, Type,
+    module_constants_lowering, module_function_registry, name_diagnostics,
+    parse_typevar_bound_expr, parse_typevar_declaration_specs, predeclare_type_aliases,
+    private_stdlib_imports, register_builtins, resolve_imports_early, resolve_type_aliases, str,
+    workload_annotations, Expr, ExternalDefs, FunctionType, HirDiagnostic, HirExpr, HirImport,
+    HirModule, LowerCtx, Ranged, Stmt, TextRange, Type,
 };
 use sifr_ir::LoweringResult;
 /// Internal implementation of module lowering.
@@ -491,6 +491,16 @@ pub(in crate::lower) fn lower_module_impl(
                                             }
                                         }
                                     }
+                                    if let Some(module_bounds) =
+                                        externals.type_param_bounds.get(&stdlib_module_key)
+                                    {
+                                        super::generic_method_requirements::import_generic_method_requirements(
+                                            &mut ctx,
+                                            module_bounds,
+                                            name,
+                                            &local,
+                                        );
+                                    }
                                     // Register as error type if flagged in external defs
                                     if externals.error_types.contains(name) {
                                         ctx.error_types.insert(local.clone());
@@ -707,6 +717,16 @@ pub(in crate::lower) fn lower_module_impl(
                                     }
                                 }
                             }
+                            if let Some(module_bounds) =
+                                externals.type_param_bounds.get(&module_name)
+                            {
+                                super::generic_method_requirements::import_generic_method_requirements(
+                                    &mut ctx,
+                                    module_bounds,
+                                    name,
+                                    &local,
+                                );
+                            }
                             // Register as error type if flagged in external defs
                             if externals.error_types.contains(name) {
                                 ctx.error_types.insert(local.clone());
@@ -832,31 +852,14 @@ pub(in crate::lower) fn lower_module_impl(
     }
     ctx.compiler_intrinsics.extend(module_compiler_intrinsics);
     let constants = module_constants_lowering::collect_module_constants(stmts, &mut ctx);
-    // Second pass: lower function bodies and class method bodies
-    let mut functions = Vec::new();
-    let mut classes = Vec::new();
-    for stmt in stmts {
-        match stmt {
-            Stmt::FunctionDef(func) => {
-                let function_name = func.name.to_string();
-                if !function_name_registry.note_lowering(function_name.as_str()) {
-                    continue;
-                }
-                if let Some(hir_func) = lower_function(func, &mut ctx) {
-                    if let Some(function_type) = ctx.functions.get_mut(&function_name) {
-                        *function_type.return_type = hir_func.return_type.clone();
-                    }
-                    functions.push(hir_func);
-                }
-            }
-            Stmt::ClassDef(class_def) => {
-                if let Some(hir_class) = lower_class(class_def, &mut ctx) {
-                    classes.push(hir_class);
-                }
-            }
-            _ => {}
-        }
-    }
+    // Infer module returns as one mutually visible group so forward calls are source-order neutral.
+    super::module_function_inference::infer_unannotated_returns(stmts, &mut ctx);
+    // Classes lower first so module calls see the closed per-method generic requirements.
+    let (functions, classes) = super::module_body_lowering::lower_module_bodies(
+        stmts,
+        &mut function_name_registry,
+        &mut ctx,
+    );
     python_interop::validate_retained_callback_owner_errors(&functions, &classes, &mut ctx);
     if ctx.errors.is_empty() {
         let module = HirModule {
