@@ -135,6 +135,13 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
             // List concatenation: list[T] + list[T] -> list[T]
             if let (Type::List(l_elem), Type::List(r_elem)) = (left, right) {
                 if l_elem == r_elem {
+                    if l_elem.contains_affine_resource() {
+                        return Err((
+                            DiagnosticCode::PYZC_INVALID_DECLARATION,
+                            "cannot concatenate lists containing affine Python buffers because concatenation duplicates their elements"
+                                .to_string(),
+                        ));
+                    }
                     return Ok(Type::List(l_elem.clone()));
                 }
             }

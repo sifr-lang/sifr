@@ -1,8 +1,9 @@
 use super::{
-    expression_diagnostics, list_append_argument_type_mismatch, method_count_range,
-    reject_exact_method_arg_count, reject_max_method_arg_count, reject_method_arg_count,
-    reject_no_method_args, str, validate_dict_update_arg, validate_list_extend_arg,
-    validate_set_iterable_arg, DiagnosticCode, HirExpr, LowerCtx, TextRange, Type,
+    container_literal_diagnostics, expression_diagnostics, list_append_argument_type_mismatch,
+    method_count_range, reject_exact_method_arg_count, reject_max_method_arg_count,
+    reject_method_arg_count, reject_no_method_args, str, validate_dict_update_arg,
+    validate_list_extend_arg, validate_set_iterable_arg, DiagnosticCode, HirExpr, LowerCtx,
+    TextRange, Type,
 };
 pub(super) fn resolve_list_method_type(
     elem_ty: &Type,
@@ -12,6 +13,21 @@ pub(super) fn resolve_list_method_type(
     method_range: TextRange,
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
+    if elem_ty.contains_affine_resource()
+        && matches!(
+            method,
+            "copy" | "extend" | "sort" | "count" | "contains" | "remove" | "index"
+        )
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYZC_INVALID_DECLARATION,
+            format!(
+                "list.{method}() is unavailable for elements containing affine Python buffers because it requires cloning, comparing, or repeatedly projecting them"
+            ),
+            method_range,
+        );
+        return None;
+    }
     match method {
         "append" => {
             if args.len() != 1 {
@@ -248,6 +264,31 @@ pub(super) fn resolve_dict_method_type(
     method_range: TextRange,
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
+    if !matches!(method, "len" | "clear")
+        && container_literal_diagnostics::reject_unhashable_container_type(
+            ctx,
+            "dict key",
+            key_ty,
+            method_range,
+        )
+    {
+        return None;
+    }
+    if val_ty.contains_affine_resource()
+        && matches!(
+            method,
+            "values" | "items" | "update" | "copy" | "get" | "setdefault"
+        )
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYZC_INVALID_DECLARATION,
+            format!(
+                "dict.{method}() is unavailable for values containing affine Python buffers because it clones or projects stored values"
+            ),
+            method_range,
+        );
+        return None;
+    }
     match method {
         "len" => {
             if !args.is_empty() {
@@ -480,6 +521,16 @@ pub(super) fn resolve_set_method_type(
     method_range: TextRange,
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
+    if !matches!(method, "len" | "clear")
+        && container_literal_diagnostics::reject_unhashable_container_type(
+            ctx,
+            "set element",
+            elem_ty,
+            method_range,
+        )
+    {
+        return None;
+    }
     match method {
         "len" => {
             if !args.is_empty() {

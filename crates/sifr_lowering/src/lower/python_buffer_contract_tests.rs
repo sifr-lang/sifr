@@ -265,3 +265,76 @@ fn affine_buffer_literal_insertion_consumes_the_source() {
         );
     }
 }
+
+#[test]
+fn affine_buffer_collection_capabilities_are_rejected_before_codegen() {
+    for source in [
+        "def duplicate(values: list[python.Buffer[uint8]]) -> list[python.Buffer[uint8]]:\n    return values.copy()\n",
+        "def concatenate(left: list[python.Buffer[uint8]], right: list[python.Buffer[uint8]]) -> list[python.Buffer[uint8]]:\n    return left + right\n",
+        "def search(values: list[python.Buffer[uint8]], value: python.Buffer[uint8]) -> bool:\n    return values.contains(value)\n",
+        "def duplicate_values(values: dict[str, python.Buffer[uint8]]) -> dict[str, python.Buffer[uint8]]:\n    return values.copy()\n",
+        "def make_set(own value: python.Buffer[uint8]) -> set[python.Buffer[uint8]]:\n    return {value}\n",
+        "def make_dict(own key: python.Buffer[uint8]) -> dict[python.Buffer[uint8], int]:\n    return {key: 1}\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn affine_buffer_collection_insertion_consumes_the_source() {
+    let errors = lower_errors(&format!(
+        "{ERROR}\ndef pack(own view: python.Buffer[uint8]) -> None:\n    values: list[python.Buffer[uint8]] = []\n    values.append(view)\n    print(view.length())\n"
+    ));
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn affine_buffer_constructor_and_walrus_moves_are_tracked() {
+    let constructor = lower_errors(
+        "class Holder:\n    view: python.Buffer[uint8]\n\ndef pack(own view: python.Buffer[uint8]) -> None:\n    holder: Holder = Holder(view)\n    print(view.length())\n",
+    );
+    assert!(
+        constructor
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+        "{constructor:?}"
+    );
+
+    let walrus = lower_errors(
+        "def alias(own view: python.Buffer[uint8]) -> None:\n    retained: python.Buffer[uint8] = (moved := view)\n    print(view.length())\n",
+    );
+    assert!(
+        walrus
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+        "{walrus:?}"
+    );
+}
+
+#[test]
+fn affine_buffer_comprehension_moves_are_rejected() {
+    for source in [
+        "def capture(own view: python.Buffer[uint8]) -> list[python.Buffer[uint8]]:\n    return [view for number in [1, 2]]\n",
+        "def capture_set(own view: python.Buffer[uint8]) -> set[python.Buffer[uint8]]:\n    return {view for number in [1, 2]}\n",
+        "def capture_dict(own view: python.Buffer[uint8]) -> dict[int, python.Buffer[uint8]]:\n    return {number: view for number in [1, 2]}\n",
+        "def iterate(values: list[python.Buffer[uint8]]) -> list[int]:\n    return [value.length() for value in values]\n",
+        "def generate(own view: python.Buffer[uint8]) -> Iterator[python.Buffer[uint8]]:\n    return (view for number in [1, 2])\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                || error.code == Some(DiagnosticCode::FLOW_INVALID_ITERATION)
+        }), "{source}: {errors:?}");
+    }
+}

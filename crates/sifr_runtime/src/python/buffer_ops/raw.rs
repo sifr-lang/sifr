@@ -119,6 +119,10 @@ impl OwnedPyBuffer {
             .unwrap_or(0)
     }
 
+    pub(super) fn exporter_identity(&self) -> usize {
+        self.raw().obj.cast::<()>() as usize
+    }
+
     pub(super) fn item_ptr(&self, flat_index: usize) -> Option<*mut core::ffi::c_void> {
         let raw = self.raw();
         let dimensions = usize::try_from(raw.ndim).ok()?;

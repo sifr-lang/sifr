@@ -62,14 +62,17 @@ use super::{
     container_literal_diagnostics, decode_typevar_constraint, expression_operators,
     fstring_support, if_expression, infer_type_var_bindings, integer_literals,
     sequence_guard_detection, str, subscript_type, substitute_type_vars, task_calls, tuple_unpack,
-    workload_annotations, DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp,
-    ExprGenerator, ExprLambda, ExprListComp, ExprNamed, ExprSetComp, FunctionType, HashMap,
-    HirExpr, HirIteratorOp, HirParam, LowerCtx, OwnershipKind, ParamConvention, Ranged, TextRange,
-    Type,
+    workload_annotations, DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp, ExprLambda,
+    ExprListComp, ExprNamed, ExprSetComp, FunctionType, HashMap, HirExpr, HirIteratorOp, HirParam,
+    LowerCtx, OwnershipKind, ParamConvention, Ranged, TextRange, Type,
 };
 
 mod core_and_calls;
 pub(in crate::lower) use core_and_calls::*;
+mod affine_resources;
+use affine_resources::consume_affine_collection_method_arguments;
+mod generator_expression;
+pub(in crate::lower) use generator_expression::lower_generator_expr;
 mod call_builtins;
 use call_builtins::{lower_unshadowed_builtin_call, CallLowering};
 mod call_shadowable_builtins;

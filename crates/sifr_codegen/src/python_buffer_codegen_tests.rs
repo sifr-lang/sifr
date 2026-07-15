@@ -43,6 +43,18 @@ fn source_buffer_declaration_and_methods_generate_parseable_rust() {
 }
 
 #[test]
+fn affine_list_append_moves_buffer_without_cloning() {
+    let source = "def pack(own view: python.Buffer[uint8]) -> None:\n    values: list[python.Buffer[uint8]] = []\n    values.append(view)\n";
+    let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
+    let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
+    let rust = generate_rust(&lowered.module);
+
+    assert!(rust.contains("values.push(view)"), "{rust}");
+    assert!(!rust.contains("values.push(view.clone())"), "{rust}");
+    syn::parse_file(&rust).expect("generated affine append Rust should parse");
+}
+
+#[test]
 fn top_level_buffer_wrapper_acquires_typed_writable_export() {
     let function = buffer_function(
         vec!["builtins", "bytearray"],

@@ -48,6 +48,23 @@ pub(in crate::lower) fn reject_affine_iteration(
     true
 }
 
+pub(in crate::lower) fn reject_affine_comprehension_value(
+    ctx: &mut LowerCtx,
+    value_type: &Type,
+    range: TextRange,
+) -> bool {
+    if !value_type.contains_affine_resource() {
+        return false;
+    }
+    ctx.error_with_code_at(
+        DiagnosticCode::PYZC_INVALID_DECLARATION,
+        "cannot produce a value containing an affine Python buffer from a comprehension or generator because its body may execute repeatedly"
+            .to_string(),
+        range,
+    );
+    true
+}
+
 pub(in crate::lower) fn mutation_during_iteration(
     ctx: &mut LowerCtx,
     source_name: &str,

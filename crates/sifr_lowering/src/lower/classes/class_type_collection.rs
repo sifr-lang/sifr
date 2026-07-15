@@ -3,7 +3,7 @@ use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Stmt, StmtClassDef};
-use sifr_type_system::{FunctionType, Type};
+use sifr_type_system::{FunctionType, ParamConvention, Type};
 use std::collections::HashMap;
 
 use super::async_await::coroutine_result_type;
@@ -766,7 +766,12 @@ pub(in crate::lower) fn collect_class_type(
         }
 
         let params: Vec<(String, Type)> = fields.clone();
-        let ft = FunctionType::new(params, class_ty.clone());
+        let mut ft = FunctionType::new(params, class_ty.clone());
+        for (_, ty, convention) in &mut ft.params {
+            if ty.contains_affine_resource() {
+                *convention = ParamConvention::own();
+            }
+        }
         ctx.functions.insert(class_name.clone(), ft);
         // Store field defaults for the auto-generated constructor
         if !field_defaults.is_empty() {

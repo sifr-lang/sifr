@@ -229,6 +229,62 @@ fn read_declaration_rejects_write_on_mutable_exporter() {
 }
 
 #[test]
+fn exporter_admission_allows_shared_reads_and_excludes_writers() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("buffer-exporter-admission")).expect("init should succeed");
+
+    let object = python_i32_array([10_i32, 20, 30]);
+    let read_request = PythonBufferRequest {
+        element: PythonBufferElement::I32,
+        access: PythonBufferAccess::Read,
+        layout: PythonBufferLayout::Any,
+    };
+    let write_request = PythonBufferRequest {
+        access: PythonBufferAccess::Write,
+        ..read_request
+    };
+
+    let first_read = acquire_buffer(&object, read_request).expect("first read should acquire");
+    let second_read = acquire_buffer(&object, read_request).expect("shared read should acquire");
+    let write_error = acquire_buffer(&object, write_request)
+        .expect_err("writer must be excluded while readers are live");
+    assert_eq!(write_error.exception_type, "BufferError");
+    assert_eq!(write_error.context, "buffer exporter access admission");
+
+    release_buffer((first_read.handle, first_read.token)).expect("first read should release");
+    let remaining_read_error = acquire_buffer(&object, write_request)
+        .expect_err("remaining reader must continue excluding writers");
+    assert_eq!(
+        remaining_read_error.context,
+        "buffer exporter access admission"
+    );
+    release_buffer((second_read.handle, second_read.token)).expect("second read should release");
+
+    let writer = acquire_buffer(&object, write_request).expect("writer should acquire");
+    for request in [read_request, write_request] {
+        let error = acquire_buffer(&object, request)
+            .expect_err("live writer must exclude every other view");
+        assert_eq!(error.context, "buffer exporter access admission");
+    }
+    release_buffer((writer.handle, writer.token)).expect("writer should release");
+
+    let read_after_release =
+        acquire_buffer(&object, read_request).expect("admission should reopen after release");
+    release_buffer((read_after_release.handle, read_after_release.token))
+        .expect("final read should release");
+    close_object(object).expect("close exporter");
+    assert_eq!(
+        resource_diagnostics().expect("diagnostics should be available"),
+        PythonResourceDiagnostics {
+            initialized: true,
+            live_objects: 0,
+            leaked_objects: 0,
+        }
+    );
+}
+
+#[test]
 fn any_layout_supports_strided_logical_access() {
     let _guard = test_guard();
     reset_runtime_state_for_tests();

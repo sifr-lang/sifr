@@ -1,6 +1,8 @@
 use super::async_await::lower_await;
 use super::builtin_calls::{lower_bytes_type_factory_call, lower_defaultdict_constructor_call};
-use super::container_literal_diagnostics::container_literal_type_conflict;
+use super::container_literal_diagnostics::{
+    container_literal_type_conflict, reject_unhashable_container_type,
+};
 use super::expression_diagnostics;
 use super::expression_operators::{lower_binop, lower_compare, lower_unaryop};
 use super::fstring_support::lower_fstring_expr;
@@ -368,6 +370,7 @@ pub(in crate::lower) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Optio
                 let mut args = Vec::new();
                 for arg in &call.arguments.args {
                     let expr = lower_expr(arg, ctx)?;
+                    consume_affine_value_name(&expr, ctx);
                     args.push(expr);
                 }
                 return Some(HirExpr::ConstructorCall {
@@ -418,7 +421,7 @@ pub(in crate::lower) fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) 
         } else {
             elem_ty = Some(ty);
         }
-        consume_affine_literal_name(&expr, ctx);
+        consume_affine_value_name(&expr, ctx);
         elements.push(expr);
     }
 
@@ -444,11 +447,14 @@ pub(in crate::lower) fn lower_set_literal(set: &ExprSet, ctx: &mut LowerCtx) -> 
         } else {
             elem_ty = Some(ty);
         }
-        consume_affine_literal_name(&expr, ctx);
+        consume_affine_value_name(&expr, ctx);
         elements.push(expr);
     }
 
     let final_elem_ty = elem_ty.unwrap_or(Type::Any);
+    if reject_unhashable_container_type(ctx, "set element", &final_elem_ty, set.range()) {
+        return None;
+    }
     let set_ty = Type::Set(Box::new(final_elem_ty));
 
     Some(HirExpr::SetLiteral {
@@ -480,6 +486,9 @@ pub(in crate::lower) fn lower_dict_literal(dict: &ExprDict, ctx: &mut LowerCtx) 
             } else {
                 key_ty = Some(kt);
             }
+            if reject_unhashable_container_type(ctx, "dict key", key.ty(), key_expr.range()) {
+                return None;
+            }
             keys.push(key);
         } else {
             expression_diagnostics::type_mismatch(
@@ -505,7 +514,7 @@ pub(in crate::lower) fn lower_dict_literal(dict: &ExprDict, ctx: &mut LowerCtx) 
         } else {
             val_ty = Some(vt);
         }
-        consume_affine_literal_name(&val, ctx);
+        consume_affine_value_name(&val, ctx);
         values.push(val);
     }
 
@@ -530,7 +539,7 @@ pub(in crate::lower) fn lower_tuple_literal(
     for elt in &tuple.elts {
         let expr = lower_expr(elt, ctx)?;
         elem_types.push(expr.ty().clone());
-        consume_affine_literal_name(&expr, ctx);
+        consume_affine_value_name(&expr, ctx);
         elements.push(expr);
     }
 
@@ -542,7 +551,7 @@ pub(in crate::lower) fn lower_tuple_literal(
     })
 }
 
-fn consume_affine_literal_name(expr: &HirExpr, ctx: &mut LowerCtx) {
+pub(in crate::lower) fn consume_affine_value_name(expr: &HirExpr, ctx: &mut LowerCtx) {
     if expr.ty().contains_affine_resource() {
         if let HirExpr::Name { name, .. } = expr {
             ctx.mark_moved_with_flow(name);

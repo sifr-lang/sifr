@@ -94,12 +94,21 @@ struct BufferStore {
     next_handle: i64,
     next_nonce: u64,
     buffers: HashMap<i64, BufferEntry>,
+    admissions: HashMap<usize, BufferAdmission>,
 }
 
 struct BufferEntry {
     token: i64,
     buffer: Arc<TrackedBuffer>,
     metadata: PythonBufferMetadata,
+    exporter_identity: usize,
+    access: PythonBufferAccess,
+}
+
+#[derive(Default)]
+struct BufferAdmission {
+    readers: usize,
+    writer: bool,
 }
 
 struct TrackedBuffer {
@@ -237,9 +246,14 @@ fn store_buffer(
     request: PythonBufferRequest,
     mut metadata: PythonBufferMetadata,
 ) -> Result<PythonBufferMetadata, PythonError> {
+    let exporter_identity = buffer.exporter_identity();
     let mut store = buffer_store()?;
     let (handle, token) = reserve_handle(&mut store)?;
-    super::update_object_count(1).map_err(PythonError::runtime)?;
+    admit_exporter(&mut store, exporter_identity, request.access)?;
+    if let Err(error) = super::update_object_count(1) {
+        let _ignored = release_exporter_admission(&mut store, exporter_identity, request.access);
+        return Err(PythonError::runtime(error));
+    }
     metadata.handle = handle;
     metadata.token = token;
     store.buffers.insert(
@@ -248,6 +262,8 @@ fn store_buffer(
             token,
             buffer: Arc::new(TrackedBuffer::new(buffer, request)),
             metadata: metadata.clone(),
+            exporter_identity,
+            access: request.access,
         },
     );
     Ok(metadata)
@@ -279,9 +295,71 @@ pub fn release_buffer((handle, token): BufferHandle) -> Result<(), PythonError> 
         }
     }
     .ok_or_else(|| closed_error(handle))?;
-    let buffer = entry.buffer.take_for_release()?;
-    super::attach(|py| buffer.release(py)).map_err(PythonError::runtime)?;
-    super::update_object_count(-1).map_err(PythonError::runtime)
+    let release_result = match entry.buffer.take_for_release() {
+        Ok(buffer) => {
+            let python_result =
+                super::attach(|py| buffer.release(py)).map_err(PythonError::runtime);
+            let count_result = super::update_object_count(-1).map_err(PythonError::runtime);
+            python_result.and(count_result)
+        }
+        Err(error) => Err(error),
+    };
+    let admission_result = {
+        let mut store = buffer_store()?;
+        release_exporter_admission(&mut store, entry.exporter_identity, entry.access)
+    };
+    release_result.and(admission_result)
+}
+
+fn admit_exporter(
+    store: &mut BufferStore,
+    exporter_identity: usize,
+    access: PythonBufferAccess,
+) -> Result<(), PythonError> {
+    let current = store.admissions.get(&exporter_identity);
+    let conflict = match access {
+        PythonBufferAccess::Read => current.is_some_and(|admission| admission.writer),
+        PythonBufferAccess::Write => {
+            current.is_some_and(|admission| admission.writer || admission.readers != 0)
+        }
+    };
+    if conflict {
+        return Err(exporter_admission_error());
+    }
+    let admission = store.admissions.entry(exporter_identity).or_default();
+    match access {
+        PythonBufferAccess::Read => {
+            admission.readers = admission
+                .readers
+                .checked_add(1)
+                .ok_or_else(buffer_state_error)?;
+        }
+        PythonBufferAccess::Write => admission.writer = true,
+    }
+    Ok(())
+}
+
+fn release_exporter_admission(
+    store: &mut BufferStore,
+    exporter_identity: usize,
+    access: PythonBufferAccess,
+) -> Result<(), PythonError> {
+    let remove = {
+        let admission = store
+            .admissions
+            .get_mut(&exporter_identity)
+            .ok_or_else(buffer_state_error)?;
+        match access {
+            PythonBufferAccess::Read if admission.readers != 0 => admission.readers -= 1,
+            PythonBufferAccess::Write if admission.writer => admission.writer = false,
+            _ => return Err(buffer_state_error()),
+        }
+        admission.readers == 0 && !admission.writer
+    };
+    if remove {
+        store.admissions.remove(&exporter_identity);
+    }
+    Ok(())
 }
 
 fn buffer_snapshot(
@@ -466,6 +544,17 @@ fn buffer_state_error() -> PythonError {
         message: "Python buffer state is unavailable".to_string(),
         traceback: String::new(),
         context: "buffer state".to_string(),
+        replay: None,
+    }
+}
+
+fn exporter_admission_error() -> PythonError {
+    PythonError {
+        kind: "zero-copy".to_string(),
+        exception_type: "BufferError".to_string(),
+        message: "buffer exporter already has an active conflicting view".to_string(),
+        traceback: String::new(),
+        context: "buffer exporter access admission".to_string(),
         replay: None,
     }
 }
