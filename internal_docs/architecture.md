@@ -889,7 +889,15 @@ supports them. This is a language rule, not an implementation detail.
   - `Copy` -- only Rust-copy scalar primitives such as fixed-width integers, `float`, and `bool` are `Copy`. Source-level `int` is value-semantic but lowers to `SifrInt` and is not Rust `Copy`.
 - **Inheritance:** trait capability includes the entire embedded parent chain,
   including transitive `NonSend` ancestry, not only fields declared by the
-  immediate child.
+  immediate child. Auto-generated child formatting prints the embedded parent
+  through that parent's emitted `Display` implementation rather than assuming
+  that the child fields alone describe the Rust representation.
+- **Generic classes:** generic declarations and constructors do not impose
+  unrelated blanket Rust bounds. Conditional derives and generated formatting
+  implementations carry only the bounds required by that trait, while ordinary
+  methods are emitted with the bounds required by their own signatures and
+  bodies. A specialization is rejected at the Sifr consumer that needs a bound
+  its concrete type argument cannot satisfy.
 - **Codegen:** the compiler emits only the derives supported by the complete
   generated struct, newtype, or union representation.
 - **Enum types (enum type-system work):** enum types unconditionally derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`. All enum values are usable as dict keys and set members.
@@ -906,9 +914,11 @@ supports them. This is a language rule, not an implementation detail.
   setdefault, and dictionary source construction; affine resources keep their
   more specific ownership diagnostic.
 - **Comparison-consumer constraint:** list count/contains/remove/index require
-  recursive `PartialEq`, while in-place list sort requires total Rust `Ord`.
-  Sifr's broader `Comparable`/`PartialOrd` surface does not certify `slice::sort`;
-  in particular, `float` is rejected for in-place sort.
+  recursive `PartialEq`. In-place list sort and `sorted()` require total Rust
+  ordering for the element type or callable-key return type used by the emitted
+  sort path. Sifr's broader `Comparable`/`PartialOrd` surface does not by itself
+  certify `slice::sort`; the dedicated floating-point path uses `total_cmp`,
+  while other partial-only orderings are rejected.
 - **Formatting-consumer constraint:** `print`, `str`, f-string interpolation,
   and `repr` validate the exact generated Rust `Display`/`Debug` strategy before
   accepting HIR. `repr` always requires `Debug`; the other surfaces select the

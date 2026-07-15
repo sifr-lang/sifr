@@ -472,9 +472,12 @@ the traits of an embedded inheritance parent, and union formatting is emitted
 only when every member supports `Display` or `Debug`. Equality and list, set, or
 dictionary membership inject a concrete union member into the generated union
 representation before invoking Rust equality. Specialized generic classes are
-not admitted as Rust hash keys until their emitted generic declaration can prove
-the required `Eq + Hash` implementation. Error-class fields must prove `Debug`
-before code generation because `std::error::Error` requires it.
+emitted without unrelated declaration-wide bounds: conditional trait
+implementations and individual methods carry only their required bounds, and a
+concrete specialization is rejected at any consumer whose emitted Rust bound it
+cannot satisfy. Generic classes are not admitted as Rust hash keys until their
+emitted representation proves `Eq + Hash`. Error-class fields must prove
+`Debug` before code generation because `std::error::Error` requires it.
 `Any`, dynamic trait objects, callable-bearing classes, affine resources, and
 other unsupported Rust representations are rejected before an operation that
 would require a missing trait. Source `is` and `is not` are limited to identity
@@ -491,6 +494,11 @@ Async-generator validation includes free-variable captures.
 Nested async generators are rejected until their dedicated lazy materialization
 path exists, with affine captures receiving the buffer-specific zero-copy
 diagnostic.
+Reusable lambdas and nested functions cannot capture an affine protocol
+resource: a callable could otherwise be invoked more than once with a single
+owner. Walrus expressions likewise cannot create an affine alias whose source
+and expression result would represent two live owners. Both cases are rejected
+during lowering before HIR or Rust block scoping can make ownership incoherent.
 
 Runtime admission compares the physical byte ranges of logical buffer items
 across every live view. C- and F-contiguous views use one compressed range, so

@@ -99,6 +99,42 @@ pub(in crate::lower) fn borrowed_affine_parameter_escape(
     );
 }
 
+pub(in crate::lower) fn affine_reusable_callable_capture(
+    ctx: &mut LowerCtx,
+    callable_kind: &str,
+    name: &str,
+    ty: &Type,
+    range: TextRange,
+) {
+    ctx.error_with_code_at(
+        DiagnosticCode::PYZC_INVALID_DECLARATION,
+        format!(
+            "{callable_kind} cannot capture '{name}' of type '{}' because reusable callables cannot own or repeatedly expose an affine Python buffer",
+            ty.display_name()
+        ),
+        range,
+    );
+}
+
+pub(in crate::lower) fn reject_affine_nested_function_capture(
+    ctx: &mut LowerCtx,
+    function_name: &str,
+    range: TextRange,
+) {
+    let capture = ctx
+        .nested_function_captures
+        .get(function_name)
+        .and_then(|captures| {
+            captures
+                .iter()
+                .find(|(_, ty)| ty.contains_affine_resource())
+        })
+        .cloned();
+    if let Some((capture_name, capture_ty)) = capture {
+        affine_reusable_callable_capture(ctx, "nested function", &capture_name, &capture_ty, range);
+    }
+}
+
 pub(in crate::lower) fn sync_guard_return_escape(
     ctx: &mut LowerCtx,
     label: &str,

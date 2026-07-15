@@ -5,21 +5,100 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
 
 impl RustEmitter {
-    /// Check if a generic class needs Hash + Eq bounds on its type parameters.
-    /// This is true when a type parameter is used as a `HashMap` key (dict field with `TypeVar` key).
-    pub(crate) fn class_needs_hash_eq(class: &HirClass) -> bool {
-        fn type_has_typevar_dict_key(ty: &Type) -> bool {
-            match ty {
-                Type::Dict(key, _) => matches!(key.as_ref(), Type::TypeVar(_)),
-                Type::List(inner) => type_has_typevar_dict_key(inner),
-                Type::Union(members) => members.iter().any(type_has_typevar_dict_key),
+    pub(crate) fn type_mentions_type_param(ty: &Type, type_param: &str) -> bool {
+        match ty.resolve_alias() {
+            Type::TypeVar(name) => name == type_param,
+            Type::List(value)
+            | Type::Set(value)
+            | Type::Iterable(value)
+            | Type::Iterator(value)
+            | Type::Awaitable(value)
+            | Type::Failure(value)
+            | Type::TimeoutResult(value)
+            | Type::Newtype { inner: value, .. } => {
+                Self::type_mentions_type_param(value, type_param)
+            }
+            Type::Dict(left, right)
+            | Type::Result(left, right)
+            | Type::Task(left, right)
+            | Type::TaskResult(left, right)
+            | Type::Coroutine(left, right)
+            | Type::Select2(left, right)
+            | Type::BlockingTask(left, right)
+            | Type::JoinSet(left, right)
+            | Type::AsyncIterator(left, right)
+            | Type::AsyncGenerator(left, right) => {
+                Self::type_mentions_type_param(left, type_param)
+                    || Self::type_mentions_type_param(right, type_param)
+            }
+            Type::Tuple(values) | Type::Union(values) | Type::Intersection(values) => values
+                .iter()
+                .any(|value| Self::type_mentions_type_param(value, type_param)),
+            Type::Callable(params, _, return_type)
+            | Type::AsyncCallable(params, _, return_type) => {
+                params
+                    .iter()
+                    .any(|value| Self::type_mentions_type_param(value, type_param))
+                    || Self::type_mentions_type_param(return_type, type_param)
+            }
+            Type::Function(function) | Type::AsyncFunction(function) => {
+                function
+                    .params
+                    .iter()
+                    .any(|(_, value, _)| Self::type_mentions_type_param(value, type_param))
+                    || Self::type_mentions_type_param(&function.return_type, type_param)
+            }
+            Type::Class {
+                fields, methods, ..
+            } => {
+                fields
+                    .iter()
+                    .any(|(_, value)| Self::type_mentions_type_param(value, type_param))
+                    || methods.iter().any(|(_, function)| {
+                        function
+                            .params
+                            .iter()
+                            .any(|(_, value, _)| Self::type_mentions_type_param(value, type_param))
+                            || Self::type_mentions_type_param(&function.return_type, type_param)
+                    })
+            }
+            _ => false,
+        }
+    }
+
+    /// Whether this type parameter occurs in a stored hash-key position.
+    pub(crate) fn class_type_param_needs_hash_eq(class: &HirClass, type_param: &str) -> bool {
+        fn type_has_hash_key_param(ty: &Type, type_param: &str) -> bool {
+            match ty.resolve_alias() {
+                Type::Dict(key, value) => {
+                    RustEmitter::type_mentions_type_param(key, type_param)
+                        || type_has_hash_key_param(value, type_param)
+                }
+                Type::Set(value) => RustEmitter::type_mentions_type_param(value, type_param),
+                Type::List(inner)
+                | Type::Iterable(inner)
+                | Type::Iterator(inner)
+                | Type::Newtype { inner, .. } => type_has_hash_key_param(inner, type_param),
+                Type::Tuple(members) | Type::Union(members) | Type::Intersection(members) => {
+                    members
+                        .iter()
+                        .any(|member| type_has_hash_key_param(member, type_param))
+                }
                 _ => false,
             }
         }
         class
             .fields
             .iter()
-            .any(|(_, ty)| type_has_typevar_dict_key(ty))
+            .any(|(_, ty)| type_has_hash_key_param(ty, type_param))
+    }
+
+    /// Check if a generic class needs Hash + Eq bounds on any type parameter.
+    pub(crate) fn class_needs_hash_eq(class: &HirClass) -> bool {
+        class
+            .type_params
+            .iter()
+            .any(|name| Self::class_type_param_needs_hash_eq(class, name))
     }
 
     /// Check if a generic function needs Hash + Eq bounds (uses `TypeVar` as dict key
@@ -541,6 +620,9 @@ impl RustEmitter {
         }
         if requirements.needs_sub {
             let _ = write!(extra, " + std::ops::Sub<Output = {tp}>");
+        }
+        if requirements.needs_partial_ord {
+            let _ = write!(extra, " + PartialOrd");
         }
         extra
     }

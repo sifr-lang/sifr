@@ -30,6 +30,7 @@ mod lib_emitter_state;
 pub use lib_emitter_state::*;
 mod class_emitter;
 mod class_method_emitter;
+mod class_trait_capabilities;
 mod context;
 pub use context::*;
 mod entrypoints;

@@ -7,6 +7,7 @@ use sifr_type_system::Type;
 use super::builtin_calls::{callable_builtin_element_type, callable_builtin_list_output_type};
 use super::expression_diagnostics;
 use super::expressions::{callable_signature, lower_expr, lower_lambda_with_context};
+use super::type_bounds::supports_total_order_in_context;
 use super::LowerCtx;
 
 fn first_call_keyword_range(call: &ExprCall) -> TextRange {
@@ -178,6 +179,7 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
         return None;
     }
     let mut key_arg = None;
+    let mut ordering_ty = elem_ty.clone();
     let mut reverse_arg = HirExpr::BoolLiteral(false);
     if let Some(keyword) = key_keyword {
         let lowered = if matches!(keyword.value, Expr::NoneLiteral(_)) {
@@ -186,7 +188,7 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
             lower_lambda_with_context(&keyword.value, std::slice::from_ref(&elem_ty), ctx)?
         };
         if !matches!(lowered, HirExpr::NoneLiteral) {
-            let Some((param_types, _conventions, _return_ty)) = callable_signature(&lowered) else {
+            let Some((param_types, _conventions, return_ty)) = callable_signature(&lowered) else {
                 expression_diagnostics::call_not_callable_or_arity(
                     ctx,
                     "sorted() keyword argument 'key' must be callable".to_string(),
@@ -202,8 +204,22 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
                 );
                 return None;
             }
+            ordering_ty = return_ty;
         }
         key_arg = Some(lowered);
+    }
+    if !matches!(ordering_ty.resolve_alias(), Type::Float)
+        && !supports_total_order_in_context(&ordering_ty, ctx)
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "sorted() requires an element or key type with generated Rust total Ord support, unavailable for '{}'",
+                ordering_ty.display_name()
+            ),
+            key_keyword.map_or(iterable_range, |keyword| keyword.value.range()),
+        );
+        return None;
     }
     if let Some(keyword) = reverse_keyword {
         let lowered = lower_expr(&keyword.value, ctx)?;

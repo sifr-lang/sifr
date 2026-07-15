@@ -126,7 +126,7 @@ fn collect_referenced_names_in_stmts(stmts: &[Stmt], names: &mut HashSet<String>
     }
 }
 
-fn collect_referenced_names_in_expr(expr: &Expr, names: &mut HashSet<String>) {
+pub(in crate::lower) fn collect_referenced_names_in_expr(expr: &Expr, names: &mut HashSet<String>) {
     match expr {
         Expr::Name(name) => {
             names.insert(name.id.to_string());

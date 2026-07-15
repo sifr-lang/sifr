@@ -1,4 +1,4 @@
-use crate::{helpers::is_auto_display_type, RustEmitter, BUILTIN_ERROR_CLASSES};
+use crate::{RustEmitter, BUILTIN_ERROR_CLASSES};
 use sifr_ir::HirModule;
 use std::collections::HashSet;
 
@@ -29,19 +29,14 @@ impl RustEmitter {
 
     pub(crate) fn collect_display_class_metadata(&mut self, module: &HirModule) {
         for class in &module.classes {
-            let has_auto_display = !class.fields.is_empty()
-                && !class.is_protocol()
-                && !class
-                    .operator_impls
-                    .iter()
-                    .any(|(name, _)| name == "__str__" || name == "__repr__")
-                && class.fields.iter().all(|(_, ty)| is_auto_display_type(ty));
+            let has_auto_display =
+                Self::class_emits_display(class, module, &mut std::collections::HashSet::new());
             if class.is_error_type
                 || class.newtype_inner.is_some()
                 || class
                     .operator_impls
                     .iter()
-                    .any(|(name, _)| name == "__str__" || name == "__repr__")
+                    .any(|(name, _)| name == "__str__")
                 || has_auto_display
             {
                 self.display_classes.insert(class.name.clone());

@@ -234,7 +234,9 @@ impl std::fmt::Display for Item {
     let twice = dedup_rust_items(code, &mut emitted, &skip_types);
 
     assert!(once.contains("struct Item {}"));
-    assert!(once.contains("impl Item"));
+    assert_eq!(once.matches("impl Item").count(), 2);
+    assert!(once.contains("fn a(&self)"));
+    assert!(once.contains("fn b(&self)"));
     assert!(once.contains("impl std::fmt::Display for Item"));
     assert!(twice.trim().is_empty());
 }

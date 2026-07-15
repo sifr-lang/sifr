@@ -336,7 +336,7 @@ fn affine_buffer_storage_assignments_transfer_owned_values() {
 }
 
 #[test]
-fn affine_buffer_constructor_and_walrus_moves_are_tracked() {
+fn affine_buffer_constructor_moves_are_tracked_and_walrus_is_rejected() {
     let constructor = lower_errors(
         "class Holder:\n    view: python.Buffer[uint8]\n\ndef pack(own view: python.Buffer[uint8]) -> None:\n    holder: Holder = Holder(view)\n    print(view.length())\n",
     );
@@ -351,11 +351,26 @@ fn affine_buffer_constructor_and_walrus_moves_are_tracked() {
         "def alias(own view: python.Buffer[uint8]) -> None:\n    retained: python.Buffer[uint8] = (moved := view)\n    print(view.length())\n",
     );
     assert!(
-        walrus
-            .iter()
-            .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+        walrus.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                && error.message.contains("walrus target 'moved'")
+        }),
         "{walrus:?}"
     );
+}
+
+#[test]
+fn affine_buffer_reusable_callable_captures_are_rejected() {
+    for source in [
+        "def keep(own view: python.Buffer[uint8]) -> Callable[[], python.Buffer[uint8]]:\n    return lambda: view\n",
+        "def keep(own view: python.Buffer[uint8]) -> Callable[[], python.Buffer[uint8]]:\n    def inner() -> python.Buffer[uint8]:\n        return view\n    return inner\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                && error.message.contains("reusable callables")
+        }), "{source}: {errors:?}");
+    }
 }
 
 #[test]

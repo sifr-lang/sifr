@@ -1,0 +1,2 @@
+def keep(own view: python.Buffer[uint8]) -> Callable[[], python.Buffer[uint8]]:
+    return lambda: view

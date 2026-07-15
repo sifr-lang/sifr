@@ -1,0 +1,5 @@
+class Item:
+    value: int
+
+def order(values: list[Item]) -> list[Item]:
+    return sorted(values)

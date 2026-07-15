@@ -7,10 +7,10 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review pass 13 reopened the final compiler
-Rust-trait consumer gaps, and its remediation now passes the authoritative
-local create-PR gate plus focused compiler, native-positive/negative,
-maintainability, and formatting validation in
+Wave 2 is implemented; whole-diff review pass 14 reopened generic/inherited
+Rust-trait and reusable affine-closure ownership gaps. Its remediation passes
+the focused compiler, native-positive/negative, maintainability, formatting,
+and file-size checks plus the authoritative local create-PR gate in
 [PR #2988](https://github.com/sifr-lang/sifr/pull/2988). Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
@@ -1004,7 +1004,39 @@ Delivery waves:
   runtime platform `28/28` with one gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `41/42` cache hits. Its `444.51s` wall time produced
   only the non-blocking warm-target advisory; every enforced step budget
-  passed. The next fresh whole-diff review remains pending.
+  passed. Full-diff
+  [review pass 14](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-14.md)
+  confirmed the pass-13 formatting and diagnostic-precedence repairs, then
+  found that `sorted()` admitted element and callable-key result types without
+  total Rust ordering; generic declarations imposed unconditional bounds while
+  capability queries overclaimed generic and inherited formatting traits; and
+  affine buffers could escape through reusable lambda/nested-function captures
+  or acquire an incoherent walrus alias. The remediation validates the exact
+  ordering type at `sorted()`, emits generic declarations and constructors
+  without unrelated bounds, attaches proved bounds to conditional trait impls
+  and individual methods, and formats inherited classes through their embedded
+  parent. Lowering now rejects all three reusable affine escape/alias families
+  before HIR. Six permanent negative fixtures expand the complete compile-fail
+  matrix to `516/516`, while two native-positive fixtures cover non-clone
+  generic storage and conditional generic/inherited formatting. Full affected
+  suites pass: type system `102/102`, lowering `744` passed with one ignored,
+  and code generation `818/818`; both positive fixtures build and run through
+  the native release backend. The requested `cargo clean` removed `39.4 GiB`
+  and exposed two stale-cache-hidden regressions: stdlib deduplication discarded
+  distinct per-method inherent impl blocks, and signature-only bound inference
+  overconstrained valid channel methods while underconstraining `Counter[T]`.
+  Inherent impl identity now includes its item names, representation-required
+  `Hash + Eq` bounds apply only to stored key parameters, and Clone/ordering
+  bounds follow the emitted method body. The corrected generated-code corpus
+  and exact create-PR E2E manifest pass, including the structural datetime,
+  channel, and collection ownership reproductions. Workspace Clippy is warning-
+  free; formatting, diff, HIR maintainability, and the `900`-line file-size
+  guardrail pass over `2646` files. The authoritative create-PR facade passes
+  every blocking lane: Python interop `11/11` in `104.05s`, runtime platform
+  `28/28` with one gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `42/42` cache hits. Its `416.20s` wall time produced
+  only the non-blocking warm-wall-time advisory. The next fresh whole-diff
+  review remains pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

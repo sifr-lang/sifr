@@ -1,0 +1,9 @@
+class Box[T]:
+    value: T
+
+class Local(NonSend):
+    pass
+
+def main() -> None:
+    local: Local = Local()
+    boxed: Box[Local] = Box(local)

@@ -705,6 +705,11 @@ pub(in crate::lower) fn lower_stmt(
                 .unwrap_or_else(|| register_local_function_symbol(func, ctx));
 
             reject_unsupported_nested_async_generator(func, ft.return_type.as_ref(), ctx);
+            super::ownership_diagnostics::reject_affine_nested_function_capture(
+                ctx,
+                func.name.as_str(),
+                func.name.range(),
+            );
 
             // Lower the nested function body
             let declared_nonlocals = collect_declared_nonlocals(&func.body);

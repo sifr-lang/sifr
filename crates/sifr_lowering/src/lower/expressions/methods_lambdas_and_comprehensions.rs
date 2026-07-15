@@ -17,9 +17,11 @@ use super::{
 };
 use crate::lower::python_interop::callback_method_arg_ranges;
 use crate::lower::{
+    nested_function_inference::collect_referenced_names_in_expr, ownership_diagnostics,
     parallel_calls, statement_diagnostics, task_join_set_calls, task_scope_offload_calls,
 };
 use sifr_ir::CompilerIntrinsicId;
+use std::collections::HashSet;
 pub(in crate::lower) fn lower_method_call(
     attr: &ExprAttribute,
     call: &ExprCall,
@@ -403,6 +405,9 @@ pub(in crate::lower) fn lower_lambda_with_context(
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
     if let Expr::Lambda(lambda) = expr {
+        if reject_affine_lambda_captures(lambda, ctx) {
+            return None;
+        }
         let (params, body, body_ty) = ctx.with_pushed_scope(|ctx| {
             let mut params = Vec::new();
             if let Some(ref parameters) = lambda.parameters {
@@ -450,6 +455,9 @@ pub(in crate::lower) fn lower_lambda_with_context(
 }
 
 pub(in crate::lower) fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if reject_affine_lambda_captures(lambda, ctx) {
+        return None;
+    }
     let (params, body, body_ty) = ctx.with_pushed_scope(|ctx| {
         let mut params = Vec::new();
         if let Some(ref parameters) = lambda.parameters {
@@ -490,6 +498,33 @@ pub(in crate::lower) fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) ->
         body: Box::new(body),
         ty: fn_ty,
     })
+}
+
+fn reject_affine_lambda_captures(lambda: &ExprLambda, ctx: &mut LowerCtx) -> bool {
+    let mut referenced = HashSet::new();
+    collect_referenced_names_in_expr(&lambda.body, &mut referenced);
+    if let Some(parameters) = &lambda.parameters {
+        for parameter in &parameters.args {
+            referenced.remove(parameter.parameter.name.as_str());
+        }
+    }
+    let capture = referenced.into_iter().find_map(|name| {
+        ctx.scope
+            .lookup(&name)
+            .filter(|info| info.ty.contains_affine_resource())
+            .map(|info| (name, info.ty.clone()))
+    });
+    let Some((name, ty)) = capture else {
+        return false;
+    };
+    ownership_diagnostics::affine_reusable_callable_capture(
+        ctx,
+        "lambda",
+        &name,
+        &ty,
+        lambda.range(),
+    );
+    true
 }
 
 pub(super) fn reject_invalid_expression_target(

@@ -650,6 +650,7 @@ pub(crate) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String>
 pub(crate) struct TypeVarOpRequirements {
     pub needs_add: bool,
     pub needs_sub: bool,
+    pub needs_partial_ord: bool,
 }
 
 pub(crate) fn collect_typevar_operator_requirements(
@@ -659,13 +660,13 @@ pub(crate) fn collect_typevar_operator_requirements(
     let mut requirements = TypeVarOpRequirements::default();
     let mut on_stmt = |_stmt: &HirStmt| {};
     let mut on_expr = |expr: &HirExpr| {
-        if let HirExpr::BinOp {
+        match expr {
+        HirExpr::BinOp {
             left,
             op,
             right,
             ty,
-        } = expr
-        {
+        } => {
             let left_is_tp =
                 matches!(left.ty(), Type::TypeVar(ref name) if name == type_param_name);
             let right_is_tp =
@@ -678,7 +679,24 @@ pub(crate) fn collect_typevar_operator_requirements(
                     _ => {}
                 }
             }
+            }
+            HirExpr::Compare {
+                left,
+                ops,
+                comparators,
+                ..
+            } if ops
+                .iter()
+                .any(|op| matches!(op.as_str(), "<" | "<=" | ">" | ">="))
+                && (matches!(left.ty(), Type::TypeVar(ref name) if name == type_param_name)
+                    || comparators.iter().any(
+                        |right| matches!(right.ty(), Type::TypeVar(ref name) if name == type_param_name)
+                    )) =>
+        {
+            requirements.needs_partial_ord = true;
         }
+        _ => {}
+    }
     };
     traversal::walk_stmts(
         stmts,

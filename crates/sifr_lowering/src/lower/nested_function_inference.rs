@@ -12,3 +12,4 @@ use expression_inference::{
     type_contains_unknown_or_any, unify_function_return, unify_name_binding, unify_types,
 };
 mod capture_collection;
+pub(in crate::lower) use capture_collection::collect_referenced_names_in_expr;
