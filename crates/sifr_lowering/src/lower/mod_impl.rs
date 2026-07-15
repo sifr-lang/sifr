@@ -1,16 +1,15 @@
-use super::python_interop;
 use super::{
     async_effects, collect_class_type, collect_function_defaults, collect_type_alias_decls,
     collect_type_vars, compiler_intrinsics, extract_function_type, function_body_contains_yield,
-    import_diagnostics, import_resolution, imported_defaults, imports, integer_literal_diagnostics,
-    module_constants_lowering, module_function_registry, name_diagnostics,
-    parse_typevar_bound_expr, parse_typevar_declaration_specs, predeclare_type_aliases,
-    private_stdlib_imports, register_builtins, resolve_imports_early, resolve_type_aliases, str,
-    workload_annotations, Expr, ExternalDefs, FunctionType, HirDiagnostic, HirExpr, HirImport,
-    HirModule, LowerCtx, Ranged, Stmt, TextRange, Type,
+    import_diagnostics, import_resolution, imported_class_identity, imported_defaults, imports,
+    integer_literal_diagnostics, module_constants_lowering, module_function_registry,
+    name_diagnostics, parse_typevar_bound_expr, parse_typevar_declaration_specs,
+    predeclare_type_aliases, private_stdlib_imports, python_interop, register_builtins,
+    resolve_imports_early, resolve_type_aliases, str, workload_annotations, Expr, ExternalDefs,
+    FunctionType, HirDiagnostic, HirExpr, HirImport, HirModule, LowerCtx, Ranged, Stmt, TextRange,
+    Type,
 };
 use sifr_ir::LoweringResult;
-/// Internal implementation of module lowering.
 pub(in crate::lower) fn lower_module_impl(
     stmts: &[Stmt],
     externals: &ExternalDefs,
@@ -707,16 +706,19 @@ pub(in crate::lower) fn lower_module_impl(
                 if !found {
                     if let Some(module_classes) = externals.classes.get(&module_name) {
                         if let Some(class_ty) = module_classes.get(name) {
-                            ctx.class_types.insert(local.clone(), class_ty.clone());
+                            let imported_class_ty = imported_class_identity::class_type_for_import(
+                                class_ty,
+                                &module_name,
+                                &local,
+                            );
+                            ctx.class_types
+                                .insert(local.clone(), imported_class_ty.clone());
                             if let Some(module_class_type_params) =
                                 externals.class_type_params.get(&module_name)
                             {
                                 if let Some(type_params) = module_class_type_params.get(name) {
                                     ctx.class_declared_type_params
                                         .insert(local.clone(), type_params.clone());
-                                    ctx.class_declared_type_params
-                                        .entry(name.clone())
-                                        .or_insert_with(|| type_params.clone());
                                     if !type_params.is_empty() {
                                         ctx.generic_functions
                                             .insert(local.clone(), type_params.clone());
@@ -741,7 +743,7 @@ pub(in crate::lower) fn lower_module_impl(
                             // otherwise fall back to field-based constructor
                             if let Type::Class {
                                 fields, methods, ..
-                            } = class_ty
+                            } = &imported_class_ty
                             {
                                 let ft = if let Some((_, new_ft)) =
                                     methods.iter().find(|(n, _)| n == "new")
@@ -752,11 +754,11 @@ pub(in crate::lower) fn lower_module_impl(
                                         .iter()
                                         .map(|(n, t, _)| (n.clone(), t.clone()))
                                         .collect();
-                                    FunctionType::new(params, class_ty.clone())
+                                    FunctionType::new(params, imported_class_ty.clone())
                                 } else {
                                     // No __init__ — default constructor from fields
                                     let params: Vec<(String, Type)> = fields.clone();
-                                    FunctionType::new(params, class_ty.clone())
+                                    FunctionType::new(params, imported_class_ty.clone())
                                 };
                                 ctx.functions.insert(local.clone(), ft);
                                 if let Some(module_defaults) =

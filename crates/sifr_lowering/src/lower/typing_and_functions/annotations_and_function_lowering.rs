@@ -446,10 +446,9 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                                     })
                                     .collect();
                                 return Type::Class {
-                                    // Keep the declaration identity even when the annotation uses
-                                    // an import alias. The local spelling is only a name-resolution
-                                    // concern; generated Rust and specialization metadata use the
-                                    // canonical class name.
+                                    // Keep the identity selected by import resolution. Merged
+                                    // stdlib classes stay canonical, while project-module aliases
+                                    // use their collision-safe local emitted spelling.
                                     name: name.clone(),
                                     fields: subst_fields,
                                     methods: subst_methods,

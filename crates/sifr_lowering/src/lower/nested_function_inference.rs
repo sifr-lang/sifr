@@ -13,5 +13,10 @@ use expression_inference::{
 };
 mod return_inference;
 use return_inference::unify_function_return;
+mod compound_statement_inference;
+use compound_statement_inference::{
+    analyze_match_stmt, analyze_try_stmt, analyze_with_stmt, collect_compound_local_bindings,
+    collect_compound_nonlocals, function_has_value_return, inference_stmt_always_exits,
+};
 mod capture_collection;
 pub(in crate::lower) use capture_collection::collect_referenced_names_in_expr;

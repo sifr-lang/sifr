@@ -13,21 +13,30 @@ class Math[T]:
 class Box[T]:
     value: T
 
-    def __eq__(self, other: Box[T]) -> bool:
+    def same(self, other: Box[T]) -> bool:
         return self.value == other.value
+
+    def __eq__(self, other: Box[T]) -> bool:
+        return self.same(other)
 
 class Ordered[A, B]:
     first: A
     second: B
 
-    def __lt__(self, other: Ordered[A, B]) -> bool:
+    def less(self, other: Ordered[A, B]) -> bool:
         return self.second < other.second
+
+    def __lt__(self, other: Ordered[A, B]) -> bool:
+        return self.less(other)
 
 class NegBox[T]:
     value: T
 
-    def __neg__(self) -> T:
+    def negated(self) -> T:
         return -self.value
+
+    def __neg__(self) -> T:
+        return self.negated()
 
 def main() -> None:
     holder: Holder[int] = Holder([1, 2])

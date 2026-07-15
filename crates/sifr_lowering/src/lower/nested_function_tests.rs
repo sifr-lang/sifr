@@ -318,3 +318,45 @@ fn test_tuple_for_target_inference_specializes_empty_dict_for_membership_index_p
         result.err()
     );
 }
+
+#[test]
+fn top_level_match_return_inference_ignores_unreachable_tail() {
+    let module = lower_source(
+        "def choose(value: int):\n    match value:\n        case 0:\n            return 1\n        case _:\n            return 2\n    return \"unreachable\"\n\ndef consume() -> int:\n    return choose(0)\n",
+    )
+    .expect("exhaustive match returns should determine the inferred return type");
+    let choose = module
+        .functions
+        .iter()
+        .find(|function| function.name == "choose")
+        .expect("choose function missing");
+    assert_eq!(choose.return_type, Type::Int);
+}
+
+#[test]
+fn top_level_try_return_inference_ignores_unreachable_tail() {
+    let module = lower_source(
+        "def choose(flag: bool):\n    try:\n        if flag:\n            raise ValueError(\"bad\")\n        return 1\n    except ValueError:\n        return 2\n    return \"unreachable\"\n\ndef consume() -> int:\n    return choose(False)\n",
+    )
+    .expect("try and handler returns should determine the inferred return type");
+    let choose = module
+        .functions
+        .iter()
+        .find(|function| function.name == "choose")
+        .expect("choose function missing");
+    assert_eq!(choose.return_type, Type::Int);
+}
+
+#[test]
+fn top_level_with_return_inference_ignores_unreachable_tail() {
+    let module = lower_source(
+        "class Resource:\n    def __enter__(self) -> Resource:\n        return self\n\n    def __exit__(self) -> None:\n        pass\n\ndef choose(resource: Resource):\n    with resource:\n        return 1\n    return \"unreachable\"\n\ndef consume(resource: Resource) -> int:\n    return choose(resource)\n",
+    )
+    .expect("with-body returns should determine the inferred return type");
+    let choose = module
+        .functions
+        .iter()
+        .find(|function| function.name == "choose")
+        .expect("choose function missing");
+    assert_eq!(choose.return_type, Type::Int);
+}

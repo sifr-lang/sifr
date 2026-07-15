@@ -37,6 +37,39 @@ pub(super) fn render_local_module_imports(module: &HirModule) -> String {
     }
 }
 
+fn register_imported_generic_classes(
+    code: &mut StdlibCode,
+    module: &HirModule,
+    project_modules: &HashMap<&str, &HirModule>,
+) {
+    for import in &module.imports {
+        let Some(source_module) = project_modules.get(import.module.as_str()) else {
+            continue;
+        };
+        for source_name in &import.names {
+            let Some(source_class) = source_module
+                .classes
+                .iter()
+                .find(|class| class.name == *source_name && !class.type_params.is_empty())
+            else {
+                continue;
+            };
+            let local_name = import
+                .aliases
+                .iter()
+                .find(|(original, _)| original == source_name)
+                .map_or(source_name.as_str(), |(_, alias)| alias.as_str());
+            let mut template = source_class.clone();
+            template.name = local_name.to_string();
+            code.generic_classes.insert(local_name.to_string());
+            code.generic_class_params
+                .insert(local_name.to_string(), source_class.type_params.clone());
+            code.generic_class_templates
+                .insert(local_name.to_string(), template);
+        }
+    }
+}
+
 /// Generate Rust source code for a multi-module project, returning aggregate dependency metadata.
 pub fn generate_rust_multi_with_metadata(
     modules: &[(&str, &HirModule)],
@@ -46,6 +79,7 @@ pub fn generate_rust_multi_with_metadata(
     let mut used_stdlib_modules = HashSet::new();
     let mut required_features = HashSet::new();
     let mut project_codegen_code = stdlib_code.clone();
+    let project_modules = modules.iter().copied().collect::<HashMap<_, _>>();
 
     for (module_name, module) in modules {
         project_codegen_code
@@ -58,7 +92,9 @@ pub fn generate_rust_multi_with_metadata(
 
     for (module_name, module) in modules {
         let module_public = *module_name != "main";
-        let codegen_result = generate_rust_with_stdlib(module, &project_codegen_code);
+        let mut module_codegen_code = project_codegen_code.clone();
+        register_imported_generic_classes(&mut module_codegen_code, module, &project_modules);
+        let codegen_result = generate_rust_with_stdlib(module, &module_codegen_code);
         let local_imports = render_local_module_imports(module);
         let mut rust_source = codegen_result.rust_source;
         if !local_imports.trim().is_empty() {

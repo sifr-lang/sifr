@@ -101,7 +101,14 @@ pub(in crate::lower) fn resolve_imports_early(
                     let local = local_name_for(name);
                     if let Some(class_ty) = module_classes.get(name) {
                         if !ctx.class_types.contains_key(&local) {
-                            ctx.class_types.insert(local.clone(), class_ty.clone());
+                            let imported_class_ty =
+                                super::imported_class_identity::class_type_for_import(
+                                    class_ty,
+                                    &module_key,
+                                    &local,
+                                );
+                            ctx.class_types
+                                .insert(local.clone(), imported_class_ty.clone());
                             if let Some(module_class_type_params) =
                                 externals.class_type_params.get(&module_key)
                             {
@@ -140,7 +147,7 @@ pub(in crate::lower) fn resolve_imports_early(
                             // Register constructor
                             if let Type::Class {
                                 fields, methods, ..
-                            } = class_ty
+                            } = &imported_class_ty
                             {
                                 let ft = if let Some((_, new_ft)) =
                                     methods.iter().find(|(n, _)| n == "new")
@@ -150,10 +157,10 @@ pub(in crate::lower) fn resolve_imports_early(
                                         .iter()
                                         .map(|(n, t, _)| (n.clone(), t.clone()))
                                         .collect();
-                                    FunctionType::new(params, class_ty.clone())
+                                    FunctionType::new(params, imported_class_ty.clone())
                                 } else {
                                     let params: Vec<(String, Type)> = fields.clone();
-                                    FunctionType::new(params, class_ty.clone())
+                                    FunctionType::new(params, imported_class_ty.clone())
                                 };
                                 ctx.functions.insert(local, ft);
                             }

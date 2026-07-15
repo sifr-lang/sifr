@@ -114,7 +114,26 @@ pub(in crate::lower) fn record_current_method_dependency(
 }
 
 pub(in crate::lower) fn close_generic_method_requirements(ctx: &mut LowerCtx) {
+    close_method_dependencies(ctx);
     add_ordering_supertrait_requirements(ctx);
+    close_method_dependencies(ctx);
+    for (class, methods) in ctx.generic_method_requirements.clone() {
+        for (method, by_param) in methods {
+            let encoded = by_param
+                .into_iter()
+                .map(|(param, requirements)| {
+                    let mut requirements = requirements.into_iter().collect::<Vec<_>>();
+                    requirements.sort();
+                    (param, requirements)
+                })
+                .collect();
+            ctx.type_param_bounds
+                .insert(format!("{class}.{method}"), encoded);
+        }
+    }
+}
+
+fn close_method_dependencies(ctx: &mut LowerCtx) {
     loop {
         let snapshot = ctx.generic_method_requirements.clone();
         let mut changed = false;
@@ -144,20 +163,6 @@ pub(in crate::lower) fn close_generic_method_requirements(ctx: &mut LowerCtx) {
         }
         if !changed {
             break;
-        }
-    }
-    for (class, methods) in ctx.generic_method_requirements.clone() {
-        for (method, by_param) in methods {
-            let encoded = by_param
-                .into_iter()
-                .map(|(param, requirements)| {
-                    let mut requirements = requirements.into_iter().collect::<Vec<_>>();
-                    requirements.sort();
-                    (param, requirements)
-                })
-                .collect();
-            ctx.type_param_bounds
-                .insert(format!("{class}.{method}"), encoded);
         }
     }
 }
@@ -213,9 +218,15 @@ pub(in crate::lower) fn import_generic_method_requirements(
             .iter()
             .map(|(param, requirements)| (param.clone(), requirements.iter().cloned().collect()))
             .collect();
-        for class_identity in [source_class, local_class] {
+        let mut class_identities = HashSet::from([local_class.to_string()]);
+        if let Some(Type::Class { name, .. }) =
+            ctx.class_types.get(local_class).map(Type::resolve_alias)
+        {
+            class_identities.insert(name.clone());
+        }
+        for class_identity in class_identities {
             ctx.generic_method_requirements
-                .entry(class_identity.to_string())
+                .entry(class_identity)
                 .or_default()
                 .insert(method.to_string(), requirements.clone());
         }
@@ -238,7 +249,60 @@ fn concrete_type_bindings(
     bindings
 }
 
-fn requirement_supported(ty: &Type, requirement: &str, ctx: &LowerCtx) -> bool {
+fn operator_method_for_requirement(requirement: &str) -> Option<&'static str> {
+    match requirement {
+        "PartialEq" => Some("__eq__"),
+        "PartialOrd" => Some("__lt__"),
+        "Neg" => Some("__neg__"),
+        _ => None,
+    }
+}
+
+fn class_operator_supported(
+    ty: &Type,
+    method: &str,
+    ctx: &LowerCtx,
+    visiting: &mut HashSet<String>,
+) -> bool {
+    let Type::Class { name, methods, .. } = ty.resolve_alias() else {
+        return false;
+    };
+    if !methods.iter().any(|(candidate, _)| candidate == method) {
+        return false;
+    }
+    let visit_key = format!("{}::{method}", ty.display_name());
+    if !visiting.insert(visit_key.clone()) {
+        return true;
+    }
+    let supported = ctx
+        .generic_method_requirements
+        .get(name)
+        .and_then(|requirements| requirements.get(method))
+        .is_none_or(|requirements| {
+            let bindings = concrete_type_bindings(name, ty, ctx);
+            requirements.iter().all(|(param, required)| {
+                bindings.get(param).is_none_or(|concrete| {
+                    required.iter().all(|requirement| {
+                        requirement_supported_inner(concrete, requirement, ctx, visiting)
+                    })
+                })
+            })
+        });
+    visiting.remove(&visit_key);
+    supported
+}
+
+fn requirement_supported_inner(
+    ty: &Type,
+    requirement: &str,
+    ctx: &LowerCtx,
+    visiting: &mut HashSet<String>,
+) -> bool {
+    if let Some(method) = operator_method_for_requirement(requirement) {
+        if class_operator_supported(ty, method, ctx, visiting) {
+            return true;
+        }
+    }
     match requirement {
         "Clone" => ty.supports_derived_clone(),
         "PartialEq" => super::type_bounds::supports_structural_equality_in_context(ty, ctx),
@@ -251,6 +315,10 @@ fn requirement_supported(ty: &Type, requirement: &str, ctx: &LowerCtx) -> bool {
         "Neg" => type_check_unary_op("-", ty).is_ok(),
         _ => false,
     }
+}
+
+fn requirement_supported(ty: &Type, requirement: &str, ctx: &LowerCtx) -> bool {
+    requirement_supported_inner(ty, requirement, ctx, &mut HashSet::new())
 }
 
 pub(in crate::lower) fn validate_generic_method_specialization(

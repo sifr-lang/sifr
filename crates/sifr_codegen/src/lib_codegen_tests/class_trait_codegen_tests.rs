@@ -164,7 +164,8 @@ class NegBox[T]:
     assert!(rust_code.contains("other: &Box<T>"), "{rust_code}");
     assert!(!rust_code.contains("impl PartialEq for Box"));
     assert!(
-        rust_code.contains("impl<A: PartialEq, B: PartialOrd> PartialOrd for Ordered<A, B>"),
+        rust_code
+            .contains("impl<A: PartialEq, B: PartialEq + PartialOrd> PartialOrd for Ordered<A, B>"),
         "{rust_code}"
     );
     assert!(
@@ -175,6 +176,59 @@ class NegBox[T]:
     assert!(
         rust_code
             .contains("impl<T: Clone + std::ops::Neg<Output = T>> std::ops::Neg for NegBox<T>"),
+        "{rust_code}"
+    );
+}
+
+#[test]
+fn generic_operator_protocol_impl_closes_self_call_requirements() {
+    let rust_code = generate_rust_from_source(
+        r#"class Box[T]:
+    value: T
+
+    def same(self, other: Box[T]) -> bool:
+        return self.value == other.value
+
+    def __eq__(self, other: Box[T]) -> bool:
+        return self.same(other)
+
+class NegBox[T]:
+    value: T
+
+    def negated(self) -> T:
+        return -self.value
+
+    def __neg__(self) -> T:
+        return self.negated()
+
+class Ordered[T]:
+    value: T
+
+    def same(self, other: Ordered[T]) -> bool:
+        return self.value == other.value
+
+    def __eq__(self, other: Ordered[T]) -> bool:
+        return self.same(other)
+
+    def less(self, other: Ordered[T]) -> bool:
+        return self.value < other.value
+
+    def __lt__(self, other: Ordered[T]) -> bool:
+        return self.less(other)
+"#,
+    );
+
+    assert!(
+        rust_code.contains("impl<T: Clone + PartialEq> PartialEq for Box<T>"),
+        "{rust_code}"
+    );
+    assert!(
+        rust_code
+            .contains("impl<T: Clone + std::ops::Neg<Output = T>> std::ops::Neg for NegBox<T>"),
+        "{rust_code}"
+    );
+    assert!(
+        rust_code.contains("impl<T: Clone + PartialEq + PartialOrd> PartialOrd for Ordered<T>"),
         "{rust_code}"
     );
 }

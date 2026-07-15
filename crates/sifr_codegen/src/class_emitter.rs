@@ -770,7 +770,7 @@ impl RustEmitter {
             self.body_items.push(Self::process_child_drop_impl());
         }
 
-        self.emit_operator_impls(class);
+        self.emit_operator_impls(class, module, &method_bounds);
 
         if class.is_error_type {
             self.body_items

@@ -65,6 +65,7 @@ mod if_branch_bindings;
 mod if_expression;
 mod import_diagnostics;
 mod import_resolution;
+mod imported_class_identity;
 mod imported_defaults;
 mod imports;
 mod integer_const_facts;

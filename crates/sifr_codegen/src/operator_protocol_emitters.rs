@@ -4,6 +4,9 @@ use crate::{
 };
 use sifr_ir::{HirClass, HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::Type;
+use std::collections::{HashMap, HashSet};
+
+type OperatorBounds = HashMap<String, HashSet<String>>;
 
 impl RustEmitter {
     fn operator_output_type(class: &HirClass, ty: &Type) -> String {
@@ -14,17 +17,77 @@ impl RustEmitter {
         }
     }
 
-    pub(crate) fn emit_operator_impls(&mut self, class: &HirClass) {
+    fn closed_operator_bounds(
+        module: &HirModule,
+        class: &HirClass,
+        function: &HirFunction,
+        method_bounds: &HashMap<String, OperatorBounds>,
+    ) -> Option<OperatorBounds> {
+        let mut closed = OperatorBounds::new();
+        if let Some(by_param) = module
+            .type_param_bounds
+            .get(&format!("{}.{}", class.name, function.name))
+        {
+            for (param, bounds) in by_param {
+                closed.entry(param.clone()).or_default().extend(
+                    bounds
+                        .iter()
+                        .map(|bound| Self::operator_rust_bound(param, bound)),
+                );
+            }
+        }
+        for called in Self::collect_direct_self_method_calls(&function.body) {
+            let Some(by_param) = method_bounds.get(&called) else {
+                continue;
+            };
+            for (param, bounds) in by_param {
+                closed
+                    .entry(param.clone())
+                    .or_default()
+                    .extend(bounds.iter().cloned());
+            }
+        }
+        (!closed.is_empty()).then_some(closed)
+    }
+
+    fn operator_rust_bound(type_param: &str, requirement: &str) -> String {
+        match requirement {
+            "Add" | "Sub" | "Mul" | "Div" | "Rem" | "Neg" => {
+                format!("std::ops::{requirement}<Output = {type_param}>")
+            }
+            _ => requirement.to_string(),
+        }
+    }
+
+    pub(crate) fn emit_operator_impls(
+        &mut self,
+        class: &HirClass,
+        module: &HirModule,
+        method_bounds: &HashMap<String, OperatorBounds>,
+    ) {
         for (dunder, func) in &class.operator_impls {
+            let bounds = Self::closed_operator_bounds(module, class, func, method_bounds);
             match dunder.as_str() {
-                "__add__" => self.emit_binop_trait_impl(class, func, "Add", "add"),
-                "__sub__" => self.emit_binop_trait_impl(class, func, "Sub", "sub"),
-                "__mul__" => self.emit_binop_trait_impl(class, func, "Mul", "mul"),
-                "__truediv__" => self.emit_binop_trait_impl(class, func, "Div", "div"),
-                "__mod__" => self.emit_binop_trait_impl(class, func, "Rem", "rem"),
-                "__neg__" => self.emit_unaryop_trait_impl(class, func, "Neg", "neg"),
-                "__eq__" => self.emit_eq_trait_impl(class, func),
-                "__lt__" => self.emit_ord_trait_impl(class, func),
+                "__add__" => {
+                    self.emit_binop_trait_impl(class, func, "Add", "add", bounds.as_ref());
+                }
+                "__sub__" => {
+                    self.emit_binop_trait_impl(class, func, "Sub", "sub", bounds.as_ref());
+                }
+                "__mul__" => {
+                    self.emit_binop_trait_impl(class, func, "Mul", "mul", bounds.as_ref());
+                }
+                "__truediv__" => {
+                    self.emit_binop_trait_impl(class, func, "Div", "div", bounds.as_ref());
+                }
+                "__mod__" => {
+                    self.emit_binop_trait_impl(class, func, "Rem", "rem", bounds.as_ref());
+                }
+                "__neg__" => {
+                    self.emit_unaryop_trait_impl(class, func, "Neg", "neg", bounds.as_ref());
+                }
+                "__eq__" => self.emit_eq_trait_impl(class, func, bounds.as_ref()),
+                "__lt__" => self.emit_ord_trait_impl(class, func, bounds.as_ref()),
                 "__str__" | "__repr__" => {}
                 _ => {}
             }
@@ -37,6 +100,7 @@ impl RustEmitter {
         func: &HirFunction,
         trait_name: &str,
         method_name: &str,
+        transitive_bounds: Option<&OperatorBounds>,
     ) {
         let is_generic = !class.type_params.is_empty();
         let generic_suffix = if is_generic {
@@ -84,7 +148,7 @@ impl RustEmitter {
             },
         ];
         let impl_type_params = if is_generic {
-            Self::class_function_impl_type_params(class, func, &items, None)
+            Self::class_function_impl_type_params(class, func, &items, transitive_bounds)
         } else {
             Vec::new()
         };
@@ -102,6 +166,7 @@ impl RustEmitter {
         func: &HirFunction,
         trait_name: &str,
         method_name: &str,
+        transitive_bounds: Option<&OperatorBounds>,
     ) {
         let body = self.lower_operator_method_body(func);
         let items = vec![
@@ -121,13 +186,23 @@ impl RustEmitter {
         ];
         self.body_items.push(RustItem::Impl {
             target: Self::class_impl_target(class),
-            type_params: Self::class_function_impl_type_params(class, func, &items, None),
+            type_params: Self::class_function_impl_type_params(
+                class,
+                func,
+                &items,
+                transitive_bounds,
+            ),
             trait_: Some(format!("std::ops::{trait_name}")),
             items,
         });
     }
 
-    pub(crate) fn emit_eq_trait_impl(&mut self, class: &HirClass, func: &HirFunction) {
+    pub(crate) fn emit_eq_trait_impl(
+        &mut self,
+        class: &HirClass,
+        func: &HirFunction,
+        transitive_bounds: Option<&OperatorBounds>,
+    ) {
         let other_name = func
             .params
             .first()
@@ -155,13 +230,23 @@ impl RustEmitter {
         }];
         self.body_items.push(RustItem::Impl {
             target: class_target,
-            type_params: Self::class_function_impl_type_params(class, func, &items, None),
+            type_params: Self::class_function_impl_type_params(
+                class,
+                func,
+                &items,
+                transitive_bounds,
+            ),
             trait_: Some("PartialEq".to_string()),
             items,
         });
     }
 
-    pub(crate) fn emit_ord_trait_impl(&mut self, class: &HirClass, func: &HirFunction) {
+    pub(crate) fn emit_ord_trait_impl(
+        &mut self,
+        class: &HirClass,
+        func: &HirFunction,
+        transitive_bounds: Option<&OperatorBounds>,
+    ) {
         let other_name = func
             .params
             .first()
@@ -187,7 +272,7 @@ impl RustEmitter {
             is_async: false,
         }];
         let helper_type_params =
-            Self::class_function_impl_type_params(class, func, &helper_items, None);
+            Self::class_function_impl_type_params(class, func, &helper_items, transitive_bounds);
         self.body_items.push(RustItem::Impl {
             target: class_target.clone(),
             type_params: helper_type_params,
@@ -246,7 +331,7 @@ impl RustEmitter {
             is_async: false,
         }];
         let mut trait_type_params =
-            Self::class_function_impl_type_params(class, func, &items, None);
+            Self::class_function_impl_type_params(class, func, &items, transitive_bounds);
         let custom_eq = class
             .operator_impls
             .iter()
@@ -268,7 +353,7 @@ impl RustEmitter {
             let equality_implied = param
                 .bounds
                 .iter()
-                .any(|bound| bound == "PartialOrd" || bound == "Eq");
+                .any(|bound| bound == "PartialEq" || bound == "PartialOrd" || bound == "Eq");
             if equality_required && !equality_implied {
                 param.bounds.push("PartialEq".to_string());
             }

@@ -7,7 +7,7 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review passes 14 through 16 reopened
+Wave 2 is implemented; whole-diff review passes 14 through 18 reopened
 generic/inherited Rust-trait, reusable affine-closure ownership, keyed sorting,
 per-type-parameter bound, specialization, generic-operator, conditional-source,
 and top-level inference gaps. Their remediation passes the focused and complete
@@ -1115,7 +1115,30 @@ Delivery waves:
   runtime platform `28/28` with one gated skip, and cold-cache E2E `131/131`
   with signature `7c39b8c1dd4fec7c` and all `42` groups rebuilt. Its `855.62s`
   wall time produced only the expected non-blocking warm-target advisory; every
-  enforced step budget passed. A fresh whole-diff review remains pending.
+  enforced step budget passed. Full-diff
+  [review pass 18](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-18.md)
+  then found four remaining compiler defects plus overstated evidence:
+  transitive helper bounds were absent from operator trait impls; user-project
+  generic aliases lost their emitted identity and same-name modules collided;
+  module signature inference ignored `match`, `try`, and context statements;
+  and valid nested custom class operators were rejected during specialization.
+  Operator impls now combine the lowering-owned semantic closure with exact
+  helper-impl bounds. User-project imports retain collision-safe local class,
+  method-signature, requirement, and generic-template identities while merged
+  stdlib imports remain canonical. Module inference covers compound bindings,
+  returns, and conservative terminal reachability. Concrete class negation,
+  equality, and ordering dunders satisfy generic requirements recursively,
+  while binary ownership shapes that cannot meet owned Rust generic traits
+  remain conservatively rejected. Permanent native, compile-fail, focused
+  lowering/codegen, and two-module project-build regressions cover every
+  reproduction. Full code generation passes `825/825`, lowering passes `750`
+  with one ignored, and compile-fail passes `527/527`. Workspace Clippy,
+  formatting, JSON and diff checks, HIR maintainability, and the `900`-line
+  file-size guardrail pass over `2672` files. The authoritative create-PR gate
+  passes every blocking lane: Python interop `11/11`, runtime platform `28/28`
+  with one gated skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and
+  `42/42` cache hits. Its `476.95s` wall time produced only the non-blocking
+  warm-wall-time advisory. A fresh whole-diff review remains pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

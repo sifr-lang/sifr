@@ -1,0 +1,39 @@
+class Resource:
+    def __enter__(self) -> Resource:
+        return self
+
+    def __exit__(self) -> None:
+        pass
+
+
+def from_match(value: int):
+    match value:
+        case 0:
+            return 1
+        case _:
+            return 2
+    return "unreachable"
+
+
+def from_try(flag: bool):
+    try:
+        if flag:
+            raise ValueError("bad")
+        return 3
+    except ValueError:
+        return 4
+    return "unreachable"
+
+
+def from_with():
+    with Resource():
+        return 5
+    return "unreachable"
+
+
+def main() -> None:
+    assert from_match(0) == 1
+    assert from_match(9) == 2
+    assert from_try(False) == 3
+    assert from_try(True) == 4
+    assert from_with() == 5

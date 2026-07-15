@@ -200,6 +200,60 @@ def node_value(node: LinkedNode | None) -> int:
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
+fn test_build_project_keeps_aliased_same_name_generic_classes_distinct() {
+    let dir = mktemp_dir("workspace_aliased_same_name_generics");
+    let main_file = dir.join("cases/app.sifr");
+    let build_out = dir.join("build_out");
+    std::fs::create_dir_all(dir.join("cases")).expect("cases dir should be created");
+    std::fs::create_dir_all(dir.join("lib/helpers")).expect("helpers dir should be created");
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\"lib\"]\n")
+        .expect("manifest should be written");
+    std::fs::write(
+        &main_file,
+        r#"
+from helpers.left import Box as LeftBox
+from helpers.right import Box as RightBox
+
+def main():
+    left: LeftBox[int] = LeftBox(7)
+    right: RightBox[int] = RightBox(3)
+    assert left.same(7)
+    assert right.negated() == -3
+"#,
+    )
+    .expect("entry should be written");
+    std::fs::write(
+        dir.join("lib/helpers/left.sifr"),
+        r#"
+class Box[T]:
+    value: T
+
+    def same(self, other: T) -> bool:
+        return self.value == other
+"#,
+    )
+    .expect("left helper should be written");
+    std::fs::write(
+        dir.join("lib/helpers/right.sifr"),
+        r#"
+class Box[T]:
+    value: T
+
+    def negated(self) -> T:
+        return -self.value
+"#,
+    )
+    .expect("right helper should be written");
+
+    let binary = build_project(&main_file, &build_out)
+        .expect("aliased same-name generic classes should build successfully");
+
+    assert!(binary.exists());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_emit_project_includes_workspace_support_modules() {
     let dir = mktemp_dir("workspace_emit");
     let main_file = dir.join("cases/app.sifr");
