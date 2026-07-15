@@ -1,4 +1,4 @@
-use crate::RustEmitter;
+use crate::{RustEmitter, RustItem};
 use sifr_ir::{HirClass, HirFunction, HirStmt};
 use sifr_type_system::{FunctionType, OwnershipKind, Type};
 use std::collections::{HashMap, HashSet};
@@ -93,14 +93,6 @@ impl RustEmitter {
             .any(|(_, ty)| type_has_hash_key_param(ty, type_param))
     }
 
-    /// Check if a generic class needs Hash + Eq bounds on any type parameter.
-    pub(crate) fn class_needs_hash_eq(class: &HirClass) -> bool {
-        class
-            .type_params
-            .iter()
-            .any(|name| Self::class_type_param_needs_hash_eq(class, name))
-    }
-
     /// Check if a generic function needs Hash + Eq bounds (uses `TypeVar` as dict key
     /// or returns a generic class that needs Hash + Eq).
     pub(crate) fn func_needs_hash_eq(func: &HirFunction) -> bool {
@@ -124,20 +116,6 @@ impl RustEmitter {
             return true;
         }
         false
-    }
-
-    pub(crate) fn generic_bounds_for_class(class: &HirClass) -> String {
-        if class.name == "deque" {
-            return "Clone + PartialEq".to_string();
-        }
-        if class.name == "NullContext" {
-            return "Clone".to_string();
-        }
-        if Self::class_needs_hash_eq(class) {
-            "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq".to_string()
-        } else {
-            "Clone + std::fmt::Display + PartialOrd".to_string()
-        }
     }
 
     /// Convert a Type to its Rust representation, appending generic type params
@@ -611,19 +589,109 @@ impl RustEmitter {
         }
     }
 
-    pub(crate) fn extra_bounds_for_type_param(tp: &str, body: &[HirStmt]) -> String {
+    pub(crate) fn extra_bound_items_for_type_param(tp: &str, body: &[HirStmt]) -> Vec<String> {
         let requirements =
             crate::hir_analysis::queries::collect_typevar_operator_requirements(body, tp);
-        let mut extra = String::new();
+        let mut extra = Vec::new();
         if requirements.needs_add {
-            let _ = write!(extra, " + std::ops::Add<Output = {tp}>");
+            extra.push(format!("std::ops::Add<Output = {tp}>"));
         }
         if requirements.needs_sub {
-            let _ = write!(extra, " + std::ops::Sub<Output = {tp}>");
+            extra.push(format!("std::ops::Sub<Output = {tp}>"));
+        }
+        if requirements.needs_partial_eq {
+            extra.push("PartialEq".to_string());
         }
         if requirements.needs_partial_ord {
-            let _ = write!(extra, " + PartialOrd");
+            extra.push("PartialOrd".to_string());
         }
         extra
+    }
+
+    pub(crate) fn extra_bounds_for_type_param(tp: &str, body: &[HirStmt]) -> String {
+        Self::extra_bound_items_for_type_param(tp, body)
+            .into_iter()
+            .fold(String::new(), |mut extra, bound| {
+                let _ = write!(extra, " + {bound}");
+                extra
+            })
+    }
+
+    /// Rust trait requirements are transitive across direct `self.method()`
+    /// calls: `copy()` inherits cloning from `to_list()`, while `remove()`
+    /// inherits equality from `index()`.
+    pub(crate) fn class_method_type_param_bounds(
+        class: &HirClass,
+        method_items: &[(&HirFunction, RustItem)],
+    ) -> HashMap<String, HashMap<String, HashSet<String>>> {
+        let mut requirements = method_items
+            .iter()
+            .map(|(method, item)| {
+                let emitted_clone = Self::emitted_items_require_clone(std::slice::from_ref(item));
+                let params = class
+                    .type_params
+                    .iter()
+                    .map(|param| {
+                        let mut bounds =
+                            Self::extra_bound_items_for_type_param(param, &method.body)
+                                .into_iter()
+                                .collect::<HashSet<_>>();
+                        if emitted_clone && Self::body_mentions_type_param(&method.body, param) {
+                            bounds.insert("Clone".to_string());
+                        }
+                        (param.clone(), bounds)
+                    })
+                    .collect::<HashMap<_, _>>();
+                (method.name.clone(), params)
+            })
+            .collect::<HashMap<_, _>>();
+
+        loop {
+            let mut changed = false;
+            for (method, _) in method_items {
+                let inherited = Self::collect_direct_self_method_calls(&method.body)
+                    .into_iter()
+                    .filter_map(|called| requirements.get(&called))
+                    .cloned()
+                    .collect::<Vec<_>>();
+                let entry = requirements.entry(method.name.clone()).or_default();
+                for inherited_by_param in inherited {
+                    for (param, bounds) in inherited_by_param {
+                        let target = entry.entry(param).or_default();
+                        let before = target.len();
+                        target.extend(bounds);
+                        changed |= target.len() != before;
+                    }
+                }
+            }
+            if !changed {
+                break;
+            }
+        }
+        requirements
+    }
+
+    /// Whether a method body actually consumes a value whose semantic type
+    /// contains this class type parameter. This is paired with inspection of
+    /// the emitted item so a clone in one consumer never leaks a `Clone` bound
+    /// onto unrelated parameters of a multi-parameter class.
+    pub(crate) fn body_mentions_type_param(body: &[HirStmt], type_param: &str) -> bool {
+        let mut mentioned = false;
+        let mut on_stmt = |_stmt: &HirStmt| {};
+        let mut on_expr = |expr: &sifr_ir::HirExpr| {
+            if matches!(expr, sifr_ir::HirExpr::Name { name, .. } if name == "self") {
+                return;
+            }
+            if Self::type_mentions_type_param(expr.ty(), type_param) {
+                mentioned = true;
+            }
+        };
+        crate::hir_analysis::traversal::walk_stmts(
+            body,
+            crate::hir_analysis::traversal::TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        );
+        mentioned
     }
 }

@@ -7,10 +7,11 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review pass 14 reopened generic/inherited
-Rust-trait and reusable affine-closure ownership gaps. Its remediation passes
-the focused compiler, native-positive/negative, maintainability, formatting,
-and file-size checks plus the authoritative local create-PR gate in
+Wave 2 is implemented; whole-diff review passes 14 and 15 reopened
+generic/inherited Rust-trait, reusable affine-closure ownership, keyed sorting,
+and per-type-parameter bound gaps. Their remediation passes the focused
+compiler, native-positive/negative, full merge-profile E2E, maintainability,
+formatting, and file-size checks plus the authoritative local create-PR gate in
 [PR #2988](https://github.com/sifr-lang/sifr/pull/2988). Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
@@ -1035,8 +1036,33 @@ Delivery waves:
   every blocking lane: Python interop `11/11` in `104.05s`, runtime platform
   `28/28` with one gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `42/42` cache hits. Its `416.20s` wall time produced
-  only the non-blocking warm-wall-time advisory. The next fresh whole-diff
-  review remains pending.
+  only the non-blocking warm-wall-time advisory. Full-diff
+  [review pass 15](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-15.md)
+  confirmed ordering, formatting, affine capture/alias, deduplication, and
+  file-decomposition repairs, then found that keyed `sorted()` still cloned
+  non-Clone comparator elements and generic method/operator bounds still leaked
+  from one type parameter onto unrelated parameters. Keyed sorting now passes
+  shared-borrow keys the comparator's existing references, requires Clone only
+  for owned keys or preserved-source materialization, and rejects mutable-borrow
+  keys. Generic method and binary-operator impl bounds are derived per type
+  parameter and propagate transitively through direct `self` method calls;
+  equality operations add `PartialEq` only where consumed. Four permanent
+  sorted/generic fixtures and two focused codegen/query regressions cover these
+  boundaries. The requested `cargo clean` then exposed fifteen additional
+  stale-cache-hidden full-suite failures: collection wrapper methods lost
+  transitive Clone/PartialEq obligations, later callers retained `Any` instead
+  of an inferred top-level return type, and two old parity fixtures violated the
+  active structural-equality/typed-empty-collection contracts. Those root
+  causes are corrected. Full affected suites pass: code generation `822/822`,
+  lowering `745` passed with one ignored, compile-fail `518/518`, and native
+  execution for every cold-build representative. The complete merge-profile
+  E2E suite passes `657/657` with signature `18e6999f2fd35220` and `154/175`
+  cache hits after the cold repair. The authoritative create-PR facade passes
+  every blocking lane: Python interop `11/11` in `104.97s`, runtime platform
+  `28/28` with one gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `41/42` cache hits. Its `441.13s` wall time produced
+  only the non-blocking warm-wall-time advisory. A fresh whole-diff review of
+  the complete remediation remains pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

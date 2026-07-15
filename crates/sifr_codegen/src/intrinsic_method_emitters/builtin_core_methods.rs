@@ -1,10 +1,10 @@
 use super::{
     intrinsics, registry_box_iterator_expr, registry_call_callable_with_owned_args,
-    registry_callable_signature, registry_class_has_next, registry_class_method_signature,
-    registry_dict_source_to_map_expr, registry_iter_from_next_method_expr,
-    registry_iterable_to_owned_iter_expr, registry_iterable_to_vec_expr,
-    registry_iterable_to_vec_expr_with_hint, registry_nested_zip_field_expr,
-    registry_zip_iter_expr, HirExpr, RustEmitter, RustExpr, Type,
+    registry_call_callable_with_shared_ref_args, registry_callable_signature,
+    registry_class_has_next, registry_class_method_signature, registry_dict_source_to_map_expr,
+    registry_iter_from_next_method_expr, registry_iterable_to_owned_iter_expr,
+    registry_iterable_to_vec_expr, registry_iterable_to_vec_expr_with_hint,
+    registry_nested_zip_field_expr, registry_zip_iter_expr, HirExpr, RustEmitter, RustExpr, Type,
 };
 use sifr_ir::CompilerIntrinsicId;
 impl RustEmitter {
@@ -422,15 +422,15 @@ impl RustEmitter {
                     let (_param_types, _conventions, key_return_ty) =
                         registry_callable_signature(&args[1])?;
                     if matches!(key_return_ty, Type::Float) {
-                        let left_call = registry_call_callable_with_owned_args(
+                        let left_call = registry_call_callable_with_shared_ref_args(
                             self,
                             &args[1],
-                            &[("__left_key".to_string(), elem_ty.clone())],
+                            &[("__left".to_string(), elem_ty.clone())],
                         )?;
-                        let right_call = registry_call_callable_with_owned_args(
+                        let right_call = registry_call_callable_with_shared_ref_args(
                             self,
                             &args[1],
-                            &[("__right_key".to_string(), elem_ty.clone())],
+                            &[("__right".to_string(), elem_ty.clone())],
                         )?;
                         stmts.push(crate::RustStmt::Expr(RustExpr::MethodCall {
                             receiver: Box::new(RustExpr::Ident(vec_name.clone())),
@@ -446,54 +446,28 @@ impl RustEmitter {
                                         ty: crate::RustType::Named("_".to_string()),
                                     },
                                 ],
-                                body: vec![
-                                    crate::RustStmt::Let {
+                                body: vec![crate::RustStmt::Return(Some(RustExpr::MethodCall {
+                                    receiver: Box::new(left_call),
+                                    method: "total_cmp".to_string(),
+                                    args: vec![RustExpr::Ref {
                                         mutable: false,
-                                        name: "__left_key".to_string(),
-                                        ty: None,
-                                        value: RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Ident(
-                                                "__left".to_string(),
-                                            )),
-                                            method: "clone".to_string(),
-                                            args: vec![],
-                                        },
-                                    },
-                                    crate::RustStmt::Let {
-                                        mutable: false,
-                                        name: "__right_key".to_string(),
-                                        ty: None,
-                                        value: RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Ident(
-                                                "__right".to_string(),
-                                            )),
-                                            method: "clone".to_string(),
-                                            args: vec![],
-                                        },
-                                    },
-                                    crate::RustStmt::Return(Some(RustExpr::MethodCall {
-                                        receiver: Box::new(left_call),
-                                        method: "total_cmp".to_string(),
-                                        args: vec![RustExpr::Ref {
-                                            mutable: false,
-                                            expr: Box::new(right_call),
-                                        }],
-                                    })),
-                                ],
+                                        expr: Box::new(right_call),
+                                    }],
+                                }))],
                                 is_move: false,
                                 is_async: false,
                             }],
                         }));
                     } else {
-                        let left_call = registry_call_callable_with_owned_args(
+                        let left_call = registry_call_callable_with_shared_ref_args(
                             self,
                             &args[1],
-                            &[("__left_key".to_string(), elem_ty.clone())],
+                            &[("__left".to_string(), elem_ty.clone())],
                         )?;
-                        let right_call = registry_call_callable_with_owned_args(
+                        let right_call = registry_call_callable_with_shared_ref_args(
                             self,
                             &args[1],
-                            &[("__right_key".to_string(), elem_ty.clone())],
+                            &[("__right".to_string(), elem_ty.clone())],
                         )?;
                         stmts.push(crate::RustStmt::Expr(RustExpr::MethodCall {
                             receiver: Box::new(RustExpr::Ident(vec_name.clone())),
@@ -509,40 +483,14 @@ impl RustEmitter {
                                         ty: crate::RustType::Named("_".to_string()),
                                     },
                                 ],
-                                body: vec![
-                                    crate::RustStmt::Let {
+                                body: vec![crate::RustStmt::Return(Some(RustExpr::MethodCall {
+                                    receiver: Box::new(left_call),
+                                    method: "cmp".to_string(),
+                                    args: vec![RustExpr::Ref {
                                         mutable: false,
-                                        name: "__left_key".to_string(),
-                                        ty: None,
-                                        value: RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Ident(
-                                                "__left".to_string(),
-                                            )),
-                                            method: "clone".to_string(),
-                                            args: vec![],
-                                        },
-                                    },
-                                    crate::RustStmt::Let {
-                                        mutable: false,
-                                        name: "__right_key".to_string(),
-                                        ty: None,
-                                        value: RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Ident(
-                                                "__right".to_string(),
-                                            )),
-                                            method: "clone".to_string(),
-                                            args: vec![],
-                                        },
-                                    },
-                                    crate::RustStmt::Return(Some(RustExpr::MethodCall {
-                                        receiver: Box::new(left_call),
-                                        method: "cmp".to_string(),
-                                        args: vec![RustExpr::Ref {
-                                            mutable: false,
-                                            expr: Box::new(right_call),
-                                        }],
-                                    })),
-                                ],
+                                        expr: Box::new(right_call),
+                                    }],
+                                }))],
                                 is_move: false,
                                 is_async: false,
                             }],

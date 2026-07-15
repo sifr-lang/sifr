@@ -1,0 +1,16 @@
+class Pair[A, B]:
+    first: A
+    second: B
+
+    def first_value(self) -> A:
+        return self.first
+
+class Local(NonSend):
+    pass
+
+def read(value: Pair[int, Local]) -> int:
+    return value.first_value()
+
+def main() -> None:
+    value: Pair[int, Local] = Pair(7, Local())
+    assert read(value) == 7

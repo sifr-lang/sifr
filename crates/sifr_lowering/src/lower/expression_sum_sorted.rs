@@ -170,12 +170,30 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
         );
         return None;
     };
-    if super::statement_diagnostics::reject_affine_iterator_builtin(
-        ctx,
-        "sorted",
-        &elem_ty,
-        iterable_range,
-    ) {
+    if elem_ty.contains_affine_resource()
+        && super::statement_diagnostics::reject_affine_iterator_builtin(
+            ctx,
+            "sorted",
+            &elem_ty,
+            iterable_range,
+        )
+    {
+        return None;
+    }
+    let preserves_source = matches!(
+        &iterable,
+        HirExpr::Name { .. } | HirExpr::FieldAccess { .. } | HirExpr::Index { .. }
+    ) && !matches!(iterable.ty().resolve_alias(), Type::Iterator(_))
+        && iterable.ty().resolve_alias().ownership() != sifr_type_system::OwnershipKind::Copy;
+    if preserves_source && !elem_ty.supports_derived_clone() {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "sorted() preserves this iterable and must clone its '{}' elements into the result, but that element type is not Clone-capable",
+                elem_ty.display_name()
+            ),
+            iterable_range,
+        );
         return None;
     }
     let mut key_arg = None;
@@ -188,7 +206,7 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
             lower_lambda_with_context(&keyword.value, std::slice::from_ref(&elem_ty), ctx)?
         };
         if !matches!(lowered, HirExpr::NoneLiteral) {
-            let Some((param_types, _conventions, return_ty)) = callable_signature(&lowered) else {
+            let Some((param_types, conventions, return_ty)) = callable_signature(&lowered) else {
                 expression_diagnostics::call_not_callable_or_arity(
                     ctx,
                     "sorted() keyword argument 'key' must be callable".to_string(),
@@ -200,6 +218,27 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
                 expression_diagnostics::call_not_callable_or_arity(
                     ctx,
                     "sorted() key callable must accept exactly 1 argument".to_string(),
+                    keyword.value.range(),
+                );
+                return None;
+            }
+            let convention = conventions[0];
+            if convention.is_mut_borrow() {
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    "sorted() key callable cannot require a mutable borrow because sorting compares shared element references"
+                        .to_string(),
+                    keyword.value.range(),
+                );
+                return None;
+            }
+            if convention.is_owned() && !elem_ty.supports_derived_clone() {
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "sorted() key callable takes its '{}' element by ownership, but generated comparison requires a Clone-capable element",
+                        elem_ty.display_name()
+                    ),
                     keyword.value.range(),
                 );
                 return None;

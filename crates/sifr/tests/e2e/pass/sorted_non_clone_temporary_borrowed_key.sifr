@@ -1,0 +1,13 @@
+class Local(NonSend):
+    rank: int
+
+def rank_of(value: Local) -> int:
+    return value.rank
+
+def main() -> None:
+    ordered: list[Local] = sorted([Local(2), Local(1)], key=rank_of)
+    assert len(ordered) == 2
+    first: Local | None = ordered.pop(0)
+    assert first is not None
+    if first is not None:
+        assert first.rank == 1

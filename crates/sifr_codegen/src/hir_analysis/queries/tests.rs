@@ -633,6 +633,27 @@ fn collect_typevar_operator_requirements_detects_add_and_sub() {
 }
 
 #[test]
+fn collect_typevar_operator_requirements_detects_equality() {
+    let stmts = vec![HirStmt::Expr {
+        expr: HirExpr::Compare {
+            left: Box::new(HirExpr::Name {
+                name: "a".to_string(),
+                ty: Type::TypeVar("T".to_string()),
+            }),
+            ops: vec!["==".to_string()],
+            comparators: vec![HirExpr::Name {
+                name: "b".to_string(),
+                ty: Type::TypeVar("T".to_string()),
+            }],
+            ty: Type::Bool,
+        },
+    }];
+
+    let req = collect_typevar_operator_requirements(&stmts, "T");
+    assert!(req.needs_partial_eq);
+}
+
+#[test]
 fn collect_let_declared_types_covers_nested_blocks() {
     let stmts = vec![HirStmt::If {
         condition: HirExpr::BoolLiteral(true),

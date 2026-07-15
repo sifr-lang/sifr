@@ -135,7 +135,7 @@ impl RustEmitter {
             .collect()
     }
 
-    fn emitted_items_require_clone(items: &[RustItem]) -> bool {
+    pub(crate) fn emitted_items_require_clone(items: &[RustItem]) -> bool {
         let rendered = crate::render_items(items);
         rendered.contains(".clone()") || rendered.contains(".cloned()")
     }
@@ -144,13 +144,16 @@ impl RustEmitter {
         class: &HirClass,
         items: &[RustItem],
     ) -> Vec<RustTypeParam> {
-        let needs_clone = Self::emitted_items_require_clone(items);
+        let emitted_clone = Self::emitted_items_require_clone(items);
         class
             .type_params
             .iter()
             .map(|name| {
                 let mut bounds = Self::class_base_type_param_bounds(class, name);
-                if needs_clone {
+                let constructor_mentions_param = class.methods.iter().any(|method| {
+                    method.name == "new" && Self::body_mentions_type_param(&method.body, name)
+                });
+                if emitted_clone && constructor_mentions_param {
                     bounds.push("Clone".to_string());
                 }
                 RustTypeParam {
@@ -161,24 +164,29 @@ impl RustEmitter {
             .collect()
     }
 
-    fn class_method_impl_type_params(
+    pub(crate) fn class_function_impl_type_params(
         class: &HirClass,
-        method: &HirFunction,
-        item: &RustItem,
+        function: &HirFunction,
+        items: &[RustItem],
+        transitive_bounds: Option<
+            &std::collections::HashMap<String, std::collections::HashSet<String>>,
+        >,
     ) -> Vec<RustTypeParam> {
-        let needs_clone = Self::emitted_items_require_clone(std::slice::from_ref(item));
+        let emitted_clone = Self::emitted_items_require_clone(items);
         class
             .type_params
             .iter()
             .map(|name| {
                 let mut bounds = Self::class_base_type_param_bounds(class, name);
-                if needs_clone {
-                    bounds.push("Clone".to_string());
-                }
-                let extra = Self::extra_bounds_for_type_param(name, &method.body);
-                let extra = extra.trim_start_matches(" + ");
-                if !extra.is_empty() {
-                    bounds.push(extra.to_string());
+                if let Some(required) = transitive_bounds.and_then(|by_param| by_param.get(name)) {
+                    let mut required = required.iter().cloned().collect::<Vec<_>>();
+                    required.sort();
+                    bounds.extend(required);
+                } else {
+                    if emitted_clone && Self::body_mentions_type_param(&function.body, name) {
+                        bounds.push("Clone".to_string());
+                    }
+                    bounds.extend(Self::extra_bound_items_for_type_param(name, &function.body));
                 }
                 RustTypeParam {
                     name: name.clone(),
@@ -742,10 +750,17 @@ impl RustEmitter {
                 items: Vec::new(),
             });
         }
+        let method_bounds = Self::class_method_type_param_bounds(class, &method_items);
         for (method, item) in method_items {
+            let type_params = Self::class_function_impl_type_params(
+                class,
+                method,
+                std::slice::from_ref(&item),
+                method_bounds.get(&method.name),
+            );
             self.body_items.push(RustItem::Impl {
                 target: Self::class_impl_target(class),
-                type_params: Self::class_method_impl_type_params(class, method, &item),
+                type_params,
                 trait_: None,
                 items: vec![item],
             });

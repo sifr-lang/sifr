@@ -1,6 +1,6 @@
 use crate::{
     try_lower_simple_stmt_with_scope_result_and_bindings, ClassScope, RustEmitter, RustExpr,
-    RustItem, RustParam, RustStmt, RustType, RustTypeParam, ScopeContext, Visibility,
+    RustItem, RustParam, RustStmt, RustType, ScopeContext, Visibility,
 };
 use sifr_ir::{HirClass, HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::Type;
@@ -31,7 +31,6 @@ impl RustEmitter {
         method_name: &str,
     ) {
         let is_generic = !class.type_params.is_empty();
-        let bounds = Self::generic_bounds_for_class(class);
         let generic_suffix = if is_generic {
             format!("<{}>", class.type_params.join(", "))
         } else {
@@ -52,18 +51,6 @@ impl RustEmitter {
         } else {
             func.return_type.rust_type()
         };
-        let impl_type_params = if is_generic {
-            class
-                .type_params
-                .iter()
-                .map(|name| RustTypeParam {
-                    name: name.clone(),
-                    bounds: vec![bounds.clone()],
-                })
-                .collect::<Vec<_>>()
-        } else {
-            Vec::new()
-        };
         let rhs_name = func
             .params
             .first()
@@ -71,31 +58,37 @@ impl RustEmitter {
             .unwrap_or_else(|| "rhs".to_string());
         let body = self.lower_operator_method_body(func);
 
+        let items = vec![
+            RustItem::TypeAlias {
+                name: "Output".to_string(),
+                ty: RustType::Named(output_ty),
+            },
+            RustItem::Fn {
+                name: method_name.to_string(),
+                visibility: Visibility::Private,
+                type_params: Vec::new(),
+                params: vec![
+                    RustParam::SelfValue,
+                    RustParam::Named {
+                        name: rhs_name,
+                        ty: RustType::Named(rhs_ty.clone()),
+                    },
+                ],
+                ret: Some(RustType::Named("Self::Output".to_string())),
+                body,
+                is_async: false,
+            },
+        ];
+        let impl_type_params = if is_generic {
+            Self::class_function_impl_type_params(class, func, &items, None)
+        } else {
+            Vec::new()
+        };
         self.body_items.push(RustItem::Impl {
             target: format!("&{class_with_generics}"),
             type_params: impl_type_params,
             trait_: Some(format!("std::ops::{trait_name}<{rhs_ty}>")),
-            items: vec![
-                RustItem::TypeAlias {
-                    name: "Output".to_string(),
-                    ty: RustType::Named(output_ty),
-                },
-                RustItem::Fn {
-                    name: method_name.to_string(),
-                    visibility: Visibility::Private,
-                    type_params: Vec::new(),
-                    params: vec![
-                        RustParam::SelfValue,
-                        RustParam::Named {
-                            name: rhs_name,
-                            ty: RustType::Named(rhs_ty),
-                        },
-                    ],
-                    ret: Some(RustType::Named("Self::Output".to_string())),
-                    body,
-                    is_async: false,
-                },
-            ],
+            items,
         });
     }
 

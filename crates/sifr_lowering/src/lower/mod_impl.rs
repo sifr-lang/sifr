@@ -843,6 +843,9 @@ pub(in crate::lower) fn lower_module_impl(
                     continue;
                 }
                 if let Some(hir_func) = lower_function(func, &mut ctx) {
+                    if let Some(function_type) = ctx.functions.get_mut(&function_name) {
+                        *function_type.return_type = hir_func.return_type.clone();
+                    }
                     functions.push(hir_func);
                 }
             }

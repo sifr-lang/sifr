@@ -895,9 +895,10 @@ supports them. This is a language rule, not an implementation detail.
 - **Generic classes:** generic declarations and constructors do not impose
   unrelated blanket Rust bounds. Conditional derives and generated formatting
   implementations carry only the bounds required by that trait, while ordinary
-  methods are emitted with the bounds required by their own signatures and
-  bodies. A specialization is rejected at the Sifr consumer that needs a bound
-  its concrete type argument cannot satisfy.
+  methods and operator implementations carry bounds only on the type parameters
+  used by their emitted consumers. A clone required for an `A` field therefore
+  does not constrain an unrelated `B`. A specialization is rejected at the Sifr
+  consumer that needs a bound its concrete type argument cannot satisfy.
 - **Codegen:** the compiler emits only the derives supported by the complete
   generated struct, newtype, or union representation.
 - **Enum types (enum type-system work):** enum types unconditionally derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`. All enum values are usable as dict keys and set members.
@@ -918,7 +919,11 @@ supports them. This is a language rule, not an implementation detail.
   ordering for the element type or callable-key return type used by the emitted
   sort path. Sifr's broader `Comparable`/`PartialOrd` surface does not by itself
   certify `slice::sort`; the dedicated floating-point path uses `total_cmp`,
-  while other partial-only orderings are rejected.
+  while other partial-only orderings are rejected. A `sorted()` key that borrows
+  its element receives the comparator's shared reference without cloning. An
+  owned key requires a Clone-capable element, mutable-borrow keys are rejected,
+  and a preserved source requires Clone-capable elements for result
+  materialization; consumed temporaries and iterators retain their elements.
 - **Formatting-consumer constraint:** `print`, `str`, f-string interpolation,
   and `repr` validate the exact generated Rust `Display`/`Debug` strategy before
   accepting HIR. `repr` always requires `Debug`; the other surfaces select the

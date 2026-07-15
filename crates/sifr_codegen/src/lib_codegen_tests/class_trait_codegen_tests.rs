@@ -38,3 +38,69 @@ def show_child(value: Child) -> str:
     );
     assert!(rust_code.contains("Child(parent={})"), "{rust_code}");
 }
+
+#[test]
+fn generic_method_clone_bounds_apply_only_to_consumed_type_parameters() {
+    let rust_code = generate_rust_from_source(
+        r#"class Pair[A, B]:
+    first: A
+    second: B
+
+    def first_value(self) -> A:
+        return self.first
+"#,
+    );
+
+    assert!(
+        rust_code.contains("impl<A: Clone, B> Pair<A, B>"),
+        "{rust_code}"
+    );
+    assert!(!rust_code.contains("impl<A: Clone, B: Clone> Pair<A, B>"));
+}
+
+#[test]
+fn generic_method_bounds_follow_direct_self_calls() {
+    let rust_code = generate_rust_from_source(
+        r#"class Holder[T]:
+    value: T
+
+    def read(self) -> T:
+        return self.value
+
+    def read_indirect(self) -> T:
+        return self.read()
+
+    def same(self, other: T) -> bool:
+        return self.value == other
+
+    def same_indirect(self, other: T) -> bool:
+        return self.same(other)
+"#,
+    );
+
+    assert_eq!(rust_code.matches("impl<T: Clone> Holder<T>").count(), 2);
+    assert!(
+        rust_code.contains("impl<T: Clone + PartialEq> Holder<T>"),
+        "{rust_code}"
+    );
+}
+
+#[test]
+fn sorted_shared_borrow_key_does_not_clone_comparator_elements() {
+    let rust_code = generate_rust_from_source(
+        r#"class Local(NonSend):
+    rank: int
+
+def rank_of(value: Local) -> int:
+    return value.rank
+
+def order() -> list[Local]:
+    return sorted([Local(2), Local(1)], key=rank_of)
+"#,
+    );
+
+    assert!(rust_code.contains("rank_of(__left)"), "{rust_code}");
+    assert!(rust_code.contains("rank_of(__right)"), "{rust_code}");
+    assert!(!rust_code.contains("__left.clone()"), "{rust_code}");
+    assert!(!rust_code.contains("__right.clone()"), "{rust_code}");
+}

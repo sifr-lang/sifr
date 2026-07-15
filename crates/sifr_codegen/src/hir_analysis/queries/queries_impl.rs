@@ -650,6 +650,7 @@ pub(crate) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String>
 pub(crate) struct TypeVarOpRequirements {
     pub needs_add: bool,
     pub needs_sub: bool,
+    pub needs_partial_eq: bool,
     pub needs_partial_ord: bool,
 }
 
@@ -659,8 +660,7 @@ pub(crate) fn collect_typevar_operator_requirements(
 ) -> TypeVarOpRequirements {
     let mut requirements = TypeVarOpRequirements::default();
     let mut on_stmt = |_stmt: &HirStmt| {};
-    let mut on_expr = |expr: &HirExpr| {
-        match expr {
+    let mut on_expr = |expr: &HirExpr| match expr {
         HirExpr::BinOp {
             left,
             op,
@@ -679,24 +679,28 @@ pub(crate) fn collect_typevar_operator_requirements(
                     _ => {}
                 }
             }
+        }
+        HirExpr::Compare {
+            left,
+            ops,
+            comparators,
+            ..
+        } if matches!(left.ty(), Type::TypeVar(ref name) if name == type_param_name)
+            || comparators.iter().any(
+                |right| matches!(right.ty(), Type::TypeVar(ref name) if name == type_param_name),
+            ) =>
+        {
+            if ops.iter().any(|op| matches!(op.as_str(), "==" | "!=")) {
+                requirements.needs_partial_eq = true;
             }
-            HirExpr::Compare {
-                left,
-                ops,
-                comparators,
-                ..
-            } if ops
+            if ops
                 .iter()
                 .any(|op| matches!(op.as_str(), "<" | "<=" | ">" | ">="))
-                && (matches!(left.ty(), Type::TypeVar(ref name) if name == type_param_name)
-                    || comparators.iter().any(
-                        |right| matches!(right.ty(), Type::TypeVar(ref name) if name == type_param_name)
-                    )) =>
-        {
-            requirements.needs_partial_ord = true;
+            {
+                requirements.needs_partial_ord = true;
+            }
         }
         _ => {}
-    }
     };
     traversal::walk_stmts(
         stmts,

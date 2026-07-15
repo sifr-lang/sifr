@@ -617,7 +617,8 @@ fn dynamic_collection_clone_and_projection_capabilities_fail_during_lowering() {
         assert!(
             errors.iter().any(|error| {
                 error.code == Some(DiagnosticCode::TYPE_MISMATCH)
-                    && error.message.contains("statically known")
+                    && (error.message.contains("statically known")
+                        || error.message.contains("Clone-capable"))
             }),
             "{source}: {errors:?}"
         );

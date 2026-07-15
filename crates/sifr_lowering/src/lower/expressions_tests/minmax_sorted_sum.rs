@@ -153,6 +153,28 @@ pub(super) fn test_sorted_rejects_non_total_order_elements_and_keys() {
 }
 
 #[test]
+pub(super) fn test_sorted_aligns_non_clone_elements_with_source_and_key_ownership() {
+    let borrowed_temporary = lower_source(
+        "class Local(NonSend):\n    pass\n\ndef key(value: Local) -> int:\n    return 0\n\ndef order() -> list[Local]:\n    return sorted([Local(), Local()], key=key)\n",
+    );
+    assert!(borrowed_temporary.is_ok(), "{borrowed_temporary:?}");
+
+    for source in [
+        "class Local(NonSend):\n    pass\n\ndef key(value: Local) -> int:\n    return 0\n\ndef order(values: list[Local]) -> list[Local]:\n    return sorted(values, key=key)\n",
+        "class Local(NonSend):\n    pass\n\ndef key(own value: Local) -> int:\n    return 0\n\ndef order() -> list[Local]:\n    return sorted([Local(), Local()], key=key)\n",
+    ] {
+        let errors = lower_source(source).expect_err("non-Clone sorted ownership should fail");
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                    && error.message.contains("Clone-capable")
+            }),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
 pub(super) fn test_sum_keyword_and_type_errors_have_codes() {
     let keyword_source =
         "def main():\n    nums: list[int] = [1, 2]\n    _total = sum(values=nums)\n";
