@@ -388,3 +388,31 @@ fn top_level_with_return_inference_uses_enter_result_type() {
         .expect("choose function missing");
     assert_eq!(choose.return_type, Type::Int);
 }
+
+#[test]
+fn top_level_match_return_inference_specializes_generic_pattern_fields() {
+    let module = lower_source(
+        "class Box[T]:\n    value: T\n\ndef choose(box: Box[int]):\n    match box:\n        case Box(value=x):\n            return x\n\ndef consume(box: Box[int]) -> int:\n    return choose(box)\n",
+    )
+    .expect("generic class-pattern captures should use the subject specialization");
+    let choose = module
+        .functions
+        .iter()
+        .find(|function| function.name == "choose")
+        .expect("choose function missing");
+    assert_eq!(choose.return_type, Type::Int);
+}
+
+#[test]
+fn top_level_match_return_inference_specializes_nested_generic_patterns() {
+    let module = lower_source(
+        "class Inner[T]:\n    value: T\n\nclass Outer[T]:\n    inner: Inner[T]\n\ndef choose(outer: Outer[str]):\n    match outer:\n        case Outer(inner=Inner(value=x)):\n            return x\n\ndef consume(outer: Outer[str]) -> str:\n    return choose(outer)\n",
+    )
+    .expect("nested generic class patterns should retain concrete field types");
+    let choose = module
+        .functions
+        .iter()
+        .find(|function| function.name == "choose")
+        .expect("choose function missing");
+    assert_eq!(choose.return_type, Type::Str);
+}

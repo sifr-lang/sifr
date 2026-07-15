@@ -37,21 +37,58 @@ pub(super) fn render_local_module_imports(module: &HirModule) -> String {
     }
 }
 
+fn resolve_exported_generic_class<'a>(
+    module_name: &str,
+    export_name: &str,
+    project_modules: &HashMap<&str, &'a HirModule>,
+    visiting: &mut HashSet<(String, String)>,
+) -> Option<&'a sifr_ir::HirClass> {
+    if !visiting.insert((module_name.to_string(), export_name.to_string())) {
+        return None;
+    }
+    let module = project_modules.get(module_name)?;
+    if let Some(class) = module
+        .classes
+        .iter()
+        .find(|class| class.name == export_name && !class.type_params.is_empty())
+    {
+        return Some(class);
+    }
+    for import in &module.imports {
+        for source_name in &import.names {
+            let local_name = import
+                .aliases
+                .iter()
+                .find(|(source, _)| source == source_name)
+                .map_or(source_name.as_str(), |(_, local)| local.as_str());
+            if local_name == export_name {
+                if let Some(class) = resolve_exported_generic_class(
+                    &import.module,
+                    source_name,
+                    project_modules,
+                    visiting,
+                ) {
+                    return Some(class);
+                }
+            }
+        }
+    }
+    None
+}
+
 fn register_imported_generic_classes(
     code: &mut StdlibCode,
     module: &HirModule,
     project_modules: &HashMap<&str, &HirModule>,
 ) {
     for import in &module.imports {
-        let Some(source_module) = project_modules.get(import.module.as_str()) else {
-            continue;
-        };
         for source_name in &import.names {
-            let Some(source_class) = source_module
-                .classes
-                .iter()
-                .find(|class| class.name == *source_name && !class.type_params.is_empty())
-            else {
+            let Some(source_class) = resolve_exported_generic_class(
+                &import.module,
+                source_name,
+                project_modules,
+                &mut HashSet::new(),
+            ) else {
                 continue;
             };
             let local_name = import

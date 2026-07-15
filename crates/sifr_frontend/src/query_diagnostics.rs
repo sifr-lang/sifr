@@ -2,14 +2,15 @@ use super::{
     DocumentVersion, FileId, FrontendDiagnosticStyle, FrontendSourceContext, ModuleId, ModuleState,
     SourceHash, SourcePath, SourceText, SymbolKind, SymbolView,
 };
+use crate::export_type_localization::reexport_class_aliases;
 use crate::module_signatures::ModuleSignature;
 use crate::{
     diagnostic_with_code, diagnostic_with_source_range, diagnostic_with_source_range_args_help,
 };
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{
-    ExternalDefs, HirDiagnostic, HirModule, LoweringResult, LoweringWarningDiagnostic,
-    RevealTypeDiagnostic,
+    localize_user_import_function_type, localize_user_import_type, ExternalDefs, HirDiagnostic,
+    HirModule, LoweringResult, LoweringWarningDiagnostic, RevealTypeDiagnostic,
 };
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
@@ -381,7 +382,13 @@ pub fn collect_module_exports(
         }
     }
 
+    let reexport_aliases = reexport_class_aliases(module, external_defs);
+
     for import in &module.imports {
+        let class_aliases = reexport_aliases
+            .get(&import.module)
+            .cloned()
+            .unwrap_or_default();
         for name in &import.names {
             let local_name = import
                 .aliases
@@ -393,7 +400,14 @@ pub fn collect_module_exports(
             }
             if let Some(module_fns) = external_defs.functions.get(&import.module) {
                 if let Some(function_type) = module_fns.get(name) {
-                    fn_exports.insert(local_name.clone(), function_type.clone());
+                    fn_exports.insert(
+                        local_name.clone(),
+                        localize_user_import_function_type(
+                            function_type,
+                            &import.module,
+                            &class_aliases,
+                        ),
+                    );
                     if let Some(defaults) = external_defs
                         .function_defaults
                         .get(&import.module)
@@ -441,7 +455,10 @@ pub fn collect_module_exports(
             }
             if let Some(module_classes) = external_defs.classes.get(&import.module) {
                 if let Some(class_type) = module_classes.get(name) {
-                    class_exports.insert(local_name.clone(), class_type.clone());
+                    class_exports.insert(
+                        local_name.clone(),
+                        localize_user_import_type(class_type, &import.module, &class_aliases),
+                    );
                     if let Some(type_params) = external_defs
                         .class_type_params
                         .get(&import.module)
@@ -454,7 +471,10 @@ pub fn collect_module_exports(
             }
             if let Some(module_consts) = external_defs.constants.get(&import.module) {
                 if let Some(const_type) = module_consts.get(name) {
-                    const_exports.insert(local_name.clone(), const_type.clone());
+                    const_exports.insert(
+                        local_name.clone(),
+                        localize_user_import_type(const_type, &import.module, &class_aliases),
+                    );
                     if let Some(value) = external_defs
                         .constant_integer_values
                         .get(&import.module)

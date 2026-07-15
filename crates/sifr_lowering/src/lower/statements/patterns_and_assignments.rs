@@ -8,6 +8,17 @@ use super::{
     Pattern, Ranged, Singleton, StmtAnnAssign, StmtAssign, Type,
 };
 use crate::lower::expressions::consume_affine_value_name;
+
+fn matched_class_type(subject_ty: &Type, class_name: &str) -> Option<Type> {
+    match subject_ty.resolve_alias() {
+        Type::Class { name, .. } if name == class_name => Some(subject_ty.resolve_alias().clone()),
+        Type::Union(members) => members
+            .iter()
+            .find_map(|member| matched_class_type(member, class_name)),
+        _ => None,
+    }
+}
+
 pub(in crate::lower) fn lower_pattern(
     pattern: &Pattern,
     subject_ty: &Type,
@@ -105,7 +116,8 @@ pub(in crate::lower) fn lower_pattern(
             };
 
             // Resolve the class type to get field types
-            let class_ty = ctx.class_types.get(&class_name).cloned();
+            let class_ty = matched_class_type(subject_ty, &class_name)
+                .or_else(|| ctx.class_types.get(&class_name).cloned());
 
             let mut fields = Vec::new();
             for kw in &class_pat.arguments.keywords {

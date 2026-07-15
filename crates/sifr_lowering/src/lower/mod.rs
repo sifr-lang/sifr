@@ -170,6 +170,22 @@ pub(in crate::lower) use diagnostic_types::{
     HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic,
 };
 pub use external_defs::ExternalDefs;
+
+pub fn localize_user_import_type(
+    ty: &Type,
+    module: &str,
+    class_aliases: &HashMap<String, String>,
+) -> Type {
+    imported_class_identity::type_for_import(ty, module, class_aliases)
+}
+
+pub fn localize_user_import_function_type(
+    function: &FunctionType,
+    module: &str,
+    class_aliases: &HashMap<String, String>,
+) -> FunctionType {
+    imported_class_identity::function_type_for_import(function, module, class_aliases)
+}
 use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;
 use mod_context::substitute_type_vars;

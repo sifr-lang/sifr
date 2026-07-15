@@ -48,6 +48,16 @@ fn pattern_is_unconditional(pattern: &Pattern) -> bool {
     matches!(pattern, Pattern::MatchAs(pattern) if pattern.pattern.is_none())
 }
 
+fn matched_class_type<'a>(subject_ty: &'a Type, class_name: &str) -> Option<&'a Type> {
+    match subject_ty.resolve_alias() {
+        Type::Class { name, .. } if name == class_name => Some(subject_ty.resolve_alias()),
+        Type::Union(members) => members
+            .iter()
+            .find_map(|member| matched_class_type(member, class_name)),
+        _ => None,
+    }
+}
+
 pub(super) fn inference_stmt_always_exits(stmt: &Stmt) -> bool {
     match stmt {
         Stmt::Return(_) | Stmt::Raise(_) => true,
@@ -112,10 +122,13 @@ fn bind_pattern_names(pattern: &Pattern, subject_ty: &Type, env: &mut FunctionEn
             }
         }
         Pattern::MatchClass(pattern) => {
-            let class_ty = match pattern.cls.as_ref() {
-                Expr::Name(name) => ctx.class_types.get(name.id.as_str()),
+            let class_name = match pattern.cls.as_ref() {
+                Expr::Name(name) => Some(name.id.as_str()),
                 _ => None,
             };
+            let class_ty = class_name
+                .and_then(|name| matched_class_type(subject_ty, name))
+                .or_else(|| class_name.and_then(|name| ctx.class_types.get(name)));
             for keyword in &pattern.arguments.keywords {
                 let field_ty = class_ty
                     .and_then(|ty| match ty.resolve_alias() {

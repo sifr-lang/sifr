@@ -7,10 +7,11 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review passes 14 through 19 reopened
+Wave 2 is implemented; whole-diff review passes 14 through 20 reopened
 generic/inherited Rust-trait, reusable affine-closure ownership, keyed sorting,
 per-type-parameter bound, specialization, generic-operator, conditional-source,
-and top-level inference gaps. Their remediation passes the focused and complete
+top-level inference, multi-hop re-export identity, and specialized generic
+pattern-capture gaps. Their remediation passes the focused and complete
 compiler suites, native-positive/negative coverage, full merge-profile E2E,
 maintainability, formatting, and file-size checks plus the authoritative local
 create-PR gate in [PR #2988](https://github.com/sifr-lang/sifr/pull/2988). Typed
@@ -1161,7 +1162,28 @@ Delivery waves:
   interop `11/11`, runtime platform `28/28` with one gated skip, and E2E
   `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache hits. Its
   `482.54s` wall time produced only the non-blocking warm-wall-time advisory.
-  A fresh whole-diff review remains pending.
+  Full-diff
+  [review pass 20](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-20.md)
+  then found that multi-hop facade re-exports did not localize embedded
+  user-class identities and generic class-pattern captures read unspecialized
+  declaration fields. Frontend re-exports now localize the complete imported
+  function, class, constant, and parent type graph against all class aliases in
+  the source module. Both inference and final pattern lowering specialize
+  fields from the narrowed subject type, including nested generic patterns;
+  project code generation also resolves generic class metadata through facade
+  chains. Permanent regressions cover two same-name generic classes re-exported
+  through a facade, factory signatures, cross-assignment rejection, three-level
+  ancestry, and direct plus nested generic captures. Full codegen passes
+  `825/825`, lowering passes `754` with one ignored, and frontend passes `47/47`;
+  focused project checks and the native multi-module build pass. Workspace
+  Clippy and formatting are clean, HIR/driver maintainability passes, and the
+  `900`-line file-size guardrail passes over `2673` files after re-export alias
+  collection was split into a focused frontend module. The authoritative
+  create-PR gate passes every blocking lane: Python interop `11/11` in
+  `111.34s`, runtime platform `28` variants with one gated skip, and E2E
+  `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache hits. Its
+  `532.87s` wall time produced only the non-blocking warm-target advisory. A
+  fresh whole-diff review remains pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.
