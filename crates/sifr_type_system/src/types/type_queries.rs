@@ -1,5 +1,71 @@
 use super::{FunctionType, OwnershipKind, Type};
+use std::collections::BTreeSet;
+
 impl Type {
+    /// Whether a value transitively owns an affine resource that Rust must not
+    /// clone or compare through an aggregate derive.
+    #[must_use]
+    pub fn contains_affine_resource(&self) -> bool {
+        self.contains_affine_resource_inner(&mut BTreeSet::new())
+    }
+
+    fn contains_affine_resource_inner(&self, visiting_classes: &mut BTreeSet<String>) -> bool {
+        match self.resolve_alias() {
+            Self::PythonBuffer(_) => true,
+            Self::List(element)
+            | Self::Set(element)
+            | Self::Iterable(element)
+            | Self::Iterator(element)
+            | Self::Awaitable(element)
+            | Self::Failure(element)
+            | Self::TimeoutResult(element)
+            | Self::Newtype { inner: element, .. } => {
+                element.contains_affine_resource_inner(visiting_classes)
+            }
+            Self::Dict(key, value)
+            | Self::Result(key, value)
+            | Self::Task(key, value)
+            | Self::TaskResult(key, value)
+            | Self::Coroutine(key, value)
+            | Self::Select2(key, value)
+            | Self::BlockingTask(key, value)
+            | Self::JoinSet(key, value)
+            | Self::AsyncIterator(key, value)
+            | Self::AsyncGenerator(key, value) => {
+                key.contains_affine_resource_inner(visiting_classes)
+                    || value.contains_affine_resource_inner(visiting_classes)
+            }
+            Self::Tuple(elements) | Self::Union(elements) | Self::Intersection(elements) => {
+                elements
+                    .iter()
+                    .any(|element| element.contains_affine_resource_inner(visiting_classes))
+            }
+            Self::Class { name, fields, .. } => {
+                if !visiting_classes.insert(name.clone()) {
+                    return false;
+                }
+                let contains = fields
+                    .iter()
+                    .any(|(_, field)| field.contains_affine_resource_inner(visiting_classes));
+                visiting_classes.remove(name);
+                contains
+            }
+            _ => false,
+        }
+    }
+
+    /// Whether Rust aggregate generation may derive `Clone` for this value.
+    #[must_use]
+    pub fn supports_derived_clone(&self) -> bool {
+        !self.contains_affine_resource()
+    }
+
+    /// Whether ordinary structural equality is valid for this value.
+    #[must_use]
+    pub fn supports_structural_equality(&self) -> bool {
+        !self.contains_affine_resource()
+    }
+
     #[must_use]
     pub fn reversible(element_type: Type) -> Self {
         Self::Alias {

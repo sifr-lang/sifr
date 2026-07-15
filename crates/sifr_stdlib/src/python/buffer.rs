@@ -141,8 +141,17 @@ impl<T: PythonBufferElement> PythonBuffer<T> {
         access: python::PythonBufferAccess,
         layout: python::PythonBufferLayout,
     ) -> Result<Self, PythonError> {
+        Self::acquire_foreign(object_bridge::object_value(object)?, access, layout)
+    }
+
+    #[doc(hidden)]
+    pub fn acquire_foreign(
+        object: &python::ForeignObject,
+        access: python::PythonBufferAccess,
+        layout: python::PythonBufferLayout,
+    ) -> Result<Self, PythonError> {
         let metadata = python::acquire_buffer(
-            object_bridge::object_value(object)?,
+            object,
             python::PythonBufferRequest {
                 element: T::ELEMENT,
                 access,

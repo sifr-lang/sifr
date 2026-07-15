@@ -76,6 +76,11 @@ COMMAND_ARGS: dict[str, list[str]] = {
         "--report",
         "../../../target/verification/areas/python_interop/dataframe-examples.latest.json",
     ],
+    "python-interop-buffer-examples": [
+        "--buffer-examples",
+        "--report",
+        "../../../target/verification/areas/python_interop/buffer-examples.latest.json",
+    ],
     "python-interop-ml-examples": [
         "--ml-examples",
         "--report",
@@ -119,6 +124,7 @@ COMMAND_ARGS: dict[str, list[str]] = {
 AREA_PROJECT_COMMANDS = {
     "python-interop-callback-examples",
     "python-interop-dataframe-examples",
+    "python-interop-buffer-examples",
     "python-interop-library-examples",
     "python-interop-async-declaration-examples",
     "python-interop-async-context-examples",

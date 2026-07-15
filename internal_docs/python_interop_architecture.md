@@ -7,9 +7,9 @@ The declaration-first package-authoring layer is specified separately in
 Its synchronous declarations, opaque lifecycle, synchronous contexts,
 hermetic package-local bridge targets, application-owned asyncio runtime,
 typed coroutine declarations, structured cancellation, and consuming async
-close are implemented. Typed async contexts and declaration-first current,
-foreign-thread, and asyncio callbacks are active; the later zero-copy affine
-protocols are not active yet.
+close are implemented. Typed async contexts, declaration-first current,
+foreign-thread and asyncio callbacks, and typed affine buffer declarations are
+active; Arrow and DLPack declarations remain reserved.
 
 ## Ownership Boundary
 

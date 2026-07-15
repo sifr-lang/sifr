@@ -325,8 +325,10 @@ context, and typed callback declarations are active. For
 async exit are required, and the manager must be consumed by `async with`.
 Callback declarations enforce call/result/receiver ownership, current/foreign/
 asyncio dispatch, serial/parallel concurrency, capture safety, deterministic
-drain, and typed failure reconciliation. Buffer, Arrow, and DLPack decorator
-forms remain reserved by their capability rows.
+drain, and typed failure reconciliation. Typed affine buffer declarations are
+active with synchronous acquisition, explicit access/layout policy, non-send
+ownership, and exact release. Arrow and DLPack decorator forms remain reserved
+by their capability rows.
 
 ## Package-Local Python Bridges
 

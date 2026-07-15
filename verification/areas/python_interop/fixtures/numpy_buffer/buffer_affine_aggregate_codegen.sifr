@@ -1,0 +1,12 @@
+from sifr.python import PythonError
+
+
+class BufferAggregate:
+    direct: python.Buffer[uint8]
+    optional: python.Buffer[uint8] | None
+    collection: list[python.Buffer[uint8]]
+
+
+def main() -> Result[None, PythonError]:
+    print("sifr-python-interop:buffer:affine-aggregate=compiled")
+    return None

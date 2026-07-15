@@ -11,6 +11,23 @@ pub(crate) fn acquire_python_buffer(
     contract: &PythonBufferDeclaration,
     error_type: &Type,
 ) -> RustExpr {
+    acquire_python_buffer_with_method(producer, contract, error_type, "acquire")
+}
+
+fn acquire_python_buffer_from_receiver(
+    producer: RustExpr,
+    contract: &PythonBufferDeclaration,
+    error_type: &Type,
+) -> RustExpr {
+    acquire_python_buffer_with_method(producer, contract, error_type, "acquire_foreign")
+}
+
+fn acquire_python_buffer_with_method(
+    producer: RustExpr,
+    contract: &PythonBufferDeclaration,
+    error_type: &Type,
+    method: &str,
+) -> RustExpr {
     let element = contract.element_type.rust_type();
     let access = match contract.access {
         PythonBufferAccess::Read => "Read",
@@ -27,7 +44,7 @@ pub(crate) fn acquire_python_buffer(
                 "sifr_stdlib".to_string(),
                 "python".to_string(),
                 format!("PythonBuffer::<{element}>"),
-                "acquire".to_string(),
+                method.to_string(),
             ])),
             args: vec![
                 RustExpr::Ref {
@@ -84,7 +101,7 @@ pub(crate) fn receiver_interop_body(func: &HirFunction) -> Option<Vec<RustStmt>>
     if target.segments.as_slice() != ["Self"] {
         return None;
     }
-    let acquired = acquire_python_buffer(
+    let acquired = acquire_python_buffer_from_receiver(
         RustExpr::Field {
             expr: Box::new(RustExpr::Ident("self".to_string())),
             field: "__sifr_python_object".to_string(),

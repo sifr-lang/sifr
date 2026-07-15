@@ -379,6 +379,16 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> TypeCheckRe
 
     match op {
         "==" | "!=" => {
+            if !left.supports_structural_equality() || !right.supports_structural_equality() {
+                return Err((
+                    DiagnosticCode::TYPE_MISMATCH,
+                    format!(
+                        "cannot compare affine values '{}' and '{}' with {op}",
+                        left.display_name(),
+                        right.display_name()
+                    ),
+                ));
+            }
             if is_bool_integer_mixed_comparison(left, right) {
                 return Err((
                     DiagnosticCode::INT_BOOL_INTEGER_COMPARISON,
@@ -786,6 +796,25 @@ mod tests {
             &Type::Dict(Box::new(Type::Str), Box::new(Type::Any)),
         )
         .is_ok());
+    }
+
+    #[test]
+    fn test_equality_rejects_python_buffers_through_nested_aggregates() {
+        let buffer = Type::PythonBuffer(Box::new(Type::FixedInt(crate::FixedIntType::U8)));
+        let optional = Type::Union(vec![Type::None, buffer.clone()]);
+        let collection = Type::List(Box::new(optional.clone()));
+        let record = Type::Class {
+            name: "BufferRecord".to_string(),
+            fields: vec![("views".to_string(), collection.clone())],
+            methods: vec![],
+            parent_class: None,
+        };
+
+        for ty in [buffer, optional, collection, record] {
+            let error = type_check_comparison(&ty, "==", &ty).unwrap_err();
+            assert_eq!(error.0, DiagnosticCode::TYPE_MISMATCH);
+            assert!(error.1.contains("cannot compare affine values"));
+        }
     }
 
     #[test]

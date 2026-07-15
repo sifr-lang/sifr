@@ -3,9 +3,10 @@
 ## Status And Scope
 
 This document defines the declaration-first Python interop contract. Typed
-coroutines, synchronous and asynchronous contexts, and every callback dispatch
-mode are implemented. Buffer, Arrow, and DLPack rows remain reserved and must
-implement the same contract without publishing reduced substitutes.
+coroutines, synchronous and asynchronous contexts, every callback dispatch
+mode, and typed affine buffer declarations are implemented. Arrow and DLPack
+rows remain reserved and must implement the same contract without publishing
+reduced substitutes.
 
 The common rules in
 [`python_interop_declaration_architecture.md`](./python_interop_declaration_architecture.md)
@@ -454,10 +455,11 @@ The buffer retains its exporter owner.
 
 `python.Buffer[T]` is affine and non-send. Drop performs exact-once
 `PyBuffer_Release`; explicit `release(own buffer)` provides deterministic early
-release. Borrowed slices cannot outlive the buffer and no call may release or
-move it while a slice is live. Writable buffers require an exclusive Sifr
-borrow. A declaration returning `bytes` or a typed collection is a checked copy,
-not a buffer declaration.
+release. The active surface exposes bounded zero-copy element access and an
+explicit checked `copy_slice`; it does not expose a borrowed slice that could
+outlive the buffer. Writable buffers require an exclusive Sifr borrow. A
+declaration returning `bytes` or a typed collection is a checked copy, not a
+buffer declaration.
 
 The public resource exposes read-only `length`, `item_size`, `dimensions`,
 `shape`, `strides`, `suboffsets`, `format`, `readonly`, `c_contiguous`, and

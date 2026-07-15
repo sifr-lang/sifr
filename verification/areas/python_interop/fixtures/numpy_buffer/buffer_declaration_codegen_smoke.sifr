@@ -1,4 +1,4 @@
-from sifr.python import PythonError
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
 @python.buffer(builtins.bytearray, access=write, layout=c_contiguous)
@@ -7,12 +7,16 @@ def writable_view(payload: bytes) -> Result[python.Buffer[uint8], PythonError]: 
 
 def main() -> Result[None, PythonError]:
     try:
+        before: ResourceDiagnostics = resource_diagnostics()
         view: python.Buffer[uint8] = writable_view(b"sifr")
         first: uint8 = view.read(0)
         written: None = view.write(1, first)
         copied: list[uint8] = view.copy_slice(0, view.length())
         released: None = view.release()
-        print(len(copied))
+        after: ResourceDiagnostics = resource_diagnostics()
+        if len(copied) != 4 or after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("top-level buffer acquisition leaked resources")
+        print("sifr-python-interop:buffer:top-level=ok:resources=zero")
         return None
     except PythonError as error:
         raise error

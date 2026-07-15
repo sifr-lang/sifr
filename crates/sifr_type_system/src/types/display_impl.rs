@@ -297,6 +297,46 @@ mod tests {
     }
 
     #[test]
+    fn test_python_buffer_capabilities_propagate_through_aggregates() {
+        let buffer = Type::PythonBuffer(Box::new(Type::FixedInt(FixedIntType::U8)));
+        let nested = Type::Class {
+            name: "NestedBuffer".to_string(),
+            fields: vec![(
+                "views".to_string(),
+                Type::List(Box::new(Type::Union(vec![Type::None, buffer]))),
+            )],
+            methods: vec![],
+            parent_class: None,
+        };
+
+        assert!(nested.contains_affine_resource());
+        assert!(!nested.supports_derived_clone());
+        assert!(!nested.supports_structural_equality());
+    }
+
+    #[test]
+    fn test_affine_capability_query_terminates_on_recursive_class_shape() {
+        let recursive = Type::Class {
+            name: "Node".to_string(),
+            fields: vec![(
+                "next".to_string(),
+                Type::Class {
+                    name: "Node".to_string(),
+                    fields: vec![],
+                    methods: vec![],
+                    parent_class: None,
+                },
+            )],
+            methods: vec![],
+            parent_class: None,
+        };
+
+        assert!(!recursive.contains_affine_resource());
+        assert!(recursive.supports_derived_clone());
+        assert!(recursive.supports_structural_equality());
+    }
+
+    #[test]
     fn test_collection_assignability() {
         let list_int = Type::List(Box::new(Type::Int));
         let list_int2 = Type::List(Box::new(Type::Int));

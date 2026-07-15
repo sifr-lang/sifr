@@ -94,7 +94,7 @@ fn self_buffer_wrapper_acquires_opaque_receiver_without_python_call() {
     let rendered = render_stmts(&body);
 
     assert!(rendered.contains("self.__sifr_python_object"));
-    assert!(rendered.contains("sifr_stdlib::python::PythonBuffer::<u16>::acquire"));
+    assert!(rendered.contains("sifr_stdlib::python::PythonBuffer::<u16>::acquire_foreign"));
     assert!(rendered.contains("sifr_runtime::python::PythonBufferAccess::Read"));
     assert!(rendered.contains("sifr_runtime::python::PythonBufferLayout::FContiguous"));
     assert!(!rendered.contains("resolve_target"));

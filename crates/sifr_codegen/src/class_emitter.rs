@@ -509,21 +509,37 @@ impl RustEmitter {
             .fields
             .iter()
             .any(|(_, ty)| matches!(ty, Type::Callable(..) | Type::AsyncCallable(..)));
-        let has_affine_field = class.fields.iter().any(|(_, ty)| {
+        let has_non_send_class_field = class.fields.iter().any(|(_, ty)| {
             matches!(
                 ty.resolve_alias(),
                 Type::Class { parent_class, .. }
                     if parent_class.as_deref() == Some("NonSend")
             )
         });
+        let has_affine_field = class
+            .fields
+            .iter()
+            .any(|(_, ty)| ty.contains_affine_resource());
+        let fields_support_clone = class
+            .fields
+            .iter()
+            .all(|(_, ty)| ty.supports_derived_clone());
+        let fields_support_equality = class
+            .fields
+            .iter()
+            .all(|(_, ty)| ty.supports_structural_equality());
         let has_auto_display =
             !class.fields.is_empty() && class.fields.iter().all(|(_, ty)| is_auto_display_type(ty));
         let derives = if is_python_opaque || self.is_current_process_resource_class(&class.name) {
             vec!["Debug".to_string()]
-        } else if has_callable_field || has_affine_field {
+        } else if has_callable_field || has_non_send_class_field {
             Vec::new()
         } else if has_custom_eq {
-            vec!["Debug".to_string(), "Clone".to_string()]
+            if fields_support_clone {
+                vec!["Debug".to_string(), "Clone".to_string()]
+            } else {
+                vec!["Debug".to_string()]
+            }
         } else if class.is_hashable {
             vec![
                 "Debug".to_string(),
@@ -532,12 +548,18 @@ impl RustEmitter {
                 "Eq".to_string(),
                 "Hash".to_string(),
             ]
-        } else {
+        } else if fields_support_clone && fields_support_equality {
             vec![
                 "Debug".to_string(),
                 "Clone".to_string(),
                 "PartialEq".to_string(),
             ]
+        } else if fields_support_clone {
+            vec!["Debug".to_string(), "Clone".to_string()]
+        } else if has_affine_field {
+            vec!["Debug".to_string()]
+        } else {
+            Vec::new()
         };
 
         let struct_fields = self.class_struct_fields(class, module_public);

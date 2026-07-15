@@ -203,3 +203,14 @@ fn python_buffer_is_rejected_at_sendability_boundaries() {
         Some("Python buffer resources are non-send")
     );
 }
+
+#[test]
+fn python_buffer_equality_is_rejected_before_codegen() {
+    let errors = lower_errors(
+        "def same(left: python.Buffer[uint8], right: python.Buffer[uint8]) -> bool:\n    return left == right\n",
+    );
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.message.contains("cannot compare affine values")
+    }));
+}

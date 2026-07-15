@@ -16,6 +16,7 @@ from async_context_examples import (
     build_async_context_examples_report,
     run_async_context_examples_self_tests,
 )
+from buffer_examples import build_buffer_examples_report, run_buffer_examples_self_tests
 from callback_examples import build_callback_examples_report, run_callback_examples_self_tests
 from certification_matrix import build_certification_report, validate_certification_policy
 from dataframe_examples import build_dataframe_examples_report, run_dataframe_examples_self_tests
@@ -122,6 +123,11 @@ REQUIRED_SOURCE_FIXTURES = (
     "numpy_buffer/py_buffer_memoryview.sifr",
     "numpy_buffer/numpy_full_example.sifr",
     "numpy_buffer/py_buffer_roundtrip.sifr",
+    "numpy_buffer/buffer_declaration_codegen_smoke.sifr",
+    "numpy_buffer/buffer_declaration_self.sifr",
+    "numpy_buffer/buffer_declaration_bridge.sifr",
+    "numpy_buffer/buffer_affine_aggregate_codegen.sifr",
+    "numpy_buffer/buffer_comparison_rejected.sifr",
     "pandas_arrow/pandas_full_example.sifr",
     "polars_arrow/polars_full_example.sifr",
     "pyarrow_capsule/arrow_capsule_copy_possible.sifr",
@@ -168,6 +174,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--live-policy", action="store_true", help="Validate live container-runtime policy.")
     parser.add_argument("--live-examples", action="store_true", help="Run testcontainers-backed live examples.")
     parser.add_argument("--dataframe-examples", action="store_true", help="Run full NumPy/pandas/Polars Sifr examples.")
+    parser.add_argument(
+        "--buffer-examples",
+        action="store_true",
+        help="Run compiled declaration-first Python buffer examples.",
+    )
     parser.add_argument("--ml-examples", action="store_true", help="Run full torch/scikit-learn Sifr examples.")
     parser.add_argument("--library-examples", action="store_true", help="Run full library-family Sifr examples.")
     parser.add_argument(
@@ -196,6 +207,7 @@ def main(argv: list[str] | None = None) -> int:
         run_live_policy_self_tests(paths)
         run_live_examples_self_tests(paths)
         run_dataframe_examples_self_tests(paths)
+        run_buffer_examples_self_tests(paths)
         run_ml_examples_self_tests(paths)
         run_library_examples_self_tests(paths)
         run_async_declaration_examples_self_tests(paths)
@@ -224,6 +236,15 @@ def main(argv: list[str] | None = None) -> int:
         write_report(report_path, payload)
         print(
             "python interop dataframe-examples "
+            f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
+        )
+        return 1 if payload["status"] == "examples-failed" else 0
+    if args.buffer_examples:
+        payload = build_buffer_examples_report(paths)
+        report_path = (paths.area_root / args.report).resolve()
+        write_report(report_path, payload)
+        print(
+            "python interop buffer-examples "
             f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
         )
         return 1 if payload["status"] == "examples-failed" else 0
