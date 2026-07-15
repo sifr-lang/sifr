@@ -109,7 +109,32 @@ pub(in crate::lower) fn lower_tuple_unpack_assign(
         );
         return None;
     };
-    consume_owned_value(&value_expr, value.range(), ctx);
+    let source_is_borrowed = matches!(
+        &value_expr,
+        crate::hir_nodes::HirExpr::Name { name, .. } if ctx.borrowed_params.contains(name)
+    );
+    if source_is_borrowed && !value_ty.supports_derived_clone() {
+        let (code, message) = if value_ty.contains_affine_resource() {
+            (
+                DiagnosticCode::PYZC_INVALID_DECLARATION,
+                "borrowed affine Python buffer tuple sources cannot be unpacked into owned values"
+                    .to_string(),
+            )
+        } else {
+            (
+                DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                format!(
+                    "borrowed tuple source '{}' cannot be unpacked into owned values because it does not support cloning",
+                    value_ty.display_name()
+                ),
+            )
+        };
+        ctx.error_with_code_at(code, message, value.range());
+        return None;
+    }
+    if !source_is_borrowed {
+        consume_owned_value(&value_expr, value.range(), ctx);
+    }
 
     record_tuple_unpack_pointer_facts(ctx, &target_names, value);
     record_tuple_unpack_len_alias_facts(ctx, &target_names, value);
@@ -208,6 +233,17 @@ pub(in crate::lower) fn lower_star_unpack_assign(
             DiagnosticCode::PYZC_INVALID_DECLARATION,
             "star unpacking is unavailable for elements containing affine Python buffers because it clones projected values"
                 .to_string(),
+            value.range(),
+        );
+        return None;
+    }
+    if !elem_ty.supports_derived_clone() {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+            format!(
+                "star unpacking requires cloneable elements, but '{}' does not support cloning",
+                elem_ty.display_name()
+            ),
             value.range(),
         );
         return None;

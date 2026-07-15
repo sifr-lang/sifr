@@ -62,36 +62,47 @@ impl Type {
 
     fn supports_derived_clone_inner(&self, visiting_classes: &mut BTreeSet<String>) -> bool {
         match self.resolve_alias() {
-            Self::Any | Self::Unknown | Self::PythonBuffer(_) => false,
+            Self::Any
+            | Self::Unknown
+            | Self::PythonBuffer(_)
+            | Self::Protocol { .. }
+            | Self::Callable(..)
+            | Self::AsyncCallable(..)
+            | Self::Coroutine(..)
+            | Self::Task(..)
+            | Self::TaskResult(..)
+            | Self::Failure(_)
+            | Self::TimeoutResult(_)
+            | Self::Select2(..)
+            | Self::BlockingTask(..)
+            | Self::JoinSet(..)
+            | Self::Awaitable(_)
+            | Self::Iterator(_)
+            | Self::AsyncIterator(..)
+            | Self::AsyncGenerator(..)
+            | Self::Intersection(_) => false,
             Self::List(element)
             | Self::Set(element)
             | Self::Iterable(element)
-            | Self::Iterator(element)
-            | Self::Awaitable(element)
-            | Self::Failure(element)
-            | Self::TimeoutResult(element)
             | Self::Newtype { inner: element, .. } => {
                 element.supports_derived_clone_inner(visiting_classes)
             }
-            Self::Dict(left, right)
-            | Self::Result(left, right)
-            | Self::Task(left, right)
-            | Self::TaskResult(left, right)
-            | Self::Coroutine(left, right)
-            | Self::Select2(left, right)
-            | Self::BlockingTask(left, right)
-            | Self::JoinSet(left, right)
-            | Self::AsyncIterator(left, right)
-            | Self::AsyncGenerator(left, right) => {
+            Self::Dict(left, right) | Self::Result(left, right) => {
                 left.supports_derived_clone_inner(visiting_classes)
                     && right.supports_derived_clone_inner(visiting_classes)
             }
-            Self::Tuple(elements) | Self::Union(elements) | Self::Intersection(elements) => {
-                elements
-                    .iter()
-                    .all(|element| element.supports_derived_clone_inner(visiting_classes))
-            }
-            Self::Class { name, fields, .. } => {
+            Self::Tuple(elements) | Self::Union(elements) => elements
+                .iter()
+                .all(|element| element.supports_derived_clone_inner(visiting_classes)),
+            Self::Class {
+                name,
+                fields,
+                parent_class,
+                ..
+            } => {
+                if parent_class.as_deref() == Some("NonSend") {
+                    return false;
+                }
                 if !visiting_classes.insert(name.clone()) {
                     return true;
                 }
@@ -108,7 +119,66 @@ impl Type {
     /// Whether ordinary structural equality is valid for this value.
     #[must_use]
     pub fn supports_structural_equality(&self) -> bool {
-        !self.contains_affine_resource()
+        self.supports_structural_equality_inner(&mut BTreeSet::new())
+    }
+
+    fn supports_structural_equality_inner(&self, visiting_classes: &mut BTreeSet<String>) -> bool {
+        match self.resolve_alias() {
+            Self::Any
+            | Self::Unknown
+            | Self::Intersection(_)
+            | Self::PythonBuffer(_)
+            | Self::Protocol { .. }
+            | Self::Callable(..)
+            | Self::AsyncCallable(..)
+            | Self::Coroutine(..)
+            | Self::Task(..)
+            | Self::TaskResult(..)
+            | Self::Failure(_)
+            | Self::TimeoutResult(_)
+            | Self::Select2(..)
+            | Self::BlockingTask(..)
+            | Self::JoinSet(..)
+            | Self::Awaitable(_)
+            | Self::Iterator(_)
+            | Self::AsyncIterator(..)
+            | Self::AsyncGenerator(..) => false,
+            Self::List(element) | Self::Set(element) | Self::Iterable(element) => {
+                element.supports_structural_equality_inner(visiting_classes)
+            }
+            Self::Dict(key, value) | Self::Result(key, value) => {
+                key.supports_structural_equality_inner(visiting_classes)
+                    && value.supports_structural_equality_inner(visiting_classes)
+            }
+            Self::Tuple(elements) | Self::Union(elements) => elements
+                .iter()
+                .all(|element| element.supports_structural_equality_inner(visiting_classes)),
+            Self::Class {
+                name,
+                fields,
+                methods,
+                parent_class,
+            } => {
+                if methods.iter().any(|(method, _)| method == "__eq__") {
+                    return true;
+                }
+                if parent_class.as_deref() == Some("NonSend") {
+                    return false;
+                }
+                if !visiting_classes.insert(name.clone()) {
+                    return true;
+                }
+                let supports = fields
+                    .iter()
+                    .all(|(_, field)| field.supports_structural_equality_inner(visiting_classes));
+                visiting_classes.remove(name);
+                supports
+            }
+            Self::Newtype { inner, .. } => {
+                inner.supports_structural_equality_inner(visiting_classes)
+            }
+            _ => true,
+        }
     }
 
     #[must_use]

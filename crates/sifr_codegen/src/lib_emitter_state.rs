@@ -447,8 +447,14 @@ impl RustEmitter {
             if let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? {
                 let lowered_stmts = crate::lower_tuple_unpack_targets(
                     targets,
+                    value,
                     self.rewrite_stdlib_constant_idents_in_expr(lowered_value),
                     &self.mutated_vars,
+                    crate::tuple_unpack_source_is_borrowed(
+                        value,
+                        &self.borrowed_params,
+                        &self.mut_borrowed_params,
+                    ),
                 );
                 for lowered_stmt in lowered_stmts {
                     self.push_captured_stmt(&lowered_stmt);

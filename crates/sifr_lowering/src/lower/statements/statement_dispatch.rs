@@ -20,6 +20,7 @@ use super::return_lowering::lower_return;
 use super::statement_diagnostics;
 use super::typing_and_functions::{
     ast_convention_to_param, register_local_function_signature, register_local_function_symbol,
+    reject_unsupported_nested_async_generator,
 };
 use super::LowerCtx;
 use super::{
@@ -692,6 +693,8 @@ pub(in crate::lower) fn lower_stmt(
                 .get(func.name.as_str())
                 .cloned()
                 .unwrap_or_else(|| register_local_function_symbol(func, ctx));
+
+            reject_unsupported_nested_async_generator(func, ft.return_type.as_ref(), ctx);
 
             // Lower the nested function body
             let declared_nonlocals = collect_declared_nonlocals(&func.body);

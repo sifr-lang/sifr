@@ -42,8 +42,18 @@ impl RustEmitter {
                 let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
                     return Ok(None);
                 };
-                let mut lowered =
-                    crate::lower_tuple_unpack_targets(targets, lowered_value, &self.mutated_vars);
+                let source_is_borrowed = crate::tuple_unpack_source_is_borrowed(
+                    value,
+                    &self.borrowed_params,
+                    &self.mut_borrowed_params,
+                );
+                let mut lowered = crate::lower_tuple_unpack_targets(
+                    targets,
+                    value,
+                    lowered_value,
+                    &self.mutated_vars,
+                    source_is_borrowed,
+                );
                 for target in targets {
                     let sifr_ir::HirTupleTargetBinding::Name(name) = &target.binding else {
                         continue;

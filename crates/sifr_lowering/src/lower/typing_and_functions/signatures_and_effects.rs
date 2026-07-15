@@ -374,7 +374,7 @@ pub(super) fn first_await_range_in_stmts(stmts: &[Stmt]) -> Option<TextRange> {
     stmts.iter().find_map(first_await_range_in_stmt)
 }
 
-pub(super) fn first_yield_range_in_stmts(stmts: &[Stmt]) -> Option<TextRange> {
+pub(in crate::lower) fn first_yield_range_in_stmts(stmts: &[Stmt]) -> Option<TextRange> {
     stmts.iter().find_map(first_yield_range_in_stmt)
 }
 

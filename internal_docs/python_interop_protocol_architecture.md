@@ -461,6 +461,23 @@ outlive the buffer. Writable buffers require an exclusive Sifr borrow. A
 declaration returning `bytes` or a typed collection is a checked copy, not a
 buffer declaration.
 
+Compiler capabilities follow the emitted Rust traits rather than assuming that
+every non-affine type is reusable. Structural equality and membership require a
+recursive `PartialEq` capability; `Any`, dynamic trait objects, callable-bearing
+classes, affine resources, and other non-equality Rust representations are
+rejected before code generation. Source `is` and `is not` are limited to
+identity checks against `None`; they are not rewritten into structural equality
+for arbitrary resources.
+
+Tuple unpacking clones a borrowed source only when its complete type is
+recursively cloneable. An owned tuple source is consumed and destructured by
+move. Star unpacking preserves its list source and therefore requires cloneable
+elements; affine, `Any`, callable-bearing, and other non-clone element shapes
+are rejected. Async-generator validation includes free-variable captures.
+Nested async generators are rejected until their dedicated lazy materialization
+path exists, with affine captures receiving the buffer-specific zero-copy
+diagnostic.
+
 Runtime admission compares the physical byte ranges of logical buffer items
 across every live view. C- and F-contiguous views use one compressed range, so
 large ordinary arrays require constant admission memory. Non-contiguous direct

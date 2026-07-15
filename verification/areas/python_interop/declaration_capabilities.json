@@ -161,7 +161,7 @@
       "required_evidence": ["positive", "negative", "cleanup", "live"],
       "evidence": [
         {"kind": "positive", "status": "passing", "owner": "typed runtime format/layout/access, constant-space large-contiguous admission, exact direct/indirect overlap tests, and compiled top-level, Self, and bridge acquisition suite"},
-        {"kind": "negative", "status": "passing", "owner": "compiler recursive borrow/move/storage, membership, chained and unpack ownership, affine-match, clone/order/equality, async-generator sendability, policy, and return-contract tests plus runtime metadata and overlap failures"},
+        {"kind": "negative", "status": "passing", "owner": "compiler recursive Rust-trait equality, None-only identity, borrowed-versus-owned tuple extraction, non-clone star-unpack, affine-match, free-variable async-generator capture, policy, and return-contract unit tests plus native compile-fail and runtime metadata/overlap matrices"},
         {"kind": "cleanup", "status": "passing", "owner": "exact PyBuffer_Release runtime counters and compiled zero-resource assertions"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "buffer acquisition is synchronous"},
         {"kind": "live", "status": "passing", "owner": "compiled top-level, receiver, package-bridge, and affine-aggregate buffer examples"}

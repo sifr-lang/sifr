@@ -395,10 +395,16 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> TypeCheckRe
     match op {
         "==" | "!=" => {
             if !left.supports_structural_equality() || !right.supports_structural_equality() {
+                let reason = if left.contains_affine_resource() || right.contains_affine_resource()
+                {
+                    "affine values"
+                } else {
+                    "values without structural equality"
+                };
                 return Err((
                     DiagnosticCode::TYPE_MISMATCH,
                     format!(
-                        "cannot compare affine values '{}' and '{}' with {op}",
+                        "cannot compare {reason} '{}' and '{}' with {op}",
                         left.display_name(),
                         right.display_name()
                     ),
@@ -789,47 +795,6 @@ mod tests {
             Type::Bool
         );
         assert!(type_check_comparison(&Type::Int, "==", &Type::Str).is_err());
-    }
-
-    #[test]
-    fn test_equality_allows_container_any_shape_mismatch() {
-        assert!(type_check_comparison(
-            &Type::List(Box::new(Type::Int)),
-            "==",
-            &Type::List(Box::new(Type::Any)),
-        )
-        .is_ok());
-        assert!(type_check_comparison(
-            &Type::List(Box::new(Type::List(Box::new(Type::Int)))),
-            "==",
-            &Type::List(Box::new(Type::List(Box::new(Type::Any)))),
-        )
-        .is_ok());
-        assert!(type_check_comparison(
-            &Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
-            "==",
-            &Type::Dict(Box::new(Type::Str), Box::new(Type::Any)),
-        )
-        .is_ok());
-    }
-
-    #[test]
-    fn test_equality_rejects_python_buffers_through_nested_aggregates() {
-        let buffer = Type::PythonBuffer(Box::new(Type::FixedInt(crate::FixedIntType::U8)));
-        let optional = Type::Union(vec![Type::None, buffer.clone()]);
-        let collection = Type::List(Box::new(optional.clone()));
-        let record = Type::Class {
-            name: "BufferRecord".to_string(),
-            fields: vec![("views".to_string(), collection.clone())],
-            methods: vec![],
-            parent_class: None,
-        };
-
-        for ty in [buffer, optional, collection, record] {
-            let error = type_check_comparison(&ty, "==", &ty).unwrap_err();
-            assert_eq!(error.0, DiagnosticCode::TYPE_MISMATCH);
-            assert!(error.1.contains("cannot compare affine values"));
-        }
     }
 
     #[test]

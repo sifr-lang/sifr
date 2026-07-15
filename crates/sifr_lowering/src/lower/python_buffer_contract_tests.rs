@@ -472,6 +472,53 @@ fn affine_membership_chained_assignment_star_unpack_and_match_are_rejected() {
 }
 
 #[test]
+fn equality_and_unpack_capabilities_reject_non_rust_traits() {
+    for source in [
+        "def member(value: Any, values: list[Any]) -> bool:\n    return value in values\n",
+        "class Holder:\n    callback: Callable[[int], int]\n\ndef member(value: Holder, values: list[Holder]) -> bool:\n    return value in values\n",
+        "def same(left: python.Buffer[uint8], right: python.Buffer[uint8]) -> bool:\n    return left is right\n",
+        "def unpack(values: list[Any]) -> None:\n    first, *rest = values\n",
+        "class Holder:\n    callback: Callable[[int], int]\n\ndef unpack(values: list[Holder]) -> None:\n    first, *rest = values\n",
+        "class Holder:\n    callback: Callable[[int], int]\n\ndef unpack(values: tuple[Holder, int]) -> Holder:\n    first, number = values\n    return first\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(
+            errors.iter().any(|error| {
+                matches!(
+                    error.code,
+                    Some(
+                        DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR
+                            | DiagnosticCode::PYZC_INVALID_DECLARATION
+                    )
+                )
+            }),
+            "{source}: {errors:?}"
+        );
+    }
+
+    lower_ok(
+        "class Holder:\n    callback: Callable[[int], int]\n\ndef unpack(own values: tuple[Holder, int]) -> Holder:\n    first, number = values\n    return first\n",
+    );
+    lower_ok(
+        "def unpack(values: tuple[str, int]) -> str:\n    first, number = values\n    return first\n",
+    );
+}
+
+#[test]
+fn nested_async_generator_affine_capture_is_rejected() {
+    let errors = lower_errors(
+        "def make(own view: python.Buffer[uint8]) -> AsyncGenerator[int, GeneratorCloseError]:\n    async def generate() -> AsyncGenerator[int, GeneratorCloseError]:\n        yield view.length()\n    return generate()\n",
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                && error.message.contains("capture 'view'")
+        }),
+        "{errors:?}"
+    );
+}
+
+#[test]
 fn tuple_unpack_consumes_owned_affine_source_and_rejects_borrowed_source() {
     let moved = lower_errors(
         "def unpack(own pair: tuple[python.Buffer[uint8], int]) -> None:\n    view, number = pair\n    print(pair)\n",

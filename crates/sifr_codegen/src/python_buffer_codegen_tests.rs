@@ -102,6 +102,21 @@ fn borrowed_string_min_max_clone_to_owned_results() {
 }
 
 #[test]
+fn tuple_unpack_clones_borrowed_sources_and_moves_owned_sources() {
+    let source = "def borrowed(values: tuple[str, int]) -> str:\n    first, number = values\n    return first\n\ndef owned(own values: tuple[str, int]) -> str:\n    first, number = values\n    return first\n";
+    let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
+    let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
+    let rust = generate_rust(&lowered.module);
+
+    assert!(
+        rust.contains("let (first, number) = (*values).clone()"),
+        "{rust}"
+    );
+    assert!(rust.contains("let (first, number) = values;"), "{rust}");
+    syn::parse_file(&rust).expect("generated tuple unpack Rust should parse");
+}
+
+#[test]
 fn top_level_buffer_wrapper_acquires_typed_writable_export() {
     let function = buffer_function(
         vec!["builtins", "bytearray"],

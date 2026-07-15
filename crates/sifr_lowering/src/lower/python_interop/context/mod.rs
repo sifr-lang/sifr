@@ -17,8 +17,8 @@ mod declarations;
 pub(in crate::lower) use async_with::try_lower_python_async_with;
 pub(in crate::lower) use borrows::{
     lower_python_context_owned_expr, python_context_borrow_in_owned_expr,
-    reject_python_context_borrow_created_value, reject_python_context_borrow_discard,
-    reject_python_context_borrow_storage,
+    python_context_borrow_reference, reject_python_context_borrow_created_value,
+    reject_python_context_borrow_discard, reject_python_context_borrow_storage,
 };
 pub(in crate::lower) use declarations::{parse_context_method, validate_context_method_signature};
 pub(in crate::lower) use declarations::{python_context_item_kind, validate_context_class_methods};

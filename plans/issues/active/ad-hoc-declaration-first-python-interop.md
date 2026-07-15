@@ -886,7 +886,32 @@ Delivery waves:
   `11/11` in `103.07s`, runtime platform `28/28` with one gated skip, and E2E
   `131/131` with signature `7c39b8c1dd4fec7c`; all step budgets passed and the
   `800.94s` uncached overall wall time produced only the non-blocking warm
-  wall-time advisory. A fresh whole-diff review is pending.
+  wall-time advisory. Full-diff
+  [review pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-9.md)
+  verified all pass-8 runtime admission remediations, then found that the
+  compiler still overclaimed recursive equality, borrowed/star-unpack cloning,
+  and nested async-generator capture support. Those accepted-invalid paths are
+  now closed by Rust-trait-accurate recursive equality and clone capabilities,
+  `None`-only identity operators, borrowed tuple cloning versus owned tuple
+  moves, non-clone star-unpack rejection, and yield-aware free-variable capture
+  analysis with explicit nested async-generator rejection. Four native-negative
+  fixtures and one native-positive borrowed/owned tuple fixture make the
+  boundary permanent. After the requested `cargo clean` removed `28.1 GiB`,
+  focused type-system tests pass `99/99`, buffer lowering passes `32/32`, buffer
+  code generation passes `10/10`, and the complete compile-fail matrix passes
+  `486/486`; the borrowed/owned tuple fixture also builds and runs as a native
+  release binary. Full affected suites pass: lowering `742/742` with one
+  ignored, code generation `814/814`, and Python-enabled runtime `206/206`.
+  The first runtime run exposed one pre-existing timing-sensitive async shutdown
+  failure; its exact rerun and the immediate complete runtime rerun both passed.
+  Workspace Clippy is warning-free, formatting/diff checks pass, and the HIR
+  maintainability and `900`-line file-size guardrails pass over `2610` files.
+  The cold authoritative create-PR facade passed every blocking lane after the
+  clean: Python interop `11/11`, runtime platform `28/28` with one gated skip,
+  and E2E `131/131` with signature `7c39b8c1dd4fec7c`. Its `995.68s` wall time
+  produced only the expected non-blocking warm-target advisory because all 42
+  native E2E groups rebuilt from the empty cache. A fresh whole-diff review is
+  pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

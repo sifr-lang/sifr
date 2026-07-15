@@ -339,6 +339,7 @@ pub(super) fn try_lower_simple_tuple_unpack_stmt(
     targets: &[sifr_ir::HirTupleTarget],
     value: &HirExpr,
     mutated_vars: &HashSet<String>,
+    source_is_borrowed: bool,
 ) -> Option<Vec<RustStmt>> {
     if targets.is_empty() {
         return None;
@@ -347,17 +348,53 @@ pub(super) fn try_lower_simple_tuple_unpack_stmt(
         return None;
     }
     let pattern = tuple_unpack_pattern(targets, mutated_vars)?;
+    let lowered_value = tuple_unpack_source_expr(
+        value,
+        try_lower_leaf_or_name_expr(value)?,
+        source_is_borrowed,
+    );
     Some(vec![RustStmt::LetPattern {
         pattern,
-        value: try_lower_leaf_or_name_expr(value)?,
+        value: lowered_value,
     }])
+}
+
+fn tuple_unpack_source_expr(
+    value: &HirExpr,
+    lowered_value: RustExpr,
+    source_is_borrowed: bool,
+) -> RustExpr {
+    if source_is_borrowed
+        && matches!(value, HirExpr::Name { ty, .. } if ty.ownership() == sifr_type_system::OwnershipKind::Move)
+    {
+        RustExpr::Clone(Box::new(RustExpr::Paren(Box::new(RustExpr::Deref(
+            Box::new(lowered_value),
+        )))))
+    } else {
+        lowered_value
+    }
+}
+
+pub(crate) fn tuple_unpack_source_is_borrowed(
+    value: &HirExpr,
+    borrowed_params: &HashSet<String>,
+    mut_borrowed_params: &HashSet<String>,
+) -> bool {
+    matches!(
+        value,
+        HirExpr::Name { name, .. }
+            if borrowed_params.contains(name) || mut_borrowed_params.contains(name)
+    )
 }
 
 pub(crate) fn lower_tuple_unpack_targets(
     targets: &[sifr_ir::HirTupleTarget],
+    value: &HirExpr,
     lowered_value: RustExpr,
     mutated_vars: &HashSet<String>,
+    source_is_borrowed: bool,
 ) -> Vec<RustStmt> {
+    let lowered_value = tuple_unpack_source_expr(value, lowered_value, source_is_borrowed);
     if targets.iter().all(|target| !target.rebind_existing) {
         if let Some(pattern) = tuple_unpack_pattern(targets, mutated_vars) {
             return vec![RustStmt::LetPattern {

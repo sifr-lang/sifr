@@ -20,6 +20,12 @@ pub(in crate::lower) use signatures_and_effects::*;
 mod python_buffer_annotations;
 use python_buffer_annotations::resolve_python_buffer_annotation;
 mod async_generator_validation;
-use async_generator_validation::reject_affine_async_generator_boundary;
+pub(in crate::lower) use async_generator_validation::{
+    reject_declared_async_generator_boundary, reject_unsupported_nested_async_generator,
+};
+mod function_exit_validation;
+use function_exit_validation::{
+    reject_live_join_sets_at_function_exit, reject_live_must_use_bindings_at_function_exit,
+};
 mod annotations_and_function_lowering;
 pub(in crate::lower) use annotations_and_function_lowering::*;

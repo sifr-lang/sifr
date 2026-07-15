@@ -24,7 +24,8 @@ pub(super) use parameters::{parameter_metadata, receiver_is_owned};
 pub(super) use target::{decorator_path, invalid_target, parse_path as parse_target_path};
 
 pub(in crate::lower) use context::{
-    lower_python_context_owned_expr, python_context_borrow_in_owned_expr, python_context_item_kind,
+    lower_python_context_owned_expr, python_context_borrow_in_owned_expr,
+    python_context_borrow_reference, python_context_item_kind,
     reject_python_context_borrow_created_value, reject_python_context_borrow_discard,
     reject_python_context_borrow_storage, try_lower_python_async_with,
     validate_context_class_methods,

@@ -1,0 +1,7 @@
+# expect-error: SIFR-TYPE-0005
+class CallbackHolder:
+    callback: Callable[[int], int]
+
+def unpack_holder(values: tuple[CallbackHolder, int]) -> CallbackHolder:
+    holder, number = values
+    return holder

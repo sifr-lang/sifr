@@ -210,7 +210,16 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
             ctx,
         ),
         HirStmt::TupleUnpack { targets, value } => {
-            try_lower_simple_tuple_unpack_stmt(targets, value, bindings.mutated_vars)
+            let source_is_borrowed = matches!(
+                value,
+                HirExpr::Name { name, .. } if bindings.borrowed_params.contains(name)
+            );
+            try_lower_simple_tuple_unpack_stmt(
+                targets,
+                value,
+                bindings.mutated_vars,
+                source_is_borrowed,
+            )
         }
         HirStmt::StarUnpack {
             before,

@@ -203,6 +203,14 @@ fn collect_referenced_names_in_expr(expr: &Expr, names: &mut HashSet<String>) {
         Expr::Await(await_expr) => {
             collect_referenced_names_in_expr(await_expr.value.as_ref(), names);
         }
+        Expr::Yield(yield_expr) => {
+            if let Some(value) = &yield_expr.value {
+                collect_referenced_names_in_expr(value, names);
+            }
+        }
+        Expr::YieldFrom(yield_from) => {
+            collect_referenced_names_in_expr(yield_from.value.as_ref(), names);
+        }
         _ => {}
     }
 }

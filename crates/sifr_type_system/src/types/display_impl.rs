@@ -18,7 +18,7 @@ impl std::fmt::Display for Type {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{FixedIntType, FunctionType, IterationCapability, OwnershipKind};
+    use crate::{FixedIntType, FunctionType, IterationCapability, OwnershipKind, ParamConvention};
 
     #[test]
     fn test_ownership_primitives_are_copy() {
@@ -334,6 +334,26 @@ mod tests {
         assert!(!recursive.contains_affine_resource());
         assert!(recursive.supports_derived_clone());
         assert!(recursive.supports_structural_equality());
+    }
+
+    #[test]
+    fn test_rust_trait_object_capabilities_are_not_overstated() {
+        let callable = Type::Callable(
+            vec![Type::Int],
+            vec![ParamConvention::own()],
+            Box::new(Type::Int),
+        );
+        let holder = Type::Class {
+            name: "Holder".to_string(),
+            fields: vec![("callback".to_string(), callable)],
+            methods: vec![],
+            parent_class: None,
+        };
+
+        for ty in [Type::Any, Type::Unknown, holder] {
+            assert!(!ty.supports_derived_clone(), "{ty:?}");
+            assert!(!ty.supports_structural_equality(), "{ty:?}");
+        }
     }
 
     #[test]

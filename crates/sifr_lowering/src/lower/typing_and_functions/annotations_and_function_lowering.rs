@@ -3,7 +3,8 @@ use super::{
     first_await_range_in_stmts, first_yield_range_in_stmts, format_type_name,
     function_body_contains_yield, infer_function_return_type, invalid_type_annotation,
     is_valid_error_type, lower_expr, lower_stmts, make_union, ownership_diagnostics,
-    reject_affine_async_generator_boundary, reject_borrowed_affine_generator_params,
+    reject_borrowed_affine_generator_params, reject_declared_async_generator_boundary,
+    reject_live_join_sets_at_function_exit, reject_live_must_use_bindings_at_function_exit,
     reserved_integer_width_name, resolve_type_annotation, str, substitute_type_vars, unknown_type,
     workload_annotations, DiagnosticCode, Expr, FunctionType, HashMap, HirFunction, HirParam,
     LowerCtx, MethodKind, Number, Operator, OwnershipKind, ParamConvention, Ranged,
@@ -655,7 +656,13 @@ pub(in crate::lower) fn lower_function(
     if !skips_normal_body_lowering && effective_is_async {
         if is_async_generator {
             if let Some(yield_range) = first_yield_range_in_stmts(&func.body) {
-                reject_affine_async_generator_boundary(&params, &ft.return_type, yield_range, ctx);
+                reject_declared_async_generator_boundary(
+                    func.name.as_str(),
+                    &params,
+                    &ft.return_type,
+                    yield_range,
+                    ctx,
+                );
                 for param in &params {
                     if param.convention.is_mut_borrow()
                         && param.ty.ownership() == OwnershipKind::Move
@@ -827,56 +834,6 @@ pub(in crate::lower) fn lower_function(
         compiler_intrinsic,
         type_params,
     })
-}
-
-fn reject_live_join_sets_at_function_exit(func: &StmtFunctionDef, ctx: &mut LowerCtx) {
-    let mut live_sets = ctx
-        .live_join_set_bindings
-        .iter()
-        .filter(|name| !ctx.scope.is_moved(name))
-        .cloned()
-        .collect::<Vec<_>>();
-    live_sets.sort();
-    for name in live_sets {
-        ctx.error_with_code_at(
-            DiagnosticCode::OWN_USE_AFTER_MOVE,
-            format!(
-                "JoinSet binding '{name}' accepted task handles and must be consumed with await {name}.join_all() or await {name}.cancel_all() before function exit"
-            ),
-            func.name.range(),
-        );
-    }
-    ctx.live_join_set_bindings.clear();
-    ctx.join_set_terminal_awaitables.clear();
-}
-
-fn reject_live_must_use_bindings_at_function_exit(func: &StmtFunctionDef, ctx: &mut LowerCtx) {
-    let mut live = ctx
-        .live_must_use_bindings
-        .iter()
-        .filter(|(name, _)| ctx.scope.lookup(name.as_str()).is_some() && !ctx.scope.is_moved(name))
-        .map(|(name, obligation)| (name.clone(), obligation.clone()))
-        .collect::<Vec<_>>();
-    live.sort();
-    for (name, obligation) in live {
-        let requirement = match obligation.kind {
-            crate::lower::must_use_obligations::MustUseObligationKind::ContextOnly => {
-                "must be consumed by `with` before function exit"
-            }
-            crate::lower::must_use_obligations::MustUseObligationKind::AsyncContextOnly => {
-                "must be consumed by `async with` before function exit"
-            }
-            crate::lower::must_use_obligations::MustUseObligationKind::CloseLike => {
-                "must be closed or transferred before function exit"
-            }
-        };
-        ctx.error_with_code_at(
-            DiagnosticCode::OWN_USE_AFTER_MOVE,
-            format!("must-use binding '{name}' owns {obligation} and {requirement}"),
-            func.name.range(),
-        );
-    }
-    ctx.live_must_use_bindings.clear();
 }
 
 pub(super) fn requires_exhaustive_return_annotation(

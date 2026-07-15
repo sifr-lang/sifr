@@ -5,6 +5,8 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 mod check;
+#[cfg(test)]
+mod check_equality_capability_tests;
 mod collection_capabilities;
 pub mod infer;
 pub mod literal;

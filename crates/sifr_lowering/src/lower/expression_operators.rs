@@ -1,5 +1,8 @@
 use super::arithmetic_warnings::check_int_overflow_risk;
-use super::empty_collection_refinement::refine_empty_set_binding_expr;
+use super::empty_collection_refinement::{
+    refine_empty_dict_index_comparison_expr, refine_empty_dict_membership_expr,
+    refine_empty_set_binding_expr,
+};
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
 use super::integer_failure_diagnostics::exact_int_division_requires_handling;
@@ -13,6 +16,25 @@ use num_bigint::BigInt;
 use ruff_text_size::Ranged;
 use sifr_python_ast::{CmpOp, ExprBinOp, ExprCompare, ExprUnaryOp, Operator, UnaryOp};
 use sifr_type_system::{type_check_binary_op, type_check_comparison, type_check_unary_op, Type};
+
+fn is_none_identity_comparison(left: &Type, right: &Type) -> bool {
+    matches!(left.resolve_alias(), Type::None) || matches!(right.resolve_alias(), Type::None)
+}
+
+fn is_provisional_empty_dict_membership(
+    collection: &HirExpr,
+    element_ty: &Type,
+    candidate_ty: &Type,
+) -> bool {
+    matches!(collection, HirExpr::Name { .. })
+        && candidate_ty.supports_structural_equality()
+        && matches!(
+            collection.ty().resolve_alias(),
+            Type::Dict(key, _)
+                if matches!(key.resolve_alias(), Type::Any | Type::Unknown)
+                    && matches!(element_ty.resolve_alias(), Type::Any | Type::Unknown)
+        )
+}
 
 /// Map a binary operator to its corresponding dunder method name.
 fn op_to_dunder(op: &str) -> Option<&'static str> {
@@ -286,6 +308,7 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
             CmpOp::In => {
                 let mut collection = lower_expr(&cmp.comparators[0], ctx)?;
                 collection = refine_empty_set_binding_expr(collection, left.ty().clone(), ctx);
+                collection = refine_empty_dict_membership_expr(collection, left.ty().clone(), ctx);
                 let collection_ty = collection.ty().clone();
                 if let Some(elem_ty) = collection_ty.contains_element_type() {
                     if elem_ty.contains_affine_resource() || left.ty().contains_affine_resource() {
@@ -293,6 +316,21 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
                             sifr_diagnostics::DiagnosticCode::PYZC_INVALID_DECLARATION,
                             "membership is unavailable for values containing affine Python buffers because it requires reusable structural equality"
                                 .to_string(),
+                            cmp.range(),
+                        );
+                        return None;
+                    }
+                    if (!elem_ty.supports_structural_equality()
+                        || !left.ty().supports_structural_equality())
+                        && !is_provisional_empty_dict_membership(&collection, &elem_ty, left.ty())
+                    {
+                        ctx.error_with_code_at(
+                            sifr_diagnostics::DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                            format!(
+                                "membership requires structural equality, which is unavailable for '{}' and '{}'",
+                                left.ty().display_name(),
+                                elem_ty.display_name()
+                            ),
                             cmp.range(),
                         );
                         return None;
@@ -326,6 +364,7 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
             CmpOp::NotIn => {
                 let mut collection = lower_expr(&cmp.comparators[0], ctx)?;
                 collection = refine_empty_set_binding_expr(collection, left.ty().clone(), ctx);
+                collection = refine_empty_dict_membership_expr(collection, left.ty().clone(), ctx);
                 let collection_ty = collection.ty().clone();
                 if let Some(elem_ty) = collection_ty.contains_element_type() {
                     if elem_ty.contains_affine_resource() || left.ty().contains_affine_resource() {
@@ -333,6 +372,21 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
                             sifr_diagnostics::DiagnosticCode::PYZC_INVALID_DECLARATION,
                             "membership is unavailable for values containing affine Python buffers because it requires reusable structural equality"
                                 .to_string(),
+                            cmp.range(),
+                        );
+                        return None;
+                    }
+                    if (!elem_ty.supports_structural_equality()
+                        || !left.ty().supports_structural_equality())
+                        && !is_provisional_empty_dict_membership(&collection, &elem_ty, left.ty())
+                    {
+                        ctx.error_with_code_at(
+                            sifr_diagnostics::DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                            format!(
+                                "membership requires structural equality, which is unavailable for '{}' and '{}'",
+                                left.ty().display_name(),
+                                elem_ty.display_name()
+                            ),
                             cmp.range(),
                         );
                         return None;
@@ -411,8 +465,38 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
         } else {
             right = retag_numeric_sentinel_name_expr(right, ctx);
         }
+        let right_ty = right.ty().clone();
+        left = refine_empty_dict_index_comparison_expr(left, &right_ty, ctx);
+        let left_ty = left.ty().clone();
+        right = refine_empty_dict_index_comparison_expr(right, &left_ty, ctx);
 
-        if op_str != "is" && op_str != "is not" {
+        if let Some(borrowed) = super::python_interop::python_context_borrow_reference(&left, ctx)
+            .or_else(|| super::python_interop::python_context_borrow_reference(&right, ctx))
+        {
+            ctx.error_with_code_at(
+                sifr_diagnostics::DiagnosticCode::PYCTX_INVALID_DECLARATION,
+                format!(
+                    "invalid Python context declaration: entered binding '{borrowed}' is a context-scoped borrow and cannot participate in a captured comparison"
+                ),
+                comparator.range(),
+            );
+            return None;
+        }
+
+        if op_str == "is" || op_str == "is not" {
+            if !is_none_identity_comparison(left.ty(), right.ty()) {
+                ctx.error_with_code_at(
+                    sifr_diagnostics::DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+                    format!(
+                        "'{op_str}' is only available for identity checks against None; use structural equality for '{}' and '{}'",
+                        left.ty().display_name(),
+                        right.ty().display_name()
+                    ),
+                    comparator.range(),
+                );
+                return None;
+            }
+        } else {
             if let Err((code, message)) = type_check_comparison(left.ty(), op_str, right.ty()) {
                 let has_overload = match left.ty() {
                     Type::Class { methods, .. } => {
