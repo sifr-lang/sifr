@@ -133,7 +133,7 @@ pub(super) fn lower_regular_call(
             if convention.is_owned() {
                 // Own convention transfers every affine candidate contained in
                 // a conditional or wrapper expression.
-                consume_owned_value(arg, ctx);
+                consume_owned_value(arg, call.arguments.args[i].range(), ctx);
             }
             // Borrow/MutBorrow: no move, variable remains usable
         }
@@ -429,7 +429,12 @@ pub(super) fn lower_regular_call(
             .map(|(_, _, c)| *c)
             .unwrap_or(ParamConvention::borrow());
         if convention.is_owned() {
-            consume_owned_value(arg, ctx);
+            let range = arg_ranges
+                .get(i)
+                .copied()
+                .flatten()
+                .unwrap_or_else(|| call.range());
+            consume_owned_value(arg, range, ctx);
         }
     }
 

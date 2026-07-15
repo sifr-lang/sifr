@@ -370,7 +370,7 @@ pub(in crate::lower) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Optio
                 let mut args = Vec::new();
                 for arg in &call.arguments.args {
                     let expr = lower_expr(arg, ctx)?;
-                    consume_affine_value_name(&expr, ctx);
+                    consume_affine_value_name(&expr, arg.range(), ctx);
                     args.push(expr);
                 }
                 return Some(HirExpr::ConstructorCall {
@@ -421,7 +421,7 @@ pub(in crate::lower) fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) 
         } else {
             elem_ty = Some(ty);
         }
-        consume_affine_value_name(&expr, ctx);
+        consume_affine_value_name(&expr, elt.range(), ctx);
         elements.push(expr);
     }
 
@@ -447,7 +447,7 @@ pub(in crate::lower) fn lower_set_literal(set: &ExprSet, ctx: &mut LowerCtx) -> 
         } else {
             elem_ty = Some(ty);
         }
-        consume_affine_value_name(&expr, ctx);
+        consume_affine_value_name(&expr, elt.range(), ctx);
         elements.push(expr);
     }
 
@@ -514,7 +514,7 @@ pub(in crate::lower) fn lower_dict_literal(dict: &ExprDict, ctx: &mut LowerCtx) 
         } else {
             val_ty = Some(vt);
         }
-        consume_affine_value_name(&val, ctx);
+        consume_affine_value_name(&val, item.value.range(), ctx);
         values.push(val);
     }
 
@@ -539,7 +539,7 @@ pub(in crate::lower) fn lower_tuple_literal(
     for elt in &tuple.elts {
         let expr = lower_expr(elt, ctx)?;
         elem_types.push(expr.ty().clone());
-        consume_affine_value_name(&expr, ctx);
+        consume_affine_value_name(&expr, elt.range(), ctx);
         elements.push(expr);
     }
 
@@ -551,13 +551,21 @@ pub(in crate::lower) fn lower_tuple_literal(
     })
 }
 
-pub(in crate::lower) fn consume_affine_value_name(expr: &HirExpr, ctx: &mut LowerCtx) {
+pub(in crate::lower) fn consume_affine_value_name(
+    expr: &HirExpr,
+    range: ruff_text_size::TextRange,
+    ctx: &mut LowerCtx,
+) {
     if !expr.ty().contains_affine_resource() {
         return;
     }
     match expr {
         HirExpr::Name { name, .. } => {
-            ctx.mark_moved_with_flow(name);
+            if ctx.borrowed_params.contains(name) {
+                ownership_diagnostics::borrowed_affine_parameter_escape(ctx, name, "move", range);
+            } else {
+                ctx.mark_moved_with_flow(name);
+            }
         }
         HirExpr::IfExpr {
             then_expr,
@@ -567,24 +575,37 @@ pub(in crate::lower) fn consume_affine_value_name(expr: &HirExpr, ctx: &mut Lowe
             // Only one branch moves at runtime, but both candidate bindings
             // must be unavailable afterward because the chosen path is not a
             // compile-time ownership fact.
-            consume_affine_value_name(then_expr, ctx);
-            consume_affine_value_name(else_expr, ctx);
+            consume_affine_value_name(then_expr, range, ctx);
+            consume_affine_value_name(else_expr, range, ctx);
         }
         HirExpr::OkWrap { value, .. }
         | HirExpr::ErrWrap { value, .. }
         | HirExpr::QuestionMark { expr: value, .. }
-        | HirExpr::WalrusExpr { value, .. } => consume_affine_value_name(value, ctx),
+        | HirExpr::WalrusExpr { value, .. } => consume_affine_value_name(value, range, ctx),
         _ => {}
     }
 }
 
-pub(in crate::lower) fn consume_owned_value(expr: &HirExpr, ctx: &mut LowerCtx) {
+pub(in crate::lower) fn consume_owned_value(
+    expr: &HirExpr,
+    range: ruff_text_size::TextRange,
+    ctx: &mut LowerCtx,
+) {
     if let HirExpr::Name { name, ty } = expr {
         if ty.ownership() == sifr_type_system::OwnershipKind::Move {
-            ctx.mark_moved_with_flow(name);
+            if ty.contains_affine_resource() && ctx.borrowed_params.contains(name) {
+                ownership_diagnostics::borrowed_affine_parameter_escape(
+                    ctx,
+                    name,
+                    "pass as an owned argument",
+                    range,
+                );
+            } else {
+                ctx.mark_moved_with_flow(name);
+            }
         }
     } else {
-        consume_affine_value_name(expr, ctx);
+        consume_affine_value_name(expr, range, ctx);
     }
 }
 

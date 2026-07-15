@@ -300,7 +300,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
     let value_ty = value.ty().clone();
     pyinterop::reject_python_context_borrow_storage(&value, assign.value.range(), ctx);
 
-    consume_owned_value(&value, ctx);
+    consume_owned_value(&value, assign.value.range(), ctx);
 
     // Check if variable already exists
     if should_treat_as_existing_binding {

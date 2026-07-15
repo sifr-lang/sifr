@@ -244,7 +244,7 @@ pub(in crate::lower) fn lower_stmt(
                             val.range(),
                         );
                     }
-                    consume_affine_value_name(&value, ctx);
+                    consume_affine_value_name(&value, val.range(), ctx);
                     return Some(HirStmt::Yield { value });
                 }
                 statement_diagnostics::unsupported_form(

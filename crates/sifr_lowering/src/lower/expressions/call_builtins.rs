@@ -624,6 +624,14 @@ pub(super) fn lower_unshadowed_builtin_call(
                     );
                 return None;
             };
+            if super::super::statement_diagnostics::reject_affine_iterator_builtin(
+                ctx,
+                "min",
+                &elem_ty,
+                call.arguments.args[0].range(),
+            ) {
+                return None;
+            }
             return Some(CallLowering::Lowered(HirExpr::Call {
                 func: "min".to_string(),
                 args: vec![arg],
@@ -687,6 +695,14 @@ pub(super) fn lower_unshadowed_builtin_call(
                     );
                 return None;
             };
+            if super::super::statement_diagnostics::reject_affine_iterator_builtin(
+                ctx,
+                "max",
+                &elem_ty,
+                call.arguments.args[0].range(),
+            ) {
+                return None;
+            }
             return Some(CallLowering::Lowered(HirExpr::Call {
                 func: "max".to_string(),
                 args: vec![arg],

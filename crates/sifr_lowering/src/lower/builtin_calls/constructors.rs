@@ -6,7 +6,7 @@ use sifr_ir::CompilerIntrinsicId;
 use sifr_python_ast::{Expr, ExprCall, Number};
 use sifr_type_system::{make_union, Type};
 
-use super::expressions::lower_expr;
+use super::expressions::{consume_affine_value_name, lower_expr};
 use super::LowerCtx;
 
 pub(in crate::lower) const DEFAULTDICT_INT_ALIAS: &str = "__sifr_defaultdict_int";
@@ -239,6 +239,7 @@ pub(in crate::lower) fn lower_tuple_constructor_call(
             for element in &tuple.elts {
                 let lowered = lower_expr(element, ctx)?;
                 elem_types.push(lowered.ty().clone());
+                consume_affine_value_name(&lowered, element.range(), ctx);
                 elements.push(lowered);
             }
             Some(HirExpr::TupleLiteral {
@@ -252,6 +253,7 @@ pub(in crate::lower) fn lower_tuple_constructor_call(
             for element in &list.elts {
                 let lowered = lower_expr(element, ctx)?;
                 elem_types.push(lowered.ty().clone());
+                consume_affine_value_name(&lowered, element.range(), ctx);
                 elements.push(lowered);
             }
             Some(HirExpr::TupleLiteral {
@@ -274,6 +276,7 @@ pub(in crate::lower) fn lower_tuple_constructor_call(
         [arg_expr] => {
             let lowered = lower_expr(arg_expr, ctx)?;
             if matches!(lowered.ty().resolve_alias(), Type::Tuple(_)) {
+                consume_affine_value_name(&lowered, arg_expr.range(), ctx);
                 Some(lowered)
             } else {
                 ctx.error_with_code_at(
@@ -322,7 +325,9 @@ pub(in crate::lower) fn lower_dict_constructor_call(
             return None;
         };
         keyword_keys.push(HirExpr::StringLiteral(name.to_string()));
-        keyword_values.push(lower_expr(&keyword.value, ctx)?);
+        let value = lower_expr(&keyword.value, ctx)?;
+        consume_affine_value_name(&value, keyword.value.range(), ctx);
+        keyword_values.push(value);
     }
 
     let keyword_value_ty = if keyword_values.is_empty() {
@@ -383,6 +388,15 @@ pub(in crate::lower) fn lower_dict_constructor_call(
                 );
                 return None;
             };
+            if arg.ty().contains_affine_resource() {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYZC_INVALID_DECLARATION,
+                    "dict() cannot copy keys or values containing affine Python buffers"
+                        .to_string(),
+                    arg_expr.range(),
+                );
+                return None;
+            }
             let merged_ty = Type::Dict(
                 Box::new(make_union(vec![(*key_ty).clone(), Type::Str])),
                 Box::new(make_union(vec![(*value_ty).clone(), keyword_value_ty])),

@@ -7,7 +7,7 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented and its pass-4 remediation is authoritatively validated
+Wave 2 is implemented and its pass-5 remediation is authoritatively validated
 and awaiting a fresh full-diff review in
 [PR #2988](https://github.com/sifr-lang/sifr/pull/2988). Typed
 synchronous and asynchronous declarations and context managers run on the
@@ -811,14 +811,24 @@ Delivery waves:
   exporter-footprint conflict admission, closed affine iterator and generator
   paths, recursive conditional moves, collection capability checks, permanent
   compiler/runtime regression coverage, and corrected architecture text.
-  Focused lowering contracts pass `23/23`, focused runtime buffer operations
-  pass `15/15`, full code generation passes `810/810`, lowering passes `733/733`
-  with one ignored, type system passes `97/97`, and the Python-enabled runtime
-  passes `203/203`. After `cargo clean` removed a provenance-tainted macOS build
-  tree, the cold authoritative create-PR facade passed every blocking lane:
-  Python interop `11/11`, runtime platform `28/28` with one gated skip, and E2E
-  `131/131` with signature `7c39b8c1dd4fec7c`. A fresh full-diff review is
-  pending.
+  Full-diff
+  [review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-5.md)
+  cleared those runtime and documentation corrections but found borrowed
+  affine escape through owned calls and aggregates, missing `min`/`max` and
+  dynamic collection capability checks, and untracked tuple/dict/list-`+=`
+  moves. Those compiler paths are now closed through one range-aware affine
+  ownership-transfer gate, operation-specific dynamic capability validation,
+  complete constructor and augmented-assignment moves, and permanent negative
+  coverage. Focused lowering contracts pass `26/26`, focused runtime buffer
+  operations pass `15/15`, full code generation passes `810/810`, lowering
+  passes `736/736` with one ignored, type system passes `97/97`, and the
+  Python-enabled runtime passes `203/203`. After `cargo clean` removed a
+  provenance-tainted macOS build tree, a cold and a subsequent warm
+  authoritative create-PR facade passed every blocking lane: Python interop
+  `11/11`, runtime platform `28/28` with one gated skip, and E2E `131/131` with
+  signature `7c39b8c1dd4fec7c`. The warm facade completed in `415.80s`; all lane
+  budgets passed, with only the non-blocking warm wall-time advisory. A fresh
+  full-diff review is pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

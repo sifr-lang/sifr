@@ -399,6 +399,24 @@ fn borrowed_affine_buffer_parameter_reassignment_is_rejected_before_clone_codege
 }
 
 #[test]
+fn borrowed_affine_buffers_cannot_enter_owned_calls_or_aggregate_returns() {
+    for source in [
+        "def sink(own value: python.Buffer[uint8]) -> None:\n    return None\n\ndef escape(view: python.Buffer[uint8]) -> None:\n    sink(view)\n",
+        "class Holder:\n    view: python.Buffer[uint8]\n\ndef escape(view: python.Buffer[uint8]) -> Holder:\n    return Holder(view)\n",
+        "def escape(view: python.Buffer[uint8]) -> list[python.Buffer[uint8]]:\n    return [view]\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                    && error.message.contains("borrowed affine Python buffer")
+            }),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
 fn affine_buffer_conditional_assignment_consumes_every_candidate() {
     let errors = lower_errors(
         "def choose(own left: python.Buffer[uint8], own right: python.Buffer[uint8], flag: bool) -> None:\n    selected: python.Buffer[uint8] = left if flag else right\n    print(left.length())\n    print(right.length())\n",
@@ -446,17 +464,55 @@ fn affine_and_dynamic_generic_collection_capabilities_fail_during_lowering() {
 }
 
 #[test]
+fn dynamic_collection_clone_and_projection_capabilities_fail_during_lowering() {
+    for source in [
+        "def concatenate(left: list[Any], right: list[Any]) -> list[Any]:\n    return left + right\n",
+        "def order(values: list[Any]) -> list[Any]:\n    return sorted(values)\n",
+        "def total(values: list[Any]) -> Any:\n    return sum(values)\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                    && error.message.contains("statically known")
+            }),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
 fn affine_buffer_copying_constructors_and_sorting_are_rejected() {
     for source in [
         "def duplicate(values: list[python.Buffer[uint8]]) -> list[python.Buffer[uint8]]:\n    return list(values)\n",
         "def duplicate(values: dict[str, python.Buffer[uint8]]) -> dict[str, python.Buffer[uint8]]:\n    return dict(values)\n",
+        "def duplicate(values: dict[str, python.Buffer[uint8]], own extra: python.Buffer[uint8]) -> dict[str, python.Buffer[uint8]]:\n    return dict(values, extra=extra)\n",
         "def order(values: list[python.Buffer[uint8]]) -> list[python.Buffer[uint8]]:\n    return sorted(values)\n",
+        "def minimum(values: list[python.Buffer[uint8]]) -> python.Buffer[uint8] | None:\n    return min(values)\n",
+        "def maximum(values: list[python.Buffer[uint8]]) -> python.Buffer[uint8] | None:\n    return max(values)\n",
     ] {
         let errors = lower_errors(source);
         assert!(
             errors
                 .iter()
                 .any(|error| error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn affine_constructor_and_list_augassign_moves_are_tracked() {
+    for source in [
+        "def pack(own view: python.Buffer[uint8]) -> None:\n    retained: tuple[python.Buffer[uint8]] = tuple((view,))\n    print(view.length())\n",
+        "def pack(own view: python.Buffer[uint8]) -> None:\n    retained: dict[str, python.Buffer[uint8]] = dict(view=view)\n    print(view.length())\n",
+        "def merge(own right: list[python.Buffer[uint8]]) -> None:\n    left: list[python.Buffer[uint8]] = []\n    left += right\n    print(len(right))\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
             "{source}: {errors:?}"
         );
     }

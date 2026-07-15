@@ -426,7 +426,7 @@ pub(in crate::lower) fn lower_ann_assign(
             }
         }
     } else {
-        consume_affine_value_name(&value, ctx);
+        consume_affine_value_name(&value, initializer_range, ctx);
     }
 
     ctx.empty_dict_specializations.remove(&name);

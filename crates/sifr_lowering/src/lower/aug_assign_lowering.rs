@@ -9,7 +9,7 @@ use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::container_literal_specialization::{
     validate_subscript_augassign_target, SubscriptAugAssignTarget,
 };
-use super::expressions::lower_expr;
+use super::expressions::{consume_owned_value, lower_expr};
 use super::integer_failure_diagnostics::exact_int_augassign_requires_handling;
 use super::name_diagnostics;
 use super::python_interop::lower_python_context_owned_expr;
@@ -358,7 +358,9 @@ pub(in crate::lower) fn lower_aug_assign(
     if base_op == "+" {
         match (&var_ty, value.ty()) {
             (Type::Str, Type::Str) => {}
-            (Type::List(_), Type::List(_)) => {}
+            (Type::List(left), Type::List(right)) if left == right => {
+                consume_owned_value(&value, aug.value.range(), ctx);
+            }
             (Type::Bytes, Type::Bytes) => {}
             _ => {
                 if let Err((code, message)) = type_check_binary_op(&var_ty, base_op, value.ty()) {

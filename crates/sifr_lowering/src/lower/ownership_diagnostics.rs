@@ -84,6 +84,21 @@ pub(in crate::lower) fn borrowed_parameter_return_escape(
     );
 }
 
+pub(in crate::lower) fn borrowed_affine_parameter_escape(
+    ctx: &mut LowerCtx,
+    name: &str,
+    action: &str,
+    range: TextRange,
+) {
+    ctx.error_with_code_at(
+        DiagnosticCode::PYZC_INVALID_DECLARATION,
+        format!(
+            "cannot {action} borrowed affine Python buffer parameter '{name}'; accept it with `own` before transferring the resource"
+        ),
+        range,
+    );
+}
+
 pub(in crate::lower) fn sync_guard_return_escape(
     ctx: &mut LowerCtx,
     label: &str,
