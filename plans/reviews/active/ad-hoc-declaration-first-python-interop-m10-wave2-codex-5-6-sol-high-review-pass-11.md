@@ -1,7 +1,9 @@
 # M10 Wave 2 review pass 11
 
-Reviewer: Codex CLI `gpt-5.6-sol`, high reasoning, fast service tier  
-Scope: complete `main...HEAD` Wave 2 implementation after pass-10 remediation  
+Reviewer: Codex CLI `gpt-5.6-sol`, high reasoning, fast service tier
+
+Scope: complete `main...HEAD` Wave 2 implementation after pass-10 remediation
+
 Verdict: **CHANGES REQUIRED**
 
 The reviewer confirmed the direct pass-10 cases, then found five High defects in
