@@ -114,6 +114,7 @@ fn test_structured_expr_path_handles_registry_method_call_expression() {
 #[test]
 fn test_structured_with_context_manager_target_is_mutable_when_body_mutates_it() {
     let handle_ty = Type::Class {
+        identity: None,
         name: "TextFileHandle".to_string(),
         fields: vec![],
         methods: vec![],

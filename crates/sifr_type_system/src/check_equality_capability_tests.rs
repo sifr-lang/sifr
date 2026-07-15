@@ -29,6 +29,7 @@ fn equality_rejects_python_buffers_through_nested_aggregates() {
     let optional = Type::Union(vec![Type::None, buffer.clone()]);
     let collection = Type::List(Box::new(optional.clone()));
     let record = Type::Class {
+        identity: None,
         name: "BufferRecord".to_string(),
         fields: vec![("views".to_string(), collection.clone())],
         methods: vec![],

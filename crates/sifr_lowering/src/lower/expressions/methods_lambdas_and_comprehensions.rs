@@ -366,12 +366,14 @@ pub(in crate::lower) fn resolve_method_type(
             resolve_python_buffer_method_type(element, method, args, arg_ranges, method_range, ctx)
         }
         Type::Class {
+            identity,
             name,
             fields,
             methods,
             ..
         } => resolve_class_method_type(
             ClassMethodSurface {
+                identity: identity.as_ref(),
                 name,
                 fields,
                 methods,

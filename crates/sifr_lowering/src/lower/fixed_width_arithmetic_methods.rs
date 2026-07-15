@@ -71,6 +71,7 @@ fn overflow_error_type(ctx: &LowerCtx) -> Type {
         .get("OverflowError")
         .cloned()
         .unwrap_or(Type::Class {
+            identity: None,
             name: "OverflowError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: vec![],

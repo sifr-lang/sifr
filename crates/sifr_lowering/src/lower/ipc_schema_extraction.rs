@@ -116,6 +116,7 @@ mod tests {
 
     fn generated_echo_descriptor() -> IpcSchemaDescriptor {
         let request = Type::Class {
+            identity: None,
             name: "EchoRequest".to_string(),
             fields: vec![
                 ("message".to_string(), Type::Str),
@@ -332,6 +333,7 @@ mod tests {
     #[test]
     fn extracts_unsupported_payload_evidence() {
         let process_reader = Type::Class {
+            identity: None,
             name: "PipeReader".to_string(),
             fields: vec![("_handle".to_string(), Type::Int)],
             methods: vec![],

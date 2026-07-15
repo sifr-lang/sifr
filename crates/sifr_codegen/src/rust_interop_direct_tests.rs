@@ -80,6 +80,7 @@ fn rust_interop_method_body_emits_self_handle_call() {
 #[test]
 fn emitted_direct_result_none_interop_does_not_append_ok_tail() {
     let error_ty = Type::Class {
+        identity: None,
         name: "ZipError".to_string(),
         fields: vec![("message".to_string(), Type::Str)],
         methods: Vec::new(),
@@ -169,6 +170,7 @@ fn emitted_opaque_class_is_a_sealed_runtime_handle_alias() {
 #[test]
 fn rust_interop_function_body_maps_python_error_fields_without_parent_metadata() {
     let python_error = Type::Class {
+        identity: None,
         name: "PythonError".to_string(),
         fields: vec![
             ("message".to_string(), Type::Str),
@@ -215,6 +217,7 @@ fn rust_interop_function_body_maps_python_error_fields_without_parent_metadata()
 #[test]
 fn rust_interop_function_body_adapts_sealed_python_object_callback_parameter() {
     let python_error = Type::Class {
+        identity: None,
         name: "PythonError".to_string(),
         fields: vec![
             ("message".to_string(), Type::Str),
@@ -227,6 +230,7 @@ fn rust_interop_function_body_adapts_sealed_python_object_callback_parameter() {
         parent_class: None,
     };
     let object = Type::Class {
+        identity: None,
         name: "Object".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),
@@ -289,6 +293,7 @@ fn rust_interop_function_body_adapts_sealed_python_object_callback_parameter() {
 #[test]
 fn rust_interop_function_body_converts_python_int_dict_return() {
     let python_error = Type::Class {
+        identity: None,
         name: "PythonError".to_string(),
         fields: vec![
             ("message".to_string(), Type::Str),

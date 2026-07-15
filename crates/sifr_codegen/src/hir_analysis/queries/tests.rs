@@ -86,6 +86,7 @@ fn collect_mutated_vars_marks_local_nested_function_mutborrow_call_argument() {
 #[test]
 fn collect_mutated_vars_marks_iterator_next_argument() {
     let iterator_ty = Type::Class {
+        identity: None,
         name: "CountdownIter".to_string(),
         fields: vec![],
         methods: vec![(
@@ -385,12 +386,14 @@ fn collect_mutated_vars_marks_set_update_receiver() {
 #[test]
 fn collect_mutated_vars_marks_self_for_delegated_field_class_method_call() {
     let writer_ty = Type::Class {
+        identity: None,
         name: "writer".to_string(),
         fields: vec![],
         methods: vec![],
         parent_class: None,
     };
     let holder_ty = Type::Class {
+        identity: None,
         name: "DictWriter".to_string(),
         fields: vec![("_writer".to_string(), writer_ty.clone())],
         methods: vec![],
@@ -538,6 +541,7 @@ fn body_contains_return_ignores_unreachable_return() {
 #[test]
 fn python_async_context_suppression_keeps_following_return_reachable() {
     let error_type = Type::Class {
+        identity: None,
         name: "PythonError".to_string(),
         fields: vec![],
         methods: vec![],

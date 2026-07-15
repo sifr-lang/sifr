@@ -167,6 +167,7 @@ impl Type {
                 fields,
                 methods,
                 parent_class,
+                ..
             } => {
                 if methods.iter().any(|(method, _)| method == "__eq__") {
                     return true;

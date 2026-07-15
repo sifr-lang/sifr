@@ -549,17 +549,24 @@ impl Type {
             (
                 Self::Class {
                     name: a,
+                    identity: identity_a,
                     parent_class: ref parent_a,
                     ..
                 },
-                Self::Class { name: b, .. },
+                Self::Class {
+                    name: b,
+                    identity: identity_b,
+                    ..
+                },
             ) => {
-                if a == b {
+                let identity_a = identity_a.as_ref().unwrap_or(a);
+                let identity_b = identity_b.as_ref().unwrap_or(b);
+                if identity_a == identity_b {
                     return true;
                 }
                 // `parent_class` stores the inheritance chain as `Parent|Grandparent|...`.
                 if let Some(ref chain) = parent_a {
-                    if chain.split('|').any(|ancestor| ancestor == b) {
+                    if chain.split('|').any(|ancestor| ancestor == identity_b) {
                         return true;
                     }
                 }

@@ -543,6 +543,7 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
     let table_ty = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
     let label_ty = Type::Str;
     let class_ty = Type::Class {
+        identity: None,
         name: "Bucket".to_string(),
         fields: vec![
             ("items".to_string(), items_ty.clone()),

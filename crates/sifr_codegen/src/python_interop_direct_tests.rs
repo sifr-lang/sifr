@@ -23,6 +23,7 @@ static_assertions::assert_not_impl_any!(PythonOpaqueAutoTraitProbe: Send, Sync);
 #[test]
 fn sync_wrapper_emits_complete_owned_argument_frame() {
     let error_type = Type::Class {
+        identity: None,
         name: "PythonError".to_string(),
         fields: vec![
             ("message".to_string(), Type::Str),
@@ -130,6 +131,7 @@ fn omittable_positional_parameters_are_forwarded_by_name_without_shifting() {
         return_type: Type::Result(
             Box::new(Type::Int),
             Box::new(Type::Class {
+                identity: None,
                 name: "PythonError".to_string(),
                 fields: Vec::new(),
                 methods: Vec::new(),
@@ -164,6 +166,7 @@ fn omittable_positional_parameters_are_forwarded_by_name_without_shifting() {
 fn recursive_wrapper_emits_list_dict_tuple_and_record_conversions() {
     let error_type = python_error_type();
     let record = Type::Class {
+        identity: None,
         name: "Payload".to_string(),
         fields: vec![
             ("name".to_string(), Type::Str),
@@ -245,6 +248,7 @@ fn consuming_opaque_close_emits_semantic_close_operation() {
 fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup() {
     let python_error = python_error_type();
     let handler_error = Type::Class {
+        identity: None,
         name: "HandlerError".to_string(),
         fields: vec![("message".to_string(), Type::Str)],
         methods: Vec::new(),
@@ -306,6 +310,7 @@ fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_clean
 #[test]
 fn retained_foreign_callback_is_aggregated_into_the_opaque_result_owner() {
     let subscription_type = Type::Class {
+        identity: None,
         name: "Subscription".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),
@@ -449,6 +454,7 @@ fn receiver_retained_callback_reuses_the_opaque_owner_slot() {
 #[test]
 fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it() {
     let handler_error = Type::Class {
+        identity: None,
         name: "HandlerError".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),
@@ -456,6 +462,7 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
     };
     let error_channel = Type::Union(vec![python_error_type(), handler_error.clone()]);
     let subscription_type = Type::Class {
+        identity: None,
         name: "Subscription".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),
@@ -683,6 +690,7 @@ fn callback_declaration(
 
 fn python_error_type() -> Type {
     Type::Class {
+        identity: None,
         name: "PythonError".to_string(),
         fields: vec![("message".to_string(), Type::Str)],
         methods: Vec::new(),

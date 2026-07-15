@@ -159,16 +159,20 @@ pub(in crate::lower) fn infer_type_var_bindings(
         }
         (
             Type::Class {
+                identity: p_identity,
                 name: p_name,
                 fields: p_fields,
                 ..
             },
             Type::Class {
+                identity: a_identity,
                 name: a_name,
                 fields: a_fields,
                 ..
             },
-        ) if p_name == a_name && p_fields.len() == a_fields.len() => {
+        ) if p_identity.as_ref().unwrap_or(p_name) == a_identity.as_ref().unwrap_or(a_name)
+            && p_fields.len() == a_fields.len() =>
+        {
             for ((_, p_ty), (_, a_ty)) in p_fields.iter().zip(a_fields.iter()) {
                 infer_type_var_bindings(p_ty, a_ty, bindings);
             }

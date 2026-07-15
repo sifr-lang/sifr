@@ -29,6 +29,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     {
         let msg_fields = vec![("message".to_string(), Type::Str)];
         let class_ty = Type::Class {
+            identity: None,
             name: "Error".to_string(),
             fields: msg_fields.clone(),
             methods: vec![],
@@ -48,6 +49,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     // from it, or structurally contain fields that do, cannot cross `scope.spawn`.
     {
         let class_ty = Type::Class {
+            identity: None,
             name: "NonSend".to_string(),
             fields: vec![],
             methods: vec![],
@@ -64,6 +66,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("kind".to_string(), Type::Str),
         ];
         let class_ty = Type::Class {
+            identity: None,
             name: "IOError".to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -94,6 +97,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     for &error_name in &other_mid_level_errors {
         let fields = vec![("message".to_string(), Type::Str)];
         let class_ty = Type::Class {
+            identity: None,
             name: error_name.to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -109,6 +113,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     }
     {
         let class_ty = Type::Class {
+            identity: None,
             name: "CancellationError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: vec![],
@@ -123,6 +128,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     }
     {
         let class_ty = Type::Class {
+            identity: None,
             name: "AsyncExitCause".to_string(),
             fields: vec![],
             methods: vec![],
@@ -140,6 +146,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("profile".to_string(), Type::Str),
         ];
         let class_ty = Type::Class {
+            identity: None,
             name: "JsonIntegerRangeError".to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -159,6 +166,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("limit".to_string(), Type::Int),
         ];
         let class_ty = Type::Class {
+            identity: None,
             name: "JsonLimitError".to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -185,6 +193,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     for &error_name in &io_subclasses {
         let fields = vec![("message".to_string(), Type::Str)];
         let class_ty = Type::Class {
+            identity: None,
             name: error_name.to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -208,6 +217,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("column".to_string(), Type::Int),
         ];
         let class_ty = Type::Class {
+            identity: None,
             name: "JSONDecodeError".to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -231,6 +241,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("column".to_string(), Type::Int),
         ];
         let class_ty = Type::Class {
+            identity: None,
             name: "TOMLDecodeError".to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -252,6 +263,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("detail".to_string(), Type::Str),
         ];
         let class_ty = Type::Class {
+            identity: None,
             name: "RegexError".to_string(),
             fields: fields.clone(),
             methods: vec![],

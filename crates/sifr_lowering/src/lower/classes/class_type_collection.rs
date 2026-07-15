@@ -502,6 +502,7 @@ pub(in crate::lower) fn collect_class_type(
     ctx.class_types.insert(
         class_name.clone(),
         Type::Class {
+            identity: None,
             name: class_name.clone(),
             fields: vec![],
             methods: vec![],
@@ -701,6 +702,7 @@ pub(in crate::lower) fn collect_class_type(
 
     let is_python_opaque = ctx.python_opaque_classes.contains_key(&class_name);
     let class_ty = Type::Class {
+        identity: None,
         name: class_name.clone(),
         fields: fields.clone(),
         methods: methods.clone(),

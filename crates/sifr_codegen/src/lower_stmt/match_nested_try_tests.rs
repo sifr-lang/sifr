@@ -34,6 +34,7 @@ fn lowers_simple_match_with_literal_and_wildcard_patterns() {
 #[test]
 fn lowers_match_with_class_patterns_and_captures() {
     let point_ty = Type::Class {
+        identity: None,
         name: "Point".to_string(),
         fields: vec![("x".to_string(), Type::Int), ("y".to_string(), Type::Int)],
         methods: vec![],
@@ -106,12 +107,14 @@ fn lowers_match_with_class_patterns_and_captures() {
 #[test]
 fn lowers_result_error_union_class_pattern() {
     let handler_error = Type::Class {
+        identity: None,
         name: "HandlerError".to_string(),
         fields: vec![("message".to_string(), Type::Str)],
         methods: vec![],
         parent_class: Some("Error".to_string()),
     };
     let python_error = Type::Class {
+        identity: None,
         name: "PythonError".to_string(),
         fields: vec![("message".to_string(), Type::Str)],
         methods: vec![],
@@ -345,6 +348,7 @@ fn does_not_lower_try_except_with_typed_handler() {
         handlers: vec![HirExceptHandler {
             error_type: Some("IOError".to_string()),
             error_resolved_type: Some(Type::Class {
+                identity: None,
                 name: "IOError".to_string(),
                 fields: vec![],
                 methods: vec![],

@@ -164,6 +164,7 @@ fn process_class_type(name: &str, ctx: &LowerCtx) -> Type {
         .get(name)
         .cloned()
         .unwrap_or_else(|| Type::Class {
+            identity: None,
             name: name.to_string(),
             fields: vec![("_handle".to_string(), Type::Int)],
             methods: Vec::new(),
@@ -176,6 +177,7 @@ fn process_error_type(ctx: &LowerCtx) -> Type {
         .get("ProcessError")
         .cloned()
         .unwrap_or_else(|| Type::Class {
+            identity: None,
             name: "ProcessError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: Vec::new(),
@@ -284,6 +286,7 @@ fn worker_error_type(name: &str, ctx: &LowerCtx) -> Type {
         .get(name)
         .cloned()
         .unwrap_or_else(|| Type::Class {
+            identity: None,
             name: name.to_string(),
             fields: Vec::new(),
             methods: Vec::new(),

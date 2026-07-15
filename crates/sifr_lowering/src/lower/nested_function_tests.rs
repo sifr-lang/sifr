@@ -416,3 +416,29 @@ fn top_level_match_return_inference_specializes_nested_generic_patterns() {
         .expect("choose function missing");
     assert_eq!(choose.return_type, Type::Str);
 }
+
+#[test]
+fn class_pattern_rejects_union_of_same_generic_class_specializations() {
+    let errors = lower_source(
+        "class Box[T]:\n    value: T\n\ndef choose(box: Box[int] | Box[str]):\n    match box:\n        case Box(value=x):\n            return x\n",
+    )
+    .expect_err("same-class specialization unions must be rejected before code generation");
+    assert!(errors.iter().any(|error| {
+        error
+            .message
+            .contains("union cannot contain multiple specializations")
+    }));
+}
+
+#[test]
+fn nested_class_pattern_rejects_union_of_same_generic_class_specializations() {
+    let errors = lower_source(
+        "class Inner[T]:\n    value: T\n\nclass Outer[T]:\n    inner: Inner[T]\n\ndef choose(outer: Outer[int] | Outer[str]):\n    match outer:\n        case Outer(inner=Inner(value=x)):\n            return x\n",
+    )
+    .expect_err("nested same-class specialization unions must be rejected before code generation");
+    assert!(errors.iter().any(|error| {
+        error
+            .message
+            .contains("union cannot contain multiple specializations")
+    }));
+}

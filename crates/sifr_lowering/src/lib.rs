@@ -18,6 +18,7 @@ mod scope;
 
 pub use hir_nodes::*;
 pub use lower::{
+    canonicalize_user_export_function_type, canonicalize_user_export_type,
     localize_user_import_function_type, localize_user_import_type, lower_module,
     lower_module_sysroot_private_declaration_with_externals, lower_module_sysroot_public_stdlib,
     lower_module_sysroot_public_stdlib_with_externals, lower_module_with_externals,

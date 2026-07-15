@@ -588,11 +588,13 @@ pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<Strin
         Type::Function(ft) => Type::Function(substitute_function_type(ft, bindings)),
         Type::AsyncFunction(ft) => Type::AsyncFunction(substitute_function_type(ft, bindings)),
         Type::Class {
+            identity,
             name,
             fields,
             methods,
             parent_class,
         } => Type::Class {
+            identity: identity.clone(),
             name: name.clone(),
             fields: fields
                 .iter()

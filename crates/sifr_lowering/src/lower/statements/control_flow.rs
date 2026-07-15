@@ -23,6 +23,7 @@ use crate::lower::expressions::{consume_affine_value_name, consume_owned_value};
 use crate::lower::must_use_obligations;
 use crate::lower::python_interop as pyinterop;
 use crate::lower::task_join_set_calls::record_join_set_terminal_awaitable;
+
 pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     if assign.targets.len() != 1 {
         statement_diagnostics::invalid_assignment_target(

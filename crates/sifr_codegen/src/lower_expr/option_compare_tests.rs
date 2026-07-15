@@ -702,6 +702,7 @@ pub(super) fn does_not_lower_field_access_for_non_self_name() {
         object: Box::new(HirExpr::Name {
             name: "point".to_string(),
             ty: Type::Class {
+                identity: None,
                 name: "Point".to_string(),
                 fields: vec![],
                 methods: vec![],
@@ -721,6 +722,7 @@ pub(super) fn does_not_lower_self_field_access() {
         object: Box::new(HirExpr::Name {
             name: "self".to_string(),
             ty: Type::Class {
+                identity: None,
                 name: "Point".to_string(),
                 fields: vec![],
                 methods: vec![],
@@ -740,6 +742,7 @@ pub(super) fn does_not_lower_subclass_field_access() {
         object: Box::new(HirExpr::Name {
             name: "dog".to_string(),
             ty: Type::Class {
+                identity: None,
                 name: "Dog".to_string(),
                 fields: vec![],
                 methods: vec![],

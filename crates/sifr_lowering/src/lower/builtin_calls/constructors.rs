@@ -500,6 +500,7 @@ pub(in crate::lower) fn lower_ord_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
                     .get("ValueError")
                     .cloned()
                     .unwrap_or(Type::Class {
+                        identity: None,
                         name: "ValueError".to_string(),
                         fields: vec![("message".to_string(), Type::Str)],
                         methods: vec![],
@@ -585,6 +586,7 @@ pub(in crate::lower) fn lower_chr_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
                     .get("ValueError")
                     .cloned()
                     .unwrap_or(Type::Class {
+                        identity: None,
                         name: "ValueError".to_string(),
                         fields: vec![("message".to_string(), Type::Str)],
                         methods: vec![],
@@ -847,6 +849,7 @@ pub(super) fn parse_error_type(ctx: &LowerCtx) -> Type {
         .get("ParseError")
         .cloned()
         .unwrap_or(Type::Class {
+            identity: None,
             name: "ParseError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: vec![],
@@ -859,6 +862,7 @@ pub(super) fn value_error_type(ctx: &LowerCtx) -> Type {
         .get("ValueError")
         .cloned()
         .unwrap_or(Type::Class {
+            identity: None,
             name: "ValueError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: vec![],

@@ -591,6 +591,7 @@ pub(super) fn python_error_type(ctx: &LowerCtx) -> Type {
         .get("PythonError")
         .cloned()
         .unwrap_or_else(|| Type::Class {
+            identity: None,
             name: "PythonError".to_string(),
             fields: Vec::new(),
             methods: Vec::new(),

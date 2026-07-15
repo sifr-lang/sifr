@@ -256,6 +256,7 @@ fn compile_stdlib_sources_with_sysroot(
                     ));
                 }
                 let class_ty = Type::Class {
+                    identity: None,
                     name: class.name.clone(),
                     fields: class.fields.clone(),
                     methods,
@@ -350,6 +351,7 @@ fn compile_stdlib_sources_with_sysroot(
                         (
                             ctor_params,
                             Type::Class {
+                                identity: None,
                                 name: class.name.clone(),
                                 fields: class.fields.clone(),
                                 methods: Vec::new(),

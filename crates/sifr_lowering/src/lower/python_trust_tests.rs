@@ -6,12 +6,14 @@ use std::collections::HashMap;
 
 fn python_externals() -> ExternalDefs {
     let object_ty = Type::Class {
+        identity: None,
         name: "Object".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),
         parent_class: None,
     };
     let error_ty = Type::Class {
+        identity: None,
         name: "PythonError".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),

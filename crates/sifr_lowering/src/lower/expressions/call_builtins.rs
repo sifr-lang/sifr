@@ -428,6 +428,7 @@ pub(super) fn lower_unshadowed_builtin_call(
                     .get("ParseError")
                     .cloned()
                     .unwrap_or(Type::Class {
+                        identity: None,
                         name: "ParseError".to_string(),
                         fields: vec![("message".to_string(), Type::Str)],
                         methods: vec![],
@@ -440,6 +441,7 @@ pub(super) fn lower_unshadowed_builtin_call(
                     .get("OverflowError")
                     .cloned()
                     .unwrap_or(Type::Class {
+                        identity: None,
                         name: "OverflowError".to_string(),
                         fields: vec![("message".to_string(), Type::Str)],
                         methods: vec![],
@@ -537,6 +539,7 @@ pub(super) fn lower_unshadowed_builtin_call(
                     .get("ParseError")
                     .cloned()
                     .unwrap_or(Type::Class {
+                        identity: None,
                         name: "ParseError".to_string(),
                         fields: vec![("message".to_string(), Type::Str)],
                         methods: vec![],

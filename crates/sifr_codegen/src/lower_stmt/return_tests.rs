@@ -585,6 +585,7 @@ fn lowers_self_return_in_class_scope_with_clone() {
         value: Some(HirExpr::Name {
             name: "self".to_string(),
             ty: Type::Class {
+                identity: None,
                 name: "Point".to_string(),
                 fields: vec![],
                 methods: vec![],
@@ -600,6 +601,7 @@ fn lowers_self_return_in_class_scope_with_clone() {
         &HashSet::new(),
         SimpleStmtLoweringCtx {
             return_type: Some(&Type::Class {
+                identity: None,
                 name: "Point".to_string(),
                 fields: vec![],
                 methods: vec![],

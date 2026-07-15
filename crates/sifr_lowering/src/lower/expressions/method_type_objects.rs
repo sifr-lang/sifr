@@ -211,6 +211,7 @@ pub(super) fn resolve_tuple_method_type(
 
 #[derive(Clone, Copy)]
 pub(super) struct ClassMethodSurface<'a> {
+    pub(super) identity: Option<&'a String>,
     pub(super) name: &'a str,
     pub(super) fields: &'a [(String, Type)],
     pub(super) methods: &'a [(String, FunctionType)],
@@ -258,6 +259,7 @@ pub(super) fn resolve_class_method_type(
 ) -> Option<Type> {
     if let Some((_, ft)) = class.methods.iter().find(|(n, _)| n == method) {
         let concrete_class = Type::Class {
+            identity: class.identity.cloned(),
             name: class.name.to_string(),
             fields: class.fields.to_vec(),
             methods: class.methods.to_vec(),

@@ -167,7 +167,7 @@ mod workload_annotations;
 use classes::{collect_class_type, lower_class};
 use default_args::collect_function_defaults;
 pub(in crate::lower) use diagnostic_types::{
-    HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic,
+    fallback_error_type, HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic,
 };
 pub use external_defs::ExternalDefs;
 
@@ -185,6 +185,22 @@ pub fn localize_user_import_function_type(
     class_aliases: &HashMap<String, String>,
 ) -> FunctionType {
     imported_class_identity::function_type_for_import(function, module, class_aliases)
+}
+
+pub fn canonicalize_user_export_type(
+    ty: &Type,
+    module: &str,
+    local_classes: &HashMap<String, String>,
+) -> Type {
+    imported_class_identity::canonicalize_export_type(ty, module, local_classes)
+}
+
+pub fn canonicalize_user_export_function_type(
+    function: &FunctionType,
+    module: &str,
+    local_classes: &HashMap<String, String>,
+) -> FunctionType {
+    imported_class_identity::canonicalize_export_function_type(function, module, local_classes)
 }
 use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;

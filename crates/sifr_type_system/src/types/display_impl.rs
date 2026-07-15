@@ -204,6 +204,7 @@ mod tests {
     #[test]
     fn test_class_with_iter_method_is_iterable() {
         let iterable_class = Type::Class {
+            identity: None,
             name: "Counter".to_string(),
             fields: vec![],
             methods: vec![(
@@ -220,12 +221,14 @@ mod tests {
     #[test]
     fn test_class_with_next_method_is_iterator_protocol() {
         let self_iter_type = Type::Class {
+            identity: None,
             name: "CounterIter".to_string(),
             fields: vec![],
             methods: vec![],
             parent_class: None,
         };
         let iterator_class = Type::Class {
+            identity: None,
             name: "CounterIter".to_string(),
             fields: vec![],
             methods: vec![
@@ -249,6 +252,7 @@ mod tests {
     #[test]
     fn test_class_with_reversed_method_is_reversible_iterable() {
         let reversible_class = Type::Class {
+            identity: None,
             name: "Deck".to_string(),
             fields: vec![],
             methods: vec![
@@ -300,6 +304,7 @@ mod tests {
     fn test_python_buffer_capabilities_propagate_through_aggregates() {
         let buffer = Type::PythonBuffer(Box::new(Type::FixedInt(FixedIntType::U8)));
         let nested = Type::Class {
+            identity: None,
             name: "NestedBuffer".to_string(),
             fields: vec![(
                 "views".to_string(),
@@ -317,10 +322,12 @@ mod tests {
     #[test]
     fn test_affine_capability_query_terminates_on_recursive_class_shape() {
         let recursive = Type::Class {
+            identity: None,
             name: "Node".to_string(),
             fields: vec![(
                 "next".to_string(),
                 Type::Class {
+                    identity: None,
                     name: "Node".to_string(),
                     fields: vec![],
                     methods: vec![],
@@ -344,6 +351,7 @@ mod tests {
             Box::new(Type::Int),
         );
         let holder = Type::Class {
+            identity: None,
             name: "Holder".to_string(),
             fields: vec![("callback".to_string(), callable)],
             methods: vec![],
@@ -359,6 +367,7 @@ mod tests {
     #[test]
     fn test_hash_and_format_capabilities_match_generated_rust_traits() {
         let callable_class = Type::Class {
+            identity: None,
             name: "CallbackHolder".to_string(),
             fields: vec![(
                 "callback".to_string(),
@@ -374,6 +383,7 @@ mod tests {
         let comparable_union = Type::Union(vec![Type::Int, Type::Str]);
         let task_result = Type::TaskResult(Box::new(Type::Int), Box::new(Type::Never));
         let join_item_id = Type::Class {
+            identity: None,
             name: "JoinItemId".to_string(),
             fields: vec![],
             methods: vec![],
@@ -403,6 +413,7 @@ mod tests {
     #[test]
     fn test_transitive_non_send_ancestry_disables_generated_rust_traits() {
         let local_child = Type::Class {
+            identity: None,
             name: "LocalChild".to_string(),
             fields: vec![],
             methods: vec![],
@@ -435,12 +446,14 @@ mod tests {
         assert!(!dict_int_int.is_assignable_to(&dict_int_union));
 
         let object_a = Type::Class {
+            identity: None,
             name: "Object".to_string(),
             fields: vec![("_handle".to_string(), Type::Int)],
             methods: vec![],
             parent_class: None,
         };
         let object_b = Type::Class {
+            identity: None,
             name: "Object".to_string(),
             fields: vec![("_token".to_string(), Type::Int)],
             methods: vec![],
@@ -450,6 +463,7 @@ mod tests {
             .is_assignable_to(&Type::List(Box::new(object_b))));
 
         let child = Type::Class {
+            identity: None,
             name: "ChildObject".to_string(),
             fields: vec![],
             methods: vec![],
@@ -461,18 +475,21 @@ mod tests {
     #[test]
     fn test_class_assignability_supports_transitive_inheritance_chain() {
         let base = Type::Class {
+            identity: None,
             name: "Base".to_string(),
             fields: vec![],
             methods: vec![],
             parent_class: None,
         };
         let mid = Type::Class {
+            identity: None,
             name: "Mid".to_string(),
             fields: vec![],
             methods: vec![],
             parent_class: Some("Base".to_string()),
         };
         let leaf = Type::Class {
+            identity: None,
             name: "Leaf".to_string(),
             fields: vec![],
             methods: vec![],
@@ -484,20 +501,51 @@ mod tests {
     }
 
     #[test]
+    fn test_class_assignability_uses_stable_import_identity() {
+        let through_type_facade = Type::Class {
+            identity: Some("left.Box".to_string()),
+            name: "Left".to_string(),
+            fields: vec![("value".to_string(), Type::Int)],
+            methods: vec![],
+            parent_class: None,
+        };
+        let through_factory_facade = Type::Class {
+            identity: Some("left.Box".to_string()),
+            name: "Box".to_string(),
+            fields: vec![("value".to_string(), Type::Int)],
+            methods: vec![],
+            parent_class: None,
+        };
+        let unrelated_same_name = Type::Class {
+            identity: Some("right.Box".to_string()),
+            name: "Box".to_string(),
+            fields: vec![("value".to_string(), Type::Int)],
+            methods: vec![],
+            parent_class: None,
+        };
+
+        assert!(through_factory_facade.is_assignable_to(&through_type_facade));
+        assert!(!unrelated_same_name.is_assignable_to(&through_type_facade));
+    }
+
+    #[test]
     fn test_error_assignability_requires_actual_error_ancestry() {
         let error = Type::Class {
+            identity: None,
             name: "Error".to_string(),
             fields: vec![],
             methods: vec![],
             parent_class: None,
         };
         let non_error_child = Type::Class {
+            identity: None,
             name: "Widget".to_string(),
             fields: vec![],
             methods: vec![],
             parent_class: Some("BaseThing".to_string()),
         };
         let real_error_child = Type::Class {
+            identity: None,
             name: "ValueError".to_string(),
             fields: vec![],
             methods: vec![],

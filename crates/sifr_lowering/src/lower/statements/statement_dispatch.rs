@@ -598,34 +598,19 @@ pub(in crate::lower) fn lower_stmt(
                             ctx.class_types
                                 .get("Error")
                                 .cloned()
-                                .unwrap_or_else(|| Type::Class {
-                                    name: "Error".to_string(),
-                                    fields: vec![("message".to_string(), Type::Str)],
-                                    methods: vec![],
-                                    parent_class: None,
-                                })
+                                .unwrap_or_else(|| super::fallback_error_type("Error"))
                         } else if let Some(class_ty) = ctx.class_types.get(et) {
                             class_ty.clone()
                         } else {
                             // Unknown error type — already reported above
-                            Type::Class {
-                                name: et.clone(),
-                                fields: vec![("message".to_string(), Type::Str)],
-                                methods: vec![],
-                                parent_class: None,
-                            }
+                            super::fallback_error_type(et)
                         }
                     } else {
                         // Bare except — error variable is base Error type
                         ctx.class_types
                             .get("Error")
                             .cloned()
-                            .unwrap_or_else(|| Type::Class {
-                                name: "Error".to_string(),
-                                fields: vec![("message".to_string(), Type::Str)],
-                                methods: vec![],
-                                parent_class: None,
-                            })
+                            .unwrap_or_else(|| super::fallback_error_type("Error"))
                     };
                     ctx.scope.define(var_name.clone(), error_var_ty);
                 }

@@ -481,6 +481,7 @@ pub(super) fn test_failure_annotation_resolves_in_function_signature() {
     assert_eq!(
         param_ty,
         &Type::Failure(Box::new(Type::Class {
+            identity: None,
             name: "ValueError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: vec![],

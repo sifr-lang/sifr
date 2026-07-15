@@ -29,3 +29,4 @@ use function_exit_validation::{
 };
 mod annotations_and_function_lowering;
 pub(in crate::lower) use annotations_and_function_lowering::*;
+mod annotation_union_validation;

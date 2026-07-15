@@ -7,7 +7,7 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review passes 14 through 20 reopened
+Wave 2 is implemented; whole-diff review passes 14 through 21 reopened
 generic/inherited Rust-trait, reusable affine-closure ownership, keyed sorting,
 per-type-parameter bound, specialization, generic-operator, conditional-source,
 top-level inference, multi-hop re-export identity, and specialized generic
@@ -1183,7 +1183,31 @@ Delivery waves:
   `111.34s`, runtime platform `28` variants with one gated skip, and E2E
   `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache hits. Its
   `532.87s` wall time produced only the non-blocking warm-target advisory. A
-  fresh whole-diff review remains pending.
+  fresh whole-diff review remains pending. Full-diff
+  [review pass 21](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-21.md)
+  then showed that identity still depended on symbols sharing one facade,
+  user-module generic requirements disappeared at the export boundary, and a
+  union of two specializations of the same generic class selected its first
+  member and emitted invalid Rust. Class types now carry stable declaration
+  identity independently of their local emitted spelling; the identity and
+  canonical ancestry are preserved through every function, constant, class,
+  factory, and re-export path. Frontend exports and re-exports now carry generic
+  callable and per-method requirement metadata. Until the backend has distinct
+  variants for repeated generic-class specializations, those unions are
+  rejected as invalid annotations before HIR/codegen. Permanent tests split
+  classes from factories and roots from leaves across separate facades, reject
+  a multi-hop unavailable generic method, reject direct and nested repeated-
+  specialization patterns, and build the complete split-path positive project
+  natively. Full affected suites pass: type system `103/103`, lowering `756`
+  with one ignored, frontend `47/47`, codegen `825/825`, and driver `347` with
+  `22` ignored. Workspace Clippy, formatting, HIR/driver maintainability, and
+  source-size guardrails pass over `2674` files; touched orchestration files
+  remain below `900` lines. The clean-build authoritative create-PR gate passes
+  every blocking lane: Python interop `11/11` in `106.89s`, runtime platform
+  `28` variants with one capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` after rebuilding all `42` fixture groups. Its `911.81s`
+  wall time produced only the expected non-blocking warm-target advisory after
+  `cargo clean`. Fresh whole-diff review remains pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

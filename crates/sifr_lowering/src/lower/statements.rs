@@ -46,9 +46,9 @@ use super::typing_and_functions::resolve_annotation_expr;
 use super::LowerCtx;
 use super::{
     append_growth_shapes, async_for, async_generator_advances, async_with,
-    container_literal_specialization, diagnostics, expressions, flow_diagnostics, function_flow,
-    match_lowering, nested_function_inference, nonlocal_support, numeric_sentinels,
-    result_diagnostics, return_lowering, str, typing_and_functions,
+    container_literal_specialization, diagnostics, expressions, fallback_error_type,
+    flow_diagnostics, function_flow, match_lowering, nested_function_inference, nonlocal_support,
+    numeric_sentinels, result_diagnostics, return_lowering, str, typing_and_functions,
 };
 use crate::hir_nodes::{HirExpr, HirIteratorOp, HirPattern, HirStmt};
 use ruff_text_size::{Ranged, TextRange};

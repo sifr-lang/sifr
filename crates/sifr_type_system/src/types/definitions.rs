@@ -94,6 +94,10 @@ pub enum Type {
     /// Class instance type with named fields and methods.
     /// `class Point: x: float; y: float` -> `Type::Class { name: "Point", fields: [...], methods: [...] }`
     Class {
+        /// Stable declaration identity used for nominal typing across import
+        /// and re-export paths. `None` means the local declaration name is the
+        /// identity (the common single-module case).
+        identity: Option<String>,
         name: String,
         fields: Vec<(String, Type)>,
         methods: Vec<(String, FunctionType)>,

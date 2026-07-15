@@ -942,6 +942,13 @@ supports them. This is a language rule, not an implementation detail.
   `PartialOrd` implementations execute the declared `__lt__` body and include
   the exact `PartialEq` supertrait requirements of the class representation or
   its custom `__eq__`; generic negation is checked and emitted end-to-end.
+- **User-class identity constraint:** nominal identity is the stable declaring
+  module plus class, separate from the local spelling used by generated Rust.
+  Function and constant signatures, class fields, generic templates, and the
+  complete ancestry chain preserve that identity across independent import and
+  re-export paths. Two aliases of one declaration therefore remain compatible
+  even when the class and its factory travel through different facades, while
+  same-named declarations from different modules remain incompatible.
 - **Module return inference:** successful unannotated top-level return types are
   inferred as a mutually visible declaration group before body lowering, making
   forward calls source-order neutral. The prepass reaches a fixed point sized to

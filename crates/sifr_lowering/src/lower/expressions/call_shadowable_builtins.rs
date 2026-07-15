@@ -191,12 +191,14 @@ pub(super) fn lower_shadowable_builtin_call(
                 HirExpr::StringLiteral("strict".to_string())
             };
             let io_err_ty = Type::Class {
+                identity: None,
                 name: "IOError".to_string(),
                 fields: vec![("message".to_string(), Type::Str)],
                 methods: vec![],
                 parent_class: None,
             };
             let text_handle_ty = Type::Class {
+                identity: None,
                 name: "TextFileHandle".to_string(),
                 fields: vec![],
                 methods: vec![
@@ -223,6 +225,7 @@ pub(super) fn lower_shadowable_builtin_call(
                         FunctionType::all_borrow(
                             vec![],
                             Type::Class {
+                                identity: None,
                                 name: "TextFileHandle".to_string(),
                                 fields: vec![],
                                 methods: vec![],
@@ -262,12 +265,14 @@ pub(super) fn lower_shadowable_builtin_call(
         // Return type: FileHandle (raises IOError on failure — used in try/except blocks)
         // FileHandle methods are defined in io.sifr; register them here for type checking.
         let io_err_ty = Type::Class {
+            identity: None,
             name: "IOError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: vec![],
             parent_class: None,
         };
         let file_handle_ty = Type::Class {
+            identity: None,
             name: "FileHandle".to_string(),
             fields: vec![
                 ("_handle".to_string(), Type::Int),
@@ -331,6 +336,7 @@ pub(super) fn lower_shadowable_builtin_call(
                     FunctionType::all_borrow(
                         vec![],
                         Type::Class {
+                            identity: None,
                             name: "FileHandle".to_string(),
                             fields: vec![
                                 ("_handle".to_string(), Type::Int),

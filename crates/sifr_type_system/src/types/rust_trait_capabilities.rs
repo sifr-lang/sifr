@@ -36,6 +36,7 @@ impl Type {
                 fields,
                 methods,
                 parent_class,
+                ..
             } => {
                 if parent_chain_contains(parent_class.as_deref(), "NonSend")
                     || methods.iter().any(|(method, _)| method == "__eq__")

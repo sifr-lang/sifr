@@ -212,6 +212,7 @@ fn public_sysroot_stdlib_source_resolves_compiled_private_classes() {
         HashMap::from([(
             "PrivateThing".to_string(),
             Type::Class {
+                identity: None,
                 name: "PrivateThing".to_string(),
                 fields: vec![("value".to_string(), Type::Int)],
                 methods: Vec::new(),

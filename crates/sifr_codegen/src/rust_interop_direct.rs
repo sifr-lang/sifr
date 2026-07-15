@@ -637,6 +637,7 @@ mod tests {
     #[test]
     fn direct_rust_function_body_maps_result_error_return() {
         let parse_error = Type::Class {
+            identity: None,
             name: "ParseError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: Vec::new(),
@@ -680,6 +681,7 @@ mod tests {
     #[test]
     fn direct_rust_function_body_maps_io_error_through_kind_helper() {
         let io_error = Type::Class {
+            identity: None,
             name: "IOError".to_string(),
             fields: vec![
                 ("message".to_string(), Type::Str),
@@ -726,6 +728,7 @@ mod tests {
     #[test]
     fn direct_rust_function_body_maps_string_error_fields() {
         let regex_error = Type::Class {
+            identity: None,
             name: "RegexError".to_string(),
             fields: vec![
                 ("message".to_string(), Type::Str),
@@ -772,6 +775,7 @@ mod tests {
     #[test]
     fn direct_rust_function_body_maps_json_decode_error_fields() {
         let json_decode_error = Type::Class {
+            identity: None,
             name: "JSONDecodeError".to_string(),
             fields: vec![
                 ("message".to_string(), Type::Str),

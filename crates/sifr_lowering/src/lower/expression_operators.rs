@@ -245,6 +245,7 @@ fn division_error_type(ctx: &LowerCtx) -> Type {
         .get("DivisionError")
         .cloned()
         .unwrap_or(Type::Class {
+            identity: None,
             name: "DivisionError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: vec![],

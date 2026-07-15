@@ -1,3 +1,4 @@
+use super::annotation_union_validation::has_conflicting_class_specializations;
 use super::{
     ast_convention_to_param, collect_declared_nonlocals, collect_yield_types,
     first_await_range_in_stmts, first_yield_range_in_stmts, format_type_name,
@@ -52,7 +53,17 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
         Expr::BinOp(binop) if matches!(binop.op, Operator::BitOr) => {
             let left = resolve_annotation_expr(&binop.left, ctx);
             let right = resolve_annotation_expr(&binop.right, ctx);
-            make_union(vec![left, right])
+            let union = make_union(vec![left, right]);
+            if has_conflicting_class_specializations(&union) {
+                invalid_type_annotation(
+                    ctx,
+                    "a union cannot contain multiple specializations of the same generic class",
+                    binop.range(),
+                );
+                Type::Any
+            } else {
+                union
+            }
         }
         // Literal string in type position: "GET" | "POST"
         Expr::StringLiteral(s) => Type::LiteralStr(s.value.to_str().to_string()),
@@ -378,6 +389,7 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                         };
                         // Build substitution map from class type params to concrete args
                         if let Type::Class {
+                            ref identity,
                             ref name,
                             ref fields,
                             ref methods,
@@ -449,6 +461,7 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                                     // Keep the identity selected by import resolution. Merged
                                     // stdlib classes stay canonical, while project-module aliases
                                     // use their collision-safe local emitted spelling.
+                                    identity: identity.clone(),
                                     name: name.clone(),
                                     fields: subst_fields,
                                     methods: subst_methods,
