@@ -2609,6 +2609,22 @@
       "suggestion_applicability": "none"
     },
     {
+      "code": "SIFR-PYZC-0001",
+      "constant": "PYZC_INVALID_DECLARATION",
+      "docs_link": "docs/errors/SIFR-PYZC-0001.md",
+      "machine_applicable": false,
+      "owner": "compiler/frontend",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs::buffer_policy_and_return_contract_fail_with_pyzc_0001",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
       "code": "SIFR-RUST-CONFIG-0001",
       "constant": "RUST_CONFIG_MALFORMED_DECORATOR",
       "docs_link": "docs/errors/SIFR-RUST-CONFIG-0001.md",

@@ -58,6 +58,7 @@ fn extract_ipc_schema_type_inner(ty: &Type) -> IpcSchemaType {
                 .collect::<Vec<_>>(),
         },
         Type::Set(_)
+        | Type::PythonBuffer(_)
         | Type::BigInt
         | Type::Decimal
         | Type::BigDecimal

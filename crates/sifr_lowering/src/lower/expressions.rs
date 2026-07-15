@@ -78,6 +78,8 @@ mod regular_calls;
 use regular_calls::lower_regular_call;
 mod methods_lambdas_and_comprehensions;
 pub(in crate::lower) use methods_lambdas_and_comprehensions::*;
+mod named_expression;
+pub(in crate::lower) use named_expression::lower_named_expr;
 mod method_type_collections;
 use method_type_collections::{
     resolve_dict_method_type, resolve_list_method_type, resolve_set_method_type,
@@ -87,4 +89,8 @@ use method_type_objects::{
     resolve_bigint_method_type, resolve_class_method_type, resolve_enum_method_type,
     resolve_newtype_method_type, resolve_protocol_method_type, resolve_str_method_type,
     resolve_tuple_method_type, ClassMethodSurface,
+};
+mod python_buffer_methods;
+use python_buffer_methods::{
+    consume_python_buffer_release_receiver, resolve_python_buffer_method_type,
 };

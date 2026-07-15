@@ -484,6 +484,9 @@ pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<Strin
         Type::Set(elem) => Type::Set(Box::new(substitute_type_vars(elem, bindings))),
         Type::Iterable(elem) => Type::Iterable(Box::new(substitute_type_vars(elem, bindings))),
         Type::Iterator(elem) => Type::Iterator(Box::new(substitute_type_vars(elem, bindings))),
+        Type::PythonBuffer(elem) => {
+            Type::PythonBuffer(Box::new(substitute_type_vars(elem, bindings)))
+        }
         Type::JoinSet(ok, err) => Type::JoinSet(
             Box::new(substitute_type_vars(ok, bindings)),
             Box::new(substitute_type_vars(err, bindings)),

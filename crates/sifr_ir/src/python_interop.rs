@@ -40,6 +40,29 @@ pub enum PythonInteropDecoratorKind {
     Dlpack,
 }
 
+/// Access authority requested from a Python buffer exporter.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PythonBufferAccess {
+    Read,
+    Write,
+}
+
+/// Physical layout required by a Python buffer declaration.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PythonBufferLayout {
+    Any,
+    CContiguous,
+    FContiguous,
+}
+
+/// Typed protocol facts carried by an active `@python.buffer` declaration.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PythonBufferDeclaration {
+    pub element_type: Type,
+    pub access: PythonBufferAccess,
+    pub layout: PythonBufferLayout,
+}
+
 /// Compiler-synthesized execution effect for a Python declaration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PythonInteropEffect {
@@ -131,4 +154,6 @@ pub struct PythonInteropDeclaration {
     pub required_import_root: Option<String>,
     /// Callback adjuncts validated against this implementation declaration.
     pub callbacks: Vec<PythonCallbackDeclaration>,
+    /// Buffer protocol contract, present only for `PythonInteropDecoratorKind::Buffer`.
+    pub buffer: Option<PythonBufferDeclaration>,
 }

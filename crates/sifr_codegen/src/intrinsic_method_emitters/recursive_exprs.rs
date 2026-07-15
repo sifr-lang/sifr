@@ -72,6 +72,11 @@ impl RustEmitter {
                 args,
                 ty,
             } => {
+                if let Some(lowered) = crate::python_buffer_codegen::lower_python_buffer_method(
+                    self, object, method, args, ty,
+                ) {
+                    return Some(lowered);
+                }
                 if method == "append" && args.len() == 1 {
                     if let HirExpr::Index {
                         object: index_object,

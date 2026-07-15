@@ -696,6 +696,7 @@ fn declaration(
         parameters,
         required_import_root: Some("pkg".to_string()),
         callbacks: Vec::new(),
+        buffer: None,
     }
 }
 
@@ -713,6 +714,7 @@ fn opaque_declaration() -> PythonInteropDeclaration {
         parameters: Vec::new(),
         required_import_root: Some("pkg".to_string()),
         callbacks: Vec::new(),
+        buffer: None,
     }
 }
 

@@ -34,6 +34,7 @@ pub(in crate::lower) fn is_collection_mutating_method(object_ty: &Type, method: 
     }
 
     match object_ty {
+        Type::PythonBuffer(_) => method == "write",
         Type::List(_) => matches!(
             method,
             "append"

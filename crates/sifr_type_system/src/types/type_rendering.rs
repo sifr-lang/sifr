@@ -36,6 +36,7 @@ impl Type {
             Type::Awaitable(_) => "Awaitable".to_string(),
             Type::AsyncIterator(_, _) => "AsyncIterator".to_string(),
             Type::AsyncGenerator(_, _) => "AsyncGenerator".to_string(),
+            Type::PythonBuffer(_) => "PythonBuffer".to_string(),
             Type::Unknown => "Unknown".to_string(),
             Type::Any => "Any".to_string(),
             Type::Never => "Never".to_string(),

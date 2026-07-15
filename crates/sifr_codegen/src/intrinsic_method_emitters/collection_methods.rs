@@ -55,6 +55,15 @@ impl RustEmitter {
     ) -> Option<crate::RustExpr> {
         let effective_object_ty = self.effective_method_object_ty(object);
         let object_ty = crate::resolve_alias_type_for_plain_call(&effective_object_ty);
+        if let Some(lowered) = crate::python_buffer_codegen::lower_python_buffer_method(
+            self,
+            object,
+            method,
+            args,
+            method_return_ty,
+        ) {
+            return Some(lowered);
+        }
         if let Some(lowered) =
             self.try_lower_defaultdict_index_method_call_expr(object, method, args)
         {

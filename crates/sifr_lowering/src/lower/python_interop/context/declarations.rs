@@ -138,6 +138,7 @@ pub(in crate::lower) fn parse_context_method(
         parameters: parameter_metadata(parameters).into_iter().skip(1).collect(),
         required_import_root: None,
         callbacks: Vec::new(),
+        buffer: None,
     })
 }
 

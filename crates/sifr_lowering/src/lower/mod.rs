@@ -110,6 +110,8 @@ mod python_async_tests;
 #[cfg(test)]
 mod python_bridge_tests;
 #[cfg(test)]
+mod python_buffer_contract_tests;
+#[cfg(test)]
 mod python_context_expression_tests;
 #[cfg(test)]
 mod python_coroutine_contract_tests;

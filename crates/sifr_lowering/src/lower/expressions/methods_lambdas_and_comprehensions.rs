@@ -8,15 +8,14 @@ use super::{
     resolve_bigint_method_type, resolve_bytes_method_type, resolve_class_method_type,
     resolve_decimal_method_type, resolve_dict_method_type, resolve_enum_method_type,
     resolve_fixed_width_method_type, resolve_list_method_type, resolve_newtype_method_type,
-    resolve_protocol_method_type, resolve_set_method_type, resolve_str_method_type,
-    resolve_tuple_method_type, str, tsc, ClassMethodSurface, DiagnosticCode, Expr, ExprAttribute,
-    ExprCall, ExprDictComp, ExprGenerator, ExprLambda, ExprListComp, ExprNamed, ExprSetComp,
-    FunctionType, HirExpr, HirIteratorOp, HirParam, LowerCtx, ParamConvention, Ranged, TextRange,
-    Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
+    resolve_protocol_method_type, resolve_python_buffer_method_type, resolve_set_method_type,
+    resolve_str_method_type, resolve_tuple_method_type, str, tsc, ClassMethodSurface,
+    DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp, ExprGenerator, ExprLambda,
+    ExprListComp, ExprSetComp, FunctionType, HirExpr, HirIteratorOp, HirParam, LowerCtx,
+    ParamConvention, Ranged, TextRange, Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS,
+    DEFAULTDICT_SET_ALIAS,
 };
-use crate::lower::python_interop::{
-    callback_method_arg_ranges, reject_python_context_borrow_storage,
-};
+use crate::lower::python_interop::callback_method_arg_ranges;
 use crate::lower::{parallel_calls, task_join_set_calls, task_scope_offload_calls};
 use sifr_ir::CompilerIntrinsicId;
 pub(in crate::lower) fn lower_method_call(
@@ -277,6 +276,13 @@ pub(in crate::lower) fn lower_method_call(
         }
     }
 
+    if matches!(object_ty.resolve_alias(), Type::PythonBuffer(_))
+        && method_name == "release"
+        && !super::consume_python_buffer_release_receiver(&object, attr.value.range(), ctx)
+    {
+        return None;
+    }
+
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: method_name,
@@ -335,6 +341,9 @@ pub(in crate::lower) fn resolve_method_type(
             resolve_fixed_width_method_type(*fixed, method, args, arg_ranges, method_range, ctx)
         }
         Type::Tuple(_) => resolve_tuple_method_type(method, args, arg_ranges, method_range, ctx),
+        Type::PythonBuffer(element) => {
+            resolve_python_buffer_method_type(element, method, args, arg_ranges, method_range, ctx)
+        }
         Type::Class {
             name,
             fields,
@@ -870,30 +879,4 @@ pub(super) fn lower_iterator_protocol_entry(iter_source_expr: HirExpr, elem_ty: 
         args: vec![iter_source_expr],
         ty: Type::Iterator(Box::new(elem_ty)),
     }
-}
-
-pub(in crate::lower) fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    let name = if let Expr::Name(n) = named.target.as_ref() {
-        n.id.to_string()
-    } else {
-        reject_invalid_expression_target(
-            ctx,
-            "walrus operator target must be a simple name",
-            named.target.range(),
-        );
-        return None;
-    };
-
-    let value = lower_expr(&named.value, ctx)?;
-    reject_python_context_borrow_storage(&value, named.value.range(), ctx);
-    let ty = value.ty().clone();
-
-    // Define the variable in the current scope
-    ctx.scope.define(name.clone(), ty.clone());
-
-    Some(HirExpr::WalrusExpr {
-        name,
-        value: Box::new(value),
-        ty,
-    })
 }

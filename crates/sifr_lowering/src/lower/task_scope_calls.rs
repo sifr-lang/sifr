@@ -286,6 +286,7 @@ pub(in crate::lower) fn non_share_safe_reason(ty: &Type) -> Option<String> {
 
 fn non_share_safe_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Option<String> {
     match ty {
+        Type::PythonBuffer(_) => Some("Python buffer resources are non-send".to_string()),
         Type::List(_) => {
             Some("list values are mutable and require explicit synchronization".to_string())
         }
@@ -352,6 +353,7 @@ fn non_share_safe_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Opt
 
 fn non_send_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Option<String> {
     match ty {
+        Type::PythonBuffer(_) => Some("Python buffer resources are non-send".to_string()),
         Type::Class {
             name,
             fields,

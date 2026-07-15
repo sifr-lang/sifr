@@ -23,6 +23,7 @@ impl DiagnosticCode {
     pub const PYRES_UNIMPLEMENTED_DECLARATION: Self = Self::new("SIFR-PYRES-0002", Severity::Error);
     pub const PYCTX_INVALID_DECLARATION: Self = Self::new("SIFR-PYCTX-0001", Severity::Error);
     pub const PYCB_INVALID_DECLARATION: Self = Self::new("SIFR-PYCB-0001", Severity::Error);
+    pub const PYZC_INVALID_DECLARATION: Self = Self::new("SIFR-PYZC-0001", Severity::Error);
 
     pub const PYTRUST_WILDCARD_REJECTED: Self = Self::new("SIFR-PYTRUST-0001", Severity::Error);
     pub const PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED: Self =

@@ -118,7 +118,8 @@ impl RustEmitter {
             | Type::Awaitable(inner)
             | Type::Newtype { inner, .. }
             | Type::Failure(inner)
-            | Type::TimeoutResult(inner) => self.register_union_type(inner),
+            | Type::TimeoutResult(inner)
+            | Type::PythonBuffer(inner) => self.register_union_type(inner),
             Type::Dict(left, right)
             | Type::Result(left, right)
             | Type::Coroutine(left, right)

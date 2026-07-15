@@ -24,6 +24,7 @@ fn plan_retains_deferred_probe_requirements_record_constraint_and_cache_identity
         parameters: Vec::new(),
         required_import_root: Some("json".to_string()),
         callbacks: Vec::new(),
+        buffer: None,
     };
     let module = HirModule {
         functions: vec![
@@ -84,6 +85,7 @@ fn python_cache_identity_changes_with_authoritative_sifr_types() {
         parameters: Vec::new(),
         required_import_root: Some("json".to_string()),
         callbacks: Vec::new(),
+        buffer: None,
     };
     let mut string_result = function("loads", Vec::new(), vec![declaration.clone()]);
     string_result.return_type = Type::Str;
@@ -191,6 +193,7 @@ fn callback_attachment_policy_is_retained_in_plan_and_cache_identity() {
             owner_class: Some("Subscription".to_string()),
             owner_cleanup: Some(PythonCleanupPolicy::Close),
         }],
+        buffer: None,
     };
     let module = module_with_functions(vec![function("register", Vec::new(), vec![declaration])]);
 
@@ -228,6 +231,7 @@ fn method_only_async_python_declaration_requires_owned_loop() {
         parameters: Vec::new(),
         required_import_root: None,
         callbacks: Vec::new(),
+        buffer: None,
     });
     let mut module = module_with_functions(Vec::new());
     module.classes.push(HirClass {

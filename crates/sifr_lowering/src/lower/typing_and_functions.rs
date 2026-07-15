@@ -17,5 +17,7 @@ use std::collections::HashMap;
 
 mod signatures_and_effects;
 pub(in crate::lower) use signatures_and_effects::*;
+mod python_buffer_annotations;
+use python_buffer_annotations::resolve_python_buffer_annotation;
 mod annotations_and_function_lowering;
 pub(in crate::lower) use annotations_and_function_lowering::*;

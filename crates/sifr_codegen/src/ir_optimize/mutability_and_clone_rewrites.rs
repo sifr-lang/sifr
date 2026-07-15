@@ -2,6 +2,7 @@ use super::{is_copy_type, not_expr, string_key_loop_rewrite::rewrite_string_key_
 use crate::{RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType};
 
 const MUTATING_METHODS: &[&str] = &[
+    "write",
     "append",
     "aclose",
     "anext",

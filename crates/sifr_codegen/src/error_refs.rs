@@ -74,6 +74,7 @@ fn collect_type_error_refs(
             }
         }
         Type::List(inner)
+        | Type::PythonBuffer(inner)
         | Type::Set(inner)
         | Type::Iterable(inner)
         | Type::Iterator(inner)

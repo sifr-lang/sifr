@@ -80,11 +80,22 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
         Expr::BooleanLiteral(b) => Type::LiteralBool(b.value),
         Expr::Subscript(sub) => {
             // Handle generic type annotations: list[int], dict[str, int], tuple[int, str]
-            let base_name = if let Expr::Name(n) = sub.value.as_ref() {
-                n.id.to_string()
-            } else {
-                invalid_type_annotation(ctx, "unsupported type annotation base", sub.value.range());
-                return Type::Any;
+            let base_name = match sub.value.as_ref() {
+                Expr::Name(n) => n.id.to_string(),
+                Expr::Attribute(attribute)
+                    if matches!(attribute.value.as_ref(), Expr::Name(root) if root.id.as_str() == "python")
+                        && attribute.attr.as_str() == "Buffer" =>
+                {
+                    return super::resolve_python_buffer_annotation(&sub.slice, ctx);
+                }
+                _ => {
+                    invalid_type_annotation(
+                        ctx,
+                        "unsupported type annotation base",
+                        sub.value.range(),
+                    );
+                    return Type::Any;
+                }
             };
             match base_name.as_str() {
                 "list" => {

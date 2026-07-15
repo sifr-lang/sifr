@@ -83,6 +83,9 @@ mod operator_protocol_emitters;
 mod output_helpers;
 mod preamble;
 pub use preamble::*;
+mod python_buffer_codegen;
+#[cfg(test)]
+mod python_buffer_codegen_tests;
 mod python_interop_async;
 #[cfg(test)]
 mod python_interop_async_tests;

@@ -6,6 +6,7 @@ use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 
 pub(crate) const MUTATING_METHODS: &[&str] = &[
+    "write",
     "append",
     "appendleft",
     "extend",

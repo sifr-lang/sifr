@@ -119,6 +119,9 @@ fn non_ipc_serializable_reason_inner(ty: &Type, visiting: &mut HashSet<String>) 
         // Sifr enums currently carry integer-backed variants, not typed payload fields.
         Type::Enum { .. } => None,
         Type::Set(_) => Some("set payloads do not have stable IPC schema ordering".to_string()),
+        Type::PythonBuffer(_) => {
+            Some("Python buffer resources are affine and process-local".to_string())
+        }
         Type::BigInt | Type::Decimal | Type::BigDecimal => {
             Some("this numeric family is not part of the initial IPC schema set".to_string())
         }

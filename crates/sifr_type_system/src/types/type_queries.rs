@@ -183,6 +183,7 @@ impl Type {
             | Self::Awaitable(_)
             | Self::AsyncIterator(_, _)
             | Self::AsyncGenerator(_, _)
+            | Self::PythonBuffer(_)
             | Self::List(_)
             | Self::Dict(_, _)
             | Self::Set(_)
@@ -337,6 +338,9 @@ impl Type {
                     err.display_name()
                 )
             }
+            Self::PythonBuffer(element) => {
+                format!("python.Buffer[{}]", element.display_name())
+            }
             Self::Protocol { name, .. } => name.clone(),
             Self::Newtype { name, .. } => name.clone(),
             Self::TypeVar(name) => name.clone(),
@@ -453,6 +457,9 @@ impl Type {
             }
             Self::AsyncGenerator(item, err) => {
                 format!("AsyncGenerator<{}, {}>", item.rust_type(), err.rust_type())
+            }
+            Self::PythonBuffer(element) => {
+                format!("sifr_stdlib::python::PythonBuffer<{}>", element.rust_type())
             }
             Self::Protocol { name, .. } => format!("Box<dyn {name}>"),
             Self::Newtype { name, .. } => name.clone(),
