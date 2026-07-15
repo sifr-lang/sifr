@@ -36,6 +36,7 @@ use crate::lower::rust_interop::{
     classify_rust_interop_stub_body, collect_rust_interop_declarations,
     has_rust_interop_decorator_syntax, RustInteropOwner,
 };
+use crate::lower::type_bounds::reject_unavailable_dict_hash_key;
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{ExceptHandler, Expr, Stmt};
@@ -312,6 +313,15 @@ pub(in crate::lower) fn lower_stmt(
             if let Expr::Subscript(sub) = &del_stmt.targets[0] {
                 let object = lower_expr(&sub.value, ctx)?;
                 let index = lower_expr(&sub.slice, ctx)?;
+                if reject_unavailable_dict_hash_key(
+                    object.ty(),
+                    index.ty(),
+                    "dict item deletion",
+                    sub.range(),
+                    ctx,
+                ) {
+                    return None;
+                }
                 Some(HirStmt::Delete { object, index })
             } else {
                 statement_diagnostics::unsupported_form(

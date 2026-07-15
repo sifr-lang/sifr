@@ -1,6 +1,10 @@
 use super::{FunctionType, OwnershipKind, Type};
 use std::collections::BTreeSet;
 
+pub(super) fn parent_chain_contains(parent_class: Option<&str>, ancestor: &str) -> bool {
+    parent_class.is_some_and(|chain| chain.split('|').any(|parent| parent == ancestor))
+}
+
 impl Type {
     /// Whether a value transitively owns an affine resource that Rust must not
     /// clone or compare through an aggregate derive.
@@ -100,7 +104,7 @@ impl Type {
                 parent_class,
                 ..
             } => {
-                if parent_class.as_deref() == Some("NonSend") {
+                if parent_chain_contains(parent_class.as_deref(), "NonSend") {
                     return false;
                 }
                 if !visiting_classes.insert(name.clone()) {
@@ -167,7 +171,7 @@ impl Type {
                 if methods.iter().any(|(method, _)| method == "__eq__") {
                     return true;
                 }
-                if parent_class.as_deref() == Some("NonSend") {
+                if parent_chain_contains(parent_class.as_deref(), "NonSend") {
                     return false;
                 }
                 if !visiting_classes.insert(name.clone()) {

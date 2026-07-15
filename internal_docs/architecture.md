@@ -870,12 +870,15 @@ Sifr compiles to Rust, which has deterministic destruction (RAII). This rules de
 
 ### 10. Auto-Derived Traits
 
-Sifr auto-derives common Rust traits for all user-defined types. This is a language rules, not an implementation detail.
+Sifr auto-derives common Rust traits when the complete emitted representation
+supports them. This is a language rule, not an implementation detail.
 
 **Rules:**
 
-- **Always derived (when valid):**
-  - `Debug` -- enables `print()` and `repr()` for all types. Derived for all structs and enums.
+- **Derived when the full representation supports the trait:**
+  - `Debug` -- enables debug formatting. Derived when every field and embedded
+    parent implements `Debug`; `NonSend` resource hierarchies are conservative
+    non-`Debug` unless code generation owns a specific implementation.
   - `Clone` -- enables `.clone()`. Derived when all fields implement `Clone`.
   - `PartialEq` -- enables `==` and `!=`. Derived when all fields implement `PartialEq`.
 - **Conditionally derived:**
@@ -884,10 +887,18 @@ Sifr auto-derives common Rust traits for all user-defined types. This is a langu
 - **Not auto-derived (require explicit opt-in):**
   - `Ord` / `PartialOrd` -- comparison ordering requires explicit definition via `__lt__`, `__le__`, etc.
   - `Copy` -- only Rust-copy scalar primitives such as fixed-width integers, `float`, and `bool` are `Copy`. Source-level `int` is value-semantic but lowers to `SifrInt` and is not Rust `Copy`.
-- **Codegen:** the compiler emits `#[derive(Debug, Clone, PartialEq)]` (and conditionally `Eq`, `Hash`) on all generated structs and enums.
+- **Inheritance:** trait capability includes the entire embedded parent chain,
+  including transitive `NonSend` ancestry, not only fields declared by the
+  immediate child.
+- **Codegen:** the compiler emits only the derives supported by the complete
+  generated struct, newtype, or union representation.
 - **Enum types (enum type-system work):** enum types unconditionally derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`. All enum values are usable as dict keys and set members.
 - **Auto-init (auto_init):** when a class has no explicit `__init__`, the compiler auto-generates `__init__`, `__eq__` (if all fields are `PartialEq`), and `__str__` (via `Debug`-style formatting). Explicit definitions always take precedence.
-- **Dict key constraint:** types used as `dict` keys must be `Hash + Eq`. The compiler enforces this at the call site and emits a clear error if the type is not hashable.
+- **Hash-consumer constraint:** set elements and dictionary keys must implement
+  `Hash + Eq`. The compiler enforces this for literals, membership, structural
+  equality, `hash()`, and dictionary indexing, assignment, augmented assignment,
+  and deletion. Specialized generic class instances are rejected at these
+  consumers unless their emitted declaration provides the required traits.
 
 ### 11. Diagnostic Mapping
 

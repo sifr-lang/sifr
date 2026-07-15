@@ -1,4 +1,4 @@
-use super::Type;
+use super::{type_queries::parent_chain_contains, Type};
 use std::collections::BTreeSet;
 
 impl Type {
@@ -37,7 +37,7 @@ impl Type {
                 methods,
                 parent_class,
             } => {
-                if parent_class.as_deref() == Some("NonSend")
+                if parent_chain_contains(parent_class.as_deref(), "NonSend")
                     || methods.iter().any(|(method, _)| method == "__eq__")
                 {
                     return false;
@@ -110,7 +110,7 @@ impl Type {
                 // specific resources receive a bespoke derive in codegen, but
                 // the type alone cannot identify those declarations, so keep
                 // the shared capability query conservative.
-                if parent_class.as_deref() == Some("NonSend") {
+                if parent_chain_contains(parent_class.as_deref(), "NonSend") {
                     return false;
                 }
                 if !visiting_classes.insert(name.clone()) {

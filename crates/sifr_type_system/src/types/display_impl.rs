@@ -390,6 +390,21 @@ mod tests {
     }
 
     #[test]
+    fn test_transitive_non_send_ancestry_disables_generated_rust_traits() {
+        let local_child = Type::Class {
+            name: "LocalChild".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: Some("LocalParent|NonSend".to_string()),
+        };
+
+        assert!(!local_child.supports_derived_clone());
+        assert!(!local_child.supports_structural_equality());
+        assert!(!local_child.supports_hash_key());
+        assert!(!local_child.supports_debug_formatting());
+    }
+
+    #[test]
     fn test_collection_assignability() {
         let list_int = Type::List(Box::new(Type::Int));
         let list_int2 = Type::List(Box::new(Type::Int));

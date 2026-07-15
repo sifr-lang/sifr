@@ -10,7 +10,7 @@ use super::numeric_sentinels::{
     lower_sentinel_expr_for_name_domain, maybe_resolve_numeric_sentinel_name_from_type,
     retag_numeric_sentinel_name_expr,
 };
-use super::type_bounds::supports_hash_key_in_context;
+use super::type_bounds::{supports_hash_key_in_context, supports_structural_equality_in_context};
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use num_bigint::BigInt;
@@ -531,6 +531,23 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
                 return None;
             }
         } else {
+            if matches!(op_str, "==" | "!=")
+                && left.ty().supports_structural_equality()
+                && right.ty().supports_structural_equality()
+                && (!supports_structural_equality_in_context(left.ty(), ctx)
+                    || !supports_structural_equality_in_context(right.ty(), ctx))
+            {
+                ctx.error_with_code_at(
+                    sifr_diagnostics::DiagnosticCode::TYPE_MISMATCH,
+                    format!(
+                        "structural equality requires generated Rust equality/hash traits, which are unavailable for '{}' and '{}'",
+                        left.ty().display_name(),
+                        right.ty().display_name()
+                    ),
+                    comparator.range(),
+                );
+                return None;
+            }
             if let Err((code, message)) = type_check_comparison(left.ty(), op_str, right.ty()) {
                 let has_overload = match left.ty() {
                     Type::Class { methods, .. } => {

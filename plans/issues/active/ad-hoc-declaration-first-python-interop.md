@@ -7,8 +7,8 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review pass 10 reopened compiler Rust-trait
-capability gaps, and its remediation now passes focused compiler,
+Wave 2 is implemented; whole-diff review pass 12 reopened the final compiler
+Rust-trait capability gaps, and its remediation now passes focused compiler,
 native-positive, native-negative, maintainability, and formatting validation in
 [PR #2988](https://github.com/sifr-lang/sifr/pull/2988). Typed
 synchronous and asynchronous declarations and context managers run on the
@@ -950,14 +950,40 @@ Delivery waves:
   containers, callable-parent inheritance, and `NonSend`-parent inheritance and
   builds through the release Rust backend. Five new negative fixtures expand the
   compile-fail matrix to `494/494`. Focused suites pass: type system `101/101`,
-  lowering `743/743` with one ignored, and code generation `817/817`. Workspace
+  lowering `742` passed with one ignored, and code generation `817/817`. Workspace
   Clippy is warning-free; formatting, diff, JSON, HIR maintainability, and the
   `900`-line file-size guardrail pass over `2620` files. The authoritative
   create-PR facade also passes every blocking lane: Python interop `11/11`,
   runtime platform `28/28` with one gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `42/42` cache hits. Its `429.98s` wall time produced only
   the non-blocking warm-wall-time advisory; every enforced step budget passed.
-  The next fresh whole-diff review remains pending.
+  Full-diff
+  [review pass 12](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-12.md)
+  confirmed the pass-11 repairs, then found that flattened transitive `NonSend`
+  ancestry was not consulted by Clone, equality, hash, and debug capability
+  queries, and that specialized generic keys still reached set/dictionary
+  equality plus dictionary read, write, augmented-write, and delete consumers.
+  One shared parent-chain query now closes every transitive `NonSend` trait
+  decision, while contextual structural-equality and dictionary hash-key checks
+  cover every emitted Rust consumer without rejecting provisional
+  `defaultdict[Any, ...]` refinement. Permanent negative fixtures
+  `transitive_non_send_equality_rejected`,
+  `error_transitive_non_send_field_rejected`,
+  `set_specialized_generic_equality_rejected`,
+  `dict_specialized_generic_equality_rejected`, and the four
+  `dict_specialized_generic_index_{read,write,augassign,delete}_rejected`
+  fixtures expand the compile-fail matrix to `502/502`. Full affected suites
+  pass: type system `102/102`, lowering `742` passed with one ignored, and code
+  generation `817/817`; the native trait-capability fixture builds through the
+  release Rust backend. Workspace Clippy is warning-free; formatting, diff, HIR
+  maintainability, and the `900`-line file-size guardrail pass over `2628` files.
+  The authoritative create-PR facade passes every blocking lane: Python interop
+  `11/11` in `104.65s`, runtime platform `28/28` with one gated skip, and E2E
+  `131/131` with signature `7c39b8c1dd4fec7c` and `22/42` cache hits after the
+  requested `cargo clean`. Its `615.77s` wall time produced only the
+  non-blocking warm-wall-time and cache-hit advisories;
+  every enforced step budget passed. The next fresh whole-diff review remains
+  pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

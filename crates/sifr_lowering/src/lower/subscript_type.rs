@@ -1,5 +1,6 @@
 use super::builtin_calls::{DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS};
 use super::guarded_index::guarded_sequence_index_result_type;
+use super::type_bounds::reject_unavailable_dict_hash_key;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::Ranged;
@@ -34,6 +35,8 @@ pub(in crate::lower) fn resolve_subscript_result_type(
     index_ty: &Type,
     ctx: &mut LowerCtx,
 ) -> Type {
+    reject_unavailable_dict_hash_key(object_ty, index_ty, "dict indexing", sub.range(), ctx);
+
     if let Type::Alias { name, body, .. } = object_ty {
         if matches!(
             name.as_str(),
