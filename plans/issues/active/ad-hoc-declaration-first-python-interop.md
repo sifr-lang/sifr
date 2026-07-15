@@ -934,7 +934,30 @@ Delivery waves:
   and E2E `131/131` with signature `7c39b8c1dd4fec7c`. E2E rebuilt 22 of 42
   groups and completed in `163.68s`; all enforced step budgets passed, while the
   `733.86s` overall wall time produced only non-blocking warm-cache advisories.
-  A fresh whole-diff review is pending.
+  Full-diff
+  [review pass 11](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-11.md)
+  then found five broader compiler capability defects: a non-optional union
+  equality stack overflow; invalid unwrapped union-member membership for lists,
+  sets, and dictionaries; child derives that ignored embedded-parent traits;
+  specialized generic hash-key overclaims; and error classes whose fields could
+  not satisfy Rust's required `Debug` bound. The remediation now guards optional
+  union recursion and injects concrete members into non-optional unions for both
+  equality operand orders and all three membership containers. Class trait
+  planning recursively includes the emitted parent; specialized generic set,
+  dictionary, and `hash()` uses are conservatively rejected; and error shapes
+  without recursive `Debug` receive `SIFR-CLASS-0006` before code generation.
+  The expanded native fixture covers both union equality orders, all membership
+  containers, callable-parent inheritance, and `NonSend`-parent inheritance and
+  builds through the release Rust backend. Five new negative fixtures expand the
+  compile-fail matrix to `494/494`. Focused suites pass: type system `101/101`,
+  lowering `743/743` with one ignored, and code generation `817/817`. Workspace
+  Clippy is warning-free; formatting, diff, JSON, HIR maintainability, and the
+  `900`-line file-size guardrail pass over `2620` files. The authoritative
+  create-PR facade also passes every blocking lane: Python interop `11/11`,
+  runtime platform `28/28` with one gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `42/42` cache hits. Its `429.98s` wall time produced only
+  the non-blocking warm-wall-time advisory; every enforced step budget passed.
+  The next fresh whole-diff review remains pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

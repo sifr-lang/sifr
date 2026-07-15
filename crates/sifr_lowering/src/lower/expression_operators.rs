@@ -10,7 +10,7 @@ use super::numeric_sentinels::{
     lower_sentinel_expr_for_name_domain, maybe_resolve_numeric_sentinel_name_from_type,
     retag_numeric_sentinel_name_expr,
 };
-use super::type_bounds::type_satisfies_bound;
+use super::type_bounds::supports_hash_key_in_context;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use num_bigint::BigInt;
@@ -45,9 +45,7 @@ fn membership_requires_hash_key(collection_ty: &Type) -> bool {
 }
 
 fn supports_membership_hash_key(ty: &Type, ctx: &LowerCtx) -> bool {
-    ty.supports_hash_key()
-        || matches!(ty.resolve_alias(), Type::TypeVar(_))
-            && type_satisfies_bound(ty, "Hashable", ctx)
+    supports_hash_key_in_context(ty, ctx)
 }
 
 fn membership_capability_available(

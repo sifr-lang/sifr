@@ -1,0 +1,6 @@
+# expect-error: SIFR-TYPE-0005
+class Box[T]:
+    value: T
+
+def contains_box(value: Box[int], values: dict[Box[int], bool]) -> bool:
+    return value in values

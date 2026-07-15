@@ -1,9 +1,9 @@
 use super::{
     collect_enum_variants, function_body_contains_yield, get_newtype_inner, get_parent_class,
     has_decorator, is_enum_class, is_operator_dunder, is_protocol_class, lower_stmts,
-    missing_method_param_annotation, resolve_annotation_expr, Expr, FunctionType, HirClass,
-    HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt, HirTupleTargetBinding,
-    LowerCtx, MethodKind, ParamConvention, Ranged, Stmt, StmtClassDef, Type,
+    missing_method_param_annotation, resolve_annotation_expr, unsupported_class_declaration, Expr,
+    FunctionType, HirClass, HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt,
+    HirTupleTargetBinding, LowerCtx, MethodKind, ParamConvention, Ranged, Stmt, StmtClassDef, Type,
 };
 use crate::lower::python_interop::{
     classify_python_interop_stub_body, collect_python_method_declarations,
@@ -684,6 +684,19 @@ pub(in crate::lower) fn lower_class(
     }
 
     let is_error = ctx.error_types.contains(&class_name);
+    if is_error
+        && !all_fields
+            .iter()
+            .all(|(_, field)| field.supports_debug_formatting())
+    {
+        unsupported_class_declaration(
+            ctx,
+            &class_name,
+            "error fields must implement Debug so the generated Rust error satisfies std::error::Error",
+            class_def.range,
+        );
+        return None;
+    }
 
     // Check which protocols this class satisfies
     let mut implements_protocols = Vec::new();

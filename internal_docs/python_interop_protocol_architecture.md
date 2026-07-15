@@ -467,8 +467,14 @@ recursive `PartialEq` capability. Set membership and equality require elements
 with recursive `Eq + Hash`; dictionary membership and equality require keys
 with recursive `Eq + Hash` and equality-capable values. Generated classes,
 newtypes, and non-optional union enums derive only the `Debug`, `Clone`,
-`PartialEq`, `Eq`, and `Hash` traits proved by their complete shapes, and union
-formatting is emitted only when every member supports `Display` or `Debug`.
+`PartialEq`, `Eq`, and `Hash` traits proved by their complete shapes, including
+the traits of an embedded inheritance parent, and union formatting is emitted
+only when every member supports `Display` or `Debug`. Equality and list, set, or
+dictionary membership inject a concrete union member into the generated union
+representation before invoking Rust equality. Specialized generic classes are
+not admitted as Rust hash keys until their emitted generic declaration can prove
+the required `Eq + Hash` implementation. Error-class fields must prove `Debug`
+before code generation because `std::error::Error` requires it.
 `Any`, dynamic trait objects, callable-bearing classes, affine resources, and
 other unsupported Rust representations are rejected before an operation that
 would require a missing trait. Source `is` and `is not` are limited to identity

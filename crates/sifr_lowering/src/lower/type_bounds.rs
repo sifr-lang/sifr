@@ -102,6 +102,55 @@ fn type_satisfies_comparable_bound(ty: &Type, ctx: &LowerCtx) -> bool {
     }
 }
 
+fn contains_declared_generic_class(
+    ty: &Type,
+    ctx: &LowerCtx,
+    visiting: &mut std::collections::HashSet<String>,
+) -> bool {
+    match ty.resolve_alias() {
+        Type::Class { name, fields, .. } => {
+            if ctx
+                .class_declared_type_params
+                .get(name)
+                .is_some_and(|params| !params.is_empty())
+            {
+                return true;
+            }
+            if !visiting.insert(name.clone()) {
+                return false;
+            }
+            let contains = fields
+                .iter()
+                .any(|(_, field)| contains_declared_generic_class(field, ctx, visiting));
+            visiting.remove(name);
+            contains
+        }
+        Type::List(element)
+        | Type::Set(element)
+        | Type::Iterable(element)
+        | Type::Iterator(element)
+        | Type::Newtype { inner: element, .. } => {
+            contains_declared_generic_class(element, ctx, visiting)
+        }
+        Type::Dict(key, value) | Type::Result(key, value) => {
+            contains_declared_generic_class(key, ctx, visiting)
+                || contains_declared_generic_class(value, ctx, visiting)
+        }
+        Type::Tuple(elements) | Type::Union(elements) => elements
+            .iter()
+            .any(|element| contains_declared_generic_class(element, ctx, visiting)),
+        _ => false,
+    }
+}
+
+pub(in crate::lower) fn supports_hash_key_in_context(ty: &Type, ctx: &LowerCtx) -> bool {
+    if let Type::TypeVar(tv_name) = ty.resolve_alias() {
+        return typevar_satisfies_spec(tv_name, "Hashable", ctx);
+    }
+    ty.supports_hash_key()
+        && !contains_declared_generic_class(ty, ctx, &mut std::collections::HashSet::new())
+}
+
 /// Check if a type satisfies a named bound (hard requirement).
 pub(in crate::lower) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &LowerCtx) -> bool {
     if let Type::TypeVar(tv_name) = ty {
@@ -110,7 +159,7 @@ pub(in crate::lower) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &Lower
     match bound {
         "Comparable" => type_satisfies_comparable_bound(ty, ctx),
         "Addable" => matches!(ty, Type::Int | Type::Float | Type::Str | Type::BigInt),
-        "Hashable" => ty.supports_hash_key(),
+        "Hashable" => supports_hash_key_in_context(ty, ctx),
         _ => resolve_named_bound_type(bound, ctx)
             .is_some_and(|bound_ty| ty.is_assignable_to(&bound_ty)),
     }

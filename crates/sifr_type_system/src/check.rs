@@ -432,13 +432,13 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> TypeCheckRe
                 return Ok(Type::Bool);
             }
             // Allow T|None vs T comparisons (and T vs T|None)
-            if let Type::Union(_) = left {
+            if union_contains_none(left) {
                 let non_none = remove_none_from_union(left);
                 if non_none == *right || type_check_comparison(&non_none, op, right).is_ok() {
                     return Ok(Type::Bool);
                 }
             }
-            if let Type::Union(_) = right {
+            if union_contains_none(right) {
                 let non_none = remove_none_from_union(right);
                 if non_none == *left || type_check_comparison(left, op, &non_none).is_ok() {
                     return Ok(Type::Bool);
@@ -795,6 +795,20 @@ mod tests {
             Type::Bool
         );
         assert!(type_check_comparison(&Type::Int, "==", &Type::Str).is_err());
+    }
+
+    #[test]
+    fn test_union_member_equality_terminates_for_both_operand_orders() {
+        let int_or_str = Type::Union(vec![Type::Int, Type::Str]);
+
+        assert_eq!(
+            type_check_comparison(&Type::Int, "==", &int_or_str).unwrap(),
+            Type::Bool
+        );
+        assert_eq!(
+            type_check_comparison(&int_or_str, "!=", &Type::Int).unwrap(),
+            Type::Bool
+        );
     }
 
     #[test]

@@ -12,7 +12,6 @@ use super::call_argument_ranges::{call_argument_ranges_by_param, type_param_argu
 use super::call_iterable_validation::{
     validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg,
 };
-use super::classes::is_hashable_type;
 use super::decimal_methods::{
     decimal_conversion_error_type, lower_bigdecimal_constructor_call,
     lower_decimal_constructor_call, resolve_decimal_method_type,
@@ -53,6 +52,7 @@ use super::ownership_diagnostics;
 use super::protocol_diagnostics;
 use super::task_handle_calls::{is_task_handle_type, lower_task_handle_method_call};
 use super::task_scope_calls as tsc;
+use super::type_bounds::supports_hash_key_in_context;
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typevar_shape_compat::is_compatible_with_unresolved_typevars;
 use super::typing_and_functions::resolve_annotation_expr;

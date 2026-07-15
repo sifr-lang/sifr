@@ -396,9 +396,24 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 Type::List(_) | Type::Set(_) | Type::Range | Type::Str => "contains",
                 _ => return None,
             };
+            let mut lowered_element = try_lower_leaf_or_name_expr(element)?;
+            if let Some(element_ty) = collection_ty.contains_element_type() {
+                let owned_element = if matches!(element.as_ref(), HirExpr::Name { .. })
+                    && !crate::helpers::is_copy_type_for_codegen(element.ty())
+                {
+                    RustExpr::Clone(Box::new(lowered_element.clone()))
+                } else {
+                    lowered_element.clone()
+                };
+                if let Some(wrapped) =
+                    crate::helpers::wrap_union_member_expr(&element_ty, element.ty(), owned_element)
+                {
+                    lowered_element = wrapped;
+                }
+            }
             let arg = RustExpr::Ref {
                 mutable: false,
-                expr: Box::new(try_lower_leaf_or_name_expr(element)?),
+                expr: Box::new(lowered_element),
             };
             Some(RustExpr::MethodCall {
                 receiver: Box::new(try_lower_leaf_or_name_expr(collection)?),

@@ -3,6 +3,7 @@ use crate::hir_analysis::{
     queries,
     traversal::{self, TraversalConfig},
 };
+use crate::RustExpr;
 use sifr_ir::{HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -363,6 +364,29 @@ pub(crate) fn find_union_variant(members: &[Type], arg_ty: &Type) -> Option<Stri
         }
     }
     None
+}
+
+pub(crate) fn wrap_union_member_expr(
+    union_ty: &Type,
+    member_ty: &Type,
+    lowered: RustExpr,
+) -> Option<RustExpr> {
+    let Type::Union(members) = crate::resolve_alias_type_for_plain_call(union_ty) else {
+        return None;
+    };
+    if is_option_type(union_ty)
+        || matches!(
+            crate::resolve_alias_type_for_plain_call(member_ty),
+            Type::Union(_)
+        )
+    {
+        return None;
+    }
+    let variant = find_union_variant(members, member_ty)?;
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![union_ty.union_enum_name(), variant])),
+        args: vec![lowered],
+    })
 }
 
 /// Detect `x is None` pattern in a Compare expression. Returns the variable name.

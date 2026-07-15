@@ -1,0 +1,3 @@
+# expect-error: SIFR-CLASS-0006
+class CallbackError(Error):
+    callback: Callable[[int], int]

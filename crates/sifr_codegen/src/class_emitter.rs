@@ -6,6 +6,25 @@ use crate::{
 use sifr_ir::{HirClass, HirFunction, HirModule, RustInteropDecoratorKind, RustInteropValue};
 use sifr_type_system::Type;
 
+#[derive(Clone, Copy, Default)]
+struct ClassTraitCapabilities {
+    debug: bool,
+    clone: bool,
+    partial_eq: bool,
+    hash: bool,
+}
+
+impl ClassTraitCapabilities {
+    const fn all() -> Self {
+        Self {
+            debug: true,
+            clone: true,
+            partial_eq: true,
+            hash: true,
+        }
+    }
+}
+
 impl RustEmitter {
     fn is_current_process_resource_class(&self, class_name: &str) -> bool {
         self.current_module_name.as_deref() == Some("sifr.process")
@@ -19,6 +38,89 @@ impl RustEmitter {
                     | "AsyncPipeReader"
                     | "AsyncPipeWriter"
             )
+    }
+
+    fn class_trait_capabilities(
+        &self,
+        class: &HirClass,
+        module: &HirModule,
+        visiting: &mut std::collections::HashSet<String>,
+    ) -> ClassTraitCapabilities {
+        if !visiting.insert(class.name.clone()) {
+            return ClassTraitCapabilities::default();
+        }
+        if class.python_opaque_declaration().is_some()
+            || self.is_current_process_resource_class(&class.name)
+        {
+            visiting.remove(&class.name);
+            return ClassTraitCapabilities {
+                debug: true,
+                ..ClassTraitCapabilities::default()
+            };
+        }
+
+        let has_callable_field = class
+            .fields
+            .iter()
+            .any(|(_, ty)| matches!(ty, Type::Callable(..) | Type::AsyncCallable(..)));
+        let has_non_send_class_field = class.fields.iter().any(|(_, ty)| {
+            matches!(
+                ty.resolve_alias(),
+                Type::Class { parent_class, .. }
+                    if parent_class.as_deref() == Some("NonSend")
+            )
+        });
+        if has_callable_field
+            || has_non_send_class_field
+            || class.parent_class.as_deref() == Some("NonSend")
+        {
+            visiting.remove(&class.name);
+            return ClassTraitCapabilities::default();
+        }
+
+        let parent = match class.parent_class.as_deref() {
+            None => ClassTraitCapabilities::all(),
+            Some(parent_name) => module
+                .classes
+                .iter()
+                .find(|candidate| candidate.name == parent_name)
+                .map_or_else(ClassTraitCapabilities::default, |parent| {
+                    self.class_trait_capabilities(parent, module, visiting)
+                }),
+        };
+        let has_custom_eq = class
+            .operator_impls
+            .iter()
+            .any(|(name, _)| name == "__eq__");
+        let has_affine_field = class
+            .fields
+            .iter()
+            .any(|(_, ty)| ty.contains_affine_resource());
+        let capabilities = ClassTraitCapabilities {
+            debug: parent.debug
+                && class
+                    .fields
+                    .iter()
+                    .all(|(_, ty)| ty.supports_debug_formatting()),
+            clone: parent.clone
+                && class
+                    .fields
+                    .iter()
+                    .all(|(_, ty)| ty.supports_derived_clone()),
+            partial_eq: parent.partial_eq
+                && (has_custom_eq
+                    || class
+                        .fields
+                        .iter()
+                        .all(|(_, ty)| ty.supports_structural_equality())),
+            hash: parent.hash
+                && !has_custom_eq
+                && class.is_hashable
+                && !has_affine_field
+                && class.fields.iter().all(|(_, ty)| ty.supports_hash_key()),
+        };
+        visiting.remove(&class.name);
+        capabilities
     }
 
     fn process_child_drop_impl() -> RustItem {
@@ -527,53 +629,24 @@ impl RustEmitter {
             .operator_impls
             .iter()
             .any(|(name, _)| name == "__str__");
-        let has_callable_field = class
-            .fields
-            .iter()
-            .any(|(_, ty)| matches!(ty, Type::Callable(..) | Type::AsyncCallable(..)));
-        let has_non_send_class_field = class.fields.iter().any(|(_, ty)| {
-            matches!(
-                ty.resolve_alias(),
-                Type::Class { parent_class, .. }
-                    if parent_class.as_deref() == Some("NonSend")
-            )
-        });
-        let has_affine_field = class
-            .fields
-            .iter()
-            .any(|(_, ty)| ty.contains_affine_resource());
-        let fields_support_clone = class
-            .fields
-            .iter()
-            .all(|(_, ty)| ty.supports_derived_clone());
-        let fields_support_equality = class
-            .fields
-            .iter()
-            .all(|(_, ty)| ty.supports_structural_equality());
-        let fields_support_hash = class.fields.iter().all(|(_, ty)| ty.supports_hash_key());
-        let fields_support_debug = class
-            .fields
-            .iter()
-            .all(|(_, ty)| ty.supports_debug_formatting());
+        let capabilities =
+            self.class_trait_capabilities(class, module, &mut std::collections::HashSet::new());
         let has_auto_display =
             !class.fields.is_empty() && class.fields.iter().all(|(_, ty)| is_auto_display_type(ty));
-        let is_non_send = class.parent_class.as_deref() == Some("NonSend");
         let derives = if is_python_opaque || self.is_current_process_resource_class(&class.name) {
             vec!["Debug".to_string()]
-        } else if has_callable_field || has_non_send_class_field || is_non_send {
-            Vec::new()
         } else {
             let mut derives = Vec::new();
-            if fields_support_debug {
+            if capabilities.debug {
                 derives.push("Debug".to_string());
             }
-            if fields_support_clone {
+            if capabilities.clone {
                 derives.push("Clone".to_string());
             }
-            if !has_custom_eq && fields_support_equality {
+            if !has_custom_eq && capabilities.partial_eq {
                 derives.push("PartialEq".to_string());
             }
-            if !has_custom_eq && class.is_hashable && fields_support_hash && !has_affine_field {
+            if capabilities.hash {
                 derives.push("Eq".to_string());
                 derives.push("Hash".to_string());
             }

@@ -1,4 +1,4 @@
-use super::{type_bounds::type_satisfies_bound, LowerCtx};
+use super::{type_bounds::supports_hash_key_in_context, LowerCtx};
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_type_system::Type;
@@ -28,9 +28,7 @@ pub(in crate::lower) fn reject_unhashable_container_type(
     range: TextRange,
 ) -> bool {
     let resolved = ty.resolve_alias();
-    if super::classes::is_hashable_type(ty)
-        || matches!(resolved, Type::TypeVar(_)) && type_satisfies_bound(ty, "Hashable", ctx)
-    {
+    if supports_hash_key_in_context(ty, ctx) {
         return false;
     }
     let (code, reason) = if matches!(resolved, Type::Any | Type::Unknown) {
