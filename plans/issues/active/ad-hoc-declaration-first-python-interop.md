@@ -7,9 +7,10 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review pass 12 reopened the final compiler
-Rust-trait capability gaps, and its remediation now passes focused compiler,
-native-positive, native-negative, maintainability, and formatting validation in
+Wave 2 is implemented; whole-diff review pass 13 reopened the final compiler
+Rust-trait consumer gaps, and its remediation now passes the authoritative
+local create-PR gate plus focused compiler, native-positive/negative,
+maintainability, and formatting validation in
 [PR #2988](https://github.com/sifr-lang/sifr/pull/2988). Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
@@ -982,8 +983,28 @@ Delivery waves:
   `131/131` with signature `7c39b8c1dd4fec7c` and `22/42` cache hits after the
   requested `cargo clean`. Its `615.77s` wall time produced only the
   non-blocking warm-wall-time and cache-hit advisories;
-  every enforced step budget passed. The next fresh whole-diff review remains
-  pending.
+  every enforced step budget passed. Full-diff
+  [review pass 13](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-13.md)
+  confirmed the transitive `NonSend` and specialized-generic hash repairs, then
+  found that dictionary projections and formatting consumers still admitted
+  unavailable Rust Clone/Display/Debug traits, `dict(iterable)` did not validate
+  its inferred key's `Eq + Hash`, and list methods conflated Clone, PartialEq,
+  and total Ord. The remediation now gates every affected dictionary clone and
+  construction path, `print`, `str`, f-string, and `repr` formatting path, and
+  separates list clone, structural-equality, and total-order requirements.
+  Eight permanent negative fixtures expand the complete compile-fail matrix to
+  `510/510`. Full affected suites pass: type system `102/102`, lowering `742`
+  passed with one ignored, and code generation `817/817`. Workspace Clippy,
+  formatting, diff, HIR maintainability, and the `900`-line file-size guardrail
+  pass over `2636` files. Explicit `None` formatting preserves Python spelling
+  without requiring Rust unit `Display`, while compiler-owned task/failure/
+  timeout/select wrappers and `JoinItemId` follow their emitted recursive
+  `Debug` or bespoke `Display` implementations. The authoritative create-PR
+  facade passes every blocking lane: Python interop `11/11` in `104.24s`,
+  runtime platform `28/28` with one gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `41/42` cache hits. Its `444.51s` wall time produced
+  only the non-blocking warm-target advisory; every enforced step budget
+  passed. The next fresh whole-diff review remains pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

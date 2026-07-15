@@ -11,6 +11,7 @@ use super::{
     validate_variadic_min_max_operands, DiagnosticCode, ExprCall, HirExpr, HirIteratorOp, LowerCtx,
     Ranged, Type,
 };
+use crate::lower::type_bounds::supports_print_formatting;
 pub(super) enum CallLowering {
     Lowered(HirExpr),
     NoMatch,
@@ -200,6 +201,17 @@ pub(super) fn lower_unshadowed_builtin_call(
     if func_name == "str" {
         if call.arguments.args.len() == 1 {
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            if !supports_print_formatting(arg.ty()) {
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "str() argument type '{}' lacks the generated Rust formatting trait required by codegen",
+                        arg.ty().display_name()
+                    ),
+                    call.arguments.args[0].range(),
+                );
+                return None;
+            }
             return Some(CallLowering::Lowered(HirExpr::Call {
                 func: "str".to_string(),
                 args: vec![arg],
@@ -355,6 +367,17 @@ pub(super) fn lower_unshadowed_builtin_call(
             return None;
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        if !arg.ty().supports_debug_formatting() {
+            expression_diagnostics::type_mismatch(
+                ctx,
+                format!(
+                    "repr() argument type '{}' lacks generated Rust Debug support",
+                    arg.ty().display_name()
+                ),
+                call.arguments.args[0].range(),
+            );
+            return None;
+        }
         return Some(CallLowering::Lowered(HirExpr::Call {
             func: "repr".to_string(),
             args: vec![arg],

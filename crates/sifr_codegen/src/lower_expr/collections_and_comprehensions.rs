@@ -378,7 +378,13 @@ pub(super) fn try_lower_simple_fstring_expr(parts: &[HirFStringPart]) -> Option<
                     return None;
                 }
                 format_str.push_str("{}");
-                lowered_args.push(try_lower_leaf_or_name_expr(expr)?);
+                if matches!(resolve_alias_type(expr.ty()), Type::None) {
+                    lowered_args.push(RustExpr::Literal(crate::RustLiteral::Str(
+                        "None".to_string(),
+                    )));
+                } else {
+                    lowered_args.push(try_lower_leaf_or_name_expr(expr)?);
+                }
             }
         }
     }

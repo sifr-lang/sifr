@@ -369,6 +369,26 @@ pub(in crate::lower) fn lower_dict_constructor_call(
                 );
                 return None;
             }
+            if !dict_ty.supports_derived_clone() {
+                reject_type_mismatch(
+                    ctx,
+                    "dict() requires source keys and values with generated Rust Clone support"
+                        .to_string(),
+                    arg_expr.range(),
+                );
+                return None;
+            }
+            let Type::Dict(key_ty, _) = dict_ty.resolve_alias() else {
+                return None;
+            };
+            if super::super::container_literal_diagnostics::reject_unhashable_container_type(
+                ctx,
+                "dict() key",
+                key_ty,
+                arg_expr.range(),
+            ) {
+                return None;
+            }
             Some(HirExpr::Call {
                 func: "dict".to_string(),
                 args: vec![arg],
@@ -395,6 +415,23 @@ pub(in crate::lower) fn lower_dict_constructor_call(
                         .to_string(),
                     arg_expr.range(),
                 );
+                return None;
+            }
+            if !arg.ty().supports_derived_clone() {
+                reject_type_mismatch(
+                    ctx,
+                    "dict() requires source keys and values with generated Rust Clone support"
+                        .to_string(),
+                    arg_expr.range(),
+                );
+                return None;
+            }
+            if super::super::container_literal_diagnostics::reject_unhashable_container_type(
+                ctx,
+                "dict() key",
+                &key_ty,
+                arg_expr.range(),
+            ) {
                 return None;
             }
             let merged_ty = Type::Dict(

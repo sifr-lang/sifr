@@ -1,6 +1,18 @@
 use super::{
     call_expr_parts, canonical_plain_call_name_for_ir, HirExpr, HirFStringPart, RustEmitter,
 };
+
+fn is_none_type(ty: &sifr_type_system::Type) -> bool {
+    matches!(
+        crate::resolve_alias_type_for_plain_call(ty),
+        sifr_type_system::Type::None
+    )
+}
+
+fn none_display_expr() -> crate::RustExpr {
+    crate::RustExpr::Literal(crate::RustLiteral::Str("None".to_string()))
+}
+
 impl RustEmitter {
     pub(crate) fn try_lower_stmt_expr_statement_only(
         &mut self,
@@ -120,6 +132,13 @@ impl RustEmitter {
 
         if args.len() == 1 {
             let arg = &args[0];
+            if is_none_type(arg.ty()) {
+                return Ok(Some(crate::RustExpr::FormatMacro {
+                    name: "println".to_string(),
+                    format_str: "None".to_string(),
+                    args: vec![],
+                }));
+            }
             if let HirExpr::StringLiteral(value) = arg {
                 let escaped = value
                     .replace('\\', "\\\\")
@@ -141,6 +160,11 @@ impl RustEmitter {
                             format_str.push_str(&text.replace('{', "{{").replace('}', "}}"));
                         }
                         HirFStringPart::Expr(inner) => {
+                            if is_none_type(inner.ty()) {
+                                format_str.push_str("{}");
+                                lowered_args.push(none_display_expr());
+                                continue;
+                            }
                             let Some(lowered_inner) = self.lower_stmt_expr_for_ir(inner)? else {
                                 return Ok(None);
                             };
@@ -250,6 +274,10 @@ impl RustEmitter {
         if let HirExpr::StringLiteral(fmt) = &args[0] {
             let mut lowered_args = Vec::with_capacity(args.len().saturating_sub(1));
             for arg in args.iter().skip(1) {
+                if is_none_type(arg.ty()) {
+                    lowered_args.push(none_display_expr());
+                    continue;
+                }
                 let Some(lowered_arg) = self.lower_stmt_expr_for_ir(arg)? else {
                     return Ok(None);
                 };
@@ -265,6 +293,11 @@ impl RustEmitter {
         let mut format_parts = Vec::with_capacity(args.len());
         let mut lowered_args = Vec::with_capacity(args.len());
         for arg in args {
+            if is_none_type(arg.ty()) {
+                lowered_args.push(none_display_expr());
+                format_parts.push("{}");
+                continue;
+            }
             let Some(lowered_arg) = self.lower_stmt_expr_for_ir(arg)? else {
                 return Ok(None);
             };

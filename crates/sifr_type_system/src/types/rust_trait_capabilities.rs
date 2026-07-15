@@ -66,7 +66,6 @@ impl Type {
         match self.resolve_alias() {
             Self::Any
             | Self::Unknown
-            | Self::Never
             | Self::Function(_)
             | Self::AsyncFunction(_)
             | Self::Protocol { .. }
@@ -74,10 +73,6 @@ impl Type {
             | Self::AsyncCallable(..)
             | Self::Coroutine(..)
             | Self::Task(..)
-            | Self::TaskResult(..)
-            | Self::Failure(_)
-            | Self::TimeoutResult(_)
-            | Self::Select2(..)
             | Self::BlockingTask(..)
             | Self::JoinSet(..)
             | Self::Awaitable(_)
@@ -95,6 +90,13 @@ impl Type {
             Self::Dict(key, value) | Self::Result(key, value) => {
                 key.supports_debug_formatting_inner(visiting_classes)
                     && value.supports_debug_formatting_inner(visiting_classes)
+            }
+            Self::TaskResult(ok, error) | Self::Select2(ok, error) => {
+                ok.supports_debug_formatting_inner(visiting_classes)
+                    && error.supports_debug_formatting_inner(visiting_classes)
+            }
+            Self::Failure(error) | Self::TimeoutResult(error) => {
+                error.supports_debug_formatting_inner(visiting_classes)
             }
             Self::Tuple(elements) | Self::Union(elements) => elements
                 .iter()
@@ -163,7 +165,9 @@ impl Type {
                 methods,
                 ..
             } => {
-                if methods.iter().any(|(method, _)| method == "__str__") {
+                // `JoinItemId` is a compiler-owned runtime wrapper with a
+                // bespoke `Display` implementation rather than a Sifr method.
+                if name == "JoinItemId" || methods.iter().any(|(method, _)| method == "__str__") {
                     return true;
                 }
                 if fields.is_empty() || !visiting_classes.insert(name.clone()) {

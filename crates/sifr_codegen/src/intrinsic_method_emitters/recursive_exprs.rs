@@ -577,6 +577,15 @@ impl RustEmitter {
                         }
                         HirFStringPart::Expr(expr) => {
                             format_str.push_str("{}");
+                            if matches!(
+                                crate::resolve_alias_type_for_plain_call(expr.ty()),
+                                Type::None
+                            ) {
+                                lowered_args.push(crate::RustExpr::Literal(
+                                    crate::RustLiteral::Str("None".to_string()),
+                                ));
+                                continue;
+                            }
                             let lowered_expr = self.try_lower_registry_expr_strict(expr)?;
                             if let Some(inner_ty) = registry_option_inner_type(expr.ty()) {
                                 let inner_format_str =

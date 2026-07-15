@@ -897,8 +897,25 @@ supports them. This is a language rule, not an implementation detail.
 - **Hash-consumer constraint:** set elements and dictionary keys must implement
   `Hash + Eq`. The compiler enforces this for literals, membership, structural
   equality, `hash()`, and dictionary indexing, assignment, augmented assignment,
-  and deletion. Specialized generic class instances are rejected at these
-  consumers unless their emitted declaration provides the required traits.
+  deletion, and every non-empty `dict(...)` construction path. Specialized
+  generic class instances are rejected at these consumers unless their emitted
+  declaration provides the required traits.
+- **Clone-consumer constraint:** collection operations that emit Rust cloning
+  require recursive `Clone` support before HIR is accepted. This includes list
+  copy/extend, dictionary key/value/item projections, dictionary copy/get/
+  setdefault, and dictionary source construction; affine resources keep their
+  more specific ownership diagnostic.
+- **Comparison-consumer constraint:** list count/contains/remove/index require
+  recursive `PartialEq`, while in-place list sort requires total Rust `Ord`.
+  Sifr's broader `Comparable`/`PartialOrd` surface does not certify `slice::sort`;
+  in particular, `float` is rejected for in-place sort.
+- **Formatting-consumer constraint:** `print`, `str`, f-string interpolation,
+  and `repr` validate the exact generated Rust `Display`/`Debug` strategy before
+  accepting HIR. `repr` always requires `Debug`; the other surfaces select the
+  same Display-versus-Debug path as code generation, including option members,
+  recursively derived task/failure/timeout/select runtime wrappers, and the
+  compiler-owned `JoinItemId` display implementation. `None` is emitted with
+  its Python spelling directly rather than requiring Rust unit `Display`.
 
 ### 11. Diagnostic Mapping
 

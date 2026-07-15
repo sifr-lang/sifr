@@ -132,6 +132,12 @@ impl RustEmitter {
     /// Wraps Option<T> expressions so they display as the inner value or "None".
     /// Omits `.to_string()` on string literals since format macros accept &str.
     pub(crate) fn lower_display_expr(&mut self, expr: &HirExpr) -> crate::RustExpr {
+        if matches!(
+            crate::resolve_alias_type_for_plain_call(expr.ty()),
+            Type::None
+        ) {
+            return crate::RustExpr::Literal(crate::RustLiteral::Str("None".to_string()));
+        }
         let inferred_option_inner = display_option_inner_type(expr);
         if let Some(inner) = inferred_option_inner {
             let lowered = self.lower_ref_expr_or_panic(expr, "display option expr");

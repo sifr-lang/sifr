@@ -5,6 +5,9 @@ use super::{
     validate_list_extend_arg, validate_set_iterable_arg, DiagnosticCode, HirExpr, LowerCtx,
     TextRange, Type,
 };
+use crate::lower::type_bounds::{
+    supports_structural_equality_in_context, supports_total_order_in_context,
+};
 pub(super) fn resolve_list_method_type(
     elem_ty: &Type,
     method: &str,
@@ -13,22 +16,41 @@ pub(super) fn resolve_list_method_type(
     method_range: TextRange,
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
-    let requires_reusable_elements = matches!(
-        method,
-        "copy" | "extend" | "sort" | "count" | "contains" | "remove" | "index"
-    );
-    if requires_reusable_elements
-        && !elem_ty.supports_derived_clone()
-        && !elem_ty.contains_affine_resource()
-    {
+    let requires_clone = matches!(method, "copy" | "extend");
+    let requires_equality = matches!(method, "count" | "contains" | "remove" | "index");
+    let requires_total_order = method == "sort";
+    let requires_trait_capability = requires_clone || requires_equality || requires_total_order;
+    if requires_clone && !elem_ty.supports_derived_clone() && !elem_ty.contains_affine_resource() {
         ctx.error_with_code_at(
             DiagnosticCode::TYPE_MISMATCH,
-            format!("list.{method}() requires a statically known clone/comparison capability"),
+            format!("list.{method}() requires elements with generated Rust Clone support"),
             method_range,
         );
         return None;
     }
-    if elem_ty.contains_affine_resource() && requires_reusable_elements {
+    if requires_equality
+        && !supports_structural_equality_in_context(elem_ty, ctx)
+        && !elem_ty.contains_affine_resource()
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!("list.{method}() requires elements with generated Rust PartialEq support"),
+            method_range,
+        );
+        return None;
+    }
+    if requires_total_order
+        && !supports_total_order_in_context(elem_ty, ctx)
+        && !elem_ty.contains_affine_resource()
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "list.sort() requires elements with generated Rust total Ord support".to_string(),
+            method_range,
+        );
+        return None;
+    }
+    if elem_ty.contains_affine_resource() && requires_trait_capability {
         ctx.error_with_code_at(
             DiagnosticCode::PYZC_INVALID_DECLARATION,
             format!(
@@ -297,13 +319,12 @@ pub(super) fn resolve_dict_method_type(
     );
     if requires_reusable_values
         && !unresolved_empty_get
-        && matches!(val_ty.resolve_alias(), Type::Any | Type::Unknown)
+        && !val_ty.supports_derived_clone()
+        && !val_ty.contains_affine_resource()
     {
         ctx.error_with_code_at(
             DiagnosticCode::TYPE_MISMATCH,
-            format!(
-                "dict.{method}() requires a statically known value clone/comparison capability"
-            ),
+            format!("dict.{method}() requires values with generated Rust Clone support"),
             method_range,
         );
         return None;
@@ -314,6 +335,18 @@ pub(super) fn resolve_dict_method_type(
             format!(
                 "dict.{method}() is unavailable for values containing affine Python buffers because it clones or projects stored values"
             ),
+            method_range,
+        );
+        return None;
+    }
+    let requires_reusable_keys = matches!(method, "keys" | "items" | "copy");
+    if requires_reusable_keys
+        && !key_ty.supports_derived_clone()
+        && !key_ty.contains_affine_resource()
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!("dict.{method}() requires keys with generated Rust Clone support"),
             method_range,
         );
         return None;

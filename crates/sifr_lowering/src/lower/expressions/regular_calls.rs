@@ -8,6 +8,7 @@ use super::{
     type_satisfies_constraint, DiagnosticCode, Expr, ExprCall, HashMap, HirExpr, LowerCtx,
     ParamConvention, Ranged, Type,
 };
+use crate::lower::type_bounds::supports_print_formatting;
 use crate::lower::{ipc_payload_calls, parallel_calls};
 
 pub(super) fn lower_regular_call(
@@ -215,7 +216,19 @@ pub(super) fn lower_regular_call(
     } else if func_name == "print" {
         let mut args = Vec::with_capacity(call.arguments.args.len());
         for arg in &call.arguments.args {
-            args.push(lower_expr(arg, ctx)?);
+            let lowered = lower_expr(arg, ctx)?;
+            if !supports_print_formatting(lowered.ty()) {
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "print() argument type '{}' lacks the generated Rust formatting trait required by codegen",
+                        lowered.ty().display_name()
+                    ),
+                    arg.range(),
+                );
+                return None;
+            }
+            args.push(lowered);
         }
         args
     } else if func_name.ends_with("_Counter")

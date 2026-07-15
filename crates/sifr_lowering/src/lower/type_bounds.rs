@@ -193,6 +193,79 @@ pub(in crate::lower) fn supports_structural_equality_in_context(ty: &Type, ctx: 
     supports_structural_equality_in_context_inner(ty, ctx, &mut std::collections::HashSet::new())
 }
 
+/// Whether the generated Rust representation implements the total `Ord` trait
+/// required by `slice::sort`. This is intentionally narrower than Sifr's
+/// `Comparable` bound, which also admits partial orders such as `float`.
+pub(in crate::lower) fn supports_total_order_in_context(ty: &Type, _ctx: &LowerCtx) -> bool {
+    supports_total_order(ty)
+}
+
+fn supports_total_order(ty: &Type) -> bool {
+    match ty.resolve_alias() {
+        Type::Int
+        | Type::FixedInt(_)
+        | Type::Bool
+        | Type::Str
+        | Type::Bytes
+        | Type::None
+        | Type::LiteralInt(_)
+        | Type::LiteralStr(_)
+        | Type::LiteralBool(_)
+        | Type::BigInt
+        | Type::Decimal
+        | Type::BigDecimal => true,
+        Type::Tuple(elements) => elements.iter().all(supports_total_order),
+        Type::TypeVar(_) => false,
+        _ => false,
+    }
+}
+
+/// Whether `print` can use the exact Display/Debug strategy selected by codegen.
+pub(in crate::lower) fn supports_print_formatting(ty: &Type) -> bool {
+    let resolved = ty.resolve_alias();
+    if let Type::Union(members) = resolved {
+        if members.len() == 2 && members.iter().any(|member| matches!(member, Type::None)) {
+            return members
+                .iter()
+                .find(|member| !matches!(member, Type::None))
+                .is_some_and(supports_print_formatting);
+        }
+    }
+    match resolved {
+        Type::List(_)
+        | Type::Bytes
+        | Type::Dict(_, _)
+        | Type::Set(_)
+        | Type::Tuple(_)
+        | Type::Iterable(_)
+        | Type::Iterator(_)
+        | Type::Function(_)
+        | Type::AsyncFunction(_)
+        | Type::Coroutine(_, _)
+        | Type::Task(_, _)
+        | Type::TaskResult(_, _)
+        | Type::Failure(_)
+        | Type::TimeoutResult(_)
+        | Type::Select2(_, _)
+        | Type::BlockingTask(_, _)
+        | Type::JoinSet(_, _)
+        | Type::Awaitable(_)
+        | Type::AsyncIterator(_, _)
+        | Type::AsyncGenerator(_, _)
+        | Type::PythonBuffer(_)
+        | Type::Callable(..)
+        | Type::AsyncCallable(..)
+        | Type::Result(_, _)
+        | Type::Protocol { .. }
+        | Type::Any
+        | Type::Unknown
+        | Type::Intersection(_)
+        | Type::Never => ty.supports_debug_formatting(),
+        Type::None => true,
+        _ => ty.supports_display_formatting(),
+    }
+}
+
 fn supports_structural_equality_in_context_inner(
     ty: &Type,
     ctx: &LowerCtx,

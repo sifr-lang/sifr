@@ -372,11 +372,22 @@ mod tests {
             parent_class: None,
         };
         let comparable_union = Type::Union(vec![Type::Int, Type::Str]);
+        let task_result = Type::TaskResult(Box::new(Type::Int), Box::new(Type::Never));
+        let join_item_id = Type::Class {
+            name: "JoinItemId".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        };
 
         assert!(comparable_union.supports_structural_equality());
         assert!(comparable_union.supports_hash_key());
         assert!(comparable_union.supports_debug_formatting());
         assert!(comparable_union.supports_display_formatting());
+        assert!(task_result.supports_debug_formatting());
+        assert!(Type::List(Box::new(task_result)).supports_debug_formatting());
+        assert!(join_item_id.supports_debug_formatting());
+        assert!(join_item_id.supports_display_formatting());
         assert!(!Type::Float.supports_hash_key());
         assert!(!Type::List(Box::new(Type::Int)).supports_hash_key());
         assert!(!Type::Set(Box::new(Type::Float)).supports_structural_equality());
