@@ -39,7 +39,6 @@ pub(super) struct OwnedPyBuffer {
 pub(super) enum BufferFootprint {
     Empty,
     Direct { ranges: Vec<Range<usize>> },
-    Indirect,
 }
 
 // SAFETY: This matches PyO3's `PyUntypedBuffer` guarantees. The pointer is
@@ -131,14 +130,19 @@ impl OwnedPyBuffer {
         if validated.len_bytes == 0 || validated.shape.contains(&0) {
             return Ok(BufferFootprint::Empty);
         }
-        if validated.suboffsets.iter().any(|suboffset| *suboffset >= 0) {
-            // Indirect buffers contain pointers to their logical storage. Their
-            // backing ranges cannot be proven disjoint from metadata alone, so
-            // writable admission must conservatively conflict with every live
-            // non-empty view.
-            return Ok(BufferFootprint::Indirect);
+        if validated.c_contiguous || validated.f_contiguous {
+            let start = self.raw().buf as usize;
+            let end = start
+                .checked_add(validated.len_bytes)
+                .ok_or_else(|| "buffer footprint address overflows".to_string())?;
+            return Ok(BufferFootprint::Direct {
+                ranges: vec![start..end],
+            });
         }
 
+        // `PyBuffer_GetPointer` follows both direct strides and indirect
+        // suboffsets, so the resulting ranges describe the actual logical
+        // items rather than an exporter-wide approximation.
         let item_count = validated.len_bytes / validated.item_size;
         let mut ranges = Vec::new();
         ranges

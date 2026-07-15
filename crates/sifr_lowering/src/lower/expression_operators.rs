@@ -288,6 +288,15 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
                 collection = refine_empty_set_binding_expr(collection, left.ty().clone(), ctx);
                 let collection_ty = collection.ty().clone();
                 if let Some(elem_ty) = collection_ty.contains_element_type() {
+                    if elem_ty.contains_affine_resource() || left.ty().contains_affine_resource() {
+                        ctx.error_with_code_at(
+                            sifr_diagnostics::DiagnosticCode::PYZC_INVALID_DECLARATION,
+                            "membership is unavailable for values containing affine Python buffers because it requires reusable structural equality"
+                                .to_string(),
+                            cmp.range(),
+                        );
+                        return None;
+                    }
                     if !left.ty().is_assignable_to(&elem_ty) {
                         expression_diagnostics::unsupported_operator(
                             ctx,
@@ -319,6 +328,15 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
                 collection = refine_empty_set_binding_expr(collection, left.ty().clone(), ctx);
                 let collection_ty = collection.ty().clone();
                 if let Some(elem_ty) = collection_ty.contains_element_type() {
+                    if elem_ty.contains_affine_resource() || left.ty().contains_affine_resource() {
+                        ctx.error_with_code_at(
+                            sifr_diagnostics::DiagnosticCode::PYZC_INVALID_DECLARATION,
+                            "membership is unavailable for values containing affine Python buffers because it requires reusable structural equality"
+                                .to_string(),
+                            cmp.range(),
+                        );
+                        return None;
+                    }
                     if !left.ty().is_assignable_to(&elem_ty) {
                         expression_diagnostics::unsupported_operator(
                             ctx,

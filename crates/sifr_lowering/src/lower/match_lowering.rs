@@ -5,6 +5,7 @@ use super::statements::{bind_pattern_vars, lower_pattern, lower_stmts};
 use super::LowerCtx;
 use crate::hir_nodes::{HirMatchArm, HirPattern, HirStmt};
 use ruff_text_size::Ranged;
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::StmtMatch;
 use sifr_type_system::{FunctionType, Type};
 
@@ -15,6 +16,15 @@ pub(in crate::lower) fn lower_match(
 ) -> Option<HirStmt> {
     let subject = lower_expr(&match_stmt.subject, ctx)?;
     let subject_ty = subject.ty().clone();
+    if subject_ty.contains_affine_resource() {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYZC_INVALID_DECLARATION,
+            "pattern matching is unavailable for values containing affine Python buffers until branch-sensitive ownership is supported"
+                .to_string(),
+            match_stmt.subject.range(),
+        );
+        return None;
+    }
 
     let mut arms = Vec::new();
     for case in &match_stmt.cases {

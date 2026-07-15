@@ -5,7 +5,7 @@ use sifr_python_ast::{Expr, ExprAttribute, ExprTuple};
 
 use super::assignment_widening::reconcile_optional_reassignment;
 use super::binding_mutability::ensure_mutable_parameter_binding;
-use super::expressions::lower_expr;
+use super::expressions::{consume_owned_value, lower_expr};
 use super::len_aliases::record_tuple_unpack_len_alias_facts;
 use super::name_diagnostics;
 use super::sequence_pointers::record_tuple_unpack_pointer_facts;
@@ -109,6 +109,7 @@ pub(in crate::lower) fn lower_tuple_unpack_assign(
         );
         return None;
     };
+    consume_owned_value(&value_expr, value.range(), ctx);
 
     record_tuple_unpack_pointer_facts(ctx, &target_names, value);
     record_tuple_unpack_len_alias_facts(ctx, &target_names, value);
@@ -202,6 +203,15 @@ pub(in crate::lower) fn lower_star_unpack_assign(
         );
         return None;
     };
+    if elem_ty.contains_affine_resource() {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYZC_INVALID_DECLARATION,
+            "star unpacking is unavailable for elements containing affine Python buffers because it clones projected values"
+                .to_string(),
+            value.range(),
+        );
+        return None;
+    }
 
     let mut before = Vec::new();
     let mut star: Option<(String, sifr_type_system::Type)> = None;

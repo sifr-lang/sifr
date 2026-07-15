@@ -488,6 +488,15 @@ pub(in crate::lower) fn lower_chained_assign(
         ctx,
     );
     let val_ty = value.ty().clone();
+    if val_ty.contains_affine_resource() {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYZC_INVALID_DECLARATION,
+            "chained assignment is unavailable for values containing affine Python buffers because one affine value cannot initialize multiple owners"
+                .to_string(),
+            assign.range(),
+        );
+        return result;
+    }
 
     // Process targets in reverse order (rightmost gets the value first)
     let targets: Vec<_> = assign.targets.iter().collect();

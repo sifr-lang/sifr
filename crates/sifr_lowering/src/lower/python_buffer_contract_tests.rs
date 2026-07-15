@@ -453,6 +453,46 @@ fn borrowed_affine_buffers_cannot_enter_owned_calls_or_aggregate_returns() {
 }
 
 #[test]
+fn affine_membership_chained_assignment_star_unpack_and_match_are_rejected() {
+    for source in [
+        "def membership(view: python.Buffer[uint8], values: list[python.Buffer[uint8]]) -> bool:\n    return view in values\n",
+        "def non_membership(view: python.Buffer[uint8], values: list[python.Buffer[uint8]]) -> bool:\n    return view not in values\n",
+        "def chain(own view: python.Buffer[uint8]) -> None:\n    left = right = view\n",
+        "def unpack(own values: list[python.Buffer[uint8]]) -> None:\n    first, *rest = values\n",
+        "def inspect(own view: python.Buffer[uint8]) -> None:\n    match view:\n        case _:\n            print(1)\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn tuple_unpack_consumes_owned_affine_source_and_rejects_borrowed_source() {
+    let moved = lower_errors(
+        "def unpack(own pair: tuple[python.Buffer[uint8], int]) -> None:\n    view, number = pair\n    print(pair)\n",
+    );
+    assert!(
+        moved
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+        "{moved:?}"
+    );
+
+    let borrowed = lower_errors(
+        "def unpack(pair: tuple[python.Buffer[uint8], int]) -> None:\n    view, number = pair\n",
+    );
+    assert!(borrowed.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+            && error.message.contains("borrowed affine Python buffer")
+    }));
+}
+
+#[test]
 fn affine_buffer_conditional_assignment_consumes_every_candidate() {
     let errors = lower_errors(
         "def choose(own left: python.Buffer[uint8], own right: python.Buffer[uint8], flag: bool) -> None:\n    selected: python.Buffer[uint8] = left if flag else right\n    print(left.length())\n    print(right.length())\n",

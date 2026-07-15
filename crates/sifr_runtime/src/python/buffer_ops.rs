@@ -342,7 +342,6 @@ fn release_buffer_admission(store: &mut BufferStore, handle: i64) -> Result<(), 
 fn footprints_overlap(left: &BufferFootprint, right: &BufferFootprint) -> bool {
     match (left, right) {
         (BufferFootprint::Empty, _) | (_, BufferFootprint::Empty) => false,
-        (BufferFootprint::Indirect, _) | (_, BufferFootprint::Indirect) => true,
         (
             BufferFootprint::Direct {
                 ranges: left_ranges,
@@ -350,12 +349,27 @@ fn footprints_overlap(left: &BufferFootprint, right: &BufferFootprint) -> bool {
             BufferFootprint::Direct {
                 ranges: right_ranges,
             },
-        ) => left_ranges.iter().any(|left_range| {
-            right_ranges.iter().any(|right_range| {
-                left_range.start < right_range.end && right_range.start < left_range.end
-            })
-        }),
+        ) => sorted_ranges_overlap(left_ranges, right_ranges),
     }
+}
+
+fn sorted_ranges_overlap(
+    left: &[std::ops::Range<usize>],
+    right: &[std::ops::Range<usize>],
+) -> bool {
+    let (mut left_index, mut right_index) = (0, 0);
+    while let (Some(left_range), Some(right_range)) = (left.get(left_index), right.get(right_index))
+    {
+        if left_range.start < right_range.end && right_range.start < left_range.end {
+            return true;
+        }
+        if left_range.end <= right_range.start {
+            left_index += 1;
+        } else {
+            right_index += 1;
+        }
+    }
+    false
 }
 
 fn buffer_snapshot(

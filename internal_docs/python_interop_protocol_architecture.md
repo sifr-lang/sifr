@@ -461,6 +461,14 @@ outlive the buffer. Writable buffers require an exclusive Sifr borrow. A
 declaration returning `bytes` or a typed collection is a checked copy, not a
 buffer declaration.
 
+Runtime admission compares the physical byte ranges of logical buffer items
+across every live view. C- and F-contiguous views use one compressed range, so
+large ordinary arrays require constant admission memory. Non-contiguous direct
+and indirect views resolve each logical item through `PyBuffer_GetPointer`, then
+sort and merge the resulting ranges. This admits physically disjoint slices,
+strides, and indirect exporters while rejecting any overlapping pair for which
+at least one view is writable.
+
 The public resource exposes read-only `length`, `item_size`, `dimensions`,
 `shape`, `strides`, `suboffsets`, `format`, `readonly`, `c_contiguous`, and
 `f_contiguous` accessors. Typed element/slice access checks the declared layout

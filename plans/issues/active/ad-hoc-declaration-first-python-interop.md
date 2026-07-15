@@ -7,8 +7,9 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented and its pass-7 remediation passes focused and full
-affected-crate validation and is awaiting a fresh whole-diff review in
+Wave 2 is implemented; whole-diff review pass 8 reopened compiler ownership and
+runtime admission gaps, and its remediation now passes focused compiler,
+runtime, native-negative, maintainability, and formatting validation in
 [PR #2988](https://github.com/sifr-lang/sifr/pull/2988). Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
@@ -865,7 +866,27 @@ Delivery waves:
   passed every blocking lane: Python interop `11/11`, runtime platform `28/28`
   with one gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c`; its `445.31s` wall time produced only the non-blocking
-  warm wall-time advisory. A fresh whole-diff review is pending.
+  warm wall-time advisory. Full-diff
+  [review pass 8](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-8.md)
+  confirmed the prior release, bridge, sendability, and recursive capability
+  work, then found affine membership, chained/unpack ownership, affine match,
+  large-contiguous footprint scaling, exact indirect admission, and activation
+  evidence gaps. Those paths are now closed by explicit affine operation
+  diagnostics, consuming tuple-unpack semantics, a permanent native-negative
+  membership fixture, constant-space contiguous admission, exact indirect
+  logical-item ranges, linear merged-range overlap checks, and corrected
+  architecture and activation evidence. Focused buffer lowering passes `30/30`,
+  buffer code generation passes `9/9`, buffer runtime operations pass `18/18`,
+  and the complete compile-fail matrix passes `482/482`. Full affected suites
+  pass: type system `98/98`, lowering `740/740` with one ignored, code generation
+  `813/813`, and Python-enabled runtime `206/206`. The first post-change
+  create-PR run passed all functional Python interop cases but exceeded that
+  step's warm budget while rebuilding callback and buffer examples. The
+  immediate authoritative rerun passed every blocking lane: Python interop
+  `11/11` in `103.07s`, runtime platform `28/28` with one gated skip, and E2E
+  `131/131` with signature `7c39b8c1dd4fec7c`; all step budgets passed and the
+  `800.94s` uncached overall wall time produced only the non-blocking warm
+  wall-time advisory. A fresh whole-diff review is pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

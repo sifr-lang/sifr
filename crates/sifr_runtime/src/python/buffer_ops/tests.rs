@@ -388,6 +388,76 @@ fn admission_allows_interleaved_disjoint_writable_strides() {
 }
 
 #[test]
+fn large_contiguous_buffer_uses_one_admission_range() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("buffer-large-contiguous-admission"))
+        .expect("init should succeed");
+
+    let object = super::super::attach(|py| {
+        let exporter = py
+            .import("builtins")?
+            .getattr("bytearray")?
+            .call1((16 * 1024 * 1024,))?;
+        super::super::object_ops::store_object(exporter.unbind())
+            .map_err(|error| pyo3::exceptions::PyRuntimeError::new_err(error.to_string()))
+    })
+    .expect("attach should succeed")
+    .expect("large exporter should create");
+    let view = acquire_buffer(
+        &object,
+        PythonBufferRequest {
+            element: PythonBufferElement::U8,
+            access: PythonBufferAccess::Write,
+            layout: PythonBufferLayout::CContiguous,
+        },
+    )
+    .expect("large contiguous buffer should acquire");
+    {
+        let store = buffer_store().expect("buffer store should lock");
+        let admission = store
+            .admissions
+            .get(&view.handle)
+            .expect("admission should exist");
+        assert!(matches!(
+            &admission.footprint,
+            BufferFootprint::Direct { ranges } if ranges.len() == 1
+        ));
+    }
+
+    release_buffer((view.handle, view.token)).expect("large buffer should release");
+    close_object(object).expect("large exporter should close");
+}
+
+#[test]
+fn indirect_admission_uses_exact_logical_item_ranges() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("buffer-indirect-exact-admission"))
+        .expect("init should succeed");
+
+    let (first_object, first_storage) = indirect_byte_memoryview();
+    let (second_object, second_storage) = indirect_byte_memoryview();
+    let request = PythonBufferRequest {
+        element: PythonBufferElement::U8,
+        access: PythonBufferAccess::Write,
+        layout: PythonBufferLayout::Any,
+    };
+    let first = acquire_buffer(&first_object, request).expect("first indirect writer");
+    let second = acquire_buffer(&second_object, request).expect("disjoint indirect writer");
+    let overlap = acquire_buffer(&first_object, request)
+        .expect_err("overlapping indirect writer must conflict");
+    assert_eq!(overlap.exception_type, "BufferError");
+
+    release_buffer((first.handle, first.token)).expect("first indirect release");
+    release_buffer((second.handle, second.token)).expect("second indirect release");
+    close_object(first_object).expect("first indirect object close");
+    close_object(second_object).expect("second indirect object close");
+    drop(first_storage);
+    drop(second_storage);
+}
+
+#[test]
 fn any_layout_supports_strided_logical_access() {
     let _guard = test_guard();
     reset_runtime_state_for_tests();
