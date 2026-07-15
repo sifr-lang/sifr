@@ -827,8 +827,23 @@ Delivery waves:
   authoritative create-PR facade passed every blocking lane: Python interop
   `11/11`, runtime platform `28/28` with one gated skip, and E2E `131/131` with
   signature `7c39b8c1dd4fec7c`. The warm facade completed in `415.80s`; all lane
-  budgets passed, with only the non-blocking warm wall-time advisory. A fresh
-  full-diff review is pending.
+  budgets passed, with only the non-blocking warm wall-time advisory. Full-diff
+  [review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-6.md)
+  confirmed the runtime lifecycle and prior exact compiler remediations, then
+  found list repetition capability gaps, variadic `min`/`max` ordering gaps,
+  affine-list self-`+=`, and stale activation evidence. Those paths are now
+  closed by a dedicated list-repetition clone-capability check, real ordering
+  validation for variadic `min`/`max`, safe assignment rewrites for cloneable
+  list `*=` and self-`+=`, exact affine/dynamic negative contracts, and corrected
+  activation status. Focused type capability tests pass `1/1`, buffer lowering
+  contracts pass `26/26`, buffer code generation passes `7/7`, full lowering
+  passes `736/736` with one ignored, full type-system tests pass `98/98`, and
+  full code generation passes `811/811`. The file-size guardrail passes over
+  `2601` files. The authoritative create-PR facade passes every blocking lane:
+  Python interop `11/11`, runtime platform `28/28` with one gated skip, and E2E
+  `131/131` with signature `7c39b8c1dd4fec7c`. The facade completed in
+  `423.95s`; all lane budgets passed, with only the non-blocking warm wall-time
+  advisory. A fresh whole-diff review is pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

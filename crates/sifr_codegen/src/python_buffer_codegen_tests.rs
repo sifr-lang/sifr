@@ -55,6 +55,19 @@ fn affine_list_append_moves_buffer_without_cloning() {
 }
 
 #[test]
+fn cloneable_list_repeat_augassign_rewrites_to_valid_repetition() {
+    let source = "def repeat(count: int) -> list[int]:\n    values: list[int] = [1, 2]\n    values *= count\n    return values\n";
+    let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
+    let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
+    let rust = generate_rust(&lowered.module);
+
+    assert!(!rust.contains("values *= count"), "{rust}");
+    assert!(rust.contains("__sifr_repeat_src"), "{rust}");
+    assert!(rust.contains("values ="), "{rust}");
+    syn::parse_file(&rust).expect("generated list repeat augmented assignment should parse");
+}
+
+#[test]
 fn top_level_buffer_wrapper_acquires_typed_writable_export() {
     let function = buffer_function(
         vec!["builtins", "bytearray"],

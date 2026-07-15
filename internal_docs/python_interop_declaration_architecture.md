@@ -2,9 +2,9 @@
 
 Status: production contract. Synchronous declarations, opaque lifecycle,
 synchronous contexts, package-local bridges, typed coroutine declarations,
-consuming async close and async contexts, and typed callbacks are active. Later
-zero-copy protocol sections remain the ordered target contract until their
-implementations activate. The
+consuming async close and async contexts, typed callbacks, and typed zero-copy
+buffer declarations are active. Remaining zero-copy protocol sections stay the
+ordered target contract until their implementations activate. The
 embedded runtime contract is also documented in
 [`python_interop_architecture.md`](./python_interop_architecture.md).
 

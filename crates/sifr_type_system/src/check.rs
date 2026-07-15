@@ -1,5 +1,6 @@
 //! Type checking rules for Sifr operators and expressions.
 
+use crate::collection_capabilities::type_check_list_repetition;
 use crate::types::Type;
 use crate::union::{remove_none_from_union, union_contains_none};
 use sifr_diagnostics::DiagnosticCode;
@@ -205,10 +206,10 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
             }
             // List repetition with *
             if op == "*" {
-                if let Type::List(_) = left {
-                    if right == &Type::Int {
-                        return Ok(left.clone());
-                    }
+                if let Some(result) = type_check_list_repetition(left, right)
+                    .or_else(|| type_check_list_repetition(right, left))
+                {
+                    return result;
                 }
                 if left == &Type::Bytes && right == &Type::Int {
                     return Ok(Type::Bytes);

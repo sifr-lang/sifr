@@ -467,8 +467,12 @@ fn affine_and_dynamic_generic_collection_capabilities_fail_during_lowering() {
 fn dynamic_collection_clone_and_projection_capabilities_fail_during_lowering() {
     for source in [
         "def concatenate(left: list[Any], right: list[Any]) -> list[Any]:\n    return left + right\n",
+        "def repeat(values: list[Any], count: int) -> list[Any]:\n    return values * count\n",
+        "def repeat(count: int) -> None:\n    values: list[Any] = []\n    values *= count\n",
         "def order(values: list[Any]) -> list[Any]:\n    return sorted(values)\n",
         "def total(values: list[Any]) -> Any:\n    return sum(values)\n",
+        "def minimum(left: Any, right: Any) -> Any:\n    return min(left, right)\n",
+        "def maximum(left: Any, right: Any) -> Any:\n    return max(left, right)\n",
     ] {
         let errors = lower_errors(source);
         assert!(
@@ -487,9 +491,14 @@ fn affine_buffer_copying_constructors_and_sorting_are_rejected() {
         "def duplicate(values: list[python.Buffer[uint8]]) -> list[python.Buffer[uint8]]:\n    return list(values)\n",
         "def duplicate(values: dict[str, python.Buffer[uint8]]) -> dict[str, python.Buffer[uint8]]:\n    return dict(values)\n",
         "def duplicate(values: dict[str, python.Buffer[uint8]], own extra: python.Buffer[uint8]) -> dict[str, python.Buffer[uint8]]:\n    return dict(values, extra=extra)\n",
+        "def repeat(values: list[python.Buffer[uint8]], count: int) -> list[python.Buffer[uint8]]:\n    return values * count\n",
+        "def repeat(count: int) -> None:\n    values: list[python.Buffer[uint8]] = []\n    values *= count\n",
+        "def duplicate() -> None:\n    values: list[python.Buffer[uint8]] = []\n    values += values\n",
         "def order(values: list[python.Buffer[uint8]]) -> list[python.Buffer[uint8]]:\n    return sorted(values)\n",
         "def minimum(values: list[python.Buffer[uint8]]) -> python.Buffer[uint8] | None:\n    return min(values)\n",
         "def maximum(values: list[python.Buffer[uint8]]) -> python.Buffer[uint8] | None:\n    return max(values)\n",
+        "def minimum(own left: python.Buffer[uint8], own right: python.Buffer[uint8]) -> python.Buffer[uint8]:\n    return min(left, right)\n",
+        "def maximum(own left: python.Buffer[uint8], own right: python.Buffer[uint8]) -> python.Buffer[uint8]:\n    return max(left, right)\n",
     ] {
         let errors = lower_errors(source);
         assert!(

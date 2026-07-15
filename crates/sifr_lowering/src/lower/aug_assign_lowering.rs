@@ -350,6 +350,7 @@ pub(in crate::lower) fn lower_aug_assign(
         return None;
     }
     let var_ty = var_info.ty.clone();
+    let rhs_is_target = matches!(aug.value.as_ref(), Expr::Name(rhs) if rhs.id.as_str() == name);
 
     let base_op = &op_str[..op_str.len() - 1];
     if exact_int_augassign_requires_handling(&var_ty, base_op, &value, ctx, aug.value.range()) {
@@ -359,6 +360,25 @@ pub(in crate::lower) fn lower_aug_assign(
         match (&var_ty, value.ty()) {
             (Type::Str, Type::Str) => {}
             (Type::List(left), Type::List(right)) if left == right => {
+                if rhs_is_target {
+                    if let Err((code, message)) = type_check_binary_op(&var_ty, base_op, value.ty())
+                    {
+                        ctx.error_with_code_at(code, message, aug.value.range());
+                        return None;
+                    }
+                    return Some(HirStmt::Assign {
+                        name: name.clone(),
+                        value: HirExpr::BinOp {
+                            left: Box::new(HirExpr::Name {
+                                name,
+                                ty: var_ty.clone(),
+                            }),
+                            op: base_op.to_string(),
+                            right: Box::new(value),
+                            ty: var_ty,
+                        },
+                    });
+                }
                 consume_owned_value(&value, aug.value.range(), ctx);
             }
             (Type::Bytes, Type::Bytes) => {}
@@ -369,9 +389,25 @@ pub(in crate::lower) fn lower_aug_assign(
                 }
             }
         }
-    } else if let Err((code, message)) = type_check_binary_op(&var_ty, base_op, value.ty()) {
-        ctx.error_with_code_at(code, message, aug.value.range());
-        return None;
+    } else {
+        if let Err((code, message)) = type_check_binary_op(&var_ty, base_op, value.ty()) {
+            ctx.error_with_code_at(code, message, aug.value.range());
+            return None;
+        }
+        if base_op == "*" && matches!(var_ty.resolve_alias(), Type::List(_)) {
+            return Some(HirStmt::Assign {
+                name: name.clone(),
+                value: HirExpr::BinOp {
+                    left: Box::new(HirExpr::Name {
+                        name,
+                        ty: var_ty.clone(),
+                    }),
+                    op: base_op.to_string(),
+                    right: Box::new(value),
+                    ty: var_ty,
+                },
+            });
+        }
     }
 
     Some(HirStmt::AugAssign {
