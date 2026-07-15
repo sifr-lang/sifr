@@ -5,6 +5,9 @@ impl RustEmitter {
         expr: &HirExpr,
         lowered: crate::RustExpr,
     ) -> crate::RustExpr {
+        if expr.ty().contains_affine_resource() {
+            return lowered;
+        }
         if matches!(expr, HirExpr::Name { .. })
             && !crate::helpers::is_copy_type_for_codegen(expr.ty())
         {

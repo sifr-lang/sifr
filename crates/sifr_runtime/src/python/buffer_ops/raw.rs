@@ -6,6 +6,7 @@ use pyo3::{Bound, PyErr, Python};
 use std::ffi::CStr;
 use std::marker::PhantomPinned;
 use std::mem::size_of;
+use std::ops::Range;
 use std::pin::Pin;
 use std::ptr;
 use std::slice;
@@ -34,10 +35,10 @@ pub(super) struct OwnedPyBuffer {
     raw: Pin<Box<RawBuffer>>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) enum BufferFootprint {
     Empty,
-    Direct { start: usize, end: usize },
+    Direct { ranges: Vec<Range<usize>> },
     Indirect,
 }
 
@@ -138,35 +139,38 @@ impl OwnedPyBuffer {
             return Ok(BufferFootprint::Indirect);
         }
 
-        let base = i128::try_from(self.raw().buf as usize)
-            .map_err(|_| "buffer base address does not fit admission arithmetic".to_string())?;
-        let mut minimum_offset = 0_i128;
-        let mut maximum_offset = 0_i128;
-        for (dimension, stride) in validated.shape.iter().zip(&validated.strides) {
-            let extent = i128::try_from(dimension.saturating_sub(1))
-                .map_err(|_| "buffer shape exceeds admission arithmetic".to_string())?
-                .checked_mul(*stride as i128)
-                .ok_or_else(|| "buffer stride span overflows admission arithmetic".to_string())?;
-            if extent < 0 {
-                minimum_offset = minimum_offset.checked_add(extent).ok_or_else(|| {
-                    "buffer minimum span overflows admission arithmetic".to_string()
+        let item_count = validated.len_bytes / validated.item_size;
+        let mut ranges = Vec::new();
+        ranges
+            .try_reserve_exact(item_count)
+            .map_err(|_| "buffer footprint is too large to track safely".to_string())?;
+        for index in 0..item_count {
+            let start = self
+                .item_ptr(index)
+                .map(|pointer| pointer as usize)
+                .ok_or_else(|| {
+                    "buffer footprint contains an invalid logical address".to_string()
                 })?;
-            } else {
-                maximum_offset = maximum_offset.checked_add(extent).ok_or_else(|| {
-                    "buffer maximum span overflows admission arithmetic".to_string()
-                })?;
-            }
+            let end = start
+                .checked_add(validated.item_size)
+                .ok_or_else(|| "buffer footprint address overflows".to_string())?;
+            ranges.push(start..end);
         }
-        let start = base
-            .checked_add(minimum_offset)
-            .and_then(|address| usize::try_from(address).ok())
-            .ok_or_else(|| "buffer start address exceeds admission arithmetic".to_string())?;
-        let end = base
-            .checked_add(maximum_offset)
-            .and_then(|address| address.checked_add(validated.item_size as i128))
-            .and_then(|address| usize::try_from(address).ok())
-            .ok_or_else(|| "buffer end address exceeds admission arithmetic".to_string())?;
-        Ok(BufferFootprint::Direct { start, end })
+        ranges.sort_unstable_by_key(|range| range.start);
+        let mut merged: Vec<Range<usize>> = Vec::new();
+        merged
+            .try_reserve_exact(ranges.len())
+            .map_err(|_| "buffer footprint is too large to merge safely".to_string())?;
+        for range in ranges {
+            if let Some(previous) = merged.last_mut() {
+                if range.start <= previous.end {
+                    previous.end = previous.end.max(range.end);
+                    continue;
+                }
+            }
+            merged.push(range);
+        }
+        Ok(BufferFootprint::Direct { ranges: merged })
     }
 
     pub(super) fn item_ptr(&self, flat_index: usize) -> Option<*mut core::ffi::c_void> {

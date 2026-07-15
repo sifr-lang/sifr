@@ -9,7 +9,7 @@ use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::container_literal_specialization::{
     validate_subscript_augassign_target, SubscriptAugAssignTarget,
 };
-use super::expressions::{consume_owned_value, lower_expr};
+use super::expressions::{affine_value_references_name, consume_owned_value, lower_expr};
 use super::integer_failure_diagnostics::exact_int_augassign_requires_handling;
 use super::name_diagnostics;
 use super::python_interop::lower_python_context_owned_expr;
@@ -351,6 +351,16 @@ pub(in crate::lower) fn lower_aug_assign(
     }
     let var_ty = var_info.ty.clone();
     let rhs_is_target = matches!(aug.value.as_ref(), Expr::Name(rhs) if rhs.id.as_str() == name);
+    if affine_value_references_name(&value, &name) {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYZC_INVALID_DECLARATION,
+            format!(
+                "augmented assignment cannot move affine target '{name}' through its own right-hand side"
+            ),
+            aug.value.range(),
+        );
+        return None;
+    }
 
     let base_op = &op_str[..op_str.len() - 1];
     if exact_int_augassign_requires_handling(&var_ty, base_op, &value, ctx, aug.value.range()) {

@@ -17,7 +17,10 @@ pub(super) fn resolve_list_method_type(
         method,
         "copy" | "extend" | "sort" | "count" | "contains" | "remove" | "index"
     );
-    if requires_reusable_elements && matches!(elem_ty.resolve_alias(), Type::Any | Type::Unknown) {
+    if requires_reusable_elements
+        && !elem_ty.supports_derived_clone()
+        && !elem_ty.contains_affine_resource()
+    {
         ctx.error_with_code_at(
             DiagnosticCode::TYPE_MISMATCH,
             format!("list.{method}() requires a statically known clone/comparison capability"),

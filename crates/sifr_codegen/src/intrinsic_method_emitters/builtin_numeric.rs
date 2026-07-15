@@ -176,9 +176,18 @@ impl RustEmitter {
             "max" | "min" if args.len() >= 2 => {
                 let mut lowered_args = Vec::with_capacity(args.len());
                 for arg in args {
-                    let lowered = self
+                    let mut lowered = self
                         .try_lower_registry_expr_strict(arg)
                         .or_else(|| self.lower_stmt_expr_for_ir(arg).ok().flatten())?;
+                    if matches!(arg.ty().resolve_alias(), Type::Str)
+                        && matches!(arg, HirExpr::Name { .. })
+                    {
+                        if matches!(arg, HirExpr::Name { name, .. } if self.borrowed_params.contains(name))
+                        {
+                            lowered = RustExpr::Paren(Box::new(RustExpr::Deref(Box::new(lowered))));
+                        }
+                        lowered = RustExpr::Clone(Box::new(lowered));
+                    }
                     lowered_args.push(lowered);
                 }
 

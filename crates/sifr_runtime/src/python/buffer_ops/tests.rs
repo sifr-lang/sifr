@@ -364,6 +364,30 @@ fn admission_allows_disjoint_writable_slices_of_shared_storage() {
 }
 
 #[test]
+fn admission_allows_interleaved_disjoint_writable_strides() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("buffer-interleaved-storage-admission"))
+        .expect("init should succeed");
+
+    let (even, odd) = interleaved_byte_memoryviews();
+    let request = PythonBufferRequest {
+        element: PythonBufferElement::U8,
+        access: PythonBufferAccess::Write,
+        layout: PythonBufferLayout::Any,
+    };
+    let even_writer = acquire_buffer(&even, request).expect("even writer should acquire");
+    let odd_writer = acquire_buffer(&odd, request).expect("odd writer should acquire");
+    buffer_write_u8((even_writer.handle, even_writer.token), 1, 8)
+        .expect("even stride should write");
+    buffer_write_u8((odd_writer.handle, odd_writer.token), 1, 9).expect("odd stride should write");
+    release_buffer((even_writer.handle, even_writer.token)).expect("even writer should release");
+    release_buffer((odd_writer.handle, odd_writer.token)).expect("odd writer should release");
+    close_object(even).expect("even view should close");
+    close_object(odd).expect("odd view should close");
+}
+
+#[test]
 fn any_layout_supports_strided_logical_access() {
     let _guard = test_guard();
     reset_runtime_state_for_tests();
@@ -638,6 +662,23 @@ fn disjoint_i32_memoryviews() -> (ObjectHandle, ObjectHandle) {
     })
     .expect("attach should succeed")
     .expect("disjoint memoryviews should create")
+}
+
+fn interleaved_byte_memoryviews() -> (ObjectHandle, ObjectHandle) {
+    super::super::attach(|py| {
+        let builtins = py.import("builtins")?;
+        let bytes = builtins.getattr("bytearray")?.call1(([1_u8, 2, 3, 4],))?;
+        let view = builtins.getattr("memoryview")?.call1((bytes,))?;
+        let even = view.call_method1("__getitem__", (pyo3::types::PySlice::new(py, 0, 4, 2),))?;
+        let odd = view.call_method1("__getitem__", (pyo3::types::PySlice::new(py, 1, 4, 2),))?;
+        let even = super::super::object_ops::store_object(even.unbind())
+            .map_err(|error| pyo3::exceptions::PyRuntimeError::new_err(error.to_string()))?;
+        let odd = super::super::object_ops::store_object(odd.unbind())
+            .map_err(|error| pyo3::exceptions::PyRuntimeError::new_err(error.to_string()))?;
+        Ok::<_, pyo3::PyErr>((even, odd))
+    })
+    .expect("attach should succeed")
+    .expect("interleaved memoryviews should create")
 }
 
 fn strided_byte_view() -> ObjectHandle {

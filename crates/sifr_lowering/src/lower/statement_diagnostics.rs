@@ -54,7 +54,7 @@ pub(in crate::lower) fn reject_affine_iterator_builtin(
     element_type: &Type,
     range: TextRange,
 ) -> bool {
-    if matches!(element_type.resolve_alias(), Type::Any | Type::Unknown) {
+    if !element_type.supports_derived_clone() && !element_type.contains_affine_resource() {
         ctx.error_with_code_at(
             DiagnosticCode::TYPE_MISMATCH,
             format!("{builtin}() requires a statically known element clone/comparison capability"),

@@ -317,7 +317,7 @@ fn admit_buffer(
 ) -> Result<(), PythonError> {
     let conflicts = store.admissions.values().any(|admission| {
         access != PythonBufferAccess::Read || admission.access != PythonBufferAccess::Read
-    } && footprints_overlap(footprint, admission.footprint));
+    } && footprints_overlap(&footprint, &admission.footprint));
     if conflicts {
         return Err(exporter_admission_error());
     }
@@ -339,20 +339,22 @@ fn release_buffer_admission(store: &mut BufferStore, handle: i64) -> Result<(), 
         .ok_or_else(buffer_state_error)
 }
 
-const fn footprints_overlap(left: BufferFootprint, right: BufferFootprint) -> bool {
+fn footprints_overlap(left: &BufferFootprint, right: &BufferFootprint) -> bool {
     match (left, right) {
         (BufferFootprint::Empty, _) | (_, BufferFootprint::Empty) => false,
         (BufferFootprint::Indirect, _) | (_, BufferFootprint::Indirect) => true,
         (
             BufferFootprint::Direct {
-                start: left_start,
-                end: left_end,
+                ranges: left_ranges,
             },
             BufferFootprint::Direct {
-                start: right_start,
-                end: right_end,
+                ranges: right_ranges,
             },
-        ) => left_start < right_end && right_start < left_end,
+        ) => left_ranges.iter().any(|left_range| {
+            right_ranges.iter().any(|right_range| {
+                left_range.start < right_range.end && right_range.start < left_range.end
+            })
+        }),
     }
 }
 

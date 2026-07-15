@@ -13,7 +13,7 @@ pub(crate) fn type_check_list_repetition(
     if count != &Type::Int {
         return None;
     }
-    if matches!(element.resolve_alias(), Type::Any | Type::Unknown) {
+    if !element.supports_derived_clone() && !element.contains_affine_resource() {
         return Some(Err((
             DiagnosticCode::TYPE_MISMATCH,
             "cannot repeat a list whose element clone capability is not statically known"

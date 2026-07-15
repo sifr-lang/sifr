@@ -161,7 +161,7 @@
       "required_evidence": ["positive", "negative", "cleanup", "live"],
       "evidence": [
         {"kind": "positive", "status": "passing", "owner": "typed runtime format/layout/access tests plus compiled top-level, Self, and bridge acquisition suite"},
-        {"kind": "negative", "status": "passing", "owner": "compiler borrow, move, equality, sendability, policy, and return-contract tests plus runtime metadata failures"},
+        {"kind": "negative", "status": "passing", "owner": "compiler recursive borrow/move/storage, clone/order, equality, async-generator sendability, policy, and return-contract tests plus runtime metadata failures"},
         {"kind": "cleanup", "status": "passing", "owner": "exact PyBuffer_Release runtime counters and compiled zero-resource assertions"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "buffer acquisition is synchronous"},
         {"kind": "live", "status": "passing", "owner": "compiled top-level, receiver, package-bridge, and affine-aggregate buffer examples"}

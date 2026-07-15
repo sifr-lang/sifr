@@ -7,8 +7,8 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented and its pass-5 remediation is authoritatively validated
-and awaiting a fresh full-diff review in
+Wave 2 is implemented and its pass-7 remediation passes focused and full
+affected-crate validation and is awaiting a fresh whole-diff review in
 [PR #2988](https://github.com/sifr-lang/sifr/pull/2988). Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
@@ -843,7 +843,29 @@ Delivery waves:
   Python interop `11/11`, runtime platform `28/28` with one gated skip, and E2E
   `131/131` with signature `7c39b8c1dd4fec7c`. The facade completed in
   `423.95s`; all lane budgets passed, with only the non-blocking warm wall-time
-  advisory. A fresh whole-diff review is pending.
+  advisory. Full-diff
+  [review pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-7.md)
+  confirmed the prior lifecycle, release, concurrency, overlap-safety,
+  declaration, bridge, diagnostic, and retention work, then found recursive
+  affine collection/storage transfers, indirect self-`+=`, recursive dynamic
+  clone capability, generic and borrowed-string `min`/`max`, async-generator
+  sendability, exact strided footprint, and evidence-ledger gaps. Those paths
+  are now closed with recursive range-aware ownership transfer, move-only
+  storage code generation, recursive clone capability, concrete total-order
+  validation, owned string result emission, affine async-generator rejection,
+  exact logical-item footprint admission, and permanent compiler/runtime/E2E
+  regressions. Focused buffer lowering passes `28/28`, buffer code generation
+  passes `9/9`, buffer runtime operations pass `23/23`, and the full affected
+  suites pass: type system `98/98`, lowering `738/738` with one ignored, code
+  generation `813/813`, and Python-enabled runtime `204/204`. The
+  borrowed-string `min`/`max` E2E fixture also builds and runs as a native
+  release binary. After the requested `cargo clean`, the cold create-PR run
+  passed every functional case but exceeded the Python interop warm-lane budget
+  while rebuilding callback artifacts. The immediate warm authoritative rerun
+  passed every blocking lane: Python interop `11/11`, runtime platform `28/28`
+  with one gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c`; its `445.31s` wall time produced only the non-blocking
+  warm wall-time advisory. A fresh whole-diff review is pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

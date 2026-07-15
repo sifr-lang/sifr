@@ -57,7 +57,52 @@ impl Type {
     /// Whether Rust aggregate generation may derive `Clone` for this value.
     #[must_use]
     pub fn supports_derived_clone(&self) -> bool {
-        !self.contains_affine_resource()
+        self.supports_derived_clone_inner(&mut BTreeSet::new())
+    }
+
+    fn supports_derived_clone_inner(&self, visiting_classes: &mut BTreeSet<String>) -> bool {
+        match self.resolve_alias() {
+            Self::Any | Self::Unknown | Self::PythonBuffer(_) => false,
+            Self::List(element)
+            | Self::Set(element)
+            | Self::Iterable(element)
+            | Self::Iterator(element)
+            | Self::Awaitable(element)
+            | Self::Failure(element)
+            | Self::TimeoutResult(element)
+            | Self::Newtype { inner: element, .. } => {
+                element.supports_derived_clone_inner(visiting_classes)
+            }
+            Self::Dict(left, right)
+            | Self::Result(left, right)
+            | Self::Task(left, right)
+            | Self::TaskResult(left, right)
+            | Self::Coroutine(left, right)
+            | Self::Select2(left, right)
+            | Self::BlockingTask(left, right)
+            | Self::JoinSet(left, right)
+            | Self::AsyncIterator(left, right)
+            | Self::AsyncGenerator(left, right) => {
+                left.supports_derived_clone_inner(visiting_classes)
+                    && right.supports_derived_clone_inner(visiting_classes)
+            }
+            Self::Tuple(elements) | Self::Union(elements) | Self::Intersection(elements) => {
+                elements
+                    .iter()
+                    .all(|element| element.supports_derived_clone_inner(visiting_classes))
+            }
+            Self::Class { name, fields, .. } => {
+                if !visiting_classes.insert(name.clone()) {
+                    return true;
+                }
+                let supports = fields
+                    .iter()
+                    .all(|(_, field)| field.supports_derived_clone_inner(visiting_classes));
+                visiting_classes.remove(name);
+                supports
+            }
+            _ => true,
+        }
     }
 
     /// Whether ordinary structural equality is valid for this value.

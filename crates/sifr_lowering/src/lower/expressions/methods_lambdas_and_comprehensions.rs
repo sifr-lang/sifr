@@ -203,7 +203,13 @@ pub(in crate::lower) fn lower_method_call(
         attr.attr.range(),
         ctx,
     )?;
-    consume_affine_collection_method_arguments(&object_ty, &method_name, &args, ctx);
+    consume_affine_collection_method_arguments(
+        &object_ty,
+        &method_name,
+        &args,
+        &method_arg_ranges,
+        ctx,
+    );
     let return_ty = refine_nonempty_method_return_type(
         &object_ty,
         &object,

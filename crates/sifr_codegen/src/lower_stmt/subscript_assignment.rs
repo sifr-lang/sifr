@@ -126,7 +126,9 @@ pub(super) fn try_lower_simple_subscript_assign_stmt(
 }
 
 pub(super) fn maybe_clone_subscript_assignment_name(expr: &HirExpr, lowered: RustExpr) -> RustExpr {
-    if matches!(expr, HirExpr::Name { .. }) && !crate::helpers::is_copy_type_for_codegen(expr.ty())
+    if !expr.ty().contains_affine_resource()
+        && matches!(expr, HirExpr::Name { .. })
+        && !crate::helpers::is_copy_type_for_codegen(expr.ty())
     {
         RustExpr::Clone(Box::new(lowered))
     } else {

@@ -55,6 +55,22 @@ fn affine_list_append_moves_buffer_without_cloning() {
 }
 
 #[test]
+fn affine_storage_assignments_move_buffers_without_cloning() {
+    let source = "class Holder:\n    view: python.Buffer[uint8]\n\ndef replace_list(mut values: list[python.Buffer[uint8]], own view: python.Buffer[uint8]) -> None:\n    values[0] = view\n\ndef replace_dict(mut values: dict[str, python.Buffer[uint8]], own view: python.Buffer[uint8]) -> None:\n    values[\"key\"] = view\n\ndef replace_nested(mut values: list[list[python.Buffer[uint8]]], own view: python.Buffer[uint8]) -> None:\n    values[0][0] = view\n\ndef replace_field(mut holder: Holder, own view: python.Buffer[uint8]) -> None:\n    holder.view = view\n";
+    let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
+    let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
+    let rust = generate_rust(&lowered.module);
+
+    assert!(!rust.contains("view.clone()"), "{rust}");
+    assert!(rust.matches("= view;").count() >= 3, "{rust}");
+    assert!(
+        rust.contains("values.insert(\"key\".to_string(), view)"),
+        "{rust}"
+    );
+    syn::parse_file(&rust).expect("generated affine storage Rust should parse");
+}
+
+#[test]
 fn cloneable_list_repeat_augassign_rewrites_to_valid_repetition() {
     let source = "def repeat(count: int) -> list[int]:\n    values: list[int] = [1, 2]\n    values *= count\n    return values\n";
     let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
@@ -65,6 +81,24 @@ fn cloneable_list_repeat_augassign_rewrites_to_valid_repetition() {
     assert!(rust.contains("__sifr_repeat_src"), "{rust}");
     assert!(rust.contains("values ="), "{rust}");
     syn::parse_file(&rust).expect("generated list repeat augmented assignment should parse");
+}
+
+#[test]
+fn borrowed_string_min_max_clone_to_owned_results() {
+    let source = "def minimum(left: str, right: str) -> str:\n    return min(left, right)\n\ndef maximum(left: str, right: str) -> str:\n    return max(left, right)\n";
+    let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
+    let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
+    let rust = generate_rust(&lowered.module);
+
+    assert!(
+        rust.contains("std::cmp::min((*left).clone(), (*right).clone())"),
+        "{rust}"
+    );
+    assert!(
+        rust.contains("std::cmp::max((*left).clone(), (*right).clone())"),
+        "{rust}"
+    );
+    syn::parse_file(&rust).expect("generated borrowed string min/max should parse");
 }
 
 #[test]

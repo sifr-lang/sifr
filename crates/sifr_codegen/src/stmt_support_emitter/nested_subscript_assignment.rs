@@ -769,7 +769,8 @@ impl RustEmitter {
             return Ok(None);
         };
         let clone_non_copy_name = |expr: &HirExpr, lowered: crate::RustExpr| {
-            if matches!(expr, HirExpr::Name { .. })
+            if !expr.ty().contains_affine_resource()
+                && matches!(expr, HirExpr::Name { .. })
                 && !crate::helpers::is_copy_type_for_codegen(expr.ty())
             {
                 crate::RustExpr::Clone(Box::new(lowered))

@@ -1,7 +1,15 @@
-# Tests max(a, b) and min(a, b) with 2 arguments
+# Tests max(a, b) and min(a, b) with 2 arguments, including borrowed strings.
+
+def smaller_text(left: str, right: str) -> str:
+    return min(left, right)
+
+def larger_text(left: str, right: str) -> str:
+    return max(left, right)
 
 def main():
     a: int = 10
     b: int = 3
     assert str(max(a, b)) == '10'
     assert str(min(a, b)) == '3'
+    assert smaller_text('alpha', 'beta') == 'alpha'
+    assert larger_text('alpha', 'beta') == 'beta'

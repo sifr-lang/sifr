@@ -288,15 +288,51 @@ fn affine_buffer_collection_capabilities_are_rejected_before_codegen() {
 
 #[test]
 fn affine_buffer_collection_insertion_consumes_the_source() {
-    let errors = lower_errors(&format!(
-        "{ERROR}\ndef pack(own view: python.Buffer[uint8]) -> None:\n    values: list[python.Buffer[uint8]] = []\n    values.append(view)\n    print(view.length())\n"
-    ));
-    assert!(
-        errors
-            .iter()
-            .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
-        "{errors:?}"
+    for source in [
+        "def pack(own view: python.Buffer[uint8]) -> None:\n    values: list[python.Buffer[uint8]] = []\n    values.append(view)\n    print(view.length())\n",
+        "def pack(own left: python.Buffer[uint8], own right: python.Buffer[uint8], flag: bool) -> None:\n    values: list[python.Buffer[uint8]] = []\n    values.append(left if flag else right)\n    print(left.length())\n    print(right.length())\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+            "{source}: {errors:?}"
+        );
+    }
+    let borrowed = lower_errors(
+        "def pack(view: python.Buffer[uint8]) -> None:\n    values: list[python.Buffer[uint8]] = []\n    values.append(view)\n",
     );
+    assert!(borrowed.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+            && error.message.contains("borrowed affine Python buffer")
+    }));
+}
+
+#[test]
+fn affine_buffer_storage_assignments_transfer_owned_values() {
+    for source in [
+        "def replace(mut values: list[python.Buffer[uint8]], own view: python.Buffer[uint8]) -> None:\n    values[0] = view\n    print(view.length())\n",
+        "def replace(mut values: dict[str, python.Buffer[uint8]], own view: python.Buffer[uint8]) -> None:\n    values[\"x\"] = view\n    print(view.length())\n",
+        "def replace(mut values: list[list[python.Buffer[uint8]]], own view: python.Buffer[uint8]) -> None:\n    values[0][0] = view\n    print(view.length())\n",
+        "class Holder:\n    view: python.Buffer[uint8]\n\ndef replace(mut holder: Holder, own view: python.Buffer[uint8]) -> None:\n    holder.view = view\n    print(view.length())\n",
+        "class Inner:\n    view: python.Buffer[uint8]\n\nclass Outer:\n    inner: Inner\n\ndef replace(mut holder: Outer, own view: python.Buffer[uint8]) -> None:\n    holder.inner.view = view\n    print(view.length())\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+            "{source}: {errors:?}"
+        );
+    }
+    let borrowed = lower_errors(
+        "def replace(mut values: list[python.Buffer[uint8]], view: python.Buffer[uint8]) -> None:\n    values[0] = view\n",
+    );
+    assert!(borrowed.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+            && error.message.contains("borrowed affine Python buffer")
+    }));
 }
 
 #[test]
@@ -468,6 +504,7 @@ fn dynamic_collection_clone_and_projection_capabilities_fail_during_lowering() {
     for source in [
         "def concatenate(left: list[Any], right: list[Any]) -> list[Any]:\n    return left + right\n",
         "def repeat(values: list[Any], count: int) -> list[Any]:\n    return values * count\n",
+        "def repeat(values: list[list[Any]], count: int) -> list[list[Any]]:\n    return values * count\n",
         "def repeat(count: int) -> None:\n    values: list[Any] = []\n    values *= count\n",
         "def order(values: list[Any]) -> list[Any]:\n    return sorted(values)\n",
         "def total(values: list[Any]) -> Any:\n    return sum(values)\n",
@@ -486,6 +523,19 @@ fn dynamic_collection_clone_and_projection_capabilities_fail_during_lowering() {
 }
 
 #[test]
+fn generic_variadic_min_max_requires_concrete_total_order() {
+    for builtin in ["min", "max"] {
+        let errors = lower_errors(&format!(
+            "def choose[T](left: T, right: T) -> T:\n    return {builtin}(left, right)\n"
+        ));
+        assert!(errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error.message.contains("concrete total-order capability")
+        }));
+    }
+}
+
+#[test]
 fn affine_buffer_copying_constructors_and_sorting_are_rejected() {
     for source in [
         "def duplicate(values: list[python.Buffer[uint8]]) -> list[python.Buffer[uint8]]:\n    return list(values)\n",
@@ -494,11 +544,14 @@ fn affine_buffer_copying_constructors_and_sorting_are_rejected() {
         "def repeat(values: list[python.Buffer[uint8]], count: int) -> list[python.Buffer[uint8]]:\n    return values * count\n",
         "def repeat(count: int) -> None:\n    values: list[python.Buffer[uint8]] = []\n    values *= count\n",
         "def duplicate() -> None:\n    values: list[python.Buffer[uint8]] = []\n    values += values\n",
+        "def duplicate(own left: list[python.Buffer[uint8]], own other: list[python.Buffer[uint8]], flag: bool) -> None:\n    values: list[python.Buffer[uint8]] = left\n    values += values if flag else other\n",
+        "def duplicate(own left: list[python.Buffer[uint8]]) -> None:\n    values: list[python.Buffer[uint8]] = left\n    values += (alias := values)\n",
         "def order(values: list[python.Buffer[uint8]]) -> list[python.Buffer[uint8]]:\n    return sorted(values)\n",
         "def minimum(values: list[python.Buffer[uint8]]) -> python.Buffer[uint8] | None:\n    return min(values)\n",
         "def maximum(values: list[python.Buffer[uint8]]) -> python.Buffer[uint8] | None:\n    return max(values)\n",
         "def minimum(own left: python.Buffer[uint8], own right: python.Buffer[uint8]) -> python.Buffer[uint8]:\n    return min(left, right)\n",
         "def maximum(own left: python.Buffer[uint8], own right: python.Buffer[uint8]) -> python.Buffer[uint8]:\n    return max(left, right)\n",
+        "async def emit_one(own view: python.Buffer[uint8]) -> AsyncGenerator[python.Buffer[uint8], str]:\n    yield view\n",
     ] {
         let errors = lower_errors(source);
         assert!(

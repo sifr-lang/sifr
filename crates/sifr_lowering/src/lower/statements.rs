@@ -2,7 +2,7 @@ use super::assignment_widening::reconcile_optional_reassignment;
 use super::async_generator_advances::{
     finish_async_generator_advance_for_expr, record_async_generator_advance_binding,
 };
-use super::aug_assign_lowering::lower_aug_assign as lower_aug_assign_impl;
+pub(in crate::lower) use super::aug_assign_lowering::lower_aug_assign;
 use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::builtin_calls::callable_builtin_element_type;
 use super::container_literal_specialization::validate_subscript_assignment_target;
@@ -54,7 +54,7 @@ use crate::hir_nodes::{HirExpr, HirIteratorOp, HirPattern, HirStmt};
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
-    Expr, Pattern, Singleton, StmtAnnAssign, StmtAssign, StmtAugAssign, StmtFor, StmtIf, StmtWhile,
+    Expr, Pattern, Singleton, StmtAnnAssign, StmtAssign, StmtFor, StmtIf, StmtWhile,
 };
 use sifr_type_system::{make_union, FunctionType, NarrowingCondition, Type};
 

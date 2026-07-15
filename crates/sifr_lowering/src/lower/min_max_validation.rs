@@ -35,6 +35,16 @@ pub(in crate::lower) fn validate_two_arg_min_max_operands(
             );
             return false;
         }
+        if matches!(operand.ty().resolve_alias(), Type::TypeVar(_)) {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "{func_name}() requires a concrete total-order capability; unconstrained generic operands are unsupported"
+                ),
+                range,
+            );
+            return false;
+        }
     }
     if union_contains_none(left.ty()) || union_contains_none(right.ty()) {
         let range = if union_contains_none(left.ty()) {

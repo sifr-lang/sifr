@@ -136,7 +136,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
             // List concatenation: list[T] + list[T] -> list[T]
             if let (Type::List(l_elem), Type::List(r_elem)) = (left, right) {
                 if l_elem == r_elem {
-                    if matches!(l_elem.resolve_alias(), Type::Any | Type::Unknown) {
+                    if !l_elem.supports_derived_clone() && !l_elem.contains_affine_resource() {
                         return Err((
                             DiagnosticCode::TYPE_MISMATCH,
                             "cannot concatenate lists whose element clone capability is not statically known"

@@ -3,10 +3,11 @@ use super::{
     first_await_range_in_stmts, first_yield_range_in_stmts, format_type_name,
     function_body_contains_yield, infer_function_return_type, invalid_type_annotation,
     is_valid_error_type, lower_expr, lower_stmts, make_union, ownership_diagnostics,
-    reject_borrowed_affine_generator_params, reserved_integer_width_name, resolve_type_annotation,
-    str, substitute_type_vars, unknown_type, workload_annotations, DiagnosticCode, Expr,
-    FunctionType, HashMap, HirFunction, HirParam, LowerCtx, MethodKind, Number, Operator,
-    OwnershipKind, ParamConvention, Ranged, StmtFunctionDef, Type,
+    reject_affine_async_generator_boundary, reject_borrowed_affine_generator_params,
+    reserved_integer_width_name, resolve_type_annotation, str, substitute_type_vars, unknown_type,
+    workload_annotations, DiagnosticCode, Expr, FunctionType, HashMap, HirFunction, HirParam,
+    LowerCtx, MethodKind, Number, Operator, OwnershipKind, ParamConvention, Ranged,
+    StmtFunctionDef, Type,
 };
 use crate::lower::python_interop::{
     classify_python_interop_stub_body, collect_python_interop_declarations,
@@ -654,6 +655,7 @@ pub(in crate::lower) fn lower_function(
     if !skips_normal_body_lowering && effective_is_async {
         if is_async_generator {
             if let Some(yield_range) = first_yield_range_in_stmts(&func.body) {
+                reject_affine_async_generator_boundary(&params, &ft.return_type, yield_range, ctx);
                 for param in &params {
                     if param.convention.is_mut_borrow()
                         && param.ty.ownership() == OwnershipKind::Move
