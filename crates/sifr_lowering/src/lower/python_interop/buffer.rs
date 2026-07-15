@@ -5,6 +5,7 @@ use sifr_ir::{
     PythonBufferAccess, PythonBufferDeclaration, PythonBufferLayout, PythonInteropDeclaration,
     PythonInteropDecoratorKind, PythonInteropEffect, PythonTargetPath,
 };
+use sifr_python_ast::{AstParamMutability, AstParamOwnership};
 use sifr_type_system::Type;
 
 pub(super) fn parse_declaration(
@@ -129,6 +130,25 @@ fn receiver_target(
             ctx,
             "a `@python.buffer(Self, ...)` declaration takes only its receiver",
             call.range,
+        );
+        return None;
+    }
+    let Some(receiver) = parameters.args.first() else {
+        invalid(
+            ctx,
+            "a receiver buffer declaration requires `self`",
+            call.range,
+        );
+        return None;
+    };
+    let convention = receiver.parameter.convention;
+    if convention.ownership != AstParamOwnership::Borrow
+        || convention.mutability != AstParamMutability::Immutable
+    {
+        invalid(
+            ctx,
+            "a `@python.buffer(Self, ...)` declaration requires immutable borrowed `self`",
+            receiver.range(),
         );
         return None;
     }

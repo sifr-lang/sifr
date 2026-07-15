@@ -418,6 +418,7 @@ pub(in crate::lower) fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) 
         } else {
             elem_ty = Some(ty);
         }
+        consume_affine_literal_name(&expr, ctx);
         elements.push(expr);
     }
 
@@ -443,6 +444,7 @@ pub(in crate::lower) fn lower_set_literal(set: &ExprSet, ctx: &mut LowerCtx) -> 
         } else {
             elem_ty = Some(ty);
         }
+        consume_affine_literal_name(&expr, ctx);
         elements.push(expr);
     }
 
@@ -503,6 +505,7 @@ pub(in crate::lower) fn lower_dict_literal(dict: &ExprDict, ctx: &mut LowerCtx) 
         } else {
             val_ty = Some(vt);
         }
+        consume_affine_literal_name(&val, ctx);
         values.push(val);
     }
 
@@ -527,6 +530,7 @@ pub(in crate::lower) fn lower_tuple_literal(
     for elt in &tuple.elts {
         let expr = lower_expr(elt, ctx)?;
         elem_types.push(expr.ty().clone());
+        consume_affine_literal_name(&expr, ctx);
         elements.push(expr);
     }
 
@@ -536,6 +540,14 @@ pub(in crate::lower) fn lower_tuple_literal(
         elements,
         ty: tuple_ty,
     })
+}
+
+fn consume_affine_literal_name(expr: &HirExpr, ctx: &mut LowerCtx) {
+    if expr.ty().contains_affine_resource() {
+        if let HirExpr::Name { name, .. } = expr {
+            ctx.mark_moved_with_flow(name);
+        }
+    }
 }
 
 pub(in crate::lower) fn lower_subscript(
@@ -662,6 +674,15 @@ pub(in crate::lower) fn lower_subscript(
             }
         };
 
+        if result_ty.contains_affine_resource() {
+            ctx.error_with_code_at(
+                DiagnosticCode::PYZC_INVALID_DECLARATION,
+                "cannot slice an aggregate containing an affine Python buffer; slicing would duplicate the resource"
+                    .to_string(),
+                sub.range(),
+            );
+        }
+
         return Some(HirExpr::Slice {
             object: Box::new(object),
             start,
@@ -675,6 +696,15 @@ pub(in crate::lower) fn lower_subscript(
     let index_ty = index.ty().clone();
 
     let result_ty = resolve_subscript_result_type(sub, &object_ty, &index, &index_ty, ctx);
+
+    if result_ty.contains_affine_resource() {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYZC_INVALID_DECLARATION,
+            "cannot project an affine Python buffer through indexing; use a consuming aggregate operation"
+                .to_string(),
+            sub.range(),
+        );
+    }
 
     Some(HirExpr::Index {
         object: Box::new(object),
@@ -717,6 +747,15 @@ pub(in crate::lower) fn lower_attribute(
     } = &resolved_object_ty
     {
         if let Some((_, field_ty)) = fields.iter().find(|(n, _)| n == &field_name) {
+            if field_ty.contains_affine_resource() {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYZC_INVALID_DECLARATION,
+                    "cannot project a field containing an affine Python buffer; move the aggregate as a whole"
+                        .to_string(),
+                    attr.range(),
+                );
+                return None;
+            }
             return Some(HirExpr::FieldAccess {
                 object: Box::new(object),
                 field: field_name,
@@ -738,6 +777,15 @@ pub(in crate::lower) fn lower_attribute(
     if let Some(field_ty) =
         super::attribute_access::optional_class_union_field_type(&resolved_object_ty, &field_name)
     {
+        if field_ty.contains_affine_resource() {
+            ctx.error_with_code_at(
+                DiagnosticCode::PYZC_INVALID_DECLARATION,
+                "cannot project a field containing an affine Python buffer; move the aggregate as a whole"
+                    .to_string(),
+                attr.range(),
+            );
+            return None;
+        }
         return Some(HirExpr::FieldAccess {
             object: Box::new(object),
             field: field_name,

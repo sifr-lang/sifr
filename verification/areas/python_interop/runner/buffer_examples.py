@@ -28,7 +28,7 @@ BUFFER_EXAMPLE_CASES = {
     "affine-aggregate": ExampleCase(
         case_id="affine-aggregate",
         relative_source="numpy_buffer/buffer_affine_aggregate_codegen.sifr",
-        stdout_marker="sifr-python-interop:buffer:affine-aggregate=compiled",
+        stdout_marker="sifr-python-interop:buffer:affine-aggregate=ok:resources=zero",
         import_roots=("builtins", "mmap"),
     ),
 }

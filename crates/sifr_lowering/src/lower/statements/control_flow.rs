@@ -745,6 +745,9 @@ pub(in crate::lower) fn lower_for(
         );
         return None;
     };
+    if statement_diagnostics::reject_affine_iteration(ctx, &elem_ty, for_stmt.iter.range()) {
+        return None;
+    }
     let iter_expr = HirExpr::IteratorCall {
         op: HirIteratorOp::Iter,
         args: vec![iterable_expr],

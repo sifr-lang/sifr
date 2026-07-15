@@ -103,6 +103,23 @@ fn opaque_receiver_buffer_declaration_uses_exact_self_target() {
 }
 
 #[test]
+fn opaque_receiver_buffer_requires_immutable_borrowed_self() {
+    for receiver in ["own self", "mut self", "own mut self"] {
+        let source = format!(
+            "{ERROR}\n@python.opaque(type=pkg.Owner, cleanup=drop)\nclass Owner(NonSend):\n    @python.buffer(Self, access=read, layout=any)\n    def view({receiver}) -> Result[python.Buffer[uint8], PythonError]: ...\n"
+        );
+        let errors = lower_errors(&source);
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                    && error.message.contains("immutable borrowed `self`")
+            }),
+            "{receiver}: {errors:?}"
+        );
+    }
+}
+
+#[test]
 fn buffer_policy_and_return_contract_fail_with_pyzc_0001() {
     for declaration in [
         "@python.buffer(pkg.make, access=copy, layout=any)\ndef bad() -> Result[python.Buffer[uint8], PythonError]: ...",
@@ -213,4 +230,38 @@ fn python_buffer_equality_is_rejected_before_codegen() {
         error.code == Some(DiagnosticCode::TYPE_MISMATCH)
             && error.message.contains("cannot compare affine values")
     }));
+}
+
+#[test]
+fn affine_buffer_aggregate_projections_are_rejected_before_codegen() {
+    for source in [
+        "def first(values: list[python.Buffer[uint8]]) -> python.Buffer[uint8] | None:\n    return values[0]\n",
+        "def first(values: tuple[python.Buffer[uint8]]) -> python.Buffer[uint8]:\n    return values[0]\n",
+        "class Holder:\n    value: python.Buffer[uint8]\n\ndef take(holder: Holder) -> python.Buffer[uint8]:\n    return holder.value\n",
+        "def visit(values: list[python.Buffer[uint8]]) -> None:\n    for value in values:\n        print(value.length())\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                || error.message.contains("affine Python buffer")
+        }), "{source}: {errors:?}");
+    }
+}
+
+#[test]
+fn affine_buffer_literal_insertion_consumes_the_source() {
+    for insertion in [
+        "values: list[python.Buffer[uint8]] = [view]",
+        "values: tuple[python.Buffer[uint8]] = (view,)",
+    ] {
+        let errors = lower_errors(&format!(
+            "{ERROR}\ndef pack(own view: python.Buffer[uint8]) -> None:\n    {insertion}\n    print(view.length())\n"
+        ));
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+            "{insertion}: {errors:?}"
+        );
+    }
 }

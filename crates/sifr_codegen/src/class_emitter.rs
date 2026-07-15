@@ -540,7 +540,11 @@ impl RustEmitter {
             } else {
                 vec!["Debug".to_string()]
             }
-        } else if class.is_hashable {
+        } else if class.is_hashable
+            && fields_support_clone
+            && fields_support_equality
+            && !has_affine_field
+        {
             vec![
                 "Debug".to_string(),
                 "Clone".to_string(),

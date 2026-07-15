@@ -171,10 +171,14 @@ impl RustEmitter {
                     value: None,
                 })
                 .collect();
+            let mut derives = vec!["Debug".to_string()];
+            if members.iter().all(Type::supports_derived_clone) {
+                derives.push("Clone".to_string());
+            }
             self.enum_items.push(RustItem::Enum {
                 name: enum_name.clone(),
                 visibility: Visibility::Private,
-                derives: vec!["Debug".to_string(), "Clone".to_string()],
+                derives,
                 repr: None,
                 variants,
             });
@@ -183,7 +187,10 @@ impl RustEmitter {
                 .iter()
                 .map(|member| {
                     let variant = member.union_variant_name();
-                    let fmt_spec = if matches!(member, Type::Class { .. }) {
+                    let fmt_spec = if member.contains_affine_resource()
+                        || matches!(member.resolve_alias(), Type::Class { .. } | Type::None)
+                        || !crate::helpers::is_auto_display_type(member)
+                    {
                         "{:?}"
                     } else {
                         "{}"
@@ -239,6 +246,31 @@ impl RustEmitter {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn affine_union_uses_debug_without_clone_or_display_bounds() {
+        let members = vec![
+            Type::None,
+            Type::Int,
+            Type::PythonBuffer(Box::new(Type::FixedInt(sifr_type_system::FixedIntType::U8))),
+        ];
+        let mut emitter = RustEmitter::new();
+        emitter.register_union_type(&Type::Union(members));
+        emitter.generate_enum_definitions();
+
+        let RustItem::Enum { derives, .. } = &emitter.enum_items[0] else {
+            panic!("first generated item should be the union enum");
+        };
+        assert_eq!(derives, &["Debug"]);
+        let rendered = crate::render::render_items(&emitter.enum_items);
+        assert!(rendered.contains("PythonBuffer(v) =>"));
+        assert!(rendered.contains("write!(f, \"{:?}\", v)"));
+        let none_arm = rendered
+            .split("None(v) =>")
+            .nth(1)
+            .expect("None union arm should be rendered");
+        assert!(none_arm[..none_arm.len().min(120)].contains("write!(f, \"{:?}\", v)"));
+    }
 
     #[test]
     fn nested_result_error_union_is_registered() {

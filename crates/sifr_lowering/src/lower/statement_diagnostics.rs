@@ -1,5 +1,6 @@
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
+use sifr_type_system::Type;
 
 use super::LowerCtx;
 
@@ -29,6 +30,22 @@ pub(in crate::lower) fn invalid_iteration(ctx: &mut LowerCtx, reason: &str, rang
         format!("invalid for-loop iteration: {reason}"),
         range,
     );
+}
+
+pub(in crate::lower) fn reject_affine_iteration(
+    ctx: &mut LowerCtx,
+    element_type: &Type,
+    range: TextRange,
+) -> bool {
+    if !element_type.contains_affine_resource() {
+        return false;
+    }
+    invalid_iteration(
+        ctx,
+        "cannot iterate over affine Python buffer elements because iteration projects values from an aggregate",
+        range,
+    );
+    true
 }
 
 pub(in crate::lower) fn mutation_during_iteration(

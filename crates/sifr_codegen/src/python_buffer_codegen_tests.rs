@@ -101,6 +101,24 @@ fn self_buffer_wrapper_acquires_opaque_receiver_without_python_call() {
     assert!(!rendered.contains("call_object_owned"));
 }
 
+#[test]
+fn self_buffer_source_emits_shared_receiver_signature() {
+    let source = format!(
+        "{ERROR}\n@python.opaque(type=pkg.Owner, cleanup=drop)\nclass Owner(NonSend):\n    @python.buffer(Self, access=read, layout=any)\n    def view(self) -> Result[python.Buffer[uint8], PythonError]: ...\n"
+    );
+    let parsed = sifr_python_parser::parse_module(&source).expect("source should parse");
+    let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
+    let rust = generate_rust(&lowered.module);
+
+    assert!(
+        rust.contains(
+            "fn view(&self) -> Result<sifr_stdlib::python::PythonBuffer<u8>, PythonError>"
+        ),
+        "{rust}"
+    );
+    syn::parse_file(&rust).expect("generated receiver buffer Rust should parse");
+}
+
 fn buffer_function(
     target: Vec<&str>,
     access: PythonBufferAccess,

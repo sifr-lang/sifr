@@ -120,6 +120,14 @@ pub(super) fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<R
     if is_none_type(ty) && matches!(value, HirExpr::NoneLiteral) {
         return Some(RustExpr::Literal(RustLiteral::Unit));
     }
+    if let Type::Union(members) = resolve_alias_type(ty) {
+        let lowered = try_lower_leaf_or_name_expr(value)?;
+        let variant = crate::helpers::find_union_variant(members, value.ty())?;
+        return Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![ty.union_enum_name(), variant])),
+            args: vec![lowered],
+        });
+    }
     if matches!(
         crate::resolve_alias_type_for_plain_call(ty),
         Type::Task(_, _)
