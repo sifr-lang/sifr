@@ -46,6 +46,26 @@ fn sorted_preserves_iterable_source(expr: &HirExpr) -> bool {
     }
 }
 
+fn sorted_materialization_requires_clone(expr: &HirExpr) -> bool {
+    if matches!(expr.ty().resolve_alias(), Type::Iterator(_))
+        || expr.ty().resolve_alias().ownership() == sifr_type_system::OwnershipKind::Copy
+    {
+        return false;
+    }
+    match expr {
+        HirExpr::Name { .. } | HirExpr::FieldAccess { .. } | HirExpr::Index { .. } => true,
+        HirExpr::IfExpr {
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            sorted_materialization_requires_clone(then_expr)
+                || sorted_materialization_requires_clone(else_expr)
+        }
+        _ => false,
+    }
+}
+
 pub(in crate::lower) fn lower_sum_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if !call.arguments.keywords.is_empty() {
         expression_diagnostics::call_unexpected_keyword(
@@ -203,7 +223,7 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
         return None;
     }
     let preserves_source = sorted_preserves_iterable_source(&iterable);
-    if preserves_source && !elem_ty.supports_derived_clone() {
+    if sorted_materialization_requires_clone(&iterable) && !elem_ty.supports_derived_clone() {
         ctx.error_with_code_at(
             DiagnosticCode::TYPE_MISMATCH,
             format!(

@@ -142,6 +142,9 @@ fn import_class_type_params(
     };
     ctx.class_declared_type_params
         .insert(local.to_string(), type_params.clone());
+    ctx.class_declared_type_params
+        .entry(name.to_string())
+        .or_insert_with(|| type_params.clone());
     if !type_params.is_empty() {
         ctx.generic_functions
             .insert(local.to_string(), type_params.clone());

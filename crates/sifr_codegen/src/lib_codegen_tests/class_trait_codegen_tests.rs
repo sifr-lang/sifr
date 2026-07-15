@@ -142,32 +142,39 @@ fn generic_operator_protocol_impl_uses_generic_target_and_bounds() {
     def __eq__(self, other: Box[T]) -> bool:
         return self.value == other.value
 
-class Ordered[T]:
-    value: T
+class Ordered[A, B]:
+    first: A
+    second: B
 
-    def __lt__(self, other: Ordered[T]) -> bool:
-        return self.value < other.value
+    def __lt__(self, other: Ordered[A, B]) -> bool:
+        return self.second < other.second
 
 class NegBox[T]:
     value: T
 
-    def __neg__(self) -> int:
-        return 0
+    def __neg__(self) -> T:
+        return -self.value
 "#,
     );
 
     assert!(
-        rust_code.contains("impl<T: Clone + PartialEq> PartialEq for Box<T>"),
+        rust_code.contains("impl<T: PartialEq> PartialEq for Box<T>"),
         "{rust_code}"
     );
     assert!(rust_code.contains("other: &Box<T>"), "{rust_code}");
     assert!(!rust_code.contains("impl PartialEq for Box"));
     assert!(
-        rust_code.contains("impl<T: PartialOrd> PartialOrd for Ordered<T>"),
+        rust_code.contains("impl<A: PartialEq, B: PartialOrd> PartialOrd for Ordered<A, B>"),
         "{rust_code}"
     );
     assert!(
-        rust_code.contains("impl<T> std::ops::Neg for NegBox<T>"),
+        rust_code.contains("self.second < other.second"),
+        "{rust_code}"
+    );
+    assert!(!rust_code.contains("self.first.partial_cmp"), "{rust_code}");
+    assert!(
+        rust_code
+            .contains("impl<T: Clone + std::ops::Neg<Output = T>> std::ops::Neg for NegBox<T>"),
         "{rust_code}"
     );
 }

@@ -114,6 +114,7 @@ pub(in crate::lower) fn record_current_method_dependency(
 }
 
 pub(in crate::lower) fn close_generic_method_requirements(ctx: &mut LowerCtx) {
+    add_ordering_supertrait_requirements(ctx);
     loop {
         let snapshot = ctx.generic_method_requirements.clone();
         let mut changed = false;
@@ -161,6 +162,42 @@ pub(in crate::lower) fn close_generic_method_requirements(ctx: &mut LowerCtx) {
     }
 }
 
+fn add_ordering_supertrait_requirements(ctx: &mut LowerCtx) {
+    let snapshot = ctx.generic_method_requirements.clone();
+    for (class, methods) in snapshot {
+        if !methods.contains_key("__lt__") {
+            continue;
+        }
+        let equality_requirements = if let Some(requirements) = methods.get("__eq__") {
+            requirements.clone()
+        } else {
+            let Some(Type::Class { fields, .. }) = ctx.class_types.get(&class) else {
+                continue;
+            };
+            ctx.class_declared_type_params
+                .get(&class)
+                .into_iter()
+                .flatten()
+                .filter(|param| {
+                    fields
+                        .iter()
+                        .any(|(_, field)| type_mentions_param(field, param))
+                })
+                .map(|param| (param.clone(), HashSet::from(["PartialEq".to_string()])))
+                .collect()
+        };
+        let ordering = ctx
+            .generic_method_requirements
+            .entry(class)
+            .or_default()
+            .entry("__lt__".to_string())
+            .or_default();
+        for (param, requirements) in equality_requirements {
+            ordering.entry(param).or_default().extend(requirements);
+        }
+    }
+}
+
 pub(in crate::lower) fn import_generic_method_requirements(
     ctx: &mut LowerCtx,
     module_bounds: &HashMap<String, HashMap<String, Vec<String>>>,
@@ -172,14 +209,16 @@ pub(in crate::lower) fn import_generic_method_requirements(
         let Some(method) = owner.strip_prefix(&prefix) else {
             continue;
         };
-        let requirements = by_param
+        let requirements: HashMap<String, HashSet<String>> = by_param
             .iter()
             .map(|(param, requirements)| (param.clone(), requirements.iter().cloned().collect()))
             .collect();
-        ctx.generic_method_requirements
-            .entry(local_class.to_string())
-            .or_default()
-            .insert(method.to_string(), requirements);
+        for class_identity in [source_class, local_class] {
+            ctx.generic_method_requirements
+                .entry(class_identity.to_string())
+                .or_default()
+                .insert(method.to_string(), requirements.clone());
+        }
     }
 }
 
@@ -189,7 +228,11 @@ fn concrete_type_bindings(
     ctx: &LowerCtx,
 ) -> HashMap<String, Type> {
     let mut bindings = HashMap::new();
-    if let Some(template) = ctx.class_types.get(class_name) {
+    if let Some(template) = ctx.class_types.get(class_name).or_else(|| {
+        ctx.class_types.values().find(|candidate| {
+            matches!(candidate.resolve_alias(), Type::Class { name, .. } if name == class_name)
+        })
+    }) {
         infer_type_var_bindings(template, concrete, &mut bindings);
     }
     bindings

@@ -37,6 +37,7 @@ pub(super) struct LocalFunctionState<'a> {
     pub(super) return_type: Type,
     pub(super) explicit_return: bool,
     pub(super) inference_failed: bool,
+    pub(super) allow_union_return_inference: bool,
 }
 
 impl LocalFunctionState<'_> {
@@ -117,7 +118,22 @@ pub(in crate::lower) fn infer_nested_function_types(
     stmts: &[Stmt],
     ctx: &mut LowerCtx,
 ) -> NestedFunctionInference {
-    let mut states = collect_nested_function_states(stmts, ctx);
+    infer_function_types(stmts, ctx, false)
+}
+
+pub(in crate::lower) fn infer_module_function_types(
+    stmts: &[Stmt],
+    ctx: &mut LowerCtx,
+) -> NestedFunctionInference {
+    infer_function_types(stmts, ctx, true)
+}
+
+fn infer_function_types(
+    stmts: &[Stmt],
+    ctx: &mut LowerCtx,
+    allow_union_return_inference: bool,
+) -> NestedFunctionInference {
+    let mut states = collect_function_states(stmts, ctx, allow_union_return_inference);
     let outer_bindings = ctx
         .scope
         .visible_local_bindings()
@@ -137,7 +153,12 @@ pub(in crate::lower) fn infer_nested_function_types(
     }
 
     let mut binding_hints = outer_bindings;
-    for _ in 0..MAX_INFERENCE_PASSES {
+    let max_passes = if allow_union_return_inference {
+        states.len().saturating_add(1)
+    } else {
+        MAX_INFERENCE_PASSES
+    };
+    for _ in 0..max_passes {
         let previous = snapshot_signatures(&states);
         let mut env = FunctionEnv {
             vars: binding_hints.clone(),
@@ -164,9 +185,10 @@ pub(in crate::lower) fn infer_nested_function_types(
     }
 }
 
-pub(super) fn collect_nested_function_states<'a>(
+fn collect_function_states<'a>(
     stmts: &'a [Stmt],
     ctx: &mut LowerCtx,
+    allow_union_return_inference: bool,
 ) -> HashMap<String, LocalFunctionState<'a>> {
     let mut states = HashMap::new();
 
@@ -214,6 +236,7 @@ pub(super) fn collect_nested_function_states<'a>(
                 return_type,
                 explicit_return: func.returns.is_some(),
                 inference_failed: false,
+                allow_union_return_inference,
             },
         );
     }
@@ -551,6 +574,31 @@ pub(super) fn analyze_block(
 ) {
     for stmt in stmts {
         analyze_stmt(stmt, env, states, current_function, ctx);
+        if inference_stmt_always_exits(stmt) {
+            break;
+        }
+    }
+}
+
+fn inference_block_always_exits(stmts: &[Stmt]) -> bool {
+    stmts.iter().any(inference_stmt_always_exits)
+}
+
+fn inference_stmt_always_exits(stmt: &Stmt) -> bool {
+    match stmt {
+        Stmt::Return(_) | Stmt::Raise(_) => true,
+        Stmt::If(if_stmt) => {
+            inference_block_always_exits(&if_stmt.body)
+                && if_stmt
+                    .elif_else_clauses
+                    .last()
+                    .is_some_and(|clause| clause.test.is_none())
+                && if_stmt
+                    .elif_else_clauses
+                    .iter()
+                    .all(|clause| inference_block_always_exits(&clause.body))
+        }
+        _ => false,
     }
 }
 

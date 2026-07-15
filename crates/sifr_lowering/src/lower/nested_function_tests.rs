@@ -288,6 +288,26 @@ fn test_recursive_memoized_nested_helper_infers_deterministic_int_return() {
 }
 
 #[test]
+fn top_level_union_return_validation_is_declaration_order_neutral() {
+    let forward = "def caller() -> int:\n    return later(False)\n\ndef later(flag: bool):\n    if flag:\n        return \"x\"\n    return 1\n";
+    let reverse = "def later(flag: bool):\n    if flag:\n        return \"x\"\n    return 1\n\ndef caller() -> int:\n    return later(False)\n";
+
+    for source in [forward, reverse] {
+        let errors = lower_source(source).expect_err("union return must not satisfy int");
+        assert!(errors.iter().any(|error| {
+            error.message == "return type mismatch: expected 'int', got 'int | str'"
+        }));
+    }
+}
+
+#[test]
+fn top_level_forward_return_inference_reaches_fixed_point_past_eight_calls() {
+    let source = "def f0() -> int:\n    return f1()\n\ndef f1():\n    return f2()\n\ndef f2():\n    return f3()\n\ndef f3():\n    return f4()\n\ndef f4():\n    return f5()\n\ndef f5():\n    return f6()\n\ndef f6():\n    return f7()\n\ndef f7():\n    return f8()\n\ndef f8():\n    return f9()\n\ndef f9():\n    return f10()\n\ndef f10():\n    return f11()\n\ndef f11():\n    return 1\n";
+
+    lower_source(source).expect("module inference should converge for the full declaration group");
+}
+
+#[test]
 fn test_tuple_for_target_inference_specializes_empty_dict_for_membership_index_pattern() {
     let result = lower_source(
         "def first_repeated_bucket(events: list[int], seed: int) -> list[int]:\n    first_seen = {}\n    for index, event in enumerate(events):\n        bucket = event + seed\n        if bucket in first_seen:\n            return [first_seen[bucket], index]\n        first_seen[bucket] = index\n    fallback: list[int] = []\n    return fallback\n",

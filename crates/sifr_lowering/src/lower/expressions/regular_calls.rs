@@ -602,8 +602,12 @@ pub(super) fn lower_regular_call(
         })
     // If this is a class constructor call, emit ConstructorCall
     } else if ctx.class_types.contains_key(&func_name) {
+        let class_name = match call_type.resolve_alias() {
+            Type::Class { name, .. } => name.clone(),
+            _ => func_name,
+        };
         Some(HirExpr::ConstructorCall {
-            class_name: func_name,
+            class_name,
             args,
             ty: call_type,
         })

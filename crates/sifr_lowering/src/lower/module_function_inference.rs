@@ -5,7 +5,7 @@ pub(super) fn infer_unannotated_returns(stmts: &[Stmt], ctx: &mut LowerCtx) {
     // diagnostic authority and has the precise reachability information needed to ignore dead
     // return expressions.
     let existing_error_count = ctx.errors.len();
-    let inferred = nested_function_inference::infer_nested_function_types(stmts, ctx);
+    let inferred = nested_function_inference::infer_module_function_types(stmts, ctx);
     ctx.errors.truncate(existing_error_count);
     for stmt in stmts {
         let Stmt::FunctionDef(function) = stmt else {

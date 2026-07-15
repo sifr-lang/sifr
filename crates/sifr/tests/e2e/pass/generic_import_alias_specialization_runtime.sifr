@@ -1,0 +1,6 @@
+from sifr.collections import deque as D
+
+
+def main() -> None:
+    values: D[int] = D([1, 2, 1])
+    assert values.count(1) == 2

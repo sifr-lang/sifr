@@ -76,6 +76,43 @@ fn op_to_dunder(op: &str) -> Option<&'static str> {
     }
 }
 
+fn validate_class_operator_specialization(
+    ty: &Type,
+    dunder: &str,
+    range: ruff_text_size::TextRange,
+    ctx: &mut LowerCtx,
+) -> bool {
+    let Type::Class { name, methods, .. } = ty.resolve_alias() else {
+        return true;
+    };
+    if !methods.iter().any(|(method, _)| method == dunder) {
+        return true;
+    }
+    let class_name = name.clone();
+    let concrete = ty.clone();
+    super::generic_method_requirements::validate_generic_method_specialization(
+        &class_name,
+        &concrete,
+        dunder,
+        range,
+        ctx,
+    )
+}
+
+fn current_generic_method_can_defer_negation(ty: &Type, ctx: &LowerCtx) -> bool {
+    let Type::TypeVar(param) = ty.resolve_alias() else {
+        return false;
+    };
+    let Some(class) = ctx.current_class.as_ref() else {
+        return false;
+    };
+    ctx.current_method.is_some()
+        && ctx
+            .class_declared_type_params
+            .get(class)
+            .is_some_and(|params| params.contains(param))
+}
+
 pub(in crate::lower) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let left = lower_expr(&binop.left, ctx)?;
     let right = lower_expr(&binop.right, ctx)?;
@@ -156,6 +193,14 @@ pub(in crate::lower) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Op
                 if let Some(dunder) = op_to_dunder(op_str) {
                     if let Some((_, ft)) = methods.iter().find(|(name, _)| name == dunder) {
                         let result_ty = *ft.return_type.clone();
+                        if !validate_class_operator_specialization(
+                            left.ty(),
+                            dunder,
+                            binop.range(),
+                            ctx,
+                        ) {
+                            return None;
+                        }
                         return Some(HirExpr::BinOp {
                             left: Box::new(left),
                             op: op_str.to_string(),
@@ -329,6 +374,14 @@ pub(in crate::lower) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -
             &[operand.ty()],
             &["Clone", "Neg"],
         );
+        if current_generic_method_can_defer_negation(operand.ty(), ctx) {
+            let ty = operand.ty().clone();
+            return Some(HirExpr::UnaryOp {
+                op: op_str.to_string(),
+                operand: Box::new(operand),
+                ty,
+            });
+        }
     }
 
     match type_check_unary_op(op_str, operand.ty()) {
@@ -338,6 +391,28 @@ pub(in crate::lower) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -
             ty: result_ty,
         }),
         Err((code, message)) => {
+            if op_str == "-" {
+                if let Type::Class { methods, .. } = operand.ty() {
+                    if let Some((_, function)) =
+                        methods.iter().find(|(method, _)| method == "__neg__")
+                    {
+                        let result_ty = function.return_type.as_ref().clone();
+                        if !validate_class_operator_specialization(
+                            operand.ty(),
+                            "__neg__",
+                            unary.range(),
+                            ctx,
+                        ) {
+                            return None;
+                        }
+                        return Some(HirExpr::UnaryOp {
+                            op: op_str.to_string(),
+                            operand: Box::new(operand),
+                            ty: result_ty,
+                        });
+                    }
+                }
+            }
             ctx.error_with_code_at(code, message, unary.range());
             None
         }
@@ -549,10 +624,28 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
                 return None;
             }
         } else {
-            let requirements =
+            let dunder = match op_str {
+                "==" | "!=" => "__eq__",
+                "<" | ">" | "<=" | ">=" => "__lt__",
+                _ => "",
+            };
+            if !dunder.is_empty()
+                && !validate_class_operator_specialization(
+                    left.ty(),
+                    dunder,
+                    comparator.range(),
+                    ctx,
+                )
+            {
+                return None;
+            }
+            let mut requirements =
                 super::generic_method_requirements::requirement_names_for_comparison(&[
                     op_str.to_string()
                 ]);
+            if matches!(ctx.current_method.as_deref(), Some("__eq__" | "__lt__")) {
+                requirements.remove("Clone");
+            }
             super::generic_method_requirements::record_current_method_requirements(
                 ctx,
                 &[left.ty(), right.ty()],
@@ -578,11 +671,6 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
             if let Err((code, message)) = type_check_comparison(left.ty(), op_str, right.ty()) {
                 let has_overload = match left.ty() {
                     Type::Class { methods, .. } => {
-                        let dunder = match op_str {
-                            "==" | "!=" => "__eq__",
-                            "<" | ">" | "<=" | ">=" => "__lt__",
-                            _ => "",
-                        };
                         !dunder.is_empty() && methods.iter().any(|(name, _)| name == dunder)
                     }
                     _ => false,

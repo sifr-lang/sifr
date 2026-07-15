@@ -16,17 +16,18 @@ class Box[T]:
     def __eq__(self, other: Box[T]) -> bool:
         return self.value == other.value
 
-class Ordered[T]:
-    value: T
+class Ordered[A, B]:
+    first: A
+    second: B
 
-    def __lt__(self, other: Ordered[T]) -> bool:
-        return self.value < other.value
+    def __lt__(self, other: Ordered[A, B]) -> bool:
+        return self.second < other.second
 
 class NegBox[T]:
     value: T
 
-    def __neg__(self) -> int:
-        return 0
+    def __neg__(self) -> T:
+        return -self.value
 
 def main() -> None:
     holder: Holder[int] = Holder([1, 2])
@@ -34,4 +35,7 @@ def main() -> None:
     assert holder.same([1, 2])
     assert math.product(7) == 42
     assert Box(9) == Box(9)
-    assert Ordered(1) < Ordered(2)
+    left: Ordered[str, int] = Ordered("z", 1)
+    right: Ordered[str, int] = Ordered("a", 2)
+    assert left < right
+    assert -NegBox(2) == -2

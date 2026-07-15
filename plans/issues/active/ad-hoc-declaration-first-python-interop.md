@@ -1092,8 +1092,30 @@ Delivery waves:
   Python interop `11/11` in `106.69s`, runtime platform `28/28` with one gated
   skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache
   hits. Its `489.54s` wall time produced only the non-blocking warm-target
-  advisory; every enforced step budget passed. A fresh whole-diff review of
-  this pass-16 remediation remains pending.
+  advisory; every enforced step budget passed. Full-diff
+  [review pass 17](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-17.md)
+  then reproduced six remaining gaps: aliased generic imports lost canonical
+  specialization identity; operator consumers skipped conditional impl checks;
+  generic ordering ignored the declared `__lt__` body and its `PartialEq`
+  supertrait; mixed conditional sorting bypassed branch-local Clone admission;
+  union-return inference remained declaration-order dependent; and generic
+  negation evidence did not execute negation. The remediation preserves local
+  aliases separately from canonical class identity, validates method and
+  operator specializations through one requirement map, emits ordering through
+  the actual `__lt__` body with exact representation equality bounds, checks
+  every preserved sorting branch, performs union-aware fixed-point module
+  inference, and supports TypeVar/class negation end-to-end. Six permanent
+  negative fixtures plus aliased-import and generic operator runtime evidence
+  cover the reproductions. Focused native execution passes for aliased `deque`,
+  multi-parameter ordering, and generic negation; full codegen passes `824/824`,
+  lowering passes `747` with one ignored, and compile-fail passes `526/526`.
+  The requested post-remediation `cargo clean` rebuild confirms the file-size
+  guardrail over `2667` files and HIR maintainability. The authoritative
+  create-PR gate passes every blocking lane, including Python interop `11/11`,
+  runtime platform `28/28` with one gated skip, and cold-cache E2E `131/131`
+  with signature `7c39b8c1dd4fec7c` and all `42` groups rebuilt. Its `855.62s`
+  wall time produced only the expected non-blocking warm-target advisory; every
+  enforced step budget passed. A fresh whole-diff review remains pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

@@ -1,0 +1,13 @@
+class NegBox[T]:
+    value: T
+
+    def __neg__(self) -> T:
+        return -self.value
+
+
+class Local(NonSend):
+    pass
+
+
+def negate(value: NegBox[Local]) -> Local:
+    return -value

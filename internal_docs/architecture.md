@@ -898,7 +898,10 @@ supports them. This is a language rule, not an implementation detail.
   methods and operator implementations carry bounds only on the type parameters
   used by their emitted consumers. A clone required for an `A` field therefore
   does not constrain an unrelated `B`. A specialization is rejected at the Sifr
-  consumer that needs a bound its concrete type argument cannot satisfy.
+  consumer that needs a bound its concrete type argument cannot satisfy. Import
+  aliases retain a separate local spelling and canonical declaration identity,
+  so annotations, constructors, emitted Rust types, and specialization metadata
+  continue to refer to the same generic class.
 - **Codegen:** the compiler emits only the derives supported by the complete
   generated struct, newtype, or union representation.
 - **Enum types (enum type-system work):** enum types unconditionally derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`. All enum values are usable as dict keys and set members.
@@ -925,18 +928,24 @@ supports them. This is a language rule, not an implementation detail.
   and a preserved source requires Clone-capable elements for result
   materialization; consumed temporaries and iterators retain their elements.
   Conditional iterable sources are materialized branch-by-branch so preserved
-  branches remain reusable and consumed branches are tracked exactly.
+  branches remain reusable and consumed branches are tracked exactly. Clone
+  admission is therefore required when any reachable branch is preserved, even
+  when another branch is a consumed temporary.
 - **Generic method specialization constraint:** body-derived Clone, equality,
   partial-order, arithmetic, remainder, division, and negation requirements are
   recorded per method and per declared type parameter. Direct `self` calls close
   those requirements transitively, module exports preserve them, and concrete
-  method calls are rejected during lowering when a specialization cannot
-  implement the Rust traits that code generation will emit.
+  method and operator calls are rejected during lowering when a specialization
+  cannot implement the Rust traits that code generation will emit. Generated
+  `PartialOrd` implementations execute the declared `__lt__` body and include
+  the exact `PartialEq` supertrait requirements of the class representation or
+  its custom `__eq__`; generic negation is checked and emitted end-to-end.
 - **Module return inference:** successful unannotated top-level return types are
   inferred as a mutually visible declaration group before body lowering, making
-  forward calls source-order neutral. The prepass is diagnostic-neutral; normal
-  reachability-aware body lowering remains authoritative for unresolved or dead
-  return expressions.
+  forward calls source-order neutral. The prepass reaches a fixed point sized to
+  the declaration group, preserves inferred unions, and ignores unreachable
+  statement tails. It is diagnostic-neutral; normal reachability-aware body
+  lowering remains authoritative for unresolved or dead return expressions.
 - **Formatting-consumer constraint:** `print`, `str`, f-string interpolation,
   and `repr` validate the exact generated Rust `Display`/`Debug` strategy before
   accepting HIR. `repr` always requires `Debug`; the other surfaces select the

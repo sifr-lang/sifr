@@ -485,6 +485,9 @@ pub(in crate::lower) fn lower_module_impl(
                                         {
                                             ctx.class_declared_type_params
                                                 .insert(local.clone(), type_params.clone());
+                                            ctx.class_declared_type_params
+                                                .entry(name.clone())
+                                                .or_insert_with(|| type_params.clone());
                                             if !type_params.is_empty() {
                                                 ctx.generic_functions
                                                     .insert(local.clone(), type_params.clone());
@@ -711,6 +714,9 @@ pub(in crate::lower) fn lower_module_impl(
                                 if let Some(type_params) = module_class_type_params.get(name) {
                                     ctx.class_declared_type_params
                                         .insert(local.clone(), type_params.clone());
+                                    ctx.class_declared_type_params
+                                        .entry(name.clone())
+                                        .or_insert_with(|| type_params.clone());
                                     if !type_params.is_empty() {
                                         ctx.generic_functions
                                             .insert(local.clone(), type_params.clone());

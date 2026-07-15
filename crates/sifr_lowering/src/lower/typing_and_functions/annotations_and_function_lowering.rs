@@ -378,10 +378,10 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                         };
                         // Build substitution map from class type params to concrete args
                         if let Type::Class {
+                            ref name,
                             ref fields,
                             ref methods,
                             ref parent_class,
-                            ..
                         } = class_ty
                         {
                             let class_type_params = ctx
@@ -446,7 +446,11 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                                     })
                                     .collect();
                                 return Type::Class {
-                                    name: base_name.clone(),
+                                    // Keep the declaration identity even when the annotation uses
+                                    // an import alias. The local spelling is only a name-resolution
+                                    // concern; generated Rust and specialization metadata use the
+                                    // canonical class name.
+                                    name: name.clone(),
                                     fields: subst_fields,
                                     methods: subst_methods,
                                     parent_class: parent_class.clone(),

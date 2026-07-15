@@ -1,6 +1,6 @@
 use super::{
-    str, type_check_binary_op, CmpOp, Expr, ExprCall, FunctionEnv, HashMap, LocalFunctionState,
-    LowerCtx, Operator, Type,
+    str, type_check_binary_op, unify_function_return, CmpOp, Expr, ExprCall, FunctionEnv, HashMap,
+    LocalFunctionState, LowerCtx, Operator, Type,
 };
 pub(super) fn analyze_assign(
     targets: &[Expr],
@@ -802,22 +802,6 @@ pub(super) fn unify_function_param(
         state.inference_failed = true;
     } else {
         param.ty = unify_types(param.ty.clone(), incoming);
-    }
-}
-
-pub(super) fn unify_function_return(
-    function_name: &str,
-    incoming: Type,
-    states: &mut HashMap<String, LocalFunctionState<'_>>,
-) {
-    let Some(state) = states.get_mut(function_name) else {
-        return;
-    };
-    if !state.explicit_return && has_conflicting_inference(&state.return_type, &incoming) {
-        state.return_type = Type::Unknown;
-        state.inference_failed = true;
-    } else {
-        state.return_type = unify_types(state.return_type.clone(), incoming);
     }
 }
 

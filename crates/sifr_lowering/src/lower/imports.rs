@@ -108,6 +108,9 @@ pub(in crate::lower) fn resolve_imports_early(
                                 if let Some(type_params) = module_class_type_params.get(name) {
                                     ctx.class_declared_type_params
                                         .insert(local.clone(), type_params.clone());
+                                    ctx.class_declared_type_params
+                                        .entry(name.clone())
+                                        .or_insert_with(|| type_params.clone());
                                 }
                             }
                             if let Some(module_bounds) =

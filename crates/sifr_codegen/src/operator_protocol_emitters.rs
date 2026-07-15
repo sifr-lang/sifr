@@ -167,31 +167,61 @@ impl RustEmitter {
             .first()
             .map(|param| param.name.clone())
             .unwrap_or_else(|| "other".to_string());
-        let ordering_expr = if let Some((field_name, _)) = class.fields.first() {
-            RustExpr::Try(Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Field {
-                    expr: Box::new(RustExpr::Ident("self".to_string())),
-                    field: field_name.clone(),
-                }),
-                method: "partial_cmp".to_string(),
-                args: vec![RustExpr::Ref {
-                    mutable: false,
-                    expr: Box::new(RustExpr::Field {
-                        expr: Box::new(RustExpr::Ident(other_name.clone())),
-                        field: field_name.clone(),
-                    }),
-                }],
-            }))
-        } else {
+        let class_target = Self::class_impl_target(class);
+        let helper_items = vec![RustItem::Fn {
+            name: "__sifr_lt".to_string(),
+            visibility: Visibility::Private,
+            type_params: Vec::new(),
+            params: vec![
+                RustParam::SelfParam { mutable: false },
+                RustParam::Named {
+                    name: other_name.clone(),
+                    ty: RustType::Ref {
+                        mutable: false,
+                        inner: Box::new(RustType::Named(class_target.clone())),
+                    },
+                },
+            ],
+            ret: Some(RustType::Bool),
+            body: self.lower_operator_method_body(func),
+            is_async: false,
+        }];
+        let helper_type_params =
+            Self::class_function_impl_type_params(class, func, &helper_items, None);
+        self.body_items.push(RustItem::Impl {
+            target: class_target.clone(),
+            type_params: helper_type_params,
+            trait_: None,
+            items: helper_items,
+        });
+
+        let less_call = RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("self".to_string())),
+            method: "__sifr_lt".to_string(),
+            args: vec![RustExpr::Ident(other_name.clone())],
+        };
+        let greater_call = RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(other_name.clone())),
+            method: "__sifr_lt".to_string(),
+            args: vec![RustExpr::Ident("self".to_string())],
+        };
+        let ordering = |variant: &str| {
             RustExpr::Path(vec![
                 "std".to_string(),
                 "cmp".to_string(),
                 "Ordering".to_string(),
-                "Equal".to_string(),
+                variant.to_string(),
             ])
         };
-
-        let class_target = Self::class_impl_target(class);
+        let ordering_expr = RustExpr::If {
+            cond: Box::new(less_call),
+            then_expr: Box::new(ordering("Less")),
+            else_expr: Some(Box::new(RustExpr::If {
+                cond: Box::new(greater_call),
+                then_expr: Box::new(ordering("Greater")),
+                else_expr: Some(Box::new(ordering("Equal"))),
+            })),
+        };
         let items = vec![RustItem::Fn {
             name: "partial_cmp".to_string(),
             visibility: Visibility::Private,
@@ -215,9 +245,37 @@ impl RustEmitter {
             }))],
             is_async: false,
         }];
+        let mut trait_type_params =
+            Self::class_function_impl_type_params(class, func, &items, None);
+        let custom_eq = class
+            .operator_impls
+            .iter()
+            .find(|(name, _)| name == "__eq__")
+            .map(|(_, function)| function);
+        for param in &mut trait_type_params {
+            let equality_required = custom_eq.map_or_else(
+                || {
+                    class.fields.iter().any(|(_, field)| {
+                        Self::type_mentions_type_param(field, param.name.as_str())
+                    })
+                },
+                |eq| {
+                    Self::extra_bound_items_for_type_param(param.name.as_str(), &eq.body)
+                        .iter()
+                        .any(|bound| bound == "PartialEq")
+                },
+            );
+            let equality_implied = param
+                .bounds
+                .iter()
+                .any(|bound| bound == "PartialOrd" || bound == "Eq");
+            if equality_required && !equality_implied {
+                param.bounds.push("PartialEq".to_string());
+            }
+        }
         self.body_items.push(RustItem::Impl {
             target: class_target,
-            type_params: Self::class_function_impl_type_params(class, func, &items, None),
+            type_params: trait_type_params,
             trait_: Some("PartialOrd".to_string()),
             items,
         });
@@ -625,8 +683,10 @@ impl RustEmitter {
     }
 
     pub(crate) fn lower_operator_expr_ir(&mut self, expr: &HirExpr) -> Option<RustExpr> {
-        if let Some(lowered) = self.lower_stmt_expr_for_ir(expr).ok().flatten() {
-            return Some(self.rewrite_stdlib_constant_idents_in_expr(lowered));
+        if !matches!(expr, HirExpr::Compare { .. }) {
+            if let Some(lowered) = self.lower_stmt_expr_for_ir(expr).ok().flatten() {
+                return Some(self.rewrite_stdlib_constant_idents_in_expr(lowered));
+            }
         }
         if let Some(lowered) = crate::try_lower_leaf_or_name_expr_result(expr)
             .ok()
@@ -690,9 +750,9 @@ impl RustEmitter {
                     return None;
                 }
                 let mut chain: Option<RustExpr> = None;
-                let mut prev = self.lower_operator_expr_ir(left)?;
+                let mut prev = self.lower_operator_comparison_operand(left)?;
                 for (op, cmp) in ops.iter().zip(comparators.iter()) {
-                    let right = self.lower_operator_expr_ir(cmp)?;
+                    let right = self.lower_operator_comparison_operand(cmp)?;
                     let compare_expr = RustExpr::BinOp {
                         left: Box::new(prev.clone()),
                         op: Self::map_operator_compare_op(op)?.to_string(),
@@ -719,6 +779,17 @@ impl RustEmitter {
                 operand: Box::new(self.lower_operator_expr_ir(operand)?),
             }),
             _ => None,
+        }
+    }
+
+    fn lower_operator_comparison_operand(&mut self, expr: &HirExpr) -> Option<RustExpr> {
+        match expr {
+            HirExpr::FieldAccess { object, field, .. } => Some(RustExpr::Field {
+                expr: Box::new(self.lower_operator_comparison_operand(object)?),
+                field: field.clone(),
+            }),
+            HirExpr::Name { name, .. } => Some(RustExpr::Ident(name.clone())),
+            _ => self.lower_operator_expr_ir(expr),
         }
     }
 
