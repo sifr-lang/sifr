@@ -1,0 +1,3 @@
+# expect-error: SIFR-TYPE-0005
+def contains_float(value: float, values: set[float]) -> bool:
+    return value in values

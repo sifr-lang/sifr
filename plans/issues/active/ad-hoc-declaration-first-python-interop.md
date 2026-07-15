@@ -7,9 +7,9 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review pass 8 reopened compiler ownership and
-runtime admission gaps, and its remediation now passes focused compiler,
-runtime, native-negative, maintainability, and formatting validation in
+Wave 2 is implemented; whole-diff review pass 10 reopened compiler Rust-trait
+capability gaps, and its remediation now passes focused compiler,
+native-positive, native-negative, maintainability, and formatting validation in
 [PR #2988](https://github.com/sifr-lang/sifr/pull/2988). Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
@@ -910,8 +910,31 @@ Delivery waves:
   clean: Python interop `11/11`, runtime platform `28/28` with one gated skip,
   and E2E `131/131` with signature `7c39b8c1dd4fec7c`. Its `995.68s` wall time
   produced only the expected non-blocking warm-target advisory because all 42
-  native E2E groups rebuilt from the empty cache. A fresh whole-diff review is
-  pending.
+  native E2E groups rebuilt from the empty cache. Full-diff
+  [review pass 10](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-10.md)
+  then found union equality generation, set/dictionary `Eq + Hash` requirements,
+  non-clone chained assignment, unconditional union formatting traits, and
+  stale activation evidence. Those accepted-invalid paths are now closed by
+  distinct recursive `PartialEq`, `Eq + Hash`, `Debug`, and `Display`
+  capabilities; conditional class/newtype/union derives and union formatting;
+  hash-aware membership and equality validation; and non-clone chained-
+  assignment rejection. The exact native-positive union/class reproduction now
+  builds and runs through the Rust backend, including corrected boxing and
+  lifetime bounds for callable-field default constructors. Three new native-
+  negative fixtures are included in the complete `489/489` compile-fail matrix,
+  focused type-system tests pass `100/100`, union code generation passes `4/4`,
+  callable-constructor code generation passes `1/1`, buffer lowering passes
+  `32/32`, and buffer code generation passes `10/10`. Full affected suites pass:
+  type system `100/100`, lowering `742/742` with one ignored, and code generation
+  `817/817`. Workspace Clippy is warning-free, formatting and JSON checks pass,
+  and the HIR maintainability and `900`-line file-size guardrails pass over
+  `2615` files after trait capability analysis was split into its own focused
+  module. The authoritative create-PR facade passes every blocking lane: Python
+  interop `11/11` in `250.73s`, runtime platform `28/28` with one gated skip,
+  and E2E `131/131` with signature `7c39b8c1dd4fec7c`. E2E rebuilt 22 of 42
+  groups and completed in `163.68s`; all enforced step budgets passed, while the
+  `733.86s` overall wall time produced only non-blocking warm-cache advisories.
+  A fresh whole-diff review is pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

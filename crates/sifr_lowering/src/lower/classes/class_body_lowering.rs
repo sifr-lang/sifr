@@ -755,14 +755,7 @@ pub(in crate::lower) fn lower_class(
 
 /// Check if a type is hashable (can derive Hash + Eq).
 pub(in crate::lower) fn is_hashable_type(ty: &Type) -> bool {
-    match ty {
-        Type::Int | Type::Bool | Type::Str | Type::None | Type::BigInt => true,
-        Type::Float => false, // f64 doesn't implement Hash
-        Type::LiteralInt(_) | Type::LiteralBool(_) | Type::LiteralStr(_) => true,
-        Type::Tuple(elems) => elems.iter().all(is_hashable_type),
-        Type::Class { fields, .. } => fields.iter().all(|(_, t)| is_hashable_type(t)),
-        _ => false,
-    }
+    ty.supports_hash_key()
 }
 
 /// Check if a method body contains any field assignments (self.field = ...).

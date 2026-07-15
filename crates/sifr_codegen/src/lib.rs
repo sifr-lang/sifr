@@ -43,8 +43,7 @@ mod generic_bounds_helpers;
 mod helpers;
 pub(crate) use helpers::{
     collect_locally_defined_vars, collect_mutated_vars_with_sigs,
-    collect_referenced_vars_with_types, default_param_convention, is_hashable_type_codegen,
-    module_uses_bigint,
+    collect_referenced_vars_with_types, default_param_convention, module_uses_bigint,
 };
 mod borrowed_string_compare;
 mod hir_analysis;

@@ -10,6 +10,7 @@ use super::numeric_sentinels::{
     lower_sentinel_expr_for_name_domain, maybe_resolve_numeric_sentinel_name_from_type,
     retag_numeric_sentinel_name_expr,
 };
+use super::type_bounds::type_satisfies_bound;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use num_bigint::BigInt;
@@ -27,13 +28,40 @@ fn is_provisional_empty_dict_membership(
     candidate_ty: &Type,
 ) -> bool {
     matches!(collection, HirExpr::Name { .. })
-        && candidate_ty.supports_structural_equality()
+        && candidate_ty.supports_hash_key()
         && matches!(
             collection.ty().resolve_alias(),
             Type::Dict(key, _)
                 if matches!(key.resolve_alias(), Type::Any | Type::Unknown)
                     && matches!(element_ty.resolve_alias(), Type::Any | Type::Unknown)
         )
+}
+
+fn membership_requires_hash_key(collection_ty: &Type) -> bool {
+    matches!(
+        collection_ty.resolve_alias(),
+        Type::Set(_) | Type::Dict(_, _)
+    )
+}
+
+fn supports_membership_hash_key(ty: &Type, ctx: &LowerCtx) -> bool {
+    ty.supports_hash_key()
+        || matches!(ty.resolve_alias(), Type::TypeVar(_))
+            && type_satisfies_bound(ty, "Hashable", ctx)
+}
+
+fn membership_capability_available(
+    collection_ty: &Type,
+    element_ty: &Type,
+    candidate_ty: &Type,
+    ctx: &LowerCtx,
+) -> bool {
+    if membership_requires_hash_key(collection_ty) {
+        supports_membership_hash_key(element_ty, ctx)
+            && supports_membership_hash_key(candidate_ty, ctx)
+    } else {
+        element_ty.supports_structural_equality() && candidate_ty.supports_structural_equality()
+    }
 }
 
 /// Map a binary operator to its corresponding dunder method name.
@@ -320,14 +348,18 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
                         );
                         return None;
                     }
-                    if (!elem_ty.supports_structural_equality()
-                        || !left.ty().supports_structural_equality())
+                    if !membership_capability_available(&collection_ty, &elem_ty, left.ty(), ctx)
                         && !is_provisional_empty_dict_membership(&collection, &elem_ty, left.ty())
                     {
+                        let capability = if membership_requires_hash_key(&collection_ty) {
+                            "hash/equality"
+                        } else {
+                            "structural equality"
+                        };
                         ctx.error_with_code_at(
                             sifr_diagnostics::DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
                             format!(
-                                "membership requires structural equality, which is unavailable for '{}' and '{}'",
+                                "membership requires {capability}, which is unavailable for '{}' and '{}'",
                                 left.ty().display_name(),
                                 elem_ty.display_name()
                             ),
@@ -376,14 +408,18 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
                         );
                         return None;
                     }
-                    if (!elem_ty.supports_structural_equality()
-                        || !left.ty().supports_structural_equality())
+                    if !membership_capability_available(&collection_ty, &elem_ty, left.ty(), ctx)
                         && !is_provisional_empty_dict_membership(&collection, &elem_ty, left.ty())
                     {
+                        let capability = if membership_requires_hash_key(&collection_ty) {
+                            "hash/equality"
+                        } else {
+                            "structural equality"
+                        };
                         ctx.error_with_code_at(
                             sifr_diagnostics::DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
                             format!(
-                                "membership requires structural equality, which is unavailable for '{}' and '{}'",
+                                "membership requires {capability}, which is unavailable for '{}' and '{}'",
                                 left.ty().display_name(),
                                 elem_ty.display_name()
                             ),

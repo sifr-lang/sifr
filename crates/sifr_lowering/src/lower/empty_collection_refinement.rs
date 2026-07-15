@@ -1,4 +1,5 @@
 use super::builtin_calls::callable_builtin_element_type;
+use super::type_bounds::type_satisfies_bound;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use sifr_type_system::Type;
@@ -36,9 +37,10 @@ pub(in crate::lower) fn refine_empty_dict_membership_expr(
     inferred_key_ty: Type,
     ctx: &mut LowerCtx,
 ) -> HirExpr {
-    if matches!(inferred_key_ty.resolve_alias(), Type::Any | Type::Unknown)
-        || !inferred_key_ty.supports_structural_equality()
-    {
+    let supports_hash = inferred_key_ty.supports_hash_key()
+        || matches!(inferred_key_ty.resolve_alias(), Type::TypeVar(_))
+            && type_satisfies_bound(&inferred_key_ty, "Hashable", ctx);
+    if matches!(inferred_key_ty.resolve_alias(), Type::Any | Type::Unknown) || !supports_hash {
         return expr;
     }
     let HirExpr::Name { name, ty } = &expr else {

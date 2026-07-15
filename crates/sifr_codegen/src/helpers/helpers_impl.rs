@@ -186,14 +186,7 @@ pub(crate) fn option_projection_method_for_owned_type(ty: &Type) -> &'static str
 /// Check if a type can be auto-formatted with `{}` (implements Display).
 /// Used to determine if auto-generated Display impl is safe for a class field.
 pub(crate) fn is_auto_display_type(ty: &Type) -> bool {
-    match ty {
-        Type::Int | Type::Float | Type::Bool | Type::Str | Type::None => true,
-        Type::LiteralInt(_) | Type::LiteralBool(_) | Type::LiteralStr(_) => true,
-        Type::Class { .. } => true, // Classes get auto-Display too
-        Type::Newtype { .. } => true,
-        // Union types map to Option<T> or Rust enum — neither implements Display
-        _ => false,
-    }
+    ty.supports_display_formatting()
 }
 
 /// Returns the default parameter convention for a type.
@@ -454,14 +447,6 @@ pub(crate) fn detect_is_none_union_var(expr: &HirExpr) -> Option<IsNoneUnionMatc
         }
     }
     None
-}
-
-pub(crate) fn is_hashable_type_codegen(ty: &Type) -> bool {
-    match ty {
-        Type::Int | Type::Bool | Type::Str | Type::None | Type::BigInt | Type::Decimal => true,
-        Type::Float => false,
-        _ => false,
-    }
 }
 
 /// Check if a module uses the `bigint` type anywhere.

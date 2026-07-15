@@ -462,18 +462,26 @@ declaration returning `bytes` or a typed collection is a checked copy, not a
 buffer declaration.
 
 Compiler capabilities follow the emitted Rust traits rather than assuming that
-every non-affine type is reusable. Structural equality and membership require a
-recursive `PartialEq` capability; `Any`, dynamic trait objects, callable-bearing
-classes, affine resources, and other non-equality Rust representations are
-rejected before code generation. Source `is` and `is not` are limited to
-identity checks against `None`; they are not rewritten into structural equality
-for arbitrary resources.
+every non-affine type is reusable. Sequence equality and membership require a
+recursive `PartialEq` capability. Set membership and equality require elements
+with recursive `Eq + Hash`; dictionary membership and equality require keys
+with recursive `Eq + Hash` and equality-capable values. Generated classes,
+newtypes, and non-optional union enums derive only the `Debug`, `Clone`,
+`PartialEq`, `Eq`, and `Hash` traits proved by their complete shapes, and union
+formatting is emitted only when every member supports `Display` or `Debug`.
+`Any`, dynamic trait objects, callable-bearing classes, affine resources, and
+other unsupported Rust representations are rejected before an operation that
+would require a missing trait. Source `is` and `is not` are limited to identity
+checks against `None`; they are not rewritten into structural equality for
+arbitrary resources.
 
 Tuple unpacking clones a borrowed source only when its complete type is
 recursively cloneable. An owned tuple source is consumed and destructured by
 move. Star unpacking preserves its list source and therefore requires cloneable
 elements; affine, `Any`, callable-bearing, and other non-clone element shapes
-are rejected. Async-generator validation includes free-variable captures.
+are rejected. Chained assignment likewise rejects move-only values whose Rust
+representation cannot be cloned; it never emits multiple moves from one source.
+Async-generator validation includes free-variable captures.
 Nested async generators are rejected until their dedicated lazy materialization
 path exists, with affine captures receiving the buffer-specific zero-copy
 diagnostic.

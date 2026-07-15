@@ -1,0 +1,12 @@
+class CallbackHolder:
+    callback: Callable[[int], int]
+
+def same(left: int | str, right: int | str) -> bool:
+    return left == right
+
+def accept_unformatted_union(value: int | CallbackHolder) -> None:
+    return None
+
+def main() -> None:
+    assert same(7, 7)
+    assert not same("left", "right")

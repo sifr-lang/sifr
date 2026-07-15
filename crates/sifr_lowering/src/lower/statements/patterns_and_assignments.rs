@@ -497,6 +497,19 @@ pub(in crate::lower) fn lower_chained_assign(
         );
         return result;
     }
+    if val_ty.ownership() == sifr_type_system::OwnershipKind::Move
+        && !val_ty.supports_derived_clone()
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+            format!(
+                "chained assignment requires cloning move-only type '{}', which does not support cloning",
+                val_ty.display_name()
+            ),
+            assign.range(),
+        );
+        return result;
+    }
 
     // Process targets in reverse order (rightmost gets the value first)
     let targets: Vec<_> = assign.targets.iter().collect();

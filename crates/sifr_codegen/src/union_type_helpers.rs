@@ -171,9 +171,19 @@ impl RustEmitter {
                     value: None,
                 })
                 .collect();
-            let mut derives = vec!["Debug".to_string()];
+            let mut derives = Vec::new();
+            if members.iter().all(Type::supports_debug_formatting) {
+                derives.push("Debug".to_string());
+            }
             if members.iter().all(Type::supports_derived_clone) {
                 derives.push("Clone".to_string());
+            }
+            if members.iter().all(Type::supports_structural_equality) {
+                derives.push("PartialEq".to_string());
+            }
+            if members.iter().all(Type::supports_hash_key) {
+                derives.push("Eq".to_string());
+                derives.push("Hash".to_string());
             }
             self.enum_items.push(RustItem::Enum {
                 name: enum_name.clone(),
@@ -183,17 +193,20 @@ impl RustEmitter {
                 variants,
             });
 
+            let supports_display = members.iter().all(|member| {
+                member.supports_display_formatting() || member.supports_debug_formatting()
+            });
+            if !supports_display {
+                continue;
+            }
             let arms: Vec<RustMatchArm> = members
                 .iter()
                 .map(|member| {
                     let variant = member.union_variant_name();
-                    let fmt_spec = if member.contains_affine_resource()
-                        || matches!(member.resolve_alias(), Type::Class { .. } | Type::None)
-                        || !crate::helpers::is_auto_display_type(member)
-                    {
-                        "{:?}"
-                    } else {
+                    let fmt_spec = if member.supports_display_formatting() {
                         "{}"
+                    } else {
+                        "{:?}"
                     };
                     RustMatchArm {
                         pattern: format!("{enum_name}::{variant}(v)"),
@@ -270,6 +283,46 @@ mod tests {
             .nth(1)
             .expect("None union arm should be rendered");
         assert!(none_arm[..none_arm.len().min(120)].contains("write!(f, \"{:?}\", v)"));
+    }
+
+    #[test]
+    fn equality_capable_union_derives_the_required_rust_traits() {
+        let mut emitter = RustEmitter::new();
+        emitter.register_union_type(&Type::Union(vec![Type::Int, Type::Str]));
+        emitter.generate_enum_definitions();
+
+        let RustItem::Enum { derives, .. } = &emitter.enum_items[0] else {
+            panic!("first generated item should be the union enum");
+        };
+        assert_eq!(derives, &["Debug", "Clone", "PartialEq", "Eq", "Hash"]);
+        let rendered = crate::render::render_items(&emitter.enum_items);
+        assert!(rendered.contains("impl std::fmt::Display for IntOrStr"));
+    }
+
+    #[test]
+    fn callable_bearing_union_requires_no_unavailable_formatting_trait() {
+        let holder = Type::Class {
+            name: "CallbackHolder".to_string(),
+            fields: vec![(
+                "callback".to_string(),
+                Type::Callable(
+                    vec![Type::Int],
+                    vec![ParamConvention::own()],
+                    Box::new(Type::Int),
+                ),
+            )],
+            methods: vec![],
+            parent_class: None,
+        };
+        let mut emitter = RustEmitter::new();
+        emitter.register_union_type(&Type::Union(vec![Type::Int, holder]));
+        emitter.generate_enum_definitions();
+
+        let RustItem::Enum { derives, .. } = &emitter.enum_items[0] else {
+            panic!("first generated item should be the union enum");
+        };
+        assert!(derives.is_empty());
+        assert_eq!(emitter.enum_items.len(), 1);
     }
 
     #[test]

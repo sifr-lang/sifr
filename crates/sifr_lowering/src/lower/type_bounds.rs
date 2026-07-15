@@ -110,18 +110,7 @@ pub(in crate::lower) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &Lower
     match bound {
         "Comparable" => type_satisfies_comparable_bound(ty, ctx),
         "Addable" => matches!(ty, Type::Int | Type::Float | Type::Str | Type::BigInt),
-        "Hashable" => matches!(
-            ty,
-            Type::Int
-                | Type::Str
-                | Type::Bool
-                | Type::BigInt
-                | Type::None
-                | Type::Enum { .. }
-                | Type::LiteralStr(_)
-                | Type::LiteralInt(_)
-                | Type::LiteralBool(_)
-        ),
+        "Hashable" => ty.supports_hash_key(),
         _ => resolve_named_bound_type(bound, ctx)
             .is_some_and(|bound_ty| ty.is_assignable_to(&bound_ty)),
     }

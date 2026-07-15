@@ -357,6 +357,39 @@ mod tests {
     }
 
     #[test]
+    fn test_hash_and_format_capabilities_match_generated_rust_traits() {
+        let callable_class = Type::Class {
+            name: "CallbackHolder".to_string(),
+            fields: vec![(
+                "callback".to_string(),
+                Type::Callable(
+                    vec![Type::Int],
+                    vec![ParamConvention::own()],
+                    Box::new(Type::Int),
+                ),
+            )],
+            methods: vec![],
+            parent_class: None,
+        };
+        let comparable_union = Type::Union(vec![Type::Int, Type::Str]);
+
+        assert!(comparable_union.supports_structural_equality());
+        assert!(comparable_union.supports_hash_key());
+        assert!(comparable_union.supports_debug_formatting());
+        assert!(comparable_union.supports_display_formatting());
+        assert!(!Type::Float.supports_hash_key());
+        assert!(!Type::List(Box::new(Type::Int)).supports_hash_key());
+        assert!(!Type::Set(Box::new(Type::Float)).supports_structural_equality());
+        assert!(!Type::Dict(
+            Box::new(Type::List(Box::new(Type::Int))),
+            Box::new(Type::Int),
+        )
+        .supports_structural_equality());
+        assert!(!callable_class.supports_debug_formatting());
+        assert!(!callable_class.supports_display_formatting());
+    }
+
+    #[test]
     fn test_collection_assignability() {
         let list_int = Type::List(Box::new(Type::Int));
         let list_int2 = Type::List(Box::new(Type::Int));

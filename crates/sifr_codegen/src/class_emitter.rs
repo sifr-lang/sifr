@@ -300,7 +300,15 @@ impl RustEmitter {
                             .unwrap_or_else(|| self.rust_type_with_generics(field_ty)),
                     )
                 } else {
-                    self.rust_ir_type_with_generics(field_ty)
+                    let rendered = self.rust_type_with_generics(field_ty);
+                    if matches!(
+                        field_ty.resolve_alias(),
+                        Type::Callable(..) | Type::AsyncCallable(..)
+                    ) {
+                        RustType::Named(format!("{rendered} + 'static"))
+                    } else {
+                        RustType::Named(rendered)
+                    }
                 };
                 RustParam::Named {
                     name: field_name.clone(),
@@ -311,7 +319,21 @@ impl RustEmitter {
         let mut fields = class
             .fields
             .iter()
-            .map(|(field_name, _)| (field_name.clone(), RustExpr::Ident(field_name.clone())))
+            .map(|(field_name, field_ty)| {
+                let value = RustExpr::Ident(field_name.clone());
+                let value = if matches!(
+                    field_ty.resolve_alias(),
+                    Type::Callable(..) | Type::AsyncCallable(..)
+                ) {
+                    RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+                        args: vec![value],
+                    }
+                } else {
+                    value
+                };
+                (field_name.clone(), value)
+            })
             .collect::<Vec<_>>();
         if class.name == "PythonError" {
             fields.push((
@@ -528,42 +550,34 @@ impl RustEmitter {
             .fields
             .iter()
             .all(|(_, ty)| ty.supports_structural_equality());
+        let fields_support_hash = class.fields.iter().all(|(_, ty)| ty.supports_hash_key());
+        let fields_support_debug = class
+            .fields
+            .iter()
+            .all(|(_, ty)| ty.supports_debug_formatting());
         let has_auto_display =
             !class.fields.is_empty() && class.fields.iter().all(|(_, ty)| is_auto_display_type(ty));
+        let is_non_send = class.parent_class.as_deref() == Some("NonSend");
         let derives = if is_python_opaque || self.is_current_process_resource_class(&class.name) {
             vec!["Debug".to_string()]
-        } else if has_callable_field || has_non_send_class_field {
+        } else if has_callable_field || has_non_send_class_field || is_non_send {
             Vec::new()
-        } else if has_custom_eq {
-            if fields_support_clone {
-                vec!["Debug".to_string(), "Clone".to_string()]
-            } else {
-                vec!["Debug".to_string()]
-            }
-        } else if class.is_hashable
-            && fields_support_clone
-            && fields_support_equality
-            && !has_affine_field
-        {
-            vec![
-                "Debug".to_string(),
-                "Clone".to_string(),
-                "PartialEq".to_string(),
-                "Eq".to_string(),
-                "Hash".to_string(),
-            ]
-        } else if fields_support_clone && fields_support_equality {
-            vec![
-                "Debug".to_string(),
-                "Clone".to_string(),
-                "PartialEq".to_string(),
-            ]
-        } else if fields_support_clone {
-            vec!["Debug".to_string(), "Clone".to_string()]
-        } else if has_affine_field {
-            vec!["Debug".to_string()]
         } else {
-            Vec::new()
+            let mut derives = Vec::new();
+            if fields_support_debug {
+                derives.push("Debug".to_string());
+            }
+            if fields_support_clone {
+                derives.push("Clone".to_string());
+            }
+            if !has_custom_eq && fields_support_equality {
+                derives.push("PartialEq".to_string());
+            }
+            if !has_custom_eq && class.is_hashable && fields_support_hash && !has_affine_field {
+                derives.push("Eq".to_string());
+                derives.push("Hash".to_string());
+            }
+            derives
         };
 
         let struct_fields = self.class_struct_fields(class, module_public);

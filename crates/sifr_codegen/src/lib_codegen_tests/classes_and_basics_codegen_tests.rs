@@ -83,6 +83,25 @@ def main():
 }
 
 #[test]
+fn callable_field_default_constructor_boxes_the_stored_trait_object() {
+    let rust_code = generate_rust_from_source(
+        r#"class CallbackHolder:
+    callback: Callable[[int], int]
+
+def identity(value: int) -> int:
+    return value
+
+def main():
+    holder = CallbackHolder(identity)
+"#,
+    );
+
+    assert!(rust_code.contains("callback: Box<dyn Fn(i64) -> i64>"));
+    assert!(rust_code.contains("fn new(callback: impl Fn(i64) -> i64 + 'static)"));
+    assert!(rust_code.contains("Self { callback: Box::new(callback) }"));
+}
+
+#[test]
 fn process_child_resource_derives_are_module_scoped() {
     let module = HirModule {
         functions: vec![],

@@ -143,12 +143,17 @@ impl Type {
             | Self::Iterator(_)
             | Self::AsyncIterator(..)
             | Self::AsyncGenerator(..) => false,
-            Self::List(element) | Self::Set(element) | Self::Iterable(element) => {
+            Self::List(element) | Self::Iterable(element) => {
                 element.supports_structural_equality_inner(visiting_classes)
             }
-            Self::Dict(key, value) | Self::Result(key, value) => {
-                key.supports_structural_equality_inner(visiting_classes)
+            Self::Set(element) => element.supports_hash_key_inner(visiting_classes),
+            Self::Dict(key, value) => {
+                key.supports_hash_key_inner(visiting_classes)
                     && value.supports_structural_equality_inner(visiting_classes)
+            }
+            Self::Result(ok, error) => {
+                ok.supports_structural_equality_inner(visiting_classes)
+                    && error.supports_structural_equality_inner(visiting_classes)
             }
             Self::Tuple(elements) | Self::Union(elements) => elements
                 .iter()
