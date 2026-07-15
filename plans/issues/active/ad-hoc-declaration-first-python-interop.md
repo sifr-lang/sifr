@@ -6,12 +6,14 @@ In progress. The phase defines one complete end-state architecture and an
 ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
-Wave 1 are implemented, locally validated, reviewed, and linked below. Typed
+Wave 1 are implemented, locally validated, reviewed, and linked below. M10
+Wave 2 is implemented, locally validated, and in review in
+[PR #2988](https://github.com/sifr-lang/sifr/pull/2988). Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
 retained-owner integration are merged, publicly active, and milestone-reviewed.
-M10 Wave 2 is next and later milestones are not yet implemented. Milestones sequence
+M10 Wave 3 and later milestones are not yet implemented. Milestones sequence
 delivery; they do not create reduced language versions, temporary public
 contracts, dual authorities, or alternate lowering paths.
 
@@ -782,7 +784,12 @@ Delivery waves:
   plus E2E `131/131` with signature `7c39b8c1dd4fec7c`.
 - [ ] Wave 2 — add the compiler-known affine `python.Buffer[T]` contract,
   decorator validation, `Self` and call-then-acquire lowering/code generation,
-  exclusive writable borrowing, early release, and atomic public activation.
+  exclusive writable borrowing, early release, and atomic public activation
+  ([PR #2988](https://github.com/sifr-lang/sifr/pull/2988)); focused lowering
+  contracts pass `9/9`, focused code generation passes `4/4`, the native
+  compiled-package smoke prints `4`, and the authoritative create-PR gate
+  passes all enforced lane budgets plus E2E `131/131` with signature
+  `7c39b8c1dd4fec7c`.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and capability-ledger activation.
