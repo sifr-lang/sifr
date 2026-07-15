@@ -36,7 +36,7 @@ impl RustEmitter {
                 );
             }
         }
-        for called in Self::collect_direct_self_method_calls(&function.body) {
+        for called in Self::collect_direct_class_method_calls(&function.body, &class.name) {
             let Some(by_param) = method_bounds.get(&called) else {
                 continue;
             };

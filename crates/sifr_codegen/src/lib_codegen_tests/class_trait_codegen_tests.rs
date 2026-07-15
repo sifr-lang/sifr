@@ -181,7 +181,7 @@ class NegBox[T]:
 }
 
 #[test]
-fn generic_operator_protocol_impl_closes_self_call_requirements() {
+fn generic_operator_protocol_impl_closes_same_class_call_requirements() {
     let rust_code = generate_rust_from_source(
         r#"class Box[T]:
     value: T
@@ -190,7 +190,7 @@ fn generic_operator_protocol_impl_closes_self_call_requirements() {
         return self.value == other.value
 
     def __eq__(self, other: Box[T]) -> bool:
-        return self.same(other)
+        return other.same(self)
 
 class NegBox[T]:
     value: T

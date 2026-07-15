@@ -360,3 +360,31 @@ fn top_level_with_return_inference_ignores_unreachable_tail() {
         .expect("choose function missing");
     assert_eq!(choose.return_type, Type::Int);
 }
+
+#[test]
+fn top_level_match_return_inference_uses_class_pattern_field_types() {
+    let module = lower_source(
+        "class A:\n    x: int\n\nclass B:\n    y: str\n\ndef choose(value: A | B):\n    match value:\n        case A(x=x):\n            return x\n        case B(y=y):\n            return y\n\ndef consume(value: A | B) -> int | str:\n    return choose(value)\n",
+    )
+    .expect("class-pattern captures should retain their declared field types");
+    let choose = module
+        .functions
+        .iter()
+        .find(|function| function.name == "choose")
+        .expect("choose function missing");
+    assert_eq!(choose.return_type, Type::Union(vec![Type::Int, Type::Str]));
+}
+
+#[test]
+fn top_level_with_return_inference_uses_enter_result_type() {
+    let module = lower_source(
+        "class Resource:\n    def __enter__(self) -> int:\n        return 7\n\n    def __exit__(self) -> None:\n        pass\n\ndef choose(resource: Resource):\n    with resource as value:\n        return value\n\ndef consume(resource: Resource) -> int:\n    return choose(resource)\n",
+    )
+    .expect("with binding inference should use the __enter__ return type");
+    let choose = module
+        .functions
+        .iter()
+        .find(|function| function.name == "choose")
+        .expect("choose function missing");
+    assert_eq!(choose.return_type, Type::Int);
+}

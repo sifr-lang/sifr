@@ -86,19 +86,19 @@ pub(super) fn inference_stmt_always_exits(stmt: &Stmt) -> bool {
     }
 }
 
-fn bind_pattern_names(pattern: &Pattern, subject_ty: &Type, env: &mut FunctionEnv) {
+fn bind_pattern_names(pattern: &Pattern, subject_ty: &Type, env: &mut FunctionEnv, ctx: &LowerCtx) {
     match pattern {
         Pattern::MatchAs(pattern) => {
             if let Some(name) = &pattern.name {
                 env.bind_var(name.as_str(), subject_ty.clone());
             }
             if let Some(inner) = &pattern.pattern {
-                bind_pattern_names(inner, subject_ty, env);
+                bind_pattern_names(inner, subject_ty, env, ctx);
             }
         }
         Pattern::MatchOr(pattern) => {
             for alternative in &pattern.patterns {
-                bind_pattern_names(alternative, subject_ty, env);
+                bind_pattern_names(alternative, subject_ty, env, ctx);
             }
         }
         Pattern::MatchSequence(pattern) => {
@@ -108,12 +108,25 @@ fn bind_pattern_names(pattern: &Pattern, subject_ty: &Type, env: &mut FunctionEn
             };
             for (index, element) in pattern.patterns.iter().enumerate() {
                 let element_ty = element_types.get(index).cloned().unwrap_or(Type::Unknown);
-                bind_pattern_names(element, &element_ty, env);
+                bind_pattern_names(element, &element_ty, env, ctx);
             }
         }
         Pattern::MatchClass(pattern) => {
+            let class_ty = match pattern.cls.as_ref() {
+                Expr::Name(name) => ctx.class_types.get(name.id.as_str()),
+                _ => None,
+            };
             for keyword in &pattern.arguments.keywords {
-                bind_pattern_names(&keyword.pattern, &Type::Unknown, env);
+                let field_ty = class_ty
+                    .and_then(|ty| match ty.resolve_alias() {
+                        Type::Class { fields, .. } => fields
+                            .iter()
+                            .find(|(name, _)| name == keyword.attr.as_str())
+                            .map(|(_, ty)| ty.clone()),
+                        _ => None,
+                    })
+                    .unwrap_or(Type::Unknown);
+                bind_pattern_names(&keyword.pattern, &field_ty, env, ctx);
             }
         }
         _ => {}
@@ -130,7 +143,7 @@ pub(super) fn analyze_match_stmt(
     let subject_ty = infer_expr_type(&stmt.subject, env, states, current_function, ctx);
     for case in &stmt.cases {
         let mut case_env = env.clone();
-        bind_pattern_names(&case.pattern, &subject_ty, &mut case_env);
+        bind_pattern_names(&case.pattern, &subject_ty, &mut case_env, ctx);
         if let Some(guard) = &case.guard {
             let _ = infer_expr_type(guard, &mut case_env, states, current_function, ctx);
         }
@@ -198,7 +211,17 @@ pub(super) fn analyze_with_stmt(
         );
         if let Some(target) = &item.optional_vars {
             if let Expr::Name(name) = target.as_ref() {
-                body_env.bind_var(name.id.as_str(), context_ty);
+                let entered_ty = match context_ty.resolve_alias() {
+                    Type::Class { methods, .. } => methods
+                        .iter()
+                        .find(|(method, _)| method == "__enter__")
+                        .map_or_else(
+                            || context_ty.clone(),
+                            |(_, function)| (*function.return_type).clone(),
+                        ),
+                    _ => context_ty,
+                };
+                body_env.bind_var(name.id.as_str(), entered_ty);
             }
         }
     }

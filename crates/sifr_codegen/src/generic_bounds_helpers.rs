@@ -629,9 +629,8 @@ impl RustEmitter {
             })
     }
 
-    /// Rust trait requirements are transitive across direct `self.method()`
-    /// calls: `copy()` inherits cloning from `to_list()`, while `remove()`
-    /// inherits equality from `index()`.
+    /// Rust trait requirements are transitive across calls on any instance of
+    /// the current class, including both `self.method()` and `other.method()`.
     pub(crate) fn class_method_type_param_bounds(
         class: &HirClass,
         method_items: &[(&HirFunction, RustItem)],
@@ -661,7 +660,7 @@ impl RustEmitter {
         loop {
             let mut changed = false;
             for (method, _) in method_items {
-                let inherited = Self::collect_direct_self_method_calls(&method.body)
+                let inherited = Self::collect_direct_class_method_calls(&method.body, &class.name)
                     .into_iter()
                     .filter_map(|called| requirements.get(&called))
                     .cloned()

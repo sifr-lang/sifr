@@ -363,7 +363,7 @@ pub fn collect_module_exports(
                 name: class.name.clone(),
                 fields: class.fields.clone(),
                 methods,
-                parent_class: None,
+                parent_class: exported_parent_chain(class.parent_class.as_deref(), module),
             };
             class_exports.insert(class.name.clone(), class_ty);
             if !class.type_params.is_empty() {
@@ -506,6 +506,23 @@ pub fn collect_module_exports(
             .constant_integer_values
             .insert(module_name.to_string(), const_integer_value_exports);
     }
+}
+
+fn exported_parent_chain(initial_parent: Option<&str>, module: &HirModule) -> Option<String> {
+    let mut chain = Vec::new();
+    let mut parent = initial_parent;
+    while let Some(name) = parent {
+        if chain.iter().any(|ancestor| ancestor == name) {
+            break;
+        }
+        chain.push(name.to_string());
+        parent = module
+            .classes
+            .iter()
+            .find(|candidate| candidate.name == name)
+            .and_then(|candidate| candidate.parent_class.as_deref());
+    }
+    (!chain.is_empty()).then(|| chain.join("|"))
 }
 
 #[cfg(test)]

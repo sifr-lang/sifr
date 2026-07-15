@@ -95,10 +95,10 @@ pub(in crate::lower) fn record_current_method_requirements(
 
 pub(in crate::lower) fn record_current_method_dependency(
     ctx: &mut LowerCtx,
-    receiver_is_self: bool,
+    receiver_is_current_class: bool,
     called_method: &str,
 ) {
-    if !receiver_is_self {
+    if !receiver_is_current_class {
         return;
     }
     let (Some(class), Some(method)) = (ctx.current_class.clone(), ctx.current_method.clone())

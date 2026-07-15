@@ -211,12 +211,14 @@ fn test_build_project_keeps_aliased_same_name_generic_classes_distinct() {
     std::fs::write(
         &main_file,
         r#"
-from helpers.left import Box as LeftBox
+from helpers.left import make as make_left
 from helpers.right import Box as RightBox
+from helpers.left import Box as LeftBox
+from helpers.right import make as make_right
 
 def main():
-    left: LeftBox[int] = LeftBox(7)
-    right: RightBox[int] = RightBox(3)
+    left: LeftBox[int] = make_left()
+    right: RightBox[int] = make_right()
     assert left.same(7)
     assert right.negated() == -3
 "#,
@@ -230,6 +232,9 @@ class Box[T]:
 
     def same(self, other: T) -> bool:
         return self.value == other
+
+def make() -> Box[int]:
+    return Box(7)
 "#,
     )
     .expect("left helper should be written");
@@ -241,6 +246,9 @@ class Box[T]:
 
     def negated(self) -> T:
         return -self.value
+
+def make() -> Box[int]:
+    return Box(3)
 "#,
     )
     .expect("right helper should be written");
@@ -249,6 +257,47 @@ class Box[T]:
         .expect("aliased same-name generic classes should build successfully");
 
     assert!(binary.exists());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_check_project_preserves_aliased_import_ancestry() {
+    let dir = mktemp_dir("workspace_aliased_ancestry");
+    std::fs::write(
+        dir.join("main.sifr"),
+        r#"
+from helper import Parent as P, Child as C
+
+def base_of(value: P) -> int:
+    return value.base
+
+def main():
+    child: C = C(1, 2)
+    assert base_of(child) == 1
+"#,
+    )
+    .expect("entry should be written");
+    std::fs::write(
+        dir.join("helper.sifr"),
+        r#"
+class Parent:
+    base: int
+
+class Child(Parent):
+    extra: int
+
+    def __init__(self, base: int, extra: int):
+        super().__init__(base)
+        self.extra = extra
+"#,
+    )
+    .expect("helper should be written");
+
+    let errors = check_project(&dir.join("main.sifr"));
+    assert!(
+        errors.is_empty(),
+        "aliased ancestry should check: {errors:?}"
+    );
     let _ = std::fs::remove_dir_all(dir);
 }
 

@@ -66,6 +66,7 @@ pub(in crate::lower) fn lower_module_impl(
     // This must happen before function signature extraction so that imported error classes
     // (e.g., StatisticsError from sifr.statistics) can be used in Result[T, E] annotations.
     resolve_imports_early(stmts, externals, &mut ctx);
+    let imported_class_aliases = imports::class_aliases_by_module(stmts, externals, &ctx);
     python_interop::collect_python_opaque_classes(stmts, &mut ctx);
     let alias_decls = collect_type_alias_decls(stmts, &mut ctx);
     predeclare_type_aliases(&alias_decls, &mut ctx);
@@ -296,7 +297,6 @@ pub(in crate::lower) fn lower_module_impl(
                 })
                 .collect::<Vec<_>>()
                 .join(", ");
-            // Collect aliases: (original_name, local_alias)
             let aliases: Vec<(String, String)> = import_from
                 .names
                 .iter()
@@ -308,7 +308,6 @@ pub(in crate::lower) fn lower_module_impl(
                 })
                 .collect();
 
-            // Build a mapping from original name -> local name (alias or original)
             let local_name_for = |original: &str| -> String {
                 aliases
                     .iter()
@@ -325,18 +324,14 @@ pub(in crate::lower) fn lower_module_impl(
                     .map_or(import_range, Ranged::range)
             };
 
-            // Skip typing imports (TypeVar, Callable, etc.) - they are handled at the type level
             if is_absolute_import && module_name == "typing" {
                 continue;
             }
 
-            // Skip enum imports (Enum is a built-in base class in Sifr)
             if is_absolute_import && module_name == "enum" {
                 continue;
             }
 
-            // Private stdlib declaration imports are source-origin gated.
-            // `_sifr.*` is the canonical private sysroot namespace, not the trust boundary.
             if is_absolute_import && module_name.starts_with("_sifr.") {
                 if !ctx.can_import_private_stdlib_declarations() {
                     import_diagnostics::forbidden_intrinsic(&mut ctx, &module_name, import_range);
@@ -361,9 +356,6 @@ pub(in crate::lower) fn lower_module_impl(
                 continue;
             }
 
-            // Check if this is a stdlib import (sifr.*)
-            // All sifr.* modules are now compiled from .sifr stdlib sources.
-            // Resolve from pre-compiled stdlib modules (via externals).
             if is_absolute_import && module_name.starts_with("sifr.") {
                 // Check if there's a pre-compiled stdlib .sifr module in externals
                 let stdlib_module_key = module_name.clone();
@@ -633,7 +625,10 @@ pub(in crate::lower) fn lower_module_impl(
                 continue;
             }
 
-            // Resolve imported names from external definitions (local modules)
+            let class_aliases = imported_class_aliases
+                .get(&module_name)
+                .cloned()
+                .unwrap_or_default();
             for name in &names {
                 let local = local_name_for(name);
                 // Check if it's a private name
@@ -648,10 +643,14 @@ pub(in crate::lower) fn lower_module_impl(
                 }
 
                 let mut found = false;
-                // Look up in external functions
                 if let Some(module_fns) = externals.functions.get(&module_name) {
                     if let Some(ft) = module_fns.get(name) {
-                        ctx.functions.insert(local.clone(), ft.clone());
+                        let imported = imported_class_identity::function_type_for_import(
+                            ft,
+                            &module_name,
+                            &class_aliases,
+                        );
+                        ctx.functions.insert(local.clone(), imported);
                         if let Some(module_intrinsics) =
                             externals.compiler_intrinsics.get(&module_name)
                         {
@@ -702,14 +701,13 @@ pub(in crate::lower) fn lower_module_impl(
                         found = true;
                     }
                 }
-                // Look up in external classes
                 if !found {
                     if let Some(module_classes) = externals.classes.get(&module_name) {
                         if let Some(class_ty) = module_classes.get(name) {
-                            let imported_class_ty = imported_class_identity::class_type_for_import(
+                            let imported_class_ty = imported_class_identity::type_for_import(
                                 class_ty,
                                 &module_name,
-                                &local,
+                                &class_aliases,
                             );
                             ctx.class_types
                                 .insert(local.clone(), imported_class_ty.clone());
@@ -735,12 +733,9 @@ pub(in crate::lower) fn lower_module_impl(
                                     &local,
                                 );
                             }
-                            // Register as error type if flagged in external defs
                             if externals.error_types.contains(name) {
                                 ctx.error_types.insert(local.clone());
                             }
-                            // Register the constructor: prefer `new` method params if available,
-                            // otherwise fall back to field-based constructor
                             if let Type::Class {
                                 fields, methods, ..
                             } = &imported_class_ty
@@ -748,7 +743,6 @@ pub(in crate::lower) fn lower_module_impl(
                                 let ft = if let Some((_, new_ft)) =
                                     methods.iter().find(|(n, _)| n == "new")
                                 {
-                                    // Use the actual __init__ parameters
                                     let params: Vec<(String, Type)> = new_ft
                                         .params
                                         .iter()
@@ -756,7 +750,6 @@ pub(in crate::lower) fn lower_module_impl(
                                         .collect();
                                     FunctionType::new(params, imported_class_ty.clone())
                                 } else {
-                                    // No __init__ — default constructor from fields
                                     let params: Vec<(String, Type)> = fields.clone();
                                     FunctionType::new(params, imported_class_ty.clone())
                                 };
@@ -796,11 +789,17 @@ pub(in crate::lower) fn lower_module_impl(
                         }
                     }
                 }
-                // Look up in external constants
                 if !found {
                     if let Some(module_consts) = externals.constants.get(&module_name) {
                         if let Some(const_ty) = module_consts.get(name) {
-                            ctx.scope.define(local.clone(), const_ty.clone());
+                            ctx.scope.define(
+                                local.clone(),
+                                imported_class_identity::type_for_import(
+                                    const_ty,
+                                    &module_name,
+                                    &class_aliases,
+                                ),
+                            );
                             if let Some(value) = externals
                                 .constant_integer_values
                                 .get(&module_name)

@@ -899,9 +899,11 @@ supports them. This is a language rule, not an implementation detail.
   used by their emitted consumers. A clone required for an `A` field therefore
   does not constrain an unrelated `B`. A specialization is rejected at the Sifr
   consumer that needs a bound its concrete type argument cannot satisfy. Import
-  aliases retain a separate local spelling and canonical declaration identity,
-  so annotations, constructors, emitted Rust types, and specialization metadata
-  continue to refer to the same generic class.
+  aliases retain a collision-safe local declaration identity across the whole
+  imported type graph. Annotations, constructors, exported function and
+  constant signatures, transitive ancestry, emitted Rust types, and
+  specialization metadata therefore continue to refer to the same generic
+  class even when factories and aliases appear in separate import statements.
 - **Codegen:** the compiler emits only the derives supported by the complete
   generated struct, newtype, or union representation.
 - **Enum types (enum type-system work):** enum types unconditionally derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`. All enum values are usable as dict keys and set members.

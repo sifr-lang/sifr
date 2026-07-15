@@ -1,18 +1,25 @@
 class Resource:
-    def __enter__(self) -> Resource:
-        return self
+    def __enter__(self) -> int:
+        return 5
 
     def __exit__(self) -> None:
         pass
 
 
-def from_match(value: int):
+class A:
+    x: int
+
+
+class B:
+    y: str
+
+
+def from_match(value: A | B):
     match value:
-        case 0:
-            return 1
-        case _:
-            return 2
-    return "unreachable"
+        case A(x=x):
+            return x
+        case B(y=y):
+            return y
 
 
 def from_try(flag: bool):
@@ -26,14 +33,14 @@ def from_try(flag: bool):
 
 
 def from_with():
-    with Resource():
-        return 5
+    with Resource() as value:
+        return value
     return "unreachable"
 
 
 def main() -> None:
-    assert from_match(0) == 1
-    assert from_match(9) == 2
+    first: int | str = from_match(A(1))
+    second: int | str = from_match(B("two"))
     assert from_try(False) == 3
     assert from_try(True) == 4
     assert from_with() == 5

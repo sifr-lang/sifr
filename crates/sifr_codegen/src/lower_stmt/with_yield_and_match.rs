@@ -218,13 +218,37 @@ pub(super) fn try_lower_simple_match_stmt(
                 (None, Some(right)) => Some(right),
                 (None, None) => None,
             };
-            let body = try_lower_simple_stmt_block(
+            let mut body = try_lower_simple_stmt_block(
                 &arm.body,
                 in_loop_with_else,
                 bindings.mutated_vars,
                 bindings.borrowed_params,
                 ctx,
             )?;
+            if subject_is_borrowed_name {
+                let mut captures = Vec::new();
+                collect_capture_types(&arm.pattern, &mut captures);
+                for (name, ty) in captures.into_iter().rev() {
+                    let value = if is_copy_capture_type(&ty) {
+                        RustExpr::Deref(Box::new(RustExpr::Ident(name.clone())))
+                    } else {
+                        RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident(name.clone())),
+                            method: "clone".to_string(),
+                            args: Vec::new(),
+                        }
+                    };
+                    body.insert(
+                        0,
+                        RustStmt::Let {
+                            mutable: false,
+                            name,
+                            ty: None,
+                            value,
+                        },
+                    );
+                }
+            }
             Some(RustMatchArm {
                 pattern,
                 bindings: arm_bindings,
@@ -457,6 +481,23 @@ pub(super) fn collect_copy_capture_names_inner(pattern: &HirPattern, out: &mut H
         HirPattern::Or { patterns } => {
             for pattern in patterns {
                 collect_copy_capture_names_inner(pattern, out);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn collect_capture_types(pattern: &HirPattern, out: &mut Vec<(String, Type)>) {
+    match pattern {
+        HirPattern::Capture { name, ty } => out.push((name.clone(), ty.clone())),
+        HirPattern::Class { fields, .. } => {
+            for (_, field_pattern) in fields {
+                collect_capture_types(field_pattern, out);
+            }
+        }
+        HirPattern::Tuple { elements } | HirPattern::Or { patterns: elements } => {
+            for element in elements {
+                collect_capture_types(element, out);
             }
         }
         _ => {}

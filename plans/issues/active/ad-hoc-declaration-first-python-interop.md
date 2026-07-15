@@ -7,7 +7,7 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review passes 14 through 18 reopened
+Wave 2 is implemented; whole-diff review passes 14 through 19 reopened
 generic/inherited Rust-trait, reusable affine-closure ownership, keyed sorting,
 per-type-parameter bound, specialization, generic-operator, conditional-source,
 and top-level inference gaps. Their remediation passes the focused and complete
@@ -1138,7 +1138,30 @@ Delivery waves:
   passes every blocking lane: Python interop `11/11`, runtime platform `28/28`
   with one gated skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and
   `42/42` cache hits. Its `476.95s` wall time produced only the non-blocking
-  warm-wall-time advisory. A fresh whole-diff review remains pending.
+  warm-wall-time advisory. Full-diff
+  [review pass 19](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-19.md)
+  then found three remaining root-cause gaps: operator helper closure recognized
+  only `self` receivers; user-module alias rewriting stopped at imported class
+  bodies rather than exported functions and inheritance; and compound inference
+  substituted `Unknown` or the context-owner type for class-pattern and
+  `with ... as` bindings. Method dependencies now follow every receiver of the
+  current class. User-module class aliases are collected across the complete
+  import set and recursively rewrite function, constant, class, and transitive
+  parent types; frontend exports retain ancestry instead of erasing it.
+  Class-pattern inference reads declared field types and context bindings read
+  `__enter__` results. The resulting native match-capture regression also fixed
+  owned return materialization from borrowed Rust match captures. Permanent
+  peer-receiver, separate-statement same-name factory, aliased ancestry,
+  class-pattern field, entered-result, and native compound fixtures cover the
+  exact reproductions. Full codegen passes `825/825`, lowering passes `752`
+  with one ignored, and frontend passes `47/47`; focused project builds and
+  native fixtures pass. Workspace Clippy, formatting, JSON/diff checks, HIR
+  maintainability, and the `900`-line file-size guardrail pass over `2672`
+  files. The authoritative create-PR gate passes every blocking lane: Python
+  interop `11/11`, runtime platform `28/28` with one gated skip, and E2E
+  `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache hits. Its
+  `482.54s` wall time produced only the non-blocking warm-wall-time advisory.
+  A fresh whole-diff review remains pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

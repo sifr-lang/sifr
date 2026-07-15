@@ -17,7 +17,7 @@ class Box[T]:
         return self.value == other.value
 
     def __eq__(self, other: Box[T]) -> bool:
-        return self.same(other)
+        return other.same(self)
 
 class Ordered[A, B]:
     first: A

@@ -6,6 +6,54 @@ use super::imported_defaults::{
     import_callable_vararg, import_callable_workload, import_python_call_shape,
 };
 use super::{import_diagnostics, name_diagnostics, ExternalDefs, LowerCtx};
+use std::collections::HashMap;
+
+pub(in crate::lower) fn class_aliases_by_module(
+    stmts: &[Stmt],
+    externals: &ExternalDefs,
+    ctx: &LowerCtx,
+) -> HashMap<String, HashMap<String, String>> {
+    let mut aliases_by_module: HashMap<String, HashMap<String, String>> = HashMap::new();
+    for stmt in stmts {
+        let Stmt::ImportFrom(import_from) = stmt else {
+            continue;
+        };
+        if import_from.level > 1 {
+            continue;
+        }
+        let Some(module) = &import_from.module else {
+            continue;
+        };
+        let module_name =
+            ctx.effective_import_module_name(module.as_ref(), import_from.level, externals);
+        let names = import_from
+            .names
+            .iter()
+            .map(|alias| alias.name.to_string())
+            .collect::<Vec<_>>();
+        let aliases = import_from
+            .names
+            .iter()
+            .filter_map(|alias| {
+                alias
+                    .asname
+                    .as_ref()
+                    .map(|local| (alias.name.to_string(), local.to_string()))
+            })
+            .collect::<Vec<_>>();
+        let imported = super::imported_class_identity::class_aliases_for_import(
+            &module_name,
+            externals.classes.get(&module_name),
+            &names,
+            &aliases,
+        );
+        aliases_by_module
+            .entry(module_name)
+            .or_default()
+            .extend(imported);
+    }
+    aliases_by_module
+}
 
 pub(in crate::lower) fn report_missing_stdlib_member(
     ctx: &mut LowerCtx,
@@ -57,6 +105,7 @@ pub(in crate::lower) fn resolve_imports_early(
     externals: &ExternalDefs,
     ctx: &mut LowerCtx,
 ) {
+    let aliases_by_module = class_aliases_by_module(stmts, externals, ctx);
     for stmt in stmts {
         if let Stmt::ImportFrom(import_from) = stmt {
             if import_from.level > 1 {
@@ -96,17 +145,20 @@ pub(in crate::lower) fn resolve_imports_early(
 
             // Only resolve from externals (stdlib and local modules)
             let module_key = module_name.clone();
+            let class_aliases = aliases_by_module
+                .get(&module_key)
+                .cloned()
+                .unwrap_or_default();
             if let Some(module_classes) = externals.classes.get(&module_key) {
                 for name in &names {
                     let local = local_name_for(name);
                     if let Some(class_ty) = module_classes.get(name) {
                         if !ctx.class_types.contains_key(&local) {
-                            let imported_class_ty =
-                                super::imported_class_identity::class_type_for_import(
-                                    class_ty,
-                                    &module_key,
-                                    &local,
-                                );
+                            let imported_class_ty = super::imported_class_identity::type_for_import(
+                                class_ty,
+                                &module_key,
+                                &class_aliases,
+                            );
                             ctx.class_types
                                 .insert(local.clone(), imported_class_ty.clone());
                             if let Some(module_class_type_params) =
@@ -172,9 +224,12 @@ pub(in crate::lower) fn resolve_imports_early(
                 for name in &names {
                     let local = local_name_for(name);
                     if let Some(ft) = module_fns.get(name) {
-                        ctx.functions
-                            .entry(local.clone())
-                            .or_insert_with(|| ft.clone());
+                        let imported = super::imported_class_identity::function_type_for_import(
+                            ft,
+                            &module_key,
+                            &class_aliases,
+                        );
+                        ctx.functions.entry(local.clone()).or_insert(imported);
                         if let Some(intrinsic) = externals
                             .compiler_intrinsics
                             .get(&module_key)
@@ -217,7 +272,14 @@ pub(in crate::lower) fn resolve_imports_early(
                 for name in &names {
                     let local = local_name_for(name);
                     if let Some(const_ty) = module_consts.get(name) {
-                        ctx.scope.define(local.clone(), const_ty.clone());
+                        ctx.scope.define(
+                            local.clone(),
+                            super::imported_class_identity::type_for_import(
+                                const_ty,
+                                &module_key,
+                                &class_aliases,
+                            ),
+                        );
                         if let Some(value) = externals
                             .constant_integer_values
                             .get(&module_key)

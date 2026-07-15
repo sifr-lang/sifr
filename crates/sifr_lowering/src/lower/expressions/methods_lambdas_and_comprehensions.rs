@@ -294,9 +294,13 @@ pub(in crate::lower) fn lower_method_call(
         return None;
     }
 
+    let receiver_is_current_class = matches!(
+        object_ty.resolve_alias(),
+        Type::Class { name, .. } if ctx.current_class.as_deref() == Some(name)
+    );
     super::super::generic_method_requirements::record_current_method_dependency(
         ctx,
-        matches!(&object, HirExpr::Name { name, .. } if name == "self"),
+        receiver_is_current_class,
         &method_name,
     );
 
