@@ -7,6 +7,7 @@ use super::{
     DiagnosticCode, Expr, FixedWidthInitializerFit, HirExpr, HirPattern, HirStmt, LowerCtx,
     Pattern, Ranged, Singleton, StmtAnnAssign, StmtAssign, Type,
 };
+use crate::lower::expressions::consume_affine_value_name;
 pub(in crate::lower) fn lower_pattern(
     pattern: &Pattern,
     subject_ty: &Type,
@@ -424,6 +425,8 @@ pub(in crate::lower) fn lower_ann_assign(
                 ctx.mark_moved_with_flow(src_name);
             }
         }
+    } else {
+        consume_affine_value_name(&value, ctx);
     }
 
     ctx.empty_dict_specializations.remove(&name);

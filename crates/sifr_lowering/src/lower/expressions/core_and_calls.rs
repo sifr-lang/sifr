@@ -552,10 +552,39 @@ pub(in crate::lower) fn lower_tuple_literal(
 }
 
 pub(in crate::lower) fn consume_affine_value_name(expr: &HirExpr, ctx: &mut LowerCtx) {
-    if expr.ty().contains_affine_resource() {
-        if let HirExpr::Name { name, .. } = expr {
+    if !expr.ty().contains_affine_resource() {
+        return;
+    }
+    match expr {
+        HirExpr::Name { name, .. } => {
             ctx.mark_moved_with_flow(name);
         }
+        HirExpr::IfExpr {
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            // Only one branch moves at runtime, but both candidate bindings
+            // must be unavailable afterward because the chosen path is not a
+            // compile-time ownership fact.
+            consume_affine_value_name(then_expr, ctx);
+            consume_affine_value_name(else_expr, ctx);
+        }
+        HirExpr::OkWrap { value, .. }
+        | HirExpr::ErrWrap { value, .. }
+        | HirExpr::QuestionMark { expr: value, .. }
+        | HirExpr::WalrusExpr { value, .. } => consume_affine_value_name(value, ctx),
+        _ => {}
+    }
+}
+
+pub(in crate::lower) fn consume_owned_value(expr: &HirExpr, ctx: &mut LowerCtx) {
+    if let HirExpr::Name { name, ty } = expr {
+        if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+            ctx.mark_moved_with_flow(name);
+        }
+    } else {
+        consume_affine_value_name(expr, ctx);
     }
 }
 

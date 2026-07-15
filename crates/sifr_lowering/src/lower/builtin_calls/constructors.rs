@@ -203,6 +203,14 @@ pub(in crate::lower) fn lower_list_constructor_call(
         }),
         OptionalIterableArg::Value(iterable) => {
             let list_ty = list_constructor_output_type(iterable.ty())?;
+            if list_ty.contains_affine_resource() {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYZC_INVALID_DECLARATION,
+                    "list() cannot copy an iterable containing affine Python buffers".to_string(),
+                    call.arguments.args[0].range(),
+                );
+                return None;
+            }
             Some(HirExpr::Call {
                 func: "list".to_string(),
                 args: vec![iterable],
@@ -347,6 +355,15 @@ pub(in crate::lower) fn lower_dict_constructor_call(
         [arg_expr] if keyword_dict.is_none() => {
             let arg = lower_expr(arg_expr, ctx)?;
             let dict_ty = dict_constructor_output_type(arg.ty())?;
+            if dict_ty.contains_affine_resource() {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYZC_INVALID_DECLARATION,
+                    "dict() cannot copy keys or values containing affine Python buffers"
+                        .to_string(),
+                    arg_expr.range(),
+                );
+                return None;
+            }
             Some(HirExpr::Call {
                 func: "dict".to_string(),
                 args: vec![arg],
@@ -711,6 +728,14 @@ pub(in crate::lower) fn lower_set_constructor_call(
                 );
                 return None;
             };
+            if super::super::container_literal_diagnostics::reject_unhashable_container_type(
+                ctx,
+                "set element",
+                &elem_ty,
+                call.arguments.args[0].range(),
+            ) {
+                return None;
+            }
             Some(HirExpr::Call {
                 func: "set".to_string(),
                 args: vec![iterable],

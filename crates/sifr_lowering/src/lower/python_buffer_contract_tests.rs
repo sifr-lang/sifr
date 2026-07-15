@@ -338,3 +338,126 @@ fn affine_buffer_comprehension_moves_are_rejected() {
         }), "{source}: {errors:?}");
     }
 }
+
+#[test]
+fn affine_buffer_iterator_builtins_are_rejected_before_codegen() {
+    for source in [
+        "def project(values: list[python.Buffer[uint8]]) -> Iterator[python.Buffer[uint8]]:\n    return iter(values)\n",
+        "def project(values: Iterator[python.Buffer[uint8]]) -> python.Buffer[uint8] | None:\n    return next(values)\n",
+        "def project(values: list[python.Buffer[uint8]]) -> Iterator[tuple[python.Buffer[uint8], int]]:\n    return zip(values, [1])\n",
+        "def project(values: list[python.Buffer[uint8]]) -> Iterator[python.Buffer[uint8]]:\n    return reversed(values)\n",
+        "def project(values: list[python.Buffer[uint8]]) -> Iterator[tuple[int, python.Buffer[uint8]]]:\n    return enumerate(values)\n",
+        "def keep(value: python.Buffer[uint8]) -> bool:\n    return True\n\ndef project(values: list[python.Buffer[uint8]]) -> Iterator[python.Buffer[uint8]]:\n    return filter(keep, values)\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                    && error.message.contains("cannot project")
+            }),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn affine_buffer_yield_is_consuming_and_borrowed_generator_inputs_are_rejected() {
+    let reused = lower_errors(
+        "def generate(own view: python.Buffer[uint8]) -> Iterator[python.Buffer[uint8]]:\n    yield view\n    print(view.length())\n",
+    );
+    assert!(
+        reused
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+        "{reused:?}"
+    );
+
+    let borrowed = lower_errors(
+        "def generate(view: python.Buffer[uint8]) -> Iterator[python.Buffer[uint8]]:\n    yield view\n",
+    );
+    assert!(
+        borrowed.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                && error.message.contains("cannot borrow affine Python buffer")
+        }),
+        "{borrowed:?}"
+    );
+}
+
+#[test]
+fn borrowed_affine_buffer_parameter_reassignment_is_rejected_before_clone_codegen() {
+    let errors = lower_errors(
+        "def replace(mut view: python.Buffer[uint8], own replacement: python.Buffer[uint8]) -> None:\n    view = replacement\n",
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                && error.message.contains("mutable parameter shadowing")
+        }),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn affine_buffer_conditional_assignment_consumes_every_candidate() {
+    let errors = lower_errors(
+        "def choose(own left: python.Buffer[uint8], own right: python.Buffer[uint8], flag: bool) -> None:\n    selected: python.Buffer[uint8] = left if flag else right\n    print(left.length())\n    print(right.length())\n",
+    );
+    assert!(
+        errors
+            .iter()
+            .filter(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE))
+            .count()
+            >= 2,
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn affine_and_dynamic_generic_collection_capabilities_fail_during_lowering() {
+    let affine = lower_errors(
+        "def duplicate[T](values: list[T]) -> list[T]:\n    return values.copy()\n\ndef use(values: list[python.Buffer[uint8]]) -> list[python.Buffer[uint8]]:\n    return duplicate(values)\n",
+    );
+    assert!(
+        affine.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                && error.message.contains("generic function 'duplicate'")
+        }),
+        "{affine:?}"
+    );
+
+    for source in [
+        "def duplicate(values: list[Any]) -> list[Any]:\n    return values.copy()\n",
+        "def duplicate(values: set[Any]) -> set[Any]:\n    return values.copy()\n",
+        "def duplicate(values: dict[Any, int]) -> dict[Any, int]:\n    return values.copy()\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(
+            errors.iter().any(|error| {
+                matches!(
+                    error.code,
+                    Some(DiagnosticCode::TYPE_MISMATCH)
+                        | Some(DiagnosticCode::TYPE_INVALID_ANNOTATION)
+                )
+            }),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn affine_buffer_copying_constructors_and_sorting_are_rejected() {
+    for source in [
+        "def duplicate(values: list[python.Buffer[uint8]]) -> list[python.Buffer[uint8]]:\n    return list(values)\n",
+        "def duplicate(values: dict[str, python.Buffer[uint8]]) -> dict[str, python.Buffer[uint8]]:\n    return dict(values)\n",
+        "def order(values: list[python.Buffer[uint8]]) -> list[python.Buffer[uint8]]:\n    return sorted(values)\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)),
+            "{source}: {errors:?}"
+        );
+    }
+}

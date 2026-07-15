@@ -1,14 +1,15 @@
 use super::{
-    call_argument_ranges_by_param, collect_type_vars, coroutine_result_type,
+    call_argument_ranges_by_param, collect_type_vars, consume_owned_value, coroutine_result_type,
     decode_typevar_constraint, expression_diagnostics, infer_type_var_bindings,
     is_compatible_with_unresolved_typevars, lower_expr, lower_function_call_args, lower_name,
     lower_python_function_call_args, lower_signature_call_args, name_diagnostics,
     ownership_diagnostics, protocol_diagnostics, refine_constructor_return_type_from_args,
     substitute_type_vars, tsc, type_param_argument_range, type_satisfies_bound,
     type_satisfies_constraint, DiagnosticCode, Expr, ExprCall, HashMap, HirExpr, LowerCtx,
-    OwnershipKind, ParamConvention, Ranged, Type,
+    ParamConvention, Ranged, Type,
 };
 use crate::lower::{ipc_payload_calls, parallel_calls};
+
 pub(super) fn lower_regular_call(
     func_name: String,
     call: &ExprCall,
@@ -130,12 +131,9 @@ pub(super) fn lower_regular_call(
                 .copied()
                 .unwrap_or(ParamConvention::borrow());
             if convention.is_owned() {
-                // Own convention: transfer ownership, mark variable as moved
-                if let HirExpr::Name { name, ty } = arg {
-                    if ty.ownership() == OwnershipKind::Move {
-                        ctx.mark_moved_with_flow(name);
-                    }
-                }
+                // Own convention transfers every affine candidate contained in
+                // a conditional or wrapper expression.
+                consume_owned_value(arg, ctx);
             }
             // Borrow/MutBorrow: no move, variable remains usable
         }
@@ -425,17 +423,13 @@ pub(super) fn lower_regular_call(
     // Track ownership: only mark arguments as moved when the parameter convention is Own
     // and the argument type is Move. Borrow and MutBorrow do not consume the value.
     for (i, arg) in args.iter().enumerate() {
-        if let HirExpr::Name { name, ty } = arg {
-            if ty.ownership() == sifr_type_system::OwnershipKind::Move {
-                let convention = ft
-                    .params
-                    .get(i)
-                    .map(|(_, _, c)| *c)
-                    .unwrap_or(ParamConvention::borrow());
-                if convention.is_owned() {
-                    ctx.mark_moved_with_flow(name);
-                }
-            }
+        let convention = ft
+            .params
+            .get(i)
+            .map(|(_, _, c)| *c)
+            .unwrap_or(ParamConvention::borrow());
+        if convention.is_owned() {
+            consume_owned_value(arg, ctx);
         }
     }
 
@@ -444,6 +438,20 @@ pub(super) fn lower_regular_call(
         let mut bindings = HashMap::new();
         for (arg, (_, param_ty, _)) in args.iter().zip(ft.params.iter()) {
             infer_type_var_bindings(param_ty, arg.ty(), &mut bindings);
+        }
+        for (type_param, concrete_ty) in &bindings {
+            let primary_range =
+                type_param_argument_range(call, &ft, type_param).unwrap_or_else(|| call.range());
+            if concrete_ty.contains_affine_resource() {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYZC_INVALID_DECLARATION,
+                    format!(
+                        "generic function '{func_name}' cannot bind type parameter '{type_param}' to '{}' because its generated reusable-value contract requires clone, comparison, and display capabilities unavailable to affine Python buffers",
+                        concrete_ty.display_name()
+                    ),
+                    primary_range,
+                );
+            }
         }
         // Re-check argument types after TypeVar substitution so repeated type
         // parameters (e.g. assert_eq[T](a: T, b: T)) enforce consistent types.

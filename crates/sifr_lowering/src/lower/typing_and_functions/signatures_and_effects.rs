@@ -11,6 +11,7 @@ use sifr_type_system::{
 use super::simple_expr::lower_expr_simple;
 use super::workload_annotations;
 use super::LowerCtx;
+use crate::hir_nodes::HirParam;
 
 pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     // print() accepts any single argument and returns None
@@ -383,6 +384,26 @@ pub(in crate::lower) fn function_body_contains_yield(stmts: &[Stmt]) -> bool {
         sifr_python_ast::visitor::Visitor::visit_stmt(&mut visitor, stmt);
     }
     visitor.is_generator
+}
+
+pub(super) fn reject_borrowed_affine_generator_params(
+    function_name: &str,
+    params: &[HirParam],
+    yield_range: TextRange,
+    ctx: &mut LowerCtx,
+) {
+    for param in params {
+        if param.convention.is_borrowed() && param.ty.contains_affine_resource() {
+            ctx.error_with_code_at(
+                DiagnosticCode::PYZC_INVALID_DECLARATION,
+                format!(
+                    "generator function '{function_name}' cannot borrow affine Python buffer parameter '{}'; lazy generator ownership would require cloning the resource, so declare the parameter as owned",
+                    param.name
+                ),
+                yield_range,
+            );
+        }
+    }
 }
 
 pub(super) fn first_await_range_in_stmt(stmt: &Stmt) -> Option<TextRange> {

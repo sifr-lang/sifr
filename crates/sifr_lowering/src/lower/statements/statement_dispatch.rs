@@ -7,6 +7,7 @@ use super::container_literal_specialization::{
 use super::diagnostics::{
     collect_raise_error_types, format_type_name, has_decorator, is_valid_error_type,
 };
+use super::expressions::consume_affine_value_name;
 use super::expressions::lower_expr;
 use super::function_flow::infer_function_return_type;
 use super::match_lowering::lower_match;
@@ -243,6 +244,7 @@ pub(in crate::lower) fn lower_stmt(
                             val.range(),
                         );
                     }
+                    consume_affine_value_name(&value, ctx);
                     return Some(HirStmt::Yield { value });
                 }
                 statement_diagnostics::unsupported_form(

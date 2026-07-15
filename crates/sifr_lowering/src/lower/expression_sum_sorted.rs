@@ -54,6 +54,14 @@ pub(in crate::lower) fn lower_sum_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
         );
         return None;
     };
+    if super::statement_diagnostics::reject_affine_iterator_builtin(
+        ctx,
+        "sum",
+        &elem_ty,
+        call.arguments.args[0].range(),
+    ) {
+        return None;
+    }
     let result_ty = match elem_ty.resolve_alias() {
         Type::FixedInt(fixed) if fixed.supports_current_int_builtin_widening() => Type::Int,
         _ => elem_ty,
@@ -161,6 +169,14 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
         );
         return None;
     };
+    if super::statement_diagnostics::reject_affine_iterator_builtin(
+        ctx,
+        "sorted",
+        &elem_ty,
+        iterable_range,
+    ) {
+        return None;
+    }
     let mut key_arg = None;
     let mut reverse_arg = HirExpr::BoolLiteral(false);
     if let Some(keyword) = key_keyword {

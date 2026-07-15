@@ -285,6 +285,85 @@ fn exporter_admission_allows_shared_reads_and_excludes_writers() {
 }
 
 #[test]
+fn admission_excludes_writable_aliases_from_distinct_views_of_shared_storage() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("buffer-shared-storage-admission"))
+        .expect("init should succeed");
+
+    let (first, second) = shared_i32_memoryviews();
+    let read_request = PythonBufferRequest {
+        element: PythonBufferElement::I32,
+        access: PythonBufferAccess::Read,
+        layout: PythonBufferLayout::Any,
+    };
+    let write_request = PythonBufferRequest {
+        access: PythonBufferAccess::Write,
+        ..read_request
+    };
+
+    let reader = acquire_buffer(&first, read_request).expect("reader should acquire");
+    let error = acquire_buffer(&second, write_request)
+        .expect_err("a distinct wrapper over shared storage must not admit a writer");
+    assert_eq!(error.context, "buffer exporter access admission");
+    release_buffer((reader.handle, reader.token)).expect("reader should release");
+
+    let writer = acquire_buffer(&second, write_request).expect("writer should acquire");
+    for request in [read_request, write_request] {
+        let error = acquire_buffer(&first, request)
+            .expect_err("shared backing storage must remain exclusive while writing");
+        assert_eq!(error.context, "buffer exporter access admission");
+    }
+    release_buffer((writer.handle, writer.token)).expect("writer should release");
+
+    close_object(first).expect("first wrapper should close");
+    close_object(second).expect("second wrapper should close");
+    assert_eq!(
+        resource_diagnostics().expect("diagnostics should be available"),
+        PythonResourceDiagnostics {
+            initialized: true,
+            live_objects: 0,
+            leaked_objects: 0,
+        }
+    );
+}
+
+#[test]
+fn admission_allows_disjoint_writable_slices_of_shared_storage() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("buffer-disjoint-storage-admission"))
+        .expect("init should succeed");
+
+    let (first, second) = disjoint_i32_memoryviews();
+    let write_request = PythonBufferRequest {
+        element: PythonBufferElement::I32,
+        access: PythonBufferAccess::Write,
+        layout: PythonBufferLayout::Any,
+    };
+    let first_writer = acquire_buffer(&first, write_request).expect("first writer should acquire");
+    let second_writer =
+        acquire_buffer(&second, write_request).expect("disjoint writer should acquire");
+    buffer_write_i32((first_writer.handle, first_writer.token), 0, 11)
+        .expect("first slice should write");
+    buffer_write_i32((second_writer.handle, second_writer.token), 0, 31)
+        .expect("second slice should write");
+    release_buffer((first_writer.handle, first_writer.token)).expect("first writer should release");
+    release_buffer((second_writer.handle, second_writer.token))
+        .expect("second writer should release");
+    close_object(first).expect("first slice should close");
+    close_object(second).expect("second slice should close");
+    assert_eq!(
+        resource_diagnostics().expect("diagnostics should be available"),
+        PythonResourceDiagnostics {
+            initialized: true,
+            live_objects: 0,
+            leaked_objects: 0,
+        }
+    );
+}
+
+#[test]
 fn any_layout_supports_strided_logical_access() {
     let _guard = test_guard();
     reset_runtime_state_for_tests();
@@ -518,6 +597,47 @@ fn python_i32_array(values: [i32; 3]) -> ObjectHandle {
     })
     .expect("attach should succeed")
     .expect("array should create")
+}
+
+fn shared_i32_memoryviews() -> (ObjectHandle, ObjectHandle) {
+    super::super::attach(|py| {
+        let array = py
+            .import("array")?
+            .getattr("array")?
+            .call1(("i", [10_i32, 20, 30]))?;
+        let memoryview = py.import("builtins")?.getattr("memoryview")?;
+        let first = memoryview.call1((&array,))?;
+        let second = memoryview.call1((&array,))?;
+        let first = super::super::object_ops::store_object(first.unbind())
+            .map_err(|error| pyo3::exceptions::PyRuntimeError::new_err(error.to_string()))?;
+        let second = super::super::object_ops::store_object(second.unbind())
+            .map_err(|error| pyo3::exceptions::PyRuntimeError::new_err(error.to_string()))?;
+        Ok::<_, pyo3::PyErr>((first, second))
+    })
+    .expect("attach should succeed")
+    .expect("shared memoryviews should create")
+}
+
+fn disjoint_i32_memoryviews() -> (ObjectHandle, ObjectHandle) {
+    super::super::attach(|py| {
+        let array = py
+            .import("array")?
+            .getattr("array")?
+            .call1(("i", [10_i32, 20, 30, 40]))?;
+        let view = py
+            .import("builtins")?
+            .getattr("memoryview")?
+            .call1((&array,))?;
+        let first = view.call_method1("__getitem__", (pyo3::types::PySlice::new(py, 0, 2, 1),))?;
+        let second = view.call_method1("__getitem__", (pyo3::types::PySlice::new(py, 2, 4, 1),))?;
+        let first = super::super::object_ops::store_object(first.unbind())
+            .map_err(|error| pyo3::exceptions::PyRuntimeError::new_err(error.to_string()))?;
+        let second = super::super::object_ops::store_object(second.unbind())
+            .map_err(|error| pyo3::exceptions::PyRuntimeError::new_err(error.to_string()))?;
+        Ok::<_, pyo3::PyErr>((first, second))
+    })
+    .expect("attach should succeed")
+    .expect("disjoint memoryviews should create")
 }
 
 fn strided_byte_view() -> ObjectHandle {

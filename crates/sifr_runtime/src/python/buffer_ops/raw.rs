@@ -34,6 +34,13 @@ pub(super) struct OwnedPyBuffer {
     raw: Pin<Box<RawBuffer>>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum BufferFootprint {
+    Empty,
+    Direct { start: usize, end: usize },
+    Indirect,
+}
+
 // SAFETY: This matches PyO3's `PyUntypedBuffer` guarantees. The pointer is
 // never dereferenced without attaching to the supported GIL-bound interpreter.
 unsafe impl Send for OwnedPyBuffer {}
@@ -119,8 +126,47 @@ impl OwnedPyBuffer {
             .unwrap_or(0)
     }
 
-    pub(super) fn exporter_identity(&self) -> usize {
-        self.raw().obj.cast::<()>() as usize
+    pub(super) fn footprint(&self, validated: &ValidatedBuffer) -> Result<BufferFootprint, String> {
+        if validated.len_bytes == 0 || validated.shape.contains(&0) {
+            return Ok(BufferFootprint::Empty);
+        }
+        if validated.suboffsets.iter().any(|suboffset| *suboffset >= 0) {
+            // Indirect buffers contain pointers to their logical storage. Their
+            // backing ranges cannot be proven disjoint from metadata alone, so
+            // writable admission must conservatively conflict with every live
+            // non-empty view.
+            return Ok(BufferFootprint::Indirect);
+        }
+
+        let base = i128::try_from(self.raw().buf as usize)
+            .map_err(|_| "buffer base address does not fit admission arithmetic".to_string())?;
+        let mut minimum_offset = 0_i128;
+        let mut maximum_offset = 0_i128;
+        for (dimension, stride) in validated.shape.iter().zip(&validated.strides) {
+            let extent = i128::try_from(dimension.saturating_sub(1))
+                .map_err(|_| "buffer shape exceeds admission arithmetic".to_string())?
+                .checked_mul(*stride as i128)
+                .ok_or_else(|| "buffer stride span overflows admission arithmetic".to_string())?;
+            if extent < 0 {
+                minimum_offset = minimum_offset.checked_add(extent).ok_or_else(|| {
+                    "buffer minimum span overflows admission arithmetic".to_string()
+                })?;
+            } else {
+                maximum_offset = maximum_offset.checked_add(extent).ok_or_else(|| {
+                    "buffer maximum span overflows admission arithmetic".to_string()
+                })?;
+            }
+        }
+        let start = base
+            .checked_add(minimum_offset)
+            .and_then(|address| usize::try_from(address).ok())
+            .ok_or_else(|| "buffer start address exceeds admission arithmetic".to_string())?;
+        let end = base
+            .checked_add(maximum_offset)
+            .and_then(|address| address.checked_add(validated.item_size as i128))
+            .and_then(|address| usize::try_from(address).ok())
+            .ok_or_else(|| "buffer end address exceeds admission arithmetic".to_string())?;
+        Ok(BufferFootprint::Direct { start, end })
     }
 
     pub(super) fn item_ptr(&self, flat_index: usize) -> Option<*mut core::ffi::c_void> {

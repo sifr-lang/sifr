@@ -13,12 +13,19 @@ pub(super) fn resolve_list_method_type(
     method_range: TextRange,
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
-    if elem_ty.contains_affine_resource()
-        && matches!(
-            method,
-            "copy" | "extend" | "sort" | "count" | "contains" | "remove" | "index"
-        )
-    {
+    let requires_reusable_elements = matches!(
+        method,
+        "copy" | "extend" | "sort" | "count" | "contains" | "remove" | "index"
+    );
+    if requires_reusable_elements && matches!(elem_ty.resolve_alias(), Type::Any | Type::Unknown) {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!("list.{method}() requires a statically known clone/comparison capability"),
+            method_range,
+        );
+        return None;
+    }
+    if elem_ty.contains_affine_resource() && requires_reusable_elements {
         ctx.error_with_code_at(
             DiagnosticCode::PYZC_INVALID_DECLARATION,
             format!(
@@ -264,7 +271,14 @@ pub(super) fn resolve_dict_method_type(
     method_range: TextRange,
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
+    let unresolved_empty_get = method == "get"
+        && args.len() == 2
+        && matches!(key_ty.resolve_alias(), Type::Any | Type::Unknown)
+        && matches!(val_ty.resolve_alias(), Type::Any | Type::Unknown)
+        && !matches!(args[0].ty().resolve_alias(), Type::Any | Type::Unknown)
+        && !matches!(args[1].ty().resolve_alias(), Type::Any | Type::Unknown);
     if !matches!(method, "len" | "clear")
+        && !unresolved_empty_get
         && container_literal_diagnostics::reject_unhashable_container_type(
             ctx,
             "dict key",
@@ -274,12 +288,24 @@ pub(super) fn resolve_dict_method_type(
     {
         return None;
     }
-    if val_ty.contains_affine_resource()
-        && matches!(
-            method,
-            "values" | "items" | "update" | "copy" | "get" | "setdefault"
-        )
+    let requires_reusable_values = matches!(
+        method,
+        "values" | "items" | "update" | "copy" | "get" | "setdefault"
+    );
+    if requires_reusable_values
+        && !unresolved_empty_get
+        && matches!(val_ty.resolve_alias(), Type::Any | Type::Unknown)
     {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "dict.{method}() requires a statically known value clone/comparison capability"
+            ),
+            method_range,
+        );
+        return None;
+    }
+    if val_ty.contains_affine_resource() && requires_reusable_values {
         ctx.error_with_code_at(
             DiagnosticCode::PYZC_INVALID_DECLARATION,
             format!(

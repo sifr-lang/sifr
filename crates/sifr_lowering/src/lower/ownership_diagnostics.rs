@@ -1,6 +1,7 @@
 use super::LowerCtx;
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
+use sifr_type_system::Type;
 
 pub(in crate::lower) fn use_after_move(ctx: &mut LowerCtx, name: &str, range: TextRange) {
     ctx.error_with_code_at(
@@ -129,6 +130,26 @@ pub(in crate::lower) fn immutable_parameter_reassignment(
         ),
         range,
     );
+}
+
+pub(in crate::lower) fn reject_borrowed_affine_parameter_reassignment(
+    ctx: &mut LowerCtx,
+    name: &str,
+    is_parameter: bool,
+    ty: &Type,
+    range: TextRange,
+) -> bool {
+    if !is_parameter || !ctx.borrowed_params.contains(name) || !ty.contains_affine_resource() {
+        return false;
+    }
+    ctx.error_with_code_at(
+        DiagnosticCode::PYZC_INVALID_DECLARATION,
+        format!(
+            "cannot reassign borrowed affine Python buffer parameter '{name}'; mutable parameter shadowing would require cloning it"
+        ),
+        range,
+    );
+    true
 }
 
 pub(in crate::lower) fn immutable_bytes_subscript_assignment(ctx: &mut LowerCtx, range: TextRange) {

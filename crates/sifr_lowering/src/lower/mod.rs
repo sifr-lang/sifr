@@ -189,4 +189,4 @@ use sifr_python_ast::{
     str, ExprAttribute, ExprCall, ExprDictComp, ExprGenerator, ExprLambda, ExprListComp, ExprNamed,
     ExprSetComp,
 };
-use sifr_type_system::{OwnershipKind, ParamConvention};
+use sifr_type_system::ParamConvention;

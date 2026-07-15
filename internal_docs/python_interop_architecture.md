@@ -173,5 +173,7 @@ Active compiler diagnostics:
 Declaration diagnostics are activated with their owning compiler surfaces. `PYIMP`,
 `PYCALL`, `PYCONV`, `PYRES`, `PYCTX`, `PYASYNC`, and `PYCB` cover synchronous and
 async declarations, opaque values, sync/async contexts, package bridges,
-consuming async close, and typed current/foreign/asyncio callbacks. `PYZC`
-remains reserved until the later zero-copy protocols activate.
+consuming async close, typed current/foreign/asyncio callbacks, and the active
+typed buffer protocol. `PYZC` is active for buffer declaration, affine
+ownership, layout, access, and release diagnostics; its Arrow and DLPack rows
+remain reserved until those later zero-copy protocols activate.

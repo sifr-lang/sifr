@@ -64,7 +64,7 @@ use super::{
     sequence_guard_detection, str, subscript_type, substitute_type_vars, task_calls, tuple_unpack,
     workload_annotations, DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp, ExprLambda,
     ExprListComp, ExprNamed, ExprSetComp, FunctionType, HashMap, HirExpr, HirIteratorOp, HirParam,
-    LowerCtx, OwnershipKind, ParamConvention, Ranged, TextRange, Type,
+    LowerCtx, ParamConvention, Ranged, TextRange, Type,
 };
 
 mod core_and_calls;

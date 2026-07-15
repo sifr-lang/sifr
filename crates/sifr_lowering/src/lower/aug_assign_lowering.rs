@@ -330,11 +330,21 @@ pub(in crate::lower) fn lower_aug_assign(
         }
     } else {
         ctx.scope.lookup(&name)
-    };
+    }
+    .cloned();
     let Some(var_info) = var_info else {
         name_diagnostics::undefined_variable(ctx, &name, name_range);
         return None;
     };
+    if super::ownership_diagnostics::reject_borrowed_affine_parameter_reassignment(
+        ctx,
+        &name,
+        var_info.is_parameter_binding(),
+        &var_info.ty,
+        name_range,
+    ) {
+        return None;
+    }
     if var_info.is_parameter_binding() && !var_info.is_mutable_binding() {
         super::ownership_diagnostics::immutable_parameter_reassignment(ctx, &name, name_range);
         return None;

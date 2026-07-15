@@ -48,6 +48,25 @@ pub(in crate::lower) fn reject_affine_iteration(
     true
 }
 
+pub(in crate::lower) fn reject_affine_iterator_builtin(
+    ctx: &mut LowerCtx,
+    builtin: &str,
+    element_type: &Type,
+    range: TextRange,
+) -> bool {
+    if !element_type.contains_affine_resource() {
+        return false;
+    }
+    ctx.error_with_code_at(
+        DiagnosticCode::PYZC_INVALID_DECLARATION,
+        format!(
+            "{builtin}() cannot project elements containing an affine Python buffer from an iterable"
+        ),
+        range,
+    );
+    true
+}
+
 pub(in crate::lower) fn reject_affine_comprehension_value(
     ctx: &mut LowerCtx,
     value_type: &Type,

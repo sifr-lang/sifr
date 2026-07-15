@@ -20,6 +20,7 @@ use super::{
     NarrowingCondition, Ranged, StmtAssign, StmtAugAssign, StmtFor, StmtIf, StmtWhile, TextRange,
     Type,
 };
+use crate::lower::expressions::consume_owned_value;
 use crate::lower::must_use_obligations;
 use crate::lower::python_interop as pyinterop;
 use crate::lower::task_join_set_calls::record_join_set_terminal_awaitable;
@@ -299,23 +300,23 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
     let value_ty = value.ty().clone();
     pyinterop::reject_python_context_borrow_storage(&value, assign.value.range(), ctx);
 
-    // Track move: if RHS is a variable name with Move ownership, mark it as moved
-    if let HirExpr::Name {
-        name: ref src_name,
-        ref ty,
-    } = value
-    {
-        if ty.ownership() == sifr_type_system::OwnershipKind::Move {
-            ctx.mark_moved_with_flow(src_name);
-        }
-    }
+    consume_owned_value(&value, ctx);
 
     // Check if variable already exists
     if should_treat_as_existing_binding {
-        let Some(info) = ctx.scope.lookup(&name) else {
+        let Some(info) = ctx.scope.lookup(&name).cloned() else {
             name_diagnostics::undefined_variable(ctx, &name, name_range);
             return None;
         };
+        if ownership_diagnostics::reject_borrowed_affine_parameter_reassignment(
+            ctx,
+            &name,
+            info.is_parameter_binding(),
+            &info.ty,
+            name_range,
+        ) {
+            return None;
+        }
         if info.is_parameter_binding() && !info.is_mutable_binding() {
             super::ownership_diagnostics::immutable_parameter_reassignment(ctx, &name, name_range);
             return None;

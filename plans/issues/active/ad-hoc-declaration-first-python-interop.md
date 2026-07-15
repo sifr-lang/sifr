@@ -7,7 +7,8 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented and in pass-3 remediation validation/review in
+Wave 2 is implemented and its pass-4 remediation is authoritatively validated
+and awaiting a fresh full-diff review in
 [PR #2988](https://github.com/sifr-lang/sifr/pull/2988). Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
@@ -801,13 +802,23 @@ Delivery waves:
   passed. Full-diff
   [review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-3.md)
   found residual collection capabilities, constructor/walrus/comprehension
-  moves, and exporter-level writable aliasing. All findings are remediated;
-  lowering `17/17`, code generation `6/6`, runtime buffer operations `13/13`,
-  full code generation `810/810`, lowering `727/727` with one ignored, type
-  system `97/97`, and Python-enabled runtime `201/201` pass. The create-PR
-  facade is functionally green through Python interop `11/11` but its latest
-  run exceeded the interop timing budget under macOS policy scanning; a clean
-  budgeted run and fresh full-diff review are pending.
+  moves, and exporter-level writable aliasing. Those findings were remediated.
+  Full-diff
+  [review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-4.md)
+  then found cross-view writable admission, iterator/generator and conditional
+  expression moves, dynamic/generic collection capabilities, missing permanent
+  coverage, and stale `PYZC` documentation. Those findings are remediated with
+  exporter-footprint conflict admission, closed affine iterator and generator
+  paths, recursive conditional moves, collection capability checks, permanent
+  compiler/runtime regression coverage, and corrected architecture text.
+  Focused lowering contracts pass `23/23`, focused runtime buffer operations
+  pass `15/15`, full code generation passes `810/810`, lowering passes `733/733`
+  with one ignored, type system passes `97/97`, and the Python-enabled runtime
+  passes `203/203`. After `cargo clean` removed a provenance-tainted macOS build
+  tree, the cold authoritative create-PR facade passed every blocking lane:
+  Python interop `11/11`, runtime platform `28/28` with one gated skip, and E2E
+  `131/131` with signature `7c39b8c1dd4fec7c`. A fresh full-diff review is
+  pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

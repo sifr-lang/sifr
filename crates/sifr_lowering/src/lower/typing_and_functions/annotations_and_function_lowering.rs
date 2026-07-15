@@ -3,10 +3,10 @@ use super::{
     first_await_range_in_stmts, first_yield_range_in_stmts, format_type_name,
     function_body_contains_yield, infer_function_return_type, invalid_type_annotation,
     is_valid_error_type, lower_expr, lower_stmts, make_union, ownership_diagnostics,
-    reserved_integer_width_name, resolve_type_annotation, str, substitute_type_vars, unknown_type,
-    workload_annotations, DiagnosticCode, Expr, FunctionType, HashMap, HirFunction, HirParam,
-    LowerCtx, MethodKind, Number, Operator, OwnershipKind, ParamConvention, Ranged,
-    StmtFunctionDef, Type,
+    reject_borrowed_affine_generator_params, reserved_integer_width_name, resolve_type_annotation,
+    str, substitute_type_vars, unknown_type, workload_annotations, DiagnosticCode, Expr,
+    FunctionType, HashMap, HirFunction, HirParam, LowerCtx, MethodKind, Number, Operator,
+    OwnershipKind, ParamConvention, Ranged, StmtFunctionDef, Type,
 };
 use crate::lower::python_interop::{
     classify_python_interop_stub_body, collect_python_interop_declarations,
@@ -626,9 +626,14 @@ pub(in crate::lower) fn lower_function(
         .skips_normal_body_lowering()
     };
 
-    let is_async_generator = !skips_normal_body_lowering
-        && effective_is_async
-        && function_body_contains_yield(&func.body);
+    let has_generator_body =
+        !skips_normal_body_lowering && function_body_contains_yield(&func.body);
+    let is_async_generator = has_generator_body && effective_is_async;
+    if has_generator_body {
+        if let Some(yield_range) = first_yield_range_in_stmts(&func.body) {
+            reject_borrowed_affine_generator_params(func.name.as_str(), &params, yield_range, ctx);
+        }
+    }
     workload_annotations::reject_async_function_annotation(ctx, func, effective_is_async);
     if !skips_normal_body_lowering
         && effective_is_async

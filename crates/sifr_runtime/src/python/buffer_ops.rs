@@ -9,7 +9,7 @@ use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
 mod access;
 mod raw;
 pub use access::*;
-use raw::{OwnedPyBuffer, ValidatedBuffer};
+use raw::{BufferFootprint, OwnedPyBuffer, ValidatedBuffer};
 
 static BUFFER_STORE: LazyLock<Mutex<BufferStore>> =
     LazyLock::new(|| Mutex::new(BufferStore::default()));
@@ -94,21 +94,18 @@ struct BufferStore {
     next_handle: i64,
     next_nonce: u64,
     buffers: HashMap<i64, BufferEntry>,
-    admissions: HashMap<usize, BufferAdmission>,
+    admissions: HashMap<i64, BufferAdmission>,
 }
 
 struct BufferEntry {
     token: i64,
     buffer: Arc<TrackedBuffer>,
     metadata: PythonBufferMetadata,
-    exporter_identity: usize,
-    access: PythonBufferAccess,
 }
 
-#[derive(Default)]
 struct BufferAdmission {
-    readers: usize,
-    writer: bool,
+    footprint: BufferFootprint,
+    access: PythonBufferAccess,
 }
 
 struct TrackedBuffer {
@@ -169,8 +166,11 @@ pub fn acquire_buffer(
             .validate(request.element)
             .map_err(|message| buffer_error(py, &message, "buffer metadata validation"))?;
         validate_request(py, &validated, request)?;
+        let footprint = buffer
+            .footprint(&validated)
+            .map_err(|message| buffer_error(py, &message, "buffer access admission"))?;
         let metadata = metadata_for_buffer(&validated, request.element)?;
-        store_buffer(buffer, request, metadata)
+        store_buffer(buffer, request, metadata, footprint)
     })
     .map_err(PythonError::runtime)?
 }
@@ -245,13 +245,13 @@ fn store_buffer(
     buffer: OwnedPyBuffer,
     request: PythonBufferRequest,
     mut metadata: PythonBufferMetadata,
+    footprint: BufferFootprint,
 ) -> Result<PythonBufferMetadata, PythonError> {
-    let exporter_identity = buffer.exporter_identity();
     let mut store = buffer_store()?;
     let (handle, token) = reserve_handle(&mut store)?;
-    admit_exporter(&mut store, exporter_identity, request.access)?;
+    admit_buffer(&mut store, handle, footprint, request.access)?;
     if let Err(error) = super::update_object_count(1) {
-        let _ignored = release_exporter_admission(&mut store, exporter_identity, request.access);
+        let _ignored = release_buffer_admission(&mut store, handle);
         return Err(PythonError::runtime(error));
     }
     metadata.handle = handle;
@@ -262,8 +262,6 @@ fn store_buffer(
             token,
             buffer: Arc::new(TrackedBuffer::new(buffer, request)),
             metadata: metadata.clone(),
-            exporter_identity,
-            access: request.access,
         },
     );
     Ok(metadata)
@@ -306,60 +304,56 @@ pub fn release_buffer((handle, token): BufferHandle) -> Result<(), PythonError> 
     };
     let admission_result = {
         let mut store = buffer_store()?;
-        release_exporter_admission(&mut store, entry.exporter_identity, entry.access)
+        release_buffer_admission(&mut store, handle)
     };
     release_result.and(admission_result)
 }
 
-fn admit_exporter(
+fn admit_buffer(
     store: &mut BufferStore,
-    exporter_identity: usize,
+    handle: i64,
+    footprint: BufferFootprint,
     access: PythonBufferAccess,
 ) -> Result<(), PythonError> {
-    let current = store.admissions.get(&exporter_identity);
-    let conflict = match access {
-        PythonBufferAccess::Read => current.is_some_and(|admission| admission.writer),
-        PythonBufferAccess::Write => {
-            current.is_some_and(|admission| admission.writer || admission.readers != 0)
-        }
-    };
-    if conflict {
+    let conflicts = store.admissions.values().any(|admission| {
+        access != PythonBufferAccess::Read || admission.access != PythonBufferAccess::Read
+    } && footprints_overlap(footprint, admission.footprint));
+    if conflicts {
         return Err(exporter_admission_error());
     }
-    let admission = store.admissions.entry(exporter_identity).or_default();
-    match access {
-        PythonBufferAccess::Read => {
-            admission.readers = admission
-                .readers
-                .checked_add(1)
-                .ok_or_else(buffer_state_error)?;
-        }
-        PythonBufferAccess::Write => admission.writer = true,
+    if store
+        .admissions
+        .insert(handle, BufferAdmission { footprint, access })
+        .is_some()
+    {
+        return Err(buffer_state_error());
     }
     Ok(())
 }
 
-fn release_exporter_admission(
-    store: &mut BufferStore,
-    exporter_identity: usize,
-    access: PythonBufferAccess,
-) -> Result<(), PythonError> {
-    let remove = {
-        let admission = store
-            .admissions
-            .get_mut(&exporter_identity)
-            .ok_or_else(buffer_state_error)?;
-        match access {
-            PythonBufferAccess::Read if admission.readers != 0 => admission.readers -= 1,
-            PythonBufferAccess::Write if admission.writer => admission.writer = false,
-            _ => return Err(buffer_state_error()),
-        }
-        admission.readers == 0 && !admission.writer
-    };
-    if remove {
-        store.admissions.remove(&exporter_identity);
+fn release_buffer_admission(store: &mut BufferStore, handle: i64) -> Result<(), PythonError> {
+    store
+        .admissions
+        .remove(&handle)
+        .map(|_| ())
+        .ok_or_else(buffer_state_error)
+}
+
+const fn footprints_overlap(left: BufferFootprint, right: BufferFootprint) -> bool {
+    match (left, right) {
+        (BufferFootprint::Empty, _) | (_, BufferFootprint::Empty) => false,
+        (BufferFootprint::Indirect, _) | (_, BufferFootprint::Indirect) => true,
+        (
+            BufferFootprint::Direct {
+                start: left_start,
+                end: left_end,
+            },
+            BufferFootprint::Direct {
+                start: right_start,
+                end: right_end,
+            },
+        ) => left_start < right_end && right_start < left_end,
     }
-    Ok(())
 }
 
 fn buffer_snapshot(

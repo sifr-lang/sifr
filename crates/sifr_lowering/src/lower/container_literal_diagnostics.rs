@@ -1,4 +1,4 @@
-use super::LowerCtx;
+use super::{type_bounds::type_satisfies_bound, LowerCtx};
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_type_system::Type;
@@ -27,16 +27,23 @@ pub(in crate::lower) fn reject_unhashable_container_type(
     ty: &Type,
     range: TextRange,
 ) -> bool {
-    if matches!(
-        ty.resolve_alias(),
-        Type::Any | Type::Unknown | Type::TypeVar(_)
-    ) {
+    let resolved = ty.resolve_alias();
+    if super::classes::is_hashable_type(ty)
+        || matches!(resolved, Type::TypeVar(_)) && type_satisfies_bound(ty, "Hashable", ctx)
+    {
         return false;
     }
-    if super::classes::is_hashable_type(ty) {
-        return false;
-    }
-    let (code, reason) = if ty.contains_affine_resource() {
+    let (code, reason) = if matches!(resolved, Type::Any | Type::Unknown) {
+        (
+            DiagnosticCode::TYPE_MISMATCH,
+            "does not have a statically known hash/equality capability",
+        )
+    } else if matches!(resolved, Type::TypeVar(_)) {
+        (
+            DiagnosticCode::TYPE_MISMATCH,
+            "requires a Hashable bound before it can be used here",
+        )
+    } else if ty.contains_affine_resource() {
         (
             DiagnosticCode::PYZC_INVALID_DECLARATION,
             "contains an affine Python buffer",

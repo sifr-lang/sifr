@@ -117,6 +117,14 @@ pub(super) fn lower_unshadowed_builtin_call(
             );
             return None;
         };
+        if super::super::statement_diagnostics::reject_affine_iterator_builtin(
+            ctx,
+            "iter",
+            &elem_ty,
+            call.arguments.args[0].range(),
+        ) {
+            return None;
+        }
         return Some(CallLowering::Lowered(HirExpr::IteratorCall {
             op: HirIteratorOp::Iter,
             args: vec![iterable],
@@ -157,6 +165,14 @@ pub(super) fn lower_unshadowed_builtin_call(
             );
             return None;
         };
+        if super::super::statement_diagnostics::reject_affine_iterator_builtin(
+            ctx,
+            "next",
+            &elem_ty,
+            call.arguments.args[0].range(),
+        ) {
+            return None;
+        }
         return Some(CallLowering::Lowered(HirExpr::IteratorCall {
             op: HirIteratorOp::Next,
             args: vec![iterator],
