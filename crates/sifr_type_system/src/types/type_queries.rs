@@ -665,7 +665,13 @@ impl Type {
             Self::Intersection(_) => "Box<dyn std::any::Any>".to_string(),
             Self::Alias { body, .. } => body.rust_type(),
             Self::Unknown => "Box<dyn std::any::Any>".to_string(),
-            Self::Class { name, .. } => name.clone(),
+            class @ Self::Class { name, .. } => {
+                if class.is_python_object_contract() {
+                    "__SifrPythonObject".to_string()
+                } else {
+                    name.clone()
+                }
+            }
             Self::Result(ok, err) => format!("Result<{}, {}>", ok.rust_type(), err.rust_type()),
             Self::AsyncFunction(ft) => {
                 let params: Vec<String> = ft.params.iter().map(|(_, t, _)| t.rust_type()).collect();

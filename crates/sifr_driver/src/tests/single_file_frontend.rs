@@ -305,6 +305,25 @@ def view(own owner: Object) -> Result[python.Buffer[uint8], PythonError]: ...
 }
 
 #[test]
+fn test_callback_error_union_name_collision_fails_check_and_compile_consistently() {
+    let source = r#"
+from typing import Callable
+from sifr.python import PythonError as CanonicalError
+
+class PythonError(Error):
+    message: str
+    code: int
+
+@python.callback(handler, lifetime=call, dispatch=current)
+@python(builtins.map)
+def compute(
+    handler: Callable[[int], int],
+) -> Result[int, CanonicalError | PythonError]: ...
+"#;
+    assert_check_compile_error_parity(source, DiagnosticCode::PYCB_INVALID_DECLARATION);
+}
+
+#[test]
 fn test_type_check_source_surfaces_reveal_type_as_structured_note() {
     let diagnostics = type_check_source("def main():\n    reveal_type(1)\n");
 

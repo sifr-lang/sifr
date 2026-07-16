@@ -231,6 +231,33 @@ fn public_sysroot_stdlib_source_resolves_compiled_private_classes() {
 }
 
 #[test]
+fn builtin_open_preserves_an_imported_text_handle_identity() {
+    let source = "from sifr.io import TextFileHandle\n\ndef main():\n    handle: TextFileHandle = open(\"out.txt\", \"w\", encoding=\"utf-8\")\n    handle.close()\n";
+    let parsed = parse_module(source).expect("parse failed");
+    let mut externals = ExternalDefs::default();
+    externals.classes.insert(
+        "sifr.io".to_string(),
+        HashMap::from([(
+            "TextFileHandle".to_string(),
+            Type::Class {
+                identity: None,
+                type_args: Vec::new(),
+                name: "TextFileHandle".to_string(),
+                fields: Vec::new(),
+                methods: vec![(
+                    "close".to_string(),
+                    FunctionType::all_borrow(Vec::new(), Type::None),
+                )],
+                parent_class: None,
+            },
+        )]),
+    );
+
+    lower_module_with_externals(parsed.suite(), &externals)
+        .expect("builtin open should return the canonical imported TextFileHandle type");
+}
+
+#[test]
 fn private_sysroot_declaration_source_cannot_import_private_declarations() {
     let source = "from _sifr.fs import read_text\n\ndef main():\n    pass\n";
     let parsed = parse_module(source).expect("parse failed");

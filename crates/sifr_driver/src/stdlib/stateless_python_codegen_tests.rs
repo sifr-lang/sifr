@@ -309,7 +309,7 @@ fn python_callback_helpers_codegen_through_sifr_stdlib() {
         .filter(|ch| !ch.is_whitespace())
         .collect();
     assert!(compact_private
-        .contains("handler:implFn(&Object)->Result<Object,PythonError>+Send+Sync+'static"));
+        .contains("handler:implFn(&__SifrPythonObject)->Result<__SifrPythonObject,PythonError>+Send+Sync+'static"));
     assert!(!compact_private.contains("(i64,i64)"));
     let public_core_code = compiled
         .code

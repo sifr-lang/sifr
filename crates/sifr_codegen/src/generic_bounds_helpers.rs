@@ -186,7 +186,13 @@ impl RustEmitter {
                 }
             }
             Type::Alias { body, .. } => self.rust_type_with_generics(body),
-            Type::Class { name, .. } => self.render_generic_class_type(name, ty),
+            Type::Class { name, .. } => {
+                if ty.is_python_object_contract() {
+                    ty.rust_type()
+                } else {
+                    self.render_generic_class_type(name, ty)
+                }
+            }
             Type::Failure(err) => {
                 format!("__SifrFailure<{}>", self.rust_type_with_generics(err))
             }

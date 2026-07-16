@@ -163,7 +163,7 @@ fn emitted_opaque_class_is_a_sealed_runtime_handle_alias() {
     let generated = generate_rust_with_metadata(&module).rust_source;
 
     assert!(generated.contains(
-        "type Object = sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>;"
+        "type __SifrPythonObject = sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>;"
     ));
     assert!(!generated.contains("struct Object"));
 }

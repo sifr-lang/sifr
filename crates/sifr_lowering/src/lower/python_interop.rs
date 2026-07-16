@@ -564,14 +564,22 @@ pub(in crate::lower) fn validate_python_interop_signature(
             "the declaration error type must satisfy the canonical `PythonError` field contract",
             declaration.span,
         );
-    } else if !declaration.callbacks.is_empty()
-        && !callbacks::error_channel_contains_python_error_contract(error_type)
-    {
-        callbacks::invalid(
-            ctx,
-            "the enclosing declaration error channel must contain the canonical `PythonError` field contract",
-            declaration.span,
-        );
+    } else if !declaration.callbacks.is_empty() {
+        if let Some(name) = callbacks::error_channel_codegen_name_collision(error_type) {
+            callbacks::invalid(
+                ctx,
+                &format!(
+                    "the enclosing declaration error channel contains multiple members that map to generated variant `{name}`"
+                ),
+                declaration.span,
+            );
+        } else if !callbacks::error_channel_contains_python_error_contract(error_type) {
+            callbacks::invalid(
+                ctx,
+                "the enclosing declaration error channel must contain the canonical `PythonError` field contract",
+                declaration.span,
+            );
+        }
     }
     if !is_direct_type(ok_type, true, ctx) {
         let declaration_kind = if declaration.effect == PythonInteropEffect::Async {

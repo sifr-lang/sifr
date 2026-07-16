@@ -1,6 +1,7 @@
-use crate::{lower_module, HirDiagnostic};
+use crate::{lower_module, ExternalDefs, HirDiagnostic};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
+use sifr_type_system::Type;
 
 #[test]
 fn callback_call_policy_is_available_before_body_lowering() {
@@ -92,6 +93,56 @@ class PythonError(Error):
 def compute(handler: Callable[[int], int]) -> Result[int, PythonError]: ...
 ",
         "canonical `PythonError` field contract",
+    );
+}
+
+#[test]
+fn callback_declaration_rejects_colliding_error_union_variants() {
+    let source = r"
+from typing import Callable
+from sifr.python import PythonError as CanonicalError
+
+class PythonError(Error):
+    message: str
+    code: int
+
+@python.callback(handler, lifetime=call, dispatch=current)
+@python(builtins.map)
+def compute(
+    handler: Callable[[int], int],
+) -> Result[int, CanonicalError | PythonError]: ...
+";
+    let canonical = Type::Class {
+        identity: Some("_sifr.python.PythonError".to_string()),
+        type_args: Vec::new(),
+        name: "PythonError".to_string(),
+        fields: ["message", "kind", "exception_type", "traceback", "context"]
+            .into_iter()
+            .map(|name| (name.to_string(), Type::Str))
+            .collect(),
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    };
+    let mut externals = ExternalDefs::default();
+    externals
+        .classes
+        .entry("sifr.python".to_string())
+        .or_default()
+        .insert("PythonError".to_string(), canonical);
+    externals.error_types.insert("PythonError".to_string());
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match crate::lower_module_with_externals(parsed.suite(), &externals) {
+        Ok(_) => panic!("colliding callback error variants should fail"),
+        Err(errors) => errors,
+    };
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYCB_INVALID_DECLARATION)
+                && error
+                    .message
+                    .contains("multiple members that map to generated variant `PythonError`")
+        }),
+        "{errors:?}"
     );
 }
 

@@ -679,7 +679,11 @@ impl RustEmitter {
         }
         if let Some(target) = opaque_rust_type_path(class) {
             self.body_items.push(RustItem::TypeAlias {
-                name: class.name.clone(),
+                name: if target == "sifr_runtime.python.ForeignObject" {
+                    "__SifrPythonObject".to_string()
+                } else {
+                    class.name.clone()
+                },
                 ty: RustType::Named(format!(
                     "sifr_runtime::interop::Handle<{}>",
                     target.replace('.', "::")

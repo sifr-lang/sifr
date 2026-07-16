@@ -112,10 +112,7 @@ pub(crate) fn async_python_method_body(
         && declaration.consumes_receiver
         && func.params.is_empty()
         && ok_type.resolve_alias() == &Type::None
-        && matches!(
-            error_type.resolve_alias(),
-            Type::Class { name, .. } if name == "PythonError"
-        );
+        && error_type.is_python_error_contract();
     if owns_async_close && declaration.consumes_receiver && !semantic_close {
         return None;
     }
@@ -663,7 +660,7 @@ fn option_inner(ty: &Type) -> Option<&Type> {
 }
 
 fn is_object(ty: &Type) -> bool {
-    matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "Object")
+    ty.is_python_object_contract()
 }
 
 fn mapped_results(iter: RustExpr, parameter: &str, body: RustExpr) -> RustExpr {

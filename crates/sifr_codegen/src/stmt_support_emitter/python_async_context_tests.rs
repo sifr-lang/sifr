@@ -11,9 +11,16 @@ fn class_type(name: &str) -> Type {
         identity: None,
         type_args: Vec::new(),
         name: name.to_string(),
-        fields: vec![],
+        fields: if name == "PythonError" {
+            ["message", "kind", "exception_type", "traceback", "context"]
+                .into_iter()
+                .map(|field| (field.to_string(), Type::Str))
+                .collect()
+        } else {
+            Vec::new()
+        },
         methods: vec![],
-        parent_class: None,
+        parent_class: (name == "PythonError").then(|| "Error".to_string()),
     }
 }
 
@@ -216,7 +223,7 @@ fn async_python_context_converts_enter_failures_to_the_active_error_type() {
     let rendered = crate::render_stmts(&[lowered]);
 
     assert!(
-        rendered.contains("return Err((error).into());"),
+        rendered.contains("return Err((PythonError {") && rendered.contains("}).into());"),
         "{rendered}"
     );
     assert!(rendered.contains("conversion_error_0.into())"));
@@ -247,5 +254,6 @@ fn async_python_context_resumes_parent_cancellation_after_enter_failure() {
     assert!(enter_failure.contains("release_and_resume_parent()"));
     assert!(enter_failure.contains("tokio::task::yield_now().await"));
     assert!(enter_failure.contains("SifrPythonAsyncContextError"));
-    assert!(enter_failure.contains("return Err((error).into());"));
+    assert!(enter_failure.contains("return Err((PythonError {"));
+    assert!(enter_failure.contains("}).into());"));
 }

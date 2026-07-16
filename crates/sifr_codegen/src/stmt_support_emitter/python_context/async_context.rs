@@ -90,10 +90,7 @@ impl RustEmitter {
             &enter_error_rust_type,
             false,
         );
-        let active_is_python = matches!(
-            active_error_type.resolve_alias(),
-            Type::Class { name, .. } if name == "PythonError"
-        );
+        let active_is_python = active_error_type.is_python_error_contract();
         let active_exit = if active_is_python {
             python_error_exit(&names)
         } else {

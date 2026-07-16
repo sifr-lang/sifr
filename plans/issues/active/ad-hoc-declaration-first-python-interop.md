@@ -19,7 +19,10 @@ Pass-25 remediation is complete, whole-diff review pass 26 is satisfied, and
 PR #2988 is merged. M10 Wave 3 evidence, demo, and documentation closure is
 implemented and locally validated; whole-diff review pass 6 is satisfied and
 the authoritative create-PR gate passes, and PR #2989 is merged. The complete
-merged M10 implementation is undergoing its required milestone review. Typed
+merged M10 implementation is undergoing its required milestone review. Review
+pass 7 found three remaining generated-name and check/build parity gaps; their
+remediation is implemented and the authoritative create-PR gate passes in PR
+#2990, with a fresh full re-review pending. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1385,7 +1388,30 @@ Delivery waves:
   identity, while same-named user records retain record conversion. The shared
   duplicate-safe five-field error predicate now guards ordinary, callback,
   context, coroutine, and buffer declarations, with lowering, codegen, stdlib,
-  and driver check/compile parity regressions before the next full re-review.
+  and driver check/compile parity regressions. Full
+  [review pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-7.md)
+  confirmed those remediations, then reproduced three remaining High-severity
+  parity defects: coroutine conversion still selected a local `Object` by
+  basename; the canonical stdlib `Object` alias collided with a user record in
+  flat generated Rust; and callback error unions could contain distinct
+  same-basename members that emitted duplicate variants. Async conversion and
+  context classification now use the shared canonical predicates. The sealed
+  handle emits as collision-proof `__SifrPythonObject` while source-level local
+  `Object` records retain record conversion, and a native package-build
+  regression compiles synchronous and coroutine declarations together.
+  Callback lowering rejects duplicate generated variant names before codegen,
+  with lowering and driver check/compile parity coverage. The first
+  authoritative gate exposed one additional strict-identity mismatch where the
+  compiler-special `open()` path replaced an imported canonical
+  `TextFileHandle` with an anonymous same-named type. Compiler-special text and
+  binary opens now preserve imported handle identities, with a focused lowering
+  regression and the previously failing text/i18n fixture compiling and running
+  natively. The repeated authoritative create-PR gate passes every blocking
+  lane in `629.99s`: Python interop `12/12`, runtime platform `28` variants with
+  one capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `41/42` cache hits. The warm-time notice is a
+  non-blocking advisory after the requested clean rebuild. A fresh complete M10
+  re-review remains pending.
 
 Acceptance:
 

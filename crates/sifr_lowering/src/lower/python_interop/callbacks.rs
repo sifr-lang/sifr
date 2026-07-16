@@ -595,6 +595,17 @@ pub(super) fn error_channel_contains_python_error_contract(channel: &Type) -> bo
     }
 }
 
+pub(super) fn error_channel_codegen_name_collision(channel: &Type) -> Option<String> {
+    let Type::Union(members) = channel.resolve_alias() else {
+        return None;
+    };
+    let mut names = std::collections::HashSet::new();
+    members.iter().find_map(|member| {
+        let name = member.union_variant_name();
+        (!names.insert(name.clone())).then_some(name)
+    })
+}
+
 pub(super) fn contains_python_identity(ty: &Type, ctx: &LowerCtx) -> bool {
     match ty.resolve_alias() {
         Type::Class { name, fields, .. } => {

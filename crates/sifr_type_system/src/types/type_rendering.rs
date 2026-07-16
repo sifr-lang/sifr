@@ -114,7 +114,13 @@ impl Type {
             Type::Union(_) => "Union".to_string(),
             Type::Intersection(_) => "Intersection".to_string(),
             Type::Alias { name, .. } => capitalize(name),
-            Type::Class { name, .. } => name.clone(),
+            class @ Type::Class { name, .. } => {
+                if class.is_python_object_contract() {
+                    "SifrPythonObject".to_string()
+                } else {
+                    name.clone()
+                }
+            }
             Type::Result(_, _) => "Result".to_string(),
             Type::Protocol { name, .. } => name.clone(),
             Type::Newtype { name, .. } => name.clone(),

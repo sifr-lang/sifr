@@ -117,5 +117,14 @@ mod tests {
         assert!(object(Some("_sifr.python.Object")).is_python_object_contract());
         assert!(!object(None).is_python_object_contract());
         assert!(!object(Some("local.Object")).is_python_object_contract());
+        assert_eq!(
+            object(Some("_sifr.python.Object")).rust_type(),
+            "__SifrPythonObject"
+        );
+        assert_eq!(
+            object(Some("_sifr.python.Object")).union_variant_name(),
+            "SifrPythonObject"
+        );
+        assert_eq!(object(None).rust_type(), "Object");
     }
 }

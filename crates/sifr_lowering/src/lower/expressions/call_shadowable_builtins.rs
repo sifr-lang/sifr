@@ -243,8 +243,17 @@ pub(super) fn lower_shadowable_builtin_call(
                 ],
                 parent_class: None,
             };
+            // Preserve the canonical identity of an explicitly imported stdlib handle.
+            // The compiler-special `open()` fallback is only needed when the source has
+            // not imported the public handle declaration.
+            let text_handle_ty = ctx
+                .class_types
+                .get("TextFileHandle")
+                .cloned()
+                .unwrap_or(text_handle_ty);
             ctx.class_types
-                .insert("TextFileHandle".to_string(), text_handle_ty.clone());
+                .entry("TextFileHandle".to_string())
+                .or_insert_with(|| text_handle_ty.clone());
             ctx.try_block_error_types.insert("IOError".to_string());
             return Some(CallLowering::Lowered(HirExpr::IntrinsicCall {
                 intrinsic: CompilerIntrinsicId::OpenText,
@@ -361,8 +370,14 @@ pub(super) fn lower_shadowable_builtin_call(
             parent_class: None,
         };
         // Register FileHandle in the class types so method calls work
+        let file_handle_ty = ctx
+            .class_types
+            .get("FileHandle")
+            .cloned()
+            .unwrap_or(file_handle_ty);
         ctx.class_types
-            .insert("FileHandle".to_string(), file_handle_ty.clone());
+            .entry("FileHandle".to_string())
+            .or_insert_with(|| file_handle_ty.clone());
         // Register IOError as a possible exception from this call
         ctx.try_block_error_types.insert("IOError".to_string());
         return Some(CallLowering::Lowered(HirExpr::IntrinsicCall {

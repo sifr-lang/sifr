@@ -2,6 +2,47 @@ use super::*;
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
+fn local_object_record_builds_beside_the_sealed_python_handle() {
+    let dir = mktemp_dir("package_python_local_object_collision");
+    let app = production_package(&dir, "app", "sifr-object-app", "object_app");
+    write_package_source(
+        &app,
+        "main.sifr",
+        r#"from sifr.python import PythonError
+
+class Object:
+    value: int
+
+@python(builtins.id)
+def echo(value: Object) -> Result[Object, PythonError]: ...
+
+@python.coroutine(builtins.id)
+async def echo_async(value: Object) -> Result[Object, PythonError]: ...
+
+async def main() -> Result[None, PythonError]:
+    try:
+        source = Object(1)
+        _result = await echo_async(source)
+        return None
+    except PythonError as error:
+        raise error
+"#,
+    );
+
+    let graph = package_graph(&dir, &[&app], &[]);
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let mut entrypoint =
+        package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+    entrypoint.python_runtime = Some(local_python_runtime(&app.root));
+    let artifact = build_cached_package_project(&entrypoint)
+        .expect("local Object and sealed Python handle should build with distinct Rust names");
+
+    assert!(artifact.binary_path().exists());
+    let _ignored = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn raw_coroutine_api_builds_and_runs_on_the_owned_loop() {
     let dir = mktemp_dir("package_python_owned_async_loop");
     let app = production_package(&dir, "app", "sifr-async-app", "async_app");
