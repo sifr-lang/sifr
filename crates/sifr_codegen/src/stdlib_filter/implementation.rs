@@ -1,6 +1,7 @@
-use proc_macro2::{TokenStream, TokenTree};
+use proc_macro2::{Group, Ident, TokenStream, TokenTree};
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
+use syn::visit_mut::{self, VisitMut};
 use syn::{Item, ItemImpl, ItemUse, Type, UseTree};
 
 #[derive(Clone)]
@@ -43,6 +44,108 @@ pub(crate) struct SharedPreludeFileHandleNeeds {
 pub(crate) struct PreparedStdlibModule {
     pub(crate) stripped_code: String,
     pub(crate) shared_needs: SharedPreludeNeeds,
+}
+
+const CANONICAL_FILE_HANDLE_RUST_NAMES: &[(&str, &str)] = &[
+    ("NativeFileHandle", "__SifrIoNativeFileHandle"),
+    ("FileHandle", "__SifrIoFileHandle"),
+    ("BinaryFileHandle", "__SifrIoBinaryFileHandle"),
+    ("TextFileHandle", "__SifrIoTextFileHandle"),
+];
+
+/// Move canonical file-handle declarations behind compiler-owned Rust names.
+///
+/// Stdlib modules are flattened into the generated crate, while Sifr's nominal
+/// identity still permits a user class to share a stdlib basename. Renaming the
+/// canonical declarations and every stdlib reference before concatenation keeps
+/// those two source-level identities distinct in Rust as well.
+pub(crate) fn seal_canonical_file_handle_names(rust_code: &str) -> String {
+    let Ok(tokens) = rust_code.parse::<TokenStream>() else {
+        return rust_code.to_string();
+    };
+    let rewritten = rewrite_canonical_file_handle_tokens(tokens);
+    let Ok(parsed) = syn::parse_file(&rewritten.to_string()) else {
+        return rust_code.to_string();
+    };
+    render_items(&parsed.items)
+}
+
+/// Make generated stdlib references to external runtime crates immune to
+/// source declarations with the same Rust identifier.
+pub(crate) fn absolutize_external_crate_paths(rust_code: &str) -> String {
+    let Ok(mut parsed) = syn::parse_file(rust_code) else {
+        return rust_code.to_string();
+    };
+    ExternalCratePathAbsolutizer.visit_file_mut(&mut parsed);
+    render_items(&parsed.items)
+}
+
+struct ExternalCratePathAbsolutizer;
+
+impl VisitMut for ExternalCratePathAbsolutizer {
+    fn visit_path_mut(&mut self, path: &mut syn::Path) {
+        if path.leading_colon.is_none()
+            && path.segments.first().is_some_and(|segment| {
+                matches!(
+                    segment.ident.to_string().as_str(),
+                    "sifr_runtime" | "sifr_stdlib"
+                )
+            })
+        {
+            path.leading_colon = Some(syn::token::PathSep::default());
+        }
+        visit_mut::visit_path_mut(self, path);
+    }
+
+    fn visit_item_use_mut(&mut self, item: &mut ItemUse) {
+        if item.leading_colon.is_none() && use_tree_starts_with_external_crate(&item.tree) {
+            item.leading_colon = Some(syn::token::PathSep::default());
+        }
+        visit_mut::visit_item_use_mut(self, item);
+    }
+}
+
+fn use_tree_starts_with_external_crate(tree: &UseTree) -> bool {
+    match tree {
+        UseTree::Path(path) => matches!(
+            path.ident.to_string().as_str(),
+            "sifr_runtime" | "sifr_stdlib"
+        ),
+        UseTree::Name(name) => matches!(
+            name.ident.to_string().as_str(),
+            "sifr_runtime" | "sifr_stdlib"
+        ),
+        UseTree::Rename(rename) => matches!(
+            rename.ident.to_string().as_str(),
+            "sifr_runtime" | "sifr_stdlib"
+        ),
+        UseTree::Glob(_) | UseTree::Group(_) => false,
+    }
+}
+
+fn rewrite_canonical_file_handle_tokens(tokens: TokenStream) -> TokenStream {
+    tokens
+        .into_iter()
+        .map(|token| match token {
+            TokenTree::Ident(ident) => {
+                let replacement = CANONICAL_FILE_HANDLE_RUST_NAMES
+                    .iter()
+                    .find_map(|(source, replacement)| (ident == *source).then_some(*replacement));
+                replacement.map_or(TokenTree::Ident(ident.clone()), |replacement| {
+                    TokenTree::Ident(Ident::new(replacement, ident.span()))
+                })
+            }
+            TokenTree::Group(group) => {
+                let mut rewritten = Group::new(
+                    group.delimiter(),
+                    rewrite_canonical_file_handle_tokens(group.stream()),
+                );
+                rewritten.set_span(group.span());
+                TokenTree::Group(rewritten)
+            }
+            other => other,
+        })
+        .collect()
 }
 
 const GLOBAL_INFRA_TYPES: &[&str] = &[

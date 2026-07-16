@@ -7,6 +7,7 @@ use crate::{
 };
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
+use sifr_ir::HirStmt;
 use sifr_python_parser::parse_module;
 use sifr_type_system::{FunctionType, Type};
 
@@ -302,6 +303,91 @@ fn builtin_open_never_reuses_a_local_same_basename_handle() {
                 .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)),
             "expected canonical-identity type mismatch, got {errors:?}"
         );
+    }
+}
+
+#[test]
+fn builtin_open_inferred_bindings_keep_canonical_handle_identities() {
+    let source = r#"class FileHandle:
+    value: int
+
+class TextFileHandle:
+    value: int
+
+def main() -> None:
+    local_binary = FileHandle(1)
+    local_text = TextFileHandle(2)
+    try:
+        binary = open("out.bin", "wb")
+        text = open("out.txt", "w", encoding="utf-8")
+        binary.close()
+        text.close()
+    except IOError as error:
+        _ = error.message
+"#;
+    let parsed = parse_module(source).expect("parse failed");
+    let mut externals = ExternalDefs::default();
+    externals.classes.insert(
+        "sifr.io".to_string(),
+        HashMap::from([
+            (
+                "FileHandle".to_string(),
+                Type::Class {
+                    identity: Some("sifr.io.FileHandle".to_string()),
+                    type_args: Vec::new(),
+                    name: "FileHandle".to_string(),
+                    fields: Vec::new(),
+                    methods: Vec::new(),
+                    parent_class: None,
+                },
+            ),
+            (
+                "TextFileHandle".to_string(),
+                Type::Class {
+                    identity: Some("sifr.io.TextFileHandle".to_string()),
+                    type_args: Vec::new(),
+                    name: "TextFileHandle".to_string(),
+                    fields: Vec::new(),
+                    methods: Vec::new(),
+                    parent_class: None,
+                },
+            ),
+        ]),
+    );
+    let result = lower_module_with_externals(parsed.suite(), &externals)
+        .expect("canonical handles should lower");
+    let main = result
+        .module
+        .functions
+        .iter()
+        .find(|function| function.name == "main")
+        .expect("main function");
+    let HirStmt::TryExcept { body, .. } = &main.body[2] else {
+        panic!("main should retain the try body");
+    };
+
+    for (statement, expected_identity) in body
+        .iter()
+        .take(2)
+        .zip(["sifr.io.FileHandle", "sifr.io.TextFileHandle"])
+    {
+        let HirStmt::Let { ty, value, .. } = statement else {
+            panic!("open result should lower to a let binding");
+        };
+        assert!(matches!(
+            ty.resolve_alias(),
+            Type::Class {
+                identity: Some(identity),
+                ..
+            } if identity == expected_identity
+        ));
+        assert!(matches!(
+            value.ty().resolve_alias(),
+            Type::Class {
+                identity: Some(identity),
+                ..
+            } if identity == expected_identity
+        ));
     }
 }
 

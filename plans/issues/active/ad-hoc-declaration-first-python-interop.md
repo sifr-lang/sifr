@@ -1427,7 +1427,34 @@ Delivery waves:
   `822.00s`: Python interop `12/12`, runtime platform `28` variants with one
   capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `42/42` cache hits. Its warm wall-time notice is a
-  non-blocking advisory after the requested clean rebuild. A fresh complete M10
+  non-blocking advisory after the requested clean rebuild. Full
+  [review pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-9.md)
+  confirmed the pass-8 fixes, then proved two remaining generated-Rust identity
+  collisions: local `sifr_runtime` shadowed relative external-crate paths, and
+  local `FileHandle`/`TextFileHandle` classes collided with canonical inferred
+  `open()` results. Generated runtime and stdlib paths are now absolute across
+  Rust IR, imports, bridge types, and assembled stdlib source. Canonical file
+  handles use compiler-owned Rust names in declarations, intrinsics, fallback
+  preambles, ordinary type rendering, and generic-aware type rendering while
+  retaining their nominal Sifr identities. Permanent lowering, renderer,
+  stdlib-filter, and native package regressions lock the reviewer's exact local
+  shadow cases. Sealed Python `Object` conversion now unwraps and rewraps the
+  canonical runtime handle through compiler-private runtime bridge functions
+  for synchronous and coroutine declarations. Both exact native collision
+  proofs pass. After the requested `cargo clean`, the repeated authoritative
+  create-PR gate passes every blocking lane in `1334.68s`: Python interop
+  `12/12`, runtime platform `28` variants with one capability-gated skip, and
+  E2E `131/131` with signature `7c39b8c1dd4fec7c` and `0/42` cold-cache hits.
+  The warm wall-time notice is a non-blocking advisory for this clean rebuild;
+  a proactive follow-up proof then showed that the compiler-owned handle names
+  themselves were source-spellable. Source-declared `__Sifr*` classes now use
+  an injective escaped Rust namespace disjoint from compiler-owned identities,
+  and the strengthened native collision package passes with exact local
+  `__SifrIoFileHandle` and `__SifrIoTextFileHandle` classes. The follow-up
+  authoritative create-PR gate passes every blocking lane in `657.69s`: Python
+  interop `12/12`, runtime platform `28` variants with one capability-gated
+  skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache
+  hits. Its warm wall-time notice is a non-blocking advisory; the fresh complete
   re-review remains pending.
 
 Acceptance:

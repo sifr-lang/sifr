@@ -275,11 +275,11 @@ fn interop_bridge_resolves_imported_opaque_type_to_declared_rust_target() {
     );
     assert_eq!(
         signature.params[0].ty.rust_borrowed_type.as_deref(),
-        Some("&sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>")
+        Some("&::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>")
     );
     assert_eq!(
         signature.return_type.rust_return_type.as_deref(),
-        Some("sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>")
+        Some("::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>")
     );
     assert!(plan.rust.bridge_contracts.generated_types.is_empty());
 }
@@ -333,7 +333,7 @@ fn interop_bridge_callable_params_require_callback_contract() {
     assert_eq!(signature.params[0].ty.kind, RustBridgeTypeKind::Callback);
     assert_eq!(
         signature.params[0].ty.rust_borrowed_type.as_deref(),
-        Some("&sifr_runtime::interop::ThreadsafeCallbackBridge")
+        Some("&::sifr_runtime::interop::ThreadsafeCallbackBridge")
     );
 }
 

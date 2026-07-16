@@ -4,7 +4,7 @@ use crate::{
     RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
 use sifr_ir::{HirClass, HirFunction, HirModule, RustInteropDecoratorKind, RustInteropValue};
-use sifr_type_system::Type;
+use sifr_type_system::{source_class_rust_name, Type};
 
 impl RustEmitter {
     fn process_child_drop_impl() -> RustItem {
@@ -83,10 +83,11 @@ impl RustEmitter {
     }
 
     pub(crate) fn class_impl_target(class: &HirClass) -> String {
+        let rust_name = source_class_rust_name(&class.name);
         if class.type_params.is_empty() {
-            return class.name.clone();
+            return rust_name;
         }
-        format!("{}<{}>", class.name, class.type_params.join(", "))
+        format!("{rust_name}<{}>", class.type_params.join(", "))
     }
 
     pub(crate) fn class_impl_type_params(class: &HirClass) -> Vec<RustTypeParam> {
@@ -197,8 +198,9 @@ impl RustEmitter {
     }
 
     pub(crate) fn class_struct_decl_name(class: &HirClass) -> String {
+        let rust_name = source_class_rust_name(&class.name);
         if class.type_params.is_empty() {
-            return class.name.clone();
+            return rust_name;
         }
         let params = class
             .type_params
@@ -213,7 +215,7 @@ impl RustEmitter {
             })
             .collect::<Vec<_>>()
             .join(", ");
-        format!("{}<{params}>", class.name)
+        format!("{rust_name}<{params}>")
     }
 
     pub(crate) fn class_emits_display(
@@ -267,11 +269,11 @@ impl RustEmitter {
             let mut fields = vec![
                 (
                     "__sifr_python_object".to_string(),
-                    RustType::Named("sifr_runtime::python::ObjectHandle".to_string()),
+                    RustType::Named("::sifr_runtime::python::ObjectHandle".to_string()),
                 ),
                 (
                     "__sifr_python_callbacks".to_string(),
-                    RustType::Named("sifr_runtime::python::CallbackOwnerSlot".to_string()),
+                    RustType::Named("::sifr_runtime::python::CallbackOwnerSlot".to_string()),
                 ),
                 (
                     "__sifr_python_not_send_sync".to_string(),
@@ -283,7 +285,7 @@ impl RustEmitter {
                     (
                         format!("__sifr_python_callback_failure_{index}"),
                         RustType::Named(format!(
-                            "sifr_runtime::python::CallbackFailureSlot<{}>",
+                            "::sifr_runtime::python::CallbackFailureSlot<{}>",
                             self.rust_type_with_generics(error)
                         )),
                     )
@@ -299,7 +301,7 @@ impl RustEmitter {
                 } else {
                     parent.to_lowercase()
                 };
-                fields.push((field_name, RustType::Named(parent.clone())));
+                fields.push((field_name, RustType::Named(source_class_rust_name(parent))));
             }
         }
 
@@ -349,7 +351,7 @@ impl RustEmitter {
             fields.push((
                 name,
                 RustType::Option(Box::new(RustType::Named(
-                    "sifr_runtime::python::PythonError".to_string(),
+                    "::sifr_runtime::python::PythonError".to_string(),
                 ))),
             ));
         }
@@ -429,7 +431,7 @@ impl RustEmitter {
             type_params: Vec::new(),
             params: vec![RustParam::Named {
                 name: "__sifr_python_object".to_string(),
-                ty: RustType::Named("sifr_runtime::python::ObjectHandle".to_string()),
+                ty: RustType::Named("::sifr_runtime::python::ObjectHandle".to_string()),
             }],
             ret: Some(RustType::Named("Self".to_string())),
             body: vec![RustStmt::Return(Some(RustExpr::StructInit {
@@ -685,9 +687,9 @@ impl RustEmitter {
                 return;
             }
             self.body_items.push(RustItem::TypeAlias {
-                name: class.name.clone(),
+                name: source_class_rust_name(&class.name),
                 ty: RustType::Named(format!(
-                    "sifr_runtime::interop::Handle<{}>",
+                    "::sifr_runtime::interop::Handle<{}>",
                     target.replace('.', "::")
                 )),
             });

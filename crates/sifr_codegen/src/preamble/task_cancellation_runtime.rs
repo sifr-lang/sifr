@@ -2,17 +2,17 @@ use super::RustItem;
 
 pub fn build_task_cancellation_items(include_current_accessor: bool) -> Vec<RustItem> {
     let mut source = r#"tokio::task_local! {
-    static __SIFR_TASK_CANCELLATION: sifr_runtime::cancellation::CancellationCarrier;
+    static __SIFR_TASK_CANCELLATION: ::sifr_runtime::cancellation::CancellationCarrier;
 }
 
 #[derive(Clone)]
 struct __SifrCancellationCarrier {
-    inner: sifr_runtime::cancellation::CancellationCarrier,
+    inner: ::sifr_runtime::cancellation::CancellationCarrier,
 }
 
 impl __SifrCancellationCarrier {
     fn new(
-        inner: sifr_runtime::cancellation::CancellationCarrier,
+        inner: ::sifr_runtime::cancellation::CancellationCarrier,
         fallback_abort: tokio::task::AbortHandle,
     ) -> Self {
         let fallback = fallback_abort.clone();
@@ -20,7 +20,7 @@ impl __SifrCancellationCarrier {
         Self { inner }
     }
 
-    fn request_cancel(&self) -> sifr_runtime::cancellation::CancellationRequest {
+    fn request_cancel(&self) -> ::sifr_runtime::cancellation::CancellationRequest {
         self.inner.request_cancel()
     }
 }
@@ -31,7 +31,7 @@ impl __SifrCancellationCarrier {
         source.push_str(
             r#"
 fn __sifr_current_task_cancellation(
-) -> Option<sifr_runtime::cancellation::CancellationCarrier> {
+) -> Option<::sifr_runtime::cancellation::CancellationCarrier> {
     __SIFR_TASK_CANCELLATION
         .try_with(Clone::clone)
         .ok()

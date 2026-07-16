@@ -247,7 +247,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                         "__SifrTaskResult<T, __SifrTimeoutResult<E>>".to_string(),
                     )),
                     body: vec![RustStmt::Expr(RustExpr::Ident(
-                        "let __SifrTask { receiver, cancellation, observed, _error } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        if let Some(mut receiver) = receiver {\n            return tokio::select! {\n                biased;\n                result = &mut receiver => {\n                    match result {\n                        Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value),\n                        Ok(__SifrTaskResult::Err(failure)) => __SifrTaskResult::Err(failure.map_primary(__SifrTimeoutResult::Inner)),\n                        Ok(__SifrTaskResult::Cancelled(failure)) => __SifrTaskResult::Cancelled(failure),\n                        Err(_) => __SifrTaskResult::cancelled(),\n                    }\n                },\n                _ = tokio::time::sleep(duration) => {\n                    let request = cancellation.request_cancel();\n                    let terminal = receiver.await;\n                    if matches!(request, sifr_runtime::cancellation::CancellationRequest::Claimed) {\n                        match terminal {\n                            Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value),\n                            Ok(__SifrTaskResult::Err(failure)) => __SifrTaskResult::Err(failure.map_primary(__SifrTimeoutResult::Inner)),\n                            Ok(__SifrTaskResult::Cancelled(_)) | Err(_) => __SifrTaskResult::Err(__SifrFailure::new(__SifrTimeoutResult::Timeout)),\n                        }\n                    } else {\n                        __SifrTaskResult::Err(__SifrFailure::new(__SifrTimeoutResult::Timeout))\n                    }\n                }\n            };\n        }\n        return __SifrTaskResult::cancelled()".to_string(),
+                        "let __SifrTask { receiver, cancellation, observed, _error } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        if let Some(mut receiver) = receiver {\n            return tokio::select! {\n                biased;\n                result = &mut receiver => {\n                    match result {\n                        Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value),\n                        Ok(__SifrTaskResult::Err(failure)) => __SifrTaskResult::Err(failure.map_primary(__SifrTimeoutResult::Inner)),\n                        Ok(__SifrTaskResult::Cancelled(failure)) => __SifrTaskResult::Cancelled(failure),\n                        Err(_) => __SifrTaskResult::cancelled(),\n                    }\n                },\n                _ = tokio::time::sleep(duration) => {\n                    let request = cancellation.request_cancel();\n                    let terminal = receiver.await;\n                    if matches!(request, ::sifr_runtime::cancellation::CancellationRequest::Claimed) {\n                        match terminal {\n                            Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value),\n                            Ok(__SifrTaskResult::Err(failure)) => __SifrTaskResult::Err(failure.map_primary(__SifrTimeoutResult::Inner)),\n                            Ok(__SifrTaskResult::Cancelled(_)) | Err(_) => __SifrTaskResult::Err(__SifrFailure::new(__SifrTimeoutResult::Timeout)),\n                        }\n                    } else {\n                        __SifrTaskResult::Err(__SifrFailure::new(__SifrTimeoutResult::Timeout))\n                    }\n                }\n            };\n        }\n        return __SifrTaskResult::cancelled()".to_string(),
                     ))],
                     is_async: true,
                 },
@@ -435,7 +435,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                             ),
                         },
                         RustStmt::Expr(RustExpr::Ident(
-                            "let cancellation_inner = sifr_runtime::cancellation::CancellationCarrier::new();\n        let child_cancellation = cancellation_inner.clone()".to_string(),
+                            "let cancellation_inner = ::sifr_runtime::cancellation::CancellationCarrier::new();\n        let child_cancellation = cancellation_inner.clone()".to_string(),
                         )),
                         task_context_label_capture_stmt(),
                         RustStmt::Let {
@@ -564,7 +564,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                             ),
                         },
                         RustStmt::Expr(RustExpr::Ident(
-                            "let cancellation_inner = sifr_runtime::cancellation::CancellationCarrier::new();\n        let child_cancellation = cancellation_inner.clone()".to_string(),
+                            "let cancellation_inner = ::sifr_runtime::cancellation::CancellationCarrier::new();\n        let child_cancellation = cancellation_inner.clone()".to_string(),
                         )),
                         task_context_label_capture_stmt(),
                         RustStmt::Let {

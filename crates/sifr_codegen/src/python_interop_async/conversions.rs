@@ -200,7 +200,10 @@ pub(super) fn async_input_conversion(
         });
     }
     if is_object(ty) {
-        return Some(runtime_call("async_from_object", vec![reference(name)]));
+        return Some(runtime_call(
+            "__sifr_declaration_async_from_object",
+            vec![RustExpr::Ident(name.to_string())],
+        ));
     }
     if matches!(ty.resolve_alias(), Type::Class { name: class_name, .. } if opaque_classes.contains_key(class_name))
     {
@@ -437,7 +440,10 @@ pub(crate) fn async_output_value(
     }
     if is_object(ty) {
         return Some(mapped_try(
-            runtime_call("async_to_object", vec![RustExpr::Ident(name.to_string())]),
+            runtime_call(
+                "__sifr_declaration_async_to_object",
+                vec![RustExpr::Ident(name.to_string())],
+            ),
             error_type,
         ));
     }
@@ -701,7 +707,7 @@ fn mapped_mutable_let(name: &str, value: RustExpr, error_type: &Type) -> RustStm
 }
 
 pub(super) fn vector_let(name: &str) -> RustStmt {
-    let value_type = RustType::Named("sifr_runtime::python::PythonAsyncValue".to_string());
+    let value_type = RustType::Named("::sifr_runtime::python::PythonAsyncValue".to_string());
     let item_type = if name == "__sifr_python_kwargs" {
         RustType::Tuple(vec![RustType::String_, value_type])
     } else {

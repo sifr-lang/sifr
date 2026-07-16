@@ -146,6 +146,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     }
     if import_needs.runtime.needs_sifr_int {
         import_items.push(RustItem::Use(vec![
+            String::new(),
             "sifr_runtime".to_string(),
             "SifrInt".to_string(),
         ]));
@@ -169,7 +170,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     let rust_file = RustFile { items: file_items };
     let rust_source = Renderer::new().render_file(&rust_file);
     let uses_task_sleep = super::module_uses_task_sleep(module);
-    let needs_python_runtime = rust_source.contains("sifr_stdlib::python::");
+    let needs_python_runtime = rust_source.contains("::sifr_stdlib::python::");
 
     CodegenResult {
         rust_source,

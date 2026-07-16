@@ -119,7 +119,7 @@ fn emitted_direct_result_none_interop_does_not_append_ok_tail() {
 
     let generated = generate_rust_with_metadata(&module).rust_source;
 
-    assert!(generated.contains("sifr_stdlib::zip::zip_close(path)"));
+    assert!(generated.contains("::sifr_stdlib::zip::zip_close(path)"));
     assert!(!generated.contains("return Ok(());"), "{generated}");
 }
 
@@ -211,7 +211,7 @@ fn rust_interop_function_body_maps_python_error_fields_without_parent_metadata()
 
     assert_eq!(
         render_expr(expr),
-        "sifr_stdlib::python::py_from_none().map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| PythonError { message: __sifr_bridge_error.message.to_string(), kind: __sifr_bridge_error.kind.to_string(), exception_type: __sifr_bridge_error.exception_type.to_string(), traceback: __sifr_bridge_error.traceback.to_string(), context: __sifr_bridge_error.context.to_string(), __sifr_python_error: Some(__sifr_bridge_error) })"
+        "::sifr_stdlib::python::py_from_none().map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| PythonError { message: __sifr_bridge_error.message.to_string(), kind: __sifr_bridge_error.kind.to_string(), exception_type: __sifr_bridge_error.exception_type.to_string(), traceback: __sifr_bridge_error.traceback.to_string(), context: __sifr_bridge_error.context.to_string(), __sifr_python_error: Some(__sifr_bridge_error) })"
     );
 }
 
@@ -285,11 +285,13 @@ fn rust_interop_function_body_adapts_sealed_python_object_callback_parameter() {
     };
     let rendered = render_expr(expr);
 
-    assert!(rendered.contains("sifr_stdlib::python::py_local_callback(move |__sifr_callback_arg|"));
+    assert!(
+        rendered.contains("::sifr_stdlib::python::py_local_callback(move |__sifr_callback_arg|")
+    );
     assert!(rendered.contains("handler(&__sifr_callback_arg)"));
     assert!(rendered.contains("Ok(__sifr_callback_result)"));
     assert!(!rendered.contains("__sifr_callback_arg.0"));
-    assert!(rendered.contains("sifr_stdlib::python::PythonError"));
+    assert!(rendered.contains("::sifr_stdlib::python::PythonError"));
     assert!(rendered.contains("PythonError { message: __sifr_bridge_error.message.to_string()"));
 }
 

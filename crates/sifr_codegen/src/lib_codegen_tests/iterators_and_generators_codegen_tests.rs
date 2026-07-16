@@ -270,7 +270,7 @@ fn test_generate_rust_open_uses_canonical_filehandle_constructor() {
     };
     let rust_code = generate_rust_with_metadata(&module).rust_source;
 
-    assert!(rust_code.contains("sifr_stdlib::fs::open_file"));
+    assert!(rust_code.contains("::sifr_stdlib::fs::open_file"));
     assert!(rust_code.contains("TextFileHandle::new("));
     assert!(rust_code.contains("BinaryFileHandle::new("));
     assert!(rust_code.contains("Encoding::new(__encoding)"));

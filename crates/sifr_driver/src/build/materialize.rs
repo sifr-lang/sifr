@@ -569,7 +569,7 @@ mod tests {
             .rust
             .trust_requirements
             .push(RustInteropTrustRequirement {
-                canonical_target_path: "sifr_stdlib::html::html_escape".to_string(),
+                canonical_target_path: "::sifr_stdlib::html::html_escape".to_string(),
                 kind: RustInteropTrustRequirementKind::NativeLinks,
                 trusted: true,
                 required_entry: "ssl".to_string(),

@@ -44,7 +44,7 @@ fn test_generate_rust_multi_with_metadata_infers_fs_feature_from_private_stdlib_
             module: "_sifr.fs".to_string(),
             source_path: "stdlib/_sifr/fs.sifr".to_string(),
             source_sha256: "test".to_string(),
-            rust: "fn read_text(path: &String) -> Result<String, IOError> {\n    sifr_stdlib::fs::read_text(path).map_err(|err| IOError { message: err.to_string(), kind: err.to_string() })\n}\n".to_string(),
+            rust: "fn read_text(path: &String) -> Result<String, IOError> {\n    ::sifr_stdlib::fs::read_text(path).map_err(|err| IOError { message: err.to_string(), kind: err.to_string() })\n}\n".to_string(),
         },
     );
 
@@ -54,7 +54,7 @@ fn test_generate_rust_multi_with_metadata_infers_fs_feature_from_private_stdlib_
         .rust_files
         .get("main")
         .expect("main module should be generated")
-        .contains("sifr_stdlib::fs::read_text"));
+        .contains("::sifr_stdlib::fs::read_text"));
     assert!(result
         .required_features
         .contains(&sifr_stdlib_manifest::StdlibFeature::Fs));

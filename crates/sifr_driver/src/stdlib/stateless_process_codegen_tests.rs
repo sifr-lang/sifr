@@ -58,7 +58,7 @@ fn process_sync_private_declarations_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::process::{name}(")),
+                .contains(&format!("::sifr_stdlib::process::{name}(")),
             "{name} should lower through _sifr.process private Rust interop declarations"
         );
     }

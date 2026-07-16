@@ -6,4 +6,5 @@ mod display_impl;
 mod python_interop;
 mod rust_trait_capabilities;
 mod type_queries;
+pub use type_queries::source_class_rust_name;
 mod type_rendering;

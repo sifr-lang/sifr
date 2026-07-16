@@ -119,12 +119,54 @@ mod tests {
         assert!(!object(Some("local.Object")).is_python_object_contract());
         assert_eq!(
             object(Some("_sifr.python.Object")).rust_type(),
-            "sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>"
+            "::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>"
         );
         assert_eq!(
             object(Some("_sifr.python.Object")).union_variant_name(),
             "SifrPythonObject"
         );
         assert_eq!(object(None).rust_type(), "Object");
+    }
+
+    #[test]
+    fn canonical_file_handles_use_compiler_owned_rust_names() {
+        let handle = |name: &str, identity: &str| Type::Class {
+            identity: Some(identity.to_string()),
+            type_args: Vec::new(),
+            name: name.to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+
+        assert_eq!(
+            handle("NativeFileHandle", "_sifr.fs.NativeFileHandle").rust_type(),
+            "__SifrIoNativeFileHandle"
+        );
+        assert_eq!(
+            handle("FileHandle", "sifr.io.FileHandle").rust_type(),
+            "__SifrIoFileHandle"
+        );
+        assert_eq!(
+            handle("BinaryFileHandle", "sifr.io.BinaryFileHandle").rust_type(),
+            "__SifrIoBinaryFileHandle"
+        );
+        assert_eq!(
+            handle("TextFileHandle", "sifr.io.TextFileHandle").rust_type(),
+            "__SifrIoTextFileHandle"
+        );
+        assert_eq!(
+            handle("FileHandle", "local.FileHandle").rust_type(),
+            "FileHandle"
+        );
+        let source_internal = handle("__SifrIoFileHandle", "local.__SifrIoFileHandle");
+        assert_eq!(
+            source_internal.rust_type(),
+            "__SifrSource_5f5f53696672496f46696c6548616e646c65"
+        );
+        assert_ne!(
+            source_internal.rust_type(),
+            handle("FileHandle", "sifr.io.FileHandle").rust_type()
+        );
     }
 }

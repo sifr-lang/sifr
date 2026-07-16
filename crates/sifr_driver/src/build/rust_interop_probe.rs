@@ -386,7 +386,10 @@ fn is_python_raw_callback_probe(rust_path: &str) -> bool {
     // marker type and cannot satisfy that bound.
     matches!(
         rust_path,
-        "sifr_stdlib::python::py_local_callback" | "sifr_stdlib::python::py_threadsafe_callback"
+        "sifr_stdlib::python::py_local_callback"
+            | "sifr_stdlib::python::py_threadsafe_callback"
+            | "::sifr_stdlib::python::py_local_callback"
+            | "::sifr_stdlib::python::py_threadsafe_callback"
     )
 }
 
@@ -398,13 +401,13 @@ fn python_raw_callback_probe_source(
     out.push_str("#![allow(dead_code)]\n");
     out.push_str(&generated_bridge_type_stubs(signature));
     out.push_str(
-        "fn __sifr_sample_python_callback(\n    _arg: sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>,\n) -> Result<sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>, sifr_stdlib::python::PythonError> {\n    unreachable!()\n}\n",
+        "fn __sifr_sample_python_callback(\n    _arg: ::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>,\n) -> Result<::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>, ::sifr_stdlib::python::PythonError> {\n    unreachable!()\n}\n",
     );
     out.push_str("fn __sifr_probe() {\n    let _: ");
     out.push_str(
         &signature_return_probe_type(&signature.return_type)
             .ty
-            .replace("__SifrBridgeError", "sifr_stdlib::python::PythonError"),
+            .replace("__SifrBridgeError", "::sifr_stdlib::python::PythonError"),
     );
     out.push_str(" = ");
     out.push_str(rust_path);
@@ -717,10 +720,12 @@ mod tests {
             span: TextRange::default(),
         };
 
-        let source =
-            python_raw_callback_probe_source(&signature, "sifr_stdlib::python::py_local_callback");
+        let source = python_raw_callback_probe_source(
+            &signature,
+            "::sifr_stdlib::python::py_local_callback",
+        );
 
-        assert!(source.contains("sifr_stdlib::python::PythonError"));
+        assert!(source.contains("::sifr_stdlib::python::PythonError"));
         assert!(!source.contains("__SifrBridgeError"));
     }
 

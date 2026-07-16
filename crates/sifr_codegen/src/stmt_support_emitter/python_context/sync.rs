@@ -495,11 +495,11 @@ impl RustEmitter {
                 ),
                 arms: vec![
                     simple_arm(
-                        "Ok(sifr_runtime::python::PythonExitDecision::Suppress)",
+                        "Ok(::sifr_runtime::python::PythonExitDecision::Suppress)",
                         vec![],
                     ),
                     simple_arm(
-                        "Ok(sifr_runtime::python::PythonExitDecision::Propagate)",
+                        "Ok(::sifr_runtime::python::PythonExitDecision::Propagate)",
                         vec![return_error(error)],
                     ),
                     RustMatchArm {
@@ -569,7 +569,7 @@ impl RustEmitter {
                 name: cause.to_string(),
                 ty: None,
                 value: RustExpr::StructInit {
-                    name: "sifr_runtime::python::SifrExitCause".to_string(),
+                    name: "::sifr_runtime::python::SifrExitCause".to_string(),
                     fields: vec![
                         (
                             "kind".to_string(),
@@ -610,7 +610,7 @@ impl RustEmitter {
                 ),
                 arms: vec![
                     simple_arm(
-                        "Ok(sifr_runtime::python::PythonExitDecision::Suppress)",
+                        "Ok(::sifr_runtime::python::PythonExitDecision::Suppress)",
                         vec![RustStmt::Expr(runtime_call(
                             "record_context_ignored_suppression",
                             vec![reference(RustExpr::Literal(RustLiteral::Str(
@@ -619,7 +619,7 @@ impl RustEmitter {
                         ))],
                     ),
                     simple_arm(
-                        "Ok(sifr_runtime::python::PythonExitDecision::Propagate)",
+                        "Ok(::sifr_runtime::python::PythonExitDecision::Propagate)",
                         vec![],
                     ),
                     RustMatchArm {

@@ -68,12 +68,12 @@ fn sync_wrapper_emits_complete_owned_argument_frame() {
     let body =
         python_interop_function_body(&function, &Default::default()).expect("wrapper should lower");
     let rendered = render_stmts(&body);
-    assert!(rendered.contains("sifr_runtime::python::resolve_target"));
+    assert!(rendered.contains("::sifr_runtime::python::resolve_target"));
     assert!(rendered.contains("for __sifr_python_value_1 in rest.iter()"));
     assert!(rendered.contains("if let Some(__sifr_python_value_2) = label"));
     assert!(rendered.contains("for (__sifr_python_key_3, __sifr_python_value_3) in extra.iter()"));
-    assert!(rendered.contains("sifr_runtime::python::call_object_owned"));
-    assert!(rendered.contains("sifr_runtime::python::to_int"));
+    assert!(rendered.contains("::sifr_runtime::python::call_object_owned"));
+    assert!(rendered.contains("::sifr_runtime::python::to_int"));
 }
 
 #[test]
@@ -686,7 +686,7 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
     let generated_module = generate_rust(&module);
     assert!(
         generated_module.contains(
-            "__sifr_python_callback_failure_0: sifr_runtime::python::CallbackFailureSlot<HandlerError>"
+            "__sifr_python_callback_failure_0: ::sifr_runtime::python::CallbackFailureSlot<HandlerError>"
         ),
         "{generated_module}"
     );

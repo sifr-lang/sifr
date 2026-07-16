@@ -32,7 +32,7 @@ fn time_private_declarations_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::time::{target_name}(")),
+                .contains(&format!("::sifr_stdlib::time::{target_name}(")),
             "{decl_name} should lower through _sifr.time private Rust interop declarations"
         );
     }

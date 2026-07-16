@@ -128,7 +128,7 @@ fn stdlib_class_exports_preserve_parent_markers_and_generic_templates() {
     assert!(object.is_python_object_contract(), "{object:?}");
     assert_eq!(
         object.rust_type(),
-        "sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>"
+        "::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>"
     );
     let private_python_rust = &compiled
         .code
@@ -138,7 +138,7 @@ fn stdlib_class_exports_preserve_parent_markers_and_generic_templates() {
         .rust;
     assert!(
         private_python_rust.contains(
-            "Result<sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>, PythonError>"
+            "Result<::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>, PythonError>"
         ),
         "{private_python_rust}"
     );

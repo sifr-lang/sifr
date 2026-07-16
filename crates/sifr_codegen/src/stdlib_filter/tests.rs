@@ -324,3 +324,42 @@ fn keep_me() {}
     assert!(!prepared.stripped_code.contains("use std::sync::Mutex;"));
     assert!(prepared.stripped_code.contains("fn keep_me()"));
 }
+
+#[test]
+fn canonical_file_handle_names_are_sealed_across_declarations_and_uses() {
+    let input = r#"
+struct NativeFileHandle {}
+struct FileHandle { inner: NativeFileHandle }
+struct BinaryFileHandle { inner: NativeFileHandle }
+struct TextFileHandle { inner: BinaryFileHandle }
+impl FileHandle { fn close(&self) {} }
+fn open() -> FileHandle { FileHandle { inner: NativeFileHandle {} } }
+"#;
+
+    let sealed = seal_canonical_file_handle_names(input);
+
+    assert!(sealed.contains("struct __SifrIoNativeFileHandle"));
+    assert!(sealed.contains("struct __SifrIoFileHandle"));
+    assert!(sealed.contains("struct __SifrIoBinaryFileHandle"));
+    assert!(sealed.contains("struct __SifrIoTextFileHandle"));
+    assert!(sealed.contains("impl __SifrIoFileHandle"));
+    assert!(sealed.contains("fn open() -> __SifrIoFileHandle"));
+    assert!(!sealed.contains("struct FileHandle"));
+}
+
+#[test]
+fn external_runtime_crate_paths_are_made_absolute() {
+    let input = r#"
+use sifr_runtime::SifrInt;
+type Resource = sifr_runtime::python::PythonResourceIdentity;
+impl sifr_runtime::python::PythonResourceIdentity for Resource {}
+fn value() -> SifrInt { sifr_runtime::SifrInt::from_i64(1) }
+"#;
+
+    let absolute = absolutize_external_crate_paths(input);
+
+    assert!(absolute.contains("use ::sifr_runtime::SifrInt"));
+    assert!(absolute.contains("type Resource = ::sifr_runtime::python::PythonResourceIdentity"));
+    assert!(absolute.contains("impl ::sifr_runtime::python::PythonResourceIdentity"));
+    assert!(absolute.contains("::sifr_runtime::SifrInt::from_i64"));
+}

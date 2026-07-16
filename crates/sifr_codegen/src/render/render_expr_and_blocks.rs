@@ -141,7 +141,15 @@ impl Renderer {
         match expr {
             RustExpr::Literal(lit) => Self::render_literal(lit),
             RustExpr::Ident(name) => Self::render_identifier(name),
-            RustExpr::Path(parts) => parts.join("::"),
+            RustExpr::Path(parts) => {
+                let rendered = parts.join("::");
+                if matches!(parts.first().map(String::as_str), Some("sifr_runtime" | "sifr_stdlib"))
+                {
+                    format!("::{rendered}")
+                } else {
+                    rendered
+                }
+            }
             RustExpr::MethodCall {
                 receiver,
                 method,

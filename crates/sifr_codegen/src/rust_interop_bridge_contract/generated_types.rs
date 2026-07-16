@@ -107,7 +107,7 @@ impl GeneratedTypeCollector {
         match ty.resolve_alias() {
             Type::FixedInt(fixed) => fixed.rust_name().to_string(),
             Type::Bool => "bool".to_string(),
-            Type::Int => "sifr_runtime::interop::SifrIntBridge".to_string(),
+            Type::Int => "::sifr_runtime::interop::SifrIntBridge".to_string(),
             Type::Float => "f64".to_string(),
             Type::Str => "String".to_string(),
             Type::Bytes => "Vec<u8>".to_string(),
@@ -118,7 +118,7 @@ impl GeneratedTypeCollector {
             ),
             Type::Dict(key, value) if matches!(key.resolve_alias(), Type::Str) => {
                 format!(
-                    "sifr_runtime::interop::IndexMap<String, {}>",
+                    "::sifr_runtime::interop::IndexMap<String, {}>",
                     self.generated_field_rust_type(value, module_name, module_catalogs)
                 )
             }
@@ -262,6 +262,18 @@ pub(super) fn opaque_type_definition(
         _ => Err(format!(
             "opaque bridge type `{name}` is ambiguous across Sifr modules"
         )),
+    }
+}
+
+pub(super) fn absolute_runtime_target(target: &str) -> String {
+    let path = target.replace('.', "::");
+    if matches!(
+        target.split('.').next(),
+        Some("sifr_runtime" | "sifr_stdlib")
+    ) {
+        format!("::{path}")
+    } else {
+        path
     }
 }
 

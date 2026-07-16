@@ -1,6 +1,24 @@
 use super::{FunctionType, OwnershipKind, Type};
 use std::collections::HashSet;
 
+/// Return a collision-free Rust identifier for a source-declared class.
+///
+/// `__Sifr*` is the compiler-owned Rust namespace. Source classes remain legal
+/// with that spelling, but are injectively escaped into a disjoint namespace so
+/// generated support types never claim their identity.
+#[must_use]
+pub fn source_class_rust_name(name: &str) -> String {
+    if !name.starts_with("__Sifr") {
+        return name.to_string();
+    }
+    let mut escaped = String::from("__SifrSource_");
+    for byte in name.as_bytes() {
+        use std::fmt::Write as _;
+        let _ = write!(escaped, "{byte:02x}");
+    }
+    escaped
+}
+
 pub(super) fn parent_chain_contains(parent_class: Option<&str>, ancestor: &str) -> bool {
     parent_class.is_some_and(|chain| chain.split('|').any(|parent| parent == ancestor))
 }
@@ -665,11 +683,18 @@ impl Type {
             Self::Intersection(_) => "Box<dyn std::any::Any>".to_string(),
             Self::Alias { body, .. } => body.rust_type(),
             Self::Unknown => "Box<dyn std::any::Any>".to_string(),
-            class @ Self::Class { name, .. } => {
+            class @ Self::Class { identity, name, .. } => {
                 if class.is_python_object_contract() {
-                    "sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>".to_string()
+                    "::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>"
+                        .to_string()
                 } else {
-                    name.clone()
+                    match identity.as_deref() {
+                        Some("_sifr.fs.NativeFileHandle") => "__SifrIoNativeFileHandle".to_string(),
+                        Some("sifr.io.FileHandle") => "__SifrIoFileHandle".to_string(),
+                        Some("sifr.io.BinaryFileHandle") => "__SifrIoBinaryFileHandle".to_string(),
+                        Some("sifr.io.TextFileHandle") => "__SifrIoTextFileHandle".to_string(),
+                        _ => source_class_rust_name(name),
+                    }
                 }
             }
             Self::Result(ok, err) => format!("Result<{}, {}>", ok.rust_type(), err.rust_type()),
@@ -715,7 +740,10 @@ impl Type {
                 format!("AsyncGenerator<{}, {}>", item.rust_type(), err.rust_type())
             }
             Self::PythonBuffer(element) => {
-                format!("sifr_stdlib::python::PythonBuffer<{}>", element.rust_type())
+                format!(
+                    "::sifr_stdlib::python::PythonBuffer<{}>",
+                    element.rust_type()
+                )
             }
             Self::Protocol { name, .. } => format!("Box<dyn {name}>"),
             Self::Newtype { name, .. } => name.clone(),

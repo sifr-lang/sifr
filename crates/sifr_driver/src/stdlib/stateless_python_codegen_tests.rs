@@ -26,7 +26,7 @@ fn python_primitive_constructors_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::python::{name}(")),
+                .contains(&format!("::sifr_stdlib::python::{name}(")),
             "{name} should lower through _sifr.python private Rust interop declarations"
         );
     }
@@ -72,13 +72,13 @@ fn python_primitive_extractors_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::python::{name}(")),
+                .contains(&format!("::sifr_stdlib::python::{name}(")),
             "{name} should lower through _sifr.python private Rust interop declarations"
         );
     }
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::python::py_to_int(object)"));
+        .contains("::sifr_stdlib::python::py_to_int(object)"));
     assert!(private_code
         .rust
         .contains("__sifr_bridge_ok.to_i64_saturating()"));
@@ -102,13 +102,13 @@ fn python_object_core_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::python::{name}(")),
+                .contains(&format!("::sifr_stdlib::python::{name}(")),
             "{name} should lower through _sifr.python private Rust interop declarations"
         );
     }
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::python::py_get_attr(object, name)"));
+        .contains("::sifr_stdlib::python::py_get_attr(object, name)"));
     assert!(!private_code.rust.contains("SifrIntBridge::from(handle)"));
     assert!(!private_code.rust.contains("SifrIntBridge::from(token)"));
 }
@@ -130,7 +130,7 @@ fn python_collection_constructors_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::python::{name}(")),
+                .contains(&format!("::sifr_stdlib::python::{name}(")),
             "{name} should lower through _sifr.python private Rust interop declarations"
         );
     }
@@ -148,7 +148,7 @@ fn python_call_helpers_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::python::{name}(")),
+                .contains(&format!("::sifr_stdlib::python::{name}(")),
             "{name} should lower through _sifr.python private Rust interop declarations"
         );
     }
@@ -191,7 +191,7 @@ fn python_copy_helpers_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::python::{name}(")),
+                .contains(&format!("::sifr_stdlib::python::{name}(")),
             "{name} should lower through _sifr.python private Rust interop declarations"
         );
     }
@@ -225,7 +225,7 @@ fn python_zero_copy_helpers_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::python::{name}(")),
+                .contains(&format!("::sifr_stdlib::python::{name}(")),
             "{name} should lower through _sifr.python private Rust interop declarations"
         );
     }
@@ -271,7 +271,7 @@ fn python_context_coroutine_helpers_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::python::{name}(")),
+                .contains(&format!("::sifr_stdlib::python::{name}(")),
             "{name} should lower through _sifr.python private Rust interop declarations"
         );
     }
@@ -295,21 +295,21 @@ fn python_callback_helpers_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::python::{name}(")),
+                .contains(&format!("::sifr_stdlib::python::{name}(")),
             "{name} should lower through _sifr.python private Rust interop declarations"
         );
     }
     assert!(private_code.rust.contains("handler(&__sifr_callback_arg)"));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::python::PythonError"));
+        .contains("::sifr_stdlib::python::PythonError"));
     let compact_private: String = private_code
         .rust
         .chars()
         .filter(|ch| !ch.is_whitespace())
         .collect();
     assert!(compact_private.contains(
-        "handler:implFn(&sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>)->Result<sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>,PythonError>+Send+Sync+'static"
+        "handler:implFn(&::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>)->Result<::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>,PythonError>+Send+Sync+'static"
     ));
     assert!(!compact_private.contains("(i64,i64)"));
     let public_core_code = compiled

@@ -386,7 +386,7 @@ mod tests {
                 fields: vec![RustGeneratedBridgeField {
                     name: "line".to_string(),
                     sifr_type: "int".to_string(),
-                    rust_type: "sifr_runtime::interop::SifrIntBridge".to_string(),
+                    rust_type: "::sifr_runtime::interop::SifrIntBridge".to_string(),
                 }],
                 variants: Vec::new(),
             }],

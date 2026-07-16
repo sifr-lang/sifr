@@ -75,7 +75,7 @@ fn invalid_mode_error_expr() -> RustExpr {
 fn native_file_handle_new_expr(handle_id: RustExpr) -> RustExpr {
     RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec![
-            "NativeFileHandle".to_string(),
+            "__SifrIoNativeFileHandle".to_string(),
             "new".to_string(),
         ])),
         args: vec![handle_id],
@@ -85,7 +85,7 @@ fn native_file_handle_new_expr(handle_id: RustExpr) -> RustExpr {
 fn binary_file_handle_new_expr() -> RustExpr {
     RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec![
-            "BinaryFileHandle".to_string(),
+            "__SifrIoBinaryFileHandle".to_string(),
             "new".to_string(),
         ])),
         args: vec![
@@ -102,11 +102,11 @@ fn binary_file_handle_new_expr() -> RustExpr {
 fn success_expr() -> RustExpr {
     RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec![
-            "Ok::<TextFileHandle, IOError>".to_string()
+            "Ok::<__SifrIoTextFileHandle, IOError>".to_string(),
         ])),
         args: vec![RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec![
-                "TextFileHandle".to_string(),
+                "__SifrIoTextFileHandle".to_string(),
                 "new".to_string(),
             ])),
             args: vec![

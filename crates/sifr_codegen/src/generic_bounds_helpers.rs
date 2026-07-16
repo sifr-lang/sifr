@@ -187,10 +187,11 @@ impl RustEmitter {
             }
             Type::Alias { body, .. } => self.rust_type_with_generics(body),
             Type::Class { name, .. } => {
-                if ty.is_python_object_contract() {
-                    ty.rust_type()
-                } else {
+                let rust_name = ty.rust_type();
+                if rust_name == *name {
                     self.render_generic_class_type(name, ty)
+                } else {
+                    rust_name
                 }
             }
             Type::Failure(err) => {
@@ -716,5 +717,29 @@ impl RustEmitter {
             &mut on_expr,
         );
         mentioned
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generic_type_rendering_preserves_compiler_owned_class_names() {
+        let emitter = RustEmitter::new();
+        for (identity, expected) in [
+            ("sifr.io.FileHandle", "__SifrIoFileHandle"),
+            ("sifr.io.TextFileHandle", "__SifrIoTextFileHandle"),
+        ] {
+            let ty = Type::Class {
+                identity: Some(identity.to_string()),
+                type_args: Vec::new(),
+                name: identity.rsplit('.').next().expect("class name").to_string(),
+                fields: Vec::new(),
+                methods: Vec::new(),
+                parent_class: None,
+            };
+            assert_eq!(emitter.rust_type_with_generics(&ty), expected);
+        }
     }
 }

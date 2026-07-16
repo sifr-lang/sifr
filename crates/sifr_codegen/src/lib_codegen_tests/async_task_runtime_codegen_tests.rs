@@ -414,7 +414,7 @@ fn test_task_timeout_handle_lowers_to_private_timeout_result() {
         .contains("__SifrFailure::new(__SifrTimeoutResult::Timeout)"));
     assert!(result
         .rust_source
-        .contains("matches!(request, sifr_runtime::cancellation::CancellationRequest::Claimed)"));
+        .contains("matches!(request, ::sifr_runtime::cancellation::CancellationRequest::Claimed)"));
     assert!(result
         .rust_source
         .contains("Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value)"));

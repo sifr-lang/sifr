@@ -177,7 +177,10 @@ fn output_value_expr_with(
         });
     }
     if is_python_object(ty) {
-        return Some(RustExpr::Ident(value_name.to_string()));
+        return Some(runtime_call(
+            "__sifr_declaration_object_result",
+            vec![RustExpr::Ident(value_name.to_string())],
+        ));
     }
     if let Type::Class { name, .. } = ty.resolve_alias() {
         if let Some(opaque) = opaque_classes.get(name) {
@@ -407,7 +410,10 @@ fn input_conversion_value(
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
 ) -> Option<RustExpr> {
     if is_python_object(ty) {
-        return Some(runtime_call("temporary_argument_handle", vec![value]));
+        return Some(runtime_call(
+            "__sifr_declaration_object_argument",
+            vec![value],
+        ));
     }
     if matches!(ty.resolve_alias(), Type::Class { name, .. } if opaque_classes.contains_key(name)) {
         return Some(runtime_call(
@@ -489,7 +495,7 @@ pub(crate) fn input_conversion_borrowed(
         Type::Str | Type::Bytes => RustExpr::Ident(name.to_string()),
         _ if is_python_object(ty) => {
             return Some(runtime_call(
-                "temporary_argument_handle",
+                "__sifr_declaration_object_argument",
                 vec![RustExpr::Ident(name.to_string())],
             ));
         }

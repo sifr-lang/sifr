@@ -22,7 +22,8 @@ use crate::ir_imports::{collect_import_needs_from_items, collect_import_needs_fr
 use crate::ir_optimize::remove_trivial_clones_in_items;
 use crate::ir_validate::validate_items;
 use crate::stdlib_filter::{
-    collect_and_strip_shared_prelude, dedup_rust_items, filter_stdlib_ir_to_needed,
+    absolutize_external_crate_paths, collect_and_strip_shared_prelude, dedup_rust_items,
+    filter_stdlib_ir_to_needed, seal_canonical_file_handle_names,
 };
 use crate::stdlib_import_signatures::register_imported_stdlib_signature;
 use crate::StdlibRustSource;
@@ -373,7 +374,8 @@ pub fn generate_rust_with_stdlib_for_module(
                         .shared_needs
                         .file_handles
                         .provides_file_handle_struct;
-                    let stripped = prepared.stripped_code;
+                    let stripped = seal_canonical_file_handle_names(&prepared.stripped_code);
+                    let stripped = absolutize_external_crate_paths(&stripped);
                     if !stripped.trim().is_empty() {
                         let deduped =
                             dedup_rust_items(&stripped, &mut emitted_items, &infra_skip_types);
@@ -674,6 +676,7 @@ pub fn generate_rust_with_stdlib_for_module(
     }
     if needs_sifr_int {
         import_items.push(RustItem::Use(vec![
+            String::new(),
             "sifr_runtime".to_string(),
             "SifrInt".to_string(),
         ]));
@@ -730,8 +733,8 @@ pub fn generate_rust_with_stdlib_for_module(
         source
     };
 
-    let needs_python_runtime = rust_source.contains("sifr_stdlib::python::");
-    let needs_sifr_stdlib_fs = rust_source.contains("sifr_stdlib::fs::");
+    let needs_python_runtime = rust_source.contains("::sifr_stdlib::python::");
+    let needs_sifr_stdlib_fs = rust_source.contains("::sifr_stdlib::fs::");
 
     // Add transitive dependencies from stdlib modules
     let mut all_used_modules = emitter.used_stdlib_modules.clone();

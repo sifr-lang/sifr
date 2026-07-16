@@ -697,7 +697,7 @@ mod tests {
         assert!(rendered.contains("static __SIFR_FILE_HANDLES"));
         assert!(rendered.contains("static __SIFR_NEXT_FILE_HANDLE_ID"));
         assert!(rendered.contains("fn __sifr_next_file_handle_id() -> i64"));
-        assert!(rendered.contains("impl FileHandle"));
+        assert!(rendered.contains("impl __SifrIoFileHandle"));
         assert!(rendered.contains("fn read(&self) -> Result<String, IOError>"));
     }
 

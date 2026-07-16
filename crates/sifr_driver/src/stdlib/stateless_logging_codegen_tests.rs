@@ -18,13 +18,13 @@ fn logging_private_declarations_codegen_through_sifr_stdlib() {
     );
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::logging::set_global_level("));
+        .contains("::sifr_stdlib::logging::set_global_level("));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::logging::get_global_level().to_i64_saturating()"));
+        .contains("::sifr_stdlib::logging::get_global_level().to_i64_saturating()"));
     assert!(private_code
         .rust
-        .contains("sifr_runtime::interop::SifrIntBridge::from(level)"));
+        .contains("::sifr_runtime::interop::SifrIntBridge::from(level)"));
     assert!(compiled
         .code
         .transitive_deps

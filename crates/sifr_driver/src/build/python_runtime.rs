@@ -170,8 +170,8 @@ fn native_link_name_from_libpython(libpython: &str) -> Option<String> {
 
 pub(super) fn render_python_runtime_prelude(metadata: &PackagePythonRuntime) -> String {
     format!(
-        r#"fn __sifr_python_runtime_config() -> sifr_runtime::python::PythonRuntimeConfig {{
-    sifr_runtime::python::PythonRuntimeConfig {{
+        r#"fn __sifr_python_runtime_config() -> ::sifr_runtime::python::PythonRuntimeConfig {{
+    ::sifr_runtime::python::PythonRuntimeConfig {{
         venv_root: {venv_root}.to_string(),
         interpreter: {interpreter}.to_string(),
         executable: {executable}.to_string(),
@@ -192,9 +192,9 @@ pub(super) fn render_python_runtime_prelude(metadata: &PackagePythonRuntime) -> 
     }}
 }}
 
-fn __sifr_initialize_python_runtime() -> Result<sifr_runtime::python::PythonRuntimeGuard, sifr_runtime::python::PythonRuntimeError> {{
-    sifr_runtime::python::initialize_runtime(__sifr_python_runtime_config())?;
-    sifr_runtime::python::runtime_guard()
+fn __sifr_initialize_python_runtime() -> Result<::sifr_runtime::python::PythonRuntimeGuard, ::sifr_runtime::python::PythonRuntimeError> {{
+    ::sifr_runtime::python::initialize_runtime(__sifr_python_runtime_config())?;
+    ::sifr_runtime::python::runtime_guard()
 }}
 
 "#,
@@ -229,7 +229,7 @@ pub(super) fn inject_python_runtime_bootstrap(
     with_bootstrap.push_str(&main_rs[..insert_at]);
     let _ = write!(
         with_bootstrap,
-        "\n    let __sifr_python_runtime_guard = match __sifr_initialize_python_runtime() {{\n        Ok(__sifr_python_runtime_guard) => __sifr_python_runtime_guard,\n        Err(sifr_runtime::python::PythonRuntimeError::ReservedBridgeCollision {{ module }}) => {{\n            eprintln!(\"{collision_code}: reserved Python bridge namespace collision at '{{}}'\", module);\n            std::process::exit(1);\n        }}\n        Err(__sifr_python_runtime_error) => {{\n            eprintln!(\"Sifr Python runtime initialization failed: {{}}\", __sifr_python_runtime_error);\n            std::process::exit(1);\n        }}\n    }};\n",
+        "\n    let __sifr_python_runtime_guard = match __sifr_initialize_python_runtime() {{\n        Ok(__sifr_python_runtime_guard) => __sifr_python_runtime_guard,\n        Err(::sifr_runtime::python::PythonRuntimeError::ReservedBridgeCollision {{ module }}) => {{\n            eprintln!(\"{collision_code}: reserved Python bridge namespace collision at '{{}}'\", module);\n            std::process::exit(1);\n        }}\n        Err(__sifr_python_runtime_error) => {{\n            eprintln!(\"Sifr Python runtime initialization failed: {{}}\", __sifr_python_runtime_error);\n            std::process::exit(1);\n        }}\n    }};\n",
         collision_code = DiagnosticCode::PYIMP_RESERVED_BRIDGE_COLLISION.code(),
     );
     with_bootstrap.push_str(&main_rs[insert_at..]);
@@ -271,7 +271,7 @@ fn render_bridge_sources(values: &[EmbeddedPythonBridgeSource]) -> String {
         .iter()
         .map(|value| {
             format!(
-                "sifr_runtime::python::PythonBridgeSource {{ module: {}.to_string(), source: {}.to_string(), filename: {}.to_string(), is_package: {}, package_prefix: {}.to_string() }}",
+                "::sifr_runtime::python::PythonBridgeSource {{ module: {}.to_string(), source: {}.to_string(), filename: {}.to_string(), is_package: {}, package_prefix: {}.to_string() }}",
                 rust_string_literal(&value.module),
                 rust_string_literal(&value.source),
                 rust_string_literal(&value.filename),

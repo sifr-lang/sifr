@@ -87,7 +87,7 @@ macro_rules! stmt_expr_constructor {
             class_name, args, ..
         } = $expr
         {
-            let emitted_class_name = canonical_constructor_class_name(class_name).to_string();
+            let emitted_class_name = canonical_constructor_class_name(class_name);
             let ctor_key = format!("{emitted_class_name}::new");
             let ctor_params = $emitter
                 .func_signatures

@@ -23,36 +23,36 @@ fn crypto_private_declarations_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::random::{random_name}(")),
+                .contains(&format!("::sifr_stdlib::random::{random_name}(")),
             "{random_name} should lower through _sifr.crypto private Rust interop declarations"
         );
     }
 
-    assert!(private_code.rust.contains("sifr_stdlib::hash::sha256(s)"));
+    assert!(private_code.rust.contains("::sifr_stdlib::hash::sha256(s)"));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::hash::sha256_bytes(data)"));
+        .contains("::sifr_stdlib::hash::sha256_bytes(data)"));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::hash::blake2s_bytes(data)"));
+        .contains("::sifr_stdlib::hash::blake2s_bytes(data)"));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::base64::base64_encode(s)"));
+        .contains("::sifr_stdlib::base64::base64_encode(s)"));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::base64::base64_encode_bytes(data)"));
+        .contains("::sifr_stdlib::base64::base64_encode_bytes(data)"));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::base64::urlsafe_b64encode(s)"));
+        .contains("::sifr_stdlib::base64::urlsafe_b64encode(s)"));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::base64::urlsafe_b64encode_bytes(data)"));
+        .contains("::sifr_stdlib::base64::urlsafe_b64encode_bytes(data)"));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::base64::b32encode(s)"));
+        .contains("::sifr_stdlib::base64::b32encode(s)"));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::base64::b32hexencode(s)"));
+        .contains("::sifr_stdlib::base64::b32hexencode(s)"));
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));

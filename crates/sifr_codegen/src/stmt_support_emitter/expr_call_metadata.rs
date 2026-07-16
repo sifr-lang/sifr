@@ -1,7 +1,7 @@
 use super::{HirExpr, HirIteratorOp, RustExpr, RustStmt, Type};
 
-pub(crate) fn canonical_constructor_class_name(class_name: &str) -> &str {
-    class_name
+pub(crate) fn canonical_constructor_class_name(class_name: &str) -> String {
+    sifr_type_system::source_class_rust_name(class_name)
 }
 
 pub(crate) fn canonical_plain_call_name_for_ir(func: &str) -> &str {
