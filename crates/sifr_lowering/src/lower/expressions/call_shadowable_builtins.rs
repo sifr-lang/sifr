@@ -6,6 +6,24 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::CompilerIntrinsicId;
 use sifr_python_ast::Expr;
 
+const TEXT_FILE_HANDLE_IDENTITY: &str = "sifr.io.TextFileHandle";
+const FILE_HANDLE_IDENTITY: &str = "sifr.io.FileHandle";
+
+fn class_type_with_identity(ctx: &LowerCtx, identity: &str) -> Option<Type> {
+    ctx.class_types
+        .values()
+        .find(|candidate| {
+            matches!(
+                candidate.resolve_alias(),
+                Type::Class {
+                    identity: Some(candidate_identity),
+                    ..
+                } if candidate_identity == identity
+            )
+        })
+        .cloned()
+}
+
 fn string_literal_value(expr: &Expr) -> Option<String> {
     match expr {
         Expr::StringLiteral(literal) => Some(literal.value.to_str().to_string()),
@@ -199,7 +217,7 @@ pub(super) fn lower_shadowable_builtin_call(
                 parent_class: None,
             };
             let text_handle_ty = Type::Class {
-                identity: None,
+                identity: Some(TEXT_FILE_HANDLE_IDENTITY.to_string()),
                 type_args: Vec::new(),
                 name: "TextFileHandle".to_string(),
                 fields: vec![],
@@ -227,7 +245,7 @@ pub(super) fn lower_shadowable_builtin_call(
                         FunctionType::all_borrow(
                             vec![],
                             Type::Class {
-                                identity: None,
+                                identity: Some(TEXT_FILE_HANDLE_IDENTITY.to_string()),
                                 type_args: Vec::new(),
                                 name: "TextFileHandle".to_string(),
                                 fields: vec![],
@@ -243,17 +261,11 @@ pub(super) fn lower_shadowable_builtin_call(
                 ],
                 parent_class: None,
             };
-            // Preserve the canonical identity of an explicitly imported stdlib handle.
-            // The compiler-special `open()` fallback is only needed when the source has
-            // not imported the public handle declaration.
-            let text_handle_ty = ctx
-                .class_types
-                .get("TextFileHandle")
-                .cloned()
-                .unwrap_or(text_handle_ty);
-            ctx.class_types
-                .entry("TextFileHandle".to_string())
-                .or_insert_with(|| text_handle_ty.clone());
+            // Preserve an explicitly imported stdlib handle even when it is aliased.
+            // A local same-basename class is a distinct declaration and must never be
+            // selected for the compiler-special `open()` result.
+            let text_handle_ty =
+                class_type_with_identity(ctx, TEXT_FILE_HANDLE_IDENTITY).unwrap_or(text_handle_ty);
             ctx.try_block_error_types.insert("IOError".to_string());
             return Some(CallLowering::Lowered(HirExpr::IntrinsicCall {
                 intrinsic: CompilerIntrinsicId::OpenText,
@@ -285,7 +297,7 @@ pub(super) fn lower_shadowable_builtin_call(
             parent_class: None,
         };
         let file_handle_ty = Type::Class {
-            identity: None,
+            identity: Some(FILE_HANDLE_IDENTITY.to_string()),
             type_args: Vec::new(),
             name: "FileHandle".to_string(),
             fields: vec![
@@ -350,7 +362,7 @@ pub(super) fn lower_shadowable_builtin_call(
                     FunctionType::all_borrow(
                         vec![],
                         Type::Class {
-                            identity: None,
+                            identity: Some(FILE_HANDLE_IDENTITY.to_string()),
                             type_args: Vec::new(),
                             name: "FileHandle".to_string(),
                             fields: vec![
@@ -369,15 +381,8 @@ pub(super) fn lower_shadowable_builtin_call(
             ],
             parent_class: None,
         };
-        // Register FileHandle in the class types so method calls work
-        let file_handle_ty = ctx
-            .class_types
-            .get("FileHandle")
-            .cloned()
-            .unwrap_or(file_handle_ty);
-        ctx.class_types
-            .entry("FileHandle".to_string())
-            .or_insert_with(|| file_handle_ty.clone());
+        let file_handle_ty =
+            class_type_with_identity(ctx, FILE_HANDLE_IDENTITY).unwrap_or(file_handle_ty);
         // Register IOError as a possible exception from this call
         ctx.try_block_error_types.insert("IOError".to_string());
         return Some(CallLowering::Lowered(HirExpr::IntrinsicCall {

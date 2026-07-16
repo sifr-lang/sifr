@@ -255,9 +255,10 @@ The raw-object row applies only to the compiler-owned declaration identity
 originating at `_sifr.python.Object` and publicly re-exported as
 `sifr.python.Object`. Basename equality is not identity: a user record named
 `Object` follows the closed-record conversion rules and cannot enter sealed
-handle conversion or Python-identity ownership analysis. Generated Rust names
-the compiler-owned handle `__SifrPythonObject`, keeping that infrastructure
-type distinct from a valid user record named `Object`.
+handle conversion or Python-identity ownership analysis. Generated Rust writes
+the compiler-owned handle as the fully qualified
+`sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>` type and
+emits no source-spellable alias into the flat user namespace.
 
 Unsupported unions, unconstrained generics, iterators, generators, arbitrary
 mapping keys, callables without a callback contract, and Python `Any` are

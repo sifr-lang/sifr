@@ -124,7 +124,7 @@ fn emitted_direct_result_none_interop_does_not_append_ok_tail() {
 }
 
 #[test]
-fn emitted_opaque_class_is_a_sealed_runtime_handle_alias() {
+fn emitted_python_object_class_does_not_claim_a_source_spellable_rust_name() {
     let mut object = zip_error_class();
     object.name = "Object".to_string();
     object.fields.clear();
@@ -162,9 +162,8 @@ fn emitted_opaque_class_is_a_sealed_runtime_handle_alias() {
 
     let generated = generate_rust_with_metadata(&module).rust_source;
 
-    assert!(generated.contains(
-        "type __SifrPythonObject = sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>;"
-    ));
+    assert!(!generated.contains("type __SifrPythonObject"));
+    assert!(!generated.contains("type Object"));
     assert!(!generated.contains("struct Object"));
 }
 

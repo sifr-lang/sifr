@@ -20,9 +20,9 @@ PR #2988 is merged. M10 Wave 3 evidence, demo, and documentation closure is
 implemented and locally validated; whole-diff review pass 6 is satisfied and
 the authoritative create-PR gate passes, and PR #2989 is merged. The complete
 merged M10 implementation is undergoing its required milestone review. Review
-pass 7 found three remaining generated-name and check/build parity gaps; their
-remediation is implemented and the authoritative create-PR gate passes in PR
-#2990, with a fresh full re-review pending. Typed
+pass 8 found two remaining generated-name and canonical-identity parity gaps;
+their remediation is implemented in PR #2990 and the repeated authoritative
+create-PR gate passes, with a fresh full re-review pending. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1396,9 +1396,9 @@ Delivery waves:
   flat generated Rust; and callback error unions could contain distinct
   same-basename members that emitted duplicate variants. Async conversion and
   context classification now use the shared canonical predicates. The sealed
-  handle emits as collision-proof `__SifrPythonObject` while source-level local
-  `Object` records retain record conversion, and a native package-build
-  regression compiles synchronous and coroutine declarations together.
+  handle initially emitted as `__SifrPythonObject` while source-level local
+  `Object` records retained record conversion, and a native package-build
+  regression compiled synchronous and coroutine declarations together.
   Callback lowering rejects duplicate generated variant names before codegen,
   with lowering and driver check/compile parity coverage. The first
   authoritative gate exposed one additional strict-identity mismatch where the
@@ -1410,6 +1410,23 @@ Delivery waves:
   lane in `629.99s`: Python interop `12/12`, runtime platform `28` variants with
   one capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `41/42` cache hits. The warm-time notice is a
+  non-blocking advisory after the requested clean rebuild. Full
+  [review pass 8](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-8.md)
+  confirmed the prior identity and error-union fixes, then showed that
+  `__SifrPythonObject` itself remained a legal user class name and that
+  compiler-special `open()` still resolved text and binary handles through
+  basename keys. Canonical Python `Object` now renders directly as the fully
+  qualified runtime handle and emits no alias into the user's flat Rust
+  namespace; the native package regression includes the reviewer's exact
+  `class __SifrPythonObject` collision. Text and binary opens now select
+  imported handles by canonical `sifr.io` identity across aliases, synthesize
+  the same canonical identity when unimported, and reject local same-basename
+  shadows. Focused type-system, lowering, codegen, stdlib-bootstrap, native
+  package, aliased-open native build, and shadow-rejection regressions pass. The
+  repeated authoritative create-PR gate passes every blocking lane in
+  `822.00s`: Python interop `12/12`, runtime platform `28` variants with one
+  capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `42/42` cache hits. Its warm wall-time notice is a
   non-blocking advisory after the requested clean rebuild. A fresh complete M10
   re-review remains pending.
 

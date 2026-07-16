@@ -126,7 +126,10 @@ fn stdlib_class_exports_preserve_parent_markers_and_generic_templates() {
         panic!("py_from_none should return Result");
     };
     assert!(object.is_python_object_contract(), "{object:?}");
-    assert_eq!(object.rust_type(), "__SifrPythonObject");
+    assert_eq!(
+        object.rust_type(),
+        "sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>"
+    );
     let private_python_rust = &compiled
         .code
         .module_rust_code
@@ -134,7 +137,9 @@ fn stdlib_class_exports_preserve_parent_markers_and_generic_templates() {
         .expect("private Python module should have generated Rust")
         .rust;
     assert!(
-        private_python_rust.contains("Result<__SifrPythonObject, PythonError>"),
+        private_python_rust.contains(
+            "Result<sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>, PythonError>"
+        ),
         "{private_python_rust}"
     );
 }

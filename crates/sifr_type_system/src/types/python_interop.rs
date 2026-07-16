@@ -119,7 +119,7 @@ mod tests {
         assert!(!object(Some("local.Object")).is_python_object_contract());
         assert_eq!(
             object(Some("_sifr.python.Object")).rust_type(),
-            "__SifrPythonObject"
+            "sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>"
         );
         assert_eq!(
             object(Some("_sifr.python.Object")).union_variant_name(),

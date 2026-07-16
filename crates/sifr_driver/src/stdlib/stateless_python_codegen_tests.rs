@@ -308,8 +308,9 @@ fn python_callback_helpers_codegen_through_sifr_stdlib() {
         .chars()
         .filter(|ch| !ch.is_whitespace())
         .collect();
-    assert!(compact_private
-        .contains("handler:implFn(&__SifrPythonObject)->Result<__SifrPythonObject,PythonError>+Send+Sync+'static"));
+    assert!(compact_private.contains(
+        "handler:implFn(&sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>)->Result<sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>,PythonError>+Send+Sync+'static"
+    ));
     assert!(!compact_private.contains("(i64,i64)"));
     let public_core_code = compiled
         .code

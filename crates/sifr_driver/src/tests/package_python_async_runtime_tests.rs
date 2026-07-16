@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
-fn local_object_record_builds_beside_the_sealed_python_handle() {
+fn source_spellable_object_names_build_beside_the_sealed_python_handle() {
     let dir = mktemp_dir("package_python_local_object_collision");
     let app = production_package(&dir, "app", "sifr-object-app", "object_app");
     write_package_source(
@@ -11,6 +11,9 @@ fn local_object_record_builds_beside_the_sealed_python_handle() {
         r#"from sifr.python import PythonError
 
 class Object:
+    value: int
+
+class __SifrPythonObject:
     value: int
 
 @python(builtins.id)
@@ -35,7 +38,7 @@ async def main() -> Result[None, PythonError]:
         package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
     entrypoint.python_runtime = Some(local_python_runtime(&app.root));
     let artifact = build_cached_package_project(&entrypoint)
-        .expect("local Object and sealed Python handle should build with distinct Rust names");
+        .expect("source-spellable classes and the sealed Python handle should not collide");
 
     assert!(artifact.binary_path().exists());
     let _ignored = std::fs::remove_dir_all(dir);

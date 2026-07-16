@@ -398,7 +398,7 @@ fn python_raw_callback_probe_source(
     out.push_str("#![allow(dead_code)]\n");
     out.push_str(&generated_bridge_type_stubs(signature));
     out.push_str(
-        "type __SifrPythonObject = sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>;\nfn __sifr_sample_python_callback(\n    _arg: __SifrPythonObject,\n) -> Result<__SifrPythonObject, sifr_stdlib::python::PythonError> {\n    unreachable!()\n}\n",
+        "fn __sifr_sample_python_callback(\n    _arg: sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>,\n) -> Result<sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>, sifr_stdlib::python::PythonError> {\n    unreachable!()\n}\n",
     );
     out.push_str("fn __sifr_probe() {\n    let _: ");
     out.push_str(

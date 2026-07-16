@@ -667,7 +667,7 @@ impl Type {
             Self::Unknown => "Box<dyn std::any::Any>".to_string(),
             class @ Self::Class { name, .. } => {
                 if class.is_python_object_contract() {
-                    "__SifrPythonObject".to_string()
+                    "sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>".to_string()
                 } else {
                     name.clone()
                 }

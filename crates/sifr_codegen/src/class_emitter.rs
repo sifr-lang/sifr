@@ -678,12 +678,14 @@ impl RustEmitter {
             return;
         }
         if let Some(target) = opaque_rust_type_path(class) {
+            if target == "sifr_runtime.python.ForeignObject" {
+                // The canonical Python Object is represented directly by its runtime
+                // handle type. Emitting a compiler-owned alias here would place a
+                // source-spellable name in the user's flat Rust namespace.
+                return;
+            }
             self.body_items.push(RustItem::TypeAlias {
-                name: if target == "sifr_runtime.python.ForeignObject" {
-                    "__SifrPythonObject".to_string()
-                } else {
-                    class.name.clone()
-                },
+                name: class.name.clone(),
                 ty: RustType::Named(format!(
                     "sifr_runtime::interop::Handle<{}>",
                     target.replace('.', "::")
