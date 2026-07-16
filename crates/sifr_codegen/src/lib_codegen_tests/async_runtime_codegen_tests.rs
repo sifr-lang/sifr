@@ -14,7 +14,7 @@ fn test_task_timeout_context_manager_wraps_awaits() {
         .module,
     );
 
-    assert!(result.rust_source.contains("match tokio::time::timeout"));
+    assert!(result.rust_source.contains("match ::tokio::time::timeout"));
     assert!(result.rust_source.contains("return Err(TimeoutError::new"));
     assert!(result.rust_source.contains("struct TimeoutError"));
     assert!(result

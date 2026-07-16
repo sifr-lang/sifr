@@ -692,7 +692,7 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
     );
     assert!(
         generated_module
-            .contains("__sifr_python_not_send_sync: std::marker::PhantomData<std::rc::Rc<()>>"),
+            .contains("__sifr_python_not_send_sync: ::std::marker::PhantomData<::std::rc::Rc<()>>"),
         "{generated_module}"
     );
     assert!(

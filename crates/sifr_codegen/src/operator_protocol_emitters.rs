@@ -3,7 +3,7 @@ use crate::{
     RustItem, RustParam, RustStmt, RustType, ScopeContext, Visibility,
 };
 use sifr_ir::{HirClass, HirExpr, HirFunction, HirModule, HirStmt};
-use sifr_type_system::Type;
+use sifr_type_system::{source_class_rust_name, Type};
 use std::collections::{HashMap, HashSet};
 
 type OperatorBounds = HashMap<String, HashSet<String>>;
@@ -397,7 +397,7 @@ impl RustEmitter {
                 }
                 let delegated_call = RustExpr::FnCall {
                     func: Box::new(RustExpr::Path(vec![
-                        class.name.clone(),
+                        source_class_rust_name(&class.name),
                         method.name.clone(),
                     ])),
                     args: call_args,
@@ -423,9 +423,9 @@ impl RustEmitter {
 
             if !impl_items.is_empty() {
                 self.body_items.push(RustItem::Impl {
-                    target: class.name.clone(),
+                    target: source_class_rust_name(&class.name),
                     type_params: Vec::new(),
-                    trait_: Some(proto_name.clone()),
+                    trait_: Some(source_class_rust_name(proto_name)),
                     items: impl_items,
                 });
             }

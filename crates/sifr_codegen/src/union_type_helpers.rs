@@ -264,11 +264,9 @@ mod tests {
 
     #[test]
     fn affine_union_uses_debug_without_clone_or_display_bounds() {
-        let members = vec![
-            Type::None,
-            Type::Int,
-            Type::PythonBuffer(Box::new(Type::FixedInt(sifr_type_system::FixedIntType::U8))),
-        ];
+        let buffer =
+            Type::PythonBuffer(Box::new(Type::FixedInt(sifr_type_system::FixedIntType::U8)));
+        let members = vec![Type::None, Type::Int, buffer.clone()];
         let mut emitter = RustEmitter::new();
         emitter.register_union_type(&Type::Union(members));
         emitter.generate_enum_definitions();
@@ -278,10 +276,10 @@ mod tests {
         };
         assert_eq!(derives, &["Debug"]);
         let rendered = crate::render::render_items(&emitter.enum_items);
-        assert!(rendered.contains("PythonBuffer(v) =>"));
+        assert!(rendered.contains(&format!("{}(v) =>", buffer.union_variant_name())));
         assert!(rendered.contains("write!(f, \"{:?}\", v)"));
         let none_arm = rendered
-            .split("None(v) =>")
+            .split(&format!("{}(v) =>", Type::None.union_variant_name()))
             .nth(1)
             .expect("None union arm should be rendered");
         assert!(none_arm[..none_arm.len().min(120)].contains("write!(f, \"{:?}\", v)"));
@@ -289,8 +287,9 @@ mod tests {
 
     #[test]
     fn equality_capable_union_derives_the_required_rust_traits() {
+        let union = Type::Union(vec![Type::Int, Type::Str]);
         let mut emitter = RustEmitter::new();
-        emitter.register_union_type(&Type::Union(vec![Type::Int, Type::Str]));
+        emitter.register_union_type(&union);
         emitter.generate_enum_definitions();
 
         let RustItem::Enum { derives, .. } = &emitter.enum_items[0] else {
@@ -298,7 +297,10 @@ mod tests {
         };
         assert_eq!(derives, &["Debug", "Clone", "PartialEq", "Eq", "Hash"]);
         let rendered = crate::render::render_items(&emitter.enum_items);
-        assert!(rendered.contains("impl std::fmt::Display for IntOrStr"));
+        assert!(rendered.contains(&format!(
+            "impl ::std::fmt::Display for {}",
+            union.union_enum_name()
+        )));
     }
 
     #[test]

@@ -29,11 +29,11 @@ def show_child(value: Child) -> str:
         "{rust_code}"
     );
     assert!(
-        rust_code.contains("impl<T: std::fmt::Display> std::fmt::Display for Box<T>"),
+        rust_code.contains("impl<T: ::std::fmt::Display> ::std::fmt::Display for Box<T>"),
         "{rust_code}"
     );
     assert!(
-        rust_code.contains("impl std::fmt::Display for Child"),
+        rust_code.contains("impl ::std::fmt::Display for Child"),
         "{rust_code}"
     );
     assert!(rust_code.contains("Child(parent={})"), "{rust_code}");
@@ -127,7 +127,7 @@ class Math[T]:
         "{rust_code}"
     );
     assert!(
-        rust_code.contains("impl<T: Clone + std::ops::Mul<Output = T>> Math<T>"),
+        rust_code.contains("impl<T: Clone + ::std::ops::Mul<Output = T>> Math<T>"),
         "{rust_code}"
     );
     assert!(rust_code.contains("self.value.clone() * other.clone()"));
@@ -175,7 +175,7 @@ class NegBox[T]:
     assert!(!rust_code.contains("self.first.partial_cmp"), "{rust_code}");
     assert!(
         rust_code
-            .contains("impl<T: Clone + std::ops::Neg<Output = T>> std::ops::Neg for NegBox<T>"),
+            .contains("impl<T: Clone + ::std::ops::Neg<Output = T>> ::std::ops::Neg for NegBox<T>"),
         "{rust_code}"
     );
 }
@@ -224,7 +224,7 @@ class Ordered[T]:
     );
     assert!(
         rust_code
-            .contains("impl<T: Clone + std::ops::Neg<Output = T>> std::ops::Neg for NegBox<T>"),
+            .contains("impl<T: Clone + ::std::ops::Neg<Output = T>> ::std::ops::Neg for NegBox<T>"),
         "{rust_code}"
     );
     assert!(

@@ -565,11 +565,11 @@ pub(in crate::lower) fn validate_python_interop_signature(
             declaration.span,
         );
     } else if !declaration.callbacks.is_empty() {
-        if let Some(name) = callbacks::error_channel_codegen_name_collision(error_type) {
+        if let Some(name) = callbacks::error_channel_codegen_payload_collision(error_type) {
             callbacks::invalid(
                 ctx,
                 &format!(
-                    "the enclosing declaration error channel contains multiple members that map to generated variant `{name}`"
+                    "the enclosing declaration error channel contains multiple members with generated payload type `{name}`"
                 ),
                 declaration.span,
             );

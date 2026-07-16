@@ -685,7 +685,7 @@ mod tests {
         let rendered = render_items(&items);
         assert!(rendered.contains("struct RegexError"));
         assert!(rendered.contains("fn new(message: String) -> Self"));
-        assert!(rendered.contains("impl std::error::Error for RegexError"));
+        assert!(rendered.contains("impl ::std::error::Error for RegexError"));
     }
 
     #[test]

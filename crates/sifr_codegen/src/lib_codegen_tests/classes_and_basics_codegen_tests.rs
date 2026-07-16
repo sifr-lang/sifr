@@ -184,7 +184,7 @@ fn test_class_to_string_method_does_not_emit_generated_allow() {
     let rust_code = generate_rust(&module);
     assert!(!rust_code.contains("#[allow(clippy::inherent_to_string_shadow_display)]"));
     assert!(rust_code.contains("impl LocaleId"));
-    assert!(rust_code.contains("impl std::fmt::Display for LocaleId"));
+    assert!(rust_code.contains("impl ::std::fmt::Display for LocaleId"));
 }
 
 #[test]
@@ -871,7 +871,7 @@ fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
         "support-module functions should be exported"
     );
     assert!(
-        helper_rs.contains("impl std::fmt::Display for TOMLDecodeError"),
+        helper_rs.contains("impl ::std::fmt::Display for TOMLDecodeError"),
         "stdlib trait impls should be preserved in publicized helper modules"
     );
     assert!(

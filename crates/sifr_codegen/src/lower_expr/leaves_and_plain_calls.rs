@@ -156,7 +156,10 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         }
         HirExpr::EnumVariant {
             enum_name, variant, ..
-        } => Some(RustExpr::Path(vec![enum_name.clone(), variant.clone()])),
+        } => Some(RustExpr::Path(vec![
+            sifr_type_system::source_class_rust_name(enum_name),
+            variant.clone(),
+        ])),
         HirExpr::UnaryOp { op, operand, .. } => match op.as_str() {
             "-" => Some(RustExpr::UnaryOp {
                 op: "-".to_string(),

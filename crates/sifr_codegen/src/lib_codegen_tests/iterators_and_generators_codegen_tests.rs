@@ -482,11 +482,11 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
     let result = generate_rust_test(&module);
     assert!(result
         .rust_source
-        .contains("use std::collections::HashMap;"));
+        .contains("use ::std::collections::HashMap;"));
     assert!(result
         .rust_source
-        .contains("use std::collections::HashSet;"));
-    assert!(result.rust_source.contains("use num_bigint::BigInt;"));
+        .contains("use ::std::collections::HashSet;"));
+    assert!(result.rust_source.contains("use ::num_bigint::BigInt;"));
     assert!(result
         .required_features
         .contains(&sifr_stdlib_manifest::StdlibFeature::NumBigint));

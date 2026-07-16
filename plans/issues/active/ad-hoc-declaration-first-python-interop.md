@@ -20,9 +20,9 @@ PR #2988 is merged. M10 Wave 3 evidence, demo, and documentation closure is
 implemented and locally validated; whole-diff review pass 6 is satisfied and
 the authoritative create-PR gate passes, and PR #2989 is merged. The complete
 merged M10 implementation is undergoing its required milestone review. Review
-pass 8 found two remaining generated-name and canonical-identity parity gaps;
-their remediation is implemented in PR #2990 and the repeated authoritative
-create-PR gate passes, with a fresh full re-review pending. Typed
+pass 10 found the remaining source-name, external-path-root, and generated-union
+collision gaps; their remediation is implemented in PR #2990 and the repeated
+authoritative create-PR gate passes, with a fresh full re-review pending. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1454,8 +1454,28 @@ Delivery waves:
   authoritative create-PR gate passes every blocking lane in `657.69s`: Python
   interop `12/12`, runtime platform `28` variants with one capability-gated
   skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache
-  hits. Its warm wall-time notice is a non-blocking advisory; the fresh complete
-  re-review remains pending.
+  hits. Its warm wall-time notice is a non-blocking advisory. Full
+  [review pass 10](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-10.md)
+  then reproduced three remaining generated-Rust collision families: source
+  newtypes, enums, and protocols named with compiler prefixes; local `std`
+  classes capturing compiler-owned relative paths; and source classes colliding
+  with display-derived union enums or variants. One shared injective source-name
+  renderer now covers every nominal definition and reference. Token-aware Rust
+  rendering absolutizes compiler-owned standard-library and external-crate
+  roots without rewriting strings, character literals, raw strings, or
+  comments. Compiler-owned union enums and variants now use exact structural
+  identities derived from emitted nominal names, so canonicalized and local
+  views of the same Rust payload agree while source aliases remain distinct.
+  The native collision package covers regular classes, newtypes, enums,
+  protocols, `class std`, source-spellable compiler prefixes, and adversarial
+  unions. A clean create-PR E2E run exposed and fixed the canonical/local
+  `JsonValue` union split; the focused rerun passes `131/131` with only that
+  group rebuilt. After the requested `cargo clean`, the final authoritative
+  create-PR gate passes every blocking lane in `605.42s`: Python interop
+  `12/12`, runtime platform `28` variants with one capability-gated skip, and
+  E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache hits. The
+  warm wall-time notice is a non-blocking advisory; a fresh complete re-review
+  remains pending.
 
 Acceptance:
 

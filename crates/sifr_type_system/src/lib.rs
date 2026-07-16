@@ -22,6 +22,7 @@ pub use infer::infer_literal_type;
 pub use types::{
     source_class_rust_name, FixedIntType, FunctionType, IterationCapability, IterationMetadata,
     OwnershipKind, ParamConvention, ParamMutability, ParamOwnership, Type,
+    COMPILER_RUST_PATH_ROOTS,
 };
 pub mod narrow;
 pub use literal::{widen as widen_literal, LiteralValue};

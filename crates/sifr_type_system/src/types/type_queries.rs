@@ -1,23 +1,5 @@
-use super::{FunctionType, OwnershipKind, Type};
+use super::{source_class_rust_name, FunctionType, OwnershipKind, Type};
 use std::collections::HashSet;
-
-/// Return a collision-free Rust identifier for a source-declared class.
-///
-/// `__Sifr*` is the compiler-owned Rust namespace. Source classes remain legal
-/// with that spelling, but are injectively escaped into a disjoint namespace so
-/// generated support types never claim their identity.
-#[must_use]
-pub fn source_class_rust_name(name: &str) -> String {
-    if !name.starts_with("__Sifr") {
-        return name.to_string();
-    }
-    let mut escaped = String::from("__SifrSource_");
-    for byte in name.as_bytes() {
-        use std::fmt::Write as _;
-        let _ = write!(escaped, "{byte:02x}");
-    }
-    escaped
-}
 
 pub(super) fn parent_chain_contains(parent_class: Option<&str>, ancestor: &str) -> bool {
     parent_class.is_some_and(|chain| chain.split('|').any(|parent| parent == ancestor))
@@ -745,10 +727,12 @@ impl Type {
                     element.rust_type()
                 )
             }
-            Self::Protocol { name, .. } => format!("Box<dyn {name}>"),
-            Self::Newtype { name, .. } => name.clone(),
+            Self::Protocol { name, .. } => {
+                format!("Box<dyn {}>", source_class_rust_name(name))
+            }
+            Self::Newtype { name, .. } => source_class_rust_name(name),
             Self::TypeVar(name) => name.clone(), // Generic type parameter name (e.g., T)
-            Self::Enum { name, .. } => name.clone(), // Enum type maps to its Rust enum name
+            Self::Enum { name, .. } => source_class_rust_name(name),
             Self::BigInt => "BigInt".to_string(),
             Self::Decimal => "Decimal".to_string(),
             Self::BigDecimal => "BigDecimal".to_string(),
@@ -839,27 +823,6 @@ impl Type {
             }
             _ => self.rust_type(),
         }
-    }
-
-    /// Generate a Rust enum name for a union type.
-    ///
-    /// E.g., `int | str` -> `IntOrStr`, `int | str | bool` -> `IntOrStrOrBool`
-    pub fn union_enum_name(&self) -> String {
-        match self {
-            Self::Union(members) => {
-                let parts: Vec<String> = members
-                    .iter()
-                    .map(Self::type_to_enum_variant_prefix)
-                    .collect();
-                parts.join("Or")
-            }
-            _ => self.rust_type(),
-        }
-    }
-
-    /// Get the enum variant name for a type when it appears in a union enum.
-    pub fn union_variant_name(&self) -> String {
-        Self::type_to_enum_variant_prefix(self)
     }
 }
 

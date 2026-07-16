@@ -121,10 +121,10 @@ mod tests {
             object(Some("_sifr.python.Object")).rust_type(),
             "::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>"
         );
-        assert_eq!(
-            object(Some("_sifr.python.Object")).union_variant_name(),
-            "SifrPythonObject"
-        );
+        let canonical = object(Some("_sifr.python.Object")).union_variant_name();
+        let local = object(None).union_variant_name();
+        assert!(canonical.starts_with("__SifrUnionVariant_"));
+        assert_ne!(canonical, local);
         assert_eq!(object(None).rust_type(), "Object");
     }
 

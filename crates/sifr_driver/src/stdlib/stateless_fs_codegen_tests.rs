@@ -61,7 +61,7 @@ fn fs_private_declarations_codegen_through_sifr_stdlib() {
     }
     assert!(private_code
         .rust
-        .contains("fn __io_err<E: std::fmt::Display + 'static>"));
+        .contains("fn __io_err<E: ::std::fmt::Display + 'static>"));
     assert!(private_code
         .rust
         .contains(".map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))"));

@@ -97,7 +97,7 @@ def compute(handler: Callable[[int], int]) -> Result[int, PythonError]: ...
 }
 
 #[test]
-fn callback_declaration_rejects_colliding_error_union_variants() {
+fn callback_declaration_rejects_colliding_error_union_payloads() {
     let source = r"
 from typing import Callable
 from sifr.python import PythonError as CanonicalError
@@ -132,7 +132,7 @@ def compute(
     externals.error_types.insert("PythonError".to_string());
     let parsed = parse_module(source).expect("source should parse");
     let errors = match crate::lower_module_with_externals(parsed.suite(), &externals) {
-        Ok(_) => panic!("colliding callback error variants should fail"),
+        Ok(_) => panic!("colliding callback error payloads should fail"),
         Err(errors) => errors,
     };
     assert!(
@@ -140,7 +140,7 @@ def compute(
             error.code == Some(DiagnosticCode::PYCB_INVALID_DECLARATION)
                 && error
                     .message
-                    .contains("multiple members that map to generated variant `PythonError`")
+                    .contains("multiple members with generated payload type `PythonError`")
         }),
         "{errors:?}"
     );

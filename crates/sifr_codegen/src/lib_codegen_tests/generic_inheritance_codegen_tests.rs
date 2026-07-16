@@ -15,7 +15,7 @@ def main():
     );
 
     assert!(rust_code.contains("struct Marker<T>"));
-    assert!(rust_code.contains("__sifr_type_marker: std::marker::PhantomData<fn() -> (T,)>"));
+    assert!(rust_code.contains("__sifr_type_marker: ::std::marker::PhantomData<fn() -> (T,)>"));
     assert!(rust_code.contains("let marker: Marker<i64> = make();"));
 }
 
@@ -41,11 +41,13 @@ def as_result(own value: Child) -> Result[Root, ValueError]:
     );
 
     assert!(
-        rust_code.contains("IntOrRoot::Root(std::convert::Into::<Root>::into(value))"),
+        rust_code.contains("(::std::convert::Into::<Root>::into(value))"),
         "{rust_code}"
     );
+    assert!(rust_code.contains("__SifrUnion_"), "{rust_code}");
+    assert!(rust_code.contains("::__SifrUnionVariant_"), "{rust_code}");
     assert!(
-        rust_code.contains("Ok(std::convert::Into::<Root>::into(value))"),
+        rust_code.contains("Ok(::std::convert::Into::<Root>::into(value))"),
         "{rust_code}"
     );
 }
@@ -88,21 +90,21 @@ def main():
     );
 
     assert!(rust_code.contains("match make_union()"), "{rust_code}");
+    assert!(rust_code.contains("(__sifr_union_value) =>"), "{rust_code}");
     assert!(
-        rust_code.contains("IntOrChild::Child(__sifr_union_value) =>"),
+        rust_code.contains("(::std::convert::Into::<Root>::into(__sifr_union_value))"),
         "{rust_code}"
     );
     assert!(
-        rust_code.contains("IntOrRoot::Root(std::convert::Into::<Root>::into(__sifr_union_value))"),
+        rust_code.contains("(make_result()).map(|__sifr_ok_value| ::std::convert::Into::<Root>::into(__sifr_ok_value))"),
         "{rust_code}"
     );
     assert!(
-        rust_code.contains("(make_result()).map(|__sifr_ok_value| std::convert::Into::<Root>::into(__sifr_ok_value))"),
+        rust_code.contains("consume_union(__SifrUnion_"),
         "{rust_code}"
     );
     assert!(
-        rust_code
-            .contains("consume_union(IntOrRoot::Root(std::convert::Into::<Root>::into(Child::new"),
+        rust_code.contains("(::std::convert::Into::<Root>::into(Child::new"),
         "{rust_code}"
     );
 }
@@ -140,8 +142,8 @@ def main():
 "#,
     );
 
-    assert!(rust_code.contains("impl std::convert::From<Child> for Mid"));
-    assert!(rust_code.contains("impl std::convert::From<Mid> for Root"));
-    let transitive = "std::convert::Into::<Root>::into(std::convert::Into::<Mid>::into";
+    assert!(rust_code.contains("impl ::std::convert::From<Child> for Mid"));
+    assert!(rust_code.contains("impl ::std::convert::From<Mid> for Root"));
+    let transitive = "::std::convert::Into::<Root>::into(::std::convert::Into::<Mid>::into";
     assert_eq!(rust_code.matches(transitive).count(), 2);
 }
