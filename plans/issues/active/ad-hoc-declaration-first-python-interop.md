@@ -15,8 +15,8 @@ pattern-capture gaps. Their remediation passes the focused and complete
 compiler suites, native-positive/negative coverage, full merge-profile E2E,
 maintainability, formatting, and file-size checks plus the authoritative local
 create-PR gate in [PR #2988](https://github.com/sifr-lang/sifr/pull/2988).
-Pass-25 remediation is complete and the next whole-diff review round is in
-progress. Typed
+Pass-25 remediation is complete and whole-diff review pass 26 is satisfied;
+PR #2988 is ready to merge. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1290,7 +1290,11 @@ Delivery waves:
   blocking lanes in `536.29s`: Python interop `11/11`, runtime platform `28`
   variants with one capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `42/42` cache hits. Its warm-time notice is a
-  non-blocking advisory.
+  non-blocking advisory. Whole-diff
+  [review pass 26](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-26.md)
+  independently re-grounded both findings, exercised an additional owned
+  `AsyncCallable` structural-upcast build and all `18` Python buffer runtime
+  tests, and returned **SATISFIED** with no actionable findings.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.
