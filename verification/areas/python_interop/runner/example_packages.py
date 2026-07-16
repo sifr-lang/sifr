@@ -48,6 +48,11 @@ def build_examples_report(
     )
     case_results = runner(paths)
     failures = sum(1 for case in case_results if case["status"] != "example-passed")
+    observed_case_ids = [case.get("id") for case in case_results]
+    if len(observed_case_ids) != len(set(observed_case_ids)) or set(observed_case_ids) != set(
+        cases_by_id
+    ):
+        failures = max(1, failures)
     return _report(
         suite_name=suite_name,
         status="examples-failed" if failures else "examples-passed",
@@ -113,6 +118,15 @@ def run_examples_self_tests(
         raise SystemExit(
             f"{suite_name} examples self-test invalid trust roots: {sorted(invalid_roots)}"
         )
+
+    empty_payload = build_examples_report(
+        paths,
+        suite_name=suite_name,
+        cases_by_id=cases_by_id,
+        example_runner=lambda _paths: [],
+    )
+    if empty_payload["status"] != "examples-failed":
+        raise SystemExit(f"{suite_name} examples self-test accepted an empty result set")
 
     first_case = next(iter(cases_by_id.values()))
     failed_payload = build_examples_report(

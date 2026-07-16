@@ -1314,8 +1314,10 @@ Delivery waves:
   3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-3.md)
   verified the native release and packaging paths, then requested a pinned 3.11
   lane, complete native-negative fixture ownership, and current review
-  tracking. All findings through pass 3 are remediated; repeat review is
-  pending.
+  tracking. [Review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-4.md)
+  then found false-pass paths for zero selected runtime tests and an empty
+  compiled-case result. Exact named-test and registered-case validation plus
+  adversarial self-tests remediate the finding; repeat review is pending.
 - [ ] Milestone review — review the complete merged M10 implementation before
   closing the milestone checkbox.
 
