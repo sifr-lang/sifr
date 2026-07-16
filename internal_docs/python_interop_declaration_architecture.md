@@ -232,6 +232,12 @@ Generated wrappers lower declarations to the existing checked Python runtime
 operations. Every conversion can fail and every failure returns
 `PythonError`; Python exceptions never unwind through Sifr.
 
+Every ordinary, coroutine, callback, context, and protocol declaration error
+channel must contain the exact runtime `PythonError` shape: the unique string
+fields `message`, `kind`, `exception_type`, `traceback`, and `context`, with no
+other fields. This structural contract is checked before code generation so
+frontend checking and generated-wrapper compilation cannot disagree.
+
 The direct conversion surface is intentionally closed and recursively typed:
 
 | Sifr type | Sifr to Python | Python to Sifr |
@@ -244,6 +250,12 @@ The direct conversion surface is intentionally closed and recursively typed:
 | `Callable` / `AsyncCallable` | Generated callable only under an explicit callback declaration. | Not inferred from an arbitrary Python callable. |
 | `python.Buffer[T]`, Arrow resource types, `python.DlpackTensor[T]` | Affine protocol transfer under the protocol declaration. | Affine protocol acquisition and validation. |
 | `py.Object` | Explicit dynamic handle. | Explicit dynamic handle with no additional type claim. |
+
+The raw-object row applies only to the compiler-owned declaration identity
+originating at `_sifr.python.Object` and publicly re-exported as
+`sifr.python.Object`. Basename equality is not identity: a user record named
+`Object` follows the closed-record conversion rules and cannot enter sealed
+handle conversion or Python-identity ownership analysis.
 
 Unsupported unions, unconstrained generics, iterators, generators, arbitrary
 mapping keys, callables without a callback contract, and Python `Any` are

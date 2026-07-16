@@ -162,6 +162,17 @@ class Owner(NonSend):
 }
 
 #[test]
+fn buffer_declaration_rejects_local_class_named_object_as_python_identity() {
+    let errors = lower_errors(&format!(
+        "{ERROR}\nclass Object:\n    pass\n\n@python.buffer(pkg.identity, access=read, layout=any)\ndef view(owner: Object) -> Result[python.Buffer[uint8], PythonError]: ...\n"
+    ));
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE)
+            && error.message.contains("unsupported type `Object`")
+    }));
+}
+
+#[test]
 fn buffer_declarations_and_methods_reject_shadow_python_error_shapes() {
     let shadows = [
         r#"

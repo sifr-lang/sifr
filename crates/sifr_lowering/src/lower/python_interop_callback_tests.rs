@@ -57,6 +57,10 @@ fn valid_callback_policy_is_active() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class HandlerError(Error):
     message: str
@@ -72,11 +76,35 @@ def compute(
 }
 
 #[test]
+fn callback_declaration_rejects_shadow_python_error_contract() {
+    assert_callback_error(
+        r"
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+    code: int
+
+@python.callback(handler, lifetime=call, dispatch=current)
+@python(pkg.compute)
+def compute(handler: Callable[[int], int]) -> Result[int, PythonError]: ...
+",
+        "canonical `PythonError` field contract",
+    );
+}
+
+#[test]
 fn callback_policy_validates_before_reservation() {
     let errors = lower_errors(
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class HandlerError(Error):
     message: str
@@ -105,6 +133,10 @@ fn asyncio_callback_requires_async_callable_and_coroutine_target() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class HandlerError(Error):
     message: str
@@ -120,6 +152,10 @@ async def compute(
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python(pkg.compute)
 @python.callback(handler, lifetime=call, dispatch=asyncio, concurrency=serial)
@@ -141,6 +177,10 @@ fn foreign_callback_rejects_python_identity_boundary() {
         r#"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.opaque(type=pkg.Client, cleanup=close)
 class Client:
@@ -167,6 +207,10 @@ fn callback_adjunct_rejects_non_implementation_python_declaration() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.callback(handler, lifetime=call, dispatch=current)
 @python.attribute(name=value)
@@ -218,7 +262,7 @@ fn callback_policy_surface_is_closed() {
     ];
     for (decorator, message) in cases {
         let source = format!(
-            "class PythonError(Error):\n    message: str\n\n{decorator}\n@python(pkg.compute)\ndef compute(handler: Callable[[int], int]) -> Result[int, PythonError]: ...\n"
+            "class PythonError(Error):\n    message: str\n    kind: str\n    exception_type: str\n    traceback: str\n    context: str\n\n{decorator}\n@python(pkg.compute)\ndef compute(handler: Callable[[int], int]) -> Result[int, PythonError]: ...\n"
         );
         assert_callback_error(&source, message);
     }
@@ -261,7 +305,7 @@ fn callback_parameter_and_dispatch_shapes_are_validated() {
         ),
     ];
     for (declaration, message) in cases {
-        let source = format!("class PythonError(Error):\n    message: str\n\n{declaration}\n");
+        let source = format!("class PythonError(Error):\n    message: str\n    kind: str\n    exception_type: str\n    traceback: str\n    context: str\n\n{declaration}\n");
         assert_callback_error(&source, message);
     }
 }
@@ -272,6 +316,10 @@ fn callback_owner_error_conversion_and_sendability_are_validated() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.callback(handler, lifetime=result, dispatch=foreign, concurrency=serial)
 @python(pkg.compute)
@@ -283,6 +331,10 @@ def compute(handler: Callable[[int], int]) -> Result[int, PythonError]: ...
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.opaque(type=pkg.Client, cleanup=drop)
 class Client:
@@ -298,6 +350,10 @@ def compute(handler: Callable[[int], int]) -> Result[Client, PythonError]: ...
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class HandlerError(Error):
     message: str
@@ -312,6 +368,10 @@ def compute(handler: Callable[[int], Result[int, HandlerError]]) -> Result[int, 
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class HandlerError(Error):
     message: str
@@ -320,12 +380,16 @@ class HandlerError(Error):
 @python(pkg.compute)
 def compute(handler: Callable[[int], int]) -> Result[int, HandlerError]: ...
 ",
-        "error channel must contain `PythonError`",
+        "error channel must contain the canonical `PythonError` field contract",
     );
     assert_callback_error(
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.callback(handler, lifetime=call, dispatch=current)
 @python(pkg.compute)
@@ -337,6 +401,10 @@ def compute(handler: Callable[[Callable[[int], int]], int]) -> Result[int, Pytho
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class LocalState(NonSend):
     value: int
@@ -355,6 +423,10 @@ fn retained_result_and_receiver_owners_are_active() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.opaque(type=pkg.Client, cleanup=close)
 class Client:
@@ -382,6 +454,10 @@ fn receiver_lifetime_rejects_static_and_class_methods() {
             r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.opaque(type=pkg.Client, cleanup=close)
 class Client:
@@ -407,6 +483,10 @@ fn retained_handler_error_must_be_declared_by_owner_cleanup() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class HandlerError(Error):
     message: str
@@ -432,6 +512,10 @@ fn foreign_callback_rejects_non_send_handler_capture_at_attachment() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class LocalState(NonSend):
     value: int
@@ -455,6 +539,10 @@ fn foreign_callback_rejects_python_identity_handler_capture_at_attachment() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.opaque(type=pkg.Client, cleanup=close)
 class Client:
@@ -484,6 +572,10 @@ fn parallel_callback_rejects_mutable_handler_capture_at_attachment() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.callback(handler, lifetime=call, dispatch=foreign, concurrency=parallel)
 @python(pkg.compute)
@@ -504,6 +596,10 @@ fn receiver_callback_rejects_capturing_its_owner() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.opaque(type=pkg.Client, cleanup=close)
 class Client:
@@ -533,6 +629,10 @@ fn foreign_callback_rejects_forwarded_callable_with_unknown_captures() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
 @python(pkg.compute)
@@ -551,6 +651,10 @@ fn foreign_callback_accepts_capture_free_nested_handler() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
 @python(pkg.compute)
@@ -570,6 +674,10 @@ fn foreign_and_asyncio_callbacks_accept_top_level_handlers() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
 @python(pkg.compute)

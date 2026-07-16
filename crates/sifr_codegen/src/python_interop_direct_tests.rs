@@ -1,5 +1,5 @@
 use crate::python_interop_direct::{
-    input_conversion, output_value_expr, python_interop_function_body,
+    input_conversion, is_python_object, output_value_expr, python_interop_function_body,
     python_interop_function_body_with_retained_errors, python_interop_method_body,
     python_interop_method_body_with_retained_errors,
 };
@@ -214,6 +214,40 @@ fn recursive_wrapper_emits_list_dict_tuple_and_record_conversions() {
     assert!(rendered.contains("dict_str_items"), "{rendered}");
     assert!(rendered.contains("tuple_items"), "{rendered}");
     assert!(rendered.contains("record_field"), "{rendered}");
+}
+
+#[test]
+fn object_basename_does_not_bypass_canonical_python_identity() {
+    let local_object = Type::Class {
+        identity: Some("main.Object".to_string()),
+        type_args: Vec::new(),
+        name: "Object".to_string(),
+        fields: vec![("value".to_string(), Type::Int)],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let canonical_object = Type::Class {
+        identity: Some("_sifr.python.Object".to_string()),
+        type_args: Vec::new(),
+        name: "Object".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("NonSend".to_string()),
+    };
+
+    let local = input_conversion("value", &local_object, &Default::default())
+        .expect("same-named local record should use record conversion");
+    let rendered_local = render_stmts(&[crate::RustStmt::Expr(local)]);
+
+    assert!(
+        rendered_local.contains("from_record_results"),
+        "{rendered_local}"
+    );
+    assert!(
+        !rendered_local.contains("temporary_argument_handle"),
+        "{rendered_local}"
+    );
+    assert!(is_python_object(&canonical_object));
 }
 
 #[test]

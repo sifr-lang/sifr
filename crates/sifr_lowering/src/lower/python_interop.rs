@@ -558,20 +558,18 @@ pub(in crate::lower) fn validate_python_interop_signature(
         return;
     }
     callbacks::validate(declaration, params, ok_type, error_type, ctx);
-    if declaration.callbacks.is_empty()
-        && !matches!(error_type.resolve_alias(), Type::Class { name, .. } if name == "PythonError")
-    {
+    if declaration.callbacks.is_empty() && !error_type.is_python_error_contract() {
         unsupported_conversion(
             ctx,
-            "the declaration error type must be `PythonError`",
+            "the declaration error type must satisfy the canonical `PythonError` field contract",
             declaration.span,
         );
     } else if !declaration.callbacks.is_empty()
-        && !callbacks::error_channel_contains(error_type, &callbacks::python_error_type(ctx))
+        && !callbacks::error_channel_contains_python_error_contract(error_type)
     {
         callbacks::invalid(
             ctx,
-            "the enclosing declaration error channel must contain `PythonError`",
+            "the enclosing declaration error channel must contain the canonical `PythonError` field contract",
             declaration.span,
         );
     }
@@ -670,7 +668,7 @@ fn validate_direct_parameters(
 pub(super) fn is_direct_type(ty: &Type, allow_option: bool, ctx: &LowerCtx) -> bool {
     match ty.resolve_alias() {
         Type::None | Type::Bool | Type::Int | Type::Float | Type::Str | Type::Bytes => true,
-        Type::Class { name, .. } if name == "Object" => true,
+        object if object.is_python_object_contract() => true,
         Type::Class { name, .. } if ctx.python_opaque_classes.contains_key(name) => true,
         Type::Class { name, fields, .. } => {
             !ctx.error_types.contains(name)

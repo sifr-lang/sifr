@@ -5,6 +5,10 @@ use sifr_python_parser::parse_module;
 const CONTEXT_OPAQUE_PREFIX: &str = r#"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class ExitCause:
     pass

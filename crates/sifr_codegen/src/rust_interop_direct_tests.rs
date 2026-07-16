@@ -233,7 +233,7 @@ fn rust_interop_function_body_adapts_sealed_python_object_callback_parameter() {
         parent_class: None,
     };
     let object = Type::Class {
-        identity: None,
+        identity: Some("_sifr.python.Object".to_string()),
         type_args: Vec::new(),
         name: "Object".to_string(),
         fields: Vec::new(),

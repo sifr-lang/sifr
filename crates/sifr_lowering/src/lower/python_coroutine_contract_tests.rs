@@ -24,11 +24,19 @@ fn has_code(errors: &[HirDiagnostic], code: DiagnosticCode) -> bool {
 const PYTHON_ERROR: &str = r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 ";
 
 const ASYNC_CLOSE_PREFIX: &str = r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.opaque(type=pkg.Client, cleanup=async_close)
 class Client:

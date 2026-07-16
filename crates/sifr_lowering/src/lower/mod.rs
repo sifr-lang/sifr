@@ -125,6 +125,8 @@ mod python_interop_callback_tests;
 #[cfg(test)]
 mod python_interop_tests;
 #[cfg(test)]
+mod python_interop_validation_tests;
+#[cfg(test)]
 mod python_trust_tests;
 mod result_diagnostics;
 #[cfg(test)]

@@ -97,9 +97,11 @@ fn stdlib_class_exports_preserve_parent_markers_and_generic_templates() {
     assert!(matches!(
         object_ty,
         Type::Class {
+            identity: Some(identity),
             parent_class: Some(parent),
             ..
-        } if parent.split('|').any(|name| name == "NonSend")
+        } if identity == "_sifr.python.Object"
+            && parent.split('|').any(|name| name == "NonSend")
     ));
 
     let shared_ty = compiled

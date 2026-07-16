@@ -129,12 +129,11 @@ fn is_python_object_callback_type(ty: &Type) -> bool {
     let Type::Callable(params, _, ret) = ty.resolve_alias() else {
         return false;
     };
-    matches!(params.as_slice(), [Type::Class { name, .. }] if name == "Object")
+    matches!(params.as_slice(), [param] if param.is_python_object_contract())
         && matches!(
             ret.resolve_alias(),
             Type::Result(ok, err)
-                if matches!(ok.resolve_alias(), Type::Class { name, .. } if name == "Object")
-                    && matches!(err.resolve_alias(), Type::Class { name, .. } if name == "PythonError")
+                if ok.is_python_object_contract() && err.is_python_error_contract()
         )
 }
 

@@ -1375,7 +1375,17 @@ Delivery waves:
   borrowed opaque/Object parameter while leaving its Sifr owner usable. Writable
   producer parameters that can transitively carry Python identity now require
   `own`, with permanent lowering, compile-fail, documentation, and evidence
-  coverage before final re-review.
+  coverage before final re-review. Full
+  [review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-6.md)
+  confirmed those ownership fixes, then found that raw Python `Object` still
+  used basename matching and that exact `PythonError` validation remained
+  buffer-specific. The stdlib export boundary now preserves the originating
+  `_sifr.python.Object` identity through public re-exports; lowering, recursive
+  ownership analysis, callback typing, and code generation use that canonical
+  identity, while same-named user records retain record conversion. The shared
+  duplicate-safe five-field error predicate now guards ordinary, callback,
+  context, coroutine, and buffer declarations, with lowering, codegen, stdlib,
+  and driver check/compile parity regressions before the next full re-review.
 
 Acceptance:
 

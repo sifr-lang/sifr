@@ -5,6 +5,30 @@ use crate::{
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_frontend::SourceOrigin;
 
+fn assert_check_compile_error_parity(source: &str, expected_code: DiagnosticCode) {
+    let check_errors = type_check_source(source);
+    assert!(check_errors
+        .iter()
+        .any(|error| error.code == expected_code.code()));
+
+    let CompileResult::Errors {
+        errors: compile_errors,
+    } = compile(source)
+    else {
+        panic!("invalid source must not reach code generation");
+    };
+    assert_eq!(
+        check_errors
+            .iter()
+            .map(crate::diagnostics::diagnostic_legacy_display)
+            .collect::<Vec<_>>(),
+        compile_errors
+            .iter()
+            .map(crate::diagnostics::diagnostic_legacy_display)
+            .collect::<Vec<_>>()
+    );
+}
+
 #[test]
 fn test_parse_source_returns_suite_for_valid_program() {
     let suite = parse_source("def main():\n    x: int = 1\n")
@@ -207,6 +231,77 @@ def view(size: int) -> Result[python.Buffer[uint8], PythonError]: ...
             .map(crate::diagnostics::diagnostic_legacy_display)
             .collect::<Vec<_>>()
     );
+}
+
+#[test]
+fn test_python_declaration_shadow_error_fails_check_and_compile_consistently() {
+    let source = r#"
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+    code: int
+
+@python(pkg.compute)
+def compute(value: int) -> Result[int, PythonError]: ...
+"#;
+    assert_check_compile_error_parity(source, DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE);
+}
+
+#[test]
+fn test_local_object_shadow_fails_check_and_compile_consistently() {
+    let source = r#"
+class Object:
+    pass
+
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+
+@python.buffer(builtins.memoryview, access=read, layout=any)
+def view(owner: Object) -> Result[python.Buffer[uint8], PythonError]: ...
+"#;
+    assert_check_compile_error_parity(source, DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE);
+}
+
+#[test]
+fn test_local_object_record_uses_record_conversion_instead_of_sealed_handle() {
+    let source = r#"
+class Object:
+    value: int
+
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+
+@python.buffer(builtins.memoryview, access=read, layout=any)
+def view(owner: Object) -> Result[python.Buffer[uint8], PythonError]: ...
+"#;
+    assert!(type_check_source(source).is_empty());
+    let CompileResult::Success { rust_source } = compile(source) else {
+        panic!("same-named local record should compile through record conversion");
+    };
+    assert!(rust_source.contains("from_record_results"), "{rust_source}");
+}
+
+#[test]
+fn test_imported_python_object_identity_reaches_check_and_compile() {
+    let source = r#"
+from sifr.python import Object, PythonError
+
+@python.buffer(builtins.memoryview, access=write, layout=any)
+def view(own owner: Object) -> Result[python.Buffer[uint8], PythonError]: ...
+"#;
+    assert!(type_check_source(source).is_empty());
+    assert!(matches!(compile(source), CompileResult::Success { .. }));
 }
 
 #[test]

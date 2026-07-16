@@ -110,11 +110,8 @@ fn contains_python_identity_inner(
     visiting_classes: &mut HashSet<(String, Vec<Type>)>,
 ) -> bool {
     match ty.resolve_alias() {
-        Type::Class { name, .. }
-            if name == "Object" || ctx.python_opaque_classes.contains_key(name) =>
-        {
-            true
-        }
+        object if object.is_python_object_contract() => true,
+        Type::Class { name, .. } if ctx.python_opaque_classes.contains_key(name) => true,
         Type::Class { fields, .. } => {
             let Some(key) = ty.class_recursion_key() else {
                 return false;

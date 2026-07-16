@@ -110,6 +110,17 @@ from sifr.python import PythonError
 def dumps(value: dict[str, int]) -> Result[str, PythonError]: ...
 ```
 
+Every declaration error channel must contain the canonical `PythonError`
+contract: exactly the string fields `message`, `kind`, `exception_type`,
+`traceback`, and `context`, with no duplicate or additional fields. Importing
+`PythonError` from `sifr.python` supplies that contract. This rule applies to
+ordinary, coroutine, callback, context, and zero-copy declarations.
+
+The dynamic `Object` handle is likewise the sealed identity exported by
+`sifr.python`, not a class selected by basename. A local record named `Object`
+keeps ordinary record-conversion semantics when it has supported fields; it
+cannot impersonate the sealed Python handle.
+
 Adaptation code belongs under the owning package's canonical
 `src/python_bridges/` directory. A source target such as
 `bridge.identifiers.parse_gtin` resolves only against that package's inventoried
@@ -318,11 +329,8 @@ along with element format, item size, dimensions, shape, strides, and
 suboffsets. Supported element types are fixed-width and pointer-width signed
 and unsigned integers plus `float`.
 
-The result error must satisfy the canonical `PythonError` field contract:
-`message`, `kind`, `exception_type`, `traceback`, and `context` must be strings,
-with no additional fields. Importing `PythonError` from `sifr.python` supplies
-that contract. A same-named local class with a different field shape is rejected
-during checking.
+The general declaration error-channel contract above applies unchanged to
+buffer producers and buffer methods.
 
 `python.Buffer[T]` is affine and non-send. It retains its exporter and performs
 exactly one `PyBuffer_Release` on explicit `release()` or automatic drop.

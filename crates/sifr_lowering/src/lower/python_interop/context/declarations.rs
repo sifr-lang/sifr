@@ -156,10 +156,10 @@ pub(in crate::lower) fn validate_context_method_signature(
         );
         return;
     };
-    if !matches!(error_type.resolve_alias(), Type::Class { name, .. } if name == "PythonError") {
+    if !error_type.is_python_error_contract() {
         invalid_context(
             ctx,
-            "context protocol declarations must use `PythonError` as their error type",
+            "context protocol declarations must use the canonical `PythonError` field contract as their error type",
             declaration.span,
         );
     }

@@ -2,6 +2,7 @@ use super::Type;
 
 const PYTHON_ERROR_FIELDS: [&str; 5] =
     ["message", "kind", "exception_type", "traceback", "context"];
+const PYTHON_OBJECT_IDENTITY: &str = "_sifr.python.Object";
 
 impl Type {
     /// Whether this type has the exact source-level contract required to receive
@@ -28,6 +29,19 @@ impl Type {
             && fields.iter().all(|(name, ty)| {
                 PYTHON_ERROR_FIELDS.contains(&name.as_str()) && ty.resolve_alias() == &Self::Str
             })
+    }
+
+    /// Whether this is the sealed raw Python object exported by `sifr.python`.
+    #[must_use]
+    pub fn is_python_object_contract(&self) -> bool {
+        matches!(
+            self.resolve_alias(),
+            Self::Class {
+                identity: Some(identity),
+                name,
+                ..
+            } if name == "Object" && identity == PYTHON_OBJECT_IDENTITY
+        )
     }
 }
 
@@ -88,5 +102,20 @@ mod tests {
             ("context", Type::Str),
         ]);
         assert!(!duplicate_field.is_python_error_contract());
+    }
+
+    #[test]
+    fn python_object_contract_requires_the_canonical_import_identity() {
+        let object = |identity: Option<&str>| Type::Class {
+            identity: identity.map(str::to_string),
+            type_args: Vec::new(),
+            name: "Object".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: Some("NonSend".to_string()),
+        };
+        assert!(object(Some("_sifr.python.Object")).is_python_object_contract());
+        assert!(!object(None).is_python_object_contract());
+        assert!(!object(Some("local.Object")).is_python_object_contract());
     }
 }

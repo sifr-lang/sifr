@@ -554,5 +554,5 @@ pub(crate) fn output_conversion(name: &str, ty: &Type) -> Option<RustExpr> {
 }
 
 pub(crate) fn is_python_object(ty: &Type) -> bool {
-    matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "Object")
+    ty.is_python_object_contract()
 }
