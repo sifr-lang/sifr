@@ -18,7 +18,8 @@ create-PR gate in [PR #2988](https://github.com/sifr-lang/sifr/pull/2988).
 Pass-25 remediation is complete, whole-diff review pass 26 is satisfied, and
 PR #2988 is merged. M10 Wave 3 evidence, demo, and documentation closure is
 implemented and locally validated; whole-diff review pass 6 is satisfied and
-the authoritative create-PR gate passes. Typed
+the authoritative create-PR gate passes, and PR #2989 is merged. The complete
+merged M10 implementation is undergoing its required milestone review. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1297,9 +1298,10 @@ Delivery waves:
   independently re-grounded both findings, exercised an additional owned
   `AsyncCallable` structural-upcast build and all `18` Python buffer runtime
   tests, and returned **SATISFIED** with no actionable findings.
-- [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
+- [x] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
-  documentation, and complete activation evidence. The implementation adds a
+  documentation, and complete activation evidence
+  ([PR #2989](https://github.com/sifr-lang/sifr/pull/2989)). The implementation adds a
   validator-owned declaration evidence matrix, a fifth compiled real-NumPy
   case, `demos/m10_demo`, and active `PYZC` public docs. Focused lowering
   (`34/34`), codegen (`10/10`), runtime buffer matrix (`30/30`), runner self-test, scaffold,
@@ -1333,7 +1335,7 @@ Delivery waves:
   examples on CPython `3.11.14`, runtime platform `28` variants with one
   capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `27/42` cache hits. Warm-time and cache-hit notices are
-  non-blocking advisories. Merge remains pending.
+  non-blocking advisories. PR #2989 is merged.
 - [ ] Milestone review — review the complete merged M10 implementation before
   closing the milestone checkbox.
 
