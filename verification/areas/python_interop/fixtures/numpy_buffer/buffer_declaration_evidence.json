@@ -7,7 +7,7 @@
       "id": "typed-runtime-matrix",
       "layer": "runtime",
       "evidence": "python::buffer_ops::tests",
-      "owners": ["crates/sifr_runtime/src/python/buffer_ops/tests.rs", "crates/sifr_runtime/src/python/buffer_ops/release_evidence_tests.rs"],
+      "owners": ["crates/sifr_runtime/src/python/buffer_ops/raw.rs", "crates/sifr_runtime/src/python/buffer_ops/tests.rs", "crates/sifr_runtime/src/python/buffer_ops/release_evidence_tests.rs", "crates/sifr_runtime/src/python/buffer_ops/typed_access_evidence_tests.rs"],
       "covers": ["fixed-width and pointer-width signed and unsigned integers", "float", "native endian format", "C/F/strided/negative-stride/indirect layout", "bounded read/write/copy_slice", "constant-space contiguous admission"]
     },
     {

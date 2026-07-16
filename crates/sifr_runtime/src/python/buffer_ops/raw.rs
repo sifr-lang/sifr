@@ -558,22 +558,31 @@ mod tests {
             b'<'
         };
         let families = [
-            (PythonBufferElement::I16, b'h', 2),
-            (PythonBufferElement::U16, b'H', 2),
-            (PythonBufferElement::I32, b'i', 4),
-            (PythonBufferElement::U32, b'I', 4),
-            (PythonBufferElement::I64, b'q', 8),
-            (PythonBufferElement::U64, b'Q', 8),
-            (PythonBufferElement::F64, b'd', 8),
+            (PythonBufferElement::I16, b'h', 2, false),
+            (PythonBufferElement::U16, b'H', 2, false),
+            (PythonBufferElement::I32, b'i', 4, false),
+            (PythonBufferElement::U32, b'I', 4, false),
+            (PythonBufferElement::I64, b'q', 8, false),
+            (PythonBufferElement::U64, b'Q', 8, false),
+            (PythonBufferElement::ISize, b'n', size_of::<isize>(), true),
+            (PythonBufferElement::USize, b'N', size_of::<usize>(), true),
+            (PythonBufferElement::F64, b'd', 8, false),
         ];
-        for (element, code, width) in families {
+        for (element, code, width, native_size_only) in families {
             assert!(validate_format_bytes(&[code], element, width).is_ok());
-            assert!(validate_format_bytes(&[b'=', code], element, width).is_ok());
-            assert!(validate_format_bytes(&[native, code], element, width).is_ok());
+            assert!(validate_format_bytes(&[b'@', code], element, width).is_ok());
+            assert_eq!(
+                validate_format_bytes(&[b'=', code], element, width).is_ok(),
+                !native_size_only
+            );
+            assert_eq!(
+                validate_format_bytes(&[native, code], element, width).is_ok(),
+                !native_size_only
+            );
             assert!(validate_format_bytes(&[foreign, code], element, width).is_err());
             assert_eq!(
                 validate_format_bytes(&[b'!', code], element, width).is_ok(),
-                cfg!(target_endian = "big")
+                cfg!(target_endian = "big") && !native_size_only
             );
         }
 

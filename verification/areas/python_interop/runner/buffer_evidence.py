@@ -7,8 +7,10 @@ BUFFER_MATRIX_SPECS = {
             "runtime",
             "python::buffer_ops::tests",
             {
+                "crates/sifr_runtime/src/python/buffer_ops/raw.rs",
                 "crates/sifr_runtime/src/python/buffer_ops/tests.rs",
                 "crates/sifr_runtime/src/python/buffer_ops/release_evidence_tests.rs",
+                "crates/sifr_runtime/src/python/buffer_ops/typed_access_evidence_tests.rs",
             },
             {
                 "fixed-width and pointer-width signed and unsigned integers",

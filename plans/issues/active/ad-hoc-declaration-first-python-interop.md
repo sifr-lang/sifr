@@ -1317,7 +1317,11 @@ Delivery waves:
   tracking. [Review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-4.md)
   then found false-pass paths for zero selected runtime tests and an empty
   compiled-case result. Exact named-test and registered-case validation plus
-  adversarial self-tests remediate the finding; repeat review is pending.
+  adversarial self-tests remediate those findings. [Review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-5.md)
+  found duplicate runtime observations were collapsed and the primitive runtime
+  owner matrix overstated pointer-width evidence. Observation multiplicity,
+  missing/duplicate self-tests, exact raw ownership, and C-level round trips for
+  every supported primitive remediate both findings; repeat review is pending.
 - [ ] Milestone review — review the complete merged M10 implementation before
   closing the milestone checkbox.
 

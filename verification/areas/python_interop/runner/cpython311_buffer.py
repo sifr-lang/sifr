@@ -90,10 +90,11 @@ def run_runtime_release_tests() -> dict[str, object]:
     if proc.stderr:
         sys.stderr.write(proc.stderr)
     observed_tests = observed_runtime_tests(proc.stdout)
-    exact_tests_observed = observed_tests == EXPECTED_RUNTIME_TESTS
+    unique_observed_tests = set(observed_tests)
+    exact_tests_observed = runtime_tests_are_complete(observed_tests)
     return {
         "status": "passed" if proc.returncode == 0 and exact_tests_observed else "failed",
-        "passed": len(observed_tests.intersection(EXPECTED_RUNTIME_TESTS)),
+        "passed": len(unique_observed_tests.intersection(EXPECTED_RUNTIME_TESTS)),
         "expected": len(EXPECTED_RUNTIME_TESTS),
         "observed_tests": sorted(observed_tests),
         "command": " ".join(command),
@@ -101,12 +102,18 @@ def run_runtime_release_tests() -> dict[str, object]:
     }
 
 
-def observed_runtime_tests(output: str) -> set[str]:
-    return {
+def observed_runtime_tests(output: str) -> list[str]:
+    return [
         line.removeprefix("test ").removesuffix(" ... ok")
         for line in output.splitlines()
         if line.startswith("test ") and line.endswith(" ... ok")
-    }
+    ]
+
+
+def runtime_tests_are_complete(observed_tests: list[str]) -> bool:
+    return len(observed_tests) == len(EXPECTED_RUNTIME_TESTS) and set(
+        observed_tests
+    ) == EXPECTED_RUNTIME_TESTS
 
 
 def compiled_examples_are_complete(examples: dict[str, object]) -> bool:
@@ -126,11 +133,17 @@ def compiled_examples_are_complete(examples: dict[str, object]) -> bool:
 def run_compatibility_self_tests() -> None:
     if not EXPECTED_RUNTIME_TESTS:
         raise SystemExit("buffer CPython compatibility runtime test registry is empty")
-    if observed_runtime_tests("test result: ok. 0 passed; 0 failed"):
+    if runtime_tests_are_complete(observed_runtime_tests("test result: ok. 0 passed; 0 failed")):
         raise SystemExit("buffer CPython compatibility accepted a zero-test runtime result")
     exact_output = "\n".join(f"test {name} ... ok" for name in EXPECTED_RUNTIME_TESTS)
-    if observed_runtime_tests(exact_output) != EXPECTED_RUNTIME_TESTS:
+    if not runtime_tests_are_complete(observed_runtime_tests(exact_output)):
         raise SystemExit("buffer CPython compatibility rejected the exact runtime test set")
+    missing_output = "\n".join(exact_output.splitlines()[:-1])
+    if runtime_tests_are_complete(observed_runtime_tests(missing_output)):
+        raise SystemExit("buffer CPython compatibility accepted a missing runtime test")
+    duplicate_output = f"{exact_output}\n{exact_output.splitlines()[0]}"
+    if runtime_tests_are_complete(observed_runtime_tests(duplicate_output)):
+        raise SystemExit("buffer CPython compatibility accepted a duplicate runtime test")
     if compiled_examples_are_complete({"status": "examples-passed", "cases": []}):
         raise SystemExit("buffer CPython compatibility accepted an empty compiled result set")
 
