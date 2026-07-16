@@ -32,16 +32,29 @@ impl RustEmitter {
         if source_identity == target_identity {
             return lowered;
         }
+        let ancestors = parent_chain.split('|').collect::<Vec<_>>();
+        let exact_index = ancestors
+            .iter()
+            .position(|ancestor| *ancestor == target_identity);
         let target_tail = target_identity
             .rsplit_once('.')
             .map_or(target_identity.as_str(), |(_, tail)| tail);
-        let Some(target_index) = parent_chain.split('|').position(|ancestor| {
-            ancestor == target_identity
-                || ancestor.rsplit_once('.').map_or(ancestor, |(_, tail)| tail) == target_tail
-        }) else {
+        let tail_matches = ancestors
+            .iter()
+            .enumerate()
+            .filter(|(_, ancestor)| {
+                ancestor
+                    .rsplit_once('.')
+                    .map_or(**ancestor, |(_, tail)| tail)
+                    == target_tail
+            })
+            .map(|(index, _)| index)
+            .collect::<Vec<_>>();
+        let Some(target_index) =
+            exact_index.or_else(|| (tail_matches.len() == 1).then(|| tail_matches[0]))
+        else {
             return lowered;
         };
-        let ancestors = parent_chain.split('|').collect::<Vec<_>>();
         for (index, ancestor) in ancestors.iter().take(target_index + 1).enumerate() {
             let rendered_target = if index == target_index {
                 self.rust_type_with_generics(target_ty)

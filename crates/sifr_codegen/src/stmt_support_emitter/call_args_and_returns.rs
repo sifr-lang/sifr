@@ -503,8 +503,10 @@ impl RustEmitter {
             }
         }
 
-        if let Some(lowered_leaf) = crate::try_lower_leaf_or_name_expr_result(value)? {
-            return Ok(Some(coerce_return(self, lowered_leaf)?));
+        if !matches!(value, HirExpr::OkWrap { .. } | HirExpr::ErrWrap { .. }) {
+            if let Some(lowered_leaf) = crate::try_lower_leaf_or_name_expr_result(value)? {
+                return Ok(Some(coerce_return(self, lowered_leaf)?));
+            }
         }
         if let Some(lowered_expr) = self.lower_stmt_expr_for_ir(value)? {
             return Ok(Some(coerce_return(

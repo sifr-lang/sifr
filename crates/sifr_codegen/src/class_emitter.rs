@@ -335,7 +335,7 @@ impl RustEmitter {
             fields.push((
                 "__sifr_type_marker".to_string(),
                 RustType::Named(format!(
-                    "std::marker::PhantomData<{}>",
+                    "std::marker::PhantomData<fn() -> {}>",
                     Self::class_phantom_tuple(class)
                 )),
             ));

@@ -421,6 +421,28 @@ mod tests {
     }
 
     #[test]
+    fn test_concrete_generic_arguments_match_derived_rust_trait_bounds() {
+        let callable = Type::Callable(
+            vec![Type::Int],
+            vec![ParamConvention::own()],
+            Box::new(Type::Int),
+        );
+        let marker = Type::Class {
+            identity: Some("markers.Marker".to_string()),
+            type_args: vec![callable],
+            name: "Marker".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        };
+
+        assert!(!marker.supports_derived_clone());
+        assert!(!marker.supports_structural_equality());
+        assert!(!marker.supports_hash_key());
+        assert!(!marker.supports_debug_formatting());
+    }
+
+    #[test]
     fn test_transitive_non_send_ancestry_disables_generated_rust_traits() {
         let local_child = Type::Class {
             identity: None,

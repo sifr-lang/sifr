@@ -1,18 +1,34 @@
 macro_rules! stmt_expr_wrappers_range_index {
     ($emitter:ident, $expr:ident) => {{
-        if let HirExpr::OkWrap { value, .. } = $expr {
+        if let HirExpr::OkWrap { value, ty } = $expr {
             let Some(lowered_value) = $emitter.lower_stmt_expr_for_ir(value)? else {
                 return Ok(None);
             };
+            let Type::Result(ok_ty, _) = crate::resolve_alias_type_for_plain_call(ty) else {
+                return Ok(None);
+            };
+            let lowered_value = $emitter.coerce_local_value_for_target_type_for_ir(
+                ok_ty,
+                value,
+                lowered_value,
+            )?;
             return Ok(Some(crate::RustExpr::FnCall {
                 func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
                 args: vec![lowered_value],
             }));
         }
-        if let HirExpr::ErrWrap { value, .. } = $expr {
+        if let HirExpr::ErrWrap { value, ty } = $expr {
             let Some(lowered_value) = $emitter.lower_stmt_expr_for_ir(value)? else {
                 return Ok(None);
             };
+            let Type::Result(_, error_ty) = crate::resolve_alias_type_for_plain_call(ty) else {
+                return Ok(None);
+            };
+            let lowered_value = $emitter.coerce_local_value_for_target_type_for_ir(
+                error_ty,
+                value,
+                lowered_value,
+            )?;
             return Ok(Some(crate::RustExpr::FnCall {
                 func: Box::new(crate::RustExpr::Path(vec!["Err".to_string()])),
                 args: vec![lowered_value],

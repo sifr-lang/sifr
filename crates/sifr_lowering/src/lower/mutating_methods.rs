@@ -14,7 +14,7 @@ pub(in crate::lower) fn reject_immutable_parameter_method_mutation(
         return false;
     }
 
-    if let HirExpr::Name { name, .. } = object {
+    if let Some(name) = mutation_receiver_root_name(object) {
         if ctx
             .scope
             .lookup(name)
@@ -26,6 +26,16 @@ pub(in crate::lower) fn reject_immutable_parameter_method_mutation(
     }
 
     false
+}
+
+fn mutation_receiver_root_name(expr: &HirExpr) -> Option<&str> {
+    match expr {
+        HirExpr::Name { name, .. } => Some(name),
+        HirExpr::FieldAccess { object, .. } | HirExpr::Index { object, .. } => {
+            mutation_receiver_root_name(object)
+        }
+        _ => None,
+    }
 }
 
 pub(in crate::lower) fn is_collection_mutating_method(object_ty: &Type, method: &str) -> bool {

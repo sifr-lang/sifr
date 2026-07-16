@@ -912,8 +912,11 @@ supports them. This is a language rule, not an implementation detail.
   to the complete union. Code generation renders the explicit class arguments
   as the authoritative Rust specialization and preserves the annotated local
   type when Rust needs result-context inference. Every generic class carries a
-  compiler-owned `PhantomData` marker, so even a fieldless declaration has a
-  valid, inhabited Rust representation for all of its type parameters.
+  compiler-owned non-owning `PhantomData<fn() -> T>` marker, so even a
+  fieldless declaration has a valid, inhabited Rust representation without
+  inheriting the argument's Rust auto traits. Concrete Clone, Debug, equality,
+  and hash capability checks still include every type argument because Rust's
+  generated derives impose those bounds.
 - **Codegen:** the compiler emits only the derives supported by the complete
   generated struct, newtype, or union representation.
 - **Enum types (enum type-system work):** enum types unconditionally derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`. All enum values are usable as dict keys and set members.
@@ -966,7 +969,10 @@ supports them. This is a language rule, not an implementation detail.
   Ownership-consuming arguments, local coercions, and returns emit one such
   conversion per ancestor and therefore move, rather than clone or borrow, the
   embedded parent representation across direct, transitive, imported, and
-  re-exported upcasts.
+  re-exported upcasts. Union and `Result` construction converts the selected
+  payload before wrapping it. Transitive selection prefers the exact canonical
+  ancestor identity; a local-name tail is used only when it identifies one
+  unambiguous ancestor.
   Generic callable parameters, bounds, and project codegen signatures likewise
   propagate through direct and multi-hop re-export facades.
 - **Module return inference:** successful unannotated top-level return types are

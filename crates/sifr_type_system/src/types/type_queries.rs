@@ -102,6 +102,7 @@ impl Type {
                 name,
                 fields,
                 parent_class,
+                type_args,
                 ..
             } => {
                 if parent_chain_contains(parent_class.as_deref(), "NonSend") {
@@ -112,7 +113,11 @@ impl Type {
                 }
                 let supports = fields
                     .iter()
-                    .all(|(_, field)| field.supports_derived_clone_inner(visiting_classes));
+                    .all(|(_, field)| field.supports_derived_clone_inner(visiting_classes))
+                    && type_args.iter().all(|argument| {
+                        matches!(argument.resolve_alias(), Self::TypeVar(_))
+                            || argument.supports_derived_clone_inner(visiting_classes)
+                    });
                 visiting_classes.remove(name);
                 supports
             }
@@ -167,6 +172,7 @@ impl Type {
                 fields,
                 methods,
                 parent_class,
+                type_args,
                 ..
             } => {
                 if methods.iter().any(|(method, _)| method == "__eq__") {
@@ -180,7 +186,11 @@ impl Type {
                 }
                 let supports = fields
                     .iter()
-                    .all(|(_, field)| field.supports_structural_equality_inner(visiting_classes));
+                    .all(|(_, field)| field.supports_structural_equality_inner(visiting_classes))
+                    && type_args.iter().all(|argument| {
+                        matches!(argument.resolve_alias(), Self::TypeVar(_))
+                            || argument.supports_structural_equality_inner(visiting_classes)
+                    });
                 visiting_classes.remove(name);
                 supports
             }

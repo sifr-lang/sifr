@@ -196,20 +196,30 @@ fn release_consumes_buffer_and_borrowed_release_is_rejected() {
 
 #[test]
 fn writable_access_requires_exclusive_parameter_borrow() {
-    let errors = lower_errors(&format!(
+    let direct = lower_errors(&format!(
         "{ERROR}\ndef overwrite(view: python.Buffer[uint8], value: uint8) -> Result[None, PythonError]:\n    try:\n        written: None = view.write(0, value)\n        return None\n    except PythonError as error:\n        raise error\n"
     ));
-    assert!(
-        errors
-            .iter()
-            .any(|error| { error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION) }),
-        "{errors:?}"
-    );
+    assert!(direct
+        .iter()
+        .any(|error| { error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION) }));
 
-    let source = format!(
+    for function in [
+        "class Holder:\n    view: python.Buffer[uint8]\n\ndef overwrite(holder: Holder, value: uint8) -> Result[None, PythonError]:\n    try:\n        written: None = holder.view.write(0, value)\n        return None\n    except PythonError as error:\n        raise error",
+        "def overwrite(views: list[python.Buffer[uint8]], value: uint8) -> Result[None, PythonError]:\n    try:\n        written: None = views[0].write(0, value)\n        return None\n    except PythonError as error:\n        raise error",
+    ] {
+        let errors = lower_errors(&format!("{ERROR}\n{function}\n"));
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                    && error.message.contains("affine Python buffer")
+            }),
+            "{function}: {errors:?}"
+        );
+    }
+
+    lower_ok(&format!(
         "{ERROR}\ndef overwrite(mut view: python.Buffer[uint8], value: uint8) -> Result[None, PythonError]:\n    try:\n        written: None = view.write(0, value)\n        return None\n    except PythonError as error:\n        raise error\n"
-    );
-    lower_ok(&source);
+    ));
 }
 
 #[test]

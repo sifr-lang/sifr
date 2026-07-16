@@ -58,6 +58,8 @@ macro_rules! stmt_expr_await_and_registry {
                 | HirExpr::Compare { .. }
                 | HirExpr::BoolOp { .. }
                 | HirExpr::Slice { .. }
+                | HirExpr::OkWrap { .. }
+                | HirExpr::ErrWrap { .. }
         );
         if !skip_leaf_registry_lowering {
             if let Some(lowered) = $emitter.try_lower_registry_expr_result($expr)? {

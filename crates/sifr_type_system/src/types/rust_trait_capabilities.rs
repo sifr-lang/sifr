@@ -36,6 +36,7 @@ impl Type {
                 fields,
                 methods,
                 parent_class,
+                type_args,
                 ..
             } => {
                 if parent_chain_contains(parent_class.as_deref(), "NonSend")
@@ -48,7 +49,11 @@ impl Type {
                 }
                 let supports = fields
                     .iter()
-                    .all(|(_, field)| field.supports_hash_key_inner(visiting_classes));
+                    .all(|(_, field)| field.supports_hash_key_inner(visiting_classes))
+                    && type_args.iter().all(|argument| {
+                        matches!(argument.resolve_alias(), Self::TypeVar(_))
+                            || argument.supports_hash_key_inner(visiting_classes)
+                    });
                 visiting_classes.remove(name);
                 supports
             }
@@ -106,6 +111,7 @@ impl Type {
                 name,
                 fields,
                 parent_class,
+                type_args,
                 ..
             } => {
                 // Most `NonSend` classes wrap runtime resources whose emitted
@@ -121,7 +127,11 @@ impl Type {
                 }
                 let supports = fields
                     .iter()
-                    .all(|(_, field)| field.supports_debug_formatting_inner(visiting_classes));
+                    .all(|(_, field)| field.supports_debug_formatting_inner(visiting_classes))
+                    && type_args.iter().all(|argument| {
+                        matches!(argument.resolve_alias(), Self::TypeVar(_))
+                            || argument.supports_debug_formatting_inner(visiting_classes)
+                    });
                 visiting_classes.remove(name);
                 supports
             }

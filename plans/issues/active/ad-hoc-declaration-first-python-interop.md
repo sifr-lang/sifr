@@ -7,7 +7,7 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review passes 14 through 23 reopened
+Wave 2 is implemented; whole-diff review passes 14 through 24 reopened
 generic/inherited Rust-trait, reusable affine-closure ownership, keyed sorting,
 per-type-parameter bound, specialization, generic-operator, conditional-source,
 top-level inference, multi-hop re-export identity, and specialized generic
@@ -15,7 +15,7 @@ pattern-capture gaps. Their remediation passes the focused and complete
 compiler suites, native-positive/negative coverage, full merge-profile E2E,
 maintainability, formatting, and file-size checks plus the authoritative local
 create-PR gate in [PR #2988](https://github.com/sifr-lang/sifr/pull/2988).
-Pass-23 remediation is complete and awaiting the next whole-diff review. Typed
+Pass-24 remediation is complete and awaiting the next whole-diff review. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1249,8 +1249,28 @@ Delivery waves:
   blocking lane in `861.81s`: Python interop `11/11`, runtime platform `28`
   variants with one capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` after rebuilding all `42` fixture groups. Its only advisory
-  is the expected non-blocking warm-target timing warning. Fresh whole-diff
-  review pass 24 is pending.
+  is the expected non-blocking warm-target timing warning. Full-diff
+  [review pass 24](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-24.md)
+  cleared runtime lifecycle, overlap admission, exact release, and no-panic
+  paths, then found four compiler boundaries: nested writable receiver places,
+  union/`Result` consuming upcasts, same-basename canonical ancestor selection,
+  and phantom derive/auto-trait alignment. Receiver root tracing now covers
+  legal nested places while the existing whole-aggregate affine rule rejects
+  buffer field/index projections before mutation; union and `Result` payloads
+  receive consuming conversions before wrapping; exact canonical ancestry wins
+  over only-unambiguous basename fallback; and fieldless generics use
+  non-owning `PhantomData<fn() -> T>` with concrete type arguments included in
+  Clone, structural-equality, Hash, and Debug capability checks. Permanent
+  direct, transitive, imported/re-exported, repeated-basename, non-capable
+  generic, and non-send native regressions pass. Full codegen passes `828/828`,
+  driver passes `350/350`, and the native generated-project lane passes `28/28`.
+  Workspace Clippy and formatting are clean; HIR/driver maintainability and the
+  `900`-line source-size guardrail pass over `2680` files. The authoritative
+  create-PR gate passes every blocking lane in `537.98s`: Python interop
+  `11/11`, runtime platform `28` variants with one capability-gated skip, and
+  E2E `131/131` with signature `7c39b8c1dd4fec7c` and `36/42` cache hits. Its
+  warm-time and cache-hit notices are non-blocking advisories. Review pass 25
+  now covers the complete remediated PR diff.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.
