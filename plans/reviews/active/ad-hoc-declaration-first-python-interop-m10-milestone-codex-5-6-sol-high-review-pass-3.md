@@ -10,11 +10,13 @@
 
 ## Findings
 
-1. **High — required M10 native evidence failed from a clean checkout.** The
-   repository ignored every nested `Cargo.lock`, while 344 committed vendored
-   checksums required those files. The pinned CPython 3.11 runtime tests passed
-   `5/5`, but all five compiled examples failed during Rust bridge probing when
-   `vendor/cfg-if/Cargo.lock` was absent.
+1. **High — required M10 native evidence failed from a clean checkout.** Generic
+   repository ignore rules omitted checksum-required vendored files. The first
+   clean run lacked 344 nested `Cargo.lock` files; after exposing those, a clean
+   validation rerun also identified ignored vendored `build/` and `.vscode/`
+   sources. The pinned CPython 3.11 runtime tests passed `5/5`, but all five
+   compiled examples failed during Rust bridge probing when required vendored
+   files were absent.
 2. **Low — public documentation overstated nominal `PythonError` enforcement.**
    The shared predicate accepts the exact five-field structural contract, while
    the public documentation said the type had to be imported from `sifr.python`.
@@ -33,7 +35,7 @@
 
 ## Required remediation
 
-- Track the checksummed vendored lockfiles, or regenerate the vendor checksums
-  without them, so required profiles run from a clean checkout.
+- Track every checksum-required vendored file so required profiles run from a
+  clean checkout.
 - Document the structural `PythonError` field contract accurately.
 - Move active `SIFR-PYZC-0001` evidence out of the reserved-family list.

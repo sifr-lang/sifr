@@ -27,6 +27,10 @@ build/
 **/Cargo.lock
 !/Cargo.lock
 !/vendor/*/Cargo.lock
+!/vendor/*/build/
+!/vendor/*/build/**
+!/vendor/*/.vscode/
+!/vendor/*/.vscode/**
 /sifr_output/
 /tmp/
 tmp_*
