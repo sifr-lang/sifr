@@ -81,6 +81,7 @@ COMMAND_ARGS: dict[str, list[str]] = {
         "--report",
         "../../../target/verification/areas/python_interop/buffer-examples.latest.json",
     ],
+    "python-interop-buffer-cpython311": [],
     "python-interop-ml-examples": [
         "--ml-examples",
         "--report",
@@ -131,6 +132,7 @@ AREA_PROJECT_COMMANDS = {
     "python-interop-ml-examples",
     "python-interop-live-examples",
 }
+CPYTHON311_PROJECT_COMMANDS = {"python-interop-buffer-cpython311"}
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -248,7 +250,24 @@ def run_case(case: dict[str, Any]) -> dict[str, Any]:
         raise SystemExit(f"python_interop case entry does not exist: {entry}")
     expected_exit = int(case["expect_exit_code"])
     env = None
-    if command in AREA_PROJECT_COMMANDS:
+    if command in CPYTHON311_PROJECT_COMMANDS:
+        argv = [
+            "uv",
+            "run",
+            "--project",
+            str(AREA_ROOT / "cpython311"),
+            "--locked",
+            "--python",
+            "3.11",
+            "--managed-python",
+            "--no-python-downloads",
+            "python",
+            str(entry),
+            *COMMAND_ARGS[command],
+        ]
+        env = os.environ.copy()
+        env.pop("VIRTUAL_ENV", None)
+    elif command in AREA_PROJECT_COMMANDS:
         argv = [
             "uv",
             "run",

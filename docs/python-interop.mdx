@@ -286,7 +286,40 @@ code.
 
 ## Zero-Copy Interop
 
-Sifr exposes zero-copy APIs only when view semantics can be proven:
+Typed buffer declarations are active for objects that implement Python's buffer
+protocol:
+
+```python
+from sifr.python import PythonError
+
+@python.buffer(numpy.arange, access=write, layout=c_contiguous)
+def numpy_range(stop: int) -> Result[python.Buffer[int64], PythonError]: ...
+
+def update(mut view: python.Buffer[int64]) -> Result[list[int64], PythonError]:
+    try:
+        changed: None = view.write(2, 42)
+        copied: list[int64] = view.copy_slice(0, view.length())
+        released: None = view.release()
+        return copied
+    except PythonError as error:
+        raise error
+```
+
+The decorator target can be an import-root callable, a package-local `bridge`
+callable, or `Self` on an opaque receiver. `access=read | write` and
+`layout=any | c_contiguous | f_contiguous` are validated during acquisition
+along with element format, item size, dimensions, shape, strides, and
+suboffsets. Supported element types are fixed-width and pointer-width signed
+and unsigned integers plus `float`.
+
+`python.Buffer[T]` is affine and non-send. It retains its exporter and performs
+exactly one `PyBuffer_Release` on explicit `release()` or automatic drop.
+Writable access requires an exclusive `mut` receiver. `read` and `write` are
+bounds checked; `copy_slice` is an explicit copy. No borrowed Rust or Sifr slice
+can outlive the buffer.
+
+Lower-level dynamic zero-copy APIs remain available when the declaration shape
+is not appropriate:
 
 ```python
 from sifr.python import ArrowCapsule, DlpackTensor, Object, PythonError, zero_copy_arrow_stream, zero_copy_dlpack_tensor
@@ -448,7 +481,9 @@ Compiler diagnostics use stable URLs and structured JSON fields:
   diagnostics. `SIFR-PYTRUST-0002` is retired.
 - `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, and `SIFR-PYRES`: active declaration, target, conversion, resource, and sequenced activation diagnostics.
 - `SIFR-PYCB`: active callback lifetime, dispatch, conversion, and shutdown diagnostics.
-- `SIFR-PYZC`: reserved for the later zero-copy declaration milestones.
+- `SIFR-PYZC`: active buffer declaration, ownership, layout, and hidden-copy
+  diagnostics; later codes remain reserved for Arrow and DLPack declaration
+  activation.
 
 Verification lives under `verification/areas/python_interop/`:
 
@@ -459,6 +494,7 @@ verification/areas/python_interop/run.sh --group callbacks
 verification/areas/python_interop/run.sh --group dataframes
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --async-declaration-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --callback-examples
+uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --buffer-examples
 verification/areas/python_interop/run.sh --self-test
 scripts/run_all_tests.sh --profile python-interop-live
 ```

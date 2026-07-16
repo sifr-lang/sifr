@@ -7,7 +7,7 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review passes 14 through 25 reopened
+Wave 2 is merged; whole-diff review passes 14 through 25 reopened
 generic/inherited Rust-trait, reusable affine-closure ownership, keyed sorting,
 per-type-parameter bound, specialization, generic-operator, conditional-source,
 top-level inference, multi-hop re-export identity, and specialized generic
@@ -15,13 +15,15 @@ pattern-capture gaps. Their remediation passes the focused and complete
 compiler suites, native-positive/negative coverage, full merge-profile E2E,
 maintainability, formatting, and file-size checks plus the authoritative local
 create-PR gate in [PR #2988](https://github.com/sifr-lang/sifr/pull/2988).
-Pass-25 remediation is complete and whole-diff review pass 26 is satisfied;
-PR #2988 is ready to merge. Typed
+Pass-25 remediation is complete, whole-diff review pass 26 is satisfied, and
+PR #2988 is merged. M10 Wave 3 evidence, demo, and documentation closure is
+implemented and locally validated; whole-diff review pass 6 is satisfied and
+the authoritative create-PR gate passes. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
 retained-owner integration are merged, publicly active, and milestone-reviewed.
-M10 Wave 3 and later milestones are not yet implemented. Milestones sequence
+M11 and later milestones are not yet implemented. Milestones sequence
 delivery; they do not create reduced language versions, temporary public
 contracts, dual authorities, or alternate lowering paths.
 
@@ -790,7 +792,7 @@ Delivery waves:
   focused buffer tests pass `19/19`, the complete Python runtime suite passes
   `145/145`, and the authoritative create-PR gate passes Python interop `10/10`
   plus E2E `131/131` with signature `7c39b8c1dd4fec7c`.
-- [ ] Wave 2 — add the compiler-known affine `python.Buffer[T]` contract,
+- [x] Wave 2 — add the compiler-known affine `python.Buffer[T]` contract,
   decorator validation, `Self` and call-then-acquire lowering/code generation,
   exclusive writable borrowing, early release, and atomic public activation
   ([PR #2988](https://github.com/sifr-lang/sifr/pull/2988)); focused lowering
@@ -1297,7 +1299,41 @@ Delivery waves:
   tests, and returned **SATISFIED** with no actionable findings.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
-  documentation, and complete activation evidence.
+  documentation, and complete activation evidence. The implementation adds a
+  validator-owned declaration evidence matrix, a fifth compiled real-NumPy
+  case, `demos/m10_demo`, and active `PYZC` public docs. Focused lowering
+  (`34/34`), codegen (`10/10`), runtime buffer matrix (`30/30`), runner self-test, scaffold,
+  and five-binary demo checks pass. The authoritative create-PR gate passes
+  Python interop `11/11` and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` after a clean build. Whole-diff
+  [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-1.md)
+  requested independent pointer/exact-release evidence, a strict evidence
+  schema, least-authority generated manifests, and an architecture wording
+  repair. [Review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-2.md)
+  requested CPython 3.11-compatible exporters, exact owner sets, narrower
+  compiled-identity claims, and a consistent phase status. [Review pass
+  3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-3.md)
+  verified the native release and packaging paths, then requested a pinned 3.11
+  lane, complete native-negative fixture ownership, and current review
+  tracking. [Review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-4.md)
+  then found false-pass paths for zero selected runtime tests and an empty
+  compiled-case result. Exact named-test and registered-case validation plus
+  adversarial self-tests remediate those findings. [Review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-5.md)
+  found duplicate runtime observations were collapsed and the primitive runtime
+  owner matrix overstated pointer-width evidence. Observation multiplicity,
+  missing/duplicate self-tests, exact raw ownership, and C-level round trips for
+  every supported primitive remediate both findings. Whole-diff
+  [review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-6.md)
+  re-ran adversarial exactness checks, the pinned CPython 3.11 release tests,
+  all eleven primitive-family round trips, the native-format matrix, evidence
+  validation, generated least-authority manifest inspection, and integrity
+  checks, then returned **SATISFIED** with no actionable findings. The
+  authoritative create-PR gate passes every blocking lane in `920.39s`:
+  Python interop `12/12` including the five release tests and five compiled
+  examples on CPython `3.11.14`, runtime platform `28` variants with one
+  capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `27/42` cache hits. Warm-time and cache-hit notices are
+  non-blocking advisories. Merge remains pending.
 - [ ] Milestone review — review the complete merged M10 implementation before
   closing the milestone checkbox.
 

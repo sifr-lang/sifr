@@ -130,7 +130,7 @@ The `PYTRUST` family covers import-root and native-extension trust policy for em
 | [`SIFR-PYTRUST-0005`](/errors/SIFR-PYTRUST-0005) | Error | Required Python import root is not authorized by the root application. |
 
 <Note>
-The `PYIMP`, `PYCALL`, `PYCONV`, `PYRES`, and `PYCB` families are active compiler-emitted Python interop diagnostics. `PYZC` remains reserved for the later zero-copy declaration milestones. Runtime failures at active boundaries are returned as structured `PythonError` values.
+The `PYIMP`, `PYCALL`, `PYCONV`, `PYRES`, `PYCB`, and `PYZC` families are active compiler-emitted Python interop diagnostics. `PYZC` currently covers typed buffer declaration, ownership, layout, and hidden-copy errors; additional codes remain reserved for Arrow and DLPack declaration activation. Runtime failures at active boundaries are returned as structured `PythonError` values.
 </Note>
 
 </Accordion>

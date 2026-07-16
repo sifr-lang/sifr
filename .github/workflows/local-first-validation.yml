@@ -46,6 +46,8 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           version: ${{ env.SIFR_MIN_UV_VERSION }}
+      - name: Install pinned buffer compatibility interpreter
+        run: uv python install 3.11
       - name: Run local-first profile
         run: bash scripts/run_all_tests.sh --profile "${{ matrix.profile }}"
 

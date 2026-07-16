@@ -514,6 +514,23 @@ The public resource exposes read-only `length`, `item_size`, `dimensions`,
 and bounds; multi-dimensional metadata remains runtime data rather than pretending
 shape values are static type parameters.
 
+Complete activation evidence is machine-owned by
+`verification/areas/python_interop/fixtures/numpy_buffer/buffer_declaration_evidence.json`.
+It locks positive, negative, cleanup, cancellation-disposition, live-source,
+and delivery-profile ownership. Its exact owners resolve to checked-in source
+or named tests, and strict mutation tests reject schema, row, evidence, owner,
+cancellation, live-case, and profile drift. The compiled suite covers
+import-root, `Self`, package-bridge, affine-aggregate, and real NumPy ndarray
+producers. The bridge fixture proves shared mutation and post-release exporter
+resizability; the aggregate fixture proves that all six retained exporters are
+resizable after automatic aggregate drop. Python 3.11-compatible C-level
+runtime exporters independently prove pointer identity and exact release counts
+for explicit release, automatic drop, validation failure, admission conflict,
+and store-failure rollback. A blocking, minimal locked CPython 3.11 lane runs
+those five C-level tests and the same five compiled binaries in every delivery
+profile. The runnable typed-buffer example exposes the same five deterministic
+markers.
+
 ## Arrow C Data Interface
 
 Arrow declarations derive capsule kind from their affine return type:

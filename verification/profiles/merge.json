@@ -115,6 +115,7 @@
         "dataframes",
         "dataframe-examples",
         "buffer-examples",
+        "buffer-cpython311",
         "ml",
         "libraries",
         "async-declaration-examples",

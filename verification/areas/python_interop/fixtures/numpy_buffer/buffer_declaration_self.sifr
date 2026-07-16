@@ -10,7 +10,7 @@ class ByteArrayOwner(NonSend):
     def close(own self) -> Result[None, PythonError]: ...
 
 
-@python(bridge.buffer_producers.make_owner)
+@python(bridge.buffer_owner.make_owner)
 def make_owner(payload: bytes) -> Result[ByteArrayOwner, PythonError]: ...
 
 

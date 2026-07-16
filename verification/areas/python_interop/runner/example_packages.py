@@ -20,6 +20,8 @@ class ExampleCase:
     stdout_marker: str
     import_roots: tuple[str, ...]
     native_roots: tuple[str, ...] | None = None
+    copy_bridges: bool = True
+    bridge_files: tuple[str, ...] | None = None
 
 
 def build_examples_report(
@@ -46,6 +48,11 @@ def build_examples_report(
     )
     case_results = runner(paths)
     failures = sum(1 for case in case_results if case["status"] != "example-passed")
+    observed_case_ids = [case.get("id") for case in case_results]
+    if len(observed_case_ids) != len(set(observed_case_ids)) or set(observed_case_ids) != set(
+        cases_by_id
+    ):
+        failures = max(1, failures)
     return _report(
         suite_name=suite_name,
         status="examples-failed" if failures else "examples-passed",
@@ -87,9 +94,39 @@ def run_examples_self_tests(
     marker_ids = {case.case_id for case in cases_by_id.values() if case.stdout_marker}
     if marker_ids != set(cases_by_id):
         raise SystemExit(f"{suite_name} examples self-test marker drift: {sorted(marker_ids)}")
-    roots_ids = {case.case_id for case in cases_by_id.values() if case.import_roots}
-    if roots_ids != set(cases_by_id):
-        raise SystemExit(f"{suite_name} examples self-test trust-root drift: {sorted(roots_ids)}")
+    invalid_roots = {
+        case.case_id
+        for case in cases_by_id.values()
+        if any(not root for root in case.import_roots)
+        or len(case.import_roots) != len(set(case.import_roots))
+        or (
+            case.native_roots is not None
+            and (
+                any(not root for root in case.native_roots)
+                or len(case.native_roots) != len(set(case.native_roots))
+            )
+        )
+        or (
+            case.bridge_files is not None
+            and (
+                any(not bridge_file for bridge_file in case.bridge_files)
+                or len(case.bridge_files) != len(set(case.bridge_files))
+            )
+        )
+    }
+    if invalid_roots:
+        raise SystemExit(
+            f"{suite_name} examples self-test invalid trust roots: {sorted(invalid_roots)}"
+        )
+
+    empty_payload = build_examples_report(
+        paths,
+        suite_name=suite_name,
+        cases_by_id=cases_by_id,
+        example_runner=lambda _paths: [],
+    )
+    if empty_payload["status"] != "examples-failed":
+        raise SystemExit(f"{suite_name} examples self-test accepted an empty result set")
 
     first_case = next(iter(cases_by_id.values()))
     failed_payload = build_examples_report(
@@ -128,6 +165,23 @@ def validate_source_presence(
                 }
             )
             continue
+        if case.bridge_files is not None:
+            bridge_root = source_path.parent / "python_bridges"
+            missing_bridges = [
+                bridge_file
+                for bridge_file in case.bridge_files
+                if not (bridge_root / bridge_file).is_file()
+            ]
+            if missing_bridges:
+                checks.append(
+                    {
+                        "id": case.case_id,
+                        "status": "fail",
+                        "sifr_source": case.relative_source,
+                        "reason": f"missing bridge files: {missing_bridges}",
+                    }
+                )
+                continue
         checks.append(
             {
                 "id": case.case_id,
@@ -169,8 +223,14 @@ def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCa
     if source_path.is_file():
         shutil.copy2(source_path, source_root / "main.sifr")
     bridge_source = source_path.parent / "python_bridges"
-    if bridge_source.is_dir():
-        shutil.copytree(bridge_source, source_root / "python_bridges")
+    if case.copy_bridges and bridge_source.is_dir():
+        if case.bridge_files is None:
+            shutil.copytree(bridge_source, source_root / "python_bridges")
+        else:
+            bridge_target = source_root / "python_bridges"
+            bridge_target.mkdir()
+            for bridge_file in case.bridge_files:
+                shutil.copy2(bridge_source / bridge_file, bridge_target / bridge_file)
     (source_root / "lib.rs").write_text(
         "// Cargo package marker required for metadata discovery; runnable Sifr source is src/main.sifr.\n",
         encoding="utf-8",

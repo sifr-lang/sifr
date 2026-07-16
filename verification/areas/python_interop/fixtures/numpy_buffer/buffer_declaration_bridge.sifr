@@ -1,18 +1,45 @@
 from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-@python.buffer(bridge.buffer_producers.make_buffer, access=read, layout=any)
+@python.buffer(bridge.buffer_bytes.make_buffer, access=write, layout=any)
 def bridge_view(payload: bytes) -> Result[python.Buffer[uint8], PythonError]: ...
+
+
+@python(bridge.buffer_bytes.reset_buffer_observer)
+def reset_buffer_observer() -> Result[None, PythonError]: ...
+
+
+@python(bridge.buffer_bytes.buffer_count)
+def buffer_count() -> Result[int, PythonError]: ...
+
+
+@python(bridge.buffer_bytes.all_buffers_resizable_after_release)
+def all_buffers_resizable_after_release() -> Result[bool, PythonError]: ...
+
+
+@python(bridge.buffer_bytes.last_buffer_pointer)
+def last_buffer_pointer() -> Result[int, PythonError]: ...
+
+
+@python(bridge.buffer_bytes.last_buffer_value)
+def last_buffer_value(index: int) -> Result[int, PythonError]: ...
 
 
 def main() -> Result[None, PythonError]:
     try:
         before: ResourceDiagnostics = resource_diagnostics()
+        reset: None = reset_buffer_observer()
         view: python.Buffer[uint8] = bridge_view(b"bridge")
+        pointer: int = last_buffer_pointer()
+        replacement: uint8 = 42
+        written: None = view.write(2, replacement)
+        producer_value: int = last_buffer_value(2)
         copied: list[uint8] = view.copy_slice(0, view.length())
         released: None = view.release()
+        producers: int = buffer_count()
+        released_all: bool = all_buffers_resizable_after_release()
         after: ResourceDiagnostics = resource_diagnostics()
-        if len(copied) != 6 or after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+        if len(copied) != 6 or copied[2] != replacement or producer_value != 42 or pointer <= 0 or producers != 1 or not released_all or after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
             raise PythonError("bridge buffer acquisition leaked resources")
         print("sifr-python-interop:buffer:bridge=ok:resources=zero")
         return None

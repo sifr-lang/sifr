@@ -16,7 +16,12 @@ from async_context_examples import (
     build_async_context_examples_report,
     run_async_context_examples_self_tests,
 )
-from buffer_examples import build_buffer_examples_report, run_buffer_examples_self_tests
+from buffer_examples import (
+    BUFFER_EXAMPLE_CASES,
+    build_buffer_examples_report,
+    run_buffer_examples_self_tests,
+)
+from buffer_evidence import BUFFER_MATRIX_SPECS
 from callback_examples import build_callback_examples_report, run_callback_examples_self_tests
 from certification_matrix import build_certification_report, validate_certification_policy
 from dataframe_examples import build_dataframe_examples_report, run_dataframe_examples_self_tests
@@ -93,6 +98,7 @@ REQUIRED_FIXTURE_FILES = (
     "fastapi_app/fastapi_app_contract.json",
     "kafka/kafka_contract.json",
     "numpy_buffer/py_buffer_contract.json",
+    "numpy_buffer/buffer_declaration_evidence.json",
     "pandas_arrow/pandas_arrow_contract.json",
     "polars_arrow/polars_arrow_contract.json",
     "pubsub/pubsub_contract.json",
@@ -127,6 +133,7 @@ REQUIRED_SOURCE_FIXTURES = (
     "numpy_buffer/buffer_declaration_self.sifr",
     "numpy_buffer/buffer_declaration_bridge.sifr",
     "numpy_buffer/buffer_affine_aggregate_codegen.sifr",
+    "numpy_buffer/buffer_declaration_numpy.sifr",
     "numpy_buffer/buffer_comparison_rejected.sifr",
     "pandas_arrow/pandas_full_example.sifr",
     "polars_arrow/polars_full_example.sifr",
@@ -425,6 +432,8 @@ def validate_fixture_files(fixtures_root: Path) -> None:
             validate_async_declaration_evidence(payload)
         if name == "async_context/async_context_evidence.json":
             validate_async_context_evidence(payload)
+        if name == "numpy_buffer/buffer_declaration_evidence.json":
+            validate_buffer_declaration_evidence(payload, fixtures_root)
     missing_sources = [
         name for name in REQUIRED_SOURCE_FIXTURES if not (fixtures_root / name).is_file()
     ]
@@ -533,6 +542,151 @@ def validate_async_context_evidence(payload: object) -> None:
         raise SystemExit("async context live evidence must lock the aiosqlite marker")
 
 
+def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -> None:
+    if not isinstance(payload, dict):
+        raise SystemExit("buffer evidence must identify buffer-protocol-declaration")
+    required_keys = {
+        "schema_version",
+        "capability",
+        "surface",
+        "positive",
+        "negative",
+        "cleanup",
+        "cancellation",
+        "live",
+        "profiles",
+    }
+    if set(payload) != required_keys:
+        raise SystemExit("buffer evidence top-level schema drift")
+    if payload.get("schema_version") != 1:
+        raise SystemExit("buffer evidence schema_version must be 1")
+    if payload.get("capability") != "buffer-protocol-declaration":
+        raise SystemExit("buffer evidence must identify buffer-protocol-declaration")
+    if payload.get("surface") != "@python.buffer -> Result[python.Buffer[T], PythonError]":
+        raise SystemExit("buffer evidence surface drift")
+    repo_root = fixtures_root.parents[3]
+    for matrix_name, expected_rows in BUFFER_MATRIX_SPECS.items():
+        matrix = payload.get(matrix_name)
+        if not isinstance(matrix, list) or len(matrix) != len(expected_rows):
+            raise SystemExit(f"buffer evidence requires exact {matrix_name} rows")
+        ids = [item.get("id") for item in matrix if isinstance(item, dict)]
+        if len(ids) != len(matrix) or len(set(ids)) != len(ids) or set(ids) != set(expected_rows):
+            raise SystemExit(f"buffer evidence {matrix_name} row id drift")
+        for item in matrix:
+            if set(item) != {"id", "layer", "evidence", "owners", "covers"}:
+                raise SystemExit(f"buffer evidence {matrix_name} row schema drift")
+            expected_layer, expected_evidence, expected_owners, expected_coverage = expected_rows[
+                item["id"]
+            ]
+            if item.get("layer") != expected_layer:
+                raise SystemExit(f"buffer evidence layer drift: {item['id']}")
+            if item.get("evidence") != expected_evidence:
+                raise SystemExit(f"buffer evidence description drift: {item['id']}")
+            covers = item.get("covers")
+            if not isinstance(covers, list) or len(covers) != len(set(covers)) or set(covers) != expected_coverage:
+                raise SystemExit(f"buffer evidence coverage drift: {item['id']}")
+            owners = item.get("owners")
+            if (
+                not isinstance(owners, list)
+                or len(owners) != len(set(owners))
+                or set(owners) != expected_owners
+            ):
+                raise SystemExit(f"buffer evidence owner drift: {item['id']}")
+            for owner in owners:
+                if not isinstance(owner, str) or not owner:
+                    raise SystemExit(f"buffer evidence owner is invalid: {item['id']}")
+                relative_path, separator, symbol = owner.partition("::")
+                owner_path = repo_root / relative_path
+                if not owner_path.is_file():
+                    raise SystemExit(f"buffer evidence owner is missing: {owner}")
+                if separator and symbol not in owner_path.read_text(encoding="utf-8"):
+                    raise SystemExit(f"buffer evidence owner symbol is missing: {owner}")
+    cancellation = payload.get("cancellation")
+    if cancellation != {
+        "status": "not-applicable",
+        "reason": "buffer acquisition and access are synchronous blocking boundaries",
+    }:
+        raise SystemExit("buffer evidence must record synchronous cancellation as not applicable")
+    live = payload.get("live")
+    required_live_ids = {
+        "import-root-bytearray",
+        "receiver-mmap",
+        "package-bridge",
+        "affine-aggregate",
+        "numpy-ndarray",
+    }
+    if not isinstance(live, list) or len(live) != len(required_live_ids):
+        raise SystemExit("buffer live evidence requires exactly five rows")
+    if any(not isinstance(item, dict) or set(item) != {"id", "source", "stdout_marker"} for item in live):
+        raise SystemExit("buffer live evidence row schema drift")
+    observed_live_ids = {item.get("id") for item in live}
+    if observed_live_ids != required_live_ids:
+        missing = sorted(required_live_ids - observed_live_ids)
+        extra = sorted(observed_live_ids - required_live_ids)
+        raise SystemExit(f"buffer live evidence drift: missing={missing}, extra={extra}")
+    registered_cases = {
+        (case.relative_source.removeprefix("numpy_buffer/"), case.stdout_marker)
+        for case in BUFFER_EXAMPLE_CASES.values()
+    }
+    observed_cases = set()
+    for item in live:
+        source = item.get("source")
+        marker = item.get("stdout_marker")
+        source_path = fixtures_root / "numpy_buffer" / source if isinstance(source, str) else None
+        if source_path is None or not source_path.is_file():
+            raise SystemExit(f"buffer live evidence source is missing: {source}")
+        if not isinstance(marker, str) or not marker:
+            raise SystemExit(f"buffer live evidence marker is missing: {source}")
+        if marker not in source_path.read_text(encoding="utf-8"):
+            raise SystemExit(f"buffer live evidence marker is absent from source: {source}")
+        observed_cases.add((source, marker))
+    if observed_cases != registered_cases:
+        raise SystemExit("buffer live evidence must match the executable case registry")
+    profiles = payload.get("profiles")
+    required_profiles = ["create-pr", "merge", "nightly", "release"]
+    if profiles != required_profiles:
+        raise SystemExit("buffer evidence must remain blocking in every delivery profile")
+    manifest_payload = json.loads(
+        (repo_root / "verification" / "areas" / "python_interop" / "manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    required_suites = {
+        "buffer-examples": "python-interop-buffer-examples",
+        "buffer-cpython311": "python-interop-buffer-cpython311",
+    }
+    for suite_name, expected_command in required_suites.items():
+        manifest_suites = [
+            suite for suite in manifest_payload["suites"] if suite["name"] == suite_name
+        ]
+        if len(manifest_suites) != 1 or manifest_suites[0].get("kind") != "adapter":
+            raise SystemExit(f"{suite_name} manifest ownership drift")
+        manifest_cases = manifest_suites[0].get("cases")
+        if (
+            not isinstance(manifest_cases, list)
+            or len(manifest_cases) != 1
+            or manifest_cases[0].get("command") != expected_command
+        ):
+            raise SystemExit(f"{suite_name} manifest command drift")
+    for profile in required_profiles:
+        profile_payload = json.loads(
+            (repo_root / "verification" / "profiles" / f"{profile}.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        python_areas = [
+            area for area in profile_payload["selected_areas"] if area["area"] == "python_interop"
+        ]
+        if len(python_areas) != 1:
+            raise SystemExit(f"python interop profile ownership drift in {profile}")
+        python_suites = python_areas[0]["suites"]
+        missing_suites = set(required_suites).difference(python_suites)
+        if missing_suites:
+            raise SystemExit(
+                f"buffer evidence suites are not blocking in {profile}: {sorted(missing_suites)}"
+            )
+
+
 def select_entries(
     entries: list[PackageEntry],
     groups: list[str],
@@ -592,6 +746,44 @@ def run_self_tests(area_root: Path) -> None:
             raise
     else:
         raise SystemExit("sync context evidence self-test accepted a missing normal outcome")
+    buffer_evidence = json.loads(
+        (area_root / "fixtures/numpy_buffer/buffer_declaration_evidence.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    buffer_mutations = []
+    invalid_schema = json.loads(json.dumps(buffer_evidence))
+    invalid_schema["schema_version"] = 999
+    buffer_mutations.append((invalid_schema, "schema_version"))
+    duplicate_matrix = json.loads(json.dumps(buffer_evidence))
+    duplicate_matrix["positive"][1]["id"] = duplicate_matrix["positive"][0]["id"]
+    buffer_mutations.append((duplicate_matrix, "row id drift"))
+    missing_owner = json.loads(json.dumps(buffer_evidence))
+    missing_owner["cleanup"][0]["owners"][0] = "crates/missing.rs::missing_test"
+    buffer_mutations.append((missing_owner, "owner drift"))
+    unrelated_owner = json.loads(json.dumps(buffer_evidence))
+    unrelated_owner["positive"][0]["owners"] = ["README.md"]
+    buffer_mutations.append((unrelated_owner, "owner drift"))
+    fabricated_evidence = json.loads(json.dumps(buffer_evidence))
+    fabricated_evidence["positive"][0]["evidence"] = "fabricated but nonempty"
+    buffer_mutations.append((fabricated_evidence, "description drift"))
+    missing_reason = json.loads(json.dumps(buffer_evidence))
+    del missing_reason["cancellation"]["reason"]
+    buffer_mutations.append((missing_reason, "synchronous cancellation"))
+    duplicate_live = json.loads(json.dumps(buffer_evidence))
+    duplicate_live["live"].append(duplicate_live["live"][0])
+    buffer_mutations.append((duplicate_live, "exactly five rows"))
+    missing_profile = json.loads(json.dumps(buffer_evidence))
+    missing_profile["profiles"].remove("release")
+    buffer_mutations.append((missing_profile, "every delivery profile"))
+    for mutated, expected_error in buffer_mutations:
+        try:
+            validate_buffer_declaration_evidence(mutated, area_root / "fixtures")
+        except SystemExit as error:
+            if expected_error not in str(error):
+                raise
+        else:
+            raise SystemExit(f"buffer evidence self-test accepted mutation: {expected_error}")
     run_env_probe(area_root)
     try:
         validate_filters("group", ["not-a-group"], KNOWN_GROUPS)
