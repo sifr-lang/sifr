@@ -31,8 +31,8 @@ BUFFER_MATRIX_SPECS = {
             {
                 "import-root target",
                 "bridge target",
-                "Self receiver",
-                "read/write access",
+                "read-only Self receiver",
+                "producer read/write access",
                 "any/C/F layout",
                 "affine aggregate propagation",
                 "non-Send propagation",
@@ -97,6 +97,7 @@ BUFFER_MATRIX_SPECS = {
                 "crates/sifr/tests/e2e/fail/python_buffer_nested_async_generator_capture.sifr",
                 "crates/sifr/tests/e2e/fail/python_buffer_nested_function_capture_rejected.sifr",
                 "crates/sifr/tests/e2e/fail/python_buffer_walrus_rejected.sifr",
+                "crates/sifr/tests/e2e/fail/python_buffer_writable_self_owner_alias.sifr",
             },
             {
                 "copy/clone/equality/hash/order",
@@ -107,6 +108,7 @@ BUFFER_MATRIX_SPECS = {
                 "lambda/nested-function/generator capture",
                 "walrus alias",
                 "task sendability",
+                "writable Self owner alias",
             },
         ),
         "runtime-validation": (

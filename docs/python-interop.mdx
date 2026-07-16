@@ -306,11 +306,18 @@ def update(mut view: python.Buffer[int64]) -> Result[list[int64], PythonError]:
 ```
 
 The decorator target can be an import-root callable, a package-local `bridge`
-callable, or `Self` on an opaque receiver. `access=read | write` and
+callable, or `Self` on an opaque receiver. `Self` acquisition is read-only;
+writable declarations must use a producer callable that returns a fresh
+exporter because a shared opaque receiver cannot be exclusively frozen while
+the view exists. `access=read | write` for producers and
 `layout=any | c_contiguous | f_contiguous` are validated during acquisition
 along with element format, item size, dimensions, shape, strides, and
 suboffsets. Supported element types are fixed-width and pointer-width signed
 and unsigned integers plus `float`.
+
+The result error must be the canonical `PythonError` contract imported from
+`sifr.python`; a same-named local class with a different field shape is
+rejected during checking.
 
 `python.Buffer[T]` is affine and non-send. It retains its exporter and performs
 exactly one `PyBuffer_Release` on explicit `release()` or automatic drop.

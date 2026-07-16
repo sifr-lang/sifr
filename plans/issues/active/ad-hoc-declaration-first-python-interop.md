@@ -1336,8 +1336,23 @@ Delivery waves:
   capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `27/42` cache hits. Warm-time and cache-hit notices are
   non-blocking advisories. PR #2989 is merged.
-- [ ] Milestone review — review the complete merged M10 implementation before
-  closing the milestone checkbox.
+- [ ] Milestone review — complete merged-M10
+  [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-1.md)
+  found writable `Self` owner aliasing and name-only `PythonError` acceptance.
+  Remediation rejects writable receiver acquisition until an exclusive owner
+  freeze is representable, adds permanent owner-close negative evidence, and
+  shares an exact Python error field-contract predicate across lowering, method
+  typing, and code generation. Focused buffer lowering passes `37/37`, the
+  complete compile-fail matrix passes `528/528`, the type-system and codegen
+  mapping regressions pass, and the Python interop evidence self-test passes.
+  Workspace Clippy, formatting, HIR maintainability, and the `900`-line
+  file-size guardrail pass over `2690` files. The authoritative create-PR gate
+  passes every blocking lane: Python interop `12/12` including CPython `3.11`
+  runtime `5/5` and compiled `5/5`, runtime platform `28` variants with one
+  capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c`. Its `892.55s` wall time and `15/42` cache hit rate produce
+  only non-blocking advisories. Full re-review is in progress before closing
+  the milestone checkbox.
 
 Acceptance:
 

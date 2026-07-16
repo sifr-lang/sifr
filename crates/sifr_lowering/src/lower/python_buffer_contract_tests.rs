@@ -120,6 +120,66 @@ fn opaque_receiver_buffer_requires_immutable_borrowed_self() {
 }
 
 #[test]
+fn opaque_receiver_buffer_rejects_writable_self_without_owner_freezing() {
+    let source = format!(
+        "{ERROR}\n@python.opaque(type=pkg.Owner, cleanup=drop)\nclass Owner(NonSend):\n    @python.buffer(Self, access=write, layout=any)\n    def view(self) -> Result[python.Buffer[uint8], PythonError]: ...\n"
+    );
+    let errors = lower_errors(&source);
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                && error
+                    .message
+                    .contains("cannot exclusively freeze its opaque owner")
+        }),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn buffer_declarations_and_methods_reject_shadow_python_error_shapes() {
+    let shadow = r#"
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+    code: int
+"#;
+    let declaration = lower_errors(&format!(
+        "{shadow}\n@python.buffer(pkg.make, access=read, layout=any)\ndef bad() -> Result[python.Buffer[uint8], PythonError]: ...\n"
+    ));
+    assert!(
+        declaration.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                && error
+                    .message
+                    .contains("canonical `PythonError` field contract")
+        }),
+        "{declaration:?}"
+    );
+
+    let method = lower_errors(&format!(
+        "{shadow}\ndef bad(view: python.Buffer[uint8]) -> None:\n    value: Result[uint8, PythonError] = view.read(0)\n"
+    ));
+    assert!(
+        method.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                && error
+                    .message
+                    .contains("python.Buffer methods require the canonical")
+        }),
+        "{method:?}"
+    );
+}
+
+#[test]
+fn infallible_buffer_metadata_does_not_require_python_error_in_scope() {
+    lower_ok("def length(view: python.Buffer[uint8]) -> int:\n    return view.length()\n");
+}
+
+#[test]
 fn buffer_policy_and_return_contract_fail_with_pyzc_0001() {
     for declaration in [
         "@python.buffer(pkg.make, access=copy, layout=any)\ndef bad() -> Result[python.Buffer[uint8], PythonError]: ...",
