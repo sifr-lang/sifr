@@ -161,27 +161,11 @@ impl RustEmitter {
                 args: vec![lowered_value],
             });
         }
-        let lowered_value = self.consuming_class_upcast_for_ir(target_ty, value_ty, lowered_value);
+        let lowered_value = self.consuming_value_upcast_for_ir(target_ty, value_ty, lowered_value);
         let lowered_value =
             Self::wrap_option_local_value_for_ir(target_ty, value, value_ty, lowered_value);
         if crate::helpers::is_option_type(target_ty) {
             return Ok(lowered_value);
-        }
-        if let Type::Union(members) = crate::resolve_alias_type_for_plain_call(target_ty) {
-            if let Some(member) = members
-                .iter()
-                .find(|member| value_ty.is_assignable_to(member))
-            {
-                let lowered_value =
-                    self.consuming_class_upcast_for_ir(member, value_ty, lowered_value);
-                return Ok(crate::RustExpr::FnCall {
-                    func: Box::new(crate::RustExpr::Path(vec![
-                        target_ty.union_enum_name(),
-                        member.union_variant_name(),
-                    ])),
-                    args: vec![lowered_value],
-                });
-            }
         }
         Ok(lowered_value)
     }

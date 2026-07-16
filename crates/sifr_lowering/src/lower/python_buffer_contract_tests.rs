@@ -232,6 +232,31 @@ fn python_buffer_is_rejected_at_sendability_boundaries() {
 }
 
 #[test]
+fn same_basename_class_identity_does_not_hide_nested_buffer_sendability() {
+    let buffer = Type::PythonBuffer(Box::new(Type::FixedInt(FixedIntType::U8)));
+    let inner = Type::Class {
+        identity: Some("inner.Root".to_string()),
+        type_args: Vec::new(),
+        name: "Root".to_string(),
+        fields: vec![("view".to_string(), buffer)],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let outer = Type::Class {
+        identity: Some("outer.Root".to_string()),
+        type_args: Vec::new(),
+        name: "Root".to_string(),
+        fields: vec![("inner".to_string(), inner)],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+
+    let reason = task_scope_calls::non_send_reason(&outer)
+        .expect("nested Python buffer should make the outer class non-send");
+    assert!(reason.contains("Python buffer resources are non-send"));
+}
+
+#[test]
 fn python_buffer_equality_is_rejected_before_codegen() {
     let errors = lower_errors(
         "def same(left: python.Buffer[uint8], right: python.Buffer[uint8]) -> bool:\n    return left == right\n",

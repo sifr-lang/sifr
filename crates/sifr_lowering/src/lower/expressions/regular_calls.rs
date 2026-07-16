@@ -131,6 +131,13 @@ pub(super) fn lower_regular_call(
                 .get(i)
                 .copied()
                 .unwrap_or(ParamConvention::borrow());
+            validate_borrowed_structural_coercion(
+                arg.ty(),
+                param_ty,
+                convention,
+                call.arguments.args[i].range(),
+                ctx,
+            );
             if convention.is_owned() {
                 // Own convention transfers every affine candidate contained in
                 // a conditional or wrapper expression.
@@ -341,7 +348,9 @@ pub(super) fn lower_regular_call(
     // Check argument types (skip for print)
     if func_name != "print" {
         let is_generic_function = ctx.generic_functions.contains_key(&func_name);
-        for (i, (arg, (param_name, param_ty, _))) in args.iter().zip(ft.params.iter()).enumerate() {
+        for (i, (arg, (param_name, param_ty, convention))) in
+            args.iter().zip(ft.params.iter()).enumerate()
+        {
             if is_generic_function {
                 let mut type_vars = Vec::new();
                 collect_type_vars(param_ty, &mut type_vars);
@@ -350,12 +359,20 @@ pub(super) fn lower_regular_call(
                     continue;
                 }
             }
-            if !arg.ty().is_assignable_to(param_ty) {
-                let primary_range = arg_ranges
-                    .get(i)
-                    .copied()
-                    .flatten()
-                    .unwrap_or_else(|| call.range());
+            let primary_range = arg_ranges
+                .get(i)
+                .copied()
+                .flatten()
+                .unwrap_or_else(|| call.range());
+            if arg.ty().is_assignable_to(param_ty) {
+                validate_borrowed_structural_coercion(
+                    arg.ty(),
+                    param_ty,
+                    *convention,
+                    primary_range,
+                    ctx,
+                );
+            } else {
                 ctx.error_with_code_at(
                     DiagnosticCode::TYPE_MISMATCH,
                     format!(
@@ -481,7 +498,7 @@ pub(super) fn lower_regular_call(
         // Re-check argument types after TypeVar substitution so repeated type
         // parameters (e.g. assert_eq[T](a: T, b: T)) enforce consistent types.
         if func_name != "print" {
-            for (i, (arg, (param_name, param_ty, _))) in
+            for (i, (arg, (param_name, param_ty, convention))) in
                 args.iter().zip(ft.params.iter()).enumerate()
             {
                 let concrete_param_ty = substitute_type_vars(param_ty, &bindings);
@@ -509,7 +526,20 @@ pub(super) fn lower_regular_call(
                     }
                     continue;
                 }
-                if !arg.ty().is_assignable_to(&concrete_param_ty) {
+                if arg.ty().is_assignable_to(&concrete_param_ty) {
+                    let primary_range = arg_ranges
+                        .get(i)
+                        .copied()
+                        .flatten()
+                        .unwrap_or_else(|| call.range());
+                    validate_borrowed_structural_coercion(
+                        arg.ty(),
+                        &concrete_param_ty,
+                        *convention,
+                        primary_range,
+                        ctx,
+                    );
+                } else {
                     let primary_range = arg_ranges
                         .get(i)
                         .copied()
@@ -632,6 +662,44 @@ pub(super) fn lower_regular_call(
             args,
             ty: call_type,
         })
+    }
+}
+
+fn validate_borrowed_structural_coercion(
+    source_ty: &Type,
+    target_ty: &Type,
+    convention: ParamConvention,
+    range: ruff_text_size::TextRange,
+    ctx: &mut LowerCtx,
+) {
+    let source = source_ty.resolve_alias();
+    let target = target_ty.resolve_alias();
+    if source == target
+        || !source_ty.is_assignable_to(target_ty)
+        || !matches!(target, Type::Union(_) | Type::Result(_, _))
+    {
+        return;
+    }
+    if convention.is_mut_borrow() {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "mutable borrow cannot change the generated representation from '{}' to '{}'",
+                source_ty.display_name(),
+                target_ty.display_name()
+            ),
+            range,
+        );
+    } else if convention.is_shared_borrow() && !source_ty.supports_derived_clone() {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "borrowed conversion from '{}' to '{}' requires a cloneable source representation",
+                source_ty.display_name(),
+                target_ty.display_name()
+            ),
+            range,
+        );
     }
 }
 

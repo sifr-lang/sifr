@@ -7,7 +7,7 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review passes 14 through 24 reopened
+Wave 2 is implemented; whole-diff review passes 14 through 25 reopened
 generic/inherited Rust-trait, reusable affine-closure ownership, keyed sorting,
 per-type-parameter bound, specialization, generic-operator, conditional-source,
 top-level inference, multi-hop re-export identity, and specialized generic
@@ -15,7 +15,8 @@ pattern-capture gaps. Their remediation passes the focused and complete
 compiler suites, native-positive/negative coverage, full merge-profile E2E,
 maintainability, formatting, and file-size checks plus the authoritative local
 create-PR gate in [PR #2988](https://github.com/sifr-lang/sifr/pull/2988).
-Pass-24 remediation is complete and awaiting the next whole-diff review. Typed
+Pass-25 remediation is complete and the next whole-diff review round is in
+progress. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1269,8 +1270,27 @@ Delivery waves:
   create-PR gate passes every blocking lane in `537.98s`: Python interop
   `11/11`, runtime platform `28` variants with one capability-gated skip, and
   E2E `131/131` with signature `7c39b8c1dd4fec7c` and `36/42` cache hits. Its
-  warm-time and cache-hit notices are non-blocking advisories. Review pass 25
-  now covers the complete remediated PR diff.
+  warm-time and cache-hit notices are non-blocking advisories. Full-diff
+  [review pass 25](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-25.md)
+  cleared the pass-24 buffer, writable-place, ancestry-selection, and phantom
+  corrections, then found that owned coercion is not recursive across existing
+  union/`Result` representations and recursive affine, trait, and sendability
+  guards still key distinct imported classes by basename. Shared consuming
+  coercion now recursively maps existing union, `Option`, and `Result` values
+  across calls, locals, and returns; borrowed representation changes require a
+  Clone-capable source and mutable borrowed changes are rejected. Recursive
+  ownership, Clone, equality, Hash, Debug, bounds, and task-sendability guards
+  now use canonical declaration identity plus concrete specialization. Same-
+  basename and specialization regressions cover each affected capability. Full
+  type-system, lowering, codegen, and driver suites pass `106/106`, `765/765`
+  active with one ignored, `829/829`, and `351/351` active with `29` ignored;
+  the native generated-project lane passes `29/29`. Workspace Clippy,
+  formatting, HIR/driver maintainability, and the `900`-line source-size
+  guardrail pass over `2682` files. The authoritative create-PR gate passes all
+  blocking lanes in `536.29s`: Python interop `11/11`, runtime platform `28`
+  variants with one capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `42/42` cache hits. Its warm-time notice is a
+  non-blocking advisory.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

@@ -969,10 +969,16 @@ supports them. This is a language rule, not an implementation detail.
   Ownership-consuming arguments, local coercions, and returns emit one such
   conversion per ancestor and therefore move, rather than clone or borrow, the
   embedded parent representation across direct, transitive, imported, and
-  re-exported upcasts. Union and `Result` construction converts the selected
-  payload before wrapping it. Transitive selection prefers the exact canonical
-  ancestor identity; a local-name tail is used only when it identifies one
-  unambiguous ancestor.
+  re-exported upcasts. Structural value coercion recursively maps existing
+  union, `Option`, and `Result` representations, and converts a raw payload
+  before wrapping it in a target union. Shared-borrow arguments whose structural
+  representation changes materialize a Clone-capable value first; mutable
+  borrows reject such conversions. Transitive selection prefers the exact
+  canonical ancestor identity; a local-name tail is used only when it identifies
+  one unambiguous ancestor. Recursive ownership, Clone, equality, Hash, Debug,
+  and task-sendability queries key class visits by canonical declaration
+  identity plus concrete specialization, so same-basename imports and generic
+  instantiations cannot mask one another.
   Generic callable parameters, bounds, and project codegen signatures likewise
   propagate through direct and multi-hop re-export facades.
 - **Module return inference:** successful unannotated top-level return types are

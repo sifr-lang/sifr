@@ -10,6 +10,8 @@ mod check_equality_capability_tests;
 mod collection_capabilities;
 pub mod infer;
 pub mod literal;
+#[cfg(test)]
+mod type_capability_identity_tests;
 mod types;
 pub mod union;
 

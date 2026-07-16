@@ -284,7 +284,10 @@ pub(in crate::lower) fn non_share_safe_reason(ty: &Type) -> Option<String> {
     non_share_safe_reason_inner(ty.resolve_alias(), &mut HashSet::new())
 }
 
-fn non_share_safe_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Option<String> {
+fn non_share_safe_reason_inner(
+    ty: &Type,
+    visiting: &mut HashSet<(String, Vec<Type>)>,
+) -> Option<String> {
     match ty {
         Type::PythonBuffer(_) => Some("Python buffer resources are non-send".to_string()),
         Type::List(_) => {
@@ -311,14 +314,17 @@ fn non_share_safe_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Opt
             if class_has_non_send_marker(name, parent_class.as_deref()) {
                 return Some(format!("`{name}` inherits the `NonSend` marker"));
             }
-            if !visiting.insert(name.clone()) {
+            let Some(key) = ty.class_recursion_key() else {
+                return Some("class identity is unavailable".to_string());
+            };
+            if !visiting.insert(key.clone()) {
                 return None;
             }
             let field_reason = fields.iter().find_map(|(field, field_ty)| {
                 non_share_safe_reason_inner(field_ty.resolve_alias(), visiting)
                     .map(|reason| format!("field `{field}` is not share-safe: {reason}"))
             });
-            visiting.remove(name);
+            visiting.remove(&key);
             field_reason.or_else(|| {
                 Some(format!(
                     "`{}` is a mutable class without an explicit synchronization wrapper",
@@ -351,7 +357,7 @@ fn non_share_safe_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Opt
     }
 }
 
-fn non_send_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Option<String> {
+fn non_send_reason_inner(ty: &Type, visiting: &mut HashSet<(String, Vec<Type>)>) -> Option<String> {
     match ty {
         Type::PythonBuffer(_) => Some("Python buffer resources are non-send".to_string()),
         Type::Class {
@@ -369,14 +375,17 @@ fn non_send_reason_inner(ty: &Type, visiting: &mut HashSet<String>) -> Option<St
             if class_has_non_send_marker(name, parent_class.as_deref()) {
                 return Some(format!("`{name}` inherits the `NonSend` marker"));
             }
-            if !visiting.insert(name.clone()) {
+            let Some(key) = ty.class_recursion_key() else {
+                return Some("class identity is unavailable".to_string());
+            };
+            if !visiting.insert(key.clone()) {
                 return None;
             }
             let found = fields.iter().find_map(|(field, field_ty)| {
                 non_send_reason_inner(field_ty.resolve_alias(), visiting)
                     .map(|reason| format!("field `{field}` is not sendable: {reason}"))
             });
-            visiting.remove(name);
+            visiting.remove(&key);
             found
         }
         Type::List(elem)

@@ -1,6 +1,112 @@
 use super::{RustEmitter, Type};
 
 impl RustEmitter {
+    pub(crate) fn consuming_value_upcast_for_ir(
+        &self,
+        target_ty: &Type,
+        source_ty: &Type,
+        lowered: crate::RustExpr,
+    ) -> crate::RustExpr {
+        let target = crate::resolve_alias_type_for_plain_call(target_ty);
+        let source = crate::resolve_alias_type_for_plain_call(source_ty);
+        if target == source {
+            return lowered;
+        }
+
+        if let Some(target_inner) = Self::option_inner_type_for_ir(target_ty) {
+            if let Some(source_inner) = Self::option_inner_type_for_ir(source_ty) {
+                let value = crate::RustExpr::Ident("__sifr_option_value".to_string());
+                let converted =
+                    self.consuming_value_upcast_for_ir(target_inner, source_inner, value.clone());
+                if converted == value {
+                    return lowered;
+                }
+                return map_value(lowered, "map", "__sifr_option_value", converted);
+            }
+            // The ordinary option adapter wraps the converted payload in Some.
+            return self.consuming_value_upcast_for_ir(target_inner, source_ty, lowered);
+        }
+
+        if let (Type::Result(source_ok, source_error), Type::Result(target_ok, target_error)) =
+            (source, target)
+        {
+            let ok_value = crate::RustExpr::Ident("__sifr_ok_value".to_string());
+            let converted_ok =
+                self.consuming_value_upcast_for_ir(target_ok, source_ok, ok_value.clone());
+            let mut converted = if converted_ok == ok_value {
+                lowered
+            } else {
+                map_value(lowered, "map", "__sifr_ok_value", converted_ok)
+            };
+
+            let error_value = crate::RustExpr::Ident("__sifr_error_value".to_string());
+            let converted_error =
+                self.consuming_value_upcast_for_ir(target_error, source_error, error_value.clone());
+            if converted_error != error_value {
+                converted = map_value(converted, "map_err", "__sifr_error_value", converted_error);
+            }
+            return converted;
+        }
+
+        if let (Type::Union(source_members), Type::Union(target_members)) = (source, target) {
+            let mut arms = Vec::with_capacity(source_members.len());
+            for source_member in source_members {
+                let Some(target_member) = target_members
+                    .iter()
+                    .find(|target_member| source_member.is_assignable_to(target_member))
+                else {
+                    return lowered;
+                };
+                let binding = "__sifr_union_value";
+                let converted_member = self.consuming_value_upcast_for_ir(
+                    target_member,
+                    source_member,
+                    crate::RustExpr::Ident(binding.to_string()),
+                );
+                let wrapped = crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec![
+                        target.union_enum_name(),
+                        target_member.union_variant_name(),
+                    ])),
+                    args: vec![converted_member],
+                };
+                arms.push(crate::RustMatchArm {
+                    pattern: format!(
+                        "{}::{}({binding})",
+                        source.union_enum_name(),
+                        source_member.union_variant_name()
+                    ),
+                    bindings: Vec::new(),
+                    guard: None,
+                    body: vec![crate::RustStmt::TailExpr(wrapped)],
+                });
+            }
+            return crate::RustExpr::Match {
+                expr: Box::new(lowered),
+                arms,
+            };
+        }
+
+        if let Type::Union(target_members) = target {
+            if let Some(target_member) = target_members
+                .iter()
+                .find(|target_member| source_ty.is_assignable_to(target_member))
+            {
+                let converted =
+                    self.consuming_value_upcast_for_ir(target_member, source_ty, lowered);
+                return crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec![
+                        target.union_enum_name(),
+                        target_member.union_variant_name(),
+                    ])),
+                    args: vec![converted],
+                };
+            }
+        }
+
+        self.consuming_class_upcast_for_ir(target_ty, source_ty, lowered)
+    }
+
     pub(crate) fn consuming_class_upcast_for_ir(
         &self,
         target_ty: &Type,
@@ -69,5 +175,25 @@ impl RustEmitter {
             };
         }
         lowered
+    }
+}
+
+fn map_value(
+    receiver: crate::RustExpr,
+    method: &str,
+    binding: &str,
+    body: crate::RustExpr,
+) -> crate::RustExpr {
+    crate::RustExpr::MethodCall {
+        receiver: Box::new(crate::RustExpr::Paren(Box::new(receiver))),
+        method: method.to_string(),
+        args: vec![crate::RustExpr::Closure {
+            params: vec![crate::RustParam::Named {
+                name: binding.to_string(),
+                ty: crate::RustType::Named("_".to_string()),
+            }],
+            body: Box::new(body),
+            is_move: false,
+        }],
     }
 }

@@ -639,7 +639,7 @@ pub(super) fn append_recursive_capture_args_to_stmts(
                 append_recursive_capture_args_to_expr(target, fn_name, capture_names);
                 append_recursive_capture_args_to_expr(value, fn_name, capture_names);
             }
-            RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => {
+            RustStmt::Expr(expr) | RustStmt::TailExpr(expr) | RustStmt::Return(Some(expr)) => {
                 append_recursive_capture_args_to_expr(expr, fn_name, capture_names);
             }
             RustStmt::Assert { cond, msg } => {

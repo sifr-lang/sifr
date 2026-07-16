@@ -403,6 +403,7 @@ impl Renderer {
                 ));
             }
             RustStmt::Expr(expr) => self.emit_line(&format!("{};", Self::render_expr_string(expr))),
+            RustStmt::TailExpr(expr) => self.emit_line(&Self::render_expr_string(expr)),
             RustStmt::Assert { cond, msg: None } => {
                 self.emit_line(&format!("assert!({});", Self::render_expr_string(cond)));
             }

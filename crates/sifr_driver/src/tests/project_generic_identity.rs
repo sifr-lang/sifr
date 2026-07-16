@@ -83,6 +83,37 @@ fn test_check_project_preserves_imported_generic_function_bounds() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
+#[test]
+fn test_check_project_preserves_same_basename_affine_capabilities() {
+    let dir = mktemp_dir("same_basename_affine_capability");
+    std::fs::write(
+        dir.join("inner.sifr"),
+        "class Root:\n    view: python.Buffer[uint8]\n",
+    )
+    .expect("inner class should be written");
+    std::fs::write(
+        dir.join("outer.sifr"),
+        "from inner import Root as InnerRoot\n\nclass Root:\n    inner: InnerRoot\n",
+    )
+    .expect("outer class should be written");
+    std::fs::write(
+        dir.join("main.sifr"),
+        "from outer import Root\n\ndef duplicate(own value: Root) -> None:\n    first = second = value\n",
+    )
+    .expect("main should be written");
+
+    let errors = check_project(&dir.join("main.sifr"));
+    assert!(
+        errors.iter().any(|error| {
+            error.message.contains("affine")
+                || error.message.contains("cannot be cloned")
+                || error.message.contains("cannot be duplicated")
+        }),
+        "same-basename nested buffer should remain affine: {errors:?}"
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
 fn write_split_ancestry_project(dir: &std::path::Path) {
     std::fs::write(dir.join("base.sifr"), "class Root:\n    value: int\n")
         .expect("base should be written");
@@ -103,7 +134,7 @@ fn write_split_ancestry_project(dir: &std::path::Path) {
     .expect("children facade should be written");
     std::fs::write(
         dir.join("main.sifr"),
-        "from roots import PublicRoot as Root\nfrom children import PublicChild as Child\n\ndef accept(value: Root) -> int:\n    return value.value\n\ndef consume(own value: Root) -> int:\n    return value.value\n\ndef as_root(own value: Child) -> Root:\n    return value\n\ndef as_union(own value: Child) -> Root | int:\n    return value\n\ndef as_result(own value: Child) -> Result[Root, ValueError]:\n    return value\n\ndef main():\n    borrowed: Child = Child(1, 2)\n    assert accept(borrowed) == 1\n    owned: Child = Child(3, 4)\n    assert consume(owned) == 3\n    root: Root = as_root(Child(5, 6))\n    assert root.value == 5\n    union_value: Root | int = as_union(Child(7, 8))\n    result_value: Result[Root, ValueError] = as_result(Child(9, 10))\n",
+        "from roots import PublicRoot as Root\nfrom children import PublicChild as Child\n\ndef accept(value: Root) -> int:\n    return value.value\n\ndef consume(own value: Root) -> int:\n    return value.value\n\ndef consume_union(own value: Root | int) -> int:\n    return 11\n\ndef consume_result(own value: Result[Root, ValueError]) -> int:\n    return 12\n\ndef as_root(own value: Child) -> Root:\n    return value\n\ndef as_union(own value: Child) -> Root | int:\n    return value\n\ndef as_result(own value: Child) -> Result[Root, ValueError]:\n    return value\n\ndef child_result() -> Result[Child, ValueError]:\n    return Child(15, 16)\n\ndef root_result() -> Result[Root, ValueError]:\n    return child_result()\n\ndef main():\n    borrowed: Child = Child(1, 2)\n    assert accept(borrowed) == 1\n    owned: Child = Child(3, 4)\n    assert consume(owned) == 3\n    root: Root = as_root(Child(5, 6))\n    assert root.value == 5\n    union_value: Root | int = as_union(Child(7, 8))\n    result_value: Result[Root, ValueError] = as_result(Child(9, 10))\n    assert consume_union(Child(17, 18)) == 11\n    assert consume_result(child_result()) == 12\n    remapped_result: Result[Root, ValueError] = root_result()\n",
     )
     .expect("main should be written");
 }
@@ -164,6 +195,24 @@ fn test_build_project_consumes_transitive_class_upcasts() {
     let status = std::process::Command::new(&binary)
         .status()
         .expect("consuming class upcast binary should run");
+    assert!(status.success());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+fn test_build_project_remaps_structural_consuming_upcasts() {
+    let dir = mktemp_dir("structural_consuming_upcast_native");
+    std::fs::write(
+        dir.join("main.sifr"),
+        "class Root:\n    value: int\n\nclass Mid(Root):\n    middle: int\n\n    def __init__(self, value: int, middle: int):\n        super().__init__(value)\n        self.middle = middle\n\nclass Child(Mid):\n    extra: int\n\n    def __init__(self, value: int, middle: int, extra: int):\n        super().__init__(value, middle)\n        self.extra = extra\n\ndef make_union() -> Child | int:\n    return Child(1, 2, 3)\n\ndef relay_union() -> Root | int:\n    return make_union()\n\ndef consume_union(own value: Root | int) -> int:\n    return 21\n\ndef borrow_union(value: Root | int) -> int:\n    return 23\n\ndef make_option() -> Child | None:\n    return Child(10, 11, 12)\n\ndef relay_option() -> Root | None:\n    return make_option()\n\ndef consume_option(own value: Root | None) -> int:\n    return 24\n\ndef make_result() -> Result[Child, ValueError]:\n    return Child(4, 5, 6)\n\ndef relay_result() -> Result[Root, ValueError]:\n    return make_result()\n\ndef consume_result(own value: Result[Root, ValueError]) -> int:\n    return 22\n\ndef main():\n    assert consume_union(Child(7, 8, 9)) == 21\n    assert consume_union(make_union()) == 21\n    borrowed: Child | int = make_union()\n    assert borrow_union(borrowed) == 23\n    assert consume_option(make_option()) == 24\n    assert consume_result(make_result()) == 22\n    union_value: Root | int = relay_union()\n    option_value: Root | None = relay_option()\n    result_value: Result[Root, ValueError] = relay_result()\n",
+    )
+    .expect("main should be written");
+    let binary = build_project(&dir.join("main.sifr"), &dir.join("build_out"))
+        .expect("structural consuming upcasts should build natively");
+    let status = std::process::Command::new(&binary)
+        .status()
+        .expect("structural consuming upcast binary should run");
     assert!(status.success());
     let _ = std::fs::remove_dir_all(dir);
 }

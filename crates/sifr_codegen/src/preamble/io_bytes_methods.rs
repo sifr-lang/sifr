@@ -528,7 +528,9 @@ mod tests {
             RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
                 count_raw_in_expr(target) + count_raw_in_expr(value)
             }
-            RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => count_raw_in_expr(expr),
+            RustStmt::Expr(expr) | RustStmt::TailExpr(expr) | RustStmt::Return(Some(expr)) => {
+                count_raw_in_expr(expr)
+            }
             RustStmt::Assert { cond, msg } => {
                 count_raw_in_expr(cond) + msg.as_ref().map(count_raw_in_expr).unwrap_or(0)
             }

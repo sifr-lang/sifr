@@ -107,7 +107,7 @@ fn type_satisfies_comparable_bound(ty: &Type, ctx: &LowerCtx) -> bool {
 fn contains_declared_generic_class(
     ty: &Type,
     ctx: &LowerCtx,
-    visiting: &mut std::collections::HashSet<String>,
+    visiting: &mut std::collections::HashSet<(String, Vec<Type>)>,
 ) -> bool {
     match ty.resolve_alias() {
         Type::Class { name, fields, .. } => {
@@ -118,13 +118,16 @@ fn contains_declared_generic_class(
             {
                 return true;
             }
-            if !visiting.insert(name.clone()) {
+            let Some(key) = ty.class_recursion_key() else {
+                return false;
+            };
+            if !visiting.insert(key.clone()) {
                 return false;
             }
             let contains = fields
                 .iter()
                 .any(|(_, field)| contains_declared_generic_class(field, ctx, visiting));
-            visiting.remove(name);
+            visiting.remove(&key);
             contains
         }
         Type::List(element)
@@ -269,7 +272,7 @@ pub(in crate::lower) fn supports_print_formatting(ty: &Type) -> bool {
 fn supports_structural_equality_in_context_inner(
     ty: &Type,
     ctx: &LowerCtx,
-    visiting: &mut std::collections::HashSet<String>,
+    visiting: &mut std::collections::HashSet<(String, Vec<Type>)>,
 ) -> bool {
     match ty.resolve_alias() {
         Type::List(element) | Type::Iterable(element) => {
@@ -306,13 +309,16 @@ fn supports_structural_equality_in_context_inner(
             {
                 return true;
             }
-            if !visiting.insert(name.clone()) {
+            let Some(key) = ty.class_recursion_key() else {
+                return false;
+            };
+            if !visiting.insert(key.clone()) {
                 return true;
             }
             let supports = fields.iter().all(|(_, field)| {
                 supports_structural_equality_in_context_inner(field, ctx, visiting)
             });
-            visiting.remove(name);
+            visiting.remove(&key);
             supports
         }
         Type::Newtype { inner, .. } => {

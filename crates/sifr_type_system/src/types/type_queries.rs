@@ -1,19 +1,39 @@
 use super::{FunctionType, OwnershipKind, Type};
-use std::collections::BTreeSet;
+use std::collections::HashSet;
 
 pub(super) fn parent_chain_contains(parent_class: Option<&str>, ancestor: &str) -> bool {
     parent_class.is_some_and(|chain| chain.split('|').any(|parent| parent == ancestor))
 }
 
 impl Type {
+    /// Stable recursion key for a nominal class representation. The declaring
+    /// identity distinguishes same-named imports, while concrete arguments
+    /// distinguish specializations whose emitted trait capabilities can differ.
+    #[must_use]
+    pub fn class_recursion_key(&self) -> Option<(String, Vec<Self>)> {
+        let Self::Class {
+            identity,
+            name,
+            type_args,
+            ..
+        } = self.resolve_alias()
+        else {
+            return None;
+        };
+        Some((identity.as_ref().unwrap_or(name).clone(), type_args.clone()))
+    }
+
     /// Whether a value transitively owns an affine resource that Rust must not
     /// clone or compare through an aggregate derive.
     #[must_use]
     pub fn contains_affine_resource(&self) -> bool {
-        self.contains_affine_resource_inner(&mut BTreeSet::new())
+        self.contains_affine_resource_inner(&mut HashSet::new())
     }
 
-    fn contains_affine_resource_inner(&self, visiting_classes: &mut BTreeSet<String>) -> bool {
+    fn contains_affine_resource_inner(
+        &self,
+        visiting_classes: &mut HashSet<(String, Vec<Self>)>,
+    ) -> bool {
         match self.resolve_alias() {
             Self::PythonBuffer(_) => true,
             Self::List(element)
@@ -44,14 +64,17 @@ impl Type {
                     .iter()
                     .any(|element| element.contains_affine_resource_inner(visiting_classes))
             }
-            Self::Class { name, fields, .. } => {
-                if !visiting_classes.insert(name.clone()) {
+            Self::Class { fields, .. } => {
+                let Some(key) = self.class_recursion_key() else {
+                    return false;
+                };
+                if !visiting_classes.insert(key.clone()) {
                     return false;
                 }
                 let contains = fields
                     .iter()
                     .any(|(_, field)| field.contains_affine_resource_inner(visiting_classes));
-                visiting_classes.remove(name);
+                visiting_classes.remove(&key);
                 contains
             }
             _ => false,
@@ -61,10 +84,13 @@ impl Type {
     /// Whether Rust aggregate generation may derive `Clone` for this value.
     #[must_use]
     pub fn supports_derived_clone(&self) -> bool {
-        self.supports_derived_clone_inner(&mut BTreeSet::new())
+        self.supports_derived_clone_inner(&mut HashSet::new())
     }
 
-    fn supports_derived_clone_inner(&self, visiting_classes: &mut BTreeSet<String>) -> bool {
+    fn supports_derived_clone_inner(
+        &self,
+        visiting_classes: &mut HashSet<(String, Vec<Self>)>,
+    ) -> bool {
         match self.resolve_alias() {
             Self::Any
             | Self::Unknown
@@ -99,7 +125,6 @@ impl Type {
                 .iter()
                 .all(|element| element.supports_derived_clone_inner(visiting_classes)),
             Self::Class {
-                name,
                 fields,
                 parent_class,
                 type_args,
@@ -108,7 +133,10 @@ impl Type {
                 if parent_chain_contains(parent_class.as_deref(), "NonSend") {
                     return false;
                 }
-                if !visiting_classes.insert(name.clone()) {
+                let Some(key) = self.class_recursion_key() else {
+                    return false;
+                };
+                if !visiting_classes.insert(key.clone()) {
                     return true;
                 }
                 let supports = fields
@@ -118,7 +146,7 @@ impl Type {
                         matches!(argument.resolve_alias(), Self::TypeVar(_))
                             || argument.supports_derived_clone_inner(visiting_classes)
                     });
-                visiting_classes.remove(name);
+                visiting_classes.remove(&key);
                 supports
             }
             _ => true,
@@ -128,10 +156,13 @@ impl Type {
     /// Whether ordinary structural equality is valid for this value.
     #[must_use]
     pub fn supports_structural_equality(&self) -> bool {
-        self.supports_structural_equality_inner(&mut BTreeSet::new())
+        self.supports_structural_equality_inner(&mut HashSet::new())
     }
 
-    fn supports_structural_equality_inner(&self, visiting_classes: &mut BTreeSet<String>) -> bool {
+    fn supports_structural_equality_inner(
+        &self,
+        visiting_classes: &mut HashSet<(String, Vec<Self>)>,
+    ) -> bool {
         match self.resolve_alias() {
             Self::Any
             | Self::Unknown
@@ -168,7 +199,6 @@ impl Type {
                 .iter()
                 .all(|element| element.supports_structural_equality_inner(visiting_classes)),
             Self::Class {
-                name,
                 fields,
                 methods,
                 parent_class,
@@ -181,7 +211,10 @@ impl Type {
                 if parent_chain_contains(parent_class.as_deref(), "NonSend") {
                     return false;
                 }
-                if !visiting_classes.insert(name.clone()) {
+                let Some(key) = self.class_recursion_key() else {
+                    return false;
+                };
+                if !visiting_classes.insert(key.clone()) {
                     return true;
                 }
                 let supports = fields
@@ -191,7 +224,7 @@ impl Type {
                         matches!(argument.resolve_alias(), Self::TypeVar(_))
                             || argument.supports_structural_equality_inner(visiting_classes)
                     });
-                visiting_classes.remove(name);
+                visiting_classes.remove(&key);
                 supports
             }
             Self::Newtype { inner, .. } => {

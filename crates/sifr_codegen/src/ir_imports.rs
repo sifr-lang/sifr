@@ -128,7 +128,9 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
             collect_expr(target, needs);
             collect_expr(value, needs);
         }
-        RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => collect_expr(expr, needs),
+        RustStmt::Expr(expr) | RustStmt::TailExpr(expr) | RustStmt::Return(Some(expr)) => {
+            collect_expr(expr, needs);
+        }
         RustStmt::Assert { cond, msg } => {
             collect_expr(cond, needs);
             if let Some(msg) = msg {

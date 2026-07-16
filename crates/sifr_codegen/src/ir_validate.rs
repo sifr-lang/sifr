@@ -123,7 +123,9 @@ fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_functi
             validate_expr(target, issues, in_function);
             validate_expr(value, issues, in_function);
         }
-        RustStmt::Expr(expr) => validate_expr(expr, issues, in_function),
+        RustStmt::Expr(expr) | RustStmt::TailExpr(expr) => {
+            validate_expr(expr, issues, in_function);
+        }
         RustStmt::Assert { cond, msg } => {
             validate_expr(cond, issues, in_function);
             if let Some(msg) = msg {
