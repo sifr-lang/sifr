@@ -1351,8 +1351,13 @@ Delivery waves:
   runtime `5/5` and compiled `5/5`, runtime platform `28` variants with one
   capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c`. Its `892.55s` wall time and `15/42` cache hit rate produce
-  only non-blocking advisories. Full re-review is in progress before closing
-  the milestone checkbox.
+  only non-blocking advisories. Full
+  [review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-2.md)
+  re-ran the complete focused compiler/runtime/native buffer evidence, confirmed
+  the pass-1 ownership and error-channel remediations, and found only a stale
+  roadmap reference to the already-merged PR #2988. That ledger reference is
+  corrected in PR #2990; final re-review is in progress before closing the
+  milestone checkbox.
 
 Acceptance:
 
