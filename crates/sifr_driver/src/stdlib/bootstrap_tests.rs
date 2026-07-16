@@ -85,7 +85,7 @@ fn public_constant_integer_value_exports_filter_to_public_recorded_values() {
 }
 
 #[test]
-fn stdlib_class_exports_preserve_parent_markers() {
+fn stdlib_class_exports_preserve_parent_markers_and_generic_templates() {
     let compiled = compile_stdlib_uncached().expect("stdlib should compile");
     let object_ty = compiled
         .defs
@@ -100,6 +100,18 @@ fn stdlib_class_exports_preserve_parent_markers() {
             parent_class: Some(parent),
             ..
         } if parent.split('|').any(|name| name == "NonSend")
+    ));
+
+    let shared_ty = compiled
+        .defs
+        .classes
+        .get("sifr.sync")
+        .and_then(|classes| classes.get("Shared"))
+        .expect("sifr.sync.Shared should be exported");
+    assert!(matches!(
+        shared_ty,
+        Type::Class { type_args, .. }
+            if type_args == &vec![Type::TypeVar("T".to_string())]
     ));
 }
 

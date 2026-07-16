@@ -98,6 +98,9 @@ pub enum Type {
         /// and re-export paths. `None` means the local declaration name is the
         /// identity (the common single-module case).
         identity: Option<String>,
+        /// Concrete generic arguments in declaration order. Empty for a
+        /// non-generic class.
+        type_args: Vec<Type>,
         name: String,
         fields: Vec<(String, Type)>,
         methods: Vec<(String, FunctionType)>,

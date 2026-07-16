@@ -239,6 +239,7 @@ fn buffer_function(
 fn python_error_type() -> Type {
     Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "PythonError".to_string(),
         fields: vec![("message".to_string(), Type::Str)],
         methods: Vec::new(),

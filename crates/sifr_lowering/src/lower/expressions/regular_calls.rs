@@ -454,6 +454,13 @@ pub(super) fn lower_regular_call(
     // If this is a generic function, infer type variable bindings and substitute
     let return_type = if ctx.generic_functions.contains_key(&func_name) {
         let mut bindings = HashMap::new();
+        if let Some(expected_type) = ctx.contextual_expr_type(call.range()) {
+            let mut expected_type_vars = Vec::new();
+            collect_type_vars(expected_type, &mut expected_type_vars);
+            if expected_type_vars.is_empty() {
+                infer_type_var_bindings(&ft.return_type, expected_type, &mut bindings);
+            }
+        }
         for (arg, (_, param_ty, _)) in args.iter().zip(ft.params.iter()) {
             infer_type_var_bindings(param_ty, arg.ty(), &mut bindings);
         }

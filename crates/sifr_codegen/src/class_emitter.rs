@@ -696,6 +696,8 @@ impl RustEmitter {
             derives,
             fields: struct_fields,
         });
+        self.body_items
+            .extend(Self::class_parent_deref_impls(class));
 
         let saved_class_name = self.current_class_name.clone();
         self.current_class_name = Some(class.name.clone());

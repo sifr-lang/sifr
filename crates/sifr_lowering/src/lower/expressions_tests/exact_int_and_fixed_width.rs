@@ -671,13 +671,10 @@ def main() -> None:
     assert!(
         errors.iter().any(|error| {
             error.code == Some(DiagnosticCode::TYPE_MISMATCH)
-                && error.message == "type mismatch: expected 'Box', got 'Box'"
+                && error.message
+                    == "argument 1 ('value') of function 'Box': expected 'uint8', got 'int'"
                 && error.primary_range
-                    == Some(range_for_after_anchor(
-                        source,
-                        "box: Box[uint8] = ",
-                        "Box(left + right)",
-                    ))
+                    == Some(range_for_after_anchor(source, "Box(", "left + right"))
         }),
         "{errors:?}"
     );

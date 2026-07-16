@@ -703,6 +703,7 @@ pub(super) fn does_not_lower_field_access_for_non_self_name() {
             name: "point".to_string(),
             ty: Type::Class {
                 identity: None,
+                type_args: Vec::new(),
                 name: "Point".to_string(),
                 fields: vec![],
                 methods: vec![],
@@ -723,6 +724,7 @@ pub(super) fn does_not_lower_self_field_access() {
             name: "self".to_string(),
             ty: Type::Class {
                 identity: None,
+                type_args: Vec::new(),
                 name: "Point".to_string(),
                 fields: vec![],
                 methods: vec![],
@@ -743,6 +745,7 @@ pub(super) fn does_not_lower_subclass_field_access() {
             name: "dog".to_string(),
             ty: Type::Class {
                 identity: None,
+                type_args: Vec::new(),
                 name: "Dog".to_string(),
                 fields: vec![],
                 methods: vec![],

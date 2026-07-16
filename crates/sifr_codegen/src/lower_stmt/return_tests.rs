@@ -586,6 +586,7 @@ fn lowers_self_return_in_class_scope_with_clone() {
             name: "self".to_string(),
             ty: Type::Class {
                 identity: None,
+                type_args: Vec::new(),
                 name: "Point".to_string(),
                 fields: vec![],
                 methods: vec![],
@@ -602,6 +603,7 @@ fn lowers_self_return_in_class_scope_with_clone() {
         SimpleStmtLoweringCtx {
             return_type: Some(&Type::Class {
                 identity: None,
+                type_args: Vec::new(),
                 name: "Point".to_string(),
                 fields: vec![],
                 methods: vec![],

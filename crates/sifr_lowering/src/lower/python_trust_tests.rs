@@ -7,6 +7,7 @@ use std::collections::HashMap;
 fn python_externals() -> ExternalDefs {
     let object_ty = Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "Object".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),
@@ -14,6 +15,7 @@ fn python_externals() -> ExternalDefs {
     };
     let error_ty = Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "PythonError".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),

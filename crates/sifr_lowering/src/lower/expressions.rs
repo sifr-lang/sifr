@@ -90,9 +90,9 @@ use method_type_collections::{
 };
 mod method_type_objects;
 use method_type_objects::{
-    resolve_bigint_method_type, resolve_class_method_type, resolve_enum_method_type,
+    resolve_bigint_method_type, resolve_class_method_on_type, resolve_enum_method_type,
     resolve_newtype_method_type, resolve_protocol_method_type, resolve_str_method_type,
-    resolve_tuple_method_type, ClassMethodSurface,
+    resolve_tuple_method_type,
 };
 mod python_buffer_methods;
 use python_buffer_methods::{

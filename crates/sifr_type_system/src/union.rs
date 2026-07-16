@@ -233,7 +233,7 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
                 )
             },
         ),
-        Type::Class { name, .. } => (31, name.clone()),
+        Type::Class { .. } => (31, ty.display_name()),
         Type::Result(_, _) => (32, String::new()),
         Type::Protocol { name, .. } => (33, name.clone()),
         Type::Newtype { name, .. } => (34, name.clone()),

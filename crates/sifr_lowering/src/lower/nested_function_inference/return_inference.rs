@@ -10,10 +10,18 @@ pub(super) fn unify_function_return(
     let Some(state) = states.get_mut(function_name) else {
         return;
     };
+    if state.inference_failed {
+        return;
+    }
     if !state.explicit_return && has_conflicting_inference(&state.return_type, &incoming) {
         if state.allow_union_return_inference {
-            state.return_type =
-                sifr_type_system::make_union(vec![state.return_type.clone(), incoming]);
+            let inferred = sifr_type_system::make_union(vec![state.return_type.clone(), incoming]);
+            if inferred.has_conflicting_class_specializations() {
+                state.return_type = Type::Unknown;
+                state.inference_failed = true;
+            } else {
+                state.return_type = inferred;
+            }
         } else {
             state.return_type = Type::Unknown;
             state.inference_failed = true;

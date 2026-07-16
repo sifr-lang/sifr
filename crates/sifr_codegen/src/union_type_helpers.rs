@@ -82,6 +82,7 @@ impl RustEmitter {
                         ctor_params,
                         Type::Class {
                             identity: None,
+                            type_args: Vec::new(),
                             name: class.name.clone(),
                             fields: class.fields.clone(),
                             methods: Vec::new(),
@@ -304,6 +305,7 @@ mod tests {
     fn callable_bearing_union_requires_no_unavailable_formatting_trait() {
         let holder = Type::Class {
             identity: None,
+            type_args: Vec::new(),
             name: "CallbackHolder".to_string(),
             fields: vec![(
                 "callback".to_string(),
@@ -331,6 +333,7 @@ mod tests {
     fn nested_result_error_union_is_registered() {
         let handler_error = Type::Class {
             identity: None,
+            type_args: Vec::new(),
             name: "HandlerError".to_string(),
             fields: Vec::new(),
             methods: Vec::new(),
@@ -338,6 +341,7 @@ mod tests {
         };
         let python_error = Type::Class {
             identity: None,
+            type_args: Vec::new(),
             name: "PythonError".to_string(),
             fields: Vec::new(),
             methods: Vec::new(),

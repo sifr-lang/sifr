@@ -29,6 +29,7 @@ pub(in crate::lower) fn lower_module_impl(
                     class_name.clone(),
                     Type::Class {
                         identity: None,
+                        type_args: Vec::new(),
                         name: class_name,
                         fields: Vec::new(),
                         methods: Vec::new(),
@@ -642,65 +643,14 @@ pub(in crate::lower) fn lower_module_impl(
                     continue;
                 }
 
-                let mut found = false;
-                if let Some(module_fns) = externals.functions.get(&module_name) {
-                    if let Some(ft) = module_fns.get(name) {
-                        let imported = imported_class_identity::function_type_for_import(
-                            ft,
-                            &module_name,
-                            &class_aliases,
-                        );
-                        ctx.functions.insert(local.clone(), imported);
-                        if let Some(module_intrinsics) =
-                            externals.compiler_intrinsics.get(&module_name)
-                        {
-                            imported_defaults::import_callable_compiler_intrinsic(
-                                &mut ctx,
-                                module_intrinsics,
-                                name,
-                                &local,
-                            );
-                        }
-                        if let Some(module_defaults) = externals.function_defaults.get(&module_name)
-                        {
-                            imported_defaults::import_callable_defaults(
-                                &mut ctx,
-                                module_defaults,
-                                name,
-                                &local,
-                            );
-                        }
-                        if let Some(module_varargs) = externals.function_varargs.get(&module_name) {
-                            imported_defaults::import_callable_vararg(
-                                &mut ctx,
-                                module_varargs,
-                                name,
-                                &local,
-                            );
-                        }
-                        if let Some(module_shapes) =
-                            externals.function_python_call_shapes.get(&module_name)
-                        {
-                            imported_defaults::import_python_call_shape(
-                                &mut ctx,
-                                module_shapes,
-                                name,
-                                &local,
-                            );
-                        }
-                        if let Some(module_workloads) =
-                            externals.function_workloads.get(&module_name)
-                        {
-                            imported_defaults::import_callable_workload(
-                                &mut ctx,
-                                module_workloads,
-                                name,
-                                &local,
-                            );
-                        }
-                        found = true;
-                    }
-                }
+                let mut found = imported_defaults::import_user_callable(
+                    &mut ctx,
+                    externals,
+                    &module_name,
+                    name,
+                    &local,
+                    &class_aliases,
+                );
                 if !found {
                     if let Some(module_classes) = externals.classes.get(&module_name) {
                         if let Some(class_ty) = module_classes.get(name) {

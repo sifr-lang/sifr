@@ -6,14 +6,14 @@ use super::{
     refine_defaultdict_binding_expr, refine_empty_list_binding_expr, refine_empty_set_binding_expr,
     refine_generic_class_binding_expr, refine_nonempty_method_return_type,
     reject_immutable_parameter_method_mutation, resolve_annotation_expr,
-    resolve_bigint_method_type, resolve_bytes_method_type, resolve_class_method_type,
+    resolve_bigint_method_type, resolve_bytes_method_type, resolve_class_method_on_type,
     resolve_decimal_method_type, resolve_dict_method_type, resolve_enum_method_type,
     resolve_fixed_width_method_type, resolve_list_method_type, resolve_newtype_method_type,
     resolve_protocol_method_type, resolve_python_buffer_method_type, resolve_set_method_type,
-    resolve_str_method_type, resolve_tuple_method_type, str, tsc, ClassMethodSurface,
-    DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp, ExprLambda, ExprListComp,
-    ExprSetComp, FunctionType, HirExpr, HirIteratorOp, HirParam, LowerCtx, ParamConvention, Ranged,
-    TextRange, Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
+    resolve_str_method_type, resolve_tuple_method_type, str, tsc, DiagnosticCode, Expr,
+    ExprAttribute, ExprCall, ExprDictComp, ExprLambda, ExprListComp, ExprSetComp, FunctionType,
+    HirExpr, HirIteratorOp, HirParam, LowerCtx, ParamConvention, Ranged, TextRange, Type,
+    DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
 };
 use crate::lower::python_interop::callback_method_arg_ranges;
 use crate::lower::{
@@ -365,25 +365,9 @@ pub(in crate::lower) fn resolve_method_type(
         Type::PythonBuffer(element) => {
             resolve_python_buffer_method_type(element, method, args, arg_ranges, method_range, ctx)
         }
-        Type::Class {
-            identity,
-            name,
-            fields,
-            methods,
-            ..
-        } => resolve_class_method_type(
-            ClassMethodSurface {
-                identity: identity.as_ref(),
-                name,
-                fields,
-                methods,
-            },
-            method,
-            args,
-            arg_ranges,
-            method_range,
-            ctx,
-        ),
+        class @ Type::Class { .. } => {
+            resolve_class_method_on_type(class, method, args, arg_ranges, method_range, ctx)
+        }
         Type::Protocol { name, methods, .. } => {
             resolve_protocol_method_type(name, methods, method, args, arg_ranges, method_range, ctx)
         }

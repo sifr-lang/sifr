@@ -10,6 +10,7 @@ fn parse_error_type(ctx: &LowerCtx) -> Type {
         .cloned()
         .unwrap_or(Type::Class {
             identity: None,
+            type_args: Vec::new(),
             name: "ParseError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: vec![],

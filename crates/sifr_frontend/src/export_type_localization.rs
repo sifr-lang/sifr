@@ -1,4 +1,5 @@
 use sifr_lowering::{ExternalDefs, HirModule};
+use sifr_type_system::Type;
 use std::collections::HashMap;
 
 pub(crate) fn should_export_callable(module_name: &str, callable_name: &str) -> bool {
@@ -19,6 +20,76 @@ pub(crate) fn should_export_callable(module_name: &str, callable_name: &str) -> 
 
 pub(crate) type GenericExports = HashMap<String, Vec<String>>;
 pub(crate) type BoundExports = HashMap<String, HashMap<String, Vec<String>>>;
+pub(crate) type ImportedClassAncestry = HashMap<String, (String, Option<String>)>;
+
+pub(crate) fn imported_class_ancestry(
+    module: &HirModule,
+    external_defs: &ExternalDefs,
+) -> ImportedClassAncestry {
+    let mut ancestry = HashMap::new();
+    for import in &module.imports {
+        let Some(classes) = external_defs.classes.get(&import.module) else {
+            continue;
+        };
+        for name in &import.names {
+            let Some(Type::Class {
+                identity,
+                name: emitted_name,
+                parent_class,
+                ..
+            }) = classes.get(name).map(Type::resolve_alias)
+            else {
+                continue;
+            };
+            let local = import
+                .aliases
+                .iter()
+                .find(|(source, _)| source == name)
+                .map_or_else(|| name.clone(), |(_, local)| local.clone());
+            ancestry.insert(
+                local,
+                (
+                    identity.clone().unwrap_or_else(|| emitted_name.clone()),
+                    parent_class.clone(),
+                ),
+            );
+        }
+    }
+    ancestry
+}
+
+pub(crate) fn exported_parent_chain(
+    initial_parent: Option<&str>,
+    module: &HirModule,
+    imported_ancestry: &ImportedClassAncestry,
+) -> Option<String> {
+    let mut chain = Vec::new();
+    let mut parent = initial_parent.map(str::to_string);
+    while let Some(name) = parent.take() {
+        if chain.iter().any(|ancestor| ancestor == &name) {
+            break;
+        }
+        if let Some(class) = module
+            .classes
+            .iter()
+            .find(|candidate| candidate.name == name)
+        {
+            chain.push(name);
+            parent.clone_from(&class.parent_class);
+            continue;
+        }
+        if let Some((identity, ancestors)) = imported_ancestry.get(&name) {
+            chain.push(identity.clone());
+            if let Some(ancestors) = ancestors {
+                chain.extend(ancestors.split('|').map(str::to_string));
+            }
+            break;
+        }
+        chain.push(name);
+        break;
+    }
+    (!chain.is_empty()).then(|| chain.join("|"))
+}
 
 pub(crate) fn declared_generic_metadata(
     module_name: &str,

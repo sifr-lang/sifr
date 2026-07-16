@@ -5,7 +5,7 @@ use super::{
 pub(crate) use crate::export_type_localization::should_export_callable;
 use crate::export_type_localization::{
     copy_class_generic_metadata, copy_function_generic_metadata, declared_generic_metadata,
-    reexport_class_aliases,
+    exported_parent_chain, imported_class_ancestry, reexport_class_aliases,
 };
 use crate::module_signatures::ModuleSignature;
 use crate::{
@@ -284,6 +284,7 @@ pub fn collect_module_exports(
     let mut workload_exports = HashMap::new();
     let (mut generic_exports, mut type_param_bound_exports, local_classes) =
         declared_generic_metadata(module_name, module);
+    let imported_ancestry = imported_class_ancestry(module, external_defs);
 
     for func in &module.functions {
         if should_export_callable(module_name, &func.name) {
@@ -355,10 +356,20 @@ pub fn collect_module_exports(
             let class_ty = canonicalize_user_export_type(
                 &Type::Class {
                     identity: None,
+                    type_args: class
+                        .type_params
+                        .iter()
+                        .cloned()
+                        .map(Type::TypeVar)
+                        .collect(),
                     name: class.name.clone(),
                     fields: class.fields.clone(),
                     methods,
-                    parent_class: exported_parent_chain(class.parent_class.as_deref(), module),
+                    parent_class: exported_parent_chain(
+                        class.parent_class.as_deref(),
+                        module,
+                        &imported_ancestry,
+                    ),
                 },
                 module_name,
                 &local_classes,
@@ -532,23 +543,6 @@ pub fn collect_module_exports(
             .constant_integer_values
             .insert(module_name.to_string(), const_integer_value_exports);
     }
-}
-
-fn exported_parent_chain(initial_parent: Option<&str>, module: &HirModule) -> Option<String> {
-    let mut chain = Vec::new();
-    let mut parent = initial_parent;
-    while let Some(name) = parent {
-        if chain.iter().any(|ancestor| ancestor == name) {
-            break;
-        }
-        chain.push(name.to_string());
-        parent = module
-            .classes
-            .iter()
-            .find(|candidate| candidate.name == name)
-            .and_then(|candidate| candidate.parent_class.as_deref());
-    }
-    (!chain.is_empty()).then(|| chain.join("|"))
 }
 
 #[cfg(test)]

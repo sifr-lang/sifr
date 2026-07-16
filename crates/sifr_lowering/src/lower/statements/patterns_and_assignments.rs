@@ -339,23 +339,28 @@ pub(in crate::lower) fn lower_ann_assign(
                 );
                 return None;
             }
-        } else if let Some(expr) = lower_expr(val, ctx) {
-            expr
         } else {
-            let error_taint = failed_initializer_taint(
-                ctx,
-                &name,
-                initializer_range,
-                error_count_before_initializer,
-            )?;
-            seed_binding_after_failed_initializer(
-                ctx,
-                &name,
-                declared_type.clone(),
-                true,
-                error_taint,
-            );
-            return None;
+            ctx.push_contextual_expr_type(initializer_range, declared_type.clone());
+            let lowered = lower_expr(val, ctx);
+            ctx.pop_contextual_expr_type();
+            if let Some(expr) = lowered {
+                expr
+            } else {
+                let error_taint = failed_initializer_taint(
+                    ctx,
+                    &name,
+                    initializer_range,
+                    error_count_before_initializer,
+                )?;
+                seed_binding_after_failed_initializer(
+                    ctx,
+                    &name,
+                    declared_type.clone(),
+                    true,
+                    error_taint,
+                );
+                return None;
+            }
         };
         let expr_ty = expr.ty().clone();
         // Inside try blocks, auto-unwrap Result[T, E] when declared type is T

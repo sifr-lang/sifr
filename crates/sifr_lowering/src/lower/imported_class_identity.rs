@@ -189,12 +189,17 @@ fn rename_class_identities(ty: &Type, class_aliases: &HashMap<String, String>) -
         },
         Type::Class {
             identity,
+            type_args,
             name,
             fields,
             methods,
             parent_class,
         } => Type::Class {
             identity: identity.clone(),
+            type_args: type_args
+                .iter()
+                .map(|arg| rename_class_identities(arg, class_aliases))
+                .collect(),
             name: class_aliases
                 .get(name)
                 .cloned()
@@ -315,6 +320,7 @@ fn set_canonical_identities(ty: &mut Type, module: &str, local_classes: &HashMap
         }
         Type::Class {
             identity,
+            type_args,
             name,
             fields,
             methods,
@@ -322,6 +328,9 @@ fn set_canonical_identities(ty: &mut Type, module: &str, local_classes: &HashMap
         } => {
             if identity.is_none() && local_classes.contains_key(name) {
                 *identity = Some(format!("{module}.{name}"));
+            }
+            for arg in type_args {
+                set_canonical_identities(arg, module, local_classes);
             }
             for (_, field) in fields {
                 set_canonical_identities(field, module, local_classes);

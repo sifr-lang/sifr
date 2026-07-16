@@ -442,3 +442,75 @@ fn nested_class_pattern_rejects_union_of_same_generic_class_specializations() {
             .contains("union cannot contain multiple specializations")
     }));
 }
+
+#[test]
+fn generic_class_specializations_are_invariant_for_calls() {
+    let errors = lower_source(
+        "class Box[T]:\n    value: T\n\ndef consume(value: Box[str]) -> None:\n    pass\n\ndef main():\n    value: Box[int] = Box(1)\n    consume(value)\n",
+    )
+    .expect_err("a concrete generic specialization must not cross another specialization");
+    assert!(errors.iter().any(|error| {
+        error.message.contains("expected 'Box', got 'Box'")
+            || error
+                .message
+                .contains("expected 'Box[str]', got 'Box[int]'")
+    }));
+}
+
+#[test]
+fn inferred_return_rejects_conflicting_generic_class_specializations() {
+    let errors = lower_source(
+        "class Box[T]:\n    value: T\n\ndef int_box() -> Box[int]:\n    return Box(1)\n\ndef str_box() -> Box[str]:\n    return Box(\"x\")\n\ndef choose(flag: bool):\n    if flag:\n        return int_box()\n    return str_box()\n",
+    )
+    .expect_err("inference must reject repeated specializations before HIR/codegen");
+    assert!(errors.iter().any(|error| {
+        error
+            .message
+            .contains("multiple specializations of the same generic class")
+            || error
+                .message
+                .contains("return type could not be inferred deterministically")
+    }));
+}
+
+#[test]
+fn inferred_generic_constructor_return_is_specialized() {
+    let module = lower_source(
+        "class Box[T]:\n    value: T\n\ndef make():\n    return Box(1)\n\ndef main():\n    make()\n",
+    )
+    .expect("generic constructor inference should substitute its concrete argument");
+    let make = module
+        .functions
+        .iter()
+        .find(|function| function.name == "make")
+        .expect("make function missing");
+    let Type::Class { fields, .. } = &make.return_type else {
+        panic!(
+            "make should return a specialized class: {:?}",
+            make.return_type
+        );
+    };
+    assert_eq!(fields, &vec![("value".to_string(), Type::Int)]);
+}
+
+#[test]
+fn inferred_generic_function_return_is_specialized() {
+    let module = lower_source(
+        "def identity[T](value: T) -> T:\n    return value\n\ndef make():\n    return identity(1)\n\ndef main():\n    make()\n",
+    )
+    .expect("generic function inference should substitute its concrete argument");
+    let make = module
+        .functions
+        .iter()
+        .find(|function| function.name == "make")
+        .expect("make function missing");
+    assert_eq!(make.return_type, Type::Int);
+}
+
+#[test]
+fn annotated_initializer_context_specializes_zero_argument_generic_return() {
+    lower_source(
+        "class Marker[T]:\n    pass\n\ndef make[T]() -> Marker[T]:\n    return Marker()\n\ndef main():\n    marker: Marker[int] = make()\n",
+    )
+    .expect("the declared initializer type should specialize an otherwise unbound return type");
+}

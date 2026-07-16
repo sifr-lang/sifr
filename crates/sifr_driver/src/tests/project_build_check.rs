@@ -412,7 +412,7 @@ def main():
     assert!(
         errors.iter().any(|error| {
             error.code == DiagnosticCode::TYPE_MISMATCH.code()
-                && error.message.contains("expected 'L', got 'R'")
+                && error.message.contains("expected 'L[int]', got 'R[int]'")
         }),
         "cross-reexport assignment should be rejected: {errors:?}"
     );

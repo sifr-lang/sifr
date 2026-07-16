@@ -1,8 +1,9 @@
 use super::{
-    generate_rust, generate_rust_with_stdlib, module_class_fields, module_func_signatures,
+    generate_rust, generate_rust_with_stdlib, module_class_fields,
     publicize_generated_module_source, HashMap, HashSet, HirModule, MultiModuleCodegenResult,
     Renderer, RustFile, RustItem, StdlibCode,
 };
+use crate::lib_project_signatures::project_func_signatures;
 use sifr_stdlib_manifest::{try_generated_cargo_dependencies, StdlibFeature};
 pub(super) fn render_local_module_imports(module: &HirModule) -> String {
     let mut module_import_items: Vec<RustItem> = Vec::new();
@@ -118,10 +119,10 @@ pub fn generate_rust_multi_with_metadata(
     let mut project_codegen_code = stdlib_code.clone();
     let project_modules = modules.iter().copied().collect::<HashMap<_, _>>();
 
+    project_codegen_code
+        .func_signatures
+        .extend(project_func_signatures(modules));
     for (module_name, module) in modules {
-        project_codegen_code
-            .func_signatures
-            .insert((*module_name).to_string(), module_func_signatures(module));
         project_codegen_code
             .module_class_fields
             .insert((*module_name).to_string(), module_class_fields(module));

@@ -7,6 +7,7 @@ use std::collections::HashMap;
 fn object_ty() -> Type {
     Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "Object".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),
@@ -17,6 +18,7 @@ fn object_ty() -> Type {
 fn error_ty() -> Type {
     Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "PythonError".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),

@@ -494,6 +494,10 @@ pub(super) fn finalize_nested_function_types(
         }
 
         if !state.explicit_return {
+            if state.return_type.has_conflicting_class_specializations() {
+                state.return_type = Type::Unknown;
+                state.inference_failed = true;
+            }
             state.return_type = finalize_return_type(state);
             if state.return_type.is_unknown() {
                 state.inference_failed = true;

@@ -71,6 +71,7 @@ fn typed_async_function_emits_owned_frame_schema_cancellation_and_await() {
 fn recursive_factory_emits_loop_thread_schema_and_owned_opaque_result() {
     let payload = Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "Payload".to_string(),
         fields: vec![
             ("name".to_string(), Type::Str),
@@ -81,6 +82,7 @@ fn recursive_factory_emits_loop_thread_schema_and_owned_opaque_result() {
     };
     let client = Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "Client".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),
@@ -195,6 +197,7 @@ fn async_owner_methods_observe_typed_retained_callback_failures() {
     owner.cleanup = Some(PythonCleanupPolicy::AsyncClose);
     let errors = vec![Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "HandlerError".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),
@@ -254,6 +257,7 @@ fn resolved_bridge_target_stays_structured_in_typed_request() {
 fn zero_argument_record_wrapper_emits_concrete_frames_and_borrowed_field_names() {
     let response = Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "Response".to_string(),
         fields: vec![
             ("status".to_string(), Type::Int),
@@ -533,6 +537,7 @@ fn retained_asyncio_result_masks_native_cancellation_until_rollback_finishes() {
     });
     let owner_type = Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "Subscription".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),
@@ -591,6 +596,7 @@ fn async_python_error_converts_to_an_active_error_supertype() {
             Box::new(Type::None),
             Box::new(Type::Class {
                 identity: None,
+                type_args: Vec::new(),
                 name: "Error".to_string(),
                 fields: vec![("message".to_string(), Type::Str)],
                 methods: Vec::new(),
@@ -727,6 +733,7 @@ fn opaque_declaration() -> PythonInteropDeclaration {
 fn python_error_type() -> Type {
     Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "PythonError".to_string(),
         fields: vec![("message".to_string(), Type::Str)],
         methods: Vec::new(),

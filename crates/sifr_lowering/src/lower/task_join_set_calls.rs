@@ -444,6 +444,7 @@ fn is_task_join_set_subscript(subscript: &ExprSubscript) -> bool {
 fn join_item_id_type() -> Type {
     Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "JoinItemId".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),
@@ -454,6 +455,7 @@ fn join_item_id_type() -> Type {
 fn cancel_outcome_type() -> Type {
     Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "CancelOutcome".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),
@@ -467,6 +469,7 @@ fn worker_error_type(name: &str, ctx: &LowerCtx) -> Type {
         .cloned()
         .unwrap_or_else(|| Type::Class {
             identity: None,
+            type_args: Vec::new(),
             name: name.to_string(),
             fields: Vec::new(),
             methods: Vec::new(),

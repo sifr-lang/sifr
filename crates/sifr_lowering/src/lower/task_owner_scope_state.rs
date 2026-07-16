@@ -15,6 +15,7 @@ pub(in crate::lower) struct ActiveTaskOwnerSnapshot {
 pub(in crate::lower) fn task_scope_type() -> Type {
     Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "TaskScope".to_string(),
         fields: vec![],
         methods: vec![],
@@ -25,6 +26,7 @@ pub(in crate::lower) fn task_scope_type() -> Type {
 pub(in crate::lower) fn task_group_type() -> Type {
     Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: "TaskGroup".to_string(),
         fields: vec![],
         methods: vec![],

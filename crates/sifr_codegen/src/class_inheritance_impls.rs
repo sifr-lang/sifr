@@ -1,0 +1,62 @@
+use crate::{RustEmitter, RustExpr, RustItem, RustParam, RustStmt, RustType, Visibility};
+use sifr_ir::HirClass;
+
+impl RustEmitter {
+    pub(crate) fn class_parent_deref_impls(class: &HirClass) -> Vec<RustItem> {
+        let Some(parent) = class
+            .parent_class
+            .as_deref()
+            .filter(|parent| *parent != "NonSend")
+        else {
+            return Vec::new();
+        };
+        let field = parent.to_lowercase();
+        let deref = RustItem::Impl {
+            target: Self::class_impl_target(class),
+            type_params: Self::class_impl_type_params(class),
+            trait_: Some("std::ops::Deref".to_string()),
+            items: vec![
+                RustItem::TypeAlias {
+                    name: "Target".to_string(),
+                    ty: RustType::Named(parent.to_string()),
+                },
+                RustItem::Fn {
+                    name: "deref".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: Vec::new(),
+                    params: vec![RustParam::SelfParam { mutable: false }],
+                    ret: Some(RustType::Named("&Self::Target".to_string())),
+                    body: vec![RustStmt::Return(Some(RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident("self".to_string())),
+                            field: field.clone(),
+                        }),
+                    }))],
+                    is_async: false,
+                },
+            ],
+        };
+        let deref_mut = RustItem::Impl {
+            target: Self::class_impl_target(class),
+            type_params: Self::class_impl_type_params(class),
+            trait_: Some("std::ops::DerefMut".to_string()),
+            items: vec![RustItem::Fn {
+                name: "deref_mut".to_string(),
+                visibility: Visibility::Private,
+                type_params: Vec::new(),
+                params: vec![RustParam::SelfParam { mutable: true }],
+                ret: Some(RustType::Named("&mut Self::Target".to_string())),
+                body: vec![RustStmt::Return(Some(RustExpr::Ref {
+                    mutable: true,
+                    expr: Box::new(RustExpr::Field {
+                        expr: Box::new(RustExpr::Ident("self".to_string())),
+                        field,
+                    }),
+                }))],
+                is_async: false,
+            }],
+        };
+        vec![deref, deref_mut]
+    }
+}

@@ -1,6 +1,6 @@
 use super::{
-    str, type_check_binary_op, unify_function_return, CmpOp, Expr, ExprCall, FunctionEnv, HashMap,
-    LocalFunctionState, LowerCtx, Operator, Type,
+    infer_registered_call, str, type_check_binary_op, unify_function_return, CmpOp, Expr, ExprCall,
+    FunctionEnv, HashMap, LocalFunctionState, LowerCtx, Operator, Type,
 };
 pub(super) fn analyze_assign(
     targets: &[Expr],
@@ -363,24 +363,33 @@ pub(super) fn infer_call_type(
                 return result;
             }
             if let Some(state) = states.get(name.id.as_str()).cloned() {
-                for (index, arg) in call.arguments.args.iter().enumerate() {
-                    let arg_ty = infer_expr_type(arg, env, states, current_function, ctx);
+                let inferred = infer_registered_call(
+                    call,
+                    &state.function_type(),
+                    env,
+                    states,
+                    current_function,
+                    ctx,
+                );
+                for (index, arg_ty) in inferred.positional_types.into_iter().enumerate() {
                     if let Some(param_name) =
                         state.params.get(index).map(|param| param.name.clone())
                     {
                         unify_function_param(name.id.as_str(), param_name.as_str(), arg_ty, states);
                     }
                 }
-                return states
-                    .get(name.id.as_str())
-                    .map(|state| state.return_type.clone())
-                    .unwrap_or(Type::Unknown);
+                return inferred.return_type;
             }
-            if let Some(function_type) = ctx.functions.get(name.id.as_str()) {
-                for arg in &call.arguments.args {
-                    let _ = infer_expr_type(arg, env, states, current_function, ctx);
-                }
-                return (*function_type.return_type).clone();
+            if let Some(function_type) = ctx.functions.get(name.id.as_str()).cloned() {
+                return infer_registered_call(
+                    call,
+                    &function_type,
+                    env,
+                    states,
+                    current_function,
+                    ctx,
+                )
+                .return_type;
             }
             Type::Unknown
         }

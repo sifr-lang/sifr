@@ -556,6 +556,7 @@ mod tests {
     fn error_type(name: &str) -> Type {
         Type::Class {
             identity: None,
+            type_args: Vec::new(),
             name: name.to_string(),
             fields: Vec::new(),
             methods: Vec::new(),

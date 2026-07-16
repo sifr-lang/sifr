@@ -394,6 +394,7 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                             ref fields,
                             ref methods,
                             ref parent_class,
+                            ..
                         } = class_ty
                         {
                             let class_type_params = ctx
@@ -462,6 +463,7 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                                     // stdlib classes stay canonical, while project-module aliases
                                     // use their collision-safe local emitted spelling.
                                     identity: identity.clone(),
+                                    type_args: type_args.clone(),
                                     name: name.clone(),
                                     fields: subst_fields,
                                     methods: subst_methods,
@@ -793,7 +795,7 @@ pub(in crate::lower) fn lower_function(
         .returns
         .as_ref()
         .map_or_else(|| func.name.range(), |returns| returns.range());
-    let inferred_return_type = if skips_normal_body_lowering {
+    let mut inferred_return_type = if skips_normal_body_lowering {
         ft.return_type.as_ref().clone()
     } else {
         infer_function_return_type(
@@ -811,6 +813,17 @@ pub(in crate::lower) fn lower_function(
             },
         )
     };
+    if func.returns.is_none() && inferred_return_type.has_conflicting_class_specializations() {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "function '{}' cannot infer a union containing multiple specializations of the same generic class",
+                func.name
+            ),
+            func.name.range(),
+        );
+        inferred_return_type = Type::Any;
+    }
     validate_python_interop_signature(&mut python_interop, &params, &inferred_return_type, ctx);
 
     // Collect user-defined decorators (excluding classmethod/staticmethod)

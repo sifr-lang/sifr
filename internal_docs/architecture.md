@@ -904,6 +904,12 @@ supports them. This is a language rule, not an implementation detail.
   constant signatures, transitive ancestry, emitted Rust types, and
   specialization metadata therefore continue to refer to the same generic
   class even when factories and aliases appear in separate import statements.
+  Class types carry their concrete specialization arguments separately from
+  declaration identity, and those arguments are invariant: `Box[int]` is not
+  assignable to `Box[str]`. A concrete annotated initializer may bind an
+  otherwise-unresolved zero-argument generic return, while optional contextual
+  binding matches the non-`None` payload rather than binding a type parameter
+  to the complete union.
 - **Codegen:** the compiler emits only the derives supported by the complete
   generated struct, newtype, or union representation.
 - **Enum types (enum type-system work):** enum types unconditionally derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`. All enum values are usable as dict keys and set members.
@@ -949,12 +955,20 @@ supports them. This is a language rule, not an implementation detail.
   re-export paths. Two aliases of one declaration therefore remain compatible
   even when the class and its factory travel through different facades, while
   same-named declarations from different modules remain incompatible.
+  Imported-parent ancestry follows aliases to this canonical identity, and
+  generated child structs implement `Deref`/`DerefMut` to their embedded parent
+  so source-level subclass-to-base compatibility remains executable in Rust.
+  Generic callable parameters, bounds, and project codegen signatures likewise
+  propagate through direct and multi-hop re-export facades.
 - **Module return inference:** successful unannotated top-level return types are
   inferred as a mutually visible declaration group before body lowering, making
   forward calls source-order neutral. The prepass reaches a fixed point sized to
   the declaration group, preserves inferred unions, and ignores unreachable
   statement tails. It is diagnostic-neutral; normal reachability-aware body
   lowering remains authoritative for unresolved or dead return expressions.
+  Generic calls in the prepass bind type variables from their arguments before
+  substituting the return type; unresolved template variables are never
+  accepted as a concrete inferred return.
 - **Formatting-consumer constraint:** `print`, `str`, f-string interpolation,
   and `repr` validate the exact generated Rust `Display`/`Debug` strategy before
   accepting HIR. `repr` always requires `Debug`; the other surfaces select the

@@ -5,7 +5,74 @@ use sifr_ir::CompilerIntrinsicId;
 use sifr_ir::PythonParameterKind;
 
 use super::workload_annotations::WorkloadKind;
-use super::LowerCtx;
+use super::{ExternalDefs, LowerCtx};
+
+pub(in crate::lower) fn import_user_callable(
+    ctx: &mut LowerCtx,
+    externals: &ExternalDefs,
+    module_name: &str,
+    external_name: &str,
+    local_name: &str,
+    class_aliases: &HashMap<String, String>,
+) -> bool {
+    let Some(function) = externals
+        .functions
+        .get(module_name)
+        .and_then(|functions| functions.get(external_name))
+    else {
+        return false;
+    };
+    ctx.functions.insert(
+        local_name.to_string(),
+        super::imported_class_identity::function_type_for_import(
+            function,
+            module_name,
+            class_aliases,
+        ),
+    );
+    import_callable_generic_metadata(ctx, externals, module_name, external_name, local_name);
+    if let Some(values) = externals.compiler_intrinsics.get(module_name) {
+        import_callable_compiler_intrinsic(ctx, values, external_name, local_name);
+    }
+    if let Some(values) = externals.function_defaults.get(module_name) {
+        import_callable_defaults(ctx, values, external_name, local_name);
+    }
+    if let Some(values) = externals.function_varargs.get(module_name) {
+        import_callable_vararg(ctx, values, external_name, local_name);
+    }
+    if let Some(values) = externals.function_python_call_shapes.get(module_name) {
+        import_python_call_shape(ctx, values, external_name, local_name);
+    }
+    if let Some(values) = externals.function_workloads.get(module_name) {
+        import_callable_workload(ctx, values, external_name, local_name);
+    }
+    true
+}
+
+fn import_callable_generic_metadata(
+    ctx: &mut LowerCtx,
+    externals: &ExternalDefs,
+    module_name: &str,
+    external_name: &str,
+    local_name: &str,
+) {
+    if let Some(type_params) = externals
+        .generic_functions
+        .get(module_name)
+        .and_then(|module_generics| module_generics.get(external_name))
+    {
+        ctx.generic_functions
+            .insert(local_name.to_string(), type_params.clone());
+    }
+    if let Some(bounds) = externals
+        .type_param_bounds
+        .get(module_name)
+        .and_then(|module_bounds| module_bounds.get(external_name))
+    {
+        ctx.type_param_bounds
+            .insert(local_name.to_string(), bounds.clone());
+    }
+}
 
 pub(in crate::lower) fn import_callable_defaults(
     ctx: &mut LowerCtx,

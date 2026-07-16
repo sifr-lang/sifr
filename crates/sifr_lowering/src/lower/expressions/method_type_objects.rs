@@ -212,9 +212,45 @@ pub(super) fn resolve_tuple_method_type(
 #[derive(Clone, Copy)]
 pub(super) struct ClassMethodSurface<'a> {
     pub(super) identity: Option<&'a String>,
+    pub(super) type_args: &'a [Type],
     pub(super) name: &'a str,
     pub(super) fields: &'a [(String, Type)],
     pub(super) methods: &'a [(String, FunctionType)],
+}
+
+pub(super) fn resolve_class_method_on_type(
+    class: &Type,
+    method: &str,
+    args: &[HirExpr],
+    arg_ranges: &[TextRange],
+    method_range: TextRange,
+    ctx: &mut LowerCtx,
+) -> Option<Type> {
+    let Type::Class {
+        identity,
+        type_args,
+        name,
+        fields,
+        methods,
+        ..
+    } = class
+    else {
+        return None;
+    };
+    resolve_class_method_type(
+        ClassMethodSurface {
+            identity: identity.as_ref(),
+            type_args,
+            name,
+            fields,
+            methods,
+        },
+        method,
+        args,
+        arg_ranges,
+        method_range,
+        ctx,
+    )
 }
 
 fn type_contains_exact(container: &Type, candidate: &Type) -> bool {
@@ -260,6 +296,7 @@ pub(super) fn resolve_class_method_type(
     if let Some((_, ft)) = class.methods.iter().find(|(n, _)| n == method) {
         let concrete_class = Type::Class {
             identity: class.identity.cloned(),
+            type_args: class.type_args.to_vec(),
             name: class.name.to_string(),
             fields: class.fields.to_vec(),
             methods: class.methods.to_vec(),

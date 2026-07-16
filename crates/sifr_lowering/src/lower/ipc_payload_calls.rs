@@ -193,6 +193,7 @@ mod tests {
     fn accepts_initial_payload_families() {
         let record = Type::Class {
             identity: None,
+            type_args: Vec::new(),
             name: "EchoRequest".to_string(),
             fields: vec![
                 ("message".to_string(), Type::Str),
@@ -229,6 +230,7 @@ mod tests {
     fn rejects_process_local_and_callable_payloads() {
         let process_reader = Type::Class {
             identity: None,
+            type_args: Vec::new(),
             name: "PipeReader".to_string(),
             fields: vec![("_handle".to_string(), Type::Int)],
             methods: vec![],

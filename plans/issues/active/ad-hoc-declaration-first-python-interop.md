@@ -7,7 +7,7 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review passes 14 through 21 reopened
+Wave 2 is implemented; whole-diff review passes 14 through 22 reopened
 generic/inherited Rust-trait, reusable affine-closure ownership, keyed sorting,
 per-type-parameter bound, specialization, generic-operator, conditional-source,
 top-level inference, multi-hop re-export identity, and specialized generic
@@ -1207,7 +1207,29 @@ Delivery waves:
   `28` variants with one capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` after rebuilding all `42` fixture groups. Its `911.81s`
   wall time produced only the expected non-blocking warm-target advisory after
-  `cargo clean`. Fresh whole-diff review remains pending.
+  `cargo clean`. Full-diff
+  [review pass 22](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-22.md)
+  then found four remaining generic and identity gaps: nominal assignability
+  ignored concrete specializations, imported-parent ancestry stayed
+  path-local, user-module imports did not install exported generic-function
+  metadata, and return inference emitted unsubstituted generic constructor
+  results. The remediation gives nominal classes explicit invariant type
+  arguments, canonicalizes imported-parent ancestry, emits executable parent
+  dereference bridges, installs generic callable metadata through user-module
+  facades, propagates project codegen signatures, and substitutes generic calls
+  during both return inference and concrete annotated-initializer lowering.
+  Optional contextual inference binds only the non-`None` payload, and nominal
+  class arguments participate in TypeVar discovery. Permanent regressions cover
+  every reported direct, inferred, multi-hop, bound, native, and recursive
+  shape. Full affected suites pass: type system `103/103`, frontend `47/47`,
+  lowering `763` with one ignored, codegen `825/825`, driver `350` with `25`
+  ignored, and the native driver lane `25/25`. Workspace Clippy, formatting,
+  HIR/driver maintainability, and the `900`-line source-size guardrail pass over
+  `2678` files. The authoritative create-PR gate passes every blocking lane in
+  `471.02s`: Python interop `11/11`, runtime platform `28` variants with one
+  capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `42/42` cache hits. Its only advisory is the
+  non-blocking warm wall-time target. Fresh whole-diff review remains pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

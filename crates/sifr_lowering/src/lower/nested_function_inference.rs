@@ -1,7 +1,7 @@
-use super::LowerCtx;
+use super::{infer_type_var_bindings, substitute_type_vars, LowerCtx};
 use super::{str, typing_and_functions};
 use sifr_python_ast::{CmpOp, Expr, ExprCall, Operator};
-use sifr_type_system::{type_check_binary_op, Type};
+use sifr_type_system::{type_check_binary_op, FunctionType, Type};
 use std::collections::HashMap;
 
 mod state_collection;
@@ -11,6 +11,8 @@ use expression_inference::{
     analyze_assign, infer_expr_type, merge_env_types, refine_name_with_binary_context,
     type_contains_unknown_or_any, unify_name_binding, unify_types,
 };
+mod generic_call_inference;
+use generic_call_inference::infer_registered_call;
 mod return_inference;
 use return_inference::unify_function_return;
 mod compound_statement_inference;

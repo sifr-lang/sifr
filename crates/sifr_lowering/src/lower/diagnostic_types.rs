@@ -6,6 +6,7 @@ use sifr_type_system::Type;
 pub(in crate::lower) fn fallback_error_type(name: &str) -> Type {
     Type::Class {
         identity: None,
+        type_args: Vec::new(),
         name: name.to_string(),
         fields: vec![("message".to_string(), Type::Str)],
         methods: vec![],

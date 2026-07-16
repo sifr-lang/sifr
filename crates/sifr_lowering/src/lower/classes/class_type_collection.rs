@@ -503,6 +503,14 @@ pub(in crate::lower) fn collect_class_type(
         class_name.clone(),
         Type::Class {
             identity: None,
+            type_args: ctx
+                .class_declared_type_params
+                .get(&class_name)
+                .into_iter()
+                .flatten()
+                .cloned()
+                .map(Type::TypeVar)
+                .collect(),
             name: class_name.clone(),
             fields: vec![],
             methods: vec![],
@@ -701,8 +709,17 @@ pub(in crate::lower) fn collect_class_type(
     }
 
     let is_python_opaque = ctx.python_opaque_classes.contains_key(&class_name);
+    let generic_type_args = ctx
+        .class_declared_type_params
+        .get(&class_name)
+        .into_iter()
+        .flatten()
+        .cloned()
+        .map(Type::TypeVar)
+        .collect();
     let class_ty = Type::Class {
         identity: None,
+        type_args: generic_type_args,
         name: class_name.clone(),
         fields: fields.clone(),
         methods: methods.clone(),

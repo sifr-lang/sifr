@@ -149,6 +149,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) function_scopes: Vec<function_scopes::FunctionScopeState>,
     pub(in crate::lower) inferred_binding_hints: Vec<HashMap<String, Type>>,
     pub(in crate::lower) empty_collection_hint_adoption: Vec<bool>,
+    /// Expected type for a specific expression range while lowering a typed initializer.
+    pub(in crate::lower) contextual_expr_types: Vec<(TextRange, Type)>,
     pub(in crate::lower) empty_dict_specializations: HashMap<String, Type>,
     pub(in crate::lower) const_integer_values: HashMap<String, num_bigint::BigInt>,
     pub(in crate::lower) flow_effects: Vec<FlowEffect>,
@@ -228,6 +230,7 @@ impl LowerCtx {
             function_scopes: Vec::new(),
             inferred_binding_hints: Vec::new(),
             empty_collection_hint_adoption: Vec::new(),
+            contextual_expr_types: Vec::new(),
             empty_dict_specializations: HashMap::new(),
             const_integer_values: HashMap::new(),
             flow_effects: Vec::new(),
@@ -370,6 +373,21 @@ impl LowerCtx {
             .last()
             .copied()
             .unwrap_or(false)
+    }
+
+    pub(in crate::lower) fn push_contextual_expr_type(&mut self, range: TextRange, ty: Type) {
+        self.contextual_expr_types.push((range, ty));
+    }
+
+    pub(in crate::lower) fn pop_contextual_expr_type(&mut self) {
+        let _ = self.contextual_expr_types.pop();
+    }
+
+    pub(in crate::lower) fn contextual_expr_type(&self, range: TextRange) -> Option<&Type> {
+        self.contextual_expr_types
+            .iter()
+            .rev()
+            .find_map(|(candidate_range, ty)| (*candidate_range == range).then_some(ty))
     }
 
     pub(in crate::lower) fn record_flow_effect(&mut self, effect: FlowEffect) {
@@ -589,12 +607,17 @@ pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<Strin
         Type::AsyncFunction(ft) => Type::AsyncFunction(substitute_function_type(ft, bindings)),
         Type::Class {
             identity,
+            type_args,
             name,
             fields,
             methods,
             parent_class,
         } => Type::Class {
             identity: identity.clone(),
+            type_args: type_args
+                .iter()
+                .map(|arg| substitute_type_vars(arg, bindings))
+                .collect(),
             name: name.clone(),
             fields: fields
                 .iter()

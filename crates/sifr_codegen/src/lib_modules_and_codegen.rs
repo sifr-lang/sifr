@@ -171,6 +171,12 @@ pub(super) fn module_func_signatures(module: &HirModule) -> ModuleFuncSignatures
                     ctor_params,
                     Type::Class {
                         identity: None,
+                        type_args: class
+                            .type_params
+                            .iter()
+                            .cloned()
+                            .map(Type::TypeVar)
+                            .collect(),
                         name: class.name.clone(),
                         fields: class.fields.clone(),
                         methods: Vec::new(),

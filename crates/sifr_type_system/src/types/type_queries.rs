@@ -471,7 +471,23 @@ impl Type {
             Self::Unknown => "Unknown".to_string(),
             Self::Class { name, .. } if name == "JoinItemId" => "JoinItemId".to_string(),
             Self::Class { name, .. } if name == "CancelOutcome" => "CancelOutcome".to_string(),
-            Self::Class { name, .. } => name.clone(),
+            Self::Class {
+                name, type_args, ..
+            } => {
+                if type_args.is_empty() {
+                    name.clone()
+                } else {
+                    format!(
+                        "{}[{}]",
+                        name,
+                        type_args
+                            .iter()
+                            .map(Self::display_name)
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    )
+                }
+            }
             Self::Result(ok, err) => {
                 format!("Result[{}, {}]", ok.display_name(), err.display_name())
             }
