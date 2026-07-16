@@ -115,10 +115,12 @@ profile. The `buffer-examples` suite runs declaration-first binaries for a
 `builtins.bytearray` import-root producer, opaque `mmap` `Self` receiver,
 package-local bridge producer, affine aggregate automatic cleanup, and a real
 writable NumPy `int64` ndarray. Every fixture checks a deterministic marker and
-zero live/leaked resources; bridge and aggregate fixtures additionally assert
-observable producer identity and exact exporter release counts, while NumPy
-mutation is checked through the retained producer. The complete positive,
-negative, cleanup,
+zero live/leaked resources. The bridge fixture additionally checks shared
+mutation and post-release exporter resizability, the aggregate fixture checks
+that all six retained exporters are resizable after automatic drop, and NumPy
+mutation is checked through the retained producer. C-level runtime exporters
+independently prove pointer identity and exact release counts. The complete
+positive, negative, cleanup,
 cancellation disposition, live-source, and profile ownership matrix is locked
 in `fixtures/numpy_buffer/buffer_declaration_evidence.json` and validated by the
 runner self-test.

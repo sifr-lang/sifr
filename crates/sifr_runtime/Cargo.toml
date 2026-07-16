@@ -36,6 +36,7 @@ unicode-segmentation = { workspace = true, optional = true }
 unicode_names2 = { workspace = true, optional = true }
 
 [dev-dependencies]
+pyo3 = { workspace = true, features = ["macros"] }
 rcgen = { workspace = true }
 tokio = { workspace = true }
 

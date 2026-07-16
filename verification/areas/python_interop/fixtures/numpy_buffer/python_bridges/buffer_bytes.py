@@ -1,44 +1,36 @@
 import ctypes
 
 
-_buffer_acquisitions = 0
-_buffer_releases = 0
-_last_buffer_pointer = 0
-
-
-class _ObservedBuffer:
-    def __init__(self, payload: bytes):
-        self.storage = bytearray(payload)
-
-    def __buffer__(self, _flags: int):
-        global _buffer_acquisitions, _last_buffer_pointer
-        _buffer_acquisitions += 1
-        _last_buffer_pointer = ctypes.addressof(ctypes.c_ubyte.from_buffer(self.storage))
-        return memoryview(self.storage)
-
-    def __release_buffer__(self, _view) -> None:
-        global _buffer_releases
-        _buffer_releases += 1
+_buffers: list[bytearray] = []
 
 
 def reset_buffer_observer() -> None:
-    global _buffer_acquisitions, _buffer_releases, _last_buffer_pointer
-    _buffer_acquisitions = 0
-    _buffer_releases = 0
-    _last_buffer_pointer = 0
+    _buffers.clear()
 
 
-def buffer_acquisition_count() -> int:
-    return _buffer_acquisitions
+def buffer_count() -> int:
+    return len(_buffers)
 
 
-def buffer_release_count() -> int:
-    return _buffer_releases
+def all_buffers_resizable_after_release() -> bool:
+    try:
+        for buffer in _buffers:
+            buffer.append(0)
+            buffer.pop()
+    except BufferError:
+        return False
+    return True
 
 
 def last_buffer_pointer() -> int:
-    return _last_buffer_pointer
+    return ctypes.addressof(ctypes.c_ubyte.from_buffer(_buffers[-1]))
 
 
-def make_buffer(payload: bytes) -> _ObservedBuffer:
-    return _ObservedBuffer(payload)
+def last_buffer_value(index: int) -> int:
+    return _buffers[-1][index]
+
+
+def make_buffer(payload: bytes) -> bytearray:
+    buffer = bytearray(payload)
+    _buffers.append(buffer)
+    return buffer

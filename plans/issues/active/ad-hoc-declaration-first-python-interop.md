@@ -22,7 +22,7 @@ synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
 retained-owner integration are merged, publicly active, and milestone-reviewed.
-M10 Wave 3 and later milestones are not yet implemented. Milestones sequence
+M11 and later milestones are not yet implemented. Milestones sequence
 delivery; they do not create reduced language versions, temporary public
 contracts, dual authorities, or alternate lowering paths.
 

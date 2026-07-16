@@ -21,6 +21,7 @@ from buffer_examples import (
     build_buffer_examples_report,
     run_buffer_examples_self_tests,
 )
+from buffer_evidence import BUFFER_MATRIX_SPECS
 from callback_examples import build_callback_examples_report, run_callback_examples_self_tests
 from certification_matrix import build_certification_report, validate_certification_policy
 from dataframe_examples import build_dataframe_examples_report, run_dataframe_examples_self_tests
@@ -563,52 +564,8 @@ def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -
         raise SystemExit("buffer evidence must identify buffer-protocol-declaration")
     if payload.get("surface") != "@python.buffer -> Result[python.Buffer[T], PythonError]":
         raise SystemExit("buffer evidence surface drift")
-    matrix_specs = {
-        "positive": {
-            "typed-runtime-matrix": (
-                "runtime",
-                {"fixed-width and pointer-width signed and unsigned integers", "float", "native endian format", "C/F/strided/negative-stride/indirect layout", "bounded read/write/copy_slice", "constant-space contiguous admission"},
-            ),
-            "compiler-contract-matrix": (
-                "lowering-codegen",
-                {"import-root target", "bridge target", "Self receiver", "read/write access", "any/C/F layout", "affine aggregate propagation", "non-Send propagation"},
-            ),
-            "compiled-producer-matrix": (
-                "native-binary",
-                {"builtins.bytearray import-root", "opaque mmap Self receiver", "package-local bridge producer", "real NumPy ndarray exporter", "affine record/Option/list/tuple/union/recursive aggregate"},
-            ),
-        },
-        "negative": {
-            "declaration-shape": (
-                "lowering",
-                {"invalid target", "invalid access/layout", "unsupported element type", "wrong return channel", "async declaration", "invalid receiver convention"},
-            ),
-            "ownership-and-traits": (
-                "lowering-e2e",
-                {"copy/clone/equality/hash/order", "use after move", "borrowed release", "mutable alias", "field/index projection", "lambda/nested-function/generator capture", "walrus alias", "task sendability"},
-            ),
-            "runtime-validation": (
-                "runtime",
-                {"dtype/format mismatch", "item-size mismatch", "layout mismatch", "readonly write", "bounds", "non-buffer exporter", "double release", "use after release", "overlapping writable views"},
-            ),
-        },
-        "cleanup": {
-            "explicit-release": (
-                "runtime-native-binary",
-                {"detach before release", "exact-once PyBuffer_Release", "exporter retention", "zero live/leaked resources"},
-            ),
-            "automatic-drop": (
-                "runtime-native-binary",
-                {"normal return", "aggregate field drop", "Option/list/tuple/union drop", "recursive aggregate drop", "zero live/leaked resources"},
-            ),
-            "failure-rollback": (
-                "runtime",
-                {"validation failure", "admission conflict", "store failure rollback", "exact-once rejected-view release", "lock-free Python release"},
-            ),
-        },
-    }
     repo_root = fixtures_root.parents[3]
-    for matrix_name, expected_rows in matrix_specs.items():
+    for matrix_name, expected_rows in BUFFER_MATRIX_SPECS.items():
         matrix = payload.get(matrix_name)
         if not isinstance(matrix, list) or len(matrix) != len(expected_rows):
             raise SystemExit(f"buffer evidence requires exact {matrix_name} rows")
@@ -618,17 +575,23 @@ def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -
         for item in matrix:
             if set(item) != {"id", "layer", "evidence", "owners", "covers"}:
                 raise SystemExit(f"buffer evidence {matrix_name} row schema drift")
-            expected_layer, expected_coverage = expected_rows[item["id"]]
+            expected_layer, expected_evidence, expected_owners, expected_coverage = expected_rows[
+                item["id"]
+            ]
             if item.get("layer") != expected_layer:
                 raise SystemExit(f"buffer evidence layer drift: {item['id']}")
-            if not isinstance(item.get("evidence"), str) or not item["evidence"]:
-                raise SystemExit(f"buffer evidence description is missing: {item['id']}")
+            if item.get("evidence") != expected_evidence:
+                raise SystemExit(f"buffer evidence description drift: {item['id']}")
             covers = item.get("covers")
             if not isinstance(covers, list) or len(covers) != len(set(covers)) or set(covers) != expected_coverage:
                 raise SystemExit(f"buffer evidence coverage drift: {item['id']}")
             owners = item.get("owners")
-            if not isinstance(owners, list) or not owners or len(owners) != len(set(owners)):
-                raise SystemExit(f"buffer evidence owners are invalid: {item['id']}")
+            if (
+                not isinstance(owners, list)
+                or len(owners) != len(set(owners))
+                or set(owners) != expected_owners
+            ):
+                raise SystemExit(f"buffer evidence owner drift: {item['id']}")
             for owner in owners:
                 if not isinstance(owner, str) or not owner:
                     raise SystemExit(f"buffer evidence owner is invalid: {item['id']}")
@@ -783,7 +746,13 @@ def run_self_tests(area_root: Path) -> None:
     buffer_mutations.append((duplicate_matrix, "row id drift"))
     missing_owner = json.loads(json.dumps(buffer_evidence))
     missing_owner["cleanup"][0]["owners"][0] = "crates/missing.rs::missing_test"
-    buffer_mutations.append((missing_owner, "owner is missing"))
+    buffer_mutations.append((missing_owner, "owner drift"))
+    unrelated_owner = json.loads(json.dumps(buffer_evidence))
+    unrelated_owner["positive"][0]["owners"] = ["README.md"]
+    buffer_mutations.append((unrelated_owner, "owner drift"))
+    fabricated_evidence = json.loads(json.dumps(buffer_evidence))
+    fabricated_evidence["positive"][0]["evidence"] = "fabricated but nonempty"
+    buffer_mutations.append((fabricated_evidence, "description drift"))
     missing_reason = json.loads(json.dumps(buffer_evidence))
     del missing_reason["cancellation"]["reason"]
     buffer_mutations.append((missing_reason, "synchronous cancellation"))
