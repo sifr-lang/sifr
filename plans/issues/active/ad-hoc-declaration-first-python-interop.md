@@ -1357,7 +1357,13 @@ Delivery waves:
   the pass-1 ownership and error-channel remediations, and found only a stale
   roadmap reference to the already-merged PR #2988. That ledger reference is
   corrected in PR #2990; final re-review is in progress before closing the
-  milestone checkbox.
+  milestone checkbox. Full
+  [review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-3.md)
+  confirmed the compiler remediations and corrected roadmap, then found that a
+  clean checkout omitted checksummed vendored lockfiles, public documentation
+  overstated nominal `PythonError` enforcement, and exit evidence still listed
+  active `PYZC` as reserved. PR #2990 now tracks all three remediations before
+  the next full review.
 
 Acceptance:
 

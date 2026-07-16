@@ -315,9 +315,11 @@ along with element format, item size, dimensions, shape, strides, and
 suboffsets. Supported element types are fixed-width and pointer-width signed
 and unsigned integers plus `float`.
 
-The result error must be the canonical `PythonError` contract imported from
-`sifr.python`; a same-named local class with a different field shape is
-rejected during checking.
+The result error must satisfy the canonical `PythonError` field contract:
+`message`, `kind`, `exception_type`, `traceback`, and `context` must be strings,
+with no additional fields. Importing `PythonError` from `sifr.python` supplies
+that contract. A same-named local class with a different field shape is rejected
+during checking.
 
 `python.Buffer[T]` is affine and non-send. It retains its exporter and performs
 exactly one `PyBuffer_Release` on explicit `release()` or automatic drop.

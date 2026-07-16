@@ -39,12 +39,12 @@ Active compiler diagnostic families:
 | `SIFR-PYCONV` | `0001` | recursive declaration conversion lowering/codegen/runtime tests. |
 | `SIFR-PYRES` | `0002` | sequenced declaration activation tests. |
 | `SIFR-PYCTX` | `0001` | synchronous context declaration, ownership, and cleanup tests. |
+| `SIFR-PYCB` | `0001` | typed callback lifetime, dispatch, concurrency, and retained-owner tests. |
+| `SIFR-PYZC` | `0001` | typed buffer declaration, affine ownership, layout, access, and release tests. |
 
 Reserved later-protocol families:
 
 - `SIFR-PYASYNC`
-- `SIFR-PYZC`
-- `SIFR-PYCB`
 
 Runtime Python exceptions continue to return structured `PythonError` values;
 compiler diagnostics own invalid declarations, trust, bridge setup, and protocol
