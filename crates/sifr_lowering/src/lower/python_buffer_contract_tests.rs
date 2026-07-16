@@ -137,6 +137,31 @@ fn opaque_receiver_buffer_rejects_writable_self_without_owner_freezing() {
 }
 
 #[test]
+fn writable_buffer_producers_require_owned_python_identity_parameters() {
+    let owner = r#"
+@python.opaque(type=pkg.Owner, cleanup=drop)
+class Owner(NonSend):
+    pass
+"#;
+    for parameter in ["owner: Owner", "holders: list[Owner]"] {
+        let errors = lower_errors(&format!(
+            "{ERROR}\n{owner}\n@python.buffer(pkg.identity, access=write, layout=any)\ndef view({parameter}) -> Result[python.Buffer[uint8], PythonError]: ...\n"
+        ));
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                    && error.message.contains("must transfer ownership with `own`")
+            }),
+            "{parameter}: {errors:?}"
+        );
+    }
+
+    lower_ok(&format!(
+        "{ERROR}\n{owner}\n@python.buffer(pkg.identity, access=write, layout=any)\ndef view(own owner: Owner) -> Result[python.Buffer[uint8], PythonError]: ...\n"
+    ));
+}
+
+#[test]
 fn buffer_declarations_and_methods_reject_shadow_python_error_shapes() {
     let shadows = [
         r#"

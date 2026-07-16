@@ -627,6 +627,20 @@ fn validate_direct_parameters(
                 shape.span,
             );
         }
+        if declaration.buffer.as_ref().is_some_and(|buffer| {
+            buffer.access == sifr_ir::PythonBufferAccess::Write
+                && !param.convention.is_owned()
+                && buffer::contains_python_identity(&param.ty, ctx)
+        }) {
+            buffer::invalid(
+                ctx,
+                &format!(
+                    "writable buffer producer parameter '{}' can carry an existing Python identity and must transfer ownership with `own`",
+                    param.name
+                ),
+                shape.span,
+            );
+        }
         let supported = match shape.kind {
             PythonParameterKind::Positional | PythonParameterKind::KeywordOnly => {
                 is_direct_type(&param.ty, true, ctx)

@@ -7,6 +7,7 @@ use sifr_ir::{
 };
 use sifr_python_ast::{AstParamMutability, AstParamOwnership};
 use sifr_type_system::Type;
+use std::collections::HashSet;
 
 pub(super) fn parse_declaration(
     call: &ExprCall,
@@ -97,6 +98,46 @@ pub(super) fn invalid(ctx: &mut LowerCtx, reason: &str, span: TextRange) {
         format!("invalid Python zero-copy declaration: {reason}"),
         span,
     );
+}
+
+pub(super) fn contains_python_identity(ty: &Type, ctx: &LowerCtx) -> bool {
+    contains_python_identity_inner(ty, ctx, &mut HashSet::new())
+}
+
+fn contains_python_identity_inner(
+    ty: &Type,
+    ctx: &LowerCtx,
+    visiting_classes: &mut HashSet<(String, Vec<Type>)>,
+) -> bool {
+    match ty.resolve_alias() {
+        Type::Class { name, .. }
+            if name == "Object" || ctx.python_opaque_classes.contains_key(name) =>
+        {
+            true
+        }
+        Type::Class { fields, .. } => {
+            let Some(key) = ty.class_recursion_key() else {
+                return false;
+            };
+            if !visiting_classes.insert(key.clone()) {
+                return false;
+            }
+            let contains = fields
+                .iter()
+                .any(|(_, field)| contains_python_identity_inner(field, ctx, visiting_classes));
+            visiting_classes.remove(&key);
+            contains
+        }
+        Type::List(element) => contains_python_identity_inner(element, ctx, visiting_classes),
+        Type::Tuple(elements) | Type::Union(elements) => elements
+            .iter()
+            .any(|element| contains_python_identity_inner(element, ctx, visiting_classes)),
+        Type::Dict(key, value) => {
+            contains_python_identity_inner(key, ctx, visiting_classes)
+                || contains_python_identity_inner(value, ctx, visiting_classes)
+        }
+        _ => false,
+    }
 }
 
 fn receiver_target(

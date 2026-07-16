@@ -97,6 +97,7 @@ BUFFER_MATRIX_SPECS = {
                 "crates/sifr/tests/e2e/fail/python_buffer_nested_async_generator_capture.sifr",
                 "crates/sifr/tests/e2e/fail/python_buffer_nested_function_capture_rejected.sifr",
                 "crates/sifr/tests/e2e/fail/python_buffer_walrus_rejected.sifr",
+                "crates/sifr/tests/e2e/fail/python_buffer_writable_producer_borrowed_owner.sifr",
                 "crates/sifr/tests/e2e/fail/python_buffer_writable_self_owner_alias.sifr",
             },
             {
@@ -109,6 +110,7 @@ BUFFER_MATRIX_SPECS = {
                 "walrus alias",
                 "task sendability",
                 "writable Self owner alias",
+                "writable producer borrowed-owner alias",
             },
         ),
         "runtime-validation": (

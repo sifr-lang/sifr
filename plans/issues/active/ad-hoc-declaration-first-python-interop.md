@@ -1369,7 +1369,13 @@ Delivery waves:
   duplicate canonical fields could still pass the structural `PythonError`
   predicate and reach the generated-Rust duplicate-field assertion. The shared
   predicate now requires exactly five canonical fields, and lowering plus driver
-  regressions lock check/compile diagnostic parity before final re-review.
+  regressions lock check/compile diagnostic parity. Full
+  [review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-5.md)
+  confirmed that remediation, then found writable producers could return a
+  borrowed opaque/Object parameter while leaving its Sifr owner usable. Writable
+  producer parameters that can transitively carry Python identity now require
+  `own`, with permanent lowering, compile-fail, documentation, and evidence
+  coverage before final re-review.
 
 Acceptance:
 

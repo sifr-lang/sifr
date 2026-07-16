@@ -307,9 +307,12 @@ def update(mut view: python.Buffer[int64]) -> Result[list[int64], PythonError]:
 
 The decorator target can be an import-root callable, a package-local `bridge`
 callable, or `Self` on an opaque receiver. `Self` acquisition is read-only;
-writable declarations must use a producer callable that returns a fresh
-exporter because a shared opaque receiver cannot be exclusively frozen while
-the view exists. `access=read | write` for producers and
+writable declarations must use a producer callable that returns a fresh or
+ownership-transferred exporter because a shared opaque receiver cannot be
+exclusively frozen while the view exists. Any writable-producer parameter that
+can carry an existing `python.Object` or opaque Python identity must use `own`,
+so no Sifr alias remains usable while the view is live. `access=read | write`
+for producers and
 `layout=any | c_contiguous | f_contiguous` are validated during acquisition
 along with element format, item size, dimensions, shape, strides, and
 suboffsets. Supported element types are fixed-width and pointer-width signed
