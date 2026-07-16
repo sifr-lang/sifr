@@ -7,7 +7,7 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review passes 14 through 25 reopened
+Wave 2 is merged; whole-diff review passes 14 through 25 reopened
 generic/inherited Rust-trait, reusable affine-closure ownership, keyed sorting,
 per-type-parameter bound, specialization, generic-operator, conditional-source,
 top-level inference, multi-hop re-export identity, and specialized generic
@@ -15,8 +15,9 @@ pattern-capture gaps. Their remediation passes the focused and complete
 compiler suites, native-positive/negative coverage, full merge-profile E2E,
 maintainability, formatting, and file-size checks plus the authoritative local
 create-PR gate in [PR #2988](https://github.com/sifr-lang/sifr/pull/2988).
-Pass-25 remediation is complete and whole-diff review pass 26 is satisfied;
-PR #2988 is ready to merge. Typed
+Pass-25 remediation is complete, whole-diff review pass 26 is satisfied, and
+PR #2988 is merged. M10 Wave 3 evidence, demo, and documentation closure is
+implemented and locally validated; whole-diff review is pending. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -790,7 +791,7 @@ Delivery waves:
   focused buffer tests pass `19/19`, the complete Python runtime suite passes
   `145/145`, and the authoritative create-PR gate passes Python interop `10/10`
   plus E2E `131/131` with signature `7c39b8c1dd4fec7c`.
-- [ ] Wave 2 — add the compiler-known affine `python.Buffer[T]` contract,
+- [x] Wave 2 — add the compiler-known affine `python.Buffer[T]` contract,
   decorator validation, `Self` and call-then-acquire lowering/code generation,
   exclusive writable borrowing, early release, and atomic public activation
   ([PR #2988](https://github.com/sifr-lang/sifr/pull/2988)); focused lowering
@@ -1297,7 +1298,13 @@ Delivery waves:
   tests, and returned **SATISFIED** with no actionable findings.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
-  documentation, and complete activation evidence.
+  documentation, and complete activation evidence. The implementation adds a
+  validator-owned declaration evidence matrix, a fifth compiled real-NumPy
+  case, `demos/m10_demo`, and active `PYZC` public docs. Focused lowering
+  (`34/34`), codegen (`10/10`), runtime (`18/18`), runner self-test, scaffold,
+  and five-binary demo checks pass. The authoritative create-PR gate passes
+  Python interop `11/11` and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` after a clean build.
 - [ ] Milestone review — review the complete merged M10 implementation before
   closing the milestone checkbox.
 

@@ -16,7 +16,11 @@ from async_context_examples import (
     build_async_context_examples_report,
     run_async_context_examples_self_tests,
 )
-from buffer_examples import build_buffer_examples_report, run_buffer_examples_self_tests
+from buffer_examples import (
+    BUFFER_EXAMPLE_CASES,
+    build_buffer_examples_report,
+    run_buffer_examples_self_tests,
+)
 from callback_examples import build_callback_examples_report, run_callback_examples_self_tests
 from certification_matrix import build_certification_report, validate_certification_policy
 from dataframe_examples import build_dataframe_examples_report, run_dataframe_examples_self_tests
@@ -93,6 +97,7 @@ REQUIRED_FIXTURE_FILES = (
     "fastapi_app/fastapi_app_contract.json",
     "kafka/kafka_contract.json",
     "numpy_buffer/py_buffer_contract.json",
+    "numpy_buffer/buffer_declaration_evidence.json",
     "pandas_arrow/pandas_arrow_contract.json",
     "polars_arrow/polars_arrow_contract.json",
     "pubsub/pubsub_contract.json",
@@ -127,6 +132,7 @@ REQUIRED_SOURCE_FIXTURES = (
     "numpy_buffer/buffer_declaration_self.sifr",
     "numpy_buffer/buffer_declaration_bridge.sifr",
     "numpy_buffer/buffer_affine_aggregate_codegen.sifr",
+    "numpy_buffer/buffer_declaration_numpy.sifr",
     "numpy_buffer/buffer_comparison_rejected.sifr",
     "pandas_arrow/pandas_full_example.sifr",
     "polars_arrow/polars_full_example.sifr",
@@ -425,6 +431,8 @@ def validate_fixture_files(fixtures_root: Path) -> None:
             validate_async_declaration_evidence(payload)
         if name == "async_context/async_context_evidence.json":
             validate_async_context_evidence(payload)
+        if name == "numpy_buffer/buffer_declaration_evidence.json":
+            validate_buffer_declaration_evidence(payload, fixtures_root)
     missing_sources = [
         name for name in REQUIRED_SOURCE_FIXTURES if not (fixtures_root / name).is_file()
     ]
@@ -533,6 +541,85 @@ def validate_async_context_evidence(payload: object) -> None:
         raise SystemExit("async context live evidence must lock the aiosqlite marker")
 
 
+def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -> None:
+    if not isinstance(payload, dict) or payload.get("capability") != (
+        "buffer-protocol-declaration"
+    ):
+        raise SystemExit("buffer evidence must identify buffer-protocol-declaration")
+    for matrix_name in ("positive", "negative", "cleanup"):
+        matrix = payload.get(matrix_name)
+        if not isinstance(matrix, list) or len(matrix) < 3:
+            raise SystemExit(f"buffer evidence requires at least 3 {matrix_name} rows")
+        if any(
+            not isinstance(item, dict)
+            or not item.get("id")
+            or not item.get("layer")
+            or not item.get("evidence")
+            or not isinstance(item.get("covers"), list)
+            or not item["covers"]
+            for item in matrix
+        ):
+            raise SystemExit(
+                f"buffer evidence {matrix_name} rows require id, layer, evidence, and coverage"
+            )
+    cancellation = payload.get("cancellation")
+    if not isinstance(cancellation, dict) or cancellation.get("status") != "not-applicable":
+        raise SystemExit("buffer evidence must record synchronous cancellation as not applicable")
+    live = payload.get("live")
+    required_live_ids = {
+        "import-root-bytearray",
+        "receiver-mmap",
+        "package-bridge",
+        "affine-aggregate",
+        "numpy-ndarray",
+    }
+    observed_live_ids = (
+        {item.get("id") for item in live if isinstance(item, dict)}
+        if isinstance(live, list)
+        else set()
+    )
+    if observed_live_ids != required_live_ids:
+        missing = sorted(required_live_ids - observed_live_ids)
+        extra = sorted(observed_live_ids - required_live_ids)
+        raise SystemExit(f"buffer live evidence drift: missing={missing}, extra={extra}")
+    registered_cases = {
+        (case.relative_source.removeprefix("numpy_buffer/"), case.stdout_marker)
+        for case in BUFFER_EXAMPLE_CASES.values()
+    }
+    observed_cases = set()
+    for item in live:
+        source = item.get("source")
+        marker = item.get("stdout_marker")
+        source_path = fixtures_root / "numpy_buffer" / source if isinstance(source, str) else None
+        if source_path is None or not source_path.is_file():
+            raise SystemExit(f"buffer live evidence source is missing: {source}")
+        if not isinstance(marker, str) or not marker:
+            raise SystemExit(f"buffer live evidence marker is missing: {source}")
+        if marker not in source_path.read_text(encoding="utf-8"):
+            raise SystemExit(f"buffer live evidence marker is absent from source: {source}")
+        observed_cases.add((source, marker))
+    if observed_cases != registered_cases:
+        raise SystemExit("buffer live evidence must match the executable case registry")
+    profiles = payload.get("profiles")
+    required_profiles = ["create-pr", "merge", "nightly", "release"]
+    if profiles != required_profiles:
+        raise SystemExit("buffer evidence must remain blocking in every delivery profile")
+    repo_root = fixtures_root.parents[3]
+    for profile in required_profiles:
+        profile_payload = json.loads(
+            (repo_root / "verification" / "profiles" / f"{profile}.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        python_suites = next(
+            area["suites"]
+            for area in profile_payload["selected_areas"]
+            if area["area"] == "python_interop"
+        )
+        if "buffer-examples" not in python_suites:
+            raise SystemExit(f"buffer examples are not blocking in {profile}")
+
+
 def select_entries(
     entries: list[PackageEntry],
     groups: list[str],
@@ -592,6 +679,21 @@ def run_self_tests(area_root: Path) -> None:
             raise
     else:
         raise SystemExit("sync context evidence self-test accepted a missing normal outcome")
+    buffer_evidence = json.loads(
+        (area_root / "fixtures/numpy_buffer/buffer_declaration_evidence.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    buffer_evidence["live"] = [
+        item for item in buffer_evidence["live"] if item["id"] != "numpy-ndarray"
+    ]
+    try:
+        validate_buffer_declaration_evidence(buffer_evidence, area_root / "fixtures")
+    except SystemExit as error:
+        if "missing=['numpy-ndarray']" not in str(error):
+            raise
+    else:
+        raise SystemExit("buffer evidence self-test accepted a missing NumPy live row")
     run_env_probe(area_root)
     try:
         validate_filters("group", ["not-a-group"], KNOWN_GROUPS)

@@ -31,6 +31,12 @@ BUFFER_EXAMPLE_CASES = {
         stdout_marker="sifr-python-interop:buffer:affine-aggregate=ok:resources=zero",
         import_roots=("builtins", "mmap"),
     ),
+    "numpy": ExampleCase(
+        case_id="numpy",
+        relative_source="numpy_buffer/buffer_declaration_numpy.sifr",
+        stdout_marker="sifr-python-interop:buffer:numpy=int64:write=42:resources=zero",
+        import_roots=("mmap", "numpy"),
+    ),
 }
 
 

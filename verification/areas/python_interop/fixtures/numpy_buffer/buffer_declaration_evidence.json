@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "capability": "buffer-protocol-declaration",
+  "surface": "@python.buffer -> Result[python.Buffer[T], PythonError]",
+  "positive": [
+    {
+      "id": "typed-runtime-matrix",
+      "layer": "runtime",
+      "evidence": "python::buffer_ops::tests",
+      "covers": ["signed and unsigned fixed integers", "float", "native endian format", "C/F/strided/negative-stride/indirect layout", "bounded read/write/copy_slice", "constant-space contiguous admission"]
+    },
+    {
+      "id": "compiler-contract-matrix",
+      "layer": "lowering-codegen",
+      "evidence": "python_buffer_contract_tests and python_buffer_codegen_tests",
+      "covers": ["import-root target", "bridge target", "Self receiver", "read/write access", "any/C/F layout", "affine aggregate propagation", "non-Send propagation"]
+    },
+    {
+      "id": "compiled-producer-matrix",
+      "layer": "native-binary",
+      "evidence": "runner/buffer_examples.py",
+      "covers": ["builtins.bytearray import-root", "opaque mmap Self receiver", "package-local bridge producer", "real NumPy ndarray exporter", "affine record/Option/list/tuple/union/recursive aggregate"]
+    }
+  ],
+  "negative": [
+    {
+      "id": "declaration-shape",
+      "layer": "lowering",
+      "evidence": "python_buffer_contract_tests",
+      "covers": ["invalid target", "invalid access/layout", "unsupported element type", "wrong return channel", "async declaration", "invalid receiver convention"]
+    },
+    {
+      "id": "ownership-and-traits",
+      "layer": "lowering-e2e",
+      "evidence": "python_buffer_contract_tests and crates/sifr/tests/e2e/fail/python_buffer_*.sifr",
+      "covers": ["copy/clone/equality/hash/order", "use after move", "borrowed release", "mutable alias", "field/index projection", "lambda/nested-function/generator capture", "walrus alias", "task sendability"]
+    },
+    {
+      "id": "runtime-validation",
+      "layer": "runtime",
+      "evidence": "python::buffer_ops::tests",
+      "covers": ["dtype/format mismatch", "item-size mismatch", "layout mismatch", "readonly write", "bounds", "non-buffer exporter", "double release", "use after release", "overlapping writable views"]
+    }
+  ],
+  "cleanup": [
+    {
+      "id": "explicit-release",
+      "layer": "runtime-native-binary",
+      "evidence": "buffer runtime counters plus top-level, Self, bridge, and NumPy examples",
+      "covers": ["detach before release", "exact-once PyBuffer_Release", "exporter retention", "zero live/leaked resources"]
+    },
+    {
+      "id": "automatic-drop",
+      "layer": "runtime-native-binary",
+      "evidence": "sealed_resource_identity_drop_releases_buffer_and_metadata plus buffer_affine_aggregate_codegen.sifr",
+      "covers": ["normal return", "aggregate field drop", "Option/list/tuple/union drop", "recursive aggregate drop", "zero live/leaked resources"]
+    },
+    {
+      "id": "failure-rollback",
+      "layer": "runtime",
+      "evidence": "buffer acquisition validation and admission tests",
+      "covers": ["validation failure", "admission conflict", "object-count failure rollback", "release error admission cleanup", "lock-free Python release"]
+    }
+  ],
+  "cancellation": {
+    "status": "not-applicable",
+    "reason": "buffer acquisition and access are synchronous blocking boundaries"
+  },
+  "live": [
+    {
+      "id": "import-root-bytearray",
+      "source": "buffer_declaration_codegen_smoke.sifr",
+      "stdout_marker": "sifr-python-interop:buffer:top-level=ok:resources=zero"
+    },
+    {
+      "id": "receiver-mmap",
+      "source": "buffer_declaration_self.sifr",
+      "stdout_marker": "sifr-python-interop:buffer:receiver=ok:resources=zero"
+    },
+    {
+      "id": "package-bridge",
+      "source": "buffer_declaration_bridge.sifr",
+      "stdout_marker": "sifr-python-interop:buffer:bridge=ok:resources=zero"
+    },
+    {
+      "id": "affine-aggregate",
+      "source": "buffer_affine_aggregate_codegen.sifr",
+      "stdout_marker": "sifr-python-interop:buffer:affine-aggregate=ok:resources=zero"
+    },
+    {
+      "id": "numpy-ndarray",
+      "source": "buffer_declaration_numpy.sifr",
+      "stdout_marker": "sifr-python-interop:buffer:numpy=int64:write=42:resources=zero"
+    }
+  ],
+  "profiles": ["create-pr", "merge", "nightly", "release"]
+}

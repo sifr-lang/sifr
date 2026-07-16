@@ -514,6 +514,14 @@ The public resource exposes read-only `length`, `item_size`, `dimensions`,
 and bounds; multi-dimensional metadata remains runtime data rather than pretending
 shape values are static type parameters.
 
+Complete activation evidence is machine-owned by
+`verification/areas/python_interop/fixtures/numpy_buffer/buffer_declaration_evidence.json`.
+It locks positive, negative, cleanup, cancellation-disposition, live-source,
+and delivery-profile ownership. The compiled suite covers import-root, `Self`,
+package-bridge, affine-aggregate, and real NumPy ndarray producers, and
+The runnable typed-buffer example exposes the same five deterministic
+zero-resource markers.
+
 ## Arrow C Data Interface
 
 Arrow declarations derive capsule kind from their affine return type:

@@ -14,6 +14,7 @@ verification/areas/python_interop/run.sh --tier tier1
 verification/areas/python_interop/run.sh --tier tier4
 verification/areas/python_interop/run.sh --package pandas
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --dataframe-examples
+uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --buffer-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --ml-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --library-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --async-declaration-examples
@@ -108,6 +109,16 @@ the runner. They are separate from the dataframes matrix case so reviewers can
 distinguish package-certification metadata from compiled Sifr execution
 evidence. Runner self-tests validate report aggregation and fixture drift; the
 actual Cargo/Sifr/venv execution path is covered by `--dataframe-examples`.
+
+Typed buffer examples are offline, compiled, and blocking in every delivery
+profile. The `buffer-examples` suite runs declaration-first binaries for a
+`builtins.bytearray` import-root producer, opaque `mmap` `Self` receiver,
+package-local bridge producer, affine aggregate automatic cleanup, and a real
+writable NumPy `int64` ndarray. Every fixture checks a deterministic marker and
+zero live/leaked resources. The complete positive, negative, cleanup,
+cancellation disposition, live-source, and profile ownership matrix is locked
+in `fixtures/numpy_buffer/buffer_declaration_evidence.json` and validated by the
+runner self-test.
 
 ML examples are offline but executable. The `ml-examples` suite uses the same
 temporary-package execution path and runs real Sifr programs for torch and

@@ -1,0 +1,30 @@
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
+
+
+@python.buffer(numpy.arange, access=write, layout=c_contiguous)
+def numpy_range(stop: int) -> Result[python.Buffer[int64], PythonError]: ...
+
+
+def main() -> Result[None, PythonError]:
+    try:
+        before: ResourceDiagnostics = resource_diagnostics()
+        view: python.Buffer[int64] = numpy_range(4)
+        expected_original: int64 = 2
+        replacement: int64 = 42
+        original: int64 = view.read(2)
+        written: None = view.write(2, replacement)
+        changed: int64 = view.read(2)
+        copied: list[int64] = view.copy_slice(0, view.length())
+        shape: list[int] = view.shape()
+        strides: list[int] = view.strides()
+        metadata_ok: bool = view.item_size() == 8 and view.dimensions() == 1 and len(shape) == 1 and shape[0] == 4 and len(strides) == 1 and strides[0] == 8 and not view.readonly() and view.c_contiguous() and view.f_contiguous()
+        released: None = view.release()
+        after: ResourceDiagnostics = resource_diagnostics()
+        if original != expected_original or changed != replacement or len(copied) != 4 or copied[2] != replacement or not metadata_ok:
+            raise PythonError("NumPy buffer metadata or typed access was incorrect")
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("NumPy buffer declaration leaked resources")
+        print("sifr-python-interop:buffer:numpy=int64:write=42:resources=zero")
+        return None
+    except PythonError as error:
+        raise error
