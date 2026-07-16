@@ -23,6 +23,13 @@
       "evidence": "runner/buffer_examples.py",
       "owners": ["verification/areas/python_interop/runner/buffer_examples.py", "verification/areas/python_interop/fixtures/numpy_buffer/buffer_declaration_codegen_smoke.sifr", "verification/areas/python_interop/fixtures/numpy_buffer/buffer_declaration_self.sifr", "verification/areas/python_interop/fixtures/numpy_buffer/buffer_declaration_bridge.sifr", "verification/areas/python_interop/fixtures/numpy_buffer/buffer_affine_aggregate_codegen.sifr", "verification/areas/python_interop/fixtures/numpy_buffer/buffer_declaration_numpy.sifr"],
       "covers": ["builtins.bytearray import-root", "opaque mmap Self receiver", "package-local bridge producer", "real NumPy ndarray exporter", "affine record/Option/list/tuple/union/recursive aggregate"]
+    },
+    {
+      "id": "cpython-3.11-compatibility",
+      "layer": "runtime-native-binary",
+      "evidence": "buffer-cpython311 suite pinned to CPython 3.11",
+      "owners": [".github/workflows/local-first-validation.yml", "verification/areas/python_interop/cpython311/pyproject.toml", "verification/areas/python_interop/cpython311/uv.lock", "verification/areas/python_interop/runner/cpython311_buffer.py"],
+      "covers": ["five C-level exact release and pointer tests", "five compiled declaration-first buffer fixtures"]
     }
   ],
   "negative": [
@@ -37,7 +44,7 @@
       "id": "ownership-and-traits",
       "layer": "lowering-e2e",
       "evidence": "python_buffer_contract_tests and crates/sifr/tests/e2e/fail/python_buffer_*.sifr",
-      "owners": ["crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs", "crates/sifr/tests/e2e/fail/python_buffer_identity_rejected.sifr"],
+      "owners": ["crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs", "crates/sifr/tests/e2e/fail/python_buffer_affine_membership.sifr", "crates/sifr/tests/e2e/fail/python_buffer_identity_rejected.sifr", "crates/sifr/tests/e2e/fail/python_buffer_lambda_capture_rejected.sifr", "crates/sifr/tests/e2e/fail/python_buffer_nested_async_generator_capture.sifr", "crates/sifr/tests/e2e/fail/python_buffer_nested_function_capture_rejected.sifr", "crates/sifr/tests/e2e/fail/python_buffer_walrus_rejected.sifr"],
       "covers": ["copy/clone/equality/hash/order", "use after move", "borrowed release", "mutable alias", "field/index projection", "lambda/nested-function/generator capture", "walrus alias", "task sendability"]
     },
     {

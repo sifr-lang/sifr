@@ -651,12 +651,23 @@ def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -
             encoding="utf-8"
         )
     )
-    manifest_suites = [suite for suite in manifest_payload["suites"] if suite["name"] == "buffer-examples"]
-    if len(manifest_suites) != 1 or manifest_suites[0].get("kind") != "adapter":
-        raise SystemExit("buffer examples manifest ownership drift")
-    manifest_cases = manifest_suites[0].get("cases")
-    if not isinstance(manifest_cases, list) or len(manifest_cases) != 1 or manifest_cases[0].get("command") != "python-interop-buffer-examples":
-        raise SystemExit("buffer examples manifest command drift")
+    required_suites = {
+        "buffer-examples": "python-interop-buffer-examples",
+        "buffer-cpython311": "python-interop-buffer-cpython311",
+    }
+    for suite_name, expected_command in required_suites.items():
+        manifest_suites = [
+            suite for suite in manifest_payload["suites"] if suite["name"] == suite_name
+        ]
+        if len(manifest_suites) != 1 or manifest_suites[0].get("kind") != "adapter":
+            raise SystemExit(f"{suite_name} manifest ownership drift")
+        manifest_cases = manifest_suites[0].get("cases")
+        if (
+            not isinstance(manifest_cases, list)
+            or len(manifest_cases) != 1
+            or manifest_cases[0].get("command") != expected_command
+        ):
+            raise SystemExit(f"{suite_name} manifest command drift")
     for profile in required_profiles:
         profile_payload = json.loads(
             (repo_root / "verification" / "profiles" / f"{profile}.json").read_text(
@@ -669,8 +680,11 @@ def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -
         if len(python_areas) != 1:
             raise SystemExit(f"python interop profile ownership drift in {profile}")
         python_suites = python_areas[0]["suites"]
-        if "buffer-examples" not in python_suites:
-            raise SystemExit(f"buffer examples are not blocking in {profile}")
+        missing_suites = set(required_suites).difference(python_suites)
+        if missing_suites:
+            raise SystemExit(
+                f"buffer evidence suites are not blocking in {profile}: {sorted(missing_suites)}"
+            )
 
 
 def select_entries(

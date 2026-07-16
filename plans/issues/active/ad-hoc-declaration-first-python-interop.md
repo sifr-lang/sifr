@@ -1308,7 +1308,14 @@ Delivery waves:
   [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-1.md)
   requested independent pointer/exact-release evidence, a strict evidence
   schema, least-authority generated manifests, and an architecture wording
-  repair. All four findings are remediated; repeat review is pending.
+  repair. [Review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-2.md)
+  requested CPython 3.11-compatible exporters, exact owner sets, narrower
+  compiled-identity claims, and a consistent phase status. [Review pass
+  3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-3.md)
+  verified the native release and packaging paths, then requested a pinned 3.11
+  lane, complete native-negative fixture ownership, and current review
+  tracking. All findings through pass 3 are remediated; repeat review is
+  pending.
 - [ ] Milestone review — review the complete merged M10 implementation before
   closing the milestone checkbox.
 

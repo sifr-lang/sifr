@@ -55,6 +55,20 @@ BUFFER_MATRIX_SPECS = {
                 "affine record/Option/list/tuple/union/recursive aggregate",
             },
         ),
+        "cpython-3.11-compatibility": (
+            "runtime-native-binary",
+            "buffer-cpython311 suite pinned to CPython 3.11",
+            {
+                ".github/workflows/local-first-validation.yml",
+                "verification/areas/python_interop/cpython311/pyproject.toml",
+                "verification/areas/python_interop/cpython311/uv.lock",
+                "verification/areas/python_interop/runner/cpython311_buffer.py",
+            },
+            {
+                "five C-level exact release and pointer tests",
+                "five compiled declaration-first buffer fixtures",
+            },
+        ),
     },
     "negative": {
         "declaration-shape": (
@@ -75,7 +89,12 @@ BUFFER_MATRIX_SPECS = {
             "python_buffer_contract_tests and crates/sifr/tests/e2e/fail/python_buffer_*.sifr",
             {
                 "crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs",
+                "crates/sifr/tests/e2e/fail/python_buffer_affine_membership.sifr",
                 "crates/sifr/tests/e2e/fail/python_buffer_identity_rejected.sifr",
+                "crates/sifr/tests/e2e/fail/python_buffer_lambda_capture_rejected.sifr",
+                "crates/sifr/tests/e2e/fail/python_buffer_nested_async_generator_capture.sifr",
+                "crates/sifr/tests/e2e/fail/python_buffer_nested_function_capture_rejected.sifr",
+                "crates/sifr/tests/e2e/fail/python_buffer_walrus_rejected.sifr",
             },
             {
                 "copy/clone/equality/hash/order",

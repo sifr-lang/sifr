@@ -11,6 +11,8 @@ use std::ptr;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
+const BUFFER_FORMAT: &[u8; 2] = b"B\0";
+
 #[derive(Default)]
 struct ExporterMetrics {
     acquisitions: AtomicUsize,
@@ -44,7 +46,6 @@ impl InstrumentedExporter {
             .fetch_add(1, Ordering::Relaxed);
         drop(exporter);
 
-        const FORMAT: &[u8; 2] = b"B\0";
         unsafe {
             (*view).obj = slf.into_any().into_ptr();
             (*view).buf = data_pointer;
@@ -52,7 +53,7 @@ impl InstrumentedExporter {
             (*view).readonly = 0;
             (*view).itemsize = 1;
             (*view).format = if flags & ffi::PyBUF_FORMAT == ffi::PyBUF_FORMAT {
-                FORMAT.as_ptr().cast::<c_char>().cast_mut()
+                BUFFER_FORMAT.as_ptr().cast::<c_char>().cast_mut()
             } else {
                 ptr::null_mut()
             };

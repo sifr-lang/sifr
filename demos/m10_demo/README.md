@@ -6,12 +6,13 @@ The generated binaries exercise:
 
 - a writable `builtins.bytearray` import-root producer;
 - an opaque `mmap` receiver through `Self`;
-- a package-local Python bridge producer with an observable data pointer and
-  exact `bf_releasebuffer` counter;
+- a package-local Python bridge producer with shared mutation and post-release
+  resizability;
 - automatic cleanup through affine record, `Option`, list, tuple, union, and
-  recursive aggregates with six exact exporter-release observations; and
+  recursive aggregates with all six retained exporters resizable after drop;
+  and
 - a real writable NumPy `int64` ndarray with checked metadata, typed element
-  access, mutation, copying, and exact release.
+  access, retained-producer mutation, copying, and zero resource leakage.
 
 From this directory, run:
 
