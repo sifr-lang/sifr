@@ -1363,7 +1363,13 @@ Delivery waves:
   generic ignore rules omitted checksum-required vendored files from a clean
   checkout, public documentation overstated nominal `PythonError` enforcement,
   and exit evidence still listed active `PYZC` as reserved. PR #2990 now tracks
-  all three remediations before the next full review.
+  all three remediations. Full
+  [review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-4.md)
+  confirmed those fixes and the clean-checkout vendor inventory, then found that
+  duplicate canonical fields could still pass the structural `PythonError`
+  predicate and reach the generated-Rust duplicate-field assertion. The shared
+  predicate now requires exactly five canonical fields, and lowering plus driver
+  regressions lock check/compile diagnostic parity before final re-review.
 
 Acceptance:
 

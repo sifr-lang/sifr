@@ -170,6 +170,46 @@ fn test_lower_source_and_type_check_source_surface_type_errors() {
 }
 
 #[test]
+fn test_duplicate_python_error_fields_fail_check_and_compile_consistently() {
+    let source = r#"
+class PythonError(Error):
+    message: str
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+
+@python.buffer(builtins.bytearray, access=read, layout=any)
+def view(size: int) -> Result[python.Buffer[uint8], PythonError]: ...
+"#;
+    let check_errors = type_check_source(source);
+    assert!(check_errors.iter().any(|error| {
+        error.code == DiagnosticCode::PYZC_INVALID_DECLARATION.code()
+            && error
+                .message
+                .contains("canonical `PythonError` field contract")
+    }));
+
+    let CompileResult::Errors {
+        errors: compile_errors,
+    } = compile(source)
+    else {
+        panic!("duplicate PythonError fields must not reach code generation");
+    };
+    assert_eq!(
+        check_errors
+            .iter()
+            .map(crate::diagnostics::diagnostic_legacy_display)
+            .collect::<Vec<_>>(),
+        compile_errors
+            .iter()
+            .map(crate::diagnostics::diagnostic_legacy_display)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
 fn test_type_check_source_surfaces_reveal_type_as_structured_note() {
     let diagnostics = type_check_source("def main():\n    reveal_type(1)\n");
 

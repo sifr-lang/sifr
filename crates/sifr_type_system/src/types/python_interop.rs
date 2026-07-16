@@ -19,6 +19,7 @@ impl Type {
         };
         name == "PythonError"
             && type_args.is_empty()
+            && fields.len() == PYTHON_ERROR_FIELDS.len()
             && PYTHON_ERROR_FIELDS.iter().all(|expected| {
                 fields
                     .iter()
@@ -77,5 +78,15 @@ mod tests {
             ("code", Type::Int),
         ]);
         assert!(!extra_field.is_python_error_contract());
+
+        let duplicate_field = python_error(vec![
+            ("message", Type::Str),
+            ("message", Type::Str),
+            ("kind", Type::Str),
+            ("exception_type", Type::Str),
+            ("traceback", Type::Str),
+            ("context", Type::Str),
+        ]);
+        assert!(!duplicate_field.is_python_error_contract());
     }
 }
