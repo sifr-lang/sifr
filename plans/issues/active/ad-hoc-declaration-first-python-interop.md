@@ -17,7 +17,8 @@ maintainability, formatting, and file-size checks plus the authoritative local
 create-PR gate in [PR #2988](https://github.com/sifr-lang/sifr/pull/2988).
 Pass-25 remediation is complete, whole-diff review pass 26 is satisfied, and
 PR #2988 is merged. M10 Wave 3 evidence, demo, and documentation closure is
-implemented and locally validated; whole-diff review is pending. Typed
+implemented and locally validated; whole-diff review pass 6 is satisfied and
+the authoritative create-PR gate passes. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1321,7 +1322,18 @@ Delivery waves:
   found duplicate runtime observations were collapsed and the primitive runtime
   owner matrix overstated pointer-width evidence. Observation multiplicity,
   missing/duplicate self-tests, exact raw ownership, and C-level round trips for
-  every supported primitive remediate both findings; repeat review is pending.
+  every supported primitive remediate both findings. Whole-diff
+  [review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-6.md)
+  re-ran adversarial exactness checks, the pinned CPython 3.11 release tests,
+  all eleven primitive-family round trips, the native-format matrix, evidence
+  validation, generated least-authority manifest inspection, and integrity
+  checks, then returned **SATISFIED** with no actionable findings. The
+  authoritative create-PR gate passes every blocking lane in `920.39s`:
+  Python interop `12/12` including the five release tests and five compiled
+  examples on CPython `3.11.14`, runtime platform `28` variants with one
+  capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `27/42` cache hits. Warm-time and cache-hit notices are
+  non-blocking advisories. Merge remains pending.
 - [ ] Milestone review — review the complete merged M10 implementation before
   closing the milestone checkbox.
 
