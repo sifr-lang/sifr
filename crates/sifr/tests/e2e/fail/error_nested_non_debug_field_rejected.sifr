@@ -1,0 +1,6 @@
+# expect-error: SIFR-CLASS-0006
+class CallbackHolder:
+    callback: Callable[[int], int]
+
+class NestedCallbackError(Error):
+    holder: CallbackHolder

@@ -1,0 +1,3 @@
+# expect-error: SIFR-PYZC-0001
+def contains_buffer(view: python.Buffer[uint8], values: list[python.Buffer[uint8]]) -> bool:
+    return view in values

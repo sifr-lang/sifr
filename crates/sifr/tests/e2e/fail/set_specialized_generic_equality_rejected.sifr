@@ -1,0 +1,6 @@
+# expect-error: SIFR-TYPE-0002
+class Box[T]:
+    value: T
+
+def same(left: set[Box[int]], right: set[Box[int]]) -> bool:
+    return left == right

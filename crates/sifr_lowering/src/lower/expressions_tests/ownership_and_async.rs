@@ -51,6 +51,20 @@ pub(super) fn test_use_after_move() {
 }
 
 #[test]
+pub(super) fn test_borrowed_structural_upcast_requires_cloneable_source() {
+    let result = lower_source(
+        "class Root(NonSend):\n    value: int\n\nclass Child(Root):\n    extra: int\n\ndef consume(value: Root | int) -> int:\n    return 1\n\ndef main():\n    value: Child | int = Child(1, 2)\n    consume(value)\n",
+    );
+    let errors = result.expect_err("non-clone borrowed union conversion should be rejected");
+    assert!(
+        errors.iter().any(|error| error
+            .message
+            .contains("requires a cloneable source representation")),
+        "{errors:?}"
+    );
+}
+
+#[test]
 pub(super) fn test_await_task_handle_consumes_handle_binding() {
     let source = "async def worker() -> int:\n    await task.sleep(0.0)\n    return 41\n\nasync def main() -> Result[None, ScopeFailure]:\n    async with task.scope() as scope:\n        handle = scope.spawn(worker())\n        first = await handle\n        second = await handle\n    return None\n";
     let result = lower_source(source);
@@ -481,6 +495,8 @@ pub(super) fn test_failure_annotation_resolves_in_function_signature() {
     assert_eq!(
         param_ty,
         &Type::Failure(Box::new(Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "ValueError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: vec![],

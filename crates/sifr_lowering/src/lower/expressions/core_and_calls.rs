@@ -1,6 +1,8 @@
 use super::async_await::lower_await;
 use super::builtin_calls::{lower_bytes_type_factory_call, lower_defaultdict_constructor_call};
-use super::container_literal_diagnostics::container_literal_type_conflict;
+use super::container_literal_diagnostics::{
+    container_literal_type_conflict, reject_unhashable_container_type,
+};
 use super::expression_diagnostics;
 use super::expression_operators::{lower_binop, lower_compare, lower_unaryop};
 use super::fstring_support::lower_fstring_expr;
@@ -368,6 +370,7 @@ pub(in crate::lower) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Optio
                 let mut args = Vec::new();
                 for arg in &call.arguments.args {
                     let expr = lower_expr(arg, ctx)?;
+                    consume_affine_value_name(&expr, arg.range(), ctx);
                     args.push(expr);
                 }
                 return Some(HirExpr::ConstructorCall {
@@ -418,6 +421,7 @@ pub(in crate::lower) fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) 
         } else {
             elem_ty = Some(ty);
         }
+        consume_affine_value_name(&expr, elt.range(), ctx);
         elements.push(expr);
     }
 
@@ -443,10 +447,14 @@ pub(in crate::lower) fn lower_set_literal(set: &ExprSet, ctx: &mut LowerCtx) -> 
         } else {
             elem_ty = Some(ty);
         }
+        consume_affine_value_name(&expr, elt.range(), ctx);
         elements.push(expr);
     }
 
     let final_elem_ty = elem_ty.unwrap_or(Type::Any);
+    if reject_unhashable_container_type(ctx, "set element", &final_elem_ty, set.range()) {
+        return None;
+    }
     let set_ty = Type::Set(Box::new(final_elem_ty));
 
     Some(HirExpr::SetLiteral {
@@ -478,6 +486,9 @@ pub(in crate::lower) fn lower_dict_literal(dict: &ExprDict, ctx: &mut LowerCtx) 
             } else {
                 key_ty = Some(kt);
             }
+            if reject_unhashable_container_type(ctx, "dict key", key.ty(), key_expr.range()) {
+                return None;
+            }
             keys.push(key);
         } else {
             expression_diagnostics::type_mismatch(
@@ -503,6 +514,7 @@ pub(in crate::lower) fn lower_dict_literal(dict: &ExprDict, ctx: &mut LowerCtx) 
         } else {
             val_ty = Some(vt);
         }
+        consume_affine_value_name(&val, item.value.range(), ctx);
         values.push(val);
     }
 
@@ -527,6 +539,7 @@ pub(in crate::lower) fn lower_tuple_literal(
     for elt in &tuple.elts {
         let expr = lower_expr(elt, ctx)?;
         elem_types.push(expr.ty().clone());
+        consume_affine_value_name(&expr, elt.range(), ctx);
         elements.push(expr);
     }
 
@@ -536,6 +549,64 @@ pub(in crate::lower) fn lower_tuple_literal(
         elements,
         ty: tuple_ty,
     })
+}
+
+pub(in crate::lower) fn consume_affine_value_name(
+    expr: &HirExpr,
+    range: ruff_text_size::TextRange,
+    ctx: &mut LowerCtx,
+) {
+    if !expr.ty().contains_affine_resource() {
+        return;
+    }
+    match expr {
+        HirExpr::Name { name, .. } => {
+            if ctx.borrowed_params.contains(name) {
+                ownership_diagnostics::borrowed_affine_parameter_escape(ctx, name, "move", range);
+            } else {
+                ctx.mark_moved_with_flow(name);
+            }
+        }
+        HirExpr::IfExpr {
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            // Only one branch moves at runtime, but both candidate bindings
+            // must be unavailable afterward because the chosen path is not a
+            // compile-time ownership fact.
+            consume_affine_value_name(then_expr, range, ctx);
+            consume_affine_value_name(else_expr, range, ctx);
+        }
+        HirExpr::OkWrap { value, .. }
+        | HirExpr::ErrWrap { value, .. }
+        | HirExpr::QuestionMark { expr: value, .. }
+        | HirExpr::WalrusExpr { value, .. } => consume_affine_value_name(value, range, ctx),
+        _ => {}
+    }
+}
+
+pub(in crate::lower) fn consume_owned_value(
+    expr: &HirExpr,
+    range: ruff_text_size::TextRange,
+    ctx: &mut LowerCtx,
+) {
+    if let HirExpr::Name { name, ty } = expr {
+        if ty.ownership() == sifr_type_system::OwnershipKind::Move {
+            if ty.contains_affine_resource() && ctx.borrowed_params.contains(name) {
+                ownership_diagnostics::borrowed_affine_parameter_escape(
+                    ctx,
+                    name,
+                    "pass as an owned argument",
+                    range,
+                );
+            } else {
+                ctx.mark_moved_with_flow(name);
+            }
+        }
+    } else {
+        consume_affine_value_name(expr, range, ctx);
+    }
 }
 
 pub(in crate::lower) fn lower_subscript(
@@ -662,6 +733,15 @@ pub(in crate::lower) fn lower_subscript(
             }
         };
 
+        if result_ty.contains_affine_resource() {
+            ctx.error_with_code_at(
+                DiagnosticCode::PYZC_INVALID_DECLARATION,
+                "cannot slice an aggregate containing an affine Python buffer; slicing would duplicate the resource"
+                    .to_string(),
+                sub.range(),
+            );
+        }
+
         return Some(HirExpr::Slice {
             object: Box::new(object),
             start,
@@ -675,6 +755,15 @@ pub(in crate::lower) fn lower_subscript(
     let index_ty = index.ty().clone();
 
     let result_ty = resolve_subscript_result_type(sub, &object_ty, &index, &index_ty, ctx);
+
+    if result_ty.contains_affine_resource() {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYZC_INVALID_DECLARATION,
+            "cannot project an affine Python buffer through indexing; use a consuming aggregate operation"
+                .to_string(),
+            sub.range(),
+        );
+    }
 
     Some(HirExpr::Index {
         object: Box::new(object),
@@ -717,6 +806,15 @@ pub(in crate::lower) fn lower_attribute(
     } = &resolved_object_ty
     {
         if let Some((_, field_ty)) = fields.iter().find(|(n, _)| n == &field_name) {
+            if field_ty.contains_affine_resource() {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYZC_INVALID_DECLARATION,
+                    "cannot project a field containing an affine Python buffer; move the aggregate as a whole"
+                        .to_string(),
+                    attr.range(),
+                );
+                return None;
+            }
             return Some(HirExpr::FieldAccess {
                 object: Box::new(object),
                 field: field_name,
@@ -738,6 +836,15 @@ pub(in crate::lower) fn lower_attribute(
     if let Some(field_ty) =
         super::attribute_access::optional_class_union_field_type(&resolved_object_ty, &field_name)
     {
+        if field_ty.contains_affine_resource() {
+            ctx.error_with_code_at(
+                DiagnosticCode::PYZC_INVALID_DECLARATION,
+                "cannot project a field containing an affine Python buffer; move the aggregate as a whole"
+                    .to_string(),
+                attr.range(),
+            );
+            return None;
+        }
         return Some(HirExpr::FieldAccess {
             object: Box::new(object),
             field: field_name,

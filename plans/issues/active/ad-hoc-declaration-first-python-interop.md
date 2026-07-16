@@ -6,12 +6,22 @@ In progress. The phase defines one complete end-state architecture and an
 ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
-Wave 1 are implemented, locally validated, reviewed, and linked below. Typed
+Wave 1 are implemented, locally validated, reviewed, and linked below. M10
+Wave 2 is implemented; whole-diff review passes 14 through 25 reopened
+generic/inherited Rust-trait, reusable affine-closure ownership, keyed sorting,
+per-type-parameter bound, specialization, generic-operator, conditional-source,
+top-level inference, multi-hop re-export identity, and specialized generic
+pattern-capture gaps. Their remediation passes the focused and complete
+compiler suites, native-positive/negative coverage, full merge-profile E2E,
+maintainability, formatting, and file-size checks plus the authoritative local
+create-PR gate in [PR #2988](https://github.com/sifr-lang/sifr/pull/2988).
+Pass-25 remediation is complete and whole-diff review pass 26 is satisfied;
+PR #2988 is ready to merge. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
 retained-owner integration are merged, publicly active, and milestone-reviewed.
-M10 Wave 2 is next and later milestones are not yet implemented. Milestones sequence
+M10 Wave 3 and later milestones are not yet implemented. Milestones sequence
 delivery; they do not create reduced language versions, temporary public
 contracts, dual authorities, or alternate lowering paths.
 
@@ -782,10 +792,512 @@ Delivery waves:
   plus E2E `131/131` with signature `7c39b8c1dd4fec7c`.
 - [ ] Wave 2 — add the compiler-known affine `python.Buffer[T]` contract,
   decorator validation, `Self` and call-then-acquire lowering/code generation,
-  exclusive writable borrowing, early release, and atomic public activation.
+  exclusive writable borrowing, early release, and atomic public activation
+  ([PR #2988](https://github.com/sifr-lang/sifr/pull/2988)); focused lowering
+  contracts pass `17/17`, focused buffer code generation passes `6/6`, permanent
+  native top-level, receiver, bridge, and affine-aggregate examples pass `4/4`
+  with zero live resources, and the authoritative create-PR gate passes Python
+  interop `11/11`, all enforced lane budgets, runtime platform `28/28`, and E2E
+  `131/131` with signature `7c39b8c1dd4fec7c`. Codex `gpt-5.6-sol` high/fast
+  [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-1.md)
+  requested receiver codegen, recursive affine capability, permanent compiled
+  evidence, and atomic activation remediation; all four findings are addressed
+  and authoritatively validated. Full-diff
+  [review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-2.md)
+  found remaining union/aggregate affine synthesis, receiver-convention, and
+  tracking issues; remediation round 2 was implemented and focused validation
+  passed. Full-diff
+  [review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-3.md)
+  found residual collection capabilities, constructor/walrus/comprehension
+  moves, and exporter-level writable aliasing. Those findings were remediated.
+  Full-diff
+  [review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-4.md)
+  then found cross-view writable admission, iterator/generator and conditional
+  expression moves, dynamic/generic collection capabilities, missing permanent
+  coverage, and stale `PYZC` documentation. Those findings are remediated with
+  exporter-footprint conflict admission, closed affine iterator and generator
+  paths, recursive conditional moves, collection capability checks, permanent
+  compiler/runtime regression coverage, and corrected architecture text.
+  Full-diff
+  [review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-5.md)
+  cleared those runtime and documentation corrections but found borrowed
+  affine escape through owned calls and aggregates, missing `min`/`max` and
+  dynamic collection capability checks, and untracked tuple/dict/list-`+=`
+  moves. Those compiler paths are now closed through one range-aware affine
+  ownership-transfer gate, operation-specific dynamic capability validation,
+  complete constructor and augmented-assignment moves, and permanent negative
+  coverage. Focused lowering contracts pass `26/26`, focused runtime buffer
+  operations pass `15/15`, full code generation passes `810/810`, lowering
+  passes `736/736` with one ignored, type system passes `97/97`, and the
+  Python-enabled runtime passes `203/203`. After `cargo clean` removed a
+  provenance-tainted macOS build tree, a cold and a subsequent warm
+  authoritative create-PR facade passed every blocking lane: Python interop
+  `11/11`, runtime platform `28/28` with one gated skip, and E2E `131/131` with
+  signature `7c39b8c1dd4fec7c`. The warm facade completed in `415.80s`; all lane
+  budgets passed, with only the non-blocking warm wall-time advisory. Full-diff
+  [review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-6.md)
+  confirmed the runtime lifecycle and prior exact compiler remediations, then
+  found list repetition capability gaps, variadic `min`/`max` ordering gaps,
+  affine-list self-`+=`, and stale activation evidence. Those paths are now
+  closed by a dedicated list-repetition clone-capability check, real ordering
+  validation for variadic `min`/`max`, safe assignment rewrites for cloneable
+  list `*=` and self-`+=`, exact affine/dynamic negative contracts, and corrected
+  activation status. Focused type capability tests pass `1/1`, buffer lowering
+  contracts pass `26/26`, buffer code generation passes `7/7`, full lowering
+  passes `736/736` with one ignored, full type-system tests pass `98/98`, and
+  full code generation passes `811/811`. The file-size guardrail passes over
+  `2601` files. The authoritative create-PR facade passes every blocking lane:
+  Python interop `11/11`, runtime platform `28/28` with one gated skip, and E2E
+  `131/131` with signature `7c39b8c1dd4fec7c`. The facade completed in
+  `423.95s`; all lane budgets passed, with only the non-blocking warm wall-time
+  advisory. Full-diff
+  [review pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-7.md)
+  confirmed the prior lifecycle, release, concurrency, overlap-safety,
+  declaration, bridge, diagnostic, and retention work, then found recursive
+  affine collection/storage transfers, indirect self-`+=`, recursive dynamic
+  clone capability, generic and borrowed-string `min`/`max`, async-generator
+  sendability, exact strided footprint, and evidence-ledger gaps. Those paths
+  are now closed with recursive range-aware ownership transfer, move-only
+  storage code generation, recursive clone capability, concrete total-order
+  validation, owned string result emission, affine async-generator rejection,
+  exact logical-item footprint admission, and permanent compiler/runtime/E2E
+  regressions. Focused buffer lowering passes `28/28`, buffer code generation
+  passes `9/9`, buffer runtime operations pass `23/23`, and the full affected
+  suites pass: type system `98/98`, lowering `738/738` with one ignored, code
+  generation `813/813`, and Python-enabled runtime `204/204`. The
+  borrowed-string `min`/`max` E2E fixture also builds and runs as a native
+  release binary. After the requested `cargo clean`, the cold create-PR run
+  passed every functional case but exceeded the Python interop warm-lane budget
+  while rebuilding callback artifacts. The immediate warm authoritative rerun
+  passed every blocking lane: Python interop `11/11`, runtime platform `28/28`
+  with one gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c`; its `445.31s` wall time produced only the non-blocking
+  warm wall-time advisory. Full-diff
+  [review pass 8](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-8.md)
+  confirmed the prior release, bridge, sendability, and recursive capability
+  work, then found affine membership, chained/unpack ownership, affine match,
+  large-contiguous footprint scaling, exact indirect admission, and activation
+  evidence gaps. Those paths are now closed by explicit affine operation
+  diagnostics, consuming tuple-unpack semantics, a permanent native-negative
+  membership fixture, constant-space contiguous admission, exact indirect
+  logical-item ranges, linear merged-range overlap checks, and corrected
+  architecture and activation evidence. Focused buffer lowering passes `30/30`,
+  buffer code generation passes `9/9`, buffer runtime operations pass `18/18`,
+  and the complete compile-fail matrix passes `482/482`. Full affected suites
+  pass: type system `98/98`, lowering `740/740` with one ignored, code generation
+  `813/813`, and Python-enabled runtime `206/206`. The first post-change
+  create-PR run passed all functional Python interop cases but exceeded that
+  step's warm budget while rebuilding callback and buffer examples. The
+  immediate authoritative rerun passed every blocking lane: Python interop
+  `11/11` in `103.07s`, runtime platform `28/28` with one gated skip, and E2E
+  `131/131` with signature `7c39b8c1dd4fec7c`; all step budgets passed and the
+  `800.94s` uncached overall wall time produced only the non-blocking warm
+  wall-time advisory. Full-diff
+  [review pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-9.md)
+  verified all pass-8 runtime admission remediations, then found that the
+  compiler still overclaimed recursive equality, borrowed/star-unpack cloning,
+  and nested async-generator capture support. Those accepted-invalid paths are
+  now closed by Rust-trait-accurate recursive equality and clone capabilities,
+  `None`-only identity operators, borrowed tuple cloning versus owned tuple
+  moves, non-clone star-unpack rejection, and yield-aware free-variable capture
+  analysis with explicit nested async-generator rejection. Four native-negative
+  fixtures and one native-positive borrowed/owned tuple fixture make the
+  boundary permanent. After the requested `cargo clean` removed `28.1 GiB`,
+  focused type-system tests pass `99/99`, buffer lowering passes `32/32`, buffer
+  code generation passes `10/10`, and the complete compile-fail matrix passes
+  `486/486`; the borrowed/owned tuple fixture also builds and runs as a native
+  release binary. Full affected suites pass: lowering `742/742` with one
+  ignored, code generation `814/814`, and Python-enabled runtime `206/206`.
+  The first runtime run exposed one pre-existing timing-sensitive async shutdown
+  failure; its exact rerun and the immediate complete runtime rerun both passed.
+  Workspace Clippy is warning-free, formatting/diff checks pass, and the HIR
+  maintainability and `900`-line file-size guardrails pass over `2610` files.
+  The cold authoritative create-PR facade passed every blocking lane after the
+  clean: Python interop `11/11`, runtime platform `28/28` with one gated skip,
+  and E2E `131/131` with signature `7c39b8c1dd4fec7c`. Its `995.68s` wall time
+  produced only the expected non-blocking warm-target advisory because all 42
+  native E2E groups rebuilt from the empty cache. Full-diff
+  [review pass 10](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-10.md)
+  then found union equality generation, set/dictionary `Eq + Hash` requirements,
+  non-clone chained assignment, unconditional union formatting traits, and
+  stale activation evidence. Those accepted-invalid paths are now closed by
+  distinct recursive `PartialEq`, `Eq + Hash`, `Debug`, and `Display`
+  capabilities; conditional class/newtype/union derives and union formatting;
+  hash-aware membership and equality validation; and non-clone chained-
+  assignment rejection. The exact native-positive union/class reproduction now
+  builds and runs through the Rust backend, including corrected boxing and
+  lifetime bounds for callable-field default constructors. Three new native-
+  negative fixtures are included in the complete `489/489` compile-fail matrix,
+  focused type-system tests pass `100/100`, union code generation passes `4/4`,
+  callable-constructor code generation passes `1/1`, buffer lowering passes
+  `32/32`, and buffer code generation passes `10/10`. Full affected suites pass:
+  type system `100/100`, lowering `742/742` with one ignored, and code generation
+  `817/817`. Workspace Clippy is warning-free, formatting and JSON checks pass,
+  and the HIR maintainability and `900`-line file-size guardrails pass over
+  `2615` files after trait capability analysis was split into its own focused
+  module. The authoritative create-PR facade passes every blocking lane: Python
+  interop `11/11` in `250.73s`, runtime platform `28/28` with one gated skip,
+  and E2E `131/131` with signature `7c39b8c1dd4fec7c`. E2E rebuilt 22 of 42
+  groups and completed in `163.68s`; all enforced step budgets passed, while the
+  `733.86s` overall wall time produced only non-blocking warm-cache advisories.
+  Full-diff
+  [review pass 11](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-11.md)
+  then found five broader compiler capability defects: a non-optional union
+  equality stack overflow; invalid unwrapped union-member membership for lists,
+  sets, and dictionaries; child derives that ignored embedded-parent traits;
+  specialized generic hash-key overclaims; and error classes whose fields could
+  not satisfy Rust's required `Debug` bound. The remediation now guards optional
+  union recursion and injects concrete members into non-optional unions for both
+  equality operand orders and all three membership containers. Class trait
+  planning recursively includes the emitted parent; specialized generic set,
+  dictionary, and `hash()` uses are conservatively rejected; and error shapes
+  without recursive `Debug` receive `SIFR-CLASS-0006` before code generation.
+  The expanded native fixture covers both union equality orders, all membership
+  containers, callable-parent inheritance, and `NonSend`-parent inheritance and
+  builds through the release Rust backend. Five new negative fixtures expand the
+  compile-fail matrix to `494/494`. Focused suites pass: type system `101/101`,
+  lowering `742` passed with one ignored, and code generation `817/817`. Workspace
+  Clippy is warning-free; formatting, diff, JSON, HIR maintainability, and the
+  `900`-line file-size guardrail pass over `2620` files. The authoritative
+  create-PR facade also passes every blocking lane: Python interop `11/11`,
+  runtime platform `28/28` with one gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `42/42` cache hits. Its `429.98s` wall time produced only
+  the non-blocking warm-wall-time advisory; every enforced step budget passed.
+  Full-diff
+  [review pass 12](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-12.md)
+  confirmed the pass-11 repairs, then found that flattened transitive `NonSend`
+  ancestry was not consulted by Clone, equality, hash, and debug capability
+  queries, and that specialized generic keys still reached set/dictionary
+  equality plus dictionary read, write, augmented-write, and delete consumers.
+  One shared parent-chain query now closes every transitive `NonSend` trait
+  decision, while contextual structural-equality and dictionary hash-key checks
+  cover every emitted Rust consumer without rejecting provisional
+  `defaultdict[Any, ...]` refinement. Permanent negative fixtures
+  `transitive_non_send_equality_rejected`,
+  `error_transitive_non_send_field_rejected`,
+  `set_specialized_generic_equality_rejected`,
+  `dict_specialized_generic_equality_rejected`, and the four
+  `dict_specialized_generic_index_{read,write,augassign,delete}_rejected`
+  fixtures expand the compile-fail matrix to `502/502`. Full affected suites
+  pass: type system `102/102`, lowering `742` passed with one ignored, and code
+  generation `817/817`; the native trait-capability fixture builds through the
+  release Rust backend. Workspace Clippy is warning-free; formatting, diff, HIR
+  maintainability, and the `900`-line file-size guardrail pass over `2628` files.
+  The authoritative create-PR facade passes every blocking lane: Python interop
+  `11/11` in `104.65s`, runtime platform `28/28` with one gated skip, and E2E
+  `131/131` with signature `7c39b8c1dd4fec7c` and `22/42` cache hits after the
+  requested `cargo clean`. Its `615.77s` wall time produced only the
+  non-blocking warm-wall-time and cache-hit advisories;
+  every enforced step budget passed. Full-diff
+  [review pass 13](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-13.md)
+  confirmed the transitive `NonSend` and specialized-generic hash repairs, then
+  found that dictionary projections and formatting consumers still admitted
+  unavailable Rust Clone/Display/Debug traits, `dict(iterable)` did not validate
+  its inferred key's `Eq + Hash`, and list methods conflated Clone, PartialEq,
+  and total Ord. The remediation now gates every affected dictionary clone and
+  construction path, `print`, `str`, f-string, and `repr` formatting path, and
+  separates list clone, structural-equality, and total-order requirements.
+  Eight permanent negative fixtures expand the complete compile-fail matrix to
+  `510/510`. Full affected suites pass: type system `102/102`, lowering `742`
+  passed with one ignored, and code generation `817/817`. Workspace Clippy,
+  formatting, diff, HIR maintainability, and the `900`-line file-size guardrail
+  pass over `2636` files. Explicit `None` formatting preserves Python spelling
+  without requiring Rust unit `Display`, while compiler-owned task/failure/
+  timeout/select wrappers and `JoinItemId` follow their emitted recursive
+  `Debug` or bespoke `Display` implementations. The authoritative create-PR
+  facade passes every blocking lane: Python interop `11/11` in `104.24s`,
+  runtime platform `28/28` with one gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `41/42` cache hits. Its `444.51s` wall time produced
+  only the non-blocking warm-target advisory; every enforced step budget
+  passed. Full-diff
+  [review pass 14](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-14.md)
+  confirmed the pass-13 formatting and diagnostic-precedence repairs, then
+  found that `sorted()` admitted element and callable-key result types without
+  total Rust ordering; generic declarations imposed unconditional bounds while
+  capability queries overclaimed generic and inherited formatting traits; and
+  affine buffers could escape through reusable lambda/nested-function captures
+  or acquire an incoherent walrus alias. The remediation validates the exact
+  ordering type at `sorted()`, emits generic declarations and constructors
+  without unrelated bounds, attaches proved bounds to conditional trait impls
+  and individual methods, and formats inherited classes through their embedded
+  parent. Lowering now rejects all three reusable affine escape/alias families
+  before HIR. Six permanent negative fixtures expand the complete compile-fail
+  matrix to `516/516`, while two native-positive fixtures cover non-clone
+  generic storage and conditional generic/inherited formatting. Full affected
+  suites pass: type system `102/102`, lowering `744` passed with one ignored,
+  and code generation `818/818`; both positive fixtures build and run through
+  the native release backend. The requested `cargo clean` removed `39.4 GiB`
+  and exposed two stale-cache-hidden regressions: stdlib deduplication discarded
+  distinct per-method inherent impl blocks, and signature-only bound inference
+  overconstrained valid channel methods while underconstraining `Counter[T]`.
+  Inherent impl identity now includes its item names, representation-required
+  `Hash + Eq` bounds apply only to stored key parameters, and Clone/ordering
+  bounds follow the emitted method body. The corrected generated-code corpus
+  and exact create-PR E2E manifest pass, including the structural datetime,
+  channel, and collection ownership reproductions. Workspace Clippy is warning-
+  free; formatting, diff, HIR maintainability, and the `900`-line file-size
+  guardrail pass over `2646` files. The authoritative create-PR facade passes
+  every blocking lane: Python interop `11/11` in `104.05s`, runtime platform
+  `28/28` with one gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `42/42` cache hits. Its `416.20s` wall time produced
+  only the non-blocking warm-wall-time advisory. Full-diff
+  [review pass 15](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-15.md)
+  confirmed ordering, formatting, affine capture/alias, deduplication, and
+  file-decomposition repairs, then found that keyed `sorted()` still cloned
+  non-Clone comparator elements and generic method/operator bounds still leaked
+  from one type parameter onto unrelated parameters. Keyed sorting now passes
+  shared-borrow keys the comparator's existing references, requires Clone only
+  for owned keys or preserved-source materialization, and rejects mutable-borrow
+  keys. Generic method and binary-operator impl bounds are derived per type
+  parameter and propagate transitively through direct `self` method calls;
+  equality operations add `PartialEq` only where consumed. Four permanent
+  sorted/generic fixtures and two focused codegen/query regressions cover these
+  boundaries. The requested `cargo clean` then exposed fifteen additional
+  stale-cache-hidden full-suite failures: collection wrapper methods lost
+  transitive Clone/PartialEq obligations, later callers retained `Any` instead
+  of an inferred top-level return type, and two old parity fixtures violated the
+  active structural-equality/typed-empty-collection contracts. Those root
+  causes are corrected. Full affected suites pass: code generation `822/822`,
+  lowering `745` passed with one ignored, compile-fail `518/518`, and native
+  execution for every cold-build representative. The complete merge-profile
+  E2E suite passes `657/657` with signature `18e6999f2fd35220` and `154/175`
+  cache hits after the cold repair. The authoritative create-PR facade passes
+  every blocking lane: Python interop `11/11` in `104.97s`, runtime platform
+  `28/28` with one gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `41/42` cache hits. Its `441.13s` wall time produced
+  only the non-blocking warm-wall-time advisory. A fresh whole-diff review of
+  the complete remediation remains pending.
+  Full-diff
+  [review pass 16](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-16.md)
+  then found six remaining compiler-wide gaps: emitted generic method
+  requirements were not checked at concrete specialization sites; recursive
+  equality and `*`, `/`, `%`, and unary operator requirements were incomplete;
+  generic operator-protocol impl targets were malformed; keyed `sorted()` did
+  not validate its parameter or safely materialize conditional sources;
+  top-level inferred returns remained source-order dependent; and the evidence
+  overstated closure. Lowering now records exact per-method, per-type-parameter
+  requirements, closes direct `self` dependencies, exports/imports them with
+  module signatures, and rejects unsupported concrete specializations before
+  code generation. Codegen recursively derives exact arithmetic, equality,
+  ordering, and negation bounds and emits generic protocol impl targets.
+  `sorted()` validates the key parameter and preserves conditional branches
+  without untracked moves. A diagnostic-neutral module signature prepass makes
+  successful inferred returns mutually visible while ordinary body lowering
+  remains the reachability-aware diagnostic authority. Five permanent fixtures
+  cover transitive and recursive generic requirements, operator protocols,
+  keyed and conditional sorting, and forward inferred returns. Full codegen
+  passes `824/824`, lowering passes `745` with one ignored, and the complete
+  compile-fail corpus passes `520/520`; all three positive fixtures build and
+  run through the native backend. The `cargo clean` rebuild and responsibility-
+  based splits leave the touched orchestration files at `898` and `892` lines;
+  HIR maintainability and the `900`-line file-size guardrail pass over `2659`
+  files. The authoritative create-PR gate passes every blocking lane, including
+  Python interop `11/11` in `106.69s`, runtime platform `28/28` with one gated
+  skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache
+  hits. Its `489.54s` wall time produced only the non-blocking warm-target
+  advisory; every enforced step budget passed. Full-diff
+  [review pass 17](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-17.md)
+  then reproduced six remaining gaps: aliased generic imports lost canonical
+  specialization identity; operator consumers skipped conditional impl checks;
+  generic ordering ignored the declared `__lt__` body and its `PartialEq`
+  supertrait; mixed conditional sorting bypassed branch-local Clone admission;
+  union-return inference remained declaration-order dependent; and generic
+  negation evidence did not execute negation. The remediation preserves local
+  aliases separately from canonical class identity, validates method and
+  operator specializations through one requirement map, emits ordering through
+  the actual `__lt__` body with exact representation equality bounds, checks
+  every preserved sorting branch, performs union-aware fixed-point module
+  inference, and supports TypeVar/class negation end-to-end. Six permanent
+  negative fixtures plus aliased-import and generic operator runtime evidence
+  cover the reproductions. Focused native execution passes for aliased `deque`,
+  multi-parameter ordering, and generic negation; full codegen passes `824/824`,
+  lowering passes `747` with one ignored, and compile-fail passes `526/526`.
+  The requested post-remediation `cargo clean` rebuild confirms the file-size
+  guardrail over `2667` files and HIR maintainability. The authoritative
+  create-PR gate passes every blocking lane, including Python interop `11/11`,
+  runtime platform `28/28` with one gated skip, and cold-cache E2E `131/131`
+  with signature `7c39b8c1dd4fec7c` and all `42` groups rebuilt. Its `855.62s`
+  wall time produced only the expected non-blocking warm-target advisory; every
+  enforced step budget passed. Full-diff
+  [review pass 18](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-18.md)
+  then found four remaining compiler defects plus overstated evidence:
+  transitive helper bounds were absent from operator trait impls; user-project
+  generic aliases lost their emitted identity and same-name modules collided;
+  module signature inference ignored `match`, `try`, and context statements;
+  and valid nested custom class operators were rejected during specialization.
+  Operator impls now combine the lowering-owned semantic closure with exact
+  helper-impl bounds. User-project imports retain collision-safe local class,
+  method-signature, requirement, and generic-template identities while merged
+  stdlib imports remain canonical. Module inference covers compound bindings,
+  returns, and conservative terminal reachability. Concrete class negation,
+  equality, and ordering dunders satisfy generic requirements recursively,
+  while binary ownership shapes that cannot meet owned Rust generic traits
+  remain conservatively rejected. Permanent native, compile-fail, focused
+  lowering/codegen, and two-module project-build regressions cover every
+  reproduction. Full code generation passes `825/825`, lowering passes `750`
+  with one ignored, and compile-fail passes `527/527`. Workspace Clippy,
+  formatting, JSON and diff checks, HIR maintainability, and the `900`-line
+  file-size guardrail pass over `2672` files. The authoritative create-PR gate
+  passes every blocking lane: Python interop `11/11`, runtime platform `28/28`
+  with one gated skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and
+  `42/42` cache hits. Its `476.95s` wall time produced only the non-blocking
+  warm-wall-time advisory. Full-diff
+  [review pass 19](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-19.md)
+  then found three remaining root-cause gaps: operator helper closure recognized
+  only `self` receivers; user-module alias rewriting stopped at imported class
+  bodies rather than exported functions and inheritance; and compound inference
+  substituted `Unknown` or the context-owner type for class-pattern and
+  `with ... as` bindings. Method dependencies now follow every receiver of the
+  current class. User-module class aliases are collected across the complete
+  import set and recursively rewrite function, constant, class, and transitive
+  parent types; frontend exports retain ancestry instead of erasing it.
+  Class-pattern inference reads declared field types and context bindings read
+  `__enter__` results. The resulting native match-capture regression also fixed
+  owned return materialization from borrowed Rust match captures. Permanent
+  peer-receiver, separate-statement same-name factory, aliased ancestry,
+  class-pattern field, entered-result, and native compound fixtures cover the
+  exact reproductions. Full codegen passes `825/825`, lowering passes `752`
+  with one ignored, and frontend passes `47/47`; focused project builds and
+  native fixtures pass. Workspace Clippy, formatting, JSON/diff checks, HIR
+  maintainability, and the `900`-line file-size guardrail pass over `2672`
+  files. The authoritative create-PR gate passes every blocking lane: Python
+  interop `11/11`, runtime platform `28/28` with one gated skip, and E2E
+  `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache hits. Its
+  `482.54s` wall time produced only the non-blocking warm-wall-time advisory.
+  Full-diff
+  [review pass 20](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-20.md)
+  then found that multi-hop facade re-exports did not localize embedded
+  user-class identities and generic class-pattern captures read unspecialized
+  declaration fields. Frontend re-exports now localize the complete imported
+  function, class, constant, and parent type graph against all class aliases in
+  the source module. Both inference and final pattern lowering specialize
+  fields from the narrowed subject type, including nested generic patterns;
+  project code generation also resolves generic class metadata through facade
+  chains. Permanent regressions cover two same-name generic classes re-exported
+  through a facade, factory signatures, cross-assignment rejection, three-level
+  ancestry, and direct plus nested generic captures. Full codegen passes
+  `825/825`, lowering passes `754` with one ignored, and frontend passes `47/47`;
+  focused project checks and the native multi-module build pass. Workspace
+  Clippy and formatting are clean, HIR/driver maintainability passes, and the
+  `900`-line file-size guardrail passes over `2673` files after re-export alias
+  collection was split into a focused frontend module. The authoritative
+  create-PR gate passes every blocking lane: Python interop `11/11` in
+  `111.34s`, runtime platform `28` variants with one gated skip, and E2E
+  `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache hits. Its
+  `532.87s` wall time produced only the non-blocking warm-target advisory. A
+  fresh whole-diff review remains pending. Full-diff
+  [review pass 21](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-21.md)
+  then showed that identity still depended on symbols sharing one facade,
+  user-module generic requirements disappeared at the export boundary, and a
+  union of two specializations of the same generic class selected its first
+  member and emitted invalid Rust. Class types now carry stable declaration
+  identity independently of their local emitted spelling; the identity and
+  canonical ancestry are preserved through every function, constant, class,
+  factory, and re-export path. Frontend exports and re-exports now carry generic
+  callable and per-method requirement metadata. Until the backend has distinct
+  variants for repeated generic-class specializations, those unions are
+  rejected as invalid annotations before HIR/codegen. Permanent tests split
+  classes from factories and roots from leaves across separate facades, reject
+  a multi-hop unavailable generic method, reject direct and nested repeated-
+  specialization patterns, and build the complete split-path positive project
+  natively. Full affected suites pass: type system `103/103`, lowering `756`
+  with one ignored, frontend `47/47`, codegen `825/825`, and driver `347` with
+  `22` ignored. Workspace Clippy, formatting, HIR/driver maintainability, and
+  source-size guardrails pass over `2674` files; touched orchestration files
+  remain below `900` lines. The clean-build authoritative create-PR gate passes
+  every blocking lane: Python interop `11/11` in `106.89s`, runtime platform
+  `28` variants with one capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` after rebuilding all `42` fixture groups. Its `911.81s`
+  wall time produced only the expected non-blocking warm-target advisory after
+  `cargo clean`. Full-diff
+  [review pass 22](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-22.md)
+  then found four remaining generic and identity gaps: nominal assignability
+  ignored concrete specializations, imported-parent ancestry stayed
+  path-local, user-module imports did not install exported generic-function
+  metadata, and return inference emitted unsubstituted generic constructor
+  results. The remediation gives nominal classes explicit invariant type
+  arguments, canonicalizes imported-parent ancestry, emits executable parent
+  dereference bridges, installs generic callable metadata through user-module
+  facades, propagates project codegen signatures, and substitutes generic calls
+  during both return inference and concrete annotated-initializer lowering.
+  Optional contextual inference binds only the non-`None` payload, and nominal
+  class arguments participate in TypeVar discovery. Permanent regressions cover
+  every reported direct, inferred, multi-hop, bound, native, and recursive
+  shape. Full affected suites pass: type system `103/103`, frontend `47/47`,
+  lowering `763` with one ignored, codegen `825/825`, driver `350` with `25`
+  ignored, and the native driver lane `25/25`. Workspace Clippy, formatting,
+  HIR/driver maintainability, and the `900`-line source-size guardrail pass over
+  `2678` files. The authoritative create-PR gate passes every blocking lane in
+  `471.02s`: Python interop `11/11`, runtime platform `28` variants with one
+  capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `42/42` cache hits. Its only advisory is the
+  non-blocking warm wall-time target. Full-diff
+  [review pass 23](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-23.md)
+  then found two native-codegen boundaries still incomplete: contextual
+  zero-argument generic specialization did not survive into emitted Rust, and
+  child-to-ancestor assignability had executable coercions only for borrowed
+  values, not consuming arguments or returns. Explicit class arguments now
+  drive generic-return specialization, concrete contextual locals retain their
+  Rust type annotation, and compiler-owned `PhantomData` represents fieldless
+  generic parameters. Direct move-based `From` bridges plus one generated
+  conversion per ancestry edge make consuming arguments, locals, and returns
+  executable for direct, transitive, and imported/re-exported inheritance.
+  Exact zero-argument generic and owned-upcast projects build and run natively.
+  Full affected suites pass: codegen `827/827`, driver `350` with `27` ignored,
+  and the native driver lane `27/27`. Workspace Clippy, formatting, HIR/driver
+  maintainability, and the `900`-line source-size guardrail pass over `2680`
+  files. After `cargo clean`, the authoritative create-PR gate passes every
+  blocking lane in `861.81s`: Python interop `11/11`, runtime platform `28`
+  variants with one capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` after rebuilding all `42` fixture groups. Its only advisory
+  is the expected non-blocking warm-target timing warning. Full-diff
+  [review pass 24](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-24.md)
+  cleared runtime lifecycle, overlap admission, exact release, and no-panic
+  paths, then found four compiler boundaries: nested writable receiver places,
+  union/`Result` consuming upcasts, same-basename canonical ancestor selection,
+  and phantom derive/auto-trait alignment. Receiver root tracing now covers
+  legal nested places while the existing whole-aggregate affine rule rejects
+  buffer field/index projections before mutation; union and `Result` payloads
+  receive consuming conversions before wrapping; exact canonical ancestry wins
+  over only-unambiguous basename fallback; and fieldless generics use
+  non-owning `PhantomData<fn() -> T>` with concrete type arguments included in
+  Clone, structural-equality, Hash, and Debug capability checks. Permanent
+  direct, transitive, imported/re-exported, repeated-basename, non-capable
+  generic, and non-send native regressions pass. Full codegen passes `828/828`,
+  driver passes `350/350`, and the native generated-project lane passes `28/28`.
+  Workspace Clippy and formatting are clean; HIR/driver maintainability and the
+  `900`-line source-size guardrail pass over `2680` files. The authoritative
+  create-PR gate passes every blocking lane in `537.98s`: Python interop
+  `11/11`, runtime platform `28` variants with one capability-gated skip, and
+  E2E `131/131` with signature `7c39b8c1dd4fec7c` and `36/42` cache hits. Its
+  warm-time and cache-hit notices are non-blocking advisories. Full-diff
+  [review pass 25](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-25.md)
+  cleared the pass-24 buffer, writable-place, ancestry-selection, and phantom
+  corrections, then found that owned coercion is not recursive across existing
+  union/`Result` representations and recursive affine, trait, and sendability
+  guards still key distinct imported classes by basename. Shared consuming
+  coercion now recursively maps existing union, `Option`, and `Result` values
+  across calls, locals, and returns; borrowed representation changes require a
+  Clone-capable source and mutable borrowed changes are rejected. Recursive
+  ownership, Clone, equality, Hash, Debug, bounds, and task-sendability guards
+  now use canonical declaration identity plus concrete specialization. Same-
+  basename and specialization regressions cover each affected capability. Full
+  type-system, lowering, codegen, and driver suites pass `106/106`, `765/765`
+  active with one ignored, `829/829`, and `351/351` active with `29` ignored;
+  the native generated-project lane passes `29/29`. Workspace Clippy,
+  formatting, HIR/driver maintainability, and the `900`-line source-size
+  guardrail pass over `2682` files. The authoritative create-PR gate passes all
+  blocking lanes in `536.29s`: Python interop `11/11`, runtime platform `28`
+  variants with one capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `42/42` cache hits. Its warm-time notice is a
+  non-blocking advisory. Whole-diff
+  [review pass 26](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-26.md)
+  independently re-grounded both findings, exercised an additional owned
+  `AsyncCallable` structural-upcast build and all `18` Python buffer runtime
+  tests, and returned **SATISFIED** with no actionable findings.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
-  documentation, and capability-ledger activation.
+  documentation, and complete activation evidence.
 - [ ] Milestone review — review the complete merged M10 implementation before
   closing the milestone checkbox.
 

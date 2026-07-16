@@ -42,7 +42,10 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
             retained_callback_errors,
         );
     }
-    if declaration.kind != PythonInteropDecoratorKind::Function {
+    if !matches!(
+        declaration.kind,
+        PythonInteropDecoratorKind::Function | PythonInteropDecoratorKind::Buffer
+    ) {
         return None;
     }
     let Type::Result(ok_type, error_type) = func.return_type.resolve_alias() else {
@@ -316,7 +319,18 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
         append_retained_callback_retention(&mut body, &callback_setups, error_type);
     }
 
-    let converted = output_value_expr("__sifr_python_result", ok_type, error_type, opaque_classes)?;
+    let converted = if declaration.kind == PythonInteropDecoratorKind::Buffer {
+        let Type::PythonBuffer(_) = ok_type.resolve_alias() else {
+            return None;
+        };
+        crate::python_buffer_codegen::acquire_python_buffer_from_foreign(
+            RustExpr::Ident("__sifr_python_result".to_string()),
+            declaration.buffer.as_ref()?,
+            error_type,
+        )
+    } else {
+        output_value_expr("__sifr_python_result", ok_type, error_type, opaque_classes)?
+    };
     if let Some(callback) = retained_result {
         let cleanup = retained_cleanup_expr(callback.owner_cleanup?)?;
         body.push(RustStmt::Let {
@@ -406,6 +420,9 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
     let Type::Result(ok_type, error_type) = func.return_type.resolve_alias() else {
         return None;
     };
+    if declaration.kind == PythonInteropDecoratorKind::Buffer {
+        return crate::python_buffer_codegen::receiver_interop_body(func);
+    }
     let mut body = Vec::new();
     if !declaration.consumes_receiver {
         append_owner_failure_observer_setup(&mut body, owner_retained_errors);

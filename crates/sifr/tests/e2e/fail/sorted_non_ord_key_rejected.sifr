@@ -1,0 +1,8 @@
+class Item:
+    value: int
+
+def item_key(value: int) -> Item:
+    return Item(value)
+
+def order(values: list[int]) -> list[int]:
+    return sorted(values, key=item_key)

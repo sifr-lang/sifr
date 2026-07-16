@@ -1,0 +1,2 @@
+def buffers_are_equal(left: python.Buffer[uint8], right: python.Buffer[uint8]) -> bool:
+    return left == right

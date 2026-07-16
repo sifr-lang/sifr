@@ -6,7 +6,7 @@ use sifr_ir::CompilerIntrinsicId;
 use sifr_python_ast::{Expr, ExprCall, Number};
 use sifr_type_system::{make_union, Type};
 
-use super::expressions::lower_expr;
+use super::expressions::{consume_affine_value_name, lower_expr};
 use super::LowerCtx;
 
 pub(in crate::lower) const DEFAULTDICT_INT_ALIAS: &str = "__sifr_defaultdict_int";
@@ -203,6 +203,14 @@ pub(in crate::lower) fn lower_list_constructor_call(
         }),
         OptionalIterableArg::Value(iterable) => {
             let list_ty = list_constructor_output_type(iterable.ty())?;
+            if list_ty.contains_affine_resource() {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYZC_INVALID_DECLARATION,
+                    "list() cannot copy an iterable containing affine Python buffers".to_string(),
+                    call.arguments.args[0].range(),
+                );
+                return None;
+            }
             Some(HirExpr::Call {
                 func: "list".to_string(),
                 args: vec![iterable],
@@ -231,6 +239,7 @@ pub(in crate::lower) fn lower_tuple_constructor_call(
             for element in &tuple.elts {
                 let lowered = lower_expr(element, ctx)?;
                 elem_types.push(lowered.ty().clone());
+                consume_affine_value_name(&lowered, element.range(), ctx);
                 elements.push(lowered);
             }
             Some(HirExpr::TupleLiteral {
@@ -244,6 +253,7 @@ pub(in crate::lower) fn lower_tuple_constructor_call(
             for element in &list.elts {
                 let lowered = lower_expr(element, ctx)?;
                 elem_types.push(lowered.ty().clone());
+                consume_affine_value_name(&lowered, element.range(), ctx);
                 elements.push(lowered);
             }
             Some(HirExpr::TupleLiteral {
@@ -266,6 +276,7 @@ pub(in crate::lower) fn lower_tuple_constructor_call(
         [arg_expr] => {
             let lowered = lower_expr(arg_expr, ctx)?;
             if matches!(lowered.ty().resolve_alias(), Type::Tuple(_)) {
+                consume_affine_value_name(&lowered, arg_expr.range(), ctx);
                 Some(lowered)
             } else {
                 ctx.error_with_code_at(
@@ -314,7 +325,9 @@ pub(in crate::lower) fn lower_dict_constructor_call(
             return None;
         };
         keyword_keys.push(HirExpr::StringLiteral(name.to_string()));
-        keyword_values.push(lower_expr(&keyword.value, ctx)?);
+        let value = lower_expr(&keyword.value, ctx)?;
+        consume_affine_value_name(&value, keyword.value.range(), ctx);
+        keyword_values.push(value);
     }
 
     let keyword_value_ty = if keyword_values.is_empty() {
@@ -347,6 +360,35 @@ pub(in crate::lower) fn lower_dict_constructor_call(
         [arg_expr] if keyword_dict.is_none() => {
             let arg = lower_expr(arg_expr, ctx)?;
             let dict_ty = dict_constructor_output_type(arg.ty())?;
+            if dict_ty.contains_affine_resource() {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYZC_INVALID_DECLARATION,
+                    "dict() cannot copy keys or values containing affine Python buffers"
+                        .to_string(),
+                    arg_expr.range(),
+                );
+                return None;
+            }
+            if !dict_ty.supports_derived_clone() {
+                reject_type_mismatch(
+                    ctx,
+                    "dict() requires source keys and values with generated Rust Clone support"
+                        .to_string(),
+                    arg_expr.range(),
+                );
+                return None;
+            }
+            let Type::Dict(key_ty, _) = dict_ty.resolve_alias() else {
+                return None;
+            };
+            if super::super::container_literal_diagnostics::reject_unhashable_container_type(
+                ctx,
+                "dict() key",
+                key_ty,
+                arg_expr.range(),
+            ) {
+                return None;
+            }
             Some(HirExpr::Call {
                 func: "dict".to_string(),
                 args: vec![arg],
@@ -366,6 +408,32 @@ pub(in crate::lower) fn lower_dict_constructor_call(
                 );
                 return None;
             };
+            if arg.ty().contains_affine_resource() {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYZC_INVALID_DECLARATION,
+                    "dict() cannot copy keys or values containing affine Python buffers"
+                        .to_string(),
+                    arg_expr.range(),
+                );
+                return None;
+            }
+            if !arg.ty().supports_derived_clone() {
+                reject_type_mismatch(
+                    ctx,
+                    "dict() requires source keys and values with generated Rust Clone support"
+                        .to_string(),
+                    arg_expr.range(),
+                );
+                return None;
+            }
+            if super::super::container_literal_diagnostics::reject_unhashable_container_type(
+                ctx,
+                "dict() key",
+                &key_ty,
+                arg_expr.range(),
+            ) {
+                return None;
+            }
             let merged_ty = Type::Dict(
                 Box::new(make_union(vec![(*key_ty).clone(), Type::Str])),
                 Box::new(make_union(vec![(*value_ty).clone(), keyword_value_ty])),
@@ -432,6 +500,8 @@ pub(in crate::lower) fn lower_ord_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
                     .get("ValueError")
                     .cloned()
                     .unwrap_or(Type::Class {
+                        identity: None,
+                        type_args: Vec::new(),
                         name: "ValueError".to_string(),
                         fields: vec![("message".to_string(), Type::Str)],
                         methods: vec![],
@@ -517,6 +587,8 @@ pub(in crate::lower) fn lower_chr_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
                     .get("ValueError")
                     .cloned()
                     .unwrap_or(Type::Class {
+                        identity: None,
+                        type_args: Vec::new(),
                         name: "ValueError".to_string(),
                         fields: vec![("message".to_string(), Type::Str)],
                         methods: vec![],
@@ -711,6 +783,14 @@ pub(in crate::lower) fn lower_set_constructor_call(
                 );
                 return None;
             };
+            if super::super::container_literal_diagnostics::reject_unhashable_container_type(
+                ctx,
+                "set element",
+                &elem_ty,
+                call.arguments.args[0].range(),
+            ) {
+                return None;
+            }
             Some(HirExpr::Call {
                 func: "set".to_string(),
                 args: vec![iterable],
@@ -771,6 +851,8 @@ pub(super) fn parse_error_type(ctx: &LowerCtx) -> Type {
         .get("ParseError")
         .cloned()
         .unwrap_or(Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "ParseError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: vec![],
@@ -783,6 +865,8 @@ pub(super) fn value_error_type(ctx: &LowerCtx) -> Type {
         .get("ValueError")
         .cloned()
         .unwrap_or(Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "ValueError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: vec![],

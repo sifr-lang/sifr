@@ -211,9 +211,78 @@ pub(super) fn resolve_tuple_method_type(
 
 #[derive(Clone, Copy)]
 pub(super) struct ClassMethodSurface<'a> {
+    pub(super) identity: Option<&'a String>,
+    pub(super) type_args: &'a [Type],
     pub(super) name: &'a str,
     pub(super) fields: &'a [(String, Type)],
     pub(super) methods: &'a [(String, FunctionType)],
+}
+
+pub(super) fn resolve_class_method_on_type(
+    class: &Type,
+    method: &str,
+    args: &[HirExpr],
+    arg_ranges: &[TextRange],
+    method_range: TextRange,
+    ctx: &mut LowerCtx,
+) -> Option<Type> {
+    let Type::Class {
+        identity,
+        type_args,
+        name,
+        fields,
+        methods,
+        ..
+    } = class
+    else {
+        return None;
+    };
+    resolve_class_method_type(
+        ClassMethodSurface {
+            identity: identity.as_ref(),
+            type_args,
+            name,
+            fields,
+            methods,
+        },
+        method,
+        args,
+        arg_ranges,
+        method_range,
+        ctx,
+    )
+}
+
+fn type_contains_exact(container: &Type, candidate: &Type) -> bool {
+    if container.resolve_alias() == candidate.resolve_alias() {
+        return true;
+    }
+    match container.resolve_alias() {
+        Type::List(inner)
+        | Type::Set(inner)
+        | Type::Iterable(inner)
+        | Type::Iterator(inner)
+        | Type::Awaitable(inner)
+        | Type::Failure(inner)
+        | Type::TimeoutResult(inner)
+        | Type::Newtype { inner, .. } => type_contains_exact(inner, candidate),
+        Type::Dict(left, right)
+        | Type::Result(left, right)
+        | Type::Task(left, right)
+        | Type::TaskResult(left, right)
+        | Type::Coroutine(left, right)
+        | Type::Select2(left, right)
+        | Type::BlockingTask(left, right)
+        | Type::JoinSet(left, right)
+        | Type::AsyncIterator(left, right)
+        | Type::AsyncGenerator(left, right) => {
+            type_contains_exact(left, candidate) || type_contains_exact(right, candidate)
+        }
+        Type::Tuple(values) | Type::Union(values) | Type::Intersection(values) => values
+            .iter()
+            .any(|value| type_contains_exact(value, candidate)),
+        _ => false,
+    }
 }
 
 pub(super) fn resolve_class_method_type(
@@ -225,6 +294,53 @@ pub(super) fn resolve_class_method_type(
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
     if let Some((_, ft)) = class.methods.iter().find(|(n, _)| n == method) {
+        let concrete_class = Type::Class {
+            identity: class.identity.cloned(),
+            type_args: class.type_args.to_vec(),
+            name: class.name.to_string(),
+            fields: class.fields.to_vec(),
+            methods: class.methods.to_vec(),
+            parent_class: None,
+        };
+        if !super::super::generic_method_requirements::validate_generic_method_specialization(
+            class.name,
+            &concrete_class,
+            method,
+            method_range,
+            ctx,
+        ) {
+            return None;
+        }
+        let specialization_needs_clone = class.fields.iter().any(|(_, ty)| {
+            !ty.supports_derived_clone() && type_contains_exact(&ft.return_type, ty)
+        }) || ft.params.iter().any(|(_, ty, convention)| {
+            convention.is_borrowed()
+                && !ty.supports_derived_clone()
+                && type_contains_exact(&ft.return_type, ty)
+        });
+        let has_dedicated_channel_transfer_diagnostic = method == "send"
+            && class
+                .name
+                .rsplit('.')
+                .next()
+                .is_some_and(|name| name == "ChannelSender");
+        if specialization_needs_clone
+            && !has_dedicated_channel_transfer_diagnostic
+            && ctx
+                .class_declared_type_params
+                .get(class.name)
+                .is_some_and(|params| !params.is_empty())
+        {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "{}.{}() is unavailable for this specialization because generated generic class methods require Clone-capable type arguments",
+                    class.name, method
+                ),
+                method_range,
+            );
+            return None;
+        }
         // Check argument count
         if args.len() != ft.params.len() {
             reject_method_arg_count(

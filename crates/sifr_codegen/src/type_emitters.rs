@@ -1,7 +1,7 @@
 use crate::helpers::body_contains_field_assign_codegen;
 use crate::{
-    is_hashable_type_codegen, RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt,
-    RustType, RustTypeParam, Visibility,
+    RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
+    Visibility,
 };
 use sifr_ir::{HirClass, HirFunction, MethodKind};
 use sifr_type_system::Type;
@@ -159,21 +159,20 @@ impl RustEmitter {
         } else {
             Visibility::Private
         };
-        let derives = if is_hashable_type_codegen(inner) {
-            vec![
-                "Debug".to_string(),
-                "Clone".to_string(),
-                "PartialEq".to_string(),
-                "Eq".to_string(),
-                "Hash".to_string(),
-            ]
-        } else {
-            vec![
-                "Debug".to_string(),
-                "Clone".to_string(),
-                "PartialEq".to_string(),
-            ]
-        };
+        let mut derives = Vec::new();
+        if inner.supports_debug_formatting() {
+            derives.push("Debug".to_string());
+        }
+        if inner.supports_derived_clone() {
+            derives.push("Clone".to_string());
+        }
+        if inner.supports_structural_equality() {
+            derives.push("PartialEq".to_string());
+        }
+        if inner.supports_hash_key() {
+            derives.push("Eq".to_string());
+            derives.push("Hash".to_string());
+        }
         self.body_items.push(RustItem::TupleStruct {
             name: class.name.clone(),
             visibility,

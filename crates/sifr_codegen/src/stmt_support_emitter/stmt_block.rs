@@ -12,7 +12,6 @@ impl RustEmitter {
         let mut lowered_block = Vec::new();
         for (stmt_index, stmt) in stmts.iter().enumerate() {
             let maybe_simple_lowered = self.try_lower_simple_block_stmt_for_ir(stmt)?;
-
             let should_bypass_simple_lowering = self.should_bypass_simple_block_lowering(stmt);
             let maybe_simple_lowered = if should_bypass_simple_lowering {
                 None
@@ -42,8 +41,18 @@ impl RustEmitter {
                 let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
                     return Ok(None);
                 };
-                let mut lowered =
-                    crate::lower_tuple_unpack_targets(targets, lowered_value, &self.mutated_vars);
+                let source_is_borrowed = crate::tuple_unpack_source_is_borrowed(
+                    value,
+                    &self.borrowed_params,
+                    &self.mut_borrowed_params,
+                );
+                let mut lowered = crate::lower_tuple_unpack_targets(
+                    targets,
+                    value,
+                    lowered_value,
+                    &self.mutated_vars,
+                    source_is_borrowed,
+                );
                 for target in targets {
                     let sifr_ir::HirTupleTargetBinding::Name(name) = &target.binding else {
                         continue;
@@ -70,12 +79,13 @@ impl RustEmitter {
                 } else {
                     ty.clone()
                 };
-                let is_generic_class = matches!(
+                let generic_class_needs_inference = matches!(
                     &effective_ty,
                     Type::Class {
                         name: class_name,
+                        type_args,
                         ..
-                    } if self.generic_classes.contains(class_name)
+                    } if self.generic_classes.contains(class_name) && type_args.is_empty()
                 );
                 let borrowed_dict_get = None;
                 let lowered_value = if let Some(lowered) = borrowed_dict_get.clone() {
@@ -96,7 +106,7 @@ impl RustEmitter {
                     self.coerce_local_value_for_target_type_for_ir(&effective_ty, value, lowered)?
                 };
                 let lowered_ty = if name == "_"
-                    || is_generic_class
+                    || generic_class_needs_inference
                     || borrowed_dict_get.is_some()
                     || Self::is_borrowed_empty_list_get_expr_for_ir(&lowered_value)
                     || should_omit_local_type_annotation(&effective_ty, value)

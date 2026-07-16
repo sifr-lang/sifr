@@ -1,0 +1,9 @@
+# expect-error: SIFR-CLASS-0006
+class LocalParent(NonSend):
+    pass
+
+class LocalChild(LocalParent):
+    pass
+
+class LocalError(Error):
+    child: LocalChild

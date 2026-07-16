@@ -1,0 +1,3 @@
+def relay(own view: python.Buffer[uint8]) -> python.Buffer[uint8]:
+    holder: python.Buffer[uint8] = (alias := view)
+    return alias

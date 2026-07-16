@@ -3382,6 +3382,7 @@ dependencies = [
  "sha1",
  "sha2 0.11.0",
  "sifr_runtime",
+ "static_assertions",
  "tokio",
  "tokio-rustls",
  "toml",

@@ -3,9 +3,10 @@
 ## Status And Scope
 
 This document defines the declaration-first Python interop contract. Typed
-coroutines, synchronous and asynchronous contexts, and every callback dispatch
-mode are implemented. Buffer, Arrow, and DLPack rows remain reserved and must
-implement the same contract without publishing reduced substitutes.
+coroutines, synchronous and asynchronous contexts, every callback dispatch
+mode, and typed affine buffer declarations are implemented. Arrow and DLPack
+rows remain reserved and must implement the same contract without publishing
+reduced substitutes.
 
 The common rules in
 [`python_interop_declaration_architecture.md`](./python_interop_declaration_architecture.md)
@@ -454,10 +455,58 @@ The buffer retains its exporter owner.
 
 `python.Buffer[T]` is affine and non-send. Drop performs exact-once
 `PyBuffer_Release`; explicit `release(own buffer)` provides deterministic early
-release. Borrowed slices cannot outlive the buffer and no call may release or
-move it while a slice is live. Writable buffers require an exclusive Sifr
-borrow. A declaration returning `bytes` or a typed collection is a checked copy,
-not a buffer declaration.
+release. The active surface exposes bounded zero-copy element access and an
+explicit checked `copy_slice`; it does not expose a borrowed slice that could
+outlive the buffer. Writable buffers require an exclusive Sifr borrow. A
+declaration returning `bytes` or a typed collection is a checked copy, not a
+buffer declaration.
+
+Compiler capabilities follow the emitted Rust traits rather than assuming that
+every non-affine type is reusable. Sequence equality and membership require a
+recursive `PartialEq` capability. Set membership and equality require elements
+with recursive `Eq + Hash`; dictionary membership and equality require keys
+with recursive `Eq + Hash` and equality-capable values. Generated classes,
+newtypes, and non-optional union enums derive only the `Debug`, `Clone`,
+`PartialEq`, `Eq`, and `Hash` traits proved by their complete shapes, including
+the traits of an embedded inheritance parent, and union formatting is emitted
+only when every member supports `Display` or `Debug`. Equality and list, set, or
+dictionary membership inject a concrete union member into the generated union
+representation before invoking Rust equality. Specialized generic classes are
+emitted without unrelated declaration-wide bounds: conditional trait
+implementations and individual methods carry only their required bounds, and a
+concrete specialization is rejected at any consumer whose emitted Rust bound it
+cannot satisfy. Generic classes are not admitted as Rust hash keys until their
+emitted representation proves `Eq + Hash`. Error-class fields must prove
+`Debug` before code generation because `std::error::Error` requires it.
+`Any`, dynamic trait objects, callable-bearing classes, affine resources, and
+other unsupported Rust representations are rejected before an operation that
+would require a missing trait. Source `is` and `is not` are limited to identity
+checks against `None`; they are not rewritten into structural equality for
+arbitrary resources.
+
+Tuple unpacking clones a borrowed source only when its complete type is
+recursively cloneable. An owned tuple source is consumed and destructured by
+move. Star unpacking preserves its list source and therefore requires cloneable
+elements; affine, `Any`, callable-bearing, and other non-clone element shapes
+are rejected. Chained assignment likewise rejects move-only values whose Rust
+representation cannot be cloned; it never emits multiple moves from one source.
+Async-generator validation includes free-variable captures.
+Nested async generators are rejected until their dedicated lazy materialization
+path exists, with affine captures receiving the buffer-specific zero-copy
+diagnostic.
+Reusable lambdas and nested functions cannot capture an affine protocol
+resource: a callable could otherwise be invoked more than once with a single
+owner. Walrus expressions likewise cannot create an affine alias whose source
+and expression result would represent two live owners. Both cases are rejected
+during lowering before HIR or Rust block scoping can make ownership incoherent.
+
+Runtime admission compares the physical byte ranges of logical buffer items
+across every live view. C- and F-contiguous views use one compressed range, so
+large ordinary arrays require constant admission memory. Non-contiguous direct
+and indirect views resolve each logical item through `PyBuffer_GetPointer`, then
+sort and merge the resulting ranges. This admits physically disjoint slices,
+strides, and indirect exporters while rejecting any overlapping pair for which
+at least one view is writable.
 
 The public resource exposes read-only `length`, `item_size`, `dimensions`,
 `shape`, `strides`, `suboffsets`, `format`, `readonly`, `c_contiguous`, and

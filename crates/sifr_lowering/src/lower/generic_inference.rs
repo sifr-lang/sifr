@@ -34,6 +34,34 @@ pub(in crate::lower) fn infer_type_var_bindings(
                 infer_type_var_bindings(p, a, bindings);
             }
         }
+        (Type::Union(param_members), Type::Union(arg_members))
+            if param_members
+                .iter()
+                .filter(|member| !matches!(member.resolve_alias(), Type::None))
+                .count()
+                == 1
+                && arg_members
+                    .iter()
+                    .filter(|member| !matches!(member.resolve_alias(), Type::None))
+                    .count()
+                    == 1
+                && param_members
+                    .iter()
+                    .any(|member| matches!(member.resolve_alias(), Type::None))
+                && arg_members
+                    .iter()
+                    .any(|member| matches!(member.resolve_alias(), Type::None)) =>
+        {
+            let param_payload = param_members
+                .iter()
+                .find(|member| !matches!(member.resolve_alias(), Type::None));
+            let arg_payload = arg_members
+                .iter()
+                .find(|member| !matches!(member.resolve_alias(), Type::None));
+            if let (Some(param_payload), Some(arg_payload)) = (param_payload, arg_payload) {
+                infer_type_var_bindings(param_payload, arg_payload, bindings);
+            }
+        }
         (Type::Union(param_members), other) => {
             let has_none_branch = param_members
                 .iter()
@@ -159,18 +187,28 @@ pub(in crate::lower) fn infer_type_var_bindings(
         }
         (
             Type::Class {
+                identity: p_identity,
+                type_args: p_args,
                 name: p_name,
                 fields: p_fields,
                 ..
             },
             Type::Class {
+                identity: a_identity,
+                type_args: a_args,
                 name: a_name,
                 fields: a_fields,
                 ..
             },
-        ) if p_name == a_name && p_fields.len() == a_fields.len() => {
-            for ((_, p_ty), (_, a_ty)) in p_fields.iter().zip(a_fields.iter()) {
-                infer_type_var_bindings(p_ty, a_ty, bindings);
+        ) if p_identity.as_ref().unwrap_or(p_name) == a_identity.as_ref().unwrap_or(a_name) => {
+            if !p_args.is_empty() && p_args.len() == a_args.len() {
+                for (p_arg, a_arg) in p_args.iter().zip(a_args) {
+                    infer_type_var_bindings(p_arg, a_arg, bindings);
+                }
+            } else if p_fields.len() == a_fields.len() {
+                for ((_, p_ty), (_, a_ty)) in p_fields.iter().zip(a_fields) {
+                    infer_type_var_bindings(p_ty, a_ty, bindings);
+                }
             }
         }
         _ => {}
@@ -234,5 +272,14 @@ mod tests {
         let mut bindings = HashMap::new();
         infer_type_var_bindings(&param, &arg, &mut bindings);
         assert!(bindings.is_empty());
+    }
+
+    #[test]
+    fn optional_union_context_binds_typevar_to_payload_only() {
+        let param = Type::Union(vec![Type::TypeVar("T".to_string()), Type::None]);
+        let arg = Type::Union(vec![Type::Int, Type::None]);
+        let mut bindings = HashMap::new();
+        infer_type_var_bindings(&param, &arg, &mut bindings);
+        assert_eq!(bindings.get("T"), Some(&Type::Int));
     }
 }

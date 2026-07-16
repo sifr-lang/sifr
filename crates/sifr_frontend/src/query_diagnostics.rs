@@ -2,14 +2,20 @@ use super::{
     DocumentVersion, FileId, FrontendDiagnosticStyle, FrontendSourceContext, ModuleId, ModuleState,
     SourceHash, SourcePath, SourceText, SymbolKind, SymbolView,
 };
+pub(crate) use crate::export_type_localization::should_export_callable;
+use crate::export_type_localization::{
+    copy_class_generic_metadata, copy_function_generic_metadata, declared_generic_metadata,
+    exported_parent_chain, imported_class_ancestry, reexport_class_aliases,
+};
 use crate::module_signatures::ModuleSignature;
 use crate::{
     diagnostic_with_code, diagnostic_with_source_range, diagnostic_with_source_range_args_help,
 };
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{
-    ExternalDefs, HirDiagnostic, HirModule, LoweringResult, LoweringWarningDiagnostic,
-    RevealTypeDiagnostic,
+    canonicalize_user_export_function_type, canonicalize_user_export_type,
+    localize_user_import_function_type, localize_user_import_type, ExternalDefs, HirDiagnostic,
+    HirModule, LoweringResult, LoweringWarningDiagnostic, RevealTypeDiagnostic,
 };
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
@@ -261,22 +267,6 @@ pub(super) fn rendered_spanless_diagnostic(
     }
 }
 
-pub(crate) fn should_export_callable(module_name: &str, callable_name: &str) -> bool {
-    if module_name == "sifr.math"
-        && matches!(callable_name, "dist_impl" | "fsum_impl" | "sumprod_impl")
-    {
-        return false;
-    }
-    !callable_name.starts_with('_')
-        || matches!(
-            (module_name, callable_name),
-            (
-                "sifr.heapq",
-                "_heapify_max" | "_heappop_max" | "_heapreplace_max"
-            )
-        )
-}
-
 pub fn collect_module_exports(
     module_name: &str,
     lowering_result: &LoweringResult,
@@ -292,6 +282,9 @@ pub fn collect_module_exports(
     let mut vararg_exports = HashMap::new();
     let mut python_shape_exports = HashMap::new();
     let mut workload_exports = HashMap::new();
+    let (mut generic_exports, mut type_param_bound_exports, local_classes) =
+        declared_generic_metadata(module_name, module);
+    let imported_ancestry = imported_class_ancestry(module, external_defs);
 
     for func in &module.functions {
         if should_export_callable(module_name, &func.name) {
@@ -300,12 +293,13 @@ pub fn collect_module_exports(
                 .iter()
                 .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
                 .collect();
+            let function_type = FunctionType {
+                params,
+                return_type: Box::new(func.return_type.clone()),
+            };
             fn_exports.insert(
                 func.name.clone(),
-                FunctionType {
-                    params,
-                    return_type: Box::new(func.return_type.clone()),
-                },
+                canonicalize_user_export_function_type(&function_type, module_name, &local_classes),
             );
             if let Some(vararg_index) = lowering_result.function_varargs.get(&func.name) {
                 vararg_exports.insert(func.name.clone(), *vararg_index);
@@ -359,12 +353,27 @@ pub fn collect_module_exports(
                     },
                 ));
             }
-            let class_ty = Type::Class {
-                name: class.name.clone(),
-                fields: class.fields.clone(),
-                methods,
-                parent_class: None,
-            };
+            let class_ty = canonicalize_user_export_type(
+                &Type::Class {
+                    identity: None,
+                    type_args: class
+                        .type_params
+                        .iter()
+                        .cloned()
+                        .map(Type::TypeVar)
+                        .collect(),
+                    name: class.name.clone(),
+                    fields: class.fields.clone(),
+                    methods,
+                    parent_class: exported_parent_chain(
+                        class.parent_class.as_deref(),
+                        module,
+                        &imported_ancestry,
+                    ),
+                },
+                module_name,
+                &local_classes,
+            );
             class_exports.insert(class.name.clone(), class_ty);
             if !class.type_params.is_empty() {
                 class_type_param_exports.insert(class.name.clone(), class.type_params.clone());
@@ -374,14 +383,23 @@ pub fn collect_module_exports(
 
     for (name, ty, _) in &module.constants {
         if !name.starts_with('_') {
-            const_exports.insert(name.clone(), ty.clone());
+            const_exports.insert(
+                name.clone(),
+                canonicalize_user_export_type(ty, module_name, &local_classes),
+            );
             if let Some(value) = lowering_result.constant_integer_values.get(name) {
                 const_integer_value_exports.insert(name.clone(), value.clone());
             }
         }
     }
 
+    let reexport_aliases = reexport_class_aliases(module, external_defs);
+
     for import in &module.imports {
+        let class_aliases = reexport_aliases
+            .get(&import.module)
+            .cloned()
+            .unwrap_or_default();
         for name in &import.names {
             let local_name = import
                 .aliases
@@ -393,7 +411,14 @@ pub fn collect_module_exports(
             }
             if let Some(module_fns) = external_defs.functions.get(&import.module) {
                 if let Some(function_type) = module_fns.get(name) {
-                    fn_exports.insert(local_name.clone(), function_type.clone());
+                    fn_exports.insert(
+                        local_name.clone(),
+                        localize_user_import_function_type(
+                            function_type,
+                            &import.module,
+                            &class_aliases,
+                        ),
+                    );
                     if let Some(defaults) = external_defs
                         .function_defaults
                         .get(&import.module)
@@ -422,39 +447,41 @@ pub fn collect_module_exports(
                     {
                         workload_exports.insert(local_name.clone(), label.clone());
                     }
-                    if let Some(type_vars) = external_defs
-                        .generic_functions
-                        .get(&import.module)
-                        .and_then(|module_generics| module_generics.get(name))
-                        .cloned()
-                    {
-                        // Generic function metadata is keyed by the local export name.
-                        // It is consumed by later modules through ExternalDefs.
-                        external_defs
-                            .generic_functions
-                            .entry(module_name.to_string())
-                            .or_default()
-                            .insert(local_name.clone(), type_vars);
-                    }
+                    copy_function_generic_metadata(
+                        external_defs,
+                        &import.module,
+                        name,
+                        &local_name,
+                        &mut generic_exports,
+                        &mut type_param_bound_exports,
+                    );
                     continue;
                 }
             }
             if let Some(module_classes) = external_defs.classes.get(&import.module) {
                 if let Some(class_type) = module_classes.get(name) {
-                    class_exports.insert(local_name.clone(), class_type.clone());
-                    if let Some(type_params) = external_defs
-                        .class_type_params
-                        .get(&import.module)
-                        .and_then(|module_params| module_params.get(name))
-                    {
-                        class_type_param_exports.insert(local_name.clone(), type_params.clone());
-                    }
+                    class_exports.insert(
+                        local_name.clone(),
+                        localize_user_import_type(class_type, &import.module, &class_aliases),
+                    );
+                    copy_class_generic_metadata(
+                        external_defs,
+                        &import.module,
+                        name,
+                        &local_name,
+                        &mut class_type_param_exports,
+                        &mut generic_exports,
+                        &mut type_param_bound_exports,
+                    );
                     continue;
                 }
             }
             if let Some(module_consts) = external_defs.constants.get(&import.module) {
                 if let Some(const_type) = module_consts.get(name) {
-                    const_exports.insert(local_name.clone(), const_type.clone());
+                    const_exports.insert(
+                        local_name.clone(),
+                        localize_user_import_type(const_type, &import.module, &class_aliases),
+                    );
                     if let Some(value) = external_defs
                         .constant_integer_values
                         .get(&import.module)
@@ -477,6 +504,16 @@ pub fn collect_module_exports(
         external_defs
             .class_type_params
             .insert(module_name.to_string(), class_type_param_exports);
+    }
+    if !generic_exports.is_empty() {
+        external_defs
+            .generic_functions
+            .insert(module_name.to_string(), generic_exports);
+    }
+    if !type_param_bound_exports.is_empty() {
+        external_defs
+            .type_param_bounds
+            .insert(module_name.to_string(), type_param_bound_exports);
     }
     if !default_exports.is_empty() {
         external_defs

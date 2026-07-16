@@ -1,0 +1,8 @@
+def caller() -> int:
+    return later(False)
+
+
+def later(flag: bool):
+    if flag:
+        return "x"
+    return 1

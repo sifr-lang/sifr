@@ -9,7 +9,7 @@ use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::container_literal_specialization::{
     validate_subscript_augassign_target, SubscriptAugAssignTarget,
 };
-use super::expressions::lower_expr;
+use super::expressions::{affine_value_references_name, consume_owned_value, lower_expr};
 use super::integer_failure_diagnostics::exact_int_augassign_requires_handling;
 use super::name_diagnostics;
 use super::python_interop::lower_python_context_owned_expr;
@@ -330,16 +330,37 @@ pub(in crate::lower) fn lower_aug_assign(
         }
     } else {
         ctx.scope.lookup(&name)
-    };
+    }
+    .cloned();
     let Some(var_info) = var_info else {
         name_diagnostics::undefined_variable(ctx, &name, name_range);
         return None;
     };
+    if super::ownership_diagnostics::reject_borrowed_affine_parameter_reassignment(
+        ctx,
+        &name,
+        var_info.is_parameter_binding(),
+        &var_info.ty,
+        name_range,
+    ) {
+        return None;
+    }
     if var_info.is_parameter_binding() && !var_info.is_mutable_binding() {
         super::ownership_diagnostics::immutable_parameter_reassignment(ctx, &name, name_range);
         return None;
     }
     let var_ty = var_info.ty.clone();
+    let rhs_is_target = matches!(aug.value.as_ref(), Expr::Name(rhs) if rhs.id.as_str() == name);
+    if affine_value_references_name(&value, &name) {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYZC_INVALID_DECLARATION,
+            format!(
+                "augmented assignment cannot move affine target '{name}' through its own right-hand side"
+            ),
+            aug.value.range(),
+        );
+        return None;
+    }
 
     let base_op = &op_str[..op_str.len() - 1];
     if exact_int_augassign_requires_handling(&var_ty, base_op, &value, ctx, aug.value.range()) {
@@ -348,7 +369,28 @@ pub(in crate::lower) fn lower_aug_assign(
     if base_op == "+" {
         match (&var_ty, value.ty()) {
             (Type::Str, Type::Str) => {}
-            (Type::List(_), Type::List(_)) => {}
+            (Type::List(left), Type::List(right)) if left == right => {
+                if rhs_is_target {
+                    if let Err((code, message)) = type_check_binary_op(&var_ty, base_op, value.ty())
+                    {
+                        ctx.error_with_code_at(code, message, aug.value.range());
+                        return None;
+                    }
+                    return Some(HirStmt::Assign {
+                        name: name.clone(),
+                        value: HirExpr::BinOp {
+                            left: Box::new(HirExpr::Name {
+                                name,
+                                ty: var_ty.clone(),
+                            }),
+                            op: base_op.to_string(),
+                            right: Box::new(value),
+                            ty: var_ty,
+                        },
+                    });
+                }
+                consume_owned_value(&value, aug.value.range(), ctx);
+            }
             (Type::Bytes, Type::Bytes) => {}
             _ => {
                 if let Err((code, message)) = type_check_binary_op(&var_ty, base_op, value.ty()) {
@@ -357,9 +399,25 @@ pub(in crate::lower) fn lower_aug_assign(
                 }
             }
         }
-    } else if let Err((code, message)) = type_check_binary_op(&var_ty, base_op, value.ty()) {
-        ctx.error_with_code_at(code, message, aug.value.range());
-        return None;
+    } else {
+        if let Err((code, message)) = type_check_binary_op(&var_ty, base_op, value.ty()) {
+            ctx.error_with_code_at(code, message, aug.value.range());
+            return None;
+        }
+        if base_op == "*" && matches!(var_ty.resolve_alias(), Type::List(_)) {
+            return Some(HirStmt::Assign {
+                name: name.clone(),
+                value: HirExpr::BinOp {
+                    left: Box::new(HirExpr::Name {
+                        name,
+                        ty: var_ty.clone(),
+                    }),
+                    op: base_op.to_string(),
+                    right: Box::new(value),
+                    ty: var_ty,
+                },
+            });
+        }
     }
 
     Some(HirStmt::AugAssign {

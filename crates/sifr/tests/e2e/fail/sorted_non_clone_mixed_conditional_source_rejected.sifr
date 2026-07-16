@@ -1,0 +1,14 @@
+class Local(NonSend):
+    pass
+
+
+def make() -> list[Local]:
+    return []
+
+
+def key(value: Local) -> int:
+    return 0
+
+
+def order(flag: bool, values: list[Local]) -> list[Local]:
+    return sorted(values if flag else make(), key=key)

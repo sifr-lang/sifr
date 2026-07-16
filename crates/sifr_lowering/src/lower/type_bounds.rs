@@ -1,3 +1,5 @@
+use ruff_text_size::TextRange;
+use sifr_diagnostics::DiagnosticCode;
 use sifr_type_system::Type;
 
 use super::{decode_typevar_constraint, encode_typevar_constraint, LowerCtx};
@@ -102,6 +104,230 @@ fn type_satisfies_comparable_bound(ty: &Type, ctx: &LowerCtx) -> bool {
     }
 }
 
+fn contains_declared_generic_class(
+    ty: &Type,
+    ctx: &LowerCtx,
+    visiting: &mut std::collections::HashSet<(String, Vec<Type>)>,
+) -> bool {
+    match ty.resolve_alias() {
+        Type::Class { name, fields, .. } => {
+            if ctx
+                .class_declared_type_params
+                .get(name)
+                .is_some_and(|params| !params.is_empty())
+            {
+                return true;
+            }
+            let Some(key) = ty.class_recursion_key() else {
+                return false;
+            };
+            if !visiting.insert(key.clone()) {
+                return false;
+            }
+            let contains = fields
+                .iter()
+                .any(|(_, field)| contains_declared_generic_class(field, ctx, visiting));
+            visiting.remove(&key);
+            contains
+        }
+        Type::List(element)
+        | Type::Set(element)
+        | Type::Iterable(element)
+        | Type::Iterator(element)
+        | Type::Newtype { inner: element, .. } => {
+            contains_declared_generic_class(element, ctx, visiting)
+        }
+        Type::Dict(key, value) | Type::Result(key, value) => {
+            contains_declared_generic_class(key, ctx, visiting)
+                || contains_declared_generic_class(value, ctx, visiting)
+        }
+        Type::Tuple(elements) | Type::Union(elements) => elements
+            .iter()
+            .any(|element| contains_declared_generic_class(element, ctx, visiting)),
+        _ => false,
+    }
+}
+
+pub(in crate::lower) fn supports_hash_key_in_context(ty: &Type, ctx: &LowerCtx) -> bool {
+    if let Type::TypeVar(tv_name) = ty.resolve_alias() {
+        return typevar_satisfies_spec(tv_name, "Hashable", ctx);
+    }
+    ty.supports_hash_key()
+        && !contains_declared_generic_class(ty, ctx, &mut std::collections::HashSet::new())
+}
+
+pub(in crate::lower) fn reject_unavailable_hash_key(
+    key_ty: &Type,
+    operation: &str,
+    range: TextRange,
+    ctx: &mut LowerCtx,
+) -> bool {
+    if matches!(key_ty.resolve_alias(), Type::Any | Type::Unknown)
+        || supports_hash_key_in_context(key_ty, ctx)
+    {
+        return false;
+    }
+    ctx.error_with_code_at(
+        DiagnosticCode::TYPE_MISMATCH,
+        format!(
+            "{operation} requires a key type with generated Rust Eq + Hash traits, unavailable for '{}'",
+            key_ty.display_name()
+        ),
+        range,
+    );
+    true
+}
+
+pub(in crate::lower) fn reject_unavailable_dict_hash_key(
+    dict_ty: &Type,
+    index_ty: &Type,
+    operation: &str,
+    range: TextRange,
+    ctx: &mut LowerCtx,
+) -> bool {
+    let Type::Dict(key_ty, _) = dict_ty.resolve_alias() else {
+        return false;
+    };
+    reject_unavailable_hash_key(key_ty, operation, range, ctx)
+        || reject_unavailable_hash_key(index_ty, operation, range, ctx)
+}
+
+pub(in crate::lower) fn supports_structural_equality_in_context(ty: &Type, ctx: &LowerCtx) -> bool {
+    supports_structural_equality_in_context_inner(ty, ctx, &mut std::collections::HashSet::new())
+}
+
+/// Whether the generated Rust representation implements the total `Ord` trait
+/// required by `slice::sort`. This is intentionally narrower than Sifr's
+/// `Comparable` bound, which also admits partial orders such as `float`.
+pub(in crate::lower) fn supports_total_order_in_context(ty: &Type, _ctx: &LowerCtx) -> bool {
+    supports_total_order(ty)
+}
+
+fn supports_total_order(ty: &Type) -> bool {
+    match ty.resolve_alias() {
+        Type::Int
+        | Type::FixedInt(_)
+        | Type::Bool
+        | Type::Str
+        | Type::Bytes
+        | Type::None
+        | Type::LiteralInt(_)
+        | Type::LiteralStr(_)
+        | Type::LiteralBool(_)
+        | Type::BigInt
+        | Type::Decimal
+        | Type::BigDecimal => true,
+        Type::Tuple(elements) => elements.iter().all(supports_total_order),
+        Type::TypeVar(_) => false,
+        _ => false,
+    }
+}
+
+/// Whether `print` can use the exact Display/Debug strategy selected by codegen.
+pub(in crate::lower) fn supports_print_formatting(ty: &Type) -> bool {
+    let resolved = ty.resolve_alias();
+    if let Type::Union(members) = resolved {
+        if members.len() == 2 && members.iter().any(|member| matches!(member, Type::None)) {
+            return members
+                .iter()
+                .find(|member| !matches!(member, Type::None))
+                .is_some_and(supports_print_formatting);
+        }
+    }
+    match resolved {
+        Type::List(_)
+        | Type::Bytes
+        | Type::Dict(_, _)
+        | Type::Set(_)
+        | Type::Tuple(_)
+        | Type::Iterable(_)
+        | Type::Iterator(_)
+        | Type::Function(_)
+        | Type::AsyncFunction(_)
+        | Type::Coroutine(_, _)
+        | Type::Task(_, _)
+        | Type::TaskResult(_, _)
+        | Type::Failure(_)
+        | Type::TimeoutResult(_)
+        | Type::Select2(_, _)
+        | Type::BlockingTask(_, _)
+        | Type::JoinSet(_, _)
+        | Type::Awaitable(_)
+        | Type::AsyncIterator(_, _)
+        | Type::AsyncGenerator(_, _)
+        | Type::PythonBuffer(_)
+        | Type::Callable(..)
+        | Type::AsyncCallable(..)
+        | Type::Result(_, _)
+        | Type::Protocol { .. }
+        | Type::Any
+        | Type::Unknown
+        | Type::Intersection(_)
+        | Type::Never => ty.supports_debug_formatting(),
+        Type::None => true,
+        _ => ty.supports_display_formatting(),
+    }
+}
+
+fn supports_structural_equality_in_context_inner(
+    ty: &Type,
+    ctx: &LowerCtx,
+    visiting: &mut std::collections::HashSet<(String, Vec<Type>)>,
+) -> bool {
+    match ty.resolve_alias() {
+        Type::List(element) | Type::Iterable(element) => {
+            supports_structural_equality_in_context_inner(element, ctx, visiting)
+        }
+        Type::Set(element) => supports_hash_key_in_context(element, ctx),
+        Type::Dict(key, value) => {
+            supports_hash_key_in_context(key, ctx)
+                && supports_structural_equality_in_context_inner(value, ctx, visiting)
+        }
+        Type::Result(ok, error) => {
+            supports_structural_equality_in_context_inner(ok, ctx, visiting)
+                && supports_structural_equality_in_context_inner(error, ctx, visiting)
+        }
+        Type::Tuple(elements) | Type::Union(elements) => elements
+            .iter()
+            .all(|element| supports_structural_equality_in_context_inner(element, ctx, visiting)),
+        Type::Class {
+            name,
+            fields,
+            methods,
+            ..
+        } => {
+            if methods.iter().any(|(method, _)| method == "__eq__") {
+                return true;
+            }
+            if !ty.supports_structural_equality() {
+                return false;
+            }
+            if ctx
+                .class_declared_type_params
+                .get(name)
+                .is_some_and(|params| !params.is_empty())
+            {
+                return true;
+            }
+            let Some(key) = ty.class_recursion_key() else {
+                return false;
+            };
+            if !visiting.insert(key.clone()) {
+                return true;
+            }
+            let supports = fields.iter().all(|(_, field)| {
+                supports_structural_equality_in_context_inner(field, ctx, visiting)
+            });
+            visiting.remove(&key);
+            supports
+        }
+        Type::Newtype { inner, .. } => {
+            supports_structural_equality_in_context_inner(inner, ctx, visiting)
+        }
+        _ => ty.supports_structural_equality(),
+    }
+}
+
 /// Check if a type satisfies a named bound (hard requirement).
 pub(in crate::lower) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &LowerCtx) -> bool {
     if let Type::TypeVar(tv_name) = ty {
@@ -110,18 +336,7 @@ pub(in crate::lower) fn type_satisfies_bound(ty: &Type, bound: &str, ctx: &Lower
     match bound {
         "Comparable" => type_satisfies_comparable_bound(ty, ctx),
         "Addable" => matches!(ty, Type::Int | Type::Float | Type::Str | Type::BigInt),
-        "Hashable" => matches!(
-            ty,
-            Type::Int
-                | Type::Str
-                | Type::Bool
-                | Type::BigInt
-                | Type::None
-                | Type::Enum { .. }
-                | Type::LiteralStr(_)
-                | Type::LiteralInt(_)
-                | Type::LiteralBool(_)
-        ),
+        "Hashable" => supports_hash_key_in_context(ty, ctx),
         _ => resolve_named_bound_type(bound, ctx)
             .is_some_and(|bound_ty| ty.is_assignable_to(&bound_ty)),
     }

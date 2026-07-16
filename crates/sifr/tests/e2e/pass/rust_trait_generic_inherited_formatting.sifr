@@ -1,0 +1,17 @@
+class Box[T]:
+    value: T
+
+class Parent:
+    value: int
+
+class Child(Parent):
+    def __init__(self, value: int):
+        super().__init__(value)
+
+def main() -> None:
+    box: Box[int] = Box(7)
+    boxes: list[Box[int]] = [box]
+    child: Child = Child(9)
+    assert str(box) == "Box(value=7)"
+    assert str(boxes) == "[Box { value: 7 }]"
+    assert str(child) == "Child(parent=Parent(value=9))"

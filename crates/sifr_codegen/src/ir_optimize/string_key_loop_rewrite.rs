@@ -84,7 +84,7 @@ fn stmt_uses_name_only_as_set_key(stmt: &RustStmt, name: &str, found: &mut bool)
             expr_uses_name_only_as_set_key(target, name, false, found)
                 && expr_uses_name_only_as_set_key(value, name, false, found)
         }
-        RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => {
+        RustStmt::Expr(expr) | RustStmt::TailExpr(expr) | RustStmt::Return(Some(expr)) => {
             expr_uses_name_only_as_set_key(expr, name, false, found)
         }
         RustStmt::Assert { cond, msg } => {

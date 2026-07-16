@@ -3,6 +3,77 @@ use crate::types::display_impl::capitalize;
 use crate::union::make_union;
 
 impl Type {
+    /// Whether two class types name the same declaration and carry the same
+    /// concrete generic specialization. Local import spellings may differ.
+    #[must_use]
+    pub fn is_same_class_specialization(&self, other: &Self) -> bool {
+        fn slot_is_invariant(left: &Type, right: &Type) -> bool {
+            left == right
+                || matches!(left.resolve_alias(), Type::Any)
+                || matches!(right.resolve_alias(), Type::Any)
+                || (left.is_assignable_to(right) && right.is_assignable_to(left))
+        }
+
+        let (
+            Type::Class {
+                identity: left_identity,
+                type_args: left_type_args,
+                name: left_name,
+                ..
+            },
+            Type::Class {
+                identity: right_identity,
+                type_args: right_type_args,
+                name: right_name,
+                ..
+            },
+        ) = (self.resolve_alias(), other.resolve_alias())
+        else {
+            return false;
+        };
+        if left_identity.as_ref().unwrap_or(left_name)
+            != right_identity.as_ref().unwrap_or(right_name)
+            || left_type_args.len() != right_type_args.len()
+        {
+            return false;
+        }
+        left_type_args
+            .iter()
+            .zip(right_type_args)
+            .all(|(left, right)| slot_is_invariant(left, right))
+    }
+
+    /// Whether a union contains two incompatible concrete specializations of
+    /// one nominal generic class.
+    #[must_use]
+    pub fn has_conflicting_class_specializations(&self) -> bool {
+        let Type::Union(members) = self.resolve_alias() else {
+            return false;
+        };
+        members.iter().enumerate().any(|(index, left)| {
+            members[index + 1..].iter().any(|right| {
+                let (
+                    Type::Class {
+                        identity: left_identity,
+                        name: left_name,
+                        ..
+                    },
+                    Type::Class {
+                        identity: right_identity,
+                        name: right_name,
+                        ..
+                    },
+                ) = (left.resolve_alias(), right.resolve_alias())
+                else {
+                    return false;
+                };
+                left_identity.as_ref().unwrap_or(left_name)
+                    == right_identity.as_ref().unwrap_or(right_name)
+                    && !left.is_same_class_specialization(right)
+            })
+        })
+    }
+
     /// Helper: map a type to a `PascalCase` name for enum variant/name generation.
     pub(super) fn type_to_enum_variant_prefix(ty: &Type) -> String {
         match ty {
@@ -36,6 +107,7 @@ impl Type {
             Type::Awaitable(_) => "Awaitable".to_string(),
             Type::AsyncIterator(_, _) => "AsyncIterator".to_string(),
             Type::AsyncGenerator(_, _) => "AsyncGenerator".to_string(),
+            Type::PythonBuffer(_) => "PythonBuffer".to_string(),
             Type::Unknown => "Unknown".to_string(),
             Type::Any => "Any".to_string(),
             Type::Never => "Never".to_string(),
@@ -548,17 +620,24 @@ impl Type {
             (
                 Self::Class {
                     name: a,
+                    identity: identity_a,
                     parent_class: ref parent_a,
                     ..
                 },
-                Self::Class { name: b, .. },
+                Self::Class {
+                    name: b,
+                    identity: identity_b,
+                    ..
+                },
             ) => {
-                if a == b {
-                    return true;
+                let identity_a = identity_a.as_ref().unwrap_or(a);
+                let identity_b = identity_b.as_ref().unwrap_or(b);
+                if identity_a == identity_b {
+                    return source.is_same_class_specialization(target_resolved);
                 }
                 // `parent_class` stores the inheritance chain as `Parent|Grandparent|...`.
                 if let Some(ref chain) = parent_a {
-                    if chain.split('|').any(|ancestor| ancestor == b) {
+                    if chain.split('|').any(|ancestor| ancestor == identity_b) {
                         return true;
                     }
                 }

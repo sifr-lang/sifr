@@ -1,0 +1,4 @@
+def keep(own view: python.Buffer[uint8]) -> Callable[[], python.Buffer[uint8]]:
+    def inner() -> python.Buffer[uint8]:
+        return view
+    return inner

@@ -1,0 +1,48 @@
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
+
+
+@python.buffer(bridge.buffer_producers.make_buffer, access=read, layout=any)
+def aggregate_view(payload: bytes) -> Result[python.Buffer[uint8], PythonError]: ...
+
+
+class BufferAggregate:
+    direct: python.Buffer[uint8]
+    optional: python.Buffer[uint8] | None
+    collection: list[python.Buffer[uint8]]
+
+
+class RecursiveBufferNode:
+    view: python.Buffer[uint8]
+    next: RecursiveBufferNode | None
+
+
+def exercise_affine_aggregates() -> Result[None, PythonError]:
+    try:
+        direct: python.Buffer[uint8] = aggregate_view(b"record")
+        optional: python.Buffer[uint8] | None = aggregate_view(b"option")
+        collection_view: python.Buffer[uint8] = aggregate_view(b"list")
+        collection: list[python.Buffer[uint8]] = [collection_view]
+        record: BufferAggregate = BufferAggregate(direct, optional, collection)
+        pair_view: python.Buffer[uint8] = aggregate_view(b"tuple")
+        pair: tuple[python.Buffer[uint8], int] = (pair_view, 1)
+        general_view: python.Buffer[uint8] = aggregate_view(b"union")
+        general: python.Buffer[uint8] | int | None = general_view
+        recursive_view: python.Buffer[uint8] = aggregate_view(b"recursive")
+        recursive: RecursiveBufferNode = RecursiveBufferNode(recursive_view, None)
+        print("sifr-python-interop:buffer:affine-aggregate=constructed")
+        return None
+    except PythonError as error:
+        raise error
+
+
+def main() -> Result[None, PythonError]:
+    try:
+        before: ResourceDiagnostics = resource_diagnostics()
+        exercised: None = exercise_affine_aggregates()
+        after: ResourceDiagnostics = resource_diagnostics()
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("affine buffer aggregate cleanup leaked resources")
+        print("sifr-python-interop:buffer:affine-aggregate=ok:resources=zero")
+        return None
+    except PythonError as error:
+        raise error

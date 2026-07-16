@@ -1,0 +1,5 @@
+# expect-error: SIFR-PYZC-0001
+def make_generator(own view: python.Buffer[uint8]) -> AsyncGenerator[int, GeneratorCloseError]:
+    async def generate() -> AsyncGenerator[int, GeneratorCloseError]:
+        yield view.length()
+    return generate()

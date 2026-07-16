@@ -1,0 +1,3 @@
+# expect-error: SIFR-TYPE-0002
+def order(mut values: list[float]) -> None:
+    values.sort()

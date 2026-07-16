@@ -1,7 +1,9 @@
 use super::capture_collection::collect_nested_function_captures;
 use super::{
-    analyze_assign, infer_expr_type, merge_env_types, refine_name_with_binary_context, str,
-    type_contains_unknown_or_any, unify_function_return, unify_name_binding, unify_types,
+    analyze_assign, analyze_match_stmt, analyze_try_stmt, analyze_with_stmt,
+    collect_compound_local_bindings, collect_compound_nonlocals, function_has_value_return,
+    infer_expr_type, inference_stmt_always_exits, merge_env_types, refine_name_with_binary_context,
+    str, type_contains_unknown_or_any, unify_function_return, unify_name_binding, unify_types,
 };
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
@@ -37,6 +39,7 @@ pub(super) struct LocalFunctionState<'a> {
     pub(super) return_type: Type,
     pub(super) explicit_return: bool,
     pub(super) inference_failed: bool,
+    pub(super) allow_union_return_inference: bool,
 }
 
 impl LocalFunctionState<'_> {
@@ -117,7 +120,22 @@ pub(in crate::lower) fn infer_nested_function_types(
     stmts: &[Stmt],
     ctx: &mut LowerCtx,
 ) -> NestedFunctionInference {
-    let mut states = collect_nested_function_states(stmts, ctx);
+    infer_function_types(stmts, ctx, false)
+}
+
+pub(in crate::lower) fn infer_module_function_types(
+    stmts: &[Stmt],
+    ctx: &mut LowerCtx,
+) -> NestedFunctionInference {
+    infer_function_types(stmts, ctx, true)
+}
+
+fn infer_function_types(
+    stmts: &[Stmt],
+    ctx: &mut LowerCtx,
+    allow_union_return_inference: bool,
+) -> NestedFunctionInference {
+    let mut states = collect_function_states(stmts, ctx, allow_union_return_inference);
     let outer_bindings = ctx
         .scope
         .visible_local_bindings()
@@ -137,7 +155,12 @@ pub(in crate::lower) fn infer_nested_function_types(
     }
 
     let mut binding_hints = outer_bindings;
-    for _ in 0..MAX_INFERENCE_PASSES {
+    let max_passes = if allow_union_return_inference {
+        states.len().saturating_add(1)
+    } else {
+        MAX_INFERENCE_PASSES
+    };
+    for _ in 0..max_passes {
         let previous = snapshot_signatures(&states);
         let mut env = FunctionEnv {
             vars: binding_hints.clone(),
@@ -164,9 +187,10 @@ pub(in crate::lower) fn infer_nested_function_types(
     }
 }
 
-pub(super) fn collect_nested_function_states<'a>(
+fn collect_function_states<'a>(
     stmts: &'a [Stmt],
     ctx: &mut LowerCtx,
+    allow_union_return_inference: bool,
 ) -> HashMap<String, LocalFunctionState<'a>> {
     let mut states = HashMap::new();
 
@@ -214,6 +238,7 @@ pub(super) fn collect_nested_function_states<'a>(
                 return_type,
                 explicit_return: func.returns.is_some(),
                 inference_failed: false,
+                allow_union_return_inference,
             },
         );
     }
@@ -469,6 +494,10 @@ pub(super) fn finalize_nested_function_types(
         }
 
         if !state.explicit_return {
+            if state.return_type.has_conflicting_class_specializations() {
+                state.return_type = Type::Unknown;
+                state.inference_failed = true;
+            }
             state.return_type = finalize_return_type(state);
             if state.return_type.is_unknown() {
                 state.inference_failed = true;
@@ -502,46 +531,6 @@ pub(super) fn finalize_return_type(state: &LocalFunctionState<'_>) -> Type {
     }
 }
 
-pub(super) fn function_has_value_return(stmts: &[Stmt]) -> bool {
-    for stmt in stmts {
-        match stmt {
-            Stmt::Return(ret) => {
-                if ret.value.is_some() {
-                    return true;
-                }
-            }
-            Stmt::If(if_stmt) => {
-                if function_has_value_return(&if_stmt.body) {
-                    return true;
-                }
-                for clause in &if_stmt.elif_else_clauses {
-                    if function_has_value_return(&clause.body) {
-                        return true;
-                    }
-                }
-            }
-            Stmt::While(while_stmt) => {
-                if function_has_value_return(&while_stmt.body) {
-                    return true;
-                }
-                if !while_stmt.orelse.is_empty() && function_has_value_return(&while_stmt.orelse) {
-                    return true;
-                }
-            }
-            Stmt::For(for_stmt) => {
-                if function_has_value_return(&for_stmt.body) {
-                    return true;
-                }
-                if !for_stmt.orelse.is_empty() && function_has_value_return(&for_stmt.orelse) {
-                    return true;
-                }
-            }
-            _ => {}
-        }
-    }
-    false
-}
-
 pub(super) fn analyze_block(
     stmts: &[Stmt],
     env: &mut FunctionEnv,
@@ -551,6 +540,9 @@ pub(super) fn analyze_block(
 ) {
     for stmt in stmts {
         analyze_stmt(stmt, env, states, current_function, ctx);
+        if inference_stmt_always_exits(stmt) {
+            break;
+        }
     }
 }
 
@@ -607,6 +599,7 @@ pub(super) fn collect_current_function_local_bindings(
             Stmt::FunctionDef(func) => {
                 bindings.insert(func.name.to_string());
             }
+            _ if collect_compound_local_bindings(stmt, bindings) => {}
             _ => {}
         }
     }
@@ -651,6 +644,7 @@ pub(super) fn collect_nonlocal_names(stmts: &[Stmt], names: &mut HashSet<String>
             Stmt::With(with_stmt) => {
                 collect_nonlocal_names(&with_stmt.body, names);
             }
+            _ if collect_compound_nonlocals(stmt, names) => {}
             _ => {}
         }
     }
@@ -800,6 +794,15 @@ pub(super) fn analyze_stmt(
                 );
                 merge_env_types(env, &else_env);
             }
+        }
+        Stmt::Match(match_stmt) => {
+            analyze_match_stmt(match_stmt, env, states, current_function, ctx);
+        }
+        Stmt::Try(try_stmt) => {
+            analyze_try_stmt(try_stmt, env, states, current_function, ctx);
+        }
+        Stmt::With(with_stmt) => {
+            analyze_with_stmt(with_stmt, env, states, current_function, ctx);
         }
         Stmt::FunctionDef(func) => {
             let Some(state) = states.get(func.name.as_str()).cloned() else {

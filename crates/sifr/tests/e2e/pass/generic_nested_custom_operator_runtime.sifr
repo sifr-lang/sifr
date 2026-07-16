@@ -1,0 +1,31 @@
+class Number:
+    value: int
+
+    def __neg__(self) -> Number:
+        return Number(-self.value)
+
+    def __eq__(self, other: Number) -> bool:
+        return self.value == other.value
+
+    def __lt__(self, other: Number) -> bool:
+        return self.value < other.value
+
+
+class Wrap[T]:
+    value: T
+
+    def negated(self) -> T:
+        return -self.value
+
+    def same(self, other: T) -> bool:
+        return self.value == other
+
+    def precedes(self, other: T) -> bool:
+        return self.value < other
+
+
+def main() -> None:
+    wrapped: Wrap[Number] = Wrap(Number(4))
+    assert wrapped.negated() == Number(-4)
+    assert wrapped.same(Number(4))
+    assert wrapped.precedes(Number(5))

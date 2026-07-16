@@ -1,0 +1,19 @@
+# Reference: declaration_first_python_buffer_unpack_ownership
+from sifr.test import assert_eq
+
+
+def borrowed(values: tuple[str, int]) -> str:
+    first, number = values
+    return first
+
+
+def owned(own values: tuple[str, int]) -> str:
+    first, number = values
+    return first
+
+
+def main() -> None:
+    retained: tuple[str, int] = ("borrowed", 1)
+    assert_eq(borrowed(retained), "borrowed")
+    assert_eq(retained[0], "borrowed")
+    assert_eq(owned(("owned", 2)), "owned")

@@ -1,0 +1,5 @@
+def text_key(value: str) -> int:
+    return len(value)
+
+def order(values: list[int]) -> list[int]:
+    return sorted(values, key=text_key)

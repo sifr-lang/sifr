@@ -1,16 +1,15 @@
-use super::python_interop;
 use super::{
     async_effects, collect_class_type, collect_function_defaults, collect_type_alias_decls,
     collect_type_vars, compiler_intrinsics, extract_function_type, function_body_contains_yield,
-    import_diagnostics, import_resolution, imported_defaults, imports, integer_literal_diagnostics,
-    lower_class, lower_function, module_constants_lowering, module_function_registry,
+    import_diagnostics, import_resolution, imported_class_identity, imported_defaults, imports,
+    integer_literal_diagnostics, module_constants_lowering, module_function_registry,
     name_diagnostics, parse_typevar_bound_expr, parse_typevar_declaration_specs,
-    predeclare_type_aliases, private_stdlib_imports, register_builtins, resolve_imports_early,
-    resolve_type_aliases, str, workload_annotations, Expr, ExternalDefs, FunctionType,
-    HirDiagnostic, HirExpr, HirImport, HirModule, LowerCtx, Ranged, Stmt, TextRange, Type,
+    predeclare_type_aliases, private_stdlib_imports, python_interop, register_builtins,
+    resolve_imports_early, resolve_type_aliases, str, workload_annotations, Expr, ExternalDefs,
+    FunctionType, HirDiagnostic, HirExpr, HirImport, HirModule, LowerCtx, Ranged, Stmt, TextRange,
+    Type,
 };
 use sifr_ir::LoweringResult;
-/// Internal implementation of module lowering.
 pub(in crate::lower) fn lower_module_impl(
     stmts: &[Stmt],
     externals: &ExternalDefs,
@@ -20,8 +19,7 @@ pub(in crate::lower) fn lower_module_impl(
     // Register built-in functions
     register_builtins(&mut ctx);
     integer_literal_diagnostics::validate_module_integer_literals(stmts, &mut ctx);
-    // Pass 0: Pre-register all class names as forward references.
-    // This allows function signatures and other classes to reference classes
+    // Pass 0: Pre-register class names so signatures and other classes can reference classes
     // defined later in the file (e.g., LinkedNode, TreeNode, Node).
     for stmt in stmts {
         if let Stmt::ClassDef(class_def) = stmt {
@@ -30,6 +28,8 @@ pub(in crate::lower) fn lower_module_impl(
                 ctx.class_types.insert(
                     class_name.clone(),
                     Type::Class {
+                        identity: None,
+                        type_args: Vec::new(),
                         name: class_name,
                         fields: Vec::new(),
                         methods: Vec::new(),
@@ -67,6 +67,7 @@ pub(in crate::lower) fn lower_module_impl(
     // This must happen before function signature extraction so that imported error classes
     // (e.g., StatisticsError from sifr.statistics) can be used in Result[T, E] annotations.
     resolve_imports_early(stmts, externals, &mut ctx);
+    let imported_class_aliases = imports::class_aliases_by_module(stmts, externals, &ctx);
     python_interop::collect_python_opaque_classes(stmts, &mut ctx);
     let alias_decls = collect_type_alias_decls(stmts, &mut ctx);
     predeclare_type_aliases(&alias_decls, &mut ctx);
@@ -297,7 +298,6 @@ pub(in crate::lower) fn lower_module_impl(
                 })
                 .collect::<Vec<_>>()
                 .join(", ");
-            // Collect aliases: (original_name, local_alias)
             let aliases: Vec<(String, String)> = import_from
                 .names
                 .iter()
@@ -309,7 +309,6 @@ pub(in crate::lower) fn lower_module_impl(
                 })
                 .collect();
 
-            // Build a mapping from original name -> local name (alias or original)
             let local_name_for = |original: &str| -> String {
                 aliases
                     .iter()
@@ -326,18 +325,14 @@ pub(in crate::lower) fn lower_module_impl(
                     .map_or(import_range, Ranged::range)
             };
 
-            // Skip typing imports (TypeVar, Callable, etc.) - they are handled at the type level
             if is_absolute_import && module_name == "typing" {
                 continue;
             }
 
-            // Skip enum imports (Enum is a built-in base class in Sifr)
             if is_absolute_import && module_name == "enum" {
                 continue;
             }
 
-            // Private stdlib declaration imports are source-origin gated.
-            // `_sifr.*` is the canonical private sysroot namespace, not the trust boundary.
             if is_absolute_import && module_name.starts_with("_sifr.") {
                 if !ctx.can_import_private_stdlib_declarations() {
                     import_diagnostics::forbidden_intrinsic(&mut ctx, &module_name, import_range);
@@ -362,9 +357,6 @@ pub(in crate::lower) fn lower_module_impl(
                 continue;
             }
 
-            // Check if this is a stdlib import (sifr.*)
-            // All sifr.* modules are now compiled from .sifr stdlib sources.
-            // Resolve from pre-compiled stdlib modules (via externals).
             if is_absolute_import && module_name.starts_with("sifr.") {
                 // Check if there's a pre-compiled stdlib .sifr module in externals
                 let stdlib_module_key = module_name.clone();
@@ -485,11 +477,24 @@ pub(in crate::lower) fn lower_module_impl(
                                         {
                                             ctx.class_declared_type_params
                                                 .insert(local.clone(), type_params.clone());
+                                            ctx.class_declared_type_params
+                                                .entry(name.clone())
+                                                .or_insert_with(|| type_params.clone());
                                             if !type_params.is_empty() {
                                                 ctx.generic_functions
                                                     .insert(local.clone(), type_params.clone());
                                             }
                                         }
+                                    }
+                                    if let Some(module_bounds) =
+                                        externals.type_param_bounds.get(&stdlib_module_key)
+                                    {
+                                        super::generic_method_requirements::import_generic_method_requirements(
+                                            &mut ctx,
+                                            module_bounds,
+                                            name,
+                                            &local,
+                                        );
                                     }
                                     // Register as error type if flagged in external defs
                                     if externals.error_types.contains(name) {
@@ -621,7 +626,10 @@ pub(in crate::lower) fn lower_module_impl(
                 continue;
             }
 
-            // Resolve imported names from external definitions (local modules)
+            let class_aliases = imported_class_aliases
+                .get(&module_name)
+                .cloned()
+                .unwrap_or_default();
             for name in &names {
                 let local = local_name_for(name);
                 // Check if it's a private name
@@ -635,66 +643,24 @@ pub(in crate::lower) fn lower_module_impl(
                     continue;
                 }
 
-                let mut found = false;
-                // Look up in external functions
-                if let Some(module_fns) = externals.functions.get(&module_name) {
-                    if let Some(ft) = module_fns.get(name) {
-                        ctx.functions.insert(local.clone(), ft.clone());
-                        if let Some(module_intrinsics) =
-                            externals.compiler_intrinsics.get(&module_name)
-                        {
-                            imported_defaults::import_callable_compiler_intrinsic(
-                                &mut ctx,
-                                module_intrinsics,
-                                name,
-                                &local,
-                            );
-                        }
-                        if let Some(module_defaults) = externals.function_defaults.get(&module_name)
-                        {
-                            imported_defaults::import_callable_defaults(
-                                &mut ctx,
-                                module_defaults,
-                                name,
-                                &local,
-                            );
-                        }
-                        if let Some(module_varargs) = externals.function_varargs.get(&module_name) {
-                            imported_defaults::import_callable_vararg(
-                                &mut ctx,
-                                module_varargs,
-                                name,
-                                &local,
-                            );
-                        }
-                        if let Some(module_shapes) =
-                            externals.function_python_call_shapes.get(&module_name)
-                        {
-                            imported_defaults::import_python_call_shape(
-                                &mut ctx,
-                                module_shapes,
-                                name,
-                                &local,
-                            );
-                        }
-                        if let Some(module_workloads) =
-                            externals.function_workloads.get(&module_name)
-                        {
-                            imported_defaults::import_callable_workload(
-                                &mut ctx,
-                                module_workloads,
-                                name,
-                                &local,
-                            );
-                        }
-                        found = true;
-                    }
-                }
-                // Look up in external classes
+                let mut found = imported_defaults::import_user_callable(
+                    &mut ctx,
+                    externals,
+                    &module_name,
+                    name,
+                    &local,
+                    &class_aliases,
+                );
                 if !found {
                     if let Some(module_classes) = externals.classes.get(&module_name) {
                         if let Some(class_ty) = module_classes.get(name) {
-                            ctx.class_types.insert(local.clone(), class_ty.clone());
+                            let imported_class_ty = imported_class_identity::type_for_import(
+                                class_ty,
+                                &module_name,
+                                &class_aliases,
+                            );
+                            ctx.class_types
+                                .insert(local.clone(), imported_class_ty.clone());
                             if let Some(module_class_type_params) =
                                 externals.class_type_params.get(&module_name)
                             {
@@ -707,30 +673,35 @@ pub(in crate::lower) fn lower_module_impl(
                                     }
                                 }
                             }
-                            // Register as error type if flagged in external defs
+                            if let Some(module_bounds) =
+                                externals.type_param_bounds.get(&module_name)
+                            {
+                                super::generic_method_requirements::import_generic_method_requirements(
+                                    &mut ctx,
+                                    module_bounds,
+                                    name,
+                                    &local,
+                                );
+                            }
                             if externals.error_types.contains(name) {
                                 ctx.error_types.insert(local.clone());
                             }
-                            // Register the constructor: prefer `new` method params if available,
-                            // otherwise fall back to field-based constructor
                             if let Type::Class {
                                 fields, methods, ..
-                            } = class_ty
+                            } = &imported_class_ty
                             {
                                 let ft = if let Some((_, new_ft)) =
                                     methods.iter().find(|(n, _)| n == "new")
                                 {
-                                    // Use the actual __init__ parameters
                                     let params: Vec<(String, Type)> = new_ft
                                         .params
                                         .iter()
                                         .map(|(n, t, _)| (n.clone(), t.clone()))
                                         .collect();
-                                    FunctionType::new(params, class_ty.clone())
+                                    FunctionType::new(params, imported_class_ty.clone())
                                 } else {
-                                    // No __init__ — default constructor from fields
                                     let params: Vec<(String, Type)> = fields.clone();
-                                    FunctionType::new(params, class_ty.clone())
+                                    FunctionType::new(params, imported_class_ty.clone())
                                 };
                                 ctx.functions.insert(local.clone(), ft);
                                 if let Some(module_defaults) =
@@ -768,11 +739,17 @@ pub(in crate::lower) fn lower_module_impl(
                         }
                     }
                 }
-                // Look up in external constants
                 if !found {
                     if let Some(module_consts) = externals.constants.get(&module_name) {
                         if let Some(const_ty) = module_consts.get(name) {
-                            ctx.scope.define(local.clone(), const_ty.clone());
+                            ctx.scope.define(
+                                local.clone(),
+                                imported_class_identity::type_for_import(
+                                    const_ty,
+                                    &module_name,
+                                    &class_aliases,
+                                ),
+                            );
                             if let Some(value) = externals
                                 .constant_integer_values
                                 .get(&module_name)
@@ -832,28 +809,14 @@ pub(in crate::lower) fn lower_module_impl(
     }
     ctx.compiler_intrinsics.extend(module_compiler_intrinsics);
     let constants = module_constants_lowering::collect_module_constants(stmts, &mut ctx);
-    // Second pass: lower function bodies and class method bodies
-    let mut functions = Vec::new();
-    let mut classes = Vec::new();
-    for stmt in stmts {
-        match stmt {
-            Stmt::FunctionDef(func) => {
-                let function_name = func.name.to_string();
-                if !function_name_registry.note_lowering(function_name.as_str()) {
-                    continue;
-                }
-                if let Some(hir_func) = lower_function(func, &mut ctx) {
-                    functions.push(hir_func);
-                }
-            }
-            Stmt::ClassDef(class_def) => {
-                if let Some(hir_class) = lower_class(class_def, &mut ctx) {
-                    classes.push(hir_class);
-                }
-            }
-            _ => {}
-        }
-    }
+    // Infer module returns as one mutually visible group so forward calls are source-order neutral.
+    super::module_function_inference::infer_unannotated_returns(stmts, &mut ctx);
+    // Classes lower first so module calls see the closed per-method generic requirements.
+    let (functions, classes) = super::module_body_lowering::lower_module_bodies(
+        stmts,
+        &mut function_name_registry,
+        &mut ctx,
+    );
     python_interop::validate_retained_callback_owner_errors(&functions, &classes, &mut ctx);
     if ctx.errors.is_empty() {
         let module = HirModule {

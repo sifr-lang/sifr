@@ -1,18 +1,34 @@
 macro_rules! stmt_expr_wrappers_range_index {
     ($emitter:ident, $expr:ident) => {{
-        if let HirExpr::OkWrap { value, .. } = $expr {
+        if let HirExpr::OkWrap { value, ty } = $expr {
             let Some(lowered_value) = $emitter.lower_stmt_expr_for_ir(value)? else {
                 return Ok(None);
             };
+            let Type::Result(ok_ty, _) = crate::resolve_alias_type_for_plain_call(ty) else {
+                return Ok(None);
+            };
+            let lowered_value = $emitter.coerce_local_value_for_target_type_for_ir(
+                ok_ty,
+                value,
+                lowered_value,
+            )?;
             return Ok(Some(crate::RustExpr::FnCall {
                 func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
                 args: vec![lowered_value],
             }));
         }
-        if let HirExpr::ErrWrap { value, .. } = $expr {
+        if let HirExpr::ErrWrap { value, ty } = $expr {
             let Some(lowered_value) = $emitter.lower_stmt_expr_for_ir(value)? else {
                 return Ok(None);
             };
+            let Type::Result(_, error_ty) = crate::resolve_alias_type_for_plain_call(ty) else {
+                return Ok(None);
+            };
+            let lowered_value = $emitter.coerce_local_value_for_target_type_for_ir(
+                error_ty,
+                value,
+                lowered_value,
+            )?;
             return Ok(Some(crate::RustExpr::FnCall {
                 func: Box::new(crate::RustExpr::Path(vec!["Err".to_string()])),
                 args: vec![lowered_value],
@@ -433,9 +449,21 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
             {
                 return Ok(Some(lowered));
             }
-            let Some(lowered_element) = $emitter.lower_stmt_expr_for_ir(element)? else {
+            let Some(mut lowered_element) = $emitter.lower_stmt_expr_for_ir(element)? else {
                 return Ok(None);
             };
+            let collection_element_ty = collection.ty().contains_element_type();
+            let union_wrapped_element = collection_element_ty.as_ref().and_then(|target_ty| {
+                let owned = crate::RustEmitter::clone_owned_append_arg_expr_for_ir(
+                    element,
+                    lowered_element.clone(),
+                );
+                crate::helpers::wrap_union_member_expr(target_ty, element.ty(), owned)
+            });
+            let element_was_union_wrapped = union_wrapped_element.is_some();
+            if let Some(wrapped) = union_wrapped_element {
+                lowered_element = wrapped;
+            }
             if let Some(lowered) = $emitter.try_lower_list_indexed_dict_contains_expr(
                 element,
                 collection,
@@ -463,7 +491,12 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
             }
             let lowered = match crate::resolve_alias_type_for_plain_call(collection.ty()) {
                 Type::Dict(_, _) => {
-                    let key_arg = if let HirExpr::StringLiteral(value) = element.as_ref() {
+                    let key_arg = if element_was_union_wrapped {
+                        crate::RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
+                        }
+                    } else if let HirExpr::StringLiteral(value) = element.as_ref() {
                         crate::RustExpr::Literal(crate::RustLiteral::Str(value.clone()))
                     } else if let HirExpr::Name { name, ty } = element.as_ref() {
                         if $emitter.borrowed_params.contains(name)
@@ -712,6 +745,21 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                         } else {
                             (lowered_left, lowered_right)
                         };
+                    if matches!(lowered_op.as_str(), "==" | "!=") {
+                        if let Some(wrapped) = crate::helpers::wrap_union_member_expr(
+                            lhs_expr.ty(),
+                            rhs_expr.ty(),
+                            lowered_right.clone(),
+                        ) {
+                            lowered_right = wrapped;
+                        } else if let Some(wrapped) = crate::helpers::wrap_union_member_expr(
+                            rhs_expr.ty(),
+                            lhs_expr.ty(),
+                            lowered_left.clone(),
+                        ) {
+                            lowered_left = wrapped;
+                        }
+                    }
                     if !left_is_option
                         && !right_is_option
                         && matches!(left_ty, Type::Float)

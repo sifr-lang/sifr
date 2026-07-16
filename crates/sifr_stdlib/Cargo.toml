@@ -105,3 +105,6 @@ numeric = ["dep:bigdecimal", "dep:num-bigint", "dep:num-traits", "dep:rayon", "d
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+static_assertions = { workspace = true }

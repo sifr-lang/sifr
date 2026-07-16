@@ -16,6 +16,7 @@ pub(crate) struct CallbackSetup {
     pub(crate) provisional_var: Option<String>,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn callback_setup(
     callback: &PythonCallbackDeclaration,
     handler_name: &str,

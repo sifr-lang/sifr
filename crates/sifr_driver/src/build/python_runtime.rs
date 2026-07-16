@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{fmt::Write as _, path::PathBuf};
 
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{LoweringOptions, PythonTrustPolicy};
@@ -227,10 +227,11 @@ pub(super) fn inject_python_runtime_bootstrap(
     })?;
     let mut with_bootstrap = render_python_runtime_prelude(metadata);
     with_bootstrap.push_str(&main_rs[..insert_at]);
-    with_bootstrap.push_str(&format!(
+    let _ = write!(
+        with_bootstrap,
         "\n    let __sifr_python_runtime_guard = match __sifr_initialize_python_runtime() {{\n        Ok(__sifr_python_runtime_guard) => __sifr_python_runtime_guard,\n        Err(sifr_runtime::python::PythonRuntimeError::ReservedBridgeCollision {{ module }}) => {{\n            eprintln!(\"{collision_code}: reserved Python bridge namespace collision at '{{}}'\", module);\n            std::process::exit(1);\n        }}\n        Err(__sifr_python_runtime_error) => {{\n            eprintln!(\"Sifr Python runtime initialization failed: {{}}\", __sifr_python_runtime_error);\n            std::process::exit(1);\n        }}\n    }};\n",
         collision_code = DiagnosticCode::PYIMP_RESERVED_BRIDGE_COLLISION.code(),
-    ));
+    );
     with_bootstrap.push_str(&main_rs[insert_at..]);
     Ok(with_bootstrap)
 }

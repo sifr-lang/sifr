@@ -8,20 +8,24 @@ use sifr_ir::{
 use sifr_python_ast::{Decorator, Expr, ExprCall, Parameters, Stmt};
 use sifr_type_system::Type;
 
+mod buffer;
 mod callbacks;
 mod callsite;
 mod context;
 mod parameters;
 mod stub_syntax;
+mod target;
 
 pub(in crate::lower) use callsite::{
     callback_call_policies, callback_method_arg_ranges, validate_callback_call_captures,
     CallbackCallPolicy,
 };
 pub(super) use parameters::{parameter_metadata, receiver_is_owned};
+pub(super) use target::{decorator_path, invalid_target, parse_path as parse_target_path};
 
 pub(in crate::lower) use context::{
-    lower_python_context_owned_expr, python_context_borrow_in_owned_expr, python_context_item_kind,
+    lower_python_context_owned_expr, python_context_borrow_in_owned_expr,
+    python_context_borrow_reference, python_context_item_kind,
     reject_python_context_borrow_created_value, reject_python_context_borrow_discard,
     reject_python_context_borrow_storage, try_lower_python_async_with,
     validate_context_class_methods,
@@ -92,6 +96,13 @@ pub(in crate::lower) fn collect_python_interop_declarations(
                 invalid_shape(ctx, "`@python.coroutine(path)` requires `async def`", span);
                 None
             }
+            (PythonInteropDecoratorKind::Buffer, false) => {
+                buffer::parse_declaration(call, parameters, false, ctx)
+            }
+            (PythonInteropDecoratorKind::Buffer, true) => {
+                buffer::invalid(ctx, "`@python.buffer` requires synchronous `def`", span);
+                None
+            }
             _ => {
                 reserved_declaration(ctx, kind, span);
                 None
@@ -152,6 +163,7 @@ pub(in crate::lower) fn collect_python_method_declarations(
                 parameters: parameter_metadata(parameters).into_iter().skip(1).collect(),
                 required_import_root: None,
                 callbacks: Vec::new(),
+                buffer: None,
             });
             continue;
         }
@@ -188,6 +200,22 @@ pub(in crate::lower) fn collect_python_method_declarations(
             }
             (PythonInteropDecoratorKind::Function, false) => {
                 parse_method(call, parameters, kind, PythonInteropEffect::BlockingIo, ctx)
+            }
+            (PythonInteropDecoratorKind::Buffer, false) => {
+                if has_receiver {
+                    buffer::parse_declaration(call, parameters, true, ctx)
+                } else {
+                    buffer::invalid(
+                        ctx,
+                        "`@python.buffer(Self, ...)` requires an opaque instance method",
+                        span,
+                    );
+                    None
+                }
+            }
+            (PythonInteropDecoratorKind::Buffer, true) => {
+                buffer::invalid(ctx, "`@python.buffer` requires synchronous `def`", span);
+                None
             }
             (PythonInteropDecoratorKind::Attribute, false) => {
                 parse_attribute_method(call, parameters, ctx)
@@ -281,6 +309,7 @@ fn parse_method(
         parameters: parameter_metadata(parameters).into_iter().skip(1).collect(),
         required_import_root: None,
         callbacks: Vec::new(),
+        buffer: None,
     })
 }
 
@@ -321,6 +350,7 @@ fn parse_attribute_method(
         parameters,
         required_import_root: None,
         callbacks: Vec::new(),
+        buffer: None,
     })
 }
 
@@ -487,6 +517,7 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
         consumes_receiver: false,
         parameters: Vec::new(),
         callbacks: Vec::new(),
+        buffer: None,
     })
 }
 
@@ -522,6 +553,10 @@ pub(in crate::lower) fn validate_python_interop_signature(
         );
         return;
     };
+    if buffer::validate_signature(declaration, ok_type, error_type, ctx) {
+        validate_direct_parameters(declaration, params, ctx);
+        return;
+    }
     callbacks::validate(declaration, params, ok_type, error_type, ctx);
     if declaration.callbacks.is_empty()
         && !matches!(error_type.resolve_alias(), Type::Class { name, .. } if name == "PythonError")
@@ -555,8 +590,26 @@ pub(in crate::lower) fn validate_python_interop_signature(
             declaration.span,
         );
     }
+    validate_direct_parameters(declaration, params, ctx);
+}
+
+fn validate_direct_parameters(
+    declaration: &PythonInteropDeclaration,
+    params: &[HirParam],
+    ctx: &mut LowerCtx,
+) {
+    let receiver_offset = usize::from(
+        declaration
+            .target
+            .as_ref()
+            .is_some_and(|target| target.segments.as_slice() == ["Self"]),
+    );
     let mut saw_omittable_positional = false;
-    for (param, shape) in params.iter().zip(&declaration.parameters) {
+    for (param, shape) in params
+        .iter()
+        .skip(receiver_offset)
+        .zip(&declaration.parameters)
+    {
         if declaration
             .callbacks
             .iter()
@@ -652,43 +705,7 @@ fn parse_function(
         );
         return None;
     }
-    let mut target = parse_target_path(&call.arguments.args[0], ctx)?;
-    if target.root() == Some("bridge") {
-        let authority = ctx
-            .current_module_name
-            .as_deref()
-            .and_then(|module| ctx.python_bridge_authorities.get(module))
-            .cloned();
-        let Some(authority) = authority else {
-            ctx.error_with_code_at(
-                DiagnosticCode::PYIMP_INVALID_TARGET,
-                "package-local `bridge` target has no bridge source in its resolved package"
-                    .to_string(),
-                target.span,
-            );
-            return None;
-        };
-        let target_module_resolves = (2..target.segments.len()).any(|end| {
-            authority
-                .modules
-                .contains(&target.segments[1..end].join("."))
-        });
-        if !target_module_resolves {
-            ctx.error_with_code_at(
-                DiagnosticCode::PYIMP_INVALID_TARGET,
-                format!(
-                    "invalid Python declaration target: package-local bridge target '{}' has no inventoried module",
-                    target.dotted()
-                ),
-                target.span,
-            );
-            return None;
-        }
-        target.segments.splice(
-            0..1,
-            authority.runtime_package.split('.').map(str::to_string),
-        );
-    }
+    let target = target::parse_callable(&call.arguments.args[0], ctx)?;
     let required_import_root = target
         .root()
         .filter(|root| !matches!(*root, "Self" | "__sifr_bridge__"))
@@ -703,6 +720,7 @@ fn parse_function(
         parameters: parameter_metadata(parameters),
         required_import_root,
         callbacks: Vec::new(),
+        buffer: None,
     })
 }
 
@@ -748,37 +766,6 @@ pub(in crate::lower) fn method_is_context_exit(decorators: &[Decorator]) -> bool
             path.as_slice() == ["python", "context", "exit"]
                 || path.as_slice() == ["python", "context", "aexit"]
         }))
-    })
-}
-
-fn parse_target_path(expr: &Expr, ctx: &mut LowerCtx) -> Option<PythonTargetPath> {
-    let Some(segments) = decorator_path(expr) else {
-        invalid_target(
-            ctx,
-            "target must be a dotted path, not a computed value",
-            expr.range(),
-        );
-        return None;
-    };
-    if segments.len() < 2 || segments.iter().any(String::is_empty) {
-        invalid_target(
-            ctx,
-            "target must contain a root and an attribute",
-            expr.range(),
-        );
-        return None;
-    }
-    if segments[0] == "Self" {
-        invalid_target(
-            ctx,
-            "`Self` is valid only on an opaque Python method",
-            expr.range(),
-        );
-        return None;
-    }
-    Some(PythonTargetPath {
-        segments,
-        span: expr.range(),
     })
 }
 
@@ -834,18 +821,6 @@ fn classify_decorator<'a>(
     Some((kind, call, expr.range()))
 }
 
-fn decorator_path(expr: &Expr) -> Option<Vec<String>> {
-    match expr {
-        Expr::Name(name) => Some(vec![name.id.to_string()]),
-        Expr::Attribute(attribute) => {
-            let mut path = decorator_path(&attribute.value)?;
-            path.push(attribute.attr.to_string());
-            Some(path)
-        }
-        _ => None,
-    }
-}
-
 fn is_ellipsis_stmt(stmt: &Stmt) -> bool {
     matches!(stmt, Stmt::Expr(expr) if matches!(expr.value.as_ref(), Expr::EllipsisLiteral(_)))
 }
@@ -866,14 +841,6 @@ fn decorator_label(kind: PythonInteropDecoratorKind) -> &'static str {
         PythonInteropDecoratorKind::Arrow => "python.arrow",
         PythonInteropDecoratorKind::Dlpack => "python.dlpack",
     }
-}
-
-fn invalid_target(ctx: &mut LowerCtx, reason: &str, span: TextRange) {
-    ctx.error_with_code_at(
-        DiagnosticCode::PYIMP_INVALID_TARGET,
-        format!("invalid Python declaration target: {reason}"),
-        span,
-    );
 }
 
 pub(super) fn invalid_shape(ctx: &mut LowerCtx, reason: &str, span: TextRange) {

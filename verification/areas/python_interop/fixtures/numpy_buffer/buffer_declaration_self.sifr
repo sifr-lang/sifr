@@ -1,0 +1,42 @@
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
+
+
+@python.opaque(type=mmap.mmap, cleanup=close)
+class ByteArrayOwner(NonSend):
+    @python.buffer(Self, access=read, layout=c_contiguous)
+    def view(self) -> Result[python.Buffer[uint8], PythonError]: ...
+
+    @python(Self.close)
+    def close(own self) -> Result[None, PythonError]: ...
+
+
+@python(bridge.buffer_producers.make_owner)
+def make_owner(payload: bytes) -> Result[ByteArrayOwner, PythonError]: ...
+
+
+def consume_owner(own owner: ByteArrayOwner) -> Result[None, PythonError]:
+    try:
+        view: python.Buffer[uint8] = owner.view()
+        first: uint8 = view.read(0)
+        length: int = view.length()
+        released: None = view.release()
+        closed: None = owner.close()
+        if length != 4:
+            raise PythonError("receiver buffer returned the wrong length")
+        return None
+    except PythonError as error:
+        raise error
+
+
+def main() -> Result[None, PythonError]:
+    try:
+        before: ResourceDiagnostics = resource_diagnostics()
+        owner: ByteArrayOwner = make_owner(b"sifr")
+        consumed: None = consume_owner(owner)
+        after: ResourceDiagnostics = resource_diagnostics()
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("receiver buffer acquisition leaked resources")
+        print("sifr-python-interop:buffer:receiver=ok:resources=zero")
+        return None
+    except PythonError as error:
+        raise error

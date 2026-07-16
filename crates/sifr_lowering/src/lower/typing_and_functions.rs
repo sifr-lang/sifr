@@ -8,7 +8,7 @@ use super::workload_annotations;
 use super::{async_effects, flow_diagnostics, simple_expr, str};
 use super::{substitute_type_vars, LowerCtx};
 use crate::hir_nodes::{HirFunction, HirParam, MethodKind};
-use ruff_text_size::Ranged;
+use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Number, Operator, StmtFunctionDef};
 use sifr_type_system::infer::resolve_type_annotation;
@@ -17,5 +17,16 @@ use std::collections::HashMap;
 
 mod signatures_and_effects;
 pub(in crate::lower) use signatures_and_effects::*;
+mod python_buffer_annotations;
+use python_buffer_annotations::resolve_python_buffer_annotation;
+mod async_generator_validation;
+pub(in crate::lower) use async_generator_validation::{
+    reject_declared_async_generator_boundary, reject_unsupported_nested_async_generator,
+};
+mod function_exit_validation;
+use function_exit_validation::{
+    reject_live_join_sets_at_function_exit, reject_live_must_use_bindings_at_function_exit,
+};
 mod annotations_and_function_lowering;
 pub(in crate::lower) use annotations_and_function_lowering::*;
+mod annotation_union_validation;

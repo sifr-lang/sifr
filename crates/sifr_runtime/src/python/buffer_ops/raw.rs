@@ -6,6 +6,7 @@ use pyo3::{Bound, PyErr, Python};
 use std::ffi::CStr;
 use std::marker::PhantomPinned;
 use std::mem::size_of;
+use std::ops::Range;
 use std::pin::Pin;
 use std::ptr;
 use std::slice;
@@ -32,6 +33,12 @@ struct RawBuffer(ffi::Py_buffer, PhantomPinned);
 /// access and release operations attach to the interpreter before touching it.
 pub(super) struct OwnedPyBuffer {
     raw: Pin<Box<RawBuffer>>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(super) enum BufferFootprint {
+    Empty,
+    Direct { ranges: Vec<Range<usize>> },
 }
 
 // SAFETY: This matches PyO3's `PyUntypedBuffer` guarantees. The pointer is
@@ -117,6 +124,57 @@ impl OwnedPyBuffer {
             .zip(usize::try_from(raw.itemsize).ok())
             .and_then(|(len, size)| len.checked_div(size))
             .unwrap_or(0)
+    }
+
+    pub(super) fn footprint(&self, validated: &ValidatedBuffer) -> Result<BufferFootprint, String> {
+        if validated.len_bytes == 0 || validated.shape.contains(&0) {
+            return Ok(BufferFootprint::Empty);
+        }
+        if validated.c_contiguous || validated.f_contiguous {
+            let start = self.raw().buf as usize;
+            let end = start
+                .checked_add(validated.len_bytes)
+                .ok_or_else(|| "buffer footprint address overflows".to_string())?;
+            return Ok(BufferFootprint::Direct {
+                ranges: vec![start..end],
+            });
+        }
+
+        // `PyBuffer_GetPointer` follows both direct strides and indirect
+        // suboffsets, so the resulting ranges describe the actual logical
+        // items rather than an exporter-wide approximation.
+        let item_count = validated.len_bytes / validated.item_size;
+        let mut ranges = Vec::new();
+        ranges
+            .try_reserve_exact(item_count)
+            .map_err(|_| "buffer footprint is too large to track safely".to_string())?;
+        for index in 0..item_count {
+            let start = self
+                .item_ptr(index)
+                .map(|pointer| pointer as usize)
+                .ok_or_else(|| {
+                    "buffer footprint contains an invalid logical address".to_string()
+                })?;
+            let end = start
+                .checked_add(validated.item_size)
+                .ok_or_else(|| "buffer footprint address overflows".to_string())?;
+            ranges.push(start..end);
+        }
+        ranges.sort_unstable_by_key(|range| range.start);
+        let mut merged: Vec<Range<usize>> = Vec::new();
+        merged
+            .try_reserve_exact(ranges.len())
+            .map_err(|_| "buffer footprint is too large to merge safely".to_string())?;
+        for range in ranges {
+            if let Some(previous) = merged.last_mut() {
+                if range.start <= previous.end {
+                    previous.end = previous.end.max(range.end);
+                    continue;
+                }
+            }
+            merged.push(range);
+        }
+        Ok(BufferFootprint::Direct { ranges: merged })
     }
 
     pub(super) fn item_ptr(&self, flat_index: usize) -> Option<*mut core::ffi::c_void> {

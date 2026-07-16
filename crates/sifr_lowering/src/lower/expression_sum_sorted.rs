@@ -6,7 +6,10 @@ use sifr_type_system::Type;
 
 use super::builtin_calls::{callable_builtin_element_type, callable_builtin_list_output_type};
 use super::expression_diagnostics;
-use super::expressions::{callable_signature, lower_expr, lower_lambda_with_context};
+use super::expressions::{
+    callable_signature, consume_owned_value, lower_expr, lower_lambda_with_context,
+};
+use super::type_bounds::supports_total_order_in_context;
 use super::LowerCtx;
 
 fn first_call_keyword_range(call: &ExprCall) -> TextRange {
@@ -21,6 +24,46 @@ fn call_arity_range(call: &ExprCall) -> TextRange {
         .args
         .last()
         .map_or_else(|| call.func.range(), Ranged::range)
+}
+
+fn sorted_preserves_iterable_source(expr: &HirExpr) -> bool {
+    if matches!(expr.ty().resolve_alias(), Type::Iterator(_))
+        || expr.ty().resolve_alias().ownership() == sifr_type_system::OwnershipKind::Copy
+    {
+        return false;
+    }
+    match expr {
+        HirExpr::Name { .. } | HirExpr::FieldAccess { .. } | HirExpr::Index { .. } => true,
+        HirExpr::IfExpr {
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            sorted_preserves_iterable_source(then_expr)
+                && sorted_preserves_iterable_source(else_expr)
+        }
+        _ => false,
+    }
+}
+
+fn sorted_materialization_requires_clone(expr: &HirExpr) -> bool {
+    if matches!(expr.ty().resolve_alias(), Type::Iterator(_))
+        || expr.ty().resolve_alias().ownership() == sifr_type_system::OwnershipKind::Copy
+    {
+        return false;
+    }
+    match expr {
+        HirExpr::Name { .. } | HirExpr::FieldAccess { .. } | HirExpr::Index { .. } => true,
+        HirExpr::IfExpr {
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            sorted_materialization_requires_clone(then_expr)
+                || sorted_materialization_requires_clone(else_expr)
+        }
+        _ => false,
+    }
 }
 
 pub(in crate::lower) fn lower_sum_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
@@ -54,6 +97,14 @@ pub(in crate::lower) fn lower_sum_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
         );
         return None;
     };
+    if super::statement_diagnostics::reject_affine_iterator_builtin(
+        ctx,
+        "sum",
+        &elem_ty,
+        call.arguments.args[0].range(),
+    ) {
+        return None;
+    }
     let result_ty = match elem_ty.resolve_alias() {
         Type::FixedInt(fixed) if fixed.supports_current_int_builtin_widening() => Type::Int,
         _ => elem_ty,
@@ -161,7 +212,30 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
         );
         return None;
     };
+    if elem_ty.contains_affine_resource()
+        && super::statement_diagnostics::reject_affine_iterator_builtin(
+            ctx,
+            "sorted",
+            &elem_ty,
+            iterable_range,
+        )
+    {
+        return None;
+    }
+    let preserves_source = sorted_preserves_iterable_source(&iterable);
+    if sorted_materialization_requires_clone(&iterable) && !elem_ty.supports_derived_clone() {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "sorted() preserves this iterable and must clone its '{}' elements into the result, but that element type is not Clone-capable",
+                elem_ty.display_name()
+            ),
+            iterable_range,
+        );
+        return None;
+    }
     let mut key_arg = None;
+    let mut ordering_ty = elem_ty.clone();
     let mut reverse_arg = HirExpr::BoolLiteral(false);
     if let Some(keyword) = key_keyword {
         let lowered = if matches!(keyword.value, Expr::NoneLiteral(_)) {
@@ -170,7 +244,7 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
             lower_lambda_with_context(&keyword.value, std::slice::from_ref(&elem_ty), ctx)?
         };
         if !matches!(lowered, HirExpr::NoneLiteral) {
-            let Some((param_types, _conventions, _return_ty)) = callable_signature(&lowered) else {
+            let Some((param_types, conventions, return_ty)) = callable_signature(&lowered) else {
                 expression_diagnostics::call_not_callable_or_arity(
                     ctx,
                     "sorted() keyword argument 'key' must be callable".to_string(),
@@ -186,8 +260,55 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
                 );
                 return None;
             }
+            let convention = conventions[0];
+            if convention.is_mut_borrow() {
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    "sorted() key callable cannot require a mutable borrow because sorting compares shared element references"
+                        .to_string(),
+                    keyword.value.range(),
+                );
+                return None;
+            }
+            if param_types[0].resolve_alias() != elem_ty.resolve_alias() {
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "sorted() key callable parameter must accept '{}', got '{}'",
+                        elem_ty.display_name(),
+                        param_types[0].display_name()
+                    ),
+                    keyword.value.range(),
+                );
+                return None;
+            }
+            if convention.is_owned() && !elem_ty.supports_derived_clone() {
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "sorted() key callable takes its '{}' element by ownership, but generated comparison requires a Clone-capable element",
+                        elem_ty.display_name()
+                    ),
+                    keyword.value.range(),
+                );
+                return None;
+            }
+            ordering_ty = return_ty;
         }
         key_arg = Some(lowered);
+    }
+    if !matches!(ordering_ty.resolve_alias(), Type::Float)
+        && !supports_total_order_in_context(&ordering_ty, ctx)
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "sorted() requires an element or key type with generated Rust total Ord support, unavailable for '{}'",
+                ordering_ty.display_name()
+            ),
+            key_keyword.map_or(iterable_range, |keyword| keyword.value.range()),
+        );
+        return None;
     }
     if let Some(keyword) = reverse_keyword {
         let lowered = lower_expr(&keyword.value, ctx)?;
@@ -205,6 +326,9 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
         reverse_arg = lowered;
     }
     let list_ty = callable_builtin_list_output_type(iterable.ty())?;
+    if !preserves_source {
+        consume_owned_value(&iterable, iterable_range, ctx);
+    }
     let mut args = vec![iterable];
     if let Some(key_arg) = key_arg {
         args.push(key_arg);

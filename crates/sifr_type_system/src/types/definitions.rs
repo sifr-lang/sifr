@@ -41,6 +41,8 @@ pub enum Type {
     AsyncIterator(Box<Type>, Box<Type>),
     /// User-defined async generator object.
     AsyncGenerator(Box<Type>, Box<Type>),
+    /// Affine, non-send view acquired through the Python buffer protocol.
+    PythonBuffer(Box<Type>),
     /// List type (`list[T]` in Sifr, `Vec<T>` in Rust)
     List(Box<Type>),
     /// Dictionary type (`dict[K, V]` in Sifr, `HashMap<K, V>` in Rust)
@@ -92,6 +94,13 @@ pub enum Type {
     /// Class instance type with named fields and methods.
     /// `class Point: x: float; y: float` -> `Type::Class { name: "Point", fields: [...], methods: [...] }`
     Class {
+        /// Stable declaration identity used for nominal typing across import
+        /// and re-export paths. `None` means the local declaration name is the
+        /// identity (the common single-module case).
+        identity: Option<String>,
+        /// Concrete generic arguments in declaration order. Empty for a
+        /// non-generic class.
+        type_args: Vec<Type>,
         name: String,
         fields: Vec<(String, Type)>,
         methods: Vec<(String, FunctionType)>,

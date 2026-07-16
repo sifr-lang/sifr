@@ -118,19 +118,26 @@ impl RustEmitter {
                 "failed to coerce iterable local binding value",
             ));
         }
-        let value_ty = if let HirExpr::Name { name, ty } = value {
-            if self.none_widened_local_bindings.contains(name)
-                || matches!(
-                    crate::resolve_alias_type_for_plain_call(ty),
-                    Type::Any | Type::Unknown
-                )
+        let value_ty = match value {
+            HirExpr::QuestionMark { expr, .. } => {
+                if let Type::Result(ok_ty, _) = crate::resolve_alias_type_for_plain_call(expr.ty())
+                {
+                    ok_ty.as_ref()
+                } else {
+                    value.ty()
+                }
+            }
+            HirExpr::Name { name, ty }
+                if self.none_widened_local_bindings.contains(name)
+                    || matches!(
+                        crate::resolve_alias_type_for_plain_call(ty),
+                        Type::Any | Type::Unknown
+                    ) =>
             {
                 self.local_binding_types.get(name).unwrap_or(ty)
-            } else {
-                ty
             }
-        } else {
-            value.ty()
+            HirExpr::Name { ty, .. } => ty,
+            _ => value.ty(),
         };
         if let Some(coerced) = crate::fixed_width_literal_expr_for_target(target_ty, value) {
             return Ok(coerced);
@@ -154,12 +161,13 @@ impl RustEmitter {
                 args: vec![lowered_value],
             });
         }
-        Ok(Self::wrap_option_local_value_for_ir(
-            target_ty,
-            value,
-            value_ty,
-            lowered_value,
-        ))
+        let lowered_value = self.consuming_value_upcast_for_ir(target_ty, value_ty, lowered_value);
+        let lowered_value =
+            Self::wrap_option_local_value_for_ir(target_ty, value, value_ty, lowered_value);
+        if crate::helpers::is_option_type(target_ty) {
+            return Ok(lowered_value);
+        }
+        Ok(lowered_value)
     }
 
     pub(crate) fn force_unwrap_option_expr_for_ir(
@@ -223,6 +231,7 @@ impl RustEmitter {
             | Type::Awaitable(_)
             | Type::AsyncIterator(_, _)
             | Type::AsyncGenerator(_, _)
+            | Type::PythonBuffer(_)
             | Type::Callable(..)
             | Type::AsyncCallable(..)
             | Type::Result(_, _)
@@ -769,5 +778,56 @@ impl RustEmitter {
             ],
             expr: Some(Box::new(RustExpr::Ident(result_ident))),
         }))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn fallible_buffer_value(target_ty: Type) -> HirExpr {
+        HirExpr::QuestionMark {
+            expr: Box::new(HirExpr::Call {
+                func: "make_buffer".to_string(),
+                args: Vec::new(),
+                ty: Type::Result(
+                    Box::new(Type::PythonBuffer(Box::new(Type::FixedInt(
+                        sifr_type_system::FixedIntType::U8,
+                    )))),
+                    Box::new(Type::Str),
+                ),
+            }),
+            ty: target_ty,
+        }
+    }
+
+    #[test]
+    fn fallible_local_binding_coercion_uses_unwrapped_source_type() {
+        let buffer_ty =
+            Type::PythonBuffer(Box::new(Type::FixedInt(sifr_type_system::FixedIntType::U8)));
+        let option_ty = Type::Union(vec![buffer_ty.clone(), Type::None]);
+        let mut emitter = RustEmitter::new();
+        let option_value = fallible_buffer_value(option_ty.clone());
+        let lowered = emitter
+            .coerce_local_value_for_target_type_for_ir(
+                &option_ty,
+                &option_value,
+                RustExpr::Ident("value".to_string()),
+            )
+            .expect("option coercion");
+        assert!(matches!(lowered, RustExpr::FnCall { func, .. }
+            if matches!(func.as_ref(), RustExpr::Path(path) if path == &["Some".to_string()])));
+
+        let union_ty = Type::Union(vec![buffer_ty, Type::Int, Type::None]);
+        let union_value = fallible_buffer_value(union_ty.clone());
+        let lowered = emitter
+            .coerce_local_value_for_target_type_for_ir(
+                &union_ty,
+                &union_value,
+                RustExpr::Ident("value".to_string()),
+            )
+            .expect("union coercion");
+        assert!(matches!(lowered, RustExpr::FnCall { func, .. }
+            if matches!(func.as_ref(), RustExpr::Path(path) if path.last().is_some_and(|variant| variant == "PythonBuffer"))));
     }
 }

@@ -1,24 +1,27 @@
 use super::{
     callable_builtin_element_type, canonicalize_class_surface_type,
+    consume_affine_collection_method_arguments, container_literal_diagnostics,
     invalidate_collection_flow_facts_for_method, is_task_handle_type, lower_expr,
     lower_method_call_args, lower_signature_call_args, lower_task_handle_method_call,
     refine_defaultdict_binding_expr, refine_empty_list_binding_expr, refine_empty_set_binding_expr,
     refine_generic_class_binding_expr, refine_nonempty_method_return_type,
     reject_immutable_parameter_method_mutation, resolve_annotation_expr,
-    resolve_bigint_method_type, resolve_bytes_method_type, resolve_class_method_type,
+    resolve_bigint_method_type, resolve_bytes_method_type, resolve_class_method_on_type,
     resolve_decimal_method_type, resolve_dict_method_type, resolve_enum_method_type,
     resolve_fixed_width_method_type, resolve_list_method_type, resolve_newtype_method_type,
-    resolve_protocol_method_type, resolve_set_method_type, resolve_str_method_type,
-    resolve_tuple_method_type, str, tsc, ClassMethodSurface, DiagnosticCode, Expr, ExprAttribute,
-    ExprCall, ExprDictComp, ExprGenerator, ExprLambda, ExprListComp, ExprNamed, ExprSetComp,
-    FunctionType, HirExpr, HirIteratorOp, HirParam, LowerCtx, ParamConvention, Ranged, TextRange,
-    Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
+    resolve_protocol_method_type, resolve_python_buffer_method_type, resolve_set_method_type,
+    resolve_str_method_type, resolve_tuple_method_type, str, tsc, DiagnosticCode, Expr,
+    ExprAttribute, ExprCall, ExprDictComp, ExprLambda, ExprListComp, ExprSetComp, FunctionType,
+    HirExpr, HirIteratorOp, HirParam, LowerCtx, ParamConvention, Ranged, TextRange, Type,
+    DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
 };
-use crate::lower::python_interop::{
-    callback_method_arg_ranges, reject_python_context_borrow_storage,
+use crate::lower::python_interop::callback_method_arg_ranges;
+use crate::lower::{
+    nested_function_inference::collect_referenced_names_in_expr, ownership_diagnostics,
+    parallel_calls, statement_diagnostics, task_join_set_calls, task_scope_offload_calls,
 };
-use crate::lower::{parallel_calls, task_join_set_calls, task_scope_offload_calls};
 use sifr_ir::CompilerIntrinsicId;
+use std::collections::HashSet;
 pub(in crate::lower) fn lower_method_call(
     attr: &ExprAttribute,
     call: &ExprCall,
@@ -202,6 +205,13 @@ pub(in crate::lower) fn lower_method_call(
         attr.attr.range(),
         ctx,
     )?;
+    consume_affine_collection_method_arguments(
+        &object_ty,
+        &method_name,
+        &args,
+        &method_arg_ranges,
+        ctx,
+    );
     let return_ty = refine_nonempty_method_return_type(
         &object_ty,
         &object,
@@ -277,6 +287,23 @@ pub(in crate::lower) fn lower_method_call(
         }
     }
 
+    if matches!(object_ty.resolve_alias(), Type::PythonBuffer(_))
+        && method_name == "release"
+        && !super::consume_python_buffer_release_receiver(&object, attr.value.range(), ctx)
+    {
+        return None;
+    }
+
+    let receiver_is_current_class = matches!(
+        object_ty.resolve_alias(),
+        Type::Class { name, .. } if ctx.current_class.as_deref() == Some(name)
+    );
+    super::super::generic_method_requirements::record_current_method_dependency(
+        ctx,
+        receiver_is_current_class,
+        &method_name,
+    );
+
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: method_name,
@@ -335,23 +362,12 @@ pub(in crate::lower) fn resolve_method_type(
             resolve_fixed_width_method_type(*fixed, method, args, arg_ranges, method_range, ctx)
         }
         Type::Tuple(_) => resolve_tuple_method_type(method, args, arg_ranges, method_range, ctx),
-        Type::Class {
-            name,
-            fields,
-            methods,
-            ..
-        } => resolve_class_method_type(
-            ClassMethodSurface {
-                name,
-                fields,
-                methods,
-            },
-            method,
-            args,
-            arg_ranges,
-            method_range,
-            ctx,
-        ),
+        Type::PythonBuffer(element) => {
+            resolve_python_buffer_method_type(element, method, args, arg_ranges, method_range, ctx)
+        }
+        class @ Type::Class { .. } => {
+            resolve_class_method_on_type(class, method, args, arg_ranges, method_range, ctx)
+        }
         Type::Protocol { name, methods, .. } => {
             resolve_protocol_method_type(name, methods, method, args, arg_ranges, method_range, ctx)
         }
@@ -385,6 +401,9 @@ pub(in crate::lower) fn lower_lambda_with_context(
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
     if let Expr::Lambda(lambda) = expr {
+        if reject_affine_lambda_captures(lambda, ctx) {
+            return None;
+        }
         let (params, body, body_ty) = ctx.with_pushed_scope(|ctx| {
             let mut params = Vec::new();
             if let Some(ref parameters) = lambda.parameters {
@@ -432,6 +451,9 @@ pub(in crate::lower) fn lower_lambda_with_context(
 }
 
 pub(in crate::lower) fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) -> Option<HirExpr> {
+    if reject_affine_lambda_captures(lambda, ctx) {
+        return None;
+    }
     let (params, body, body_ty) = ctx.with_pushed_scope(|ctx| {
         let mut params = Vec::new();
         if let Some(ref parameters) = lambda.parameters {
@@ -472,6 +494,33 @@ pub(in crate::lower) fn lower_lambda(lambda: &ExprLambda, ctx: &mut LowerCtx) ->
         body: Box::new(body),
         ty: fn_ty,
     })
+}
+
+fn reject_affine_lambda_captures(lambda: &ExprLambda, ctx: &mut LowerCtx) -> bool {
+    let mut referenced = HashSet::new();
+    collect_referenced_names_in_expr(&lambda.body, &mut referenced);
+    if let Some(parameters) = &lambda.parameters {
+        for parameter in &parameters.args {
+            referenced.remove(parameter.parameter.name.as_str());
+        }
+    }
+    let capture = referenced.into_iter().find_map(|name| {
+        ctx.scope
+            .lookup(&name)
+            .filter(|info| info.ty.contains_affine_resource())
+            .map(|info| (name, info.ty.clone()))
+    });
+    let Some((name, ty)) = capture else {
+        return false;
+    };
+    ownership_diagnostics::affine_reusable_callable_capture(
+        ctx,
+        "lambda",
+        &name,
+        &ty,
+        lambda.range(),
+    );
+    true
 }
 
 pub(super) fn reject_invalid_expression_target(
@@ -581,6 +630,9 @@ pub(in crate::lower) fn lower_list_comp(
                 reject_invalid_expression_iteration(ctx, &iter_ty, gen.iter.range());
                 return None;
             };
+            if statement_diagnostics::reject_affine_iteration(ctx, &elem_ty, gen.iter.range()) {
+                return None;
+            }
 
             ctx.scope.push();
             pushed_scopes += 1;
@@ -627,6 +679,10 @@ pub(in crate::lower) fn lower_list_comp(
         // Lower the expression (all generator vars are in scope)
         let expr = lower_expr(&comp.elt, ctx)?;
         let expr_ty = expr.ty().clone();
+        if statement_diagnostics::reject_affine_comprehension_value(ctx, &expr_ty, comp.elt.range())
+        {
+            return None;
+        }
         let result_ty = Type::List(Box::new(expr_ty));
 
         Some(HirExpr::ListComp {
@@ -669,6 +725,9 @@ pub(in crate::lower) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -
                 reject_invalid_expression_iteration(ctx, &iter_ty, gen.iter.range());
                 return None;
             };
+            if statement_diagnostics::reject_affine_iteration(ctx, &elem_ty, gen.iter.range()) {
+                return None;
+            }
             ctx.scope.push();
             pushed_scopes += 1;
             ctx.scope.define(var_name.clone(), elem_ty.clone());
@@ -682,6 +741,16 @@ pub(in crate::lower) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -
         }
         let expr = lower_expr(&comp.elt, ctx)?;
         let expr_ty = expr.ty().clone();
+        if statement_diagnostics::reject_affine_comprehension_value(ctx, &expr_ty, comp.elt.range())
+            || container_literal_diagnostics::reject_unhashable_container_type(
+                ctx,
+                "set comprehension element",
+                &expr_ty,
+                comp.elt.range(),
+            )
+        {
+            return None;
+        }
         let result_ty = Type::Set(Box::new(expr_ty));
         Some(HirExpr::SetComp {
             expr: Box::new(expr),
@@ -749,6 +818,9 @@ pub(in crate::lower) fn lower_dict_comp(
                 reject_invalid_expression_iteration(ctx, &iter_ty, gen.iter.range());
                 return None;
             };
+            if statement_diagnostics::reject_affine_iteration(ctx, &elem_ty, gen.iter.range()) {
+                return None;
+            }
             ctx.scope.push();
             pushed_scopes += 1;
             if var_name.contains(',') {
@@ -778,6 +850,18 @@ pub(in crate::lower) fn lower_dict_comp(
         let val_expr = lower_expr(&comp.value, ctx)?;
         let key_ty = key_expr.ty().clone();
         let val_ty = val_expr.ty().clone();
+        if container_literal_diagnostics::reject_unhashable_container_type(
+            ctx,
+            "dict comprehension key",
+            &key_ty,
+            comp.key.range(),
+        ) || statement_diagnostics::reject_affine_comprehension_value(
+            ctx,
+            &val_ty,
+            comp.value.range(),
+        ) {
+            return None;
+        }
         let result_ty = Type::Dict(Box::new(key_ty), Box::new(val_ty));
         Some(HirExpr::DictComp {
             key_expr: Box::new(key_expr),
@@ -790,110 +874,10 @@ pub(in crate::lower) fn lower_dict_comp(
     result
 }
 
-pub(in crate::lower) fn lower_generator_expr(
-    gen: &ExprGenerator,
-    ctx: &mut LowerCtx,
-) -> Option<HirExpr> {
-    if gen.generators.iter().any(|generator| generator.is_async) {
-        super::async_comprehension_diagnostics::reject_async_generator_expression(ctx, gen.range());
-        return None;
-    }
-
-    // Only support single generator: (expr for var in iter) or (expr for var in iter if cond)
-    if gen.generators.len() != 1 {
-        reject_unsupported_expression_form(
-            ctx,
-            "only single-generator generator expressions are supported",
-            gen.range(),
-        );
-        return None;
-    }
-
-    let comp = &gen.generators[0];
-
-    let var_name = if let Expr::Name(n) = &comp.target {
-        n.id.to_string()
-    } else {
-        reject_invalid_expression_target(
-            ctx,
-            "generator target must be a simple name",
-            comp.target.range(),
-        );
-        return None;
-    };
-    let iter_source_expr = lower_expr(&comp.iter, ctx)?;
-    let iter_ty = iter_source_expr.ty().clone();
-    let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
-        reject_invalid_expression_iteration(ctx, &iter_ty, comp.iter.range());
-        return None;
-    };
-
-    let (expr, expr_ty, filter) = ctx.with_pushed_scope(|ctx| {
-        ctx.scope.define(var_name.clone(), elem_ty.clone());
-        let expr = lower_expr(&gen.elt, ctx)?;
-        let expr_ty = expr.ty().clone();
-        let filter = if comp.ifs.is_empty() {
-            None
-        } else {
-            let first = lower_expr(&comp.ifs[0], ctx)?;
-            if comp.ifs.len() == 1 {
-                Some(Box::new(first))
-            } else {
-                let mut combined = first;
-                for cond in &comp.ifs[1..] {
-                    let next = lower_expr(cond, ctx)?;
-                    combined = HirExpr::BoolOp {
-                        op: "and".to_string(),
-                        values: vec![combined, next],
-                        ty: Type::Bool,
-                    };
-                }
-                Some(Box::new(combined))
-            }
-        };
-        Some((expr, expr_ty, filter))
-    })?;
-    let result_ty = Type::Iterator(Box::new(expr_ty));
-    let iter_expr = lower_iterator_protocol_entry(iter_source_expr, elem_ty);
-    Some(HirExpr::GeneratorExpr {
-        expr: Box::new(expr),
-        var: var_name,
-        iter: Box::new(iter_expr),
-        filter,
-        ty: result_ty,
-    })
-}
-
 pub(super) fn lower_iterator_protocol_entry(iter_source_expr: HirExpr, elem_ty: Type) -> HirExpr {
     HirExpr::IteratorCall {
         op: HirIteratorOp::Iter,
         args: vec![iter_source_expr],
         ty: Type::Iterator(Box::new(elem_ty)),
     }
-}
-
-pub(in crate::lower) fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) -> Option<HirExpr> {
-    let name = if let Expr::Name(n) = named.target.as_ref() {
-        n.id.to_string()
-    } else {
-        reject_invalid_expression_target(
-            ctx,
-            "walrus operator target must be a simple name",
-            named.target.range(),
-        );
-        return None;
-    };
-
-    let value = lower_expr(&named.value, ctx)?;
-    reject_python_context_borrow_storage(&value, named.value.range(), ctx);
-    let ty = value.ty().clone();
-
-    // Define the variable in the current scope
-    ctx.scope.define(name.clone(), ty.clone());
-
-    Some(HirExpr::WalrusExpr {
-        name,
-        value: Box::new(value),
-        ty,
-    })
 }

@@ -1,5 +1,6 @@
 //! Type checking rules for Sifr operators and expressions.
 
+use crate::collection_capabilities::type_check_list_repetition;
 use crate::types::Type;
 use crate::union::{remove_none_from_union, union_contains_none};
 use sifr_diagnostics::DiagnosticCode;
@@ -135,6 +136,20 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
             // List concatenation: list[T] + list[T] -> list[T]
             if let (Type::List(l_elem), Type::List(r_elem)) = (left, right) {
                 if l_elem == r_elem {
+                    if !l_elem.supports_derived_clone() && !l_elem.contains_affine_resource() {
+                        return Err((
+                            DiagnosticCode::TYPE_MISMATCH,
+                            "cannot concatenate lists whose element clone capability is not statically known"
+                                .to_string(),
+                        ));
+                    }
+                    if l_elem.contains_affine_resource() {
+                        return Err((
+                            DiagnosticCode::PYZC_INVALID_DECLARATION,
+                            "cannot concatenate lists containing affine Python buffers because concatenation duplicates their elements"
+                                .to_string(),
+                        ));
+                    }
                     return Ok(Type::List(l_elem.clone()));
                 }
             }
@@ -191,10 +206,10 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
             }
             // List repetition with *
             if op == "*" {
-                if let Type::List(_) = left {
-                    if right == &Type::Int {
-                        return Ok(left.clone());
-                    }
+                if let Some(result) = type_check_list_repetition(left, right)
+                    .or_else(|| type_check_list_repetition(right, left))
+                {
+                    return result;
                 }
                 if left == &Type::Bytes && right == &Type::Int {
                     return Ok(Type::Bytes);
@@ -379,6 +394,22 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> TypeCheckRe
 
     match op {
         "==" | "!=" => {
+            if !left.supports_structural_equality() || !right.supports_structural_equality() {
+                let reason = if left.contains_affine_resource() || right.contains_affine_resource()
+                {
+                    "affine values"
+                } else {
+                    "values without structural equality"
+                };
+                return Err((
+                    DiagnosticCode::TYPE_MISMATCH,
+                    format!(
+                        "cannot compare {reason} '{}' and '{}' with {op}",
+                        left.display_name(),
+                        right.display_name()
+                    ),
+                ));
+            }
             if is_bool_integer_mixed_comparison(left, right) {
                 return Err((
                     DiagnosticCode::INT_BOOL_INTEGER_COMPARISON,
@@ -401,13 +432,13 @@ pub fn type_check_comparison(left: &Type, op: &str, right: &Type) -> TypeCheckRe
                 return Ok(Type::Bool);
             }
             // Allow T|None vs T comparisons (and T vs T|None)
-            if let Type::Union(_) = left {
+            if union_contains_none(left) {
                 let non_none = remove_none_from_union(left);
                 if non_none == *right || type_check_comparison(&non_none, op, right).is_ok() {
                     return Ok(Type::Bool);
                 }
             }
-            if let Type::Union(_) = right {
+            if union_contains_none(right) {
                 let non_none = remove_none_from_union(right);
                 if non_none == *left || type_check_comparison(left, op, &non_none).is_ok() {
                     return Ok(Type::Bool);
@@ -767,25 +798,17 @@ mod tests {
     }
 
     #[test]
-    fn test_equality_allows_container_any_shape_mismatch() {
-        assert!(type_check_comparison(
-            &Type::List(Box::new(Type::Int)),
-            "==",
-            &Type::List(Box::new(Type::Any)),
-        )
-        .is_ok());
-        assert!(type_check_comparison(
-            &Type::List(Box::new(Type::List(Box::new(Type::Int)))),
-            "==",
-            &Type::List(Box::new(Type::List(Box::new(Type::Any)))),
-        )
-        .is_ok());
-        assert!(type_check_comparison(
-            &Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
-            "==",
-            &Type::Dict(Box::new(Type::Str), Box::new(Type::Any)),
-        )
-        .is_ok());
+    fn test_union_member_equality_terminates_for_both_operand_orders() {
+        let int_or_str = Type::Union(vec![Type::Int, Type::Str]);
+
+        assert_eq!(
+            type_check_comparison(&Type::Int, "==", &int_or_str).unwrap(),
+            Type::Bool
+        );
+        assert_eq!(
+            type_check_comparison(&int_or_str, "!=", &Type::Int).unwrap(),
+            Type::Bool
+        );
     }
 
     #[test]

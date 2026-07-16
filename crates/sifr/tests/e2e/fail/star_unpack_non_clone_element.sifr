@@ -1,0 +1,3 @@
+# expect-error: SIFR-TYPE-0005
+def unpack_any(values: list[Any]) -> None:
+    first, *rest = values

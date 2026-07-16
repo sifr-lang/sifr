@@ -1,8 +1,11 @@
+use super::annotation_union_validation::has_conflicting_class_specializations;
 use super::{
     ast_convention_to_param, collect_declared_nonlocals, collect_yield_types,
     first_await_range_in_stmts, first_yield_range_in_stmts, format_type_name,
     function_body_contains_yield, infer_function_return_type, invalid_type_annotation,
     is_valid_error_type, lower_expr, lower_stmts, make_union, ownership_diagnostics,
+    reject_borrowed_affine_generator_params, reject_declared_async_generator_boundary,
+    reject_live_join_sets_at_function_exit, reject_live_must_use_bindings_at_function_exit,
     reserved_integer_width_name, resolve_type_annotation, str, substitute_type_vars, unknown_type,
     workload_annotations, DiagnosticCode, Expr, FunctionType, HashMap, HirFunction, HirParam,
     LowerCtx, MethodKind, Number, Operator, OwnershipKind, ParamConvention, Ranged,
@@ -50,7 +53,17 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
         Expr::BinOp(binop) if matches!(binop.op, Operator::BitOr) => {
             let left = resolve_annotation_expr(&binop.left, ctx);
             let right = resolve_annotation_expr(&binop.right, ctx);
-            make_union(vec![left, right])
+            let union = make_union(vec![left, right]);
+            if has_conflicting_class_specializations(&union) {
+                invalid_type_annotation(
+                    ctx,
+                    "a union cannot contain multiple specializations of the same generic class",
+                    binop.range(),
+                );
+                Type::Any
+            } else {
+                union
+            }
         }
         // Literal string in type position: "GET" | "POST"
         Expr::StringLiteral(s) => Type::LiteralStr(s.value.to_str().to_string()),
@@ -80,11 +93,22 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
         Expr::BooleanLiteral(b) => Type::LiteralBool(b.value),
         Expr::Subscript(sub) => {
             // Handle generic type annotations: list[int], dict[str, int], tuple[int, str]
-            let base_name = if let Expr::Name(n) = sub.value.as_ref() {
-                n.id.to_string()
-            } else {
-                invalid_type_annotation(ctx, "unsupported type annotation base", sub.value.range());
-                return Type::Any;
+            let base_name = match sub.value.as_ref() {
+                Expr::Name(n) => n.id.to_string(),
+                Expr::Attribute(attribute)
+                    if matches!(attribute.value.as_ref(), Expr::Name(root) if root.id.as_str() == "python")
+                        && attribute.attr.as_str() == "Buffer" =>
+                {
+                    return super::resolve_python_buffer_annotation(&sub.slice, ctx);
+                }
+                _ => {
+                    invalid_type_annotation(
+                        ctx,
+                        "unsupported type annotation base",
+                        sub.value.range(),
+                    );
+                    return Type::Any;
+                }
             };
             match base_name.as_str() {
                 "list" => {
@@ -365,6 +389,8 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                         };
                         // Build substitution map from class type params to concrete args
                         if let Type::Class {
+                            ref identity,
+                            ref name,
                             ref fields,
                             ref methods,
                             ref parent_class,
@@ -433,7 +459,12 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                                     })
                                     .collect();
                                 return Type::Class {
-                                    name: base_name.clone(),
+                                    // Keep the identity selected by import resolution. Merged
+                                    // stdlib classes stay canonical, while project-module aliases
+                                    // use their collision-safe local emitted spelling.
+                                    identity: identity.clone(),
+                                    type_args: type_args.clone(),
+                                    name: name.clone(),
                                     fields: subst_fields,
                                     methods: subst_methods,
                                     parent_class: parent_class.clone(),
@@ -615,9 +646,14 @@ pub(in crate::lower) fn lower_function(
         .skips_normal_body_lowering()
     };
 
-    let is_async_generator = !skips_normal_body_lowering
-        && effective_is_async
-        && function_body_contains_yield(&func.body);
+    let has_generator_body =
+        !skips_normal_body_lowering && function_body_contains_yield(&func.body);
+    let is_async_generator = has_generator_body && effective_is_async;
+    if has_generator_body {
+        if let Some(yield_range) = first_yield_range_in_stmts(&func.body) {
+            reject_borrowed_affine_generator_params(func.name.as_str(), &params, yield_range, ctx);
+        }
+    }
     workload_annotations::reject_async_function_annotation(ctx, func, effective_is_async);
     if !skips_normal_body_lowering
         && effective_is_async
@@ -638,6 +674,13 @@ pub(in crate::lower) fn lower_function(
     if !skips_normal_body_lowering && effective_is_async {
         if is_async_generator {
             if let Some(yield_range) = first_yield_range_in_stmts(&func.body) {
+                reject_declared_async_generator_boundary(
+                    func.name.as_str(),
+                    &params,
+                    &ft.return_type,
+                    yield_range,
+                    ctx,
+                );
                 for param in &params {
                     if param.convention.is_mut_borrow()
                         && param.ty.ownership() == OwnershipKind::Move
@@ -752,7 +795,7 @@ pub(in crate::lower) fn lower_function(
         .returns
         .as_ref()
         .map_or_else(|| func.name.range(), |returns| returns.range());
-    let inferred_return_type = if skips_normal_body_lowering {
+    let mut inferred_return_type = if skips_normal_body_lowering {
         ft.return_type.as_ref().clone()
     } else {
         infer_function_return_type(
@@ -770,6 +813,17 @@ pub(in crate::lower) fn lower_function(
             },
         )
     };
+    if func.returns.is_none() && inferred_return_type.has_conflicting_class_specializations() {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "function '{}' cannot infer a union containing multiple specializations of the same generic class",
+                func.name
+            ),
+            func.name.range(),
+        );
+        inferred_return_type = Type::Any;
+    }
     validate_python_interop_signature(&mut python_interop, &params, &inferred_return_type, ctx);
 
     // Collect user-defined decorators (excluding classmethod/staticmethod)
@@ -809,56 +863,6 @@ pub(in crate::lower) fn lower_function(
         compiler_intrinsic,
         type_params,
     })
-}
-
-fn reject_live_join_sets_at_function_exit(func: &StmtFunctionDef, ctx: &mut LowerCtx) {
-    let mut live_sets = ctx
-        .live_join_set_bindings
-        .iter()
-        .filter(|name| !ctx.scope.is_moved(name))
-        .cloned()
-        .collect::<Vec<_>>();
-    live_sets.sort();
-    for name in live_sets {
-        ctx.error_with_code_at(
-            DiagnosticCode::OWN_USE_AFTER_MOVE,
-            format!(
-                "JoinSet binding '{name}' accepted task handles and must be consumed with await {name}.join_all() or await {name}.cancel_all() before function exit"
-            ),
-            func.name.range(),
-        );
-    }
-    ctx.live_join_set_bindings.clear();
-    ctx.join_set_terminal_awaitables.clear();
-}
-
-fn reject_live_must_use_bindings_at_function_exit(func: &StmtFunctionDef, ctx: &mut LowerCtx) {
-    let mut live = ctx
-        .live_must_use_bindings
-        .iter()
-        .filter(|(name, _)| ctx.scope.lookup(name.as_str()).is_some() && !ctx.scope.is_moved(name))
-        .map(|(name, obligation)| (name.clone(), obligation.clone()))
-        .collect::<Vec<_>>();
-    live.sort();
-    for (name, obligation) in live {
-        let requirement = match obligation.kind {
-            crate::lower::must_use_obligations::MustUseObligationKind::ContextOnly => {
-                "must be consumed by `with` before function exit"
-            }
-            crate::lower::must_use_obligations::MustUseObligationKind::AsyncContextOnly => {
-                "must be consumed by `async with` before function exit"
-            }
-            crate::lower::must_use_obligations::MustUseObligationKind::CloseLike => {
-                "must be closed or transferred before function exit"
-            }
-        };
-        ctx.error_with_code_at(
-            DiagnosticCode::OWN_USE_AFTER_MOVE,
-            format!("must-use binding '{name}' owns {obligation} and {requirement}"),
-            func.name.range(),
-        );
-    }
-    ctx.live_must_use_bindings.clear();
 }
 
 pub(super) fn requires_exhaustive_return_annotation(

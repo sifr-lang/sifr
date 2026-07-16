@@ -65,7 +65,7 @@ fn python_context_entered_borrow_cannot_escape_through_walrus() {
 
 #[test]
 fn python_context_entered_borrow_cannot_be_implicitly_discarded() {
-    for expression in ["transaction", "[transaction]", "{transaction}"] {
+    for expression in ["transaction", "[transaction]", "{1: transaction}"] {
         let errors = lower_errors(&format!(
             "{CONTEXT_OPAQUE_PREFIX}\ndef invalid_discard() -> Result[None, PythonError]:\n    try:\n        with make_transaction() as transaction:\n            {expression}\n        return None\n    except PythonError as error:\n        raise error\n"
         ));
@@ -116,16 +116,8 @@ fn python_context_entered_borrow_composite_is_rejected_in_return_and_condition()
 
 #[test]
 fn python_context_entered_borrow_cannot_move_into_collection_method() {
-    for (parameter, statement) in [
-        (
-            "mut stored: list[Transaction]",
-            "stored.append(transaction)",
-        ),
-        ("mut stored: set[Transaction]", "stored.add(transaction)"),
-    ] {
-        let errors = lower_errors(&format!(
-            "{CONTEXT_OPAQUE_PREFIX}\ndef invalid_store({parameter}) -> Result[None, PythonError]:\n    try:\n        with make_transaction() as transaction:\n            {statement}\n        return None\n    except PythonError as error:\n        raise error\n"
-        ));
-        assert!(has_context_borrow_error(&errors), "{errors:?}");
-    }
+    let errors = lower_errors(&format!(
+        "{CONTEXT_OPAQUE_PREFIX}\ndef invalid_store(mut stored: list[Transaction]) -> Result[None, PythonError]:\n    try:\n        with make_transaction() as transaction:\n            stored.append(transaction)\n        return None\n    except PythonError as error:\n        raise error\n"
+    ));
+    assert!(has_context_borrow_error(&errors), "{errors:?}");
 }

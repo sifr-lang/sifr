@@ -134,6 +134,47 @@ pub(super) fn test_sorted_accepts_iterable_keyword_and_key_none() {
 }
 
 #[test]
+pub(super) fn test_sorted_rejects_non_total_order_elements_and_keys() {
+    let sources = [
+        "class Item:\n    value: int\n\ndef order(values: list[Item]) -> list[Item]:\n    return sorted(values)\n",
+        "class Item:\n    value: int\n\ndef item_key(value: int) -> Item:\n    return Item(value)\n\ndef order(values: list[int]) -> list[int]:\n    return sorted(values, key=item_key)\n",
+        "class Item:\n    value: int\n\ndef order(values: list[int]) -> list[int]:\n    return sorted(values, key=lambda value: Item(value))\n",
+    ];
+    for source in sources {
+        let errors = lower_source(source).expect_err("non-Ord sorted input should fail");
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                    && error.message.contains("generated Rust total Ord support")
+            }),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+pub(super) fn test_sorted_aligns_non_clone_elements_with_source_and_key_ownership() {
+    let borrowed_temporary = lower_source(
+        "class Local(NonSend):\n    pass\n\ndef key(value: Local) -> int:\n    return 0\n\ndef order() -> list[Local]:\n    return sorted([Local(), Local()], key=key)\n",
+    );
+    assert!(borrowed_temporary.is_ok(), "{borrowed_temporary:?}");
+
+    for source in [
+        "class Local(NonSend):\n    pass\n\ndef key(value: Local) -> int:\n    return 0\n\ndef order(values: list[Local]) -> list[Local]:\n    return sorted(values, key=key)\n",
+        "class Local(NonSend):\n    pass\n\ndef key(own value: Local) -> int:\n    return 0\n\ndef order() -> list[Local]:\n    return sorted([Local(), Local()], key=key)\n",
+    ] {
+        let errors = lower_source(source).expect_err("non-Clone sorted ownership should fail");
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                    && error.message.contains("Clone-capable")
+            }),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
 pub(super) fn test_sum_keyword_and_type_errors_have_codes() {
     let keyword_source =
         "def main():\n    nums: list[int] = [1, 2]\n    _total = sum(values=nums)\n";

@@ -103,6 +103,9 @@ pub enum RustStmt {
         value: RustExpr,
     },
     Expr(RustExpr),
+    /// Final expression of an expression-valued block, rendered without a
+    /// semicolon so the surrounding block evaluates to this value.
+    TailExpr(RustExpr),
     Assert {
         cond: RustExpr,
         msg: Option<RustExpr>,

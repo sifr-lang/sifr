@@ -403,6 +403,20 @@ mod tests {
 
     use super::*;
 
+    fn error_type(name: &str, fields: Vec<(&str, Type)>) -> Type {
+        Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: name.to_string(),
+            fields: fields
+                .into_iter()
+                .map(|(name, ty)| (name.to_string(), ty))
+                .collect(),
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        }
+    }
+
     #[test]
     fn direct_rust_function_body_calls_cargo_dependency_path() {
         let func = HirFunction {
@@ -636,12 +650,7 @@ mod tests {
 
     #[test]
     fn direct_rust_function_body_maps_result_error_return() {
-        let parse_error = Type::Class {
-            name: "ParseError".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: Vec::new(),
-            parent_class: Some("Error".to_string()),
-        };
+        let parse_error = error_type("ParseError", vec![("message", Type::Str)]);
         let func = HirFunction {
             name: "base64_decode".to_string(),
             params: vec![HirParam {
@@ -679,15 +688,7 @@ mod tests {
 
     #[test]
     fn direct_rust_function_body_maps_io_error_through_kind_helper() {
-        let io_error = Type::Class {
-            name: "IOError".to_string(),
-            fields: vec![
-                ("message".to_string(), Type::Str),
-                ("kind".to_string(), Type::Str),
-            ],
-            methods: Vec::new(),
-            parent_class: Some("Error".to_string()),
-        };
+        let io_error = error_type("IOError", vec![("message", Type::Str), ("kind", Type::Str)]);
         let func = HirFunction {
             name: "read_text".to_string(),
             params: vec![HirParam {
@@ -725,15 +726,10 @@ mod tests {
 
     #[test]
     fn direct_rust_function_body_maps_string_error_fields() {
-        let regex_error = Type::Class {
-            name: "RegexError".to_string(),
-            fields: vec![
-                ("message".to_string(), Type::Str),
-                ("detail".to_string(), Type::Str),
-            ],
-            methods: Vec::new(),
-            parent_class: Some("Error".to_string()),
-        };
+        let regex_error = error_type(
+            "RegexError",
+            vec![("message", Type::Str), ("detail", Type::Str)],
+        );
         let func = HirFunction {
             name: "re_match".to_string(),
             params: vec![HirParam {
@@ -771,16 +767,14 @@ mod tests {
 
     #[test]
     fn direct_rust_function_body_maps_json_decode_error_fields() {
-        let json_decode_error = Type::Class {
-            name: "JSONDecodeError".to_string(),
-            fields: vec![
-                ("message".to_string(), Type::Str),
-                ("line".to_string(), Type::Int),
-                ("column".to_string(), Type::Int),
+        let json_decode_error = error_type(
+            "JSONDecodeError",
+            vec![
+                ("message", Type::Str),
+                ("line", Type::Int),
+                ("column", Type::Int),
             ],
-            methods: Vec::new(),
-            parent_class: Some("Error".to_string()),
-        };
+        );
         let func = HirFunction {
             name: "json_load_tokens".to_string(),
             params: vec![HirParam {

@@ -40,6 +40,8 @@ fn classify_value_category_marks_names_and_fields_as_places() {
         object: Box::new(HirExpr::Name {
             name: "self".to_string(),
             ty: Type::Class {
+                identity: None,
+                type_args: Vec::new(),
                 name: "C".to_string(),
                 fields: vec![("items".to_string(), Type::List(Box::new(Type::Int)))],
                 methods: vec![],
@@ -150,6 +152,8 @@ fn iterator_plan_defaults_to_borrow_for_conservative_unknown_elements() {
     let source = HirExpr::Name {
         name: "unknown".to_string(),
         ty: Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "Unknown".to_string(),
             fields: vec![],
             methods: vec![],
@@ -438,12 +442,16 @@ fn body_contains_return_ignores_nested_function_scope() {
 #[test]
 fn body_contains_field_assign_detects_delegated_self_field_class_mutation() {
     let writer_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
         name: "writer".to_string(),
         fields: vec![],
         methods: vec![],
         parent_class: None,
     };
     let holder_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
         name: "DictWriter".to_string(),
         fields: vec![("_writer".to_string(), writer_ty.clone())],
         methods: vec![],

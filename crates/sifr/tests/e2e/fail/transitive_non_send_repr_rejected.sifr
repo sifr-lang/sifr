@@ -1,0 +1,9 @@
+# expect-error: SIFR-TYPE-0002
+class LocalParent(NonSend):
+    pass
+
+class LocalChild(LocalParent):
+    pass
+
+def describe(value: LocalChild) -> str:
+    return repr(value)

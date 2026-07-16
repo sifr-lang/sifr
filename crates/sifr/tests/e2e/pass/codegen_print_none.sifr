@@ -2,4 +2,10 @@
 
 
 def main():
+    value = None
+    print(None)
+    print(value)
+    assert str(value) == "None"
+    assert repr(value) == "None"
+    assert f"{value}" == "None"
     assert None is None

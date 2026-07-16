@@ -42,6 +42,14 @@ pub(in crate::lower) fn lower_zip_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
             );
             return None;
         };
+        if super::statement_diagnostics::reject_affine_iterator_builtin(
+            ctx,
+            "zip",
+            &elem_ty,
+            arg_expr.range(),
+        ) {
+            return None;
+        }
         elem_types.push(elem_ty);
         args.push(arg);
     }
@@ -72,6 +80,16 @@ pub(in crate::lower) fn lower_any_all_call(
         return None;
     }
     let arg = lower_expr(&call.arguments.args[0], ctx)?;
+    if let Some(element_type) = callable_builtin_element_type(arg.ty()) {
+        if super::statement_diagnostics::reject_affine_iterator_builtin(
+            ctx,
+            builtin_name,
+            &element_type,
+            call.arguments.args[0].range(),
+        ) {
+            return None;
+        }
+    }
     Some(HirExpr::Call {
         func: builtin_name.to_string(),
         args: vec![arg],
@@ -111,6 +129,14 @@ pub(in crate::lower) fn lower_map_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
             );
             return None;
         };
+        if super::statement_diagnostics::reject_affine_iterator_builtin(
+            ctx,
+            "map",
+            &elem_ty,
+            arg_expr.range(),
+        ) {
+            return None;
+        }
         context_types.push(elem_ty);
         iter_args.push(iter_arg);
     }
@@ -138,6 +164,14 @@ pub(in crate::lower) fn lower_map_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
             ),
             range,
         );
+        return None;
+    }
+    if super::statement_diagnostics::reject_affine_iterator_builtin(
+        ctx,
+        "map",
+        &result_elem_ty,
+        call.arguments.args[0].range(),
+    ) {
         return None;
     }
     let result_ty = Type::Iterator(Box::new(result_elem_ty));
@@ -177,6 +211,14 @@ pub(in crate::lower) fn lower_filter_call(call: &ExprCall, ctx: &mut LowerCtx) -
         );
         return None;
     };
+    if super::statement_diagnostics::reject_affine_iterator_builtin(
+        ctx,
+        "filter",
+        &elem_ty,
+        call.arguments.args[1].range(),
+    ) {
+        return None;
+    }
     let func_arg =
         lower_lambda_with_context(&call.arguments.args[0], std::slice::from_ref(&elem_ty), ctx)?;
     let Some((param_types, _conventions, return_ty)) = callable_signature(&func_arg) else {

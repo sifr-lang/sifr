@@ -33,7 +33,7 @@ pub(crate) use simple_dispatch_and_bindings::{
     try_lower_simple_stmt_with_ctx, try_lower_simple_stmt_with_ctx_and_bindings,
 };
 mod try_tuple_flow;
-pub(crate) use try_tuple_flow::lower_tuple_unpack_targets;
+pub(crate) use try_tuple_flow::{lower_tuple_unpack_targets, tuple_unpack_source_is_borrowed};
 use try_tuple_flow::{
     try_lower_simple_star_unpack_stmt, try_lower_simple_stmt_block,
     try_lower_simple_try_except_stmt, try_lower_simple_tuple_unpack_stmt,

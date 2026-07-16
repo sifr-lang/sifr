@@ -128,13 +128,15 @@ pub(super) fn apply_python_interop_metadata(
                         .declarations
                         .iter()
                         .filter(|declaration| {
-                            declaration.declaration.kind
-                                == sifr_ir::PythonInteropDecoratorKind::Function
-                                && declaration
-                                    .declaration
-                                    .target
-                                    .as_ref()
-                                    .is_some_and(|target| target.dotted() == probe.target_path)
+                            matches!(
+                                declaration.declaration.kind,
+                                sifr_ir::PythonInteropDecoratorKind::Function
+                                    | sifr_ir::PythonInteropDecoratorKind::Buffer
+                            ) && declaration
+                                .declaration
+                                .target
+                                .as_ref()
+                                .is_some_and(|target| target.dotted() == probe.target_path)
                         })
                         .find_map(|declaration| validate_signature(declaration, &output.parameters))
                     {
@@ -499,6 +501,7 @@ mod tests {
             },
             required_import_root: Some(root.clone()),
             callbacks: Vec::new(),
+            buffer: None,
         };
         let mut python = PythonInteropPlan::default();
         python.target_probes.push(PythonTargetProbe {

@@ -102,6 +102,8 @@ pub(super) fn lowers_super_call_with_leaf_args() {
         method: "new".to_string(),
         args: vec![HirExpr::IntLiteral(1)],
         ty: Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "Base".to_string(),
             fields: vec![],
             methods: vec![],
@@ -163,6 +165,8 @@ pub(super) fn lowers_hash_builtin_call_with_leaf_arg() {
         args: vec![HirExpr::Name {
             name: "item".to_string(),
             ty: Type::Class {
+                identity: None,
+                type_args: Vec::new(),
                 name: "Color".to_string(),
                 fields: vec![],
                 methods: vec![],
@@ -225,6 +229,8 @@ pub(super) fn lowers_map_builtin_call_with_typed_lambda() {
 #[test]
 pub(super) fn lowers_map_named_callable_with_optional_widening_closure() {
     let node_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
         name: "TreeNode".to_string(),
         fields: vec![],
         methods: vec![],

@@ -7,6 +7,18 @@ use super::{
     DiagnosticCode, Expr, FixedWidthInitializerFit, HirExpr, HirPattern, HirStmt, LowerCtx,
     Pattern, Ranged, Singleton, StmtAnnAssign, StmtAssign, Type,
 };
+use crate::lower::expressions::consume_affine_value_name;
+
+fn matched_class_type(subject_ty: &Type, class_name: &str) -> Option<Type> {
+    match subject_ty.resolve_alias() {
+        Type::Class { name, .. } if name == class_name => Some(subject_ty.resolve_alias().clone()),
+        Type::Union(members) => members
+            .iter()
+            .find_map(|member| matched_class_type(member, class_name)),
+        _ => None,
+    }
+}
+
 pub(in crate::lower) fn lower_pattern(
     pattern: &Pattern,
     subject_ty: &Type,
@@ -104,7 +116,8 @@ pub(in crate::lower) fn lower_pattern(
             };
 
             // Resolve the class type to get field types
-            let class_ty = ctx.class_types.get(&class_name).cloned();
+            let class_ty = matched_class_type(subject_ty, &class_name)
+                .or_else(|| ctx.class_types.get(&class_name).cloned());
 
             let mut fields = Vec::new();
             for kw in &class_pat.arguments.keywords {
@@ -326,23 +339,28 @@ pub(in crate::lower) fn lower_ann_assign(
                 );
                 return None;
             }
-        } else if let Some(expr) = lower_expr(val, ctx) {
-            expr
         } else {
-            let error_taint = failed_initializer_taint(
-                ctx,
-                &name,
-                initializer_range,
-                error_count_before_initializer,
-            )?;
-            seed_binding_after_failed_initializer(
-                ctx,
-                &name,
-                declared_type.clone(),
-                true,
-                error_taint,
-            );
-            return None;
+            ctx.push_contextual_expr_type(initializer_range, declared_type.clone());
+            let lowered = lower_expr(val, ctx);
+            ctx.pop_contextual_expr_type();
+            if let Some(expr) = lowered {
+                expr
+            } else {
+                let error_taint = failed_initializer_taint(
+                    ctx,
+                    &name,
+                    initializer_range,
+                    error_count_before_initializer,
+                )?;
+                seed_binding_after_failed_initializer(
+                    ctx,
+                    &name,
+                    declared_type.clone(),
+                    true,
+                    error_taint,
+                );
+                return None;
+            }
         };
         let expr_ty = expr.ty().clone();
         // Inside try blocks, auto-unwrap Result[T, E] when declared type is T
@@ -424,6 +442,8 @@ pub(in crate::lower) fn lower_ann_assign(
                 ctx.mark_moved_with_flow(src_name);
             }
         }
+    } else {
+        consume_affine_value_name(&value, initializer_range, ctx);
     }
 
     ctx.empty_dict_specializations.remove(&name);
@@ -485,6 +505,28 @@ pub(in crate::lower) fn lower_chained_assign(
         ctx,
     );
     let val_ty = value.ty().clone();
+    if val_ty.contains_affine_resource() {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYZC_INVALID_DECLARATION,
+            "chained assignment is unavailable for values containing affine Python buffers because one affine value cannot initialize multiple owners"
+                .to_string(),
+            assign.range(),
+        );
+        return result;
+    }
+    if val_ty.ownership() == sifr_type_system::OwnershipKind::Move
+        && !val_ty.supports_derived_clone()
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR,
+            format!(
+                "chained assignment requires cloning move-only type '{}', which does not support cloning",
+                val_ty.display_name()
+            ),
+            assign.range(),
+        );
+        return result;
+    }
 
     // Process targets in reverse order (rightmost gets the value first)
     let targets: Vec<_> = assign.targets.iter().collect();

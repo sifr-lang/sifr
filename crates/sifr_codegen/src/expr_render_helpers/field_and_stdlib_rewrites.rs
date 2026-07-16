@@ -689,6 +689,9 @@ impl RustEmitter {
             crate::RustStmt::Expr(expr) => {
                 crate::RustStmt::Expr(self.rewrite_stdlib_constant_idents_in_expr(expr))
             }
+            crate::RustStmt::TailExpr(expr) => {
+                crate::RustStmt::TailExpr(self.rewrite_stdlib_constant_idents_in_expr(expr))
+            }
             crate::RustStmt::Assert { cond, msg } => crate::RustStmt::Assert {
                 cond: self.rewrite_stdlib_constant_idents_in_expr(cond),
                 msg: msg.map(|msg| self.rewrite_stdlib_constant_idents_in_expr(msg)),

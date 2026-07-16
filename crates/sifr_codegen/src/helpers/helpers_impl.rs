@@ -3,6 +3,7 @@ use crate::hir_analysis::{
     queries,
     traversal::{self, TraversalConfig},
 };
+use crate::RustExpr;
 use sifr_ir::{HirExpr, HirFunction, HirModule, HirStmt};
 use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -186,14 +187,7 @@ pub(crate) fn option_projection_method_for_owned_type(ty: &Type) -> &'static str
 /// Check if a type can be auto-formatted with `{}` (implements Display).
 /// Used to determine if auto-generated Display impl is safe for a class field.
 pub(crate) fn is_auto_display_type(ty: &Type) -> bool {
-    match ty {
-        Type::Int | Type::Float | Type::Bool | Type::Str | Type::None => true,
-        Type::LiteralInt(_) | Type::LiteralBool(_) | Type::LiteralStr(_) => true,
-        Type::Class { .. } => true, // Classes get auto-Display too
-        Type::Newtype { .. } => true,
-        // Union types map to Option<T> or Rust enum — neither implements Display
-        _ => false,
-    }
+    ty.supports_display_formatting()
 }
 
 /// Returns the default parameter convention for a type.
@@ -372,6 +366,29 @@ pub(crate) fn find_union_variant(members: &[Type], arg_ty: &Type) -> Option<Stri
     None
 }
 
+pub(crate) fn wrap_union_member_expr(
+    union_ty: &Type,
+    member_ty: &Type,
+    lowered: RustExpr,
+) -> Option<RustExpr> {
+    let Type::Union(members) = crate::resolve_alias_type_for_plain_call(union_ty) else {
+        return None;
+    };
+    if is_option_type(union_ty)
+        || matches!(
+            crate::resolve_alias_type_for_plain_call(member_ty),
+            Type::Union(_)
+        )
+    {
+        return None;
+    }
+    let variant = find_union_variant(members, member_ty)?;
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![union_ty.union_enum_name(), variant])),
+        args: vec![lowered],
+    })
+}
+
 /// Detect `x is None` pattern in a Compare expression. Returns the variable name.
 /// Check if a block of HIR statements always exits (return, break, continue).
 /// Used for early-return narrowing in codegen.
@@ -454,14 +471,6 @@ pub(crate) fn detect_is_none_union_var(expr: &HirExpr) -> Option<IsNoneUnionMatc
         }
     }
     None
-}
-
-pub(crate) fn is_hashable_type_codegen(ty: &Type) -> bool {
-    match ty {
-        Type::Int | Type::Bool | Type::Str | Type::None | Type::BigInt | Type::Decimal => true,
-        Type::Float => false,
-        _ => false,
-    }
 }
 
 /// Check if a module uses the `bigint` type anywhere.
@@ -640,7 +649,7 @@ pub(crate) fn is_self_field_mutating_method_call(expr: &HirExpr) -> bool {
 pub(crate) fn type_contains_typevar(ty: &Type, tv_name: &str) -> bool {
     match ty {
         Type::TypeVar(name) => name == tv_name,
-        Type::List(inner) => type_contains_typevar(inner, tv_name),
+        Type::List(inner) | Type::PythonBuffer(inner) => type_contains_typevar(inner, tv_name),
         Type::Set(inner) => type_contains_typevar(inner, tv_name),
         Type::Dict(key, val) => {
             type_contains_typevar(key, tv_name) || type_contains_typevar(val, tv_name)

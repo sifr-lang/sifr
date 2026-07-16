@@ -58,6 +58,7 @@ fn extract_ipc_schema_type_inner(ty: &Type) -> IpcSchemaType {
                 .collect::<Vec<_>>(),
         },
         Type::Set(_)
+        | Type::PythonBuffer(_)
         | Type::BigInt
         | Type::Decimal
         | Type::BigDecimal
@@ -115,6 +116,8 @@ mod tests {
 
     fn generated_echo_descriptor() -> IpcSchemaDescriptor {
         let request = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "EchoRequest".to_string(),
             fields: vec![
                 ("message".to_string(), Type::Str),
@@ -331,6 +334,8 @@ mod tests {
     #[test]
     fn extracts_unsupported_payload_evidence() {
         let process_reader = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "PipeReader".to_string(),
             fields: vec![("_handle".to_string(), Type::Int)],
             methods: vec![],

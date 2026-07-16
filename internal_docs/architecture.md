@@ -51,7 +51,7 @@
 - Historical references in this architecture document may mention legacy sequencing from earlier planning versions.
 - When numbered-record conflicts exist, follow the project planning index and the matching staged planning files.
 - Network/TLS/URL/HTTP substrate architecture is tracked in [`network_http_architecture.md`](./network_http_architecture.md). The public boundary is `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http`; CPython-shaped networking modules remain unsupported diagnostics or rejected surfaces.
-- Embedded CPython interop is production-grade complete as a separate lane from Rust-backed packages, raw C ABI interop, and CPython source-parity adaptation. The declaration-first continuation now includes synchronous declarations, opaque lifecycle, synchronous and asynchronous contexts, hermetic package-local bridges, one application-owned asyncio loop, typed coroutine declarations with terminally ordered native cancellation, consuming async close, and typed current-thread, foreign-thread, and asyncio callbacks with retained-owner shutdown. Package metadata records Python environment selection, inferred and manual import roots, and root-owned Python trust; the package layer resolves one environment and validates canonical CPython probe JSON before runtime embedding consumes it. Runtime lifecycle, GIL/refcount ownership, blocking/offload, callbacks, resources, and zero-copy rules are documented in [`python_interop_architecture.md`](./python_interop_architecture.md), with verification under [`verification/areas/python_interop/`](../verification/areas/python_interop/).
+- Embedded CPython interop is production-grade complete as a separate lane from Rust-backed packages, raw C ABI interop, and CPython source-parity adaptation. The declaration-first continuation now includes synchronous declarations, opaque lifecycle, synchronous and asynchronous contexts, hermetic package-local bridges, one application-owned asyncio loop, typed coroutine declarations with terminally ordered native cancellation, consuming async close, typed current-thread, foreign-thread, and asyncio callbacks with retained-owner shutdown, and the compiler-known affine non-send `python.Buffer[T]` contract with exclusive writable borrowing and exact-once release. Package metadata records Python environment selection, inferred and manual import roots, and root-owned Python trust; the package layer resolves one environment and validates canonical CPython probe JSON before runtime embedding consumes it. Runtime lifecycle, GIL/refcount ownership, blocking/offload, callbacks, resources, and zero-copy rules are documented in [`python_interop_architecture.md`](./python_interop_architecture.md), with verification under [`verification/areas/python_interop/`](../verification/areas/python_interop/).
 - Rust interop is designed as declaration-level Cargo integration, not a runtime `dlopen` layer or Rust ABI FFI surface. Rust-backed Sifr packages expose normal Sifr declarations annotated with `@rust(...)`, direct Cargo bindings are allowed only for checked bridge-compatible signatures, and package-local/shared bridge crates own adaptation. The source of truth is [`rust_interop_architecture.md`](./rust_interop_architecture.md).
 - The sysroot and stdlib toolchain migration is tracked in [`sifr_sysroot_and_stdlib_architecture.md`](./sifr_sysroot_and_stdlib_architecture.md). The final stdlib boundary is checked Sifr source plus trusted sysroot Rust interop: public APIs live in `stdlib/sifr`, sysroot-private declaration source lives in `stdlib/_sifr`, stdlib behavior lives in `crates/sifr_stdlib`, and reusable runtime substrate lives in `crates/sifr_runtime`. The compiler may emit language scaffolding, Rust interop bridge glue, panic wrappers, exact-int conversions, entrypoint machinery, and runtime call glue; it must not implement stdlib behavior through intrinsic dispatch, pasted preambles, or handwritten Rust literals. Existing compiler-native stdlib glue survives only as exhaustive retained-by-design exceptions in `stdlib_retained_compiler_intrinsics.toml`.
 
@@ -870,12 +870,15 @@ Sifr compiles to Rust, which has deterministic destruction (RAII). This rules de
 
 ### 10. Auto-Derived Traits
 
-Sifr auto-derives common Rust traits for all user-defined types. This is a language rules, not an implementation detail.
+Sifr auto-derives common Rust traits when the complete emitted representation
+supports them. This is a language rule, not an implementation detail.
 
 **Rules:**
 
-- **Always derived (when valid):**
-  - `Debug` -- enables `print()` and `repr()` for all types. Derived for all structs and enums.
+- **Derived when the full representation supports the trait:**
+  - `Debug` -- enables debug formatting. Derived when every field and embedded
+    parent implements `Debug`; `NonSend` resource hierarchies are conservative
+    non-`Debug` unless code generation owns a specific implementation.
   - `Clone` -- enables `.clone()`. Derived when all fields implement `Clone`.
   - `PartialEq` -- enables `==` and `!=`. Derived when all fields implement `PartialEq`.
 - **Conditionally derived:**
@@ -884,10 +887,116 @@ Sifr auto-derives common Rust traits for all user-defined types. This is a langu
 - **Not auto-derived (require explicit opt-in):**
   - `Ord` / `PartialOrd` -- comparison ordering requires explicit definition via `__lt__`, `__le__`, etc.
   - `Copy` -- only Rust-copy scalar primitives such as fixed-width integers, `float`, and `bool` are `Copy`. Source-level `int` is value-semantic but lowers to `SifrInt` and is not Rust `Copy`.
-- **Codegen:** the compiler emits `#[derive(Debug, Clone, PartialEq)]` (and conditionally `Eq`, `Hash`) on all generated structs and enums.
+- **Inheritance:** trait capability includes the entire embedded parent chain,
+  including transitive `NonSend` ancestry, not only fields declared by the
+  immediate child. Auto-generated child formatting prints the embedded parent
+  through that parent's emitted `Display` implementation rather than assuming
+  that the child fields alone describe the Rust representation.
+- **Generic classes:** generic declarations and constructors do not impose
+  unrelated blanket Rust bounds. Conditional derives and generated formatting
+  implementations carry only the bounds required by that trait, while ordinary
+  methods and operator implementations carry bounds only on the type parameters
+  used by their emitted consumers. A clone required for an `A` field therefore
+  does not constrain an unrelated `B`. A specialization is rejected at the Sifr
+  consumer that needs a bound its concrete type argument cannot satisfy. Import
+  aliases retain a collision-safe local declaration identity across the whole
+  imported type graph. Annotations, constructors, exported function and
+  constant signatures, transitive ancestry, emitted Rust types, and
+  specialization metadata therefore continue to refer to the same generic
+  class even when factories and aliases appear in separate import statements.
+  Class types carry their concrete specialization arguments separately from
+  declaration identity, and those arguments are invariant: `Box[int]` is not
+  assignable to `Box[str]`. A concrete annotated initializer may bind an
+  otherwise-unresolved zero-argument generic return, while optional contextual
+  binding matches the non-`None` payload rather than binding a type parameter
+  to the complete union. Code generation renders the explicit class arguments
+  as the authoritative Rust specialization and preserves the annotated local
+  type when Rust needs result-context inference. Every generic class carries a
+  compiler-owned non-owning `PhantomData<fn() -> T>` marker, so even a
+  fieldless declaration has a valid, inhabited Rust representation without
+  inheriting the argument's Rust auto traits. Concrete Clone, Debug, equality,
+  and hash capability checks still include every type argument because Rust's
+  generated derives impose those bounds.
+- **Codegen:** the compiler emits only the derives supported by the complete
+  generated struct, newtype, or union representation.
 - **Enum types (enum type-system work):** enum types unconditionally derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`. All enum values are usable as dict keys and set members.
 - **Auto-init (auto_init):** when a class has no explicit `__init__`, the compiler auto-generates `__init__`, `__eq__` (if all fields are `PartialEq`), and `__str__` (via `Debug`-style formatting). Explicit definitions always take precedence.
-- **Dict key constraint:** types used as `dict` keys must be `Hash + Eq`. The compiler enforces this at the call site and emits a clear error if the type is not hashable.
+- **Hash-consumer constraint:** set elements and dictionary keys must implement
+  `Hash + Eq`. The compiler enforces this for literals, membership, structural
+  equality, `hash()`, and dictionary indexing, assignment, augmented assignment,
+  deletion, and every non-empty `dict(...)` construction path. Specialized
+  generic class instances are rejected at these consumers unless their emitted
+  declaration provides the required traits.
+- **Clone-consumer constraint:** collection operations that emit Rust cloning
+  require recursive `Clone` support before HIR is accepted. This includes list
+  copy/extend, dictionary key/value/item projections, dictionary copy/get/
+  setdefault, and dictionary source construction; affine resources keep their
+  more specific ownership diagnostic.
+- **Comparison-consumer constraint:** list count/contains/remove/index require
+  recursive `PartialEq`. In-place list sort and `sorted()` require total Rust
+  ordering for the element type or callable-key return type used by the emitted
+  sort path. Sifr's broader `Comparable`/`PartialOrd` surface does not by itself
+  certify `slice::sort`; the dedicated floating-point path uses `total_cmp`,
+  while other partial-only orderings are rejected. A `sorted()` key that borrows
+  its element receives the comparator's shared reference without cloning. An
+  owned key requires a Clone-capable element, mutable-borrow keys are rejected,
+  and a preserved source requires Clone-capable elements for result
+  materialization; consumed temporaries and iterators retain their elements.
+  Conditional iterable sources are materialized branch-by-branch so preserved
+  branches remain reusable and consumed branches are tracked exactly. Clone
+  admission is therefore required when any reachable branch is preserved, even
+  when another branch is a consumed temporary.
+- **Generic method specialization constraint:** body-derived Clone, equality,
+  partial-order, arithmetic, remainder, division, and negation requirements are
+  recorded per method and per declared type parameter. Direct `self` calls close
+  those requirements transitively, module exports preserve them, and concrete
+  method and operator calls are rejected during lowering when a specialization
+  cannot implement the Rust traits that code generation will emit. Generated
+  `PartialOrd` implementations execute the declared `__lt__` body and include
+  the exact `PartialEq` supertrait requirements of the class representation or
+  its custom `__eq__`; generic negation is checked and emitted end-to-end.
+- **User-class identity constraint:** nominal identity is the stable declaring
+  module plus class, separate from the local spelling used by generated Rust.
+  Function and constant signatures, class fields, generic templates, and the
+  complete ancestry chain preserve that identity across independent import and
+  re-export paths. Two aliases of one declaration therefore remain compatible
+  even when the class and its factory travel through different facades, while
+  same-named declarations from different modules remain incompatible.
+  Imported-parent ancestry follows aliases to this canonical identity, and
+  generated child structs implement `Deref`/`DerefMut` to their embedded parent
+  so borrowed source-level subclass-to-base compatibility remains executable in
+  Rust. Each direct embedding also implements `From<Child> for Parent`.
+  Ownership-consuming arguments, local coercions, and returns emit one such
+  conversion per ancestor and therefore move, rather than clone or borrow, the
+  embedded parent representation across direct, transitive, imported, and
+  re-exported upcasts. Structural value coercion recursively maps existing
+  union, `Option`, and `Result` representations, and converts a raw payload
+  before wrapping it in a target union. Shared-borrow arguments whose structural
+  representation changes materialize a Clone-capable value first; mutable
+  borrows reject such conversions. Transitive selection prefers the exact
+  canonical ancestor identity; a local-name tail is used only when it identifies
+  one unambiguous ancestor. Recursive ownership, Clone, equality, Hash, Debug,
+  and task-sendability queries key class visits by canonical declaration
+  identity plus concrete specialization, so same-basename imports and generic
+  instantiations cannot mask one another.
+  Generic callable parameters, bounds, and project codegen signatures likewise
+  propagate through direct and multi-hop re-export facades.
+- **Module return inference:** successful unannotated top-level return types are
+  inferred as a mutually visible declaration group before body lowering, making
+  forward calls source-order neutral. The prepass reaches a fixed point sized to
+  the declaration group, preserves inferred unions, and ignores unreachable
+  statement tails. It is diagnostic-neutral; normal reachability-aware body
+  lowering remains authoritative for unresolved or dead return expressions.
+  Generic calls in the prepass bind type variables from their arguments before
+  substituting the return type; unresolved template variables are never
+  accepted as a concrete inferred return.
+- **Formatting-consumer constraint:** `print`, `str`, f-string interpolation,
+  and `repr` validate the exact generated Rust `Display`/`Debug` strategy before
+  accepting HIR. `repr` always requires `Debug`; the other surfaces select the
+  same Display-versus-Debug path as code generation, including option members,
+  recursively derived task/failure/timeout/select runtime wrappers, and the
+  compiler-owned `JoinItemId` display implementation. `None` is emitted with
+  its Python spelling directly rather than requiring Rust unit `Display`.
 
 ### 11. Diagnostic Mapping
 

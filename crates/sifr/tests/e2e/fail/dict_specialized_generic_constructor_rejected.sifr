@@ -1,0 +1,6 @@
+# expect-error: SIFR-TYPE-0002
+class Box[T]:
+    value: T
+
+def copy_pairs(values: list[tuple[Box[int], bool]]) -> dict[Box[int], bool]:
+    return dict(values)

@@ -1,0 +1,50 @@
+class Holder[T]:
+    values: list[T]
+
+    def same(self, other: list[T]) -> bool:
+        return self.values == other
+
+class Math[T]:
+    value: T
+
+    def product(self, other: T) -> T:
+        return self.value * other
+
+class Box[T]:
+    value: T
+
+    def same(self, other: Box[T]) -> bool:
+        return self.value == other.value
+
+    def __eq__(self, other: Box[T]) -> bool:
+        return other.same(self)
+
+class Ordered[A, B]:
+    first: A
+    second: B
+
+    def less(self, other: Ordered[A, B]) -> bool:
+        return self.second < other.second
+
+    def __lt__(self, other: Ordered[A, B]) -> bool:
+        return self.less(other)
+
+class NegBox[T]:
+    value: T
+
+    def negated(self) -> T:
+        return -self.value
+
+    def __neg__(self) -> T:
+        return self.negated()
+
+def main() -> None:
+    holder: Holder[int] = Holder([1, 2])
+    math: Math[int] = Math(6)
+    assert holder.same([1, 2])
+    assert math.product(7) == 42
+    assert Box(9) == Box(9)
+    left: Ordered[str, int] = Ordered("z", 1)
+    right: Ordered[str, int] = Ordered("a", 2)
+    assert left < right
+    assert -NegBox(2) == -2

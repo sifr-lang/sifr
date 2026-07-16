@@ -6,9 +6,9 @@ def collect_list_actual() -> list[bool]:
     actual: list[bool] = []
     items: list[int] = [10, 20, 30, 40]
     popped: int | None = items.pop(1)
-    actual.append(popped is 20 and items == [10, 30, 40])
+    actual.append(popped == 20 and items == [10, 30, 40])
     idx: int | None = items.index(40, start=1, stop=3)
-    actual.append(idx is 2)
+    actual.append(idx == 2)
     return actual
 
 
@@ -60,7 +60,7 @@ def collect_tuple_and_str_actual() -> list[bool]:
     coords: tuple[int, int, int, int] = (3, 1, 3, 5)
     actual.append(coords.count(3) == 2)
     tuple_idx: int | None = coords.index(3, start=1)
-    actual.append(tuple_idx is 2)
+    actual.append(tuple_idx == 2)
     actual.append("a,b,c".split(sep=",", maxsplit=1) == ["a", "b,c"])
     actual.append("sifr".replace("f", "F", count=1) == "siFr")
     return actual

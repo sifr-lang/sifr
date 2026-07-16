@@ -213,6 +213,8 @@ fn worker_error_type(name: &str, ctx: &LowerCtx) -> Type {
         .get(name)
         .cloned()
         .unwrap_or_else(|| Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: name.to_string(),
             fields: Vec::new(),
             methods: Vec::new(),

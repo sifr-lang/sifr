@@ -490,6 +490,7 @@ fn bridge_type_contract(
             unsupported_type(ty, "function values are not Rust bridge-compatible")
         }
         Type::Range
+        | Type::PythonBuffer(_)
         | Type::Iterable(_)
         | Type::Iterator(_)
         | Type::Coroutine(_, _)

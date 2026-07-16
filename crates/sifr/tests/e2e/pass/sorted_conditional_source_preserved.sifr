@@ -1,0 +1,9 @@
+def choose(flag: bool, left: list[int], right: list[int]) -> list[int]:
+    ordered: list[int] = sorted(left if flag else right)
+    assert left == [3, 1]
+    assert right == [4, 2]
+    return ordered
+
+def main() -> None:
+    assert choose(True, [3, 1], [4, 2]) == [1, 3]
+    assert choose(False, [3, 1], [4, 2]) == [2, 4]

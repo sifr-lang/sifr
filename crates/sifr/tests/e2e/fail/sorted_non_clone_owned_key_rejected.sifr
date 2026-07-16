@@ -1,0 +1,8 @@
+class Local(NonSend):
+    pass
+
+def key(own value: Local) -> int:
+    return 0
+
+def order() -> list[Local]:
+    return sorted([Local(), Local()], key=key)

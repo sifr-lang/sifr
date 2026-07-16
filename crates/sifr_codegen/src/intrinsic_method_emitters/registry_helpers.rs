@@ -42,6 +42,7 @@ pub(super) fn registry_uses_debug_display_format(ty: &Type) -> bool {
         | Type::Awaitable(_)
         | Type::AsyncIterator(_, _)
         | Type::AsyncGenerator(_, _)
+        | Type::PythonBuffer(_)
         | Type::Callable(..)
         | Type::AsyncCallable(..)
         | Type::Result(_, _)
@@ -450,6 +451,27 @@ pub(super) fn registry_iterable_to_vec_expr_with_hint(
     expr: &HirExpr,
     element_type_hint: Option<&Type>,
 ) -> Option<RustExpr> {
+    if let HirExpr::IfExpr {
+        condition,
+        then_expr,
+        else_expr,
+        ..
+    } = expr
+    {
+        return Some(RustExpr::If {
+            cond: Box::new(emitter.try_lower_registry_expr_strict(condition)?),
+            then_expr: Box::new(registry_iterable_to_vec_expr_with_hint(
+                emitter,
+                then_expr,
+                element_type_hint,
+            )?),
+            else_expr: Some(Box::new(registry_iterable_to_vec_expr_with_hint(
+                emitter,
+                else_expr,
+                element_type_hint,
+            )?)),
+        });
+    }
     let mut iter_expr =
         registry_iterable_to_owned_iter_expr_with_hint(emitter, expr, element_type_hint)?;
     if matches!(
@@ -567,6 +589,46 @@ pub(super) fn registry_call_callable_with_owned_args(
         };
         lowered_args.push(lowered_arg);
     }
+    Some(RustExpr::FnCall {
+        func: Box::new(callable_expr),
+        args: lowered_args,
+    })
+}
+
+/// Calls a callable from a comparator whose bindings are already shared
+/// references. Shared-borrow parameters receive the reference directly;
+/// owned parameters require an explicit clone of the referent. Mutable-borrow
+/// parameters cannot be satisfied from an immutable sort comparator.
+pub(super) fn registry_call_callable_with_shared_ref_args(
+    emitter: &mut RustEmitter,
+    callable: &HirExpr,
+    arg_bindings: &[(String, Type)],
+) -> Option<RustExpr> {
+    let callable_expr = emitter.try_lower_registry_expr_strict(callable)?;
+    let (param_types, conventions, _) = registry_callable_signature(callable)?;
+    if param_types.len() != arg_bindings.len() {
+        return None;
+    }
+    let lowered_args = arg_bindings
+        .iter()
+        .zip(param_types.iter())
+        .zip(conventions.iter())
+        .map(|(((name, arg_ty), param_ty), convention)| {
+            if convention.is_mut_borrow() || arg_ty != param_ty {
+                return None;
+            }
+            let reference = RustExpr::Ident(name.clone());
+            if convention.is_owned() {
+                Some(RustExpr::MethodCall {
+                    receiver: Box::new(reference),
+                    method: "clone".to_string(),
+                    args: vec![],
+                })
+            } else {
+                Some(reference)
+            }
+        })
+        .collect::<Option<Vec<_>>>()?;
     Some(RustExpr::FnCall {
         func: Box::new(callable_expr),
         args: lowered_args,

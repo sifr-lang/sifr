@@ -288,6 +288,26 @@ fn test_recursive_memoized_nested_helper_infers_deterministic_int_return() {
 }
 
 #[test]
+fn top_level_union_return_validation_is_declaration_order_neutral() {
+    let forward = "def caller() -> int:\n    return later(False)\n\ndef later(flag: bool):\n    if flag:\n        return \"x\"\n    return 1\n";
+    let reverse = "def later(flag: bool):\n    if flag:\n        return \"x\"\n    return 1\n\ndef caller() -> int:\n    return later(False)\n";
+
+    for source in [forward, reverse] {
+        let errors = lower_source(source).expect_err("union return must not satisfy int");
+        assert!(errors.iter().any(|error| {
+            error.message == "return type mismatch: expected 'int', got 'int | str'"
+        }));
+    }
+}
+
+#[test]
+fn top_level_forward_return_inference_reaches_fixed_point_past_eight_calls() {
+    let source = "def f0() -> int:\n    return f1()\n\ndef f1():\n    return f2()\n\ndef f2():\n    return f3()\n\ndef f3():\n    return f4()\n\ndef f4():\n    return f5()\n\ndef f5():\n    return f6()\n\ndef f6():\n    return f7()\n\ndef f7():\n    return f8()\n\ndef f8():\n    return f9()\n\ndef f9():\n    return f10()\n\ndef f10():\n    return f11()\n\ndef f11():\n    return 1\n";
+
+    lower_source(source).expect("module inference should converge for the full declaration group");
+}
+
+#[test]
 fn test_tuple_for_target_inference_specializes_empty_dict_for_membership_index_pattern() {
     let result = lower_source(
         "def first_repeated_bucket(events: list[int], seed: int) -> list[int]:\n    first_seen = {}\n    for index, event in enumerate(events):\n        bucket = event + seed\n        if bucket in first_seen:\n            return [first_seen[bucket], index]\n        first_seen[bucket] = index\n    fallback: list[int] = []\n    return fallback\n",
@@ -297,4 +317,200 @@ fn test_tuple_for_target_inference_specializes_empty_dict_for_membership_index_p
         "tuple-target for-loop inference should specialize dict key/value types early enough for guarded indexed reads: {:?}",
         result.err()
     );
+}
+
+#[test]
+fn top_level_match_return_inference_ignores_unreachable_tail() {
+    let module = lower_source(
+        "def choose(value: int):\n    match value:\n        case 0:\n            return 1\n        case _:\n            return 2\n    return \"unreachable\"\n\ndef consume() -> int:\n    return choose(0)\n",
+    )
+    .expect("exhaustive match returns should determine the inferred return type");
+    let choose = module
+        .functions
+        .iter()
+        .find(|function| function.name == "choose")
+        .expect("choose function missing");
+    assert_eq!(choose.return_type, Type::Int);
+}
+
+#[test]
+fn top_level_try_return_inference_ignores_unreachable_tail() {
+    let module = lower_source(
+        "def choose(flag: bool):\n    try:\n        if flag:\n            raise ValueError(\"bad\")\n        return 1\n    except ValueError:\n        return 2\n    return \"unreachable\"\n\ndef consume() -> int:\n    return choose(False)\n",
+    )
+    .expect("try and handler returns should determine the inferred return type");
+    let choose = module
+        .functions
+        .iter()
+        .find(|function| function.name == "choose")
+        .expect("choose function missing");
+    assert_eq!(choose.return_type, Type::Int);
+}
+
+#[test]
+fn top_level_with_return_inference_ignores_unreachable_tail() {
+    let module = lower_source(
+        "class Resource:\n    def __enter__(self) -> Resource:\n        return self\n\n    def __exit__(self) -> None:\n        pass\n\ndef choose(resource: Resource):\n    with resource:\n        return 1\n    return \"unreachable\"\n\ndef consume(resource: Resource) -> int:\n    return choose(resource)\n",
+    )
+    .expect("with-body returns should determine the inferred return type");
+    let choose = module
+        .functions
+        .iter()
+        .find(|function| function.name == "choose")
+        .expect("choose function missing");
+    assert_eq!(choose.return_type, Type::Int);
+}
+
+#[test]
+fn top_level_match_return_inference_uses_class_pattern_field_types() {
+    let module = lower_source(
+        "class A:\n    x: int\n\nclass B:\n    y: str\n\ndef choose(value: A | B):\n    match value:\n        case A(x=x):\n            return x\n        case B(y=y):\n            return y\n\ndef consume(value: A | B) -> int | str:\n    return choose(value)\n",
+    )
+    .expect("class-pattern captures should retain their declared field types");
+    let choose = module
+        .functions
+        .iter()
+        .find(|function| function.name == "choose")
+        .expect("choose function missing");
+    assert_eq!(choose.return_type, Type::Union(vec![Type::Int, Type::Str]));
+}
+
+#[test]
+fn top_level_with_return_inference_uses_enter_result_type() {
+    let module = lower_source(
+        "class Resource:\n    def __enter__(self) -> int:\n        return 7\n\n    def __exit__(self) -> None:\n        pass\n\ndef choose(resource: Resource):\n    with resource as value:\n        return value\n\ndef consume(resource: Resource) -> int:\n    return choose(resource)\n",
+    )
+    .expect("with binding inference should use the __enter__ return type");
+    let choose = module
+        .functions
+        .iter()
+        .find(|function| function.name == "choose")
+        .expect("choose function missing");
+    assert_eq!(choose.return_type, Type::Int);
+}
+
+#[test]
+fn top_level_match_return_inference_specializes_generic_pattern_fields() {
+    let module = lower_source(
+        "class Box[T]:\n    value: T\n\ndef choose(box: Box[int]):\n    match box:\n        case Box(value=x):\n            return x\n\ndef consume(box: Box[int]) -> int:\n    return choose(box)\n",
+    )
+    .expect("generic class-pattern captures should use the subject specialization");
+    let choose = module
+        .functions
+        .iter()
+        .find(|function| function.name == "choose")
+        .expect("choose function missing");
+    assert_eq!(choose.return_type, Type::Int);
+}
+
+#[test]
+fn top_level_match_return_inference_specializes_nested_generic_patterns() {
+    let module = lower_source(
+        "class Inner[T]:\n    value: T\n\nclass Outer[T]:\n    inner: Inner[T]\n\ndef choose(outer: Outer[str]):\n    match outer:\n        case Outer(inner=Inner(value=x)):\n            return x\n\ndef consume(outer: Outer[str]) -> str:\n    return choose(outer)\n",
+    )
+    .expect("nested generic class patterns should retain concrete field types");
+    let choose = module
+        .functions
+        .iter()
+        .find(|function| function.name == "choose")
+        .expect("choose function missing");
+    assert_eq!(choose.return_type, Type::Str);
+}
+
+#[test]
+fn class_pattern_rejects_union_of_same_generic_class_specializations() {
+    let errors = lower_source(
+        "class Box[T]:\n    value: T\n\ndef choose(box: Box[int] | Box[str]):\n    match box:\n        case Box(value=x):\n            return x\n",
+    )
+    .expect_err("same-class specialization unions must be rejected before code generation");
+    assert!(errors.iter().any(|error| {
+        error
+            .message
+            .contains("union cannot contain multiple specializations")
+    }));
+}
+
+#[test]
+fn nested_class_pattern_rejects_union_of_same_generic_class_specializations() {
+    let errors = lower_source(
+        "class Inner[T]:\n    value: T\n\nclass Outer[T]:\n    inner: Inner[T]\n\ndef choose(outer: Outer[int] | Outer[str]):\n    match outer:\n        case Outer(inner=Inner(value=x)):\n            return x\n",
+    )
+    .expect_err("nested same-class specialization unions must be rejected before code generation");
+    assert!(errors.iter().any(|error| {
+        error
+            .message
+            .contains("union cannot contain multiple specializations")
+    }));
+}
+
+#[test]
+fn generic_class_specializations_are_invariant_for_calls() {
+    let errors = lower_source(
+        "class Box[T]:\n    value: T\n\ndef consume(value: Box[str]) -> None:\n    pass\n\ndef main():\n    value: Box[int] = Box(1)\n    consume(value)\n",
+    )
+    .expect_err("a concrete generic specialization must not cross another specialization");
+    assert!(errors.iter().any(|error| {
+        error.message.contains("expected 'Box', got 'Box'")
+            || error
+                .message
+                .contains("expected 'Box[str]', got 'Box[int]'")
+    }));
+}
+
+#[test]
+fn inferred_return_rejects_conflicting_generic_class_specializations() {
+    let errors = lower_source(
+        "class Box[T]:\n    value: T\n\ndef int_box() -> Box[int]:\n    return Box(1)\n\ndef str_box() -> Box[str]:\n    return Box(\"x\")\n\ndef choose(flag: bool):\n    if flag:\n        return int_box()\n    return str_box()\n",
+    )
+    .expect_err("inference must reject repeated specializations before HIR/codegen");
+    assert!(errors.iter().any(|error| {
+        error
+            .message
+            .contains("multiple specializations of the same generic class")
+            || error
+                .message
+                .contains("return type could not be inferred deterministically")
+    }));
+}
+
+#[test]
+fn inferred_generic_constructor_return_is_specialized() {
+    let module = lower_source(
+        "class Box[T]:\n    value: T\n\ndef make():\n    return Box(1)\n\ndef main():\n    make()\n",
+    )
+    .expect("generic constructor inference should substitute its concrete argument");
+    let make = module
+        .functions
+        .iter()
+        .find(|function| function.name == "make")
+        .expect("make function missing");
+    let Type::Class { fields, .. } = &make.return_type else {
+        panic!(
+            "make should return a specialized class: {:?}",
+            make.return_type
+        );
+    };
+    assert_eq!(fields, &vec![("value".to_string(), Type::Int)]);
+}
+
+#[test]
+fn inferred_generic_function_return_is_specialized() {
+    let module = lower_source(
+        "def identity[T](value: T) -> T:\n    return value\n\ndef make():\n    return identity(1)\n\ndef main():\n    make()\n",
+    )
+    .expect("generic function inference should substitute its concrete argument");
+    let make = module
+        .functions
+        .iter()
+        .find(|function| function.name == "make")
+        .expect("make function missing");
+    assert_eq!(make.return_type, Type::Int);
+}
+
+#[test]
+fn annotated_initializer_context_specializes_zero_argument_generic_return() {
+    lower_source(
+        "class Marker[T]:\n    pass\n\ndef make[T]() -> Marker[T]:\n    return Marker()\n\ndef main():\n    marker: Marker[int] = make()\n",
+    )
+    .expect("the declared initializer type should specialize an otherwise unbound return type");
 }

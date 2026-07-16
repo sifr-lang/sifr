@@ -1,9 +1,9 @@
 use super::{
     collect_enum_variants, function_body_contains_yield, get_newtype_inner, get_parent_class,
     has_decorator, is_enum_class, is_operator_dunder, is_protocol_class, lower_stmts,
-    missing_method_param_annotation, resolve_annotation_expr, Expr, FunctionType, HirClass,
-    HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt, HirTupleTargetBinding,
-    LowerCtx, MethodKind, ParamConvention, Ranged, Stmt, StmtClassDef, Type,
+    missing_method_param_annotation, resolve_annotation_expr, unsupported_class_declaration, Expr,
+    FunctionType, HirClass, HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt,
+    HirTupleTargetBinding, LowerCtx, MethodKind, ParamConvention, Ranged, Stmt, StmtClassDef, Type,
 };
 use crate::lower::python_interop::{
     classify_python_interop_stub_body, collect_python_method_declarations,
@@ -146,6 +146,7 @@ pub(in crate::lower) fn lower_class(
                 );
 
                 let previous_owner = ctx.current_owner.replace(class_name.clone());
+                let previous_method = ctx.current_method.replace(method_name.clone());
                 let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
                 let previous_async = ctx.current_function_is_async;
                 let previous_async_generator = ctx.current_function_is_async_generator;
@@ -162,6 +163,7 @@ pub(in crate::lower) fn lower_class(
                 ctx.current_function_is_async = previous_async;
                 ctx.current_function_is_async_generator = previous_async_generator;
                 ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
+                ctx.current_method = previous_method;
                 ctx.current_owner = previous_owner;
                 ctx.scope.pop();
 
@@ -272,6 +274,7 @@ pub(in crate::lower) fn lower_class(
                 );
 
                 let previous_owner = ctx.current_owner.replace(class_name.clone());
+                let previous_method = ctx.current_method.replace(method_name.clone());
                 let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
                 let previous_async = ctx.current_function_is_async;
                 let previous_async_generator = ctx.current_function_is_async_generator;
@@ -288,6 +291,7 @@ pub(in crate::lower) fn lower_class(
                 ctx.current_function_is_async = previous_async;
                 ctx.current_function_is_async_generator = previous_async_generator;
                 ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
+                ctx.current_method = previous_method;
                 ctx.current_owner = previous_owner;
                 ctx.scope.pop();
                 ctx.current_class = None;
@@ -493,6 +497,7 @@ pub(in crate::lower) fn lower_class(
 
             // Lower method body
             let previous_owner = ctx.current_owner.replace(class_name.clone());
+            let previous_method = ctx.current_method.replace(method_name.clone());
             let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
             let previous_async = ctx.current_function_is_async;
             let previous_async_generator = ctx.current_function_is_async_generator;
@@ -534,6 +539,7 @@ pub(in crate::lower) fn lower_class(
             ctx.current_function_is_async = previous_async;
             ctx.current_function_is_async_generator = previous_async_generator;
             ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
+            ctx.current_method = previous_method;
             ctx.current_owner = previous_owner;
 
             // Determine receiver mutability: if any statement assigns to self.field, it's &mut self
@@ -684,6 +690,19 @@ pub(in crate::lower) fn lower_class(
     }
 
     let is_error = ctx.error_types.contains(&class_name);
+    if is_error
+        && !all_fields
+            .iter()
+            .all(|(_, field)| field.supports_debug_formatting())
+    {
+        unsupported_class_declaration(
+            ctx,
+            &class_name,
+            "error fields must implement Debug so the generated Rust error satisfies std::error::Error",
+            class_def.range,
+        );
+        return None;
+    }
 
     // Check which protocols this class satisfies
     let mut implements_protocols = Vec::new();
@@ -755,14 +774,7 @@ pub(in crate::lower) fn lower_class(
 
 /// Check if a type is hashable (can derive Hash + Eq).
 pub(in crate::lower) fn is_hashable_type(ty: &Type) -> bool {
-    match ty {
-        Type::Int | Type::Bool | Type::Str | Type::None | Type::BigInt => true,
-        Type::Float => false, // f64 doesn't implement Hash
-        Type::LiteralInt(_) | Type::LiteralBool(_) | Type::LiteralStr(_) => true,
-        Type::Tuple(elems) => elems.iter().all(is_hashable_type),
-        Type::Class { fields, .. } => fields.iter().all(|(_, t)| is_hashable_type(t)),
-        _ => false,
-    }
+    ty.supports_hash_key()
 }
 
 /// Check if a method body contains any field assignments (self.field = ...).

@@ -1,0 +1,6 @@
+# expect-error: SIFR-PROTO-0004
+class Box[T]:
+    value: T
+
+def hash_box(value: Box[int]) -> int:
+    return hash(value)

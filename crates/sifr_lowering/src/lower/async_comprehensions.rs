@@ -54,6 +54,10 @@ pub(in crate::lower) fn lower_list_comp(
         );
         return Some(None);
     };
+    if super::statement_diagnostics::reject_affine_iteration(ctx, &elem_ty, generator.iter.range())
+    {
+        return Some(None);
+    }
     let return_type = ctx
         .current_function_return_type
         .clone()
@@ -91,6 +95,13 @@ pub(in crate::lower) fn lower_list_comp(
         };
         let expr = lower_expr(&comp.elt, ctx)?;
         let expr_ty = expr.ty().clone();
+        if super::statement_diagnostics::reject_affine_comprehension_value(
+            ctx,
+            &expr_ty,
+            comp.elt.range(),
+        ) {
+            return None;
+        }
         Some(HirExpr::ListComp {
             expr: Box::new(expr),
             generators: vec![(var_name, iter_source_expr, filter)],
@@ -114,14 +125,29 @@ pub(in crate::lower) fn lower_set_comp(
         return Some(None);
     };
 
-    ctx.scope.push();
     let elem_ty = super::async_for::async_iterator_parts(iter_source_expr.ty())
         .map(|(elem_ty, _)| elem_ty)
         .unwrap_or(Type::Any);
+    if super::statement_diagnostics::reject_affine_iteration(ctx, &elem_ty, comp.range()) {
+        return Some(None);
+    }
+    ctx.scope.push();
     ctx.scope.define(var_name.clone(), elem_ty);
     let result = (|| {
         let expr = lower_expr(&comp.elt, ctx)?;
         let expr_ty = expr.ty().clone();
+        if super::statement_diagnostics::reject_affine_comprehension_value(
+            ctx,
+            &expr_ty,
+            comp.elt.range(),
+        ) || super::container_literal_diagnostics::reject_unhashable_container_type(
+            ctx,
+            "set comprehension element",
+            &expr_ty,
+            comp.elt.range(),
+        ) {
+            return None;
+        }
         Some(HirExpr::SetComp {
             expr: Box::new(expr),
             generators: vec![(var_name, iter_source_expr, filter)],
@@ -145,16 +171,31 @@ pub(in crate::lower) fn lower_dict_comp(
         return Some(None);
     };
 
-    ctx.scope.push();
     let elem_ty = super::async_for::async_iterator_parts(iter_source_expr.ty())
         .map(|(elem_ty, _)| elem_ty)
         .unwrap_or(Type::Any);
+    if super::statement_diagnostics::reject_affine_iteration(ctx, &elem_ty, comp.range()) {
+        return Some(None);
+    }
+    ctx.scope.push();
     ctx.scope.define(var_name.clone(), elem_ty);
     let result = (|| {
         let key_expr = lower_expr(&comp.key, ctx)?;
         let val_expr = lower_expr(&comp.value, ctx)?;
         let key_ty = key_expr.ty().clone();
         let val_ty = val_expr.ty().clone();
+        if super::container_literal_diagnostics::reject_unhashable_container_type(
+            ctx,
+            "dict comprehension key",
+            &key_ty,
+            comp.key.range(),
+        ) || super::statement_diagnostics::reject_affine_comprehension_value(
+            ctx,
+            &val_ty,
+            comp.value.range(),
+        ) {
+            return None;
+        }
         Some(HirExpr::DictComp {
             key_expr: Box::new(key_expr),
             val_expr: Box::new(val_expr),

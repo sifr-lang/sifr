@@ -1,0 +1,10 @@
+# expect-error: SIFR-TYPE-0005
+class CallbackHolder:
+    callback: Callable[[int], int]
+
+def identity(value: int) -> int:
+    return value
+
+def duplicate() -> None:
+    holder: CallbackHolder = CallbackHolder(identity)
+    first = second = holder

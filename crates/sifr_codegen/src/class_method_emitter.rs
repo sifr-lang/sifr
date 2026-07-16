@@ -126,6 +126,29 @@ impl RustEmitter {
         calls
     }
 
+    pub(crate) fn collect_direct_class_method_calls(
+        stmts: &[HirStmt],
+        class_name: &str,
+    ) -> HashSet<String> {
+        let mut calls = HashSet::new();
+        let mut on_stmt = |_stmt: &HirStmt| {};
+        let mut on_expr = |expr: &HirExpr| {
+            if let HirExpr::MethodCall { object, method, .. } = expr {
+                if matches!(object.ty().resolve_alias(), Type::Class { name, .. } if name == class_name)
+                {
+                    calls.insert(method.clone());
+                }
+            }
+        };
+        traversal::walk_stmts(
+            stmts,
+            TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        );
+        calls
+    }
+
     pub(crate) fn is_some_call_expr(expr: &RustExpr) -> bool {
         matches!(
             expr,
@@ -457,6 +480,8 @@ impl RustEmitter {
                 ));
             }
 
+            Self::append_class_phantom_initializer(class, &mut fields);
+
             if class.name == "PythonError" {
                 fields.push((
                     "__sifr_python_error".to_string(),
@@ -574,6 +599,8 @@ impl RustEmitter {
             };
             fields.push((field_name.clone(), value));
         }
+
+        Self::append_class_phantom_initializer(class, &mut fields);
 
         if class.name == "PythonError" {
             fields.push((

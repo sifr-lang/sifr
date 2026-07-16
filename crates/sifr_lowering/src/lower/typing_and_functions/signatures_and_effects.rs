@@ -11,6 +11,7 @@ use sifr_type_system::{
 use super::simple_expr::lower_expr_simple;
 use super::workload_annotations;
 use super::LowerCtx;
+use crate::hir_nodes::HirParam;
 
 pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     // print() accepts any single argument and returns None
@@ -28,6 +29,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     {
         let msg_fields = vec![("message".to_string(), Type::Str)];
         let class_ty = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "Error".to_string(),
             fields: msg_fields.clone(),
             methods: vec![],
@@ -47,6 +50,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     // from it, or structurally contain fields that do, cannot cross `scope.spawn`.
     {
         let class_ty = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "NonSend".to_string(),
             fields: vec![],
             methods: vec![],
@@ -63,6 +68,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("kind".to_string(), Type::Str),
         ];
         let class_ty = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "IOError".to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -93,6 +100,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     for &error_name in &other_mid_level_errors {
         let fields = vec![("message".to_string(), Type::Str)];
         let class_ty = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: error_name.to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -108,6 +117,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     }
     {
         let class_ty = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "CancellationError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: vec![],
@@ -122,6 +133,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     }
     {
         let class_ty = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "AsyncExitCause".to_string(),
             fields: vec![],
             methods: vec![],
@@ -139,6 +152,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("profile".to_string(), Type::Str),
         ];
         let class_ty = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "JsonIntegerRangeError".to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -158,6 +173,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("limit".to_string(), Type::Int),
         ];
         let class_ty = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "JsonLimitError".to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -184,6 +201,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     for &error_name in &io_subclasses {
         let fields = vec![("message".to_string(), Type::Str)];
         let class_ty = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: error_name.to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -207,6 +226,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("column".to_string(), Type::Int),
         ];
         let class_ty = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "JSONDecodeError".to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -230,6 +251,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("column".to_string(), Type::Int),
         ];
         let class_ty = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "TOMLDecodeError".to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -251,6 +274,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             ("detail".to_string(), Type::Str),
         ];
         let class_ty = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "RegexError".to_string(),
             fields: fields.clone(),
             methods: vec![],
@@ -373,7 +398,7 @@ pub(super) fn first_await_range_in_stmts(stmts: &[Stmt]) -> Option<TextRange> {
     stmts.iter().find_map(first_await_range_in_stmt)
 }
 
-pub(super) fn first_yield_range_in_stmts(stmts: &[Stmt]) -> Option<TextRange> {
+pub(in crate::lower) fn first_yield_range_in_stmts(stmts: &[Stmt]) -> Option<TextRange> {
     stmts.iter().find_map(first_yield_range_in_stmt)
 }
 
@@ -383,6 +408,26 @@ pub(in crate::lower) fn function_body_contains_yield(stmts: &[Stmt]) -> bool {
         sifr_python_ast::visitor::Visitor::visit_stmt(&mut visitor, stmt);
     }
     visitor.is_generator
+}
+
+pub(super) fn reject_borrowed_affine_generator_params(
+    function_name: &str,
+    params: &[HirParam],
+    yield_range: TextRange,
+    ctx: &mut LowerCtx,
+) {
+    for param in params {
+        if param.convention.is_borrowed() && param.ty.contains_affine_resource() {
+            ctx.error_with_code_at(
+                DiagnosticCode::PYZC_INVALID_DECLARATION,
+                format!(
+                    "generator function '{function_name}' cannot borrow affine Python buffer parameter '{}'; lazy generator ownership would require cloning the resource, so declare the parameter as owned",
+                    param.name
+                ),
+                yield_range,
+            );
+        }
+    }
 }
 
 pub(super) fn first_await_range_in_stmt(stmt: &Stmt) -> Option<TextRange> {

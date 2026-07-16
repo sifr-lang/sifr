@@ -40,7 +40,7 @@ pub(in crate::lower) fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
             collect_type_vars(ok, vars);
             collect_type_vars(err, vars);
         }
-        Type::Failure(err) => collect_type_vars(err, vars),
+        Type::Failure(err) | Type::PythonBuffer(err) => collect_type_vars(err, vars),
         Type::TimeoutResult(err) => collect_type_vars(err, vars),
         Type::Awaitable(result) => collect_type_vars(result, vars),
         Type::Alias {
@@ -58,8 +58,14 @@ pub(in crate::lower) fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
             collect_type_vars(&ft.return_type, vars);
         }
         Type::Class {
-            fields, methods, ..
+            type_args,
+            fields,
+            methods,
+            ..
         } => {
+            for type_arg in type_args {
+                collect_type_vars(type_arg, vars);
+            }
             for (_, field_ty) in fields {
                 collect_type_vars(field_ty, vars);
             }
@@ -77,5 +83,26 @@ pub(in crate::lower) fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
             collect_type_vars(ret, vars);
         }
         _ => {}
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::collect_type_vars;
+    use sifr_type_system::Type;
+
+    #[test]
+    fn collects_typevars_from_nominal_class_arguments() {
+        let ty = Type::Class {
+            identity: Some("pkg.Node".to_string()),
+            type_args: vec![Type::TypeVar("T".to_string())],
+            name: "Node".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let mut vars = Vec::new();
+        collect_type_vars(&ty, &mut vars);
+        assert_eq!(vars, vec!["T".to_string()]);
     }
 }

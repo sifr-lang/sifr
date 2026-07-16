@@ -58,6 +58,8 @@ macro_rules! stmt_expr_await_and_registry {
                 | HirExpr::Compare { .. }
                 | HirExpr::BoolOp { .. }
                 | HirExpr::Slice { .. }
+                | HirExpr::OkWrap { .. }
+                | HirExpr::ErrWrap { .. }
         );
         if !skip_leaf_registry_lowering {
             if let Some(lowered) = $emitter.try_lower_registry_expr_result($expr)? {
@@ -381,7 +383,10 @@ macro_rules! stmt_expr_literals_and_calls {
                 let Some(mut lowered_element) = $emitter.lower_stmt_expr_for_ir(element)? else {
                     return Ok(None);
                 };
-                lowered_element = Self::clone_non_copy_name_expr_for_ir(element, lowered_element);
+                if !element.ty().contains_affine_resource() {
+                    lowered_element =
+                        Self::clone_non_copy_name_expr_for_ir(element, lowered_element);
+                }
                 if matches!(list_ty, Type::Bytes) {
                     lowered_element = crate::RustExpr::Cast {
                         expr: Box::new(lowered_element),
@@ -476,10 +481,11 @@ macro_rules! stmt_expr_literals_and_calls {
                 let Some(lowered_element) = $emitter.lower_stmt_expr_for_ir(element)? else {
                     return Ok(None);
                 };
-                lowered_elements.push(Self::clone_non_copy_name_expr_for_ir(
-                    element,
-                    lowered_element,
-                ));
+                lowered_elements.push(if element.ty().contains_affine_resource() {
+                    lowered_element
+                } else {
+                    Self::clone_non_copy_name_expr_for_ir(element, lowered_element)
+                });
             }
             if crate::homogeneous_large_tuple_backing_array(ty).is_some() {
                 return Ok(Some(crate::RustExpr::Array(lowered_elements)));

@@ -1,5 +1,7 @@
 mod object_bridge;
 pub use object_bridge::*;
+mod buffer;
+pub use buffer::*;
 
 use sifr_runtime::{
     interop::{Handle, SifrIntBridge},

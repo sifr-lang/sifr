@@ -590,7 +590,8 @@ fn test_generate_rust_multi_assembles_single_rust_file() {
         .expect("generate_project docs should exist");
     let generate_block = &lib_src[start..end];
 
-    assert!(generate_block.contains("generate_rust_with_stdlib(module, &project_codegen_code)"));
+    assert!(generate_block.contains("generate_rust_with_stdlib(module, &module_codegen_code)"));
+    assert!(generate_block.contains("register_imported_generic_classes("));
     assert!(generate_block.contains("render_local_module_imports(module)"));
     assert!(generate_block.contains("publicize_generated_module_source(&rust_source)"));
     assert!(generate_block.contains("required_features.extend(codegen_result.required_features)"));

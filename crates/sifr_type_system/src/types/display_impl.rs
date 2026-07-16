@@ -18,7 +18,7 @@ impl std::fmt::Display for Type {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{FixedIntType, FunctionType, IterationCapability, OwnershipKind};
+    use crate::{FixedIntType, FunctionType, IterationCapability, OwnershipKind, ParamConvention};
 
     #[test]
     fn test_ownership_primitives_are_copy() {
@@ -204,6 +204,8 @@ mod tests {
     #[test]
     fn test_class_with_iter_method_is_iterable() {
         let iterable_class = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "Counter".to_string(),
             fields: vec![],
             methods: vec![(
@@ -220,12 +222,16 @@ mod tests {
     #[test]
     fn test_class_with_next_method_is_iterator_protocol() {
         let self_iter_type = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "CounterIter".to_string(),
             fields: vec![],
             methods: vec![],
             parent_class: None,
         };
         let iterator_class = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "CounterIter".to_string(),
             fields: vec![],
             methods: vec![
@@ -249,6 +255,8 @@ mod tests {
     #[test]
     fn test_class_with_reversed_method_is_reversible_iterable() {
         let reversible_class = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "Deck".to_string(),
             fields: vec![],
             methods: vec![
@@ -297,6 +305,161 @@ mod tests {
     }
 
     #[test]
+    fn test_python_buffer_capabilities_propagate_through_aggregates() {
+        let buffer = Type::PythonBuffer(Box::new(Type::FixedInt(FixedIntType::U8)));
+        let nested = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "NestedBuffer".to_string(),
+            fields: vec![(
+                "views".to_string(),
+                Type::List(Box::new(Type::Union(vec![Type::None, buffer]))),
+            )],
+            methods: vec![],
+            parent_class: None,
+        };
+
+        assert!(nested.contains_affine_resource());
+        assert!(!nested.supports_derived_clone());
+        assert!(!nested.supports_structural_equality());
+    }
+
+    #[test]
+    fn test_affine_capability_query_terminates_on_recursive_class_shape() {
+        let recursive = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "Node".to_string(),
+            fields: vec![(
+                "next".to_string(),
+                Type::Class {
+                    identity: None,
+                    type_args: Vec::new(),
+                    name: "Node".to_string(),
+                    fields: vec![],
+                    methods: vec![],
+                    parent_class: None,
+                },
+            )],
+            methods: vec![],
+            parent_class: None,
+        };
+
+        assert!(!recursive.contains_affine_resource());
+        assert!(recursive.supports_derived_clone());
+        assert!(recursive.supports_structural_equality());
+    }
+
+    #[test]
+    fn test_rust_trait_object_capabilities_are_not_overstated() {
+        let callable = Type::Callable(
+            vec![Type::Int],
+            vec![ParamConvention::own()],
+            Box::new(Type::Int),
+        );
+        let holder = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "Holder".to_string(),
+            fields: vec![("callback".to_string(), callable)],
+            methods: vec![],
+            parent_class: None,
+        };
+
+        for ty in [Type::Any, Type::Unknown, holder] {
+            assert!(!ty.supports_derived_clone(), "{ty:?}");
+            assert!(!ty.supports_structural_equality(), "{ty:?}");
+        }
+    }
+
+    #[test]
+    fn test_hash_and_format_capabilities_match_generated_rust_traits() {
+        let callable_class = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "CallbackHolder".to_string(),
+            fields: vec![(
+                "callback".to_string(),
+                Type::Callable(
+                    vec![Type::Int],
+                    vec![ParamConvention::own()],
+                    Box::new(Type::Int),
+                ),
+            )],
+            methods: vec![],
+            parent_class: None,
+        };
+        let comparable_union = Type::Union(vec![Type::Int, Type::Str]);
+        let task_result = Type::TaskResult(Box::new(Type::Int), Box::new(Type::Never));
+        let join_item_id = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "JoinItemId".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        };
+
+        assert!(comparable_union.supports_structural_equality());
+        assert!(comparable_union.supports_hash_key());
+        assert!(comparable_union.supports_debug_formatting());
+        assert!(comparable_union.supports_display_formatting());
+        assert!(task_result.supports_debug_formatting());
+        assert!(Type::List(Box::new(task_result)).supports_debug_formatting());
+        assert!(join_item_id.supports_debug_formatting());
+        assert!(join_item_id.supports_display_formatting());
+        assert!(!Type::Float.supports_hash_key());
+        assert!(!Type::List(Box::new(Type::Int)).supports_hash_key());
+        assert!(!Type::Set(Box::new(Type::Float)).supports_structural_equality());
+        assert!(!Type::Dict(
+            Box::new(Type::List(Box::new(Type::Int))),
+            Box::new(Type::Int),
+        )
+        .supports_structural_equality());
+        assert!(!callable_class.supports_debug_formatting());
+        assert!(!callable_class.supports_display_formatting());
+    }
+
+    #[test]
+    fn test_concrete_generic_arguments_match_derived_rust_trait_bounds() {
+        let callable = Type::Callable(
+            vec![Type::Int],
+            vec![ParamConvention::own()],
+            Box::new(Type::Int),
+        );
+        let marker = Type::Class {
+            identity: Some("markers.Marker".to_string()),
+            type_args: vec![callable],
+            name: "Marker".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: None,
+        };
+
+        assert!(!marker.supports_derived_clone());
+        assert!(!marker.supports_structural_equality());
+        assert!(!marker.supports_hash_key());
+        assert!(!marker.supports_debug_formatting());
+    }
+
+    #[test]
+    fn test_transitive_non_send_ancestry_disables_generated_rust_traits() {
+        let local_child = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "LocalChild".to_string(),
+            fields: vec![],
+            methods: vec![],
+            parent_class: Some("LocalParent|NonSend".to_string()),
+        };
+
+        assert!(!local_child.supports_derived_clone());
+        assert!(!local_child.supports_structural_equality());
+        assert!(!local_child.supports_hash_key());
+        assert!(!local_child.supports_debug_formatting());
+    }
+
+    #[test]
     fn test_collection_assignability() {
         let list_int = Type::List(Box::new(Type::Int));
         let list_int2 = Type::List(Box::new(Type::Int));
@@ -316,12 +479,16 @@ mod tests {
         assert!(!dict_int_int.is_assignable_to(&dict_int_union));
 
         let object_a = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "Object".to_string(),
             fields: vec![("_handle".to_string(), Type::Int)],
             methods: vec![],
             parent_class: None,
         };
         let object_b = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "Object".to_string(),
             fields: vec![("_token".to_string(), Type::Int)],
             methods: vec![],
@@ -331,6 +498,8 @@ mod tests {
             .is_assignable_to(&Type::List(Box::new(object_b))));
 
         let child = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "ChildObject".to_string(),
             fields: vec![],
             methods: vec![],
@@ -342,18 +511,24 @@ mod tests {
     #[test]
     fn test_class_assignability_supports_transitive_inheritance_chain() {
         let base = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "Base".to_string(),
             fields: vec![],
             methods: vec![],
             parent_class: None,
         };
         let mid = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "Mid".to_string(),
             fields: vec![],
             methods: vec![],
             parent_class: Some("Base".to_string()),
         };
         let leaf = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "Leaf".to_string(),
             fields: vec![],
             methods: vec![],
@@ -365,20 +540,68 @@ mod tests {
     }
 
     #[test]
+    fn test_class_assignability_uses_stable_import_identity() {
+        let through_type_facade = Type::Class {
+            identity: Some("left.Box".to_string()),
+            type_args: vec![Type::Int],
+            name: "Left".to_string(),
+            fields: vec![("value".to_string(), Type::Int)],
+            methods: vec![],
+            parent_class: None,
+        };
+        let through_factory_facade = Type::Class {
+            identity: Some("left.Box".to_string()),
+            type_args: vec![Type::Int],
+            name: "Box".to_string(),
+            fields: vec![("value".to_string(), Type::Int)],
+            methods: vec![],
+            parent_class: None,
+        };
+        let unrelated_same_name = Type::Class {
+            identity: Some("right.Box".to_string()),
+            type_args: vec![Type::Int],
+            name: "Box".to_string(),
+            fields: vec![("value".to_string(), Type::Int)],
+            methods: vec![],
+            parent_class: None,
+        };
+        let other_specialization = Type::Class {
+            identity: Some("left.Box".to_string()),
+            type_args: vec![Type::Str],
+            name: "Box".to_string(),
+            fields: vec![("value".to_string(), Type::Str)],
+            methods: vec![],
+            parent_class: None,
+        };
+
+        assert!(through_factory_facade.is_assignable_to(&through_type_facade));
+        assert!(!unrelated_same_name.is_assignable_to(&through_type_facade));
+        assert!(!other_specialization.is_assignable_to(&through_type_facade));
+        assert!(Type::Union(vec![through_type_facade, other_specialization])
+            .has_conflicting_class_specializations());
+    }
+
+    #[test]
     fn test_error_assignability_requires_actual_error_ancestry() {
         let error = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "Error".to_string(),
             fields: vec![],
             methods: vec![],
             parent_class: None,
         };
         let non_error_child = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "Widget".to_string(),
             fields: vec![],
             methods: vec![],
             parent_class: Some("BaseThing".to_string()),
         };
         let real_error_child = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "ValueError".to_string(),
             fields: vec![],
             methods: vec![],

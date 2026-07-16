@@ -23,11 +23,26 @@ pub(super) fn try_lower_simple_return_stmt(
     if matches!(value.ty(), Type::TypeVar(_)) {
         return None;
     }
+    if ctx
+        .return_type
+        .is_some_and(|target| value_requires_consuming_class_upcast(target, value))
+    {
+        return None;
+    }
     if ctx.return_type.is_some_and(|ty| {
         matches!(
             resolve_alias_type(ty),
             Type::Iterable(_) | Type::Iterator(_)
         )
+    }) {
+        return None;
+    }
+    if ctx.return_type.is_some_and(|target| {
+        let source = resolve_alias_type(value.ty());
+        let target = resolve_alias_type(target);
+        matches!((source, target), (Type::Class { .. }, Type::Class { .. }))
+            && source != target
+            && source.is_assignable_to(target)
     }) {
         return None;
     }
@@ -96,6 +111,9 @@ pub(super) fn try_lower_simple_return_stmt(
 }
 
 pub(super) fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<RustExpr> {
+    if value_requires_consuming_class_upcast(ty, value) {
+        return None;
+    }
     if let Some(lowered) = crate::fixed_width_literal_expr_for_target(ty, value) {
         return Some(lowered);
     }
@@ -120,6 +138,14 @@ pub(super) fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<R
     if is_none_type(ty) && matches!(value, HirExpr::NoneLiteral) {
         return Some(RustExpr::Literal(RustLiteral::Unit));
     }
+    if let Type::Union(members) = resolve_alias_type(ty) {
+        let lowered = try_lower_leaf_or_name_expr(value)?;
+        let variant = crate::helpers::find_union_variant(members, value.ty())?;
+        return Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![ty.union_enum_name(), variant])),
+            args: vec![lowered],
+        });
+    }
     if matches!(
         crate::resolve_alias_type_for_plain_call(ty),
         Type::Task(_, _)
@@ -130,6 +156,38 @@ pub(super) fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<R
         return None;
     }
     try_lower_leaf_or_name_expr(value)
+}
+
+fn value_requires_consuming_class_upcast(target: &Type, value: &HirExpr) -> bool {
+    match value {
+        HirExpr::OkWrap { value, ty } => {
+            let Type::Result(ok, _) = resolve_alias_type(ty) else {
+                return false;
+            };
+            type_requires_consuming_class_upcast(ok, value.ty())
+        }
+        HirExpr::ErrWrap { value, ty } => {
+            let Type::Result(_, error) = resolve_alias_type(ty) else {
+                return false;
+            };
+            type_requires_consuming_class_upcast(error, value.ty())
+        }
+        _ => type_requires_consuming_class_upcast(target, value.ty()),
+    }
+}
+
+fn type_requires_consuming_class_upcast(target: &Type, source: &Type) -> bool {
+    let target = resolve_alias_type(target);
+    let source = resolve_alias_type(source);
+    match (source, target) {
+        (Type::Class { .. }, Type::Class { .. }) => {
+            source != target && source.is_assignable_to(target)
+        }
+        (_, Type::Union(members)) => members
+            .iter()
+            .any(|member| type_requires_consuming_class_upcast(member, source)),
+        _ => false,
+    }
 }
 
 pub(super) fn try_lower_simple_assign_value(

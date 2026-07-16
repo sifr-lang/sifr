@@ -15,6 +15,12 @@ pub struct PythonResourceDiagnostics {
 }
 
 pub fn resource_diagnostics() -> Result<PythonResourceDiagnostics, PythonError> {
+    let initialized = super::shutdown_diagnostics()
+        .map_err(PythonError::runtime)?
+        .initialized;
+    if initialized {
+        super::attach(|_| ()).map_err(PythonError::runtime)?;
+    }
     let diagnostics = super::shutdown_diagnostics().map_err(PythonError::runtime)?;
     Ok(PythonResourceDiagnostics {
         initialized: diagnostics.initialized,
@@ -91,14 +97,13 @@ mod tests {
     }
 
     #[test]
-    fn ordinary_drop_releases_object_identity() {
+    fn resource_diagnostics_drains_deferred_ordinary_drop() {
         let _guard = test_guard();
         reset_runtime_state_for_tests();
         initialize_runtime(test_config("ordinary-drop")).expect("init should succeed");
 
         let value = from_int(1).expect("object should be stored");
         drop(value);
-        super::super::attach(|_| ()).expect("attach should drain pending releases");
         assert_eq!(resource_diagnostics().expect("diagnostics").live_objects, 0);
     }
 

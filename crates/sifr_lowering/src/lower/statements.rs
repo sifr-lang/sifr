@@ -2,7 +2,7 @@ use super::assignment_widening::reconcile_optional_reassignment;
 use super::async_generator_advances::{
     finish_async_generator_advance_for_expr, record_async_generator_advance_binding,
 };
-use super::aug_assign_lowering::lower_aug_assign as lower_aug_assign_impl;
+pub(in crate::lower) use super::aug_assign_lowering::lower_aug_assign;
 use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::builtin_calls::callable_builtin_element_type;
 use super::container_literal_specialization::validate_subscript_assignment_target;
@@ -46,15 +46,15 @@ use super::typing_and_functions::resolve_annotation_expr;
 use super::LowerCtx;
 use super::{
     append_growth_shapes, async_for, async_generator_advances, async_with,
-    container_literal_specialization, diagnostics, expressions, flow_diagnostics, function_flow,
-    match_lowering, nested_function_inference, nonlocal_support, numeric_sentinels,
-    result_diagnostics, return_lowering, str, typing_and_functions,
+    container_literal_specialization, diagnostics, expressions, fallback_error_type,
+    flow_diagnostics, function_flow, match_lowering, nested_function_inference, nonlocal_support,
+    numeric_sentinels, result_diagnostics, return_lowering, str, typing_and_functions,
 };
 use crate::hir_nodes::{HirExpr, HirIteratorOp, HirPattern, HirStmt};
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
-    Expr, Pattern, Singleton, StmtAnnAssign, StmtAssign, StmtAugAssign, StmtFor, StmtIf, StmtWhile,
+    Expr, Pattern, Singleton, StmtAnnAssign, StmtAssign, StmtFor, StmtIf, StmtWhile,
 };
 use sifr_type_system::{make_union, FunctionType, NarrowingCondition, Type};
 

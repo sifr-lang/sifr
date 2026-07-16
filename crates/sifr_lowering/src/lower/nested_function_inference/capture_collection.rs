@@ -126,7 +126,7 @@ fn collect_referenced_names_in_stmts(stmts: &[Stmt], names: &mut HashSet<String>
     }
 }
 
-fn collect_referenced_names_in_expr(expr: &Expr, names: &mut HashSet<String>) {
+pub(in crate::lower) fn collect_referenced_names_in_expr(expr: &Expr, names: &mut HashSet<String>) {
     match expr {
         Expr::Name(name) => {
             names.insert(name.id.to_string());
@@ -202,6 +202,14 @@ fn collect_referenced_names_in_expr(expr: &Expr, names: &mut HashSet<String>) {
         Expr::Generator(gen) => collect_comprehension_names(&gen.generators, names, Some(&gen.elt)),
         Expr::Await(await_expr) => {
             collect_referenced_names_in_expr(await_expr.value.as_ref(), names);
+        }
+        Expr::Yield(yield_expr) => {
+            if let Some(value) = &yield_expr.value {
+                collect_referenced_names_in_expr(value, names);
+            }
+        }
+        Expr::YieldFrom(yield_from) => {
+            collect_referenced_names_in_expr(yield_from.value.as_ref(), names);
         }
         _ => {}
     }

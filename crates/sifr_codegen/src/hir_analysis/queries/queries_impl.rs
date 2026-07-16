@@ -6,6 +6,7 @@ use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 
 pub(crate) const MUTATING_METHODS: &[&str] = &[
+    "write",
     "append",
     "appendleft",
     "extend",
@@ -649,6 +650,71 @@ pub(crate) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String>
 pub(crate) struct TypeVarOpRequirements {
     pub needs_add: bool,
     pub needs_sub: bool,
+    pub needs_mul: bool,
+    pub needs_div: bool,
+    pub needs_rem: bool,
+    pub needs_neg: bool,
+    pub needs_partial_eq: bool,
+    pub needs_partial_ord: bool,
+}
+
+fn type_mentions_type_var(ty: &Type, type_param_name: &str) -> bool {
+    match ty.resolve_alias() {
+        Type::TypeVar(name) => name == type_param_name,
+        Type::List(inner)
+        | Type::Set(inner)
+        | Type::Iterable(inner)
+        | Type::Iterator(inner)
+        | Type::PythonBuffer(inner)
+        | Type::Awaitable(inner)
+        | Type::Failure(inner)
+        | Type::TimeoutResult(inner)
+        | Type::Newtype { inner, .. } => type_mentions_type_var(inner, type_param_name),
+        Type::Dict(left, right)
+        | Type::Result(left, right)
+        | Type::Task(left, right)
+        | Type::TaskResult(left, right)
+        | Type::Coroutine(left, right)
+        | Type::Select2(left, right)
+        | Type::BlockingTask(left, right)
+        | Type::JoinSet(left, right)
+        | Type::AsyncIterator(left, right)
+        | Type::AsyncGenerator(left, right) => {
+            type_mentions_type_var(left, type_param_name)
+                || type_mentions_type_var(right, type_param_name)
+        }
+        Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => items
+            .iter()
+            .any(|item| type_mentions_type_var(item, type_param_name)),
+        Type::Callable(params, _, result) | Type::AsyncCallable(params, _, result) => {
+            params
+                .iter()
+                .any(|param| type_mentions_type_var(param, type_param_name))
+                || type_mentions_type_var(result, type_param_name)
+        }
+        Type::Function(function) | Type::AsyncFunction(function) => {
+            function
+                .params
+                .iter()
+                .any(|(_, param, _)| type_mentions_type_var(param, type_param_name))
+                || type_mentions_type_var(&function.return_type, type_param_name)
+        }
+        Type::Class {
+            fields, methods, ..
+        } => {
+            fields
+                .iter()
+                .any(|(_, field)| type_mentions_type_var(field, type_param_name))
+                || methods.iter().any(|(_, method)| {
+                    method
+                        .params
+                        .iter()
+                        .any(|(_, param, _)| type_mentions_type_var(param, type_param_name))
+                        || type_mentions_type_var(&method.return_type, type_param_name)
+                })
+        }
+        _ => false,
+    }
 }
 
 pub(crate) fn collect_typevar_operator_requirements(
@@ -657,27 +723,55 @@ pub(crate) fn collect_typevar_operator_requirements(
 ) -> TypeVarOpRequirements {
     let mut requirements = TypeVarOpRequirements::default();
     let mut on_stmt = |_stmt: &HirStmt| {};
-    let mut on_expr = |expr: &HirExpr| {
-        if let HirExpr::BinOp {
+    let mut on_expr = |expr: &HirExpr| match expr {
+        HirExpr::BinOp {
             left,
             op,
             right,
             ty,
-        } = expr
-        {
-            let left_is_tp =
-                matches!(left.ty(), Type::TypeVar(ref name) if name == type_param_name);
-            let right_is_tp =
-                matches!(right.ty(), Type::TypeVar(ref name) if name == type_param_name);
-            let result_is_tp = matches!(ty, Type::TypeVar(ref name) if name == type_param_name);
+        } => {
+            let left_is_tp = type_mentions_type_var(left.ty(), type_param_name);
+            let right_is_tp = type_mentions_type_var(right.ty(), type_param_name);
+            let result_is_tp = type_mentions_type_var(ty, type_param_name);
             if left_is_tp || right_is_tp || result_is_tp {
                 match op.as_str() {
                     "+" => requirements.needs_add = true,
                     "-" => requirements.needs_sub = true,
+                    "*" => requirements.needs_mul = true,
+                    "/" | "//" => requirements.needs_div = true,
+                    "%" => requirements.needs_rem = true,
                     _ => {}
                 }
             }
         }
+        HirExpr::UnaryOp { op, operand, ty }
+            if op == "-"
+                && (type_mentions_type_var(operand.ty(), type_param_name)
+                    || type_mentions_type_var(ty, type_param_name)) =>
+        {
+            requirements.needs_neg = true;
+        }
+        HirExpr::Compare {
+            left,
+            ops,
+            comparators,
+            ..
+        } if type_mentions_type_var(left.ty(), type_param_name)
+            || comparators
+                .iter()
+                .any(|right| type_mentions_type_var(right.ty(), type_param_name)) =>
+        {
+            if ops.iter().any(|op| matches!(op.as_str(), "==" | "!=")) {
+                requirements.needs_partial_eq = true;
+            }
+            if ops
+                .iter()
+                .any(|op| matches!(op.as_str(), "<" | "<=" | ">" | ">="))
+            {
+                requirements.needs_partial_ord = true;
+            }
+        }
+        _ => {}
     };
     traversal::walk_stmts(
         stmts,

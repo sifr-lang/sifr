@@ -1,0 +1,52 @@
+class CallbackHolder:
+    callback: Callable[[int], int]
+
+class CallbackParent:
+    callback: Callable[[int], int]
+
+class CallbackChild(CallbackParent):
+    pass
+
+class LocalParent(NonSend):
+    pass
+
+class LocalChild(LocalParent):
+    pass
+
+def same(left: int | str, right: int | str) -> bool:
+    return left == right
+
+def same_member_left(value: int, other: int | str) -> bool:
+    return value == other
+
+def same_member_right(value: int | str, other: int) -> bool:
+    return value == other
+
+def list_member(value: int, values: list[int | str]) -> bool:
+    return value in values
+
+def set_member(value: int, values: set[int | str]) -> bool:
+    return value in values
+
+def dict_member(value: int, values: dict[int | str, bool]) -> bool:
+    return value in values
+
+def accept_unformatted_union(value: int | CallbackHolder) -> None:
+    return None
+
+def main() -> None:
+    assert same(7, 7)
+    assert not same("left", "right")
+    left_union: int | str = 7
+    right_union: int | str = 7
+    list_union: int | str = 7
+    set_union: int | str = 7
+    dict_union: int | str = 7
+    list_values: list[int | str] = [list_union]
+    set_values: set[int | str] = {set_union}
+    dict_values: dict[int | str, bool] = {dict_union: True}
+    assert same_member_left(7, left_union)
+    assert same_member_right(right_union, 7)
+    assert list_member(7, list_values)
+    assert set_member(7, set_values)
+    assert dict_member(7, dict_values)

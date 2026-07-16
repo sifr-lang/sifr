@@ -287,6 +287,8 @@ mod tests {
     #[test]
     fn runtime_diagnostic_string_errors_map_to_the_declared_error() {
         let diagnostic_error = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "DiagnosticError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: Vec::new(),

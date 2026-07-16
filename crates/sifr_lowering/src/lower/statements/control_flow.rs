@@ -5,8 +5,8 @@ use super::{
     detect_true_sequence_guards, detect_while_sequence_guards, ensure_mutable_parameter_binding,
     failed_initializer_taint, finish_async_generator_advance_for_expr,
     invalidate_rebound_binding_facts, is_collection_backed_iter_source,
-    loop_body_mutates_iter_source, lower_aug_assign_impl, lower_expr, lower_star_unpack_assign,
-    lower_stmts, lower_tuple_unpack_assign, maybe_record_dict_assignment_guard,
+    loop_body_mutates_iter_source, lower_expr, lower_star_unpack_assign, lower_stmts,
+    lower_tuple_unpack_assign, maybe_record_dict_assignment_guard,
     merge_exhaustive_branch_sequence_guards, name_diagnostics, numeric_domain_for_type,
     numeric_sentinel_kind, ownership_diagnostics, predeclare_exhaustive_if_assigned_names,
     reconcile_optional_reassignment, record_async_generator_advance_binding,
@@ -17,12 +17,13 @@ use super::{
     should_rebind_simple_name, statement_diagnostics, str, task_group_spawn_owner,
     then_body_always_exits, validate_control_flow_condition, validate_subscript_assignment_target,
     DiagnosticCode, Expr, FunctionType, HirExpr, HirIteratorOp, HirStmt, LowerCtx,
-    NarrowingCondition, Ranged, StmtAssign, StmtAugAssign, StmtFor, StmtIf, StmtWhile, TextRange,
-    Type,
+    NarrowingCondition, Ranged, StmtAssign, StmtFor, StmtIf, StmtWhile, TextRange, Type,
 };
+use crate::lower::expressions::{consume_affine_value_name, consume_owned_value};
 use crate::lower::must_use_obligations;
 use crate::lower::python_interop as pyinterop;
 use crate::lower::task_join_set_calls::record_join_set_terminal_awaitable;
+
 pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) -> Option<HirStmt> {
     if assign.targets.len() != 1 {
         statement_diagnostics::invalid_assignment_target(
@@ -66,6 +67,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             let nested_field_ty = resolve_field_type_from_type(&field_ty, &nested_field_name)
                 .unwrap_or(Type::Unknown);
             let value = pyinterop::lower_python_context_owned_expr(&assign.value, ctx)?;
+            consume_affine_value_name(&value, assign.value.range(), ctx);
             return Some(HirStmt::NestedFieldAssign {
                 object: obj_name,
                 field: field_name,
@@ -92,6 +94,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
         let field_name = attr.attr.to_string();
         let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
         let value = pyinterop::lower_python_context_owned_expr(&assign.value, ctx)?;
+        consume_affine_value_name(&value, assign.value.range(), ctx);
         return Some(HirStmt::FieldAssign {
             object: obj_name,
             field: field_name,
@@ -147,6 +150,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             let outer_index = lower_expr(&inner_sub.slice, ctx)?;
             let inner_index = lower_expr(&sub.slice, ctx)?;
             let value = pyinterop::lower_python_context_owned_expr(&assign.value, ctx)?;
+            consume_affine_value_name(&value, assign.value.range(), ctx);
             if let Some(field) = field_name {
                 return Some(HirStmt::AttributeNestedSubscriptAssign {
                     object: obj_name,
@@ -192,6 +196,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             }
             let index = lower_expr(&sub.slice, ctx)?;
             let value = pyinterop::lower_python_context_owned_expr(&assign.value, ctx)?;
+            consume_affine_value_name(&value, assign.value.range(), ctx);
             return Some(HirStmt::AttributeSubscriptAssign {
                 object: obj_name,
                 field: field_name,
@@ -234,6 +239,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             sub.range(),
         );
         maybe_record_dict_assignment_guard(ctx, &object_ty, &obj_name, &sub.slice);
+        consume_affine_value_name(&value, assign.value.range(), ctx);
         return Some(HirStmt::SubscriptAssign {
             object: obj_name,
             index,
@@ -299,23 +305,23 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
     let value_ty = value.ty().clone();
     pyinterop::reject_python_context_borrow_storage(&value, assign.value.range(), ctx);
 
-    // Track move: if RHS is a variable name with Move ownership, mark it as moved
-    if let HirExpr::Name {
-        name: ref src_name,
-        ref ty,
-    } = value
-    {
-        if ty.ownership() == sifr_type_system::OwnershipKind::Move {
-            ctx.mark_moved_with_flow(src_name);
-        }
-    }
+    consume_owned_value(&value, assign.value.range(), ctx);
 
     // Check if variable already exists
     if should_treat_as_existing_binding {
-        let Some(info) = ctx.scope.lookup(&name) else {
+        let Some(info) = ctx.scope.lookup(&name).cloned() else {
             name_diagnostics::undefined_variable(ctx, &name, name_range);
             return None;
         };
+        if ownership_diagnostics::reject_borrowed_affine_parameter_reassignment(
+            ctx,
+            &name,
+            info.is_parameter_binding(),
+            &info.ty,
+            name_range,
+        ) {
+            return None;
+        }
         if info.is_parameter_binding() && !info.is_mutable_binding() {
             super::ownership_diagnostics::immutable_parameter_reassignment(ctx, &name, name_range);
             return None;
@@ -427,13 +433,6 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             is_mutable: true,
         })
     }
-}
-
-pub(in crate::lower) fn lower_aug_assign(
-    aug: &StmtAugAssign,
-    ctx: &mut LowerCtx,
-) -> Option<HirStmt> {
-    lower_aug_assign_impl(aug, ctx)
 }
 
 pub(in crate::lower) fn lower_if(
@@ -745,6 +744,9 @@ pub(in crate::lower) fn lower_for(
         );
         return None;
     };
+    if statement_diagnostics::reject_affine_iteration(ctx, &elem_ty, for_stmt.iter.range()) {
+        return None;
+    }
     let iter_expr = HirExpr::IteratorCall {
         op: HirIteratorOp::Iter,
         args: vec![iterable_expr],

@@ -1664,6 +1664,19 @@
       "suggestion_rendering_fixture": null
     },
     {
+      "baseline_fixture_id": null,
+      "code": "SIFR-PYZC-0001",
+      "deferral": {
+        "issue": "python-interop-zero-copy-rendered-fixture",
+        "owner": "compiler/frontend",
+        "reason": "covered by crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs::buffer_policy_and_return_contract_fail_with_pyzc_0001 until the Python zero-copy fixture matrix lands",
+        "removal_target": "add a rendered diagnostics fixture for invalid @python.buffer declarations"
+      },
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [],
+      "suggestion_rendering_fixture": null
+    },
+    {
       "baseline_fixture_id": "rust_interop_malformed_decorator",
       "code": "SIFR-RUST-CONFIG-0001",
       "deferral": null,

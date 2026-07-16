@@ -1,6 +1,9 @@
 use super::expressions::lower_expr;
+use super::type_bounds::supports_print_formatting;
 use super::LowerCtx;
 use crate::hir_nodes::{HirExpr, HirFStringPart};
+use ruff_text_size::Ranged;
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{ExprFString, InterpolatedStringElement};
 use sifr_type_system::Type;
 
@@ -23,6 +26,22 @@ pub(in crate::lower) fn lower_fstring_expr(
                         }
                         InterpolatedStringElement::Interpolation(expr_elem) => {
                             let expr = lower_expr(&expr_elem.expression, ctx)?;
+                            if !supports_print_formatting(expr.ty())
+                                && super::python_interop::python_context_borrow_reference(
+                                    &expr, ctx,
+                                )
+                                .is_none()
+                            {
+                                ctx.error_with_code_at(
+                                    DiagnosticCode::TYPE_MISMATCH,
+                                    format!(
+                                        "f-string value type '{}' lacks the generated Rust formatting trait required by codegen",
+                                        expr.ty().display_name()
+                                    ),
+                                    expr_elem.expression.range(),
+                                );
+                                return None;
+                            }
                             parts.push(HirFStringPart::Expr(expr));
                         }
                     }

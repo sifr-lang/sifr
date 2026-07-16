@@ -1,14 +1,16 @@
 use super::{
-    call_argument_ranges_by_param, collect_type_vars, coroutine_result_type,
+    call_argument_ranges_by_param, collect_type_vars, consume_owned_value, coroutine_result_type,
     decode_typevar_constraint, expression_diagnostics, infer_type_var_bindings,
     is_compatible_with_unresolved_typevars, lower_expr, lower_function_call_args, lower_name,
     lower_python_function_call_args, lower_signature_call_args, name_diagnostics,
     ownership_diagnostics, protocol_diagnostics, refine_constructor_return_type_from_args,
     substitute_type_vars, tsc, type_param_argument_range, type_satisfies_bound,
     type_satisfies_constraint, DiagnosticCode, Expr, ExprCall, HashMap, HirExpr, LowerCtx,
-    OwnershipKind, ParamConvention, Ranged, Type,
+    ParamConvention, Ranged, Type,
 };
+use crate::lower::type_bounds::supports_print_formatting;
 use crate::lower::{ipc_payload_calls, parallel_calls};
+
 pub(super) fn lower_regular_call(
     func_name: String,
     call: &ExprCall,
@@ -129,13 +131,17 @@ pub(super) fn lower_regular_call(
                 .get(i)
                 .copied()
                 .unwrap_or(ParamConvention::borrow());
+            validate_borrowed_structural_coercion(
+                arg.ty(),
+                param_ty,
+                convention,
+                call.arguments.args[i].range(),
+                ctx,
+            );
             if convention.is_owned() {
-                // Own convention: transfer ownership, mark variable as moved
-                if let HirExpr::Name { name, ty } = arg {
-                    if ty.ownership() == OwnershipKind::Move {
-                        ctx.mark_moved_with_flow(name);
-                    }
-                }
+                // Own convention transfers every affine candidate contained in
+                // a conditional or wrapper expression.
+                consume_owned_value(arg, call.arguments.args[i].range(), ctx);
             }
             // Borrow/MutBorrow: no move, variable remains usable
         }
@@ -217,7 +223,19 @@ pub(super) fn lower_regular_call(
     } else if func_name == "print" {
         let mut args = Vec::with_capacity(call.arguments.args.len());
         for arg in &call.arguments.args {
-            args.push(lower_expr(arg, ctx)?);
+            let lowered = lower_expr(arg, ctx)?;
+            if !supports_print_formatting(lowered.ty()) {
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "print() argument type '{}' lacks the generated Rust formatting trait required by codegen",
+                        lowered.ty().display_name()
+                    ),
+                    arg.range(),
+                );
+                return None;
+            }
+            args.push(lowered);
         }
         args
     } else if func_name.ends_with("_Counter")
@@ -330,7 +348,9 @@ pub(super) fn lower_regular_call(
     // Check argument types (skip for print)
     if func_name != "print" {
         let is_generic_function = ctx.generic_functions.contains_key(&func_name);
-        for (i, (arg, (param_name, param_ty, _))) in args.iter().zip(ft.params.iter()).enumerate() {
+        for (i, (arg, (param_name, param_ty, convention))) in
+            args.iter().zip(ft.params.iter()).enumerate()
+        {
             if is_generic_function {
                 let mut type_vars = Vec::new();
                 collect_type_vars(param_ty, &mut type_vars);
@@ -339,12 +359,20 @@ pub(super) fn lower_regular_call(
                     continue;
                 }
             }
-            if !arg.ty().is_assignable_to(param_ty) {
-                let primary_range = arg_ranges
-                    .get(i)
-                    .copied()
-                    .flatten()
-                    .unwrap_or_else(|| call.range());
+            let primary_range = arg_ranges
+                .get(i)
+                .copied()
+                .flatten()
+                .unwrap_or_else(|| call.range());
+            if arg.ty().is_assignable_to(param_ty) {
+                validate_borrowed_structural_coercion(
+                    arg.ty(),
+                    param_ty,
+                    *convention,
+                    primary_range,
+                    ctx,
+                );
+            } else {
                 ctx.error_with_code_at(
                     DiagnosticCode::TYPE_MISMATCH,
                     format!(
@@ -425,30 +453,52 @@ pub(super) fn lower_regular_call(
     // Track ownership: only mark arguments as moved when the parameter convention is Own
     // and the argument type is Move. Borrow and MutBorrow do not consume the value.
     for (i, arg) in args.iter().enumerate() {
-        if let HirExpr::Name { name, ty } = arg {
-            if ty.ownership() == sifr_type_system::OwnershipKind::Move {
-                let convention = ft
-                    .params
-                    .get(i)
-                    .map(|(_, _, c)| *c)
-                    .unwrap_or(ParamConvention::borrow());
-                if convention.is_owned() {
-                    ctx.mark_moved_with_flow(name);
-                }
-            }
+        let convention = ft
+            .params
+            .get(i)
+            .map(|(_, _, c)| *c)
+            .unwrap_or(ParamConvention::borrow());
+        if convention.is_owned() {
+            let range = arg_ranges
+                .get(i)
+                .copied()
+                .flatten()
+                .unwrap_or_else(|| call.range());
+            consume_owned_value(arg, range, ctx);
         }
     }
 
     // If this is a generic function, infer type variable bindings and substitute
     let return_type = if ctx.generic_functions.contains_key(&func_name) {
         let mut bindings = HashMap::new();
+        if let Some(expected_type) = ctx.contextual_expr_type(call.range()) {
+            let mut expected_type_vars = Vec::new();
+            collect_type_vars(expected_type, &mut expected_type_vars);
+            if expected_type_vars.is_empty() {
+                infer_type_var_bindings(&ft.return_type, expected_type, &mut bindings);
+            }
+        }
         for (arg, (_, param_ty, _)) in args.iter().zip(ft.params.iter()) {
             infer_type_var_bindings(param_ty, arg.ty(), &mut bindings);
+        }
+        for (type_param, concrete_ty) in &bindings {
+            let primary_range =
+                type_param_argument_range(call, &ft, type_param).unwrap_or_else(|| call.range());
+            if concrete_ty.contains_affine_resource() {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYZC_INVALID_DECLARATION,
+                    format!(
+                        "generic function '{func_name}' cannot bind type parameter '{type_param}' to '{}' because its generated reusable-value contract requires clone, comparison, and display capabilities unavailable to affine Python buffers",
+                        concrete_ty.display_name()
+                    ),
+                    primary_range,
+                );
+            }
         }
         // Re-check argument types after TypeVar substitution so repeated type
         // parameters (e.g. assert_eq[T](a: T, b: T)) enforce consistent types.
         if func_name != "print" {
-            for (i, (arg, (param_name, param_ty, _))) in
+            for (i, (arg, (param_name, param_ty, convention))) in
                 args.iter().zip(ft.params.iter()).enumerate()
             {
                 let concrete_param_ty = substitute_type_vars(param_ty, &bindings);
@@ -476,7 +526,20 @@ pub(super) fn lower_regular_call(
                     }
                     continue;
                 }
-                if !arg.ty().is_assignable_to(&concrete_param_ty) {
+                if arg.ty().is_assignable_to(&concrete_param_ty) {
+                    let primary_range = arg_ranges
+                        .get(i)
+                        .copied()
+                        .flatten()
+                        .unwrap_or_else(|| call.range());
+                    validate_borrowed_structural_coercion(
+                        arg.ty(),
+                        &concrete_param_ty,
+                        *convention,
+                        primary_range,
+                        ctx,
+                    );
+                } else {
                     let primary_range = arg_ranges
                         .get(i)
                         .copied()
@@ -576,8 +639,12 @@ pub(super) fn lower_regular_call(
         })
     // If this is a class constructor call, emit ConstructorCall
     } else if ctx.class_types.contains_key(&func_name) {
+        let class_name = match call_type.resolve_alias() {
+            Type::Class { name, .. } => name.clone(),
+            _ => func_name,
+        };
         Some(HirExpr::ConstructorCall {
-            class_name: func_name,
+            class_name,
             args,
             ty: call_type,
         })
@@ -595,6 +662,44 @@ pub(super) fn lower_regular_call(
             args,
             ty: call_type,
         })
+    }
+}
+
+fn validate_borrowed_structural_coercion(
+    source_ty: &Type,
+    target_ty: &Type,
+    convention: ParamConvention,
+    range: ruff_text_size::TextRange,
+    ctx: &mut LowerCtx,
+) {
+    let source = source_ty.resolve_alias();
+    let target = target_ty.resolve_alias();
+    if source == target
+        || !source_ty.is_assignable_to(target_ty)
+        || !matches!(target, Type::Union(_) | Type::Result(_, _))
+    {
+        return;
+    }
+    if convention.is_mut_borrow() {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "mutable borrow cannot change the generated representation from '{}' to '{}'",
+                source_ty.display_name(),
+                target_ty.display_name()
+            ),
+            range,
+        );
+    } else if convention.is_shared_borrow() && !source_ty.supports_derived_clone() {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "borrowed conversion from '{}' to '{}' requires a cloneable source representation",
+                source_ty.display_name(),
+                target_ty.display_name()
+            ),
+            range,
+        );
     }
 }
 

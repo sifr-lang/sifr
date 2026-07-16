@@ -1,0 +1,3 @@
+# expect-error: SIFR-TYPE-0002
+def same(left: dict[list[int], int], right: dict[list[int], int]) -> bool:
+    return left == right

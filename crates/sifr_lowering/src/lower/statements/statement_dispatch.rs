@@ -7,6 +7,7 @@ use super::container_literal_specialization::{
 use super::diagnostics::{
     collect_raise_error_types, format_type_name, has_decorator, is_valid_error_type,
 };
+use super::expressions::consume_affine_value_name;
 use super::expressions::lower_expr;
 use super::function_flow::infer_function_return_type;
 use super::match_lowering::lower_match;
@@ -19,6 +20,7 @@ use super::return_lowering::lower_return;
 use super::statement_diagnostics;
 use super::typing_and_functions::{
     ast_convention_to_param, register_local_function_signature, register_local_function_symbol,
+    reject_unsupported_nested_async_generator,
 };
 use super::LowerCtx;
 use super::{
@@ -34,6 +36,7 @@ use crate::lower::rust_interop::{
     classify_rust_interop_stub_body, collect_rust_interop_declarations,
     has_rust_interop_decorator_syntax, RustInteropOwner,
 };
+use crate::lower::type_bounds::reject_unavailable_dict_hash_key;
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{ExceptHandler, Expr, Stmt};
@@ -243,6 +246,7 @@ pub(in crate::lower) fn lower_stmt(
                             val.range(),
                         );
                     }
+                    consume_affine_value_name(&value, val.range(), ctx);
                     return Some(HirStmt::Yield { value });
                 }
                 statement_diagnostics::unsupported_form(
@@ -309,6 +313,15 @@ pub(in crate::lower) fn lower_stmt(
             if let Expr::Subscript(sub) = &del_stmt.targets[0] {
                 let object = lower_expr(&sub.value, ctx)?;
                 let index = lower_expr(&sub.slice, ctx)?;
+                if reject_unavailable_dict_hash_key(
+                    object.ty(),
+                    index.ty(),
+                    "dict item deletion",
+                    sub.range(),
+                    ctx,
+                ) {
+                    return None;
+                }
                 Some(HirStmt::Delete { object, index })
             } else {
                 statement_diagnostics::unsupported_form(
@@ -585,34 +598,19 @@ pub(in crate::lower) fn lower_stmt(
                             ctx.class_types
                                 .get("Error")
                                 .cloned()
-                                .unwrap_or_else(|| Type::Class {
-                                    name: "Error".to_string(),
-                                    fields: vec![("message".to_string(), Type::Str)],
-                                    methods: vec![],
-                                    parent_class: None,
-                                })
+                                .unwrap_or_else(|| super::fallback_error_type("Error"))
                         } else if let Some(class_ty) = ctx.class_types.get(et) {
                             class_ty.clone()
                         } else {
                             // Unknown error type — already reported above
-                            Type::Class {
-                                name: et.clone(),
-                                fields: vec![("message".to_string(), Type::Str)],
-                                methods: vec![],
-                                parent_class: None,
-                            }
+                            super::fallback_error_type(et)
                         }
                     } else {
                         // Bare except — error variable is base Error type
                         ctx.class_types
                             .get("Error")
                             .cloned()
-                            .unwrap_or_else(|| Type::Class {
-                                name: "Error".to_string(),
-                                fields: vec![("message".to_string(), Type::Str)],
-                                methods: vec![],
-                                parent_class: None,
-                            })
+                            .unwrap_or_else(|| super::fallback_error_type("Error"))
                     };
                     ctx.scope.define(var_name.clone(), error_var_ty);
                 }
@@ -690,6 +688,13 @@ pub(in crate::lower) fn lower_stmt(
                 .get(func.name.as_str())
                 .cloned()
                 .unwrap_or_else(|| register_local_function_symbol(func, ctx));
+
+            reject_unsupported_nested_async_generator(func, ft.return_type.as_ref(), ctx);
+            super::ownership_diagnostics::reject_affine_nested_function_capture(
+                ctx,
+                func.name.as_str(),
+                func.name.range(),
+            );
 
             // Lower the nested function body
             let declared_nonlocals = collect_declared_nonlocals(&func.body);

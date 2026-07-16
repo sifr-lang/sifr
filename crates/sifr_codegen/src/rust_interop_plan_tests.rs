@@ -94,12 +94,16 @@ fn interop_build_plan_cache_key_records_integer_list_arguments() {
 #[test]
 fn interop_build_plan_records_bridge_signature_and_generated_types() {
     let token_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
         name: "Token".to_string(),
         fields: vec![("text".to_string(), Type::Str)],
         methods: Vec::new(),
         parent_class: None,
     };
     let error_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
         name: "HashError".to_string(),
         fields: vec![("message".to_string(), Type::Str)],
         methods: Vec::new(),
@@ -162,6 +166,8 @@ fn interop_build_plan_records_bridge_signature_and_generated_types() {
 #[test]
 fn interop_build_plan_accepts_tuple_result_with_error_class_flag() {
     let python_error_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
         name: "PythonError".to_string(),
         fields: python_error_fields(),
         methods: Vec::new(),
@@ -220,6 +226,8 @@ fn interop_build_plan_accepts_tuple_result_with_error_class_flag() {
 #[test]
 fn interop_bridge_resolves_imported_opaque_type_to_declared_rust_target() {
     let object_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
         name: "Object".to_string(),
         fields: Vec::new(),
         methods: Vec::new(),
@@ -332,12 +340,16 @@ fn interop_bridge_callable_params_require_callback_contract() {
 #[test]
 fn interop_bridge_generated_field_paths_use_declaring_module() {
     let token_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
         name: "Token".to_string(),
         fields: vec![("text".to_string(), Type::Str)],
         methods: Vec::new(),
         parent_class: None,
     };
     let wrapper_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
         name: "Wrapper".to_string(),
         fields: vec![("token".to_string(), token_ty.clone())],
         methods: Vec::new(),

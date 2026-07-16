@@ -49,11 +49,6 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "Reserved for an invalid Python awaitable, cancellation, or loop-ownership declaration.",
         ),
     reserved_code(
-            "SIFR-PYZC-0001",
-            "PYZC",
-            "Reserved for an invalid advanced-data ownership or hidden-copy declaration.",
-        ),
-    reserved_code(
             "SIFR-INT-0002",
             "INT",
             "Reserved for implicit narrowing from exact or fixed-width integer sources to narrower fixed-width targets.",

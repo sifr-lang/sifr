@@ -10,6 +10,16 @@ impl RustEmitter {
     ) -> Option<crate::RustExpr> {
         match expr {
             HirExpr::Name { name, .. } => Some(crate::RustExpr::Ident(name.clone())),
+            HirExpr::IfExpr {
+                condition,
+                then_expr,
+                else_expr,
+                ..
+            } => Some(crate::RustExpr::If {
+                cond: Box::new(self.try_lower_registry_expr_strict(condition)?),
+                then_expr: Box::new(self.try_lower_registry_expr_strict(then_expr)?),
+                else_expr: Some(Box::new(self.try_lower_registry_expr_strict(else_expr)?)),
+            }),
             HirExpr::FieldAccess { object, field, ty } => {
                 if let Ok(Some(lowered)) =
                     self.try_lower_structured_field_access_expr(object, field, ty)
@@ -72,6 +82,11 @@ impl RustEmitter {
                 args,
                 ty,
             } => {
+                if let Some(lowered) = crate::python_buffer_codegen::lower_python_buffer_method(
+                    self, object, method, args, ty,
+                ) {
+                    return Some(lowered);
+                }
                 if method == "append" && args.len() == 1 {
                     if let HirExpr::Index {
                         object: index_object,
@@ -572,6 +587,15 @@ impl RustEmitter {
                         }
                         HirFStringPart::Expr(expr) => {
                             format_str.push_str("{}");
+                            if matches!(
+                                crate::resolve_alias_type_for_plain_call(expr.ty()),
+                                Type::None
+                            ) {
+                                lowered_args.push(crate::RustExpr::Literal(
+                                    crate::RustLiteral::Str("None".to_string()),
+                                ));
+                                continue;
+                            }
                             let lowered_expr = self.try_lower_registry_expr_strict(expr)?;
                             if let Some(inner_ty) = registry_option_inner_type(expr.ty()) {
                                 let inner_format_str =

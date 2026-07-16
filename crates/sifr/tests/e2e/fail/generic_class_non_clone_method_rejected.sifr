@@ -1,0 +1,11 @@
+class Box[T]:
+    value: T
+
+    def get(self) -> T:
+        return self.value
+
+class Local(NonSend):
+    pass
+
+def read(value: Box[Local]) -> Local:
+    return value.get()

@@ -1,8 +1,12 @@
 use super::{
-    expression_diagnostics, list_append_argument_type_mismatch, method_count_range,
-    reject_exact_method_arg_count, reject_max_method_arg_count, reject_method_arg_count,
-    reject_no_method_args, str, validate_dict_update_arg, validate_list_extend_arg,
-    validate_set_iterable_arg, DiagnosticCode, HirExpr, LowerCtx, TextRange, Type,
+    container_literal_diagnostics, expression_diagnostics, list_append_argument_type_mismatch,
+    method_count_range, reject_exact_method_arg_count, reject_max_method_arg_count,
+    reject_method_arg_count, reject_no_method_args, str, validate_dict_update_arg,
+    validate_list_extend_arg, validate_set_iterable_arg, DiagnosticCode, HirExpr, LowerCtx,
+    TextRange, Type,
+};
+use crate::lower::type_bounds::{
+    supports_structural_equality_in_context, supports_total_order_in_context,
 };
 pub(super) fn resolve_list_method_type(
     elem_ty: &Type,
@@ -12,6 +16,50 @@ pub(super) fn resolve_list_method_type(
     method_range: TextRange,
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
+    let requires_clone = matches!(method, "copy" | "extend");
+    let requires_equality = matches!(method, "count" | "contains" | "remove" | "index");
+    let requires_total_order = method == "sort";
+    let requires_trait_capability = requires_clone || requires_equality || requires_total_order;
+    if requires_clone && !elem_ty.supports_derived_clone() && !elem_ty.contains_affine_resource() {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!("list.{method}() requires elements with generated Rust Clone support"),
+            method_range,
+        );
+        return None;
+    }
+    if requires_equality
+        && !supports_structural_equality_in_context(elem_ty, ctx)
+        && !elem_ty.contains_affine_resource()
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!("list.{method}() requires elements with generated Rust PartialEq support"),
+            method_range,
+        );
+        return None;
+    }
+    if requires_total_order
+        && !supports_total_order_in_context(elem_ty, ctx)
+        && !elem_ty.contains_affine_resource()
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "list.sort() requires elements with generated Rust total Ord support".to_string(),
+            method_range,
+        );
+        return None;
+    }
+    if elem_ty.contains_affine_resource() && requires_trait_capability {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYZC_INVALID_DECLARATION,
+            format!(
+                "list.{method}() is unavailable for elements containing affine Python buffers because it requires cloning, comparing, or repeatedly projecting them"
+            ),
+            method_range,
+        );
+        return None;
+    }
     match method {
         "append" => {
             if args.len() != 1 {
@@ -248,6 +296,61 @@ pub(super) fn resolve_dict_method_type(
     method_range: TextRange,
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
+    let unresolved_empty_get = method == "get"
+        && args.len() == 2
+        && matches!(key_ty.resolve_alias(), Type::Any | Type::Unknown)
+        && matches!(val_ty.resolve_alias(), Type::Any | Type::Unknown)
+        && !matches!(args[0].ty().resolve_alias(), Type::Any | Type::Unknown)
+        && !matches!(args[1].ty().resolve_alias(), Type::Any | Type::Unknown);
+    if !matches!(method, "len" | "clear")
+        && !unresolved_empty_get
+        && container_literal_diagnostics::reject_unhashable_container_type(
+            ctx,
+            "dict key",
+            key_ty,
+            method_range,
+        )
+    {
+        return None;
+    }
+    let requires_reusable_values = matches!(
+        method,
+        "values" | "items" | "update" | "copy" | "get" | "setdefault"
+    );
+    if requires_reusable_values
+        && !unresolved_empty_get
+        && !val_ty.supports_derived_clone()
+        && !val_ty.contains_affine_resource()
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!("dict.{method}() requires values with generated Rust Clone support"),
+            method_range,
+        );
+        return None;
+    }
+    if val_ty.contains_affine_resource() && requires_reusable_values {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYZC_INVALID_DECLARATION,
+            format!(
+                "dict.{method}() is unavailable for values containing affine Python buffers because it clones or projects stored values"
+            ),
+            method_range,
+        );
+        return None;
+    }
+    let requires_reusable_keys = matches!(method, "keys" | "items" | "copy");
+    if requires_reusable_keys
+        && !key_ty.supports_derived_clone()
+        && !key_ty.contains_affine_resource()
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!("dict.{method}() requires keys with generated Rust Clone support"),
+            method_range,
+        );
+        return None;
+    }
     match method {
         "len" => {
             if !args.is_empty() {
@@ -480,6 +583,16 @@ pub(super) fn resolve_set_method_type(
     method_range: TextRange,
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
+    if !matches!(method, "len" | "clear")
+        && container_literal_diagnostics::reject_unhashable_container_type(
+            ctx,
+            "set element",
+            elem_ty,
+            method_range,
+        )
+    {
+        return None;
+    }
     match method {
         "len" => {
             if !args.is_empty() {

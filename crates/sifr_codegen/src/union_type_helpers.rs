@@ -81,6 +81,8 @@ impl RustEmitter {
                     (
                         ctor_params,
                         Type::Class {
+                            identity: None,
+                            type_args: Vec::new(),
                             name: class.name.clone(),
                             fields: class.fields.clone(),
                             methods: Vec::new(),
@@ -118,7 +120,8 @@ impl RustEmitter {
             | Type::Awaitable(inner)
             | Type::Newtype { inner, .. }
             | Type::Failure(inner)
-            | Type::TimeoutResult(inner) => self.register_union_type(inner),
+            | Type::TimeoutResult(inner)
+            | Type::PythonBuffer(inner) => self.register_union_type(inner),
             Type::Dict(left, right)
             | Type::Result(left, right)
             | Type::Coroutine(left, right)
@@ -170,22 +173,42 @@ impl RustEmitter {
                     value: None,
                 })
                 .collect();
+            let mut derives = Vec::new();
+            if members.iter().all(Type::supports_debug_formatting) {
+                derives.push("Debug".to_string());
+            }
+            if members.iter().all(Type::supports_derived_clone) {
+                derives.push("Clone".to_string());
+            }
+            if members.iter().all(Type::supports_structural_equality) {
+                derives.push("PartialEq".to_string());
+            }
+            if members.iter().all(Type::supports_hash_key) {
+                derives.push("Eq".to_string());
+                derives.push("Hash".to_string());
+            }
             self.enum_items.push(RustItem::Enum {
                 name: enum_name.clone(),
                 visibility: Visibility::Private,
-                derives: vec!["Debug".to_string(), "Clone".to_string()],
+                derives,
                 repr: None,
                 variants,
             });
 
+            let supports_display = members.iter().all(|member| {
+                member.supports_display_formatting() || member.supports_debug_formatting()
+            });
+            if !supports_display {
+                continue;
+            }
             let arms: Vec<RustMatchArm> = members
                 .iter()
                 .map(|member| {
                     let variant = member.union_variant_name();
-                    let fmt_spec = if matches!(member, Type::Class { .. }) {
-                        "{:?}"
-                    } else {
+                    let fmt_spec = if member.supports_display_formatting() {
                         "{}"
+                    } else {
+                        "{:?}"
                     };
                     RustMatchArm {
                         pattern: format!("{enum_name}::{variant}(v)"),
@@ -240,14 +263,85 @@ mod tests {
     use super::*;
 
     #[test]
+    fn affine_union_uses_debug_without_clone_or_display_bounds() {
+        let members = vec![
+            Type::None,
+            Type::Int,
+            Type::PythonBuffer(Box::new(Type::FixedInt(sifr_type_system::FixedIntType::U8))),
+        ];
+        let mut emitter = RustEmitter::new();
+        emitter.register_union_type(&Type::Union(members));
+        emitter.generate_enum_definitions();
+
+        let RustItem::Enum { derives, .. } = &emitter.enum_items[0] else {
+            panic!("first generated item should be the union enum");
+        };
+        assert_eq!(derives, &["Debug"]);
+        let rendered = crate::render::render_items(&emitter.enum_items);
+        assert!(rendered.contains("PythonBuffer(v) =>"));
+        assert!(rendered.contains("write!(f, \"{:?}\", v)"));
+        let none_arm = rendered
+            .split("None(v) =>")
+            .nth(1)
+            .expect("None union arm should be rendered");
+        assert!(none_arm[..none_arm.len().min(120)].contains("write!(f, \"{:?}\", v)"));
+    }
+
+    #[test]
+    fn equality_capable_union_derives_the_required_rust_traits() {
+        let mut emitter = RustEmitter::new();
+        emitter.register_union_type(&Type::Union(vec![Type::Int, Type::Str]));
+        emitter.generate_enum_definitions();
+
+        let RustItem::Enum { derives, .. } = &emitter.enum_items[0] else {
+            panic!("first generated item should be the union enum");
+        };
+        assert_eq!(derives, &["Debug", "Clone", "PartialEq", "Eq", "Hash"]);
+        let rendered = crate::render::render_items(&emitter.enum_items);
+        assert!(rendered.contains("impl std::fmt::Display for IntOrStr"));
+    }
+
+    #[test]
+    fn callable_bearing_union_requires_no_unavailable_formatting_trait() {
+        let holder = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "CallbackHolder".to_string(),
+            fields: vec![(
+                "callback".to_string(),
+                Type::Callable(
+                    vec![Type::Int],
+                    vec![ParamConvention::own()],
+                    Box::new(Type::Int),
+                ),
+            )],
+            methods: vec![],
+            parent_class: None,
+        };
+        let mut emitter = RustEmitter::new();
+        emitter.register_union_type(&Type::Union(vec![Type::Int, holder]));
+        emitter.generate_enum_definitions();
+
+        let RustItem::Enum { derives, .. } = &emitter.enum_items[0] else {
+            panic!("first generated item should be the union enum");
+        };
+        assert!(derives.is_empty());
+        assert_eq!(emitter.enum_items.len(), 1);
+    }
+
+    #[test]
     fn nested_result_error_union_is_registered() {
         let handler_error = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "HandlerError".to_string(),
             fields: Vec::new(),
             methods: Vec::new(),
             parent_class: Some("Error".to_string()),
         };
         let python_error = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "PythonError".to_string(),
             fields: Vec::new(),
             methods: Vec::new(),

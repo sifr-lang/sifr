@@ -138,6 +138,18 @@ impl RustEmitter {
                 })
             }
             "repr" if args.len() == 1 => {
+                if matches!(
+                    crate::resolve_alias_type_for_plain_call(args[0].ty()),
+                    Type::None
+                ) {
+                    return Some(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Str(
+                            "None".to_string(),
+                        ))),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    });
+                }
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;
                 if registry_option_inner_type(args[0].ty()).is_some() {
                     Some(crate::RustExpr::MethodCall {
@@ -176,9 +188,18 @@ impl RustEmitter {
             "max" | "min" if args.len() >= 2 => {
                 let mut lowered_args = Vec::with_capacity(args.len());
                 for arg in args {
-                    let lowered = self
+                    let mut lowered = self
                         .try_lower_registry_expr_strict(arg)
                         .or_else(|| self.lower_stmt_expr_for_ir(arg).ok().flatten())?;
+                    if matches!(arg.ty().resolve_alias(), Type::Str)
+                        && matches!(arg, HirExpr::Name { .. })
+                    {
+                        if matches!(arg, HirExpr::Name { name, .. } if self.borrowed_params.contains(name))
+                        {
+                            lowered = RustExpr::Paren(Box::new(RustExpr::Deref(Box::new(lowered))));
+                        }
+                        lowered = RustExpr::Clone(Box::new(lowered));
+                    }
                     lowered_args.push(lowered);
                 }
 
@@ -702,6 +723,18 @@ impl RustEmitter {
                 }
             }
             "str" if args.len() == 1 => {
+                if matches!(
+                    crate::resolve_alias_type_for_plain_call(args[0].ty()),
+                    Type::None
+                ) {
+                    return Some(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Str(
+                            "None".to_string(),
+                        ))),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    });
+                }
                 let lowered = self.try_lower_registry_expr_strict(&args[0])?;
                 let call_return_ty = if let HirExpr::Call { func, .. } = &args[0] {
                     self.func_signatures.get(func).map(|(_, ret)| ret.clone())

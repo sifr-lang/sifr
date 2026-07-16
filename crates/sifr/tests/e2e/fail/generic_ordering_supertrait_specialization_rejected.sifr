@@ -1,0 +1,14 @@
+class Ordered[A, B]:
+    first: A
+    second: B
+
+    def __lt__(self, other: Ordered[A, B]) -> bool:
+        return self.second < other.second
+
+
+class Local(NonSend):
+    pass
+
+
+def precedes(left: Ordered[Local, int], right: Ordered[Local, int]) -> bool:
+    return left < right

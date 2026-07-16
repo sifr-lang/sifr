@@ -390,11 +390,16 @@ fn lowers_tuple_unpack_with_rebind_targets_to_temp_and_assigns() {
             HirStmt::TupleUnpack { targets, .. } => targets,
             _ => unreachable!(),
         },
+        match &tuple_unpack {
+            HirStmt::TupleUnpack { value, .. } => value,
+            _ => unreachable!(),
+        },
         RustExpr::Tuple(vec![
             RustExpr::Literal(RustLiteral::Int(1)),
             RustExpr::Literal(RustLiteral::Int(2)),
         ]),
         &HashSet::new(),
+        false,
     );
 
     assert!(matches!(
@@ -443,11 +448,16 @@ fn lowers_tuple_unpack_with_field_targets_to_temp_and_field_assigns() {
             HirStmt::TupleUnpack { targets, .. } => targets,
             _ => unreachable!(),
         },
+        match &tuple_unpack {
+            HirStmt::TupleUnpack { value, .. } => value,
+            _ => unreachable!(),
+        },
         RustExpr::Tuple(vec![
             RustExpr::Literal(RustLiteral::Int(1)),
             RustExpr::Literal(RustLiteral::Int(2)),
         ]),
         &HashSet::new(),
+        false,
     );
 
     assert_eq!(lowered.len(), 3);

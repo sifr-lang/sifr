@@ -1,0 +1,6 @@
+# expect-error: SIFR-TYPE-0002
+class Box[T]:
+    value: T
+
+def remove(key: Box[int], mut values: dict[Box[int], bool]) -> None:
+    del values[key]

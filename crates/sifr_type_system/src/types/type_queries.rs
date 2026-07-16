@@ -1,5 +1,239 @@
 use super::{FunctionType, OwnershipKind, Type};
+use std::collections::HashSet;
+
+pub(super) fn parent_chain_contains(parent_class: Option<&str>, ancestor: &str) -> bool {
+    parent_class.is_some_and(|chain| chain.split('|').any(|parent| parent == ancestor))
+}
+
 impl Type {
+    /// Stable recursion key for a nominal class representation. The declaring
+    /// identity distinguishes same-named imports, while concrete arguments
+    /// distinguish specializations whose emitted trait capabilities can differ.
+    #[must_use]
+    pub fn class_recursion_key(&self) -> Option<(String, Vec<Self>)> {
+        let Self::Class {
+            identity,
+            name,
+            type_args,
+            ..
+        } = self.resolve_alias()
+        else {
+            return None;
+        };
+        Some((identity.as_ref().unwrap_or(name).clone(), type_args.clone()))
+    }
+
+    /// Whether a value transitively owns an affine resource that Rust must not
+    /// clone or compare through an aggregate derive.
+    #[must_use]
+    pub fn contains_affine_resource(&self) -> bool {
+        self.contains_affine_resource_inner(&mut HashSet::new())
+    }
+
+    fn contains_affine_resource_inner(
+        &self,
+        visiting_classes: &mut HashSet<(String, Vec<Self>)>,
+    ) -> bool {
+        match self.resolve_alias() {
+            Self::PythonBuffer(_) => true,
+            Self::List(element)
+            | Self::Set(element)
+            | Self::Iterable(element)
+            | Self::Iterator(element)
+            | Self::Awaitable(element)
+            | Self::Failure(element)
+            | Self::TimeoutResult(element)
+            | Self::Newtype { inner: element, .. } => {
+                element.contains_affine_resource_inner(visiting_classes)
+            }
+            Self::Dict(key, value)
+            | Self::Result(key, value)
+            | Self::Task(key, value)
+            | Self::TaskResult(key, value)
+            | Self::Coroutine(key, value)
+            | Self::Select2(key, value)
+            | Self::BlockingTask(key, value)
+            | Self::JoinSet(key, value)
+            | Self::AsyncIterator(key, value)
+            | Self::AsyncGenerator(key, value) => {
+                key.contains_affine_resource_inner(visiting_classes)
+                    || value.contains_affine_resource_inner(visiting_classes)
+            }
+            Self::Tuple(elements) | Self::Union(elements) | Self::Intersection(elements) => {
+                elements
+                    .iter()
+                    .any(|element| element.contains_affine_resource_inner(visiting_classes))
+            }
+            Self::Class { fields, .. } => {
+                let Some(key) = self.class_recursion_key() else {
+                    return false;
+                };
+                if !visiting_classes.insert(key.clone()) {
+                    return false;
+                }
+                let contains = fields
+                    .iter()
+                    .any(|(_, field)| field.contains_affine_resource_inner(visiting_classes));
+                visiting_classes.remove(&key);
+                contains
+            }
+            _ => false,
+        }
+    }
+
+    /// Whether Rust aggregate generation may derive `Clone` for this value.
+    #[must_use]
+    pub fn supports_derived_clone(&self) -> bool {
+        self.supports_derived_clone_inner(&mut HashSet::new())
+    }
+
+    fn supports_derived_clone_inner(
+        &self,
+        visiting_classes: &mut HashSet<(String, Vec<Self>)>,
+    ) -> bool {
+        match self.resolve_alias() {
+            Self::Any
+            | Self::Unknown
+            | Self::PythonBuffer(_)
+            | Self::Protocol { .. }
+            | Self::Callable(..)
+            | Self::AsyncCallable(..)
+            | Self::Coroutine(..)
+            | Self::Task(..)
+            | Self::TaskResult(..)
+            | Self::Failure(_)
+            | Self::TimeoutResult(_)
+            | Self::Select2(..)
+            | Self::BlockingTask(..)
+            | Self::JoinSet(..)
+            | Self::Awaitable(_)
+            | Self::Iterator(_)
+            | Self::AsyncIterator(..)
+            | Self::AsyncGenerator(..)
+            | Self::Intersection(_) => false,
+            Self::List(element)
+            | Self::Set(element)
+            | Self::Iterable(element)
+            | Self::Newtype { inner: element, .. } => {
+                element.supports_derived_clone_inner(visiting_classes)
+            }
+            Self::Dict(left, right) | Self::Result(left, right) => {
+                left.supports_derived_clone_inner(visiting_classes)
+                    && right.supports_derived_clone_inner(visiting_classes)
+            }
+            Self::Tuple(elements) | Self::Union(elements) => elements
+                .iter()
+                .all(|element| element.supports_derived_clone_inner(visiting_classes)),
+            Self::Class {
+                fields,
+                parent_class,
+                type_args,
+                ..
+            } => {
+                if parent_chain_contains(parent_class.as_deref(), "NonSend") {
+                    return false;
+                }
+                let Some(key) = self.class_recursion_key() else {
+                    return false;
+                };
+                if !visiting_classes.insert(key.clone()) {
+                    return true;
+                }
+                let supports = fields
+                    .iter()
+                    .all(|(_, field)| field.supports_derived_clone_inner(visiting_classes))
+                    && type_args.iter().all(|argument| {
+                        matches!(argument.resolve_alias(), Self::TypeVar(_))
+                            || argument.supports_derived_clone_inner(visiting_classes)
+                    });
+                visiting_classes.remove(&key);
+                supports
+            }
+            _ => true,
+        }
+    }
+
+    /// Whether ordinary structural equality is valid for this value.
+    #[must_use]
+    pub fn supports_structural_equality(&self) -> bool {
+        self.supports_structural_equality_inner(&mut HashSet::new())
+    }
+
+    fn supports_structural_equality_inner(
+        &self,
+        visiting_classes: &mut HashSet<(String, Vec<Self>)>,
+    ) -> bool {
+        match self.resolve_alias() {
+            Self::Any
+            | Self::Unknown
+            | Self::Intersection(_)
+            | Self::PythonBuffer(_)
+            | Self::Protocol { .. }
+            | Self::Callable(..)
+            | Self::AsyncCallable(..)
+            | Self::Coroutine(..)
+            | Self::Task(..)
+            | Self::TaskResult(..)
+            | Self::Failure(_)
+            | Self::TimeoutResult(_)
+            | Self::Select2(..)
+            | Self::BlockingTask(..)
+            | Self::JoinSet(..)
+            | Self::Awaitable(_)
+            | Self::Iterator(_)
+            | Self::AsyncIterator(..)
+            | Self::AsyncGenerator(..) => false,
+            Self::List(element) | Self::Iterable(element) => {
+                element.supports_structural_equality_inner(visiting_classes)
+            }
+            Self::Set(element) => element.supports_hash_key_inner(visiting_classes),
+            Self::Dict(key, value) => {
+                key.supports_hash_key_inner(visiting_classes)
+                    && value.supports_structural_equality_inner(visiting_classes)
+            }
+            Self::Result(ok, error) => {
+                ok.supports_structural_equality_inner(visiting_classes)
+                    && error.supports_structural_equality_inner(visiting_classes)
+            }
+            Self::Tuple(elements) | Self::Union(elements) => elements
+                .iter()
+                .all(|element| element.supports_structural_equality_inner(visiting_classes)),
+            Self::Class {
+                fields,
+                methods,
+                parent_class,
+                type_args,
+                ..
+            } => {
+                if methods.iter().any(|(method, _)| method == "__eq__") {
+                    return true;
+                }
+                if parent_chain_contains(parent_class.as_deref(), "NonSend") {
+                    return false;
+                }
+                let Some(key) = self.class_recursion_key() else {
+                    return false;
+                };
+                if !visiting_classes.insert(key.clone()) {
+                    return true;
+                }
+                let supports = fields
+                    .iter()
+                    .all(|(_, field)| field.supports_structural_equality_inner(visiting_classes))
+                    && type_args.iter().all(|argument| {
+                        matches!(argument.resolve_alias(), Self::TypeVar(_))
+                            || argument.supports_structural_equality_inner(visiting_classes)
+                    });
+                visiting_classes.remove(&key);
+                supports
+            }
+            Self::Newtype { inner, .. } => {
+                inner.supports_structural_equality_inner(visiting_classes)
+            }
+            _ => true,
+        }
+    }
+
     #[must_use]
     pub fn reversible(element_type: Type) -> Self {
         Self::Alias {
@@ -183,6 +417,7 @@ impl Type {
             | Self::Awaitable(_)
             | Self::AsyncIterator(_, _)
             | Self::AsyncGenerator(_, _)
+            | Self::PythonBuffer(_)
             | Self::List(_)
             | Self::Dict(_, _)
             | Self::Set(_)
@@ -279,7 +514,23 @@ impl Type {
             Self::Unknown => "Unknown".to_string(),
             Self::Class { name, .. } if name == "JoinItemId" => "JoinItemId".to_string(),
             Self::Class { name, .. } if name == "CancelOutcome" => "CancelOutcome".to_string(),
-            Self::Class { name, .. } => name.clone(),
+            Self::Class {
+                name, type_args, ..
+            } => {
+                if type_args.is_empty() {
+                    name.clone()
+                } else {
+                    format!(
+                        "{}[{}]",
+                        name,
+                        type_args
+                            .iter()
+                            .map(Self::display_name)
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    )
+                }
+            }
             Self::Result(ok, err) => {
                 format!("Result[{}, {}]", ok.display_name(), err.display_name())
             }
@@ -336,6 +587,9 @@ impl Type {
                     item.display_name(),
                     err.display_name()
                 )
+            }
+            Self::PythonBuffer(element) => {
+                format!("python.Buffer[{}]", element.display_name())
             }
             Self::Protocol { name, .. } => name.clone(),
             Self::Newtype { name, .. } => name.clone(),
@@ -453,6 +707,9 @@ impl Type {
             }
             Self::AsyncGenerator(item, err) => {
                 format!("AsyncGenerator<{}, {}>", item.rust_type(), err.rust_type())
+            }
+            Self::PythonBuffer(element) => {
+                format!("sifr_stdlib::python::PythonBuffer<{}>", element.rust_type())
             }
             Self::Protocol { name, .. } => format!("Box<dyn {name}>"),
             Self::Newtype { name, .. } => name.clone(),

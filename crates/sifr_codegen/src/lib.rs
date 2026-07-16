@@ -24,12 +24,15 @@ pub(crate) use lib_task_scope_offload_needs::{
     module_uses_task_scope_spawn_cpu,
 };
 mod lib_project_codegen;
+mod lib_project_signatures;
 mod rust_interop_error_mapping;
 pub use lib_project_codegen::*;
 mod lib_emitter_state;
 pub use lib_emitter_state::*;
 mod class_emitter;
+mod class_inheritance_impls;
 mod class_method_emitter;
+mod class_trait_capabilities;
 mod context;
 pub use context::*;
 mod entrypoints;
@@ -43,8 +46,7 @@ mod generic_bounds_helpers;
 mod helpers;
 pub(crate) use helpers::{
     collect_locally_defined_vars, collect_mutated_vars_with_sigs,
-    collect_referenced_vars_with_types, default_param_convention, is_hashable_type_codegen,
-    module_uses_bigint,
+    collect_referenced_vars_with_types, default_param_convention, module_uses_bigint,
 };
 mod borrowed_string_compare;
 mod hir_analysis;
@@ -83,6 +85,9 @@ mod operator_protocol_emitters;
 mod output_helpers;
 mod preamble;
 pub use preamble::*;
+mod python_buffer_codegen;
+#[cfg(test)]
+mod python_buffer_codegen_tests;
 mod python_interop_async;
 #[cfg(test)]
 mod python_interop_async_tests;

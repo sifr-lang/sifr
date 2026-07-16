@@ -20,6 +20,14 @@ pub(in crate::lower) fn lower_reversed_call(
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
     let (arg, elem_ty) = lower_builtin_reverseable_arg(call, "reversed", ctx)?;
+    if super::statement_diagnostics::reject_affine_iterator_builtin(
+        ctx,
+        "reversed",
+        &elem_ty,
+        call.arguments.args[0].range(),
+    ) {
+        return None;
+    }
     Some(HirExpr::IteratorCall {
         op: HirIteratorOp::Reversed,
         args: vec![arg],
@@ -81,6 +89,14 @@ pub(in crate::lower) fn lower_enumerate_call(
         );
         return None;
     };
+    if super::statement_diagnostics::reject_affine_iterator_builtin(
+        ctx,
+        "enumerate",
+        &elem_ty,
+        call.arguments.args[0].range(),
+    ) {
+        return None;
+    }
 
     let start = if call.arguments.args.len() == 2 {
         let start_expr = &call.arguments.args[1];

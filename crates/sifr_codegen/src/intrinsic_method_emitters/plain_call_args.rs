@@ -60,7 +60,28 @@ impl RustEmitter {
                 lowered_arg = RustExpr::Literal(crate::RustLiteral::Unit);
             }
 
-            if let Type::Union(members) = resolved_param {
+            let coercion_probe = RustExpr::Ident("__sifr_coercion_probe".to_string());
+            let needs_borrowed_structural_coercion = convention.is_shared_borrow()
+                && registry_needs_structural_value_coercion(param_ty, &effective_arg_ty)
+                && self.consuming_value_upcast_for_ir(
+                    param_ty,
+                    &effective_arg_ty,
+                    coercion_probe.clone(),
+                ) != coercion_probe;
+            if convention.is_owned() {
+                lowered_arg =
+                    self.consuming_value_upcast_for_ir(param_ty, &effective_arg_ty, lowered_arg);
+            } else if needs_borrowed_structural_coercion {
+                if !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty) {
+                    lowered_arg = crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
+                        method: "clone".to_string(),
+                        args: Vec::new(),
+                    };
+                }
+                lowered_arg =
+                    self.consuming_value_upcast_for_ir(param_ty, &effective_arg_ty, lowered_arg);
+            } else if let Type::Union(members) = resolved_param {
                 if !crate::helpers::is_option_type(resolved_param)
                     && !matches!(
                         crate::resolve_alias_type_for_plain_call(&effective_arg_ty),
@@ -100,6 +121,7 @@ impl RustEmitter {
                     let param_is_owned_rust_value =
                         convention.is_owned() && !param_rust_type.starts_with('&');
                     if (!param_is_owned_rust_value || borrowed_name_arg)
+                        && !needs_borrowed_structural_coercion
                         && !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty)
                     {
                         lowered_arg = crate::RustExpr::MethodCall {
@@ -154,7 +176,8 @@ impl RustEmitter {
                         crate::render_type(&crate::sifr_type_to_rust_type(param_err_ty));
                     let arg_err_name =
                         crate::render_type(&crate::sifr_type_to_rust_type(arg_err_ty));
-                    if param_err_name != arg_err_name
+                    if !arg_err_ty.is_assignable_to(param_err_ty)
+                        && param_err_name != arg_err_name
                         && registry_can_construct_error_from_message(&param_err_name)
                     {
                         let ctor_func = if param_err_name.contains("::") {
@@ -216,7 +239,9 @@ impl RustEmitter {
                     && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
                         || matches!(resolved_param, Type::TypeVar(_) | Type::Any)));
 
-            if requires_shared_borrow || requires_mut_borrow {
+            if (requires_shared_borrow || requires_mut_borrow)
+                && !needs_borrowed_structural_coercion
+            {
                 lowered_arg = Self::clone_moved_names_in_borrowed_aggregate(arg, lowered_arg);
             }
             if (requires_shared_borrow || requires_mut_borrow)
@@ -469,88 +494,6 @@ impl RustEmitter {
             };
         }
         lowered_arg
-    }
-
-    pub(crate) fn clone_moved_names_in_borrowed_aggregate(
-        arg: &HirExpr,
-        lowered: crate::RustExpr,
-    ) -> crate::RustExpr {
-        Self::clone_moved_names_in_borrowed_aggregate_inner(arg, lowered, false)
-    }
-
-    pub(crate) fn clone_moved_names_in_borrowed_aggregate_inner(
-        arg: &HirExpr,
-        lowered: crate::RustExpr,
-        in_aggregate: bool,
-    ) -> crate::RustExpr {
-        match (arg, lowered) {
-            (HirExpr::ListLiteral { elements, .. }, crate::RustExpr::Vec(items)) => {
-                crate::RustExpr::Vec(
-                    elements
-                        .iter()
-                        .zip(items)
-                        .map(|(element, item)| {
-                            Self::clone_moved_names_in_borrowed_aggregate_inner(element, item, true)
-                        })
-                        .collect(),
-                )
-            }
-            (HirExpr::TupleLiteral { elements, .. }, crate::RustExpr::Tuple(items)) => {
-                crate::RustExpr::Tuple(
-                    elements
-                        .iter()
-                        .zip(items)
-                        .map(|(element, item)| {
-                            Self::clone_moved_names_in_borrowed_aggregate_inner(element, item, true)
-                        })
-                        .collect(),
-                )
-            }
-            (HirExpr::Name { ty, .. }, lowered_expr)
-                if in_aggregate && ty.ownership() != sifr_type_system::OwnershipKind::Copy =>
-            {
-                crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_expr))),
-                    method: "clone".to_string(),
-                    args: vec![],
-                }
-            }
-            (_, lowered_expr) => lowered_expr,
-        }
-    }
-
-    pub(crate) fn arg_is_already_borrowed_for_registry_call(
-        &self,
-        arg: &HirExpr,
-        lowered: &crate::RustExpr,
-    ) -> bool {
-        if matches!(lowered, crate::RustExpr::Ref { .. }) {
-            return true;
-        }
-        if let (HirExpr::Name { name, .. }, crate::RustExpr::Ident(lowered_name)) = (arg, lowered) {
-            if lowered_name != name {
-                return false;
-            }
-            return self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name);
-        }
-        false
-    }
-
-    pub(crate) fn arg_is_already_mut_borrowed_for_registry_call(
-        &self,
-        arg: &HirExpr,
-        lowered: &crate::RustExpr,
-    ) -> bool {
-        if let crate::RustExpr::Ref { mutable, .. } = lowered {
-            return *mutable;
-        }
-        if let (HirExpr::Name { name, .. }, crate::RustExpr::Ident(lowered_name)) = (arg, lowered) {
-            if lowered_name != name {
-                return false;
-            }
-            return self.mut_borrowed_params.contains(name);
-        }
-        false
     }
 
     pub(crate) fn try_lower_registry_compare_expr(
@@ -883,4 +826,12 @@ impl RustEmitter {
             args: vec![],
         })
     }
+}
+
+fn registry_needs_structural_value_coercion(target_ty: &Type, source_ty: &Type) -> bool {
+    let target = crate::resolve_alias_type_for_plain_call(target_ty);
+    let source = crate::resolve_alias_type_for_plain_call(source_ty);
+    target != source
+        && source_ty.is_assignable_to(target_ty)
+        && matches!(target, Type::Union(_) | Type::Result(_, _))
 }

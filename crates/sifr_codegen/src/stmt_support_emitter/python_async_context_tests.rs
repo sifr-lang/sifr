@@ -8,6 +8,8 @@ use sifr_ir::{
 
 fn class_type(name: &str) -> Type {
     Type::Class {
+        identity: None,
+        type_args: Vec::new(),
         name: name.to_string(),
         fields: vec![],
         methods: vec![],
@@ -39,6 +41,7 @@ fn emitter() -> RustEmitter {
                 parameters: vec![],
                 required_import_root: Some("fixture".to_string()),
                 callbacks: Vec::new(),
+                buffer: None,
             },
         );
     }

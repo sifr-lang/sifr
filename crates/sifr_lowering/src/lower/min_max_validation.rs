@@ -3,7 +3,7 @@ use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::Expr;
-use sifr_type_system::union_contains_none;
+use sifr_type_system::{type_check_comparison, union_contains_none, Type};
 
 pub(in crate::lower) fn validate_two_arg_min_max_operands(
     func_name: &str,
@@ -13,6 +13,39 @@ pub(in crate::lower) fn validate_two_arg_min_max_operands(
     right_range: TextRange,
     ctx: &mut LowerCtx,
 ) -> bool {
+    for (operand, range) in [(left, left_range), (right, right_range)] {
+        if operand.ty().contains_affine_resource() {
+            ctx.error_with_code_at(
+                DiagnosticCode::PYZC_INVALID_DECLARATION,
+                format!(
+                    "{func_name}() cannot order affine Python buffer values because comparison would consume a non-orderable resource"
+                ),
+                range,
+            );
+            return false;
+        }
+        if matches!(operand.ty().resolve_alias(), Type::Any | Type::Unknown) {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "{func_name}() requires a statically known ordering capability, got '{}'",
+                    operand.ty().display_name()
+                ),
+                range,
+            );
+            return false;
+        }
+        if matches!(operand.ty().resolve_alias(), Type::TypeVar(_)) {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "{func_name}() requires a concrete total-order capability; unconstrained generic operands are unsupported"
+                ),
+                range,
+            );
+            return false;
+        }
+    }
     if union_contains_none(left.ty()) || union_contains_none(right.ty()) {
         let range = if union_contains_none(left.ty()) {
             left_range
@@ -30,7 +63,7 @@ pub(in crate::lower) fn validate_two_arg_min_max_operands(
         );
         return false;
     }
-    if !left.ty().is_assignable_to(right.ty()) && !right.ty().is_assignable_to(left.ty()) {
+    if type_check_comparison(left.ty(), "<", right.ty()).is_err() {
         ctx.error_with_code_at(
             DiagnosticCode::TYPE_MISMATCH,
             format!(

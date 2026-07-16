@@ -119,6 +119,9 @@ fn non_ipc_serializable_reason_inner(ty: &Type, visiting: &mut HashSet<String>) 
         // Sifr enums currently carry integer-backed variants, not typed payload fields.
         Type::Enum { .. } => None,
         Type::Set(_) => Some("set payloads do not have stable IPC schema ordering".to_string()),
+        Type::PythonBuffer(_) => {
+            Some("Python buffer resources are affine and process-local".to_string())
+        }
         Type::BigInt | Type::Decimal | Type::BigDecimal => {
             Some("this numeric family is not part of the initial IPC schema set".to_string())
         }
@@ -189,6 +192,8 @@ mod tests {
     #[test]
     fn accepts_initial_payload_families() {
         let record = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "EchoRequest".to_string(),
             fields: vec![
                 ("message".to_string(), Type::Str),
@@ -224,6 +229,8 @@ mod tests {
     #[test]
     fn rejects_process_local_and_callable_payloads() {
         let process_reader = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "PipeReader".to_string(),
             fields: vec![("_handle".to_string(), Type::Int)],
             methods: vec![],

@@ -1,4 +1,4 @@
-use super::LowerCtx;
+use super::{type_bounds::reject_unavailable_hash_key, LowerCtx};
 use crate::hir_nodes::{HirExpr, HirStmt};
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
@@ -90,6 +90,15 @@ pub(in crate::lower) fn validate_subscript_assignment_target(
                 ctx.empty_dict_specializations
                     .insert(object_name.to_string(), specialized.clone());
                 return specialized;
+            }
+
+            if !reject_unavailable_hash_key(
+                key_ty.as_ref(),
+                "dict subscript assignment",
+                range,
+                ctx,
+            ) {
+                reject_unavailable_hash_key(index_ty, "dict subscript assignment", range, ctx);
             }
 
             let key_ok = index_ty.is_assignable_to(key_ty.as_ref());
@@ -189,6 +198,19 @@ pub(in crate::lower) fn validate_subscript_augassign_target(
             Type::List(elem_ty)
         }
         Type::Dict(key_ty, value_ty_expected) => {
+            if !reject_unavailable_hash_key(
+                key_ty.as_ref(),
+                "dict augmented subscript assignment",
+                target_range,
+                ctx,
+            ) {
+                reject_unavailable_hash_key(
+                    index_ty,
+                    "dict augmented subscript assignment",
+                    target_range,
+                    ctx,
+                );
+            }
             if !index_ty.is_assignable_to(key_ty.as_ref()) {
                 ctx.error_with_code_at(
                     DiagnosticCode::TYPE_MISMATCH,

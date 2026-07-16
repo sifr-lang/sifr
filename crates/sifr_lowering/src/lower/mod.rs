@@ -58,12 +58,14 @@ mod function_flow;
 mod function_scopes;
 mod generic_constructor_specialization;
 mod generic_inference;
+mod generic_method_requirements;
 mod generic_receiver_specialization;
 mod guarded_index;
 mod if_branch_bindings;
 mod if_expression;
 mod import_diagnostics;
 mod import_resolution;
+mod imported_class_identity;
 mod imported_defaults;
 mod imports;
 mod integer_const_facts;
@@ -80,7 +82,9 @@ mod method_call_args;
 mod method_diagnostics;
 mod min_max_validation;
 mod mod_impl;
+mod module_body_lowering;
 mod module_constants_lowering;
+mod module_function_inference;
 mod module_function_registry;
 mod must_use_obligations;
 mod mutating_methods;
@@ -109,6 +113,8 @@ mod python_async_context_contract_tests;
 mod python_async_tests;
 #[cfg(test)]
 mod python_bridge_tests;
+#[cfg(test)]
+mod python_buffer_contract_tests;
 #[cfg(test)]
 mod python_context_expression_tests;
 #[cfg(test)]
@@ -161,9 +167,41 @@ mod workload_annotations;
 use classes::{collect_class_type, lower_class};
 use default_args::collect_function_defaults;
 pub(in crate::lower) use diagnostic_types::{
-    HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic,
+    fallback_error_type, HirDiagnostic, LoweringWarningDiagnostic, RevealTypeDiagnostic,
 };
 pub use external_defs::ExternalDefs;
+
+pub fn localize_user_import_type(
+    ty: &Type,
+    module: &str,
+    class_aliases: &HashMap<String, String>,
+) -> Type {
+    imported_class_identity::type_for_import(ty, module, class_aliases)
+}
+
+pub fn localize_user_import_function_type(
+    function: &FunctionType,
+    module: &str,
+    class_aliases: &HashMap<String, String>,
+) -> FunctionType {
+    imported_class_identity::function_type_for_import(function, module, class_aliases)
+}
+
+pub fn canonicalize_user_export_type(
+    ty: &Type,
+    module: &str,
+    local_classes: &HashMap<String, String>,
+) -> Type {
+    imported_class_identity::canonicalize_export_type(ty, module, local_classes)
+}
+
+pub fn canonicalize_user_export_function_type(
+    function: &FunctionType,
+    module: &str,
+    local_classes: &HashMap<String, String>,
+) -> FunctionType {
+    imported_class_identity::canonicalize_export_function_type(function, module, local_classes)
+}
 use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;
 use mod_context::substitute_type_vars;
@@ -187,4 +225,4 @@ use sifr_python_ast::{
     str, ExprAttribute, ExprCall, ExprDictComp, ExprGenerator, ExprLambda, ExprListComp, ExprNamed,
     ExprSetComp,
 };
-use sifr_type_system::{OwnershipKind, ParamConvention};
+use sifr_type_system::ParamConvention;

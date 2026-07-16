@@ -93,6 +93,8 @@ pub(in crate::lower) fn decimal_conversion_error_type(ctx: &LowerCtx) -> Type {
         .get("DecimalConversionError")
         .cloned()
         .unwrap_or(Type::Class {
+            identity: None,
+            type_args: Vec::new(),
             name: "DecimalConversionError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],
             methods: vec![],

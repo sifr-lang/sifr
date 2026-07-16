@@ -73,6 +73,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) current_class: Option<String>,
     /// Current function/method owner name while lowering a body.
     pub(in crate::lower) current_owner: Option<String>,
+    /// Current class method name, used to retain generated Rust trait requirements per method.
+    pub(in crate::lower) current_method: Option<String>,
     /// The parent class name of the current class (for `super()` resolution)
     pub(in crate::lower) current_parent_class: Option<String>,
     /// Whether we're inside a try block (auto-unwrap Result values)
@@ -114,6 +116,12 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) python_context_borrows: HashMap<String, ruff_text_size::TextRange>,
     /// Map of class names to their declared type parameters (from PEP 695 class C[T])
     pub(in crate::lower) class_declared_type_params: HashMap<String, Vec<String>>,
+    /// Class -> method -> type parameter -> generated Rust trait requirements.
+    pub(in crate::lower) generic_method_requirements:
+        HashMap<String, HashMap<String, HashMap<String, HashSet<String>>>>,
+    /// Class -> method -> directly delegated `self.method()` calls.
+    pub(in crate::lower) generic_method_dependencies:
+        HashMap<String, HashMap<String, HashSet<String>>>,
     pub(in crate::lower) current_module_name: Option<String>,
     pub(in crate::lower) externals: ExternalDefs,
     pub(in crate::lower) explicit_defaultdict_bindings: HashSet<String>,
@@ -141,6 +149,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) function_scopes: Vec<function_scopes::FunctionScopeState>,
     pub(in crate::lower) inferred_binding_hints: Vec<HashMap<String, Type>>,
     pub(in crate::lower) empty_collection_hint_adoption: Vec<bool>,
+    /// Expected type for a specific expression range while lowering a typed initializer.
+    pub(in crate::lower) contextual_expr_types: Vec<(TextRange, Type)>,
     pub(in crate::lower) empty_dict_specializations: HashMap<String, Type>,
     pub(in crate::lower) const_integer_values: HashMap<String, num_bigint::BigInt>,
     pub(in crate::lower) flow_effects: Vec<FlowEffect>,
@@ -176,6 +186,7 @@ impl LowerCtx {
             warnings: Vec::new(),
             current_class: None,
             current_owner: None,
+            current_method: None,
             current_parent_class: None,
             in_try_block: false,
             current_function_is_async: false,
@@ -195,6 +206,8 @@ impl LowerCtx {
             borrowed_params: std::collections::HashSet::new(),
             python_context_borrows: HashMap::new(),
             class_declared_type_params: HashMap::new(),
+            generic_method_requirements: HashMap::new(),
+            generic_method_dependencies: HashMap::new(),
             current_module_name: None,
             externals: ExternalDefs::default(),
             explicit_defaultdict_bindings: HashSet::new(),
@@ -217,6 +230,7 @@ impl LowerCtx {
             function_scopes: Vec::new(),
             inferred_binding_hints: Vec::new(),
             empty_collection_hint_adoption: Vec::new(),
+            contextual_expr_types: Vec::new(),
             empty_dict_specializations: HashMap::new(),
             const_integer_values: HashMap::new(),
             flow_effects: Vec::new(),
@@ -361,6 +375,21 @@ impl LowerCtx {
             .unwrap_or(false)
     }
 
+    pub(in crate::lower) fn push_contextual_expr_type(&mut self, range: TextRange, ty: Type) {
+        self.contextual_expr_types.push((range, ty));
+    }
+
+    pub(in crate::lower) fn pop_contextual_expr_type(&mut self) {
+        let _ = self.contextual_expr_types.pop();
+    }
+
+    pub(in crate::lower) fn contextual_expr_type(&self, range: TextRange) -> Option<&Type> {
+        self.contextual_expr_types
+            .iter()
+            .rev()
+            .find_map(|(candidate_range, ty)| (*candidate_range == range).then_some(ty))
+    }
+
     pub(in crate::lower) fn record_flow_effect(&mut self, effect: FlowEffect) {
         self.flow_effects.push(effect);
     }
@@ -484,6 +513,9 @@ pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<Strin
         Type::Set(elem) => Type::Set(Box::new(substitute_type_vars(elem, bindings))),
         Type::Iterable(elem) => Type::Iterable(Box::new(substitute_type_vars(elem, bindings))),
         Type::Iterator(elem) => Type::Iterator(Box::new(substitute_type_vars(elem, bindings))),
+        Type::PythonBuffer(elem) => {
+            Type::PythonBuffer(Box::new(substitute_type_vars(elem, bindings)))
+        }
         Type::JoinSet(ok, err) => Type::JoinSet(
             Box::new(substitute_type_vars(ok, bindings)),
             Box::new(substitute_type_vars(err, bindings)),
@@ -574,11 +606,18 @@ pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<Strin
         Type::Function(ft) => Type::Function(substitute_function_type(ft, bindings)),
         Type::AsyncFunction(ft) => Type::AsyncFunction(substitute_function_type(ft, bindings)),
         Type::Class {
+            identity,
+            type_args,
             name,
             fields,
             methods,
             parent_class,
         } => Type::Class {
+            identity: identity.clone(),
+            type_args: type_args
+                .iter()
+                .map(|arg| substitute_type_vars(arg, bindings))
+                .collect(),
             name: name.clone(),
             fields: fields
                 .iter()

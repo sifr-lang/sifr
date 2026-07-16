@@ -198,7 +198,10 @@ pub(in crate::lower) fn reject_python_context_borrow_discard(
     }
 }
 
-fn python_context_borrow_reference(expr: &HirExpr, ctx: &LowerCtx) -> Option<String> {
+pub(in crate::lower) fn python_context_borrow_reference(
+    expr: &HirExpr,
+    ctx: &LowerCtx,
+) -> Option<String> {
     if let HirExpr::Name { name, .. } = expr {
         return ctx
             .python_context_borrows

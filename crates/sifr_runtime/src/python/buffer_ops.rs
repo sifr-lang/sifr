@@ -9,7 +9,7 @@ use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
 mod access;
 mod raw;
 pub use access::*;
-use raw::{OwnedPyBuffer, ValidatedBuffer};
+use raw::{BufferFootprint, OwnedPyBuffer, ValidatedBuffer};
 
 static BUFFER_STORE: LazyLock<Mutex<BufferStore>> =
     LazyLock::new(|| Mutex::new(BufferStore::default()));
@@ -94,12 +94,18 @@ struct BufferStore {
     next_handle: i64,
     next_nonce: u64,
     buffers: HashMap<i64, BufferEntry>,
+    admissions: HashMap<i64, BufferAdmission>,
 }
 
 struct BufferEntry {
     token: i64,
     buffer: Arc<TrackedBuffer>,
     metadata: PythonBufferMetadata,
+}
+
+struct BufferAdmission {
+    footprint: BufferFootprint,
+    access: PythonBufferAccess,
 }
 
 struct TrackedBuffer {
@@ -160,8 +166,11 @@ pub fn acquire_buffer(
             .validate(request.element)
             .map_err(|message| buffer_error(py, &message, "buffer metadata validation"))?;
         validate_request(py, &validated, request)?;
+        let footprint = buffer
+            .footprint(&validated)
+            .map_err(|message| buffer_error(py, &message, "buffer access admission"))?;
         let metadata = metadata_for_buffer(&validated, request.element)?;
-        store_buffer(buffer, request, metadata)
+        store_buffer(buffer, request, metadata, footprint)
     })
     .map_err(PythonError::runtime)?
 }
@@ -236,10 +245,15 @@ fn store_buffer(
     buffer: OwnedPyBuffer,
     request: PythonBufferRequest,
     mut metadata: PythonBufferMetadata,
+    footprint: BufferFootprint,
 ) -> Result<PythonBufferMetadata, PythonError> {
     let mut store = buffer_store()?;
     let (handle, token) = reserve_handle(&mut store)?;
-    super::update_object_count(1).map_err(PythonError::runtime)?;
+    admit_buffer(&mut store, handle, footprint, request.access)?;
+    if let Err(error) = super::update_object_count(1) {
+        let _ignored = release_buffer_admission(&mut store, handle);
+        return Err(PythonError::runtime(error));
+    }
     metadata.handle = handle;
     metadata.token = token;
     store.buffers.insert(
@@ -279,9 +293,83 @@ pub fn release_buffer((handle, token): BufferHandle) -> Result<(), PythonError> 
         }
     }
     .ok_or_else(|| closed_error(handle))?;
-    let buffer = entry.buffer.take_for_release()?;
-    super::attach(|py| buffer.release(py)).map_err(PythonError::runtime)?;
-    super::update_object_count(-1).map_err(PythonError::runtime)
+    let release_result = match entry.buffer.take_for_release() {
+        Ok(buffer) => {
+            let python_result =
+                super::attach(|py| buffer.release(py)).map_err(PythonError::runtime);
+            let count_result = super::update_object_count(-1).map_err(PythonError::runtime);
+            python_result.and(count_result)
+        }
+        Err(error) => Err(error),
+    };
+    let admission_result = {
+        let mut store = buffer_store()?;
+        release_buffer_admission(&mut store, handle)
+    };
+    release_result.and(admission_result)
+}
+
+fn admit_buffer(
+    store: &mut BufferStore,
+    handle: i64,
+    footprint: BufferFootprint,
+    access: PythonBufferAccess,
+) -> Result<(), PythonError> {
+    let conflicts = store.admissions.values().any(|admission| {
+        access != PythonBufferAccess::Read || admission.access != PythonBufferAccess::Read
+    } && footprints_overlap(&footprint, &admission.footprint));
+    if conflicts {
+        return Err(exporter_admission_error());
+    }
+    if store
+        .admissions
+        .insert(handle, BufferAdmission { footprint, access })
+        .is_some()
+    {
+        return Err(buffer_state_error());
+    }
+    Ok(())
+}
+
+fn release_buffer_admission(store: &mut BufferStore, handle: i64) -> Result<(), PythonError> {
+    store
+        .admissions
+        .remove(&handle)
+        .map(|_| ())
+        .ok_or_else(buffer_state_error)
+}
+
+fn footprints_overlap(left: &BufferFootprint, right: &BufferFootprint) -> bool {
+    match (left, right) {
+        (BufferFootprint::Empty, _) | (_, BufferFootprint::Empty) => false,
+        (
+            BufferFootprint::Direct {
+                ranges: left_ranges,
+            },
+            BufferFootprint::Direct {
+                ranges: right_ranges,
+            },
+        ) => sorted_ranges_overlap(left_ranges, right_ranges),
+    }
+}
+
+fn sorted_ranges_overlap(
+    left: &[std::ops::Range<usize>],
+    right: &[std::ops::Range<usize>],
+) -> bool {
+    let (mut left_index, mut right_index) = (0, 0);
+    while let (Some(left_range), Some(right_range)) = (left.get(left_index), right.get(right_index))
+    {
+        if left_range.start < right_range.end && right_range.start < left_range.end {
+            return true;
+        }
+        if left_range.end <= right_range.start {
+            left_index += 1;
+        } else {
+            right_index += 1;
+        }
+    }
+    false
 }
 
 fn buffer_snapshot(
@@ -466,6 +554,17 @@ fn buffer_state_error() -> PythonError {
         message: "Python buffer state is unavailable".to_string(),
         traceback: String::new(),
         context: "buffer state".to_string(),
+        replay: None,
+    }
+}
+
+fn exporter_admission_error() -> PythonError {
+    PythonError {
+        kind: "zero-copy".to_string(),
+        exception_type: "BufferError".to_string(),
+        message: "buffer exporter already has an active conflicting view".to_string(),
+        traceback: String::new(),
+        context: "buffer exporter access admission".to_string(),
         replay: None,
     }
 }

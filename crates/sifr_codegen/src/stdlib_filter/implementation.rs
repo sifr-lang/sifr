@@ -602,7 +602,20 @@ pub(super) fn dedup_impl_key(item_impl: &ItemImpl) -> String {
     if let Some((_, trait_path, _)) = &item_impl.trait_ {
         format!("impl {} for {}", dedup_path_key(trait_path), self_ty)
     } else {
-        format!("impl {self_ty}")
+        let item_names = item_impl
+            .items
+            .iter()
+            .map(|item| match item {
+                syn::ImplItem::Const(item) => format!("const {}", item.ident),
+                syn::ImplItem::Fn(item) => format!("fn {}", item.sig.ident),
+                syn::ImplItem::Type(item) => format!("type {}", item.ident),
+                syn::ImplItem::Macro(item) => format!("macro {}", dedup_path_key(&item.mac.path)),
+                syn::ImplItem::Verbatim(tokens) => format!("verbatim {tokens}"),
+                _ => "unknown".to_string(),
+            })
+            .collect::<Vec<_>>()
+            .join(",");
+        format!("impl {self_ty} [{item_names}]")
     }
 }
 

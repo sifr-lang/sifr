@@ -371,6 +371,8 @@ macro_rules! stmt_expr_binop {
             let mut lowered_right = lowered_right;
             let is_move_arith_op = matches!(op.as_str(), "+" | "-" | "*" | "/" | "//" | "%" | "**");
             if is_move_arith_op {
+                lowered_left = $emitter.clone_borrowed_generic_operand(left, resolved_left_ty, lowered_left);
+                lowered_right = $emitter.clone_borrowed_generic_operand(right, resolved_right_ty, lowered_right);
                 if matches!(resolved_left_ty, Type::BigInt) {
                     lowered_left = crate::RustExpr::Clone(Box::new(lowered_left));
                 }

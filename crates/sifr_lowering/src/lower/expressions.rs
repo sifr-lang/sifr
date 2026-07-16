@@ -12,7 +12,6 @@ use super::call_argument_ranges::{call_argument_ranges_by_param, type_param_argu
 use super::call_iterable_validation::{
     validate_dict_update_arg, validate_list_extend_arg, validate_set_iterable_arg,
 };
-use super::classes::is_hashable_type;
 use super::decimal_methods::{
     decimal_conversion_error_type, lower_bigdecimal_constructor_call,
     lower_decimal_constructor_call, resolve_decimal_method_type,
@@ -53,6 +52,7 @@ use super::ownership_diagnostics;
 use super::protocol_diagnostics;
 use super::task_handle_calls::{is_task_handle_type, lower_task_handle_method_call};
 use super::task_scope_calls as tsc;
+use super::type_bounds::supports_hash_key_in_context;
 use super::type_bounds::{type_satisfies_bound, type_satisfies_constraint};
 use super::typevar_shape_compat::is_compatible_with_unresolved_typevars;
 use super::typing_and_functions::resolve_annotation_expr;
@@ -62,14 +62,18 @@ use super::{
     container_literal_diagnostics, decode_typevar_constraint, expression_operators,
     fstring_support, if_expression, infer_type_var_bindings, integer_literals,
     sequence_guard_detection, str, subscript_type, substitute_type_vars, task_calls, tuple_unpack,
-    workload_annotations, DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp,
-    ExprGenerator, ExprLambda, ExprListComp, ExprNamed, ExprSetComp, FunctionType, HashMap,
-    HirExpr, HirIteratorOp, HirParam, LowerCtx, OwnershipKind, ParamConvention, Ranged, TextRange,
-    Type,
+    workload_annotations, DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp, ExprLambda,
+    ExprListComp, ExprNamed, ExprSetComp, FunctionType, HashMap, HirExpr, HirIteratorOp, HirParam,
+    LowerCtx, ParamConvention, Ranged, TextRange, Type,
 };
 
 mod core_and_calls;
 pub(in crate::lower) use core_and_calls::*;
+mod affine_resources;
+pub(in crate::lower) use affine_resources::affine_value_references_name;
+use affine_resources::consume_affine_collection_method_arguments;
+mod generator_expression;
+pub(in crate::lower) use generator_expression::lower_generator_expr;
 mod call_builtins;
 use call_builtins::{lower_unshadowed_builtin_call, CallLowering};
 mod call_shadowable_builtins;
@@ -78,13 +82,19 @@ mod regular_calls;
 use regular_calls::lower_regular_call;
 mod methods_lambdas_and_comprehensions;
 pub(in crate::lower) use methods_lambdas_and_comprehensions::*;
+mod named_expression;
+pub(in crate::lower) use named_expression::lower_named_expr;
 mod method_type_collections;
 use method_type_collections::{
     resolve_dict_method_type, resolve_list_method_type, resolve_set_method_type,
 };
 mod method_type_objects;
 use method_type_objects::{
-    resolve_bigint_method_type, resolve_class_method_type, resolve_enum_method_type,
+    resolve_bigint_method_type, resolve_class_method_on_type, resolve_enum_method_type,
     resolve_newtype_method_type, resolve_protocol_method_type, resolve_str_method_type,
-    resolve_tuple_method_type, ClassMethodSurface,
+    resolve_tuple_method_type,
+};
+mod python_buffer_methods;
+use python_buffer_methods::{
+    consume_python_buffer_release_receiver, resolve_python_buffer_method_type,
 };

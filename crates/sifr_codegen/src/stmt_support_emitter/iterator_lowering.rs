@@ -624,6 +624,7 @@ impl RustEmitter {
             RustStmt::Let { value, .. }
             | RustStmt::LetPattern { value, .. }
             | RustStmt::Expr(value)
+            | RustStmt::TailExpr(value)
             | RustStmt::Return(Some(value)) => Self::rust_expr_contains_await(value),
             RustStmt::LetElse {
                 value, else_body, ..

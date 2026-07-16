@@ -2,9 +2,9 @@
 
 Status: production contract. Synchronous declarations, opaque lifecycle,
 synchronous contexts, package-local bridges, typed coroutine declarations,
-consuming async close and async contexts, and typed callbacks are active. Later
-zero-copy protocol sections remain the ordered target contract until their
-implementations activate. The
+consuming async close and async contexts, typed callbacks, and typed zero-copy
+buffer declarations are active. Remaining zero-copy protocol sections stay the
+ordered target contract until their implementations activate. The
 embedded runtime contract is also documented in
 [`python_interop_architecture.md`](./python_interop_architecture.md).
 
@@ -325,8 +325,10 @@ context, and typed callback declarations are active. For
 async exit are required, and the manager must be consumed by `async with`.
 Callback declarations enforce call/result/receiver ownership, current/foreign/
 asyncio dispatch, serial/parallel concurrency, capture safety, deterministic
-drain, and typed failure reconciliation. Buffer, Arrow, and DLPack decorator
-forms remain reserved by their capability rows.
+drain, and typed failure reconciliation. Typed affine buffer declarations are
+active with synchronous acquisition, explicit access/layout policy, non-send
+ownership, and exact release. Arrow and DLPack decorator forms remain reserved
+by their capability rows.
 
 ## Package-Local Python Bridges
 

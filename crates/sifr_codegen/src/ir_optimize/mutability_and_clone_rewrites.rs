@@ -2,6 +2,7 @@ use super::{is_copy_type, not_expr, string_key_loop_rewrite::rewrite_string_key_
 use crate::{RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType};
 
 const MUTATING_METHODS: &[&str] = &[
+    "write",
     "append",
     "aclose",
     "anext",
@@ -142,7 +143,7 @@ pub(super) fn remove_nested_unneeded_mutability(stmt: &mut RustStmt) -> usize {
         RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
             remove_expr_unneeded_mutability(target) + remove_expr_unneeded_mutability(value)
         }
-        RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => {
+        RustStmt::Expr(expr) | RustStmt::TailExpr(expr) | RustStmt::Return(Some(expr)) => {
             remove_expr_unneeded_mutability(expr)
         }
         RustStmt::Assert { cond, msg } => {
@@ -340,7 +341,9 @@ pub(super) fn stmt_mutates_name(stmt: &RustStmt, name: &str) -> bool {
         RustStmt::LetElse {
             value, else_body, ..
         } => expr_mutates_name(value, name) || stmts_mutate_name(else_body, name),
-        RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => expr_mutates_name(expr, name),
+        RustStmt::Expr(expr) | RustStmt::TailExpr(expr) | RustStmt::Return(Some(expr)) => {
+            expr_mutates_name(expr, name)
+        }
         RustStmt::Assert { cond, msg } => {
             expr_mutates_name(cond, name)
                 || msg.as_ref().is_some_and(|msg| expr_mutates_name(msg, name))
@@ -574,7 +577,9 @@ pub(super) fn optimize_stmt(stmt: &mut RustStmt) -> usize {
         RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
             optimize_expr(target) + optimize_expr(value)
         }
-        RustStmt::Expr(expr) | RustStmt::Return(Some(expr)) => optimize_expr(expr),
+        RustStmt::Expr(expr) | RustStmt::TailExpr(expr) | RustStmt::Return(Some(expr)) => {
+            optimize_expr(expr)
+        }
         RustStmt::Assert { cond, msg } => {
             optimize_expr(cond) + msg.as_mut().map(optimize_expr).unwrap_or(0)
         }

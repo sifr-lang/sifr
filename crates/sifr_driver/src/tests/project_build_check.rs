@@ -200,6 +200,266 @@ def node_value(node: LinkedNode | None) -> int:
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
+fn test_build_project_keeps_aliased_same_name_generic_classes_distinct() {
+    let dir = mktemp_dir("workspace_aliased_same_name_generics");
+    let main_file = dir.join("cases/app.sifr");
+    let build_out = dir.join("build_out");
+    std::fs::create_dir_all(dir.join("cases")).expect("cases dir should be created");
+    std::fs::create_dir_all(dir.join("lib/helpers")).expect("helpers dir should be created");
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroots = [\"lib\"]\n")
+        .expect("manifest should be written");
+    std::fs::write(
+        &main_file,
+        r#"
+from helpers.factories import make_left
+from helpers.types import Right as RightBox
+from helpers.types import Left as LeftBox
+from helpers.factories import make_right
+from helpers.roots import LeftRoot as RootAlias
+from helpers.leaves import LeftLeaf as LeafAlias
+
+def left_value(value: LeftBox[int]) -> int:
+    return value.value
+
+def right_value(value: RightBox[int]) -> int:
+    return value.value
+
+def leaf_end(value: LeafAlias) -> int:
+    return value.end
+
+def main():
+    left: LeftBox[int] = make_left()
+    right: RightBox[int] = make_right()
+    assert left_value(left) == 7
+    assert right_value(right) == 3
+    root: RootAlias = RootAlias(9)
+    assert root.base == 9
+    leaf: LeafAlias = LeafAlias(1, 2, 3)
+    assert leaf_end(leaf) == 3
+"#,
+    )
+    .expect("entry should be written");
+    std::fs::write(
+        dir.join("lib/helpers/left.sifr"),
+        r#"
+class Box[T]:
+    value: T
+
+    def same(self, other: T) -> bool:
+        return self.value == other
+
+def make() -> Box[int]:
+    return Box(7)
+
+class Root:
+    base: int
+
+class Mid(Root):
+    middle: int
+
+    def __init__(self, base: int, middle: int):
+        super().__init__(base)
+        self.middle = middle
+
+class Leaf(Mid):
+    end: int
+
+    def __init__(self, base: int, middle: int, end: int):
+        super().__init__(base, middle)
+        self.end = end
+
+"#,
+    )
+    .expect("left helper should be written");
+    std::fs::write(
+        dir.join("lib/helpers/right.sifr"),
+        r#"
+class Box[T]:
+    value: T
+
+    def negated(self) -> T:
+        return -self.value
+
+def make() -> Box[int]:
+    return Box(3)
+"#,
+    )
+    .expect("right helper should be written");
+    std::fs::write(
+        dir.join("lib/helpers/types.sifr"),
+        r#"
+from helpers.right import Box as Right
+from helpers.left import Box as Left
+"#,
+    )
+    .expect("type facade should be written");
+    std::fs::write(
+        dir.join("lib/helpers/factories.sifr"),
+        "from helpers.left import make as make_left\nfrom helpers.right import make as make_right\n",
+    )
+    .expect("factory facade should be written");
+    std::fs::write(
+        dir.join("lib/helpers/roots.sifr"),
+        "from helpers.left import Root as LeftRoot\n",
+    )
+    .expect("root facade should be written");
+    std::fs::write(
+        dir.join("lib/helpers/leaves.sifr"),
+        "from helpers.left import Leaf as LeftLeaf\n",
+    )
+    .expect("leaf facade should be written");
+
+    let binary = build_project(&main_file, &build_out)
+        .expect("aliased same-name generic classes should build successfully");
+
+    assert!(binary.exists());
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_check_project_preserves_aliased_import_ancestry() {
+    let dir = mktemp_dir("workspace_aliased_ancestry");
+    std::fs::write(
+        dir.join("main.sifr"),
+        r#"
+from roots import Root as R
+from children import Child as C
+
+def base_of(value: R) -> int:
+    return value.base
+
+def main():
+    child: C = C(1, 2, 3)
+    assert base_of(child) == 1
+"#,
+    )
+    .expect("entry should be written");
+    std::fs::write(
+        dir.join("helper.sifr"),
+        r#"
+class Root:
+    base: int
+
+class Parent(Root):
+    middle: int
+
+    def __init__(self, base: int, middle: int):
+        super().__init__(base)
+        self.middle = middle
+
+class Child(Parent):
+    extra: int
+
+    def __init__(self, base: int, middle: int, extra: int):
+        super().__init__(base, middle)
+        self.extra = extra
+"#,
+    )
+    .expect("helper should be written");
+    std::fs::write(dir.join("roots.sifr"), "from helper import Root\n")
+        .expect("root facade should be written");
+    std::fs::write(dir.join("children.sifr"), "from helper import Child\n")
+        .expect("child facade should be written");
+
+    let errors = check_project(&dir.join("main.sifr"));
+    assert!(
+        errors.is_empty(),
+        "aliased ancestry should check: {errors:?}"
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_check_project_rejects_cross_reexported_same_name_classes() {
+    let dir = mktemp_dir("workspace_reexported_same_name_classes");
+    std::fs::write(
+        dir.join("main.sifr"),
+        r#"
+from types import Left as L
+from factories import make_right
+from types import Right as R
+from factories import make_left
+
+def main():
+    left: L[int] = make_left()
+    right: R[int] = make_right()
+    invalid: L[int] = right
+"#,
+    )
+    .expect("entry should be written");
+    std::fs::write(
+        dir.join("left.sifr"),
+        "class Box[T]:\n    value: T\n\ndef make() -> Box[int]:\n    return Box(1)\n",
+    )
+    .expect("left helper should be written");
+    std::fs::write(
+        dir.join("right.sifr"),
+        "class Box[T]:\n    value: T\n\ndef make() -> Box[int]:\n    return Box(2)\n",
+    )
+    .expect("right helper should be written");
+    std::fs::write(
+        dir.join("types.sifr"),
+        "from right import Box as Right\nfrom left import Box as Left\n",
+    )
+    .expect("type facade should be written");
+    std::fs::write(
+        dir.join("factories.sifr"),
+        "from left import make as make_left\nfrom right import make as make_right\n",
+    )
+    .expect("factory facade should be written");
+
+    let errors = check_project(&dir.join("main.sifr"));
+    assert!(
+        errors.iter().any(|error| {
+            error.code == DiagnosticCode::TYPE_MISMATCH.code()
+                && error.message.contains("expected 'L[int]', got 'R[int]'")
+        }),
+        "cross-reexport assignment should be rejected: {errors:?}"
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn test_check_project_rejects_reexported_generic_method_bound_violation() {
+    let dir = mktemp_dir("workspace_reexported_generic_method_bounds");
+    std::fs::write(
+        dir.join("main.sifr"),
+        r#"
+from facade import PublicBox as Box
+
+class Local(NonSend):
+    pass
+
+def invalid(value: Box[Local], other: Local) -> bool:
+    return value.same(other)
+"#,
+    )
+    .expect("entry should be written");
+    std::fs::write(
+        dir.join("helper.sifr"),
+        "class Box[T]:\n    value: T\n\n    def same(self, other: T) -> bool:\n        return self.value == other\n",
+    )
+    .expect("helper should be written");
+    std::fs::write(
+        dir.join("facade.sifr"),
+        "from helper import Box as PublicBox\n",
+    )
+    .expect("facade should be written");
+
+    let errors = check_project(&dir.join("main.sifr"));
+    assert!(
+        errors.iter().any(|error| {
+            error.code == DiagnosticCode::TYPE_MISMATCH.code()
+                && error.message.contains("Box.same() is unavailable")
+                && error.message.contains("lacks Clone + PartialEq")
+        }),
+        "re-exported generic method bounds should reject invalid specialization: {errors:?}"
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
 fn test_emit_project_includes_workspace_support_modules() {
     let dir = mktemp_dir("workspace_emit");
     let main_file = dir.join("cases/app.sifr");

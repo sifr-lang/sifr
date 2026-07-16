@@ -1,25 +1,96 @@
-use crate::RustEmitter;
+use crate::{RustEmitter, RustItem};
 use sifr_ir::{HirClass, HirFunction, HirStmt};
 use sifr_type_system::{FunctionType, OwnershipKind, Type};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
 
 impl RustEmitter {
-    /// Check if a generic class needs Hash + Eq bounds on its type parameters.
-    /// This is true when a type parameter is used as a `HashMap` key (dict field with `TypeVar` key).
-    pub(crate) fn class_needs_hash_eq(class: &HirClass) -> bool {
-        fn type_has_typevar_dict_key(ty: &Type) -> bool {
-            match ty {
-                Type::Dict(key, _) => matches!(key.as_ref(), Type::TypeVar(_)),
-                Type::List(inner) => type_has_typevar_dict_key(inner),
-                Type::Union(members) => members.iter().any(type_has_typevar_dict_key),
+    pub(crate) fn type_mentions_type_param(ty: &Type, type_param: &str) -> bool {
+        match ty.resolve_alias() {
+            Type::TypeVar(name) => name == type_param,
+            Type::List(value)
+            | Type::Set(value)
+            | Type::Iterable(value)
+            | Type::Iterator(value)
+            | Type::Awaitable(value)
+            | Type::Failure(value)
+            | Type::TimeoutResult(value)
+            | Type::Newtype { inner: value, .. } => {
+                Self::type_mentions_type_param(value, type_param)
+            }
+            Type::Dict(left, right)
+            | Type::Result(left, right)
+            | Type::Task(left, right)
+            | Type::TaskResult(left, right)
+            | Type::Coroutine(left, right)
+            | Type::Select2(left, right)
+            | Type::BlockingTask(left, right)
+            | Type::JoinSet(left, right)
+            | Type::AsyncIterator(left, right)
+            | Type::AsyncGenerator(left, right) => {
+                Self::type_mentions_type_param(left, type_param)
+                    || Self::type_mentions_type_param(right, type_param)
+            }
+            Type::Tuple(values) | Type::Union(values) | Type::Intersection(values) => values
+                .iter()
+                .any(|value| Self::type_mentions_type_param(value, type_param)),
+            Type::Callable(params, _, return_type)
+            | Type::AsyncCallable(params, _, return_type) => {
+                params
+                    .iter()
+                    .any(|value| Self::type_mentions_type_param(value, type_param))
+                    || Self::type_mentions_type_param(return_type, type_param)
+            }
+            Type::Function(function) | Type::AsyncFunction(function) => {
+                function
+                    .params
+                    .iter()
+                    .any(|(_, value, _)| Self::type_mentions_type_param(value, type_param))
+                    || Self::type_mentions_type_param(&function.return_type, type_param)
+            }
+            Type::Class {
+                fields, methods, ..
+            } => {
+                fields
+                    .iter()
+                    .any(|(_, value)| Self::type_mentions_type_param(value, type_param))
+                    || methods.iter().any(|(_, function)| {
+                        function
+                            .params
+                            .iter()
+                            .any(|(_, value, _)| Self::type_mentions_type_param(value, type_param))
+                            || Self::type_mentions_type_param(&function.return_type, type_param)
+                    })
+            }
+            _ => false,
+        }
+    }
+
+    /// Whether this type parameter occurs in a stored hash-key position.
+    pub(crate) fn class_type_param_needs_hash_eq(class: &HirClass, type_param: &str) -> bool {
+        fn type_has_hash_key_param(ty: &Type, type_param: &str) -> bool {
+            match ty.resolve_alias() {
+                Type::Dict(key, value) => {
+                    RustEmitter::type_mentions_type_param(key, type_param)
+                        || type_has_hash_key_param(value, type_param)
+                }
+                Type::Set(value) => RustEmitter::type_mentions_type_param(value, type_param),
+                Type::List(inner)
+                | Type::Iterable(inner)
+                | Type::Iterator(inner)
+                | Type::Newtype { inner, .. } => type_has_hash_key_param(inner, type_param),
+                Type::Tuple(members) | Type::Union(members) | Type::Intersection(members) => {
+                    members
+                        .iter()
+                        .any(|member| type_has_hash_key_param(member, type_param))
+                }
                 _ => false,
             }
         }
         class
             .fields
             .iter()
-            .any(|(_, ty)| type_has_typevar_dict_key(ty))
+            .any(|(_, ty)| type_has_hash_key_param(ty, type_param))
     }
 
     /// Check if a generic function needs Hash + Eq bounds (uses `TypeVar` as dict key
@@ -45,20 +116,6 @@ impl RustEmitter {
             return true;
         }
         false
-    }
-
-    pub(crate) fn generic_bounds_for_class(class: &HirClass) -> String {
-        if class.name == "deque" {
-            return "Clone + PartialEq".to_string();
-        }
-        if class.name == "NullContext" {
-            return "Clone".to_string();
-        }
-        if Self::class_needs_hash_eq(class) {
-            "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq".to_string()
-        } else {
-            "Clone + std::fmt::Display + PartialOrd".to_string()
-        }
     }
 
     /// Convert a Type to its Rust representation, appending generic type params
@@ -318,13 +375,19 @@ impl RustEmitter {
     pub(crate) fn infer_generic_class_type_args(&self, name: &str, ty: &Type) -> Option<Vec<Type>> {
         let template = self.generic_class_templates.get(name)?;
         let Type::Class {
-            fields, methods, ..
+            type_args,
+            fields,
+            methods,
+            ..
         } = ty
         else {
             return None;
         };
         if template.type_params.is_empty() {
             return None;
+        }
+        if type_args.len() == template.type_params.len() {
+            return Some(type_args.clone());
         }
 
         let mut bindings = HashMap::new();
@@ -532,16 +595,120 @@ impl RustEmitter {
         }
     }
 
-    pub(crate) fn extra_bounds_for_type_param(tp: &str, body: &[HirStmt]) -> String {
+    pub(crate) fn extra_bound_items_for_type_param(tp: &str, body: &[HirStmt]) -> Vec<String> {
         let requirements =
             crate::hir_analysis::queries::collect_typevar_operator_requirements(body, tp);
-        let mut extra = String::new();
+        let mut extra = Vec::new();
         if requirements.needs_add {
-            let _ = write!(extra, " + std::ops::Add<Output = {tp}>");
+            extra.push(format!("std::ops::Add<Output = {tp}>"));
         }
         if requirements.needs_sub {
-            let _ = write!(extra, " + std::ops::Sub<Output = {tp}>");
+            extra.push(format!("std::ops::Sub<Output = {tp}>"));
+        }
+        if requirements.needs_mul {
+            extra.push(format!("std::ops::Mul<Output = {tp}>"));
+        }
+        if requirements.needs_div {
+            extra.push(format!("std::ops::Div<Output = {tp}>"));
+        }
+        if requirements.needs_rem {
+            extra.push(format!("std::ops::Rem<Output = {tp}>"));
+        }
+        if requirements.needs_neg {
+            extra.push(format!("std::ops::Neg<Output = {tp}>"));
+        }
+        if requirements.needs_partial_eq {
+            extra.push("PartialEq".to_string());
+        }
+        if requirements.needs_partial_ord {
+            extra.push("PartialOrd".to_string());
         }
         extra
+    }
+
+    pub(crate) fn extra_bounds_for_type_param(tp: &str, body: &[HirStmt]) -> String {
+        Self::extra_bound_items_for_type_param(tp, body)
+            .into_iter()
+            .fold(String::new(), |mut extra, bound| {
+                let _ = write!(extra, " + {bound}");
+                extra
+            })
+    }
+
+    /// Rust trait requirements are transitive across calls on any instance of
+    /// the current class, including both `self.method()` and `other.method()`.
+    pub(crate) fn class_method_type_param_bounds(
+        class: &HirClass,
+        method_items: &[(&HirFunction, RustItem)],
+    ) -> HashMap<String, HashMap<String, HashSet<String>>> {
+        let mut requirements = method_items
+            .iter()
+            .map(|(method, item)| {
+                let emitted_clone = Self::emitted_items_require_clone(std::slice::from_ref(item));
+                let params = class
+                    .type_params
+                    .iter()
+                    .map(|param| {
+                        let mut bounds =
+                            Self::extra_bound_items_for_type_param(param, &method.body)
+                                .into_iter()
+                                .collect::<HashSet<_>>();
+                        if emitted_clone && Self::body_mentions_type_param(&method.body, param) {
+                            bounds.insert("Clone".to_string());
+                        }
+                        (param.clone(), bounds)
+                    })
+                    .collect::<HashMap<_, _>>();
+                (method.name.clone(), params)
+            })
+            .collect::<HashMap<_, _>>();
+
+        loop {
+            let mut changed = false;
+            for (method, _) in method_items {
+                let inherited = Self::collect_direct_class_method_calls(&method.body, &class.name)
+                    .into_iter()
+                    .filter_map(|called| requirements.get(&called))
+                    .cloned()
+                    .collect::<Vec<_>>();
+                let entry = requirements.entry(method.name.clone()).or_default();
+                for inherited_by_param in inherited {
+                    for (param, bounds) in inherited_by_param {
+                        let target = entry.entry(param).or_default();
+                        let before = target.len();
+                        target.extend(bounds);
+                        changed |= target.len() != before;
+                    }
+                }
+            }
+            if !changed {
+                break;
+            }
+        }
+        requirements
+    }
+
+    /// Whether a method body actually consumes a value whose semantic type
+    /// contains this class type parameter. This is paired with inspection of
+    /// the emitted item so a clone in one consumer never leaks a `Clone` bound
+    /// onto unrelated parameters of a multi-parameter class.
+    pub(crate) fn body_mentions_type_param(body: &[HirStmt], type_param: &str) -> bool {
+        let mut mentioned = false;
+        let mut on_stmt = |_stmt: &HirStmt| {};
+        let mut on_expr = |expr: &sifr_ir::HirExpr| {
+            if matches!(expr, sifr_ir::HirExpr::Name { name, .. } if name == "self") {
+                return;
+            }
+            if Self::type_mentions_type_param(expr.ty(), type_param) {
+                mentioned = true;
+            }
+        };
+        crate::hir_analysis::traversal::walk_stmts(
+            body,
+            crate::hir_analysis::traversal::TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut on_stmt,
+            &mut on_expr,
+        );
+        mentioned
     }
 }

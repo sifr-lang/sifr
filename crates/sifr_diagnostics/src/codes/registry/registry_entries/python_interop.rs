@@ -275,4 +275,15 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         [arg!("reason")],
         ["reason"]
     ),
+    active_entry!(
+        "SIFR-PYZC-0001",
+        "PYZC",
+        "An advanced-data ownership, buffer layout, or hidden-copy declaration is invalid.",
+        Severity::Error,
+        "crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs::buffer_policy_and_return_contract_fail_with_pyzc_0001",
+        "invalid Python zero-copy declaration: {reason}",
+        "sifr_lowering",
+        [arg!("reason")],
+        ["reason"]
+    ),
 ];

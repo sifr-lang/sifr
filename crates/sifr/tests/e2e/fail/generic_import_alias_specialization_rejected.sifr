@@ -1,0 +1,9 @@
+from sifr.collections import deque as D
+
+
+class Local(NonSend):
+    pass
+
+
+def count(values: D[Local], item: Local) -> int:
+    return values.count(item)

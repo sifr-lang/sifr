@@ -170,6 +170,13 @@ pub(super) fn module_func_signatures(module: &HirModule) -> ModuleFuncSignatures
                 (
                     ctor_params,
                     Type::Class {
+                        identity: None,
+                        type_args: class
+                            .type_params
+                            .iter()
+                            .cloned()
+                            .map(Type::TypeVar)
+                            .collect(),
                         name: class.name.clone(),
                         fields: class.fields.clone(),
                         methods: Vec::new(),
@@ -230,8 +237,15 @@ pub fn generate_rust_with_stdlib_for_module(
                 // Also load class method signatures (ClassName::method entries)
                 let prefix = format!("{name}::");
                 for (key, sig) in sig_map {
-                    if key.starts_with(&prefix) {
-                        emitter.func_signatures.insert(key.clone(), sig.clone());
+                    if let Some(method) = key.strip_prefix(&prefix) {
+                        let local_name = import
+                            .aliases
+                            .iter()
+                            .find(|(original, _)| original == name)
+                            .map_or(name.as_str(), |(_, alias)| alias.as_str());
+                        emitter
+                            .func_signatures
+                            .insert(format!("{local_name}::{method}"), sig.clone());
                     }
                 }
             }

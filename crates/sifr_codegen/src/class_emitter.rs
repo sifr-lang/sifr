@@ -1,26 +1,12 @@
 use crate::{
-    helpers::{collect_mutated_vars_with_sigs, is_auto_display_type},
-    RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
-    Visibility,
+    class_trait_capabilities::supports_declaration_display,
+    helpers::collect_mutated_vars_with_sigs, RustEmitter, RustExpr, RustItem, RustLiteral,
+    RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
 use sifr_ir::{HirClass, HirFunction, HirModule, RustInteropDecoratorKind, RustInteropValue};
 use sifr_type_system::Type;
 
 impl RustEmitter {
-    fn is_current_process_resource_class(&self, class_name: &str) -> bool {
-        self.current_module_name.as_deref() == Some("sifr.process")
-            && matches!(
-                class_name,
-                "Child"
-                    | "AsyncChild"
-                    | "ProcessHandle"
-                    | "PipeReader"
-                    | "PipeWriter"
-                    | "AsyncPipeReader"
-                    | "AsyncPipeWriter"
-            )
-    }
-
     fn process_child_drop_impl() -> RustItem {
         RustItem::Impl {
             target: "Child".to_string(),
@@ -81,6 +67,7 @@ impl RustEmitter {
             | Type::LiteralInt(_)
             | Type::LiteralBool(_)
             | Type::LiteralStr(_)
+            | Type::TypeVar(_)
             | Type::Newtype { .. } => "{}",
             Type::Class { name, .. } if self.display_classes.contains(name) => "{}",
             _ => "{:?}",
@@ -103,16 +90,108 @@ impl RustEmitter {
     }
 
     pub(crate) fn class_impl_type_params(class: &HirClass) -> Vec<RustTypeParam> {
-        if class.type_params.is_empty() {
-            return Vec::new();
-        }
-        let bounds = Self::generic_bounds_for_class(class);
         class
             .type_params
             .iter()
             .map(|tp| RustTypeParam {
                 name: tp.clone(),
-                bounds: vec![bounds.clone()],
+                bounds: Self::class_base_type_param_bounds(class, tp),
+            })
+            .collect()
+    }
+
+    fn class_base_type_param_bounds(class: &HirClass, name: &str) -> Vec<String> {
+        if Self::class_type_param_needs_hash_eq(class, name) {
+            vec!["std::hash::Hash".to_string(), "Eq".to_string()]
+        } else {
+            Vec::new()
+        }
+    }
+
+    fn class_auto_display_type_params(class: &HirClass) -> Vec<RustTypeParam> {
+        class
+            .type_params
+            .iter()
+            .map(|name| RustTypeParam {
+                name: name.clone(),
+                bounds: {
+                    let mut bounds = Self::class_base_type_param_bounds(class, name);
+                    let direct_display = class.fields.iter().any(|(_, ty)| {
+                        matches!(ty.resolve_alias(), Type::TypeVar(field_name) if field_name == name)
+                    });
+                    let nested_debug = class.fields.iter().any(|(_, ty)| {
+                        !matches!(ty.resolve_alias(), Type::TypeVar(field_name) if field_name == name)
+                            && Self::type_mentions_type_param(ty, name)
+                    });
+                    if direct_display {
+                        bounds.push("std::fmt::Display".to_string());
+                    }
+                    if nested_debug {
+                        bounds.push("std::fmt::Debug".to_string());
+                    }
+                    bounds
+                },
+            })
+            .collect()
+    }
+
+    pub(crate) fn emitted_items_require_clone(items: &[RustItem]) -> bool {
+        let rendered = crate::render_items(items);
+        rendered.contains(".clone()") || rendered.contains(".cloned()")
+    }
+
+    fn class_constructor_impl_type_params(
+        class: &HirClass,
+        items: &[RustItem],
+    ) -> Vec<RustTypeParam> {
+        let emitted_clone = Self::emitted_items_require_clone(items);
+        class
+            .type_params
+            .iter()
+            .map(|name| {
+                let mut bounds = Self::class_base_type_param_bounds(class, name);
+                let constructor_mentions_param = class.methods.iter().any(|method| {
+                    method.name == "new" && Self::body_mentions_type_param(&method.body, name)
+                });
+                if emitted_clone && constructor_mentions_param {
+                    bounds.push("Clone".to_string());
+                }
+                RustTypeParam {
+                    name: name.clone(),
+                    bounds,
+                }
+            })
+            .collect()
+    }
+
+    pub(crate) fn class_function_impl_type_params(
+        class: &HirClass,
+        function: &HirFunction,
+        items: &[RustItem],
+        transitive_bounds: Option<
+            &std::collections::HashMap<String, std::collections::HashSet<String>>,
+        >,
+    ) -> Vec<RustTypeParam> {
+        let emitted_clone = Self::emitted_items_require_clone(items);
+        class
+            .type_params
+            .iter()
+            .map(|name| {
+                let mut bounds = Self::class_base_type_param_bounds(class, name);
+                if let Some(required) = transitive_bounds.and_then(|by_param| by_param.get(name)) {
+                    let mut required = required.iter().cloned().collect::<Vec<_>>();
+                    required.sort();
+                    bounds.extend(required);
+                } else {
+                    if emitted_clone && Self::body_mentions_type_param(&function.body, name) {
+                        bounds.push("Clone".to_string());
+                    }
+                    bounds.extend(Self::extra_bound_items_for_type_param(name, &function.body));
+                }
+                RustTypeParam {
+                    name: name.clone(),
+                    bounds,
+                }
             })
             .collect()
     }
@@ -121,14 +200,62 @@ impl RustEmitter {
         if class.type_params.is_empty() {
             return class.name.clone();
         }
-        let bounds = Self::generic_bounds_for_class(class);
         let params = class
             .type_params
             .iter()
-            .map(|tp| format!("{tp}: {bounds}"))
+            .map(|name| {
+                let bounds = Self::class_base_type_param_bounds(class, name);
+                if bounds.is_empty() {
+                    name.clone()
+                } else {
+                    format!("{name}: {}", bounds.join(" + "))
+                }
+            })
             .collect::<Vec<_>>()
             .join(", ");
         format!("{}<{params}>", class.name)
+    }
+
+    pub(crate) fn class_emits_display(
+        class: &HirClass,
+        module: &HirModule,
+        visiting: &mut std::collections::HashSet<String>,
+    ) -> bool {
+        if class.is_error_type
+            || class.newtype_inner.is_some()
+            || class
+                .operator_impls
+                .iter()
+                .any(|(name, _)| name == "__str__")
+        {
+            return true;
+        }
+        if class.is_protocol()
+            || class.python_opaque_declaration().is_some()
+            || !visiting.insert(class.name.clone())
+        {
+            return false;
+        }
+        let parent_is_field = class
+            .parent_class
+            .as_deref()
+            .is_some_and(|name| name != "NonSend");
+        let parent_supports = match class.parent_class.as_deref() {
+            None | Some("NonSend") => true,
+            Some(parent_name) => module
+                .classes
+                .iter()
+                .find(|candidate| candidate.name == parent_name)
+                .is_some_and(|parent| Self::class_emits_display(parent, module, visiting)),
+        };
+        let supports = (parent_is_field || !class.fields.is_empty())
+            && parent_supports
+            && class
+                .fields
+                .iter()
+                .all(|(_, ty)| supports_declaration_display(ty));
+        visiting.remove(&class.name);
+        supports
     }
 
     pub(crate) fn class_struct_fields(
@@ -204,6 +331,15 @@ impl RustEmitter {
             };
             fields.push((name, ty));
         }
+        if !class.type_params.is_empty() {
+            fields.push((
+                "__sifr_type_marker".to_string(),
+                RustType::Named(format!(
+                    "std::marker::PhantomData<fn() -> {}>",
+                    Self::class_phantom_tuple(class)
+                )),
+            ));
+        }
         if class.name == "PythonError" {
             let name = if module_public {
                 "pub __sifr_python_error".to_string()
@@ -218,6 +354,30 @@ impl RustEmitter {
             ));
         }
         fields
+    }
+
+    fn class_phantom_tuple(class: &HirClass) -> String {
+        if class.type_params.len() == 1 {
+            format!("({},)", class.type_params[0])
+        } else {
+            format!("({})", class.type_params.join(", "))
+        }
+    }
+
+    pub(crate) fn append_class_phantom_initializer(
+        class: &HirClass,
+        fields: &mut Vec<(String, RustExpr)>,
+    ) {
+        if !class.type_params.is_empty() {
+            fields.push((
+                "__sifr_type_marker".to_string(),
+                RustExpr::Path(vec![
+                    "std".to_string(),
+                    "marker".to_string(),
+                    "PhantomData".to_string(),
+                ]),
+            ));
+        }
     }
 
     fn python_opaque_constructor_item(&self, class: &HirClass) -> RustItem {
@@ -300,7 +460,15 @@ impl RustEmitter {
                             .unwrap_or_else(|| self.rust_type_with_generics(field_ty)),
                     )
                 } else {
-                    self.rust_ir_type_with_generics(field_ty)
+                    let rendered = self.rust_type_with_generics(field_ty);
+                    if matches!(
+                        field_ty.resolve_alias(),
+                        Type::Callable(..) | Type::AsyncCallable(..)
+                    ) {
+                        RustType::Named(format!("{rendered} + 'static"))
+                    } else {
+                        RustType::Named(rendered)
+                    }
                 };
                 RustParam::Named {
                     name: field_name.clone(),
@@ -311,8 +479,23 @@ impl RustEmitter {
         let mut fields = class
             .fields
             .iter()
-            .map(|(field_name, _)| (field_name.clone(), RustExpr::Ident(field_name.clone())))
+            .map(|(field_name, field_ty)| {
+                let value = RustExpr::Ident(field_name.clone());
+                let value = if matches!(
+                    field_ty.resolve_alias(),
+                    Type::Callable(..) | Type::AsyncCallable(..)
+                ) {
+                    RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
+                        args: vec![value],
+                    }
+                } else {
+                    value
+                };
+                (field_name.clone(), value)
+            })
             .collect::<Vec<_>>();
+        Self::append_class_phantom_initializer(class, &mut fields);
         if class.name == "PythonError" {
             fields.push((
                 "__sifr_python_error".to_string(),
@@ -423,15 +606,20 @@ impl RustEmitter {
     }
 
     pub(crate) fn build_display_impl_for_auto_fields(&self, class: &HirClass) -> RustItem {
+        let parent_field = class
+            .parent_class
+            .as_deref()
+            .filter(|name| *name != "NonSend")
+            .map(str::to_lowercase);
         let format_str = format!(
             "{}({})",
             class.name,
-            class
-                .fields
+            parent_field
                 .iter()
-                .map(|(name, ty)| {
+                .map(|name| format!("{name}={{}}"))
+                .chain(class.fields.iter().map(|(name, ty)| {
                     format!("{name}={}", self.auto_display_format_spec_for_field(ty))
-                })
+                }))
                 .collect::<Vec<_>>()
                 .join(", ")
         );
@@ -439,6 +627,10 @@ impl RustEmitter {
             RustExpr::Ident("f".to_string()),
             RustExpr::Literal(RustLiteral::Str(format_str)),
         ];
+        args.extend(parent_field.iter().map(|field_name| RustExpr::Field {
+            expr: Box::new(RustExpr::Ident("self".to_string())),
+            field: field_name.clone(),
+        }));
         args.extend(class.fields.iter().map(|(field_name, _)| RustExpr::Field {
             expr: Box::new(RustExpr::Ident("self".to_string())),
             field: field_name.clone(),
@@ -446,7 +638,7 @@ impl RustEmitter {
 
         RustItem::Impl {
             target: Self::class_impl_target(class),
-            type_params: Self::class_impl_type_params(class),
+            type_params: Self::class_auto_display_type_params(class),
             trait_: Some("std::fmt::Display".to_string()),
             items: vec![RustItem::Fn {
                 name: "fmt".to_string(),
@@ -505,39 +697,30 @@ impl RustEmitter {
             .operator_impls
             .iter()
             .any(|(name, _)| name == "__str__");
-        let has_callable_field = class
-            .fields
-            .iter()
-            .any(|(_, ty)| matches!(ty, Type::Callable(..) | Type::AsyncCallable(..)));
-        let has_affine_field = class.fields.iter().any(|(_, ty)| {
-            matches!(
-                ty.resolve_alias(),
-                Type::Class { parent_class, .. }
-                    if parent_class.as_deref() == Some("NonSend")
-            )
-        });
+        let capabilities =
+            self.class_trait_capabilities(class, module, &mut std::collections::HashSet::new());
         let has_auto_display =
-            !class.fields.is_empty() && class.fields.iter().all(|(_, ty)| is_auto_display_type(ty));
+            Self::class_emits_display(class, module, &mut std::collections::HashSet::new())
+                && !has_custom_str
+                && !class.is_error_type;
         let derives = if is_python_opaque || self.is_current_process_resource_class(&class.name) {
             vec!["Debug".to_string()]
-        } else if has_callable_field || has_affine_field {
-            Vec::new()
-        } else if has_custom_eq {
-            vec!["Debug".to_string(), "Clone".to_string()]
-        } else if class.is_hashable {
-            vec![
-                "Debug".to_string(),
-                "Clone".to_string(),
-                "PartialEq".to_string(),
-                "Eq".to_string(),
-                "Hash".to_string(),
-            ]
         } else {
-            vec![
-                "Debug".to_string(),
-                "Clone".to_string(),
-                "PartialEq".to_string(),
-            ]
+            let mut derives = Vec::new();
+            if capabilities.debug {
+                derives.push("Debug".to_string());
+            }
+            if capabilities.clone {
+                derives.push("Clone".to_string());
+            }
+            if !has_custom_eq && capabilities.partial_eq {
+                derives.push("PartialEq".to_string());
+            }
+            if capabilities.hash {
+                derives.push("Eq".to_string());
+                derives.push("Hash".to_string());
+            }
+            derives
         };
 
         let struct_fields = self.class_struct_fields(class, module_public);
@@ -547,12 +730,15 @@ impl RustEmitter {
             derives,
             fields: struct_fields,
         });
+        self.body_items
+            .extend(Self::class_parent_deref_impls(class));
 
         let saved_class_name = self.current_class_name.clone();
         self.current_class_name = Some(class.name.clone());
-        let mut impl_items = Vec::new();
+        let mut constructor_items = Vec::new();
+        let mut method_items = Vec::new();
         if is_python_opaque {
-            impl_items.push(self.python_opaque_constructor_item(class));
+            constructor_items.push(self.python_opaque_constructor_item(class));
         }
         let has_constructor = class.methods.iter().any(|method| method.name == "new");
         if !is_python_opaque
@@ -562,7 +748,7 @@ impl RustEmitter {
                 .as_deref()
                 .is_none_or(|parent| parent == "NonSend")
         {
-            impl_items.push(self.lower_default_constructor_item(class, module_public));
+            constructor_items.push(self.lower_default_constructor_item(class, module_public));
         }
         for method in &class.methods {
             if method.python_interop.first().is_some_and(|declaration| {
@@ -576,21 +762,51 @@ impl RustEmitter {
             }) {
                 continue;
             }
-            impl_items.push(self.lower_class_method_item(method, class, module_public));
+            let item = self.lower_class_method_item(method, class, module_public);
+            if method.name == "new" {
+                constructor_items.push(item);
+            } else {
+                method_items.push((method, item));
+            }
         }
         self.current_class_name = saved_class_name;
-        self.body_items.push(RustItem::Impl {
-            target: Self::class_impl_target(class),
-            type_params: Self::class_impl_type_params(class),
-            trait_: None,
-            items: impl_items,
-        });
+        if !constructor_items.is_empty() {
+            self.body_items.push(RustItem::Impl {
+                target: Self::class_impl_target(class),
+                type_params: Self::class_constructor_impl_type_params(class, &constructor_items),
+                trait_: None,
+                items: constructor_items,
+            });
+        }
+        if method_items.is_empty() && class.type_params.is_empty() {
+            self.body_items.push(RustItem::Impl {
+                target: Self::class_impl_target(class),
+                type_params: Vec::new(),
+                trait_: None,
+                items: Vec::new(),
+            });
+        }
+        let method_bounds = Self::class_method_type_param_bounds(class, &method_items);
+        for (method, item) in method_items {
+            let type_params = Self::class_function_impl_type_params(
+                class,
+                method,
+                std::slice::from_ref(&item),
+                method_bounds.get(&method.name),
+            );
+            self.body_items.push(RustItem::Impl {
+                target: Self::class_impl_target(class),
+                type_params,
+                trait_: None,
+                items: vec![item],
+            });
+        }
 
         if self.current_module_name.as_deref() == Some("sifr.process") && class.name == "Child" {
             self.body_items.push(Self::process_child_drop_impl());
         }
 
-        self.emit_operator_impls(class);
+        self.emit_operator_impls(class, module, &method_bounds);
 
         if class.is_error_type {
             self.body_items

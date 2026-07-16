@@ -126,6 +126,7 @@
         "callback-examples",
         "dataframes",
         "dataframe-examples",
+        "buffer-examples",
         "ml",
         "libraries",
         "async-declaration-examples",

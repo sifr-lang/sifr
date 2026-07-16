@@ -61,7 +61,9 @@ pub(in crate::lower) fn lower_return(
         let expr_ty = expr.ty().clone();
 
         if let HirExpr::Name { name, ty } = &expr {
-            if ctx.borrowed_params.contains(name.as_str()) && ty.ownership() == OwnershipKind::Move
+            if ctx.borrowed_params.contains(name.as_str())
+                && ty.ownership() == OwnershipKind::Move
+                && !ty.contains_affine_resource()
             {
                 ownership_diagnostics::borrowed_parameter_return_escape(ctx, name, val.range());
             }
@@ -135,6 +137,13 @@ fn transfer_return_ownership(expr: &HirExpr, range: TextRange, ctx: &mut LowerCt
                 ),
                 range,
             );
+        }
+        HirExpr::Name { name, ty }
+            if ctx.borrowed_params.contains(name)
+                && ty.ownership() == OwnershipKind::Move
+                && ty.contains_affine_resource() =>
+        {
+            ownership_diagnostics::borrowed_affine_parameter_escape(ctx, name, "return", range);
         }
         HirExpr::Name { name, ty }
             if ty.ownership() == OwnershipKind::Move
