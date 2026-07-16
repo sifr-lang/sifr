@@ -1301,10 +1301,14 @@ Delivery waves:
   documentation, and complete activation evidence. The implementation adds a
   validator-owned declaration evidence matrix, a fifth compiled real-NumPy
   case, `demos/m10_demo`, and active `PYZC` public docs. Focused lowering
-  (`34/34`), codegen (`10/10`), runtime (`18/18`), runner self-test, scaffold,
+  (`34/34`), codegen (`10/10`), runtime buffer matrix (`30/30`), runner self-test, scaffold,
   and five-binary demo checks pass. The authoritative create-PR gate passes
   Python interop `11/11` and E2E `131/131` with signature
-  `7c39b8c1dd4fec7c` after a clean build.
+  `7c39b8c1dd4fec7c` after a clean build. Whole-diff
+  [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-1.md)
+  requested independent pointer/exact-release evidence, a strict evidence
+  schema, least-authority generated manifests, and an architecture wording
+  repair. All four findings are remediated; repeat review is pending.
 - [ ] Milestone review — review the complete merged M10 implementation before
   closing the milestone checkbox.
 

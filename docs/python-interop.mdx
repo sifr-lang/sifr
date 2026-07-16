@@ -309,8 +309,8 @@ The decorator target can be an import-root callable, a package-local `bridge`
 callable, or `Self` on an opaque receiver. `access=read | write` and
 `layout=any | c_contiguous | f_contiguous` are validated during acquisition
 along with element format, item size, dimensions, shape, strides, and
-suboffsets. Supported element types are fixed-width signed and unsigned
-integers plus `float`.
+suboffsets. Supported element types are fixed-width and pointer-width signed
+and unsigned integers plus `float`.
 
 `python.Buffer[T]` is affine and non-send. It retains its exporter and performs
 exactly one `PyBuffer_Release` on explicit `release()` or automatic drop.

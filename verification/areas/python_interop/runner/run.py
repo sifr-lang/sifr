@@ -542,28 +542,107 @@ def validate_async_context_evidence(payload: object) -> None:
 
 
 def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -> None:
-    if not isinstance(payload, dict) or payload.get("capability") != (
-        "buffer-protocol-declaration"
-    ):
+    if not isinstance(payload, dict):
         raise SystemExit("buffer evidence must identify buffer-protocol-declaration")
-    for matrix_name in ("positive", "negative", "cleanup"):
+    required_keys = {
+        "schema_version",
+        "capability",
+        "surface",
+        "positive",
+        "negative",
+        "cleanup",
+        "cancellation",
+        "live",
+        "profiles",
+    }
+    if set(payload) != required_keys:
+        raise SystemExit("buffer evidence top-level schema drift")
+    if payload.get("schema_version") != 1:
+        raise SystemExit("buffer evidence schema_version must be 1")
+    if payload.get("capability") != "buffer-protocol-declaration":
+        raise SystemExit("buffer evidence must identify buffer-protocol-declaration")
+    if payload.get("surface") != "@python.buffer -> Result[python.Buffer[T], PythonError]":
+        raise SystemExit("buffer evidence surface drift")
+    matrix_specs = {
+        "positive": {
+            "typed-runtime-matrix": (
+                "runtime",
+                {"fixed-width and pointer-width signed and unsigned integers", "float", "native endian format", "C/F/strided/negative-stride/indirect layout", "bounded read/write/copy_slice", "constant-space contiguous admission"},
+            ),
+            "compiler-contract-matrix": (
+                "lowering-codegen",
+                {"import-root target", "bridge target", "Self receiver", "read/write access", "any/C/F layout", "affine aggregate propagation", "non-Send propagation"},
+            ),
+            "compiled-producer-matrix": (
+                "native-binary",
+                {"builtins.bytearray import-root", "opaque mmap Self receiver", "package-local bridge producer", "real NumPy ndarray exporter", "affine record/Option/list/tuple/union/recursive aggregate"},
+            ),
+        },
+        "negative": {
+            "declaration-shape": (
+                "lowering",
+                {"invalid target", "invalid access/layout", "unsupported element type", "wrong return channel", "async declaration", "invalid receiver convention"},
+            ),
+            "ownership-and-traits": (
+                "lowering-e2e",
+                {"copy/clone/equality/hash/order", "use after move", "borrowed release", "mutable alias", "field/index projection", "lambda/nested-function/generator capture", "walrus alias", "task sendability"},
+            ),
+            "runtime-validation": (
+                "runtime",
+                {"dtype/format mismatch", "item-size mismatch", "layout mismatch", "readonly write", "bounds", "non-buffer exporter", "double release", "use after release", "overlapping writable views"},
+            ),
+        },
+        "cleanup": {
+            "explicit-release": (
+                "runtime-native-binary",
+                {"detach before release", "exact-once PyBuffer_Release", "exporter retention", "zero live/leaked resources"},
+            ),
+            "automatic-drop": (
+                "runtime-native-binary",
+                {"normal return", "aggregate field drop", "Option/list/tuple/union drop", "recursive aggregate drop", "zero live/leaked resources"},
+            ),
+            "failure-rollback": (
+                "runtime",
+                {"validation failure", "admission conflict", "store failure rollback", "exact-once rejected-view release", "lock-free Python release"},
+            ),
+        },
+    }
+    repo_root = fixtures_root.parents[3]
+    for matrix_name, expected_rows in matrix_specs.items():
         matrix = payload.get(matrix_name)
-        if not isinstance(matrix, list) or len(matrix) < 3:
-            raise SystemExit(f"buffer evidence requires at least 3 {matrix_name} rows")
-        if any(
-            not isinstance(item, dict)
-            or not item.get("id")
-            or not item.get("layer")
-            or not item.get("evidence")
-            or not isinstance(item.get("covers"), list)
-            or not item["covers"]
-            for item in matrix
-        ):
-            raise SystemExit(
-                f"buffer evidence {matrix_name} rows require id, layer, evidence, and coverage"
-            )
+        if not isinstance(matrix, list) or len(matrix) != len(expected_rows):
+            raise SystemExit(f"buffer evidence requires exact {matrix_name} rows")
+        ids = [item.get("id") for item in matrix if isinstance(item, dict)]
+        if len(ids) != len(matrix) or len(set(ids)) != len(ids) or set(ids) != set(expected_rows):
+            raise SystemExit(f"buffer evidence {matrix_name} row id drift")
+        for item in matrix:
+            if set(item) != {"id", "layer", "evidence", "owners", "covers"}:
+                raise SystemExit(f"buffer evidence {matrix_name} row schema drift")
+            expected_layer, expected_coverage = expected_rows[item["id"]]
+            if item.get("layer") != expected_layer:
+                raise SystemExit(f"buffer evidence layer drift: {item['id']}")
+            if not isinstance(item.get("evidence"), str) or not item["evidence"]:
+                raise SystemExit(f"buffer evidence description is missing: {item['id']}")
+            covers = item.get("covers")
+            if not isinstance(covers, list) or len(covers) != len(set(covers)) or set(covers) != expected_coverage:
+                raise SystemExit(f"buffer evidence coverage drift: {item['id']}")
+            owners = item.get("owners")
+            if not isinstance(owners, list) or not owners or len(owners) != len(set(owners)):
+                raise SystemExit(f"buffer evidence owners are invalid: {item['id']}")
+            for owner in owners:
+                if not isinstance(owner, str) or not owner:
+                    raise SystemExit(f"buffer evidence owner is invalid: {item['id']}")
+                relative_path, separator, symbol = owner.partition("::")
+                owner_path = repo_root / relative_path
+                if not owner_path.is_file():
+                    raise SystemExit(f"buffer evidence owner is missing: {owner}")
+                if separator and symbol not in owner_path.read_text(encoding="utf-8"):
+                    raise SystemExit(f"buffer evidence owner symbol is missing: {owner}")
     cancellation = payload.get("cancellation")
-    if not isinstance(cancellation, dict) or cancellation.get("status") != "not-applicable":
+    if cancellation != {
+        "status": "not-applicable",
+        "reason": "buffer acquisition and access are synchronous blocking boundaries",
+    }:
         raise SystemExit("buffer evidence must record synchronous cancellation as not applicable")
     live = payload.get("live")
     required_live_ids = {
@@ -573,11 +652,11 @@ def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -
         "affine-aggregate",
         "numpy-ndarray",
     }
-    observed_live_ids = (
-        {item.get("id") for item in live if isinstance(item, dict)}
-        if isinstance(live, list)
-        else set()
-    )
+    if not isinstance(live, list) or len(live) != len(required_live_ids):
+        raise SystemExit("buffer live evidence requires exactly five rows")
+    if any(not isinstance(item, dict) or set(item) != {"id", "source", "stdout_marker"} for item in live):
+        raise SystemExit("buffer live evidence row schema drift")
+    observed_live_ids = {item.get("id") for item in live}
     if observed_live_ids != required_live_ids:
         missing = sorted(required_live_ids - observed_live_ids)
         extra = sorted(observed_live_ids - required_live_ids)
@@ -604,18 +683,29 @@ def validate_buffer_declaration_evidence(payload: object, fixtures_root: Path) -
     required_profiles = ["create-pr", "merge", "nightly", "release"]
     if profiles != required_profiles:
         raise SystemExit("buffer evidence must remain blocking in every delivery profile")
-    repo_root = fixtures_root.parents[3]
+    manifest_payload = json.loads(
+        (repo_root / "verification" / "areas" / "python_interop" / "manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    manifest_suites = [suite for suite in manifest_payload["suites"] if suite["name"] == "buffer-examples"]
+    if len(manifest_suites) != 1 or manifest_suites[0].get("kind") != "adapter":
+        raise SystemExit("buffer examples manifest ownership drift")
+    manifest_cases = manifest_suites[0].get("cases")
+    if not isinstance(manifest_cases, list) or len(manifest_cases) != 1 or manifest_cases[0].get("command") != "python-interop-buffer-examples":
+        raise SystemExit("buffer examples manifest command drift")
     for profile in required_profiles:
         profile_payload = json.loads(
             (repo_root / "verification" / "profiles" / f"{profile}.json").read_text(
                 encoding="utf-8"
             )
         )
-        python_suites = next(
-            area["suites"]
-            for area in profile_payload["selected_areas"]
-            if area["area"] == "python_interop"
-        )
+        python_areas = [
+            area for area in profile_payload["selected_areas"] if area["area"] == "python_interop"
+        ]
+        if len(python_areas) != 1:
+            raise SystemExit(f"python interop profile ownership drift in {profile}")
+        python_suites = python_areas[0]["suites"]
         if "buffer-examples" not in python_suites:
             raise SystemExit(f"buffer examples are not blocking in {profile}")
 
@@ -684,16 +774,33 @@ def run_self_tests(area_root: Path) -> None:
             encoding="utf-8"
         )
     )
-    buffer_evidence["live"] = [
-        item for item in buffer_evidence["live"] if item["id"] != "numpy-ndarray"
-    ]
-    try:
-        validate_buffer_declaration_evidence(buffer_evidence, area_root / "fixtures")
-    except SystemExit as error:
-        if "missing=['numpy-ndarray']" not in str(error):
-            raise
-    else:
-        raise SystemExit("buffer evidence self-test accepted a missing NumPy live row")
+    buffer_mutations = []
+    invalid_schema = json.loads(json.dumps(buffer_evidence))
+    invalid_schema["schema_version"] = 999
+    buffer_mutations.append((invalid_schema, "schema_version"))
+    duplicate_matrix = json.loads(json.dumps(buffer_evidence))
+    duplicate_matrix["positive"][1]["id"] = duplicate_matrix["positive"][0]["id"]
+    buffer_mutations.append((duplicate_matrix, "row id drift"))
+    missing_owner = json.loads(json.dumps(buffer_evidence))
+    missing_owner["cleanup"][0]["owners"][0] = "crates/missing.rs::missing_test"
+    buffer_mutations.append((missing_owner, "owner is missing"))
+    missing_reason = json.loads(json.dumps(buffer_evidence))
+    del missing_reason["cancellation"]["reason"]
+    buffer_mutations.append((missing_reason, "synchronous cancellation"))
+    duplicate_live = json.loads(json.dumps(buffer_evidence))
+    duplicate_live["live"].append(duplicate_live["live"][0])
+    buffer_mutations.append((duplicate_live, "exactly five rows"))
+    missing_profile = json.loads(json.dumps(buffer_evidence))
+    missing_profile["profiles"].remove("release")
+    buffer_mutations.append((missing_profile, "every delivery profile"))
+    for mutated, expected_error in buffer_mutations:
+        try:
+            validate_buffer_declaration_evidence(mutated, area_root / "fixtures")
+        except SystemExit as error:
+            if expected_error not in str(error):
+                raise
+        else:
+            raise SystemExit(f"buffer evidence self-test accepted mutation: {expected_error}")
     run_env_probe(area_root)
     try:
         validate_filters("group", ["not-a-group"], KNOWN_GROUPS)

@@ -1,8 +1,20 @@
 from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-@python.buffer(bridge.buffer_producers.make_buffer, access=read, layout=any)
+@python.buffer(bridge.buffer_bytes.make_buffer, access=read, layout=any)
 def aggregate_view(payload: bytes) -> Result[python.Buffer[uint8], PythonError]: ...
+
+
+@python(bridge.buffer_bytes.reset_buffer_observer)
+def reset_buffer_observer() -> Result[None, PythonError]: ...
+
+
+@python(bridge.buffer_bytes.buffer_acquisition_count)
+def buffer_acquisition_count() -> Result[int, PythonError]: ...
+
+
+@python(bridge.buffer_bytes.buffer_release_count)
+def buffer_release_count() -> Result[int, PythonError]: ...
 
 
 class BufferAggregate:
@@ -38,9 +50,12 @@ def exercise_affine_aggregates() -> Result[None, PythonError]:
 def main() -> Result[None, PythonError]:
     try:
         before: ResourceDiagnostics = resource_diagnostics()
+        reset: None = reset_buffer_observer()
         exercised: None = exercise_affine_aggregates()
+        acquisitions: int = buffer_acquisition_count()
+        releases: int = buffer_release_count()
         after: ResourceDiagnostics = resource_diagnostics()
-        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+        if acquisitions != 6 or releases != 6 or after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
             raise PythonError("affine buffer aggregate cleanup leaked resources")
         print("sifr-python-interop:buffer:affine-aggregate=ok:resources=zero")
         return None

@@ -7,18 +7,21 @@
       "id": "typed-runtime-matrix",
       "layer": "runtime",
       "evidence": "python::buffer_ops::tests",
-      "covers": ["signed and unsigned fixed integers", "float", "native endian format", "C/F/strided/negative-stride/indirect layout", "bounded read/write/copy_slice", "constant-space contiguous admission"]
+      "owners": ["crates/sifr_runtime/src/python/buffer_ops/tests.rs", "crates/sifr_runtime/src/python/buffer_ops/release_evidence_tests.rs"],
+      "covers": ["fixed-width and pointer-width signed and unsigned integers", "float", "native endian format", "C/F/strided/negative-stride/indirect layout", "bounded read/write/copy_slice", "constant-space contiguous admission"]
     },
     {
       "id": "compiler-contract-matrix",
       "layer": "lowering-codegen",
       "evidence": "python_buffer_contract_tests and python_buffer_codegen_tests",
+      "owners": ["crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs", "crates/sifr_codegen/src/python_buffer_codegen_tests.rs"],
       "covers": ["import-root target", "bridge target", "Self receiver", "read/write access", "any/C/F layout", "affine aggregate propagation", "non-Send propagation"]
     },
     {
       "id": "compiled-producer-matrix",
       "layer": "native-binary",
       "evidence": "runner/buffer_examples.py",
+      "owners": ["verification/areas/python_interop/runner/buffer_examples.py", "verification/areas/python_interop/fixtures/numpy_buffer/buffer_declaration_codegen_smoke.sifr", "verification/areas/python_interop/fixtures/numpy_buffer/buffer_declaration_self.sifr", "verification/areas/python_interop/fixtures/numpy_buffer/buffer_declaration_bridge.sifr", "verification/areas/python_interop/fixtures/numpy_buffer/buffer_affine_aggregate_codegen.sifr", "verification/areas/python_interop/fixtures/numpy_buffer/buffer_declaration_numpy.sifr"],
       "covers": ["builtins.bytearray import-root", "opaque mmap Self receiver", "package-local bridge producer", "real NumPy ndarray exporter", "affine record/Option/list/tuple/union/recursive aggregate"]
     }
   ],
@@ -27,18 +30,21 @@
       "id": "declaration-shape",
       "layer": "lowering",
       "evidence": "python_buffer_contract_tests",
+      "owners": ["crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs"],
       "covers": ["invalid target", "invalid access/layout", "unsupported element type", "wrong return channel", "async declaration", "invalid receiver convention"]
     },
     {
       "id": "ownership-and-traits",
       "layer": "lowering-e2e",
       "evidence": "python_buffer_contract_tests and crates/sifr/tests/e2e/fail/python_buffer_*.sifr",
+      "owners": ["crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs", "crates/sifr/tests/e2e/fail/python_buffer_identity_rejected.sifr"],
       "covers": ["copy/clone/equality/hash/order", "use after move", "borrowed release", "mutable alias", "field/index projection", "lambda/nested-function/generator capture", "walrus alias", "task sendability"]
     },
     {
       "id": "runtime-validation",
       "layer": "runtime",
       "evidence": "python::buffer_ops::tests",
+      "owners": ["crates/sifr_runtime/src/python/buffer_ops/tests.rs"],
       "covers": ["dtype/format mismatch", "item-size mismatch", "layout mismatch", "readonly write", "bounds", "non-buffer exporter", "double release", "use after release", "overlapping writable views"]
     }
   ],
@@ -46,20 +52,23 @@
     {
       "id": "explicit-release",
       "layer": "runtime-native-binary",
-      "evidence": "buffer runtime counters plus top-level, Self, bridge, and NumPy examples",
+      "evidence": "instrumented bf_releasebuffer counter, data-pointer identity, and compiled bridge/NumPy producer identity",
+      "owners": ["crates/sifr_runtime/src/python/buffer_ops/release_evidence_tests.rs::instrumented_exporter_explicit_release_is_exact_once_and_pointer_identical", "verification/areas/python_interop/fixtures/numpy_buffer/buffer_declaration_bridge.sifr", "verification/areas/python_interop/fixtures/numpy_buffer/buffer_declaration_numpy.sifr"],
       "covers": ["detach before release", "exact-once PyBuffer_Release", "exporter retention", "zero live/leaked resources"]
     },
     {
       "id": "automatic-drop",
       "layer": "runtime-native-binary",
-      "evidence": "sealed_resource_identity_drop_releases_buffer_and_metadata plus buffer_affine_aggregate_codegen.sifr",
+      "evidence": "instrumented automatic release counter plus buffer_affine_aggregate_codegen.sifr six-exporter counter",
+      "owners": ["crates/sifr_runtime/src/python/buffer_ops/release_evidence_tests.rs::instrumented_exporter_automatic_resource_drop_releases_exactly_once", "verification/areas/python_interop/fixtures/numpy_buffer/buffer_affine_aggregate_codegen.sifr"],
       "covers": ["normal return", "aggregate field drop", "Option/list/tuple/union drop", "recursive aggregate drop", "zero live/leaked resources"]
     },
     {
       "id": "failure-rollback",
       "layer": "runtime",
-      "evidence": "buffer acquisition validation and admission tests",
-      "covers": ["validation failure", "admission conflict", "object-count failure rollback", "release error admission cleanup", "lock-free Python release"]
+      "evidence": "instrumented validation, admission-conflict, and store-failure release counters",
+      "owners": ["crates/sifr_runtime/src/python/buffer_ops/release_evidence_tests.rs::instrumented_exporter_validation_failure_rolls_back_exactly_once", "crates/sifr_runtime/src/python/buffer_ops/release_evidence_tests.rs::instrumented_exporter_admission_conflict_releases_rejected_view_exactly_once", "crates/sifr_runtime/src/python/buffer_ops/release_evidence_tests.rs::instrumented_exporter_store_failure_rolls_back_exactly_once"],
+      "covers": ["validation failure", "admission conflict", "store failure rollback", "exact-once rejected-view release", "lock-free Python release"]
     }
   ],
   "cancellation": {
@@ -90,7 +99,7 @@
     {
       "id": "numpy-ndarray",
       "source": "buffer_declaration_numpy.sifr",
-      "stdout_marker": "sifr-python-interop:buffer:numpy=int64:write=42:resources=zero"
+      "stdout_marker": "sifr-python-interop:buffer:numpy=int64:write=42:identity=shared:resources=zero"
     }
   ],
   "profiles": ["create-pr", "merge", "nightly", "release"]

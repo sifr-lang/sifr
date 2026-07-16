@@ -162,7 +162,7 @@
       "evidence": [
         {"kind": "positive", "status": "passing", "owner": "validated buffer_declaration_evidence.json typed runtime, compiler, import-root, Self, bridge, affine aggregate, and NumPy matrices"},
         {"kind": "negative", "status": "passing", "owner": "validated buffer_declaration_evidence.json declaration-shape, ownership/trait, and runtime validation matrices"},
-        {"kind": "cleanup", "status": "passing", "owner": "validated buffer_declaration_evidence.json explicit release, automatic aggregate drop, and failure rollback matrices"},
+        {"kind": "cleanup", "status": "passing", "owner": "validated buffer_declaration_evidence.json instrumented pointer identity and exact exporter counters for explicit release, automatic aggregate drop, validation/admission failure, and store rollback"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "buffer acquisition is synchronous"},
         {"kind": "live", "status": "passing", "owner": "five compiled buffer examples: import-root bytearray, mmap Self receiver, package bridge, affine aggregate, and NumPy ndarray"}
       ]

@@ -586,4 +586,6 @@ fn buffer_store() -> Result<MutexGuard<'static, BufferStore>, PythonError> {
 }
 
 #[cfg(test)]
+mod release_evidence_tests;
+#[cfg(test)]
 mod tests;

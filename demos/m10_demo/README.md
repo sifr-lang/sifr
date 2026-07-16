@@ -6,9 +6,10 @@ The generated binaries exercise:
 
 - a writable `builtins.bytearray` import-root producer;
 - an opaque `mmap` receiver through `Self`;
-- a package-local Python bridge producer;
+- a package-local Python bridge producer with an observable data pointer and
+  exact `bf_releasebuffer` counter;
 - automatic cleanup through affine record, `Option`, list, tuple, union, and
-  recursive aggregates; and
+  recursive aggregates with six exact exporter-release observations; and
 - a real writable NumPy `int64` ndarray with checked metadata, typed element
   access, mutation, copying, and exact release.
 
@@ -25,5 +26,5 @@ sifr-python-interop:buffer:top-level=ok:resources=zero
 sifr-python-interop:buffer:receiver=ok:resources=zero
 sifr-python-interop:buffer:bridge=ok:resources=zero
 sifr-python-interop:buffer:affine-aggregate=ok:resources=zero
-sifr-python-interop:buffer:numpy=int64:write=42:resources=zero
+sifr-python-interop:buffer:numpy=int64:write=42:identity=shared:resources=zero
 ```

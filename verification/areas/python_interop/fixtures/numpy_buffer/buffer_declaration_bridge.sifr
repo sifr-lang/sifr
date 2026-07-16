@@ -1,18 +1,38 @@
 from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-@python.buffer(bridge.buffer_producers.make_buffer, access=read, layout=any)
+@python.buffer(bridge.buffer_bytes.make_buffer, access=read, layout=any)
 def bridge_view(payload: bytes) -> Result[python.Buffer[uint8], PythonError]: ...
+
+
+@python(bridge.buffer_bytes.reset_buffer_observer)
+def reset_buffer_observer() -> Result[None, PythonError]: ...
+
+
+@python(bridge.buffer_bytes.buffer_acquisition_count)
+def buffer_acquisition_count() -> Result[int, PythonError]: ...
+
+
+@python(bridge.buffer_bytes.buffer_release_count)
+def buffer_release_count() -> Result[int, PythonError]: ...
+
+
+@python(bridge.buffer_bytes.last_buffer_pointer)
+def last_buffer_pointer() -> Result[int, PythonError]: ...
 
 
 def main() -> Result[None, PythonError]:
     try:
         before: ResourceDiagnostics = resource_diagnostics()
+        reset: None = reset_buffer_observer()
         view: python.Buffer[uint8] = bridge_view(b"bridge")
+        pointer: int = last_buffer_pointer()
         copied: list[uint8] = view.copy_slice(0, view.length())
         released: None = view.release()
+        acquisitions: int = buffer_acquisition_count()
+        releases: int = buffer_release_count()
         after: ResourceDiagnostics = resource_diagnostics()
-        if len(copied) != 6 or after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+        if len(copied) != 6 or pointer <= 0 or acquisitions != 1 or releases != 1 or after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
             raise PythonError("bridge buffer acquisition leaked resources")
         print("sifr-python-interop:buffer:bridge=ok:resources=zero")
         return None

@@ -517,10 +517,14 @@ shape values are static type parameters.
 Complete activation evidence is machine-owned by
 `verification/areas/python_interop/fixtures/numpy_buffer/buffer_declaration_evidence.json`.
 It locks positive, negative, cleanup, cancellation-disposition, live-source,
-and delivery-profile ownership. The compiled suite covers import-root, `Self`,
-package-bridge, affine-aggregate, and real NumPy ndarray producers, and
-The runnable typed-buffer example exposes the same five deterministic
-zero-resource markers.
+and delivery-profile ownership. Its owners resolve to checked-in source or
+named tests, and strict mutation tests reject schema, row, owner, cancellation,
+live-case, and profile drift. The compiled suite covers import-root, `Self`,
+package-bridge, affine-aggregate, and real NumPy ndarray producers. The bridge
+fixtures expose data identity and exact `bf_releasebuffer` counts for explicit
+and aggregate-drop cleanup; runtime tests independently cover pointer identity,
+validation failure, admission conflict, and store-failure rollback. The
+runnable typed-buffer example exposes the same five deterministic markers.
 
 ## Arrow C Data Interface
 
