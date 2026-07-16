@@ -51,12 +51,35 @@ impl RustEmitter {
                     mutable: true,
                     expr: Box::new(RustExpr::Field {
                         expr: Box::new(RustExpr::Ident("self".to_string())),
-                        field,
+                        field: field.clone(),
                     }),
                 }))],
                 is_async: false,
             }],
         };
-        vec![deref, deref_mut]
+        let from_child = RustItem::Impl {
+            target: parent.to_string(),
+            type_params: Self::class_impl_type_params(class),
+            trait_: Some(format!(
+                "std::convert::From<{}>",
+                Self::class_impl_target(class)
+            )),
+            items: vec![RustItem::Fn {
+                name: "from".to_string(),
+                visibility: Visibility::Private,
+                type_params: Vec::new(),
+                params: vec![RustParam::Named {
+                    name: "value".to_string(),
+                    ty: RustType::Named(Self::class_impl_target(class)),
+                }],
+                ret: Some(RustType::Named("Self".to_string())),
+                body: vec![RustStmt::Return(Some(RustExpr::Field {
+                    expr: Box::new(RustExpr::Ident("value".to_string())),
+                    field,
+                }))],
+                is_async: false,
+            }],
+        };
+        vec![deref, deref_mut, from_child]
     }
 }

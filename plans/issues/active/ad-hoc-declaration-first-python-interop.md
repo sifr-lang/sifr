@@ -7,14 +7,15 @@ ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
-Wave 2 is implemented; whole-diff review passes 14 through 22 reopened
+Wave 2 is implemented; whole-diff review passes 14 through 23 reopened
 generic/inherited Rust-trait, reusable affine-closure ownership, keyed sorting,
 per-type-parameter bound, specialization, generic-operator, conditional-source,
 top-level inference, multi-hop re-export identity, and specialized generic
 pattern-capture gaps. Their remediation passes the focused and complete
 compiler suites, native-positive/negative coverage, full merge-profile E2E,
 maintainability, formatting, and file-size checks plus the authoritative local
-create-PR gate in [PR #2988](https://github.com/sifr-lang/sifr/pull/2988). Typed
+create-PR gate in [PR #2988](https://github.com/sifr-lang/sifr/pull/2988).
+Pass-23 remediation is complete and awaiting the next whole-diff review. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1229,7 +1230,27 @@ Delivery waves:
   `471.02s`: Python interop `11/11`, runtime platform `28` variants with one
   capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `42/42` cache hits. Its only advisory is the
-  non-blocking warm wall-time target. Fresh whole-diff review remains pending.
+  non-blocking warm wall-time target. Full-diff
+  [review pass 23](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-23.md)
+  then found two native-codegen boundaries still incomplete: contextual
+  zero-argument generic specialization did not survive into emitted Rust, and
+  child-to-ancestor assignability had executable coercions only for borrowed
+  values, not consuming arguments or returns. Explicit class arguments now
+  drive generic-return specialization, concrete contextual locals retain their
+  Rust type annotation, and compiler-owned `PhantomData` represents fieldless
+  generic parameters. Direct move-based `From` bridges plus one generated
+  conversion per ancestry edge make consuming arguments, locals, and returns
+  executable for direct, transitive, and imported/re-exported inheritance.
+  Exact zero-argument generic and owned-upcast projects build and run natively.
+  Full affected suites pass: codegen `827/827`, driver `350` with `27` ignored,
+  and the native driver lane `27/27`. Workspace Clippy, formatting, HIR/driver
+  maintainability, and the `900`-line source-size guardrail pass over `2680`
+  files. After `cargo clean`, the authoritative create-PR gate passes every
+  blocking lane in `861.81s`: Python interop `11/11`, runtime platform `28`
+  variants with one capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` after rebuilding all `42` fixture groups. Its only advisory
+  is the expected non-blocking warm-target timing warning. Fresh whole-diff
+  review pass 24 is pending.
 - [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
   documentation, and complete activation evidence.

@@ -588,6 +588,17 @@ pub(super) fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option
     if func == "__sifr_task_sleep" {
         return try_lower_task_sleep_call_expr(args);
     }
+    if args.iter().any(|arg| {
+        matches!(
+            resolve_alias_type(arg.ty()),
+            Type::Class {
+                parent_class: Some(_),
+                ..
+            }
+        )
+    }) {
+        return None;
+    }
     if func == "__sifr_task_gather" {
         let [handles] = args else {
             return None;

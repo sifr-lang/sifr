@@ -56,6 +56,8 @@ mod collections_and_stdlib_codegen_tests;
 #[cfg(test)]
 mod control_flow_codegen_tests;
 #[cfg(test)]
+mod generic_inheritance_codegen_tests;
+#[cfg(test)]
 mod iterators_and_generators_codegen_tests;
 #[cfg(test)]
 mod multi_module_stdlib_feature_tests;

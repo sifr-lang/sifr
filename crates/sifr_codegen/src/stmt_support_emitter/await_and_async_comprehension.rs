@@ -161,6 +161,7 @@ impl RustEmitter {
                 args: vec![lowered_value],
             });
         }
+        let lowered_value = self.consuming_class_upcast_for_ir(target_ty, value_ty, lowered_value);
         let lowered_value =
             Self::wrap_option_local_value_for_ir(target_ty, value, value_ty, lowered_value);
         if crate::helpers::is_option_type(target_ty) {

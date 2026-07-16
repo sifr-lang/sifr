@@ -331,6 +331,15 @@ impl RustEmitter {
             };
             fields.push((name, ty));
         }
+        if !class.type_params.is_empty() {
+            fields.push((
+                "__sifr_type_marker".to_string(),
+                RustType::Named(format!(
+                    "std::marker::PhantomData<{}>",
+                    Self::class_phantom_tuple(class)
+                )),
+            ));
+        }
         if class.name == "PythonError" {
             let name = if module_public {
                 "pub __sifr_python_error".to_string()
@@ -345,6 +354,30 @@ impl RustEmitter {
             ));
         }
         fields
+    }
+
+    fn class_phantom_tuple(class: &HirClass) -> String {
+        if class.type_params.len() == 1 {
+            format!("({},)", class.type_params[0])
+        } else {
+            format!("({})", class.type_params.join(", "))
+        }
+    }
+
+    pub(crate) fn append_class_phantom_initializer(
+        class: &HirClass,
+        fields: &mut Vec<(String, RustExpr)>,
+    ) {
+        if !class.type_params.is_empty() {
+            fields.push((
+                "__sifr_type_marker".to_string(),
+                RustExpr::Path(vec![
+                    "std".to_string(),
+                    "marker".to_string(),
+                    "PhantomData".to_string(),
+                ]),
+            ));
+        }
     }
 
     fn python_opaque_constructor_item(&self, class: &HirClass) -> RustItem {
@@ -462,6 +495,7 @@ impl RustEmitter {
                 (field_name.clone(), value)
             })
             .collect::<Vec<_>>();
+        Self::append_class_phantom_initializer(class, &mut fields);
         if class.name == "PythonError" {
             fields.push((
                 "__sifr_python_error".to_string(),

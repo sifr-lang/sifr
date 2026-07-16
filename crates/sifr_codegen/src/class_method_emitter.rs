@@ -480,6 +480,8 @@ impl RustEmitter {
                 ));
             }
 
+            Self::append_class_phantom_initializer(class, &mut fields);
+
             if class.name == "PythonError" {
                 fields.push((
                     "__sifr_python_error".to_string(),
@@ -597,6 +599,8 @@ impl RustEmitter {
             };
             fields.push((field_name.clone(), value));
         }
+
+        Self::append_class_phantom_initializer(class, &mut fields);
 
         if class.name == "PythonError" {
             fields.push((

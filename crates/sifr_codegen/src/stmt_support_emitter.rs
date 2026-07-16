@@ -30,6 +30,7 @@ mod async_with_and_for;
 mod await_and_async_comprehension;
 mod borrowed_operand_lowering;
 mod call_args_and_returns;
+mod class_upcasts;
 mod comprehension_exprs;
 mod condition_lowering;
 mod field_assignment;

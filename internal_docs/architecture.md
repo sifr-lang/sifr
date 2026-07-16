@@ -909,7 +909,11 @@ supports them. This is a language rule, not an implementation detail.
   assignable to `Box[str]`. A concrete annotated initializer may bind an
   otherwise-unresolved zero-argument generic return, while optional contextual
   binding matches the non-`None` payload rather than binding a type parameter
-  to the complete union.
+  to the complete union. Code generation renders the explicit class arguments
+  as the authoritative Rust specialization and preserves the annotated local
+  type when Rust needs result-context inference. Every generic class carries a
+  compiler-owned `PhantomData` marker, so even a fieldless declaration has a
+  valid, inhabited Rust representation for all of its type parameters.
 - **Codegen:** the compiler emits only the derives supported by the complete
   generated struct, newtype, or union representation.
 - **Enum types (enum type-system work):** enum types unconditionally derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`. All enum values are usable as dict keys and set members.
@@ -957,7 +961,12 @@ supports them. This is a language rule, not an implementation detail.
   same-named declarations from different modules remain incompatible.
   Imported-parent ancestry follows aliases to this canonical identity, and
   generated child structs implement `Deref`/`DerefMut` to their embedded parent
-  so source-level subclass-to-base compatibility remains executable in Rust.
+  so borrowed source-level subclass-to-base compatibility remains executable in
+  Rust. Each direct embedding also implements `From<Child> for Parent`.
+  Ownership-consuming arguments, local coercions, and returns emit one such
+  conversion per ancestor and therefore move, rather than clone or borrow, the
+  embedded parent representation across direct, transitive, imported, and
+  re-exported upcasts.
   Generic callable parameters, bounds, and project codegen signatures likewise
   propagate through direct and multi-hop re-export facades.
 - **Module return inference:** successful unannotated top-level return types are

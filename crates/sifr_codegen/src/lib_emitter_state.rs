@@ -496,12 +496,13 @@ impl RustEmitter {
                 self.lowering_stats.stmt_candidate_structured += 1;
                 return Ok(true);
             }
-            let is_generic_class = matches!(
+            let generic_class_needs_inference = matches!(
                 &effective_ty,
                 Type::Class {
                     name: class_name,
+                    type_args,
                     ..
-                } if self.generic_classes.contains(class_name)
+                } if self.generic_classes.contains(class_name) && type_args.is_empty()
             );
             let lowered_value = if effective_ty.ownership() == sifr_type_system::OwnershipKind::Move
             {
@@ -549,7 +550,7 @@ impl RustEmitter {
                     || matches!(effective_ty.resolve_alias(), Type::Iterator(_)),
                 name: name.clone(),
                 ty: if name == "_"
-                    || is_generic_class
+                    || generic_class_needs_inference
                     || borrowed_dict_get.is_some()
                     || Self::is_borrowed_empty_list_get_expr_for_ir(&lowered_value)
                     || match (&effective_ty, value) {

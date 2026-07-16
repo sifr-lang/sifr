@@ -81,6 +81,11 @@ impl RustEmitter {
                 }
             }
 
+            if convention.is_owned() {
+                lowered_arg =
+                    self.consuming_class_upcast_for_ir(param_ty, &effective_arg_ty, lowered_arg);
+            }
+
             if crate::helpers::is_option_type(resolved_param) {
                 let is_recursive_ctor_param = ctor_class_name
                     .and_then(|class_name| {

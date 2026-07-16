@@ -31,6 +31,15 @@ pub(super) fn try_lower_simple_return_stmt(
     }) {
         return None;
     }
+    if ctx.return_type.is_some_and(|target| {
+        let source = resolve_alias_type(value.ty());
+        let target = resolve_alias_type(target);
+        matches!((source, target), (Type::Class { .. }, Type::Class { .. }))
+            && source != target
+            && source.is_assignable_to(target)
+    }) {
+        return None;
+    }
 
     if option_return {
         if is_option_like_type(value.ty()) && !is_none_type(value.ty()) {

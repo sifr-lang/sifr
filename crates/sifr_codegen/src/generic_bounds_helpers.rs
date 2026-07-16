@@ -375,13 +375,19 @@ impl RustEmitter {
     pub(crate) fn infer_generic_class_type_args(&self, name: &str, ty: &Type) -> Option<Vec<Type>> {
         let template = self.generic_class_templates.get(name)?;
         let Type::Class {
-            fields, methods, ..
+            type_args,
+            fields,
+            methods,
+            ..
         } = ty
         else {
             return None;
         };
         if template.type_params.is_empty() {
             return None;
+        }
+        if type_args.len() == template.type_params.len() {
+            return Some(type_args.clone());
         }
 
         let mut bindings = HashMap::new();
