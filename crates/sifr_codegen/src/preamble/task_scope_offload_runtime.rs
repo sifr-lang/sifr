@@ -1,4 +1,5 @@
 use super::{RustExpr, RustItem, RustParam, RustStmt, RustType, Visibility};
+use std::collections::HashMap;
 
 pub fn build_task_scope_offload_items() -> Vec<RustItem> {
     vec![RustItem::Impl {
@@ -65,6 +66,11 @@ pub fn build_task_scope_offload_items() -> Vec<RustItem> {
 }
 
 pub fn build_task_scope_process_items() -> Vec<RustItem> {
+    let command_type = sifr_type_system::stdlib_class_rust_name("sifr.process", "Command");
+    let process_handle_type =
+        sifr_type_system::stdlib_class_rust_name("sifr.process", "ProcessHandle");
+    let process_error_type =
+        sifr_type_system::stdlib_class_rust_name("_sifr.process", "ProcessError");
     vec![RustItem::Impl {
         target: "__SifrTaskScope".to_string(),
         type_params: vec![],
@@ -77,13 +83,13 @@ pub fn build_task_scope_process_items() -> Vec<RustItem> {
                 RustParam::SelfParam { mutable: true },
                 RustParam::Named {
                     name: "command".to_string(),
-                    ty: RustType::Named("Command".to_string()),
+                    ty: RustType::Named(command_type.clone()),
                 },
             ],
-            ret: Some(RustType::Named(
-                "Result<ProcessHandle, ProcessError>".to_string(),
-            )),
-            body: scoped_process_body(),
+            ret: Some(RustType::Named(format!(
+                "Result<{process_handle_type}, {process_error_type}>"
+            ))),
+            body: scoped_process_body(&command_type, &process_handle_type, &process_error_type),
             is_async: false,
         }],
     }]
@@ -171,9 +177,20 @@ fn scoped_task_body(child_expr: &str) -> Vec<RustStmt> {
     )))]
 }
 
-fn scoped_process_body() -> Vec<RustStmt> {
+fn scoped_process_body(
+    command_type: &str,
+    process_handle_type: &str,
+    process_error_type: &str,
+) -> Vec<RustStmt> {
+    let replacements = HashMap::from([
+        ("Command".to_string(), command_type.to_string()),
+        ("__SifrTokioCommand".to_string(), "Command".to_string()),
+        ("ProcessHandle".to_string(), process_handle_type.to_string()),
+        ("ProcessError".to_string(), process_error_type.to_string()),
+    ]);
     vec![RustStmt::Expr(RustExpr::Ident(
-        "if command.has_stdin_data {
+        crate::stdlib_filter::rewrite_rust_identifiers(
+            "if command.has_stdin_data {
             return Err(ProcessError { message: \"scoped process spawn does not consume Command.stdin_bytes; use stdin(Stdio(\\\"pipe\\\")) and ProcessHandle.stdin()\".to_string() });
         }
         fn __sifr_scoped_process_stdio_from_mode(mode: &str) -> Result<std::process::Stdio, ProcessError> {
@@ -184,7 +201,7 @@ fn scoped_process_body() -> Vec<RustStmt> {
                 _ => Err(ProcessError { message: format!(\"unsupported scoped process stdio mode: {}\", mode) }),
             }
         }
-        let mut __cmd = tokio::process::Command::new(&command.program);
+        let mut __cmd = tokio::process::__SifrTokioCommand::new(&command.program);
         for __arg in &command.arguments {
             __cmd.arg(__arg);
         }
@@ -235,7 +252,8 @@ fn scoped_process_body() -> Vec<RustStmt> {
             let _ = __stop_sender.send(());
         });
         self.children.push(__SifrScopeChild { handle: __observer, cancellation: None, observed: __child_observed, start_on_join: Some(__start_sender), stop_on_fail_fast: Some(__stop_on_fail_fast) });
-        return Ok(ProcessHandle::new(__handle));"
-            .to_string(),
+        return Ok(ProcessHandle::new(__handle));",
+            &replacements,
+        ),
     ))]
 }

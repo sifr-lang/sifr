@@ -3,6 +3,7 @@ use super::{
     registry_defaultdict_key_arg, registry_iterator_op_func_name, registry_option_inner_type,
     registry_uses_debug_display_format, HirExpr, HirFStringPart, RustEmitter, Type,
 };
+use crate::stmt_support_emitter::canonical_constructor_class_name;
 impl RustEmitter {
     pub(crate) fn try_lower_registry_expr_recursive(
         &mut self,
@@ -259,16 +260,38 @@ impl RustEmitter {
                 ))
             }
             HirExpr::ConstructorCall {
-                class_name, args, ..
+                class_name,
+                args,
+                ty,
             } => {
-                let mut path = class_name
+                let emitted_class_name = canonical_constructor_class_name(class_name, ty);
+                let emitted_ctor_key = format!("{emitted_class_name}::new");
+                let source_ctor_key = format!("{class_name}::new");
+                let registry_ctor_key = if self.func_signatures.contains_key(&emitted_ctor_key) {
+                    &emitted_ctor_key
+                } else {
+                    &source_ctor_key
+                };
+                if let Some(mut lowered) =
+                    self.try_lower_registry_plain_call_with_signature(registry_ctor_key, args)
+                {
+                    if let crate::RustExpr::FnCall { func, .. } = &mut lowered {
+                        *func = Box::new(crate::RustExpr::Path(vec![
+                            emitted_class_name,
+                            "new".to_string(),
+                        ]));
+                    }
+                    return Some(lowered);
+                }
+
+                let mut path = emitted_class_name
                     .split("::")
                     .map(str::to_string)
                     .collect::<Vec<_>>();
                 path.push("new".to_string());
                 let lowered_args = self.try_lower_registry_exprs_strict(args)?;
                 let lowered_args = self.adapt_plain_call_args_with_signature_for_ir(
-                    &path.join("::"),
+                    registry_ctor_key,
                     args,
                     lowered_args,
                 );

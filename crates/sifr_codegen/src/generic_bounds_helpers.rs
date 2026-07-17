@@ -186,13 +186,38 @@ impl RustEmitter {
                 }
             }
             Type::Alias { body, .. } => self.rust_type_with_generics(body),
-            Type::Class { name, .. } => {
+            Type::Class {
+                name, type_args, ..
+            } => {
                 let rust_name = ty.rust_type();
-                if rust_name == *name {
-                    self.render_generic_class_type(name, ty)
-                } else {
-                    rust_name
+                if !self.generic_classes.contains(name) {
+                    return rust_name;
                 }
+                if !type_args.is_empty() {
+                    return format!(
+                        "{rust_name}<{}>",
+                        type_args
+                            .iter()
+                            .map(|arg| self.rust_type_with_generics(arg))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    );
+                }
+                if let Some(type_args) = self.infer_generic_class_type_args(name, ty) {
+                    return format!(
+                        "{rust_name}<{}>",
+                        type_args
+                            .iter()
+                            .map(|arg| self.rust_type_with_generics(arg))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    );
+                }
+                self.generic_class_params
+                    .get(name)
+                    .map_or(rust_name.clone(), |params| {
+                        format!("{rust_name}<{}>", params.join(", "))
+                    })
             }
             Type::Failure(err) => {
                 format!("__SifrFailure<{}>", self.rust_type_with_generics(err))
@@ -741,5 +766,25 @@ mod tests {
             };
             assert_eq!(emitter.rust_type_with_generics(&ty), expected);
         }
+    }
+
+    #[test]
+    fn canonical_generic_class_rendering_preserves_concrete_arguments() {
+        let mut emitter = RustEmitter::new();
+        emitter.generic_classes.insert("NullContext".to_string());
+        let ty = Type::Class {
+            identity: Some("sifr.resource.NullContext".to_string()),
+            type_args: vec![Type::Int],
+            name: "NullContext".to_string(),
+            fields: vec![("value".to_string(), Type::Int)],
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let canonical = sifr_type_system::stdlib_class_rust_name("sifr.resource", "NullContext");
+
+        assert_eq!(
+            emitter.rust_type_with_generics(&ty),
+            format!("{canonical}<i64>")
+        );
     }
 }

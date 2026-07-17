@@ -197,7 +197,8 @@ pub(super) fn try_lower_simple_match_stmt(
                 {
                     (pattern, bindings, None)
                 } else {
-                    let (pattern, arm_bindings) = try_lower_match_pattern(&arm.pattern)?;
+                    let (pattern, arm_bindings) =
+                        try_lower_typed_match_pattern(&arm.pattern, subject_ty)?;
                     (pattern, arm_bindings, None)
                 };
             let mut lowered_guard = arm.guard.as_ref().and_then(try_lower_leaf_or_name_expr);
@@ -283,7 +284,7 @@ pub(super) fn try_lower_result_error_class_match_pattern(
     if !matches!(resolve_alias_type(error_ty), Type::Class { name, .. } if name == class_name) {
         return None;
     }
-    let (error_pattern, bindings) = try_lower_match_pattern(pattern)?;
+    let (error_pattern, bindings) = try_lower_typed_match_pattern(pattern, error_ty)?;
     Some((format!("Err({error_pattern})"), bindings))
 }
 
@@ -396,6 +397,73 @@ pub(super) fn try_lower_match_pattern(pattern: &HirPattern) -> Option<(String, V
     }
 }
 
+fn try_lower_typed_match_pattern(
+    pattern: &HirPattern,
+    subject_ty: &Type,
+) -> Option<(String, Vec<String>)> {
+    match pattern {
+        HirPattern::Or { patterns } => {
+            let mut rendered = Vec::new();
+            for pattern in patterns {
+                let (rendered_pattern, bindings) =
+                    try_lower_typed_match_pattern(pattern, subject_ty)?;
+                if !bindings.is_empty() {
+                    return None;
+                }
+                rendered.push(rendered_pattern);
+            }
+            Some((rendered.join(" | "), Vec::new()))
+        }
+        HirPattern::Tuple { elements } => {
+            let Type::Tuple(element_types) = resolve_alias_type(subject_ty) else {
+                return try_lower_match_pattern(pattern);
+            };
+            if elements.len() != element_types.len() {
+                return None;
+            }
+            let mut rendered = Vec::with_capacity(elements.len());
+            let mut bindings = Vec::new();
+            for (element, element_ty) in elements.iter().zip(element_types) {
+                let (rendered_element, element_bindings) =
+                    try_lower_typed_match_pattern(element, element_ty)?;
+                rendered.push(rendered_element);
+                bindings.extend(element_bindings);
+            }
+            Some((format!("({})", rendered.join(", ")), bindings))
+        }
+        HirPattern::Class { fields, .. } => {
+            let class_ty @ Type::Class {
+                fields: class_fields,
+                ..
+            } = resolve_alias_type(subject_ty)
+            else {
+                return try_lower_match_pattern(pattern);
+            };
+            let mut rendered_fields = Vec::with_capacity(fields.len());
+            let mut bindings = Vec::new();
+            for (field_name, field_pattern) in fields {
+                let field_ty = class_fields
+                    .iter()
+                    .find_map(|(name, ty)| (name == field_name).then_some(ty))?;
+                let (field_rendered, field_bindings) =
+                    try_lower_typed_match_pattern(field_pattern, field_ty)?;
+                rendered_fields.push(format!("{field_name}: {field_rendered}"));
+                bindings.extend(field_bindings);
+            }
+            let rust_name = class_ty.rust_type();
+            if rendered_fields.is_empty() {
+                Some((format!("{rust_name} {{ .. }}"), bindings))
+            } else {
+                Some((
+                    format!("{rust_name} {{ {}, .. }}", rendered_fields.join(", ")),
+                    bindings,
+                ))
+            }
+        }
+        _ => try_lower_match_pattern(pattern),
+    }
+}
+
 pub(super) fn try_lower_union_class_match_pattern(
     pattern: &HirPattern,
     subject_ty: &Type,
@@ -431,14 +499,25 @@ pub(super) fn try_lower_union_class_match_pattern(
     }
     let mut rendered_fields = Vec::new();
     let mut bindings = Vec::new();
+    let Type::Class {
+        fields: class_fields,
+        ..
+    } = target_ty.resolve_alias()
+    else {
+        return None;
+    };
     for (field_name, field_pattern) in fields {
-        let (field_pat, field_binds) = try_lower_match_pattern(field_pattern)?;
+        let field_ty = class_fields
+            .iter()
+            .find_map(|(name, ty)| (name == field_name).then_some(ty))?;
+        let (field_pat, field_binds) = try_lower_typed_match_pattern(field_pattern, field_ty)?;
         rendered_fields.push(format!("{field_name}: {field_pat}"));
         bindings.extend(field_binds);
     }
+    let target_rust_name = target_ty.rust_type();
     Some((
         format!(
-            "{enum_name}::{variant_name}({class_name} {{ {}, .. }})",
+            "{enum_name}::{variant_name}({target_rust_name} {{ {}, .. }})",
             rendered_fields.join(", ")
         ),
         bindings,

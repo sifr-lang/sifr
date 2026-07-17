@@ -1,4 +1,5 @@
 use proc_macro2::{Group, Ident, TokenStream, TokenTree};
+use sifr_type_system::{stdlib_class_rust_name, GLOBAL_RUST_NOMINAL_NAMES};
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
 use syn::visit_mut::{self, VisitMut};
@@ -46,24 +47,26 @@ pub(crate) struct PreparedStdlibModule {
     pub(crate) shared_needs: SharedPreludeNeeds,
 }
 
-const CANONICAL_FILE_HANDLE_RUST_NAMES: &[(&str, &str)] = &[
-    ("NativeFileHandle", "__SifrIoNativeFileHandle"),
-    ("FileHandle", "__SifrIoFileHandle"),
-    ("BinaryFileHandle", "__SifrIoBinaryFileHandle"),
-    ("TextFileHandle", "__SifrIoTextFileHandle"),
-];
-
-/// Move canonical file-handle declarations behind compiler-owned Rust names.
+/// Move canonical stdlib declarations behind compiler-owned Rust names.
 ///
 /// Stdlib modules are flattened into the generated crate, while Sifr's nominal
 /// identity still permits a user class to share a stdlib basename. Renaming the
 /// canonical declarations and every stdlib reference before concatenation keeps
 /// those two source-level identities distinct in Rust as well.
-pub(crate) fn seal_canonical_file_handle_names(rust_code: &str) -> String {
+pub(crate) fn seal_canonical_stdlib_names(
+    rust_code: &str,
+    module: &str,
+    nominal_types: &HashSet<String>,
+) -> String {
+    let replacements = nominal_types
+        .iter()
+        .filter(|name| !GLOBAL_RUST_NOMINAL_NAMES.contains(&name.as_str()))
+        .map(|name| (name.clone(), stdlib_class_rust_name(module, name)))
+        .collect::<HashMap<_, _>>();
     let Ok(tokens) = rust_code.parse::<TokenStream>() else {
         return rust_code.to_string();
     };
-    let rewritten = rewrite_canonical_file_handle_tokens(tokens);
+    let rewritten = rewrite_canonical_stdlib_tokens(tokens, &replacements, false);
     let Ok(parsed) = syn::parse_file(&rewritten.to_string()) else {
         return rust_code.to_string();
     };
@@ -123,29 +126,56 @@ fn use_tree_starts_with_external_crate(tree: &UseTree) -> bool {
     }
 }
 
-fn rewrite_canonical_file_handle_tokens(tokens: TokenStream) -> TokenStream {
+fn rewrite_canonical_stdlib_tokens(
+    tokens: TokenStream,
+    replacements: &HashMap<String, String>,
+    rewrite_qualified_segments: bool,
+) -> TokenStream {
+    let tokens = tokens.into_iter().collect::<Vec<_>>();
     tokens
-        .into_iter()
-        .map(|token| match token {
+        .iter()
+        .enumerate()
+        .map(|(index, token)| match token {
             TokenTree::Ident(ident) => {
-                let replacement = CANONICAL_FILE_HANDLE_RUST_NAMES
-                    .iter()
-                    .find_map(|(source, replacement)| (ident == *source).then_some(*replacement));
-                replacement.map_or(TokenTree::Ident(ident.clone()), |replacement| {
-                    TokenTree::Ident(Ident::new(replacement, ident.span()))
-                })
+                let source = ident.to_string();
+                let is_qualified_segment = index >= 2
+                    && matches!(&tokens[index - 1], TokenTree::Punct(punct) if punct.as_char() == ':')
+                    && matches!(&tokens[index - 2], TokenTree::Punct(punct) if punct.as_char() == ':');
+                if is_qualified_segment && !rewrite_qualified_segments {
+                    return TokenTree::Ident(ident.clone());
+                }
+                replacements.get(&source).map_or_else(
+                    || TokenTree::Ident(ident.clone()),
+                    |replacement| TokenTree::Ident(Ident::new(replacement, ident.span())),
+                )
             }
             TokenTree::Group(group) => {
                 let mut rewritten = Group::new(
                     group.delimiter(),
-                    rewrite_canonical_file_handle_tokens(group.stream()),
+                    rewrite_canonical_stdlib_tokens(
+                        group.stream(),
+                        replacements,
+                        rewrite_qualified_segments,
+                    ),
                 );
                 rewritten.set_span(group.span());
                 TokenTree::Group(rewritten)
             }
-            other => other,
+            other => other.clone(),
         })
         .collect()
+}
+
+/// Rewrite Rust identifier tokens in a compiler-owned source fragment without
+/// touching string literals, character literals, or comments.
+pub(crate) fn rewrite_rust_identifiers(
+    rust_code: &str,
+    replacements: &HashMap<String, String>,
+) -> String {
+    rust_code.parse::<TokenStream>().map_or_else(
+        |_| rust_code.to_string(),
+        |tokens| rewrite_canonical_stdlib_tokens(tokens, replacements, true).to_string(),
+    )
 }
 
 const GLOBAL_INFRA_TYPES: &[&str] = &[
@@ -210,6 +240,31 @@ pub(crate) fn filter_stdlib_ir_to_needed(
     let deps = deps_by_item_name(&ir);
     let needed = transitive_needed_items(imported_names, &deps);
     render_needed_ir_items(&ir, &needed)
+}
+
+/// Run stdlib DCE after restoring identity-owned type references to the source
+/// names used by top-level item declarations.
+///
+/// Checked stdlib HIR already carries canonical identities, so signatures and
+/// expressions can contain `__SifrStdlib_*` references before the module-wide
+/// sealing pass. The item filter must normalize those references or it cannot
+/// discover dependencies on still-source-named declarations.
+pub(crate) fn filter_canonical_stdlib_ir_to_needed(
+    rust_code: &str,
+    imported_names: &HashSet<String>,
+    module: &str,
+    nominal_types: &HashSet<String>,
+) -> String {
+    let replacements = nominal_types
+        .iter()
+        .filter(|name| !GLOBAL_RUST_NOMINAL_NAMES.contains(&name.as_str()))
+        .map(|name| (stdlib_class_rust_name(module, name), name.clone()))
+        .collect::<HashMap<_, _>>();
+    let Ok(tokens) = rust_code.parse::<TokenStream>() else {
+        return filter_stdlib_ir_to_needed(rust_code, imported_names);
+    };
+    let restored = rewrite_canonical_stdlib_tokens(tokens, &replacements, true).to_string();
+    filter_stdlib_ir_to_needed(&restored, imported_names)
 }
 
 /// Strip top-level items from Rust source whose names are already in `emitted_items`.

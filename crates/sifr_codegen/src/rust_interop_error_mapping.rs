@@ -26,19 +26,19 @@ pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
                 ])),
                 args: vec![bridge_error_expr(value, python_error)],
             }),
-        Type::Class {
+        class @ Type::Class {
             name,
             fields,
             parent_class: _,
             ..
         } if is_message_error_alias(name) && message_error_fields(fields).is_some() => {
             RustExpr::StructInit {
-                name: name.clone(),
+                name: class.rust_type(),
                 fields: vec![("message".to_string(), to_string_expr(value))],
             }
         }
-        Type::Class { name, .. } if err_type.is_python_error_contract() => {
-            python_error_expr(name, value)
+        class @ Type::Class { .. } if err_type.is_python_error_contract() => {
+            python_error_expr(&class.rust_type(), value)
         }
         Type::Class {
             name,
@@ -54,39 +54,39 @@ pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
                 args: vec![value],
             }
         }
-        Type::Class {
+        class @ Type::Class {
             name,
             fields: _,
             parent_class,
             ..
         } if parent_class.as_deref() == Some("Error") && name == "JSONDecodeError" => {
-            json_decode_error_expr(name, value)
+            json_decode_error_expr(&class.rust_type(), value)
         }
-        Type::Class {
+        class @ Type::Class {
             name,
             fields: _,
             parent_class,
             ..
         } if parent_class.as_deref() == Some("Error") && name == "JsonLimitError" => {
-            json_limit_error_expr(name, value)
+            json_limit_error_expr(&class.rust_type(), value)
         }
-        Type::Class {
+        class @ Type::Class {
             name,
             fields: _,
             parent_class,
             ..
         } if parent_class.as_deref() == Some("Error") && name == "JsonIntegerRangeError" => {
-            json_integer_range_error_expr(name, value)
+            json_integer_range_error_expr(&class.rust_type(), value)
         }
-        Type::Class {
-            name,
+        class @ Type::Class {
+            name: _,
             fields,
             parent_class,
             ..
         } if parent_class.as_deref() == Some("Error") => {
             if let Some(error_fields) = message_error_fields(fields) {
                 RustExpr::StructInit {
-                    name: name.clone(),
+                    name: class.rust_type(),
                     fields: error_fields
                         .into_iter()
                         .map(|field| (field, to_string_expr(value.clone())))
@@ -309,5 +309,27 @@ mod tests {
         let mapped = bridge_error_expr(RustExpr::Ident("__sifr_bridge_error".to_string()), &shadow);
 
         assert_eq!(render_expr(&mapped), "__sifr_bridge_error");
+    }
+
+    #[test]
+    fn bridge_error_mapping_uses_the_nominal_rust_identity() {
+        let declared = Type::Class {
+            identity: Some("local.__SifrBridgeError".to_string()),
+            type_args: Vec::new(),
+            name: "__SifrBridgeError".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+
+        let mapped = bridge_error_expr(
+            RustExpr::Ident("__sifr_bridge_error".to_string()),
+            &declared,
+        );
+
+        assert_eq!(
+            render_expr(&mapped),
+            "__SifrSource_5f5f536966724272696467654572726f72 { message: __sifr_bridge_error.to_string() }"
+        );
     }
 }

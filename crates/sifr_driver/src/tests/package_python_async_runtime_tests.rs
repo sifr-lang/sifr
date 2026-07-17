@@ -9,6 +9,8 @@ fn compiler_owned_nominal_paths_and_unions_build_beside_source_collisions() {
         &app,
         "main.sifr",
         r#"from enum import Enum
+from sifr.io import FileHandle as StdFileHandle
+from sifr.json import JsonValue as StdJsonValue
 
 class __SifrIoNativeFileHandle:
     value: int
@@ -32,6 +34,19 @@ class LocalValue:
 class std:
     value: int
 
+class Child(std):
+    extra: int
+
+    def __init__(self, value: int, extra: int) -> None:
+        super().__init__(value)
+        self.extra = extra
+
+class FileHandle:
+    value: int
+
+class JsonValue:
+    value: int
+
 class Int:
     value: int
 
@@ -51,18 +66,36 @@ def choose_text(flag: bool) -> int | str:
         return 1
     return "text"
 
+def preserve_handle(own value: StdFileHandle | FileHandle) -> StdFileHandle | FileHandle:
+    return value
+
+def preserve_json(own value: StdJsonValue | JsonValue) -> StdJsonValue | JsonValue:
+    return value
+
+def json_kind(value: StdJsonValue) -> str:
+    match value:
+        case StdJsonValue(kind=kind):
+            return kind
+        case _:
+            return ""
+
 def main() -> None:
     regular = __SifrIoNativeFileHandle(1)
     wrapped = __SifrIoFileHandle(2)
     variant = __SifrIoTextFileHandle.READY
     local_std = std(4)
+    child = Child(5, 6)
+    canonical_json = StdJsonValue("null")
+    local_json = JsonValue(7)
     local_union_name = IntOrStr(8)
     values: dict[str, int] = {"value": 16}
     first: int | Int = choose(True)
     second: int | str = choose_text(False)
     assert read(LocalValue(32)) == 32
     assert regular.value + wrapped.value() + variant.value() == 4
-    assert local_std.value + local_union_name.value == 12
+    assert local_std.value + local_union_name.value + child.value + child.extra == 23
+    assert json_kind(canonical_json) == "null"
+    assert local_json.value == 7
     assert values["value"] == 16
     _ = first
     _ = second
@@ -144,8 +177,30 @@ class __SifrPythonObject:
 class sifr_runtime:
     value: int
 
+class __SifrSyncRecord:
+    value: int
+
+class __SifrAsyncRecord:
+    value: int
+
+@python.opaque(type=builtins.object, cleanup=drop)
+class __SifrOpaque(NonSend):
+    pass
+
 @python(builtins.id)
 def echo(value: PythonObject) -> Result[PythonObject, PythonError]: ...
+
+@python(builtins.dict)
+def sync_record() -> Result[__SifrSyncRecord, PythonError]: ...
+
+@python.coroutine(asyncio.sleep)
+async def async_record(delay: float) -> Result[__SifrAsyncRecord, PythonError]: ...
+
+@python(builtins.object)
+def make_opaque() -> Result[__SifrOpaque, PythonError]: ...
+
+def preserve_object(own value: PythonObject | Object) -> PythonObject | Object:
+    return value
 
 def main() -> Result[None, PythonError]:
     try:

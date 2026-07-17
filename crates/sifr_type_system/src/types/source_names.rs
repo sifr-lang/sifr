@@ -17,6 +17,52 @@ pub const COMPILER_RUST_PATH_ROOTS: &[&str] = &[
     "tokio",
 ];
 
+const CANONICAL_FILE_HANDLE_RUST_NAMES: &[(&str, &str)] = &[
+    ("_sifr.fs.NativeFileHandle", "__SifrIoNativeFileHandle"),
+    ("sifr.io.FileHandle", "__SifrIoFileHandle"),
+    ("sifr.io.BinaryFileHandle", "__SifrIoBinaryFileHandle"),
+    ("sifr.io.TextFileHandle", "__SifrIoTextFileHandle"),
+];
+
+/// Canonical classes supplied by the generated global prelude rather than a
+/// merged stdlib module. Their shared Rust names are intentionally stable.
+pub const GLOBAL_RUST_NOMINAL_NAMES: &[&str] = &[
+    "IOError",
+    "ParseError",
+    "ValueError",
+    "TypeError",
+    "RegexError",
+    "KeyError",
+    "IndexError",
+    "AttributeError",
+    "OverflowError",
+    "ZeroDivisionError",
+    "RuntimeError",
+    "NotImplementedError",
+    "Error",
+    "JSONDecodeError",
+    "JsonIntegerRangeError",
+    "JsonLimitError",
+    "TOMLDecodeError",
+    "FileNotFoundError",
+    "PermissionError",
+    "FileExistsError",
+    "IsADirectoryError",
+    "NotADirectoryError",
+    "DirectoryNotEmptyError",
+    "ScopeFailure",
+    "TaskCancelled",
+    "SecondaryError",
+    // These are emitted by the compiler's shared CPU-offload prelude and are
+    // therefore global infrastructure even when surfaced through sifr.parallel.
+    "WorkerRuntimeError",
+    "WorkerError",
+    // The Python runtime glue and generated interop adapters share this
+    // concrete error representation. It is emitted by the global prelude,
+    // rather than by the flattened `_sifr.python` module.
+    "PythonError",
+];
+
 /// Return a collision-free Rust identifier for a source-declared nominal type.
 ///
 /// `__Sifr*` and external crate roots are compiler-owned Rust namespaces.
@@ -35,9 +81,49 @@ pub fn source_class_rust_name(name: &str) -> String {
     escaped
 }
 
+/// Return the Rust identifier for a nominal class reference.
+///
+/// Checked stdlib modules are merged into one generated Rust namespace. Their
+/// canonical declaration identity, rather than their source basename, owns the
+/// emitted identifier. User-package identities continue to use their local
+/// source name because project codegen preserves module/import boundaries.
+#[must_use]
+pub fn class_rust_name(identity: Option<&str>, name: &str) -> String {
+    if let Some(identity) = identity {
+        if let Some((_, rust_name)) = CANONICAL_FILE_HANDLE_RUST_NAMES
+            .iter()
+            .find(|(canonical, _)| *canonical == identity)
+        {
+            return (*rust_name).to_string();
+        }
+        if (identity.starts_with("sifr.") || identity.starts_with("_sifr."))
+            && !GLOBAL_RUST_NOMINAL_NAMES.contains(&name)
+        {
+            return compiler_owned_identifier("__SifrStdlib_", identity);
+        }
+    }
+    source_class_rust_name(name)
+}
+
+/// Return the canonical Rust identifier for a class declared by a checked
+/// stdlib module.
+#[must_use]
+pub fn stdlib_class_rust_name(module: &str, name: &str) -> String {
+    let identity = format!("{module}.{name}");
+    class_rust_name(Some(&identity), name)
+}
+
+fn compiler_owned_identifier(prefix: &str, identity: &str) -> String {
+    let mut escaped = String::from(prefix);
+    for byte in identity.as_bytes() {
+        let _ = write!(escaped, "{byte:02x}");
+    }
+    escaped
+}
+
 #[cfg(test)]
 mod tests {
-    use super::source_class_rust_name;
+    use super::{class_rust_name, source_class_rust_name, stdlib_class_rust_name};
 
     #[test]
     fn escapes_compiler_namespaces_injectively() {
@@ -47,6 +133,34 @@ mod tests {
         assert_ne!(
             source_class_rust_name("__SifrSource_737464"),
             source_class_rust_name("std")
+        );
+    }
+
+    #[test]
+    fn canonical_stdlib_names_are_identity_owned() {
+        assert_eq!(
+            class_rust_name(Some("sifr.io.FileHandle"), "FileHandle"),
+            "__SifrIoFileHandle"
+        );
+        assert_eq!(
+            class_rust_name(Some("local.FileHandle"), "FileHandle"),
+            "FileHandle"
+        );
+        assert_eq!(
+            class_rust_name(Some("sifr.json.JSONDecodeError"), "JSONDecodeError"),
+            "JSONDecodeError"
+        );
+        assert_eq!(
+            class_rust_name(Some("_sifr.python.PythonError"), "PythonError"),
+            "PythonError"
+        );
+        assert_eq!(
+            class_rust_name(Some("sifr.json.JsonValue"), "JsonValue"),
+            stdlib_class_rust_name("sifr.json", "JsonValue")
+        );
+        assert_ne!(
+            class_rust_name(Some("sifr.json.JsonValue"), "JsonValue"),
+            class_rust_name(None, "JsonValue")
         );
     }
 }

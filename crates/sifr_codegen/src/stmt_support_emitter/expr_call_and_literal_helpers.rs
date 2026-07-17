@@ -84,14 +84,21 @@ macro_rules! stmt_expr_await_and_registry {
 macro_rules! stmt_expr_constructor {
     ($emitter:ident, $expr:ident) => {{
         if let HirExpr::ConstructorCall {
-            class_name, args, ..
+            class_name, args, ty,
         } = $expr
         {
-            let emitted_class_name = canonical_constructor_class_name(class_name);
+            let emitted_class_name = canonical_constructor_class_name(class_name, ty);
             let ctor_key = format!("{emitted_class_name}::new");
+            let source_ctor_key = format!("{class_name}::new");
+            let registry_ctor_key = if $emitter.func_signatures.contains_key(&ctor_key) {
+                &ctor_key
+            } else {
+                &source_ctor_key
+            };
             let ctor_params = $emitter
                 .func_signatures
                 .get(&ctor_key)
+                .or_else(|| $emitter.func_signatures.get(&source_ctor_key))
                 .map(|(params, _)| params.clone());
             if emitted_class_name == "Counter"
                 && args.len() == 2
@@ -211,9 +218,15 @@ macro_rules! stmt_expr_constructor {
                     }
                 }
             }
-            if let Some(mut lowered_ctor) =
-                $emitter.try_lower_registry_plain_call_with_signature(&ctor_key, args)
+            if let Some(mut lowered_ctor) = $emitter
+                .try_lower_registry_plain_call_with_signature(registry_ctor_key, args)
             {
+                if let crate::RustExpr::FnCall { func, .. } = &mut lowered_ctor {
+                    *func = Box::new(crate::RustExpr::Path(vec![
+                        emitted_class_name.clone(),
+                        "new".to_string(),
+                    ]));
+                }
                 if let Some(params) = ctor_params.as_ref() {
                     if let crate::RustExpr::FnCall {
                         args: lowered_args, ..

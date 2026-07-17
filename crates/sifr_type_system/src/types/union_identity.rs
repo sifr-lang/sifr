@@ -1,4 +1,4 @@
-use super::{source_class_rust_name, FunctionType, ParamConvention, Type};
+use super::{FunctionType, ParamConvention, Type};
 use std::fmt::Write as _;
 
 impl Type {
@@ -69,9 +69,9 @@ impl Type {
             }
             Self::Unknown => atom("unknown"),
             Self::Result(ok, error) => binary("result", ok, error),
-            Self::Class {
-                name, type_args, ..
-            } => named_sequence("class", &source_class_rust_name(name), type_args),
+            class @ Self::Class { type_args, .. } => {
+                named_sequence("class", &class.rust_type(), type_args)
+            }
             Self::Protocol { name, methods } => nominal_methods("protocol", name, methods),
             Self::Newtype { name, inner } => {
                 let mut key = component("newtype", name);

@@ -325,6 +325,18 @@ fn compile_stdlib_sources_with_sysroot(
                 module_name,
                 stdlib_source,
                 &sysroot,
+                result
+                    .module
+                    .classes
+                    .iter()
+                    .filter(|class| {
+                        !class
+                            .rust_interop
+                            .iter()
+                            .any(|declaration| declaration.abi_requirements.opaque_handle)
+                    })
+                    .map(|class| class.name.clone())
+                    .collect(),
                 codegen_result.rust_source,
             )?;
             stdlib_code
@@ -498,12 +510,14 @@ fn stdlib_rust_source(
     module_name: &str,
     source: &LoadedStdlibSource,
     sysroot: &ResolvedSysroot,
+    nominal_types: HashSet<String>,
     rust: String,
 ) -> Result<StdlibRustSource, Vec<RenderedDiagnostic>> {
     Ok(StdlibRustSource {
         module: module_name.to_string(),
         source_path: canonical_stdlib_source_path(source, sysroot)?,
         source_sha256: source_sha256(&source.source),
+        nominal_types,
         rust,
     })
 }
@@ -596,10 +610,9 @@ fn canonicalize_stdlib_hir_function(
     module_name: &str,
     local_classes: &HashMap<String, String>,
 ) {
-    for param in &mut function.params {
-        param.ty = canonical_stdlib_type(&param.ty, module_name, local_classes);
-    }
-    function.return_type = canonical_stdlib_type(&function.return_type, module_name, local_classes);
+    sifr_ir::transform_hir_function_types(function, &mut |ty| {
+        canonical_stdlib_type(ty, module_name, local_classes)
+    });
 }
 
 fn function_type_from_params(params: &[HirParam], return_type: &Type) -> FunctionType {

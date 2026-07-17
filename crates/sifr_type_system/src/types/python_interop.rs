@@ -3,6 +3,7 @@ use super::Type;
 const PYTHON_ERROR_FIELDS: [&str; 5] =
     ["message", "kind", "exception_type", "traceback", "context"];
 const PYTHON_OBJECT_IDENTITY: &str = "_sifr.python.Object";
+const PYTHON_RESOURCE_IDENTITY: &str = "_sifr.python.ResourceIdentity";
 
 impl Type {
     /// Whether this type has the exact source-level contract required to receive
@@ -41,6 +42,20 @@ impl Type {
                 name,
                 ..
             } if name == "Object" && identity == PYTHON_OBJECT_IDENTITY
+        )
+    }
+
+    /// Whether this is the sealed resource owner shared by the Python protocol
+    /// bridges.
+    #[must_use]
+    pub fn is_python_resource_identity_contract(&self) -> bool {
+        matches!(
+            self.resolve_alias(),
+            Self::Class {
+                identity: Some(identity),
+                name,
+                ..
+            } if name == "ResourceIdentity" && identity == PYTHON_RESOURCE_IDENTITY
         )
     }
 }
@@ -126,6 +141,26 @@ mod tests {
         assert!(canonical.starts_with("__SifrUnionVariant_"));
         assert_ne!(canonical, local);
         assert_eq!(object(None).rust_type(), "Object");
+    }
+
+    #[test]
+    fn python_resource_identity_contract_requires_the_canonical_import_identity() {
+        let resource = |identity: Option<&str>| Type::Class {
+            identity: identity.map(str::to_string),
+            type_args: Vec::new(),
+            name: "ResourceIdentity".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: Some("NonSend".to_string()),
+        };
+        let canonical = resource(Some("_sifr.python.ResourceIdentity"));
+        assert!(canonical.is_python_resource_identity_contract());
+        assert_eq!(
+            canonical.rust_type(),
+            "::sifr_runtime::interop::Handle<::sifr_runtime::python::PythonResourceIdentity>"
+        );
+        assert!(!resource(None).is_python_resource_identity_contract());
+        assert!(!resource(Some("local.ResourceIdentity")).is_python_resource_identity_contract());
     }
 
     #[test]

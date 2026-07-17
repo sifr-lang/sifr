@@ -273,9 +273,14 @@ fn test_generate_rust_open_uses_canonical_filehandle_constructor() {
     assert!(rust_code.contains("::sifr_stdlib::fs::open_file"));
     assert!(rust_code.contains("TextFileHandle::new("));
     assert!(rust_code.contains("BinaryFileHandle::new("));
-    assert!(rust_code.contains("Encoding::new(__encoding)"));
-    assert!(rust_code.contains("DecodeErrorHandler::new(__errors.clone())"));
-    assert!(rust_code.contains("EncodeErrorHandler::new(__errors)"));
+    for (class_name, argument) in [
+        ("Encoding", "__encoding"),
+        ("DecodeErrorHandler", "__errors.clone()"),
+        ("EncodeErrorHandler", "__errors"),
+    ] {
+        let rust_name = sifr_type_system::stdlib_class_rust_name("sifr.encoding", class_name);
+        assert!(rust_code.contains(&format!("{rust_name}::new({argument})")));
+    }
     assert!(!rust_code
         .contains("return Ok(FileHandle { _handle: __handle_id, _mode: __mode.to_string() });"));
 }

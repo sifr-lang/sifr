@@ -23,7 +23,7 @@ use crate::ir_optimize::remove_trivial_clones_in_items;
 use crate::ir_validate::validate_items;
 use crate::stdlib_filter::{
     absolutize_external_crate_paths, collect_and_strip_shared_prelude, dedup_rust_items,
-    filter_stdlib_ir_to_needed, seal_canonical_file_handle_names,
+    filter_canonical_stdlib_ir_to_needed, seal_canonical_stdlib_names,
 };
 use crate::stdlib_import_signatures::register_imported_stdlib_signature;
 use crate::StdlibRustSource;
@@ -355,7 +355,12 @@ pub fn generate_rust_with_stdlib_for_module(
                                     }
                                 }
                             }
-                            filter_stdlib_ir_to_needed(&rust_source.rust, &expanded_imports)
+                            filter_canonical_stdlib_ir_to_needed(
+                                &rust_source.rust,
+                                &expanded_imports,
+                                &rust_source.module,
+                                &rust_source.nominal_types,
+                            )
                         }
                     } else {
                         rust_source.rust.clone()
@@ -374,7 +379,11 @@ pub fn generate_rust_with_stdlib_for_module(
                         .shared_needs
                         .file_handles
                         .provides_file_handle_struct;
-                    let stripped = seal_canonical_file_handle_names(&prepared.stripped_code);
+                    let stripped = seal_canonical_stdlib_names(
+                        &prepared.stripped_code,
+                        &rust_source.module,
+                        &rust_source.nominal_types,
+                    );
                     let stripped = absolutize_external_crate_paths(&stripped);
                     if !stripped.trim().is_empty() {
                         let deduped =
@@ -767,6 +776,7 @@ pub fn generate_rust_with_stdlib_for_module(
                 || uses_task_sleep
                 || module_uses_task_scope(module)
                 || module_uses_join_set(module)
+                || uses_async_python
                 || stdlib_preamble.contains("tokio::")
             {
                 features.insert(StdlibFeature::Tokio);

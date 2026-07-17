@@ -30,6 +30,7 @@ pub use lib_project_codegen::*;
 mod lib_emitter_state;
 pub use lib_emitter_state::*;
 mod class_emitter;
+mod class_error_emitter;
 mod class_inheritance_impls;
 mod class_method_emitter;
 mod class_trait_capabilities;

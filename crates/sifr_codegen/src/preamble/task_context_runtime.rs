@@ -53,6 +53,7 @@ pub fn build_task_context_scope_extension_items(include_task_local: bool) -> Vec
 }
 
 pub fn build_task_current_context_items(include_task_local: bool) -> Vec<RustItem> {
+    let context_type = sifr_type_system::stdlib_class_rust_name("sifr.task", "Context");
     let mut items = Vec::new();
     if include_task_local {
         items.push(RustItem::Attr(
@@ -64,9 +65,11 @@ pub fn build_task_current_context_items(include_task_local: bool) -> Vec<RustIte
         visibility: Visibility::Private,
         type_params: vec![],
         params: vec![],
-        ret: Some(RustType::Named("Context".to_string())),
+        ret: Some(RustType::Named(context_type.clone())),
         body: vec![RustStmt::Return(Some(RustExpr::Ident(
-            r#"Context::new(__SIFR_TASK_CONTEXT_LABEL.try_with(Clone::clone).unwrap_or_else(|_| "Context".to_string()))"#.to_string(),
+            format!(
+                r#"{context_type}::new(__SIFR_TASK_CONTEXT_LABEL.try_with(Clone::clone).unwrap_or_else(|_| "Context".to_string()))"#
+            ),
         )))],
         is_async: false,
     });

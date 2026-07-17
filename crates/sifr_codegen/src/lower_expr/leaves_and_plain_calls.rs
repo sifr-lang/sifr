@@ -493,7 +493,10 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 .map(try_lower_leaf_or_name_expr)
                 .collect::<Option<Vec<_>>>()?;
             Some(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![parent_class.clone(), method.clone()])),
+                func: Box::new(RustExpr::Path(vec![
+                    sifr_type_system::source_class_rust_name(parent_class),
+                    method.clone(),
+                ])),
                 args: lowered_args,
             })
         }

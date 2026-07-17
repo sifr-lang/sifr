@@ -20,9 +20,12 @@ PR #2988 is merged. M10 Wave 3 evidence, demo, and documentation closure is
 implemented and locally validated; whole-diff review pass 6 is satisfied and
 the authoritative create-PR gate passes, and PR #2989 is merged. The complete
 merged M10 implementation is undergoing its required milestone review. Review
-pass 10 found the remaining source-name, external-path-root, and generated-union
-collision gaps; their remediation is implemented in PR #2990 and the repeated
-authoritative create-PR gate passes, with a fresh full re-review pending. Typed
+pass 10 found source-name, external-path-root, and generated-union collision
+gaps; their remediation is implemented in PR #2990 and the repeated
+authoritative create-PR gate passes. Review pass 11 found three deeper nominal
+identity gaps in canonical/local class unions, sync/async and inheritance
+reference rendering, and ordinary merged stdlib class names; remediation is in
+progress. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1474,8 +1477,25 @@ Delivery waves:
   create-PR gate passes every blocking lane in `605.42s`: Python interop
   `12/12`, runtime platform `28` variants with one capability-gated skip, and
   E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache hits. The
-  warm wall-time notice is a non-blocking advisory; a fresh complete re-review
-  remains pending.
+  warm wall-time notice is a non-blocking advisory. Full
+  [review pass 11](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-11.md)
+  then found that class union keys still omitted canonical identity, several
+  synchronous/asynchronous conversion and inheritance paths still emitted raw
+  source class names, and the merged-stdlib sealing pass protected only file
+  handles rather than every canonical nominal. Remediation and native
+  canonical/local collision coverage are complete in PR #2990. Nominal Rust
+  identities now flow recursively through HIR types, union keys, constructors,
+  operators, handlers, patterns, Python conversions, inheritance, and generated
+  runtime helpers; flattened stdlib declarations are sealed by canonical module
+  identity while external qualified paths remain untouched. Compiler-generated
+  errors render their Sifr source names in user-visible `Debug` output even
+  though their Rust identifiers remain collision-safe. Focused regressions,
+  the eight previously failing E2E fixtures, and the full E2E suite pass. The
+  authoritative create-PR gate passes every blocking lane in `921.00s`: Python
+  interop `12/12`, runtime platform `28` variants with one capability-gated
+  skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache
+  hits. Its warm wall-time notice is a non-blocking advisory. A fresh full-diff
+  review is pending before M10 closure.
 
 Acceptance:
 

@@ -182,7 +182,7 @@ fn output_value_expr_with(
             vec![RustExpr::Ident(value_name.to_string())],
         ));
     }
-    if let Type::Class { name, .. } = ty.resolve_alias() {
+    if let class @ Type::Class { name, .. } = ty.resolve_alias() {
         if let Some(opaque) = opaque_classes.get(name) {
             let target = opaque.target.as_ref()?;
             let checked = conversion_try(
@@ -208,7 +208,7 @@ fn output_value_expr_with(
             );
             return Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
-                    name.clone(),
+                    class.rust_type(),
                     "__sifr_from_python_object".to_string(),
                 ])),
                 args: vec![checked],
@@ -351,7 +351,7 @@ fn output_value_expr_with(
                 ))),
             });
         }
-        Type::Class { name, fields, .. } if !fields.is_empty() => {
+        class @ Type::Class { fields, .. } if !fields.is_empty() => {
             let mut statements = Vec::new();
             let mut converted_fields = Vec::new();
             for (field, field_type) in fields {
@@ -375,7 +375,7 @@ fn output_value_expr_with(
             return Some(RustExpr::Block {
                 stmts: statements,
                 expr: Some(Box::new(RustExpr::StructInit {
-                    name: name.clone(),
+                    name: class.rust_type(),
                     fields: converted_fields,
                 })),
             });

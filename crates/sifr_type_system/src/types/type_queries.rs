@@ -669,14 +669,11 @@ impl Type {
                 if class.is_python_object_contract() {
                     "::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>"
                         .to_string()
+                } else if class.is_python_resource_identity_contract() {
+                    "::sifr_runtime::interop::Handle<::sifr_runtime::python::PythonResourceIdentity>"
+                        .to_string()
                 } else {
-                    match identity.as_deref() {
-                        Some("_sifr.fs.NativeFileHandle") => "__SifrIoNativeFileHandle".to_string(),
-                        Some("sifr.io.FileHandle") => "__SifrIoFileHandle".to_string(),
-                        Some("sifr.io.BinaryFileHandle") => "__SifrIoBinaryFileHandle".to_string(),
-                        Some("sifr.io.TextFileHandle") => "__SifrIoTextFileHandle".to_string(),
-                        _ => source_class_rust_name(name),
-                    }
+                    super::class_rust_name(identity.as_deref(), name)
                 }
             }
             Self::Result(ok, err) => format!("Result<{}, {}>", ok.rust_type(), err.rust_type()),

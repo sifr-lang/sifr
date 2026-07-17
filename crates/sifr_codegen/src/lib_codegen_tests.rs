@@ -21,6 +21,7 @@ fn trait_impl_fixture_stdlib_code() -> StdlibCode {
             module: "sifr.tomllib".to_string(),
             source_path: "stdlib/sifr/tomllib.sifr".to_string(),
             source_sha256: "fixture".to_string(),
+            nominal_types: HashSet::new(),
             rust: r#"
 struct TOMLDecodeError { message: String }
 impl std::fmt::Display for TOMLDecodeError {

@@ -9,11 +9,11 @@ use std::collections::{HashMap, HashSet};
 type OperatorBounds = HashMap<String, HashSet<String>>;
 
 impl RustEmitter {
-    fn operator_output_type(class: &HirClass, ty: &Type) -> String {
-        if ty.rust_type() == class.name {
+    fn operator_output_type(&self, class: &HirClass, ty: &Type) -> String {
+        if matches!(ty.resolve_alias(), Type::Class { name, .. } if name == &class.name) {
             Self::class_impl_target(class)
         } else {
-            ty.rust_type()
+            self.rust_type_with_generics(ty)
         }
     }
 
@@ -108,17 +108,18 @@ impl RustEmitter {
         } else {
             String::new()
         };
-        let class_with_generics = format!("{}{}", class.name, generic_suffix);
+        let class_with_generics =
+            format!("{}{}", source_class_rust_name(&class.name), generic_suffix);
         let rhs_ty = if let Some(param) = func.params.first() {
-            if param.ty.rust_type() == class.name {
+            if matches!(param.ty.resolve_alias(), Type::Class { name, .. } if name == &class.name) {
                 format!("&{class_with_generics}")
             } else {
-                param.ty.rust_type()
+                self.rust_type_with_generics(&param.ty)
             }
         } else {
             format!("&{class_with_generics}")
         };
-        let output_ty = Self::operator_output_type(class, &func.return_type);
+        let output_ty = self.operator_output_type(class, &func.return_type);
         let rhs_name = func
             .params
             .first()
@@ -172,7 +173,7 @@ impl RustEmitter {
         let items = vec![
             RustItem::TypeAlias {
                 name: "Output".to_string(),
-                ty: RustType::Named(Self::operator_output_type(class, &func.return_type)),
+                ty: RustType::Named(self.operator_output_type(class, &func.return_type)),
             },
             RustItem::Fn {
                 name: method_name.to_string(),

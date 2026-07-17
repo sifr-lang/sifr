@@ -62,9 +62,10 @@ fn process_sync_private_declarations_codegen_through_sifr_stdlib() {
             "{name} should lower through _sifr.process private Rust interop declarations"
         );
     }
-    assert!(private_code.rust.contains(
-        "map_err(|__sifr_bridge_error| ProcessError { message: __sifr_bridge_error.to_string() })"
-    ));
+    let process_error = sifr_type_system::stdlib_class_rust_name("_sifr.process", "ProcessError");
+    assert!(private_code.rust.contains(&format!(
+        "map_err(|__sifr_bridge_error| {process_error} {{ message: __sifr_bridge_error.to_string() }})"
+    )));
 
     assert!(compiled
         .code

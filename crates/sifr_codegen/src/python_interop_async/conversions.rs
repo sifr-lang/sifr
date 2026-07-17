@@ -447,14 +447,14 @@ pub(crate) fn async_output_value(
             error_type,
         ));
     }
-    if let Type::Class {
+    if let class @ Type::Class {
         name: class_name, ..
     } = ty.resolve_alias()
     {
         if opaque_classes.contains_key(class_name) {
             return Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
-                    class_name.clone(),
+                    class.rust_type(),
                     "__sifr_from_python_object".to_string(),
                 ])),
                 args: vec![mapped_try(
@@ -567,11 +567,7 @@ pub(crate) fn async_output_value(
                 ))),
             })
         }
-        Type::Class {
-            name: class_name,
-            fields,
-            ..
-        } if !fields.is_empty() => {
+        class @ Type::Class { fields, .. } if !fields.is_empty() => {
             let mut stmts = vec![RustStmt::Let {
                 mutable: true,
                 name: "__sifr_python_record".to_string(),
@@ -606,7 +602,7 @@ pub(crate) fn async_output_value(
             Some(RustExpr::Block {
                 stmts,
                 expr: Some(Box::new(RustExpr::StructInit {
-                    name: class_name.clone(),
+                    name: class.rust_type(),
                     fields: converted,
                 })),
             })

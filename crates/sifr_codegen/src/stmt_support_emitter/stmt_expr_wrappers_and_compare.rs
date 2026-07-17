@@ -400,7 +400,9 @@ macro_rules! stmt_expr_wrappers_range_index {
                         field: idx.to_string(),
                     };
                     return Ok(Some(
-                        if crate::helpers::is_copy_type_for_codegen(element_ty) {
+                        if crate::helpers::is_copy_type_for_codegen(element_ty)
+                            || !element_ty.supports_derived_clone()
+                        {
                             field_expr
                         } else {
                             crate::RustExpr::Clone(Box::new(field_expr))

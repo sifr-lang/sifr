@@ -101,7 +101,7 @@ impl RustEmitter {
             .collect()
     }
 
-    fn class_base_type_param_bounds(class: &HirClass, name: &str) -> Vec<String> {
+    pub(super) fn class_base_type_param_bounds(class: &HirClass, name: &str) -> Vec<String> {
         if Self::class_type_param_needs_hash_eq(class, name) {
             vec!["std::hash::Hash".to_string(), "Eq".to_string()]
         } else {
@@ -577,7 +577,7 @@ impl RustEmitter {
 
         RustItem::Impl {
             target: Self::class_impl_target(class),
-            type_params: Self::class_impl_type_params(class),
+            type_params: Self::class_debug_type_params(class),
             trait_: Some("std::fmt::Display".to_string()),
             items: vec![RustItem::Fn {
                 name: "fmt".to_string(),
@@ -715,7 +715,7 @@ impl RustEmitter {
             vec!["Debug".to_string()]
         } else {
             let mut derives = Vec::new();
-            if capabilities.debug {
+            if capabilities.debug && !class.is_error_type {
                 derives.push("Debug".to_string());
             }
             if capabilities.clone {
@@ -818,10 +818,12 @@ impl RustEmitter {
 
         if class.is_error_type {
             self.body_items
+                .push(Self::build_debug_impl_for_error(class));
+            self.body_items
                 .push(Self::build_display_impl_for_error(class));
             self.body_items.push(RustItem::Impl {
                 target: Self::class_impl_target(class),
-                type_params: Self::class_impl_type_params(class),
+                type_params: Self::class_debug_type_params(class),
                 trait_: Some("std::error::Error".to_string()),
                 items: Vec::new(),
             });

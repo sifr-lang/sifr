@@ -2,6 +2,13 @@
 
 use crate::{RustExpr, RustLiteral, RustMatchArm, RustStmt};
 
+fn encoding_constructor_path(name: &str) -> Vec<String> {
+    vec![
+        sifr_type_system::stdlib_class_rust_name("sifr.encoding", name),
+        "new".to_string(),
+    ]
+}
+
 fn owned_str(arg: &RustExpr) -> RustExpr {
     RustExpr::MethodCall {
         receiver: Box::new(arg.clone()),
@@ -112,26 +119,21 @@ fn success_expr() -> RustExpr {
             args: vec![
                 binary_file_handle_new_expr(),
                 RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        "Encoding".to_string(),
-                        "new".to_string(),
-                    ])),
+                    func: Box::new(RustExpr::Path(encoding_constructor_path("Encoding"))),
                     args: vec![RustExpr::Ident("__encoding".to_string())],
                 },
                 RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        "DecodeErrorHandler".to_string(),
-                        "new".to_string(),
-                    ])),
+                    func: Box::new(RustExpr::Path(encoding_constructor_path(
+                        "DecodeErrorHandler",
+                    ))),
                     args: vec![RustExpr::Clone(Box::new(RustExpr::Ident(
                         "__errors".to_string(),
                     )))],
                 },
                 RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        "EncodeErrorHandler".to_string(),
-                        "new".to_string(),
-                    ])),
+                    func: Box::new(RustExpr::Path(encoding_constructor_path(
+                        "EncodeErrorHandler",
+                    ))),
                     args: vec![RustExpr::Ident("__errors".to_string())],
                 },
             ],

@@ -447,7 +447,10 @@ impl RustEmitter {
             fields.push((
                 parent_name.to_lowercase(),
                 RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![parent_name.clone(), "new".to_string()])),
+                    func: Box::new(RustExpr::Path(vec![
+                        sifr_type_system::source_class_rust_name(parent_name),
+                        "new".to_string(),
+                    ])),
                     args: parent_args,
                 },
             ));

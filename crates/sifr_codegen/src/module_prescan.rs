@@ -81,6 +81,16 @@ impl RustEmitter {
                 .insert(func.name.clone(), (params, func.return_type.clone()));
         }
         for class in &module.classes {
+            let emitted_class_name = self.current_module_name.as_deref().map_or_else(
+                || sifr_type_system::source_class_rust_name(&class.name),
+                |module| {
+                    if module.starts_with("sifr.") || module.starts_with("_sifr.") {
+                        sifr_type_system::stdlib_class_rust_name(module, &class.name)
+                    } else {
+                        sifr_type_system::source_class_rust_name(&class.name)
+                    }
+                },
+            );
             for method in &class.methods {
                 let params = method
                     .params
@@ -94,10 +104,13 @@ impl RustEmitter {
                         (param.ty.clone(), convention)
                     })
                     .collect::<Vec<_>>();
+                let signature = (params, method.return_type.clone());
                 self.func_signatures.insert(
                     format!("{}::{}", class.name, method.name),
-                    (params, method.return_type.clone()),
+                    signature.clone(),
                 );
+                self.func_signatures
+                    .insert(format!("{emitted_class_name}::{}", method.name), signature);
             }
         }
     }

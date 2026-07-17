@@ -37,7 +37,11 @@ impl RustEmitter {
             }
             return HandlerMatchCondition::Unsupported;
         }
-        if error_type == err_ty {
+        let resolved_error_type = handler
+            .error_resolved_type
+            .as_ref()
+            .map(|ty| crate::render_type(&crate::sifr_type_to_rust_type(ty)));
+        if resolved_error_type.as_deref() == Some(err_ty) || error_type == err_ty {
             return HandlerMatchCondition::Always;
         }
         HandlerMatchCondition::Unsupported

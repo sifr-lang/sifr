@@ -232,3 +232,26 @@ class Ordered[T]:
         "{rust_code}"
     );
 }
+
+#[test]
+fn error_debug_uses_the_source_class_name() {
+    let rust_code = generate_rust_from_source(
+        r#"class LocalError(Error):
+    message: str
+"#,
+    );
+
+    assert!(!rust_code.contains("#[derive(Debug"), "{rust_code}");
+    assert!(
+        rust_code.contains("impl ::std::fmt::Debug for LocalError"),
+        "{rust_code}"
+    );
+    assert!(
+        rust_code.contains("f.debug_struct(\"LocalError\")"),
+        "{rust_code}"
+    );
+    assert!(
+        rust_code.contains(".field(\"message\", &self.message)"),
+        "{rust_code}"
+    );
+}
