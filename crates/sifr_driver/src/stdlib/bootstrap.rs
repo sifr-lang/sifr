@@ -587,6 +587,7 @@ fn canonicalize_stdlib_hir_signatures(
         canonicalize_stdlib_hir_function(function, module_name, local_classes);
     }
     for class in &mut module.classes {
+        class.identity = Some(format!("{module_name}.{}", class.name));
         for (_, field_type) in &mut class.fields {
             *field_type = canonical_stdlib_type(field_type, module_name, local_classes);
         }
@@ -598,6 +599,9 @@ fn canonicalize_stdlib_hir_signatures(
         }
         if let Some(inner) = &mut class.newtype_inner {
             *inner = canonical_stdlib_type(inner, module_name, local_classes);
+        }
+        if let Some(parent) = &mut class.parent_type {
+            *parent = canonical_stdlib_type(parent, module_name, local_classes);
         }
     }
     for (_, constant_type, _) in &mut module.constants {

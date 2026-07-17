@@ -24,44 +24,24 @@ const CANONICAL_FILE_HANDLE_RUST_NAMES: &[(&str, &str)] = &[
     ("sifr.io.TextFileHandle", "__SifrIoTextFileHandle"),
 ];
 
-/// Canonical classes supplied by the generated global prelude rather than a
-/// merged stdlib module. Their shared Rust names are intentionally stable.
-pub const GLOBAL_RUST_NOMINAL_NAMES: &[&str] = &[
-    "IOError",
-    "ParseError",
-    "ValueError",
-    "TypeError",
-    "RegexError",
-    "KeyError",
-    "IndexError",
-    "AttributeError",
-    "OverflowError",
-    "ZeroDivisionError",
-    "RuntimeError",
-    "NotImplementedError",
-    "Error",
-    "JSONDecodeError",
-    "JsonIntegerRangeError",
-    "JsonLimitError",
-    "TOMLDecodeError",
-    "FileNotFoundError",
-    "PermissionError",
-    "FileExistsError",
-    "IsADirectoryError",
-    "NotADirectoryError",
-    "DirectoryNotEmptyError",
-    "ScopeFailure",
-    "TaskCancelled",
-    "SecondaryError",
+/// Canonical declarations supplied by the generated global prelude rather
+/// than their merged stdlib module. Exemptions are exact declaration
+/// identities: a same-basename class in another module remains distinct.
+pub const GLOBAL_RUST_NOMINAL_IDENTITIES: &[&str] = &[
     // These are emitted by the compiler's shared CPU-offload prelude and are
     // therefore global infrastructure even when surfaced through sifr.parallel.
-    "WorkerRuntimeError",
-    "WorkerError",
+    "sifr.parallel.WorkerRuntimeError",
+    "sifr.parallel.WorkerError",
     // The Python runtime glue and generated interop adapters share this
     // concrete error representation. It is emitted by the global prelude,
     // rather than by the flattened `_sifr.python` module.
-    "PythonError",
+    "_sifr.python.PythonError",
 ];
+
+#[must_use]
+pub fn is_global_rust_nominal_identity(identity: &str) -> bool {
+    GLOBAL_RUST_NOMINAL_IDENTITIES.contains(&identity)
+}
 
 /// Return a collision-free Rust identifier for a source-declared nominal type.
 ///
@@ -97,7 +77,7 @@ pub fn class_rust_name(identity: Option<&str>, name: &str) -> String {
             return (*rust_name).to_string();
         }
         if (identity.starts_with("sifr.") || identity.starts_with("_sifr."))
-            && !GLOBAL_RUST_NOMINAL_NAMES.contains(&name)
+            && !is_global_rust_nominal_identity(identity)
         {
             return compiler_owned_identifier("__SifrStdlib_", identity);
         }
@@ -146,13 +126,17 @@ mod tests {
             class_rust_name(Some("local.FileHandle"), "FileHandle"),
             "FileHandle"
         );
-        assert_eq!(
+        assert_ne!(
             class_rust_name(Some("sifr.json.JSONDecodeError"), "JSONDecodeError"),
             "JSONDecodeError"
         );
         assert_eq!(
             class_rust_name(Some("_sifr.python.PythonError"), "PythonError"),
             "PythonError"
+        );
+        assert_ne!(
+            class_rust_name(Some("sifr.csv.Error"), "Error"),
+            class_rust_name(Some("sifr.configparser.Error"), "Error")
         );
         assert_eq!(
             class_rust_name(Some("sifr.json.JsonValue"), "JsonValue"),

@@ -9,14 +9,6 @@ use std::collections::{HashMap, HashSet};
 type OperatorBounds = HashMap<String, HashSet<String>>;
 
 impl RustEmitter {
-    fn operator_output_type(&self, class: &HirClass, ty: &Type) -> String {
-        if matches!(ty.resolve_alias(), Type::Class { name, .. } if name == &class.name) {
-            Self::class_impl_target(class)
-        } else {
-            self.rust_type_with_generics(ty)
-        }
-    }
-
     fn closed_operator_bounds(
         module: &HirModule,
         class: &HirClass,
@@ -48,15 +40,6 @@ impl RustEmitter {
             }
         }
         (!closed.is_empty()).then_some(closed)
-    }
-
-    fn operator_rust_bound(type_param: &str, requirement: &str) -> String {
-        match requirement {
-            "Add" | "Sub" | "Mul" | "Div" | "Rem" | "Neg" => {
-                format!("std::ops::{requirement}<Output = {type_param}>")
-            }
-            _ => requirement.to_string(),
-        }
     }
 
     pub(crate) fn emit_operator_impls(
@@ -110,15 +93,7 @@ impl RustEmitter {
         };
         let class_with_generics =
             format!("{}{}", source_class_rust_name(&class.name), generic_suffix);
-        let rhs_ty = if let Some(param) = func.params.first() {
-            if matches!(param.ty.resolve_alias(), Type::Class { name, .. } if name == &class.name) {
-                format!("&{class_with_generics}")
-            } else {
-                self.rust_type_with_generics(&param.ty)
-            }
-        } else {
-            format!("&{class_with_generics}")
-        };
+        let rhs_ty = self.operator_rhs_type(class, func.params.first(), &class_with_generics);
         let output_ty = self.operator_output_type(class, &func.return_type);
         let rhs_name = func
             .params
@@ -468,7 +443,18 @@ impl RustEmitter {
                 Some(vec![RustStmt::Expr(lowered_expr)])
             }
             HirStmt::Return { value } => {
-                let lowered = value.as_ref().map(|expr| self.lower_operator_expr_ir(expr));
+                let lowered = value.as_ref().map(|expr| {
+                    self.lower_operator_expr_ir(expr).map(|lowered| match expr {
+                        HirExpr::Name { name, ty }
+                            if (self.borrowed_params.contains(name)
+                                || self.mut_borrowed_params.contains(name))
+                                && ty.ownership() != sifr_type_system::OwnershipKind::Copy =>
+                        {
+                            RustExpr::Clone(Box::new(lowered))
+                        }
+                        _ => lowered,
+                    })
+                });
                 match lowered {
                     Some(Some(expr)) => Some(vec![RustStmt::Return(Some(expr))]),
                     Some(None) => None,

@@ -390,7 +390,7 @@ fn open() -> FileHandle { FileHandle {} }
 }
 
 #[test]
-fn canonical_stdlib_sealing_uses_module_identity_and_preserves_global_types() {
+fn canonical_stdlib_sealing_uses_exact_module_identity() {
     let input = r#"
 struct JsonValue {}
 struct JSONDecodeError {}
@@ -402,11 +402,35 @@ impl JsonValue { fn parse() -> Result<JsonValue, JSONDecodeError> { todo!() } }
         &HashSet::from(["JsonValue".to_string(), "JSONDecodeError".to_string()]),
     );
     let canonical = sifr_type_system::stdlib_class_rust_name("sifr.json", "JsonValue");
+    let canonical_error = sifr_type_system::stdlib_class_rust_name("sifr.json", "JSONDecodeError");
 
     assert!(sealed.contains(&format!("struct {canonical}")));
     assert!(sealed.contains(&format!("impl {canonical}")));
-    assert!(sealed.contains("struct JSONDecodeError"));
-    assert!(sealed.contains("JSONDecodeError"));
+    assert!(sealed.contains(&format!("struct {canonical_error}")));
+    assert!(sealed.contains(&canonical_error));
+
+    let csv = seal_canonical_stdlib_names(
+        "struct Error {}",
+        "sifr.csv",
+        &HashSet::from(["Error".to_string()]),
+    );
+    let config = seal_canonical_stdlib_names(
+        "struct Error {}",
+        "sifr.configparser",
+        &HashSet::from(["Error".to_string()]),
+    );
+    let csv_error = sifr_type_system::stdlib_class_rust_name("sifr.csv", "Error");
+    let config_error = sifr_type_system::stdlib_class_rust_name("sifr.configparser", "Error");
+    assert_ne!(csv_error, config_error);
+    assert!(csv.contains(&format!("struct {csv_error}")));
+    assert!(config.contains(&format!("struct {config_error}")));
+
+    let global = seal_canonical_stdlib_names(
+        "struct WorkerError {}",
+        "sifr.parallel",
+        &HashSet::from(["WorkerError".to_string()]),
+    );
+    assert!(global.contains("struct WorkerError"));
 }
 
 #[test]

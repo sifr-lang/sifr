@@ -17,6 +17,7 @@ fn interop_build_plan_collects_function_class_and_method_declarations() {
         )],
         classes: vec![HirClass {
             name: "Consumer".to_string(),
+            identity: None,
             fields: Vec::new(),
             methods: vec![function_with_declaration(
                 "poll",
@@ -30,6 +31,7 @@ fn interop_build_plan_collects_function_class_and_method_declarations() {
             newtype_inner: None,
             implements_protocols: Vec::new(),
             parent_class: None,
+            parent_type: None,
             type_params: Vec::new(),
             enum_variants: Vec::new(),
             rust_interop: vec![declaration(
@@ -463,6 +465,7 @@ fn function_with_declaration(
 fn class(name: &str, kind: HirClassKind, fields: Vec<(String, Type)>) -> HirClass {
     HirClass {
         name: name.to_string(),
+        identity: None,
         fields,
         methods: Vec::new(),
         is_hashable: false,
@@ -472,6 +475,7 @@ fn class(name: &str, kind: HirClassKind, fields: Vec<(String, Type)>) -> HirClas
         newtype_inner: None,
         implements_protocols: Vec::new(),
         parent_class: None,
+        parent_type: None,
         type_params: Vec::new(),
         enum_variants: Vec::new(),
         rust_interop: Vec::new(),

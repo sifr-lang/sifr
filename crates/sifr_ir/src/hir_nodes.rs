@@ -43,6 +43,8 @@ pub enum HirClassKind {
 #[derive(Debug, Clone)]
 pub struct HirClass {
     pub name: String,
+    /// Stable declaration identity. `None` denotes the current user module.
+    pub identity: Option<String>,
     pub fields: Vec<(String, Type)>,
     pub methods: Vec<HirFunction>,
     /// Whether all fields support Eq + Hash (enables derive(Eq, Hash))
@@ -61,6 +63,8 @@ pub struct HirClass {
     pub implements_protocols: Vec<String>,
     /// Parent class name for single inheritance
     pub parent_class: Option<String>,
+    /// Resolved parent type used by executable inheritance codegen.
+    pub parent_type: Option<Type>,
     /// Generic type parameters (e.g., T, K, V from PEP 695 or `TypeVar`)
     pub type_params: Vec<String>,
     /// Enum variants: (name, `optional_value`)
@@ -72,6 +76,29 @@ pub struct HirClass {
 }
 
 impl HirClass {
+    #[must_use]
+    pub fn is_self_type(&self, ty: &Type) -> bool {
+        let Type::Class {
+            identity,
+            type_args,
+            name,
+            ..
+        } = ty.resolve_alias()
+        else {
+            return false;
+        };
+        if identity.as_ref().unwrap_or(name) != self.identity.as_ref().unwrap_or(&self.name) {
+            return false;
+        }
+        let expected_args = self
+            .type_params
+            .iter()
+            .cloned()
+            .map(Type::TypeVar)
+            .collect::<Vec<_>>();
+        type_args == &expected_args
+    }
+
     pub fn is_protocol(&self) -> bool {
         matches!(self.kind, HirClassKind::Protocol)
     }
@@ -339,7 +366,7 @@ pub enum HirStmt {
         body: Vec<HirStmt>,
         handlers: Vec<HirExceptHandler>,
         /// Error types that can arise from the try body (collected during lowering)
-        body_error_types: Vec<String>,
+        body_error_types: Vec<Type>,
     },
     /// Try/finally: finalbody runs before normal completion, return, or error propagation.
     TryFinally {
@@ -463,6 +490,7 @@ pub enum HirPattern {
     /// `case Circle(radius=r):` — class pattern with field bindings
     Class {
         class_name: String,
+        class_type: Type,
         fields: Vec<(String, HirPattern)>,
     },
     /// `case Color.RED:` — attribute value pattern (enum-like)
@@ -665,6 +693,7 @@ pub enum HirExpr {
     /// Super call: `super().__init__(args)` -> `ParentType::new(args)`
     SuperCall {
         parent_class: String,
+        parent_type: Type,
         method: String,
         args: Vec<HirExpr>,
         ty: Type,

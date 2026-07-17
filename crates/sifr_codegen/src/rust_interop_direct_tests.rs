@@ -361,6 +361,7 @@ fn rust_interop_function_body_converts_python_int_dict_return() {
 fn zip_error_class() -> HirClass {
     HirClass {
         name: "ZipError".to_string(),
+        identity: None,
         fields: vec![("message".to_string(), Type::Str)],
         methods: Vec::new(),
         is_hashable: false,
@@ -370,6 +371,7 @@ fn zip_error_class() -> HirClass {
         newtype_inner: None,
         implements_protocols: Vec::new(),
         parent_class: Some("Error".to_string()),
+        parent_type: None,
         type_params: Vec::new(),
         enum_variants: Vec::new(),
         rust_interop: Vec::new(),

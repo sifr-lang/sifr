@@ -1,4 +1,15 @@
 use super::*;
+
+fn test_error_type(name: &str) -> Type {
+    Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: name.to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    }
+}
 use sifr_ir::CompilerIntrinsicId;
 #[test]
 fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
@@ -94,7 +105,7 @@ fn test_generate_rust_generator_try_except_materializes_without_shape_panic() {
                             value: HirExpr::IntLiteral(2),
                         }],
                     }],
-                    body_error_types: vec!["Error".to_string()],
+                    body_error_types: vec![test_error_type("Error")],
                 }],
                 is_async: false,
                 method_kind: MethodKind::Regular,
@@ -564,6 +575,7 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
         functions: vec![],
         classes: vec![HirClass {
             name: "Bucket".to_string(),
+            identity: None,
             fields: vec![
                 ("items".to_string(), items_ty.clone()),
                 ("table".to_string(), table_ty.clone()),
@@ -684,6 +696,7 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
             newtype_inner: None,
             implements_protocols: vec![],
             parent_class: None,
+            parent_type: None,
             type_params: vec![],
             enum_variants: vec![],
             rust_interop: Vec::new(),

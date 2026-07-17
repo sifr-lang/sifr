@@ -272,7 +272,7 @@ pub(super) fn try_lower_result_error_class_match_pattern(
     let Type::Result(_, error_ty) = resolve_alias_type(subject_ty) else {
         return None;
     };
-    let HirPattern::Class { class_name, .. } = pattern else {
+    let HirPattern::Class { class_type, .. } = pattern else {
         return None;
     };
 
@@ -281,7 +281,7 @@ pub(super) fn try_lower_result_error_class_match_pattern(
         return Some((format!("Err({error_pattern})"), bindings));
     }
 
-    if !matches!(resolve_alias_type(error_ty), Type::Class { name, .. } if name == class_name) {
+    if !resolve_alias_type(error_ty).is_same_class_specialization(class_type) {
         return None;
     }
     let (error_pattern, bindings) = try_lower_typed_match_pattern(pattern, error_ty)?;
@@ -377,7 +377,9 @@ pub(super) fn try_lower_match_pattern(pattern: &HirPattern) -> Option<(String, V
             }
             Some((format!("({})", rendered.join(", ")), bindings))
         }
-        HirPattern::Class { class_name, fields } => {
+        HirPattern::Class {
+            class_name, fields, ..
+        } => {
             let mut rendered_fields = Vec::new();
             let mut bindings = Vec::new();
             for (field_name, field_pattern) in fields {
@@ -431,7 +433,9 @@ fn try_lower_typed_match_pattern(
             }
             Some((format!("({})", rendered.join(", ")), bindings))
         }
-        HirPattern::Class { fields, .. } => {
+        HirPattern::Class {
+            class_type, fields, ..
+        } => {
             let class_ty @ Type::Class {
                 fields: class_fields,
                 ..
@@ -439,6 +443,9 @@ fn try_lower_typed_match_pattern(
             else {
                 return try_lower_match_pattern(pattern);
             };
+            if !class_ty.is_same_class_specialization(class_type) {
+                return None;
+            }
             let mut rendered_fields = Vec::with_capacity(fields.len());
             let mut bindings = Vec::new();
             for (field_name, field_pattern) in fields {
@@ -471,20 +478,17 @@ pub(super) fn try_lower_union_class_match_pattern(
     let Type::Union(members) = resolve_alias_type(subject_ty) else {
         return None;
     };
-    let HirPattern::Class { class_name, fields } = pattern else {
+    let HirPattern::Class {
+        class_type, fields, ..
+    } = pattern
+    else {
         return None;
     };
 
-    let target_ty = match class_name.as_str() {
-        "int" => Some(Type::Int),
-        "str" => Some(Type::Str),
-        "float" => Some(Type::Float),
-        "bool" => Some(Type::Bool),
-        other => members
-            .iter()
-            .find(|m| matches!(m, Type::Class { name, .. } if name == other))
-            .cloned(),
-    }?;
+    let target_ty = members
+        .iter()
+        .find(|member| *member == class_type || member.is_same_class_specialization(class_type))
+        .cloned()?;
     if !members.contains(&target_ty) {
         return None;
     }

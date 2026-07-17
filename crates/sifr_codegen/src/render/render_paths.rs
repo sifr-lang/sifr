@@ -32,10 +32,9 @@ impl Renderer {
                 rendered.push_str(root);
                 index += root.len();
             } else {
-                let next = value[index..]
-                    .chars()
-                    .next()
-                    .expect("index remains on a UTF-8 character boundary");
+                let Some(next) = value[index..].chars().next() else {
+                    break;
+                };
                 rendered.push(next);
                 index += next.len_utf8();
             }

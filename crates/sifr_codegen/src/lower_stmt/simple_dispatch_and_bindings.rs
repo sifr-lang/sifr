@@ -122,7 +122,18 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
                 Some(vec![RustStmt::Return(None)])
             }
         }
-        HirStmt::Return { value: Some(value) } => try_lower_simple_return_stmt(value, ctx),
+        HirStmt::Return { value: Some(value) } => {
+            let mut lowered = try_lower_simple_return_stmt(value, ctx)?;
+            if matches!(value, HirExpr::Name { name, ty }
+                if bindings.borrowed_params.contains(name)
+                    && ty.ownership() != sifr_type_system::OwnershipKind::Copy)
+            {
+                if let Some(RustStmt::Return(Some(returned))) = lowered.first_mut() {
+                    *returned = RustExpr::Clone(Box::new(returned.clone()));
+                }
+            }
+            Some(lowered)
+        }
         HirStmt::Assert { test, msg } => {
             let lowered_msg = if let Some(msg_expr) = msg.as_ref() {
                 Some(if is_option_like_type(msg_expr.ty()) {

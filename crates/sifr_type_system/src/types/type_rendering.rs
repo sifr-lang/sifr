@@ -2,6 +2,28 @@ use super::{FixedIntType, IterationCapability, IterationMetadata, Type};
 use crate::union::make_union;
 
 impl Type {
+    /// Whether two class types name the same declaration, independent of
+    /// their concrete generic arguments.
+    #[must_use]
+    pub fn is_same_class_declaration(&self, other: &Self) -> bool {
+        let (
+            Type::Class {
+                identity: left_identity,
+                name: left_name,
+                ..
+            },
+            Type::Class {
+                identity: right_identity,
+                name: right_name,
+                ..
+            },
+        ) = (self.resolve_alias(), other.resolve_alias())
+        else {
+            return false;
+        };
+        left_identity.as_ref().unwrap_or(left_name) == right_identity.as_ref().unwrap_or(right_name)
+    }
+
     /// Whether two class types name the same declaration and carry the same
     /// concrete generic specialization. Local import spellings may differ.
     #[must_use]
@@ -15,25 +37,18 @@ impl Type {
 
         let (
             Type::Class {
-                identity: left_identity,
                 type_args: left_type_args,
-                name: left_name,
                 ..
             },
             Type::Class {
-                identity: right_identity,
                 type_args: right_type_args,
-                name: right_name,
                 ..
             },
         ) = (self.resolve_alias(), other.resolve_alias())
         else {
             return false;
         };
-        if left_identity.as_ref().unwrap_or(left_name)
-            != right_identity.as_ref().unwrap_or(right_name)
-            || left_type_args.len() != right_type_args.len()
-        {
+        if !self.is_same_class_declaration(other) || left_type_args.len() != right_type_args.len() {
             return false;
         }
         left_type_args

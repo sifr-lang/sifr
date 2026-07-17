@@ -46,16 +46,7 @@ fn first_try_error_type_in_stmt(stmt: &HirStmt) -> Option<String> {
             body_error_types,
         } => body_error_types
             .first()
-            .map(|error_name| {
-                handlers
-                    .iter()
-                    .find(|handler| handler.error_type.as_deref() == Some(error_name.as_str()))
-                    .and_then(|handler| handler.error_resolved_type.as_ref())
-                    .map_or_else(
-                        || error_name.clone(),
-                        |ty| crate::render_type(&crate::sifr_type_to_rust_type(ty)),
-                    )
-            })
+            .map(|error_ty| crate::render_type(&crate::sifr_type_to_rust_type(error_ty)))
             .or_else(|| {
                 first_try_error_type_in_stmts(body).or_else(|| {
                     handlers

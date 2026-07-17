@@ -4,6 +4,17 @@ use sifr_ir::{HirExpr, HirFunction, HirIteratorOp, HirParam, HirPattern, HirStmt
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashMap;
 
+fn test_error_type(name: &str) -> Type {
+    Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: name.to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    }
+}
+
 #[test]
 fn collect_mutated_vars_marks_mutborrow_call_argument() {
     let stmts = vec![HirStmt::Expr {
@@ -187,7 +198,7 @@ fn body_contains_yield_detects_try_except_and_loop_else_paths() {
                 value: HirExpr::IntLiteral(2),
             }],
         }],
-        body_error_types: vec!["Error".to_string()],
+        body_error_types: vec![test_error_type("Error")],
     }];
 
     assert!(body_contains_yield(&stmts));
@@ -503,7 +514,7 @@ fn block_control_flow_effect_reports_always_exits_for_mixed_return_raise() {
                 },
             }],
         }],
-        body_error_types: vec!["Error".to_string()],
+        body_error_types: vec![test_error_type("Error")],
     }]);
 
     assert_eq!(effect, ControlFlowEffect::AlwaysExits);

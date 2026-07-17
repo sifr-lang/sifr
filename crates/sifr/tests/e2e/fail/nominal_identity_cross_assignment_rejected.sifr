@@ -1,0 +1,8 @@
+from sifr.configparser import Error as ConfigError
+from sifr.csv import Error as CsvError
+
+
+def main() -> None:
+    csv_error: CsvError = CsvError("csv")
+    config_error: ConfigError = csv_error
+    _ = config_error

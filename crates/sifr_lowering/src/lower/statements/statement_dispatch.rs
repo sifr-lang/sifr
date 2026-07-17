@@ -420,8 +420,9 @@ pub(in crate::lower) fn lower_stmt(
                                 );
                                 return None;
                             }
-                            if let Type::Class { name, .. } = error_type.resolve_alias() {
-                                ctx.try_block_error_types.insert(name.clone());
+                        if matches!(error_type.resolve_alias(), Type::Class { .. }) {
+                            ctx.try_block_error_types
+                                .insert(error_type.resolve_alias().clone());
                             }
                             value = HirExpr::QuestionMark {
                                 expr: Box::new(value),
@@ -582,7 +583,9 @@ pub(in crate::lower) fn lower_stmt(
                                 error_type_range.unwrap_or_else(|| h.range()),
                             );
                         }
-                        covered_types.insert(et.clone());
+                        if let Some(class_ty) = ctx.class_types.get(et) {
+                            covered_types.insert(class_ty.clone());
+                        }
                     }
                 } else {
                     // Bare except (no type) — acts as catch-all
@@ -633,30 +636,28 @@ pub(in crate::lower) fn lower_stmt(
             // A parent type covers all its children (e.g., except IOError covers FileNotFoundError)
             // Subclasses partially cover their parent (e.g., except FileNotFoundError covers IOError::FileNotFound)
             if !has_catch_all && !try_error_types.is_empty() {
-                // Expand covered_types: if a parent is covered, all its children are covered
-                let mut expanded_covered = covered_types.clone();
-                for covered in &covered_types {
-                    if let Some(children) = ctx.error_hierarchy.get(covered) {
-                        for child in children {
-                            expanded_covered.insert(child.clone());
-                        }
-                    }
-                }
-                // Check if subclasses fully cover their parent
-                // If all children of a parent are covered, the parent is covered
-                for (parent, children) in &ctx.error_hierarchy {
-                    if try_error_types.contains(parent) && !expanded_covered.contains(parent) {
-                        let all_children_covered =
-                            children.iter().all(|c| expanded_covered.contains(c));
-                        if all_children_covered {
-                            expanded_covered.insert(parent.clone());
-                        }
-                    }
-                }
                 let uncovered: Vec<String> = try_error_types
                     .iter()
-                    .filter(|et| !expanded_covered.contains(*et))
-                    .cloned()
+                    .filter(|error_ty| {
+                        if covered_types
+                            .iter()
+                            .any(|covered| error_ty.is_assignable_to(covered))
+                        {
+                            return false;
+                        }
+                        let error_name = error_ty.display_name();
+                        let Some(children) = ctx.error_hierarchy.get(&error_name) else {
+                            return true;
+                        };
+                        !children.iter().all(|child| {
+                            ctx.class_types.get(child).is_some_and(|child_ty| {
+                                covered_types
+                                    .iter()
+                                    .any(|covered| child_ty.is_assignable_to(covered))
+                            })
+                        })
+                    })
+                    .map(Type::display_name)
                     .collect();
                 if !uncovered.is_empty() {
                     let mut sorted = uncovered;
@@ -669,7 +670,7 @@ pub(in crate::lower) fn lower_stmt(
                 }
             }
 
-            let body_error_types: Vec<String> = try_error_types.into_iter().collect();
+            let body_error_types: Vec<Type> = try_error_types.into_iter().collect();
             Some(HirStmt::TryExcept {
                 body,
                 handlers,

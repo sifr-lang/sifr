@@ -9,12 +9,14 @@ use super::{
 };
 use crate::lower::expressions::consume_affine_value_name;
 
-fn matched_class_type(subject_ty: &Type, class_name: &str) -> Option<Type> {
+fn matched_class_type(subject_ty: &Type, declared_type: &Type) -> Option<Type> {
     match subject_ty.resolve_alias() {
-        Type::Class { name, .. } if name == class_name => Some(subject_ty.resolve_alias().clone()),
+        candidate @ Type::Class { .. } if candidate.is_same_class_declaration(declared_type) => {
+            Some(candidate.clone())
+        }
         Type::Union(members) => members
             .iter()
-            .find_map(|member| matched_class_type(member, class_name)),
+            .find_map(|member| matched_class_type(member, declared_type)),
         _ => None,
     }
 }
@@ -116,16 +118,30 @@ pub(in crate::lower) fn lower_pattern(
             };
 
             // Resolve the class type to get field types
-            let class_ty = matched_class_type(subject_ty, &class_name)
-                .or_else(|| ctx.class_types.get(&class_name).cloned());
+            let declared_class_ty = ctx
+                .class_types
+                .get(&class_name)
+                .cloned()
+                .or(match class_name.as_str() {
+                    "int" => Some(Type::Int),
+                    "str" => Some(Type::Str),
+                    "float" => Some(Type::Float),
+                    "bool" => Some(Type::Bool),
+                    _ => None,
+                });
+            let class_ty = declared_class_ty
+                .as_ref()
+                .and_then(|declared| matched_class_type(subject_ty, declared))
+                .or(declared_class_ty)
+                .unwrap_or(Type::Any);
 
             let mut fields = Vec::new();
             for kw in &class_pat.arguments.keywords {
                 let field_name = kw.attr.to_string();
-                let field_ty = if let Some(Type::Class {
+                let field_ty = if let Type::Class {
                     fields: class_fields,
                     ..
-                }) = &class_ty
+                } = &class_ty
                 {
                     let Some(field_ty) = class_fields
                         .iter()
@@ -153,7 +169,11 @@ pub(in crate::lower) fn lower_pattern(
                 fields.push((field_name, field_pattern));
             }
 
-            Some(HirPattern::Class { class_name, fields })
+            Some(HirPattern::Class {
+                class_name,
+                class_type: class_ty,
+                fields,
+            })
         }
         Pattern::MatchSequence(seq_pat) => {
             if seq_pat.patterns.is_empty() {
@@ -217,18 +237,11 @@ pub(in crate::lower) fn lower_pattern(
 pub(in crate::lower) fn pattern_narrowed_type(
     pattern: &HirPattern,
     subject_ty: &Type,
-    ctx: &LowerCtx,
+    _ctx: &LowerCtx,
 ) -> Type {
     match pattern {
         HirPattern::None => Type::None,
-        HirPattern::Class { class_name, .. } => {
-            // Look up the class type
-            if let Some(class_ty) = ctx.class_types.get(class_name) {
-                class_ty.clone()
-            } else {
-                subject_ty.clone()
-            }
-        }
+        HirPattern::Class { class_type, .. } => class_type.clone(),
         _ => subject_ty.clone(),
     }
 }
@@ -368,8 +381,9 @@ pub(in crate::lower) fn lower_ann_assign(
             if let Type::Result(ref ok_ty, ref err_ty) = expr_ty {
                 if ok_ty.as_ref().is_assignable_to(&declared_type) {
                     // Track the error type for exhaustiveness checking
-                    if let Type::Class { name, .. } = err_ty.as_ref() {
-                        ctx.try_block_error_types.insert(name.clone());
+                    if matches!(err_ty.resolve_alias(), Type::Class { .. }) {
+                        ctx.try_block_error_types
+                            .insert(err_ty.resolve_alias().clone());
                     }
                     expr = HirExpr::QuestionMark {
                         expr: Box::new(expr),

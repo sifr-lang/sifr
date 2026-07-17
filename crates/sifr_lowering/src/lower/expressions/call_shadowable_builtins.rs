@@ -266,7 +266,9 @@ pub(super) fn lower_shadowable_builtin_call(
             // selected for the compiler-special `open()` result.
             let text_handle_ty =
                 class_type_with_identity(ctx, TEXT_FILE_HANDLE_IDENTITY).unwrap_or(text_handle_ty);
-            ctx.try_block_error_types.insert("IOError".to_string());
+            if let Some(error_ty) = ctx.class_types.get("IOError") {
+                ctx.try_block_error_types.insert(error_ty.clone());
+            }
             return Some(CallLowering::Lowered(HirExpr::IntrinsicCall {
                 intrinsic: CompilerIntrinsicId::OpenText,
                 args: vec![path_arg, mode_arg, encoding_arg, errors_arg],
@@ -384,7 +386,9 @@ pub(super) fn lower_shadowable_builtin_call(
         let file_handle_ty =
             class_type_with_identity(ctx, FILE_HANDLE_IDENTITY).unwrap_or(file_handle_ty);
         // Register IOError as a possible exception from this call
-        ctx.try_block_error_types.insert("IOError".to_string());
+        if let Some(error_ty) = ctx.class_types.get("IOError") {
+            ctx.try_block_error_types.insert(error_ty.clone());
+        }
         return Some(CallLowering::Lowered(HirExpr::IntrinsicCall {
             intrinsic: CompilerIntrinsicId::OpenBinary,
             args: vec![path_arg, mode_arg],

@@ -1494,8 +1494,25 @@ Delivery waves:
   authoritative create-PR gate passes every blocking lane in `921.00s`: Python
   interop `12/12`, runtime platform `28` variants with one capability-gated
   skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache
-  hits. Its warm wall-time notice is a non-blocking advisory. A fresh full-diff
-  review is pending before M10 closure.
+  hits. Its warm wall-time notice is a non-blocking advisory. Full
+  [review pass 12](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-12.md)
+  found four remaining exact-identity gaps: global nominal exemptions used
+  basenames, inheritance discarded canonical parent types, match/try paths
+  compared alias spellings, and generic/operator self shortcuts were
+  basename-only. Remediation now carries exact nominal identities and parent
+  types through class, `super()`, pattern, handler, generic-method, and
+  operator HIR/codegen paths; only exact compiler-global identities bypass
+  source-name escaping. Native regressions cover duplicate stdlib `Error`
+  classes, aliased stdlib inheritance and handlers, compiler-prefixed generic
+  self returns, canonical/local same-name operators, and rejected cross-module
+  assignments. Focused type-system, lowering, and codegen suites pass, as do
+  Clippy, formatting, maintainability, and file-size guardrails. After the
+  requested `cargo clean`, the authoritative create-PR gate passes every
+  blocking lane in `1504.56s`: Python interop `12/12`, runtime platform `28`
+  variants with one capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `0/42` cold-cache hits. Its warm wall-time notice is a
+  non-blocking advisory. A fresh full-diff review is pending before M10
+  closure.
 
 Acceptance:
 

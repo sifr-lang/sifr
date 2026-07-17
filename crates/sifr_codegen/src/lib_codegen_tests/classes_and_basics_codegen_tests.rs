@@ -107,6 +107,7 @@ fn process_child_resource_derives_are_module_scoped() {
         functions: vec![],
         classes: vec![HirClass {
             name: "Child".to_string(),
+            identity: None,
             fields: vec![
                 ("_handle".to_string(), Type::Int),
                 ("_waited".to_string(), Type::Bool),
@@ -121,6 +122,7 @@ fn process_child_resource_derives_are_module_scoped() {
             enum_variants: vec![],
             kind: HirClassKind::Regular,
             parent_class: None,
+            parent_type: None,
             rust_interop: Vec::new(),
         }],
         imports: vec![],
@@ -148,6 +150,7 @@ fn test_class_to_string_method_does_not_emit_generated_allow() {
         functions: vec![],
         classes: vec![HirClass {
             name: "LocaleId".to_string(),
+            identity: None,
             fields: vec![("value".to_string(), Type::Str)],
             methods: vec![HirFunction {
                 name: "to_string".to_string(),
@@ -171,6 +174,7 @@ fn test_class_to_string_method_does_not_emit_generated_allow() {
             newtype_inner: None,
             implements_protocols: vec![],
             parent_class: None,
+            parent_type: None,
             type_params: vec![],
             enum_variants: vec![],
             rust_interop: Vec::new(),
@@ -551,6 +555,7 @@ fn test_generate_rust_multi_exports_non_main_items() {
         }],
         classes: vec![HirClass {
             name: "Thing".to_string(),
+            identity: None,
             fields: vec![("value".to_string(), Type::Int)],
             methods: vec![],
             is_hashable: false,
@@ -560,6 +565,7 @@ fn test_generate_rust_multi_exports_non_main_items() {
             newtype_inner: None,
             implements_protocols: vec![],
             parent_class: None,
+            parent_type: None,
             type_params: vec![],
             enum_variants: vec![],
             rust_interop: Vec::new(),

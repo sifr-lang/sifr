@@ -32,7 +32,10 @@ pub(in crate::lower) fn lower_method_call(
         if let Expr::Name(name) = super_call.func.as_ref() {
             if name.id.as_str() == "super" {
                 let method_name = attr.attr.to_string();
-                if let Some(parent_name) = ctx.current_parent_class.clone() {
+                if let (Some(parent_name), Some(parent_type)) = (
+                    ctx.current_parent_class.clone(),
+                    ctx.current_parent_type.clone(),
+                ) {
                     let mut args = Vec::new();
                     for arg in &call.arguments.args {
                         let expr = lower_expr(arg, ctx)?;
@@ -41,6 +44,7 @@ pub(in crate::lower) fn lower_method_call(
 
                     return Some(HirExpr::SuperCall {
                         parent_class: parent_name,
+                        parent_type,
                         method: if method_name == "__init__" {
                             "new".to_string()
                         } else {

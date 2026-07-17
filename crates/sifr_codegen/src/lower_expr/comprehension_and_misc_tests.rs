@@ -99,6 +99,14 @@ pub(super) fn lowers_walrus_expr_with_leaf_value() {
 pub(super) fn lowers_super_call_with_leaf_args() {
     let expr = HirExpr::SuperCall {
         parent_class: "Base".to_string(),
+        parent_type: Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "Base".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        },
         method: "new".to_string(),
         args: vec![HirExpr::IntLiteral(1)],
         ty: Type::Class {

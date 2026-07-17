@@ -380,14 +380,8 @@ impl RustEmitter {
         {
             return Some(result_int_return_type_to_sifr_int(&method.return_type));
         }
-        if let Type::Class { name: ret_name, .. } = &method.return_type {
-            if !class.type_params.is_empty() && ret_name == &class.name {
-                return Some(RustType::Named(format!(
-                    "{}<{}>",
-                    ret_name,
-                    class.type_params.join(", ")
-                )));
-            }
+        if !class.type_params.is_empty() && class.is_self_type(&method.return_type) {
+            return Some(RustType::Named(Self::class_impl_target(class)));
         }
         Some(self.rust_ir_type_with_generics(&method.return_type))
     }
@@ -413,6 +407,10 @@ impl RustEmitter {
         };
 
         if let Some(parent_name) = inheritance_parent {
+            let parent_rust_type = class.parent_type.as_ref().map_or_else(
+                || sifr_type_system::source_class_rust_name(parent_name),
+                sifr_type_system::Type::rust_type,
+            );
             let mut super_args: Option<&Vec<HirExpr>> = None;
             let mut field_inits: Vec<(&str, &HirExpr)> = Vec::new();
             let mut other_stmts: Vec<&HirStmt> = Vec::new();
@@ -447,10 +445,7 @@ impl RustEmitter {
             fields.push((
                 parent_name.to_lowercase(),
                 RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        sifr_type_system::source_class_rust_name(parent_name),
-                        "new".to_string(),
-                    ])),
+                    func: Box::new(RustExpr::Path(vec![parent_rust_type, "new".to_string()])),
                     args: parent_args,
                 },
             ));

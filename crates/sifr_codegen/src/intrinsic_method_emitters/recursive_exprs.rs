@@ -276,10 +276,7 @@ impl RustEmitter {
                     self.try_lower_registry_plain_call_with_signature(registry_ctor_key, args)
                 {
                     if let crate::RustExpr::FnCall { func, .. } = &mut lowered {
-                        *func = Box::new(crate::RustExpr::Path(vec![
-                            emitted_class_name,
-                            "new".to_string(),
-                        ]));
+                        **func = crate::RustExpr::Path(vec![emitted_class_name, "new".to_string()]);
                     }
                     return Some(lowered);
                 }

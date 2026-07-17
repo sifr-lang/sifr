@@ -458,6 +458,8 @@ pub(in crate::lower) fn collect_class_type(
     if let Some(ref parent_name) = parent_class_name {
         if let Some(parent_ty) = ctx.class_types.get(parent_name).cloned() {
             if let Type::Class {
+                identity: parent_identity,
+                name: parent_type_name,
                 fields: parent_fields,
                 methods: parent_methods,
                 parent_class: parent_parent_chain,
@@ -472,10 +474,11 @@ pub(in crate::lower) fn collect_class_type(
                 for (mname, mft) in &parent_methods {
                     methods.push((mname.clone(), mft.clone()));
                 }
+                let parent_identity = parent_identity.unwrap_or(parent_type_name);
                 parent_class_chain = Some(if let Some(chain) = parent_parent_chain {
-                    format!("{parent_name}|{chain}")
+                    format!("{parent_identity}|{chain}")
                 } else {
-                    parent_name.clone()
+                    parent_identity
                 });
             } else {
                 let reason = format!("parent type '{parent_name}' is not a class");

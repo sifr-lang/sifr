@@ -1,5 +1,5 @@
 use proc_macro2::{Group, Ident, TokenStream, TokenTree};
-use sifr_type_system::{stdlib_class_rust_name, GLOBAL_RUST_NOMINAL_NAMES};
+use sifr_type_system::{is_global_rust_nominal_identity, stdlib_class_rust_name};
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
 use syn::visit_mut::{self, VisitMut};
@@ -60,7 +60,7 @@ pub(crate) fn seal_canonical_stdlib_names(
 ) -> String {
     let replacements = nominal_types
         .iter()
-        .filter(|name| !GLOBAL_RUST_NOMINAL_NAMES.contains(&name.as_str()))
+        .filter(|name| !is_global_rust_nominal_identity(&format!("{module}.{name}")))
         .map(|name| (name.clone(), stdlib_class_rust_name(module, name)))
         .collect::<HashMap<_, _>>();
     let Ok(tokens) = rust_code.parse::<TokenStream>() else {
@@ -257,7 +257,7 @@ pub(crate) fn filter_canonical_stdlib_ir_to_needed(
 ) -> String {
     let replacements = nominal_types
         .iter()
-        .filter(|name| !GLOBAL_RUST_NOMINAL_NAMES.contains(&name.as_str()))
+        .filter(|name| !is_global_rust_nominal_identity(&format!("{module}.{name}")))
         .map(|name| (stdlib_class_rust_name(module, name), name.clone()))
         .collect::<HashMap<_, _>>();
     let Ok(tokens) = rust_code.parse::<TokenStream>() else {

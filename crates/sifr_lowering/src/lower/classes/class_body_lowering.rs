@@ -64,6 +64,7 @@ pub(in crate::lower) fn lower_class(
 
         return Some(HirClass {
             name: class_name,
+            identity: None,
             fields: vec![],
             methods: hir_methods,
             is_hashable: false,
@@ -73,6 +74,7 @@ pub(in crate::lower) fn lower_class(
             newtype_inner: None,
             implements_protocols: Vec::new(),
             parent_class: None,
+            parent_type: None,
             type_params: Vec::new(),
             enum_variants: Vec::new(),
             rust_interop: collect_rust_interop_declarations(
@@ -185,6 +187,7 @@ pub(in crate::lower) fn lower_class(
         ctx.current_class = None;
         return Some(HirClass {
             name: class_name,
+            identity: None,
             fields: vec![],
             methods: hir_methods,
             is_hashable: true,
@@ -194,6 +197,7 @@ pub(in crate::lower) fn lower_class(
             newtype_inner: None,
             implements_protocols: Vec::new(),
             parent_class: None,
+            parent_type: None,
             type_params: Vec::new(),
             enum_variants: variants
                 .iter()
@@ -313,6 +317,7 @@ pub(in crate::lower) fn lower_class(
 
         return Some(HirClass {
             name: class_name,
+            identity: None,
             fields: vec![("0".to_string(), inner.clone())], // Single wrapped field
             methods: hir_methods,
             is_hashable: is_hashable_type(inner),
@@ -321,6 +326,7 @@ pub(in crate::lower) fn lower_class(
             operator_impls: Vec::new(),
             newtype_inner: Some(inner.clone()),
             parent_class: None,
+            parent_type: None,
             implements_protocols: Vec::new(),
             type_params: Vec::new(),
             enum_variants: Vec::new(),
@@ -343,6 +349,10 @@ pub(in crate::lower) fn lower_class(
     };
 
     let parent_class_name = get_parent_class(class_def);
+    let parent_type = parent_class_name
+        .as_ref()
+        .and_then(|parent_name| ctx.class_types.get(parent_name))
+        .cloned();
 
     // Separate own fields from inherited fields
     // For struct codegen, we only want the child's own fields (parent is embedded)
@@ -386,6 +396,7 @@ pub(in crate::lower) fn lower_class(
             // Set current class context for `self` resolution
             ctx.current_class = Some(class_name.clone());
             ctx.current_parent_class.clone_from(&parent_class_name);
+            ctx.current_parent_type.clone_from(&parent_type);
 
             // Push a new scope for the method
             ctx.scope.push();
@@ -548,6 +559,7 @@ pub(in crate::lower) fn lower_class(
             ctx.scope.pop();
             ctx.current_class = None;
             ctx.current_parent_class = None;
+            ctx.current_parent_type = None;
 
             // Collect user-defined decorators (excluding classmethod/staticmethod)
             let method_decorators: Vec<String> = func
@@ -750,6 +762,7 @@ pub(in crate::lower) fn lower_class(
 
     Some(HirClass {
         name: class_name,
+        identity: None,
         fields: own_fields,
         methods: hir_methods,
         is_hashable,
@@ -759,6 +772,7 @@ pub(in crate::lower) fn lower_class(
         newtype_inner: None,
         implements_protocols,
         parent_class: parent_class_name,
+        parent_type,
         type_params: class_type_params,
         enum_variants: Vec::new(),
         rust_interop: collect_rust_interop_declarations(

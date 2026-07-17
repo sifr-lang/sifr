@@ -615,6 +615,7 @@ mod tests {
         let mut module = empty_module();
         module.classes.push(HirClass {
             name: "Holder".to_string(),
+            identity: None,
             fields: vec![("err".to_string(), error_type("ParseError"))],
             methods: vec![HirFunction {
                 name: "check".to_string(),
@@ -642,6 +643,7 @@ mod tests {
             newtype_inner: None,
             implements_protocols: Vec::new(),
             parent_class: None,
+            parent_type: None,
             type_params: Vec::new(),
             enum_variants: Vec::new(),
             rust_interop: Vec::new(),

@@ -77,6 +77,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) current_method: Option<String>,
     /// The parent class name of the current class (for `super()` resolution)
     pub(in crate::lower) current_parent_class: Option<String>,
+    /// Resolved parent class type of the current class.
+    pub(in crate::lower) current_parent_type: Option<Type>,
     /// Whether we're inside a try block (auto-unwrap Result values)
     pub(in crate::lower) in_try_block: bool,
     /// Whether the currently lowered function body is async.
@@ -86,8 +88,8 @@ pub(in crate::lower) struct LowerCtx {
     /// Return type of the currently lowered function body.
     pub(in crate::lower) current_function_return_type: Option<Type>,
     /// Error types collected from Result-returning calls during try body lowering.
-    /// Each entry is the name of an error class encountered via auto-unwrap in the current try block.
-    pub(in crate::lower) try_block_error_types: std::collections::HashSet<String>,
+    /// Each entry is an exact error class type encountered via auto-unwrap.
+    pub(in crate::lower) try_block_error_types: std::collections::HashSet<Type>,
     /// Set of class names that are error types (class Foo(Error))
     pub(in crate::lower) error_types: std::collections::HashSet<String>,
     /// Map of parent error type -> list of known child error types (for exhaustiveness checking)
@@ -188,6 +190,7 @@ impl LowerCtx {
             current_owner: None,
             current_method: None,
             current_parent_class: None,
+            current_parent_type: None,
             in_try_block: false,
             current_function_is_async: false,
             current_function_is_async_generator: false,

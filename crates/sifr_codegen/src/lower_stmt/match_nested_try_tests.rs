@@ -1,4 +1,15 @@
 use super::*;
+
+fn test_error_type(name: &str) -> Type {
+    Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: name.to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    }
+}
 #[test]
 fn lowers_simple_match_with_literal_and_wildcard_patterns() {
     let stmt = HirStmt::Match {
@@ -46,11 +57,12 @@ fn lowers_match_with_class_patterns_and_captures() {
             name: "p".to_string(),
             ty: point_ty.clone(),
         },
-        subject_ty: point_ty,
+        subject_ty: point_ty.clone(),
         arms: vec![
             sifr_ir::HirMatchArm {
                 pattern: HirPattern::Class {
                     class_name: "Point".to_string(),
+                    class_type: point_ty,
                     fields: vec![
                         (
                             "x".to_string(),
@@ -127,6 +139,7 @@ fn lowers_result_error_union_class_pattern() {
     let result_ty = Type::Result(Box::new(Type::None), Box::new(error_union.clone()));
     let pattern = HirPattern::Class {
         class_name: "HandlerError".to_string(),
+        class_type: handler_error.clone(),
         fields: vec![],
     };
 
@@ -313,7 +326,7 @@ fn lowers_simple_try_except_catch_all_with_result_flow() {
             name: None,
             body: vec![HirStmt::Pass],
         }],
-        body_error_types: vec!["Error".to_string()],
+        body_error_types: vec![test_error_type("Error")],
     };
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("try/except lowered");
@@ -361,7 +374,7 @@ fn does_not_lower_try_except_with_typed_handler() {
             name: None,
             body: vec![HirStmt::Pass],
         }],
-        body_error_types: vec!["IOError".to_string()],
+        body_error_types: vec![test_error_type("IOError")],
     };
     assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
 }
@@ -376,7 +389,7 @@ fn does_not_lower_try_except_without_result_flow() {
             name: None,
             body: vec![HirStmt::Pass],
         }],
-        body_error_types: vec!["Error".to_string()],
+        body_error_types: vec![test_error_type("Error")],
     };
     assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
 }

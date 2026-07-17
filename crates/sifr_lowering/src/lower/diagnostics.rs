@@ -117,13 +117,13 @@ pub(in crate::lower) fn list_append_argument_type_mismatch(
 /// Collect error types from raise statements in a list of HIR statements.
 pub(in crate::lower) fn collect_raise_error_types(
     stmts: &[HirStmt],
-    errors: &mut std::collections::HashSet<String>,
+    errors: &mut std::collections::HashSet<Type>,
 ) {
     for stmt in stmts {
         match stmt {
             HirStmt::Raise { value } => {
-                if let Type::Class { name, .. } = value.ty() {
-                    errors.insert(name.clone());
+                if matches!(value.ty().resolve_alias(), Type::Class { .. }) {
+                    errors.insert(value.ty().resolve_alias().clone());
                 }
             }
             HirStmt::If {

@@ -301,7 +301,11 @@ impl RustEmitter {
                 } else {
                     parent.to_lowercase()
                 };
-                fields.push((field_name, RustType::Named(source_class_rust_name(parent))));
+                let parent_rust_type = class.parent_type.as_ref().map_or_else(
+                    || source_class_rust_name(parent),
+                    sifr_type_system::Type::rust_type,
+                );
+                fields.push((field_name, RustType::Named(parent_rust_type)));
             }
         }
 

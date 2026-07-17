@@ -83,6 +83,7 @@ mod module_constants;
 mod module_prescan;
 mod nested_list_element;
 mod operator_protocol_emitters;
+mod operator_type_rendering;
 mod output_helpers;
 mod preamble;
 pub use preamble::*;

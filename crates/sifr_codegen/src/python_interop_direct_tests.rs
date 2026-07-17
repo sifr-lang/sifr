@@ -463,6 +463,7 @@ fn receiver_retained_callback_reuses_the_opaque_owner_slot() {
     assert!(!rendered.contains("close_call_scope"));
     let class = HirClass {
         name: "Subscription".to_string(),
+        identity: None,
         fields: Vec::new(),
         methods: vec![method.clone()],
         is_hashable: false,
@@ -472,6 +473,7 @@ fn receiver_retained_callback_reuses_the_opaque_owner_slot() {
         newtype_inner: None,
         implements_protocols: Vec::new(),
         parent_class: None,
+        parent_type: None,
         type_params: Vec::new(),
         enum_variants: Vec::new(),
         rust_interop: Vec::new(),
@@ -665,6 +667,7 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
         functions: vec![subscribe],
         classes: vec![HirClass {
             name: "Subscription".to_string(),
+            identity: None,
             fields: Vec::new(),
             methods: vec![inspect, close],
             is_hashable: false,
@@ -674,6 +677,7 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
             newtype_inner: None,
             implements_protocols: Vec::new(),
             parent_class: Some("NonSend".to_string()),
+            parent_type: None,
             type_params: Vec::new(),
             enum_variants: Vec::new(),
             rust_interop: Vec::new(),

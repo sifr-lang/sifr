@@ -100,11 +100,18 @@ where
         }
         | HirExpr::ConstructorCall {
             args: values, ty, ..
-        }
-        | HirExpr::SuperCall {
-            args: values, ty, ..
         } => {
             transform_exprs(values, transform);
+            transform_type(ty, transform);
+        }
+        HirExpr::SuperCall {
+            args,
+            parent_type,
+            ty,
+            ..
+        } => {
+            transform_exprs(args, transform);
+            transform_type(parent_type, transform);
             transform_type(ty, transform);
         }
         HirExpr::PythonCall { args, ty, .. } => {
@@ -382,8 +389,15 @@ where
                 transform_expr(msg, transform);
             }
         }
-        HirStmt::TryExcept { body, handlers, .. } => {
+        HirStmt::TryExcept {
+            body,
+            handlers,
+            body_error_types,
+        } => {
             transform_stmts(body, transform);
+            for ty in body_error_types {
+                transform_type(ty, transform);
+            }
             for handler in handlers {
                 if let Some(ty) = &mut handler.error_resolved_type {
                     transform_type(ty, transform);
@@ -558,7 +572,10 @@ where
                 transform_pattern(pattern, transform);
             }
         }
-        HirPattern::Class { fields, .. } => {
+        HirPattern::Class {
+            class_type, fields, ..
+        } => {
+            transform_type(class_type, transform);
             for (_, pattern) in fields {
                 transform_pattern(pattern, transform);
             }
