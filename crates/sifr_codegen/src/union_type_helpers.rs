@@ -34,6 +34,9 @@ impl RustEmitter {
             for ty in crate::hir_analysis::queries::collect_let_declared_types(&func.body) {
                 self.register_union_type(&ty);
             }
+            for ty in crate::hir_analysis::queries::collect_try_error_carriers(&func.body) {
+                self.register_try_error_carrier(&ty);
+            }
         }
         // Also scan class method bodies and register their signatures
         for class in &module.classes {
@@ -66,6 +69,9 @@ impl RustEmitter {
                 self.register_union_type(&method.return_type);
                 for ty in crate::hir_analysis::queries::collect_let_declared_types(&method.body) {
                     self.register_union_type(&ty);
+                }
+                for ty in crate::hir_analysis::queries::collect_try_error_carriers(&method.body) {
+                    self.register_try_error_carrier(&ty);
                 }
             }
             if !has_constructor {
@@ -156,6 +162,13 @@ impl RustEmitter {
         }
     }
 
+    fn register_try_error_carrier(&mut self, ty: &Type) {
+        if matches!(ty.resolve_alias(), Type::Union(_)) {
+            self.try_error_carrier_enums.insert(ty.union_enum_name());
+        }
+        self.register_union_type(ty);
+    }
+
     /// Generate Rust enum definitions for all collected union types.
     pub(crate) fn generate_enum_definitions(&mut self) {
         // Sort enum names for deterministic output
@@ -164,6 +177,7 @@ impl RustEmitter {
 
         self.enum_items.clear();
         for (enum_name, members) in enums {
+            let is_try_error_carrier = self.try_error_carrier_enums.contains(&enum_name);
             let variants = members
                 .iter()
                 .map(|member| RustEnumVariant {
@@ -180,10 +194,10 @@ impl RustEmitter {
             if members.iter().all(Type::supports_derived_clone) {
                 derives.push("Clone".to_string());
             }
-            if members.iter().all(Type::supports_structural_equality) {
+            if !is_try_error_carrier && members.iter().all(Type::supports_structural_equality) {
                 derives.push("PartialEq".to_string());
             }
-            if members.iter().all(Type::supports_hash_key) {
+            if !is_try_error_carrier && members.iter().all(Type::supports_hash_key) {
                 derives.push("Eq".to_string());
                 derives.push("Hash".to_string());
             }
@@ -194,6 +208,34 @@ impl RustEmitter {
                 repr: None,
                 variants,
             });
+            if is_try_error_carrier {
+                self.enum_items.extend(members.iter().map(|member| {
+                    let variant = member.union_variant_name();
+                    RustItem::Impl {
+                        target: enum_name.clone(),
+                        type_params: Vec::new(),
+                        trait_: Some(format!(
+                            "From<{}>",
+                            crate::render_type(&sifr_type_to_rust_type(member))
+                        )),
+                        items: vec![RustItem::Fn {
+                            name: "from".to_string(),
+                            visibility: Visibility::Private,
+                            type_params: Vec::new(),
+                            params: vec![RustParam::Named {
+                                name: "value".to_string(),
+                                ty: sifr_type_to_rust_type(member),
+                            }],
+                            ret: Some(RustType::Named("Self".to_string())),
+                            body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec![enum_name.clone(), variant])),
+                                args: vec![RustExpr::Ident("value".to_string())],
+                            }))],
+                            is_async: false,
+                        }],
+                    }
+                }));
+            }
 
             let supports_display = members.iter().all(|member| {
                 member.supports_display_formatting() || member.supports_debug_formatting()

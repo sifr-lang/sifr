@@ -8,6 +8,7 @@ macro_rules! stmt_expr_await_and_registry {
                 return Ok(Some(crate::RustExpr::TimeoutAwait {
                     duration: Box::new(duration),
                     future: Box::new(future),
+                    error: Box::new($emitter.timeout_error_for_ir()),
                 }));
             }
             if let HirExpr::Call { func, args, .. } = value.as_ref() {

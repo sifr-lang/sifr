@@ -358,12 +358,19 @@ pub(crate) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionM
 
 /// Find the matching union variant name for an argument type.
 pub(crate) fn find_union_variant(members: &[Type], arg_ty: &Type) -> Option<String> {
-    for member in members {
-        if arg_ty.is_assignable_to(member) {
-            return Some(member.union_variant_name());
-        }
-    }
-    None
+    find_union_member(members, arg_ty).map(Type::union_variant_name)
+}
+
+pub(crate) fn find_union_member<'a>(members: &'a [Type], arg_ty: &Type) -> Option<&'a Type> {
+    let exact_variant = arg_ty.union_variant_name();
+    members
+        .iter()
+        .find(|member| member.union_variant_name() == exact_variant)
+        .or_else(|| {
+            members
+                .iter()
+                .find(|member| arg_ty.is_assignable_to(member))
+        })
 }
 
 pub(crate) fn wrap_union_member_expr(

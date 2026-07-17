@@ -293,8 +293,14 @@ pub(super) fn remove_expr_unneeded_mutability(expr: &mut RustExpr) -> usize {
             .iter_mut()
             .map(|(_, value)| remove_expr_unneeded_mutability(value))
             .sum(),
-        RustExpr::TimeoutAwait { duration, future } => {
-            remove_expr_unneeded_mutability(duration) + remove_expr_unneeded_mutability(future)
+        RustExpr::TimeoutAwait {
+            duration,
+            future,
+            error,
+        } => {
+            remove_expr_unneeded_mutability(duration)
+                + remove_expr_unneeded_mutability(future)
+                + remove_expr_unneeded_mutability(error)
         }
         RustExpr::Range { start, end } => {
             remove_expr_unneeded_mutability(start) + remove_expr_unneeded_mutability(end)
@@ -506,8 +512,14 @@ pub(super) fn expr_mutates_name(expr: &RustExpr, name: &str) -> bool {
         RustExpr::StructInit { fields, .. } => fields
             .iter()
             .any(|(_, value)| expr_mutates_name(value, name)),
-        RustExpr::TimeoutAwait { duration, future } => {
-            expr_mutates_name(duration, name) || expr_mutates_name(future, name)
+        RustExpr::TimeoutAwait {
+            duration,
+            future,
+            error,
+        } => {
+            expr_mutates_name(duration, name)
+                || expr_mutates_name(future, name)
+                || expr_mutates_name(error, name)
         }
         RustExpr::Range { start, end } => {
             expr_mutates_name(start, name) || expr_mutates_name(end, name)
@@ -711,9 +723,11 @@ pub(super) fn optimize_expr(expr: &mut RustExpr) -> usize {
             }
             removed
         }
-        RustExpr::TimeoutAwait { duration, future } => {
-            optimize_expr(duration) + optimize_expr(future)
-        }
+        RustExpr::TimeoutAwait {
+            duration,
+            future,
+            error,
+        } => optimize_expr(duration) + optimize_expr(future) + optimize_expr(error),
         RustExpr::FormatMacro { args, .. } => {
             let mut removed = 0usize;
             for arg in args {

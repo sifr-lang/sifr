@@ -234,6 +234,42 @@ fn async_python_context_converts_enter_failures_to_the_active_error_type() {
 }
 
 #[test]
+fn async_python_context_uses_the_enclosing_try_error_carrier() {
+    let mut emitter = emitter();
+    let carrier = Type::Union(vec![
+        class_type("ValueError"),
+        class_type("PythonError"),
+        class_type("Error"),
+    ]);
+    let carrier_rust_type = crate::render_type(&crate::sifr_type_to_rust_type(&carrier));
+    let return_expression_type = emitter.context_return_expression_type(&carrier_rust_type);
+    let expected_outcome_type = format!(
+        "Option<Result<Result<Option<{return_expression_type}>, bool>, {carrier_rust_type}>>"
+    );
+    emitter.try_closure_error_type[0] = carrier_rust_type.clone();
+    emitter
+        .try_closure_error_type_info
+        .push(Some(carrier.clone()));
+
+    let lowered = emitter
+        .try_lower_async_with_stmt_for_ir(&kind(class_type("Error")), None, &[])
+        .expect("lowering should succeed")
+        .expect("Python async context should lower");
+    let rendered = crate::render_stmts(&[lowered]);
+
+    assert!(
+        rendered.contains(&format!(
+            "let __sifr_python_async_context_outcome_0: {expected_outcome_type}"
+        )),
+        "{rendered}"
+    );
+    assert!(
+        rendered.contains("Some(Err(mut __sifr_python_async_context_body_error_0))"),
+        "{rendered}"
+    );
+}
+
+#[test]
 fn async_python_context_resumes_parent_cancellation_after_enter_failure() {
     let mut emitter = emitter();
     let lowered = emitter

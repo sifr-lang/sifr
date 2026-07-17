@@ -1,6 +1,55 @@
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 
+pub(super) fn complete_class_type_with_identity(
+    class_types: &HashMap<String, Type>,
+    identity: &str,
+) -> Option<Type> {
+    class_types
+        .values()
+        .filter(|candidate| {
+            matches!(
+                candidate.resolve_alias(),
+                Type::Class {
+                    identity: Some(candidate_identity),
+                    ..
+                } if candidate_identity == identity
+            )
+        })
+        .max_by_key(|candidate| match candidate.resolve_alias() {
+            Type::Class {
+                fields, methods, ..
+            } => (methods.len(), fields.len()),
+            _ => (0, 0),
+        })
+        .cloned()
+}
+
+pub(super) fn complete_context_enter_return_type(
+    class_types: &HashMap<String, Type>,
+    context_type: &Type,
+    return_type: &Type,
+) -> Type {
+    let Type::Class { identity, name, .. } = return_type.resolve_alias() else {
+        return return_type.clone();
+    };
+    let returns_context_identity = match context_type.resolve_alias() {
+        Type::Class {
+            identity: context_identity,
+            ..
+        } => identity.is_some() && identity == context_identity,
+        _ => false,
+    };
+    if returns_context_identity {
+        return context_type.clone();
+    }
+    identity
+        .as_deref()
+        .and_then(|identity| complete_class_type_with_identity(class_types, identity))
+        .or_else(|| class_types.get(name).cloned())
+        .unwrap_or_else(|| return_type.clone())
+}
+
 pub(super) fn class_aliases_for_import(
     module: &str,
     module_classes: Option<&HashMap<String, Type>>,

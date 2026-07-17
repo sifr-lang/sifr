@@ -140,10 +140,36 @@ pub(in crate::lower) fn collect_raise_error_types(
                     collect_raise_error_types(eb, errors);
                 }
             }
-            HirStmt::While { body, .. }
-            | HirStmt::For { body, .. }
-            | HirStmt::AsyncFor { body, .. } => {
+            HirStmt::While {
+                body, else_body, ..
+            }
+            | HirStmt::For {
+                body, else_body, ..
+            }
+            | HirStmt::AsyncFor {
+                body, else_body, ..
+            } => {
                 collect_raise_error_types(body, errors);
+                if let Some(else_body) = else_body {
+                    collect_raise_error_types(else_body, errors);
+                }
+            }
+            HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => {
+                collect_raise_error_types(body, errors);
+            }
+            HirStmt::Match { arms, .. } => {
+                for arm in arms {
+                    collect_raise_error_types(&arm.body, errors);
+                }
+            }
+            HirStmt::TryExcept { handlers, .. } => {
+                for handler in handlers {
+                    collect_raise_error_types(&handler.body, errors);
+                }
+            }
+            HirStmt::TryFinally { body, finalbody } => {
+                collect_raise_error_types(body, errors);
+                collect_raise_error_types(finalbody, errors);
             }
             _ => {}
         }

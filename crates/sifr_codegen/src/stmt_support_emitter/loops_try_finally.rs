@@ -189,13 +189,9 @@ impl RustEmitter {
     }
 
     pub(crate) fn try_lower_structured_try_except_stmt(&mut self, stmt: &HirStmt) -> bool {
-        let HirStmt::TryExcept { body, handlers, .. } = stmt else {
-            return false;
-        };
-        let lowered = match self.try_lower_try_except_stmt_for_ir(body, handlers) {
+        let lowered = match self.try_lower_try_except_hir_stmt_for_ir(stmt) {
             Ok(Some(lowered)) => lowered,
-            Ok(None) => return false,
-            Err(_) => return false,
+            Ok(None) | Err(_) => return false,
         };
         for lowered_stmt in lowered {
             self.push_captured_stmt(&lowered_stmt);
@@ -203,17 +199,45 @@ impl RustEmitter {
         true
     }
 
+    pub(crate) fn try_lower_try_except_hir_stmt_for_ir(
+        &mut self,
+        stmt: &HirStmt,
+    ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
+        let HirStmt::TryExcept {
+            body,
+            handlers,
+            body_error_types,
+        } = stmt
+        else {
+            return Ok(None);
+        };
+        self.try_lower_try_except_stmt_for_ir(body, handlers, body_error_types)
+    }
+
     pub(crate) fn try_lower_try_except_stmt_for_ir(
         &mut self,
         body: &[HirStmt],
         handlers: &[HirExceptHandler],
+        body_error_types: &[Type],
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
         if handlers.is_empty() {
             return Ok(None);
         }
-        let err_ty = select_try_error_type(handlers);
-        let capture_returns =
-            queries::body_contains_return(body) && self.current_return_type.is_some();
+        let error_carrier = crate::try_error_carrier::try_error_carrier(body_error_types, handlers)
+            .or_else(|| {
+                handlers
+                    .iter()
+                    .find_map(|handler| handler.error_resolved_type.clone())
+            });
+        let err_ty = error_carrier.as_ref().map_or_else(
+            || select_try_error_type(handlers),
+            |carrier| crate::render_type(&crate::sifr_type_to_rust_type(carrier)),
+        );
+        let capture_returns = self.current_return_type.is_some()
+            && (queries::body_contains_return(body)
+                || handlers
+                    .iter()
+                    .any(|handler| queries::body_contains_return(&handler.body)));
         let direct_return_capture = capture_returns
             && queries::block_control_flow_effect(body).always_exits()
             && handlers
@@ -242,11 +266,7 @@ impl RustEmitter {
                 self.try_closure_option_wrap.push(!direct_return_capture);
             }
             self.try_closure_error_type.push(err_ty.clone());
-            self.try_closure_error_type_info.push(
-                handlers
-                    .first()
-                    .and_then(|handler| handler.error_resolved_type.clone()),
-            );
+            self.try_closure_error_type_info.push(error_carrier.clone());
             let lowered = self.try_lower_stmt_block_for_ir(body)?;
             if capture_returns {
                 self.try_closure_depth -= 1;
@@ -325,8 +345,12 @@ impl RustEmitter {
                     body: vec![],
                 });
             }
-            let Some(handler_chain) =
-                self.lower_try_except_handler_chain_for_ir(handlers, "__sifr_try_err", &err_ty)?
+            let Some(handler_chain) = self.lower_try_except_handler_chain_for_ir(
+                handlers,
+                "__sifr_try_err",
+                error_carrier.as_ref(),
+                &err_ty,
+            )?
             else {
                 return Ok(None);
             };
@@ -341,8 +365,12 @@ impl RustEmitter {
                 arms,
             });
         } else {
-            let Some(handler_chain) =
-                self.lower_try_except_handler_chain_for_ir(handlers, "__sifr_try_err", &err_ty)?
+            let Some(handler_chain) = self.lower_try_except_handler_chain_for_ir(
+                handlers,
+                "__sifr_try_err",
+                error_carrier.as_ref(),
+                &err_ty,
+            )?
             else {
                 return Ok(None);
             };
@@ -367,6 +395,50 @@ impl RustEmitter {
                 Some(crate::render_type(&crate::sifr_type_to_rust_type(err_ty)))
             })
             .unwrap_or_else(|| "Error".to_string())
+    }
+
+    pub(crate) fn timeout_error_for_ir(&self) -> RustExpr {
+        let source_type = crate::try_error_carrier::timeout_error_type();
+        let source = RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "TimeoutError".to_string(),
+                "new".to_string(),
+            ])),
+            args: vec![RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Literal(crate::RustLiteral::Str(
+                    "task timeout expired".to_string(),
+                ))),
+                method: "to_string".to_string(),
+                args: Vec::new(),
+            }],
+        };
+        let target = self
+            .try_closure_error_type_info
+            .last()
+            .and_then(Option::as_ref)
+            .or_else(|| {
+                let Type::Result(_, error) = self.current_return_type.as_ref()?.resolve_alias()
+                else {
+                    return None;
+                };
+                Some(error.as_ref())
+            });
+        let Some(target) = target else {
+            return source;
+        };
+        let converted = self.consuming_value_upcast_for_ir(target, &source_type, source.clone());
+        if converted != source {
+            return converted;
+        }
+        if crate::sifr_type_to_rust_type(target) == crate::sifr_type_to_rust_type(&source_type) {
+            source
+        } else {
+            RustExpr::MethodCall {
+                receiver: Box::new(source),
+                method: "into".to_string(),
+                args: Vec::new(),
+            }
+        }
     }
 
     pub(crate) fn try_finally_error_type_name_for_ir(
@@ -424,19 +496,26 @@ impl RustEmitter {
             "()".to_string()
         };
 
+        let active_error_type = self
+            .try_closure_error_type_info
+            .last()
+            .cloned()
+            .flatten()
+            .or_else(|| {
+                let Type::Result(_, error_type) =
+                    self.current_return_type.as_ref()?.resolve_alias()
+                else {
+                    return None;
+                };
+                Some(error_type.as_ref().clone())
+            });
         let mut closure_body = {
             if capture_returns {
                 self.try_closure_depth += 1;
                 self.try_closure_option_wrap.push(!direct_return_capture);
             }
             self.try_closure_error_type.push(err_ty.clone());
-            self.try_closure_error_type_info
-                .push(self.current_return_type.as_ref().and_then(|return_type| {
-                    match return_type.resolve_alias() {
-                        Type::Result(_, error_type) => Some(error_type.as_ref().clone()),
-                        _ => None,
-                    }
-                }));
+            self.try_closure_error_type_info.push(active_error_type);
             let lowered = self.try_lower_stmt_block_for_ir(body)?;
             if capture_returns {
                 self.try_closure_depth -= 1;

@@ -38,6 +38,13 @@ impl RustEmitter {
             .get(manager_class)
             .cloned()
             .unwrap_or_default();
+        let effective_active_error_type = self
+            .try_closure_error_type_info
+            .last()
+            .and_then(Clone::clone);
+        let active_error_type = effective_active_error_type
+            .as_ref()
+            .unwrap_or(active_error_type);
         let manager = crate::render_expr(&manager_value);
         let schema = crate::render_expr(&schema);
         let entered_rust_type = crate::render_type(&crate::sifr_type_to_rust_type(entered_type));

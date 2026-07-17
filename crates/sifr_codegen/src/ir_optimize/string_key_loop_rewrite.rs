@@ -267,9 +267,14 @@ fn expr_uses_name_only_as_set_key(
         RustExpr::StructInit { fields, .. } => fields
             .iter()
             .all(|(_, value)| expr_uses_name_only_as_set_key(value, name, false, found)),
-        RustExpr::TimeoutAwait { duration, future } => {
+        RustExpr::TimeoutAwait {
+            duration,
+            future,
+            error,
+        } => {
             expr_uses_name_only_as_set_key(duration, name, false, found)
                 && expr_uses_name_only_as_set_key(future, name, false, found)
+                && expr_uses_name_only_as_set_key(error, name, false, found)
         }
         RustExpr::Literal(_) | RustExpr::Path(_) | RustExpr::Ident(_) => true,
     }

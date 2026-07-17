@@ -5,6 +5,19 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
 
 impl RustEmitter {
+    pub(crate) fn class_needs_phantom_marker(class: &HirClass) -> bool {
+        class.type_params.iter().any(|type_param| {
+            !class
+                .fields
+                .iter()
+                .any(|(_, field)| Self::type_mentions_type_param(field, type_param))
+                && !class
+                    .parent_type
+                    .as_ref()
+                    .is_some_and(|parent| Self::type_mentions_type_param(parent, type_param))
+        })
+    }
+
     pub(crate) fn type_mentions_type_param(ty: &Type, type_param: &str) -> bool {
         match ty.resolve_alias() {
             Type::TypeVar(name) => name == type_param,

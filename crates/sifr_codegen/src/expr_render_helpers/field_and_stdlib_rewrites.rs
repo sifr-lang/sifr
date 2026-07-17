@@ -534,9 +534,14 @@ impl RustEmitter {
                     .map(|item| self.rewrite_stdlib_constant_idents_in_expr(item))
                     .collect(),
             ),
-            crate::RustExpr::TimeoutAwait { duration, future } => crate::RustExpr::TimeoutAwait {
+            crate::RustExpr::TimeoutAwait {
+                duration,
+                future,
+                error,
+            } => crate::RustExpr::TimeoutAwait {
                 duration: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*duration)),
                 future: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*future)),
+                error: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*error)),
             },
             crate::RustExpr::Try(expr) => {
                 crate::RustExpr::Try(Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)))

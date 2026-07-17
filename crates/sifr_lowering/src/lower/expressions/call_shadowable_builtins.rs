@@ -10,18 +10,29 @@ const TEXT_FILE_HANDLE_IDENTITY: &str = "sifr.io.TextFileHandle";
 const FILE_HANDLE_IDENTITY: &str = "sifr.io.FileHandle";
 
 fn class_type_with_identity(ctx: &LowerCtx, identity: &str) -> Option<Type> {
-    ctx.class_types
-        .values()
-        .find(|candidate| {
-            matches!(
-                candidate.resolve_alias(),
-                Type::Class {
-                    identity: Some(candidate_identity),
-                    ..
-                } if candidate_identity == identity
-            )
-        })
-        .cloned()
+    super::super::imported_class_identity::complete_class_type_with_identity(
+        &ctx.class_types,
+        identity,
+    )
+}
+
+fn class_surface_score(ty: &Type) -> (usize, usize) {
+    match ty.resolve_alias() {
+        Type::Class {
+            fields, methods, ..
+        } => (methods.len(), fields.len()),
+        _ => (0, 0),
+    }
+}
+
+fn prefer_complete_class_surface(fallback: Type, candidate: Option<Type>) -> Type {
+    candidate.map_or(fallback.clone(), |candidate| {
+        if class_surface_score(&candidate) >= class_surface_score(&fallback) {
+            candidate
+        } else {
+            fallback
+        }
+    })
 }
 
 fn string_literal_value(expr: &Expr) -> Option<String> {
@@ -264,8 +275,10 @@ pub(super) fn lower_shadowable_builtin_call(
             // Preserve an explicitly imported stdlib handle even when it is aliased.
             // A local same-basename class is a distinct declaration and must never be
             // selected for the compiler-special `open()` result.
-            let text_handle_ty =
-                class_type_with_identity(ctx, TEXT_FILE_HANDLE_IDENTITY).unwrap_or(text_handle_ty);
+            let text_handle_ty = prefer_complete_class_surface(
+                text_handle_ty,
+                class_type_with_identity(ctx, TEXT_FILE_HANDLE_IDENTITY),
+            );
             if let Some(error_ty) = ctx.class_types.get("IOError") {
                 ctx.try_block_error_types.insert(error_ty.clone());
             }
@@ -383,8 +396,10 @@ pub(super) fn lower_shadowable_builtin_call(
             ],
             parent_class: None,
         };
-        let file_handle_ty =
-            class_type_with_identity(ctx, FILE_HANDLE_IDENTITY).unwrap_or(file_handle_ty);
+        let file_handle_ty = prefer_complete_class_surface(
+            file_handle_ty,
+            class_type_with_identity(ctx, FILE_HANDLE_IDENTITY),
+        );
         // Register IOError as a possible exception from this call
         if let Some(error_ty) = ctx.class_types.get("IOError") {
             ctx.try_block_error_types.insert(error_ty.clone());
@@ -406,4 +421,41 @@ pub(super) fn lower_shadowable_builtin_call(
     }
 
     Some(CallLowering::NoMatch)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn text_handle(methods: Vec<(String, FunctionType)>) -> Type {
+        Type::Class {
+            identity: Some(TEXT_FILE_HANDLE_IDENTITY.to_string()),
+            type_args: Vec::new(),
+            name: "TextFileHandle".to_string(),
+            fields: Vec::new(),
+            methods,
+            parent_class: None,
+        }
+    }
+
+    #[test]
+    fn canonical_handle_lookup_prefers_the_complete_class_surface() {
+        let mut ctx = LowerCtx::new();
+        ctx.class_types
+            .insert("nested_snapshot".to_string(), text_handle(Vec::new()));
+        ctx.class_types.insert(
+            "TextFileHandle".to_string(),
+            text_handle(vec![(
+                "write".to_string(),
+                FunctionType::all_borrow(vec![("text".to_string(), Type::Str)], Type::None),
+            )]),
+        );
+
+        let selected = class_type_with_identity(&ctx, TEXT_FILE_HANDLE_IDENTITY)
+            .expect("canonical handle should exist");
+        let Type::Class { methods, .. } = selected else {
+            panic!("canonical handle should remain a class");
+        };
+        assert!(methods.iter().any(|(name, _)| name == "write"));
+    }
 }

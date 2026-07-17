@@ -501,12 +501,11 @@ pub(in crate::lower) fn lower_stmt(
                                 .find(|(name, _)| name == "__enter__")
                                 .map(|(_, ft)| (*ft.return_type).clone())
                                 .unwrap_or(val_ty.clone());
-                            // If the return type is a class, look up the fully-defined version
-                            if let Type::Class { name: ret_name, .. } = &ret_ty {
-                                ctx.class_types.get(ret_name).cloned().unwrap_or(ret_ty)
-                            } else {
-                                ret_ty
-                            }
+                            super::super::imported_class_identity::complete_context_enter_return_type(
+                                &ctx.class_types,
+                                &val_ty,
+                                &ret_ty,
+                            )
                         } else {
                             val_ty.clone()
                         }
@@ -670,7 +669,8 @@ pub(in crate::lower) fn lower_stmt(
                 }
             }
 
-            let body_error_types: Vec<Type> = try_error_types.into_iter().collect();
+            let mut body_error_types: Vec<Type> = try_error_types.into_iter().collect();
+            body_error_types.sort_by_key(Type::union_variant_name);
             Some(HirStmt::TryExcept {
                 body,
                 handlers,

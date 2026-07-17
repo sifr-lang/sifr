@@ -311,9 +311,18 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
         HirStmt::NestedFunction { func } => {
             try_lower_simple_nested_function_stmt(func, in_loop_with_else, bindings)
         }
-        HirStmt::TryExcept { body, handlers, .. } => {
-            try_lower_simple_try_except_stmt(body, handlers, in_loop_with_else, bindings, ctx)
-        }
+        HirStmt::TryExcept {
+            body,
+            handlers,
+            body_error_types,
+        } => try_lower_simple_try_except_stmt(
+            body,
+            handlers,
+            body_error_types,
+            in_loop_with_else,
+            bindings,
+            ctx,
+        ),
         HirStmt::TryFinally { .. } => None,
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
@@ -818,9 +827,14 @@ pub(super) fn append_recursive_capture_args_to_expr(
                 append_recursive_capture_args_to_expr(item, fn_name, capture_names);
             }
         }
-        RustExpr::TimeoutAwait { duration, future } => {
+        RustExpr::TimeoutAwait {
+            duration,
+            future,
+            error,
+        } => {
             append_recursive_capture_args_to_expr(duration, fn_name, capture_names);
             append_recursive_capture_args_to_expr(future, fn_name, capture_names);
+            append_recursive_capture_args_to_expr(error, fn_name, capture_names);
         }
         RustExpr::FormatMacro { args, .. } => {
             for arg in args {

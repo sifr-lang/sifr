@@ -12,6 +12,8 @@ pub struct RustEmitter {
     pub(crate) runtime_needs: RuntimeNeeds,
     /// Track union enum types that need to be defined (name -> member types)
     pub(crate) union_enums: HashMap<String, Vec<Type>>,
+    /// Union enums synthesized solely as exact try/except error carriers.
+    pub(crate) try_error_carrier_enums: HashSet<String>,
     /// Accumulated union enum items to prepend
     pub(crate) enum_items: Vec<RustItem>,
     /// Accumulated non-enum body items to assemble before raw output rendering.
@@ -196,6 +198,7 @@ impl RustEmitter {
             collection_needs: CollectionNeeds::default(),
             runtime_needs: RuntimeNeeds::default(),
             union_enums: HashMap::new(),
+            try_error_carrier_enums: HashSet::new(),
             enum_items: Vec::new(),
             body_items: Vec::new(),
             current_return_type: None,

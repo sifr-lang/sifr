@@ -28,6 +28,7 @@ def show_child(value: Child) -> str:
         rust_code.contains("#[derive(Debug, Clone, PartialEq)]\nstruct Box<T>"),
         "{rust_code}"
     );
+    assert!(!rust_code.contains("__sifr_type_marker"));
     assert!(
         rust_code.contains("impl<T: ::std::fmt::Display> ::std::fmt::Display for Box<T>"),
         "{rust_code}"

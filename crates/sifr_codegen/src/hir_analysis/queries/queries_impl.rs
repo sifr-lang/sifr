@@ -799,6 +799,32 @@ pub(crate) fn collect_let_declared_types(stmts: &[HirStmt]) -> Vec<Type> {
     declared
 }
 
+pub(crate) fn collect_try_error_carriers(stmts: &[HirStmt]) -> Vec<Type> {
+    let mut carriers = Vec::new();
+    let mut on_stmt = |stmt: &HirStmt| {
+        if let HirStmt::TryExcept {
+            body_error_types,
+            handlers,
+            ..
+        } = stmt
+        {
+            if let Some(carrier) =
+                crate::try_error_carrier::try_error_carrier(body_error_types, handlers)
+            {
+                carriers.push(carrier);
+            }
+        }
+    };
+    let mut on_expr = |_expr: &HirExpr| {};
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
+    carriers
+}
+
 pub(super) fn collect_capture_pattern_names(pattern: &HirPattern, defined: &mut HashSet<String>) {
     match pattern {
         HirPattern::Capture { name, .. } => {

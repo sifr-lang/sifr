@@ -289,6 +289,37 @@ macro_rules! stmt_expr_question_mark {
                 if let Type::Result(_, inner_err_ty) = resolved_inner_ty {
                     let inner_err_ty_name =
                         crate::render_type(&crate::sifr_type_to_rust_type(inner_err_ty));
+                    let error_ident = crate::RustExpr::Ident("__e".to_string());
+                    let converted_error = $emitter
+                        .try_closure_error_type_info
+                        .last()
+                        .and_then(Option::as_ref)
+                        .map(|target| {
+                            $emitter.consuming_value_upcast_for_ir(
+                                target,
+                                inner_err_ty,
+                                error_ident.clone(),
+                            )
+                        });
+                    if converted_error
+                        .as_ref()
+                        .is_some_and(|converted| converted != &error_ident)
+                    {
+                        return Ok(Some(crate::RustExpr::Try(Box::new(
+                            crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_inner))),
+                                method: "map_err".to_string(),
+                                args: vec![crate::RustExpr::Closure {
+                                    params: vec![crate::RustParam::Named {
+                                        name: "__e".to_string(),
+                                        ty: crate::RustType::Named("_".to_string()),
+                                    }],
+                                    body: Box::new(converted_error.unwrap_or(error_ident)),
+                                    is_move: false,
+                                }],
+                            },
+                        ))));
+                    }
                     if inner_err_ty_name != target_err_ty
                         && can_construct_error_from_message_for_ir(&target_err_ty)
                     {

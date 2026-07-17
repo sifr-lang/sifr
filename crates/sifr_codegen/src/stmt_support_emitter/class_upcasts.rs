@@ -51,9 +51,8 @@ impl RustEmitter {
         if let (Type::Union(source_members), Type::Union(target_members)) = (source, target) {
             let mut arms = Vec::with_capacity(source_members.len());
             for source_member in source_members {
-                let Some(target_member) = target_members
-                    .iter()
-                    .find(|target_member| source_member.is_assignable_to(target_member))
+                let Some(target_member) =
+                    crate::helpers::find_union_member(target_members, source_member)
                 else {
                     return lowered;
                 };
@@ -88,9 +87,8 @@ impl RustEmitter {
         }
 
         if let Type::Union(target_members) = target {
-            if let Some(target_member) = target_members
-                .iter()
-                .find(|target_member| source_ty.is_assignable_to(target_member))
+            if let Some(target_member) =
+                crate::helpers::find_union_member(target_members, source_ty)
             {
                 let converted =
                     self.consuming_value_upcast_for_ir(target_member, source_ty, lowered);

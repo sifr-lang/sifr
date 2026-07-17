@@ -2,6 +2,7 @@ use super::{
     io_error_kind_for_handler, HandlerMatchCondition, HirExceptHandler, RustEmitter, RustExpr,
     RustStmt,
 };
+use sifr_type_system::Type;
 
 impl RustEmitter {
     pub(crate) fn try_except_handler_condition_expr(
@@ -51,7 +52,48 @@ impl RustEmitter {
         &mut self,
         handlers: &[HirExceptHandler],
         err_ident: &str,
+        carrier_type: Option<&Type>,
         err_ty: &str,
+    ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
+        if let Some(carrier @ Type::Union(members)) = carrier_type.map(Type::resolve_alias) {
+            let mut arms = Vec::with_capacity(members.len());
+            for member in members {
+                let member_ident = "__sifr_try_variant_error";
+                let member_ty = crate::render_type(&crate::sifr_type_to_rust_type(member));
+                let Some(body) = self.lower_single_try_except_handler_chain_for_ir(
+                    handlers,
+                    member_ident,
+                    &member_ty,
+                    Some(member),
+                )?
+                else {
+                    return Ok(None);
+                };
+                arms.push(crate::RustMatchArm {
+                    pattern: format!(
+                        "{}::{}({member_ident})",
+                        carrier.union_enum_name(),
+                        member.union_variant_name()
+                    ),
+                    bindings: vec![member_ident.to_string()],
+                    guard: None,
+                    body,
+                });
+            }
+            return Ok(Some(vec![RustStmt::Match {
+                expr: RustExpr::Ident(err_ident.to_string()),
+                arms,
+            }]));
+        }
+        self.lower_single_try_except_handler_chain_for_ir(handlers, err_ident, err_ty, carrier_type)
+    }
+
+    fn lower_single_try_except_handler_chain_for_ir(
+        &mut self,
+        handlers: &[HirExceptHandler],
+        err_ident: &str,
+        err_ty: &str,
+        source_error_type: Option<&Type>,
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
         let mut branches: Vec<(Option<RustExpr>, Vec<RustStmt>)> = Vec::new();
         for handler in handlers {
@@ -63,15 +105,56 @@ impl RustEmitter {
             let mut handler_body = Vec::new();
             let handler_name = handler.name.as_deref().unwrap_or("_e");
             if handler_name != "_" {
+                let cloned_error = RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(err_ident.to_string())),
+                    method: "clone".to_string(),
+                    args: vec![],
+                };
+                let binding_value = source_error_type
+                    .zip(handler.error_resolved_type.as_ref())
+                    .map_or_else(
+                        || cloned_error.clone(),
+                        |(source, target)| {
+                            if source.union_variant_name() == target.union_variant_name() {
+                                return cloned_error.clone();
+                            }
+                            let target_name =
+                                crate::render_type(&crate::sifr_type_to_rust_type(target));
+                            if target_name == "Error" {
+                                return RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Ident("Error::new".to_string())),
+                                    args: vec![RustExpr::Field {
+                                        expr: Box::new(cloned_error.clone()),
+                                        field: "message".to_string(),
+                                    }],
+                                };
+                            }
+                            let converted = self.consuming_value_upcast_for_ir(
+                                target,
+                                source,
+                                cloned_error.clone(),
+                            );
+                            if converted != cloned_error {
+                                return converted;
+                            }
+                            if super::can_construct_error_from_message_for_ir(&target_name) {
+                                RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Ident(format!("{target_name}::new"))),
+                                    args: vec![RustExpr::Field {
+                                        expr: Box::new(cloned_error.clone()),
+                                        field: "message".to_string(),
+                                    }],
+                                }
+                            } else {
+                                cloned_error.clone()
+                            }
+                        },
+                    );
                 handler_body.push(RustStmt::Let {
                     mutable: false,
                     name: handler_name.to_string(),
                     ty: None,
-                    value: RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(err_ident.to_string())),
-                        method: "clone".to_string(),
-                        args: vec![],
-                    },
+                    value: binding_value,
                 });
             }
             match self.try_lower_stmt_block_for_ir(&handler.body) {

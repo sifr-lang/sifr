@@ -354,10 +354,15 @@ impl Renderer {
                     .collect::<Vec<_>>()
                     .join(", ")
             ),
-            RustExpr::TimeoutAwait { duration, future } => format!(
-                "match ::tokio::time::timeout({}, {}).await {{ Ok(__sifr_timeout_value) => __sifr_timeout_value, Err(_) => return Err(TimeoutError::new(\"task timeout expired\".to_string()).into()) }}",
+            RustExpr::TimeoutAwait {
+                duration,
+                future,
+                error,
+            } => format!(
+                "match ::tokio::time::timeout({}, {}).await {{ Ok(__sifr_timeout_value) => __sifr_timeout_value, Err(_) => return Err({}) }}",
                 Self::render_expr_string(duration),
-                Self::render_expr_string(future)
+                Self::render_expr_string(future),
+                Self::render_expr_string(error)
             ),
             RustExpr::Try(expr) => format!("{}?", Self::wrap_expr(expr)),
             RustExpr::Await(expr) => format!("{}.await", Self::wrap_expr(expr)),

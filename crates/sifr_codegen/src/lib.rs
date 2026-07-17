@@ -136,6 +136,7 @@ pub use stdlib_rust_source::StdlibRustSource;
 mod stmt_support_emitter;
 mod string_char_cache;
 mod string_char_cache_scan;
+mod try_error_carrier;
 mod type_emitters;
 mod union_type_helpers;
 

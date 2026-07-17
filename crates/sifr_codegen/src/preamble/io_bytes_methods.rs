@@ -460,9 +460,11 @@ mod tests {
             | RustExpr::Vec(args)
             | RustExpr::Tuple(args)
             | RustExpr::Array(args) => args.iter().map(count_raw_in_expr).sum(),
-            RustExpr::TimeoutAwait { duration, future } => {
-                count_raw_in_expr(duration) + count_raw_in_expr(future)
-            }
+            RustExpr::TimeoutAwait {
+                duration,
+                future,
+                error,
+            } => count_raw_in_expr(duration) + count_raw_in_expr(future) + count_raw_in_expr(error),
             RustExpr::FormatMacro { args, .. } => args.iter().map(count_raw_in_expr).sum(),
             RustExpr::BinOp { left, right, .. } => {
                 count_raw_in_expr(left) + count_raw_in_expr(right)

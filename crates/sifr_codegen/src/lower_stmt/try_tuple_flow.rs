@@ -6,10 +6,16 @@ use super::{
 pub(super) fn try_lower_simple_try_except_stmt(
     body: &[HirStmt],
     handlers: &[HirExceptHandler],
+    body_error_types: &[Type],
     in_loop_with_else: bool,
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
+    if crate::try_error_carrier::exact_try_error_carrier(body_error_types)
+        .is_some_and(|carrier| carrier.rust_type() != "Error")
+    {
+        return None;
+    }
     if handlers.len() != 1 {
         return None;
     }

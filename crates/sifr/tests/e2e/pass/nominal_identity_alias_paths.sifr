@@ -14,6 +14,9 @@ class ChildFormatter(LogFormatter):
     def render(self, message: str) -> str:
         return self.format("INFO", "identity", message) + self.suffix
 
+    def raw_template(self) -> str:
+        return self._fmt
+
 
 class JsonValue:
     value: int
@@ -50,6 +53,17 @@ def aliased_except_matches() -> bool:
     return False
 
 
+def catches_same_basename_errors(csv_branch: bool) -> str:
+    try:
+        if csv_branch:
+            raise CsvError("csv branch")
+        raise ConfigError("config branch")
+    except CsvError as error:
+        return "csv:" + error.message
+    except ConfigError as error:
+        return "config:" + error.message
+
+
 def main() -> None:
     csv_error: CsvError = CsvError("one")
     config_error: ConfigError = ConfigError("two")
@@ -58,7 +72,12 @@ def main() -> None:
 
     child: ChildFormatter = ChildFormatter("%(message)s", "!")
     assert child.render("ready") == "ready!"
-    assert formatter_template(child) == "%(message)s"
+    assert child.raw_template() == "%(message)s"
+    assert formatter_template(ChildFormatter("%(message)s", "!")) == "%(message)s"
+    assert ChildFormatter("%(message)s", "!") == ChildFormatter("%(message)s", "!")
+    assert len(str(ChildFormatter("%(message)s", "!"))) > 0
+    formatter_set: set[ChildFormatter] = {ChildFormatter("%(message)s", "!")}
+    assert len(formatter_set) == 1
 
     local_json: JsonValue = JsonValue(7)
     canonical_json: StdJsonValue = StdJsonValue("null")
@@ -68,3 +87,5 @@ def main() -> None:
     box_again: __SifrIdentityBox[int] = box.same()
     assert box_again.value == 9
     assert aliased_except_matches()
+    assert catches_same_basename_errors(True) == "csv:csv branch"
+    assert catches_same_basename_errors(False) == "config:config branch"

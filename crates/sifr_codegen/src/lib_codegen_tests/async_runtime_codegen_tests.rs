@@ -42,6 +42,26 @@ fn test_try_except_with_async_body_lowers_to_async_try_closure() {
 }
 
 #[test]
+fn test_task_timeout_try_carrier_includes_timeout_and_await_errors() {
+    let result = generate_rust_with_metadata(
+        &lower_module(
+            parse_module(
+                "class ProcessError(Error):\n    pass\n\nasync def fail() -> Result[None, ProcessError]:\n    await task.sleep(0.0)\n    return None\n\nasync def main() -> Result[None, Error]:\n    try:\n        async with task.timeout(1.0):\n            _value: None = await fail()\n    except TimeoutError:\n        return None\n    except ProcessError:\n        return None\n    return None\n",
+            )
+            .expect("parse failed")
+            .suite(),
+        )
+        .expect("lowering failed")
+        .module,
+    );
+
+    let source = result.rust_source;
+    assert!(source.contains("enum __SifrUnion_"));
+    assert!(source.contains("(TimeoutError),"));
+    assert!(source.contains("(ProcessError),"));
+}
+
+#[test]
 fn test_try_finally_runs_cleanup_before_timeout_propagates() {
     let result = generate_rust_with_metadata(
         &lower_module(
@@ -65,6 +85,9 @@ fn test_try_finally_runs_cleanup_before_timeout_propagates() {
         .expect("try/finally should rethrow after cleanup");
 
     assert!(result.rust_source.contains("let __sifr_try_finally_res"));
+    assert!(result
+        .rust_source
+        .contains("Err(_) => return Err(TimeoutError::new"));
     assert!(cleanup_pos < rethrow_pos);
 }
 

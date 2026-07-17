@@ -20,12 +20,15 @@ impl GeneratedTypeCollector {
     pub(super) fn insert_record(
         &mut self,
         module_name: Option<&String>,
-        name: &str,
-        fields: &[(String, Type)],
+        class_type: &Type,
         is_error: bool,
         module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
     ) {
-        let key = (module_name.cloned(), name.to_string());
+        let Type::Class { fields, .. } = class_type.resolve_alias() else {
+            return;
+        };
+        let bridge_name = class_bridge_name(class_type);
+        let key = (module_name.cloned(), bridge_name.clone());
         if self.entries.contains_key(&key) || self.in_progress.contains(&key) {
             return;
         }
@@ -44,8 +47,8 @@ impl GeneratedTypeCollector {
             key,
             RustGeneratedBridgeType {
                 module_name: module_name.cloned(),
-                name: format!("{name}Bridge"),
-                rust_type_path: generated_bridge_type_path(module_name, name),
+                name: bridge_name,
+                rust_type_path: generated_class_bridge_type_path(module_name, class_type),
                 kind: if is_error {
                     RustGeneratedBridgeTypeKind::Error
                 } else {
@@ -122,23 +125,17 @@ impl GeneratedTypeCollector {
                     self.generated_field_rust_type(value, module_name, module_catalogs)
                 )
             }
-            Type::Class {
-                name,
-                fields,
-                parent_class,
-                ..
-            } => {
+            class_type @ Type::Class { parent_class, .. } => {
                 let definition_module =
-                    bridge_type_definition_module(name, module_name, module_catalogs, false)
+                    class_bridge_definition_module(class_type, module_name, module_catalogs)
                         .unwrap_or_else(|_| module_name.cloned());
                 self.insert_record(
                     definition_module.as_ref(),
-                    name,
-                    fields,
+                    class_type,
                     parent_class.as_deref() == Some("Error"),
                     module_catalogs,
                 );
-                generated_bridge_type_path(definition_module.as_ref(), name)
+                generated_class_bridge_type_path(definition_module.as_ref(), class_type)
             }
             Type::Enum { name, variants } => {
                 let definition_module =
@@ -172,6 +169,58 @@ impl GeneratedTypeCollector {
 pub(super) fn generated_bridge_type_path(module_name: Option<&String>, name: &str) -> String {
     let module = rust_bridge_module_name(module_name.map(String::as_str));
     format!("crate::__sifr_bridge::{module}::{name}Bridge")
+}
+
+pub(super) fn generated_class_bridge_type_path(
+    module_name: Option<&String>,
+    class_type: &Type,
+) -> String {
+    let module = rust_bridge_module_name(module_name.map(String::as_str));
+    format!(
+        "crate::__sifr_bridge::{module}::{}",
+        class_bridge_name(class_type)
+    )
+}
+
+pub(super) fn class_bridge_definition_module(
+    class_type: &Type,
+    current_module: Option<&String>,
+    module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
+) -> Result<Option<String>, String> {
+    let Type::Class { identity, name, .. } = class_type.resolve_alias() else {
+        return Ok(current_module.cloned());
+    };
+    if let Some(identity) = identity {
+        if let Some((module, _)) = identity.rsplit_once('.') {
+            return Ok(Some(module.to_string()));
+        }
+    }
+    bridge_type_definition_module(name, current_module, module_catalogs, false)
+}
+
+pub(super) fn class_bridge_declaration_name(class_type: &Type) -> &str {
+    let Type::Class { identity, name, .. } = class_type.resolve_alias() else {
+        return "Unsupported";
+    };
+    identity
+        .as_deref()
+        .and_then(|identity| identity.rsplit_once('.').map(|(_, name)| name))
+        .unwrap_or(name)
+}
+
+fn class_bridge_name(class_type: &Type) -> String {
+    let Type::Class { type_args, .. } = class_type.resolve_alias() else {
+        return "UnsupportedBridge".to_string();
+    };
+    let declaration_name = class_bridge_declaration_name(class_type);
+    if type_args.is_empty() {
+        format!("{declaration_name}Bridge")
+    } else {
+        format!(
+            "{declaration_name}{}Bridge",
+            class_type.union_variant_name()
+        )
+    }
 }
 
 fn rust_bridge_module_name(module_name: Option<&str>) -> String {

@@ -22,10 +22,13 @@ the authoritative create-PR gate passes, and PR #2989 is merged. The complete
 merged M10 implementation is undergoing its required milestone review. Review
 pass 10 found source-name, external-path-root, and generated-union collision
 gaps; their remediation is implemented in PR #2990 and the repeated
-authoritative create-PR gate passes. Review pass 11 found three deeper nominal
-identity gaps in canonical/local class unions, sync/async and inheritance
-reference rendering, and ordinary merged stdlib class names; remediation is in
-progress. Typed
+authoritative create-PR gate passes. Review passes 11 and 12 drove exact nominal
+identity through unions, conversions, inheritance, handlers, patterns,
+generics, operators, and merged stdlib declarations. Review pass 13 then found
+three remaining end-to-end gaps in imported-parent semantics, exact try-error
+carriers, and same-basename Rust bridge records. Their remediation is complete,
+the full merge E2E suite passes `664/664`, and the authoritative create-PR gate
+passes every blocking lane; a fresh full-diff re-review is pending. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1511,8 +1514,30 @@ Delivery waves:
   blocking lane in `1504.56s`: Python interop `12/12`, runtime platform `28`
   variants with one capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `0/42` cold-cache hits. Its warm wall-time notice is a
-  non-blocking advisory. A fresh full-diff review is pending before M10
-  closure.
+  non-blocking advisory. Full
+  [review pass 13](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-13.md)
+  then found that imported parents lost exact fields and capabilities, try
+  codegen collapsed the recorded error set to one handler type, and Rust bridge
+  records collapsed distinct canonical classes sharing a basename. Imported
+  class completion now selects the richest exact-identity surface and preserves
+  parent fields, methods, derives, and `Display`. Try bodies use an exact
+  discriminated carrier with exhaustive nested-raise discovery, per-member
+  conversions, identity-aware handler dispatch, catch-all fallback, and carrier
+  inheritance across timeout, task scope, async context, and `finally` paths.
+  Rust bridge definition lookup, generated names, schemas, and recursion keys
+  now include canonical module and nominal identity. Complete-suite regressions
+  additionally restrict generic phantom markers to genuinely unrepresented
+  parameters and make Python async contexts inherit the enclosing try carrier.
+  Focused native proofs cover inherited formatting, exact TOML error routing,
+  same-basename bridge records, file handles, cancellation/process/network/TLS,
+  i18n, and Python async-context execution. The full merge-profile E2E suite
+  passes `664/664` with signature `76a3c67a1e579374`. Workspace Clippy,
+  formatting, HIR maintainability, and the `900`-line guardrail pass over `2705`
+  files. The authoritative create-PR gate passes every blocking lane in
+  `1024.46s`: Python interop `12/12`, runtime platform `28` variants with one
+  capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c`. Its warm-time and cache-hit notices are non-blocking
+  advisories. A fresh full-diff review is pending before M10 closure.
 
 Acceptance:
 

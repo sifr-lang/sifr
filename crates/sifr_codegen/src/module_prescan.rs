@@ -51,16 +51,32 @@ impl RustEmitter {
     pub(crate) fn collect_parent_field_metadata(&mut self, module: &HirModule) {
         for class in &module.classes {
             if let Some(ref parent_name) = class.parent_class {
-                if let Some(parent_class) = module
-                    .classes
-                    .iter()
-                    .find(|candidate| candidate.name == *parent_name)
-                {
-                    let parent_field_names: HashSet<String> = parent_class
-                        .fields
-                        .iter()
-                        .map(|(name, _)| name.clone())
-                        .collect();
+                let parent_field_names = class
+                    .parent_type
+                    .as_ref()
+                    .and_then(|parent| match parent.resolve_alias() {
+                        sifr_type_system::Type::Class { fields, .. } => Some(
+                            fields
+                                .iter()
+                                .map(|(name, _)| name.clone())
+                                .collect::<HashSet<_>>(),
+                        ),
+                        _ => None,
+                    })
+                    .or_else(|| {
+                        module
+                            .classes
+                            .iter()
+                            .find(|candidate| candidate.name == *parent_name)
+                            .map(|parent_class| {
+                                parent_class
+                                    .fields
+                                    .iter()
+                                    .map(|(name, _)| name.clone())
+                                    .collect::<HashSet<_>>()
+                            })
+                    });
+                if let Some(parent_field_names) = parent_field_names {
                     self.parent_fields.insert(
                         class.name.clone(),
                         (parent_name.clone(), parent_field_names),

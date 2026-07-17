@@ -129,6 +129,15 @@ impl ClassTraitCapabilities {
             hash: true,
         }
     }
+
+    fn for_parent_type(parent: &Type) -> Self {
+        Self {
+            debug: supports_generic_debug(parent),
+            clone: supports_generic_clone(parent),
+            partial_eq: supports_generic_equality(parent),
+            hash: supports_generic_hash(parent),
+        }
+    }
 }
 
 impl RustEmitter {
@@ -186,13 +195,22 @@ impl RustEmitter {
 
         let parent = match class.parent_class.as_deref() {
             None => ClassTraitCapabilities::all(),
-            Some(parent_name) => module
-                .classes
-                .iter()
-                .find(|candidate| candidate.name == parent_name)
-                .map_or_else(ClassTraitCapabilities::default, |parent| {
+            Some(parent_name) => {
+                if let Some(parent) = module
+                    .classes
+                    .iter()
+                    .find(|candidate| candidate.name == parent_name)
+                {
                     self.class_trait_capabilities(parent, module, visiting)
-                }),
+                } else {
+                    class
+                        .parent_type
+                        .as_ref()
+                        .map_or_else(ClassTraitCapabilities::default, |parent| {
+                            ClassTraitCapabilities::for_parent_type(parent)
+                        })
+                }
+            }
         };
         let has_custom_eq = class
             .operator_impls

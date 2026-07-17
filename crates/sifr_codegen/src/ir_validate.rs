@@ -252,9 +252,14 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
                 validate_expr(arg, issues, in_function);
             }
         }
-        RustExpr::TimeoutAwait { duration, future } => {
+        RustExpr::TimeoutAwait {
+            duration,
+            future,
+            error,
+        } => {
             validate_expr(duration, issues, in_function);
             validate_expr(future, issues, in_function);
+            validate_expr(error, issues, in_function);
         }
         RustExpr::FormatMacro { args, .. } => {
             for arg in args {

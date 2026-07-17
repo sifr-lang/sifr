@@ -1,0 +1,14 @@
+# expect-error[col=5]: SIFR-RESULT-0005
+from sifr.configparser import Error as ConfigError
+from sifr.csv import Error as CsvError
+from sifr.resource import nullcontext
+
+
+def invalid() -> None:
+    manager = nullcontext(1)
+    try:
+        with manager as value:
+            _ = value
+            raise CsvError("with")
+    except ConfigError:
+        pass

@@ -244,11 +244,20 @@ impl RustEmitter {
             .is_some_and(|name| name != "NonSend");
         let parent_supports = match class.parent_class.as_deref() {
             None | Some("NonSend") => true,
-            Some(parent_name) => module
-                .classes
-                .iter()
-                .find(|candidate| candidate.name == parent_name)
-                .is_some_and(|parent| Self::class_emits_display(parent, module, visiting)),
+            Some(parent_name) => {
+                if let Some(parent) = module
+                    .classes
+                    .iter()
+                    .find(|candidate| candidate.name == parent_name)
+                {
+                    Self::class_emits_display(parent, module, visiting)
+                } else {
+                    class
+                        .parent_type
+                        .as_ref()
+                        .is_some_and(supports_declaration_display)
+                }
+            }
         };
         let supports = (parent_is_field || !class.fields.is_empty())
             && parent_supports
@@ -337,7 +346,7 @@ impl RustEmitter {
             };
             fields.push((name, ty));
         }
-        if !class.type_params.is_empty() {
+        if Self::class_needs_phantom_marker(class) {
             fields.push((
                 "__sifr_type_marker".to_string(),
                 RustType::Named(format!(
@@ -374,7 +383,7 @@ impl RustEmitter {
         class: &HirClass,
         fields: &mut Vec<(String, RustExpr)>,
     ) {
-        if !class.type_params.is_empty() {
+        if Self::class_needs_phantom_marker(class) {
             fields.push((
                 "__sifr_type_marker".to_string(),
                 RustExpr::Path(vec![
