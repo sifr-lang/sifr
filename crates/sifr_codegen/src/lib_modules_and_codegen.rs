@@ -546,7 +546,11 @@ pub fn generate_rust_with_stdlib_for_module(
         }
     }
     if uses_async_python && referenced_error_classes.contains("Error") {
-        preamble_items.push(build_error_into_error_impl("PythonError"));
+        preamble_items.extend(
+            crate::python_interop_common::python_error_contract_rust_types(module)
+                .iter()
+                .map(|rust_type| build_error_into_error_impl(rust_type)),
+        );
     }
     if uses_task_scope || uses_join_set || uses_failure_type {
         preamble_items.extend(build_failure_type_items());
@@ -744,7 +748,8 @@ pub fn generate_rust_with_stdlib_for_module(
         source
     };
 
-    let needs_python_runtime = rust_source.contains("::sifr_stdlib::python::");
+    let needs_python_runtime =
+        crate::python_interop_common::rust_source_uses_python_runtime(&rust_source);
     let needs_sifr_stdlib_fs = rust_source.contains("::sifr_stdlib::fs::");
 
     // Add transitive dependencies from stdlib modules

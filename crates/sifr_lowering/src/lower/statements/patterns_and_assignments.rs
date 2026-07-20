@@ -2,10 +2,10 @@ use super::{
     class_specialization_payload_conflicts, domain_typed_sentinel_expr, lower_expr, make_union,
     match_diagnostics, name_diagnostics, numeric_domain_for_type, numeric_sentinel_kind,
     ownership_diagnostics, record_async_generator_advance_binding, record_const_integer_binding,
-    record_len_alias_fact, record_sequence_pointer_fact, resolve_annotation_expr,
-    sequence_shape_fact, statement_diagnostics, str, validate_fixed_width_initializer,
-    DiagnosticCode, Expr, FixedWidthInitializerFit, HirExpr, HirPattern, HirStmt, LowerCtx,
-    Pattern, Ranged, Singleton, StmtAnnAssign, StmtAssign, Type,
+    record_len_alias_fact, record_sequence_pointer_fact, record_try_error_types,
+    resolve_annotation_expr, sequence_shape_fact, statement_diagnostics, str,
+    validate_fixed_width_initializer, DiagnosticCode, Expr, FixedWidthInitializerFit, HirExpr,
+    HirPattern, HirStmt, LowerCtx, Pattern, Ranged, Singleton, StmtAnnAssign, StmtAssign, Type,
 };
 use crate::lower::expressions::consume_affine_value_name;
 
@@ -292,7 +292,7 @@ pub(super) fn failed_initializer_taint(
     range: ruff_text_size::TextRange,
     error_count_before_initializer: usize,
 ) -> Option<crate::scope::ErrorTaint> {
-    let taint = ctx.error_taint_since(error_count_before_initializer);
+    let taint = ctx.initializer_error_taint_since(error_count_before_initializer);
     if taint.is_none() {
         ctx.error_with_code_at(
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
@@ -326,11 +326,13 @@ pub(in crate::lower) fn lower_ann_assign(
         );
         return None;
     };
+    let error_count_before_annotation = ctx.error_count();
     let declared_type = resolve_annotation_expr(&ann.annotation, ctx);
+    let annotation_error_taint = ctx.error_taint_since(error_count_before_annotation);
 
     let (value, initializer_range) = if let Some(val) = &ann.value {
         let initializer_range = val.range();
-        let error_count_before_initializer = ctx.error_count();
+        let error_count_before_initializer = ctx.begin_initializer_lowering();
         let mut expr = if let Some(kind) = numeric_sentinel_kind(val) {
             if let Some(domain) = numeric_domain_for_type(&declared_type) {
                 domain_typed_sentinel_expr(kind, domain)
@@ -381,10 +383,7 @@ pub(in crate::lower) fn lower_ann_assign(
             if let Type::Result(ref ok_ty, ref err_ty) = expr_ty {
                 if ok_ty.as_ref().is_assignable_to(&declared_type) {
                     // Track the error type for exhaustiveness checking
-                    if matches!(err_ty.resolve_alias(), Type::Class { .. }) {
-                        ctx.try_block_error_types
-                            .insert(err_ty.resolve_alias().clone());
-                    }
+                    record_try_error_types(ctx, err_ty);
                     expr = HirExpr::QuestionMark {
                         expr: Box::new(expr),
                         ty: declared_type.clone(),
@@ -462,8 +461,13 @@ pub(in crate::lower) fn lower_ann_assign(
 
     ctx.empty_dict_specializations.remove(&name);
     ctx.pending_container_specialization_patches.remove(&name);
-    ctx.scope
-        .define_explicit_local(name.clone(), declared_type.clone());
+    if let Some(error_taint) = annotation_error_taint {
+        ctx.scope
+            .define_poisoned_local(name.clone(), declared_type.clone(), true, error_taint);
+    } else {
+        ctx.scope
+            .define_explicit_local(name.clone(), declared_type.clone());
+    }
     ctx.record_must_use_binding(&name, &declared_type);
     if matches!(value.ty(), Type::Int | Type::LiteralInt(_))
         && value.ty().is_assignable_to(&declared_type)

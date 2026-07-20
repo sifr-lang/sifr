@@ -136,10 +136,11 @@ fn stdlib_class_exports_preserve_parent_markers_and_generic_templates() {
         .get("_sifr.python")
         .expect("private Python module should have generated Rust")
         .rust;
+    let python_error = sifr_type_system::stdlib_class_rust_name("_sifr.python", "PythonError");
     assert!(
-        private_python_rust.contains(
-            "Result<::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>, PythonError>"
-        ),
+        private_python_rust.contains(&format!(
+            "Result<::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>, {python_error}>"
+        )),
         "{private_python_rust}"
     );
 }

@@ -13,7 +13,7 @@ impl RustEmitter {
         let Some(error_type) = handler.error_type.as_deref() else {
             return HandlerMatchCondition::Always;
         };
-        if error_type == "Error" {
+        if crate::try_error_carrier::handler_is_catch_all(handler) {
             return HandlerMatchCondition::Always;
         }
         if err_ty == "IOError" {

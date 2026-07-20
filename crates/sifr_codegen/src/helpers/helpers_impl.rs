@@ -639,8 +639,8 @@ pub(crate) fn expr_contains_self_field_mutation(expr: &HirExpr) -> bool {
 pub(crate) fn is_self_field_mutating_method_call(expr: &HirExpr) -> bool {
     match expr {
         HirExpr::MethodCall { object, method, .. } => {
-            let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { object: inner, .. }
-                if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
+            let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { .. })
+                && field_access_root_name(object) == Some("self");
             is_self_field
                 && (MUTATING_METHODS.contains(&method.as_str())
                     || matches!(
@@ -649,6 +649,14 @@ pub(crate) fn is_self_field_mutating_method_call(expr: &HirExpr) -> bool {
                     ))
         }
         _ => false,
+    }
+}
+
+fn field_access_root_name(expr: &HirExpr) -> Option<&str> {
+    match expr {
+        HirExpr::Name { name, .. } => Some(name),
+        HirExpr::FieldAccess { object, .. } => field_access_root_name(object),
+        _ => None,
     }
 }
 

@@ -1,0 +1,10 @@
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+
+
+def main() -> None:
+    assert True

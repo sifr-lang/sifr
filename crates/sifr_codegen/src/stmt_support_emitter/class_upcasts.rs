@@ -137,25 +137,9 @@ impl RustEmitter {
             return lowered;
         }
         let ancestors = parent_chain.split('|').collect::<Vec<_>>();
-        let exact_index = ancestors
+        let Some(target_index) = ancestors
             .iter()
-            .position(|ancestor| *ancestor == target_identity);
-        let target_tail = target_identity
-            .rsplit_once('.')
-            .map_or(target_identity.as_str(), |(_, tail)| tail);
-        let tail_matches = ancestors
-            .iter()
-            .enumerate()
-            .filter(|(_, ancestor)| {
-                ancestor
-                    .rsplit_once('.')
-                    .map_or(**ancestor, |(_, tail)| tail)
-                    == target_tail
-            })
-            .map(|(index, _)| index)
-            .collect::<Vec<_>>();
-        let Some(target_index) =
-            exact_index.or_else(|| (tail_matches.len() == 1).then(|| tail_matches[0]))
+            .position(|ancestor| *ancestor == target_identity)
         else {
             return lowered;
         };
@@ -193,5 +177,38 @@ fn map_value(
             body: Box::new(body),
             is_move: false,
         }],
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{RustEmitter, RustExpr};
+    use sifr_type_system::Type;
+
+    fn class(identity: &str, name: &str, parent_class: Option<&str>) -> Type {
+        Type::Class {
+            identity: Some(identity.to_string()),
+            type_args: Vec::new(),
+            name: name.to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: parent_class.map(str::to_string),
+        }
+    }
+
+    #[test]
+    fn basename_only_ancestor_match_does_not_emit_an_upcast() {
+        let source = class("pkg.Child", "Child", Some("pkg.Root"));
+        let unrelated_root = class("other.Root", "Root", None);
+        let value = RustExpr::Ident("value".to_string());
+
+        assert_eq!(
+            RustEmitter::new().consuming_class_upcast_for_ir(
+                &unrelated_root,
+                &source,
+                value.clone()
+            ),
+            value
+        );
     }
 }

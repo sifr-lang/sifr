@@ -79,6 +79,10 @@ impl VarInfo {
     pub fn is_poisoned_binding(&self) -> bool {
         self.error_taint.is_some()
     }
+
+    pub(crate) fn error_taint(&self) -> Option<ErrorTaint> {
+        self.error_taint
+    }
 }
 
 /// A snapshot of the narrowing state for all variables in scope.

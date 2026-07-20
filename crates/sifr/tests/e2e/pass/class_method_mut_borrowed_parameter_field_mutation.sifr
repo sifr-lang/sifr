@@ -1,0 +1,15 @@
+class Crate:
+    items: list[int]
+
+    def merge(self, mut other: Crate) -> None:
+        other.items.append(7)
+        other.items.extend([8, 9])
+        popped: int | None = other.items.pop()
+        assert popped == 9
+
+
+def main() -> None:
+    receiver: Crate = Crate([0])
+    other: Crate = Crate([1, 2])
+    receiver.merge(other)
+    assert other.items == [1, 2, 7, 8]

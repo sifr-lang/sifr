@@ -63,6 +63,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) errors: Vec<HirDiagnostic>,
     /// Proof for the latest emitted lowering diagnostic.
     pub(in crate::lower) last_error_taint: Option<ErrorTaint>,
+    /// Proof propagated by an expression suppressed because it reads a poisoned binding.
+    propagated_error_taint: Option<ErrorTaint>,
     /// Loop nesting depth (for break/continue validation)
     pub(in crate::lower) loop_depth: usize,
     /// `reveal_type()` diagnostics (informational, not errors)
@@ -183,6 +185,7 @@ impl LowerCtx {
             active_task_owner_bindings: Vec::new(),
             errors: Vec::new(),
             last_error_taint: None,
+            propagated_error_taint: None,
             loop_depth: 0,
             reveal_types: Vec::new(),
             warnings: Vec::new(),
@@ -348,10 +351,28 @@ impl LowerCtx {
             .then_some(self.last_error_taint)
             .flatten()
     }
-    pub(in crate::lower) fn is_poisoned_binding(&self, name: &str) -> bool {
-        self.scope
+    pub(in crate::lower) fn begin_initializer_lowering(&mut self) -> usize {
+        self.propagated_error_taint = None;
+        self.error_count()
+    }
+    pub(in crate::lower) fn initializer_error_taint_since(
+        &mut self,
+        previous_error_count: usize,
+    ) -> Option<ErrorTaint> {
+        self.error_taint_since(previous_error_count)
+            .or_else(|| self.propagated_error_taint.take())
+    }
+    pub(in crate::lower) fn propagate_poisoned_binding_error(&mut self, name: &str) -> bool {
+        let taint = self
+            .scope
             .lookup(name)
-            .is_some_and(crate::scope::VarInfo::is_poisoned_binding)
+            .and_then(crate::scope::VarInfo::error_taint);
+        if taint.is_some() {
+            self.propagated_error_taint = taint;
+            true
+        } else {
+            false
+        }
     }
     pub(in crate::lower) fn in_loop(&self) -> bool {
         self.loop_depth > 0

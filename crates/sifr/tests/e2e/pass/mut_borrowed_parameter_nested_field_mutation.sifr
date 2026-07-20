@@ -1,0 +1,24 @@
+class Inner:
+    items: list[int]
+
+
+class Outer:
+    inner: Inner
+
+    def append_to_inner(self) -> None:
+        self.inner.items.append(11)
+
+
+def append_nested(mut outer: Outer) -> None:
+    outer.inner.items.append(7)
+    outer.inner.items.extend([8, 9])
+    popped: int | None = outer.inner.items.pop()
+    assert popped == 9
+
+
+def main() -> None:
+    outer: Outer = Outer(Inner([1, 2]))
+    append_nested(outer)
+    assert outer.inner.items == [1, 2, 7, 8]
+    outer.append_to_inner()
+    assert outer.inner.items == [1, 2, 7, 8, 11]

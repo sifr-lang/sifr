@@ -1,3 +1,4 @@
+use super::parameter_conventions::class_method_param_convention;
 use super::{
     collect_enum_variants, function_body_contains_yield, get_newtype_inner, get_parent_class,
     has_decorator, is_enum_class, is_operator_dunder, is_protocol_class, lower_stmts,
@@ -14,7 +15,6 @@ use crate::lower::rust_interop::{
     classify_rust_interop_stub_body, collect_rust_interop_declarations,
     has_rust_interop_decorator_syntax, RustInteropOwner,
 };
-use crate::lower::typing_and_functions::ast_convention_to_param;
 /// Second pass: lower class method bodies into `HirClass`.
 pub(in crate::lower) fn lower_class(
     class_def: &StmtClassDef,
@@ -420,19 +420,13 @@ pub(in crate::lower) fn lower_class(
                 } else {
                     Type::Any
                 };
-                ctx.scope.define(param_name.clone(), param_ty.clone());
-                let declared_convention =
-                    ast_convention_to_param(param.parameter.convention, &param_ty);
-                let convention = if ctx.must_use_obligation_for_type(&param_ty).is_some()
-                    || (matches!(
-                        param_ty.resolve_alias(),
-                        Type::Callable(..) | Type::AsyncCallable(..)
-                    ) && declared_convention.is_owned())
-                {
-                    declared_convention
-                } else {
-                    ParamConvention::default()
-                };
+                let convention =
+                    class_method_param_convention(param.parameter.convention, &param_ty, ctx);
+                ctx.scope.define_parameter(
+                    param_name.clone(),
+                    param_ty.clone(),
+                    convention.is_mutable(),
+                );
                 params.push(HirParam {
                     name: param_name,
                     ty: param_ty,

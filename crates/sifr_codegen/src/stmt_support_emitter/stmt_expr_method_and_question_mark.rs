@@ -147,14 +147,34 @@ macro_rules! stmt_expr_method_call {
             let Some(lowered_object) = $emitter.lower_stmt_expr_for_ir(object)? else {
                 return Ok(None);
             };
+            let effective_object_ty = $emitter.effective_method_object_ty(object);
+            let method_params =
+                $emitter.resolve_registry_method_params(&effective_object_ty, method);
             let mut lowered_args = Vec::with_capacity(args.len());
-            for arg in args {
-                let Some(lowered_arg) = $emitter.lower_stmt_expr_for_ir(arg)? else {
+            for (idx, arg) in args.iter().enumerate() {
+                let convention = method_params
+                    .as_ref()
+                    .and_then(|params| params.get(idx))
+                    .map_or(sifr_type_system::ParamConvention::default(), |(_, convention)| {
+                        *convention
+                    });
+                let suppress =
+                    $emitter.method_mut_arg_needs_field_clone_suppression(arg, convention);
+                let suppression_prev = $emitter.pending_self_field_clone_suppression;
+                if suppress {
+                    $emitter.pending_self_field_clone_suppression += 1;
+                }
+                let lowered_arg = $emitter.lower_stmt_expr_for_ir(arg);
+                if suppress
+                    && $emitter.pending_self_field_clone_suppression > suppression_prev
+                {
+                    $emitter.pending_self_field_clone_suppression -= 1;
+                }
+                let Some(lowered_arg) = lowered_arg? else {
                     return Ok(None);
                 };
                 lowered_args.push(lowered_arg);
             }
-            let effective_object_ty = $emitter.effective_method_object_ty(object);
             let is_callable_field = match crate::resolve_alias_type_for_plain_call(
                 &effective_object_ty,
             ) {
@@ -222,9 +242,7 @@ macro_rules! stmt_expr_method_call {
                     return Ok(Some(lowered_object));
                 }
             }
-            if let Some(method_params) =
-                $emitter.resolve_registry_method_params(&effective_object_ty, method)
-            {
+            if let Some(method_params) = method_params {
                 let method_receiver_class =
                     match crate::resolve_alias_type_for_plain_call(&effective_object_ty) {
                         Type::Class { name, .. } => Some(name.clone()),

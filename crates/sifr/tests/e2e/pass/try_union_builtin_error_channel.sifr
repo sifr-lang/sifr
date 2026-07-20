@@ -1,0 +1,40 @@
+from sifr.csv import Error as CsvError
+
+
+def fail_builtin(value_branch: bool) -> Result[int, ValueError | KeyError]:
+    if value_branch:
+        raise ValueError("value")
+    raise KeyError("key")
+
+
+def classify_builtin(value_branch: bool) -> str:
+    try:
+        value: int = fail_builtin(value_branch)
+        return str(value)
+    except ValueError as error:
+        return "value:" + error.message
+    except KeyError as error:
+        return "key:" + error.message
+
+
+def fail_mixed(csv_branch: bool) -> Result[int, CsvError | ValueError]:
+    if csv_branch:
+        raise CsvError("csv")
+    raise ValueError("value")
+
+
+def classify_mixed(csv_branch: bool) -> str:
+    try:
+        value: int = fail_mixed(csv_branch)
+        return str(value)
+    except CsvError as error:
+        return "csv:" + error.message
+    except ValueError as error:
+        return "value:" + error.message
+
+
+def main() -> None:
+    assert classify_builtin(True) == "value:value"
+    assert classify_builtin(False) == "key:key"
+    assert classify_mixed(True) == "csv:csv"
+    assert classify_mixed(False) == "value:value"

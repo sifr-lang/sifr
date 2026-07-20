@@ -36,7 +36,7 @@ pub(in crate::lower) fn is_error_class(class_def: &StmtClassDef) -> bool {
 
 /// Check if a type is a valid error type (a class registered in `error_types`).
 pub(in crate::lower) fn is_valid_error_type(ty: &Type, ctx: &LowerCtx) -> bool {
-    match ty {
+    match ty.resolve_alias() {
         Type::Class { name, .. } => ctx.error_types.contains(name),
         Type::Union(members) => {
             !members.is_empty()
@@ -89,6 +89,37 @@ pub(in crate::lower) fn format_type_name(ty: &Type) -> String {
         Type::Bool => "bool".to_string(),
         Type::None => "None".to_string(),
         Type::Class { name, .. } => name.clone(),
+        Type::Alias { name, .. } => name.clone(),
+        Type::Union(members) => {
+            let duplicate_class_names = members
+                .iter()
+                .filter_map(|member| match member.resolve_alias() {
+                    Type::Class { name, .. } => Some(name),
+                    _ => None,
+                })
+                .filter(|name| {
+                    members
+                        .iter()
+                        .filter(|member| {
+                            matches!(member.resolve_alias(), Type::Class { name: other, .. } if other == *name)
+                        })
+                        .count()
+                        > 1
+                })
+                .collect::<std::collections::HashSet<_>>();
+            members
+                .iter()
+                .map(|member| match member.resolve_alias() {
+                    Type::Class {
+                        identity: Some(identity),
+                        name,
+                        ..
+                    } if duplicate_class_names.contains(name) => identity.clone(),
+                    _ => format_type_name(member),
+                })
+                .collect::<Vec<_>>()
+                .join(" | ")
+        }
         Type::List(inner) => format!("list[{}]", format_type_name(inner)),
         Type::Dict(k, v) => format!("dict[{}, {}]", format_type_name(k), format_type_name(v)),
         Type::Failure(inner) => format!("Failure[{}]", format_type_name(inner)),

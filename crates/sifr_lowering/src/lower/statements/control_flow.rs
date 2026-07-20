@@ -285,7 +285,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
     } else {
         ctx.scope.lookup(&name).is_some()
     };
-    let error_count_before_initializer = ctx.error_count();
+    let error_count_before_initializer = ctx.begin_initializer_lowering();
     let Some(value) = lower_expr(&assign.value, ctx) else {
         if !should_treat_as_existing_binding {
             let error_taint = failed_initializer_taint(

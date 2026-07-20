@@ -420,10 +420,7 @@ pub(in crate::lower) fn lower_stmt(
                                 );
                                 return None;
                             }
-                        if matches!(error_type.resolve_alias(), Type::Class { .. }) {
-                            ctx.try_block_error_types
-                                .insert(error_type.resolve_alias().clone());
-                            }
+                            super::record_try_error_types(ctx, &error_type);
                             value = HirExpr::QuestionMark {
                                 expr: Box::new(value),
                                 ty: ok_type,
@@ -562,6 +559,12 @@ pub(in crate::lower) fn lower_stmt(
                         (None, None, false)
                     };
                 let name = h.name.as_ref().map(std::string::ToString::to_string);
+                let error_resolved_type = error_type
+                    .as_ref()
+                    .and_then(|error_name| ctx.class_types.get(error_name).cloned());
+                let is_builtin_catch_all = error_resolved_type
+                    .as_ref()
+                    .is_some_and(Type::is_builtin_error_base);
 
                 // Check if this is a catch-all (except Error) or a specific handler
                 if invalid_error_type_form {
@@ -571,7 +574,7 @@ pub(in crate::lower) fn lower_stmt(
                         error_type_range.unwrap_or_else(|| h.range()),
                     );
                 } else if let Some(ref et) = error_type {
-                    if et == "Error" {
+                    if is_builtin_catch_all {
                         has_catch_all = true;
                     } else {
                         // Validate the except type is a known error class
@@ -595,13 +598,12 @@ pub(in crate::lower) fn lower_stmt(
                 ctx.scope.push();
                 if let Some(ref var_name) = name {
                     let error_var_ty = if let Some(ref et) = error_type {
-                        if et == "Error" {
+                        if is_builtin_catch_all {
                             // catch-all: bind as the base Error type
-                            ctx.class_types
-                                .get("Error")
-                                .cloned()
+                            error_resolved_type
+                                .clone()
                                 .unwrap_or_else(|| super::fallback_error_type("Error"))
-                        } else if let Some(class_ty) = ctx.class_types.get(et) {
+                        } else if let Some(class_ty) = &error_resolved_type {
                             class_ty.clone()
                         } else {
                             // Unknown error type — already reported above
@@ -619,10 +621,6 @@ pub(in crate::lower) fn lower_stmt(
                 let handler_body = lower_stmts(&h.body, func_type, ctx);
                 ctx.scope.pop();
 
-                // Resolve the error type for codegen
-                let error_resolved_type = error_type
-                    .as_ref()
-                    .and_then(|et| ctx.class_types.get(et).cloned());
                 handlers.push(HirExceptHandler {
                     error_type,
                     error_resolved_type,

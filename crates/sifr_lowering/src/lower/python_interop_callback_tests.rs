@@ -97,7 +97,7 @@ def compute(handler: Callable[[int], int]) -> Result[int, PythonError]: ...
 }
 
 #[test]
-fn callback_declaration_rejects_colliding_error_union_payloads() {
+fn callback_declaration_keeps_same_basename_error_payloads_distinct() {
     let source = r"
 from typing import Callable
 from sifr.python import PythonError as CanonicalError
@@ -131,19 +131,16 @@ def compute(
         .insert("PythonError".to_string(), canonical);
     externals.error_types.insert("PythonError".to_string());
     let parsed = parse_module(source).expect("source should parse");
-    let errors = match crate::lower_module_with_externals(parsed.suite(), &externals) {
-        Ok(_) => panic!("colliding callback error payloads should fail"),
-        Err(errors) => errors,
+    let lowered = crate::lower_module_with_externals(parsed.suite(), &externals)
+        .expect("nominally distinct payloads should lower");
+    let Type::Result(_, error_channel) = &lowered.module.functions[0].return_type else {
+        panic!("declaration should retain a Result return type");
     };
-    assert!(
-        errors.iter().any(|error| {
-            error.code == Some(DiagnosticCode::PYCB_INVALID_DECLARATION)
-                && error
-                    .message
-                    .contains("multiple members with generated payload type `PythonError`")
-        }),
-        "{errors:?}"
-    );
+    let Type::Union(members) = error_channel.resolve_alias() else {
+        panic!("declaration should retain its union error channel");
+    };
+    assert_eq!(members.len(), 2);
+    assert_ne!(members[0].rust_type(), members[1].rust_type());
 }
 
 #[test]

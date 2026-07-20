@@ -30,10 +30,6 @@ pub const GLOBAL_RUST_NOMINAL_IDENTITIES: &[&str] = &[
     // therefore global infrastructure even when surfaced through sifr.parallel.
     "sifr.parallel.WorkerRuntimeError",
     "sifr.parallel.WorkerError",
-    // The Python runtime glue and generated interop adapters share this
-    // concrete error representation. It is emitted by the global prelude,
-    // rather than by the flattened `_sifr.python` module.
-    "_sifr.python.PythonError",
 ];
 
 #[must_use]
@@ -138,9 +134,9 @@ mod tests {
             class_rust_name(Some("sifr.json.JSONDecodeError"), "JSONDecodeError"),
             "JSONDecodeError"
         );
-        assert_eq!(
+        assert_ne!(
             class_rust_name(Some("_sifr.python.PythonError"), "PythonError"),
-            "PythonError"
+            class_rust_name(None, "PythonError")
         );
         assert_ne!(
             class_rust_name(Some("sifr.csv.Error"), "Error"),

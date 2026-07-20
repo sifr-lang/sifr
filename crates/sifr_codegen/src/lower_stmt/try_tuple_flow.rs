@@ -20,11 +20,7 @@ pub(super) fn try_lower_simple_try_except_stmt(
         return None;
     }
     let handler = handlers.first()?;
-    if handler
-        .error_type
-        .as_deref()
-        .is_some_and(|error_type| error_type != "Error")
-    {
+    if !crate::try_error_carrier::handler_is_catch_all(handler) {
         return None;
     }
     if !body.iter().all(is_simple_try_except_body_stmt)

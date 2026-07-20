@@ -1,7 +1,6 @@
 use crate::{
     function_emitter::{is_result_int_type, result_int_return_type_to_sifr_int, result_method_key},
-    helpers::{body_contains_field_assign_codegen, collect_mutated_vars_with_sigs},
-    hir_analysis::traversal::{self, TraversalConfig},
+    helpers::collect_mutated_vars_with_sigs,
     python_interop_direct::python_interop_method_body_with_retained_errors,
     rust_interop_direct::rust_interop_method_body,
     RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
@@ -9,146 +8,8 @@ use crate::{
 };
 use sifr_ir::{HirClass, HirExpr, HirFunction, HirStmt, MethodKind};
 use sifr_type_system::{ParamConvention, Type};
-use std::collections::HashSet;
 
 impl RustEmitter {
-    pub(crate) fn class_method_requires_mutable_self(
-        &self,
-        class: &HirClass,
-        method: &HirFunction,
-    ) -> bool {
-        if method.method_kind != MethodKind::Regular || method.name == "new" {
-            return false;
-        }
-        let mut visiting = HashSet::new();
-        self.class_method_requires_mutable_self_recursive(class, &method.name, &mut visiting)
-    }
-
-    pub(crate) fn class_method_requires_mutable_self_recursive(
-        &self,
-        class: &HirClass,
-        method_name: &str,
-        visiting: &mut HashSet<String>,
-    ) -> bool {
-        let Some(method) = class
-            .methods
-            .iter()
-            .find(|candidate| candidate.name == method_name)
-        else {
-            return false;
-        };
-
-        if body_contains_field_assign_codegen(&method.body) {
-            return true;
-        }
-        if self.body_contains_mut_borrowed_self_field_call(&method.body) {
-            return true;
-        }
-
-        if !visiting.insert(method_name.to_string()) {
-            return false;
-        }
-
-        let delegated_calls = Self::collect_direct_self_method_calls(&method.body);
-        for delegated_method in delegated_calls {
-            if self.class_method_requires_mutable_self_recursive(class, &delegated_method, visiting)
-            {
-                visiting.remove(method_name);
-                return true;
-            }
-        }
-
-        visiting.remove(method_name);
-        false
-    }
-
-    fn body_contains_mut_borrowed_self_field_call(&self, stmts: &[HirStmt]) -> bool {
-        let found = std::cell::Cell::new(false);
-        let mut on_stmt = |_stmt: &HirStmt| {};
-        let mut on_expr = |expr: &HirExpr| {
-            if found.get() {
-                return;
-            }
-            let HirExpr::Call { func, args, .. } = expr else {
-                return;
-            };
-            let Some(params) = self.resolve_plain_call_param_info(func, args.len()) else {
-                return;
-            };
-            if args
-                .iter()
-                .zip(params.iter())
-                .any(|(arg, (_, convention))| {
-                    convention.is_mut_borrow() && Self::expr_is_self_field_path(arg)
-                })
-            {
-                found.set(true);
-            }
-        };
-        traversal::walk_stmts(
-            stmts,
-            TraversalConfig::LOCAL_SCOPE_ONLY,
-            &mut on_stmt,
-            &mut on_expr,
-        );
-        found.get()
-    }
-
-    fn expr_is_self_field_path(expr: &HirExpr) -> bool {
-        match expr {
-            HirExpr::FieldAccess { object, .. } => {
-                matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self")
-                    || Self::expr_is_self_field_path(object)
-            }
-            HirExpr::Index { object, .. } | HirExpr::Slice { object, .. } => {
-                Self::expr_is_self_field_path(object)
-            }
-            _ => false,
-        }
-    }
-
-    pub(crate) fn collect_direct_self_method_calls(stmts: &[HirStmt]) -> HashSet<String> {
-        let mut calls = HashSet::new();
-        let mut on_stmt = |_stmt: &HirStmt| {};
-        let mut on_expr = |expr: &HirExpr| {
-            if let HirExpr::MethodCall { object, method, .. } = expr {
-                if matches!(object.as_ref(), HirExpr::Name { name, .. } if name == "self") {
-                    calls.insert(method.clone());
-                }
-            }
-        };
-        traversal::walk_stmts(
-            stmts,
-            TraversalConfig::LOCAL_SCOPE_ONLY,
-            &mut on_stmt,
-            &mut on_expr,
-        );
-        calls
-    }
-
-    pub(crate) fn collect_direct_class_method_calls(
-        stmts: &[HirStmt],
-        class_name: &str,
-    ) -> HashSet<String> {
-        let mut calls = HashSet::new();
-        let mut on_stmt = |_stmt: &HirStmt| {};
-        let mut on_expr = |expr: &HirExpr| {
-            if let HirExpr::MethodCall { object, method, .. } = expr {
-                if matches!(object.ty().resolve_alias(), Type::Class { name, .. } if name == class_name)
-                {
-                    calls.insert(method.clone());
-                }
-            }
-        };
-        traversal::walk_stmts(
-            stmts,
-            TraversalConfig::LOCAL_SCOPE_ONLY,
-            &mut on_stmt,
-            &mut on_expr,
-        );
-        calls
-    }
-
     pub(crate) fn is_some_call_expr(expr: &RustExpr) -> bool {
         matches!(
             expr,
@@ -390,6 +251,7 @@ impl RustEmitter {
         &mut self,
         method: &HirFunction,
         class: &HirClass,
+        uses_python_error_bridge: bool,
     ) -> Vec<RustStmt> {
         let has_super = method.body.iter().any(|stmt| {
             if let HirStmt::Expr { expr } = stmt {
@@ -480,7 +342,7 @@ impl RustEmitter {
 
             Self::append_class_phantom_initializer(class, &mut fields);
 
-            if class.name == "PythonError" {
+            if uses_python_error_bridge {
                 fields.push((
                     "__sifr_python_error".to_string(),
                     RustExpr::Literal(RustLiteral::None),
@@ -600,7 +462,7 @@ impl RustEmitter {
 
         Self::append_class_phantom_initializer(class, &mut fields);
 
-        if class.name == "PythonError" {
+        if uses_python_error_bridge {
             fields.push((
                 "__sifr_python_error".to_string(),
                 RustExpr::Literal(RustLiteral::None),
@@ -699,6 +561,7 @@ impl RustEmitter {
         method: &HirFunction,
         class: &HirClass,
         module_public: bool,
+        uses_python_error_bridge: bool,
     ) -> RustItem {
         let saved_return_type = self.current_return_type.clone();
         let saved_mutated_vars = self.mutated_vars.clone();
@@ -829,7 +692,7 @@ impl RustEmitter {
         } else if let Some(interop_body) = rust_interop_method_body(method) {
             interop_body
         } else if method.method_kind == MethodKind::Regular && method.name == "new" {
-            self.lower_constructor_body(method, class)
+            self.lower_constructor_body(method, class, uses_python_error_bridge)
         } else {
             let mut lowered = Vec::new();
             for stmt in &method.body {

@@ -52,7 +52,7 @@ impl Type {
             Self::Iterator(element) => unary("iterator", element),
             Self::Any => atom("any"),
             Self::Never => atom("never"),
-            Self::Union(members) => sequence("union", members),
+            Self::Union(members) => unordered_sequence("union", members),
             Self::Intersection(members) => sequence("intersection", members),
             Self::LiteralInt(value) => component("literal_int", &value.to_string()),
             Self::LiteralStr(value) => component("literal_str", value),
@@ -127,6 +127,20 @@ fn sequence(tag: &str, values: &[Type]) -> String {
     append(&mut key, &values.len().to_string());
     for value in values {
         append(&mut key, &value.union_identity_key());
+    }
+    key
+}
+
+fn unordered_sequence(tag: &str, values: &[Type]) -> String {
+    let mut identities = values
+        .iter()
+        .map(Type::union_identity_key)
+        .collect::<Vec<_>>();
+    identities.sort_unstable();
+    let mut key = component("sequence", tag);
+    append(&mut key, &identities.len().to_string());
+    for identity in identities {
+        append(&mut key, &identity);
     }
     key
 }
@@ -244,6 +258,10 @@ mod tests {
         assert_ne!(
             callable(vec![ParamConvention::own()]).union_variant_name(),
             callable(vec![ParamConvention::own(), ParamConvention::borrow()]).union_variant_name()
+        );
+        assert_eq!(
+            Type::Union(vec![Type::Int, Type::Str]).union_enum_name(),
+            Type::Union(vec![Type::Str, Type::Int]).union_enum_name()
         );
     }
 }

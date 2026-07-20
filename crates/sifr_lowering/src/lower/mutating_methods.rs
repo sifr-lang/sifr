@@ -38,6 +38,47 @@ fn mutation_receiver_root_name(expr: &HirExpr) -> Option<&str> {
     }
 }
 
+pub(in crate::lower) fn reject_immutable_method_mut_borrow_arguments(
+    ctx: &mut LowerCtx,
+    object_ty: &Type,
+    method: &str,
+    args: &[HirExpr],
+    arg_ranges: &[TextRange],
+) -> bool {
+    let methods = match object_ty.resolve_alias() {
+        Type::Class { methods, .. } | Type::Protocol { methods, .. } => methods,
+        _ => return false,
+    };
+    let Some((_, signature)) = methods.iter().find(|(name, _)| name == method) else {
+        return false;
+    };
+
+    let mut rejected = false;
+    for (index, (arg, (_, _, convention))) in args.iter().zip(&signature.params).enumerate() {
+        if !convention.is_mut_borrow() {
+            continue;
+        }
+        let Some(root_name) = mutation_receiver_root_name(arg) else {
+            continue;
+        };
+        let range = arg_ranges.get(index).copied().unwrap_or_default();
+        if ctx
+            .scope
+            .lookup(root_name)
+            .is_some_and(|info| info.is_parameter_binding() && !info.is_mutable_binding())
+        {
+            super::ownership_diagnostics::immutable_parameter_mutation(ctx, root_name, range);
+            rejected = true;
+            continue;
+        }
+        ctx.record_flow_effect(sifr_ir::FlowEffect::Borrow {
+            binding: root_name.to_string(),
+            mutable: true,
+        });
+    }
+    rejected
+}
+
 pub(in crate::lower) fn is_collection_mutating_method(object_ty: &Type, method: &str) -> bool {
     if let Type::Alias { body, .. } = object_ty {
         return is_collection_mutating_method(body, method);

@@ -19,22 +19,20 @@ Pass-25 remediation is complete, whole-diff review pass 26 is satisfied, and
 PR #2988 is merged. M10 Wave 3 evidence, demo, and documentation closure is
 implemented and locally validated; whole-diff review pass 6 is satisfied and
 the authoritative create-PR gate passes, and PR #2989 is merged. The complete
-merged M10 implementation is undergoing its required milestone review. Review
-pass 10 found source-name, external-path-root, and generated-union collision
-gaps; their remediation is implemented in PR #2990 and the repeated
-authoritative create-PR gate passes. Review passes 11 and 12 drove exact nominal
-identity through unions, conversions, inheritance, handlers, patterns,
-generics, operators, and merged stdlib declarations. Review pass 13 then found
-three remaining end-to-end gaps in imported-parent semantics, exact try-error
-carriers, and same-basename Rust bridge records. Review pass 14 found two final
-carrier codegen parity gaps for nested functions and ordinary unions sharing a
-carrier enum. Their remediation is complete and the authoritative create-PR
-gate passes every blocking lane. The first full merge validation then exposed
-two compiler-path and nominal-type traversal regressions in the M10 identity
-hardening plus a stale pre-LSP memory ceiling. Their root-cause remediation and
-the recalibrated LSP budget pass focused compiler/native coverage and the
-representative performance suite; the repeated full merge validation and a
-fresh Fable High full-diff review are pending. Typed
+merged M10 implementation is in final closure on PR #2990. Codex milestone
+passes 10 through 14 drove exact nominal identity through unions, conversions,
+inheritance, handlers, patterns, generics, operators, merged stdlib
+declarations, imported-parent semantics, exact try-error carriers,
+same-basename Rust bridge records, nested functions, and ordinary unions
+sharing carrier enums. Subsequent Fable High passes 2 through 7 found and
+closed the remaining error-carrier parity, PythonError identity, exact
+catch-all, borrowed-field mutation, nested parameter, and class-method
+mut-argument place gaps. Pass 8 was an invalid timer-only artifact and is not
+review evidence. Fresh Fable High pass 9 independently rechecked the complete
+candidate and returned **SATISFIED** with no blockers. The authoritative merge
+gate passes every blocking lane in `2685.23s`, including E2E `674/674`, Python
+interop `18/18`, diagnostics `175/175`, and `261` hardening variants with zero
+failures; the warm-time notice is non-blocking. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1587,8 +1585,35 @@ Delivery waves:
   branch at `1.391s` mean versus `1.563s` for unmodified `main`; a later
   representative run exceeded three absolute latency ceilings while concurrent
   macOS policy/trust services consumed substantial CPU, but retained the branch
-  improvement. A quiet-host full merge validation and a fresh Fable High
-  whole-diff review are pending before M10 closure.
+  improvement. Fable High milestone
+  [review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-2.md)
+  found declared union error channels and Python-error identity parity gaps;
+  [pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-3.md)
+  narrowed the remaining builtin carrier and alias collision cases;
+  [pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-4.md),
+  [pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-5.md),
+  and
+  [pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-6.md)
+  drove the borrowed-field mutation fix through direct, nested, class-method,
+  and field-argument shapes. Fable High
+  [pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-7.md)
+  verified all blockers closed and requested the authoritative merge gate plus
+  a separate issue for the pre-existing class-field mutating-receiver clone
+  defect. That defect and adjacent fail-closed parity gaps are tracked in
+  [`ad-hoc-class-field-mutating-receiver-place-semantics.md`](ad-hoc-class-field-mutating-receiver-place-semantics.md).
+  Pass 8 is retained as an explicitly invalid timer-only artifact and is not
+  treated as review evidence. Fresh Fable High
+  [pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-9.md)
+  independently inspected the complete candidate and adversarially probed the
+  mutation, identity, carrier, PythonError, and buffer surfaces, then returned
+  **SATISFIED** with no blocking findings. The authoritative merge gate passes
+  every blocking lane in `2685.23s`: E2E `674/674` with signature
+  `1f8b1cadc4f48ec8`, Python interop `18/18`, diagnostics `175/175`, codegen
+  `864/864`, lowering `784/784` plus one ignored test, driver `360/360` plus 33
+  ignored tests and generated builds `33/33`, file-size guardrails over `2720`
+  files, and `261` hardening variants with zero failures. Its warm-time budget
+  notice is a non-blocking advisory. PR #2990 is closure-ready; the checkbox
+  remains open until the PR is merged.
 
 Acceptance:
 

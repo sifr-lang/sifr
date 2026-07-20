@@ -1,7 +1,7 @@
 use super::{
     call_arity_range, callable_builtin_element_type, decimal_conversion_error_type,
     expression_diagnostics, first_call_keyword_range, float_sentinel_expr,
-    float_sentinel_kind_from_call, lower_abs_call, lower_anext_call,
+    float_sentinel_kind_from_call, is_poisoned_binding_expr, lower_abs_call, lower_anext_call,
     lower_bigdecimal_constructor_call, lower_bytes_constructor_call, lower_chr_call,
     lower_decimal_constructor_call, lower_dict_constructor_call, lower_enumerate_call, lower_expr,
     lower_isinstance_call, lower_len_call, lower_list_constructor_call, lower_ord_call,
@@ -201,6 +201,9 @@ pub(super) fn lower_unshadowed_builtin_call(
     if func_name == "str" {
         if call.arguments.args.len() == 1 {
             let arg = lower_expr(&call.arguments.args[0], ctx)?;
+            if is_poisoned_binding_expr(&arg, ctx) {
+                return None;
+            }
             if !supports_print_formatting(arg.ty()) {
                 expression_diagnostics::type_mismatch(
                     ctx,

@@ -12,6 +12,7 @@ use super::diagnostics::{
     collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
     is_error_class, is_protocol_class,
 };
+use super::parameter_conventions::class_method_param_convention;
 use super::protocol_diagnostics;
 use super::simple_expr::lower_expr_simple;
 use super::typing_and_functions::resolve_annotation_expr;
@@ -387,14 +388,19 @@ pub(in crate::lower) fn collect_class_type(
                         );
                         Type::Any
                     };
-                    params.push((param_name, param_ty));
+                    let convention =
+                        class_method_param_convention(param.parameter.convention, &param_ty, ctx);
+                    params.push((param_name, param_ty, convention));
                 }
                 let return_ty = if let Some(ref ret_ann) = func.returns {
                     resolve_annotation_expr(ret_ann, ctx)
                 } else {
                     Type::None
                 };
-                let ft = FunctionType::new(params, method_signature_return_type(func, return_ty));
+                let ft = FunctionType {
+                    params,
+                    return_type: Box::new(method_signature_return_type(func, return_ty)),
+                };
                 // Register method as ClassName.method_name for lookup
                 ctx.functions
                     .insert(format!("{class_name}.{method_name}"), ft.clone());
@@ -428,7 +434,9 @@ pub(in crate::lower) fn collect_class_type(
                         );
                         Type::Any
                     };
-                    params.push((param_name, param_ty));
+                    let convention =
+                        class_method_param_convention(param.parameter.convention, &param_ty, ctx);
+                    params.push((param_name, param_ty, convention));
                 }
                 let return_ty = if let Some(ref ret_ann) = func.returns {
                     resolve_annotation_expr(ret_ann, ctx)
@@ -437,7 +445,10 @@ pub(in crate::lower) fn collect_class_type(
                 };
                 methods.push((
                     method_name,
-                    FunctionType::new(params, method_signature_return_type(func, return_ty)),
+                    FunctionType {
+                        params,
+                        return_type: Box::new(method_signature_return_type(func, return_ty)),
+                    },
                 ));
             }
         }
@@ -642,7 +653,12 @@ pub(in crate::lower) fn collect_class_type(
                             Type::Any
                         };
                         method_locals.insert(param_name.clone(), param_ty.clone());
-                        params.push((param_name, param_ty));
+                        let convention = class_method_param_convention(
+                            param.parameter.convention,
+                            &param_ty,
+                            ctx,
+                        );
+                        params.push((param_name, param_ty, convention));
                     }
                     let return_ty = if let Some(ref ret_ann) = func.returns {
                         resolve_annotation_expr(ret_ann, ctx)
@@ -678,7 +694,10 @@ pub(in crate::lower) fn collect_class_type(
                     }
                     methods.push((
                         method_name,
-                        FunctionType::new(params, method_signature_return_type(func, return_ty)),
+                        FunctionType {
+                            params,
+                            return_type: Box::new(method_signature_return_type(func, return_ty)),
+                        },
                     ));
 
                     collect_constructor_self_field_assignments(

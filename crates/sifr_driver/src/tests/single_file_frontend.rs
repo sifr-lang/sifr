@@ -305,7 +305,7 @@ def view(own owner: Object) -> Result[python.Buffer[uint8], PythonError]: ...
 }
 
 #[test]
-fn test_callback_error_union_name_collision_fails_check_and_compile_consistently() {
+fn test_callback_error_union_same_basename_identities_compile_distinctly() {
     let source = r#"
 from typing import Callable
 from sifr.python import PythonError as CanonicalError
@@ -320,7 +320,13 @@ def compute(
     handler: Callable[[int], int],
 ) -> Result[int, CanonicalError | PythonError]: ...
 "#;
-    assert_check_compile_error_parity(source, DiagnosticCode::PYCB_INVALID_DECLARATION);
+    assert!(type_check_source(source).is_empty());
+    let CompileResult::Success { rust_source } = compile(source) else {
+        panic!("same-basename callback errors should compile with distinct Rust identities");
+    };
+    let canonical = sifr_type_system::stdlib_class_rust_name("_sifr.python", "PythonError");
+    assert!(rust_source.contains(&format!("struct {canonical}")));
+    assert!(rust_source.contains("struct PythonError"));
 }
 
 #[test]
@@ -697,6 +703,50 @@ def main():
             panic!("compilation failed: {:?}", errors);
         }
     }
+}
+
+const SOURCE_PYTHON_ERROR_CONTRACT: &str = r#"
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+"#;
+
+#[test]
+fn test_source_python_error_contract_without_interop_has_no_runtime_bridge() {
+    let source =
+        format!("{SOURCE_PYTHON_ERROR_CONTRACT}\n\ndef main() -> None:\n    assert True\n");
+    let CompileResultFull::Success {
+        rust_source,
+        required_features,
+        ..
+    } = compile_with_metadata(&source)
+    else {
+        panic!("source PythonError contract should compile");
+    };
+
+    assert!(!rust_source.contains("__sifr_python_error"));
+    assert!(!required_features.contains(&sifr_stdlib_manifest::StdlibFeature::PythonRuntime));
+}
+
+#[test]
+fn test_source_python_error_contract_with_interop_gets_runtime_bridge() {
+    let source = format!(
+        "{SOURCE_PYTHON_ERROR_CONTRACT}\n\n@python(pkg.compute)\ndef compute(value: int) -> Result[int, PythonError]: ...\n"
+    );
+    let CompileResultFull::Success {
+        rust_source,
+        required_features,
+        ..
+    } = compile_with_metadata(&source)
+    else {
+        panic!("Python declaration should compile");
+    };
+
+    assert!(rust_source.contains("__sifr_python_error"));
+    assert!(required_features.contains(&sifr_stdlib_manifest::StdlibFeature::PythonRuntime));
 }
 
 #[test]

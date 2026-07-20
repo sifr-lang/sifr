@@ -3,6 +3,7 @@
 mod definitions;
 pub use definitions::*;
 mod display_impl;
+mod error_contracts;
 mod python_interop;
 mod rust_trait_capabilities;
 mod source_names;

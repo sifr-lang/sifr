@@ -45,6 +45,88 @@ fn collect_mutated_vars_marks_mutborrow_call_argument() {
 }
 
 #[test]
+fn collect_mutated_vars_marks_method_mutborrow_argument() {
+    let crate_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "Crate".to_string(),
+        fields: vec![],
+        methods: vec![],
+        parent_class: None,
+    };
+    let stmts = vec![HirStmt::Expr {
+        expr: HirExpr::MethodCall {
+            object: Box::new(HirExpr::Name {
+                name: "receiver".to_string(),
+                ty: crate_ty.clone(),
+            }),
+            method: "merge".to_string(),
+            args: vec![HirExpr::Name {
+                name: "other".to_string(),
+                ty: crate_ty.clone(),
+            }],
+            ty: Type::None,
+        },
+    }];
+    let mut sigs: ModuleFuncSignatures = HashMap::new();
+    sigs.insert(
+        "Crate::merge".to_string(),
+        (vec![(crate_ty, ParamConvention::mut_borrow())], Type::None),
+    );
+
+    let mutated = collect_mutated_vars(&stmts, Some(&sigs));
+
+    assert!(mutated.contains("other"));
+}
+
+#[test]
+fn collect_mutated_vars_marks_method_mutborrow_field_argument_root() {
+    let crate_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "Crate".to_string(),
+        fields: vec![],
+        methods: vec![],
+        parent_class: None,
+    };
+    let depot_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "Depot".to_string(),
+        fields: vec![("stock".to_string(), crate_ty.clone())],
+        methods: vec![],
+        parent_class: None,
+    };
+    let stmts = vec![HirStmt::Expr {
+        expr: HirExpr::MethodCall {
+            object: Box::new(HirExpr::Name {
+                name: "receiver".to_string(),
+                ty: crate_ty.clone(),
+            }),
+            method: "merge".to_string(),
+            args: vec![HirExpr::FieldAccess {
+                object: Box::new(HirExpr::Name {
+                    name: "depot".to_string(),
+                    ty: depot_ty,
+                }),
+                field: "stock".to_string(),
+                ty: crate_ty.clone(),
+            }],
+            ty: Type::None,
+        },
+    }];
+    let mut sigs: ModuleFuncSignatures = HashMap::new();
+    sigs.insert(
+        "Crate::merge".to_string(),
+        (vec![(crate_ty, ParamConvention::mut_borrow())], Type::None),
+    );
+
+    let mutated = collect_mutated_vars(&stmts, Some(&sigs));
+
+    assert!(mutated.contains("depot"));
+}
+
+#[test]
 fn collect_mutated_vars_marks_local_nested_function_mutborrow_call_argument() {
     let nested = HirFunction {
         name: "touch_local".to_string(),

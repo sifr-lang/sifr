@@ -157,7 +157,29 @@ impl RustEmitter {
                     self.pending_self_field_clone_suppression -= 1;
                 }
                 let effective_object_ty = self.effective_method_object_ty(object);
-                let mut arg_exprs = self.try_lower_registry_exprs_strict(args)?;
+                let method_params =
+                    self.resolve_registry_method_params(&effective_object_ty, method);
+                let mut arg_exprs = Vec::with_capacity(args.len());
+                for (idx, arg) in args.iter().enumerate() {
+                    let convention = method_params
+                        .as_ref()
+                        .and_then(|params| params.get(idx))
+                        .map_or(
+                            sifr_type_system::ParamConvention::default(),
+                            |(_, convention)| *convention,
+                        );
+                    let suppress =
+                        self.method_mut_arg_needs_field_clone_suppression(arg, convention);
+                    let suppression_prev = self.pending_self_field_clone_suppression;
+                    if suppress {
+                        self.pending_self_field_clone_suppression += 1;
+                    }
+                    let lowered = self.try_lower_registry_expr_strict(arg);
+                    if suppress && self.pending_self_field_clone_suppression > suppression_prev {
+                        self.pending_self_field_clone_suppression -= 1;
+                    }
+                    arg_exprs.push(lowered?);
+                }
                 if let Type::List(element_ty) =
                     crate::resolve_alias_type_for_plain_call(&effective_object_ty)
                 {
@@ -230,9 +252,7 @@ impl RustEmitter {
                         lowered.expr,
                     ));
                 }
-                if let Some(method_params) =
-                    self.resolve_registry_method_params(&effective_object_ty, method)
-                {
+                if let Some(method_params) = method_params {
                     for (idx, arg_expr) in arg_exprs.iter_mut().enumerate() {
                         if let (Some((param_ty, convention)), Some(arg)) =
                             (method_params.get(idx), args.get(idx))

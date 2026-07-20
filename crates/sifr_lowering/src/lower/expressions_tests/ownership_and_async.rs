@@ -38,6 +38,29 @@ pub(super) fn test_poisoned_initializer_binding_suppresses_followup_unary_cascad
 }
 
 #[test]
+pub(super) fn test_poisoned_initializer_binding_suppresses_formatting_cascades() {
+    for use_site in [
+        "print(value)",
+        "text: str = str(value)",
+        "text: str = f\"{value}\"",
+        "total: int = value + 1",
+        "total = value + 1",
+    ] {
+        let source = format!("def main():\n    value: MissingType[int] = 42\n    {use_site}\n");
+        let errors = lower_source(&source).expect_err("unknown annotation should be rejected");
+        assert_eq!(
+            errors.len(),
+            1,
+            "poisoned binding should not trigger a formatting cascade at {use_site}: {errors:?}"
+        );
+        assert!(
+            errors[0].message.contains("unknown type"),
+            "the originating annotation error should be preserved: {errors:?}"
+        );
+    }
+}
+
+#[test]
 pub(super) fn test_use_after_move() {
     let source = "def consume(own s: str) -> str:\n    return s\ndef main():\n    s: str = \"hello\"\n    x: str = consume(s)\n    print(s)\n";
     let result = lower_source(source);

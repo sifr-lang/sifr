@@ -30,14 +30,20 @@ pub(crate) fn try_error_carrier(
     let mut types = body_error_types.to_vec();
     if let Some(catch_all) = handlers
         .iter()
-        .find(|handler| {
-            handler.error_type.is_none() || handler.error_type.as_deref() == Some("Error")
-        })
+        .find(|handler| handler_is_catch_all(handler))
         .and_then(|handler| handler.error_resolved_type.clone())
     {
         types.push(catch_all);
     }
     exact_try_error_carrier(&types)
+}
+
+pub(crate) fn handler_is_catch_all(handler: &HirExceptHandler) -> bool {
+    handler.error_type.is_none()
+        || handler
+            .error_resolved_type
+            .as_ref()
+            .is_some_and(Type::is_builtin_error_base)
 }
 
 #[cfg(test)]
@@ -86,7 +92,17 @@ mod tests {
     #[test]
     fn catch_all_fallback_keeps_exact_error_variant() {
         let exact = error("sifr.tomllib.TOMLDecodeError");
-        let fallback = error("builtins.Error");
+        let mut fallback = error("builtins.Error");
+        let Type::Class {
+            identity,
+            parent_class,
+            ..
+        } = &mut fallback
+        else {
+            unreachable!();
+        };
+        *identity = None;
+        *parent_class = None;
         let handlers = vec![HirExceptHandler {
             error_type: Some("Error".to_string()),
             error_resolved_type: Some(fallback),
@@ -99,5 +115,17 @@ mod tests {
             panic!("exact and fallback errors should remain distinct");
         };
         assert_eq!(members.len(), 2);
+    }
+
+    #[test]
+    fn same_basename_import_is_not_a_catch_all() {
+        let handler = HirExceptHandler {
+            error_type: Some("Error".to_string()),
+            error_resolved_type: Some(error("sifr.csv.Error")),
+            name: None,
+            body: Vec::new(),
+        };
+
+        assert!(!handler_is_catch_all(&handler));
     }
 }

@@ -64,3 +64,18 @@ mod patterns_and_assignments;
 pub(in crate::lower) use patterns_and_assignments::*;
 mod control_flow;
 pub(in crate::lower) use control_flow::*;
+
+fn record_try_error_types(ctx: &mut LowerCtx, error_type: &Type) {
+    match error_type.resolve_alias() {
+        Type::Class { .. } => {
+            ctx.try_block_error_types
+                .insert(error_type.resolve_alias().clone());
+        }
+        Type::Union(members) => {
+            for member in members {
+                record_try_error_types(ctx, member);
+            }
+        }
+        _ => {}
+    }
+}

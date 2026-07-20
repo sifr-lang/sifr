@@ -1,4 +1,4 @@
-use super::expressions::lower_expr;
+use super::expressions::{is_poisoned_binding_expr, lower_expr};
 use super::type_bounds::supports_print_formatting;
 use super::LowerCtx;
 use crate::hir_nodes::{HirExpr, HirFStringPart};
@@ -26,6 +26,9 @@ pub(in crate::lower) fn lower_fstring_expr(
                         }
                         InterpolatedStringElement::Interpolation(expr_elem) => {
                             let expr = lower_expr(&expr_elem.expression, ctx)?;
+                            if is_poisoned_binding_expr(&expr, ctx) {
+                                return None;
+                            }
                             if !supports_print_formatting(expr.ty())
                                 && super::python_interop::python_context_borrow_reference(
                                     &expr, ctx,

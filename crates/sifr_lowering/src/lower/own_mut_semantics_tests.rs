@@ -2,6 +2,7 @@ use crate::{lower_module, HirDiagnostic, HirModule};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
+use sifr_type_system::ParamConvention;
 
 fn lower_source(source: &str) -> Result<HirModule, Vec<HirDiagnostic>> {
     let parsed = parse_module(source).expect("parse failed");
@@ -126,4 +127,70 @@ fn test_borrowed_parameter_cannot_be_tuple_reassigned_without_mut() {
             && error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_REASSIGNMENT)
             && error.primary_range == Some(range_for_after(source, "    items, other", "items"))
     }));
+}
+
+#[test]
+fn test_class_method_mut_parameter_retains_mut_borrow_convention() {
+    let module = lower_source(
+        "class Crate:\n    items: list[int]\n\n    def merge(self, mut other: Crate) -> None:\n        other.items.append(1)\n",
+    )
+    .expect("mutable class method parameter should lower");
+    let merge = module.classes[0]
+        .methods
+        .iter()
+        .find(|method| method.name == "merge")
+        .expect("merge method");
+
+    assert_eq!(merge.params[0].convention, ParamConvention::mut_borrow());
+}
+
+#[test]
+fn test_class_method_immutable_parameter_rejects_mutating_method() {
+    let source = "class Crate:\n    items: list[int]\n\n    def merge(self, other: Crate) -> None:\n        other.items.append(1)\n";
+    let errors = lower_errors(source);
+
+    assert!(
+        errors.iter().any(|error| {
+            error.message
+                == "cannot mutate through immutable parameter `other`: add `mut` to the parameter declaration"
+                && error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION)
+                && error.primary_range
+                    == Some(range_for_after(source, "        other.items", "other.items"))
+        }),
+        "unexpected diagnostics: {errors:#?}"
+    );
+}
+
+#[test]
+fn test_immutable_parameter_rejects_class_method_mut_borrow_argument() {
+    let source = "class Crate:\n    items: list[int]\n\n    def merge(self, mut other: Crate) -> None:\n        other.items.append(1)\n\ndef relay(other: Crate, receiver: Crate) -> None:\n    receiver.merge(other)\n";
+    let errors = lower_errors(source);
+
+    assert!(
+        errors.iter().any(|error| {
+            error.message
+                == "cannot mutate through immutable parameter `other`: add `mut` to the parameter declaration"
+                && error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION)
+                && error.primary_range
+                    == Some(range_for_after(source, "    receiver.merge(", "other"))
+        }),
+        "unexpected diagnostics: {errors:#?}"
+    );
+}
+
+#[test]
+fn test_immutable_parameter_field_rejects_class_method_mut_borrow_argument() {
+    let source = "class Crate:\n    items: list[int]\n\n    def merge(self, mut other: Crate) -> None:\n        other.items.append(1)\n\nclass Depot:\n    stock: Crate\n\ndef relay(depot: Depot, receiver: Crate) -> None:\n    receiver.merge(depot.stock)\n";
+    let errors = lower_errors(source);
+
+    assert!(
+        errors.iter().any(|error| {
+            error.message
+                == "cannot mutate through immutable parameter `depot`: add `mut` to the parameter declaration"
+                && error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION)
+                && error.primary_range
+                    == Some(range_for_after(source, "    receiver.merge(", "depot.stock"))
+        }),
+        "unexpected diagnostics: {errors:#?}"
+    );
 }
