@@ -18,6 +18,7 @@ pub(crate) struct IrCollectionImportNeeds {
 pub(crate) struct IrRuntimeImportNeeds {
     pub(crate) needs_mutex: bool,
     pub(crate) needs_sifr_int: bool,
+    pub(crate) needs_sifr_runtime: bool,
     pub(crate) numeric: IrNumericImportNeeds,
 }
 
@@ -402,8 +403,11 @@ struct SynImportNeedsCollector<'a> {
 
 impl Visit<'_> for SynImportNeedsCollector<'_> {
     fn visit_path(&mut self, path: &syn::Path) {
-        if path.leading_colon.is_none() {
-            if let Some(first) = path.segments.first() {
+        if let Some(first) = path.segments.first() {
+            if first.ident == "sifr_runtime" {
+                self.needs.runtime.needs_sifr_runtime = true;
+            }
+            if path.leading_colon.is_none() {
                 mark_symbol(&first.ident.to_string(), self.needs);
             }
         }
@@ -429,6 +433,9 @@ fn scan_named_text(text: &str, needs: &mut IrImportNeeds) {
             }
             let ident = &text[start..i];
             let is_qualified = start >= 2 && &text[start - 2..start] == "::";
+            if ident == "sifr_runtime" {
+                needs.runtime.needs_sifr_runtime = true;
+            }
             if !is_qualified {
                 mark_symbol(ident, needs);
             }
@@ -444,8 +451,11 @@ fn mark_symbol(symbol: &str, needs: &mut IrImportNeeds) {
         "HashSet" => needs.collections.needs_hashset = true,
         "VecDeque" => needs.collections.needs_vecdeque = true,
         "Mutex" => needs.runtime.needs_mutex = true,
-        "SifrInt" => needs.runtime.needs_sifr_int = true,
-        "sifr_runtime" => needs.runtime.needs_sifr_int = true,
+        "SifrInt" => {
+            needs.runtime.needs_sifr_int = true;
+            needs.runtime.needs_sifr_runtime = true;
+        }
+        "sifr_runtime" => needs.runtime.needs_sifr_runtime = true,
         "BigInt" => needs.runtime.numeric.needs_bigint = true,
         "Decimal" => needs.runtime.numeric.needs_decimal = true,
         "BigDecimal" => needs.runtime.numeric.needs_bigdecimal = true,
@@ -563,5 +573,16 @@ mod tests {
         let needs = collect_import_needs_from_items(&items);
 
         assert!(needs.runtime.needs_sifr_int);
+        assert!(needs.runtime.needs_sifr_runtime);
+    }
+
+    #[test]
+    fn absolute_runtime_paths_require_the_crate_without_an_unqualified_import() {
+        let needs = collect_import_needs_from_source(
+            "fn bridge(n: i64) { ::sifr_runtime::interop::SifrIntBridge::from(n); }",
+        );
+
+        assert!(!needs.runtime.needs_sifr_int);
+        assert!(needs.runtime.needs_sifr_runtime);
     }
 }

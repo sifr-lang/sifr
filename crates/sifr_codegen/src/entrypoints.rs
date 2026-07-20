@@ -188,7 +188,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
             if import_needs.runtime.numeric.needs_bigdecimal {
                 features.insert(sifr_stdlib_manifest::StdlibFeature::BigDecimal);
             }
-            if import_needs.runtime.needs_sifr_int {
+            if import_needs.runtime.needs_sifr_runtime {
                 features.insert(sifr_stdlib_manifest::StdlibFeature::SifrRuntime);
             }
             if uses_task_sleep {

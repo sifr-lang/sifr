@@ -5,70 +5,105 @@ impl Renderer {
     /// Make compiler-owned external paths crate-absolute without rewriting
     /// string/character data or comments embedded in structured raw fragments.
     pub(crate) fn render_compiler_path_string(value: &str) -> String {
+        if !value.contains("::") {
+            return value.to_string();
+        }
+
         let bytes = value.as_bytes();
-        let mut rendered = String::with_capacity(value.len() + 2);
+        let mut rendered = None;
+        let mut copied = 0;
         let mut index = 0;
         while index < bytes.len() {
             if let Some(end) = protected_region_end(value, index) {
-                rendered.push_str(&value[index..end]);
                 index = end;
                 continue;
             }
 
-            let matched = COMPILER_RUST_PATH_ROOTS.iter().find(|root| {
-                let root_bytes = root.as_bytes();
-                let end = index + root_bytes.len();
-                end + 1 < bytes.len()
-                    && &bytes[index..end] == root_bytes
-                    && bytes[end] == b':'
-                    && bytes[end + 1] == b':'
-                    && (index == 0
-                        || (!bytes[index - 1].is_ascii_alphanumeric()
-                            && bytes[index - 1] != b'_'
-                            && bytes[index - 1] != b':'))
-            });
-            if let Some(root) = matched {
-                rendered.push_str("::");
-                rendered.push_str(root);
-                index += root.len();
-            } else {
-                let Some(next) = value[index..].chars().next() else {
-                    break;
-                };
-                rendered.push(next);
-                index += next.len_utf8();
+            if is_identifier_start(bytes, index) {
+                let end = identifier_end(bytes, index);
+                if bytes.get(end..end + 2) == Some(b"::")
+                    && COMPILER_RUST_PATH_ROOTS.contains(&&value[index..end])
+                {
+                    let output =
+                        rendered.get_or_insert_with(|| String::with_capacity(value.len() + 2));
+                    output.push_str(&value[copied..index]);
+                    output.push_str("::");
+                    copied = index;
+                }
+                index = end;
+                continue;
             }
+            index += 1;
         }
-        rendered
+
+        rendered.map_or_else(
+            || value.to_string(),
+            |mut output| {
+                output.push_str(&value[copied..]);
+                output
+            },
+        )
     }
 
     pub(crate) fn render_path_parts(parts: &[String]) -> String {
-        Self::render_compiler_path_string(&parts.join("::"))
+        let joined = parts.join("::");
+        if parts
+            .first()
+            .is_some_and(|root| COMPILER_RUST_PATH_ROOTS.contains(&root.as_str()))
+        {
+            format!("::{joined}")
+        } else {
+            Self::render_compiler_path_string(&joined)
+        }
     }
+
+    pub(crate) fn render_identifier_or_compiler_path(value: &str) -> String {
+        if value.contains("::") {
+            Self::render_compiler_path_string(&Self::render_identifier(value))
+        } else {
+            Self::render_identifier(value)
+        }
+    }
+}
+
+fn is_identifier_start(bytes: &[u8], start: usize) -> bool {
+    bytes
+        .get(start)
+        .is_some_and(|byte| byte.is_ascii_alphabetic() || *byte == b'_')
+        && (start == 0
+            || (!bytes[start - 1].is_ascii_alphanumeric()
+                && bytes[start - 1] != b'_'
+                && bytes[start - 1] != b':'))
+}
+
+fn identifier_end(bytes: &[u8], start: usize) -> usize {
+    let mut end = start;
+    while bytes
+        .get(end)
+        .is_some_and(|byte| byte.is_ascii_alphanumeric() || *byte == b'_')
+    {
+        end += 1;
+    }
+    end
 }
 
 fn protected_region_end(value: &str, index: usize) -> Option<usize> {
     let bytes = value.as_bytes();
-    if bytes[index..].starts_with(b"//") {
-        return Some(
+    match bytes[index] {
+        b'/' if bytes.get(index + 1) == Some(&b'/') => Some(
             value[index..]
                 .find('\n')
                 .map_or(bytes.len(), |offset| index + offset),
-        );
+        ),
+        b'/' if bytes.get(index + 1) == Some(&b'*') => Some(block_comment_end(bytes, index)),
+        b'r' => raw_string_end(bytes, index),
+        b'b' => raw_string_end(bytes, index).or_else(|| {
+            (bytes.get(index + 1) == Some(&b'"')).then(|| quoted_end(bytes, index + 1, b'"'))
+        }),
+        b'"' => Some(quoted_end(bytes, index, b'"')),
+        b'\'' => char_literal_end(value, index),
+        _ => None,
     }
-    if bytes[index..].starts_with(b"/*") {
-        return Some(block_comment_end(bytes, index));
-    }
-    if let Some(end) = raw_string_end(bytes, index) {
-        return Some(end);
-    }
-    if bytes[index] == b'"' {
-        return Some(quoted_end(bytes, index, b'"'));
-    }
-    if bytes[index] == b'b' && bytes.get(index + 1) == Some(&b'"') {
-        return Some(quoted_end(bytes, index + 1, b'"'));
-    }
-    char_literal_end(value, index)
 }
 
 fn block_comment_end(bytes: &[u8], start: usize) -> usize {

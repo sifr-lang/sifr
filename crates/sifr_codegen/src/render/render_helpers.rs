@@ -359,6 +359,18 @@ mod tests {
             ),
             "/* std::comment */ ::tokio::spawn // rayon::comment\n::rayon::join"
         );
+        assert_eq!(
+            Renderer::render_compiler_path_string(
+                "not_std::value std::value ::std::value xstd::value"
+            ),
+            "not_std::value ::std::value ::std::value xstd::value"
+        );
+        assert_eq!(
+            Renderer::render_compiler_path_string(
+                r####"r###"std::raw"### b"tokio::bytes" 's' /* core::nested /* serde::nested */ */ core::value"####
+            ),
+            r####"r###"std::raw"### b"tokio::bytes" 's' /* core::nested /* serde::nested */ */ ::core::value"####
+        );
     }
 
     #[test]

@@ -29,8 +29,12 @@ three remaining end-to-end gaps in imported-parent semantics, exact try-error
 carriers, and same-basename Rust bridge records. Review pass 14 found two final
 carrier codegen parity gaps for nested functions and ordinary unions sharing a
 carrier enum. Their remediation is complete and the authoritative create-PR
-gate passes every blocking lane; full merge validation and a fresh full-diff
-re-review are pending. Typed
+gate passes every blocking lane. The first full merge validation then exposed
+two compiler-path and nominal-type traversal regressions in the M10 identity
+hardening plus a stale pre-LSP memory ceiling. Their root-cause remediation and
+the recalibrated LSP budget pass focused compiler/native coverage and the
+representative performance suite; the repeated full merge validation and a
+fresh Fable High full-diff review are pending. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1554,8 +1558,37 @@ Delivery waves:
   `612.79s`: Python interop `12/12`, runtime platform `28` variants with one
   capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `41/42` cache hits. Its warm wall-time notice is a
-  non-blocking advisory. Full merge validation and a fresh whole-diff review
-  are pending before M10 closure.
+  non-blocking advisory. The first full merge validation passed every
+  functional lane but exposed approximately 20% extra frontend work from
+  scanning every rendered byte against every compiler path root and cloning
+  every visited HIR type during stdlib nominal canonicalization. Token-boundary
+  root recognition is now a span-based lexical scan of identifiers, allocates
+  only when a rewrite is required, and leaves protected Rust strings and
+  comments untouched; identifier-only rendering avoids the scan entirely.
+  Stdlib HIR types are canonicalized in place with an empty-class fast path.
+  The representative performance matrix passes `8/8` after instruction
+  count returned from approximately `15.0B` to `12.6B` for the arithmetic
+  check. The same run measured current LSP RSS at `72,187,904` bytes, while
+  unmodified `main` measured `70,451,200` bytes against the stale `64 MiB`
+  ceiling; all LSP query ceilings are therefore recalibrated to `80 MiB`, still
+  below the checked-in baseline policy's documented `baseline + 32 MiB`
+  headroom for the aggregate case. Type-system `113/113`, IR `3/3`, lowering
+  `779/779` plus one ignored test, codegen `856/856`, driver `358/358` plus 32
+  ignored tests, and the native nominal-identity fixture pass. The next full
+  gate exposed one downstream test-runner manifest gap: absolute runtime bridge
+  paths in filtered private-stdlib source no longer requested the direct
+  `sifr_runtime` crate because import collection intentionally ignored absolute
+  paths. Runtime-crate dependency need is now tracked separately from the need
+  for an unqualified `SifrInt` import. Focused collector and multi-module
+  metadata regressions pass, and the exact failing `sifr test
+  demos/mode_consistency` command builds and runs successfully. Clippy, format,
+  HIR/driver maintainability, and the `2705`-file size guardrail pass. A
+  ten-run debug-binary A/B under identical package discovery measures this M10
+  branch at `1.391s` mean versus `1.563s` for unmodified `main`; a later
+  representative run exceeded three absolute latency ceilings while concurrent
+  macOS policy/trust services consumed substantial CPU, but retained the branch
+  improvement. A quiet-host full merge validation and a fresh Fable High
+  whole-diff review are pending before M10 closure.
 
 Acceptance:
 

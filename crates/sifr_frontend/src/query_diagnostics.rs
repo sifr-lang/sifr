@@ -299,7 +299,7 @@ pub fn collect_module_exports(
             };
             fn_exports.insert(
                 func.name.clone(),
-                canonicalize_user_export_function_type(&function_type, module_name, &local_classes),
+                canonicalize_user_export_function_type(&function_type, &local_classes),
             );
             if let Some(vararg_index) = lowering_result.function_varargs.get(&func.name) {
                 vararg_exports.insert(func.name.clone(), *vararg_index);
@@ -371,7 +371,6 @@ pub fn collect_module_exports(
                         &imported_ancestry,
                     ),
                 },
-                module_name,
                 &local_classes,
             );
             class_exports.insert(class.name.clone(), class_ty);
@@ -385,7 +384,7 @@ pub fn collect_module_exports(
         if !name.starts_with('_') {
             const_exports.insert(
                 name.clone(),
-                canonicalize_user_export_type(ty, module_name, &local_classes),
+                canonicalize_user_export_type(ty, &local_classes),
             );
             if let Some(value) = lowering_result.constant_integer_values.get(name) {
                 const_integer_value_exports.insert(name.clone(), value.clone());

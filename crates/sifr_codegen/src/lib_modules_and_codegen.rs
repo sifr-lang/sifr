@@ -639,6 +639,8 @@ pub fn generate_rust_with_stdlib_for_module(
         || stdlib_import_needs.runtime.numeric.needs_bigdecimal;
     let needs_sifr_int =
         body_import_needs.runtime.needs_sifr_int || stdlib_import_needs.runtime.needs_sifr_int;
+    let needs_sifr_runtime = body_import_needs.runtime.needs_sifr_runtime
+        || stdlib_import_needs.runtime.needs_sifr_runtime;
     let needs_mutex = needs_file_handles
         || body_import_needs.runtime.needs_mutex
         || stdlib_import_needs.runtime.needs_mutex;
@@ -769,7 +771,7 @@ pub fn generate_rust_with_stdlib_for_module(
             if needs_bigdecimal {
                 features.insert(StdlibFeature::BigDecimal);
             }
-            if needs_sifr_int {
+            if needs_sifr_runtime {
                 features.insert(StdlibFeature::SifrRuntime);
             }
             if has_async_main_entrypoint

@@ -8,7 +8,7 @@ use sifr_type_system::Type;
 /// signatures while stale local views remain in code-generation HIR.
 pub fn transform_hir_function_types<F>(function: &mut HirFunction, transform: &mut F)
 where
-    F: FnMut(&Type) -> Type,
+    F: FnMut(&mut Type),
 {
     for param in &mut function.params {
         transform_type(&mut param.ty, transform);
@@ -22,14 +22,14 @@ where
 
 fn transform_type<F>(ty: &mut Type, transform: &mut F)
 where
-    F: FnMut(&Type) -> Type,
+    F: FnMut(&mut Type),
 {
-    *ty = transform(ty);
+    transform(ty);
 }
 
 fn transform_expr<F>(expr: &mut HirExpr, transform: &mut F)
 where
-    F: FnMut(&Type) -> Type,
+    F: FnMut(&mut Type),
 {
     match expr {
         HirExpr::Name { ty, .. } | HirExpr::EnumVariant { ty, .. } => {
@@ -255,7 +255,7 @@ where
 
 fn transform_exprs<F>(expressions: &mut [HirExpr], transform: &mut F)
 where
-    F: FnMut(&Type) -> Type,
+    F: FnMut(&mut Type),
 {
     for expression in expressions {
         transform_expr(expression, transform);
@@ -264,7 +264,7 @@ where
 
 fn transform_generators<F>(generators: &mut [(String, HirExpr, Option<HirExpr>)], transform: &mut F)
 where
-    F: FnMut(&Type) -> Type,
+    F: FnMut(&mut Type),
 {
     for (_, iter, filter) in generators {
         transform_expr(iter, transform);
@@ -276,7 +276,7 @@ where
 
 fn transform_stmts<F>(statements: &mut [HirStmt], transform: &mut F)
 where
-    F: FnMut(&Type) -> Type,
+    F: FnMut(&mut Type),
 {
     for statement in statements {
         transform_stmt(statement, transform);
@@ -286,7 +286,7 @@ where
 #[allow(clippy::too_many_lines)]
 fn transform_stmt<F>(statement: &mut HirStmt, transform: &mut F)
 where
-    F: FnMut(&Type) -> Type,
+    F: FnMut(&mut Type),
 {
     match statement {
         HirStmt::Let { ty, value, .. } => {
@@ -522,7 +522,7 @@ where
 
 fn transform_async_with_kind<F>(kind: &mut HirAsyncWithKind, transform: &mut F)
 where
-    F: FnMut(&Type) -> Type,
+    F: FnMut(&mut Type),
 {
     match kind {
         HirAsyncWithKind::TaskScope => {}
@@ -562,7 +562,7 @@ where
 
 fn transform_pattern<F>(pattern: &mut HirPattern, transform: &mut F)
 where
-    F: FnMut(&Type) -> Type,
+    F: FnMut(&mut Type),
 {
     match pattern {
         HirPattern::Capture { ty, .. } => transform_type(ty, transform),

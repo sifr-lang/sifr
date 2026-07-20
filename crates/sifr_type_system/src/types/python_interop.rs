@@ -197,7 +197,7 @@ mod tests {
         let source_internal = handle("__SifrIoFileHandle", "local.__SifrIoFileHandle");
         assert_eq!(
             source_internal.rust_type(),
-            "__SifrSource_5f5f53696672496f46696c6548616e646c65"
+            crate::source_class_rust_name("__SifrIoFileHandle")
         );
         assert_ne!(
             source_internal.rust_type(),

@@ -329,7 +329,10 @@ mod tests {
 
         assert_eq!(
             render_expr(&mapped),
-            "__SifrSource_5f5f536966724272696467654572726f72 { message: __sifr_bridge_error.to_string() }"
+            format!(
+                "{} {{ message: __sifr_bridge_error.to_string() }}",
+                declared.rust_type()
+            )
         );
     }
 }

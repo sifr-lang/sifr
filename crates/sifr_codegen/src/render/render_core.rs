@@ -196,8 +196,7 @@ impl Renderer {
                         .join(", ");
                     format!("<{params}>")
                 };
-                let rendered_target =
-                    Self::render_compiler_path_string(&Self::render_identifier(target));
+                let rendered_target = Self::render_identifier_or_compiler_path(target);
                 let head = if let Some(trait_name) = trait_ {
                     format!(
                         "impl{generics} {} for {rendered_target} {{",

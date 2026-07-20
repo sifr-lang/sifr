@@ -1,5 +1,3 @@
-use std::fmt::Write as _;
-
 /// External crate roots reserved by compiler-generated Rust paths.
 pub const COMPILER_RUST_PATH_ROOTS: &[&str] = &[
     "alloc",
@@ -54,11 +52,7 @@ pub fn source_class_rust_name(name: &str) -> String {
     if !name.starts_with("__Sifr") && !COMPILER_RUST_PATH_ROOTS.contains(&name) {
         return name.to_string();
     }
-    let mut escaped = String::from("__SifrSource_");
-    for byte in name.as_bytes() {
-        let _ = write!(escaped, "{byte:02x}");
-    }
-    escaped
+    compiler_owned_identifier("__SifrSource_", name)
 }
 
 /// Return the Rust identifier for a nominal class reference.
@@ -93,12 +87,26 @@ pub fn stdlib_class_rust_name(module: &str, name: &str) -> String {
     class_rust_name(Some(&identity), name)
 }
 
-fn compiler_owned_identifier(prefix: &str, identity: &str) -> String {
-    let mut escaped = String::from(prefix);
-    for byte in identity.as_bytes() {
-        let _ = write!(escaped, "{byte:02x}");
+pub(super) fn compiler_owned_identifier(prefix: &str, identity: &str) -> String {
+    let mut escaped = String::with_capacity(prefix.len() + identity.len());
+    escaped.push_str(prefix);
+    for byte in identity.bytes() {
+        if byte.is_ascii_alphanumeric() {
+            escaped.push(char::from(byte));
+        } else if byte == b'_' {
+            escaped.push_str("__");
+        } else {
+            escaped.push_str("_x");
+            push_hex_byte(&mut escaped, byte);
+        }
     }
     escaped
+}
+
+fn push_hex_byte(target: &mut String, byte: u8) {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    target.push(char::from(HEX[usize::from(byte >> 4)]));
+    target.push(char::from(HEX[usize::from(byte & 0x0f)]));
 }
 
 #[cfg(test)]
@@ -108,10 +116,10 @@ mod tests {
     #[test]
     fn escapes_compiler_namespaces_injectively() {
         assert_eq!(source_class_rust_name("Regular"), "Regular");
-        assert_eq!(source_class_rust_name("std"), "__SifrSource_737464");
-        assert_eq!(source_class_rust_name("tokio"), "__SifrSource_746f6b696f");
+        assert_eq!(source_class_rust_name("std"), "__SifrSource_std");
+        assert_eq!(source_class_rust_name("tokio"), "__SifrSource_tokio");
         assert_ne!(
-            source_class_rust_name("__SifrSource_737464"),
+            source_class_rust_name("__SifrSource_std"),
             source_class_rust_name("std")
         );
     }

@@ -62,6 +62,55 @@ fn test_generate_rust_multi_with_metadata_infers_fs_feature_from_private_stdlib_
 }
 
 #[test]
+fn test_generate_rust_multi_requires_runtime_for_absolute_private_stdlib_bridge_paths() {
+    let main_module = HirModule {
+        functions: vec![HirFunction {
+            name: "main".to_string(),
+            params: vec![],
+            return_type: Type::None,
+            body: vec![],
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: vec![],
+            rust_interop: Vec::new(),
+            python_interop: Vec::new(),
+            compiler_intrinsic: None,
+            type_params: vec![],
+        }],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "sifr.math".to_string(),
+            names: vec!["isqrt".to_string()],
+            aliases: vec![],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+    let mut stdlib_code = StdlibCode::default();
+    stdlib_code.transitive_deps.insert(
+        "sifr.math".to_string(),
+        HashSet::from(["_sifr.math".to_string()]),
+    );
+    stdlib_code.module_rust_code.insert(
+        "_sifr.math".to_string(),
+        StdlibRustSource {
+            module: "_sifr.math".to_string(),
+            source_path: "stdlib/_sifr/math.sifr".to_string(),
+            source_sha256: "test".to_string(),
+            nominal_types: HashSet::new(),
+            rust: "fn isqrt(n: i64) -> i64 { ::sifr_runtime::interop::SifrIntBridge::from(n).to_i64_saturating() }\n".to_string(),
+        },
+    );
+
+    let result = generate_rust_multi_with_metadata(&[("main", &main_module)], &stdlib_code);
+
+    assert!(result
+        .required_features
+        .contains(&sifr_stdlib_manifest::StdlibFeature::SifrRuntime));
+}
+
+#[test]
 fn public_stdlib_reexport_uses_transitive_private_signature_for_call_borrowing() {
     let main_module = HirModule {
         functions: vec![HirFunction {

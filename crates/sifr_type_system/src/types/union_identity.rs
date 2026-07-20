@@ -1,5 +1,4 @@
 use super::{FunctionType, ParamConvention, Type};
-use std::fmt::Write as _;
 
 impl Type {
     /// Return the compiler-owned Rust enum name for a non-optional union.
@@ -105,7 +104,9 @@ fn component(tag: &str, value: &str) -> String {
 }
 
 fn append(target: &mut String, value: &str) {
-    let _ = write!(target, "{}:{value}", value.len());
+    target.push_str(&value.len().to_string());
+    target.push(':');
+    target.push_str(value);
 }
 
 fn unary(tag: &str, value: &Type) -> String {
@@ -202,12 +203,7 @@ fn convention_key(convention: ParamConvention) -> String {
 }
 
 fn compiler_identifier(prefix: &str, identity: &str) -> String {
-    let mut name = String::with_capacity(prefix.len() + identity.len() * 2);
-    name.push_str(prefix);
-    for byte in identity.bytes() {
-        let _ = write!(name, "{byte:02x}");
-    }
-    name
+    super::source_names::compiler_owned_identifier(prefix, identity)
 }
 
 #[cfg(test)]

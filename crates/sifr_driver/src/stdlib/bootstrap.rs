@@ -8,7 +8,8 @@ use sha2::{Digest, Sha256};
 use sifr_codegen::{StdlibCode, StdlibRustSource};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{
-    canonicalize_user_export_type, lower_module_sysroot_private_declaration_with_externals,
+    canonicalize_user_export_type, canonicalize_user_export_type_in_place,
+    lower_module_sysroot_private_declaration_with_externals,
     lower_module_sysroot_public_stdlib_with_externals, ExternalDefs, HirFunction, HirParam,
 };
 use sifr_stdlib_manifest::{
@@ -276,7 +277,6 @@ fn compile_stdlib_sources_with_sysroot(
                         methods,
                         parent_class: class.parent_class.clone(),
                     },
-                    module_name,
                     &local_classes,
                 );
                 class_exports.insert(class.name.clone(), class_ty);
@@ -570,12 +570,8 @@ fn lower_stdlib_source(
     }
 }
 
-fn canonical_stdlib_type(
-    ty: &Type,
-    module_name: &str,
-    local_classes: &HashMap<String, String>,
-) -> Type {
-    canonicalize_user_export_type(ty, module_name, local_classes)
+fn canonical_stdlib_type(ty: &Type, local_classes: &HashMap<String, String>) -> Type {
+    canonicalize_user_export_type(ty, local_classes)
 }
 
 fn canonicalize_stdlib_hir_signatures(
@@ -583,39 +579,41 @@ fn canonicalize_stdlib_hir_signatures(
     module_name: &str,
     local_classes: &HashMap<String, String>,
 ) {
+    if local_classes.is_empty() {
+        return;
+    }
     for function in &mut module.functions {
-        canonicalize_stdlib_hir_function(function, module_name, local_classes);
+        canonicalize_stdlib_hir_function(function, local_classes);
     }
     for class in &mut module.classes {
         class.identity = Some(format!("{module_name}.{}", class.name));
         for (_, field_type) in &mut class.fields {
-            *field_type = canonical_stdlib_type(field_type, module_name, local_classes);
+            canonicalize_user_export_type_in_place(field_type, local_classes);
         }
         for method in &mut class.methods {
-            canonicalize_stdlib_hir_function(method, module_name, local_classes);
+            canonicalize_stdlib_hir_function(method, local_classes);
         }
         for (_, operator) in &mut class.operator_impls {
-            canonicalize_stdlib_hir_function(operator, module_name, local_classes);
+            canonicalize_stdlib_hir_function(operator, local_classes);
         }
         if let Some(inner) = &mut class.newtype_inner {
-            *inner = canonical_stdlib_type(inner, module_name, local_classes);
+            canonicalize_user_export_type_in_place(inner, local_classes);
         }
         if let Some(parent) = &mut class.parent_type {
-            *parent = canonical_stdlib_type(parent, module_name, local_classes);
+            canonicalize_user_export_type_in_place(parent, local_classes);
         }
     }
     for (_, constant_type, _) in &mut module.constants {
-        *constant_type = canonical_stdlib_type(constant_type, module_name, local_classes);
+        canonicalize_user_export_type_in_place(constant_type, local_classes);
     }
 }
 
 fn canonicalize_stdlib_hir_function(
     function: &mut HirFunction,
-    module_name: &str,
     local_classes: &HashMap<String, String>,
 ) {
     sifr_ir::transform_hir_function_types(function, &mut |ty| {
-        canonical_stdlib_type(ty, module_name, local_classes)
+        canonicalize_user_export_type_in_place(ty, local_classes);
     });
 }
 
