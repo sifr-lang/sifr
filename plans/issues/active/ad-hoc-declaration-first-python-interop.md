@@ -29,7 +29,9 @@ closed the remaining error-carrier parity, PythonError identity, exact
 catch-all, borrowed-field mutation, nested parameter, and class-method
 mut-argument place gaps. Pass 8 was an invalid timer-only artifact and is not
 review evidence. Fresh Fable High pass 9 independently rechecked the complete
-candidate and returned **SATISFIED** with no blockers. The authoritative merge
+candidate and returned **SATISFIED** with no blockers; post-commit closure
+pass 10 confirmed the frozen PR diff and ledger with the same verdict. The
+authoritative merge
 gate passes every blocking lane in `2685.23s`, including E2E `674/674`, Python
 interop `18/18`, diagnostics `175/175`, and `261` hardening variants with zero
 failures; the warm-time notice is non-blocking. Typed
@@ -1606,7 +1608,11 @@ Delivery waves:
   [pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-9.md)
   independently inspected the complete candidate and adversarially probed the
   mutation, identity, carrier, PythonError, and buffer surfaces, then returned
-  **SATISFIED** with no blocking findings. The authoritative merge gate passes
+  **SATISFIED** with no blocking findings. Post-commit Fable High
+  [pass 10](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-10.md)
+  re-inspected the frozen `origin/main...HEAD` diff, confirmed the final commit
+  was documentation-only, and returned **SATISFIED** with no blockers. The
+  authoritative merge gate passes
   every blocking lane in `2685.23s`: E2E `674/674` with signature
   `1f8b1cadc4f48ec8`, Python interop `18/18`, diagnostics `175/175`, codegen
   `864/864`, lowering `784/784` plus one ignored test, driver `360/360` plus 33
