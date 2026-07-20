@@ -170,7 +170,7 @@ Implementation progress:
 - [x] M7 owned asyncio runtime and async declarations — [PR #2968](https://github.com/sifr-lang/sifr/pull/2968)
 - [x] M8 async context managers — [PR #2970](https://github.com/sifr-lang/sifr/pull/2970), [PR #2972](https://github.com/sifr-lang/sifr/pull/2972)
 - [x] M9 typed callback lifetimes and dispatch — [PR #2974](https://github.com/sifr-lang/sifr/pull/2974), [PR #2977](https://github.com/sifr-lang/sifr/pull/2977), [PR #2979](https://github.com/sifr-lang/sifr/pull/2979), remediation [PRs #2981](https://github.com/sifr-lang/sifr/pull/2981), [#2982](https://github.com/sifr-lang/sifr/pull/2982), [#2984](https://github.com/sifr-lang/sifr/pull/2984), and [#2985](https://github.com/sifr-lang/sifr/pull/2985)
-- [ ] M10 typed buffer protocol
+- [x] M10 typed buffer protocol ([PR #2990](https://github.com/sifr-lang/sifr/pull/2990))
 - [ ] M11 Arrow C Data Interface
 - [ ] M12 DLPack one-shot tensor transfer
 - [ ] M13 read-only check and doctor
@@ -1349,7 +1349,7 @@ Delivery waves:
   capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `27/42` cache hits. Warm-time and cache-hit notices are
   non-blocking advisories. PR #2989 is merged.
-- [ ] Milestone review — complete merged-M10
+- [x] Milestone review — complete merged-M10
   [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-1.md)
   found writable `Self` owner aliasing and name-only `PythonError` acceptance.
   Remediation rejects writable receiver acquisition until an exclusive owner
@@ -1612,8 +1612,8 @@ Delivery waves:
   `864/864`, lowering `784/784` plus one ignored test, driver `360/360` plus 33
   ignored tests and generated builds `33/33`, file-size guardrails over `2720`
   files, and `261` hardening variants with zero failures. Its warm-time budget
-  notice is a non-blocking advisory. PR #2990 is closure-ready; the checkbox
-  remains open until the PR is merged.
+  notice is a non-blocking advisory. [PR #2990](https://github.com/sifr-lang/sifr/pull/2990)
+  is the reviewed and validated M10 closure PR.
 
 Acceptance:
 
