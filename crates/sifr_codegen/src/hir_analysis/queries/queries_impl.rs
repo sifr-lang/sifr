@@ -818,7 +818,7 @@ pub(crate) fn collect_try_error_carriers(stmts: &[HirStmt]) -> Vec<Type> {
     let mut on_expr = |_expr: &HirExpr| {};
     traversal::walk_stmts(
         stmts,
-        TraversalConfig::LOCAL_SCOPE_ONLY,
+        TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
         &mut on_stmt,
         &mut on_expr,
     );

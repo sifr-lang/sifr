@@ -26,9 +26,11 @@ authoritative create-PR gate passes. Review passes 11 and 12 drove exact nominal
 identity through unions, conversions, inheritance, handlers, patterns,
 generics, operators, and merged stdlib declarations. Review pass 13 then found
 three remaining end-to-end gaps in imported-parent semantics, exact try-error
-carriers, and same-basename Rust bridge records. Their remediation is complete,
-the full merge E2E suite passes `664/664`, and the authoritative create-PR gate
-passes every blocking lane; a fresh full-diff re-review is pending. Typed
+carriers, and same-basename Rust bridge records. Review pass 14 found two final
+carrier codegen parity gaps for nested functions and ordinary unions sharing a
+carrier enum. Their remediation is complete and the authoritative create-PR
+gate passes every blocking lane; full merge validation and a fresh full-diff
+re-review are pending. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -1537,7 +1539,23 @@ Delivery waves:
   `1024.46s`: Python interop `12/12`, runtime platform `28` variants with one
   capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c`. Its warm-time and cache-hit notices are non-blocking
-  advisories. A fresh full-diff review is pending before M10 closure.
+  advisories. Full
+  [review pass 14](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-14.md)
+  found that nested functions were skipped during synthesized try-carrier
+  discovery and that marking a structural union as a carrier globally removed
+  equality and hash traits required by ordinary uses of the same enum. Carrier
+  discovery now traverses nested functions, and union registration records
+  ordinary-value use separately from its carrier role. Carrier-only enums keep
+  their minimal trait surface, while reused ordinary unions retain their proved
+  `PartialEq`, `Eq`, and `Hash` derives. Unit regressions cover both usage modes;
+  the native nominal-identity fixture covers nested exact-error dispatch plus
+  equality and hash-set use on the shared canonical error union. Codegen passes
+  `854/854`, and the authoritative create-PR gate passes every blocking lane in
+  `612.79s`: Python interop `12/12`, runtime platform `28` variants with one
+  capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `41/42` cache hits. Its warm wall-time notice is a
+  non-blocking advisory. Full merge validation and a fresh whole-diff review
+  are pending before M10 closure.
 
 Acceptance:
 

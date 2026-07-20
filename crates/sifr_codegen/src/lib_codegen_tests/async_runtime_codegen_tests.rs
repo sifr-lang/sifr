@@ -145,9 +145,9 @@ fn test_async_generated_errors_convert_to_error_return_type() {
     assert!(result
         .rust_source
         .contains("impl From<ScopeFailure> for Error"));
-    assert!(result
-        .rust_source
-        .contains("return Err(TimeoutError::new(\"task timeout expired\".to_string()).into())"));
+    assert!(result.rust_source.contains(
+        "return Err(::std::convert::Into::<Error>::into(TimeoutError::new(\"task timeout expired\""
+    ));
     assert!(result
         .rust_source
         .contains("return Err(__sifr_scope_failure.into());"));

@@ -205,6 +205,34 @@ fn body_contains_yield_detects_try_except_and_loop_else_paths() {
 }
 
 #[test]
+fn collect_try_error_carriers_descends_into_nested_functions() {
+    let first_error = test_error_type("FirstError");
+    let second_error = test_error_type("SecondError");
+    let nested = HirFunction {
+        name: "inner".to_string(),
+        params: Vec::new(),
+        return_type: Type::None,
+        body: vec![HirStmt::TryExcept {
+            body: vec![HirStmt::Pass],
+            handlers: Vec::new(),
+            body_error_types: vec![first_error.clone(), second_error.clone()],
+        }],
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
+        python_interop: Vec::new(),
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+
+    assert_eq!(
+        collect_try_error_carriers(&[HirStmt::NestedFunction { func: nested }]),
+        vec![Type::Union(vec![first_error, second_error])]
+    );
+}
+
+#[test]
 fn collect_locally_defined_vars_includes_match_captures() {
     let stmts = vec![HirStmt::Match {
         subject: HirExpr::IntLiteral(3),

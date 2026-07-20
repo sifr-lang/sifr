@@ -64,6 +64,20 @@ def catches_same_basename_errors(csv_branch: bool) -> str:
         return "config:" + error.message
 
 
+def nested_catches_same_basename_errors(csv_branch: bool) -> str:
+    def inner() -> str:
+        try:
+            if csv_branch:
+                raise CsvError("nested csv")
+            raise ConfigError("nested config")
+        except CsvError as error:
+            return "csv:" + error.message
+        except ConfigError as error:
+            return "config:" + error.message
+
+    return inner()
+
+
 def main() -> None:
     csv_error: CsvError = CsvError("one")
     config_error: ConfigError = ConfigError("two")
@@ -89,3 +103,12 @@ def main() -> None:
     assert aliased_except_matches()
     assert catches_same_basename_errors(True) == "csv:csv branch"
     assert catches_same_basename_errors(False) == "config:config branch"
+    assert nested_catches_same_basename_errors(True) == "csv:nested csv"
+    assert nested_catches_same_basename_errors(False) == "config:nested config"
+
+    left: CsvError | ConfigError = CsvError("same")
+    right: CsvError | ConfigError = CsvError("same")
+    assert left == right
+    set_error: CsvError | ConfigError = ConfigError("other")
+    errors: set[CsvError | ConfigError] = {set_error}
+    assert len(errors) == 1
