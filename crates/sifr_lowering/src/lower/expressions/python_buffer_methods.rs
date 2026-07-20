@@ -11,12 +11,6 @@ pub(super) fn resolve_python_buffer_method_type(
     method_range: TextRange,
     ctx: &mut LowerCtx,
 ) -> Option<Type> {
-    let python_error = ctx
-        .class_types
-        .get("PythonError")
-        .cloned()
-        .unwrap_or(Type::Any);
-    let result = |ok: Type| Type::Result(Box::new(ok), Box::new(python_error.clone()));
     match method {
         "length" | "item_size" | "dimensions" => {
             require_no_args(method, args, arg_ranges, method_range, ctx)?;
@@ -37,23 +31,23 @@ pub(super) fn resolve_python_buffer_method_type(
         "read" => {
             require_exact_args(method, 1, args, arg_ranges, method_range, ctx)?;
             require_arg_type(method, &args[0], &Type::Int, arg_ranges[0], ctx);
-            Some(result(element.clone()))
+            python_buffer_result(element.clone(), method_range, ctx)
         }
         "write" => {
             require_exact_args(method, 2, args, arg_ranges, method_range, ctx)?;
             require_arg_type(method, &args[0], &Type::Int, arg_ranges[0], ctx);
             require_arg_type(method, &args[1], element, arg_ranges[1], ctx);
-            Some(result(Type::None))
+            python_buffer_result(Type::None, method_range, ctx)
         }
         "copy_slice" => {
             require_exact_args(method, 2, args, arg_ranges, method_range, ctx)?;
             require_arg_type(method, &args[0], &Type::Int, arg_ranges[0], ctx);
             require_arg_type(method, &args[1], &Type::Int, arg_ranges[1], ctx);
-            Some(result(Type::List(Box::new(element.clone()))))
+            python_buffer_result(Type::List(Box::new(element.clone())), method_range, ctx)
         }
         "release" => {
             require_no_args(method, args, arg_ranges, method_range, ctx)?;
-            Some(result(Type::None))
+            python_buffer_result(Type::None, method_range, ctx)
         }
         _ => {
             ctx.error_with_code_at(
@@ -67,6 +61,23 @@ pub(super) fn resolve_python_buffer_method_type(
             None
         }
     }
+}
+
+fn python_buffer_result(ok: Type, range: TextRange, ctx: &mut LowerCtx) -> Option<Type> {
+    let Some(python_error) = ctx
+        .class_types
+        .get("PythonError")
+        .filter(|ty| ty.is_python_error_contract())
+        .cloned()
+    else {
+        ctx.error_with_code_at(
+            sifr_diagnostics::DiagnosticCode::PYZC_INVALID_DECLARATION,
+            "python.Buffer methods require the canonical `PythonError` field contract; import `PythonError` from `sifr.python`".to_string(),
+            range,
+        );
+        return None;
+    };
+    Some(Type::Result(Box::new(ok), Box::new(python_error)))
 }
 
 pub(super) fn consume_python_buffer_release_receiver(

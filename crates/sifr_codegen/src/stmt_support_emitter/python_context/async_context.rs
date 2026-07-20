@@ -38,6 +38,13 @@ impl RustEmitter {
             .get(manager_class)
             .cloned()
             .unwrap_or_default();
+        let effective_active_error_type = self
+            .try_closure_error_type_info
+            .last()
+            .and_then(Clone::clone);
+        let active_error_type = effective_active_error_type
+            .as_ref()
+            .unwrap_or(active_error_type);
         let manager = crate::render_expr(&manager_value);
         let schema = crate::render_expr(&schema);
         let entered_rust_type = crate::render_type(&crate::sifr_type_to_rust_type(entered_type));
@@ -90,10 +97,7 @@ impl RustEmitter {
             &enter_error_rust_type,
             false,
         );
-        let active_is_python = matches!(
-            active_error_type.resolve_alias(),
-            Type::Class { name, .. } if name == "PythonError"
-        );
+        let active_is_python = active_error_type.is_python_error_contract();
         let active_exit = if active_is_python {
             python_error_exit(&names)
         } else {
@@ -128,14 +132,14 @@ let {parent} = match __sifr_current_task_cancellation() {{
     Some(carrier) => carrier,
     None => return Err({internal_error}),
 }};
-let {scope} = match sifr_runtime::cancellation::CancellationScopeLease::claim(&{parent}) {{
+let {scope} = match ::sifr_runtime::cancellation::CancellationScopeLease::claim(&{parent}) {{
     Ok(scope) => scope,
     Err(_) => return Err({internal_error}),
 }};
 let {child} = {scope}.child().clone();
 let {entered_raw} = match __SIFR_TASK_CANCELLATION.scope(
     {child}.clone(),
-    sifr_runtime::python::submit_async_context_enter(
+    ::sifr_runtime::python::submit_async_context_enter(
         &{manager_name}.__sifr_python_object,
         {schema},
         Some(&{child}),
@@ -143,23 +147,23 @@ let {entered_raw} = match __SIFR_TASK_CANCELLATION.scope(
     ).await {{
     Ok(value) => value,
     Err(error) => {{
-        let error = sifr_runtime::python::abandon_callback_owner_after_error_async(
+        let error = ::sifr_runtime::python::abandon_callback_owner_after_error_async(
             error,
             &{manager_name}.__sifr_python_callbacks,
         ).await;
-        sifr_runtime::python::poison_object({manager_name}.__sifr_python_object);
+        ::sifr_runtime::python::poison_object({manager_name}.__sifr_python_object);
         match {scope}.release_and_resume_parent() {{
-            sifr_runtime::cancellation::CancellationResume::Invoked
-            | sifr_runtime::cancellation::CancellationResume::AlreadyResumed => {{
+            ::sifr_runtime::cancellation::CancellationResume::Invoked
+            | ::sifr_runtime::cancellation::CancellationResume::AlreadyResumed => {{
                 tokio::task::yield_now().await;
                 return Err({internal_error});
             }},
-            sifr_runtime::cancellation::CancellationResume::NotRequested => {{
+            ::sifr_runtime::cancellation::CancellationResume::NotRequested => {{
                 return Err(({enter_error}).into());
             }},
-            sifr_runtime::cancellation::CancellationResume::ExactClaimActive
-            | sifr_runtime::cancellation::CancellationResume::FallbackUnavailable
-            | sifr_runtime::cancellation::CancellationResume::StateUnavailable => {{
+            ::sifr_runtime::cancellation::CancellationResume::ExactClaimActive
+            | ::sifr_runtime::cancellation::CancellationResume::FallbackUnavailable
+            | ::sifr_runtime::cancellation::CancellationResume::StateUnavailable => {{
                 return Err({internal_error});
             }},
         }}
@@ -189,14 +193,14 @@ match {outcome} {{
     {loop_arms}
     Some(Err(mut {body_error})) => {{ {active_exit} }},
     None => {{
-        let {cleanup_carrier} = sifr_runtime::cancellation::CancellationCarrier::new();
+        let {cleanup_carrier} = ::sifr_runtime::cancellation::CancellationCarrier::new();
         let {cleanup_result} = __SIFR_TASK_CANCELLATION.scope(
             {cleanup_carrier}.clone(),
-            sifr_runtime::python::submit_async_context_exit_with_callbacks(
+            ::sifr_runtime::python::submit_async_context_exit_with_callbacks(
                 {manager_name}.__sifr_python_object,
-                sifr_runtime::python::PythonAsyncExitCause::Sifr(
-                    sifr_runtime::python::SifrExitCause {{
-                        kind: sifr_runtime::python::SifrExitCauseKind::Cancellation,
+                ::sifr_runtime::python::PythonAsyncExitCause::Sifr(
+                    ::sifr_runtime::python::SifrExitCause {{
+                        kind: ::sifr_runtime::python::SifrExitCauseKind::Cancellation,
                         sifr_type: "CancellationError".to_string(),
                         message: "task cancellation".to_string(),
                     }},
@@ -206,13 +210,13 @@ match {outcome} {{
             ),
         ).await;
         match {cleanup_result} {{
-            Ok(sifr_runtime::python::PythonExitDecision::Suppress) => {{
-                sifr_runtime::python::record_context_ignored_suppression(
+            Ok(::sifr_runtime::python::PythonExitDecision::Suppress) => {{
+                ::sifr_runtime::python::record_context_ignored_suppression(
                     "cancellation:CancellationError",
                 );
             }},
-            Ok(sifr_runtime::python::PythonExitDecision::Propagate) => {{}},
-            Err({cleanup_error}) => sifr_runtime::python::record_context_cleanup_evidence(
+            Ok(::sifr_runtime::python::PythonExitDecision::Propagate) => {{}},
+            Err({cleanup_error}) => ::sifr_runtime::python::record_context_cleanup_evidence(
                 "cancellation:CancellationError",
                 &{cleanup_error},
             ),
@@ -248,14 +252,14 @@ drop({scope});
 fn resume_parent_cancellation(scope: &str) -> String {
     format!(
         r#"match {scope}.release_and_resume_parent() {{
-    sifr_runtime::cancellation::CancellationResume::Invoked
-    | sifr_runtime::cancellation::CancellationResume::AlreadyResumed => {{
+    ::sifr_runtime::cancellation::CancellationResume::Invoked
+    | ::sifr_runtime::cancellation::CancellationResume::AlreadyResumed => {{
         tokio::task::yield_now().await;
     }},
-    sifr_runtime::cancellation::CancellationResume::NotRequested
-    | sifr_runtime::cancellation::CancellationResume::ExactClaimActive
-    | sifr_runtime::cancellation::CancellationResume::FallbackUnavailable
-    | sifr_runtime::cancellation::CancellationResume::StateUnavailable => {{}},
+    ::sifr_runtime::cancellation::CancellationResume::NotRequested
+    | ::sifr_runtime::cancellation::CancellationResume::ExactClaimActive
+    | ::sifr_runtime::cancellation::CancellationResume::FallbackUnavailable
+    | ::sifr_runtime::cancellation::CancellationResume::StateUnavailable => {{}},
 }}"#
     )
 }
@@ -341,7 +345,7 @@ fn normal_exit(
     let exit = RustExpr::Await(Box::new(RustExpr::Ident(cleanup_scope_call(
         &names.cleanup_carrier,
         &names.manager,
-        "sifr_runtime::python::PythonAsyncExitCause::Normal",
+        "::sifr_runtime::python::PythonAsyncExitCause::Normal",
     ))));
     let mapped = crate::python_interop_direct::mapped_try(exit, exit_error_type);
     let reconciliation = if owner_retained_errors.is_empty() {
@@ -367,7 +371,7 @@ fn normal_exit(
         }])
     };
     format!(
-        "let {cleanup} = sifr_runtime::cancellation::CancellationCarrier::new(); let _decision = {}; {reconciliation}",
+        "let {cleanup} = ::sifr_runtime::cancellation::CancellationCarrier::new(); let _decision = {}; {reconciliation}",
         crate::render_expr(&mapped),
         cleanup = names.cleanup_carrier,
     )
@@ -375,32 +379,32 @@ fn normal_exit(
 
 fn python_error_exit(names: &AsyncContextNames) -> String {
     format!(
-        r#"let {cleanup_carrier} = sifr_runtime::cancellation::CancellationCarrier::new();
+        r#"let {cleanup_carrier} = ::sifr_runtime::cancellation::CancellationCarrier::new();
 let {cause} = match {body_error}.__sifr_python_error.as_ref() {{
-    Some(replay) => sifr_runtime::python::PythonAsyncExitCause::Python(replay.clone()),
-    None => sifr_runtime::python::PythonAsyncExitCause::Sifr(sifr_runtime::python::SifrExitCause {{
-        kind: sifr_runtime::python::SifrExitCauseKind::OrdinaryError,
+    Some(replay) => ::sifr_runtime::python::PythonAsyncExitCause::Python(replay.clone()),
+    None => ::sifr_runtime::python::PythonAsyncExitCause::Sifr(::sifr_runtime::python::SifrExitCause {{
+        kind: ::sifr_runtime::python::SifrExitCauseKind::OrdinaryError,
         sifr_type: "PythonError".to_string(),
         message: format!("{{}}", {body_error}),
     }}),
 }};
 match __SIFR_TASK_CANCELLATION.scope(
     {cleanup_carrier}.clone(),
-    sifr_runtime::python::submit_async_context_exit_with_callbacks(
+    ::sifr_runtime::python::submit_async_context_exit_with_callbacks(
         {manager}.__sifr_python_object,
         {cause},
         Some(&{cleanup_carrier}),
         {manager}.__sifr_python_callbacks,
     ),
 ).await {{
-    Ok(sifr_runtime::python::PythonExitDecision::Suppress) => {{}},
-    Ok(sifr_runtime::python::PythonExitDecision::Propagate) => return Err({body_error}),
+    Ok(::sifr_runtime::python::PythonExitDecision::Suppress) => {{}},
+    Ok(::sifr_runtime::python::PythonExitDecision::Propagate) => return Err({body_error}),
     Err({cleanup_error}) => {{
         if let Some(primary) = {body_error}.__sifr_python_error.as_mut() {{
-            sifr_runtime::python::attach_secondary_python_error(primary, &{cleanup_error});
+            ::sifr_runtime::python::attach_secondary_python_error(primary, &{cleanup_error});
             {body_error}.context = primary.context.to_string();
         }} else {{
-            sifr_runtime::python::record_context_cleanup_evidence("ordinary-error:PythonError", &{cleanup_error});
+            ::sifr_runtime::python::record_context_cleanup_evidence("ordinary-error:PythonError", &{cleanup_error});
         }}
         return Err({body_error});
     }},
@@ -426,13 +430,13 @@ fn sifr_error_exit(
         String::new()
     };
     format!(
-        r#"let {cleanup_carrier} = sifr_runtime::cancellation::CancellationCarrier::new();
+        r#"let {cleanup_carrier} = ::sifr_runtime::cancellation::CancellationCarrier::new();
 let {cleanup_result} = __SIFR_TASK_CANCELLATION.scope(
     {cleanup_carrier}.clone(),
-    sifr_runtime::python::submit_async_context_exit_with_callbacks(
+    ::sifr_runtime::python::submit_async_context_exit_with_callbacks(
         {manager}.__sifr_python_object,
-        sifr_runtime::python::PythonAsyncExitCause::Sifr(sifr_runtime::python::SifrExitCause {{
-            kind: sifr_runtime::python::SifrExitCauseKind::{cause_kind},
+        ::sifr_runtime::python::PythonAsyncExitCause::Sifr(::sifr_runtime::python::SifrExitCause {{
+            kind: ::sifr_runtime::python::SifrExitCauseKind::{cause_kind},
             sifr_type: "{error_type}".to_string(),
             message: format!("{{}}", {error}),
         }}),
@@ -441,11 +445,11 @@ let {cleanup_result} = __SIFR_TASK_CANCELLATION.scope(
     ),
 ).await;
 match {cleanup_result} {{
-    Ok(sifr_runtime::python::PythonExitDecision::Suppress) => {{
-        sifr_runtime::python::record_context_ignored_suppression("{cause_label}:{error_type}");
+    Ok(::sifr_runtime::python::PythonExitDecision::Suppress) => {{
+        ::sifr_runtime::python::record_context_ignored_suppression("{cause_label}:{error_type}");
     }},
-    Ok(sifr_runtime::python::PythonExitDecision::Propagate) => {{}},
-    Err({cleanup_error}) => sifr_runtime::python::record_context_cleanup_evidence(
+    Ok(::sifr_runtime::python::PythonExitDecision::Propagate) => {{}},
+    Err({cleanup_error}) => ::sifr_runtime::python::record_context_cleanup_evidence(
         "{cause_label}:{error_type}",
         &{cleanup_error},
     ),

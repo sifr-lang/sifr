@@ -358,12 +358,19 @@ pub(crate) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionM
 
 /// Find the matching union variant name for an argument type.
 pub(crate) fn find_union_variant(members: &[Type], arg_ty: &Type) -> Option<String> {
-    for member in members {
-        if arg_ty.is_assignable_to(member) {
-            return Some(member.union_variant_name());
-        }
-    }
-    None
+    find_union_member(members, arg_ty).map(Type::union_variant_name)
+}
+
+pub(crate) fn find_union_member<'a>(members: &'a [Type], arg_ty: &Type) -> Option<&'a Type> {
+    let exact_variant = arg_ty.union_variant_name();
+    members
+        .iter()
+        .find(|member| member.union_variant_name() == exact_variant)
+        .or_else(|| {
+            members
+                .iter()
+                .find(|member| arg_ty.is_assignable_to(member))
+        })
 }
 
 pub(crate) fn wrap_union_member_expr(
@@ -632,8 +639,8 @@ pub(crate) fn expr_contains_self_field_mutation(expr: &HirExpr) -> bool {
 pub(crate) fn is_self_field_mutating_method_call(expr: &HirExpr) -> bool {
     match expr {
         HirExpr::MethodCall { object, method, .. } => {
-            let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { object: inner, .. }
-                if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"));
+            let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { .. })
+                && field_access_root_name(object) == Some("self");
             is_self_field
                 && (MUTATING_METHODS.contains(&method.as_str())
                     || matches!(
@@ -642,6 +649,14 @@ pub(crate) fn is_self_field_mutating_method_call(expr: &HirExpr) -> bool {
                     ))
         }
         _ => false,
+    }
+}
+
+fn field_access_root_name(expr: &HirExpr) -> Option<&str> {
+    match expr {
+        HirExpr::Name { name, .. } => Some(name),
+        HirExpr::FieldAccess { object, .. } => field_access_root_name(object),
+        _ => None,
     }
 }
 

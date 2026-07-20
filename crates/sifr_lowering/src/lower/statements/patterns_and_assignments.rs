@@ -2,19 +2,21 @@ use super::{
     class_specialization_payload_conflicts, domain_typed_sentinel_expr, lower_expr, make_union,
     match_diagnostics, name_diagnostics, numeric_domain_for_type, numeric_sentinel_kind,
     ownership_diagnostics, record_async_generator_advance_binding, record_const_integer_binding,
-    record_len_alias_fact, record_sequence_pointer_fact, resolve_annotation_expr,
-    sequence_shape_fact, statement_diagnostics, str, validate_fixed_width_initializer,
-    DiagnosticCode, Expr, FixedWidthInitializerFit, HirExpr, HirPattern, HirStmt, LowerCtx,
-    Pattern, Ranged, Singleton, StmtAnnAssign, StmtAssign, Type,
+    record_len_alias_fact, record_sequence_pointer_fact, record_try_error_types,
+    resolve_annotation_expr, sequence_shape_fact, statement_diagnostics, str,
+    validate_fixed_width_initializer, DiagnosticCode, Expr, FixedWidthInitializerFit, HirExpr,
+    HirPattern, HirStmt, LowerCtx, Pattern, Ranged, Singleton, StmtAnnAssign, StmtAssign, Type,
 };
 use crate::lower::expressions::consume_affine_value_name;
 
-fn matched_class_type(subject_ty: &Type, class_name: &str) -> Option<Type> {
+fn matched_class_type(subject_ty: &Type, declared_type: &Type) -> Option<Type> {
     match subject_ty.resolve_alias() {
-        Type::Class { name, .. } if name == class_name => Some(subject_ty.resolve_alias().clone()),
+        candidate @ Type::Class { .. } if candidate.is_same_class_declaration(declared_type) => {
+            Some(candidate.clone())
+        }
         Type::Union(members) => members
             .iter()
-            .find_map(|member| matched_class_type(member, class_name)),
+            .find_map(|member| matched_class_type(member, declared_type)),
         _ => None,
     }
 }
@@ -116,16 +118,30 @@ pub(in crate::lower) fn lower_pattern(
             };
 
             // Resolve the class type to get field types
-            let class_ty = matched_class_type(subject_ty, &class_name)
-                .or_else(|| ctx.class_types.get(&class_name).cloned());
+            let declared_class_ty = ctx
+                .class_types
+                .get(&class_name)
+                .cloned()
+                .or(match class_name.as_str() {
+                    "int" => Some(Type::Int),
+                    "str" => Some(Type::Str),
+                    "float" => Some(Type::Float),
+                    "bool" => Some(Type::Bool),
+                    _ => None,
+                });
+            let class_ty = declared_class_ty
+                .as_ref()
+                .and_then(|declared| matched_class_type(subject_ty, declared))
+                .or(declared_class_ty)
+                .unwrap_or(Type::Any);
 
             let mut fields = Vec::new();
             for kw in &class_pat.arguments.keywords {
                 let field_name = kw.attr.to_string();
-                let field_ty = if let Some(Type::Class {
+                let field_ty = if let Type::Class {
                     fields: class_fields,
                     ..
-                }) = &class_ty
+                } = &class_ty
                 {
                     let Some(field_ty) = class_fields
                         .iter()
@@ -153,7 +169,11 @@ pub(in crate::lower) fn lower_pattern(
                 fields.push((field_name, field_pattern));
             }
 
-            Some(HirPattern::Class { class_name, fields })
+            Some(HirPattern::Class {
+                class_name,
+                class_type: class_ty,
+                fields,
+            })
         }
         Pattern::MatchSequence(seq_pat) => {
             if seq_pat.patterns.is_empty() {
@@ -217,18 +237,11 @@ pub(in crate::lower) fn lower_pattern(
 pub(in crate::lower) fn pattern_narrowed_type(
     pattern: &HirPattern,
     subject_ty: &Type,
-    ctx: &LowerCtx,
+    _ctx: &LowerCtx,
 ) -> Type {
     match pattern {
         HirPattern::None => Type::None,
-        HirPattern::Class { class_name, .. } => {
-            // Look up the class type
-            if let Some(class_ty) = ctx.class_types.get(class_name) {
-                class_ty.clone()
-            } else {
-                subject_ty.clone()
-            }
-        }
+        HirPattern::Class { class_type, .. } => class_type.clone(),
         _ => subject_ty.clone(),
     }
 }
@@ -279,7 +292,7 @@ pub(super) fn failed_initializer_taint(
     range: ruff_text_size::TextRange,
     error_count_before_initializer: usize,
 ) -> Option<crate::scope::ErrorTaint> {
-    let taint = ctx.error_taint_since(error_count_before_initializer);
+    let taint = ctx.initializer_error_taint_since(error_count_before_initializer);
     if taint.is_none() {
         ctx.error_with_code_at(
             DiagnosticCode::INTERNAL_COMPILER_PANIC,
@@ -313,11 +326,13 @@ pub(in crate::lower) fn lower_ann_assign(
         );
         return None;
     };
+    let error_count_before_annotation = ctx.error_count();
     let declared_type = resolve_annotation_expr(&ann.annotation, ctx);
+    let annotation_error_taint = ctx.error_taint_since(error_count_before_annotation);
 
     let (value, initializer_range) = if let Some(val) = &ann.value {
         let initializer_range = val.range();
-        let error_count_before_initializer = ctx.error_count();
+        let error_count_before_initializer = ctx.begin_initializer_lowering();
         let mut expr = if let Some(kind) = numeric_sentinel_kind(val) {
             if let Some(domain) = numeric_domain_for_type(&declared_type) {
                 domain_typed_sentinel_expr(kind, domain)
@@ -368,9 +383,7 @@ pub(in crate::lower) fn lower_ann_assign(
             if let Type::Result(ref ok_ty, ref err_ty) = expr_ty {
                 if ok_ty.as_ref().is_assignable_to(&declared_type) {
                     // Track the error type for exhaustiveness checking
-                    if let Type::Class { name, .. } = err_ty.as_ref() {
-                        ctx.try_block_error_types.insert(name.clone());
-                    }
+                    record_try_error_types(ctx, err_ty);
                     expr = HirExpr::QuestionMark {
                         expr: Box::new(expr),
                         ty: declared_type.clone(),
@@ -448,8 +461,13 @@ pub(in crate::lower) fn lower_ann_assign(
 
     ctx.empty_dict_specializations.remove(&name);
     ctx.pending_container_specialization_patches.remove(&name);
-    ctx.scope
-        .define_explicit_local(name.clone(), declared_type.clone());
+    if let Some(error_taint) = annotation_error_taint {
+        ctx.scope
+            .define_poisoned_local(name.clone(), declared_type.clone(), true, error_taint);
+    } else {
+        ctx.scope
+            .define_explicit_local(name.clone(), declared_type.clone());
+    }
     ctx.record_must_use_binding(&name, &declared_type);
     if matches!(value.ty(), Type::Int | Type::LiteralInt(_))
         && value.ty().is_assignable_to(&declared_type)

@@ -818,6 +818,7 @@ mod tests {
         assert!(matches!(lowered, RustExpr::FnCall { func, .. }
             if matches!(func.as_ref(), RustExpr::Path(path) if path == &["Some".to_string()])));
 
+        let buffer_variant = buffer_ty.union_variant_name();
         let union_ty = Type::Union(vec![buffer_ty, Type::Int, Type::None]);
         let union_value = fallible_buffer_value(union_ty.clone());
         let lowered = emitter
@@ -828,6 +829,6 @@ mod tests {
             )
             .expect("union coercion");
         assert!(matches!(lowered, RustExpr::FnCall { func, .. }
-            if matches!(func.as_ref(), RustExpr::Path(path) if path.last().is_some_and(|variant| variant == "PythonBuffer"))));
+            if matches!(func.as_ref(), RustExpr::Path(path) if path.last() == Some(&buffer_variant))));
     }
 }

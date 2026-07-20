@@ -44,7 +44,7 @@ fn open_file_handle_expr() -> RustExpr {
 fn native_file_handle_new_expr(handle_id: RustExpr) -> RustExpr {
     RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec![
-            "NativeFileHandle".to_string(),
+            "__SifrIoNativeFileHandle".to_string(),
             "new".to_string(),
         ])),
         args: vec![handle_id],
@@ -78,12 +78,12 @@ pub(crate) fn lower_builtin_open(args: &[RustExpr]) -> Option<RustExpr> {
                     value: open_file_handle_expr(),
                 },
                 RustStmt::Return(Some(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(
-                        vec!["Ok::<FileHandle, IOError>".to_string()],
-                    )),
+                    func: Box::new(RustExpr::Path(vec![
+                        "Ok::<__SifrIoFileHandle, IOError>".to_string()
+                    ])),
                     args: vec![RustExpr::FnCall {
                         func: Box::new(RustExpr::Path(vec![
-                            "FileHandle".to_string(),
+                            "__SifrIoFileHandle".to_string(),
                             "new".to_string(),
                         ])),
                         args: vec![

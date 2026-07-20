@@ -106,8 +106,8 @@ fn report_union_exhaustiveness(
     };
 
     let mut covered_none = false;
-    let mut covered_classes: std::collections::HashSet<String> = std::collections::HashSet::new();
-    let mut covered_types: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut covered_classes: std::collections::HashSet<Type> = std::collections::HashSet::new();
+    let mut covered_types: std::collections::HashSet<Type> = std::collections::HashSet::new();
     let mut covered_literal_strs: std::collections::HashSet<String> =
         std::collections::HashSet::new();
     let mut covered_literal_ints: std::collections::HashSet<i64> = std::collections::HashSet::new();
@@ -119,11 +119,11 @@ fn report_union_exhaustiveness(
             HirPattern::None => {
                 covered_none = true;
             }
-            HirPattern::Class { class_name, .. } => {
-                covered_classes.insert(class_name.clone());
+            HirPattern::Class { class_type, .. } => {
+                covered_classes.insert(class_type.clone());
             }
             HirPattern::Capture { ty, .. } if arm.guard.is_none() => {
-                covered_types.insert(ty.display_name());
+                covered_types.insert(ty.clone());
             }
             HirPattern::Literal { .. } => {
                 collect_literal_coverage(
@@ -156,27 +156,33 @@ fn report_union_exhaustiveness(
                 }
             }
             Type::Class { name, .. } => {
-                if !covered_classes.contains(name) && !covered_types.contains(name) {
+                if !covered_classes
+                    .iter()
+                    .any(|covered| covered.is_same_class_specialization(member))
+                    && !covered_types
+                        .iter()
+                        .any(|covered| covered.is_same_class_specialization(member))
+                {
                     uncovered.push(name.clone());
                 }
             }
             Type::Int => {
-                if !covered_types.contains("int") && !covered_classes.contains("int") {
+                if !covered_types.contains(member) && !covered_classes.contains(member) {
                     uncovered.push("int".to_string());
                 }
             }
             Type::Str => {
-                if !covered_types.contains("str") && !covered_classes.contains("str") {
+                if !covered_types.contains(member) && !covered_classes.contains(member) {
                     uncovered.push("str".to_string());
                 }
             }
             Type::Float => {
-                if !covered_types.contains("float") && !covered_classes.contains("float") {
+                if !covered_types.contains(member) && !covered_classes.contains(member) {
                     uncovered.push("float".to_string());
                 }
             }
             Type::Bool => {
-                if !covered_types.contains("bool") && !covered_classes.contains("bool") {
+                if !covered_types.contains(member) && !covered_classes.contains(member) {
                     uncovered.push("bool".to_string());
                 }
             }
@@ -212,7 +218,7 @@ fn report_union_exhaustiveness(
 fn collect_or_pattern_coverage(
     patterns: &[HirPattern],
     covered_none: &mut bool,
-    covered_classes: &mut std::collections::HashSet<String>,
+    covered_classes: &mut std::collections::HashSet<Type>,
     covered_literal_strs: &mut std::collections::HashSet<String>,
     covered_literal_ints: &mut std::collections::HashSet<i64>,
     covered_literal_bools: &mut std::collections::HashSet<bool>,
@@ -222,8 +228,8 @@ fn collect_or_pattern_coverage(
             HirPattern::None => {
                 *covered_none = true;
             }
-            HirPattern::Class { class_name, .. } => {
-                covered_classes.insert(class_name.clone());
+            HirPattern::Class { class_type, .. } => {
+                covered_classes.insert(class_type.clone());
             }
             HirPattern::Literal { .. } => {
                 collect_literal_coverage(

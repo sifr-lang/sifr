@@ -125,6 +125,8 @@ mod python_interop_callback_tests;
 #[cfg(test)]
 mod python_interop_tests;
 #[cfg(test)]
+mod python_interop_validation_tests;
+#[cfg(test)]
 mod python_trust_tests;
 mod result_diagnostics;
 #[cfg(test)]
@@ -187,20 +189,22 @@ pub fn localize_user_import_function_type(
     imported_class_identity::function_type_for_import(function, module, class_aliases)
 }
 
-pub fn canonicalize_user_export_type(
-    ty: &Type,
-    module: &str,
+pub fn canonicalize_user_export_type(ty: &Type, local_classes: &HashMap<String, String>) -> Type {
+    imported_class_identity::canonicalize_export_type(ty, local_classes)
+}
+
+pub fn canonicalize_user_export_type_in_place(
+    ty: &mut Type,
     local_classes: &HashMap<String, String>,
-) -> Type {
-    imported_class_identity::canonicalize_export_type(ty, module, local_classes)
+) {
+    imported_class_identity::canonicalize_export_type_in_place(ty, local_classes);
 }
 
 pub fn canonicalize_user_export_function_type(
     function: &FunctionType,
-    module: &str,
     local_classes: &HashMap<String, String>,
 ) -> FunctionType {
-    imported_class_identity::canonicalize_export_function_type(function, module, local_classes)
+    imported_class_identity::canonicalize_export_function_type(function, local_classes)
 }
 use generic_inference::infer_type_var_bindings;
 use imports::resolve_imports_early;

@@ -97,9 +97,11 @@ fn stdlib_class_exports_preserve_parent_markers_and_generic_templates() {
     assert!(matches!(
         object_ty,
         Type::Class {
+            identity: Some(identity),
             parent_class: Some(parent),
             ..
-        } if parent.split('|').any(|name| name == "NonSend")
+        } if identity == "_sifr.python.Object"
+            && parent.split('|').any(|name| name == "NonSend")
     ));
 
     let shared_ty = compiled
@@ -113,6 +115,34 @@ fn stdlib_class_exports_preserve_parent_markers_and_generic_templates() {
         Type::Class { type_args, .. }
             if type_args == &vec![Type::TypeVar("T".to_string())]
     ));
+
+    let (_, return_type) = compiled
+        .code
+        .func_signatures
+        .get("_sifr.python")
+        .and_then(|functions| functions.get("py_from_none"))
+        .expect("private Python bridge signature should be recorded");
+    let Type::Result(object, _) = return_type.resolve_alias() else {
+        panic!("py_from_none should return Result");
+    };
+    assert!(object.is_python_object_contract(), "{object:?}");
+    assert_eq!(
+        object.rust_type(),
+        "::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>"
+    );
+    let private_python_rust = &compiled
+        .code
+        .module_rust_code
+        .get("_sifr.python")
+        .expect("private Python module should have generated Rust")
+        .rust;
+    let python_error = sifr_type_system::stdlib_class_rust_name("_sifr.python", "PythonError");
+    assert!(
+        private_python_rust.contains(&format!(
+            "Result<::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>, {python_error}>"
+        )),
+        "{private_python_rust}"
+    );
 }
 
 #[test]

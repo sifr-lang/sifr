@@ -1,4 +1,4 @@
-use super::{FunctionType, OwnershipKind, Type};
+use super::{source_class_rust_name, FunctionType, OwnershipKind, Type};
 use std::collections::HashSet;
 
 pub(super) fn parent_chain_contains(parent_class: Option<&str>, ancestor: &str) -> bool {
@@ -665,7 +665,17 @@ impl Type {
             Self::Intersection(_) => "Box<dyn std::any::Any>".to_string(),
             Self::Alias { body, .. } => body.rust_type(),
             Self::Unknown => "Box<dyn std::any::Any>".to_string(),
-            Self::Class { name, .. } => name.clone(),
+            class @ Self::Class { identity, name, .. } => {
+                if class.is_python_object_contract() {
+                    "::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>"
+                        .to_string()
+                } else if class.is_python_resource_identity_contract() {
+                    "::sifr_runtime::interop::Handle<::sifr_runtime::python::PythonResourceIdentity>"
+                        .to_string()
+                } else {
+                    super::class_rust_name(identity.as_deref(), name)
+                }
+            }
             Self::Result(ok, err) => format!("Result<{}, {}>", ok.rust_type(), err.rust_type()),
             Self::AsyncFunction(ft) => {
                 let params: Vec<String> = ft.params.iter().map(|(_, t, _)| t.rust_type()).collect();
@@ -709,12 +719,17 @@ impl Type {
                 format!("AsyncGenerator<{}, {}>", item.rust_type(), err.rust_type())
             }
             Self::PythonBuffer(element) => {
-                format!("sifr_stdlib::python::PythonBuffer<{}>", element.rust_type())
+                format!(
+                    "::sifr_stdlib::python::PythonBuffer<{}>",
+                    element.rust_type()
+                )
             }
-            Self::Protocol { name, .. } => format!("Box<dyn {name}>"),
-            Self::Newtype { name, .. } => name.clone(),
+            Self::Protocol { name, .. } => {
+                format!("Box<dyn {}>", source_class_rust_name(name))
+            }
+            Self::Newtype { name, .. } => source_class_rust_name(name),
             Self::TypeVar(name) => name.clone(), // Generic type parameter name (e.g., T)
-            Self::Enum { name, .. } => name.clone(), // Enum type maps to its Rust enum name
+            Self::Enum { name, .. } => source_class_rust_name(name),
             Self::BigInt => "BigInt".to_string(),
             Self::Decimal => "Decimal".to_string(),
             Self::BigDecimal => "BigDecimal".to_string(),
@@ -805,27 +820,6 @@ impl Type {
             }
             _ => self.rust_type(),
         }
-    }
-
-    /// Generate a Rust enum name for a union type.
-    ///
-    /// E.g., `int | str` -> `IntOrStr`, `int | str | bool` -> `IntOrStrOrBool`
-    pub fn union_enum_name(&self) -> String {
-        match self {
-            Self::Union(members) => {
-                let parts: Vec<String> = members
-                    .iter()
-                    .map(Self::type_to_enum_variant_prefix)
-                    .collect();
-                parts.join("Or")
-            }
-            _ => self.rust_type(),
-        }
-    }
-
-    /// Get the enum variant name for a type when it appears in a union enum.
-    pub fn union_variant_name(&self) -> String {
-        Self::type_to_enum_variant_prefix(self)
     }
 }
 

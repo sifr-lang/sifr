@@ -343,6 +343,16 @@ pub(crate) fn collect_mutated_vars(
         func.rsplit('.').next().unwrap_or(func)
     }
 
+    fn expression_root_name(expr: &HirExpr) -> Option<&str> {
+        match expr {
+            HirExpr::Name { name, .. } => Some(name),
+            HirExpr::FieldAccess { object, .. } | HirExpr::Index { object, .. } => {
+                expression_root_name(object)
+            }
+            _ => None,
+        }
+    }
+
     fn effective_nested_param_convention(
         param_convention: ParamConvention,
         param_ty: &Type,
@@ -465,22 +475,29 @@ pub(crate) fn collect_mutated_vars(
         HirExpr::MethodCall {
             object,
             method,
-            args: _,
+            args,
             ..
         } => {
-            let root_name = match object.as_ref() {
-                HirExpr::Name { name, .. } => Some(name.clone()),
-                HirExpr::FieldAccess { object: inner, .. } => match inner.as_ref() {
-                    HirExpr::Name { name, .. } => Some(name.clone()),
-                    _ => None,
-                },
-                _ => None,
-            };
+            let root_name = expression_root_name(object).map(str::to_string);
             if MUTATING_METHODS.contains(&method.as_str())
                 || matches!(object.ty(), Type::Class { .. })
             {
                 if let Some(name) = root_name {
                     mutated.borrow_mut().insert(name);
+                }
+            }
+            if let (Some(signatures), Type::Class { name, .. }) =
+                (func_signatures, object.ty().resolve_alias())
+            {
+                let signature_name = format!("{name}::{method}");
+                if let Some((params, _)) = signatures.get(&signature_name) {
+                    for (arg, (_, convention)) in args.iter().zip(params) {
+                        if convention.is_mut_borrow() {
+                            if let Some(name) = expression_root_name(arg) {
+                                mutated.borrow_mut().insert(name.to_string());
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -797,6 +814,32 @@ pub(crate) fn collect_let_declared_types(stmts: &[HirStmt]) -> Vec<Type> {
         &mut on_expr,
     );
     declared
+}
+
+pub(crate) fn collect_try_error_carriers(stmts: &[HirStmt]) -> Vec<Type> {
+    let mut carriers = Vec::new();
+    let mut on_stmt = |stmt: &HirStmt| {
+        if let HirStmt::TryExcept {
+            body_error_types,
+            handlers,
+            ..
+        } = stmt
+        {
+            if let Some(carrier) =
+                crate::try_error_carrier::try_error_carrier(body_error_types, handlers)
+            {
+                carriers.push(carrier);
+            }
+        }
+    };
+    let mut on_expr = |_expr: &HirExpr| {};
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+        &mut on_stmt,
+        &mut on_expr,
+    );
+    carriers
 }
 
 pub(super) fn collect_capture_pattern_names(pattern: &HirPattern, defined: &mut HashSet<String>) {

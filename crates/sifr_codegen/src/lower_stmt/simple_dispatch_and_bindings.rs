@@ -122,7 +122,18 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
                 Some(vec![RustStmt::Return(None)])
             }
         }
-        HirStmt::Return { value: Some(value) } => try_lower_simple_return_stmt(value, ctx),
+        HirStmt::Return { value: Some(value) } => {
+            let mut lowered = try_lower_simple_return_stmt(value, ctx)?;
+            if matches!(value, HirExpr::Name { name, ty }
+                if bindings.borrowed_params.contains(name)
+                    && ty.ownership() != sifr_type_system::OwnershipKind::Copy)
+            {
+                if let Some(RustStmt::Return(Some(returned))) = lowered.first_mut() {
+                    *returned = RustExpr::Clone(Box::new(returned.clone()));
+                }
+            }
+            Some(lowered)
+        }
         HirStmt::Assert { test, msg } => {
             let lowered_msg = if let Some(msg_expr) = msg.as_ref() {
                 Some(if is_option_like_type(msg_expr.ty()) {
@@ -300,9 +311,18 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
         HirStmt::NestedFunction { func } => {
             try_lower_simple_nested_function_stmt(func, in_loop_with_else, bindings)
         }
-        HirStmt::TryExcept { body, handlers, .. } => {
-            try_lower_simple_try_except_stmt(body, handlers, in_loop_with_else, bindings, ctx)
-        }
+        HirStmt::TryExcept {
+            body,
+            handlers,
+            body_error_types,
+        } => try_lower_simple_try_except_stmt(
+            body,
+            handlers,
+            body_error_types,
+            in_loop_with_else,
+            bindings,
+            ctx,
+        ),
         HirStmt::TryFinally { .. } => None,
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
@@ -807,9 +827,14 @@ pub(super) fn append_recursive_capture_args_to_expr(
                 append_recursive_capture_args_to_expr(item, fn_name, capture_names);
             }
         }
-        RustExpr::TimeoutAwait { duration, future } => {
+        RustExpr::TimeoutAwait {
+            duration,
+            future,
+            error,
+        } => {
             append_recursive_capture_args_to_expr(duration, fn_name, capture_names);
             append_recursive_capture_args_to_expr(future, fn_name, capture_names);
+            append_recursive_capture_args_to_expr(error, fn_name, capture_names);
         }
         RustExpr::FormatMacro { args, .. } => {
             for arg in args {

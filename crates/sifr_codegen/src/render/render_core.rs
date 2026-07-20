@@ -30,11 +30,13 @@ impl Renderer {
 
     pub fn render_item(&mut self, item: &RustItem) {
         match item {
-            RustItem::Use(path) => self.emit_line(&format!("use {};", path.join("::"))),
+            RustItem::Use(path) => {
+                self.emit_line(&format!("use {};", Self::render_path_parts(path)));
+            }
             RustItem::UseAlias { path, alias } => {
                 self.emit_line(&format!(
                     "use {} as {};",
-                    path.join("::"),
+                    Self::render_path_parts(path),
                     Self::render_identifier(alias)
                 ));
             }
@@ -142,7 +144,14 @@ impl Renderer {
                 let supers = if supertraits.is_empty() {
                     String::new()
                 } else {
-                    format!(": {}", supertraits.join(" + "))
+                    format!(
+                        ": {}",
+                        supertraits
+                            .iter()
+                            .map(|name| Self::render_compiler_path_string(name))
+                            .collect::<Vec<_>>()
+                            .join(" + ")
+                    )
                 };
                 self.emit_line(&format!(
                     "{}trait {}{} {{",
@@ -172,20 +181,29 @@ impl Renderer {
                             if p.bounds.is_empty() {
                                 p.name.clone()
                             } else {
-                                format!("{}: {}", p.name, p.bounds.join(" + "))
+                                format!(
+                                    "{}: {}",
+                                    p.name,
+                                    p.bounds
+                                        .iter()
+                                        .map(|bound| Self::render_compiler_path_string(bound))
+                                        .collect::<Vec<_>>()
+                                        .join(" + ")
+                                )
                             }
                         })
                         .collect::<Vec<_>>()
                         .join(", ");
                     format!("<{params}>")
                 };
+                let rendered_target = Self::render_identifier_or_compiler_path(target);
                 let head = if let Some(trait_name) = trait_ {
                     format!(
-                        "impl{generics} {trait_name} for {} {{",
-                        Self::render_identifier(target)
+                        "impl{generics} {} for {rendered_target} {{",
+                        Self::render_compiler_path_string(trait_name)
                     )
                 } else {
-                    format!("impl{generics} {} {{", Self::render_identifier(target))
+                    format!("impl{generics} {rendered_target} {{")
                 };
                 self.emit_line(&head);
                 self.indent();
@@ -216,7 +234,15 @@ impl Renderer {
                                 if p.bounds.is_empty() {
                                     p.name.clone()
                                 } else {
-                                    format!("{}: {}", p.name, p.bounds.join(" + "))
+                                    format!(
+                                        "{}: {}",
+                                        p.name,
+                                        p.bounds
+                                            .iter()
+                                            .map(|bound| Self::render_compiler_path_string(bound))
+                                            .collect::<Vec<_>>()
+                                            .join(" + ")
+                                    )
                                 }
                             })
                             .collect::<Vec<_>>()
@@ -297,7 +323,7 @@ impl Renderer {
                     Self::render_expr_string(value)
                 ));
             }
-            RustItem::Attr(attr) => self.emit_line(attr),
+            RustItem::Attr(attr) => self.emit_line(&Self::render_compiler_path_string(attr)),
         }
     }
 }
@@ -365,7 +391,8 @@ impl Renderer {
             } => {
                 self.emit_line(&format!(
                     "let {pattern} = {} else {{",
-                    Self::wrap_expr(value)
+                    Self::wrap_expr(value),
+                    pattern = Self::render_pattern_string(pattern)
                 ));
                 self.indent();
                 for stmt in else_body {
@@ -460,7 +487,7 @@ impl Renderer {
             } => {
                 self.emit_line(&format!(
                     "if let {} = {} {{",
-                    pattern,
+                    Self::render_pattern_string(pattern),
                     Self::render_expr_string(expr)
                 ));
                 self.indent();

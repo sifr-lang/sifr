@@ -119,12 +119,12 @@ fn emitted_direct_result_none_interop_does_not_append_ok_tail() {
 
     let generated = generate_rust_with_metadata(&module).rust_source;
 
-    assert!(generated.contains("sifr_stdlib::zip::zip_close(path)"));
+    assert!(generated.contains("::sifr_stdlib::zip::zip_close(path)"));
     assert!(!generated.contains("return Ok(());"), "{generated}");
 }
 
 #[test]
-fn emitted_opaque_class_is_a_sealed_runtime_handle_alias() {
+fn emitted_python_object_class_does_not_claim_a_source_spellable_rust_name() {
     let mut object = zip_error_class();
     object.name = "Object".to_string();
     object.fields.clear();
@@ -162,9 +162,8 @@ fn emitted_opaque_class_is_a_sealed_runtime_handle_alias() {
 
     let generated = generate_rust_with_metadata(&module).rust_source;
 
-    assert!(generated.contains(
-        "type Object = sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>;"
-    ));
+    assert!(!generated.contains("type __SifrPythonObject"));
+    assert!(!generated.contains("type Object"));
     assert!(!generated.contains("struct Object"));
 }
 
@@ -212,7 +211,7 @@ fn rust_interop_function_body_maps_python_error_fields_without_parent_metadata()
 
     assert_eq!(
         render_expr(expr),
-        "sifr_stdlib::python::py_from_none().map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| PythonError { message: __sifr_bridge_error.message.to_string(), kind: __sifr_bridge_error.kind.to_string(), exception_type: __sifr_bridge_error.exception_type.to_string(), traceback: __sifr_bridge_error.traceback.to_string(), context: __sifr_bridge_error.context.to_string(), __sifr_python_error: Some(__sifr_bridge_error) })"
+        "::sifr_stdlib::python::py_from_none().map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| PythonError { message: __sifr_bridge_error.message.to_string(), kind: __sifr_bridge_error.kind.to_string(), exception_type: __sifr_bridge_error.exception_type.to_string(), traceback: __sifr_bridge_error.traceback.to_string(), context: __sifr_bridge_error.context.to_string(), __sifr_python_error: Some(__sifr_bridge_error) })"
     );
 }
 
@@ -233,7 +232,7 @@ fn rust_interop_function_body_adapts_sealed_python_object_callback_parameter() {
         parent_class: None,
     };
     let object = Type::Class {
-        identity: None,
+        identity: Some("_sifr.python.Object".to_string()),
         type_args: Vec::new(),
         name: "Object".to_string(),
         fields: Vec::new(),
@@ -286,11 +285,13 @@ fn rust_interop_function_body_adapts_sealed_python_object_callback_parameter() {
     };
     let rendered = render_expr(expr);
 
-    assert!(rendered.contains("sifr_stdlib::python::py_local_callback(move |__sifr_callback_arg|"));
+    assert!(
+        rendered.contains("::sifr_stdlib::python::py_local_callback(move |__sifr_callback_arg|")
+    );
     assert!(rendered.contains("handler(&__sifr_callback_arg)"));
     assert!(rendered.contains("Ok(__sifr_callback_result)"));
     assert!(!rendered.contains("__sifr_callback_arg.0"));
-    assert!(rendered.contains("sifr_stdlib::python::PythonError"));
+    assert!(rendered.contains("::sifr_stdlib::python::PythonError"));
     assert!(rendered.contains("PythonError { message: __sifr_bridge_error.message.to_string()"));
 }
 
@@ -360,6 +361,7 @@ fn rust_interop_function_body_converts_python_int_dict_return() {
 fn zip_error_class() -> HirClass {
     HirClass {
         name: "ZipError".to_string(),
+        identity: None,
         fields: vec![("message".to_string(), Type::Str)],
         methods: Vec::new(),
         is_hashable: false,
@@ -369,6 +371,7 @@ fn zip_error_class() -> HirClass {
         newtype_inner: None,
         implements_protocols: Vec::new(),
         parent_class: Some("Error".to_string()),
+        parent_type: None,
         type_params: Vec::new(),
         enum_variants: Vec::new(),
         rust_interop: Vec::new(),

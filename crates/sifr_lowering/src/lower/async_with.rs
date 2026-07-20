@@ -847,10 +847,12 @@ pub(in crate::lower) fn lower_async_with(
         let task_owner_snapshot = enter_task_owner_scope(ctx, &kind, target.as_ref());
         let body = lower_stmts(&with_stmt.body, func_type, ctx);
         exit_task_owner_scope(ctx, task_owner_snapshot);
-        if matches!(kind, HirAsyncWithKind::TaskTimeout { .. })
-            && body.iter().any(stmt_contains_await)
-            && !return_type_accepts_timeout_error(&func_type.return_type)
-        {
+        let timeout_can_fail = matches!(kind, HirAsyncWithKind::TaskTimeout { .. })
+            && body.iter().any(stmt_contains_await);
+        if timeout_can_fail && ctx.in_try_block {
+            ctx.try_block_error_types.insert(timeout_error_type());
+        }
+        if timeout_can_fail && !return_type_accepts_timeout_error(&func_type.return_type) {
             ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,
                 "async with task.timeout(duration) can time out at await points; enclosing function must return Result[..., TimeoutError]"
@@ -859,13 +861,15 @@ pub(in crate::lower) fn lower_async_with(
             );
             return None;
         }
-        if matches!(
+        let scope_can_fail = matches!(
             kind,
             HirAsyncWithKind::TaskScope | HirAsyncWithKind::TaskGroup { .. }
         )
-            && body.iter().any(stmt_contains_task_spawn)
-            && !return_type_accepts_scope_failure(&func_type.return_type)
-        {
+            && body.iter().any(stmt_contains_task_spawn);
+        if scope_can_fail && ctx.in_try_block {
+            ctx.try_block_error_types.insert(scope_failure_type());
+        }
+        if scope_can_fail && !return_type_accepts_scope_failure(&func_type.return_type) {
             ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,
                 "async task scopes that spawn children can fail at exit; enclosing function must return Result[..., ScopeFailure] or Result[..., Error]"

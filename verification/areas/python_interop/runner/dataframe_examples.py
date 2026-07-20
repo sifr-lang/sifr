@@ -12,6 +12,7 @@ DATAFRAME_EXAMPLE_CASES = {
         relative_source="numpy_buffer/numpy_full_example.sifr",
         stdout_marker="sifr-python-interop:numpy:sum=20:values=2,4,6,8",
         import_roots=("numpy",),
+        copy_bridges=False,
     ),
     "pandas": ExampleCase(
         case_id="pandas",
@@ -46,3 +47,14 @@ def run_dataframe_examples_self_tests(paths: RunnerPaths) -> None:
         suite_name="dataframe",
         cases_by_id=DATAFRAME_EXAMPLE_CASES,
     )
+    observed_policy = {
+        case_id: (case.import_roots, case.native_roots, case.copy_bridges, case.bridge_files)
+        for case_id, case in DATAFRAME_EXAMPLE_CASES.items()
+    }
+    expected_policy = {
+        "numpy": (("numpy",), None, False, None),
+        "pandas": (("numpy", "pandas"), None, True, None),
+        "polars": (("polars",), None, True, None),
+    }
+    if observed_policy != expected_policy:
+        raise SystemExit(f"dataframe example package-policy drift: {observed_policy}")

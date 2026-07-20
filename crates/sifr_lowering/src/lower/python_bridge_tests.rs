@@ -6,6 +6,10 @@ use std::collections::BTreeMap;
 const SOURCE: &str = r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python(bridge.pkg.compute)
 def compute(value: int) -> Result[int, PythonError]: ...

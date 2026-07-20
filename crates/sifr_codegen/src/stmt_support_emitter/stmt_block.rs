@@ -866,9 +866,8 @@ impl RustEmitter {
                     return Ok(None);
                 };
                 (vec![lowered_async_with], true)
-            } else if let HirStmt::TryExcept { body, handlers, .. } = stmt {
-                let Some(lowered_try_except) =
-                    self.try_lower_try_except_stmt_for_ir(body, handlers)?
+            } else if matches!(stmt, HirStmt::TryExcept { .. }) {
+                let Some(lowered_try_except) = self.try_lower_try_except_hir_stmt_for_ir(stmt)?
                 else {
                     return Ok(None);
                 };

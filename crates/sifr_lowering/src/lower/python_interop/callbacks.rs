@@ -586,24 +586,30 @@ pub(super) fn error_channel_contains(channel: &Type, expected: &Type) -> bool {
     }
 }
 
-pub(super) fn python_error_type(ctx: &LowerCtx) -> Type {
-    ctx.class_types
-        .get("PythonError")
-        .cloned()
-        .unwrap_or_else(|| Type::Class {
-            identity: None,
-            type_args: Vec::new(),
-            name: "PythonError".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
-            parent_class: Some("Error".to_string()),
-        })
+pub(super) fn error_channel_contains_python_error_contract(channel: &Type) -> bool {
+    match channel.resolve_alias() {
+        Type::Union(members) => members
+            .iter()
+            .any(error_channel_contains_python_error_contract),
+        resolved => resolved.is_python_error_contract(),
+    }
+}
+
+pub(super) fn error_channel_codegen_payload_collision(channel: &Type) -> Option<String> {
+    let Type::Union(members) = channel.resolve_alias() else {
+        return None;
+    };
+    let mut names = std::collections::HashSet::new();
+    members.iter().find_map(|member| {
+        let name = member.rust_type();
+        (!names.insert(name.clone())).then_some(name)
+    })
 }
 
 pub(super) fn contains_python_identity(ty: &Type, ctx: &LowerCtx) -> bool {
     match ty.resolve_alias() {
         Type::Class { name, fields, .. } => {
-            name == "Object"
+            ty.is_python_object_contract()
                 || ctx.python_opaque_classes.contains_key(name)
                 || fields
                     .iter()

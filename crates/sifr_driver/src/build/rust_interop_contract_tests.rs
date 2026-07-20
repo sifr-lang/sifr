@@ -567,7 +567,7 @@ pub(super) fn result_contract(
     }
 }
 
-fn none_contract() -> RustBridgeTypeContract {
+pub(super) fn none_contract() -> RustBridgeTypeContract {
     RustBridgeTypeContract {
         sifr_type: "None".to_string(),
         rust_borrowed_type: Some("()".to_string()),
@@ -607,7 +607,7 @@ pub(super) fn declaration_entry(
     declaration_entry_with_arguments(target, kind, Vec::new())
 }
 
-fn trusted_no_panic_declaration_entry(
+pub(super) fn trusted_no_panic_declaration_entry(
     target: &str,
     kind: RustInteropDecoratorKind,
 ) -> RustInteropPlanDeclaration {
@@ -748,7 +748,7 @@ pub(super) fn symbol_argument(name: &str, value: &str) -> RustInteropArgument {
     }
 }
 
-fn trusted_no_panic_context(
+pub(super) fn trusted_no_panic_context(
     backend_crates: Vec<BackendCrateMetadata>,
 ) -> PackageRustInteropContext {
     let mut trust = TrustPolicy::default();

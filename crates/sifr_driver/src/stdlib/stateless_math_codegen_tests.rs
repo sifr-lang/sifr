@@ -9,12 +9,12 @@ fn math_private_declarations_codegen_through_sifr_stdlib() {
         .get("_sifr.math")
         .expect("_sifr.math should generate private Rust code");
 
-    assert!(private_code.rust.contains("sifr_stdlib::math::sqrt(x)"));
+    assert!(private_code.rust.contains("::sifr_stdlib::math::sqrt(x)"));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::math::pow_val(x, y)"));
-    assert!(private_code.rust.contains("sifr_stdlib::math::floor(x)"));
-    assert!(private_code.rust.contains("sifr_stdlib::math::frexp(x)"));
+        .contains("::sifr_stdlib::math::pow_val(x, y)"));
+    assert!(private_code.rust.contains("::sifr_stdlib::math::floor(x)"));
+    assert!(private_code.rust.contains("::sifr_stdlib::math::frexp(x)"));
     assert!(private_code
         .rust
         .contains("const PI: f64 = 3.141592653589793_f64;"));

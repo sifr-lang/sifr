@@ -34,6 +34,9 @@ impl RustEmitter {
             for ty in crate::hir_analysis::queries::collect_let_declared_types(&func.body) {
                 self.register_union_type(&ty);
             }
+            for ty in crate::hir_analysis::queries::collect_try_error_carriers(&func.body) {
+                self.register_try_error_carrier(&ty);
+            }
         }
         // Also scan class method bodies and register their signatures
         for class in &module.classes {
@@ -67,6 +70,9 @@ impl RustEmitter {
                 for ty in crate::hir_analysis::queries::collect_let_declared_types(&method.body) {
                     self.register_union_type(&ty);
                 }
+                for ty in crate::hir_analysis::queries::collect_try_error_carriers(&method.body) {
+                    self.register_try_error_carrier(&ty);
+                }
             }
             if !has_constructor {
                 // Classes without an explicit `new` still get an auto-generated constructor.
@@ -95,6 +101,10 @@ impl RustEmitter {
     }
 
     pub(crate) fn register_union_type(&mut self, ty: &Type) {
+        self.register_union_type_with_usage(ty, true);
+    }
+
+    fn register_union_type_with_usage(&mut self, ty: &Type, ordinary_value: bool) {
         let resolved = crate::resolve_alias_type_for_plain_call(ty);
         match resolved {
             Type::Union(members) => {
@@ -105,12 +115,16 @@ impl RustEmitter {
                 let is_option =
                     members.iter().any(|member| matches!(member, Type::None)) && non_none == 1;
                 if !is_option {
+                    let enum_name = resolved.union_enum_name();
+                    if ordinary_value {
+                        self.ordinary_union_enums.insert(enum_name.clone());
+                    }
                     self.union_enums
-                        .entry(resolved.union_enum_name())
+                        .entry(enum_name)
                         .or_insert_with(|| members.clone());
                 }
                 for member in members {
-                    self.register_union_type(member);
+                    self.register_union_type_with_usage(member, ordinary_value);
                 }
             }
             Type::List(inner)
@@ -121,7 +135,9 @@ impl RustEmitter {
             | Type::Newtype { inner, .. }
             | Type::Failure(inner)
             | Type::TimeoutResult(inner)
-            | Type::PythonBuffer(inner) => self.register_union_type(inner),
+            | Type::PythonBuffer(inner) => {
+                self.register_union_type_with_usage(inner, ordinary_value);
+            }
             Type::Dict(left, right)
             | Type::Result(left, right)
             | Type::Coroutine(left, right)
@@ -132,28 +148,35 @@ impl RustEmitter {
             | Type::JoinSet(left, right)
             | Type::AsyncIterator(left, right)
             | Type::AsyncGenerator(left, right) => {
-                self.register_union_type(left);
-                self.register_union_type(right);
+                self.register_union_type_with_usage(left, ordinary_value);
+                self.register_union_type_with_usage(right, ordinary_value);
             }
             Type::Tuple(items) | Type::Intersection(items) => {
                 for item in items {
-                    self.register_union_type(item);
+                    self.register_union_type_with_usage(item, ordinary_value);
                 }
             }
             Type::Function(signature) | Type::AsyncFunction(signature) => {
                 for (_, parameter, _) in &signature.params {
-                    self.register_union_type(parameter);
+                    self.register_union_type_with_usage(parameter, ordinary_value);
                 }
-                self.register_union_type(&signature.return_type);
+                self.register_union_type_with_usage(&signature.return_type, ordinary_value);
             }
             Type::Callable(parameters, _, result) | Type::AsyncCallable(parameters, _, result) => {
                 for parameter in parameters {
-                    self.register_union_type(parameter);
+                    self.register_union_type_with_usage(parameter, ordinary_value);
                 }
-                self.register_union_type(result);
+                self.register_union_type_with_usage(result, ordinary_value);
             }
             _ => {}
         }
+    }
+
+    fn register_try_error_carrier(&mut self, ty: &Type) {
+        if matches!(ty.resolve_alias(), Type::Union(_)) {
+            self.try_error_carrier_enums.insert(ty.union_enum_name());
+        }
+        self.register_union_type_with_usage(ty, false);
     }
 
     /// Generate Rust enum definitions for all collected union types.
@@ -164,6 +187,9 @@ impl RustEmitter {
 
         self.enum_items.clear();
         for (enum_name, members) in enums {
+            let is_try_error_carrier = self.try_error_carrier_enums.contains(&enum_name);
+            let supports_ordinary_value_traits =
+                !is_try_error_carrier || self.ordinary_union_enums.contains(&enum_name);
             let variants = members
                 .iter()
                 .map(|member| RustEnumVariant {
@@ -180,10 +206,12 @@ impl RustEmitter {
             if members.iter().all(Type::supports_derived_clone) {
                 derives.push("Clone".to_string());
             }
-            if members.iter().all(Type::supports_structural_equality) {
+            if supports_ordinary_value_traits
+                && members.iter().all(Type::supports_structural_equality)
+            {
                 derives.push("PartialEq".to_string());
             }
-            if members.iter().all(Type::supports_hash_key) {
+            if supports_ordinary_value_traits && members.iter().all(Type::supports_hash_key) {
                 derives.push("Eq".to_string());
                 derives.push("Hash".to_string());
             }
@@ -194,6 +222,34 @@ impl RustEmitter {
                 repr: None,
                 variants,
             });
+            if is_try_error_carrier {
+                self.enum_items.extend(members.iter().map(|member| {
+                    let variant = member.union_variant_name();
+                    RustItem::Impl {
+                        target: enum_name.clone(),
+                        type_params: Vec::new(),
+                        trait_: Some(format!(
+                            "From<{}>",
+                            crate::render_type(&sifr_type_to_rust_type(member))
+                        )),
+                        items: vec![RustItem::Fn {
+                            name: "from".to_string(),
+                            visibility: Visibility::Private,
+                            type_params: Vec::new(),
+                            params: vec![RustParam::Named {
+                                name: "value".to_string(),
+                                ty: sifr_type_to_rust_type(member),
+                            }],
+                            ret: Some(RustType::Named("Self".to_string())),
+                            body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec![enum_name.clone(), variant])),
+                                args: vec![RustExpr::Ident("value".to_string())],
+                            }))],
+                            is_async: false,
+                        }],
+                    }
+                }));
+            }
 
             let supports_display = members.iter().all(|member| {
                 member.supports_display_formatting() || member.supports_debug_formatting()
@@ -264,11 +320,9 @@ mod tests {
 
     #[test]
     fn affine_union_uses_debug_without_clone_or_display_bounds() {
-        let members = vec![
-            Type::None,
-            Type::Int,
-            Type::PythonBuffer(Box::new(Type::FixedInt(sifr_type_system::FixedIntType::U8))),
-        ];
+        let buffer =
+            Type::PythonBuffer(Box::new(Type::FixedInt(sifr_type_system::FixedIntType::U8)));
+        let members = vec![Type::None, Type::Int, buffer.clone()];
         let mut emitter = RustEmitter::new();
         emitter.register_union_type(&Type::Union(members));
         emitter.generate_enum_definitions();
@@ -278,10 +332,10 @@ mod tests {
         };
         assert_eq!(derives, &["Debug"]);
         let rendered = crate::render::render_items(&emitter.enum_items);
-        assert!(rendered.contains("PythonBuffer(v) =>"));
+        assert!(rendered.contains(&format!("{}(v) =>", buffer.union_variant_name())));
         assert!(rendered.contains("write!(f, \"{:?}\", v)"));
         let none_arm = rendered
-            .split("None(v) =>")
+            .split(&format!("{}(v) =>", Type::None.union_variant_name()))
             .nth(1)
             .expect("None union arm should be rendered");
         assert!(none_arm[..none_arm.len().min(120)].contains("write!(f, \"{:?}\", v)"));
@@ -289,8 +343,9 @@ mod tests {
 
     #[test]
     fn equality_capable_union_derives_the_required_rust_traits() {
+        let union = Type::Union(vec![Type::Int, Type::Str]);
         let mut emitter = RustEmitter::new();
-        emitter.register_union_type(&Type::Union(vec![Type::Int, Type::Str]));
+        emitter.register_union_type(&union);
         emitter.generate_enum_definitions();
 
         let RustItem::Enum { derives, .. } = &emitter.enum_items[0] else {
@@ -298,7 +353,53 @@ mod tests {
         };
         assert_eq!(derives, &["Debug", "Clone", "PartialEq", "Eq", "Hash"]);
         let rendered = crate::render::render_items(&emitter.enum_items);
-        assert!(rendered.contains("impl std::fmt::Display for IntOrStr"));
+        assert!(rendered.contains(&format!(
+            "impl ::std::fmt::Display for {}",
+            union.union_enum_name()
+        )));
+    }
+
+    #[test]
+    fn try_carrier_reuse_keeps_ordinary_union_traits() {
+        let first_error = Type::Class {
+            identity: Some("tests.first.Error".to_string()),
+            type_args: Vec::new(),
+            name: "Error".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let second_error = Type::Class {
+            identity: Some("tests.second.Error".to_string()),
+            type_args: Vec::new(),
+            name: "Error".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let union = Type::Union(vec![first_error, second_error]);
+        let mut emitter = RustEmitter::new();
+        emitter.register_union_type(&union);
+        emitter.register_try_error_carrier(&union);
+        emitter.generate_enum_definitions();
+
+        let RustItem::Enum { derives, .. } = &emitter.enum_items[0] else {
+            panic!("first generated item should be the union enum");
+        };
+        assert_eq!(derives, &["Debug", "Clone", "PartialEq", "Eq", "Hash"]);
+    }
+
+    #[test]
+    fn carrier_only_union_omits_unneeded_value_traits() {
+        let union = Type::Union(vec![Type::Int, Type::Str]);
+        let mut emitter = RustEmitter::new();
+        emitter.register_try_error_carrier(&union);
+        emitter.generate_enum_definitions();
+
+        let RustItem::Enum { derives, .. } = &emitter.enum_items[0] else {
+            panic!("first generated item should be the union enum");
+        };
+        assert_eq!(derives, &["Debug", "Clone"]);
     }
 
     #[test]

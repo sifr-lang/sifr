@@ -26,6 +26,10 @@ fn sync_python_declaration_retains_target_effect_and_call_shape() {
         r#"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python(pkg.api.compute)
 def compute(value: int, *rest: int, flag: bool = False, missing: int = python.omit, **extra: int) -> Result[int, PythonError]: ...
@@ -64,6 +68,10 @@ fn invalid_python_target_reports_pyimp_0001() {
         r#"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python("pkg.compute")
 def compute(value: int) -> Result[int, PythonError]: ...
@@ -80,41 +88,13 @@ fn invalid_python_declaration_shape_reports_pycall_0001() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python(pkg.compute, pkg.other)
 def compute(value: int) -> Result[int, PythonError]: ...
-",
-    );
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYCALL_INVALID_SHAPE)));
-}
-
-#[test]
-fn unsupported_python_conversion_reports_pyconv_0001() {
-    let errors = lower_errors(
-        r"
-class PythonError(Error):
-    message: str
-
-@python(pkg.compute)
-def compute(values: set[int]) -> Result[int, PythonError]: ...
-",
-    );
-    assert!(errors
-        .iter()
-        .any(|error| { error.code == Some(DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE) }));
-}
-
-#[test]
-fn positional_variadics_after_omission_are_rejected() {
-    let errors = lower_errors(
-        r"
-class PythonError(Error):
-    message: str
-
-@python(pkg.compute)
-def compute(value: int = python.omit, *rest: int) -> Result[int, PythonError]: ...
 ",
     );
     assert!(errors
@@ -148,6 +128,10 @@ fn opaque_methods_retain_self_attribute_and_item_declarations() {
         r#"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.opaque(type=pkg.Token, cleanup=drop)
 class Token:
@@ -184,6 +168,10 @@ class Token:
 const CLOSE_OPAQUE_PREFIX: &str = r#"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python.opaque(type=pkg.Client, cleanup=close)
 class Client:
@@ -197,6 +185,10 @@ def make_client() -> Result[Client, PythonError]: ...
 const CONTEXT_OPAQUE_PREFIX: &str = r#"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class ExitCause:
     pass
@@ -247,6 +239,19 @@ fn invalid_python_context_declaration_reports_pyctx_0001() {
 }
 
 #[test]
+fn context_declaration_rejects_shadow_python_error_contract() {
+    let errors = lower_errors(
+        &CONTEXT_OPAQUE_PREFIX.replace("    context: str", "    context: str\n    code: int"),
+    );
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PYCTX_INVALID_DECLARATION)
+            && error
+                .message
+                .contains("canonical `PythonError` field contract")
+    }));
+}
+
+#[test]
 fn context_only_obligation_cannot_transfer_through_return() {
     let errors = lower_errors(&format!(
         "{CONTEXT_OPAQUE_PREFIX}\ndef forward() -> Result[Transaction, PythonError]:\n    try:\n        transaction: Transaction = make_transaction()\n        return transaction\n    except PythonError as error:\n        raise error\n"
@@ -273,6 +278,10 @@ fn context_enter_rejects_distinct_close_required_opaque_result() {
     let source = r#"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class ExitCause:
     pass
@@ -305,6 +314,10 @@ fn context_enter_rejects_aggregate_hiding_close_required_opaque_result() {
     let source = r#"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class ExitCause:
     pass
@@ -403,6 +416,10 @@ fn python_with_nonopaque_entered_value_is_ordinary_owned_data() {
     let source = r#"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class ExitCause:
     pass
@@ -748,6 +765,10 @@ fn python_declaration_rejects_non_stub_body() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python(pkg.compute)
 def compute(value: int) -> Result[int, PythonError]:
@@ -766,6 +787,10 @@ fn sync_python_declaration_is_blocking_in_async_context() {
         r"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python(math.sqrt)
 def sqrt(value: float) -> Result[float, PythonError]: ...
@@ -786,6 +811,10 @@ fn python_calls_lower_omit_none_variadics_and_typed_kwargs() {
         r#"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 @python(pkg.collect)
 def collect(value: int, *rest: int, label: str | None = python.omit, **extra: int) -> Result[int, PythonError]: ...
@@ -812,6 +841,10 @@ fn closed_record_expansion_retains_fields_and_span_in_hir() {
         r#"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class Options:
     label: str

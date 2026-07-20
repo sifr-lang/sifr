@@ -1,13 +1,4 @@
-/// Capitalize the first letter of a string.
 use super::Type;
-
-pub(super) fn capitalize(s: &str) -> String {
-    let mut chars = s.chars();
-    match chars.next() {
-        None => String::new(),
-        Some(c) => c.to_uppercase().to_string() + chars.as_str(),
-    }
-}
 
 impl std::fmt::Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -60,7 +51,9 @@ mod tests {
     fn test_fixed_width_type_names_and_union_variants() {
         let fixed = Type::FixedInt(FixedIntType::U32);
         assert_eq!(fixed.display_name(), "uint32");
-        assert_eq!(fixed.union_variant_name(), "Uint32");
+        assert!(fixed
+            .union_variant_name()
+            .starts_with("__SifrUnionVariant_"));
     }
 
     #[test]
@@ -715,7 +708,7 @@ mod tests {
     #[test]
     fn test_union_rust_type_enum() {
         let u = Type::Union(vec![Type::Int, Type::Str]);
-        assert_eq!(u.rust_type(), "IntOrStr");
+        assert!(u.rust_type().starts_with("__SifrUnion_"));
     }
 
     #[test]

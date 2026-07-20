@@ -4,7 +4,7 @@ use crate::{
     Visibility,
 };
 use sifr_ir::{HirClass, HirFunction, MethodKind};
-use sifr_type_system::Type;
+use sifr_type_system::{source_class_rust_name, Type};
 
 impl RustEmitter {
     pub(crate) fn emit_protocol_trait(&mut self, class: &HirClass, _module_public: bool) {
@@ -35,7 +35,7 @@ impl RustEmitter {
             })
             .collect::<Vec<_>>();
         self.body_items.push(RustItem::Trait {
-            name: class.name.clone(),
+            name: source_class_rust_name(&class.name),
             visibility,
             supertraits: vec![],
             methods,
@@ -64,7 +64,7 @@ impl RustEmitter {
             })
             .collect::<Vec<_>>();
         self.body_items.push(RustItem::Enum {
-            name: class.name.clone(),
+            name: source_class_rust_name(&class.name),
             visibility,
             derives: vec![
                 "Debug".to_string(),
@@ -79,7 +79,7 @@ impl RustEmitter {
         });
 
         self.body_items.push(RustItem::Impl {
-            target: class.name.clone(),
+            target: source_class_rust_name(&class.name),
             type_params: Vec::new(),
             trait_: Some("std::fmt::Display".to_string()),
             items: vec![RustItem::Fn {
@@ -146,7 +146,7 @@ impl RustEmitter {
         self.current_class_name = saved_class_name;
 
         self.body_items.push(RustItem::Impl {
-            target: class.name.clone(),
+            target: source_class_rust_name(&class.name),
             type_params: Vec::new(),
             trait_: None,
             items: impl_items,
@@ -174,7 +174,7 @@ impl RustEmitter {
             derives.push("Hash".to_string());
         }
         self.body_items.push(RustItem::TupleStruct {
-            name: class.name.clone(),
+            name: source_class_rust_name(&class.name),
             visibility,
             derives,
             inner: crate::sifr_type_to_rust_type(inner),
@@ -231,13 +231,13 @@ impl RustEmitter {
         self.current_class_name = saved_class_name;
 
         self.body_items.push(RustItem::Impl {
-            target: class.name.clone(),
+            target: source_class_rust_name(&class.name),
             type_params: Vec::new(),
             trait_: None,
             items: impl_items,
         });
         self.body_items.push(RustItem::Impl {
-            target: class.name.clone(),
+            target: source_class_rust_name(&class.name),
             type_params: Vec::new(),
             trait_: Some("std::fmt::Display".to_string()),
             items: vec![RustItem::Fn {

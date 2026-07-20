@@ -535,6 +535,39 @@ def main():\n    print(crc32(b\"abc\"))\n",
 }
 
 #[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+fn test_build_package_keeps_runtime_and_source_python_error_identities_distinct() {
+    let dir = mktemp_dir("package_python_error_identity_collision");
+    let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");
+    write_package_source(
+        &app,
+        "main.sifr",
+        "from sifr.python import PythonError as RuntimePythonError\n\n\
+class PythonError(Error):\n    message: str\n    code: int\n\n\
+def describe(error: RuntimePythonError) -> str:\n    return error.kind\n\n\
+def main() -> None:\n    local: PythonError = PythonError(\"local\", 7)\n    assert local.code == 7\n",
+    );
+    let graph = package_graph(&dir, &[&app], &[]);
+    let source_map = sifr_package::PackageSourceMap::build(&graph).expect("source map builds");
+    let mut entrypoint =
+        package_entrypoint(&graph, &source_map, &app, app.root.join("src/main.sifr"));
+    entrypoint.python_runtime = Some(local_python_runtime(&dir));
+
+    let artifact = build_cached_package_project(&entrypoint)
+        .expect("canonical and source PythonError declarations should build together");
+    let output = std::process::Command::new(artifact.binary_path())
+        .output()
+        .expect("package binary should run");
+
+    assert!(
+        output.status.success(),
+        "binary should pass: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
 fn test_check_package_project_uses_sifr_manifest_dependency_aliases() {
     let dir = mktemp_dir("package_sifr_manifest_alias");
     let app = production_package(&dir, "app", "sifr-demo-app", "demo_app");

@@ -256,6 +256,7 @@ pub enum RustExpr {
     TimeoutAwait {
         duration: Box<RustExpr>,
         future: Box<RustExpr>,
+        error: Box<RustExpr>,
     },
     Try(Box<RustExpr>),
     Await(Box<RustExpr>),

@@ -198,3 +198,5 @@ opt-level = 1
 opt-level = 1
 [profile.dev.package.sifr_type_system]
 opt-level = 1
+[profile.dev.package.sifr_codegen]
+opt-level = 1

@@ -4,6 +4,17 @@ use sifr_ir::{HirExpr, HirFunction, HirIteratorOp, HirParam, HirPattern, HirStmt
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashMap;
 
+fn test_error_type(name: &str) -> Type {
+    Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: name.to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    }
+}
+
 #[test]
 fn collect_mutated_vars_marks_mutborrow_call_argument() {
     let stmts = vec![HirStmt::Expr {
@@ -31,6 +42,88 @@ fn collect_mutated_vars_marks_mutborrow_call_argument() {
 
     let mutated = collect_mutated_vars(&stmts, Some(&sigs));
     assert!(mutated.contains("items"));
+}
+
+#[test]
+fn collect_mutated_vars_marks_method_mutborrow_argument() {
+    let crate_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "Crate".to_string(),
+        fields: vec![],
+        methods: vec![],
+        parent_class: None,
+    };
+    let stmts = vec![HirStmt::Expr {
+        expr: HirExpr::MethodCall {
+            object: Box::new(HirExpr::Name {
+                name: "receiver".to_string(),
+                ty: crate_ty.clone(),
+            }),
+            method: "merge".to_string(),
+            args: vec![HirExpr::Name {
+                name: "other".to_string(),
+                ty: crate_ty.clone(),
+            }],
+            ty: Type::None,
+        },
+    }];
+    let mut sigs: ModuleFuncSignatures = HashMap::new();
+    sigs.insert(
+        "Crate::merge".to_string(),
+        (vec![(crate_ty, ParamConvention::mut_borrow())], Type::None),
+    );
+
+    let mutated = collect_mutated_vars(&stmts, Some(&sigs));
+
+    assert!(mutated.contains("other"));
+}
+
+#[test]
+fn collect_mutated_vars_marks_method_mutborrow_field_argument_root() {
+    let crate_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "Crate".to_string(),
+        fields: vec![],
+        methods: vec![],
+        parent_class: None,
+    };
+    let depot_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "Depot".to_string(),
+        fields: vec![("stock".to_string(), crate_ty.clone())],
+        methods: vec![],
+        parent_class: None,
+    };
+    let stmts = vec![HirStmt::Expr {
+        expr: HirExpr::MethodCall {
+            object: Box::new(HirExpr::Name {
+                name: "receiver".to_string(),
+                ty: crate_ty.clone(),
+            }),
+            method: "merge".to_string(),
+            args: vec![HirExpr::FieldAccess {
+                object: Box::new(HirExpr::Name {
+                    name: "depot".to_string(),
+                    ty: depot_ty,
+                }),
+                field: "stock".to_string(),
+                ty: crate_ty.clone(),
+            }],
+            ty: Type::None,
+        },
+    }];
+    let mut sigs: ModuleFuncSignatures = HashMap::new();
+    sigs.insert(
+        "Crate::merge".to_string(),
+        (vec![(crate_ty, ParamConvention::mut_borrow())], Type::None),
+    );
+
+    let mutated = collect_mutated_vars(&stmts, Some(&sigs));
+
+    assert!(mutated.contains("depot"));
 }
 
 #[test]
@@ -187,10 +280,38 @@ fn body_contains_yield_detects_try_except_and_loop_else_paths() {
                 value: HirExpr::IntLiteral(2),
             }],
         }],
-        body_error_types: vec!["Error".to_string()],
+        body_error_types: vec![test_error_type("Error")],
     }];
 
     assert!(body_contains_yield(&stmts));
+}
+
+#[test]
+fn collect_try_error_carriers_descends_into_nested_functions() {
+    let first_error = test_error_type("FirstError");
+    let second_error = test_error_type("SecondError");
+    let nested = HirFunction {
+        name: "inner".to_string(),
+        params: Vec::new(),
+        return_type: Type::None,
+        body: vec![HirStmt::TryExcept {
+            body: vec![HirStmt::Pass],
+            handlers: Vec::new(),
+            body_error_types: vec![first_error.clone(), second_error.clone()],
+        }],
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
+        python_interop: Vec::new(),
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+
+    assert_eq!(
+        collect_try_error_carriers(&[HirStmt::NestedFunction { func: nested }]),
+        vec![Type::Union(vec![first_error, second_error])]
+    );
 }
 
 #[test]
@@ -503,7 +624,7 @@ fn block_control_flow_effect_reports_always_exits_for_mixed_return_raise() {
                 },
             }],
         }],
-        body_error_types: vec!["Error".to_string()],
+        body_error_types: vec![test_error_type("Error")],
     }]);
 
     assert_eq!(effect, ControlFlowEffect::AlwaysExits);

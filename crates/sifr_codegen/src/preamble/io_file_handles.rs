@@ -195,7 +195,7 @@ pub fn build_file_handle_infra_items() -> Vec<RustItem> {
 pub fn build_file_handle_struct_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {
-            name: "FileHandle".to_string(),
+            name: "__SifrIoFileHandle".to_string(),
             visibility: Visibility::Private,
             derives: vec!["Debug".to_string(), "Clone".to_string()],
             fields: vec![
@@ -204,7 +204,7 @@ pub fn build_file_handle_struct_items() -> Vec<RustItem> {
             ],
         },
         RustItem::Impl {
-            target: "FileHandle".to_string(),
+            target: "__SifrIoFileHandle".to_string(),
             type_params: vec![],
             trait_: None,
             items: vec![

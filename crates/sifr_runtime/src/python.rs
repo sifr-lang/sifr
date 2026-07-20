@@ -26,6 +26,7 @@ mod context_ops;
 #[cfg(test)]
 mod context_ops_tests;
 mod coroutine_ops;
+mod declaration_object_bridge;
 mod dlpack_ops;
 mod foreign_object;
 mod object_ops;
@@ -77,6 +78,8 @@ pub use context_ops::{
     SifrExitCauseKind,
 };
 pub use coroutine_ops::run_coroutine_blocking;
+#[doc(hidden)]
+pub use declaration_object_bridge::*;
 pub use dlpack_ops::{
     dlpack_shape, dlpack_strides, dlpack_tensor, release_dlpack, DlpackHandle,
     PythonDlpackTensorMetadata,

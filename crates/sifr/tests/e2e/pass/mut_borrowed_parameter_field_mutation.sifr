@@ -1,0 +1,17 @@
+class Crate:
+    items: list[int]
+
+
+def mutate(mut item: Crate) -> None:
+    item.items.append(7)
+    item.items.extend([8, 9])
+    popped: int | None = item.items.pop()
+    assert popped == 9
+
+
+def main() -> None:
+    item: Crate = Crate([1, 2])
+    mutate(item)
+    assert len(item.items) == 4
+    assert item.items[2] == 7
+    assert item.items[3] == 8

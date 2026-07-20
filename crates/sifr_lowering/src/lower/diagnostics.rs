@@ -36,7 +36,7 @@ pub(in crate::lower) fn is_error_class(class_def: &StmtClassDef) -> bool {
 
 /// Check if a type is a valid error type (a class registered in `error_types`).
 pub(in crate::lower) fn is_valid_error_type(ty: &Type, ctx: &LowerCtx) -> bool {
-    match ty {
+    match ty.resolve_alias() {
         Type::Class { name, .. } => ctx.error_types.contains(name),
         Type::Union(members) => {
             !members.is_empty()
@@ -89,6 +89,37 @@ pub(in crate::lower) fn format_type_name(ty: &Type) -> String {
         Type::Bool => "bool".to_string(),
         Type::None => "None".to_string(),
         Type::Class { name, .. } => name.clone(),
+        Type::Alias { name, .. } => name.clone(),
+        Type::Union(members) => {
+            let duplicate_class_names = members
+                .iter()
+                .filter_map(|member| match member.resolve_alias() {
+                    Type::Class { name, .. } => Some(name),
+                    _ => None,
+                })
+                .filter(|name| {
+                    members
+                        .iter()
+                        .filter(|member| {
+                            matches!(member.resolve_alias(), Type::Class { name: other, .. } if other == *name)
+                        })
+                        .count()
+                        > 1
+                })
+                .collect::<std::collections::HashSet<_>>();
+            members
+                .iter()
+                .map(|member| match member.resolve_alias() {
+                    Type::Class {
+                        identity: Some(identity),
+                        name,
+                        ..
+                    } if duplicate_class_names.contains(name) => identity.clone(),
+                    _ => format_type_name(member),
+                })
+                .collect::<Vec<_>>()
+                .join(" | ")
+        }
         Type::List(inner) => format!("list[{}]", format_type_name(inner)),
         Type::Dict(k, v) => format!("dict[{}, {}]", format_type_name(k), format_type_name(v)),
         Type::Failure(inner) => format!("Failure[{}]", format_type_name(inner)),
@@ -117,13 +148,13 @@ pub(in crate::lower) fn list_append_argument_type_mismatch(
 /// Collect error types from raise statements in a list of HIR statements.
 pub(in crate::lower) fn collect_raise_error_types(
     stmts: &[HirStmt],
-    errors: &mut std::collections::HashSet<String>,
+    errors: &mut std::collections::HashSet<Type>,
 ) {
     for stmt in stmts {
         match stmt {
             HirStmt::Raise { value } => {
-                if let Type::Class { name, .. } = value.ty() {
-                    errors.insert(name.clone());
+                if matches!(value.ty().resolve_alias(), Type::Class { .. }) {
+                    errors.insert(value.ty().resolve_alias().clone());
                 }
             }
             HirStmt::If {
@@ -140,10 +171,36 @@ pub(in crate::lower) fn collect_raise_error_types(
                     collect_raise_error_types(eb, errors);
                 }
             }
-            HirStmt::While { body, .. }
-            | HirStmt::For { body, .. }
-            | HirStmt::AsyncFor { body, .. } => {
+            HirStmt::While {
+                body, else_body, ..
+            }
+            | HirStmt::For {
+                body, else_body, ..
+            }
+            | HirStmt::AsyncFor {
+                body, else_body, ..
+            } => {
                 collect_raise_error_types(body, errors);
+                if let Some(else_body) = else_body {
+                    collect_raise_error_types(else_body, errors);
+                }
+            }
+            HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => {
+                collect_raise_error_types(body, errors);
+            }
+            HirStmt::Match { arms, .. } => {
+                for arm in arms {
+                    collect_raise_error_types(&arm.body, errors);
+                }
+            }
+            HirStmt::TryExcept { handlers, .. } => {
+                for handler in handlers {
+                    collect_raise_error_types(&handler.body, errors);
+                }
+            }
+            HirStmt::TryFinally { body, finalbody } => {
+                collect_raise_error_types(body, errors);
+                collect_raise_error_types(finalbody, errors);
             }
             _ => {}
         }

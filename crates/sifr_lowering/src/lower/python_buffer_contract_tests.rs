@@ -120,6 +120,116 @@ fn opaque_receiver_buffer_requires_immutable_borrowed_self() {
 }
 
 #[test]
+fn opaque_receiver_buffer_rejects_writable_self_without_owner_freezing() {
+    let source = format!(
+        "{ERROR}\n@python.opaque(type=pkg.Owner, cleanup=drop)\nclass Owner(NonSend):\n    @python.buffer(Self, access=write, layout=any)\n    def view(self) -> Result[python.Buffer[uint8], PythonError]: ...\n"
+    );
+    let errors = lower_errors(&source);
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                && error
+                    .message
+                    .contains("cannot exclusively freeze its opaque owner")
+        }),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn writable_buffer_producers_require_owned_python_identity_parameters() {
+    let owner = r#"
+@python.opaque(type=pkg.Owner, cleanup=drop)
+class Owner(NonSend):
+    pass
+"#;
+    for parameter in ["owner: Owner", "holders: list[Owner]"] {
+        let errors = lower_errors(&format!(
+            "{ERROR}\n{owner}\n@python.buffer(pkg.identity, access=write, layout=any)\ndef view({parameter}) -> Result[python.Buffer[uint8], PythonError]: ...\n"
+        ));
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                    && error.message.contains("must transfer ownership with `own`")
+            }),
+            "{parameter}: {errors:?}"
+        );
+    }
+
+    lower_ok(&format!(
+        "{ERROR}\n{owner}\n@python.buffer(pkg.identity, access=write, layout=any)\ndef view(own owner: Owner) -> Result[python.Buffer[uint8], PythonError]: ...\n"
+    ));
+}
+
+#[test]
+fn buffer_declaration_rejects_local_class_named_object_as_python_identity() {
+    let errors = lower_errors(&format!(
+        "{ERROR}\nclass Object:\n    pass\n\n@python.buffer(pkg.identity, access=read, layout=any)\ndef view(owner: Object) -> Result[python.Buffer[uint8], PythonError]: ...\n"
+    ));
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE)
+            && error.message.contains("unsupported type `Object`")
+    }));
+}
+
+#[test]
+fn buffer_declarations_and_methods_reject_shadow_python_error_shapes() {
+    let shadows = [
+        r#"
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+    code: int
+"#,
+        r#"
+class PythonError(Error):
+    message: str
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+"#,
+    ];
+
+    for shadow in shadows {
+        let declaration = lower_errors(&format!(
+            "{shadow}\n@python.buffer(pkg.make, access=read, layout=any)\ndef bad() -> Result[python.Buffer[uint8], PythonError]: ...\n"
+        ));
+        assert!(
+            declaration.iter().any(|error| {
+                error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                    && error
+                        .message
+                        .contains("canonical `PythonError` field contract")
+            }),
+            "{declaration:?}"
+        );
+
+        let method = lower_errors(&format!(
+            "{shadow}\ndef bad(view: python.Buffer[uint8]) -> None:\n    value: Result[uint8, PythonError] = view.read(0)\n"
+        ));
+        assert!(
+            method.iter().any(|error| {
+                error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                    && error
+                        .message
+                        .contains("python.Buffer methods require the canonical")
+            }),
+            "{method:?}"
+        );
+    }
+}
+
+#[test]
+fn infallible_buffer_metadata_does_not_require_python_error_in_scope() {
+    lower_ok("def length(view: python.Buffer[uint8]) -> int:\n    return view.length()\n");
+}
+
+#[test]
 fn buffer_policy_and_return_contract_fail_with_pyzc_0001() {
     for declaration in [
         "@python.buffer(pkg.make, access=copy, layout=any)\ndef bad() -> Result[python.Buffer[uint8], PythonError]: ...",

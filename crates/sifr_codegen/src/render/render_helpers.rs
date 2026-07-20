@@ -317,10 +317,60 @@ mod tests {
         }]);
 
         assert_snapshot!(rendered, @r###"
-        pub fn identity<T: Clone + std::fmt::Display>(value: T) -> T {
+        pub fn identity<T: Clone + ::std::fmt::Display>(value: T) -> T {
             value
         }
         "###);
+    }
+
+    #[test]
+    fn compiler_paths_are_absolute_without_rewriting_source_values() {
+        assert_eq!(
+            render_expr(&RustExpr::Ident(
+                "std::sync::Arc::new(tokio::sync::Mutex::new(value))".to_string()
+            )),
+            "::std::sync::Arc::new(::tokio::sync::Mutex::new(value))"
+        );
+        assert_eq!(
+            render_expr(&RustExpr::Path(vec![
+                "std".to_string(),
+                "convert".to_string(),
+                "Into".to_string(),
+            ])),
+            "::std::convert::Into"
+        );
+        assert_eq!(render_expr(&RustExpr::Ident("std".to_string())), "std");
+        assert_eq!(
+            render_expr(&RustExpr::Literal(RustLiteral::Str(
+                "std::path remains data".to_string()
+            ))),
+            "\"std::path remains data\".to_string()"
+        );
+        assert_eq!(
+            render_expr(&RustExpr::Ident(
+                r##"format!("std::data"); let raw = r#"tokio::data"#; std::path::Path::new()"##
+                    .to_string()
+            )),
+            r##"format!("std::data"); let raw = r#"tokio::data"#; ::std::path::Path::new()"##
+        );
+        assert_eq!(
+            Renderer::render_compiler_path_string(
+                "/* std::comment */ tokio::spawn // rayon::comment\nrayon::join"
+            ),
+            "/* std::comment */ ::tokio::spawn // rayon::comment\n::rayon::join"
+        );
+        assert_eq!(
+            Renderer::render_compiler_path_string(
+                "not_std::value std::value ::std::value xstd::value"
+            ),
+            "not_std::value ::std::value ::std::value xstd::value"
+        );
+        assert_eq!(
+            Renderer::render_compiler_path_string(
+                r####"r###"std::raw"### b"tokio::bytes" 's' /* core::nested /* serde::nested */ */ core::value"####
+            ),
+            r####"r###"std::raw"### b"tokio::bytes" 's' /* core::nested /* serde::nested */ */ ::core::value"####
+        );
     }
 
     #[test]

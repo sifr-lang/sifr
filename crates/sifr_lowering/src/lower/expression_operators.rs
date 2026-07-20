@@ -119,7 +119,7 @@ pub(in crate::lower) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Op
 
     if [&left, &right]
         .iter()
-        .any(|expr| matches!(expr, HirExpr::Name { name, .. } if ctx.is_poisoned_binding(name)))
+        .any(|expr| super::expressions::is_poisoned_binding_expr(expr, ctx))
     {
         return None;
     }
@@ -359,7 +359,7 @@ fn current_owner_has_typevar_bound(ctx: &LowerCtx, type_var: &str, bound: &str) 
 
 pub(in crate::lower) fn lower_unaryop(unary: &ExprUnaryOp, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let operand = lower_expr(&unary.operand, ctx)?;
-    if matches!(&operand, HirExpr::Name { name, .. } if ctx.is_poisoned_binding(name)) {
+    if super::expressions::is_poisoned_binding_expr(&operand, ctx) {
         return None;
     }
 

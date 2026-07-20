@@ -22,7 +22,8 @@ use crate::ir_imports::{collect_import_needs_from_items, collect_import_needs_fr
 use crate::ir_optimize::remove_trivial_clones_in_items;
 use crate::ir_validate::validate_items;
 use crate::stdlib_filter::{
-    collect_and_strip_shared_prelude, dedup_rust_items, filter_stdlib_ir_to_needed,
+    absolutize_external_crate_paths, collect_and_strip_shared_prelude, dedup_rust_items,
+    filter_canonical_stdlib_ir_to_needed, seal_canonical_stdlib_names,
 };
 use crate::stdlib_import_signatures::register_imported_stdlib_signature;
 use crate::StdlibRustSource;
@@ -354,7 +355,12 @@ pub fn generate_rust_with_stdlib_for_module(
                                     }
                                 }
                             }
-                            filter_stdlib_ir_to_needed(&rust_source.rust, &expanded_imports)
+                            filter_canonical_stdlib_ir_to_needed(
+                                &rust_source.rust,
+                                &expanded_imports,
+                                &rust_source.module,
+                                &rust_source.nominal_types,
+                            )
                         }
                     } else {
                         rust_source.rust.clone()
@@ -373,7 +379,12 @@ pub fn generate_rust_with_stdlib_for_module(
                         .shared_needs
                         .file_handles
                         .provides_file_handle_struct;
-                    let stripped = prepared.stripped_code;
+                    let stripped = seal_canonical_stdlib_names(
+                        &prepared.stripped_code,
+                        &rust_source.module,
+                        &rust_source.nominal_types,
+                    );
+                    let stripped = absolutize_external_crate_paths(&stripped);
                     if !stripped.trim().is_empty() {
                         let deduped =
                             dedup_rust_items(&stripped, &mut emitted_items, &infra_skip_types);
@@ -535,7 +546,11 @@ pub fn generate_rust_with_stdlib_for_module(
         }
     }
     if uses_async_python && referenced_error_classes.contains("Error") {
-        preamble_items.push(build_error_into_error_impl("PythonError"));
+        preamble_items.extend(
+            crate::python_interop_common::python_error_contract_rust_types(module)
+                .iter()
+                .map(|rust_type| build_error_into_error_impl(rust_type)),
+        );
     }
     if uses_task_scope || uses_join_set || uses_failure_type {
         preamble_items.extend(build_failure_type_items());
@@ -628,6 +643,8 @@ pub fn generate_rust_with_stdlib_for_module(
         || stdlib_import_needs.runtime.numeric.needs_bigdecimal;
     let needs_sifr_int =
         body_import_needs.runtime.needs_sifr_int || stdlib_import_needs.runtime.needs_sifr_int;
+    let needs_sifr_runtime = body_import_needs.runtime.needs_sifr_runtime
+        || stdlib_import_needs.runtime.needs_sifr_runtime;
     let needs_mutex = needs_file_handles
         || body_import_needs.runtime.needs_mutex
         || stdlib_import_needs.runtime.needs_mutex;
@@ -674,6 +691,7 @@ pub fn generate_rust_with_stdlib_for_module(
     }
     if needs_sifr_int {
         import_items.push(RustItem::Use(vec![
+            String::new(),
             "sifr_runtime".to_string(),
             "SifrInt".to_string(),
         ]));
@@ -730,8 +748,9 @@ pub fn generate_rust_with_stdlib_for_module(
         source
     };
 
-    let needs_python_runtime = rust_source.contains("sifr_stdlib::python::");
-    let needs_sifr_stdlib_fs = rust_source.contains("sifr_stdlib::fs::");
+    let needs_python_runtime =
+        crate::python_interop_common::rust_source_uses_python_runtime(&rust_source);
+    let needs_sifr_stdlib_fs = rust_source.contains("::sifr_stdlib::fs::");
 
     // Add transitive dependencies from stdlib modules
     let mut all_used_modules = emitter.used_stdlib_modules.clone();
@@ -757,13 +776,14 @@ pub fn generate_rust_with_stdlib_for_module(
             if needs_bigdecimal {
                 features.insert(StdlibFeature::BigDecimal);
             }
-            if needs_sifr_int {
+            if needs_sifr_runtime {
                 features.insert(StdlibFeature::SifrRuntime);
             }
             if has_async_main_entrypoint
                 || uses_task_sleep
                 || module_uses_task_scope(module)
                 || module_uses_join_set(module)
+                || uses_async_python
                 || stdlib_preamble.contains("tokio::")
             {
                 features.insert(StdlibFeature::Tokio);

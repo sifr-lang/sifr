@@ -173,6 +173,10 @@ impl RustEmitter {
         let Some(target) = target else {
             return lowered;
         };
+        let converted = self.consuming_value_upcast_for_ir(target, value.ty(), lowered.clone());
+        if converted != lowered {
+            return converted;
+        }
         let source_name = crate::render_type(&crate::sifr_type_to_rust_type(value.ty()));
         let target_name = crate::render_type(&crate::sifr_type_to_rust_type(target));
         if source_name == target_name {

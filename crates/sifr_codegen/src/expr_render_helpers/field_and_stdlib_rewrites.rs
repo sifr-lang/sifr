@@ -6,9 +6,23 @@ use super::{
 use crate::helpers::needs_clone_for_type;
 use crate::RustEmitter;
 use sifr_ir::HirExpr;
-use sifr_type_system::Type;
+use sifr_type_system::{ParamConvention, Type};
 
 impl RustEmitter {
+    pub(crate) fn method_mut_arg_needs_field_clone_suppression(
+        &self,
+        arg: &HirExpr,
+        convention: ParamConvention,
+    ) -> bool {
+        convention.is_mut_borrow()
+            && matches!(arg, HirExpr::FieldAccess { .. })
+            && field_receiver_root_name(arg).is_some_and(|name| {
+                name == "self"
+                    || self.borrowed_params.contains(name)
+                    || self.mut_borrowed_params.contains(name)
+            })
+    }
+
     pub(crate) fn method_call_needs_field_clone_suppression(
         &self,
         object: &HirExpr,
@@ -30,12 +44,19 @@ impl RustEmitter {
             return true;
         }
 
-        if matches!(parent.as_ref(), HirExpr::Name { name, .. } if name == "self") {
+        let receiver_root_name = field_receiver_root_name(object);
+        if receiver_root_name == Some("self") {
             return true;
         }
 
         if !crate::helpers::MUTATING_METHODS.contains(&method) {
             return false;
+        }
+
+        if receiver_root_name.is_some_and(|name| {
+            self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name)
+        }) {
+            return true;
         }
 
         let parent_class_name = match crate::resolve_alias_type_for_plain_call(parent.ty()) {
@@ -140,16 +161,23 @@ impl RustEmitter {
             self.recursive_fields
                 .contains(&(class_name.clone(), field.to_owned()))
         });
+        let is_borrowed_parameter = matches!(
+            object,
+            HirExpr::Name { name, .. }
+                if self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name)
+        );
 
-        let suppress_self_clone = if self.pending_self_field_clone_suppression > 0
-            && (is_self_access || is_recursive_field)
+        let suppress_field_clone = if self.pending_self_field_clone_suppression > 0
+            && (is_self_access || is_recursive_field || is_borrowed_parameter)
         {
             self.pending_self_field_clone_suppression -= 1;
             true
         } else {
             false
         };
-        let needs_clone = is_self_access && needs_clone_for_type(ty) && !suppress_self_clone;
+        let needs_clone = (is_self_access || is_borrowed_parameter)
+            && needs_clone_for_type(ty)
+            && !suppress_field_clone;
 
         let lowered_base = if let Some(ref class_name) = class_name_for_parent {
             if let Some((parent_name, parent_field_names)) = self.parent_fields.get(class_name) {
@@ -174,7 +202,7 @@ impl RustEmitter {
         };
 
         if is_recursive_field {
-            if suppress_self_clone {
+            if suppress_field_clone {
                 return lowered_field;
             }
             if crate::helpers::is_option_type(ty) {
@@ -238,6 +266,14 @@ impl RustEmitter {
         name != "self"
             && !self.borrowed_params.contains(name)
             && !self.mut_borrowed_params.contains(name)
+    }
+}
+
+fn field_receiver_root_name(expr: &HirExpr) -> Option<&str> {
+    match expr {
+        HirExpr::Name { name, .. } => Some(name),
+        HirExpr::FieldAccess { object, .. } => field_receiver_root_name(object),
+        _ => None,
     }
 }
 
@@ -534,9 +570,14 @@ impl RustEmitter {
                     .map(|item| self.rewrite_stdlib_constant_idents_in_expr(item))
                     .collect(),
             ),
-            crate::RustExpr::TimeoutAwait { duration, future } => crate::RustExpr::TimeoutAwait {
+            crate::RustExpr::TimeoutAwait {
+                duration,
+                future,
+                error,
+            } => crate::RustExpr::TimeoutAwait {
                 duration: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*duration)),
                 future: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*future)),
+                error: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*error)),
             },
             crate::RustExpr::Try(expr) => {
                 crate::RustExpr::Try(Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)))

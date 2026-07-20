@@ -1,0 +1,13 @@
+# expect-error[col=5]: SIFR-RESULT-0005
+from sifr.configparser import Error as ConfigError
+from sifr.csv import Error as CsvError
+
+
+def invalid() -> None:
+    try:
+        for value in [1]:
+            _ = value
+        else:
+            raise CsvError("loop else")
+    except ConfigError:
+        pass

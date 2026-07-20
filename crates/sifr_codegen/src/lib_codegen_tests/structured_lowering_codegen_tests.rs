@@ -1,6 +1,42 @@
 use super::*;
 
 #[test]
+fn test_nested_stdlib_constructor_uses_canonical_nominal_path() {
+    let class = |name: &str, identity: &str| Type::Class {
+        identity: Some(identity.to_string()),
+        type_args: Vec::new(),
+        name: name.to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let locale_ty = class("LocaleId", "sifr.i18n.LocaleId");
+    let formatter_ty = class("NumberFormatter", "sifr.i18n.NumberFormatter");
+    let expr = HirExpr::ConstructorCall {
+        class_name: "NumberFormatter".to_string(),
+        args: vec![HirExpr::ConstructorCall {
+            class_name: "LocaleId".to_string(),
+            args: vec![HirExpr::StringLiteral("bn".to_string())],
+            ty: locale_ty,
+        }],
+        ty: formatter_ty,
+    };
+    let mut emitter = RustEmitter::new();
+
+    let lowered = emitter
+        .try_lower_registry_expr_strict(&expr)
+        .expect("nested constructor should lower through the structured registry path");
+    let rendered = crate::render_expr(&lowered);
+    let formatter_name = sifr_type_system::stdlib_class_rust_name("sifr.i18n", "NumberFormatter");
+    let locale_name = sifr_type_system::stdlib_class_rust_name("sifr.i18n", "LocaleId");
+
+    assert_eq!(
+        rendered,
+        format!("{formatter_name}::new({locale_name}::new(\"bn\".to_string()))")
+    );
+}
+
+#[test]
 fn test_structured_expr_path_handles_plain_signature_call_expression() {
     let module = HirModule {
         functions: vec![
@@ -496,6 +532,49 @@ fn test_structured_tuple_index_field_assign_clones_non_copy_element() {
                 )
         ),
         "expected cloned tuple field, got {value:?}"
+    );
+}
+
+#[test]
+fn test_structured_tuple_index_field_assign_moves_non_clone_element() {
+    let resource_ty = Type::Class {
+        identity: Some("_sifr.python.ResourceIdentity".to_string()),
+        type_args: Vec::new(),
+        name: "ResourceIdentity".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("NonSend".to_string()),
+    };
+    let stmt = HirStmt::FieldAssign {
+        object: "callback".to_string(),
+        field: "identity".to_string(),
+        field_ty: resource_ty.clone(),
+        value: HirExpr::Index {
+            object: Box::new(HirExpr::Name {
+                name: "raw".to_string(),
+                ty: Type::Tuple(vec![resource_ty.clone(), Type::Str]),
+            }),
+            index: Box::new(HirExpr::IntLiteral(0)),
+            ty: resource_ty,
+        },
+    };
+    let mut emitter = RustEmitter::new();
+
+    let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
+    let Some(RustStmt::Assign { value, .. }) = captured.first() else {
+        panic!("expected structured tuple-index field assignment");
+    };
+    assert!(
+        matches!(
+            value,
+            RustExpr::Field { expr, field }
+                if matches!(
+                    expr.as_ref(),
+                    RustExpr::Paren(inner)
+                        if matches!(inner.as_ref(), RustExpr::Ident(object) if object == "raw")
+                ) && field == "0"
+        ),
+        "expected moved tuple field, got {value:?}"
     );
 }
 

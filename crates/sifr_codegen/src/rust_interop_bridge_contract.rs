@@ -2,8 +2,9 @@ mod generated_types;
 
 use crate::rust_interop_plan::{RustInteropOwner, RustInteropPlanDeclaration};
 use generated_types::{
-    bridge_type_definition_module, generated_bridge_type_path, opaque_rust_type_path,
-    opaque_type_definition, GeneratedTypeCollector,
+    absolute_runtime_target, bridge_type_definition_module, class_bridge_declaration_name,
+    class_bridge_definition_module, generated_bridge_type_path, generated_class_bridge_type_path,
+    opaque_rust_type_path, opaque_type_definition, GeneratedTypeCollector,
 };
 use sifr_ir::HirModule;
 use sifr_type_system::{ParamConvention, ParamOwnership, Type};
@@ -308,9 +309,9 @@ fn bridge_type_contract(
         ),
         Type::Int => RustBridgeTypeContract {
             sifr_type: "int".to_string(),
-            rust_borrowed_type: Some("&sifr_runtime::interop::SifrIntBridge".to_string()),
-            rust_owned_type: Some("sifr_runtime::interop::SifrIntBridge".to_string()),
-            rust_return_type: Some("sifr_runtime::interop::SifrIntBridge".to_string()),
+            rust_borrowed_type: Some("&::sifr_runtime::interop::SifrIntBridge".to_string()),
+            rust_owned_type: Some("::sifr_runtime::interop::SifrIntBridge".to_string()),
+            rust_return_type: Some("::sifr_runtime::interop::SifrIntBridge".to_string()),
             kind: RustBridgeTypeKind::ExactInt,
             unsupported_reason: None,
         },
@@ -395,11 +396,8 @@ fn bridge_type_contract(
                 )
             }
         },
-        Type::Class {
-            name,
-            fields,
-            parent_class,
-            ..
+        class_type @ Type::Class {
+            name, parent_class, ..
         } => {
             let opaque_target = opaque_type_definition(name, module_name, module_catalogs);
             if let Ok(Some(target)) = opaque_target {
@@ -408,23 +406,26 @@ fn bridge_type_contract(
                 unsupported_type(ty, &reason)
             } else {
                 let declaration_module =
-                    match bridge_type_definition_module(name, module_name, module_catalogs, false)
-                    {
+                    match class_bridge_definition_module(class_type, module_name, module_catalogs) {
                         Ok(module_name) => module_name,
                         Err(reason) => return unsupported_type(ty, &reason),
                     };
                 let is_error = parent_class.as_deref() == Some("Error")
                     || module_catalogs
                         .get(&declaration_module)
-                        .is_some_and(|catalog| catalog.error_classes.contains(name));
+                        .is_some_and(|catalog| {
+                            catalog
+                                .error_classes
+                                .contains(class_bridge_declaration_name(class_type))
+                        });
                 generated_types.insert_record(
                     declaration_module.as_ref(),
-                    name,
-                    fields,
+                    class_type,
                     is_error,
                     module_catalogs,
                 );
-                let path = generated_bridge_type_path(declaration_module.as_ref(), name);
+                let path =
+                    generated_class_bridge_type_path(declaration_module.as_ref(), class_type);
                 RustBridgeTypeContract {
                     sifr_type: ty.display_name(),
                     rust_borrowed_type: Some(path.clone()),
@@ -464,9 +465,9 @@ fn bridge_type_contract(
             RustBridgeTypeContract {
                 sifr_type: ty.display_name(),
                 rust_borrowed_type: Some(
-                    "&sifr_runtime::interop::ThreadsafeCallbackBridge".to_string(),
+                    "&::sifr_runtime::interop::ThreadsafeCallbackBridge".to_string(),
                 ),
-                rust_owned_type: Some("sifr_runtime::interop::ThreadsafeCallbackBridge".to_string()),
+                rust_owned_type: Some("::sifr_runtime::interop::ThreadsafeCallbackBridge".to_string()),
                 rust_return_type: None,
                 kind: RustBridgeTypeKind::Callback,
                 unsupported_reason: None,
@@ -598,7 +599,7 @@ fn bridge_dict_type(
             "dict value type is not Rust bridge-compatible",
         );
     };
-    let rust_type = format!("sifr_runtime::interop::IndexMap<String, {value_owned}>");
+    let rust_type = format!("::sifr_runtime::interop::IndexMap<String, {value_owned}>");
     RustBridgeTypeContract {
         sifr_type: format!("dict[str, {}]", value_ty.sifr_type),
         rust_borrowed_type: Some(format!("&{rust_type}")),
@@ -714,8 +715,8 @@ fn tuple_item_rust_type(
             .flatten()
             .map(|target| {
                 format!(
-                    "sifr_runtime::interop::Handle<{}>",
-                    target.replace('.', "::")
+                    "::sifr_runtime::interop::Handle<{}>",
+                    absolute_runtime_target(&target)
                 )
             }),
         _ => None,
@@ -748,8 +749,8 @@ fn combine_generic_type(
 
 fn opaque_handle_type(name: &str, target: &str) -> RustBridgeTypeContract {
     let rust_type = format!(
-        "sifr_runtime::interop::Handle<{}>",
-        target.replace('.', "::")
+        "::sifr_runtime::interop::Handle<{}>",
+        absolute_runtime_target(target)
     );
     RustBridgeTypeContract {
         sifr_type: name.to_string(),

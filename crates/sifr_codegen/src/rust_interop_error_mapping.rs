@@ -18,12 +18,7 @@ pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
     match err_type.resolve_alias() {
         Type::Union(members) => members
             .iter()
-            .find(|member| {
-                matches!(
-                    member.resolve_alias(),
-                    Type::Class { name, .. } if name == "PythonError"
-                )
-            })
+            .find(|member| member.is_python_error_contract())
             .map_or(value.clone(), |python_error| RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
                     err_type.resolve_alias().union_enum_name(),
@@ -31,23 +26,20 @@ pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
                 ])),
                 args: vec![bridge_error_expr(value, python_error)],
             }),
-        Type::Class {
+        class @ Type::Class {
             name,
             fields,
             parent_class: _,
             ..
         } if is_message_error_alias(name) && message_error_fields(fields).is_some() => {
             RustExpr::StructInit {
-                name: name.clone(),
+                name: class.rust_type(),
                 fields: vec![("message".to_string(), to_string_expr(value))],
             }
         }
-        Type::Class {
-            name,
-            fields,
-            parent_class: _,
-            ..
-        } if name == "PythonError" && python_error_fields(fields) => python_error_expr(name, value),
+        class @ Type::Class { .. } if err_type.is_python_error_contract() => {
+            python_error_expr(&class.rust_type(), value)
+        }
         Type::Class {
             name,
             fields,
@@ -62,39 +54,39 @@ pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
                 args: vec![value],
             }
         }
-        Type::Class {
+        class @ Type::Class {
             name,
             fields: _,
             parent_class,
             ..
         } if parent_class.as_deref() == Some("Error") && name == "JSONDecodeError" => {
-            json_decode_error_expr(name, value)
+            json_decode_error_expr(&class.rust_type(), value)
         }
-        Type::Class {
+        class @ Type::Class {
             name,
             fields: _,
             parent_class,
             ..
         } if parent_class.as_deref() == Some("Error") && name == "JsonLimitError" => {
-            json_limit_error_expr(name, value)
+            json_limit_error_expr(&class.rust_type(), value)
         }
-        Type::Class {
+        class @ Type::Class {
             name,
             fields: _,
             parent_class,
             ..
         } if parent_class.as_deref() == Some("Error") && name == "JsonIntegerRangeError" => {
-            json_integer_range_error_expr(name, value)
+            json_integer_range_error_expr(&class.rust_type(), value)
         }
-        Type::Class {
-            name,
+        class @ Type::Class {
+            name: _,
             fields,
             parent_class,
             ..
         } if parent_class.as_deref() == Some("Error") => {
             if let Some(error_fields) = message_error_fields(fields) {
                 RustExpr::StructInit {
-                    name: name.clone(),
+                    name: class.rust_type(),
                     fields: error_fields
                         .into_iter()
                         .map(|field| (field, to_string_expr(value.clone())))
@@ -209,15 +201,6 @@ fn python_error_expr(name: &str, value: RustExpr) -> RustExpr {
     }
 }
 
-fn python_error_fields(fields: &[(String, Type)]) -> bool {
-    let expected = ["message", "kind", "exception_type", "traceback", "context"];
-    expected.iter().all(|expected_name| {
-        fields
-            .iter()
-            .any(|(name, ty)| name == expected_name && ty.resolve_alias() == &Type::Str)
-    })
-}
-
 fn io_error_fields(fields: &[(String, Type)]) -> bool {
     ["message", "kind"].iter().all(|expected_name| {
         fields
@@ -303,6 +286,53 @@ mod tests {
         assert_eq!(
             render_expr(&mapped),
             "DiagnosticError { message: __sifr_bridge_error.to_string() }"
+        );
+    }
+
+    #[test]
+    fn shadow_python_error_does_not_use_the_runtime_struct_mapping() {
+        let shadow = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "PythonError".to_string(),
+            fields: vec![
+                ("message".to_string(), Type::Str),
+                ("kind".to_string(), Type::Str),
+                ("exception_type".to_string(), Type::Str),
+                ("traceback".to_string(), Type::Str),
+                ("context".to_string(), Type::Str),
+                ("code".to_string(), Type::Int),
+            ],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let mapped = bridge_error_expr(RustExpr::Ident("__sifr_bridge_error".to_string()), &shadow);
+
+        assert_eq!(render_expr(&mapped), "__sifr_bridge_error");
+    }
+
+    #[test]
+    fn bridge_error_mapping_uses_the_nominal_rust_identity() {
+        let declared = Type::Class {
+            identity: Some("local.__SifrBridgeError".to_string()),
+            type_args: Vec::new(),
+            name: "__SifrBridgeError".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+
+        let mapped = bridge_error_expr(
+            RustExpr::Ident("__sifr_bridge_error".to_string()),
+            &declared,
+        );
+
+        assert_eq!(
+            render_expr(&mapped),
+            format!(
+                "{} {{ message: __sifr_bridge_error.to_string() }}",
+                declared.rust_type()
+            )
         );
     }
 }

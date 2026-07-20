@@ -18,7 +18,23 @@ create-PR gate in [PR #2988](https://github.com/sifr-lang/sifr/pull/2988).
 Pass-25 remediation is complete, whole-diff review pass 26 is satisfied, and
 PR #2988 is merged. M10 Wave 3 evidence, demo, and documentation closure is
 implemented and locally validated; whole-diff review pass 6 is satisfied and
-the authoritative create-PR gate passes. Typed
+the authoritative create-PR gate passes, and PR #2989 is merged. The complete
+merged M10 implementation is in final closure on PR #2990. Codex milestone
+passes 10 through 14 drove exact nominal identity through unions, conversions,
+inheritance, handlers, patterns, generics, operators, merged stdlib
+declarations, imported-parent semantics, exact try-error carriers,
+same-basename Rust bridge records, nested functions, and ordinary unions
+sharing carrier enums. Subsequent Fable High passes 2 through 7 found and
+closed the remaining error-carrier parity, PythonError identity, exact
+catch-all, borrowed-field mutation, nested parameter, and class-method
+mut-argument place gaps. Pass 8 was an invalid timer-only artifact and is not
+review evidence. Fresh Fable High pass 9 independently rechecked the complete
+candidate and returned **SATISFIED** with no blockers; post-commit closure
+pass 10 confirmed the frozen PR diff and ledger with the same verdict. The
+authoritative merge
+gate passes every blocking lane in `2685.23s`, including E2E `674/674`, Python
+interop `18/18`, diagnostics `175/175`, and `261` hardening variants with zero
+failures; the warm-time notice is non-blocking. Typed
 synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
@@ -156,7 +172,7 @@ Implementation progress:
 - [x] M7 owned asyncio runtime and async declarations — [PR #2968](https://github.com/sifr-lang/sifr/pull/2968)
 - [x] M8 async context managers — [PR #2970](https://github.com/sifr-lang/sifr/pull/2970), [PR #2972](https://github.com/sifr-lang/sifr/pull/2972)
 - [x] M9 typed callback lifetimes and dispatch — [PR #2974](https://github.com/sifr-lang/sifr/pull/2974), [PR #2977](https://github.com/sifr-lang/sifr/pull/2977), [PR #2979](https://github.com/sifr-lang/sifr/pull/2979), remediation [PRs #2981](https://github.com/sifr-lang/sifr/pull/2981), [#2982](https://github.com/sifr-lang/sifr/pull/2982), [#2984](https://github.com/sifr-lang/sifr/pull/2984), and [#2985](https://github.com/sifr-lang/sifr/pull/2985)
-- [ ] M10 typed buffer protocol
+- [x] M10 typed buffer protocol ([PR #2990](https://github.com/sifr-lang/sifr/pull/2990))
 - [ ] M11 Arrow C Data Interface
 - [ ] M12 DLPack one-shot tensor transfer
 - [ ] M13 read-only check and doctor
@@ -1297,9 +1313,10 @@ Delivery waves:
   independently re-grounded both findings, exercised an additional owned
   `AsyncCallable` structural-upcast build and all `18` Python buffer runtime
   tests, and returned **SATISFIED** with no actionable findings.
-- [ ] Wave 3 — add complete positive/negative/cleanup matrices, compiled
+- [x] Wave 3 — add complete positive/negative/cleanup matrices, compiled
   import-root, bridge, receiver, and NumPy-compatible evidence, demo and public
-  documentation, and complete activation evidence. The implementation adds a
+  documentation, and complete activation evidence
+  ([PR #2989](https://github.com/sifr-lang/sifr/pull/2989)). The implementation adds a
   validator-owned declaration evidence matrix, a fifth compiled real-NumPy
   case, `demos/m10_demo`, and active `PYZC` public docs. Focused lowering
   (`34/34`), codegen (`10/10`), runtime buffer matrix (`30/30`), runner self-test, scaffold,
@@ -1333,9 +1350,276 @@ Delivery waves:
   examples on CPython `3.11.14`, runtime platform `28` variants with one
   capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `27/42` cache hits. Warm-time and cache-hit notices are
-  non-blocking advisories. Merge remains pending.
-- [ ] Milestone review — review the complete merged M10 implementation before
-  closing the milestone checkbox.
+  non-blocking advisories. PR #2989 is merged.
+- [x] Milestone review — complete merged-M10
+  [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-1.md)
+  found writable `Self` owner aliasing and name-only `PythonError` acceptance.
+  Remediation rejects writable receiver acquisition until an exclusive owner
+  freeze is representable, adds permanent owner-close negative evidence, and
+  shares an exact Python error field-contract predicate across lowering, method
+  typing, and code generation. Focused buffer lowering passes `37/37`, the
+  complete compile-fail matrix passes `528/528`, the type-system and codegen
+  mapping regressions pass, and the Python interop evidence self-test passes.
+  Workspace Clippy, formatting, HIR maintainability, and the `900`-line
+  file-size guardrail pass over `2690` files. The authoritative create-PR gate
+  passes every blocking lane: Python interop `12/12` including CPython `3.11`
+  runtime `5/5` and compiled `5/5`, runtime platform `28` variants with one
+  capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c`. Its `892.55s` wall time and `15/42` cache hit rate produce
+  only non-blocking advisories. Full
+  [review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-2.md)
+  re-ran the complete focused compiler/runtime/native buffer evidence, confirmed
+  the pass-1 ownership and error-channel remediations, and found only a stale
+  roadmap reference to the already-merged PR #2988. That ledger reference is
+  corrected in PR #2990; final re-review is in progress before closing the
+  milestone checkbox. Full
+  [review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-3.md)
+  confirmed the compiler remediations and corrected roadmap, then found that
+  generic ignore rules omitted checksum-required vendored files from a clean
+  checkout, public documentation overstated nominal `PythonError` enforcement,
+  and exit evidence still listed active `PYZC` as reserved. PR #2990 now tracks
+  all three remediations. Full
+  [review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-4.md)
+  confirmed those fixes and the clean-checkout vendor inventory, then found that
+  duplicate canonical fields could still pass the structural `PythonError`
+  predicate and reach the generated-Rust duplicate-field assertion. The shared
+  predicate now requires exactly five canonical fields, and lowering plus driver
+  regressions lock check/compile diagnostic parity. Full
+  [review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-5.md)
+  confirmed that remediation, then found writable producers could return a
+  borrowed opaque/Object parameter while leaving its Sifr owner usable. Writable
+  producer parameters that can transitively carry Python identity now require
+  `own`, with permanent lowering, compile-fail, documentation, and evidence
+  coverage before final re-review. Full
+  [review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-6.md)
+  confirmed those ownership fixes, then found that raw Python `Object` still
+  used basename matching and that exact `PythonError` validation remained
+  buffer-specific. The stdlib export boundary now preserves the originating
+  `_sifr.python.Object` identity through public re-exports; lowering, recursive
+  ownership analysis, callback typing, and code generation use that canonical
+  identity, while same-named user records retain record conversion. The shared
+  duplicate-safe five-field error predicate now guards ordinary, callback,
+  context, coroutine, and buffer declarations, with lowering, codegen, stdlib,
+  and driver check/compile parity regressions. Full
+  [review pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-7.md)
+  confirmed those remediations, then reproduced three remaining High-severity
+  parity defects: coroutine conversion still selected a local `Object` by
+  basename; the canonical stdlib `Object` alias collided with a user record in
+  flat generated Rust; and callback error unions could contain distinct
+  same-basename members that emitted duplicate variants. Async conversion and
+  context classification now use the shared canonical predicates. The sealed
+  handle initially emitted as `__SifrPythonObject` while source-level local
+  `Object` records retained record conversion, and a native package-build
+  regression compiled synchronous and coroutine declarations together.
+  Callback lowering rejects duplicate generated variant names before codegen,
+  with lowering and driver check/compile parity coverage. The first
+  authoritative gate exposed one additional strict-identity mismatch where the
+  compiler-special `open()` path replaced an imported canonical
+  `TextFileHandle` with an anonymous same-named type. Compiler-special text and
+  binary opens now preserve imported handle identities, with a focused lowering
+  regression and the previously failing text/i18n fixture compiling and running
+  natively. The repeated authoritative create-PR gate passes every blocking
+  lane in `629.99s`: Python interop `12/12`, runtime platform `28` variants with
+  one capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `41/42` cache hits. The warm-time notice is a
+  non-blocking advisory after the requested clean rebuild. Full
+  [review pass 8](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-8.md)
+  confirmed the prior identity and error-union fixes, then showed that
+  `__SifrPythonObject` itself remained a legal user class name and that
+  compiler-special `open()` still resolved text and binary handles through
+  basename keys. Canonical Python `Object` now renders directly as the fully
+  qualified runtime handle and emits no alias into the user's flat Rust
+  namespace; the native package regression includes the reviewer's exact
+  `class __SifrPythonObject` collision. Text and binary opens now select
+  imported handles by canonical `sifr.io` identity across aliases, synthesize
+  the same canonical identity when unimported, and reject local same-basename
+  shadows. Focused type-system, lowering, codegen, stdlib-bootstrap, native
+  package, aliased-open native build, and shadow-rejection regressions pass. The
+  repeated authoritative create-PR gate passes every blocking lane in
+  `822.00s`: Python interop `12/12`, runtime platform `28` variants with one
+  capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `42/42` cache hits. Its warm wall-time notice is a
+  non-blocking advisory after the requested clean rebuild. Full
+  [review pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-9.md)
+  confirmed the pass-8 fixes, then proved two remaining generated-Rust identity
+  collisions: local `sifr_runtime` shadowed relative external-crate paths, and
+  local `FileHandle`/`TextFileHandle` classes collided with canonical inferred
+  `open()` results. Generated runtime and stdlib paths are now absolute across
+  Rust IR, imports, bridge types, and assembled stdlib source. Canonical file
+  handles use compiler-owned Rust names in declarations, intrinsics, fallback
+  preambles, ordinary type rendering, and generic-aware type rendering while
+  retaining their nominal Sifr identities. Permanent lowering, renderer,
+  stdlib-filter, and native package regressions lock the reviewer's exact local
+  shadow cases. Sealed Python `Object` conversion now unwraps and rewraps the
+  canonical runtime handle through compiler-private runtime bridge functions
+  for synchronous and coroutine declarations. Both exact native collision
+  proofs pass. After the requested `cargo clean`, the repeated authoritative
+  create-PR gate passes every blocking lane in `1334.68s`: Python interop
+  `12/12`, runtime platform `28` variants with one capability-gated skip, and
+  E2E `131/131` with signature `7c39b8c1dd4fec7c` and `0/42` cold-cache hits.
+  The warm wall-time notice is a non-blocking advisory for this clean rebuild;
+  a proactive follow-up proof then showed that the compiler-owned handle names
+  themselves were source-spellable. Source-declared `__Sifr*` classes now use
+  an injective escaped Rust namespace disjoint from compiler-owned identities,
+  and the strengthened native collision package passes with exact local
+  `__SifrIoFileHandle` and `__SifrIoTextFileHandle` classes. The follow-up
+  authoritative create-PR gate passes every blocking lane in `657.69s`: Python
+  interop `12/12`, runtime platform `28` variants with one capability-gated
+  skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache
+  hits. Its warm wall-time notice is a non-blocking advisory. Full
+  [review pass 10](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-10.md)
+  then reproduced three remaining generated-Rust collision families: source
+  newtypes, enums, and protocols named with compiler prefixes; local `std`
+  classes capturing compiler-owned relative paths; and source classes colliding
+  with display-derived union enums or variants. One shared injective source-name
+  renderer now covers every nominal definition and reference. Token-aware Rust
+  rendering absolutizes compiler-owned standard-library and external-crate
+  roots without rewriting strings, character literals, raw strings, or
+  comments. Compiler-owned union enums and variants now use exact structural
+  identities derived from emitted nominal names, so canonicalized and local
+  views of the same Rust payload agree while source aliases remain distinct.
+  The native collision package covers regular classes, newtypes, enums,
+  protocols, `class std`, source-spellable compiler prefixes, and adversarial
+  unions. A clean create-PR E2E run exposed and fixed the canonical/local
+  `JsonValue` union split; the focused rerun passes `131/131` with only that
+  group rebuilt. After the requested `cargo clean`, the final authoritative
+  create-PR gate passes every blocking lane in `605.42s`: Python interop
+  `12/12`, runtime platform `28` variants with one capability-gated skip, and
+  E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache hits. The
+  warm wall-time notice is a non-blocking advisory. Full
+  [review pass 11](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-11.md)
+  then found that class union keys still omitted canonical identity, several
+  synchronous/asynchronous conversion and inheritance paths still emitted raw
+  source class names, and the merged-stdlib sealing pass protected only file
+  handles rather than every canonical nominal. Remediation and native
+  canonical/local collision coverage are complete in PR #2990. Nominal Rust
+  identities now flow recursively through HIR types, union keys, constructors,
+  operators, handlers, patterns, Python conversions, inheritance, and generated
+  runtime helpers; flattened stdlib declarations are sealed by canonical module
+  identity while external qualified paths remain untouched. Compiler-generated
+  errors render their Sifr source names in user-visible `Debug` output even
+  though their Rust identifiers remain collision-safe. Focused regressions,
+  the eight previously failing E2E fixtures, and the full E2E suite pass. The
+  authoritative create-PR gate passes every blocking lane in `921.00s`: Python
+  interop `12/12`, runtime platform `28` variants with one capability-gated
+  skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache
+  hits. Its warm wall-time notice is a non-blocking advisory. Full
+  [review pass 12](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-12.md)
+  found four remaining exact-identity gaps: global nominal exemptions used
+  basenames, inheritance discarded canonical parent types, match/try paths
+  compared alias spellings, and generic/operator self shortcuts were
+  basename-only. Remediation now carries exact nominal identities and parent
+  types through class, `super()`, pattern, handler, generic-method, and
+  operator HIR/codegen paths; only exact compiler-global identities bypass
+  source-name escaping. Native regressions cover duplicate stdlib `Error`
+  classes, aliased stdlib inheritance and handlers, compiler-prefixed generic
+  self returns, canonical/local same-name operators, and rejected cross-module
+  assignments. Focused type-system, lowering, and codegen suites pass, as do
+  Clippy, formatting, maintainability, and file-size guardrails. After the
+  requested `cargo clean`, the authoritative create-PR gate passes every
+  blocking lane in `1504.56s`: Python interop `12/12`, runtime platform `28`
+  variants with one capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `0/42` cold-cache hits. Its warm wall-time notice is a
+  non-blocking advisory. Full
+  [review pass 13](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-13.md)
+  then found that imported parents lost exact fields and capabilities, try
+  codegen collapsed the recorded error set to one handler type, and Rust bridge
+  records collapsed distinct canonical classes sharing a basename. Imported
+  class completion now selects the richest exact-identity surface and preserves
+  parent fields, methods, derives, and `Display`. Try bodies use an exact
+  discriminated carrier with exhaustive nested-raise discovery, per-member
+  conversions, identity-aware handler dispatch, catch-all fallback, and carrier
+  inheritance across timeout, task scope, async context, and `finally` paths.
+  Rust bridge definition lookup, generated names, schemas, and recursion keys
+  now include canonical module and nominal identity. Complete-suite regressions
+  additionally restrict generic phantom markers to genuinely unrepresented
+  parameters and make Python async contexts inherit the enclosing try carrier.
+  Focused native proofs cover inherited formatting, exact TOML error routing,
+  same-basename bridge records, file handles, cancellation/process/network/TLS,
+  i18n, and Python async-context execution. The full merge-profile E2E suite
+  passes `664/664` with signature `76a3c67a1e579374`. Workspace Clippy,
+  formatting, HIR maintainability, and the `900`-line guardrail pass over `2705`
+  files. The authoritative create-PR gate passes every blocking lane in
+  `1024.46s`: Python interop `12/12`, runtime platform `28` variants with one
+  capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c`. Its warm-time and cache-hit notices are non-blocking
+  advisories. Full
+  [review pass 14](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-14.md)
+  found that nested functions were skipped during synthesized try-carrier
+  discovery and that marking a structural union as a carrier globally removed
+  equality and hash traits required by ordinary uses of the same enum. Carrier
+  discovery now traverses nested functions, and union registration records
+  ordinary-value use separately from its carrier role. Carrier-only enums keep
+  their minimal trait surface, while reused ordinary unions retain their proved
+  `PartialEq`, `Eq`, and `Hash` derives. Unit regressions cover both usage modes;
+  the native nominal-identity fixture covers nested exact-error dispatch plus
+  equality and hash-set use on the shared canonical error union. Codegen passes
+  `854/854`, and the authoritative create-PR gate passes every blocking lane in
+  `612.79s`: Python interop `12/12`, runtime platform `28` variants with one
+  capability-gated skip, and E2E `131/131` with signature
+  `7c39b8c1dd4fec7c` and `41/42` cache hits. Its warm wall-time notice is a
+  non-blocking advisory. The first full merge validation passed every
+  functional lane but exposed approximately 20% extra frontend work from
+  scanning every rendered byte against every compiler path root and cloning
+  every visited HIR type during stdlib nominal canonicalization. Token-boundary
+  root recognition is now a span-based lexical scan of identifiers, allocates
+  only when a rewrite is required, and leaves protected Rust strings and
+  comments untouched; identifier-only rendering avoids the scan entirely.
+  Stdlib HIR types are canonicalized in place with an empty-class fast path.
+  The representative performance matrix passes `8/8` after instruction
+  count returned from approximately `15.0B` to `12.6B` for the arithmetic
+  check. The same run measured current LSP RSS at `72,187,904` bytes, while
+  unmodified `main` measured `70,451,200` bytes against the stale `64 MiB`
+  ceiling; all LSP query ceilings are therefore recalibrated to `80 MiB`, still
+  below the checked-in baseline policy's documented `baseline + 32 MiB`
+  headroom for the aggregate case. Type-system `113/113`, IR `3/3`, lowering
+  `779/779` plus one ignored test, codegen `856/856`, driver `358/358` plus 32
+  ignored tests, and the native nominal-identity fixture pass. The next full
+  gate exposed one downstream test-runner manifest gap: absolute runtime bridge
+  paths in filtered private-stdlib source no longer requested the direct
+  `sifr_runtime` crate because import collection intentionally ignored absolute
+  paths. Runtime-crate dependency need is now tracked separately from the need
+  for an unqualified `SifrInt` import. Focused collector and multi-module
+  metadata regressions pass, and the exact failing `sifr test
+  demos/mode_consistency` command builds and runs successfully. Clippy, format,
+  HIR/driver maintainability, and the `2705`-file size guardrail pass. A
+  ten-run debug-binary A/B under identical package discovery measures this M10
+  branch at `1.391s` mean versus `1.563s` for unmodified `main`; a later
+  representative run exceeded three absolute latency ceilings while concurrent
+  macOS policy/trust services consumed substantial CPU, but retained the branch
+  improvement. Fable High milestone
+  [review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-2.md)
+  found declared union error channels and Python-error identity parity gaps;
+  [pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-3.md)
+  narrowed the remaining builtin carrier and alias collision cases;
+  [pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-4.md),
+  [pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-5.md),
+  and
+  [pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-6.md)
+  drove the borrowed-field mutation fix through direct, nested, class-method,
+  and field-argument shapes. Fable High
+  [pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-7.md)
+  verified all blockers closed and requested the authoritative merge gate plus
+  a separate issue for the pre-existing class-field mutating-receiver clone
+  defect. That defect and adjacent fail-closed parity gaps are tracked in
+  [`ad-hoc-class-field-mutating-receiver-place-semantics.md`](ad-hoc-class-field-mutating-receiver-place-semantics.md).
+  Pass 8 is retained as an explicitly invalid timer-only artifact and is not
+  treated as review evidence. Fresh Fable High
+  [pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-9.md)
+  independently inspected the complete candidate and adversarially probed the
+  mutation, identity, carrier, PythonError, and buffer surfaces, then returned
+  **SATISFIED** with no blocking findings. Post-commit Fable High
+  [pass 10](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-10.md)
+  re-inspected the frozen `origin/main...HEAD` diff, confirmed the final commit
+  was documentation-only, and returned **SATISFIED** with no blockers. The
+  authoritative merge gate passes
+  every blocking lane in `2685.23s`: E2E `674/674` with signature
+  `1f8b1cadc4f48ec8`, Python interop `18/18`, diagnostics `175/175`, codegen
+  `864/864`, lowering `784/784` plus one ignored test, driver `360/360` plus 33
+  ignored tests and generated builds `33/33`, file-size guardrails over `2720`
+  files, and `261` hardening variants with zero failures. Its warm-time budget
+  notice is a non-blocking advisory. [PR #2990](https://github.com/sifr-lang/sifr/pull/2990)
+  is the reviewed and validated M10 closure PR.
 
 Acceptance:
 

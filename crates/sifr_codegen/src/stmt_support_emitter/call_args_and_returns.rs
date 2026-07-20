@@ -391,7 +391,9 @@ impl RustEmitter {
                     expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_object))),
                     field: idx.to_string(),
                 };
-                if crate::helpers::is_copy_type_for_codegen(element_ty) {
+                if crate::helpers::is_copy_type_for_codegen(element_ty)
+                    || !element_ty.supports_derived_clone()
+                {
                     field_expr
                 } else {
                     crate::RustExpr::Clone(Box::new(field_expr))

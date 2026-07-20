@@ -5,6 +5,19 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
 
 impl RustEmitter {
+    pub(crate) fn class_needs_phantom_marker(class: &HirClass) -> bool {
+        class.type_params.iter().any(|type_param| {
+            !class
+                .fields
+                .iter()
+                .any(|(_, field)| Self::type_mentions_type_param(field, type_param))
+                && !class
+                    .parent_type
+                    .as_ref()
+                    .is_some_and(|parent| Self::type_mentions_type_param(parent, type_param))
+        })
+    }
+
     pub(crate) fn type_mentions_type_param(ty: &Type, type_param: &str) -> bool {
         match ty.resolve_alias() {
             Type::TypeVar(name) => name == type_param,
@@ -186,7 +199,39 @@ impl RustEmitter {
                 }
             }
             Type::Alias { body, .. } => self.rust_type_with_generics(body),
-            Type::Class { name, .. } => self.render_generic_class_type(name, ty),
+            Type::Class {
+                name, type_args, ..
+            } => {
+                let rust_name = ty.rust_type();
+                if !self.generic_classes.contains(name) {
+                    return rust_name;
+                }
+                if !type_args.is_empty() {
+                    return format!(
+                        "{rust_name}<{}>",
+                        type_args
+                            .iter()
+                            .map(|arg| self.rust_type_with_generics(arg))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    );
+                }
+                if let Some(type_args) = self.infer_generic_class_type_args(name, ty) {
+                    return format!(
+                        "{rust_name}<{}>",
+                        type_args
+                            .iter()
+                            .map(|arg| self.rust_type_with_generics(arg))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    );
+                }
+                self.generic_class_params
+                    .get(name)
+                    .map_or(rust_name.clone(), |params| {
+                        format!("{rust_name}<{}>", params.join(", "))
+                    })
+            }
             Type::Failure(err) => {
                 format!("__SifrFailure<{}>", self.rust_type_with_generics(err))
             }
@@ -710,5 +755,49 @@ impl RustEmitter {
             &mut on_expr,
         );
         mentioned
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generic_type_rendering_preserves_compiler_owned_class_names() {
+        let emitter = RustEmitter::new();
+        for (identity, expected) in [
+            ("sifr.io.FileHandle", "__SifrIoFileHandle"),
+            ("sifr.io.TextFileHandle", "__SifrIoTextFileHandle"),
+        ] {
+            let ty = Type::Class {
+                identity: Some(identity.to_string()),
+                type_args: Vec::new(),
+                name: identity.rsplit('.').next().expect("class name").to_string(),
+                fields: Vec::new(),
+                methods: Vec::new(),
+                parent_class: None,
+            };
+            assert_eq!(emitter.rust_type_with_generics(&ty), expected);
+        }
+    }
+
+    #[test]
+    fn canonical_generic_class_rendering_preserves_concrete_arguments() {
+        let mut emitter = RustEmitter::new();
+        emitter.generic_classes.insert("NullContext".to_string());
+        let ty = Type::Class {
+            identity: Some("sifr.resource.NullContext".to_string()),
+            type_args: vec![Type::Int],
+            name: "NullContext".to_string(),
+            fields: vec![("value".to_string(), Type::Int)],
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let canonical = sifr_type_system::stdlib_class_rust_name("sifr.resource", "NullContext");
+
+        assert_eq!(
+            emitter.rust_type_with_generics(&ty),
+            format!("{canonical}<i64>")
+        );
     }
 }

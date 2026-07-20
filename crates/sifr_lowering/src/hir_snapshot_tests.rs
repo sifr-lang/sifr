@@ -232,7 +232,10 @@ fn project_stmt(stmt: &HirStmt) -> Value {
                     })
                 })
                 .collect::<Vec<_>>(),
-            "body_error_types": body_error_types,
+            "body_error_types": body_error_types
+                .iter()
+                .map(Type::display_name)
+                .collect::<Vec<_>>(),
         }),
         HirStmt::TryFinally { body, finalbody } => json!({
             "kind": "TryFinally",
@@ -840,7 +843,9 @@ fn pattern_kind_name(pattern: &HirPattern) -> Value {
             "kind": "Or",
             "patterns": patterns.iter().map(pattern_kind_name).collect::<Vec<_>>(),
         }),
-        HirPattern::Class { class_name, fields } => json!({
+        HirPattern::Class {
+            class_name, fields, ..
+        } => json!({
             "kind": "Class",
             "class_name": class_name,
             "fields": fields

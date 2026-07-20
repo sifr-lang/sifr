@@ -1,12 +1,12 @@
 use super::{
     call_argument_ranges_by_param, collect_type_vars, consume_owned_value, coroutine_result_type,
     decode_typevar_constraint, expression_diagnostics, infer_type_var_bindings,
-    is_compatible_with_unresolved_typevars, lower_expr, lower_function_call_args, lower_name,
-    lower_python_function_call_args, lower_signature_call_args, name_diagnostics,
-    ownership_diagnostics, protocol_diagnostics, refine_constructor_return_type_from_args,
-    substitute_type_vars, tsc, type_param_argument_range, type_satisfies_bound,
-    type_satisfies_constraint, DiagnosticCode, Expr, ExprCall, HashMap, HirExpr, LowerCtx,
-    ParamConvention, Ranged, Type,
+    is_compatible_with_unresolved_typevars, is_poisoned_binding_expr, lower_expr,
+    lower_function_call_args, lower_name, lower_python_function_call_args,
+    lower_signature_call_args, name_diagnostics, ownership_diagnostics, protocol_diagnostics,
+    refine_constructor_return_type_from_args, substitute_type_vars, tsc, type_param_argument_range,
+    type_satisfies_bound, type_satisfies_constraint, DiagnosticCode, Expr, ExprCall, HashMap,
+    HirExpr, LowerCtx, ParamConvention, Ranged, Type,
 };
 use crate::lower::type_bounds::supports_print_formatting;
 use crate::lower::{ipc_payload_calls, parallel_calls};
@@ -224,6 +224,9 @@ pub(super) fn lower_regular_call(
         let mut args = Vec::with_capacity(call.arguments.args.len());
         for arg in &call.arguments.args {
             let lowered = lower_expr(arg, ctx)?;
+            if is_poisoned_binding_expr(&lowered, ctx) {
+                return None;
+            }
             if !supports_print_formatting(lowered.ty()) {
                 expression_diagnostics::type_mismatch(
                     ctx,

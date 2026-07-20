@@ -63,6 +63,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) errors: Vec<HirDiagnostic>,
     /// Proof for the latest emitted lowering diagnostic.
     pub(in crate::lower) last_error_taint: Option<ErrorTaint>,
+    /// Proof propagated by an expression suppressed because it reads a poisoned binding.
+    propagated_error_taint: Option<ErrorTaint>,
     /// Loop nesting depth (for break/continue validation)
     pub(in crate::lower) loop_depth: usize,
     /// `reveal_type()` diagnostics (informational, not errors)
@@ -77,6 +79,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) current_method: Option<String>,
     /// The parent class name of the current class (for `super()` resolution)
     pub(in crate::lower) current_parent_class: Option<String>,
+    /// Resolved parent class type of the current class.
+    pub(in crate::lower) current_parent_type: Option<Type>,
     /// Whether we're inside a try block (auto-unwrap Result values)
     pub(in crate::lower) in_try_block: bool,
     /// Whether the currently lowered function body is async.
@@ -86,8 +90,8 @@ pub(in crate::lower) struct LowerCtx {
     /// Return type of the currently lowered function body.
     pub(in crate::lower) current_function_return_type: Option<Type>,
     /// Error types collected from Result-returning calls during try body lowering.
-    /// Each entry is the name of an error class encountered via auto-unwrap in the current try block.
-    pub(in crate::lower) try_block_error_types: std::collections::HashSet<String>,
+    /// Each entry is an exact error class type encountered via auto-unwrap.
+    pub(in crate::lower) try_block_error_types: std::collections::HashSet<Type>,
     /// Set of class names that are error types (class Foo(Error))
     pub(in crate::lower) error_types: std::collections::HashSet<String>,
     /// Map of parent error type -> list of known child error types (for exhaustiveness checking)
@@ -181,6 +185,7 @@ impl LowerCtx {
             active_task_owner_bindings: Vec::new(),
             errors: Vec::new(),
             last_error_taint: None,
+            propagated_error_taint: None,
             loop_depth: 0,
             reveal_types: Vec::new(),
             warnings: Vec::new(),
@@ -188,6 +193,7 @@ impl LowerCtx {
             current_owner: None,
             current_method: None,
             current_parent_class: None,
+            current_parent_type: None,
             in_try_block: false,
             current_function_is_async: false,
             current_function_is_async_generator: false,
@@ -345,10 +351,28 @@ impl LowerCtx {
             .then_some(self.last_error_taint)
             .flatten()
     }
-    pub(in crate::lower) fn is_poisoned_binding(&self, name: &str) -> bool {
-        self.scope
+    pub(in crate::lower) fn begin_initializer_lowering(&mut self) -> usize {
+        self.propagated_error_taint = None;
+        self.error_count()
+    }
+    pub(in crate::lower) fn initializer_error_taint_since(
+        &mut self,
+        previous_error_count: usize,
+    ) -> Option<ErrorTaint> {
+        self.error_taint_since(previous_error_count)
+            .or_else(|| self.propagated_error_taint.take())
+    }
+    pub(in crate::lower) fn propagate_poisoned_binding_error(&mut self, name: &str) -> bool {
+        let taint = self
+            .scope
             .lookup(name)
-            .is_some_and(crate::scope::VarInfo::is_poisoned_binding)
+            .and_then(crate::scope::VarInfo::error_taint);
+        if taint.is_some() {
+            self.propagated_error_taint = taint;
+            true
+        } else {
+            false
+        }
     }
     pub(in crate::lower) fn in_loop(&self) -> bool {
         self.loop_depth > 0

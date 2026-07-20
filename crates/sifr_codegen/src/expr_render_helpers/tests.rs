@@ -1,6 +1,104 @@
 use super::*;
 use crate::{RustExpr, RustLiteral, RustStmt, RustType};
 
+#[test]
+fn field_read_from_borrowed_parameter_clones_move_value() {
+    let class = Type::Class {
+        identity: Some("_sifr.python.PythonError".to_string()),
+        type_args: Vec::new(),
+        name: "PythonError".to_string(),
+        fields: vec![("kind".to_string(), Type::Str)],
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    };
+    let object = HirExpr::Name {
+        name: "error".to_string(),
+        ty: class,
+    };
+    let mut emitter = RustEmitter::new();
+    emitter.borrowed_params.insert("error".to_string());
+
+    let lowered = emitter.lower_field_access_expr_with_lowered_object(
+        &object,
+        "kind",
+        &Type::Str,
+        RustExpr::Ident("error".to_string()),
+    );
+
+    assert_eq!(crate::render_expr(&lowered), "error.kind.clone()");
+}
+
+#[test]
+fn mutating_field_receiver_from_mut_borrowed_parameter_does_not_clone() {
+    let class = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "Crate".to_string(),
+        fields: vec![("items".to_string(), Type::List(Box::new(Type::Int)))],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let object = HirExpr::Name {
+        name: "item".to_string(),
+        ty: class,
+    };
+    let mut emitter = RustEmitter::new();
+    emitter.mut_borrowed_params.insert("item".to_string());
+    let field = HirExpr::FieldAccess {
+        object: Box::new(object.clone()),
+        field: "items".to_string(),
+        ty: Type::List(Box::new(Type::Int)),
+    };
+    assert!(emitter.method_call_needs_field_clone_suppression(&field, "append"));
+    emitter.pending_self_field_clone_suppression = 1;
+
+    let lowered = emitter.lower_field_access_expr_with_lowered_object(
+        &object,
+        "items",
+        &Type::List(Box::new(Type::Int)),
+        RustExpr::Ident("item".to_string()),
+    );
+
+    assert_eq!(crate::render_expr(&lowered), "item.items");
+    assert_eq!(emitter.pending_self_field_clone_suppression, 0);
+}
+
+#[test]
+fn nested_mutating_field_receiver_uses_borrowed_root_for_clone_suppression() {
+    let inner = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "Inner".to_string(),
+        fields: vec![("items".to_string(), Type::List(Box::new(Type::Int)))],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let outer = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "Outer".to_string(),
+        fields: vec![("inner".to_string(), inner.clone())],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let receiver = HirExpr::FieldAccess {
+        object: Box::new(HirExpr::FieldAccess {
+            object: Box::new(HirExpr::Name {
+                name: "outer".to_string(),
+                ty: outer,
+            }),
+            field: "inner".to_string(),
+            ty: inner,
+        }),
+        field: "items".to_string(),
+        ty: Type::List(Box::new(Type::Int)),
+    };
+    let mut emitter = RustEmitter::new();
+    emitter.mut_borrowed_params.insert("outer".to_string());
+
+    assert!(emitter.method_call_needs_field_clone_suppression(&receiver, "append"));
+}
+
 fn emitter_with_large_int_const() -> RustEmitter {
     let mut emitter = RustEmitter::new();
     emitter.module_constants.insert(

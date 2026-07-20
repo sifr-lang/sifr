@@ -1,5 +1,5 @@
 use crate::python_interop_direct::{
-    input_conversion, output_value_expr, python_interop_function_body,
+    input_conversion, is_python_object, output_value_expr, python_interop_function_body,
     python_interop_function_body_with_retained_errors, python_interop_method_body,
     python_interop_method_body_with_retained_errors,
 };
@@ -68,12 +68,12 @@ fn sync_wrapper_emits_complete_owned_argument_frame() {
     let body =
         python_interop_function_body(&function, &Default::default()).expect("wrapper should lower");
     let rendered = render_stmts(&body);
-    assert!(rendered.contains("sifr_runtime::python::resolve_target"));
+    assert!(rendered.contains("::sifr_runtime::python::resolve_target"));
     assert!(rendered.contains("for __sifr_python_value_1 in rest.iter()"));
     assert!(rendered.contains("if let Some(__sifr_python_value_2) = label"));
     assert!(rendered.contains("for (__sifr_python_key_3, __sifr_python_value_3) in extra.iter()"));
-    assert!(rendered.contains("sifr_runtime::python::call_object_owned"));
-    assert!(rendered.contains("sifr_runtime::python::to_int"));
+    assert!(rendered.contains("::sifr_runtime::python::call_object_owned"));
+    assert!(rendered.contains("::sifr_runtime::python::to_int"));
 }
 
 #[test]
@@ -214,6 +214,40 @@ fn recursive_wrapper_emits_list_dict_tuple_and_record_conversions() {
     assert!(rendered.contains("dict_str_items"), "{rendered}");
     assert!(rendered.contains("tuple_items"), "{rendered}");
     assert!(rendered.contains("record_field"), "{rendered}");
+}
+
+#[test]
+fn object_basename_does_not_bypass_canonical_python_identity() {
+    let local_object = Type::Class {
+        identity: Some("main.Object".to_string()),
+        type_args: Vec::new(),
+        name: "Object".to_string(),
+        fields: vec![("value".to_string(), Type::Int)],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let canonical_object = Type::Class {
+        identity: Some("_sifr.python.Object".to_string()),
+        type_args: Vec::new(),
+        name: "Object".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("NonSend".to_string()),
+    };
+
+    let local = input_conversion("value", &local_object, &Default::default())
+        .expect("same-named local record should use record conversion");
+    let rendered_local = render_stmts(&[crate::RustStmt::Expr(local)]);
+
+    assert!(
+        rendered_local.contains("from_record_results"),
+        "{rendered_local}"
+    );
+    assert!(
+        !rendered_local.contains("temporary_argument_handle"),
+        "{rendered_local}"
+    );
+    assert!(is_python_object(&canonical_object));
 }
 
 #[test]
@@ -429,6 +463,7 @@ fn receiver_retained_callback_reuses_the_opaque_owner_slot() {
     assert!(!rendered.contains("close_call_scope"));
     let class = HirClass {
         name: "Subscription".to_string(),
+        identity: None,
         fields: Vec::new(),
         methods: vec![method.clone()],
         is_hashable: false,
@@ -438,6 +473,7 @@ fn receiver_retained_callback_reuses_the_opaque_owner_slot() {
         newtype_inner: None,
         implements_protocols: Vec::new(),
         parent_class: None,
+        parent_type: None,
         type_params: Vec::new(),
         enum_variants: Vec::new(),
         rust_interop: Vec::new(),
@@ -631,6 +667,7 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
         functions: vec![subscribe],
         classes: vec![HirClass {
             name: "Subscription".to_string(),
+            identity: None,
             fields: Vec::new(),
             methods: vec![inspect, close],
             is_hashable: false,
@@ -640,6 +677,7 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
             newtype_inner: None,
             implements_protocols: Vec::new(),
             parent_class: Some("NonSend".to_string()),
+            parent_type: None,
             type_params: Vec::new(),
             enum_variants: Vec::new(),
             rust_interop: Vec::new(),
@@ -652,13 +690,13 @@ fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it
     let generated_module = generate_rust(&module);
     assert!(
         generated_module.contains(
-            "__sifr_python_callback_failure_0: sifr_runtime::python::CallbackFailureSlot<HandlerError>"
+            "__sifr_python_callback_failure_0: ::sifr_runtime::python::CallbackFailureSlot<HandlerError>"
         ),
         "{generated_module}"
     );
     assert!(
         generated_module
-            .contains("__sifr_python_not_send_sync: std::marker::PhantomData<std::rc::Rc<()>>"),
+            .contains("__sifr_python_not_send_sync: ::std::marker::PhantomData<::std::rc::Rc<()>>"),
         "{generated_module}"
     );
     assert!(

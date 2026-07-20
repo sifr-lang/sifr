@@ -51,16 +51,32 @@ impl RustEmitter {
     pub(crate) fn collect_parent_field_metadata(&mut self, module: &HirModule) {
         for class in &module.classes {
             if let Some(ref parent_name) = class.parent_class {
-                if let Some(parent_class) = module
-                    .classes
-                    .iter()
-                    .find(|candidate| candidate.name == *parent_name)
-                {
-                    let parent_field_names: HashSet<String> = parent_class
-                        .fields
-                        .iter()
-                        .map(|(name, _)| name.clone())
-                        .collect();
+                let parent_field_names = class
+                    .parent_type
+                    .as_ref()
+                    .and_then(|parent| match parent.resolve_alias() {
+                        sifr_type_system::Type::Class { fields, .. } => Some(
+                            fields
+                                .iter()
+                                .map(|(name, _)| name.clone())
+                                .collect::<HashSet<_>>(),
+                        ),
+                        _ => None,
+                    })
+                    .or_else(|| {
+                        module
+                            .classes
+                            .iter()
+                            .find(|candidate| candidate.name == *parent_name)
+                            .map(|parent_class| {
+                                parent_class
+                                    .fields
+                                    .iter()
+                                    .map(|(name, _)| name.clone())
+                                    .collect::<HashSet<_>>()
+                            })
+                    });
+                if let Some(parent_field_names) = parent_field_names {
                     self.parent_fields.insert(
                         class.name.clone(),
                         (parent_name.clone(), parent_field_names),
@@ -81,6 +97,16 @@ impl RustEmitter {
                 .insert(func.name.clone(), (params, func.return_type.clone()));
         }
         for class in &module.classes {
+            let emitted_class_name = self.current_module_name.as_deref().map_or_else(
+                || sifr_type_system::source_class_rust_name(&class.name),
+                |module| {
+                    if module.starts_with("sifr.") || module.starts_with("_sifr.") {
+                        sifr_type_system::stdlib_class_rust_name(module, &class.name)
+                    } else {
+                        sifr_type_system::source_class_rust_name(&class.name)
+                    }
+                },
+            );
             for method in &class.methods {
                 let params = method
                     .params
@@ -94,10 +120,13 @@ impl RustEmitter {
                         (param.ty.clone(), convention)
                     })
                     .collect::<Vec<_>>();
+                let signature = (params, method.return_type.clone());
                 self.func_signatures.insert(
                     format!("{}::{}", class.name, method.name),
-                    (params, method.return_type.clone()),
+                    signature.clone(),
                 );
+                self.func_signatures
+                    .insert(format!("{emitted_class_name}::{}", method.name), signature);
             }
         }
     }

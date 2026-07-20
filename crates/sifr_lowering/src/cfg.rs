@@ -488,7 +488,7 @@ mod tests {
                         },
                     }],
                 }],
-                body_error_types: vec!["Error".to_string()],
+                body_error_types: vec![Type::Any],
             },
         ];
 

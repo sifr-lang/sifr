@@ -44,13 +44,16 @@ fn first_try_error_type_in_stmt(stmt: &HirStmt) -> Option<String> {
             body,
             handlers,
             body_error_types,
-        } => body_error_types.first().cloned().or_else(|| {
-            first_try_error_type_in_stmts(body).or_else(|| {
-                handlers
-                    .iter()
-                    .find_map(|handler| first_try_error_type_in_stmts(&handler.body))
-            })
-        }),
+        } => body_error_types
+            .first()
+            .map(|error_ty| crate::render_type(&crate::sifr_type_to_rust_type(error_ty)))
+            .or_else(|| {
+                first_try_error_type_in_stmts(body).or_else(|| {
+                    handlers
+                        .iter()
+                        .find_map(|handler| first_try_error_type_in_stmts(&handler.body))
+                })
+            }),
         HirStmt::TryFinally { body, finalbody } => {
             first_try_error_type_in_stmts(body).or_else(|| first_try_error_type_in_stmts(finalbody))
         }

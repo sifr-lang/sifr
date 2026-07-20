@@ -12,6 +12,7 @@ pub mod lowering_outcome;
 pub mod lowering_result;
 pub mod python_interop;
 pub mod rust_interop;
+mod type_visit;
 
 pub use cfg::*;
 pub use diagnostic_types::*;
@@ -21,6 +22,7 @@ pub use lowering_outcome::LoweringOutcome;
 pub use lowering_result::LoweringResult;
 pub use python_interop::*;
 pub use rust_interop::*;
+pub use type_visit::transform_hir_function_types;
 
 #[cfg(test)]
 mod tests {

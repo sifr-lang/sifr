@@ -5,15 +5,15 @@ use super::{
     lower_method_call_args, lower_signature_call_args, lower_task_handle_method_call,
     refine_defaultdict_binding_expr, refine_empty_list_binding_expr, refine_empty_set_binding_expr,
     refine_generic_class_binding_expr, refine_nonempty_method_return_type,
-    reject_immutable_parameter_method_mutation, resolve_annotation_expr,
-    resolve_bigint_method_type, resolve_bytes_method_type, resolve_class_method_on_type,
-    resolve_decimal_method_type, resolve_dict_method_type, resolve_enum_method_type,
-    resolve_fixed_width_method_type, resolve_list_method_type, resolve_newtype_method_type,
-    resolve_protocol_method_type, resolve_python_buffer_method_type, resolve_set_method_type,
-    resolve_str_method_type, resolve_tuple_method_type, str, tsc, DiagnosticCode, Expr,
-    ExprAttribute, ExprCall, ExprDictComp, ExprLambda, ExprListComp, ExprSetComp, FunctionType,
-    HirExpr, HirIteratorOp, HirParam, LowerCtx, ParamConvention, Ranged, TextRange, Type,
-    DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
+    reject_immutable_method_mut_borrow_arguments, reject_immutable_parameter_method_mutation,
+    resolve_annotation_expr, resolve_bigint_method_type, resolve_bytes_method_type,
+    resolve_class_method_on_type, resolve_decimal_method_type, resolve_dict_method_type,
+    resolve_enum_method_type, resolve_fixed_width_method_type, resolve_list_method_type,
+    resolve_newtype_method_type, resolve_protocol_method_type, resolve_python_buffer_method_type,
+    resolve_set_method_type, resolve_str_method_type, resolve_tuple_method_type, str, tsc,
+    DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp, ExprLambda, ExprListComp,
+    ExprSetComp, FunctionType, HirExpr, HirIteratorOp, HirParam, LowerCtx, ParamConvention, Ranged,
+    TextRange, Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
 };
 use crate::lower::python_interop::callback_method_arg_ranges;
 use crate::lower::{
@@ -32,7 +32,10 @@ pub(in crate::lower) fn lower_method_call(
         if let Expr::Name(name) = super_call.func.as_ref() {
             if name.id.as_str() == "super" {
                 let method_name = attr.attr.to_string();
-                if let Some(parent_name) = ctx.current_parent_class.clone() {
+                if let (Some(parent_name), Some(parent_type)) = (
+                    ctx.current_parent_class.clone(),
+                    ctx.current_parent_type.clone(),
+                ) {
                     let mut args = Vec::new();
                     for arg in &call.arguments.args {
                         let expr = lower_expr(arg, ctx)?;
@@ -41,6 +44,7 @@ pub(in crate::lower) fn lower_method_call(
 
                     return Some(HirExpr::SuperCall {
                         parent_class: parent_name,
+                        parent_type,
                         method: if method_name == "__init__" {
                             "new".to_string()
                         } else {
@@ -197,6 +201,15 @@ pub(in crate::lower) fn lower_method_call(
     }
     let method_arg_ranges =
         callback_method_arg_ranges(&object, &object_ty_for_args, &method_name, call, &args, ctx);
+    if reject_immutable_method_mut_borrow_arguments(
+        ctx,
+        &object_ty_for_args,
+        &method_name,
+        &args,
+        &method_arg_ranges,
+    ) {
+        return None;
+    }
     let resolved_method_type = resolve_method_type(
         &object_ty,
         &method_name,

@@ -5,6 +5,30 @@ use crate::{
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_frontend::SourceOrigin;
 
+fn assert_check_compile_error_parity(source: &str, expected_code: DiagnosticCode) {
+    let check_errors = type_check_source(source);
+    assert!(check_errors
+        .iter()
+        .any(|error| error.code == expected_code.code()));
+
+    let CompileResult::Errors {
+        errors: compile_errors,
+    } = compile(source)
+    else {
+        panic!("invalid source must not reach code generation");
+    };
+    assert_eq!(
+        check_errors
+            .iter()
+            .map(crate::diagnostics::diagnostic_legacy_display)
+            .collect::<Vec<_>>(),
+        compile_errors
+            .iter()
+            .map(crate::diagnostics::diagnostic_legacy_display)
+            .collect::<Vec<_>>()
+    );
+}
+
 #[test]
 fn test_parse_source_returns_suite_for_valid_program() {
     let suite = parse_source("def main():\n    x: int = 1\n")
@@ -167,6 +191,142 @@ fn test_lower_source_and_type_check_source_surface_type_errors() {
             .map(crate::diagnostics::diagnostic_legacy_display)
             .collect::<Vec<_>>()
     );
+}
+
+#[test]
+fn test_duplicate_python_error_fields_fail_check_and_compile_consistently() {
+    let source = r#"
+class PythonError(Error):
+    message: str
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+
+@python.buffer(builtins.bytearray, access=read, layout=any)
+def view(size: int) -> Result[python.Buffer[uint8], PythonError]: ...
+"#;
+    let check_errors = type_check_source(source);
+    assert!(check_errors.iter().any(|error| {
+        error.code == DiagnosticCode::PYZC_INVALID_DECLARATION.code()
+            && error
+                .message
+                .contains("canonical `PythonError` field contract")
+    }));
+
+    let CompileResult::Errors {
+        errors: compile_errors,
+    } = compile(source)
+    else {
+        panic!("duplicate PythonError fields must not reach code generation");
+    };
+    assert_eq!(
+        check_errors
+            .iter()
+            .map(crate::diagnostics::diagnostic_legacy_display)
+            .collect::<Vec<_>>(),
+        compile_errors
+            .iter()
+            .map(crate::diagnostics::diagnostic_legacy_display)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn test_python_declaration_shadow_error_fails_check_and_compile_consistently() {
+    let source = r#"
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+    code: int
+
+@python(pkg.compute)
+def compute(value: int) -> Result[int, PythonError]: ...
+"#;
+    assert_check_compile_error_parity(source, DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE);
+}
+
+#[test]
+fn test_local_object_shadow_fails_check_and_compile_consistently() {
+    let source = r#"
+class Object:
+    pass
+
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+
+@python.buffer(builtins.memoryview, access=read, layout=any)
+def view(owner: Object) -> Result[python.Buffer[uint8], PythonError]: ...
+"#;
+    assert_check_compile_error_parity(source, DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE);
+}
+
+#[test]
+fn test_local_object_record_uses_record_conversion_instead_of_sealed_handle() {
+    let source = r#"
+class Object:
+    value: int
+
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+
+@python.buffer(builtins.memoryview, access=read, layout=any)
+def view(owner: Object) -> Result[python.Buffer[uint8], PythonError]: ...
+"#;
+    assert!(type_check_source(source).is_empty());
+    let CompileResult::Success { rust_source } = compile(source) else {
+        panic!("same-named local record should compile through record conversion");
+    };
+    assert!(rust_source.contains("from_record_results"), "{rust_source}");
+}
+
+#[test]
+fn test_imported_python_object_identity_reaches_check_and_compile() {
+    let source = r#"
+from sifr.python import Object, PythonError
+
+@python.buffer(builtins.memoryview, access=write, layout=any)
+def view(own owner: Object) -> Result[python.Buffer[uint8], PythonError]: ...
+"#;
+    assert!(type_check_source(source).is_empty());
+    assert!(matches!(compile(source), CompileResult::Success { .. }));
+}
+
+#[test]
+fn test_callback_error_union_same_basename_identities_compile_distinctly() {
+    let source = r#"
+from typing import Callable
+from sifr.python import PythonError as CanonicalError
+
+class PythonError(Error):
+    message: str
+    code: int
+
+@python.callback(handler, lifetime=call, dispatch=current)
+@python(builtins.map)
+def compute(
+    handler: Callable[[int], int],
+) -> Result[int, CanonicalError | PythonError]: ...
+"#;
+    assert!(type_check_source(source).is_empty());
+    let CompileResult::Success { rust_source } = compile(source) else {
+        panic!("same-basename callback errors should compile with distinct Rust identities");
+    };
+    let canonical = sifr_type_system::stdlib_class_rust_name("_sifr.python", "PythonError");
+    assert!(rust_source.contains(&format!("struct {canonical}")));
+    assert!(rust_source.contains("struct PythonError"));
 }
 
 #[test]
@@ -543,6 +703,50 @@ def main():
             panic!("compilation failed: {:?}", errors);
         }
     }
+}
+
+const SOURCE_PYTHON_ERROR_CONTRACT: &str = r#"
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+"#;
+
+#[test]
+fn test_source_python_error_contract_without_interop_has_no_runtime_bridge() {
+    let source =
+        format!("{SOURCE_PYTHON_ERROR_CONTRACT}\n\ndef main() -> None:\n    assert True\n");
+    let CompileResultFull::Success {
+        rust_source,
+        required_features,
+        ..
+    } = compile_with_metadata(&source)
+    else {
+        panic!("source PythonError contract should compile");
+    };
+
+    assert!(!rust_source.contains("__sifr_python_error"));
+    assert!(!required_features.contains(&sifr_stdlib_manifest::StdlibFeature::PythonRuntime));
+}
+
+#[test]
+fn test_source_python_error_contract_with_interop_gets_runtime_bridge() {
+    let source = format!(
+        "{SOURCE_PYTHON_ERROR_CONTRACT}\n\n@python(pkg.compute)\ndef compute(value: int) -> Result[int, PythonError]: ...\n"
+    );
+    let CompileResultFull::Success {
+        rust_source,
+        required_features,
+        ..
+    } = compile_with_metadata(&source)
+    else {
+        panic!("Python declaration should compile");
+    };
+
+    assert!(rust_source.contains("__sifr_python_error"));
+    assert!(required_features.contains(&sifr_stdlib_manifest::StdlibFeature::PythonRuntime));
 }
 
 #[test]

@@ -22,13 +22,13 @@ fn collections_private_declarations_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::collections::{name}(")),
+                .contains(&format!("::sifr_stdlib::collections::{name}(")),
             "{name} should lower through _sifr.collections private Rust interop declarations"
         );
     }
     assert!(private_code
         .rust
-        .contains("sifr_runtime::interop::SifrIntBridge::from(item)"));
+        .contains("::sifr_runtime::interop::SifrIntBridge::from(item)"));
     assert!(private_code.rust.contains(".to_i64_saturating()"));
     assert!(compiled
         .code

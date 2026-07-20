@@ -1,0 +1,7 @@
+class PythonError(Error):
+    message: str
+    code: int
+
+
+def main() -> None:
+    assert True

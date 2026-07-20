@@ -1,0 +1,26 @@
+# expect-error: SIFR-PYZC-0001
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+
+
+@python.opaque(type=pkg.Owner, cleanup=drop)
+class Owner(NonSend):
+    @python(Self.mutate)
+    def mutate(self) -> Result[None, PythonError]: ...
+
+
+@python.buffer(pkg.identity, access=write, layout=any)
+def writable_alias(owner: Owner) -> Result[python.Buffer[uint8], PythonError]: ...
+
+
+def forbidden_alias(owner: Owner) -> Result[uint8, PythonError]:
+    try:
+        view: python.Buffer[uint8] = writable_alias(owner)
+        changed: None = owner.mutate()
+        return view.read(0)
+    except PythonError as error:
+        raise error

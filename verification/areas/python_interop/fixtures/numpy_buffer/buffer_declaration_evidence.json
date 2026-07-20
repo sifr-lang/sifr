@@ -15,7 +15,7 @@
       "layer": "lowering-codegen",
       "evidence": "python_buffer_contract_tests and python_buffer_codegen_tests",
       "owners": ["crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs", "crates/sifr_codegen/src/python_buffer_codegen_tests.rs"],
-      "covers": ["import-root target", "bridge target", "Self receiver", "read/write access", "any/C/F layout", "affine aggregate propagation", "non-Send propagation"]
+      "covers": ["import-root target", "bridge target", "read-only Self receiver", "producer read/write access", "any/C/F layout", "affine aggregate propagation", "non-Send propagation"]
     },
     {
       "id": "compiled-producer-matrix",
@@ -44,8 +44,8 @@
       "id": "ownership-and-traits",
       "layer": "lowering-e2e",
       "evidence": "python_buffer_contract_tests and crates/sifr/tests/e2e/fail/python_buffer_*.sifr",
-      "owners": ["crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs", "crates/sifr/tests/e2e/fail/python_buffer_affine_membership.sifr", "crates/sifr/tests/e2e/fail/python_buffer_identity_rejected.sifr", "crates/sifr/tests/e2e/fail/python_buffer_lambda_capture_rejected.sifr", "crates/sifr/tests/e2e/fail/python_buffer_nested_async_generator_capture.sifr", "crates/sifr/tests/e2e/fail/python_buffer_nested_function_capture_rejected.sifr", "crates/sifr/tests/e2e/fail/python_buffer_walrus_rejected.sifr"],
-      "covers": ["copy/clone/equality/hash/order", "use after move", "borrowed release", "mutable alias", "field/index projection", "lambda/nested-function/generator capture", "walrus alias", "task sendability"]
+      "owners": ["crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs", "crates/sifr/tests/e2e/fail/python_buffer_affine_membership.sifr", "crates/sifr/tests/e2e/fail/python_buffer_identity_rejected.sifr", "crates/sifr/tests/e2e/fail/python_buffer_lambda_capture_rejected.sifr", "crates/sifr/tests/e2e/fail/python_buffer_nested_async_generator_capture.sifr", "crates/sifr/tests/e2e/fail/python_buffer_nested_function_capture_rejected.sifr", "crates/sifr/tests/e2e/fail/python_buffer_walrus_rejected.sifr", "crates/sifr/tests/e2e/fail/python_buffer_writable_producer_borrowed_owner.sifr", "crates/sifr/tests/e2e/fail/python_buffer_writable_self_owner_alias.sifr"],
+      "covers": ["copy/clone/equality/hash/order", "use after move", "borrowed release", "mutable alias", "field/index projection", "lambda/nested-function/generator capture", "walrus alias", "task sendability", "writable Self owner alias", "writable producer borrowed-owner alias"]
     },
     {
       "id": "runtime-validation",

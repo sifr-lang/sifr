@@ -381,7 +381,7 @@ pub(super) fn append_submission(
                     args: Vec::new(),
                 },
                 then_body: vec![RustStmt::Expr(RustExpr::Ident(format!(
-                    "if let Some(__sifr_provisional_callback) = {provisional}.as_ref() {{ if let Err(__sifr_provisional_cleanup_error) = __sifr_provisional_callback.rollback_provisional().await {{ sifr_runtime::python::record_context_cleanup_evidence(\"receiver-callback-registration\", &__sifr_provisional_cleanup_error); }} }}"
+                    "if let Some(__sifr_provisional_callback) = {provisional}.as_ref() {{ if let Err(__sifr_provisional_cleanup_error) = __sifr_provisional_callback.rollback_provisional().await {{ ::sifr_runtime::python::record_context_cleanup_evidence(\"receiver-callback-registration\", &__sifr_provisional_cleanup_error); }} }}"
                 )))],
                 else_body: None,
             });

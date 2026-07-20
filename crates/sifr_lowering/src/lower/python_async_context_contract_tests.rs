@@ -5,6 +5,10 @@ use sifr_python_parser::parse_module;
 const ASYNC_CONTEXT_PREFIX: &str = r#"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class ExitCause:
     pass
@@ -88,6 +92,10 @@ fn async_context_rejects_distinct_entered_resource_without_drop_cleanup() {
     let source = r#"
 class PythonError(Error):
     message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
 
 class ExitCause:
     pass

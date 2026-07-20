@@ -7,6 +7,7 @@ use crate::{
 };
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
+use sifr_ir::HirStmt;
 use sifr_python_parser::parse_module;
 use sifr_type_system::{FunctionType, Type};
 
@@ -228,6 +229,166 @@ fn public_sysroot_stdlib_source_resolves_compiled_private_classes() {
     assert!(result.module.imports.iter().any(|import| {
         import.module == "_sifr.hidden" && import.names == ["PrivateThing".to_string()]
     }));
+}
+
+#[test]
+fn builtin_open_preserves_an_aliased_imported_text_handle_identity() {
+    let source = "from sifr.io import TextFileHandle as Handle\n\ndef main():\n    handle: Handle = open(\"out.txt\", \"w\", encoding=\"utf-8\")\n    handle.close()\n";
+    let parsed = parse_module(source).expect("parse failed");
+    let mut externals = ExternalDefs::default();
+    externals.classes.insert(
+        "sifr.io".to_string(),
+        HashMap::from([(
+            "TextFileHandle".to_string(),
+            Type::Class {
+                identity: Some("sifr.io.TextFileHandle".to_string()),
+                type_args: Vec::new(),
+                name: "TextFileHandle".to_string(),
+                fields: Vec::new(),
+                methods: vec![(
+                    "close".to_string(),
+                    FunctionType::all_borrow(Vec::new(), Type::None),
+                )],
+                parent_class: None,
+            },
+        )]),
+    );
+
+    lower_module_with_externals(parsed.suite(), &externals)
+        .expect("builtin open should return the canonical imported TextFileHandle type");
+}
+
+#[test]
+fn builtin_open_preserves_an_aliased_imported_binary_handle_identity() {
+    let source = "from sifr.io import FileHandle as Handle\n\ndef main():\n    handle: Handle = open(\"out.bin\", \"rb\")\n    handle.close()\n";
+    let parsed = parse_module(source).expect("parse failed");
+    let mut externals = ExternalDefs::default();
+    externals.classes.insert(
+        "sifr.io".to_string(),
+        HashMap::from([(
+            "FileHandle".to_string(),
+            Type::Class {
+                identity: Some("sifr.io.FileHandle".to_string()),
+                type_args: Vec::new(),
+                name: "FileHandle".to_string(),
+                fields: Vec::new(),
+                methods: vec![(
+                    "close".to_string(),
+                    FunctionType::all_borrow(Vec::new(), Type::None),
+                )],
+                parent_class: None,
+            },
+        )]),
+    );
+
+    lower_module_with_externals(parsed.suite(), &externals)
+        .expect("builtin open should return the canonical imported FileHandle type");
+}
+
+#[test]
+fn builtin_open_never_reuses_a_local_same_basename_handle() {
+    for source in [
+        "class TextFileHandle:\n    value: int\n\ndef main():\n    handle: TextFileHandle = open(\"out.txt\", \"w\", encoding=\"utf-8\")\n",
+        "class FileHandle:\n    value: int\n\ndef main():\n    handle: FileHandle = open(\"out.bin\", \"rb\")\n",
+    ] {
+        let parsed = parse_module(source).expect("parse failed");
+        let errors = match lower_module(parsed.suite()) {
+            Ok(_) => panic!("local handle shadow should not match the canonical open result"),
+            Err(errors) => errors,
+        };
+
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)),
+            "expected canonical-identity type mismatch, got {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn builtin_open_inferred_bindings_keep_canonical_handle_identities() {
+    let source = r#"class FileHandle:
+    value: int
+
+class TextFileHandle:
+    value: int
+
+def main() -> None:
+    local_binary = FileHandle(1)
+    local_text = TextFileHandle(2)
+    try:
+        binary = open("out.bin", "wb")
+        text = open("out.txt", "w", encoding="utf-8")
+        binary.close()
+        text.close()
+    except IOError as error:
+        _ = error.message
+"#;
+    let parsed = parse_module(source).expect("parse failed");
+    let mut externals = ExternalDefs::default();
+    externals.classes.insert(
+        "sifr.io".to_string(),
+        HashMap::from([
+            (
+                "FileHandle".to_string(),
+                Type::Class {
+                    identity: Some("sifr.io.FileHandle".to_string()),
+                    type_args: Vec::new(),
+                    name: "FileHandle".to_string(),
+                    fields: Vec::new(),
+                    methods: Vec::new(),
+                    parent_class: None,
+                },
+            ),
+            (
+                "TextFileHandle".to_string(),
+                Type::Class {
+                    identity: Some("sifr.io.TextFileHandle".to_string()),
+                    type_args: Vec::new(),
+                    name: "TextFileHandle".to_string(),
+                    fields: Vec::new(),
+                    methods: Vec::new(),
+                    parent_class: None,
+                },
+            ),
+        ]),
+    );
+    let result = lower_module_with_externals(parsed.suite(), &externals)
+        .expect("canonical handles should lower");
+    let main = result
+        .module
+        .functions
+        .iter()
+        .find(|function| function.name == "main")
+        .expect("main function");
+    let HirStmt::TryExcept { body, .. } = &main.body[2] else {
+        panic!("main should retain the try body");
+    };
+
+    for (statement, expected_identity) in body
+        .iter()
+        .take(2)
+        .zip(["sifr.io.FileHandle", "sifr.io.TextFileHandle"])
+    {
+        let HirStmt::Let { ty, value, .. } = statement else {
+            panic!("open result should lower to a let binding");
+        };
+        assert!(matches!(
+            ty.resolve_alias(),
+            Type::Class {
+                identity: Some(identity),
+                ..
+            } if identity == expected_identity
+        ));
+        assert!(matches!(
+            value.ty().resolve_alias(),
+            Type::Class {
+                identity: Some(identity),
+                ..
+            } if identity == expected_identity
+        ));
+    }
 }
 
 #[test]

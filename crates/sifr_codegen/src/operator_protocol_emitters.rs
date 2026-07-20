@@ -3,20 +3,12 @@ use crate::{
     RustItem, RustParam, RustStmt, RustType, ScopeContext, Visibility,
 };
 use sifr_ir::{HirClass, HirExpr, HirFunction, HirModule, HirStmt};
-use sifr_type_system::Type;
+use sifr_type_system::{source_class_rust_name, Type};
 use std::collections::{HashMap, HashSet};
 
 type OperatorBounds = HashMap<String, HashSet<String>>;
 
 impl RustEmitter {
-    fn operator_output_type(class: &HirClass, ty: &Type) -> String {
-        if ty.rust_type() == class.name {
-            Self::class_impl_target(class)
-        } else {
-            ty.rust_type()
-        }
-    }
-
     fn closed_operator_bounds(
         module: &HirModule,
         class: &HirClass,
@@ -48,15 +40,6 @@ impl RustEmitter {
             }
         }
         (!closed.is_empty()).then_some(closed)
-    }
-
-    fn operator_rust_bound(type_param: &str, requirement: &str) -> String {
-        match requirement {
-            "Add" | "Sub" | "Mul" | "Div" | "Rem" | "Neg" => {
-                format!("std::ops::{requirement}<Output = {type_param}>")
-            }
-            _ => requirement.to_string(),
-        }
     }
 
     pub(crate) fn emit_operator_impls(
@@ -108,17 +91,10 @@ impl RustEmitter {
         } else {
             String::new()
         };
-        let class_with_generics = format!("{}{}", class.name, generic_suffix);
-        let rhs_ty = if let Some(param) = func.params.first() {
-            if param.ty.rust_type() == class.name {
-                format!("&{class_with_generics}")
-            } else {
-                param.ty.rust_type()
-            }
-        } else {
-            format!("&{class_with_generics}")
-        };
-        let output_ty = Self::operator_output_type(class, &func.return_type);
+        let class_with_generics =
+            format!("{}{}", source_class_rust_name(&class.name), generic_suffix);
+        let rhs_ty = self.operator_rhs_type(class, func.params.first(), &class_with_generics);
+        let output_ty = self.operator_output_type(class, &func.return_type);
         let rhs_name = func
             .params
             .first()
@@ -172,7 +148,7 @@ impl RustEmitter {
         let items = vec![
             RustItem::TypeAlias {
                 name: "Output".to_string(),
-                ty: RustType::Named(Self::operator_output_type(class, &func.return_type)),
+                ty: RustType::Named(self.operator_output_type(class, &func.return_type)),
             },
             RustItem::Fn {
                 name: method_name.to_string(),
@@ -397,7 +373,7 @@ impl RustEmitter {
                 }
                 let delegated_call = RustExpr::FnCall {
                     func: Box::new(RustExpr::Path(vec![
-                        class.name.clone(),
+                        source_class_rust_name(&class.name),
                         method.name.clone(),
                     ])),
                     args: call_args,
@@ -423,9 +399,9 @@ impl RustEmitter {
 
             if !impl_items.is_empty() {
                 self.body_items.push(RustItem::Impl {
-                    target: class.name.clone(),
+                    target: source_class_rust_name(&class.name),
                     type_params: Vec::new(),
-                    trait_: Some(proto_name.clone()),
+                    trait_: Some(source_class_rust_name(proto_name)),
                     items: impl_items,
                 });
             }
@@ -467,7 +443,18 @@ impl RustEmitter {
                 Some(vec![RustStmt::Expr(lowered_expr)])
             }
             HirStmt::Return { value } => {
-                let lowered = value.as_ref().map(|expr| self.lower_operator_expr_ir(expr));
+                let lowered = value.as_ref().map(|expr| {
+                    self.lower_operator_expr_ir(expr).map(|lowered| match expr {
+                        HirExpr::Name { name, ty }
+                            if (self.borrowed_params.contains(name)
+                                || self.mut_borrowed_params.contains(name))
+                                && ty.ownership() != sifr_type_system::OwnershipKind::Copy =>
+                        {
+                            RustExpr::Clone(Box::new(lowered))
+                        }
+                        _ => lowered,
+                    })
+                });
                 match lowered {
                     Some(Some(expr)) => Some(vec![RustStmt::Return(Some(expr))]),
                     Some(None) => None,

@@ -1,0 +1,23 @@
+from sifr.configparser import Error as ConfigError
+from sifr.csv import Error as CsvError
+
+
+def fail_with(csv_branch: bool) -> Result[int, CsvError | ConfigError]:
+    if csv_branch:
+        raise CsvError("csv")
+    raise ConfigError("config")
+
+
+def classify(csv_branch: bool) -> str:
+    try:
+        value: int = fail_with(csv_branch)
+        return str(value)
+    except CsvError as error:
+        return "csv:" + error.message
+    except ConfigError as error:
+        return "config:" + error.message
+
+
+def main() -> None:
+    assert classify(True) == "csv:csv"
+    assert classify(False) == "config:config"

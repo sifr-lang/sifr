@@ -17,6 +17,7 @@ fn interop_build_plan_collects_function_class_and_method_declarations() {
         )],
         classes: vec![HirClass {
             name: "Consumer".to_string(),
+            identity: None,
             fields: Vec::new(),
             methods: vec![function_with_declaration(
                 "poll",
@@ -30,6 +31,7 @@ fn interop_build_plan_collects_function_class_and_method_declarations() {
             newtype_inner: None,
             implements_protocols: Vec::new(),
             parent_class: None,
+            parent_type: None,
             type_params: Vec::new(),
             enum_variants: Vec::new(),
             rust_interop: vec![declaration(
@@ -275,11 +277,11 @@ fn interop_bridge_resolves_imported_opaque_type_to_declared_rust_target() {
     );
     assert_eq!(
         signature.params[0].ty.rust_borrowed_type.as_deref(),
-        Some("&sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>")
+        Some("&::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>")
     );
     assert_eq!(
         signature.return_type.rust_return_type.as_deref(),
-        Some("sifr_runtime::interop::Handle<sifr_runtime::python::ForeignObject>")
+        Some("::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>")
     );
     assert!(plan.rust.bridge_contracts.generated_types.is_empty());
 }
@@ -333,7 +335,7 @@ fn interop_bridge_callable_params_require_callback_contract() {
     assert_eq!(signature.params[0].ty.kind, RustBridgeTypeKind::Callback);
     assert_eq!(
         signature.params[0].ty.rust_borrowed_type.as_deref(),
-        Some("&sifr_runtime::interop::ThreadsafeCallbackBridge")
+        Some("&::sifr_runtime::interop::ThreadsafeCallbackBridge")
     );
 }
 
@@ -440,6 +442,90 @@ fn interop_bridge_rejects_enum_discriminants_outside_repr_u32() {
     assert!(plan.rust.bridge_contracts.generated_types.is_empty());
 }
 
+#[test]
+fn interop_bridge_keeps_same_basename_canonical_records_distinct() {
+    let csv_error = Type::Class {
+        identity: Some("sifr.csv.Error".to_string()),
+        type_args: Vec::new(),
+        name: "Error".to_string(),
+        fields: vec![("line".to_string(), Type::Int)],
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    };
+    let config_error = Type::Class {
+        identity: Some("sifr.configparser.Error".to_string()),
+        type_args: Vec::new(),
+        name: "Error".to_string(),
+        fields: vec![("section".to_string(), Type::Str)],
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    };
+    let module = module_with(
+        vec![HirFunction {
+            name: "consume_errors".to_string(),
+            params: vec![
+                HirParam {
+                    name: "csv_error".to_string(),
+                    ty: csv_error,
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::borrow(),
+                },
+                HirParam {
+                    name: "config_error".to_string(),
+                    ty: config_error,
+                    default: None,
+                    keyword_only: false,
+                    convention: ParamConvention::borrow(),
+                },
+            ],
+            return_type: Type::None,
+            body: Vec::new(),
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            rust_interop: vec![declaration(
+                RustInteropDecoratorKind::Function,
+                "native.consume_errors",
+            )],
+            python_interop: Vec::new(),
+            compiler_intrinsic: None,
+            type_params: Vec::new(),
+        }],
+        Vec::new(),
+    );
+
+    let plan = interop_build_plan_for_named_modules([(Some("app"), &module)]);
+    let signature = &plan.rust.bridge_contracts.signatures[0];
+    assert_eq!(
+        signature.params[0].ty.rust_borrowed_type.as_deref(),
+        Some("crate::__sifr_bridge::sifr_csv::ErrorBridge")
+    );
+    assert_eq!(
+        signature.params[1].ty.rust_borrowed_type.as_deref(),
+        Some("crate::__sifr_bridge::sifr_configparser::ErrorBridge")
+    );
+    assert_eq!(plan.rust.bridge_contracts.generated_types.len(), 2);
+    let csv_bridge = plan
+        .rust
+        .bridge_contracts
+        .generated_types
+        .iter()
+        .find(|bridge| bridge.module_name.as_deref() == Some("sifr.csv"))
+        .expect("csv.Error bridge should retain its canonical module");
+    assert_eq!(csv_bridge.name, "ErrorBridge");
+    assert_eq!(csv_bridge.fields[0].name, "line");
+    let config_bridge = plan
+        .rust
+        .bridge_contracts
+        .generated_types
+        .iter()
+        .find(|bridge| bridge.module_name.as_deref() == Some("sifr.configparser"))
+        .expect("configparser.Error bridge should retain its canonical module");
+    assert_eq!(config_bridge.name, "ErrorBridge");
+    assert_eq!(config_bridge.fields[0].name, "section");
+}
+
 fn function_with_declaration(
     name: &str,
     kind: RustInteropDecoratorKind,
@@ -463,6 +549,7 @@ fn function_with_declaration(
 fn class(name: &str, kind: HirClassKind, fields: Vec<(String, Type)>) -> HirClass {
     HirClass {
         name: name.to_string(),
+        identity: None,
         fields,
         methods: Vec::new(),
         is_hashable: false,
@@ -472,6 +559,7 @@ fn class(name: &str, kind: HirClassKind, fields: Vec<(String, Type)>) -> HirClas
         newtype_inner: None,
         implements_protocols: Vec::new(),
         parent_class: None,
+        parent_type: None,
         type_params: Vec::new(),
         enum_variants: Vec::new(),
         rust_interop: Vec::new(),

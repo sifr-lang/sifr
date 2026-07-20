@@ -1,0 +1,114 @@
+from sifr.configparser import ConfigParser, Error as ConfigError, ParsingError as PE
+from sifr.csv import Error as CsvError
+from sifr.json import JsonValue as StdJsonValue
+from sifr.logging import Formatter as LogFormatter
+
+
+class ChildFormatter(LogFormatter):
+    suffix: str
+
+    def __init__(self, template: str, suffix: str) -> None:
+        super().__init__(template)
+        self.suffix = suffix
+
+    def render(self, message: str) -> str:
+        return self.format("INFO", "identity", message) + self.suffix
+
+    def raw_template(self) -> str:
+        return self._fmt
+
+
+class JsonValue:
+    value: int
+
+    def __add__(self, other: StdJsonValue) -> StdJsonValue:
+        return other
+
+
+class __SifrIdentityBox[T]:
+    value: T
+
+    def same(self) -> __SifrIdentityBox[T]:
+        return __SifrIdentityBox(self.value)
+
+
+def error_message(value: CsvError | ConfigError) -> str:
+    match value:
+        case CsvError(message=message):
+            return "csv:" + message
+        case ConfigError(message=message):
+            return "config:" + message
+
+
+def formatter_template(own formatter: LogFormatter) -> str:
+    return formatter.template()
+
+
+def aliased_except_matches() -> bool:
+    parser: ConfigParser = ConfigParser()
+    try:
+        _: None = parser.read_string("broken line")
+    except PE as error:
+        return error.line == 1
+    return False
+
+
+def catches_same_basename_errors(csv_branch: bool) -> str:
+    try:
+        if csv_branch:
+            raise CsvError("csv branch")
+        raise ConfigError("config branch")
+    except CsvError as error:
+        return "csv:" + error.message
+    except ConfigError as error:
+        return "config:" + error.message
+
+
+def nested_catches_same_basename_errors(csv_branch: bool) -> str:
+    def inner() -> str:
+        try:
+            if csv_branch:
+                raise CsvError("nested csv")
+            raise ConfigError("nested config")
+        except CsvError as error:
+            return "csv:" + error.message
+        except ConfigError as error:
+            return "config:" + error.message
+
+    return inner()
+
+
+def main() -> None:
+    csv_error: CsvError = CsvError("one")
+    config_error: ConfigError = ConfigError("two")
+    assert error_message(csv_error) == "csv:one"
+    assert error_message(config_error) == "config:two"
+
+    child: ChildFormatter = ChildFormatter("%(message)s", "!")
+    assert child.render("ready") == "ready!"
+    assert child.raw_template() == "%(message)s"
+    assert formatter_template(ChildFormatter("%(message)s", "!")) == "%(message)s"
+    assert ChildFormatter("%(message)s", "!") == ChildFormatter("%(message)s", "!")
+    assert len(str(ChildFormatter("%(message)s", "!"))) > 0
+    formatter_set: set[ChildFormatter] = {ChildFormatter("%(message)s", "!")}
+    assert len(formatter_set) == 1
+
+    local_json: JsonValue = JsonValue(7)
+    canonical_json: StdJsonValue = StdJsonValue("null")
+    assert (local_json + canonical_json).kind == "null"
+
+    box: __SifrIdentityBox[int] = __SifrIdentityBox(9)
+    box_again: __SifrIdentityBox[int] = box.same()
+    assert box_again.value == 9
+    assert aliased_except_matches()
+    assert catches_same_basename_errors(True) == "csv:csv branch"
+    assert catches_same_basename_errors(False) == "config:config branch"
+    assert nested_catches_same_basename_errors(True) == "csv:nested csv"
+    assert nested_catches_same_basename_errors(False) == "config:nested config"
+
+    left: CsvError | ConfigError = CsvError("same")
+    right: CsvError | ConfigError = CsvError("same")
+    assert left == right
+    set_error: CsvError | ConfigError = ConfigError("other")
+    errors: set[CsvError | ConfigError] = {set_error}
+    assert len(errors) == 1

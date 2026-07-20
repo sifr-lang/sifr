@@ -114,9 +114,10 @@ impl Renderer {
                     format!("&{}", Self::render_type_string(inner))
                 }
             }
-            RustType::Named(name) => name.clone(),
+            RustType::Named(name) => Self::render_compiler_path_string(name),
             RustType::Generic { base, params } => format!(
-                "{base}<{}>",
+                "{}<{}>",
+                Self::render_compiler_path_string(base),
                 params
                     .iter()
                     .map(Self::render_type_string)
@@ -132,16 +133,20 @@ impl Renderer {
                     .join(", "),
                 Self::render_type_string(ret)
             ),
-            RustType::DynTrait(name) => format!("dyn {name}"),
-            RustType::Impl(name) => format!("impl {name}"),
+            RustType::DynTrait(name) => {
+                format!("dyn {}", Self::render_compiler_path_string(name))
+            }
+            RustType::Impl(name) => {
+                format!("impl {}", Self::render_compiler_path_string(name))
+            }
         }
     }
 
     pub(crate) fn render_expr_string(expr: &RustExpr) -> String {
         match expr {
             RustExpr::Literal(lit) => Self::render_literal(lit),
-            RustExpr::Ident(name) => Self::render_identifier(name),
-            RustExpr::Path(parts) => parts.join("::"),
+            RustExpr::Ident(name) => Self::render_identifier_or_compiler_path(name),
+            RustExpr::Path(parts) => Self::render_path_parts(parts),
             RustExpr::MethodCall {
                 receiver,
                 method,
@@ -163,7 +168,8 @@ impl Renderer {
                     .join(", ")
             ),
             RustExpr::MacroCall { name, args } => format!(
-                "{name}!({})",
+                "{}!({})",
+                Self::render_compiler_path_string(name),
                 args.iter()
                     .enumerate()
                     .map(|(idx, arg)| Self::render_macro_arg(name, idx, arg))
@@ -310,7 +316,8 @@ impl Renderer {
                 format!("async {move_kw}{}", Self::render_block_expr(body, None))
             }
             RustExpr::StructInit { name, fields } => format!(
-                "{name} {{ {} }}",
+                "{} {{ {} }}",
+                Self::render_compiler_path_string(name),
                 fields
                     .iter()
                     .map(|(field, value)| Self::render_struct_field_init(field, value))
@@ -345,10 +352,15 @@ impl Renderer {
                     .collect::<Vec<_>>()
                     .join(", ")
             ),
-            RustExpr::TimeoutAwait { duration, future } => format!(
-                "match tokio::time::timeout({}, {}).await {{ Ok(__sifr_timeout_value) => __sifr_timeout_value, Err(_) => return Err(TimeoutError::new(\"task timeout expired\".to_string()).into()) }}",
+            RustExpr::TimeoutAwait {
+                duration,
+                future,
+                error,
+            } => format!(
+                "match ::tokio::time::timeout({}, {}).await {{ Ok(__sifr_timeout_value) => __sifr_timeout_value, Err(_) => return Err({}) }}",
                 Self::render_expr_string(duration),
-                Self::render_expr_string(future)
+                Self::render_expr_string(future),
+                Self::render_expr_string(error)
             ),
             RustExpr::Try(expr) => format!("{}?", Self::wrap_expr(expr)),
             RustExpr::Await(expr) => format!("{}.await", Self::wrap_expr(expr)),
@@ -574,7 +586,7 @@ impl Renderer {
             }
         }
         flush_token(&mut out, &mut token);
-        out
+        Self::render_compiler_path_string(&out)
     }
 
     pub(crate) fn render_identifier(name: &str) -> String {
@@ -679,7 +691,11 @@ impl Renderer {
                 .as_ref()
                 .map(|g| format!(" if {}", Self::render_expr_string(g)))
                 .unwrap_or_default();
-            self.emit_line(&format!("{}{} => {{", arm.pattern, guard));
+            self.emit_line(&format!(
+                "{}{} => {{",
+                Self::render_pattern_string(&arm.pattern),
+                guard
+            ));
             self.indent();
             for stmt in &arm.body {
                 self.render_stmt(stmt);

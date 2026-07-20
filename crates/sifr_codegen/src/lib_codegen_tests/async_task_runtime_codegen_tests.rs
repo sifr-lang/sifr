@@ -59,7 +59,7 @@ fn test_task_gather_lowers_to_private_gather_helper() {
     assert!(result.rust_source.contains("ordered_values.push(value);"));
     assert!(result
         .rust_source
-        .contains("let result: __SifrTaskResult<Vec<i64>, std::convert::Infallible>"));
+        .contains("let result: __SifrTaskResult<Vec<i64>, ::std::convert::Infallible>"));
     assert!(result
         .required_features
         .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
@@ -159,7 +159,7 @@ fn test_task_race_lowers_to_private_race_helper() {
         .contains("race loser task failed\".to_string()"));
     assert!(result
         .rust_source
-        .contains("let result: __SifrTaskResult<i64, std::convert::Infallible>"));
+        .contains("let result: __SifrTaskResult<i64, ::std::convert::Infallible>"));
     assert!(result
         .required_features
         .contains(&sifr_stdlib_manifest::StdlibFeature::Tokio));
@@ -226,12 +226,12 @@ fn test_task_select_lowers_to_private_select_helper() {
         .contains("let _ = first_cancellation.request_cancel();"));
     assert!(result
         .rust_source
-        .contains("second_observed.store(false, std::sync::atomic::Ordering::SeqCst)"));
+        .contains("second_observed.store(false, ::std::sync::atomic::Ordering::SeqCst)"));
     assert!(result
         .rust_source
-        .contains("first_observed.store(false, std::sync::atomic::Ordering::SeqCst)"));
+        .contains("first_observed.store(false, ::std::sync::atomic::Ordering::SeqCst)"));
     assert!(result.rust_source.contains(
-        "let result: __SifrSelect2<__SifrTaskResult<i64, std::convert::Infallible>, __SifrTaskResult<String, std::convert::Infallible>>"
+        "let result: __SifrSelect2<__SifrTaskResult<i64, ::std::convert::Infallible>, __SifrTaskResult<String, ::std::convert::Infallible>>"
     ));
     assert!(result
         .required_features
@@ -283,7 +283,7 @@ fn test_task_handle_join_lowers_to_task_result_observation() {
     assert!(result.rust_source.contains("handle.join().await"));
     assert!(result
         .rust_source
-        .contains("let result: __SifrTaskResult<i64, std::convert::Infallible>"));
+        .contains("let result: __SifrTaskResult<i64, ::std::convert::Infallible>"));
 }
 
 #[test]
@@ -303,7 +303,7 @@ fn test_await_task_handle_desugars_to_join_observation() {
     assert!(result.rust_source.contains("handle.join().await"));
     assert!(result
         .rust_source
-        .contains("let result: __SifrTaskResult<i64, std::convert::Infallible>"));
+        .contains("let result: __SifrTaskResult<i64, ::std::convert::Infallible>"));
 }
 
 #[test]
@@ -414,12 +414,12 @@ fn test_task_timeout_handle_lowers_to_private_timeout_result() {
         .contains("__SifrFailure::new(__SifrTimeoutResult::Timeout)"));
     assert!(result
         .rust_source
-        .contains("matches!(request, sifr_runtime::cancellation::CancellationRequest::Claimed)"));
+        .contains("matches!(request, ::sifr_runtime::cancellation::CancellationRequest::Claimed)"));
     assert!(result
         .rust_source
         .contains("Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value)"));
     assert!(result.rust_source.contains(
-        "let result: __SifrTaskResult<i64, __SifrTimeoutResult<std::convert::Infallible>>"
+        "let result: __SifrTaskResult<i64, __SifrTimeoutResult<::std::convert::Infallible>>"
     ));
 }
 

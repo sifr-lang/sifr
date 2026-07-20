@@ -112,10 +112,7 @@ pub(crate) fn async_python_method_body(
         && declaration.consumes_receiver
         && func.params.is_empty()
         && ok_type.resolve_alias() == &Type::None
-        && matches!(
-            error_type.resolve_alias(),
-            Type::Class { name, .. } if name == "PythonError"
-        );
+        && error_type.is_python_error_contract();
     if owns_async_close && declaration.consumes_receiver && !semantic_close {
         return None;
     }
@@ -203,7 +200,10 @@ pub(super) fn async_input_conversion(
         });
     }
     if is_object(ty) {
-        return Some(runtime_call("async_from_object", vec![reference(name)]));
+        return Some(runtime_call(
+            "__sifr_declaration_async_from_object",
+            vec![RustExpr::Ident(name.to_string())],
+        ));
     }
     if matches!(ty.resolve_alias(), Type::Class { name: class_name, .. } if opaque_classes.contains_key(class_name))
     {
@@ -440,18 +440,21 @@ pub(crate) fn async_output_value(
     }
     if is_object(ty) {
         return Some(mapped_try(
-            runtime_call("async_to_object", vec![RustExpr::Ident(name.to_string())]),
+            runtime_call(
+                "__sifr_declaration_async_to_object",
+                vec![RustExpr::Ident(name.to_string())],
+            ),
             error_type,
         ));
     }
-    if let Type::Class {
+    if let class @ Type::Class {
         name: class_name, ..
     } = ty.resolve_alias()
     {
         if opaque_classes.contains_key(class_name) {
             return Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
-                    class_name.clone(),
+                    class.rust_type(),
                     "__sifr_from_python_object".to_string(),
                 ])),
                 args: vec![mapped_try(
@@ -564,11 +567,7 @@ pub(crate) fn async_output_value(
                 ))),
             })
         }
-        Type::Class {
-            name: class_name,
-            fields,
-            ..
-        } if !fields.is_empty() => {
+        class @ Type::Class { fields, .. } if !fields.is_empty() => {
             let mut stmts = vec![RustStmt::Let {
                 mutable: true,
                 name: "__sifr_python_record".to_string(),
@@ -603,7 +602,7 @@ pub(crate) fn async_output_value(
             Some(RustExpr::Block {
                 stmts,
                 expr: Some(Box::new(RustExpr::StructInit {
-                    name: class_name.clone(),
+                    name: class.rust_type(),
                     fields: converted,
                 })),
             })
@@ -663,7 +662,7 @@ fn option_inner(ty: &Type) -> Option<&Type> {
 }
 
 fn is_object(ty: &Type) -> bool {
-    matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "Object")
+    ty.is_python_object_contract()
 }
 
 fn mapped_results(iter: RustExpr, parameter: &str, body: RustExpr) -> RustExpr {
@@ -704,7 +703,7 @@ fn mapped_mutable_let(name: &str, value: RustExpr, error_type: &Type) -> RustStm
 }
 
 pub(super) fn vector_let(name: &str) -> RustStmt {
-    let value_type = RustType::Named("sifr_runtime::python::PythonAsyncValue".to_string());
+    let value_type = RustType::Named("::sifr_runtime::python::PythonAsyncValue".to_string());
     let item_type = if name == "__sifr_python_kwargs" {
         RustType::Tuple(vec![RustType::String_, value_type])
     } else {

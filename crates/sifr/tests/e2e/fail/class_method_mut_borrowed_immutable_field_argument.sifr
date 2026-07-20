@@ -1,0 +1,16 @@
+# expect-error[col=20]: SIFR-OWN-0005
+# Test: fields rooted in immutable parameters cannot be passed to class-method mut borrows.
+
+class Crate:
+    items: list[int]
+
+    def merge(self, mut other: Crate) -> None:
+        other.items.append(1)
+
+
+class Depot:
+    stock: Crate
+
+
+def relay(depot: Depot, receiver: Crate) -> None:
+    receiver.merge(depot.stock)

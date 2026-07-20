@@ -453,6 +453,16 @@ the ordinary return type. Acquisition validates format, item size, dimensions,
 shape, strides, suboffsets, requested writability, and layout before returning.
 The buffer retains its exporter owner.
 
+`Self` receiver acquisition is read-only. The receiver contract is an immutable
+borrow, so a writable `Self` view would leave the opaque owner usable while the
+view exists and could not prove exclusive access. Writable declarations must
+instead call an import-root or `bridge` producer that returns a fresh or
+ownership-transferred exporter. A producer parameter that can transitively
+carry an existing raw or opaque Python identity must use `own`; borrowed identity
+parameters are rejected because the producer could return that same exporter
+while leaving its Sifr owner usable. The wrapper owns the returned producer
+object before admitting the writable view.
+
 `python.Buffer[T]` is affine and non-send. Drop performs exact-once
 `PyBuffer_Release`; explicit `release(own buffer)` provides deterministic early
 release. The active surface exposes bounded zero-copy element access and an

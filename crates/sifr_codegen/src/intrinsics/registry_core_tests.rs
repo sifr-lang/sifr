@@ -362,7 +362,7 @@ pub(crate) fn lowers_bytes_intrinsics_via_registry() {
 
     let enc_result = lower_intrinsic("str_encode_utf8_result", &["s".to_string()])
         .expect("str_encode_utf8_result");
-    assert!(render_expr(&enc_result.expr).contains("sifr_runtime::encoding::encode_bytes"));
+    assert!(render_expr(&enc_result.expr).contains("::sifr_runtime::encoding::encode_bytes"));
     assert_eq!(
         enc_result.required_feature,
         Some(sifr_stdlib_manifest::StdlibFeature::SifrRuntime)
@@ -376,17 +376,17 @@ pub(crate) fn lowers_bytes_intrinsics_via_registry() {
         &["s".to_string(), "codec".to_string()],
     )
     .expect("str_encode_utf8_result_with_encoding");
-    assert!(render_expr(&enc_with_codec.expr).contains("sifr_runtime::encoding::encode_bytes"));
+    assert!(render_expr(&enc_with_codec.expr).contains("::sifr_runtime::encoding::encode_bytes"));
 
     let dec = lower_intrinsic("decode_utf8", &["vals".to_string()]).expect("decode_utf8");
-    assert!(render_expr(&dec.expr).contains("sifr_runtime::encoding::decode_text"));
+    assert!(render_expr(&dec.expr).contains("::sifr_runtime::encoding::decode_text"));
 
     let dec_with_codec = lower_intrinsic(
         "decode_utf8_with_encoding",
         &["vals".to_string(), "codec".to_string()],
     )
     .expect("decode_utf8_with_encoding");
-    assert!(render_expr(&dec_with_codec.expr).contains("sifr_runtime::encoding::decode_text"));
+    assert!(render_expr(&dec_with_codec.expr).contains("::sifr_runtime::encoding::decode_text"));
 
     assert!(
         lower_intrinsic(

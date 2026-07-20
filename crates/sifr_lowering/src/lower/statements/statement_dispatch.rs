@@ -420,9 +420,7 @@ pub(in crate::lower) fn lower_stmt(
                                 );
                                 return None;
                             }
-                            if let Type::Class { name, .. } = error_type.resolve_alias() {
-                                ctx.try_block_error_types.insert(name.clone());
-                            }
+                            super::record_try_error_types(ctx, &error_type);
                             value = HirExpr::QuestionMark {
                                 expr: Box::new(value),
                                 ty: ok_type,
@@ -500,12 +498,11 @@ pub(in crate::lower) fn lower_stmt(
                                 .find(|(name, _)| name == "__enter__")
                                 .map(|(_, ft)| (*ft.return_type).clone())
                                 .unwrap_or(val_ty.clone());
-                            // If the return type is a class, look up the fully-defined version
-                            if let Type::Class { name: ret_name, .. } = &ret_ty {
-                                ctx.class_types.get(ret_name).cloned().unwrap_or(ret_ty)
-                            } else {
-                                ret_ty
-                            }
+                            super::super::imported_class_identity::complete_context_enter_return_type(
+                                &ctx.class_types,
+                                &val_ty,
+                                &ret_ty,
+                            )
                         } else {
                             val_ty.clone()
                         }
@@ -562,6 +559,12 @@ pub(in crate::lower) fn lower_stmt(
                         (None, None, false)
                     };
                 let name = h.name.as_ref().map(std::string::ToString::to_string);
+                let error_resolved_type = error_type
+                    .as_ref()
+                    .and_then(|error_name| ctx.class_types.get(error_name).cloned());
+                let is_builtin_catch_all = error_resolved_type
+                    .as_ref()
+                    .is_some_and(Type::is_builtin_error_base);
 
                 // Check if this is a catch-all (except Error) or a specific handler
                 if invalid_error_type_form {
@@ -571,7 +574,7 @@ pub(in crate::lower) fn lower_stmt(
                         error_type_range.unwrap_or_else(|| h.range()),
                     );
                 } else if let Some(ref et) = error_type {
-                    if et == "Error" {
+                    if is_builtin_catch_all {
                         has_catch_all = true;
                     } else {
                         // Validate the except type is a known error class
@@ -582,7 +585,9 @@ pub(in crate::lower) fn lower_stmt(
                                 error_type_range.unwrap_or_else(|| h.range()),
                             );
                         }
-                        covered_types.insert(et.clone());
+                        if let Some(class_ty) = ctx.class_types.get(et) {
+                            covered_types.insert(class_ty.clone());
+                        }
                     }
                 } else {
                     // Bare except (no type) — acts as catch-all
@@ -593,13 +598,12 @@ pub(in crate::lower) fn lower_stmt(
                 ctx.scope.push();
                 if let Some(ref var_name) = name {
                     let error_var_ty = if let Some(ref et) = error_type {
-                        if et == "Error" {
+                        if is_builtin_catch_all {
                             // catch-all: bind as the base Error type
-                            ctx.class_types
-                                .get("Error")
-                                .cloned()
+                            error_resolved_type
+                                .clone()
                                 .unwrap_or_else(|| super::fallback_error_type("Error"))
-                        } else if let Some(class_ty) = ctx.class_types.get(et) {
+                        } else if let Some(class_ty) = &error_resolved_type {
                             class_ty.clone()
                         } else {
                             // Unknown error type — already reported above
@@ -617,10 +621,6 @@ pub(in crate::lower) fn lower_stmt(
                 let handler_body = lower_stmts(&h.body, func_type, ctx);
                 ctx.scope.pop();
 
-                // Resolve the error type for codegen
-                let error_resolved_type = error_type
-                    .as_ref()
-                    .and_then(|et| ctx.class_types.get(et).cloned());
                 handlers.push(HirExceptHandler {
                     error_type,
                     error_resolved_type,
@@ -633,30 +633,28 @@ pub(in crate::lower) fn lower_stmt(
             // A parent type covers all its children (e.g., except IOError covers FileNotFoundError)
             // Subclasses partially cover their parent (e.g., except FileNotFoundError covers IOError::FileNotFound)
             if !has_catch_all && !try_error_types.is_empty() {
-                // Expand covered_types: if a parent is covered, all its children are covered
-                let mut expanded_covered = covered_types.clone();
-                for covered in &covered_types {
-                    if let Some(children) = ctx.error_hierarchy.get(covered) {
-                        for child in children {
-                            expanded_covered.insert(child.clone());
-                        }
-                    }
-                }
-                // Check if subclasses fully cover their parent
-                // If all children of a parent are covered, the parent is covered
-                for (parent, children) in &ctx.error_hierarchy {
-                    if try_error_types.contains(parent) && !expanded_covered.contains(parent) {
-                        let all_children_covered =
-                            children.iter().all(|c| expanded_covered.contains(c));
-                        if all_children_covered {
-                            expanded_covered.insert(parent.clone());
-                        }
-                    }
-                }
                 let uncovered: Vec<String> = try_error_types
                     .iter()
-                    .filter(|et| !expanded_covered.contains(*et))
-                    .cloned()
+                    .filter(|error_ty| {
+                        if covered_types
+                            .iter()
+                            .any(|covered| error_ty.is_assignable_to(covered))
+                        {
+                            return false;
+                        }
+                        let error_name = error_ty.display_name();
+                        let Some(children) = ctx.error_hierarchy.get(&error_name) else {
+                            return true;
+                        };
+                        !children.iter().all(|child| {
+                            ctx.class_types.get(child).is_some_and(|child_ty| {
+                                covered_types
+                                    .iter()
+                                    .any(|covered| child_ty.is_assignable_to(covered))
+                            })
+                        })
+                    })
+                    .map(Type::display_name)
                     .collect();
                 if !uncovered.is_empty() {
                     let mut sorted = uncovered;
@@ -669,7 +667,8 @@ pub(in crate::lower) fn lower_stmt(
                 }
             }
 
-            let body_error_types: Vec<String> = try_error_types.into_iter().collect();
+            let mut body_error_types: Vec<Type> = try_error_types.into_iter().collect();
+            body_error_types.sort_by_key(Type::union_variant_name);
             Some(HirStmt::TryExcept {
                 body,
                 handlers,

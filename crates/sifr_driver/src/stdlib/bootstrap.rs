@@ -8,6 +8,7 @@ use sha2::{Digest, Sha256};
 use sifr_codegen::{StdlibCode, StdlibRustSource};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_lowering::{
+    canonicalize_user_export_type, canonicalize_user_export_type_in_place,
     lower_module_sysroot_private_declaration_with_externals,
     lower_module_sysroot_public_stdlib_with_externals, ExternalDefs, HirFunction, HirParam,
 };
@@ -88,7 +89,7 @@ fn compile_stdlib_sources_with_sysroot(
                     .collect());
             }
         };
-        let result = match lower_stdlib_source(stdlib_source, parsed.suite(), &stdlib_defs) {
+        let mut result = match lower_stdlib_source(stdlib_source, parsed.suite(), &stdlib_defs) {
             Ok(result) => result,
             Err(errors) => {
                 let diagnostics: Vec<RenderedDiagnostic> = errors
@@ -108,6 +109,13 @@ fn compile_stdlib_sources_with_sysroot(
             }
         };
         let private_declaration = stdlib_source.kind == LoadedStdlibSourceKind::PrivateDeclaration;
+        let local_classes = result
+            .module
+            .classes
+            .iter()
+            .map(|class| (class.name.clone(), format!("{module_name}.{}", class.name)))
+            .collect::<HashMap<_, _>>();
+        canonicalize_stdlib_hir_signatures(&mut result.module, module_name, &local_classes);
         if let Some(module) = pending_private_interop_module(stdlib_source, &result.module) {
             private_interop_modules.push(module);
         }
@@ -255,19 +263,22 @@ fn compile_stdlib_sources_with_sysroot(
                         function_type_from_params(&op_func.params, &op_func.return_type),
                     ));
                 }
-                let class_ty = Type::Class {
-                    identity: None,
-                    type_args: class
-                        .type_params
-                        .iter()
-                        .cloned()
-                        .map(Type::TypeVar)
-                        .collect(),
-                    name: class.name.clone(),
-                    fields: class.fields.clone(),
-                    methods,
-                    parent_class: class.parent_class.clone(),
-                };
+                let class_ty = canonical_stdlib_type(
+                    &Type::Class {
+                        identity: None,
+                        type_args: class
+                            .type_params
+                            .iter()
+                            .cloned()
+                            .map(Type::TypeVar)
+                            .collect(),
+                        name: class.name.clone(),
+                        fields: class.fields.clone(),
+                        methods,
+                        parent_class: class.parent_class.clone(),
+                    },
+                    &local_classes,
+                );
                 class_exports.insert(class.name.clone(), class_ty);
                 if !class.type_params.is_empty() {
                     class_type_param_exports.insert(class.name.clone(), class.type_params.clone());
@@ -314,6 +325,18 @@ fn compile_stdlib_sources_with_sysroot(
                 module_name,
                 stdlib_source,
                 &sysroot,
+                result
+                    .module
+                    .classes
+                    .iter()
+                    .filter(|class| {
+                        !class
+                            .rust_interop
+                            .iter()
+                            .any(|declaration| declaration.abi_requirements.opaque_handle)
+                    })
+                    .map(|class| class.name.clone())
+                    .collect(),
                 codegen_result.rust_source,
             )?;
             stdlib_code
@@ -487,12 +510,14 @@ fn stdlib_rust_source(
     module_name: &str,
     source: &LoadedStdlibSource,
     sysroot: &ResolvedSysroot,
+    nominal_types: HashSet<String>,
     rust: String,
 ) -> Result<StdlibRustSource, Vec<RenderedDiagnostic>> {
     Ok(StdlibRustSource {
         module: module_name.to_string(),
         source_path: canonical_stdlib_source_path(source, sysroot)?,
         source_sha256: source_sha256(&source.source),
+        nominal_types,
         rust,
     })
 }
@@ -543,6 +568,53 @@ fn lower_stdlib_source(
             lower_module_sysroot_private_declaration_with_externals(suite, stdlib_defs)
         }
     }
+}
+
+fn canonical_stdlib_type(ty: &Type, local_classes: &HashMap<String, String>) -> Type {
+    canonicalize_user_export_type(ty, local_classes)
+}
+
+fn canonicalize_stdlib_hir_signatures(
+    module: &mut sifr_ir::HirModule,
+    module_name: &str,
+    local_classes: &HashMap<String, String>,
+) {
+    if local_classes.is_empty() {
+        return;
+    }
+    for function in &mut module.functions {
+        canonicalize_stdlib_hir_function(function, local_classes);
+    }
+    for class in &mut module.classes {
+        class.identity = Some(format!("{module_name}.{}", class.name));
+        for (_, field_type) in &mut class.fields {
+            canonicalize_user_export_type_in_place(field_type, local_classes);
+        }
+        for method in &mut class.methods {
+            canonicalize_stdlib_hir_function(method, local_classes);
+        }
+        for (_, operator) in &mut class.operator_impls {
+            canonicalize_stdlib_hir_function(operator, local_classes);
+        }
+        if let Some(inner) = &mut class.newtype_inner {
+            canonicalize_user_export_type_in_place(inner, local_classes);
+        }
+        if let Some(parent) = &mut class.parent_type {
+            canonicalize_user_export_type_in_place(parent, local_classes);
+        }
+    }
+    for (_, constant_type, _) in &mut module.constants {
+        canonicalize_user_export_type_in_place(constant_type, local_classes);
+    }
+}
+
+fn canonicalize_stdlib_hir_function(
+    function: &mut HirFunction,
+    local_classes: &HashMap<String, String>,
+) {
+    sifr_ir::transform_hir_function_types(function, &mut |ty| {
+        canonicalize_user_export_type_in_place(ty, local_classes);
+    });
 }
 
 fn function_type_from_params(params: &[HirParam], return_type: &Type) -> FunctionType {

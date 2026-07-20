@@ -1,6 +1,55 @@
 use sifr_type_system::{FunctionType, Type};
 use std::collections::HashMap;
 
+pub(super) fn complete_class_type_with_identity(
+    class_types: &HashMap<String, Type>,
+    identity: &str,
+) -> Option<Type> {
+    class_types
+        .values()
+        .filter(|candidate| {
+            matches!(
+                candidate.resolve_alias(),
+                Type::Class {
+                    identity: Some(candidate_identity),
+                    ..
+                } if candidate_identity == identity
+            )
+        })
+        .max_by_key(|candidate| match candidate.resolve_alias() {
+            Type::Class {
+                fields, methods, ..
+            } => (methods.len(), fields.len()),
+            _ => (0, 0),
+        })
+        .cloned()
+}
+
+pub(super) fn complete_context_enter_return_type(
+    class_types: &HashMap<String, Type>,
+    context_type: &Type,
+    return_type: &Type,
+) -> Type {
+    let Type::Class { identity, name, .. } = return_type.resolve_alias() else {
+        return return_type.clone();
+    };
+    let returns_context_identity = match context_type.resolve_alias() {
+        Type::Class {
+            identity: context_identity,
+            ..
+        } => identity.is_some() && identity == context_identity,
+        _ => false,
+    };
+    if returns_context_identity {
+        return context_type.clone();
+    }
+    identity
+        .as_deref()
+        .and_then(|identity| complete_class_type_with_identity(class_types, identity))
+        .or_else(|| class_types.get(name).cloned())
+        .unwrap_or_else(|| return_type.clone())
+}
+
 pub(super) fn class_aliases_for_import(
     module: &str,
     module_classes: Option<&HashMap<String, Type>>,
@@ -226,17 +275,19 @@ fn rename_class_identities(ty: &Type, class_aliases: &HashMap<String, String>) -
     }
 }
 
-pub(super) fn canonicalize_export_type(
-    ty: &Type,
-    module: &str,
+pub(super) fn canonicalize_export_type(ty: &Type, local_classes: &HashMap<String, String>) -> Type {
+    canonicalize_class_identities(ty, local_classes)
+}
+
+pub(super) fn canonicalize_export_type_in_place(
+    ty: &mut Type,
     local_classes: &HashMap<String, String>,
-) -> Type {
-    canonicalize_class_identities(ty, module, local_classes)
+) {
+    set_canonical_identities(ty, local_classes);
 }
 
 pub(super) fn canonicalize_export_function_type(
     function: &FunctionType,
-    module: &str,
     local_classes: &HashMap<String, String>,
 ) -> FunctionType {
     FunctionType {
@@ -246,30 +297,25 @@ pub(super) fn canonicalize_export_function_type(
             .map(|(name, ty, convention)| {
                 (
                     name.clone(),
-                    canonicalize_class_identities(ty, module, local_classes),
+                    canonicalize_class_identities(ty, local_classes),
                     *convention,
                 )
             })
             .collect(),
         return_type: Box::new(canonicalize_class_identities(
             &function.return_type,
-            module,
             local_classes,
         )),
     }
 }
 
-fn canonicalize_class_identities(
-    ty: &Type,
-    module: &str,
-    local_classes: &HashMap<String, String>,
-) -> Type {
-    let mut canonicalized = rename_class_identities(ty, &HashMap::new());
-    set_canonical_identities(&mut canonicalized, module, local_classes);
+fn canonicalize_class_identities(ty: &Type, local_classes: &HashMap<String, String>) -> Type {
+    let mut canonicalized = ty.clone();
+    set_canonical_identities(&mut canonicalized, local_classes);
     canonicalized
 }
 
-fn set_canonical_identities(ty: &mut Type, module: &str, local_classes: &HashMap<String, String>) {
+fn set_canonical_identities(ty: &mut Type, local_classes: &HashMap<String, String>) {
     match ty {
         Type::List(inner)
         | Type::Set(inner)
@@ -279,7 +325,7 @@ fn set_canonical_identities(ty: &mut Type, module: &str, local_classes: &HashMap
         | Type::Awaitable(inner)
         | Type::Failure(inner)
         | Type::TimeoutResult(inner)
-        | Type::Newtype { inner, .. } => set_canonical_identities(inner, module, local_classes),
+        | Type::Newtype { inner, .. } => set_canonical_identities(inner, local_classes),
         Type::Dict(left, right)
         | Type::Result(left, right)
         | Type::Task(left, right)
@@ -290,33 +336,33 @@ fn set_canonical_identities(ty: &mut Type, module: &str, local_classes: &HashMap
         | Type::JoinSet(left, right)
         | Type::AsyncIterator(left, right)
         | Type::AsyncGenerator(left, right) => {
-            set_canonical_identities(left, module, local_classes);
-            set_canonical_identities(right, module, local_classes);
+            set_canonical_identities(left, local_classes);
+            set_canonical_identities(right, local_classes);
         }
         Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
             for item in items {
-                set_canonical_identities(item, module, local_classes);
+                set_canonical_identities(item, local_classes);
             }
         }
         Type::Callable(params, _, result) | Type::AsyncCallable(params, _, result) => {
             for param in params {
-                set_canonical_identities(param, module, local_classes);
+                set_canonical_identities(param, local_classes);
             }
-            set_canonical_identities(result, module, local_classes);
+            set_canonical_identities(result, local_classes);
         }
         Type::Function(function) | Type::AsyncFunction(function) => {
             for (_, param, _) in &mut function.params {
-                set_canonical_identities(param, module, local_classes);
+                set_canonical_identities(param, local_classes);
             }
-            set_canonical_identities(&mut function.return_type, module, local_classes);
+            set_canonical_identities(&mut function.return_type, local_classes);
         }
         Type::Alias {
             type_args, body, ..
         } => {
             for arg in type_args {
-                set_canonical_identities(arg, module, local_classes);
+                set_canonical_identities(arg, local_classes);
             }
-            set_canonical_identities(body, module, local_classes);
+            set_canonical_identities(body, local_classes);
         }
         Type::Class {
             identity,
@@ -326,33 +372,36 @@ fn set_canonical_identities(ty: &mut Type, module: &str, local_classes: &HashMap
             methods,
             parent_class,
         } => {
-            if identity.is_none() && local_classes.contains_key(name) {
-                *identity = Some(format!("{module}.{name}"));
+            if identity.is_none() {
+                *identity = local_classes.get(name).cloned();
             }
             for arg in type_args {
-                set_canonical_identities(arg, module, local_classes);
+                set_canonical_identities(arg, local_classes);
             }
             for (_, field) in fields {
-                set_canonical_identities(field, module, local_classes);
+                set_canonical_identities(field, local_classes);
             }
             for (_, method) in methods {
                 for (_, param, _) in &mut method.params {
-                    set_canonical_identities(param, module, local_classes);
+                    set_canonical_identities(param, local_classes);
                 }
-                set_canonical_identities(&mut method.return_type, module, local_classes);
+                set_canonical_identities(&mut method.return_type, local_classes);
             }
             if let Some(chain) = parent_class {
-                *chain = chain
+                if chain
                     .split('|')
-                    .map(|parent| {
-                        if local_classes.contains_key(parent) {
-                            format!("{module}.{parent}")
-                        } else {
-                            parent.to_string()
-                        }
-                    })
-                    .collect::<Vec<_>>()
-                    .join("|");
+                    .any(|parent| local_classes.contains_key(parent))
+                {
+                    *chain = chain
+                        .split('|')
+                        .map(|parent| {
+                            local_classes
+                                .get(parent)
+                                .map_or_else(|| parent.to_string(), Clone::clone)
+                        })
+                        .collect::<Vec<_>>()
+                        .join("|");
+                }
             }
         }
         _ => {}

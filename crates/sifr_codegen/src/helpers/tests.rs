@@ -30,6 +30,17 @@ fn mk_module_with_main(body: Vec<HirStmt>) -> HirModule {
     }
 }
 
+fn test_error_type(name: &str) -> Type {
+    Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: name.to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    }
+}
+
 #[test]
 fn classify_value_category_marks_names_and_fields_as_places() {
     let name_expr = HirExpr::Name {
@@ -382,7 +393,7 @@ fn body_contains_yield_detects_try_except_and_loop_else_paths() {
                 value: HirExpr::IntLiteral(2),
             }],
         }],
-        body_error_types: vec!["Error".to_string()],
+        body_error_types: vec![test_error_type("Error")],
     }];
 
     assert!(body_contains_yield_inner(&stmts));
@@ -411,7 +422,7 @@ fn body_contains_return_detects_try_handlers_and_loop_else_paths() {
                 value: Some(HirExpr::IntLiteral(2)),
             }],
         }],
-        body_error_types: vec!["Error".to_string()],
+        body_error_types: vec![test_error_type("Error")],
     }];
 
     assert!(body_contains_return_stmt(&stmts));
@@ -499,7 +510,7 @@ fn try_body_has_value_return_detects_loop_else_and_try_handler_returns() {
                 value: Some(HirExpr::IntLiteral(7)),
             }],
         }],
-        body_error_types: vec!["Error".to_string()],
+        body_error_types: vec![test_error_type("Error")],
     }];
 
     assert!(try_body_has_value_return(&stmts));
@@ -532,7 +543,7 @@ fn module_uses_bigint_detects_try_handler_branches() {
                 is_mutable: true,
             }],
         }],
-        body_error_types: vec!["Error".to_string()],
+        body_error_types: vec![test_error_type("Error")],
     }]);
 
     assert!(module_uses_bigint(&module));

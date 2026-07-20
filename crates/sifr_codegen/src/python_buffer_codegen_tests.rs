@@ -26,11 +26,11 @@ fn source_buffer_declaration_and_methods_generate_parseable_rust() {
     let rust = generate_rust(&lowered.module);
 
     assert!(
-        rust.contains("sifr_stdlib::python::PythonBuffer::<u8>::acquire"),
+        rust.contains("::sifr_stdlib::python::PythonBuffer::<u8>::acquire"),
         "{rust}"
     );
     assert!(
-        rust.contains("sifr_runtime::interop::Handle::new(__sifr_python_result)"),
+        rust.contains("::sifr_runtime::interop::Handle::new(__sifr_python_result)"),
         "{rust}"
     );
     assert!(rust.contains("view.read(0_i64).map_err("), "{rust}");
@@ -128,11 +128,11 @@ fn top_level_buffer_wrapper_acquires_typed_writable_export() {
         .expect("buffer wrapper should lower");
     let rendered = render_stmts(&body);
 
-    assert!(rendered.contains("sifr_runtime::python::resolve_target"));
-    assert!(rendered.contains("sifr_runtime::python::call_object_owned"));
-    assert!(rendered.contains("sifr_stdlib::python::PythonBuffer::<u16>::acquire"));
-    assert!(rendered.contains("sifr_runtime::python::PythonBufferAccess::Write"));
-    assert!(rendered.contains("sifr_runtime::python::PythonBufferLayout::CContiguous"));
+    assert!(rendered.contains("::sifr_runtime::python::resolve_target"));
+    assert!(rendered.contains("::sifr_runtime::python::call_object_owned"));
+    assert!(rendered.contains("::sifr_stdlib::python::PythonBuffer::<u16>::acquire"));
+    assert!(rendered.contains("::sifr_runtime::python::PythonBufferAccess::Write"));
+    assert!(rendered.contains("::sifr_runtime::python::PythonBufferLayout::CContiguous"));
     assert!(rendered.contains("__sifr_python_result"));
     assert!(rendered.contains("map_err"));
 }
@@ -151,8 +151,8 @@ fn bridge_buffer_wrapper_calls_resolved_package_producer_before_acquire() {
 
     assert!(rendered.contains("\"__sifr_bridge__\""));
     assert!(rendered.contains("\"p_abc123\""));
-    assert!(rendered.contains("sifr_runtime::python::call_object_owned"));
-    assert!(rendered.contains("sifr_stdlib::python::PythonBuffer::<u16>::acquire"));
+    assert!(rendered.contains("::sifr_runtime::python::call_object_owned"));
+    assert!(rendered.contains("::sifr_stdlib::python::PythonBuffer::<u16>::acquire"));
 }
 
 #[test]
@@ -168,9 +168,9 @@ fn self_buffer_wrapper_acquires_opaque_receiver_without_python_call() {
     let rendered = render_stmts(&body);
 
     assert!(rendered.contains("self.__sifr_python_object"));
-    assert!(rendered.contains("sifr_stdlib::python::PythonBuffer::<u16>::acquire_foreign"));
-    assert!(rendered.contains("sifr_runtime::python::PythonBufferAccess::Read"));
-    assert!(rendered.contains("sifr_runtime::python::PythonBufferLayout::FContiguous"));
+    assert!(rendered.contains("::sifr_stdlib::python::PythonBuffer::<u16>::acquire_foreign"));
+    assert!(rendered.contains("::sifr_runtime::python::PythonBufferAccess::Read"));
+    assert!(rendered.contains("::sifr_runtime::python::PythonBufferLayout::FContiguous"));
     assert!(!rendered.contains("resolve_target"));
     assert!(!rendered.contains("call_object_owned"));
 }
@@ -186,7 +186,7 @@ fn self_buffer_source_emits_shared_receiver_signature() {
 
     assert!(
         rust.contains(
-            "fn view(&self) -> Result<sifr_stdlib::python::PythonBuffer<u8>, PythonError>"
+            "fn view(&self) -> Result<::sifr_stdlib::python::PythonBuffer<u8>, PythonError>"
         ),
         "{rust}"
     );

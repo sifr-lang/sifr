@@ -21,3 +21,4 @@ mod class_type_collection;
 pub(in crate::lower) use class_type_collection::*;
 mod class_body_lowering;
 pub(in crate::lower) use class_body_lowering::*;
+mod parameter_conventions;

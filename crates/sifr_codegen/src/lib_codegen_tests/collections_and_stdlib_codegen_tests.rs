@@ -628,7 +628,7 @@ fn test_async_main_entrypoint_gets_tokio_bootstrap_dependency() {
 
     assert!(result
         .rust_source
-        .contains("#[tokio::main(flavor = \"current_thread\")]"));
+        .contains("#[::tokio::main(flavor = \"current_thread\")]"));
     assert!(result.rust_source.contains("async fn main()"));
     assert!(result
         .required_features
@@ -651,7 +651,7 @@ fn test_async_result_main_entrypoint_keeps_result_return() {
 
     assert!(result
         .rust_source
-        .contains("#[tokio::main(flavor = \"current_thread\")]"));
+        .contains("#[::tokio::main(flavor = \"current_thread\")]"));
     assert!(result
         .rust_source
         .contains("async fn main() -> Result<(), ValueError>"));

@@ -3,8 +3,9 @@ use super::rust_interop::{
     apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
 };
 use super::rust_interop_contract_tests::{
-    backend_with_manifest, interop_errors, package_context, param_contract, result_contract,
-    signature_contract,
+    backend_with_manifest, base_project_with_contracts, interop_errors, none_contract,
+    package_context, param_contract, result_contract, signature_contract, temp_package_root,
+    trusted_no_panic_context, trusted_no_panic_declaration_entry,
 };
 use sifr_codegen::{
     generate_rust_multi_with_metadata, RustBridgeParamConvention, RustBridgeSignatureContract,
@@ -55,6 +56,57 @@ class TensorView:
 def dlpack(input: bytes) -> Result[TensorView, TensorError]:
     return TensorView(ptr=0)
 "#;
+
+#[test]
+fn package_rust_interop_probe_keeps_same_basename_bridge_types_distinct() {
+    let backend_root = temp_package_root("rust_interop_distinct_canonical_bridges");
+    std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
+    std::fs::write(
+        backend_root.join("Cargo.toml"),
+        "[package]\nname = \"native\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write backend cargo toml");
+    std::fs::write(
+        backend_root.join("src/lib.rs"),
+        "pub fn hash<A, B>(_csv: A, _config: B) {}\n",
+    )
+    .expect("write backend lib");
+
+    let generated = base_project_with_contracts(
+        vec![trusted_no_panic_declaration_entry(
+            "native.hash",
+            sifr_ir::RustInteropDecoratorKind::Function,
+        )],
+        vec![signature_contract(
+            vec![
+                param_contract(
+                    "csv_error",
+                    RustBridgeParamConvention::Borrow,
+                    generated_error_contract(
+                        "sifr.csv.Error",
+                        "crate::__sifr_bridge::sifr_csv::ErrorBridge",
+                    ),
+                ),
+                param_contract(
+                    "config_error",
+                    RustBridgeParamConvention::Borrow,
+                    generated_error_contract(
+                        "sifr.configparser.Error",
+                        "crate::__sifr_bridge::sifr_configparser::ErrorBridge",
+                    ),
+                ),
+            ],
+            none_contract(),
+        )],
+    );
+    let context = trusted_no_panic_context(vec![backend_with_manifest(
+        "native",
+        backend_root.join("Cargo.toml"),
+    )]);
+
+    apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("canonical bridge paths should produce distinct compiled probe stubs");
+}
 
 #[test]
 fn package_rust_interop_accepts_arrow_record_batch_metadata_contract() {
@@ -469,6 +521,17 @@ fn error_type_contract(name: &str) -> RustBridgeTypeContract {
         rust_borrowed_type: Some(format!("crate::__sifr_bridge::{name}Bridge")),
         rust_owned_type: Some(format!("crate::__sifr_bridge::{name}Bridge")),
         rust_return_type: Some(format!("crate::__sifr_bridge::{name}Bridge")),
+        kind: RustBridgeTypeKind::GeneratedError,
+        unsupported_reason: None,
+    }
+}
+
+fn generated_error_contract(sifr_type: &str, rust_type: &str) -> RustBridgeTypeContract {
+    RustBridgeTypeContract {
+        sifr_type: sifr_type.to_string(),
+        rust_borrowed_type: Some(rust_type.to_string()),
+        rust_owned_type: Some(rust_type.to_string()),
+        rust_return_type: Some(rust_type.to_string()),
         kind: RustBridgeTypeKind::GeneratedError,
         unsupported_reason: None,
     }

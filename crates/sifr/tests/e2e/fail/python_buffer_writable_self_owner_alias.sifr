@@ -1,0 +1,26 @@
+# expect-error: SIFR-PYZC-0001
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+
+
+@python.opaque(type=pkg.Owner, cleanup=close)
+class Owner(NonSend):
+    @python.buffer(Self, access=write, layout=any)
+    def view(self) -> Result[python.Buffer[uint8], PythonError]: ...
+
+    @python(Self.close)
+    def close(own self) -> Result[None, PythonError]: ...
+
+
+def forbidden_alias(own owner: Owner, value: uint8) -> Result[None, PythonError]:
+    try:
+        view: python.Buffer[uint8] = owner.view()
+        closed: None = owner.close()
+        written: None = view.write(0, value)
+        return None
+    except PythonError as error:
+        raise error

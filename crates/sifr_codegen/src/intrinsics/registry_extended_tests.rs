@@ -604,9 +604,9 @@ pub(crate) fn lowers_file_handle_builtin_bridge_and_migrated_intrinsics() {
 
     let builtin_open = lower_intrinsic("builtin_open", &["path".to_string(), "mode".to_string()])
         .expect("builtin_open");
-    assert!(render_expr(&builtin_open.expr).contains("FileHandle"));
-    assert!(render_expr(&builtin_open.expr).contains("sifr_stdlib::fs::open_file"));
-    assert!(render_expr(&builtin_open.expr).contains("NativeFileHandle"));
+    assert!(render_expr(&builtin_open.expr).contains("__SifrIoFileHandle"));
+    assert!(render_expr(&builtin_open.expr).contains("::sifr_stdlib::fs::open_file"));
+    assert!(render_expr(&builtin_open.expr).contains("__SifrIoNativeFileHandle"));
 }
 
 #[test]
@@ -620,6 +620,6 @@ pub(crate) fn lower_intrinsic_accepts_ir_inputs() {
     )
     .expect("ir builtin_open");
 
-    assert!(render_expr(&ir.expr).contains("sifr_stdlib::fs::open_file"));
+    assert!(render_expr(&ir.expr).contains("::sifr_stdlib::fs::open_file"));
     assert_eq!(ir.required_feature, None);
 }

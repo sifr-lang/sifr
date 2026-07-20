@@ -236,6 +236,7 @@ fn method_only_async_python_declaration_requires_owned_loop() {
     let mut module = module_with_functions(Vec::new());
     module.classes.push(HirClass {
         name: "Client".to_string(),
+        identity: None,
         fields: Vec::new(),
         methods: vec![method],
         is_hashable: false,
@@ -245,6 +246,7 @@ fn method_only_async_python_declaration_requires_owned_loop() {
         newtype_inner: None,
         implements_protocols: Vec::new(),
         parent_class: Some("NonSend".to_string()),
+        parent_type: None,
         type_params: Vec::new(),
         enum_variants: Vec::new(),
         rust_interop: Vec::new(),

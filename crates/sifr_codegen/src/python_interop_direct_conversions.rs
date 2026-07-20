@@ -177,9 +177,12 @@ fn output_value_expr_with(
         });
     }
     if is_python_object(ty) {
-        return Some(RustExpr::Ident(value_name.to_string()));
+        return Some(runtime_call(
+            "__sifr_declaration_object_result",
+            vec![RustExpr::Ident(value_name.to_string())],
+        ));
     }
-    if let Type::Class { name, .. } = ty.resolve_alias() {
+    if let class @ Type::Class { name, .. } = ty.resolve_alias() {
         if let Some(opaque) = opaque_classes.get(name) {
             let target = opaque.target.as_ref()?;
             let checked = conversion_try(
@@ -205,7 +208,7 @@ fn output_value_expr_with(
             );
             return Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
-                    name.clone(),
+                    class.rust_type(),
                     "__sifr_from_python_object".to_string(),
                 ])),
                 args: vec![checked],
@@ -348,7 +351,7 @@ fn output_value_expr_with(
                 ))),
             });
         }
-        Type::Class { name, fields, .. } if !fields.is_empty() => {
+        class @ Type::Class { fields, .. } if !fields.is_empty() => {
             let mut statements = Vec::new();
             let mut converted_fields = Vec::new();
             for (field, field_type) in fields {
@@ -372,7 +375,7 @@ fn output_value_expr_with(
             return Some(RustExpr::Block {
                 stmts: statements,
                 expr: Some(Box::new(RustExpr::StructInit {
-                    name: name.clone(),
+                    name: class.rust_type(),
                     fields: converted_fields,
                 })),
             });
@@ -407,7 +410,10 @@ fn input_conversion_value(
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
 ) -> Option<RustExpr> {
     if is_python_object(ty) {
-        return Some(runtime_call("temporary_argument_handle", vec![value]));
+        return Some(runtime_call(
+            "__sifr_declaration_object_argument",
+            vec![value],
+        ));
     }
     if matches!(ty.resolve_alias(), Type::Class { name, .. } if opaque_classes.contains_key(name)) {
         return Some(runtime_call(
@@ -489,7 +495,7 @@ pub(crate) fn input_conversion_borrowed(
         Type::Str | Type::Bytes => RustExpr::Ident(name.to_string()),
         _ if is_python_object(ty) => {
             return Some(runtime_call(
-                "temporary_argument_handle",
+                "__sifr_declaration_object_argument",
                 vec![RustExpr::Ident(name.to_string())],
             ));
         }
@@ -554,5 +560,5 @@ pub(crate) fn output_conversion(name: &str, ty: &Type) -> Option<RustExpr> {
 }
 
 pub(crate) fn is_python_object(ty: &Type) -> bool {
-    matches!(ty.resolve_alias(), Type::Class { name, .. } if name == "Object")
+    ty.is_python_object_contract()
 }

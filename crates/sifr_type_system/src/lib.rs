@@ -20,8 +20,10 @@ pub use check::{
 };
 pub use infer::infer_literal_type;
 pub use types::{
-    FixedIntType, FunctionType, IterationCapability, IterationMetadata, OwnershipKind,
-    ParamConvention, ParamMutability, ParamOwnership, Type,
+    class_rust_name, is_global_rust_nominal_identity, source_class_rust_name,
+    stdlib_class_rust_name, FixedIntType, FunctionType, IterationCapability, IterationMetadata,
+    OwnershipKind, ParamConvention, ParamMutability, ParamOwnership, Type,
+    COMPILER_RUST_PATH_ROOTS, GLOBAL_RUST_NOMINAL_IDENTITIES,
 };
 pub mod narrow;
 pub use literal::{widen as widen_literal, LiteralValue};

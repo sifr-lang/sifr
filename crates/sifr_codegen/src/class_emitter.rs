@@ -4,7 +4,7 @@ use crate::{
     RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
 use sifr_ir::{HirClass, HirFunction, HirModule, RustInteropDecoratorKind, RustInteropValue};
-use sifr_type_system::Type;
+use sifr_type_system::{source_class_rust_name, Type};
 
 impl RustEmitter {
     fn process_child_drop_impl() -> RustItem {
@@ -83,10 +83,11 @@ impl RustEmitter {
     }
 
     pub(crate) fn class_impl_target(class: &HirClass) -> String {
+        let rust_name = source_class_rust_name(&class.name);
         if class.type_params.is_empty() {
-            return class.name.clone();
+            return rust_name;
         }
-        format!("{}<{}>", class.name, class.type_params.join(", "))
+        format!("{rust_name}<{}>", class.type_params.join(", "))
     }
 
     pub(crate) fn class_impl_type_params(class: &HirClass) -> Vec<RustTypeParam> {
@@ -100,7 +101,7 @@ impl RustEmitter {
             .collect()
     }
 
-    fn class_base_type_param_bounds(class: &HirClass, name: &str) -> Vec<String> {
+    pub(super) fn class_base_type_param_bounds(class: &HirClass, name: &str) -> Vec<String> {
         if Self::class_type_param_needs_hash_eq(class, name) {
             vec!["std::hash::Hash".to_string(), "Eq".to_string()]
         } else {
@@ -197,8 +198,9 @@ impl RustEmitter {
     }
 
     pub(crate) fn class_struct_decl_name(class: &HirClass) -> String {
+        let rust_name = source_class_rust_name(&class.name);
         if class.type_params.is_empty() {
-            return class.name.clone();
+            return rust_name;
         }
         let params = class
             .type_params
@@ -213,7 +215,7 @@ impl RustEmitter {
             })
             .collect::<Vec<_>>()
             .join(", ");
-        format!("{}<{params}>", class.name)
+        format!("{rust_name}<{params}>")
     }
 
     pub(crate) fn class_emits_display(
@@ -242,11 +244,20 @@ impl RustEmitter {
             .is_some_and(|name| name != "NonSend");
         let parent_supports = match class.parent_class.as_deref() {
             None | Some("NonSend") => true,
-            Some(parent_name) => module
-                .classes
-                .iter()
-                .find(|candidate| candidate.name == parent_name)
-                .is_some_and(|parent| Self::class_emits_display(parent, module, visiting)),
+            Some(parent_name) => {
+                if let Some(parent) = module
+                    .classes
+                    .iter()
+                    .find(|candidate| candidate.name == parent_name)
+                {
+                    Self::class_emits_display(parent, module, visiting)
+                } else {
+                    class
+                        .parent_type
+                        .as_ref()
+                        .is_some_and(supports_declaration_display)
+                }
+            }
         };
         let supports = (parent_is_field || !class.fields.is_empty())
             && parent_supports
@@ -256,128 +267,6 @@ impl RustEmitter {
                 .all(|(_, ty)| supports_declaration_display(ty));
         visiting.remove(&class.name);
         supports
-    }
-
-    pub(crate) fn class_struct_fields(
-        &mut self,
-        class: &HirClass,
-        module_public: bool,
-    ) -> Vec<(String, RustType)> {
-        if class.python_opaque_declaration().is_some() {
-            let mut fields = vec![
-                (
-                    "__sifr_python_object".to_string(),
-                    RustType::Named("sifr_runtime::python::ObjectHandle".to_string()),
-                ),
-                (
-                    "__sifr_python_callbacks".to_string(),
-                    RustType::Named("sifr_runtime::python::CallbackOwnerSlot".to_string()),
-                ),
-                (
-                    "__sifr_python_not_send_sync".to_string(),
-                    RustType::Named("std::marker::PhantomData<std::rc::Rc<()>>".to_string()),
-                ),
-            ];
-            if let Some(errors) = self.python_retained_callback_errors.get(&class.name) {
-                fields.extend(errors.iter().enumerate().map(|(index, error)| {
-                    (
-                        format!("__sifr_python_callback_failure_{index}"),
-                        RustType::Named(format!(
-                            "sifr_runtime::python::CallbackFailureSlot<{}>",
-                            self.rust_type_with_generics(error)
-                        )),
-                    )
-                }));
-            }
-            return fields;
-        }
-        let mut fields = Vec::new();
-        if let Some(parent) = &class.parent_class {
-            if parent != "NonSend" {
-                let field_name = if module_public {
-                    format!("pub {}", parent.to_lowercase())
-                } else {
-                    parent.to_lowercase()
-                };
-                fields.push((field_name, RustType::Named(parent.clone())));
-            }
-        }
-
-        for (field_name, field_ty) in &class.fields {
-            let name = if module_public {
-                format!("pub {field_name}")
-            } else {
-                field_name.clone()
-            };
-            let ty = if self
-                .recursive_fields
-                .contains(&(class.name.clone(), field_name.clone()))
-            {
-                RustType::Named(
-                    self.recursive_field_rust_types
-                        .get(&(class.name.clone(), field_name.clone()))
-                        .cloned()
-                        .unwrap_or_else(|| field_ty.rust_type()),
-                )
-            } else if class.name == "deque" && field_name == "_data" {
-                self.collection_needs.needs_vecdeque = true;
-                if let Type::List(elem) = field_ty {
-                    RustType::Named(format!("VecDeque<{}>", self.rust_type_with_generics(elem)))
-                } else {
-                    RustType::Named(self.rust_struct_field_type_with_generics(field_ty))
-                }
-            } else {
-                RustType::Named(self.rust_struct_field_type_with_generics(field_ty))
-            };
-            fields.push((name, ty));
-        }
-        if !class.type_params.is_empty() {
-            fields.push((
-                "__sifr_type_marker".to_string(),
-                RustType::Named(format!(
-                    "std::marker::PhantomData<fn() -> {}>",
-                    Self::class_phantom_tuple(class)
-                )),
-            ));
-        }
-        if class.name == "PythonError" {
-            let name = if module_public {
-                "pub __sifr_python_error".to_string()
-            } else {
-                "__sifr_python_error".to_string()
-            };
-            fields.push((
-                name,
-                RustType::Option(Box::new(RustType::Named(
-                    "sifr_runtime::python::PythonError".to_string(),
-                ))),
-            ));
-        }
-        fields
-    }
-
-    fn class_phantom_tuple(class: &HirClass) -> String {
-        if class.type_params.len() == 1 {
-            format!("({},)", class.type_params[0])
-        } else {
-            format!("({})", class.type_params.join(", "))
-        }
-    }
-
-    pub(crate) fn append_class_phantom_initializer(
-        class: &HirClass,
-        fields: &mut Vec<(String, RustExpr)>,
-    ) {
-        if !class.type_params.is_empty() {
-            fields.push((
-                "__sifr_type_marker".to_string(),
-                RustExpr::Path(vec![
-                    "std".to_string(),
-                    "marker".to_string(),
-                    "PhantomData".to_string(),
-                ]),
-            ));
-        }
     }
 
     fn python_opaque_constructor_item(&self, class: &HirClass) -> RustItem {
@@ -429,7 +318,7 @@ impl RustEmitter {
             type_params: Vec::new(),
             params: vec![RustParam::Named {
                 name: "__sifr_python_object".to_string(),
-                ty: RustType::Named("sifr_runtime::python::ObjectHandle".to_string()),
+                ty: RustType::Named("::sifr_runtime::python::ObjectHandle".to_string()),
             }],
             ret: Some(RustType::Named("Self".to_string())),
             body: vec![RustStmt::Return(Some(RustExpr::StructInit {
@@ -444,6 +333,7 @@ impl RustEmitter {
         &self,
         class: &HirClass,
         module_public: bool,
+        uses_python_error_bridge: bool,
     ) -> RustItem {
         let params = class
             .fields
@@ -496,7 +386,7 @@ impl RustEmitter {
             })
             .collect::<Vec<_>>();
         Self::append_class_phantom_initializer(class, &mut fields);
-        if class.name == "PythonError" {
+        if uses_python_error_bridge {
             fields.push((
                 "__sifr_python_error".to_string(),
                 RustExpr::Literal(RustLiteral::None),
@@ -575,7 +465,7 @@ impl RustEmitter {
 
         RustItem::Impl {
             target: Self::class_impl_target(class),
-            type_params: Self::class_impl_type_params(class),
+            type_params: Self::class_debug_type_params(class),
             trait_: Some("std::fmt::Display".to_string()),
             items: vec![RustItem::Fn {
                 name: "fmt".to_string(),
@@ -678,10 +568,16 @@ impl RustEmitter {
             return;
         }
         if let Some(target) = opaque_rust_type_path(class) {
+            if target == "sifr_runtime.python.ForeignObject" {
+                // The canonical Python Object is represented directly by its runtime
+                // handle type. Emitting a compiler-owned alias here would place a
+                // source-spellable name in the user's flat Rust namespace.
+                return;
+            }
             self.body_items.push(RustItem::TypeAlias {
-                name: class.name.clone(),
+                name: source_class_rust_name(&class.name),
                 ty: RustType::Named(format!(
-                    "sifr_runtime::interop::Handle<{}>",
+                    "::sifr_runtime::interop::Handle<{}>",
                     target.replace('.', "::")
                 )),
             });
@@ -689,6 +585,7 @@ impl RustEmitter {
         }
 
         let is_python_opaque = class.python_opaque_declaration().is_some();
+        let uses_python_error_bridge = Self::class_uses_python_error_bridge(class, module);
         let has_custom_eq = class
             .operator_impls
             .iter()
@@ -707,7 +604,7 @@ impl RustEmitter {
             vec!["Debug".to_string()]
         } else {
             let mut derives = Vec::new();
-            if capabilities.debug {
+            if capabilities.debug && !class.is_error_type {
                 derives.push("Debug".to_string());
             }
             if capabilities.clone {
@@ -723,7 +620,8 @@ impl RustEmitter {
             derives
         };
 
-        let struct_fields = self.class_struct_fields(class, module_public);
+        let struct_fields =
+            self.class_struct_fields(class, module_public, uses_python_error_bridge);
         self.body_items.push(RustItem::Struct {
             name: Self::class_struct_decl_name(class),
             visibility: Self::class_visibility(module_public),
@@ -748,7 +646,11 @@ impl RustEmitter {
                 .as_deref()
                 .is_none_or(|parent| parent == "NonSend")
         {
-            constructor_items.push(self.lower_default_constructor_item(class, module_public));
+            constructor_items.push(self.lower_default_constructor_item(
+                class,
+                module_public,
+                uses_python_error_bridge,
+            ));
         }
         for method in &class.methods {
             if method.python_interop.first().is_some_and(|declaration| {
@@ -762,7 +664,12 @@ impl RustEmitter {
             }) {
                 continue;
             }
-            let item = self.lower_class_method_item(method, class, module_public);
+            let item = self.lower_class_method_item(
+                method,
+                class,
+                module_public,
+                uses_python_error_bridge,
+            );
             if method.name == "new" {
                 constructor_items.push(item);
             } else {
@@ -810,10 +717,12 @@ impl RustEmitter {
 
         if class.is_error_type {
             self.body_items
+                .push(Self::build_debug_impl_for_error(class));
+            self.body_items
                 .push(Self::build_display_impl_for_error(class));
             self.body_items.push(RustItem::Impl {
                 target: Self::class_impl_target(class),
-                type_params: Self::class_impl_type_params(class),
+                type_params: Self::class_debug_type_params(class),
                 trait_: Some("std::error::Error".to_string()),
                 items: Vec::new(),
             });

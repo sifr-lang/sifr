@@ -1,0 +1,15 @@
+from sifr.configparser import Error as ConfigError
+from sifr.csv import Error
+
+
+def classify() -> str:
+    try:
+        raise ConfigError("config")
+    except Error as error:
+        return "csv:" + error.message
+    except ConfigError as error:
+        return "config:" + error.message
+
+
+def main() -> None:
+    assert classify() == "config:config"

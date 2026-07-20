@@ -6,6 +6,35 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::CompilerIntrinsicId;
 use sifr_python_ast::Expr;
 
+const TEXT_FILE_HANDLE_IDENTITY: &str = "sifr.io.TextFileHandle";
+const FILE_HANDLE_IDENTITY: &str = "sifr.io.FileHandle";
+
+fn class_type_with_identity(ctx: &LowerCtx, identity: &str) -> Option<Type> {
+    super::super::imported_class_identity::complete_class_type_with_identity(
+        &ctx.class_types,
+        identity,
+    )
+}
+
+fn class_surface_score(ty: &Type) -> (usize, usize) {
+    match ty.resolve_alias() {
+        Type::Class {
+            fields, methods, ..
+        } => (methods.len(), fields.len()),
+        _ => (0, 0),
+    }
+}
+
+fn prefer_complete_class_surface(fallback: Type, candidate: Option<Type>) -> Type {
+    candidate.map_or(fallback.clone(), |candidate| {
+        if class_surface_score(&candidate) >= class_surface_score(&fallback) {
+            candidate
+        } else {
+            fallback
+        }
+    })
+}
+
 fn string_literal_value(expr: &Expr) -> Option<String> {
     match expr {
         Expr::StringLiteral(literal) => Some(literal.value.to_str().to_string()),
@@ -199,7 +228,7 @@ pub(super) fn lower_shadowable_builtin_call(
                 parent_class: None,
             };
             let text_handle_ty = Type::Class {
-                identity: None,
+                identity: Some(TEXT_FILE_HANDLE_IDENTITY.to_string()),
                 type_args: Vec::new(),
                 name: "TextFileHandle".to_string(),
                 fields: vec![],
@@ -227,7 +256,7 @@ pub(super) fn lower_shadowable_builtin_call(
                         FunctionType::all_borrow(
                             vec![],
                             Type::Class {
-                                identity: None,
+                                identity: Some(TEXT_FILE_HANDLE_IDENTITY.to_string()),
                                 type_args: Vec::new(),
                                 name: "TextFileHandle".to_string(),
                                 fields: vec![],
@@ -243,9 +272,16 @@ pub(super) fn lower_shadowable_builtin_call(
                 ],
                 parent_class: None,
             };
-            ctx.class_types
-                .insert("TextFileHandle".to_string(), text_handle_ty.clone());
-            ctx.try_block_error_types.insert("IOError".to_string());
+            // Preserve an explicitly imported stdlib handle even when it is aliased.
+            // A local same-basename class is a distinct declaration and must never be
+            // selected for the compiler-special `open()` result.
+            let text_handle_ty = prefer_complete_class_surface(
+                text_handle_ty,
+                class_type_with_identity(ctx, TEXT_FILE_HANDLE_IDENTITY),
+            );
+            if let Some(error_ty) = ctx.class_types.get("IOError") {
+                ctx.try_block_error_types.insert(error_ty.clone());
+            }
             return Some(CallLowering::Lowered(HirExpr::IntrinsicCall {
                 intrinsic: CompilerIntrinsicId::OpenText,
                 args: vec![path_arg, mode_arg, encoding_arg, errors_arg],
@@ -276,7 +312,7 @@ pub(super) fn lower_shadowable_builtin_call(
             parent_class: None,
         };
         let file_handle_ty = Type::Class {
-            identity: None,
+            identity: Some(FILE_HANDLE_IDENTITY.to_string()),
             type_args: Vec::new(),
             name: "FileHandle".to_string(),
             fields: vec![
@@ -341,7 +377,7 @@ pub(super) fn lower_shadowable_builtin_call(
                     FunctionType::all_borrow(
                         vec![],
                         Type::Class {
-                            identity: None,
+                            identity: Some(FILE_HANDLE_IDENTITY.to_string()),
                             type_args: Vec::new(),
                             name: "FileHandle".to_string(),
                             fields: vec![
@@ -360,11 +396,14 @@ pub(super) fn lower_shadowable_builtin_call(
             ],
             parent_class: None,
         };
-        // Register FileHandle in the class types so method calls work
-        ctx.class_types
-            .insert("FileHandle".to_string(), file_handle_ty.clone());
+        let file_handle_ty = prefer_complete_class_surface(
+            file_handle_ty,
+            class_type_with_identity(ctx, FILE_HANDLE_IDENTITY),
+        );
         // Register IOError as a possible exception from this call
-        ctx.try_block_error_types.insert("IOError".to_string());
+        if let Some(error_ty) = ctx.class_types.get("IOError") {
+            ctx.try_block_error_types.insert(error_ty.clone());
+        }
         return Some(CallLowering::Lowered(HirExpr::IntrinsicCall {
             intrinsic: CompilerIntrinsicId::OpenBinary,
             args: vec![path_arg, mode_arg],
@@ -382,4 +421,41 @@ pub(super) fn lower_shadowable_builtin_call(
     }
 
     Some(CallLowering::NoMatch)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn text_handle(methods: Vec<(String, FunctionType)>) -> Type {
+        Type::Class {
+            identity: Some(TEXT_FILE_HANDLE_IDENTITY.to_string()),
+            type_args: Vec::new(),
+            name: "TextFileHandle".to_string(),
+            fields: Vec::new(),
+            methods,
+            parent_class: None,
+        }
+    }
+
+    #[test]
+    fn canonical_handle_lookup_prefers_the_complete_class_surface() {
+        let mut ctx = LowerCtx::new();
+        ctx.class_types
+            .insert("nested_snapshot".to_string(), text_handle(Vec::new()));
+        ctx.class_types.insert(
+            "TextFileHandle".to_string(),
+            text_handle(vec![(
+                "write".to_string(),
+                FunctionType::all_borrow(vec![("text".to_string(), Type::Str)], Type::None),
+            )]),
+        );
+
+        let selected = class_type_with_identity(&ctx, TEXT_FILE_HANDLE_IDENTITY)
+            .expect("canonical handle should exist");
+        let Type::Class { methods, .. } = selected else {
+            panic!("canonical handle should remain a class");
+        };
+        assert!(methods.iter().any(|(name, _)| name == "write"));
+    }
 }

@@ -188,7 +188,10 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
         match shape.kind {
             PythonParameterKind::Positional | PythonParameterKind::KeywordOnly => {
                 let conversion = if is_python_object(&param.ty) {
-                    runtime_call("temporary_argument_handle", vec![reference(&param.name)])
+                    runtime_call(
+                        "__sifr_declaration_object_argument",
+                        vec![RustExpr::Ident(param.name.clone())],
+                    )
                 } else {
                     input_conversion(&param.name, &param.ty, opaque_classes)?
                 };

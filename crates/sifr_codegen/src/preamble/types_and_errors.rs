@@ -124,7 +124,13 @@ pub fn build_error_type_items(
         RustItem::Struct {
             name: name.to_string(),
             visibility: Visibility::Private,
-            derives: vec!["Debug".to_string(), "Clone".to_string()],
+            derives: vec![
+                "Debug".to_string(),
+                "Clone".to_string(),
+                "PartialEq".to_string(),
+                "Eq".to_string(),
+                "Hash".to_string(),
+            ],
             fields,
         },
         RustItem::Impl {

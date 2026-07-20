@@ -4,6 +4,17 @@ use sifr_ir::{
 };
 use sifr_type_system::{ParamConvention, Type};
 
+fn test_error_type(name: &str) -> Type {
+    Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: name.to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    }
+}
+
 #[test]
 fn walk_stmts_covers_try_handlers_loop_else_and_match_patterns() {
     let nested = HirFunction {
@@ -83,7 +94,7 @@ fn walk_stmts_covers_try_handlers_loop_else_and_match_patterns() {
                     }],
                 }],
             }],
-            body_error_types: vec!["Error".to_string()],
+            body_error_types: vec![test_error_type("Error")],
         },
         HirStmt::NestedFunction { func: nested },
     ];

@@ -68,6 +68,37 @@ fn typed_async_function_emits_owned_frame_schema_cancellation_and_await() {
 }
 
 #[test]
+fn local_object_record_uses_async_record_conversion_not_sealed_handle() {
+    let object = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "Object".to_string(),
+        fields: vec![("value".to_string(), Type::Int)],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let function = function(
+        "echo",
+        vec![param("value", object.clone(), ParamConvention::borrow())],
+        object,
+        declaration(
+            vec!["builtins", "id"],
+            vec![shape("value", PythonParameterKind::Positional, false)],
+        ),
+    );
+
+    let rendered = render_stmts(
+        &python_interop_function_body(&function, &Default::default())
+            .expect("local Object record should lower through record conversion"),
+    );
+    assert!(rendered.contains("async_from_record_results"), "{rendered}");
+    assert!(rendered.contains("PythonAsyncType::Record"), "{rendered}");
+    assert!(rendered.contains("async_record_field"), "{rendered}");
+    assert!(!rendered.contains("async_from_object"), "{rendered}");
+    assert!(!rendered.contains("async_to_object"), "{rendered}");
+}
+
+#[test]
 fn recursive_factory_emits_loop_thread_schema_and_owned_opaque_result() {
     let payload = Type::Class {
         identity: None,
@@ -249,8 +280,10 @@ fn resolved_bridge_target_stays_structured_in_typed_request() {
     for segment in ["__sifr_bridge__", "p_abc123", "adapter", "value"] {
         assert!(rendered.contains(&format!("\"{segment}\".to_string()")));
     }
-    assert!(rendered.contains("Vec<sifr_runtime::python::PythonAsyncValue> = Vec::new()"));
-    assert!(rendered.contains("Vec<(String, sifr_runtime::python::PythonAsyncValue)> = Vec::new()"));
+    assert!(rendered.contains("Vec<::sifr_runtime::python::PythonAsyncValue> = Vec::new()"));
+    assert!(
+        rendered.contains("Vec<(String, ::sifr_runtime::python::PythonAsyncValue)> = Vec::new()")
+    );
 }
 
 #[test]
@@ -277,7 +310,7 @@ fn zero_argument_record_wrapper_emits_concrete_frames_and_borrowed_field_names()
             .expect("zero-argument record wrapper should lower"),
     );
 
-    assert!(rendered.contains("Vec<sifr_runtime::python::PythonAsyncValue> = Vec::new()"));
+    assert!(rendered.contains("Vec<::sifr_runtime::python::PythonAsyncValue> = Vec::new()"));
     assert!(rendered.contains("&\"status\".to_string()"));
     assert!(rendered.contains("&\"message\".to_string()"));
 }
@@ -735,7 +768,10 @@ fn python_error_type() -> Type {
         identity: None,
         type_args: Vec::new(),
         name: "PythonError".to_string(),
-        fields: vec![("message".to_string(), Type::Str)],
+        fields: ["message", "kind", "exception_type", "traceback", "context"]
+            .into_iter()
+            .map(|name| (name.to_string(), Type::Str))
+            .collect(),
         methods: Vec::new(),
         parent_class: Some("Error".to_string()),
     }

@@ -1,4 +1,15 @@
 use super::*;
+
+fn test_error_type(name: &str) -> Type {
+    Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: name.to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    }
+}
 use sifr_ir::CompilerIntrinsicId;
 #[test]
 fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
@@ -94,7 +105,7 @@ fn test_generate_rust_generator_try_except_materializes_without_shape_panic() {
                             value: HirExpr::IntLiteral(2),
                         }],
                     }],
-                    body_error_types: vec!["Error".to_string()],
+                    body_error_types: vec![test_error_type("Error")],
                 }],
                 is_async: false,
                 method_kind: MethodKind::Regular,
@@ -270,12 +281,17 @@ fn test_generate_rust_open_uses_canonical_filehandle_constructor() {
     };
     let rust_code = generate_rust_with_metadata(&module).rust_source;
 
-    assert!(rust_code.contains("sifr_stdlib::fs::open_file"));
+    assert!(rust_code.contains("::sifr_stdlib::fs::open_file"));
     assert!(rust_code.contains("TextFileHandle::new("));
     assert!(rust_code.contains("BinaryFileHandle::new("));
-    assert!(rust_code.contains("Encoding::new(__encoding)"));
-    assert!(rust_code.contains("DecodeErrorHandler::new(__errors.clone())"));
-    assert!(rust_code.contains("EncodeErrorHandler::new(__errors)"));
+    for (class_name, argument) in [
+        ("Encoding", "__encoding"),
+        ("DecodeErrorHandler", "__errors.clone()"),
+        ("EncodeErrorHandler", "__errors"),
+    ] {
+        let rust_name = sifr_type_system::stdlib_class_rust_name("sifr.encoding", class_name);
+        assert!(rust_code.contains(&format!("{rust_name}::new({argument})")));
+    }
     assert!(!rust_code
         .contains("return Ok(FileHandle { _handle: __handle_id, _mode: __mode.to_string() });"));
 }
@@ -482,11 +498,11 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
     let result = generate_rust_test(&module);
     assert!(result
         .rust_source
-        .contains("use std::collections::HashMap;"));
+        .contains("use ::std::collections::HashMap;"));
     assert!(result
         .rust_source
-        .contains("use std::collections::HashSet;"));
-    assert!(result.rust_source.contains("use num_bigint::BigInt;"));
+        .contains("use ::std::collections::HashSet;"));
+    assert!(result.rust_source.contains("use ::num_bigint::BigInt;"));
     assert!(result
         .required_features
         .contains(&sifr_stdlib_manifest::StdlibFeature::NumBigint));
@@ -559,6 +575,7 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
         functions: vec![],
         classes: vec![HirClass {
             name: "Bucket".to_string(),
+            identity: None,
             fields: vec![
                 ("items".to_string(), items_ty.clone()),
                 ("table".to_string(), table_ty.clone()),
@@ -679,6 +696,7 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
             newtype_inner: None,
             implements_protocols: vec![],
             parent_class: None,
+            parent_type: None,
             type_params: vec![],
             enum_variants: vec![],
             rust_interop: Vec::new(),

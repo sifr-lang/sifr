@@ -156,7 +156,10 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         }
         HirExpr::EnumVariant {
             enum_name, variant, ..
-        } => Some(RustExpr::Path(vec![enum_name.clone(), variant.clone()])),
+        } => Some(RustExpr::Path(vec![
+            sifr_type_system::source_class_rust_name(enum_name),
+            variant.clone(),
+        ])),
         HirExpr::UnaryOp { op, operand, .. } => match op.as_str() {
             "-" => Some(RustExpr::UnaryOp {
                 op: "-".to_string(),
@@ -480,7 +483,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             expr: Some(Box::new(RustExpr::Ident(name.clone()))),
         }),
         HirExpr::SuperCall {
-            parent_class,
+            parent_type,
             method,
             args,
             ..
@@ -490,7 +493,10 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 .map(try_lower_leaf_or_name_expr)
                 .collect::<Option<Vec<_>>>()?;
             Some(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![parent_class.clone(), method.clone()])),
+                func: Box::new(RustExpr::Path(vec![
+                    parent_type.rust_type(),
+                    method.clone(),
+                ])),
                 args: lowered_args,
             })
         }

@@ -460,9 +460,11 @@ mod tests {
             | RustExpr::Vec(args)
             | RustExpr::Tuple(args)
             | RustExpr::Array(args) => args.iter().map(count_raw_in_expr).sum(),
-            RustExpr::TimeoutAwait { duration, future } => {
-                count_raw_in_expr(duration) + count_raw_in_expr(future)
-            }
+            RustExpr::TimeoutAwait {
+                duration,
+                future,
+                error,
+            } => count_raw_in_expr(duration) + count_raw_in_expr(future) + count_raw_in_expr(error),
             RustExpr::FormatMacro { args, .. } => args.iter().map(count_raw_in_expr).sum(),
             RustExpr::BinOp { left, right, .. } => {
                 count_raw_in_expr(left) + count_raw_in_expr(right)
@@ -685,7 +687,7 @@ mod tests {
         let rendered = render_items(&items);
         assert!(rendered.contains("struct RegexError"));
         assert!(rendered.contains("fn new(message: String) -> Self"));
-        assert!(rendered.contains("impl std::error::Error for RegexError"));
+        assert!(rendered.contains("impl ::std::error::Error for RegexError"));
     }
 
     #[test]
@@ -697,7 +699,7 @@ mod tests {
         assert!(rendered.contains("static __SIFR_FILE_HANDLES"));
         assert!(rendered.contains("static __SIFR_NEXT_FILE_HANDLE_ID"));
         assert!(rendered.contains("fn __sifr_next_file_handle_id() -> i64"));
-        assert!(rendered.contains("impl FileHandle"));
+        assert!(rendered.contains("impl __SifrIoFileHandle"));
         assert!(rendered.contains("fn read(&self) -> Result<String, IOError>"));
     }
 

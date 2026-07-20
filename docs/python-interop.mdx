@@ -110,6 +110,17 @@ from sifr.python import PythonError
 def dumps(value: dict[str, int]) -> Result[str, PythonError]: ...
 ```
 
+Every declaration error channel must contain the canonical `PythonError`
+contract: exactly the string fields `message`, `kind`, `exception_type`,
+`traceback`, and `context`, with no duplicate or additional fields. Importing
+`PythonError` from `sifr.python` supplies that contract. This rule applies to
+ordinary, coroutine, callback, context, and zero-copy declarations.
+
+The dynamic `Object` handle is likewise the sealed identity exported by
+`sifr.python`, not a class selected by basename. A local record named `Object`
+keeps ordinary record-conversion semantics when it has supported fields; it
+cannot impersonate the sealed Python handle.
+
 Adaptation code belongs under the owning package's canonical
 `src/python_bridges/` directory. A source target such as
 `bridge.identifiers.parse_gtin` resolves only against that package's inventoried
@@ -306,11 +317,20 @@ def update(mut view: python.Buffer[int64]) -> Result[list[int64], PythonError]:
 ```
 
 The decorator target can be an import-root callable, a package-local `bridge`
-callable, or `Self` on an opaque receiver. `access=read | write` and
+callable, or `Self` on an opaque receiver. `Self` acquisition is read-only;
+writable declarations must use a producer callable that returns a fresh or
+ownership-transferred exporter because a shared opaque receiver cannot be
+exclusively frozen while the view exists. Any writable-producer parameter that
+can carry an existing `python.Object` or opaque Python identity must use `own`,
+so no Sifr alias remains usable while the view is live. `access=read | write`
+for producers and
 `layout=any | c_contiguous | f_contiguous` are validated during acquisition
 along with element format, item size, dimensions, shape, strides, and
 suboffsets. Supported element types are fixed-width and pointer-width signed
 and unsigned integers plus `float`.
+
+The general declaration error-channel contract above applies unchanged to
+buffer producers and buffer methods.
 
 `python.Buffer[T]` is affine and non-send. It retains its exporter and performs
 exactly one `PyBuffer_Release` on explicit `release()` or automatic drop.

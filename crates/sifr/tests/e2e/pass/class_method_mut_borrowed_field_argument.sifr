@@ -1,0 +1,34 @@
+class Crate:
+    items: list[int]
+
+    def merge(self, mut other: Crate) -> None:
+        other.items.append(7)
+
+
+class Depot:
+    stock: Crate
+    helper: Crate
+
+    def refill(self) -> None:
+        self.helper.merge(self.stock)
+
+    def refill_explicit(mut self) -> None:
+        self.helper.merge(self.stock)
+
+
+def relay(mut depot: Depot) -> None:
+    depot.helper.merge(depot.stock)
+
+
+def main() -> None:
+    inferred: Depot = Depot(Crate([1]), Crate([]))
+    inferred.refill()
+    assert inferred.stock.items == [1, 7]
+
+    explicit: Depot = Depot(Crate([2]), Crate([]))
+    explicit.refill_explicit()
+    assert explicit.stock.items == [2, 7]
+
+    forwarded: Depot = Depot(Crate([3]), Crate([]))
+    relay(forwarded)
+    assert forwarded.stock.items == [3, 7]

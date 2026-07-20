@@ -1,8 +1,29 @@
 use super::{FixedIntType, IterationCapability, IterationMetadata, Type};
-use crate::types::display_impl::capitalize;
 use crate::union::make_union;
 
 impl Type {
+    /// Whether two class types name the same declaration, independent of
+    /// their concrete generic arguments.
+    #[must_use]
+    pub fn is_same_class_declaration(&self, other: &Self) -> bool {
+        let (
+            Type::Class {
+                identity: left_identity,
+                name: left_name,
+                ..
+            },
+            Type::Class {
+                identity: right_identity,
+                name: right_name,
+                ..
+            },
+        ) = (self.resolve_alias(), other.resolve_alias())
+        else {
+            return false;
+        };
+        left_identity.as_ref().unwrap_or(left_name) == right_identity.as_ref().unwrap_or(right_name)
+    }
+
     /// Whether two class types name the same declaration and carry the same
     /// concrete generic specialization. Local import spellings may differ.
     #[must_use]
@@ -16,25 +37,18 @@ impl Type {
 
         let (
             Type::Class {
-                identity: left_identity,
                 type_args: left_type_args,
-                name: left_name,
                 ..
             },
             Type::Class {
-                identity: right_identity,
                 type_args: right_type_args,
-                name: right_name,
                 ..
             },
         ) = (self.resolve_alias(), other.resolve_alias())
         else {
             return false;
         };
-        if left_identity.as_ref().unwrap_or(left_name)
-            != right_identity.as_ref().unwrap_or(right_name)
-            || left_type_args.len() != right_type_args.len()
-        {
+        if !self.is_same_class_declaration(other) || left_type_args.len() != right_type_args.len() {
             return false;
         }
         left_type_args
@@ -72,60 +86,6 @@ impl Type {
                     && !left.is_same_class_specialization(right)
             })
         })
-    }
-
-    /// Helper: map a type to a `PascalCase` name for enum variant/name generation.
-    pub(super) fn type_to_enum_variant_prefix(ty: &Type) -> String {
-        match ty {
-            Type::Int => "Int".to_string(),
-            Type::FixedInt(fixed) => fixed.variant_prefix().to_string(),
-            Type::Float => "Float".to_string(),
-            Type::Bool => "Bool".to_string(),
-            Type::Str => "Str".to_string(),
-            Type::Bytes => "Bytes".to_string(),
-            Type::None => "None".to_string(),
-            Type::LiteralInt(v) => format!("LitInt{v}"),
-            Type::LiteralStr(v) => format!("Lit{}", capitalize(v)),
-            Type::LiteralBool(v) => format!("Lit{}", if *v { "True" } else { "False" }),
-            Type::List(_) => "List".to_string(),
-            Type::Dict(_, _) => "Dict".to_string(),
-            Type::Set(_) => "Set".to_string(),
-            Type::Tuple(_) => "Tuple".to_string(),
-            Type::Range => "Range".to_string(),
-            Type::Iterable(_) => "Iterable".to_string(),
-            Type::Iterator(_) => "Iterator".to_string(),
-            Type::Function(_) => "Fn".to_string(),
-            Type::AsyncFunction(_) => "AsyncFn".to_string(),
-            Type::Coroutine(_, _) => "Coroutine".to_string(),
-            Type::Task(_, _) => "Task".to_string(),
-            Type::TaskResult(_, _) => "TaskResult".to_string(),
-            Type::Failure(_) => "Failure".to_string(),
-            Type::TimeoutResult(_) => "TimeoutResult".to_string(),
-            Type::Select2(_, _) => "Select2".to_string(),
-            Type::BlockingTask(_, _) => "BlockingTask".to_string(),
-            Type::JoinSet(_, _) => "JoinSet".to_string(),
-            Type::Awaitable(_) => "Awaitable".to_string(),
-            Type::AsyncIterator(_, _) => "AsyncIterator".to_string(),
-            Type::AsyncGenerator(_, _) => "AsyncGenerator".to_string(),
-            Type::PythonBuffer(_) => "PythonBuffer".to_string(),
-            Type::Unknown => "Unknown".to_string(),
-            Type::Any => "Any".to_string(),
-            Type::Never => "Never".to_string(),
-            Type::Union(_) => "Union".to_string(),
-            Type::Intersection(_) => "Intersection".to_string(),
-            Type::Alias { name, .. } => capitalize(name),
-            Type::Class { name, .. } => name.clone(),
-            Type::Result(_, _) => "Result".to_string(),
-            Type::Protocol { name, .. } => name.clone(),
-            Type::Newtype { name, .. } => name.clone(),
-            Type::TypeVar(name) => name.clone(),
-            Type::Callable(..) => "Fn".to_string(),
-            Type::AsyncCallable(..) => "AsyncCallable".to_string(),
-            Type::Enum { name, .. } => name.clone(),
-            Type::BigInt => "BigInt".to_string(),
-            Type::Decimal => "Decimal".to_string(),
-            Type::BigDecimal => "BigDecimal".to_string(),
-        }
     }
 
     /// Check if this type is a numeric type.

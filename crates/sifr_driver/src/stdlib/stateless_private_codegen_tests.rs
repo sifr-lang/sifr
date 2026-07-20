@@ -18,7 +18,7 @@ fn platform_private_declarations_codegen_through_sifr_stdlib() {
     );
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::platform::platform_system()"));
+        .contains("::sifr_stdlib::platform::platform_system()"));
     assert!(compiled
         .code
         .transitive_deps
@@ -64,7 +64,7 @@ fn sys_private_declarations_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::sys::{name}(")),
+                .contains(&format!("::sifr_stdlib::sys::{name}(")),
             "{name} should lower through _sifr.sys private Rust interop declarations"
         );
     }
@@ -107,7 +107,7 @@ fn html_private_declarations_codegen_through_sifr_stdlib() {
 
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::html::html_escape(s)"));
+        .contains("::sifr_stdlib::html::html_escape(s)"));
     assert!(compiled
         .code
         .transitive_deps
@@ -125,10 +125,10 @@ fn calendar_private_declarations_codegen_through_sifr_stdlib() {
         .expect("_sifr.calendar should generate private Rust code");
 
     assert!(private_code.rust.contains(
-        "sifr_stdlib::calendar::calendar_isleap(sifr_runtime::interop::SifrIntBridge::from(year))"
+        "::sifr_stdlib::calendar::calendar_isleap(::sifr_runtime::interop::SifrIntBridge::from(year))"
     ));
     assert!(private_code.rust.contains(
-        "sifr_stdlib::calendar::calendar_monthrange(sifr_runtime::interop::SifrIntBridge::from(year), sifr_runtime::interop::SifrIntBridge::from(month)).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating()).collect()"
+        "::sifr_stdlib::calendar::calendar_monthrange(::sifr_runtime::interop::SifrIntBridge::from(year), ::sifr_runtime::interop::SifrIntBridge::from(month)).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating()).collect()"
     ));
     assert!(compiled
         .code
@@ -146,13 +146,13 @@ fn uuid_private_declarations_codegen_through_sifr_stdlib() {
         .get("_sifr.uuid")
         .expect("_sifr.uuid should generate private Rust code");
 
-    assert!(private_code.rust.contains("sifr_stdlib::uuid::uuid4()"));
+    assert!(private_code.rust.contains("::sifr_stdlib::uuid::uuid4()"));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::uuid::uuid3_text(namespace, name)"));
+        .contains("::sifr_stdlib::uuid::uuid3_text(namespace, name)"));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::uuid::uuid5_text(namespace, name)"));
+        .contains("::sifr_stdlib::uuid::uuid5_text(namespace, name)"));
     assert!(compiled
         .code
         .transitive_deps
@@ -171,10 +171,10 @@ fn bytes_private_declarations_codegen_through_sifr_stdlib() {
 
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::bytes::encode_utf8(s)"));
+        .contains("::sifr_stdlib::bytes::encode_utf8(s)"));
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::bytes::bytes_to_hex(bytes)"));
+        .contains("::sifr_stdlib::bytes::bytes_to_hex(bytes)"));
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
@@ -229,7 +229,7 @@ fn regex_private_declarations_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::regex::{name}(")),
+                .contains(&format!("::sifr_stdlib::regex::{name}(")),
             "{name} should lower through _sifr.regex private Rust interop declarations"
         );
     }
@@ -238,7 +238,7 @@ fn regex_private_declarations_codegen_through_sifr_stdlib() {
     ));
     assert!(private_code
         .rust
-        .contains("sifr_runtime::interop::SifrIntBridge::from(flags)"));
+        .contains("::sifr_runtime::interop::SifrIntBridge::from(flags)"));
     assert!(compiled
         .code
         .transitive_deps
@@ -277,13 +277,13 @@ fn url_private_declarations_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::url::{name}(")),
+                .contains(&format!("::sifr_stdlib::url::{name}(")),
             "{name} should lower through _sifr.url private Rust interop declarations"
         );
     }
     assert!(private_code
         .rust
-        .contains("port.map(sifr_runtime::interop::SifrIntBridge::from)"));
+        .contains("port.map(::sifr_runtime::interop::SifrIntBridge::from)"));
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
@@ -314,7 +314,7 @@ fn toml_private_declarations_codegen_through_sifr_stdlib() {
 
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::toml::toml_parse_tokens(text)"));
+        .contains("::sifr_stdlib::toml::toml_parse_tokens(text)"));
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));
@@ -353,7 +353,7 @@ fn json_private_declarations_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::json::{name}(")),
+                .contains(&format!("::sifr_stdlib::json::{name}(")),
             "{name} should lower through _sifr.json private Rust interop declarations"
         );
     }
@@ -400,7 +400,7 @@ fn encoding_private_declarations_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::encoding::{name}(")),
+                .contains(&format!("::sifr_stdlib::encoding::{name}(")),
             "{name} should lower through _sifr.encoding private Rust interop declarations"
         );
     }
@@ -456,7 +456,7 @@ fn unicode_private_declarations_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::unicode::{name}(")),
+                .contains(&format!("::sifr_stdlib::unicode::{name}(")),
             "{name} should lower through _sifr.unicode private Rust interop declarations"
         );
     }
@@ -502,16 +502,16 @@ fn compression_private_declarations_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::{module}::{name}(")),
+                .contains(&format!("::sifr_stdlib::{module}::{name}(")),
             "{name} should lower through _sifr.compress private Rust interop declarations"
         );
     }
     assert!(private_code
         .rust
-        .contains("sifr_stdlib::gzip::gzip_compress_bytes(data)"));
+        .contains("::sifr_stdlib::gzip::gzip_compress_bytes(data)"));
     assert!(private_code
         .rust
-        .contains("fn __io_err<E: std::fmt::Display + 'static>"));
+        .contains("fn __io_err<E: ::std::fmt::Display + 'static>"));
     assert!(private_code
         .rust
         .contains(".map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))"));
@@ -565,7 +565,7 @@ fn datetime_private_declarations_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::time::{name}(")),
+                .contains(&format!("::sifr_stdlib::time::{name}(")),
             "{name} should lower through _sifr.datetime private Rust interop declarations"
         );
     }
@@ -615,15 +615,15 @@ fn i18n_private_declarations_codegen_through_sifr_stdlib() {
         assert!(
             private_code
                 .rust
-                .contains(&format!("sifr_stdlib::i18n::{name}(")),
+                .contains(&format!("::sifr_stdlib::i18n::{name}(")),
             "{name} should lower through _sifr.i18n private Rust interop declarations"
         );
     }
     assert!(private_code.rust.contains(
-        "sifr_stdlib::i18n::i18n_format_datetime(locale, style, sifr_runtime::interop::SifrIntBridge::from(year)"
+        "::sifr_stdlib::i18n::i18n_format_datetime(locale, style, ::sifr_runtime::interop::SifrIntBridge::from(year)"
     ));
     assert!(private_code.rust.contains(
-        "sifr_stdlib::i18n::i18n_collate(locale, strength, left, right).map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())"
+        "::sifr_stdlib::i18n::i18n_collate(locale, strength, left, right).map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())"
     ));
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"

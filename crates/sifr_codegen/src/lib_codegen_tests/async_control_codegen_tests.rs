@@ -29,7 +29,7 @@ fn async_callable_parameter_emits_send_future_contract() {
     );
 
     assert!(rust_code.contains(
-        "Fn(i64) -> std::pin::Pin<Box<dyn std::future::Future<Output = i64> + Send>> + Send + Sync"
+        "Fn(i64) -> ::std::pin::Pin<Box<dyn ::std::future::Future<Output = i64> + Send>> + Send + Sync"
     ));
     assert!(rust_code.contains("handler(4_i64).await"));
     syn::parse_file(&rust_code).expect("AsyncCallable Rust should parse");
@@ -54,7 +54,7 @@ fn async_method_argument_is_adapted_to_send_future_callable() {
     );
 
     assert!(
-        rust_code.contains("let __sifr_send_async_callable = std::sync::Arc::new(plus_one)"),
+        rust_code.contains("let __sifr_send_async_callable = ::std::sync::Arc::new(plus_one)"),
         "{rust_code}"
     );
     assert!(
@@ -71,7 +71,7 @@ fn nested_async_function_argument_is_adapted_to_send_future_callable() {
     );
 
     assert!(
-        rust_code.contains("let __sifr_send_async_callable = std::sync::Arc::new(nested)"),
+        rust_code.contains("let __sifr_send_async_callable = ::std::sync::Arc::new(nested)"),
         "{rust_code}"
     );
     assert!(
@@ -87,9 +87,9 @@ fn async_callable_class_field_uses_a_boxed_future_adapter() {
         "class AsyncRunner:\n    handler: AsyncCallable[[int], int]\n\n    def __init__(self, handler: AsyncCallable[[int], int]):\n        self.handler = handler\n\n    async def run(self, value: int) -> int:\n        return await self.handler(value)\n\nasync def plus_one(value: int) -> int:\n    await task.sleep(0.0)\n    return value + 1\n\nasync def main() -> None:\n    runner = AsyncRunner(plus_one)\n    print(await runner.run(41))\n",
     );
 
-    assert!(rust_code.contains("Box<dyn Fn(i64) -> std::pin::Pin<Box<dyn std::future::Future<Output = i64> + Send>> + Send + Sync>"));
+    assert!(rust_code.contains("Box<dyn Fn(i64) -> ::std::pin::Pin<Box<dyn ::std::future::Future<Output = i64> + Send>> + Send + Sync>"));
     assert!(rust_code.contains("move |__sifr_async_arg_0|"));
-    assert!(rust_code.contains("std::sync::Arc::clone(&__sifr_async_callable)"));
+    assert!(rust_code.contains("::std::sync::Arc::clone(&__sifr_async_callable)"));
     assert!(rust_code.contains("__sifr_async_callable(__sifr_async_arg_0).await"));
     assert!(rust_code.contains("(self.handler)(value).await"));
     syn::parse_file(&rust_code).expect("stored AsyncCallable Rust should parse");
@@ -756,7 +756,7 @@ fn test_hashmap_short_name() {
 
     let rust_code = generate_rust(&module);
     assert!(
-        rust_code.contains("use std::collections::HashMap;"),
+        rust_code.contains("use ::std::collections::HashMap;"),
         "should have HashMap import"
     );
     assert!(
@@ -764,7 +764,7 @@ fn test_hashmap_short_name() {
         "should use short HashMap::from"
     );
     assert!(
-        !rust_code.contains("std::collections::HashMap::from("),
+        !rust_code.contains("::std::collections::HashMap::from("),
         "should NOT use fully qualified HashMap::from"
     );
     assert!(

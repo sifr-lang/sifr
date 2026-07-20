@@ -7,6 +7,7 @@ use sifr_ir::{
 };
 use sifr_python_ast::{AstParamMutability, AstParamOwnership};
 use sifr_type_system::Type;
+use std::collections::HashSet;
 
 pub(super) fn parse_declaration(
     call: &ExprCall,
@@ -22,12 +23,12 @@ pub(super) fn parse_declaration(
         );
         return None;
     }
+    let (access, layout) = parse_policy(call, ctx)?;
     let target = if is_method {
-        receiver_target(call, parameters, ctx)?
+        receiver_target(call, parameters, access, ctx)?
     } else {
         target::parse_callable(&call.arguments.args[0], ctx)?
     };
-    let (access, layout) = parse_policy(call, ctx)?;
     let required_import_root = target
         .root()
         .filter(|root| !matches!(*root, "Self" | "__sifr_bridge__"))
@@ -70,10 +71,10 @@ pub(super) fn validate_signature(
             declaration.span,
         );
     }
-    if !matches!(error_type.resolve_alias(), Type::Class { name, .. } if name == "PythonError") {
+    if !error_type.is_python_error_contract() {
         invalid(
             ctx,
-            "a buffer declaration must use `PythonError` as its error type",
+            "a buffer declaration must use the canonical `PythonError` field contract as its error type",
             declaration.span,
         );
     }
@@ -99,9 +100,47 @@ pub(super) fn invalid(ctx: &mut LowerCtx, reason: &str, span: TextRange) {
     );
 }
 
+pub(super) fn contains_python_identity(ty: &Type, ctx: &LowerCtx) -> bool {
+    contains_python_identity_inner(ty, ctx, &mut HashSet::new())
+}
+
+fn contains_python_identity_inner(
+    ty: &Type,
+    ctx: &LowerCtx,
+    visiting_classes: &mut HashSet<(String, Vec<Type>)>,
+) -> bool {
+    match ty.resolve_alias() {
+        object if object.is_python_object_contract() => true,
+        Type::Class { name, .. } if ctx.python_opaque_classes.contains_key(name) => true,
+        Type::Class { fields, .. } => {
+            let Some(key) = ty.class_recursion_key() else {
+                return false;
+            };
+            if !visiting_classes.insert(key.clone()) {
+                return false;
+            }
+            let contains = fields
+                .iter()
+                .any(|(_, field)| contains_python_identity_inner(field, ctx, visiting_classes));
+            visiting_classes.remove(&key);
+            contains
+        }
+        Type::List(element) => contains_python_identity_inner(element, ctx, visiting_classes),
+        Type::Tuple(elements) | Type::Union(elements) => elements
+            .iter()
+            .any(|element| contains_python_identity_inner(element, ctx, visiting_classes)),
+        Type::Dict(key, value) => {
+            contains_python_identity_inner(key, ctx, visiting_classes)
+                || contains_python_identity_inner(value, ctx, visiting_classes)
+        }
+        _ => false,
+    }
+}
+
 fn receiver_target(
     call: &ExprCall,
     parameters: &Parameters,
+    access: PythonBufferAccess,
     ctx: &mut LowerCtx,
 ) -> Option<PythonTargetPath> {
     if ctx
@@ -122,6 +161,14 @@ fn receiver_target(
             ctx,
             "a buffer receiver declaration target must be exactly `Self`",
             call.arguments.args[0].range(),
+        );
+        return None;
+    }
+    if access == PythonBufferAccess::Write {
+        invalid(
+            ctx,
+            "a writable `Self` buffer cannot exclusively freeze its opaque owner; use a producer that returns a fresh exporter",
+            call.range,
         );
         return None;
     }
