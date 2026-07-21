@@ -30,6 +30,7 @@ COMMAND_ARGS: dict[str, list[str]] = {
         "--report",
         "../../../target/verification/areas/python_interop/env.latest.json",
     ],
+    "python-interop-readonly-check-doctor": [],
     "python-interop-tier1": [
         "--tier",
         "tier1",

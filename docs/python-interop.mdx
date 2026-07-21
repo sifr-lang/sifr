@@ -59,6 +59,36 @@ Dependency packages may publish requirements, but cannot select an environment
 or authorize Python or native-extension execution. Native trust for a root that
 is not required is rejected as stale policy.
 
+## Read-Only Check And Doctor
+
+Inspect the complete declaration-first Python plan before building:
+
+```bash
+sifr python check
+sifr python check --json
+sifr python doctor
+```
+
+Both commands use frozen package resolution and the same driver plan as normal
+check/build for declarations, bridge packages, protocols, target probes,
+environment selection, lock freshness, and trust. The report includes graph
+and source-content snapshot digests so results identify the inputs that were
+actually checked. Target states are `verified` for import-root targets proven
+in the selected interpreter, `runtime-checked` for hermetic embedded bridge
+targets, and `deferred` when a library has no authority to select an
+environment.
+
+A library-only package is valid to inspect without a root Python environment.
+Its required imports and target probes are reported as deferred to the final
+application. A package containing one or more runnable applications must
+resolve the root environment and trust policy immediately; failures match
+ordinary `sifr check` diagnostics for the same snapshot.
+
+`sifr python doctor` adds deterministic patch-like suggestions, such as the
+root `[python]` and `[trust]` entries a library consumer must provide. The
+patches are output only: neither command writes a manifest or lockfile, grants
+trust, creates a virtual environment, installs packages, or runs `uv sync`.
+
 ## Runtime Semantics
 
 The generated binary initializes CPython once before user `main` when Python interop is used. Initialization uses the validated probe metadata: executable, venv prefix, site-packages, `sys.path`, CPython version, SOABI, extension suffixes, platform, pointer width, and `libpython` when discoverable.

@@ -1,4 +1,4 @@
-use super::report::BuildReport;
+use super::report::{BuildReport, PythonInteropCheckReport};
 use crate::build::{
     build_cached_package_project_binary, build_cached_project_binary,
     build_cached_single_file_binary, build_rooted_entrypoint_binary_with_report,
@@ -41,10 +41,22 @@ pub fn check_project(main_file: &Path) -> Vec<RenderedDiagnostic> {
 }
 
 pub fn check_package_project(entrypoint: &PackageEntrypoint) -> Vec<RenderedDiagnostic> {
-    match resolve_package_project_entrypoint_plan(entrypoint) {
-        Ok(project_plan) => project_plan.frontend_diagnostics(),
+    match check_package_python_interop(entrypoint) {
+        Ok(_) => Vec::new(),
         Err(errors) => errors,
     }
+}
+
+pub fn check_package_python_interop(
+    entrypoint: &PackageEntrypoint,
+) -> Result<PythonInteropCheckReport, Vec<RenderedDiagnostic>> {
+    let project_plan = resolve_package_project_entrypoint_plan(entrypoint)?;
+    let diagnostics = project_plan.frontend_diagnostics();
+    if !diagnostics.is_empty() {
+        return Err(diagnostics);
+    }
+    let generated = project_plan.into_generated_binary_project_with_probe_policy(true)?;
+    Ok(super::python_check::python_interop_check_report(&generated))
 }
 
 pub fn check_single_file(source: &str, entrypoint_file: &Path) -> Vec<RenderedDiagnostic> {

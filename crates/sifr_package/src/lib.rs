@@ -35,8 +35,8 @@ pub use crate::graph::derive::{
 };
 pub use crate::graph::digest::{
     digest_graph_inputs, digest_package_build_cache_inputs, digest_package_graph,
-    digest_package_source_map, digest_python_environment_probe, GraphDigest,
-    PackageBuildCacheInputs,
+    digest_package_source_map, digest_package_source_snapshot, digest_python_environment_probe,
+    GraphDigest, PackageBuildCacheInputs,
 };
 pub use crate::graph::filters::{
     apply_package_filters, parse_package_filter, PackageFilter, PackageFilterTerm,

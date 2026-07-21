@@ -1,5 +1,5 @@
 use super::check_and_package_commands::{
-    declaration_python_requirements, load_package_graph_context,
+    declaration_python_requirements, load_package_graph_context, package_python_runtime,
 };
 use super::cli_model_and_entrypoint::{
     diagnostic_with_code, package_diagnostic, DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
@@ -9,8 +9,9 @@ use super::diagnostic_rendering_and_run::{
     current_session_package_id, package_session_for_cwd, render_diagnostics,
 };
 use clap::{Args, Subcommand};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sifr_diagnostics::DiagnosticCode;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::{self, Write as _};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -23,8 +24,19 @@ pub(crate) struct PythonArgs {
 
 #[derive(Subcommand)]
 enum PythonCommands {
+    /// Validate Python interop without changing the package or environment
+    Check(PythonInspectArgs),
+    /// Diagnose Python interop and print non-applying patch suggestions
+    Doctor(PythonInspectArgs),
     /// Create or recheck executable Python interop certifications
     Certify(PythonCertifyArgs),
+}
+
+#[derive(Args)]
+struct PythonInspectArgs {
+    /// Emit the deterministic report as JSON
+    #[arg(long)]
+    json: bool,
 }
 
 #[derive(Args)]
@@ -71,7 +83,366 @@ struct CertificationContext {
 
 pub(crate) fn cmd_python(args: PythonArgs, diagnostic_format: DiagnosticFormat) -> i32 {
     match args.command {
+        PythonCommands::Check(args) => cmd_python_inspect(&args, false, diagnostic_format),
+        PythonCommands::Doctor(args) => cmd_python_inspect(&args, true, diagnostic_format),
         PythonCommands::Certify(args) => cmd_certify(args, diagnostic_format),
+    }
+}
+
+#[derive(Serialize)]
+struct PythonInspectionReport {
+    schema_version: u32,
+    status: &'static str,
+    package: String,
+    application: bool,
+    graph_digest: String,
+    source_digest: String,
+    lock: &'static str,
+    trust: &'static str,
+    environment: PythonEnvironmentReport,
+    required_imports: Vec<String>,
+    declarations: Vec<PythonDeclarationReport>,
+    targets: Vec<PythonTargetReport>,
+    bridge_packages: usize,
+    requires_async_loop: bool,
+}
+
+#[derive(Serialize)]
+struct PythonEnvironmentReport {
+    status: &'static str,
+    digest: Option<String>,
+}
+
+#[derive(Serialize, PartialEq, Eq, PartialOrd, Ord)]
+struct PythonDeclarationReport {
+    module: Option<String>,
+    name: String,
+    target: Option<String>,
+    kind: String,
+}
+
+#[derive(Serialize)]
+struct PythonTargetReport {
+    target: String,
+    status: &'static str,
+}
+
+#[derive(Serialize)]
+struct PythonDoctorReport {
+    #[serde(flatten)]
+    inspection: PythonInspectionReport,
+    suggestions: Vec<PythonDoctorSuggestion>,
+}
+
+#[derive(Serialize)]
+struct PythonDoctorSuggestion {
+    file: &'static str,
+    reason: &'static str,
+    patch: String,
+}
+
+struct PythonReadOnlyContext {
+    package_name: String,
+    package_id: sifr_package::SifrPackageId,
+    graph: sifr_package::SifrPackageGraph,
+    source_map: sifr_package::PackageSourceMap,
+    runtime: Option<sifr_driver::PackagePythonRuntime>,
+    required_imports: Vec<String>,
+    application: bool,
+    graph_digest: String,
+    source_digest: String,
+    entrypoints: Vec<PathBuf>,
+}
+
+fn cmd_python_inspect(
+    args: &PythonInspectArgs,
+    doctor: bool,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
+    let context = match python_read_only_context(diagnostic_format) {
+        Ok(context) => context,
+        Err(code) => return code,
+    };
+    let inspection = match run_python_read_only_plan(&context) {
+        Ok(report) => report,
+        Err(diagnostics) => return render_diagnostics(&diagnostics, diagnostic_format),
+    };
+    if doctor {
+        render_python_doctor(inspection, args.json)
+    } else {
+        render_python_check(&inspection, args.json)
+    }
+}
+
+fn python_read_only_context(
+    diagnostic_format: DiagnosticFormat,
+) -> Result<PythonReadOnlyContext, i32> {
+    let lock_mode = sifr_package::CargoLockMode::Frozen;
+    let session = package_session_for_cwd(lock_mode).map_err(|error| {
+        render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+        EXIT_USAGE_OR_CONFIG
+    })?;
+    if session.manifest_less_mode {
+        return Err(fail(
+            "`sifr python check` and `sifr python doctor` require a Sifr package",
+            diagnostic_format,
+            EXIT_USAGE_OR_CONFIG,
+        ));
+    }
+    let application_entrypoints = session.runnable_app_paths().map_err(|error| {
+        render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+        EXIT_USER_DIAGNOSTIC
+    })?;
+    let application = !application_entrypoints.is_empty();
+    let graph_context = load_package_graph_context(&session, lock_mode, diagnostic_format)?
+        .ok_or(EXIT_USAGE_OR_CONFIG)?;
+    let package_id =
+        current_session_package_id(&session, &graph_context.graph).ok_or(EXIT_USAGE_OR_CONFIG)?;
+    let package = graph_context
+        .graph
+        .packages
+        .get(&package_id)
+        .ok_or(EXIT_USAGE_OR_CONFIG)?;
+    let mut requirements = declaration_python_requirements(&graph_context.source_map, None);
+    let bridge_graph = sifr_package::resolve_python_bridge_graph(&graph_context.graph, &package_id)
+        .map_err(|errors| {
+            render_diagnostics(
+                &errors
+                    .into_iter()
+                    .map(package_diagnostic)
+                    .collect::<Vec<_>>(),
+                diagnostic_format,
+            );
+            EXIT_USER_DIAGNOSTIC
+        })?;
+    requirements.extend(bridge_graph.requirements);
+    requirements.sort();
+    requirements.dedup();
+    let required_imports = requirements
+        .iter()
+        .map(|requirement| requirement.root.clone())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    let runtime = if application {
+        package_python_runtime(
+            &graph_context.graph,
+            &package_id,
+            &requirements,
+            diagnostic_format,
+        )?
+    } else {
+        None
+    };
+    let entrypoints = python_inspection_entrypoints(
+        &graph_context.source_map,
+        &package_id,
+        application_entrypoints,
+    );
+    let source_digest = sifr_package::digest_package_source_snapshot(&graph_context.source_map)
+        .map_err(|error| {
+            fail(
+                format!("could not read the Python inspection source snapshot: {error}"),
+                diagnostic_format,
+                EXIT_USAGE_OR_CONFIG,
+            )
+        })?
+        .hex;
+    Ok(PythonReadOnlyContext {
+        package_name: package.sifr_name.0.clone(),
+        package_id,
+        graph_digest: sifr_package::digest_package_graph(&graph_context.graph).hex,
+        source_digest,
+        graph: graph_context.graph,
+        source_map: graph_context.source_map,
+        runtime,
+        required_imports,
+        application,
+        entrypoints,
+    })
+}
+
+fn python_inspection_entrypoints(
+    source_map: &sifr_package::PackageSourceMap,
+    package_id: &sifr_package::SifrPackageId,
+    application_entrypoints: Vec<PathBuf>,
+) -> Vec<PathBuf> {
+    if !application_entrypoints.is_empty() {
+        return application_entrypoints;
+    }
+    source_map
+        .modules
+        .values()
+        .filter(|module| &module.package_id == package_id)
+        .map(|module| module.file_path.clone())
+        .collect()
+}
+
+fn run_python_read_only_plan(
+    context: &PythonReadOnlyContext,
+) -> Result<PythonInspectionReport, Vec<sifr_diagnostics::RenderedDiagnostic>> {
+    let mut declarations = BTreeSet::new();
+    let mut targets = BTreeMap::new();
+    let mut bridge_packages = 0;
+    let mut requires_async_loop = false;
+    for entrypoint in &context.entrypoints {
+        let report = sifr_driver::check_package_python_interop(&sifr_driver::PackageEntrypoint {
+            main_file: entrypoint.clone(),
+            package_id: context.package_id.clone(),
+            graph: context.graph.clone(),
+            source_map: context.source_map.clone(),
+            python_runtime: context.runtime.clone(),
+        })?;
+        declarations.extend(report.declarations.into_iter().map(|declaration| {
+            PythonDeclarationReport {
+                module: declaration.module_name,
+                name: declaration.function_name,
+                target: declaration.target,
+                kind: declaration.kind,
+            }
+        }));
+        for probe in report.target_probes {
+            targets.insert(probe.target, target_status_name(probe.status));
+        }
+        bridge_packages = bridge_packages.max(report.bridge_package_count);
+        requires_async_loop |= report.requires_async_loop;
+    }
+    let environment = context.runtime.as_ref().map_or_else(
+        || PythonEnvironmentReport {
+            status: if declarations.is_empty() {
+                "not-required"
+            } else {
+                "deferred"
+            },
+            digest: None,
+        },
+        |runtime| PythonEnvironmentReport {
+            status: "resolved",
+            digest: Some(runtime.environment_digest().to_string()),
+        },
+    );
+    let trust = if context.runtime.is_some() {
+        "verified"
+    } else if context.required_imports.is_empty() {
+        "not-required"
+    } else {
+        "deferred-to-final-application"
+    };
+    Ok(PythonInspectionReport {
+        schema_version: 1,
+        status: "ok",
+        package: context.package_name.clone(),
+        application: context.application,
+        graph_digest: context.graph_digest.clone(),
+        source_digest: context.source_digest.clone(),
+        lock: "verified-frozen-read-only",
+        trust,
+        environment,
+        required_imports: context.required_imports.clone(),
+        declarations: declarations.into_iter().collect(),
+        targets: targets
+            .into_iter()
+            .map(|(target, status)| PythonTargetReport { target, status })
+            .collect(),
+        bridge_packages,
+        requires_async_loop,
+    })
+}
+
+const fn target_status_name(status: sifr_driver::PythonTargetCheckStatus) -> &'static str {
+    match status {
+        sifr_driver::PythonTargetCheckStatus::Deferred => "deferred",
+        sifr_driver::PythonTargetCheckStatus::Verified => "verified",
+        sifr_driver::PythonTargetCheckStatus::RuntimeChecked => "runtime-checked",
+    }
+}
+
+fn render_python_check(report: &PythonInspectionReport, json: bool) -> i32 {
+    if json {
+        return write_json(report);
+    }
+    render_inspection_human(report, "Python check");
+    EXIT_SUCCESS
+}
+
+fn render_python_doctor(report: PythonInspectionReport, json: bool) -> i32 {
+    let suggestions = doctor_suggestions(&report);
+    if json {
+        return write_json(&PythonDoctorReport {
+            inspection: report,
+            suggestions,
+        });
+    }
+    render_inspection_human(&report, "Python doctor");
+    if suggestions.is_empty() {
+        let _ = writeln!(io::stdout(), "suggestions: none");
+    } else {
+        let _ = writeln!(io::stdout(), "suggestions:");
+        for suggestion in suggestions {
+            let _ = writeln!(io::stdout(), "  {}: {}", suggestion.file, suggestion.reason);
+            for line in suggestion.patch.lines() {
+                let _ = writeln!(io::stdout(), "    {line}");
+            }
+        }
+    }
+    EXIT_SUCCESS
+}
+
+fn render_inspection_human(report: &PythonInspectionReport, title: &str) {
+    let _ = writeln!(io::stdout(), "{title}: {}", report.status);
+    let _ = writeln!(io::stdout(), "package: {}", report.package);
+    let _ = writeln!(
+        io::stdout(),
+        "snapshot: graph={} source={}",
+        report.graph_digest,
+        report.source_digest
+    );
+    let _ = writeln!(io::stdout(), "lock: {}", report.lock);
+    let _ = writeln!(io::stdout(), "trust: {}", report.trust);
+    let _ = writeln!(io::stdout(), "environment: {}", report.environment.status);
+    let _ = writeln!(io::stdout(), "declarations: {}", report.declarations.len());
+    let _ = writeln!(io::stdout(), "targets:");
+    if report.targets.is_empty() {
+        let _ = writeln!(io::stdout(), "  (none)");
+    } else {
+        for target in &report.targets {
+            let _ = writeln!(io::stdout(), "  {}: {}", target.target, target.status);
+        }
+    }
+}
+
+fn doctor_suggestions(report: &PythonInspectionReport) -> Vec<PythonDoctorSuggestion> {
+    if report.environment.status != "deferred" {
+        return Vec::new();
+    }
+    let trusted = report
+        .required_imports
+        .iter()
+        .map(|root| serde_json::to_string(root).unwrap_or_else(|_| "\"<import>\"".to_string()))
+        .collect::<Vec<_>>()
+        .join(", ");
+    vec![PythonDoctorSuggestion {
+        file: "final-application/sifr.toml",
+        reason: "select and trust the Python environment in the final application",
+        patch: format!(
+            "@@ [python]\n+venv = \".venv\"\n+pyproject = \"pyproject.toml\"\n+lock = \"uv.lock\"\n@@ [trust]\n+python = [{trusted}]"
+        ),
+    }]
+}
+
+fn write_json(value: &impl Serialize) -> i32 {
+    match serde_json::to_writer_pretty(io::stdout(), value) {
+        Ok(()) => {
+            let _ = writeln!(io::stdout());
+            EXIT_SUCCESS
+        }
+        Err(error) => {
+            let _ = writeln!(
+                io::stderr(),
+                "could not serialize Python inspection report: {error}"
+            );
+            EXIT_USAGE_OR_CONFIG
+        }
     }
 }
 

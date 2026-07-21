@@ -5,7 +5,7 @@ pub use super::digest_build_cache::{
 };
 pub use super::digest_cargo_metadata::digest_graph_inputs;
 pub use super::digest_package_graph::digest_package_graph;
-pub use super::digest_source_map::digest_package_source_map;
+pub use super::digest_source_map::{digest_package_source_map, digest_package_source_snapshot};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct GraphDigest {

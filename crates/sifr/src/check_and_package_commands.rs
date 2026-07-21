@@ -198,7 +198,7 @@ pub(super) fn package_compiler_context(
     }))
 }
 
-fn package_python_runtime(
+pub(super) fn package_python_runtime(
     graph: &sifr_package::SifrPackageGraph,
     package_id: &sifr_package::SifrPackageId,
     derived: &[sifr_package::PythonRequirementContribution],

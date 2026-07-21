@@ -61,7 +61,11 @@ and returned **APPROVED** with no blockers. The
 fresh authoritative merge gate passes every blocking lane in `3554.66s`,
 including E2E `674/674`, Python interop `22/22`, diagnostics `175/175`, and
 `261` hardening variants with zero failures. Its warm-time and group-skew notices
-are non-blocking advisories. M13 and later milestones are not yet implemented.
+are non-blocking advisories. M13's shared read-only driver plan, `python check`
+and `python doctor` CLI surfaces, multi-app/final-app resolution, deferred
+library reporting, executable non-mutation/parity evidence, demo, and docs are
+implemented and in milestone closure. M14 and later milestones are not yet
+implemented.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
@@ -1830,6 +1834,25 @@ Validation:
 ### M13. Read-Only Check And Doctor
 
 Depends on the completed compiler/runtime protocol plans from M2 through M12.
+
+- [x] Wave 1 — route ordinary package check and read-only inspection through
+  one codegen/protocol/target-probe plan with an explicit deferred-library
+  policy and structured report.
+- [x] Wave 2 — add frozen, non-mutating `sifr python check` and deterministic
+  patch-reporting `sifr python doctor`, including all runnable application
+  targets and graph/source-content snapshot identity.
+- [x] Wave 3 — add library/final-application success and failure parity,
+  deterministic JSON/patch, source-digest, and byte-level non-mutation tests;
+  add the blocking delivery-profile suite, runnable demo, and public/internal
+  documentation.
+- [ ] Wave 4 — authoritative validation, repeated full milestone review,
+  closure ledger, and merge.
+
+Pre-review validation: the authoritative `create-pr` profile passes every
+blocking lane in `1110.82s`, including the new read-only check/doctor suite,
+Python interop `17/17`, create-PR E2E `131/131` with signature
+`7c39b8c1dd4fec7c`, and hardening `6/6`. The warm wall-time notice is a
+non-blocking advisory; every per-step blocking budget passes.
 
 Tasks:
 

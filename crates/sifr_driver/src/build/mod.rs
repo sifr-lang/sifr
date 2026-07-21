@@ -1,9 +1,11 @@
 mod api;
 mod cargo_manifest;
 mod entrypoint;
+mod entrypoint_stages;
 mod materialize;
 mod project_codegen;
 mod python_bridges;
+mod python_check;
 mod python_interop;
 mod python_runtime;
 mod report;
@@ -40,7 +42,8 @@ mod workspace;
 pub use api::{
     build, build_cached_package_project, build_cached_project, build_cached_single_file,
     build_package_project_report, build_project, build_project_report, build_single_file_report,
-    check_package_project, check_project, check_single_file, emit_project,
+    check_package_project, check_package_python_interop, check_project, check_single_file,
+    emit_project,
 };
 pub use cargo_manifest::{
     generate_dependency_cargo_toml, sysroot_cargo_config_args,
@@ -50,6 +53,8 @@ pub use entrypoint::{CachedBinaryArtifact, PackageEntrypoint};
 pub use python_runtime::PackagePythonRuntime;
 pub use report::{
     BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport, BuildSysrootReport,
+    PythonDeclarationCheck, PythonEnvironmentCheck, PythonInteropCheckReport, PythonTargetCheck,
+    PythonTargetCheckStatus,
 };
 
 pub(crate) use cargo_manifest::{

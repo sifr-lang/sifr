@@ -1,0 +1,15 @@
+[package]
+name = "python_read_only_demo"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[python]
+venv = ".venv"
+pyproject = "pyproject.toml"
+lock = "uv.lock"
+
+[trust]
+python = ["math"]

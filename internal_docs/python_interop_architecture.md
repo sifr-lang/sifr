@@ -11,7 +11,8 @@ close are implemented. Typed async contexts, declaration-first current,
 foreign-thread and asyncio callbacks, typed affine buffer declarations, and
 certified Arrow C Data Interface declarations are active. Declaration-first
 DLPack tensor and stream acquisition, validation, and one-shot transfer are
-active as well.
+active as well. Read-only Python plan inspection and deterministic doctor
+suggestions are active on the same package/driver path used by compilation.
 
 ## Ownership Boundary
 
@@ -44,6 +45,26 @@ Probe metadata participates in generated artifact cache keys: interpreter path,
 CPython version tuple, SOABI, extension suffixes, pointer width, platform,
 `libpython` when available, project/lock digests, canonical required imports,
 root-owned trust config, and sorted owning distribution names and versions.
+
+## Read-Only Inspection
+
+`sifr python check` resolves packages with frozen Cargo lock semantics, derives
+all declaration and bridge requirements, and invokes the production driver
+codegen/protocol/target-probe plan without Rust emission or build. Final
+applications use the exact environment, uv-lock, trust, certification, and
+probe resolver used by normal check/build. Packages with multiple runnable
+targets remain applications and every target is checked.
+
+Library-only packages have no authority to select an environment. Their full
+compiler/protocol plan still runs, while environment-dependent import-root
+probes are reported as `deferred`; embedded bridge targets are
+`runtime-checked`. The final application resolves those deferred obligations.
+Reports include deterministic package-graph and source-content digests.
+
+`sifr python doctor` renders the same report plus stable patch-like suggestions.
+Both commands are observational: they never update Cargo/Sifr manifests,
+lockfiles, trust policy, certification artifacts, or virtual environments, and
+never invoke environment synchronization or installation.
 
 ## Runtime Lifecycle
 
@@ -123,6 +144,9 @@ Important selectors:
 
 - `--group scaffold`: matrix, fixture, and runner contract shape.
 - `--group env`: live interpreter probe plus checked-in positive/negative probe fixtures.
+- `readonly-check-doctor`: executable CLI parity, source-snapshot,
+  deterministic-doctor, deferred-library, final-application, and byte-level
+  non-mutation evidence.
 - `--tier tier1`, `--tier tier2`, `--tier tier3`, `--tier tier4`: deterministic package certification evidence.
 - `--group callbacks`, `--group dataframes`, `--group cloud`, `--group brokers`, and similar group filters: representative contract coverage.
 - `--self-test`: runner positive/negative tests, certification-policy invariants, fixture JSON validation, and env-probe smoke.

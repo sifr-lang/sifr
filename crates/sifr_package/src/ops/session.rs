@@ -364,7 +364,7 @@ impl PackageSession {
         }
     }
 
-    fn discover_app_targets(&self) -> Result<Vec<AppTarget>, PackageDiagnostic> {
+    pub(super) fn discover_app_targets(&self) -> Result<Vec<AppTarget>, PackageDiagnostic> {
         if self.source_roots.is_empty() {
             return Ok(Vec::new());
         }
