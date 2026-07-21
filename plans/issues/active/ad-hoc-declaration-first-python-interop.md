@@ -64,8 +64,9 @@ including E2E `674/674`, Python interop `22/22`, diagnostics `175/175`, and
 are non-blocking advisories. M13's shared read-only driver plan, `python check`
 and `python doctor` CLI surfaces, multi-app/final-app resolution, deferred
 library reporting, executable non-mutation/parity evidence, demo, and docs are
-implemented and in milestone closure. M14 and later milestones are not yet
-implemented.
+implemented, locally validated, milestone-reviewed, and closed in
+[PR #2993](https://github.com/sifr-lang/sifr/pull/2993). M14 and later
+milestones are not yet implemented.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
@@ -202,7 +203,7 @@ Implementation progress:
 - [x] M10 typed buffer protocol ([PR #2990](https://github.com/sifr-lang/sifr/pull/2990))
 - [x] M11 Arrow C Data Interface ([PR #2991](https://github.com/sifr-lang/sifr/pull/2991))
 - [x] M12 DLPack one-shot tensor transfer ([PR #2992](https://github.com/sifr-lang/sifr/pull/2992))
-- [ ] M13 read-only check and doctor
+- [x] M13 read-only check and doctor ([PR #2993](https://github.com/sifr-lang/sifr/pull/2993))
 - [ ] M14 binding and certification authoring
 - [ ] M15 LSP declaration authoring
 - [ ] M16 raw API ergonomics on shared ownership
@@ -1845,7 +1846,7 @@ Depends on the completed compiler/runtime protocol plans from M2 through M12.
   deterministic JSON/patch, source-digest, and byte-level non-mutation tests;
   add the blocking delivery-profile suite, runnable demo, and public/internal
   documentation.
-- [ ] Wave 4 — authoritative validation, repeated full milestone review,
+- [x] Wave 4 — authoritative validation, repeated full milestone review,
   closure ledger, and merge.
 
 Pre-review validation: the authoritative `create-pr` profile passes every
@@ -1907,6 +1908,13 @@ Fable High pass 6 returned `SATISFIED`. It independently completed thirteen
 consecutive default-parallel runs (`78/78`), verified the suite within the full
 `sifr_cli_full` merge step, reconfirmed the four-way diagnostic evidence
 consistency, and revalidated every M13 behavioral and safety acceptance item.
+
+The fresh authoritative merge gate passes every blocking lane in `4056.35s`:
+Python interop `23/23` with read-only evidence
+`deferred=1 resolved=3 parity=5 mutations=0`, E2E `674/674` with signature
+`1f8b1cadc4f48ec8`, diagnostics `175/175`, and `261` hardening variants with
+zero failures. The warm-time and group-skew notices are non-blocking advisories.
+M13 is complete and closure-approved.
 
 Tasks:
 
