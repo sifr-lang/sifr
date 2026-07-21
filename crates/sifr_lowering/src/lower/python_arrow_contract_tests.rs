@@ -469,8 +469,10 @@ fn async_loops_and_comprehensions_cannot_repeat_affine_moves() {
 
         for expression in [
             "[consume(value) async for i in readings()]",
+            "[i async for i in readings() if consume(value) > 0]",
             "{consume(value) async for i in readings()}",
             "{i: consume(value) async for i in readings()}",
+            "{consume(value): i async for i in readings()}",
         ] {
             let source = format!(
                 "def consume(own value: {resource}) -> int:\n    return 1\n\nasync def readings() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 2\n\nasync def misuse(own value: {resource}) -> Result[None, GeneratorCloseError]:\n    result = {expression}\n    return None\n"
@@ -502,6 +504,10 @@ fn affine_consuming_operator_parameters_fail_closed() {
             );
         }
     }
+
+    lower_ok(
+        "class Accumulator:\n    def __pow__(self, own value: list[int]) -> int:\n        return len(value)\n\n    def __getitem__(self, value: python.ArrowArray) -> int:\n        return 1\n",
+    );
 }
 
 #[test]

@@ -73,6 +73,24 @@ def main() -> None:
 }
 
 #[test]
+fn explicit_non_affine_pow_dunder_remains_an_inherent_method() {
+    let rust_code = generate_rust_from_source(
+        r#"class Power:
+    def __pow__(self, exponent: int) -> int:
+        return exponent
+
+def main() -> None:
+    power: Power = Power()
+    value: int = power.__pow__(3)
+    assert value == 3
+"#,
+    );
+
+    assert!(rust_code.contains("fn __pow__"), "{rust_code}");
+    assert!(rust_code.contains("power.__pow__(3_i64)"), "{rust_code}");
+}
+
+#[test]
 fn consuming_class_upcasts_enter_union_and_result_payloads() {
     let rust_code = generate_rust_from_source(
         r#"class Root:

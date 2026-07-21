@@ -241,7 +241,6 @@ const OPERATOR_DUNDERS: &[&str] = &[
     "__add__",
     "__sub__",
     "__mul__",
-    "__pow__",
     "__truediv__",
     "__floordiv__",
     "__mod__",
