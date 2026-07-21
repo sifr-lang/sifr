@@ -11,6 +11,6 @@ Selected Python environment has no site-packages path.
 | Severity | Error |
 | Owner | `sifr_package::python` |
 | Message template | `selected Python environment has no site-packages path` |
-| Representative fixture | `crates/sifr_package/src/python/tests.rs::probe_rejects_missing_site_packages_with_pyenv_0007` |
+| Representative fixture | `crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_missing_site_packages_with_pyenv_0007` |
 | Declared args | `interpreter (json-only)`, `venv (json-only)` |
 | Dedupe args | `interpreter`, `venv` |

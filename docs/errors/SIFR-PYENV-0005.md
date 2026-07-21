@@ -11,6 +11,6 @@ Selected Python interpreter is not supported CPython.
 | Severity | Error |
 | Owner | `sifr_package::python` |
 | Message template | `unsupported Python interpreter: {implementation}` |
-| Representative fixture | `crates/sifr_package/src/python/tests.rs::probe_rejects_non_cpython_json_with_pyenv_0005` |
+| Representative fixture | `crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_non_cpython_json_with_pyenv_0005` |
 | Declared args | `implementation (message+json)`, `interpreter (json-only)`, `venv (json-only)` |
 | Dedupe args | `interpreter`, `venv`, `implementation` |

@@ -11,6 +11,6 @@ Selected interpreter does not belong to the configured virtual environment.
 | Severity | Error |
 | Owner | `sifr_package::python` |
 | Message template | `Python sys.prefix is outside the selected virtual environment` |
-| Representative fixture | `crates/sifr_package/src/python/tests.rs::probe_rejects_prefix_outside_venv_with_pyenv_0006` |
+| Representative fixture | `crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_prefix_outside_venv_with_pyenv_0006` |
 | Declared args | `interpreter (json-only)`, `venv (json-only)`, `sys_prefix (json-only)` |
 | Dedupe args | `interpreter`, `venv`, `sys_prefix` |

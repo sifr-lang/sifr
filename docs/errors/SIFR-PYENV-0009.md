@@ -11,6 +11,6 @@ Trusted native Python import root failed to load.
 | Severity | Error |
 | Owner | `sifr_package::python` |
 | Message template | `trusted native Python import root failed to load: {import_root}` |
-| Representative fixture | `crates/sifr_package/src/python/tests.rs::probe_rejects_native_import_failure_with_pyenv_0009` |
+| Representative fixture | `crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_native_import_failure_with_pyenv_0009` |
 | Declared args | `import_root (message+json)`, `reason (message+json)`, `interpreter (json-only)`, `venv (json-only)` |
 | Dedupe args | `interpreter`, `venv`, `import_root`, `reason` |

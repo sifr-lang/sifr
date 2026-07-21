@@ -11,6 +11,6 @@ Declared Python import root is missing from the selected environment.
 | Severity | Error |
 | Owner | `sifr_package::python` |
 | Message template | `declared Python import root is missing: {import_root}` |
-| Representative fixture | `crates/sifr_package/src/python/tests.rs::probe_rejects_missing_declared_import_with_pyenv_0008` |
+| Representative fixture | `crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_missing_declared_import_with_pyenv_0008` |
 | Declared args | `import_root (message+json)`, `interpreter (json-only)`, `venv (json-only)` |
 | Dedupe args | `interpreter`, `venv`, `import_root` |

@@ -11,6 +11,6 @@ Selected Python interpreter probe failed or returned invalid JSON.
 | Severity | Error |
 | Owner | `sifr_package::python` |
 | Message template | `Python environment probe failed: {reason}` |
-| Representative fixture | `crates/sifr_package/src/python/tests.rs::probe_rejects_missing_interpreter_with_pyenv_0004` |
+| Representative fixture | `crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_missing_interpreter_with_pyenv_0004` |
 | Declared args | `reason (message+json)`, `interpreter (json-only)`, `venv (json-only)` |
 | Dedupe args | `interpreter`, `venv`, `reason` |

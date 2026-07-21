@@ -1882,8 +1882,8 @@ guardrails. The unrelated dirty Ruff submodule is absent from the PR diff.
 The post-review authoritative gate exposed the package-manager's stricter
 420-line module limit for `sifr_package` tests. Probe-validation cases now live
 in their own responsibility-focused module, diagnostic registry evidence paths
-were updated, and both the package-manager guardrail and all 133 package tests
-pass after the split.
+and generated diagnostic documentation were updated, and both the
+package-manager guardrail and all 133 package tests pass after the split.
 
 Tasks:
 
