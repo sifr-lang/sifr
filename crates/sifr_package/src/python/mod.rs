@@ -49,6 +49,8 @@ mod bridge_resolution_tests;
 #[cfg(test)]
 mod cache_tests;
 #[cfg(test)]
+mod probe_validation_tests;
+#[cfg(test)]
 mod test_support;
 #[cfg(test)]
 mod tests;
