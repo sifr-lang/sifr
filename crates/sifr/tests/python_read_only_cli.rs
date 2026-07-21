@@ -3,7 +3,10 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
+
+static NEXT_FIXTURE_ID: AtomicU64 = AtomicU64::new(0);
 
 struct TestPackage {
     root: PathBuf,
@@ -71,11 +74,13 @@ impl TestPackage {
             .duration_since(UNIX_EPOCH)
             .expect("clock should move forward")
             .as_nanos();
+        let fixture_id = NEXT_FIXTURE_ID.fetch_add(1, Ordering::Relaxed);
         let root = std::env::temp_dir().join(format!(
-            "sifr-python-readonly-{label}-{}-{nonce}",
+            "sifr-python-readonly-{label}-{}-{nonce}-{fixture_id}",
             std::process::id()
         ));
-        std::fs::create_dir_all(root.join("src")).expect("source directory should exist");
+        std::fs::create_dir(&root).expect("unique fixture root should be created");
+        std::fs::create_dir(root.join("src")).expect("source directory should exist");
         std::fs::write(root.join("src/lib.rs"), "").expect("pure marker should be written");
         std::fs::write(
             root.join("Cargo.toml"),

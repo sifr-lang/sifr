@@ -1897,6 +1897,12 @@ probe-test split, so it returned `NOT SATISFIED`. The catalog now points to the
 new probe-validation module for `SIFR-PYENV-0004` through `0011`; the complete
 five-case diagnostics rules suite passes after remediation.
 
+Fable High pass 5 confirmed the catalog remediation and the complete runtime
+contract, then reproduced a parallel-test fixture collision in the new CLI
+suite. Fixture roots now include a process-wide atomic discriminator and use
+collision-detecting root creation. Eight consecutive default-parallel suite
+runs pass `48/48`, exceeding the reviewer's six-run reproduction sample.
+
 Tasks:
 
 - Add read-only `sifr python check` using the same package/driver plan as normal
