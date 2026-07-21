@@ -20,6 +20,35 @@ def main():
 }
 
 #[test]
+fn inherited_constructor_evaluates_super_at_its_source_position() {
+    let rust_code = generate_rust_from_source(
+        r#"class Parent:
+    value: int
+
+def mark() -> None:
+    return None
+
+class Child(Parent):
+    def __init__(self, value: int):
+        super().__init__(value)
+        mark()
+
+def main() -> None:
+    child: Child = Child(1)
+"#,
+    );
+
+    let child_impl = rust_code
+        .split("impl Child")
+        .nth(1)
+        .expect("Child implementation");
+    let parent_init = child_impl.find("Parent::new(value)").expect("parent init");
+    let mark = child_impl.find("mark();").expect("following statement");
+    assert!(parent_init < mark, "{child_impl}");
+    assert!(child_impl.contains("parent: __sifr_parent"), "{child_impl}");
+}
+
+#[test]
 fn consuming_class_upcasts_enter_union_and_result_payloads() {
     let rust_code = generate_rust_from_source(
         r#"class Root:

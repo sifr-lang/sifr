@@ -330,6 +330,87 @@ fn static_super_and_buffer_method_calls_consume_owned_arguments() {
 }
 
 #[test]
+fn explicit_constructors_consume_owned_affine_arguments() {
+    for resource in ["python.ArrowArray", "python.Buffer[uint8]"] {
+        let source = format!(
+            "class Holder:\n    value: {resource}\n\n    def __init__(self, own value: {resource}):\n        self.value = value\n\ndef misuse(own value: {resource}) -> None:\n    first: Holder = Holder(value)\n    second: Holder = Holder(value)\n    return None\n"
+        );
+        let errors = lower_errors(&source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn super_constructor_consumes_owned_affine_arguments() {
+    for resource in ["python.ArrowArray", "python.Buffer[uint8]"] {
+        let source = format!(
+            "class Parent:\n    value: {resource}\n\n    def __init__(self, own value: {resource}):\n        self.value = value\n\nclass Child(Parent):\n    def __init__(self, own value: {resource}):\n        super().__init__(value)\n        second: Parent = Parent(value)\n\ndef keep(child: Child) -> None:\n    return None\n"
+        );
+        let errors = lower_errors(&source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn callable_objects_consume_owned_affine_arguments() {
+    for resource in ["python.ArrowArray", "python.Buffer[uint8]"] {
+        let source = format!(
+            "class Consumer:\n    def __call__(self, own value: {resource}) -> None:\n        return None\n\ndef misuse(consumer: Consumer, own value: {resource}) -> None:\n    first: None = consumer(value)\n    second: None = consumer(value)\n    return None\n"
+        );
+        let errors = lower_errors(&source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn class_style_calls_reject_protocol_and_instance_methods() {
+    for source in [
+        "class Duck(Protocol):\n    def quack(self) -> None: ...\n\ndef misuse() -> None:\n    Duck.quack()\n",
+        "class Duck:\n    def quack(self) -> None:\n        return None\n\ndef misuse() -> None:\n    Duck.quack()\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::CLASS_MISSING_MEMBER)),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn super_calls_apply_defaults_and_reject_missing_methods() {
+    lower_ok(
+        "class Parent:\n    def value(self, extra: int = 5) -> int:\n        return extra\n\nclass Child(Parent):\n    def value(self, extra: int = 7) -> int:\n        return super().value()\n",
+    );
+
+    let errors = lower_errors(
+        "class Parent:\n    pass\n\nclass Child(Parent):\n    def misuse(self) -> None:\n        super().missing()\n        return None\n",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::CLASS_MISSING_MEMBER)),
+        "{errors:?}"
+    );
+}
+
+#[test]
 fn arrow_release_and_owned_transfer_leave_the_resource_moved() {
     for body in [
         "released: None = value.release()\n    names: list[str] = value.capsule_names()",

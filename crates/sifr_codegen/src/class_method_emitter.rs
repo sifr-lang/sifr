@@ -273,43 +273,48 @@ impl RustEmitter {
                 || sifr_type_system::source_class_rust_name(parent_name),
                 sifr_type_system::Type::rust_type,
             );
-            let mut super_args: Option<&Vec<HirExpr>> = None;
             let mut field_inits: Vec<(&str, &HirExpr)> = Vec::new();
-            let mut other_stmts: Vec<&HirStmt> = Vec::new();
 
             for stmt in &method.body {
                 if let HirStmt::Expr {
                     expr: HirExpr::SuperCall { args, .. },
                 } = stmt
                 {
-                    super_args = Some(args);
+                    let parent_args = args
+                        .iter()
+                        .map(|arg| {
+                            self.lower_class_expr_strict(
+                                arg,
+                                "class constructor super-call arg lowering",
+                            )
+                        })
+                        .collect();
+                    body.push(RustStmt::Let {
+                        mutable: false,
+                        name: "__sifr_parent".to_string(),
+                        ty: None,
+                        value: RustExpr::FnCall {
+                            func: Box::new(RustExpr::Path(vec![
+                                parent_rust_type.clone(),
+                                "new".to_string(),
+                            ])),
+                            args: parent_args,
+                        },
+                    });
                 } else if let HirStmt::FieldAssign { field, value, .. } = stmt {
                     field_inits.push((field, value));
                 } else {
-                    other_stmts.push(stmt);
+                    body.extend(self.lower_class_stmt_strict(
+                        stmt,
+                        "class constructor non-field statement lowering",
+                    ));
                 }
             }
 
-            for stmt in &other_stmts {
-                body.extend(self.lower_class_stmt_strict(
-                    stmt,
-                    "class constructor non-field statement lowering",
-                ));
-            }
-
             let mut fields = Vec::new();
-            let mut parent_args = Vec::new();
-            if let Some(args) = super_args {
-                parent_args.extend(args.iter().map(|arg| {
-                    self.lower_class_expr_strict(arg, "class constructor super-call arg lowering")
-                }));
-            }
             fields.push((
                 parent_name.to_lowercase(),
-                RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![parent_rust_type, "new".to_string()])),
-                    args: parent_args,
-                },
+                RustExpr::Ident("__sifr_parent".to_string()),
             ));
 
             for (field_name, value) in &field_inits {

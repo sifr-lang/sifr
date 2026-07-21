@@ -34,6 +34,9 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) function_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
     /// Class type definitions (name -> `Type::Class`)
     pub(in crate::lower) class_types: HashMap<String, Type>,
+    /// Locally declared instance methods, keyed as `Class.method`.
+    /// Imported method kinds are not yet part of exported type metadata.
+    pub(in crate::lower) class_instance_methods: HashSet<String>,
     /// Class name -> declaration metadata for sealed Python-backed identities.
     pub(in crate::lower) python_opaque_classes: HashMap<String, sifr_ir::PythonInteropDeclaration>,
     /// General affine must-use obligations keyed by their current owning binding.
@@ -171,6 +174,7 @@ impl LowerCtx {
             function_workload_annotations: HashMap::new(),
             function_defaults: HashMap::new(),
             class_types: HashMap::new(),
+            class_instance_methods: HashSet::new(),
             python_opaque_classes: HashMap::new(),
             live_must_use_bindings: HashMap::new(),
             python_consuming_methods: HashSet::new(),

@@ -488,10 +488,13 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             args,
             ..
         } => {
-            let lowered_args = args
+            let mut lowered_args = args
                 .iter()
                 .map(try_lower_leaf_or_name_expr)
                 .collect::<Option<Vec<_>>>()?;
+            if method != "new" {
+                lowered_args.insert(0, RustExpr::Ident("self".to_string()));
+            }
             Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![
                     parent_type.rust_type(),

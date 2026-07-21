@@ -587,10 +587,18 @@ pub(in crate::lower) fn collect_class_type(
                             Type::Any
                         };
                         constructor_locals.insert(param_name.clone(), param_ty.clone());
-                        params.push((param_name, param_ty));
+                        let convention = class_method_param_convention(
+                            param.parameter.convention,
+                            &param_ty,
+                            ctx,
+                        );
+                        params.push((param_name, param_ty, convention));
                     }
                     // Constructor return type is registered after field collection.
-                    let constructor_ft = FunctionType::new(params.clone(), Type::None);
+                    let constructor_ft = FunctionType {
+                        params,
+                        return_type: Box::new(Type::None),
+                    };
                     ctx.functions.insert(class_name.clone(), constructor_ft);
 
                     collect_constructor_self_field_assignments(
@@ -626,6 +634,11 @@ pub(in crate::lower) fn collect_class_type(
                     // For @staticmethod, don't skip any params
                     // For @classmethod and regular methods, skip `self`/`cls`
                     let is_static = has_decorator(func, "staticmethod");
+                    let is_class = has_decorator(func, "classmethod");
+                    if !is_static && !is_class {
+                        ctx.class_instance_methods
+                            .insert(format!("{class_name}.{method_name}"));
+                    }
                     let skip_count = usize::from(!is_static);
                     let callback_policies = crate::lower::python_interop::callback_call_policies(
                         &func.decorator_list,
