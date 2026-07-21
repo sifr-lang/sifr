@@ -53,6 +53,7 @@ pub(super) fn parse_declaration(
             layout,
         }),
         arrow: None,
+        dlpack: None,
     })
 }
 

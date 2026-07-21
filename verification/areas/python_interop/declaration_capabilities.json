@@ -186,15 +186,15 @@
       "id": "dlpack-transfer",
       "surface": "@python.dlpack and @python.dlpack.stream",
       "target_state": "declaration-supported",
-      "implementation_status": "reserved",
+      "implementation_status": "active",
       "activation_owner": "dlpack-transfer",
       "required_evidence": ["positive", "negative", "cleanup", "live"],
       "evidence": [
-        {"kind": "positive", "status": "planned", "owner": "dtype/device/stream transfer matrix"},
-        {"kind": "negative", "status": "planned", "owner": "capsule, copy, device, and double-consume failures"},
-        {"kind": "cleanup", "status": "planned", "owner": "exact deleter and failure-transition counters"},
+        {"kind": "positive", "status": "passing", "owner": "validated dlpack_declaration_evidence.json compiler/runtime/device/stream matrix"},
+        {"kind": "negative", "status": "passing", "owner": "validated declaration, capsule, version, copy, dtype, shape, stride, device, and one-shot failures"},
+        {"kind": "cleanup", "status": "passing", "owner": "instrumented consumed, unconsumed, mismatch, shutdown, and exact-once deleter counters"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "DLPack transfer is synchronous"},
-        {"kind": "live", "status": "planned", "owner": "PyTorch and TensorFlow binaries"}
+        {"kind": "live", "status": "passing", "owner": "blocking compiled PyTorch and TensorFlow pointer-identity binaries"}
       ]
     },
     {

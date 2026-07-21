@@ -40,7 +40,9 @@ pub(in crate::lower) fn collect_type_vars(ty: &Type, vars: &mut Vec<String>) {
             collect_type_vars(ok, vars);
             collect_type_vars(err, vars);
         }
-        Type::Failure(err) | Type::PythonBuffer(err) => collect_type_vars(err, vars),
+        Type::Failure(err) | Type::PythonBuffer(err) | Type::PythonDlpackTensor(err) => {
+            collect_type_vars(err, vars);
+        }
         Type::TimeoutResult(err) => collect_type_vars(err, vars),
         Type::Awaitable(result) => collect_type_vars(result, vars),
         Type::Alias {

@@ -184,6 +184,20 @@
       ]
     },
     {
+      "name": "dlpack-examples",
+      "kind": "adapter",
+      "timeout_seconds": 600,
+      "cases": [
+        {
+          "id": "dlpack-examples",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-dlpack-examples",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "cloud-boto3",
       "kind": "adapter",
       "cases": [
@@ -313,6 +327,20 @@
           "id": "arrow-cpython311",
           "entry": "verification/areas/python_interop/runner/cpython311_arrow.py",
           "command": "python-interop-arrow-cpython311",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "dlpack-cpython311",
+      "kind": "adapter",
+      "timeout_seconds": 900,
+      "cases": [
+        {
+          "id": "dlpack-cpython311",
+          "entry": "verification/areas/python_interop/runner/cpython311_dlpack.py",
+          "command": "python-interop-dlpack-cpython311",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

@@ -1,0 +1,47 @@
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
+
+
+@python.opaque(type=torch.Tensor, cleanup=drop)
+class TorchTensor(NonSend):
+    @python(Self.data_ptr)
+    def data_pointer(self) -> Result[int, PythonError]: ...
+
+    @python.dlpack(Self, device=cpu, stream=none)
+    def export(self) -> Result[python.DlpackTensor[int64], PythonError]: ...
+
+
+@python(torch.tensor)
+def make_tensor(values: list[int]) -> Result[TorchTensor, PythonError]: ...
+
+
+@python(torch.from_dlpack)
+def consume_tensor(own value: python.DlpackTensor[int64]) -> Result[TorchTensor, PythonError]: ...
+
+
+def transfer_once() -> Result[bool, PythonError]:
+    try:
+        source: TorchTensor = make_tensor([1, 2, 3, 4])
+        source_pointer: int = source.data_pointer()
+        transfer: python.DlpackTensor[int64] = source.export()
+        shape: list[int] = transfer.shape()
+        strides: list[int] = transfer.strides()
+        metadata_ok: bool = transfer.device_type() == 1 and transfer.device_id() == 0 and transfer.byte_offset() == 0 and len(shape) == 1 and shape[0] == 4 and len(strides) == 1 and strides[0] == 1
+        consumed: TorchTensor = consume_tensor(transfer)
+        target_pointer: int = consumed.data_pointer()
+        return metadata_ok and source_pointer == target_pointer
+    except PythonError as error:
+        raise error
+
+
+def main() -> Result[None, PythonError]:
+    try:
+        before: ResourceDiagnostics = resource_diagnostics()
+        transferred: bool = transfer_once()
+        after: ResourceDiagnostics = resource_diagnostics()
+        resources_ok: bool = before.live_objects == after.live_objects and before.leaked_objects == after.leaked_objects
+        if not transferred or not resources_ok:
+            raise PythonError("PyTorch declaration-first DLPack transfer evidence failed")
+        print("sifr-python-interop:dlpack:torch:pointer=stable:device=cpu:one-shot=ok:resources=zero")
+        return None
+    except PythonError as error:
+        raise error

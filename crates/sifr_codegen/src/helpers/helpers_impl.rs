@@ -664,7 +664,9 @@ fn field_access_root_name(expr: &HirExpr) -> Option<&str> {
 pub(crate) fn type_contains_typevar(ty: &Type, tv_name: &str) -> bool {
     match ty {
         Type::TypeVar(name) => name == tv_name,
-        Type::List(inner) | Type::PythonBuffer(inner) => type_contains_typevar(inner, tv_name),
+        Type::List(inner) | Type::PythonBuffer(inner) | Type::PythonDlpackTensor(inner) => {
+            type_contains_typevar(inner, tv_name)
+        }
         Type::Set(inner) => type_contains_typevar(inner, tv_name),
         Type::Dict(key, val) => {
             type_contains_typevar(key, tv_name) || type_contains_typevar(val, tv_name)

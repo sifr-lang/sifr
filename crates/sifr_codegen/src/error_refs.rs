@@ -75,6 +75,7 @@ fn collect_type_error_refs(
         }
         Type::List(inner)
         | Type::PythonBuffer(inner)
+        | Type::PythonDlpackTensor(inner)
         | Type::Set(inner)
         | Type::Iterable(inner)
         | Type::Iterator(inner)
@@ -145,6 +146,7 @@ fn collect_type_error_refs(
         | Type::Unknown
         | Type::TypeVar(_)
         | Type::PythonArrow(_)
+        | Type::PythonDlpackStream
         | Type::BigInt
         | Type::Decimal
         | Type::BigDecimal => {}

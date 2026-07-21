@@ -135,7 +135,8 @@ impl RustEmitter {
             | Type::Newtype { inner, .. }
             | Type::Failure(inner)
             | Type::TimeoutResult(inner)
-            | Type::PythonBuffer(inner) => {
+            | Type::PythonBuffer(inner)
+            | Type::PythonDlpackTensor(inner) => {
                 self.register_union_type_with_usage(inner, ordinary_value);
             }
             Type::Dict(left, right)

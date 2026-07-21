@@ -70,6 +70,17 @@ impl PythonResourceIdentity {
         self.key_for(ResourceKind::Dlpack, "DLPack")
     }
 
+    pub fn into_dlpack_key(mut self) -> Result<DlpackHandle, PythonError> {
+        if self.kind != ResourceKind::Dlpack {
+            return Err(identity_error(
+                "sealed Python resource identity is not a DLPack resource".to_string(),
+            ));
+        }
+        self.key
+            .take()
+            .ok_or_else(|| identity_error("sealed Python DLPack resource is closed".to_string()))
+    }
+
     pub fn close(mut self) -> Result<(), PythonError> {
         self.release()
     }

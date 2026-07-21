@@ -110,6 +110,10 @@ mod python_arrow_methods;
 use python_arrow_methods::{
     consume_python_arrow_release_receiver, resolve_python_arrow_method_type,
 };
+mod python_dlpack_methods;
+use python_dlpack_methods::{
+    consume_python_dlpack_release_receiver, resolve_python_dlpack_method_type,
+};
 
 pub(in crate::lower) fn is_poisoned_binding_expr(expr: &HirExpr, ctx: &mut LowerCtx) -> bool {
     matches!(expr, HirExpr::Name { name, .. } if ctx.propagate_poisoned_binding_error(name))

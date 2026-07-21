@@ -233,6 +233,8 @@ impl RustEmitter {
             | Type::AsyncGenerator(_, _)
             | Type::PythonBuffer(_)
             | Type::PythonArrow(_)
+            | Type::PythonDlpackTensor(_)
+            | Type::PythonDlpackStream
             | Type::Callable(..)
             | Type::AsyncCallable(..)
             | Type::Result(_, _)

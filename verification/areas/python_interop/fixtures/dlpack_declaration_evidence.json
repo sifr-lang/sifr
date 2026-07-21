@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "capability": "dlpack-one-shot-declaration",
+  "surface": "@python.dlpack and @python.dlpack.stream",
+  "positive": [
+    {
+      "id": "compiler-contract",
+      "owners": [
+        "crates/sifr_lowering/src/lower/python_dlpack_contract_tests.rs",
+        "crates/sifr_codegen/src/python_dlpack_codegen_tests.rs",
+        "crates/sifr_driver/src/build/python_interop.rs"
+      ],
+      "covers": ["types", "decorators", "Self", "import-root", "bridge", "target-probe"]
+    },
+    {
+      "id": "runtime-protocol",
+      "owners": [
+        "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs",
+        "crates/sifr_runtime/src/python/dlpack_ops/abi.rs"
+      ],
+      "covers": ["versioned-signature", "legacy-capsule", "versioned-capsule", "dtype", "shape", "strides", "device", "stream"]
+    }
+  ],
+  "negative": [
+    {
+      "id": "static-and-runtime-rejection",
+      "owners": [
+        "crates/sifr_lowering/src/lower/python_dlpack_contract_tests.rs",
+        "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs"
+      ],
+      "covers": ["invalid-policy", "ownership", "copy-flag", "no-retry", "device-stream-mismatch"]
+    }
+  ],
+  "cleanup": [
+    {
+      "id": "one-shot-exact-release",
+      "owners": [
+        "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs",
+        "crates/sifr_codegen/src/python_dlpack_codegen_tests.rs"
+      ],
+      "covers": ["producer-sentinel", "fresh-consumer-capsule", "unconsumed-release", "consumed-transfer", "committed-move"]
+    }
+  ],
+  "cancellation": {
+    "status": "not-applicable",
+    "reason": "DLPack acquisition and transfer are synchronous blocking boundaries"
+  },
+  "live": [
+    {
+      "id": "torch-declaration",
+      "source": "torch_dlpack/dlpack_declaration_compiled.sifr",
+      "stdout_marker": "sifr-python-interop:dlpack:torch:pointer=stable:device=cpu:one-shot=ok:resources=zero"
+    },
+    {
+      "id": "tensorflow-declaration",
+      "source": "tensorflow_dlpack/dlpack_declaration_compiled.sifr",
+      "stdout_marker": "sifr-python-interop:dlpack:tensorflow:pointer=stable:device=cpu:bridge=versioned-call:resources=zero"
+    }
+  ],
+  "profiles": ["create-pr", "merge", "nightly", "release"]
+}

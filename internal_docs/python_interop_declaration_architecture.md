@@ -342,8 +342,8 @@ Callback declarations enforce call/result/receiver ownership, current/foreign/
 asyncio dispatch, serial/parallel concurrency, capture safety, deterministic
 drain, and typed failure reconciliation. Typed affine buffer declarations are
 active with synchronous acquisition, explicit access/layout policy, non-send
-ownership, and exact release. The DLPack decorator form remains reserved
-by its capability row.
+ownership, and exact release. DLPack tensor/stream declarations are active with
+explicit device/stream negotiation and one-shot transfer.
 
 ## Package-Local Python Bridges
 

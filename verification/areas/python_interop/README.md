@@ -15,6 +15,7 @@ verification/areas/python_interop/run.sh --tier tier4
 verification/areas/python_interop/run.sh --package pandas
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --dataframe-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --buffer-examples
+uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --dlpack-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --ml-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --library-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --async-declaration-examples
@@ -133,9 +134,18 @@ scikit-learn. The torch example constructs a CPU `float32` tensor, performs
 tensor math, converts results back to typed Sifr values, and validates DLPack
 metadata/release. The scikit-learn example trains a deterministic decision tree,
 predicts labels, copies predictions/classes back into typed Sifr lists, and
-checks deterministic stdout markers. TensorFlow remains matrix/contract evidence
-only in the offline gate because its wheel and CPU feature requirements are
-host-dependent.
+checks deterministic stdout markers.
+
+DLPack declaration examples are offline, compiled, and blocking in every
+delivery profile. The `dlpack-examples` suite runs real PyTorch and TensorFlow
+CPU transfers, verifies stable data pointers, exact device metadata, owned
+one-shot consumption, and zero residual resources. PyTorch exercises direct
+import-root and `Self` acquisition. TensorFlow exercises an explicit
+package-local bridge that adapts its capsule API to the complete versioned
+`__dlpack__` call shape without copying.
+The companion `dlpack-cpython311` suite runs the exact Python-feature runtime
+test inventory, so malformed capsules, copied flags, no-retry behavior,
+stream/device mismatches, and exact-once cleanup remain blocking evidence.
 
 Library examples are offline but executable. The `library-examples` suite covers
 the remaining non-service, non-host-dependent library contracts that previously
@@ -156,8 +166,8 @@ had only matrix or JSON/source-fixture evidence:
 
 Service-backed libraries remain in `live-examples`: Redis, Postgres/psycopg,
 Kafka, Pub/Sub-style SNS fanout, SNS, and SQS are exercised with testcontainers
-when Docker is available. TensorFlow remains host-dependent and is represented
-by contract/matrix evidence in offline profiles.
+when Docker is available. TensorFlow CPU DLPack is covered by the locked
+offline `dlpack-examples` suite.
 
 Package certification records include:
 

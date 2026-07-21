@@ -411,7 +411,8 @@ pub(crate) fn type_contains_by(ty: &Type, predicate: fn(&Type) -> bool) -> bool 
         | Type::Failure(inner)
         | Type::TimeoutResult(inner)
         | Type::Awaitable(inner)
-        | Type::PythonBuffer(inner) => type_contains_by(inner, predicate),
+        | Type::PythonBuffer(inner)
+        | Type::PythonDlpackTensor(inner) => type_contains_by(inner, predicate),
         Type::Dict(key, value)
         | Type::Result(key, value)
         | Type::Coroutine(key, value)

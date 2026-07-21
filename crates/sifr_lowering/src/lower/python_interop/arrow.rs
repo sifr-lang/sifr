@@ -57,6 +57,7 @@ pub(super) fn parse_declaration(
             kind: PythonArrowKind::Array,
             schema,
         }),
+        dlpack: None,
     })
 }
 

@@ -54,6 +54,7 @@ fn emitter() -> RustEmitter {
             callbacks: Vec::new(),
             buffer: None,
             arrow: None,
+            dlpack: None,
         },
     );
     emitter

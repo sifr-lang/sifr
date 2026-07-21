@@ -95,6 +95,9 @@ mod python_arrow_codegen_tests;
 mod python_buffer_codegen;
 #[cfg(test)]
 mod python_buffer_codegen_tests;
+mod python_dlpack_codegen;
+#[cfg(test)]
+mod python_dlpack_codegen_tests;
 mod python_interop_async;
 #[cfg(test)]
 mod python_interop_async_tests;
@@ -111,6 +114,7 @@ mod python_interop_plan;
 #[cfg(test)]
 mod python_interop_plan_tests;
 mod python_interop_runtime_exprs;
+mod python_zero_copy_arguments;
 pub use python_interop_plan::{
     PythonBridgeImportPlan, PythonBridgeModulePlan, PythonBridgePackagePlan,
     PythonCallbackAttachmentPlan, PythonInteropPlan, PythonInteropPlanDeclaration,

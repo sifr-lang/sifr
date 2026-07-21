@@ -38,6 +38,7 @@ pub enum PythonInteropDecoratorKind {
     Buffer,
     Arrow,
     Dlpack,
+    DlpackStream,
 }
 
 /// Access authority requested from a Python buffer exporter.
@@ -75,6 +76,40 @@ pub enum PythonArrowSchemaMode {
 pub struct PythonArrowDeclaration {
     pub kind: PythonArrowKind,
     pub schema: PythonArrowSchemaMode,
+}
+
+/// Device family accepted by a declaration-first `DLPack` boundary.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PythonDlpackDevice {
+    Cpu,
+    Cuda,
+    Any,
+}
+
+impl PythonDlpackDevice {
+    #[must_use]
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::Cpu => "cpu",
+            Self::Cuda => "cuda",
+            Self::Any => "any",
+        }
+    }
+}
+
+/// Explicit synchronization stream policy for `DLPack` acquisition.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PythonDlpackStreamMode {
+    None,
+    Parameter { name: String, span: TextRange },
+}
+
+/// Typed protocol facts carried by an active `DLPack` declaration.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PythonDlpackDeclaration {
+    pub device: PythonDlpackDevice,
+    pub stream: PythonDlpackStreamMode,
+    pub element_type: Option<Type>,
 }
 
 /// Compiler-synthesized execution effect for a Python declaration.
@@ -172,4 +207,6 @@ pub struct PythonInteropDeclaration {
     pub buffer: Option<PythonBufferDeclaration>,
     /// Arrow protocol contract, present only for `PythonInteropDecoratorKind::Arrow`.
     pub arrow: Option<PythonArrowDeclaration>,
+    /// `DLPack` contract, present only for tensor and stream declarations.
+    pub dlpack: Option<PythonDlpackDeclaration>,
 }

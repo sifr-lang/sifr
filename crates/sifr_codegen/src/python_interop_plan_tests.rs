@@ -26,6 +26,7 @@ fn plan_retains_deferred_probe_requirements_record_constraint_and_cache_identity
         callbacks: Vec::new(),
         buffer: None,
         arrow: None,
+        dlpack: None,
     };
     let module = HirModule {
         functions: vec![
@@ -88,6 +89,7 @@ fn python_cache_identity_changes_with_authoritative_sifr_types() {
         callbacks: Vec::new(),
         buffer: None,
         arrow: None,
+        dlpack: None,
     };
     let mut string_result = function("loads", Vec::new(), vec![declaration.clone()]);
     string_result.return_type = Type::Str;
@@ -197,6 +199,7 @@ fn callback_attachment_policy_is_retained_in_plan_and_cache_identity() {
         }],
         buffer: None,
         arrow: None,
+        dlpack: None,
     };
     let module = module_with_functions(vec![function("register", Vec::new(), vec![declaration])]);
 
@@ -236,6 +239,7 @@ fn method_only_async_python_declaration_requires_owned_loop() {
         callbacks: Vec::new(),
         buffer: None,
         arrow: None,
+        dlpack: None,
     });
     let mut module = module_with_functions(Vec::new());
     module.classes.push(HirClass {
