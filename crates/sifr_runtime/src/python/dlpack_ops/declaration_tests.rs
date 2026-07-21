@@ -136,7 +136,20 @@ fn cuda_and_any_require_a_matching_explicit_stream() {
     assert_eq!(attribute_i64(&matched, "seen_stream"), 92);
     release_dlpack((tensor.handle, tensor.token)).expect("tensor should release");
     close_object(matched).expect("exporter should close");
-    assert_eq!(LEGACY_RELEASES.load(Ordering::SeqCst), 3);
+
+    let cpu =
+        exporter(legacy_capsule(DEVICE_CPU, 0), DEVICE_CPU, 0).expect("CPU exporter should exist");
+    let cpu_stream = PythonDlpackStreamMetadata {
+        device_type: i64::from(DEVICE_CPU),
+        device_id: 0,
+        stream_token: 93,
+    };
+    let tensor = acquire_dlpack_tensor(&cpu, "any", Some(&cpu_stream), Some("float64"))
+        .expect("matching CPU stream metadata should acquire");
+    assert_eq!(attribute_i64(&cpu, "seen_stream"), -1);
+    release_dlpack((tensor.handle, tensor.token)).expect("CPU tensor should release");
+    close_object(cpu).expect("CPU exporter should close");
+    assert_eq!(LEGACY_RELEASES.load(Ordering::SeqCst), 4);
 }
 
 #[test]

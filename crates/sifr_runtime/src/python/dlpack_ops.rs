@@ -108,7 +108,11 @@ pub fn acquire_dlpack_tensor(
         let device = dlpack_device(py, owner.bind(py))?;
         validate_device_policy(device, expected_device, stream)?;
         let kwargs = pyo3::types::PyDict::new(py);
-        if let Some(stream) = stream {
+        if device.device_type == DEVICE_CPU {
+            kwargs.set_item("stream", py.None()).map_err(|error| {
+                PythonError::from_pyerr(py, error, "zero-copy", "DLPack stream")
+            })?;
+        } else if let Some(stream) = stream {
             kwargs
                 .set_item("stream", stream.stream_token)
                 .map_err(|error| {

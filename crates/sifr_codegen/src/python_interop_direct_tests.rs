@@ -495,6 +495,71 @@ fn receiver_retained_callback_reuses_the_opaque_owner_slot() {
 }
 
 #[test]
+fn retained_callback_owner_attribute_does_not_drop_an_absent_argument_frame() {
+    let handler_error = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "HandlerError".to_string(),
+        fields: Vec::new(),
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    };
+    let error_channel = Type::Union(vec![python_error_type(), handler_error.clone()]);
+    let mut opaque = declaration();
+    opaque.kind = PythonInteropDecoratorKind::Opaque;
+    opaque.cleanup = Some(PythonCleanupPolicy::Close);
+    opaque.target = Some(PythonTargetPath {
+        segments: vec!["pkg".to_string(), "Subscription".to_string()],
+        span: TextRange::default(),
+    });
+    let mut opaque_classes = std::collections::HashMap::new();
+    opaque_classes.insert("Subscription".to_string(), opaque.clone());
+    let mut retained_errors = std::collections::HashMap::new();
+    retained_errors.insert("Subscription".to_string(), vec![handler_error.clone()]);
+
+    let mut attribute = declaration();
+    attribute.kind = PythonInteropDecoratorKind::Attribute;
+    attribute.target = Some(PythonTargetPath {
+        segments: vec!["Self".to_string(), "value".to_string()],
+        span: TextRange::default(),
+    });
+    attribute.parameters.clear();
+    let method = HirFunction {
+        name: "value".to_string(),
+        params: Vec::new(),
+        return_type: Type::Result(Box::new(Type::Int), Box::new(error_channel)),
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: Vec::new(),
+        python_interop: vec![attribute],
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+
+    let rendered = render_stmts(
+        &python_interop_method_body_with_retained_errors(
+            &method,
+            &opaque_classes,
+            Some(&opaque),
+            &retained_errors,
+            &[handler_error],
+        )
+        .expect("retained callback owner attribute wrapper"),
+    );
+    assert!(rendered.contains("get_attr"), "{rendered}");
+    assert!(
+        rendered.contains("attach_callback_failure_evidence"),
+        "{rendered}"
+    );
+    assert!(!rendered.contains("__sifr_python_args"), "{rendered}");
+    assert!(!rendered.contains("__sifr_python_kwargs"), "{rendered}");
+    syn::parse_file(&format!("fn generated() {{ {rendered} }}"))
+        .expect("generated callback-owner attribute statements should be valid Rust syntax");
+}
+
+#[test]
 fn retained_handler_failure_moves_into_typed_owner_sidecar_and_close_observes_it() {
     let handler_error = Type::Class {
         identity: None,

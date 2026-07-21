@@ -66,6 +66,9 @@ impl ArgumentGuards {
     }
 
     pub(crate) fn append_reconciliation(&self, body: &mut Vec<RustStmt>, outcome_name: &str) {
+        if self.is_empty() {
+            return;
+        }
         body.push(drop_value("__sifr_python_args"));
         body.push(drop_value("__sifr_python_kwargs"));
         if !self.arrow.is_empty() {
