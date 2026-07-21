@@ -22,7 +22,7 @@ pub use infer::infer_literal_type;
 pub use types::{
     class_rust_name, is_global_rust_nominal_identity, source_class_rust_name,
     stdlib_class_rust_name, FixedIntType, FunctionType, IterationCapability, IterationMetadata,
-    OwnershipKind, ParamConvention, ParamMutability, ParamOwnership, Type,
+    OwnershipKind, ParamConvention, ParamMutability, ParamOwnership, PythonArrowKind, Type,
     COMPILER_RUST_PATH_ROOTS, GLOBAL_RUST_NOMINAL_IDENTITIES,
 };
 pub mod narrow;

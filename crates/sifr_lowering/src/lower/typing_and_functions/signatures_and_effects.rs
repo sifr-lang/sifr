@@ -421,7 +421,7 @@ pub(super) fn reject_borrowed_affine_generator_params(
             ctx.error_with_code_at(
                 DiagnosticCode::PYZC_INVALID_DECLARATION,
                 format!(
-                    "generator function '{function_name}' cannot borrow affine Python buffer parameter '{}'; lazy generator ownership would require cloning the resource, so declare the parameter as owned",
+                    "generator function '{function_name}' cannot borrow affine Python resource parameter '{}'; lazy generator ownership would require cloning the resource, so declare the parameter as owned",
                     param.name
                 ),
                 yield_range,

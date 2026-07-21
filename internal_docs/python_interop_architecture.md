@@ -8,8 +8,9 @@ Its synchronous declarations, opaque lifecycle, synchronous contexts,
 hermetic package-local bridge targets, application-owned asyncio runtime,
 typed coroutine declarations, structured cancellation, and consuming async
 close are implemented. Typed async contexts, declaration-first current,
-foreign-thread and asyncio callbacks, and typed affine buffer declarations are
-active; Arrow and DLPack declarations remain reserved.
+foreign-thread and asyncio callbacks, typed affine buffer declarations, and
+certified Arrow C Data Interface declarations are active; DLPack declarations
+remain reserved.
 
 ## Ownership Boundary
 
@@ -96,7 +97,11 @@ Every public Python boundary operation is classified as `@blocking_io`. Async Si
 Zero-copy support is explicit:
 
 - `Py_buffer` tracks owner, pointer, length, readonly flag, format, item size, shape, strides, suboffsets, requested flags, and release state.
-- Arrow validates exact PyCapsule names and release callbacks for array, stream, and schema surfaces.
+- Arrow provides five affine nominal resources for schema, array, stream,
+  device-array, and device-stream surfaces. It validates exact PyCapsule names,
+  structural C metadata, paired schema/data ownership, and release callbacks;
+  declared producers additionally require environment-bound executable
+  no-copy certification and exact runtime producer identity.
 - DLPack enforces one-shot capsule consumption, `"used_dltensor"` marking, dtype/device validation, and exact-once deleter release.
 - Array-interface protocols retain owners and validate pointer/dtype/shape/stride/device metadata.
 
@@ -150,7 +155,7 @@ The public examples in `docs/python-interop.mdx` are intentionally backed by che
 | installed package-local biip bridge | `package_bridge_archive/package_bridge_evidence.json` records the archive/unpack/build/run proof; the package bridge showcase runs the compiled fixture after checkout and installed bridge-source removal. |
 | FastAPI app construction | `library-examples` runs `fastapi_app/fastapi_pydantic_full_example.sifr`; `fastapi_app_contract.json` remains the contract inventory. |
 | Pydantic / pydantic-core validation | `library-examples` runs `fastapi_app/fastapi_pydantic_full_example.sifr`; `pydantic_models_contract.json` remains the contract inventory. |
-| pandas / pyarrow / polars Arrow bridge | `dataframe-examples` runs pandas and Polars examples; `library-examples` runs `pyarrow_capsule/pyarrow_full_example.sifr`; Arrow capsule fixtures remain contract inventory. |
+| pandas / pyarrow / polars Arrow bridge | `arrow-examples` creates and read-only rechecks exact environment-bound certifications, then compiles and runs `pyarrow_capsule/arrow_declaration_compiled.sifr` against all three producers with zero residual resources. The lower-level dataframe/library examples remain dynamic API evidence. |
 | torch / TensorFlow DLPack | `ml-examples` runs `torch_dlpack/torch_full_example.sifr`; TensorFlow remains host-dependent matrix/contract evidence through `tensorflow_dlpack_contract.json`. |
 | Kafka / CFFI / asyncio / Pub/Sub callbacks | `callback-examples` compiles and runs all four offline examples, including foreign-thread CFFI and Kafka dispatch plus active retained Pub/Sub close/drain. |
 | cryptography / CFFI / certifi | `library-examples` runs `cryptography_tls/cryptography_cffi_full_example.sifr`; `cryptography_tls_contract.json` remains the contract inventory. |
@@ -174,6 +179,7 @@ Declaration diagnostics are activated with their owning compiler surfaces. `PYIM
 `PYCALL`, `PYCONV`, `PYRES`, `PYCTX`, `PYASYNC`, and `PYCB` cover synchronous and
 async declarations, opaque values, sync/async contexts, package bridges,
 consuming async close, typed current/foreign/asyncio callbacks, and the active
-typed buffer protocol. `PYZC` is active for buffer declaration, affine
-ownership, layout, access, and release diagnostics; its Arrow and DLPack rows
-remain reserved until those later zero-copy protocols activate.
+typed buffer and Arrow protocols. `PYZC` is active for buffer and Arrow
+declaration, affine ownership, layout, certification, capsule validation,
+transfer, and release diagnostics; its DLPack rows remain reserved until that
+protocol activates.

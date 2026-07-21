@@ -2,18 +2,20 @@ use super::{
     callable_builtin_element_type, canonicalize_class_surface_type,
     consume_affine_collection_method_arguments, container_literal_diagnostics,
     invalidate_collection_flow_facts_for_method, is_task_handle_type, lower_expr,
-    lower_method_call_args, lower_signature_call_args, lower_task_handle_method_call,
-    refine_defaultdict_binding_expr, refine_empty_list_binding_expr, refine_empty_set_binding_expr,
-    refine_generic_class_binding_expr, refine_nonempty_method_return_type,
-    reject_immutable_method_mut_borrow_arguments, reject_immutable_parameter_method_mutation,
-    resolve_annotation_expr, resolve_bigint_method_type, resolve_bytes_method_type,
-    resolve_class_method_on_type, resolve_decimal_method_type, resolve_dict_method_type,
-    resolve_enum_method_type, resolve_fixed_width_method_type, resolve_list_method_type,
-    resolve_newtype_method_type, resolve_protocol_method_type, resolve_python_buffer_method_type,
-    resolve_set_method_type, resolve_str_method_type, resolve_tuple_method_type, str, tsc,
-    DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp, ExprLambda, ExprListComp,
-    ExprSetComp, FunctionType, HirExpr, HirIteratorOp, HirParam, LowerCtx, ParamConvention, Ranged,
-    TextRange, Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
+    lower_iterator_protocol_entry, lower_method_call_args, lower_signature_call_args,
+    lower_task_handle_method_call, refine_defaultdict_binding_expr, refine_empty_list_binding_expr,
+    refine_empty_set_binding_expr, refine_generic_class_binding_expr,
+    refine_nonempty_method_return_type, reject_immutable_method_mut_borrow_arguments,
+    reject_immutable_parameter_method_mutation, resolve_annotation_expr,
+    resolve_bigint_method_type, resolve_bytes_method_type, resolve_class_method_on_type,
+    resolve_decimal_method_type, resolve_dict_method_type, resolve_enum_method_type,
+    resolve_fixed_width_method_type, resolve_list_method_type, resolve_newtype_method_type,
+    resolve_protocol_method_type, resolve_python_arrow_method_type,
+    resolve_python_buffer_method_type, resolve_set_method_type, resolve_str_method_type,
+    resolve_tuple_method_type, str, tsc, DiagnosticCode, Expr, ExprAttribute, ExprCall,
+    ExprDictComp, ExprLambda, ExprListComp, ExprSetComp, FunctionType, HirExpr, HirParam, LowerCtx,
+    ParamConvention, Ranged, TextRange, Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS,
+    DEFAULTDICT_SET_ALIAS,
 };
 use crate::lower::python_interop::callback_method_arg_ranges;
 use crate::lower::{
@@ -306,6 +308,12 @@ pub(in crate::lower) fn lower_method_call(
     {
         return None;
     }
+    if matches!(object_ty.resolve_alias(), Type::PythonArrow(_))
+        && method_name == "release"
+        && !super::consume_python_arrow_release_receiver(&object, attr.value.range(), ctx)
+    {
+        return None;
+    }
 
     let receiver_is_current_class = matches!(
         object_ty.resolve_alias(),
@@ -377,6 +385,9 @@ pub(in crate::lower) fn resolve_method_type(
         Type::Tuple(_) => resolve_tuple_method_type(method, args, arg_ranges, method_range, ctx),
         Type::PythonBuffer(element) => {
             resolve_python_buffer_method_type(element, method, args, arg_ranges, method_range, ctx)
+        }
+        Type::PythonArrow(kind) => {
+            resolve_python_arrow_method_type(*kind, method, args, arg_ranges, method_range, ctx)
         }
         class @ Type::Class { .. } => {
             resolve_class_method_on_type(class, method, args, arg_ranges, method_range, ctx)
@@ -885,12 +896,4 @@ pub(in crate::lower) fn lower_dict_comp(
     })();
     ctx.pop_scopes(pushed_scopes);
     result
-}
-
-pub(super) fn lower_iterator_protocol_entry(iter_source_expr: HirExpr, elem_ty: Type) -> HirExpr {
-    HirExpr::IteratorCall {
-        op: HirIteratorOp::Iter,
-        args: vec![iter_source_expr],
-        ty: Type::Iterator(Box::new(elem_ty)),
-    }
 }

@@ -74,6 +74,7 @@ print(os.pathsep.join(sys.path))
         native_import_roots: Vec::new(),
         trusted_native_roots: Vec::new(),
         bridge_sources: Vec::new(),
+        arrow_certifications: Vec::new(),
         start_async_loop: false,
     }
 }

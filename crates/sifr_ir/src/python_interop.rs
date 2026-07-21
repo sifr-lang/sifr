@@ -1,7 +1,7 @@
 //! Declaration-first Python interop metadata carried through HIR.
 
 use ruff_text_size::TextRange;
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::{ParamConvention, PythonArrowKind, Type};
 
 /// A Python declaration target written as a structured dotted path.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -61,6 +61,20 @@ pub struct PythonBufferDeclaration {
     pub element_type: Type,
     pub access: PythonBufferAccess,
     pub layout: PythonBufferLayout,
+}
+
+/// Requested-schema policy for an Arrow C Data Interface declaration.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PythonArrowSchemaMode {
+    Omitted,
+    Parameter { name: String, span: TextRange },
+}
+
+/// Typed protocol facts carried by an active `@python.arrow` declaration.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PythonArrowDeclaration {
+    pub kind: PythonArrowKind,
+    pub schema: PythonArrowSchemaMode,
 }
 
 /// Compiler-synthesized execution effect for a Python declaration.
@@ -156,4 +170,6 @@ pub struct PythonInteropDeclaration {
     pub callbacks: Vec<PythonCallbackDeclaration>,
     /// Buffer protocol contract, present only for `PythonInteropDecoratorKind::Buffer`.
     pub buffer: Option<PythonBufferDeclaration>,
+    /// Arrow protocol contract, present only for `PythonInteropDecoratorKind::Arrow`.
+    pub arrow: Option<PythonArrowDeclaration>,
 }

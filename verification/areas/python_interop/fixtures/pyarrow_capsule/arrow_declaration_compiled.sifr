@@ -1,0 +1,36 @@
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
+
+
+@python.arrow(pyarrow.array, schema=omitted)
+def pyarrow_array(values: list[int]) -> Result[python.ArrowArray, PythonError]: ...
+
+
+@python.arrow(pandas.DataFrame, schema=omitted)
+def pandas_frame(values: list[int]) -> Result[python.ArrowStream, PythonError]: ...
+
+
+@python.arrow(polars.Series, schema=omitted)
+def polars_series(values: list[int]) -> Result[python.ArrowStream, PythonError]: ...
+
+
+def main() -> Result[None, PythonError]:
+    try:
+        before: ResourceDiagnostics = resource_diagnostics()
+        array: python.ArrowArray = pyarrow_array([1, 2, 3])
+        pandas_stream: python.ArrowStream = pandas_frame([4, 5, 6])
+        polars_stream: python.ArrowStream = polars_series([7, 8, 9])
+        array_names: list[str] = array.capsule_names()
+        pandas_names: list[str] = pandas_stream.capsule_names()
+        polars_names: list[str] = polars_stream.capsule_names()
+        metadata_ok: bool = len(array_names) == 2 and array_names[0] == "arrow_schema" and array_names[1] == "arrow_array" and len(pandas_names) == 1 and pandas_names[0] == "arrow_array_stream" and len(polars_names) == 1 and polars_names[0] == "arrow_array_stream" and array.producer_module() == "pyarrow.lib" and pandas_stream.producer_module() == "pandas.core.frame" and polars_stream.producer_module() == "polars.series.series"
+        released_array: None = array.release()
+        released_pandas: None = pandas_stream.release()
+        released_polars: None = polars_stream.release()
+        after: ResourceDiagnostics = resource_diagnostics()
+        resources_ok: bool = after.live_objects == before.live_objects and after.leaked_objects == before.leaked_objects
+        if not metadata_ok or not resources_ok:
+            raise PythonError("compiled Arrow declaration evidence was incorrect")
+        print("sifr-python-interop:arrow:pyarrow=array:pandas=stream:polars=stream:resources=zero")
+        return None
+    except PythonError as error:
+        raise error

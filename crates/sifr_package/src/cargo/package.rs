@@ -151,6 +151,9 @@ pub fn required_archive_entries(
     required.extend(required_python_bridge_archive_entries(
         &package.package_root,
     ));
+    required.extend(crate::required_python_certification_archive_entries(
+        &package.package_root,
+    ));
     required
 }
 

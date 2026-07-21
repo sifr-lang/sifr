@@ -19,7 +19,7 @@ pub(in crate::lower) fn lower_match(
     if subject_ty.contains_affine_resource() {
         ctx.error_with_code_at(
             DiagnosticCode::PYZC_INVALID_DECLARATION,
-            "pattern matching is unavailable for values containing affine Python buffers until branch-sensitive ownership is supported"
+            "pattern matching is unavailable for values containing affine Python resources until branch-sensitive ownership is supported"
                 .to_string(),
             match_stmt.subject.range(),
         );

@@ -1,3 +1,37 @@
+/// Affine resource kind exported through the Arrow C Data Interface.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum PythonArrowKind {
+    Array,
+    Schema,
+    Stream,
+    DeviceArray,
+    DeviceStream,
+}
+
+impl PythonArrowKind {
+    #[must_use]
+    pub const fn source_name(self) -> &'static str {
+        match self {
+            Self::Array => "ArrowArray",
+            Self::Schema => "ArrowSchema",
+            Self::Stream => "ArrowStream",
+            Self::DeviceArray => "ArrowDeviceArray",
+            Self::DeviceStream => "ArrowDeviceStream",
+        }
+    }
+
+    #[must_use]
+    pub const fn rust_name(self) -> &'static str {
+        match self {
+            Self::Array => "PythonArrowArray",
+            Self::Schema => "PythonArrowSchema",
+            Self::Stream => "PythonArrowStream",
+            Self::DeviceArray => "PythonArrowDeviceArray",
+            Self::DeviceStream => "PythonArrowDeviceStream",
+        }
+    }
+}
+
 /// Represents a type in the Sifr language.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Type {
@@ -43,6 +77,8 @@ pub enum Type {
     AsyncGenerator(Box<Type>, Box<Type>),
     /// Affine, non-send view acquired through the Python buffer protocol.
     PythonBuffer(Box<Type>),
+    /// Affine, non-send capsule owner acquired through the Arrow C Data Interface.
+    PythonArrow(PythonArrowKind),
     /// List type (`list[T]` in Sifr, `Vec<T>` in Rust)
     List(Box<Type>),
     /// Dictionary type (`dict[K, V]` in Sifr, `HashMap<K, V>` in Rust)

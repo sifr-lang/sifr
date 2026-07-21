@@ -290,6 +290,7 @@ fn non_share_safe_reason_inner(
 ) -> Option<String> {
     match ty {
         Type::PythonBuffer(_) => Some("Python buffer resources are non-send".to_string()),
+        Type::PythonArrow(_) => Some("Python Arrow resources are non-send".to_string()),
         Type::List(_) => {
             Some("list values are mutable and require explicit synchronization".to_string())
         }
@@ -360,6 +361,7 @@ fn non_share_safe_reason_inner(
 fn non_send_reason_inner(ty: &Type, visiting: &mut HashSet<(String, Vec<Type>)>) -> Option<String> {
     match ty {
         Type::PythonBuffer(_) => Some("Python buffer resources are non-send".to_string()),
+        Type::PythonArrow(_) => Some("Python Arrow resources are non-send".to_string()),
         Type::Class {
             name,
             fields,

@@ -35,7 +35,7 @@ impl Type {
         visiting_classes: &mut HashSet<(String, Vec<Self>)>,
     ) -> bool {
         match self.resolve_alias() {
-            Self::PythonBuffer(_) => true,
+            Self::PythonBuffer(_) | Self::PythonArrow(_) => true,
             Self::List(element)
             | Self::Set(element)
             | Self::Iterable(element)
@@ -95,6 +95,7 @@ impl Type {
             Self::Any
             | Self::Unknown
             | Self::PythonBuffer(_)
+            | Self::PythonArrow(_)
             | Self::Protocol { .. }
             | Self::Callable(..)
             | Self::AsyncCallable(..)
@@ -168,6 +169,7 @@ impl Type {
             | Self::Unknown
             | Self::Intersection(_)
             | Self::PythonBuffer(_)
+            | Self::PythonArrow(_)
             | Self::Protocol { .. }
             | Self::Callable(..)
             | Self::AsyncCallable(..)
@@ -418,6 +420,7 @@ impl Type {
             | Self::AsyncIterator(_, _)
             | Self::AsyncGenerator(_, _)
             | Self::PythonBuffer(_)
+            | Self::PythonArrow(_)
             | Self::List(_)
             | Self::Dict(_, _)
             | Self::Set(_)
@@ -591,6 +594,7 @@ impl Type {
             Self::PythonBuffer(element) => {
                 format!("python.Buffer[{}]", element.display_name())
             }
+            Self::PythonArrow(kind) => format!("python.{}", kind.source_name()),
             Self::Protocol { name, .. } => name.clone(),
             Self::Newtype { name, .. } => name.clone(),
             Self::TypeVar(name) => name.clone(),
@@ -723,6 +727,9 @@ impl Type {
                     "::sifr_stdlib::python::PythonBuffer<{}>",
                     element.rust_type()
                 )
+            }
+            Self::PythonArrow(kind) => {
+                format!("::sifr_stdlib::python::{}", kind.rust_name())
             }
             Self::Protocol { name, .. } => {
                 format!("Box<dyn {}>", source_class_rust_name(name))

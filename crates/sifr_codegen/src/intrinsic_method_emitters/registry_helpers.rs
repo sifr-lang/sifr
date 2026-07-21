@@ -43,6 +43,7 @@ pub(super) fn registry_uses_debug_display_format(ty: &Type) -> bool {
         | Type::AsyncIterator(_, _)
         | Type::AsyncGenerator(_, _)
         | Type::PythonBuffer(_)
+        | Type::PythonArrow(_)
         | Type::Callable(..)
         | Type::AsyncCallable(..)
         | Type::Result(_, _)

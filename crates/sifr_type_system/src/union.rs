@@ -210,6 +210,7 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
         Type::AsyncIterator(_, _) => (27, String::new()),
         Type::AsyncGenerator(_, _) => (28, String::new()),
         Type::PythonBuffer(element) => (29, element.display_name()),
+        Type::PythonArrow(kind) => (29, kind.source_name().to_string()),
         Type::Unknown => (29, String::new()),
         Type::Any => (29, String::new()),
         Type::Never => (29, String::new()),

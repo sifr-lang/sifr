@@ -89,6 +89,9 @@ mod operator_type_rendering;
 mod output_helpers;
 mod preamble;
 pub use preamble::*;
+mod python_arrow_codegen;
+#[cfg(test)]
+mod python_arrow_codegen_tests;
 mod python_buffer_codegen;
 #[cfg(test)]
 mod python_buffer_codegen_tests;
@@ -99,6 +102,7 @@ mod python_interop_callbacks;
 mod python_interop_common;
 mod python_interop_direct;
 mod python_interop_direct_conversions;
+mod python_interop_direct_helpers;
 #[cfg(test)]
 mod python_interop_direct_tests;
 mod python_interop_plan;

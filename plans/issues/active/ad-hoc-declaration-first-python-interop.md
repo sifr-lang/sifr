@@ -39,9 +39,12 @@ synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
 retained-owner integration are merged, publicly active, and milestone-reviewed.
-M11 and later milestones are not yet implemented. Milestones sequence
-delivery; they do not create reduced language versions, temporary public
-contracts, dual authorities, or alternate lowering paths.
+M11's five Arrow C Data Interface delivery waves are implemented and pass the
+authoritative create-PR and merge gates; repeated whole-diff Fable High review
+and PR closure remain in progress. M12 and later milestones are not yet
+implemented. Milestones sequence delivery; they do not create reduced language
+versions, temporary public contracts, dual authorities, or alternate lowering
+paths.
 
 The durable contracts are:
 
@@ -1639,6 +1642,26 @@ Validation:
 ### M11. Arrow C Data Interface
 
 Depends on M1 sealed affine resources and M4 conversion.
+
+Delivery waves:
+
+- [x] Wave 1 — add the five nominal affine Arrow resource types, HIR contract,
+  decorator/schema grammar, exact return-kind derivation, and static ownership
+  failure matrices.
+- [x] Wave 2 — implement runtime and stdlib acquisition for array/schema,
+  stream, device-array, and device-stream capsules with structural C-interface
+  validation, paired ownership, rollback, and exact-once release.
+- [x] Wave 3 — generate receiver and producer acquisition plus owned consumer
+  transfer, consumed-state inspection, and failure cleanup without copy paths.
+- [x] Wave 4 — bootstrap `sifr python certify arrow` and read-only
+  `sifr python certify --check`, define the package artifact schema, and bind
+  exact producer/distribution/schema evidence into build and archive identity.
+- [x] Wave 5 — add package, native, CPython, and malformed-capsule evidence,
+  the compiled Arrow example, public/durable documentation, and delivery-profile
+  wiring.
+- [ ] Milestone review — run the full M11 diff through repeated Fable High
+  review after the authoritative merge gate, remediate until satisfied, then
+  merge the M11 PR.
 
 Tasks:
 

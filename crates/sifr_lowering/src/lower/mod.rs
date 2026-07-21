@@ -108,6 +108,8 @@ mod parallel_calls;
 mod private_stdlib_imports;
 mod protocol_diagnostics;
 #[cfg(test)]
+mod python_arrow_contract_tests;
+#[cfg(test)]
 mod python_async_context_contract_tests;
 #[cfg(test)]
 mod python_async_tests;

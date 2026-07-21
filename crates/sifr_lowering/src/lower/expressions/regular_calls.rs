@@ -491,7 +491,7 @@ pub(super) fn lower_regular_call(
                 ctx.error_with_code_at(
                     DiagnosticCode::PYZC_INVALID_DECLARATION,
                     format!(
-                        "generic function '{func_name}' cannot bind type parameter '{type_param}' to '{}' because its generated reusable-value contract requires clone, comparison, and display capabilities unavailable to affine Python buffers",
+                        "generic function '{func_name}' cannot bind type parameter '{type_param}' to '{}' because its generated reusable-value contract requires clone, comparison, and display capabilities unavailable to affine Python resources",
                         concrete_ty.display_name()
                     ),
                     primary_range,

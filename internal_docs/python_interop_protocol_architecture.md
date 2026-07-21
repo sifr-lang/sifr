@@ -4,9 +4,9 @@
 
 This document defines the declaration-first Python interop contract. Typed
 coroutines, synchronous and asynchronous contexts, every callback dispatch
-mode, and typed affine buffer declarations are implemented. Arrow and DLPack
-rows remain reserved and must implement the same contract without publishing
-reduced substitutes.
+mode, typed affine buffer declarations, and Arrow C Data Interface declarations
+are implemented. DLPack rows remain reserved and must implement the same
+contract without publishing reduced substitutes.
 
 The common rules in
 [`python_interop_declaration_architecture.md`](./python_interop_declaration_architecture.md)
@@ -546,7 +546,7 @@ markers.
 Arrow declarations derive capsule kind from their affine return type:
 
 ```sifr
-@python.arrow(Self)
+@python.arrow(Self, schema=omitted)
 def arrow_stream(self) -> Result[python.ArrowStream, PythonError]: ...
 ```
 
@@ -572,40 +572,44 @@ request is representation-preserving. Without this evidence the author may
 declare an ordinary copied value or dynamic object, but cannot claim an Arrow
 zero-copy resource. There is no policy that silently accepts uncertain copying.
 
-Certification is package-authored, not a compiler allowlist. The package checks
-in a fixture plus `src/python_certifications/<name>.json`, keyed by the fully
-qualified Sifr declaration. The artifact records the Python target, protocol
-kind, distribution name/version and locked artifact hash, SOABI, schema mode and
-schema-contract digest, fixture/source digest, compiler certification version, within-run
-producer/consumer pointer-identity assertion results, and exact release counts.
-It never records absolute addresses, which are unstable across processes. The
-artifact participates in the binding contract digest and package archive.
+Certification is package-authored, not a compiler allowlist. The package owns an
+executable Python fixture and the root `sifr.python-certifications.json`
+artifact, keyed by the exact Python declaration target. The versioned artifact
+records the target, fixture path and digest, exact producer module/type,
+distribution names and versions, schema mode, pointer-identity result, one
+release per capsule, and the no-copy result. Its environment digest binds the
+selected interpreter probe and locked environment. It never records absolute
+addresses, which are unstable across processes. The artifact, its fixtures,
+and its serialized identity participate in package archives and generated
+artifact cache keys.
 
 The authoring flow is explicit and reproducible:
 
 ```bash
 sifr python certify arrow \
-  my_package.dataframe.DataFrame.arrow_stream \
-  --fixture verification/python/arrow_stream.sifr
+  pyarrow.array \
+  --fixture python_certifications/arrow_array.py
 sifr python certify --check
 ```
 
-The first command executes the compiled fixture in the selected locked
-environment and writes or updates the adjacent certification artifact. The
-read-only `--check` reruns the fixture, verifies the complete fingerprint, and
-fails on environment/source drift, a pointer-identity assertion failure, or a
-release-count mismatch. A consumer build
-verifies the locked fingerprint; project and package certification lanes rerun
-the executable evidence. Any package author can certify a new producer without
-changing Sifr itself.
+The first command executes the package-local fixture with the selected CPython
+interpreter and exact target argument, validates its strict JSON evidence, and
+writes or updates the root artifact. The read-only `--check` reruns every
+fixture and fails on environment, source, producer, distribution, schema,
+pointer-identity, release-count, or copy-result drift. A consumer build requires
+the exact target and schema mode before target probing and admits the returned
+resource only when its runtime module/type identity also matches. Any package
+author can certify a new producer without changing Sifr itself.
 
-Arrow resources are affine, non-send, retain the producer, and invoke the exact
+Arrow resources are affine and non-send, and invoke each owned capsule's exact
 release callback once. Passing `own python.Arrow*` to another Python declaration
-transfers the capsule. The generated wrapper treats it as moved regardless of
-call success and inspects the C structure's release callback: a consumer that
-moved the data must have set it to null, while an unconsumed structure remains
-the wrapper's cleanup responsibility. A copied dataframe or record is declared
-as an ordinary copied return and never masquerades as Arrow transfer.
+transfers the capsule authority. The generated wrapper treats it as moved
+regardless of call success and inspects the C structure's release callback: a
+consumer that moved the data must have set it to null, while an unconsumed
+structure remains the wrapper's cleanup responsibility. Partial consumption of
+a schema/data pair is a deterministic zero-copy error after the remaining
+capsule is cleaned up. A copied dataframe or record is declared as an ordinary
+copied return and never masquerades as Arrow transfer.
 
 ## DLPack
 

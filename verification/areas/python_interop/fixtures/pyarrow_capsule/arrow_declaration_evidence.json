@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "capability": "arrow-c-data-interface-declaration",
+  "surface": "@python.arrow -> Result[python.Arrow*, PythonError]",
+  "compiler": {
+    "owners": [
+      "crates/sifr_lowering/src/lower/python_arrow_contract_tests.rs",
+      "crates/sifr_codegen/src/python_arrow_codegen_tests.rs",
+      "crates/sifr_driver/src/build/python_interop.rs"
+    ],
+    "covers": [
+      "five nominal affine resources",
+      "Self/import-root/bridge acquisition",
+      "omitted and requested schema modes",
+      "owned consumer transfer",
+      "exact target certification and schema mismatch"
+    ]
+  },
+  "runtime": {
+    "owners": [
+      "crates/sifr_runtime/src/python/arrow_ops/abi.rs",
+      "crates/sifr_runtime/src/python/arrow_ops/tests.rs",
+      "crates/sifr_package/src/python/arrow_certification.rs",
+      "verification/areas/python_interop/runner/cpython311_arrow.py"
+    ],
+    "covers": [
+      "array/schema/stream/device-array/device-stream",
+      "wrong name and missing destructor",
+      "missing release and inconsistent pairs",
+      "one-shot export and full/partial/unconsumed transfer",
+      "double release and exact producer identity",
+      "artifact environment, fixture, archive, and cache identity"
+    ]
+  },
+  "compiled": {
+    "runner": "verification/areas/python_interop/runner/arrow_examples.py",
+    "source": "arrow_declaration_compiled.sifr",
+    "fixture": "python_certifications/arrow_evidence.py",
+    "producers": ["pyarrow.array", "pandas.DataFrame", "polars.Series"],
+    "stdout_marker": "sifr-python-interop:arrow:pyarrow=array:pandas=stream:polars=stream:resources=zero"
+  },
+  "profiles": ["create-pr", "merge", "nightly", "release"]
+}

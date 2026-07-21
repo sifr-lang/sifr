@@ -16,6 +16,7 @@ from async_context_examples import (
     build_async_context_examples_report,
     run_async_context_examples_self_tests,
 )
+from arrow_examples import build_arrow_examples_report, run_arrow_examples_self_tests
 from buffer_examples import (
     BUFFER_EXAMPLE_CASES,
     build_buffer_examples_report,
@@ -103,6 +104,7 @@ REQUIRED_FIXTURE_FILES = (
     "polars_arrow/polars_arrow_contract.json",
     "pubsub/pubsub_contract.json",
     "pyarrow_capsule/arrow_capsule_contract.json",
+    "pyarrow_capsule/arrow_declaration_evidence.json",
     "pydantic_models/pydantic_models_contract.json",
     "redis/redis_contract.json",
     "torch_dlpack/dlpack_tensor_contract.json",
@@ -140,6 +142,8 @@ REQUIRED_SOURCE_FIXTURES = (
     "pyarrow_capsule/arrow_capsule_copy_possible.sifr",
     "pyarrow_capsule/arrow_capsule_roundtrip.sifr",
     "pyarrow_capsule/arrow_capsule_zero_copy.sifr",
+    "pyarrow_capsule/arrow_declaration_compiled.sifr",
+    "pyarrow_capsule/python_certifications/arrow_evidence.py",
     "pyarrow_capsule/pyarrow_full_example.sifr",
     "fastapi_app/fastapi_pydantic_full_example.sifr",
     "cryptography_tls/cryptography_cffi_full_example.sifr",
@@ -186,6 +190,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Run compiled declaration-first Python buffer examples.",
     )
+    parser.add_argument(
+        "--arrow-examples",
+        action="store_true",
+        help="Run compiled declaration-first Arrow C Data Interface examples.",
+    )
     parser.add_argument("--ml-examples", action="store_true", help="Run full torch/scikit-learn Sifr examples.")
     parser.add_argument("--library-examples", action="store_true", help="Run full library-family Sifr examples.")
     parser.add_argument(
@@ -215,6 +224,7 @@ def main(argv: list[str] | None = None) -> int:
         run_live_examples_self_tests(paths)
         run_dataframe_examples_self_tests(paths)
         run_buffer_examples_self_tests(paths)
+        run_arrow_examples_self_tests(paths)
         run_ml_examples_self_tests(paths)
         run_library_examples_self_tests(paths)
         run_async_declaration_examples_self_tests(paths)
@@ -252,6 +262,15 @@ def main(argv: list[str] | None = None) -> int:
         write_report(report_path, payload)
         print(
             "python interop buffer-examples "
+            f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
+        )
+        return 1 if payload["status"] == "examples-failed" else 0
+    if args.arrow_examples:
+        payload = build_arrow_examples_report(paths)
+        report_path = (paths.area_root / args.report).resolve()
+        write_report(report_path, payload)
+        print(
+            "python interop arrow-examples "
             f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
         )
         return 1 if payload["status"] == "examples-failed" else 0

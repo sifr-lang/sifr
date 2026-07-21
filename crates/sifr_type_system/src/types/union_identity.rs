@@ -43,6 +43,7 @@ impl Type {
             Self::AsyncIterator(item, error) => binary("async_iterator", item, error),
             Self::AsyncGenerator(item, error) => binary("async_generator", item, error),
             Self::PythonBuffer(element) => unary("python_buffer", element),
+            Self::PythonArrow(kind) => format!("python_arrow:{}", kind.source_name()),
             Self::List(element) => unary("list", element),
             Self::Dict(key, value) => binary("dict", key, value),
             Self::Set(element) => unary("set", element),

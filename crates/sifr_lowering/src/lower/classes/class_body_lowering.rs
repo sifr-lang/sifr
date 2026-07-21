@@ -435,6 +435,28 @@ pub(in crate::lower) fn lower_class(
                     convention,
                 });
             }
+            for param in &func.parameters.kwonlyargs {
+                let param_name = param.parameter.name.to_string();
+                let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                    resolve_annotation_expr(ann, ctx)
+                } else {
+                    Type::Any
+                };
+                let convention =
+                    class_method_param_convention(param.parameter.convention, &param_ty, ctx);
+                ctx.scope.define_parameter(
+                    param_name.clone(),
+                    param_ty.clone(),
+                    convention.is_mutable(),
+                );
+                params.push(HirParam {
+                    name: param_name,
+                    ty: param_ty,
+                    default: None,
+                    keyword_only: true,
+                    convention,
+                });
+            }
 
             let return_ty = if method_name == "__init__" {
                 Type::None

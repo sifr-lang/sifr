@@ -52,6 +52,7 @@ pub(super) fn parse_declaration(
             access,
             layout,
         }),
+        arrow: None,
     })
 }
 

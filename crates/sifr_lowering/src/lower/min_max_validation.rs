@@ -18,7 +18,7 @@ pub(in crate::lower) fn validate_two_arg_min_max_operands(
             ctx.error_with_code_at(
                 DiagnosticCode::PYZC_INVALID_DECLARATION,
                 format!(
-                    "{func_name}() cannot order affine Python buffer values because comparison would consume a non-orderable resource"
+                    "{func_name}() cannot order affine Python resource values because comparison would consume a non-orderable resource"
                 ),
                 range,
             );

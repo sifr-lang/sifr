@@ -79,6 +79,45 @@ pub(super) fn apply_python_interop_metadata(
     };
 
     let mut diagnostics = Vec::new();
+    for declaration in generated
+        .interop
+        .python
+        .declarations
+        .iter()
+        .filter(|declaration| {
+            declaration.declaration.kind == sifr_ir::PythonInteropDecoratorKind::Arrow
+        })
+    {
+        let Some(target) = declaration.declaration.target.as_ref() else {
+            continue;
+        };
+        let target = target.dotted();
+        let Some(certification) = runtime.arrow_certification(&target) else {
+            diagnostics.push(diagnostic_with_code(
+                format!(
+                    "Arrow declaration target '{target}' has no exact executable no-copy certification for the selected Python environment"
+                ),
+                DiagnosticCode::PYZC_INVALID_DECLARATION,
+            ));
+            continue;
+        };
+        let requested = declaration.declaration.arrow.as_ref().is_some_and(|arrow| {
+            matches!(
+                arrow.schema,
+                sifr_ir::PythonArrowSchemaMode::Parameter { .. }
+            )
+        });
+        let certified_requested =
+            certification.schema_mode == sifr_package::ArrowCertifiedSchemaMode::Parameter;
+        if requested != certified_requested {
+            diagnostics.push(diagnostic_with_code(
+                format!(
+                    "Arrow declaration target '{target}' schema-request mode does not match its executable certification"
+                ),
+                DiagnosticCode::PYZC_INVALID_DECLARATION,
+            ));
+        }
+    }
     for probe in &mut generated.interop.python.target_probes {
         if probe.target_path.starts_with("__sifr_bridge__.") {
             probe.status = PythonTargetProbeStatus::RuntimeChecked;
@@ -132,6 +171,7 @@ pub(super) fn apply_python_interop_metadata(
                                 declaration.declaration.kind,
                                 sifr_ir::PythonInteropDecoratorKind::Function
                                     | sifr_ir::PythonInteropDecoratorKind::Buffer
+                                    | sifr_ir::PythonInteropDecoratorKind::Arrow
                             ) && declaration
                                 .declaration
                                 .target
@@ -410,6 +450,39 @@ mod tests {
     }
 
     #[test]
+    fn arrow_target_requires_exact_environment_certification() {
+        let runtime = PackagePythonRuntime::for_tests(python(), "probe");
+        let Err(diagnostics) =
+            apply_python_interop_metadata(arrow_project("builtins.bytearray"), Some(&runtime))
+        else {
+            panic!("uncertified Arrow target must fail");
+        };
+        assert_eq!(diagnostics[0].code, "SIFR-PYZC-0001");
+
+        let mut runtime = PackagePythonRuntime::for_tests(python(), "probe");
+        runtime.set_arrow_certifications(vec![arrow_certification("builtins.bytearray")]);
+        apply_python_interop_metadata(arrow_project("builtins.bytearray"), Some(&runtime))
+            .expect("exactly certified Arrow target should pass");
+    }
+
+    #[test]
+    fn arrow_target_rejects_schema_mode_mismatch() {
+        let mut runtime = PackagePythonRuntime::for_tests(python(), "probe");
+        let mut certification = arrow_certification("builtins.bytearray");
+        certification.schema_mode = sifr_package::ArrowCertifiedSchemaMode::Parameter;
+        runtime.set_arrow_certifications(vec![certification]);
+
+        let Err(diagnostics) =
+            apply_python_interop_metadata(arrow_project("builtins.bytearray"), Some(&runtime))
+        else {
+            panic!("schema-mode mismatch must fail");
+        };
+        assert!(diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("schema-request mode")));
+    }
+
+    #[test]
     fn record_expansion_rejects_uninspectable_target() {
         let runtime = PackagePythonRuntime::for_tests(python(), "probe");
         let mut generated = project("builtins.dir");
@@ -502,6 +575,7 @@ mod tests {
             required_import_root: Some(root.clone()),
             callbacks: Vec::new(),
             buffer: None,
+            arrow: None,
         };
         let mut python = PythonInteropPlan::default();
         python.target_probes.push(PythonTargetProbe {
@@ -536,6 +610,35 @@ mod tests {
             },
             cache_key_fragment: None,
             python_runtime: None,
+        }
+    }
+
+    fn arrow_project(target: &str) -> GeneratedBinaryProject {
+        let mut generated = project(target);
+        let declaration = &mut generated.interop.python.declarations[0].declaration;
+        declaration.kind = sifr_ir::PythonInteropDecoratorKind::Arrow;
+        declaration.arrow = Some(sifr_ir::PythonArrowDeclaration {
+            kind: sifr_type_system::PythonArrowKind::Array,
+            schema: sifr_ir::PythonArrowSchemaMode::Omitted,
+        });
+        generated
+    }
+
+    fn arrow_certification(target: &str) -> sifr_package::ArrowCertification {
+        sifr_package::ArrowCertification {
+            target: target.to_string(),
+            fixture: "fixtures/arrow.py".to_string(),
+            fixture_digest: "digest".to_string(),
+            producer_module: "pyarrow.lib".to_string(),
+            producer_type: "Array".to_string(),
+            distributions: vec![sifr_package::ArrowCertifiedDistribution {
+                name: "pyarrow".to_string(),
+                version: "1".to_string(),
+            }],
+            schema_mode: sifr_package::ArrowCertifiedSchemaMode::Omitted,
+            pointer_identity_verified: true,
+            exact_release_count: 1,
+            copy_performed: false,
         }
     }
 }

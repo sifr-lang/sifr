@@ -123,6 +123,13 @@ pub(super) fn apply_package_runtime_metadata(
             "python-runtime",
             metadata.probe_digest(),
         );
+        if !metadata.arrow_certification_identity().is_empty() {
+            push_cache_key_fragment(
+                &mut generated.cache_key_fragment,
+                "python-arrow-certifications",
+                metadata.arrow_certification_identity(),
+            );
+        }
         generated.python_runtime = Some(metadata);
     }
     Ok(generated)
@@ -199,6 +206,37 @@ mod tests {
         )
         .expect("metadata should apply");
         assert!(generated.main_rs.contains("start_async_loop: false"));
+    }
+
+    #[test]
+    fn arrow_certification_changes_package_cache_identity() {
+        let certification = |producer_type: &str| sifr_package::ArrowCertification {
+            target: "pyarrow.array".to_string(),
+            fixture: "fixtures/arrow.py".to_string(),
+            fixture_digest: "fixture-digest".to_string(),
+            producer_module: "pyarrow.lib".to_string(),
+            producer_type: producer_type.to_string(),
+            distributions: vec![sifr_package::ArrowCertifiedDistribution {
+                name: "pyarrow".to_string(),
+                version: "22.0.0".to_string(),
+            }],
+            schema_mode: sifr_package::ArrowCertifiedSchemaMode::Omitted,
+            pointer_identity_verified: true,
+            exact_release_count: 1,
+            copy_performed: false,
+        };
+        let mut first = PackagePythonRuntime::for_tests("/tmp/sifr-py/bin/python", "digest-a");
+        first.set_arrow_certifications(vec![certification("Int64Array")]);
+        let first = apply_package_runtime_metadata(base_project(), Some(first))
+            .expect("metadata should apply")
+            .cache_key_fragment;
+        let mut second = PackagePythonRuntime::for_tests("/tmp/sifr-py/bin/python", "digest-a");
+        second.set_arrow_certifications(vec![certification("StringArray")]);
+        let second = apply_package_runtime_metadata(base_project(), Some(second))
+            .expect("metadata should apply")
+            .cache_key_fragment;
+
+        assert_ne!(first, second);
     }
 
     #[test]

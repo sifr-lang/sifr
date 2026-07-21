@@ -660,6 +660,28 @@ pub(in crate::lower) fn collect_class_type(
                         );
                         params.push((param_name, param_ty, convention));
                     }
+                    for param in &func.parameters.kwonlyargs {
+                        let param_name = param.parameter.name.to_string();
+                        let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                            resolve_annotation_expr(ann, ctx)
+                        } else {
+                            missing_method_param_annotation(
+                                ctx,
+                                &class_name,
+                                &method_name,
+                                &param_name,
+                                param.parameter.name.range(),
+                            );
+                            Type::Any
+                        };
+                        method_locals.insert(param_name.clone(), param_ty.clone());
+                        let convention = class_method_param_convention(
+                            param.parameter.convention,
+                            &param_ty,
+                            ctx,
+                        );
+                        params.push((param_name, param_ty, convention));
+                    }
                     let return_ty = if let Some(ref ret_ann) = func.returns {
                         resolve_annotation_expr(ret_ann, ctx)
                     } else {

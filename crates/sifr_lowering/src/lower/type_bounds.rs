@@ -256,6 +256,7 @@ pub(in crate::lower) fn supports_print_formatting(ty: &Type) -> bool {
         | Type::AsyncIterator(_, _)
         | Type::AsyncGenerator(_, _)
         | Type::PythonBuffer(_)
+        | Type::PythonArrow(_)
         | Type::Callable(..)
         | Type::AsyncCallable(..)
         | Type::Result(_, _)

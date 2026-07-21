@@ -1,0 +1,33 @@
+use super::cli_model_and_entrypoint::{
+    diagnostic_with_code, DiagnosticFormat, EXIT_USER_DIAGNOSTIC,
+};
+use super::diagnostic_rendering_and_run::render_diagnostics;
+use std::path::Path;
+
+pub(super) fn load_into_runtime(
+    package_root: &Path,
+    environment_digest: &str,
+    runtime: &mut sifr_driver::PackagePythonRuntime,
+    diagnostic_format: DiagnosticFormat,
+) -> Result<(), i32> {
+    let artifact_path = package_root.join(sifr_package::PYTHON_CERTIFICATIONS_FILE);
+    if !artifact_path.is_file() {
+        return Ok(());
+    }
+    match sifr_package::load_python_certifications(package_root, environment_digest) {
+        Ok(artifact) => {
+            runtime.set_arrow_certifications(artifact.arrow);
+            Ok(())
+        }
+        Err(reason) => {
+            render_diagnostics(
+                &[diagnostic_with_code(
+                    format!("invalid Python certification artifact: {reason}"),
+                    sifr_diagnostics::DiagnosticCode::PYZC_INVALID_DECLARATION,
+                )],
+                diagnostic_format,
+            );
+            Err(EXIT_USER_DIAGNOSTIC)
+        }
+    }
+}

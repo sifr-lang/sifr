@@ -71,16 +71,20 @@ pub use crate::projection::{
     ProjectionCheck, ProjectionRepair,
 };
 pub use crate::python::{
-    discover_python_bridge_inventory, probe_python_environment, resolve_python_bridge_graph,
+    arrow_fixture_digest, arrow_fixture_path, discover_python_bridge_inventory,
+    load_python_certifications, load_python_certifications_for_update, probe_python_environment,
+    required_python_certification_archive_entries, resolve_python_bridge_graph,
     resolve_python_environment, resolve_python_environment_with_requirements,
     resolved_python_bridge_package_key, resolved_python_bridge_runtime_package,
     validate_python_bridge_inventory_manifest, validate_python_environment_probe,
-    write_python_bridge_inventory, PythonBridgeImport, PythonBridgeInventory, PythonBridgeModule,
+    write_python_bridge_inventory, write_python_certifications, ArrowCertification,
+    ArrowCertifiedDistribution, ArrowCertifiedSchemaMode, PythonBridgeImport,
+    PythonBridgeInventory, PythonBridgeModule, PythonCertificationArtifact,
     PythonDistributionProbe, PythonEnvironmentProbe, PythonEnvironmentProbeRequest,
     PythonRequirementContribution, PythonRequirementKind, ResolvedPythonBridgeGraph,
     ResolvedPythonBridgeImport, ResolvedPythonBridgeModule, ResolvedPythonBridgePackage,
-    ResolvedPythonEnvironment, PYTHON_BRIDGE_INVENTORY, PYTHON_BRIDGE_ROOT,
-    PYTHON_BRIDGE_RUNTIME_ROOT,
+    ResolvedPythonEnvironment, ARROW_CERTIFICATION_SCHEMA_VERSION, PYTHON_BRIDGE_INVENTORY,
+    PYTHON_BRIDGE_ROOT, PYTHON_BRIDGE_RUNTIME_ROOT, PYTHON_CERTIFICATIONS_FILE,
 };
 pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
 

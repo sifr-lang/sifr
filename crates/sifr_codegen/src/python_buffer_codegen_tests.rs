@@ -230,6 +230,7 @@ fn buffer_function(
                 access,
                 layout,
             }),
+            arrow: None,
         }],
         compiler_intrinsic: None,
         type_params: Vec::new(),

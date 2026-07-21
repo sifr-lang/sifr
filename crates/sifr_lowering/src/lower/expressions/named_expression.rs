@@ -24,7 +24,7 @@ pub(in crate::lower) fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) 
         ctx.error_with_code_at(
             DiagnosticCode::PYZC_INVALID_DECLARATION,
             format!(
-                "walrus target '{name}' cannot bind a value containing an affine Python buffer because the assignment expression result would create a second owner"
+                "walrus target '{name}' cannot bind a value containing an affine Python resource because the assignment expression result would create a second owner"
             ),
             named.range(),
         );

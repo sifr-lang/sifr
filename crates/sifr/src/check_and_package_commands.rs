@@ -229,14 +229,27 @@ fn package_python_runtime(
         }
     };
     let digest = sifr_package::digest_python_environment_probe(&request, &probe).hex;
-    Ok(Some(sifr_driver::PackagePythonRuntime::from_probe(
+    let mut runtime = sifr_driver::PackagePythonRuntime::from_probe(
         &request,
         &probe,
-        digest,
+        digest.clone(),
         resolved.required_imports,
         resolved.trusted_imports,
         resolved.trusted_native_imports,
-    )))
+    );
+    let package_root = graph
+        .packages
+        .get(package_id)
+        .map(|package| package.package_root.as_path());
+    if let Some(package_root) = package_root {
+        super::package_python_certifications::load_into_runtime(
+            package_root,
+            &digest,
+            &mut runtime,
+            diagnostic_format,
+        )?;
+    }
+    Ok(Some(runtime))
 }
 
 fn declaration_python_requirements(

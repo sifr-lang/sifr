@@ -117,7 +117,7 @@ pub(in crate::lower) fn lower_tuple_unpack_assign(
         let (code, message) = if value_ty.contains_affine_resource() {
             (
                 DiagnosticCode::PYZC_INVALID_DECLARATION,
-                "borrowed affine Python buffer tuple sources cannot be unpacked into owned values"
+                "borrowed affine Python resource tuple sources cannot be unpacked into owned values"
                     .to_string(),
             )
         } else {
@@ -231,7 +231,7 @@ pub(in crate::lower) fn lower_star_unpack_assign(
     if elem_ty.contains_affine_resource() {
         ctx.error_with_code_at(
             DiagnosticCode::PYZC_INVALID_DECLARATION,
-            "star unpacking is unavailable for elements containing affine Python buffers because it clones projected values"
+            "star unpacking is unavailable for elements containing affine Python resources because it clones projected values"
                 .to_string(),
             value.range(),
         );

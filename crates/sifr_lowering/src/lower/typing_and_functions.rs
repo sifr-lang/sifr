@@ -12,13 +12,17 @@ use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Number, Operator, StmtFunctionDef};
 use sifr_type_system::infer::resolve_type_annotation;
-use sifr_type_system::{make_union, FunctionType, OwnershipKind, ParamConvention, Type};
+use sifr_type_system::{
+    make_union, FunctionType, OwnershipKind, ParamConvention, PythonArrowKind, Type,
+};
 use std::collections::HashMap;
 
 mod signatures_and_effects;
 pub(in crate::lower) use signatures_and_effects::*;
 mod python_buffer_annotations;
 use python_buffer_annotations::resolve_python_buffer_annotation;
+mod python_arrow_annotations;
+use python_arrow_annotations::resolve_python_arrow_annotation;
 mod async_generator_validation;
 pub(in crate::lower) use async_generator_validation::{
     reject_declared_async_generator_boundary, reject_unsupported_nested_async_generator,

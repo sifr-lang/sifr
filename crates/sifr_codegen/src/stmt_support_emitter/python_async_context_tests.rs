@@ -49,6 +49,7 @@ fn emitter() -> RustEmitter {
                 required_import_root: Some("fixture".to_string()),
                 callbacks: Vec::new(),
                 buffer: None,
+                arrow: None,
             },
         );
     }
