@@ -79,9 +79,9 @@ pub enum Type {
     PythonBuffer(Box<Type>),
     /// Affine, non-send capsule owner acquired through the Arrow C Data Interface.
     PythonArrow(PythonArrowKind),
-    /// Affine, non-send tensor owner acquired through the DLPack protocol.
+    /// Affine, non-send tensor owner acquired through the `DLPack` protocol.
     PythonDlpackTensor(Box<Type>),
-    /// Affine, non-send consumer stream token used for DLPack synchronization.
+    /// Affine, non-send consumer stream token used for `DLPack` synchronization.
     PythonDlpackStream,
     /// List type (`list[T]` in Sifr, `Vec<T>` in Rust)
     List(Box<Type>),

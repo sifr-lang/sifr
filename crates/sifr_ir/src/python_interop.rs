@@ -78,7 +78,7 @@ pub struct PythonArrowDeclaration {
     pub schema: PythonArrowSchemaMode,
 }
 
-/// Device family accepted by a declaration-first DLPack boundary.
+/// Device family accepted by a declaration-first `DLPack` boundary.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PythonDlpackDevice {
     Cpu,
@@ -97,14 +97,14 @@ impl PythonDlpackDevice {
     }
 }
 
-/// Explicit synchronization stream policy for DLPack acquisition.
+/// Explicit synchronization stream policy for `DLPack` acquisition.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PythonDlpackStreamMode {
     None,
     Parameter { name: String, span: TextRange },
 }
 
-/// Typed protocol facts carried by an active DLPack declaration.
+/// Typed protocol facts carried by an active `DLPack` declaration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PythonDlpackDeclaration {
     pub device: PythonDlpackDevice,
@@ -207,6 +207,6 @@ pub struct PythonInteropDeclaration {
     pub buffer: Option<PythonBufferDeclaration>,
     /// Arrow protocol contract, present only for `PythonInteropDecoratorKind::Arrow`.
     pub arrow: Option<PythonArrowDeclaration>,
-    /// DLPack contract, present only for tensor and stream declarations.
+    /// `DLPack` contract, present only for tensor and stream declarations.
     pub dlpack: Option<PythonDlpackDeclaration>,
 }

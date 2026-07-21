@@ -188,7 +188,7 @@ fn parse_policies(
                 return None;
             }
             "stream" if !is_stream_declaration && stream.is_none() => {
-                stream = parse_stream(&keyword.value, parameters, ctx)
+                stream = parse_stream(&keyword.value, parameters, ctx);
             }
             "device" | "stream" => {
                 invalid(

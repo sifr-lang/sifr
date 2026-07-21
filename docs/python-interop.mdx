@@ -402,7 +402,9 @@ Producer targets may be import-root callables, package-local bridges, or `Self`.
 `stream=none`; CUDA and `any` require `stream=parameter(name)`, where `name` is
 a required keyword-only borrowed `python.DlpackStream` from an explicit
 `@python.dlpack.stream` declaration. Runtime acquisition validates the stream
-family/id before the one permitted `__dlpack__` call.
+family/id before the one permitted `__dlpack__` call. A CPU producer always
+receives `stream=None`, including when `device=any` validated matching CPU
+stream metadata.
 
 Sifr passes `copy=False` and `max_version=(1, 0)` without an old-signature retry,
 accepts legacy or compatible 1.x versioned capsules, and validates copy flags,

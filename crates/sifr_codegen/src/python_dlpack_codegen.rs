@@ -8,6 +8,7 @@ use sifr_ir::{
 };
 use sifr_type_system::Type;
 
+#[derive(Clone, Copy)]
 pub(crate) struct ArgumentPreparation<'a> {
     pub(crate) parameter_name: &'a str,
     pub(crate) index: usize,

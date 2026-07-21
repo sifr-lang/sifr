@@ -9,6 +9,7 @@ pub(crate) struct ArgumentGuards {
     dlpack: Vec<String>,
 }
 
+#[derive(Clone, Copy)]
 pub(crate) struct ArgumentPreparation<'a> {
     pub(crate) parameter_name: &'a str,
     pub(crate) index: usize,
