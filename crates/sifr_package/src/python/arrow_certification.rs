@@ -3,7 +3,7 @@ use sha2::{Digest as _, Sha256};
 use std::path::{Path, PathBuf};
 
 pub const PYTHON_CERTIFICATIONS_FILE: &str = "sifr.python-certifications.json";
-pub const ARROW_CERTIFICATION_SCHEMA_VERSION: u32 = 1;
+pub const ARROW_CERTIFICATION_SCHEMA_VERSION: u32 = 2;
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
@@ -17,15 +17,27 @@ pub struct PythonCertificationArtifact {
 #[serde(deny_unknown_fields)]
 pub struct ArrowCertification {
     pub target: String,
+    pub kind: ArrowCertifiedKind,
     pub fixture: String,
     pub fixture_digest: String,
     pub producer_module: String,
     pub producer_type: String,
     pub distributions: Vec<ArrowCertifiedDistribution>,
     pub schema_mode: ArrowCertifiedSchemaMode,
+    pub identity_method: ArrowCertifiedIdentityMethod,
     pub pointer_identity_verified: bool,
     pub exact_release_count: u64,
     pub copy_performed: bool,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ArrowCertifiedKind {
+    Array,
+    Schema,
+    Stream,
+    DeviceArray,
+    DeviceStream,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -40,6 +52,13 @@ pub struct ArrowCertifiedDistribution {
 pub enum ArrowCertifiedSchemaMode {
     Omitted,
     Parameter,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ArrowCertifiedIdentityMethod {
+    BufferAddress,
+    SchemaFormat,
 }
 
 pub fn load_python_certifications(
@@ -125,6 +144,17 @@ pub fn validate_python_certifications(
         if certification.copy_performed || !certification.pointer_identity_verified {
             return Err(format!(
                 "Arrow certification '{}' does not prove a no-copy transfer",
+                certification.target
+            ));
+        }
+        if matches!(certification.kind, ArrowCertifiedKind::Schema)
+            != matches!(
+                certification.identity_method,
+                ArrowCertifiedIdentityMethod::SchemaFormat
+            )
+        {
+            return Err(format!(
+                "Arrow certification '{}' identity method does not match its kind",
                 certification.target
             ));
         }
@@ -313,6 +343,7 @@ mod tests {
             environment_digest: "environment-a".to_string(),
             arrow: vec![ArrowCertification {
                 target: "pkg.make_array".to_string(),
+                kind: ArrowCertifiedKind::Array,
                 fixture: "fixtures/arrow.py".to_string(),
                 fixture_digest: fixture_digest(fixture).expect("digest"),
                 producer_module: "pyarrow.lib".to_string(),
@@ -322,6 +353,7 @@ mod tests {
                     version: "22.0.0".to_string(),
                 }],
                 schema_mode: ArrowCertifiedSchemaMode::Omitted,
+                identity_method: ArrowCertifiedIdentityMethod::BufferAddress,
                 pointer_identity_verified: true,
                 exact_release_count: 1,
                 copy_performed: false,

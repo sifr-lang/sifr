@@ -1,8 +1,12 @@
-use crate::{lower_module, HirDiagnostic, HirModule};
+use crate::{
+    lower_module, ExternalDefs, HirDiagnostic, HirModule, LoweringOptions,
+    PythonBridgeTargetAuthority,
+};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{PythonArrowSchemaMode, PythonInteropDecoratorKind, PythonParameterKind};
 use sifr_python_parser::parse_module;
 use sifr_type_system::{OwnershipKind, PythonArrowKind, Type};
+use std::collections::BTreeMap;
 
 const ERROR: &str = r#"
 class PythonError(Error):
@@ -73,9 +77,39 @@ fn arrow_declaration_derives_return_kind_and_omitted_schema() {
 }
 
 #[test]
-fn requested_schema_is_required_keyword_only_borrowed_and_not_sent_to_producer() {
+fn bridge_arrow_producer_rewrites_to_package_runtime_identity() {
+    let parsed = parse_module(&format!(
+        "{ERROR}\n@python.arrow(bridge.arrow.make, schema=omitted)\ndef array() -> Result[python.ArrowArray, PythonError]: ...\n"
+    ))
+    .expect("source should parse");
+    let lowered = crate::lower_module_with_externals_name_and_options(
+        "main",
+        parsed.suite(),
+        &ExternalDefs::default(),
+        LoweringOptions {
+            python_bridge_authorities: BTreeMap::from([(
+                "main".to_string(),
+                PythonBridgeTargetAuthority {
+                    runtime_package: "__sifr_bridge__.p_abc123".to_string(),
+                    modules: ["arrow".to_string()].into_iter().collect(),
+                },
+            )]),
+            ..LoweringOptions::default()
+        },
+    )
+    .expect("resolved bridge Arrow producer should lower");
+    let declaration = &lowered.module.functions[0].python_interop[0];
+    assert_eq!(
+        declaration.target.as_ref().expect("target").dotted(),
+        "__sifr_bridge__.p_abc123.arrow.make"
+    );
+    assert_eq!(declaration.required_import_root, None);
+}
+
+#[test]
+fn requested_schema_is_required_keyword_only_owned_and_not_sent_to_producer() {
     let module = lower_ok(&format!(
-        "{ERROR}\n@python.arrow(pkg.make_stream, schema=parameter(requested))\ndef stream(size: int, *, requested: python.ArrowSchema) -> Result[python.ArrowStream, PythonError]: ...\n"
+        "{ERROR}\n@python.arrow(pkg.make_stream, schema=parameter(requested))\ndef stream(size: int, *, own requested: python.ArrowSchema) -> Result[python.ArrowStream, PythonError]: ...\n"
     ));
     let function = &module.functions[0];
     let declaration = &function.python_interop[0];
@@ -96,13 +130,13 @@ fn requested_schema_is_required_keyword_only_borrowed_and_not_sent_to_producer()
         .iter()
         .find(|parameter| parameter.name == "requested")
         .expect("schema parameter");
-    assert!(schema.convention.is_shared_borrow());
+    assert!(schema.convention.is_owned());
 }
 
 #[test]
 fn opaque_arrow_receiver_retains_self_and_optional_schema_only() {
     let module = lower_ok(&format!(
-        "{ERROR}\n@python.opaque(type=pkg.Owner, cleanup=drop)\nclass Owner(NonSend):\n    @python.arrow(Self, schema=parameter(requested))\n    def stream(self, *, requested: python.ArrowSchema) -> Result[python.ArrowStream, PythonError]: ...\n"
+        "{ERROR}\n@python.opaque(type=pkg.Owner, cleanup=drop)\nclass Owner(NonSend):\n    @python.arrow(Self, schema=parameter(requested))\n    def stream(self, *, own requested: python.ArrowSchema) -> Result[python.ArrowStream, PythonError]: ...\n"
     ));
     let method = &module.classes[1].methods[0];
     let declaration = &method.python_interop[0];
@@ -118,11 +152,11 @@ fn arrow_declaration_rejects_invalid_schema_and_signature_shapes() {
     for source in [
         "@python.arrow(pkg.make)\ndef bad() -> Result[python.ArrowArray, PythonError]: ...",
         "@python.arrow(pkg.make, schema=dynamic)\ndef bad() -> Result[python.ArrowArray, PythonError]: ...",
-        "@python.arrow(pkg.make, schema=parameter(requested))\ndef bad(requested: python.ArrowSchema) -> Result[python.ArrowArray, PythonError]: ...",
-        "@python.arrow(pkg.make, schema=parameter(requested))\ndef bad(*, requested: python.ArrowSchema = None) -> Result[python.ArrowArray, PythonError]: ...",
-        "@python.arrow(pkg.make, schema=parameter(requested))\ndef bad(*, own requested: python.ArrowSchema) -> Result[python.ArrowArray, PythonError]: ...",
-        "@python.arrow(pkg.make, schema=parameter(requested))\ndef bad(*, requested: python.ArrowArray) -> Result[python.ArrowArray, PythonError]: ...",
-        "@python.arrow(pkg.make, schema=parameter(requested))\ndef bad(*, requested: python.ArrowSchema) -> Result[python.ArrowSchema, PythonError]: ...",
+        "@python.arrow(pkg.make, schema=parameter(requested))\ndef bad(own requested: python.ArrowSchema) -> Result[python.ArrowArray, PythonError]: ...",
+        "@python.arrow(pkg.make, schema=parameter(requested))\ndef bad(*, own requested: python.ArrowSchema = None) -> Result[python.ArrowArray, PythonError]: ...",
+        "@python.arrow(pkg.make, schema=parameter(requested))\ndef bad(*, requested: python.ArrowSchema) -> Result[python.ArrowArray, PythonError]: ...",
+        "@python.arrow(pkg.make, schema=parameter(requested))\ndef bad(*, own requested: python.ArrowArray) -> Result[python.ArrowArray, PythonError]: ...",
+        "@python.arrow(pkg.make, schema=parameter(requested))\ndef bad(*, own requested: python.ArrowSchema) -> Result[python.ArrowSchema, PythonError]: ...",
         "@python.arrow(pkg.make, schema=omitted)\ndef bad() -> Result[bytes, PythonError]: ...",
         "@python.arrow(pkg.make, schema=omitted)\nasync def bad() -> Result[python.ArrowArray, PythonError]: ...",
     ] {
@@ -165,6 +199,63 @@ fn arrow_consumer_arguments_require_owned_transfer() {
     lower_ok(&format!(
         "{ERROR}\n@python(pkg.consume)\ndef consume(own value: python.ArrowArray) -> Result[int, PythonError]: ...\n"
     ));
+}
+
+#[test]
+fn arrow_consumers_reject_unlowerable_async_mutable_and_omittable_shapes() {
+    for declaration in [
+        "@python(pkg.consume)\ndef consume(own value: python.ArrowArray = python.omit) -> Result[int, PythonError]: ...",
+        "@python.coroutine(pkg.consume)\nasync def consume(own value: python.ArrowArray) -> Result[int, PythonError]: ...",
+        "@python.opaque(type=pkg.Owner, cleanup=drop)\nclass Owner(NonSend):\n    @python(Self.consume)\n    def consume(self, own mut value: python.ArrowArray) -> Result[int, PythonError]: ...",
+    ] {
+        let errors = lower_errors(&format!("{ERROR}\n{declaration}\n"));
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)),
+            "{declaration}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn class_methods_preserve_owned_arrow_parameters() {
+    let module = lower_ok(&format!(
+        "{ERROR}\n@python.opaque(type=pkg.Owner, cleanup=drop)\nclass Owner(NonSend):\n    @python(Self.consume)\n    def consume(self, own value: python.ArrowArray) -> Result[int, PythonError]: ...\n"
+    ));
+    let parameter = &module.classes[1].methods[0].params[0];
+    assert!(parameter.convention.is_owned());
+    assert_eq!(parameter.ty, Type::PythonArrow(PythonArrowKind::Array));
+}
+
+#[test]
+fn class_method_borrowed_arrow_parameters_cannot_escape() {
+    let errors = lower_errors(&format!(
+        "{ERROR}\n@python(pkg.consume)\ndef consume(own value: python.ArrowArray) -> Result[int, PythonError]: ...\n\nclass Owner:\n    def misuse(self, value: python.ArrowArray) -> None:\n        result: int = consume(value)\n        return None\n"
+    ));
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                && error.message.contains("borrowed affine Python resource")
+        }),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn a_single_call_cannot_consume_the_same_arrow_resource_twice() {
+    for call in ["consume2(value, value)", "consume2(value, take(value))"] {
+        let errors = lower_errors(&format!(
+            "{ERROR}\ndef take(own value: python.ArrowArray) -> python.ArrowArray:\n    return value\n\n@python(pkg.consume2)\ndef consume2(own left: python.ArrowArray, own right: python.ArrowArray) -> Result[int, PythonError]: ...\n\ndef misuse(own value: python.ArrowArray) -> None:\n    result: int = {call}\n    return None\n"
+        ));
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+                    && error.message.contains("moved")
+            }),
+            "{call}: {errors:?}"
+        );
+    }
 }
 
 #[test]

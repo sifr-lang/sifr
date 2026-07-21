@@ -1,43 +1,62 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "capability": "arrow-c-data-interface-declaration",
   "surface": "@python.arrow -> Result[python.Arrow*, PythonError]",
-  "compiler": {
-    "owners": [
-      "crates/sifr_lowering/src/lower/python_arrow_contract_tests.rs",
-      "crates/sifr_codegen/src/python_arrow_codegen_tests.rs",
-      "crates/sifr_driver/src/build/python_interop.rs"
-    ],
-    "covers": [
-      "five nominal affine resources",
-      "Self/import-root/bridge acquisition",
-      "omitted and requested schema modes",
-      "owned consumer transfer",
-      "exact target certification and schema mismatch"
-    ]
-  },
-  "runtime": {
-    "owners": [
-      "crates/sifr_runtime/src/python/arrow_ops/abi.rs",
-      "crates/sifr_runtime/src/python/arrow_ops/tests.rs",
-      "crates/sifr_package/src/python/arrow_certification.rs",
-      "verification/areas/python_interop/runner/cpython311_arrow.py"
-    ],
-    "covers": [
-      "array/schema/stream/device-array/device-stream",
-      "wrong name and missing destructor",
-      "missing release and inconsistent pairs",
-      "one-shot export and full/partial/unconsumed transfer",
-      "double release and exact producer identity",
-      "artifact environment, fixture, archive, and cache identity"
-    ]
-  },
-  "compiled": {
-    "runner": "verification/areas/python_interop/runner/arrow_examples.py",
-    "source": "arrow_declaration_compiled.sifr",
-    "fixture": "python_certifications/arrow_evidence.py",
-    "producers": ["pyarrow.array", "pandas.DataFrame", "polars.Series"],
-    "stdout_marker": "sifr-python-interop:arrow:pyarrow=array:pandas=stream:polars=stream:resources=zero"
-  },
+  "positive": [
+    {
+      "id": "compiler-contract",
+      "owners": ["crates/sifr_lowering/src/lower/python_arrow_contract_tests.rs", "crates/sifr_codegen/src/python_arrow_codegen_tests.rs", "crates/sifr_codegen/src/python_interop_plan_tests.rs"],
+      "covers": ["five nominal kinds", "import-root producer", "Self receiver", "bridge producer", "owned consumer", "owned requested schema"]
+    },
+    {
+      "id": "runtime-protocol",
+      "owners": ["crates/sifr_runtime/src/python/arrow_ops/tests.rs", "crates/sifr_runtime/src/python/arrow_ops/abi.rs"],
+      "covers": ["five capsule kinds", "paired validation", "device metadata (synthetic runtime evidence; no accelerator-hardware claim)", "one-shot consumer proxy", "target-kind-producer admission"]
+    },
+    {
+      "id": "executable-certification",
+      "owners": ["crates/sifr/src/python_cli.rs", "crates/sifr_package/src/python/arrow_certification.rs", "verification/areas/python_interop/fixtures/pyarrow_capsule/python_certifications/arrow_evidence.py"],
+      "covers": ["measured buffer address identity", "schema-format equivalence", "instrumented exact release", "target echo", "kind echo", "distribution version", "schema mode"]
+    }
+  ],
+  "negative": [
+    {
+      "id": "declaration-and-ownership",
+      "owners": ["crates/sifr_lowering/src/lower/python_arrow_contract_tests.rs"],
+      "covers": ["invalid schema shape", "async consumer", "mutable consumer", "omittable consumer", "borrowed escape", "same-call double move", "use after move"]
+    },
+    {
+      "id": "capsule-and-device-validation",
+      "owners": ["crates/sifr_runtime/src/python/arrow_ops/tests.rs", "crates/sifr_runtime/src/python/arrow_ops/abi.rs"],
+      "covers": ["wrong name", "null payload", "missing destructor", "missing release", "misalignment", "pair mismatch", "invalid device type", "CPU sync event"]
+    },
+    {
+      "id": "certification-rejection",
+      "owners": ["crates/sifr_driver/src/build/python_interop.rs", "crates/sifr_package/src/python/arrow_certification.rs"],
+      "covers": ["missing exact target", "kind mismatch", "schema-mode mismatch", "environment mismatch", "fixture mutation", "distribution drift", "copy evidence"]
+    }
+  ],
+  "cleanup": [
+    {
+      "id": "capsule-release",
+      "owners": ["crates/sifr_runtime/src/python/arrow_ops/tests.rs", "verification/areas/python_interop/fixtures/pyarrow_capsule/python_certifications/arrow_evidence.py"],
+      "covers": ["explicit release", "automatic rollback", "real PyArrow requested-schema consumption", "instrumented exact-once release"]
+    },
+    {
+      "id": "consumer-reconciliation",
+      "owners": ["crates/sifr_runtime/src/python/arrow_ops/tests.rs", "crates/sifr_codegen/src/python_arrow_codegen_tests.rs"],
+      "covers": ["full consumption", "partial consumption", "unconsumed failure", "early wrapper exit", "moved remains moved"]
+    }
+  ],
+  "cancellation": {"status": "not-applicable", "reason": "Arrow acquisition and transfer are synchronous blocking boundaries"},
+  "live": [
+    {
+      "id": "pyarrow-pandas-polars",
+      "source": "arrow_declaration_compiled.sifr",
+      "fixture": "python_certifications/arrow_evidence.py",
+      "targets": ["pandas.DataFrame", "polars.Series", "pyarrow.array", "pyarrow.int64"],
+      "stdout_marker": "sifr-python-interop:arrow:pyarrow=array:schema=parameter:pandas=stream:polars=stream:owned-transfer=len3:rollback=ok:resources=zero"
+    }
+  ],
   "profiles": ["create-pr", "merge", "nightly", "release"]
 }

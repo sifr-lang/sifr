@@ -1,10 +1,3 @@
-use sifr_ir::{
-    HirFunction, PythonCallbackLifetime, PythonInteropDeclaration, PythonInteropDecoratorKind,
-    PythonParameterKind,
-};
-use sifr_type_system::Type;
-use std::collections::HashMap;
-
 use crate::python_interop_callbacks::{
     append_owner_failure_evidence, append_owner_failure_observer_setup,
     append_owner_failure_reconciliation, append_retained_callback_retention,
@@ -17,9 +10,14 @@ use crate::python_interop_direct_helpers::{
     drop_value, ok_return, push_for_shape, push_keyword_expr, push_named_keyword, push_positional,
 };
 pub(crate) use crate::python_interop_direct_helpers::{push_to, reference, vector_let};
-use crate::{RustExpr, RustLiteral, RustStmt};
-
 pub(crate) use crate::python_interop_runtime_exprs::{mapped_let, mapped_try, runtime_call};
+use crate::{RustExpr, RustLiteral, RustStmt};
+use sifr_ir::{
+    HirFunction, PythonCallbackLifetime, PythonInteropDeclaration, PythonInteropDecoratorKind,
+    PythonParameterKind,
+};
+use sifr_type_system::Type;
+use std::collections::HashMap;
 
 pub(crate) use crate::python_interop_direct_conversions::{
     callback_output_value_expr, input_conversion, input_conversion_borrowed, is_python_object,
@@ -396,6 +394,7 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
         crate::python_arrow_codegen::acquire_python_arrow_from_foreign(
             RustExpr::Ident("__sifr_python_result".to_string()),
             declaration.arrow.as_ref()?,
+            &target.dotted(),
             error_type,
         )
     } else {
@@ -490,7 +489,7 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
         return crate::python_buffer_codegen::receiver_interop_body(func);
     }
     if declaration.kind == PythonInteropDecoratorKind::Arrow {
-        return crate::python_arrow_codegen::receiver_interop_body(func);
+        return crate::python_arrow_codegen::receiver_interop_body(func, owner_declaration);
     }
     let mut body = Vec::new();
     if !declaration.consumes_receiver {

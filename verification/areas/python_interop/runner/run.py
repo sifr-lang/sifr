@@ -16,6 +16,7 @@ from async_context_examples import (
     build_async_context_examples_report,
     run_async_context_examples_self_tests,
 )
+from arrow_evidence import validate_arrow_declaration_evidence
 from arrow_examples import build_arrow_examples_report, run_arrow_examples_self_tests
 from buffer_examples import (
     BUFFER_EXAMPLE_CASES,
@@ -453,6 +454,8 @@ def validate_fixture_files(fixtures_root: Path) -> None:
             validate_async_context_evidence(payload)
         if name == "numpy_buffer/buffer_declaration_evidence.json":
             validate_buffer_declaration_evidence(payload, fixtures_root)
+        if name == "pyarrow_capsule/arrow_declaration_evidence.json":
+            validate_arrow_declaration_evidence(payload, fixtures_root)
     missing_sources = [
         name for name in REQUIRED_SOURCE_FIXTURES if not (fixtures_root / name).is_file()
     ]
@@ -803,6 +806,32 @@ def run_self_tests(area_root: Path) -> None:
                 raise
         else:
             raise SystemExit(f"buffer evidence self-test accepted mutation: {expected_error}")
+    arrow_evidence = json.loads(
+        (area_root / "fixtures/pyarrow_capsule/arrow_declaration_evidence.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    arrow_mutations = []
+    invalid_arrow_schema = json.loads(json.dumps(arrow_evidence))
+    invalid_arrow_schema["schema_version"] = 1
+    arrow_mutations.append((invalid_arrow_schema, "schema_version"))
+    missing_arrow_owner = json.loads(json.dumps(arrow_evidence))
+    missing_arrow_owner["positive"][0]["owners"][0] = "crates/missing.rs"
+    arrow_mutations.append((missing_arrow_owner, "owner is missing"))
+    drifted_arrow_target = json.loads(json.dumps(arrow_evidence))
+    drifted_arrow_target["live"][0]["targets"].remove("pyarrow.array")
+    arrow_mutations.append((drifted_arrow_target, "target drift"))
+    missing_arrow_profile = json.loads(json.dumps(arrow_evidence))
+    missing_arrow_profile["profiles"].remove("release")
+    arrow_mutations.append((missing_arrow_profile, "every delivery profile"))
+    for mutated, expected_error in arrow_mutations:
+        try:
+            validate_arrow_declaration_evidence(mutated, area_root / "fixtures")
+        except SystemExit as error:
+            if expected_error not in str(error):
+                raise
+        else:
+            raise SystemExit(f"Arrow evidence self-test accepted mutation: {expected_error}")
     run_env_probe(area_root)
     try:
         validate_filters("group", ["not-a-group"], KNOWN_GROUPS)

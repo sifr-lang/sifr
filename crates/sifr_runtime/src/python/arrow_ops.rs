@@ -86,6 +86,20 @@ impl PythonArrowArgument {
     }
 }
 
+impl Drop for PythonArrowArgument {
+    fn drop(&mut self) {
+        let Some(entry) = self.entry.take() else {
+            return;
+        };
+        let object = self.object.take();
+        let _ignored = super::attach(move |py| {
+            drop(object);
+            drop(entry);
+            super::foreign_object::drain_pending_releases(py);
+        });
+    }
+}
+
 struct TrackedArrowCapsules {
     capsules: Vec<Py<PyAny>>,
 }
@@ -178,17 +192,20 @@ pub fn arrow_capsule_names(handle: ArrowHandle) -> Result<Vec<String>, PythonErr
 
 pub fn require_arrow_certification(
     metadata: &PythonArrowCapsuleMetadata,
+    target: &str,
 ) -> Result<(), PythonError> {
     let config = super::runtime_config().map_err(PythonError::runtime)?;
     if config.arrow_certifications.iter().any(|certification| {
-        certification.producer_module == metadata.producer_module
+        certification.target == target
+            && certification.kind == metadata.kind
+            && certification.producer_module == metadata.producer_module
             && certification.producer_type == metadata.producer_type
     }) {
         Ok(())
     } else {
         Err(arrow_error(format!(
-            "producer '{}.{}' has no exact executable no-copy certification for this environment",
-            metadata.producer_module, metadata.producer_type
+            "target '{target}' returning '{}.{}' as '{}' has no exact executable no-copy certification for this environment",
+            metadata.producer_module, metadata.producer_type, metadata.kind
         )))
     }
 }
@@ -261,16 +278,21 @@ fn acquire_arrow_capsules(
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         let producer = producer_info(object.bind(py));
-        let requested_schema = requested_schema
-            .map(|handle| clone_requested_schema(py, handle))
-            .transpose()?;
+        let requested_schema = requested_schema.map(take_requested_schema).transpose()?;
         let exported = call_export_method(
             object.bind(py),
             kind,
-            requested_schema.as_ref().map(|schema| schema.bind(py)),
+            requested_schema.as_ref().and_then(|entry| {
+                entry
+                    .capsules
+                    .capsules
+                    .first()
+                    .map(|schema| schema.bind(py))
+            }),
         )
         .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", kind.method()))?;
         let capsules = extract_capsules(py, &exported, kind)?;
+        drop(requested_schema);
         let capsule_names = capsule_names(kind);
         store_arrow_capsules(capsules, kind, capsule_names, producer)
     })
@@ -293,8 +315,8 @@ fn call_export_method<'py>(
     }
 }
 
-fn clone_requested_schema(py: Python<'_>, handle: ArrowHandle) -> Result<Py<PyAny>, PythonError> {
-    let store = arrow_store()?;
+fn take_requested_schema(handle: ArrowHandle) -> Result<ArrowEntry, PythonError> {
+    let mut store = arrow_store()?;
     let entry = store
         .capsules
         .get(&handle.0)
@@ -305,12 +327,15 @@ fn clone_requested_schema(py: Python<'_>, handle: ArrowHandle) -> Result<Py<PyAn
             "requested_schema must be an owned python.ArrowSchema resource",
         ));
     }
-    entry
+    if entry.capsules.capsules.len() != 1 {
+        return Err(arrow_error(
+            "requested ArrowSchema resource must own exactly one capsule",
+        ));
+    }
+    store
         .capsules
-        .capsules
-        .first()
-        .map(|capsule| capsule.clone_ref(py))
-        .ok_or_else(|| arrow_error("requested ArrowSchema resource has no capsule"))
+        .remove(&handle.0)
+        .ok_or_else(|| closed_error(handle.0))
 }
 
 fn build_argument_proxy(py: Python<'_>, entry: &ArrowEntry) -> Result<ObjectHandle, PythonError> {
@@ -338,33 +363,33 @@ class _SifrOwnedArrowArgument:
         self._arrow_kind = arrow_kind
         self._exported = False
     def _require(self, arrow_kind):
-        if self._arrow_kind != arrow_kind:
-            raise TypeError(f"owned Arrow resource exports {self._arrow_kind}, not {arrow_kind}")
         if self._exported:
             raise RuntimeError("owned Arrow resource was already exported")
         self._exported = True
     def _reject_requested_schema(self, requested_schema):
         if requested_schema is not None:
             raise ValueError("owned Arrow transfer cannot satisfy a new requested schema")
-    def __arrow_c_array__(self, requested_schema=None):
-        self._reject_requested_schema(requested_schema)
-        self._require("__arrow_c_array__")
-        return self._capsules
-    def __arrow_c_schema__(self):
-        self._require("__arrow_c_schema__")
-        return self._capsules[0]
-    def __arrow_c_stream__(self, requested_schema=None):
-        self._reject_requested_schema(requested_schema)
-        self._require("__arrow_c_stream__")
-        return self._capsules[0]
-    def __arrow_c_device_array__(self, requested_schema=None):
-        self._reject_requested_schema(requested_schema)
-        self._require("__arrow_c_device_array__")
-        return self._capsules
-    def __arrow_c_device_stream__(self, requested_schema=None):
-        self._reject_requested_schema(requested_schema)
-        self._require("__arrow_c_device_stream__")
-        return self._capsules[0]
+
+def _export_pair(self, requested_schema=None):
+    self._reject_requested_schema(requested_schema)
+    self._require(self._arrow_kind)
+    return self._capsules
+
+def _export_single(self, requested_schema=None):
+    self._reject_requested_schema(requested_schema)
+    self._require(self._arrow_kind)
+    return self._capsules[0]
+
+def _export_schema(self):
+    self._require(self._arrow_kind)
+    return self._capsules[0]
+
+if ARROW_KIND == "__arrow_c_schema__":
+    setattr(_SifrOwnedArrowArgument, ARROW_KIND, _export_schema)
+elif ARROW_KIND in ("__arrow_c_array__", "__arrow_c_device_array__"):
+    setattr(_SifrOwnedArrowArgument, ARROW_KIND, _export_pair)
+else:
+    setattr(_SifrOwnedArrowArgument, ARROW_KIND, _export_single)
 obj = _SifrOwnedArrowArgument(CAPSULES, ARROW_KIND)
 "#,
         Some(&globals),
@@ -668,6 +693,13 @@ fn arrow_store() -> Result<MutexGuard<'static, ArrowStore>, PythonError> {
         context: "Arrow capsule store".to_string(),
         replay: None,
     })
+}
+
+#[cfg(test)]
+pub(super) fn reset_arrow_store_for_tests() {
+    if let Ok(mut store) = ARROW_STORE.lock() {
+        *store = ArrowStore::default();
+    }
 }
 
 #[cfg(test)]

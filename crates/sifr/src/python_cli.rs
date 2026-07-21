@@ -1,4 +1,6 @@
-use super::check_and_package_commands::load_package_graph_context;
+use super::check_and_package_commands::{
+    declaration_python_requirements, load_package_graph_context,
+};
 use super::cli_model_and_entrypoint::{
     diagnostic_with_code, package_diagnostic, DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
     EXIT_USER_DIAGNOSTIC,
@@ -49,10 +51,13 @@ enum PythonCertifyCommands {
 #[derive(Debug, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 struct ArrowFixtureEvidence {
+    target: String,
+    kind: sifr_package::ArrowCertifiedKind,
     producer_module: String,
     producer_type: String,
     distributions: Vec<sifr_package::ArrowCertifiedDistribution>,
     schema_mode: sifr_package::ArrowCertifiedSchemaMode,
+    identity_method: sifr_package::ArrowCertifiedIdentityMethod,
     pointer_identity_verified: bool,
     exact_release_count: u64,
     copy_performed: bool,
@@ -117,7 +122,8 @@ fn certification_context(diagnostic_format: DiagnosticFormat) -> Result<Certific
         .packages
         .get(&package_id)
         .ok_or(EXIT_USAGE_OR_CONFIG)?;
-    let resolved = sifr_package::resolve_python_environment(&graph_context.graph, &package_id)
+    let mut derived = declaration_python_requirements(&graph_context.source_map, None);
+    let bridge_graph = sifr_package::resolve_python_bridge_graph(&graph_context.graph, &package_id)
         .map_err(|errors| {
             let diagnostics = errors
                 .into_iter()
@@ -125,14 +131,28 @@ fn certification_context(diagnostic_format: DiagnosticFormat) -> Result<Certific
                 .collect::<Vec<_>>();
             render_diagnostics(&diagnostics, diagnostic_format);
             EXIT_USER_DIAGNOSTIC
-        })?
-        .ok_or_else(|| {
-            fail(
-                "Python certification requires a root-selected Python environment",
-                diagnostic_format,
-                EXIT_USER_DIAGNOSTIC,
-            )
         })?;
+    derived.extend(bridge_graph.requirements);
+    let resolved = sifr_package::resolve_python_environment_with_requirements(
+        &graph_context.graph,
+        &package_id,
+        &derived,
+    )
+    .map_err(|errors| {
+        let diagnostics = errors
+            .into_iter()
+            .map(package_diagnostic)
+            .collect::<Vec<_>>();
+        render_diagnostics(&diagnostics, diagnostic_format);
+        EXIT_USER_DIAGNOSTIC
+    })?
+    .ok_or_else(|| {
+        fail(
+            "Python certification requires a root-selected Python environment",
+            diagnostic_format,
+            EXIT_USER_DIAGNOSTIC,
+        )
+    })?;
     let request = sifr_package::PythonEnvironmentProbeRequest::from(&resolved);
     let probe = sifr_package::probe_python_environment(&request).map_err(|error| {
         render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
@@ -152,20 +172,9 @@ fn certify_arrow(
     fixture: &Path,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    let fixture = if fixture.is_absolute() {
-        fixture.to_path_buf()
-    } else {
-        context.package_root.join(fixture)
-    };
-    let relative = match fixture.strip_prefix(&context.package_root) {
-        Ok(path) if !path.as_os_str().is_empty() => path,
-        _ => {
-            return fail(
-                "Arrow certification fixture must stay inside the package",
-                diagnostic_format,
-                EXIT_USER_DIAGNOSTIC,
-            );
-        }
+    let (fixture, relative) = match validated_fixture(context, fixture) {
+        Ok(value) => value,
+        Err(reason) => return fail(reason, diagnostic_format, EXIT_USER_DIAGNOSTIC),
     };
     let evidence = match run_fixture(context, &fixture, target) {
         Ok(evidence) => evidence,
@@ -180,12 +189,14 @@ fn certify_arrow(
     };
     let certification = sifr_package::ArrowCertification {
         target: target.to_string(),
+        kind: evidence.kind,
         fixture: relative.to_string_lossy().replace('\\', "/"),
         fixture_digest,
         producer_module: evidence.producer_module,
         producer_type: evidence.producer_type,
         distributions: evidence.distributions,
         schema_mode: evidence.schema_mode,
+        identity_method: evidence.identity_method,
         pointer_identity_verified: evidence.pointer_identity_verified,
         exact_release_count: evidence.exact_release_count,
         copy_performed: evidence.copy_performed,
@@ -227,6 +238,48 @@ fn certify_arrow(
     }
 }
 
+fn validated_fixture(
+    context: &CertificationContext,
+    fixture: &Path,
+) -> Result<(PathBuf, PathBuf), String> {
+    let candidate = if fixture.is_absolute() {
+        fixture.to_path_buf()
+    } else {
+        context.package_root.join(fixture)
+    };
+    let relative = candidate
+        .strip_prefix(&context.package_root)
+        .map_err(|_| "Arrow certification fixture must stay inside the package".to_string())?;
+    if relative.as_os_str().is_empty() {
+        return Err("Arrow certification fixture must name a package file".to_string());
+    }
+    let candidate =
+        sifr_package::arrow_fixture_path(&context.package_root, &relative.to_string_lossy())?;
+    let metadata = std::fs::symlink_metadata(&candidate).map_err(|error| {
+        format!(
+            "could not inspect fixture '{}': {error}",
+            candidate.display()
+        )
+    })?;
+    if metadata.file_type().is_symlink() || !metadata.is_file() {
+        return Err(format!(
+            "Arrow certification fixture '{}' must be a regular package file",
+            candidate.display()
+        ));
+    }
+    let canonical_root = context
+        .package_root
+        .canonicalize()
+        .map_err(|error| format!("could not resolve package root: {error}"))?;
+    let canonical_fixture = candidate
+        .canonicalize()
+        .map_err(|error| format!("could not resolve fixture: {error}"))?;
+    if !canonical_fixture.starts_with(canonical_root) {
+        return Err("Arrow certification fixture must stay inside the package".to_string());
+    }
+    Ok((candidate, relative.to_path_buf()))
+}
+
 fn check_certifications(
     context: &CertificationContext,
     diagnostic_format: DiagnosticFormat,
@@ -252,9 +305,12 @@ fn check_certifications(
             return fail(reason, diagnostic_format, EXIT_USER_DIAGNOSTIC);
         }
         if evidence.producer_module != certification.producer_module
+            || evidence.target != certification.target
+            || evidence.kind != certification.kind
             || evidence.producer_type != certification.producer_type
             || evidence.distributions != certification.distributions
             || evidence.schema_mode != certification.schema_mode
+            || evidence.identity_method != certification.identity_method
             || evidence.pointer_identity_verified != certification.pointer_identity_verified
             || evidence.exact_release_count != certification.exact_release_count
             || evidence.copy_performed != certification.copy_performed
@@ -305,6 +361,7 @@ fn validate_evidence(
     evidence: &ArrowFixtureEvidence,
 ) -> Result<(), String> {
     if target.trim().is_empty()
+        || evidence.target != target
         || evidence.producer_module.trim().is_empty()
         || evidence.producer_type.trim().is_empty()
     {

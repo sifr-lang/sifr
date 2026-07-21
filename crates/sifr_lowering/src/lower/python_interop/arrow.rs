@@ -129,10 +129,10 @@ pub(super) fn validate_signature(
                 *span,
             );
         }
-        if !parameter.convention.is_shared_borrow() {
+        if !parameter.convention.is_owned() || parameter.convention.is_mutable() {
             invalid(
                 ctx,
-                &format!("schema parameter `{name}` must be an immutable borrowed parameter"),
+                &format!("schema parameter `{name}` must transfer ownership with plain `own`"),
                 *span,
             );
         }

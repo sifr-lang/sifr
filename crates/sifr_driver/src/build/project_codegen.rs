@@ -212,6 +212,7 @@ mod tests {
     fn arrow_certification_changes_package_cache_identity() {
         let certification = |producer_type: &str| sifr_package::ArrowCertification {
             target: "pyarrow.array".to_string(),
+            kind: sifr_package::ArrowCertifiedKind::Array,
             fixture: "fixtures/arrow.py".to_string(),
             fixture_digest: "fixture-digest".to_string(),
             producer_module: "pyarrow.lib".to_string(),
@@ -221,6 +222,7 @@ mod tests {
                 version: "22.0.0".to_string(),
             }],
             schema_mode: sifr_package::ArrowCertifiedSchemaMode::Omitted,
+            identity_method: sifr_package::ArrowCertifiedIdentityMethod::BufferAddress,
             pointer_identity_verified: true,
             exact_release_count: 1,
             copy_performed: false,

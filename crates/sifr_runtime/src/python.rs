@@ -134,6 +134,8 @@ pub struct PythonRuntimeConfig {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PythonArrowCertification {
+    pub target: String,
+    pub kind: String,
     pub producer_module: String,
     pub producer_type: String,
 }
@@ -597,6 +599,7 @@ fn py_error(error: &PyErr) -> PythonRuntimeError {
 
 #[cfg(test)]
 fn reset_runtime_state_for_tests() {
+    arrow_ops::reset_arrow_store_for_tests();
     let _ignored = async_runtime::shutdown();
     async_runtime::reset_for_tests();
     let _ignored = Python::try_attach(bridge_loader::reset_for_tests);

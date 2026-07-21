@@ -10,8 +10,11 @@ struct ArrowResource {
 }
 
 impl ArrowResource {
-    fn new(metadata: python::PythonArrowCapsuleMetadata) -> Result<Self, PythonError> {
-        if let Err(error) = python::require_arrow_certification(&metadata) {
+    fn new(
+        metadata: python::PythonArrowCapsuleMetadata,
+        certification_target: &str,
+    ) -> Result<Self, PythonError> {
+        if let Err(error) = python::require_arrow_certification(&metadata, certification_target) {
             let _ignored = python::release_arrow((metadata.handle, metadata.token));
             return Err(error);
         }
@@ -80,14 +83,20 @@ macro_rules! arrow_resource {
         }
 
         impl $name {
-            pub fn acquire(object: &PythonObject) -> Result<Self, PythonError> {
-                Self::acquire_foreign(object_bridge::object_value(object)?)
+            pub fn acquire(
+                object: &PythonObject,
+                certification_target: &str,
+            ) -> Result<Self, PythonError> {
+                Self::acquire_foreign(object_bridge::object_value(object)?, certification_target)
             }
 
             #[doc(hidden)]
-            pub fn acquire_foreign(object: &python::ForeignObject) -> Result<Self, PythonError> {
+            pub fn acquire_foreign(
+                object: &python::ForeignObject,
+                certification_target: &str,
+            ) -> Result<Self, PythonError> {
                 python::$acquire(object)
-                    .and_then(ArrowResource::new)
+                    .and_then(|metadata| ArrowResource::new(metadata, certification_target))
                     .map(|resource| Self { resource })
             }
 
@@ -128,18 +137,25 @@ macro_rules! requested_schema_acquisition {
         impl $name {
             pub fn acquire_with_schema(
                 object: &PythonObject,
-                schema: &PythonArrowSchema,
+                schema: PythonArrowSchema,
+                certification_target: &str,
             ) -> Result<Self, PythonError> {
-                Self::acquire_foreign_with_schema(object_bridge::object_value(object)?, schema)
+                Self::acquire_foreign_with_schema(
+                    object_bridge::object_value(object)?,
+                    schema,
+                    certification_target,
+                )
             }
 
             #[doc(hidden)]
             pub fn acquire_foreign_with_schema(
                 object: &python::ForeignObject,
-                schema: &PythonArrowSchema,
+                schema: PythonArrowSchema,
+                certification_target: &str,
             ) -> Result<Self, PythonError> {
-                python::$acquire(object, schema.resource.handle()?)
-                    .and_then(ArrowResource::new)
+                let identity = take_resource(schema.resource.identity)?;
+                python::$acquire(object, identity.into_arrow_key()?)
+                    .and_then(|metadata| ArrowResource::new(metadata, certification_target))
                     .map(|resource| Self { resource })
             }
         }

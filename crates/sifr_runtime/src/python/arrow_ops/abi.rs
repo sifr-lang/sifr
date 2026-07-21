@@ -88,7 +88,7 @@ pub(super) enum ConsumptionState {
 }
 
 pub(super) fn validate_schema(pointer: NonNull<c_void>, context: &str) -> Result<(), PythonError> {
-    let schema = unsafe { pointer.cast::<ArrowSchema>().as_ref() };
+    let schema = checked_ref::<ArrowSchema>(pointer, context, "ArrowSchema")?;
     if schema.release.is_none() {
         return Err(arrow_error(format!(
             "{context} ArrowSchema has no release callback"
@@ -108,7 +108,7 @@ pub(super) fn validate_schema(pointer: NonNull<c_void>, context: &str) -> Result
 }
 
 pub(super) fn validate_array(pointer: NonNull<c_void>, context: &str) -> Result<(), PythonError> {
-    let array = unsafe { pointer.cast::<ArrowArray>().as_ref() };
+    let array = checked_ref::<ArrowArray>(pointer, context, "ArrowArray")?;
     validate_array_value(array, context)
 }
 
@@ -119,8 +119,8 @@ pub(super) fn validate_array_pair(
 ) -> Result<(), PythonError> {
     validate_schema(schema_pointer, context)?;
     validate_array(array_pointer, context)?;
-    let schema = unsafe { schema_pointer.cast::<ArrowSchema>().as_ref() };
-    let array = unsafe { array_pointer.cast::<ArrowArray>().as_ref() };
+    let schema = checked_ref::<ArrowSchema>(schema_pointer, context, "ArrowSchema")?;
+    let array = checked_ref::<ArrowArray>(array_pointer, context, "ArrowArray")?;
     if schema.n_children != array.n_children {
         return Err(arrow_error(format!(
             "{context} schema/array child counts differ ({} != {})",
@@ -136,7 +136,7 @@ pub(super) fn validate_array_pair(
 }
 
 pub(super) fn validate_stream(pointer: NonNull<c_void>, context: &str) -> Result<(), PythonError> {
-    let stream = unsafe { pointer.cast::<ArrowArrayStream>().as_ref() };
+    let stream = checked_ref::<ArrowArrayStream>(pointer, context, "ArrowArrayStream")?;
     if stream.get_schema.is_none()
         || stream.get_next.is_none()
         || stream.get_last_error.is_none()
@@ -155,7 +155,7 @@ pub(super) fn validate_device_array_pair(
     context: &str,
 ) -> Result<(), PythonError> {
     validate_schema(schema_pointer, context)?;
-    let device = unsafe { device_pointer.cast::<ArrowDeviceArray>().as_ref() };
+    let device = checked_ref::<ArrowDeviceArray>(device_pointer, context, "ArrowDeviceArray")?;
     validate_array_value(&device.array, context)?;
     validate_device_type(device.device_type, context)?;
     if device.device_id < 0 {
@@ -163,12 +163,17 @@ pub(super) fn validate_device_array_pair(
             "{context} ArrowDeviceArray has a negative device_id"
         )));
     }
+    if device.device_type == 1 && !device.sync_event.is_null() {
+        return Err(arrow_error(format!(
+            "{context} CPU ArrowDeviceArray must have a null sync_event"
+        )));
+    }
     if device.reserved != [0; 3] {
         return Err(arrow_error(format!(
             "{context} ArrowDeviceArray reserved fields must be zero"
         )));
     }
-    let schema = unsafe { schema_pointer.cast::<ArrowSchema>().as_ref() };
+    let schema = checked_ref::<ArrowSchema>(schema_pointer, context, "ArrowSchema")?;
     if schema.n_children != device.array.n_children {
         return Err(arrow_error(format!(
             "{context} schema/device-array child counts differ ({} != {})",
@@ -187,7 +192,7 @@ pub(super) fn validate_device_stream(
     pointer: NonNull<c_void>,
     context: &str,
 ) -> Result<(), PythonError> {
-    let stream = unsafe { pointer.cast::<ArrowDeviceArrayStream>().as_ref() };
+    let stream = checked_ref::<ArrowDeviceArrayStream>(pointer, context, "ArrowDeviceArrayStream")?;
     validate_device_type(stream.device_type, context)?;
     if stream.get_schema.is_none()
         || stream.get_next.is_none()
@@ -318,10 +323,23 @@ fn validate_count_and_pointer(
     Ok(())
 }
 
+fn checked_ref<'a, T>(
+    pointer: NonNull<c_void>,
+    context: &str,
+    structure: &str,
+) -> Result<&'a T, PythonError> {
+    if pointer.as_ptr().addr() % std::mem::align_of::<T>() != 0 {
+        return Err(arrow_error(format!(
+            "{context} {structure} payload is not correctly aligned"
+        )));
+    }
+    Ok(unsafe { pointer.cast::<T>().as_ref() })
+}
+
 fn validate_device_type(device_type: i32, context: &str) -> Result<(), PythonError> {
     // ArrowDeviceType follows the stable DLPack device-type identifiers. Keep
     // this closed so unknown future values require an explicit runtime update.
-    const KNOWN_DEVICE_TYPES: &[i32] = &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+    const KNOWN_DEVICE_TYPES: &[i32] = &[1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
     if KNOWN_DEVICE_TYPES.contains(&device_type) {
         Ok(())
     } else {
@@ -377,6 +395,15 @@ mod tests {
         );
 
         device.reserved = [0; 3];
+        device.sync_event = std::ptr::dangling_mut();
+        assert!(
+            validate_device_array_pair(pointer(&mut schema), pointer(&mut device), "test")
+                .expect_err("CPU sync event must be null")
+                .message
+                .contains("sync_event")
+        );
+
+        device.sync_event = std::ptr::null_mut();
         device.device_type = 999;
         assert!(
             validate_device_array_pair(pointer(&mut schema), pointer(&mut device), "test")
@@ -384,6 +411,26 @@ mod tests {
                 .message
                 .contains("unknown Arrow device type")
         );
+    }
+
+    #[test]
+    fn rejects_misaligned_payloads_and_reserved_device_types() {
+        let mut words = [0_u64; (std::mem::size_of::<ArrowSchema>() / 8) + 2];
+        let pointer = NonNull::new(
+            words
+                .as_mut_ptr()
+                .cast::<u8>()
+                .wrapping_add(1)
+                .cast::<c_void>(),
+        )
+        .expect("offset pointer");
+        assert!(validate_schema(pointer, "test")
+            .expect_err("misaligned schema must fail before dereference")
+            .message
+            .contains("aligned"));
+        for reserved in [5, 6] {
+            assert!(validate_device_type(reserved, "test").is_err());
+        }
     }
 
     fn schema() -> ArrowSchema {

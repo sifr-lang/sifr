@@ -12,8 +12,8 @@ pub use arrow_certification::{
     load_python_certifications_for_update, required_python_certification_archive_entries,
     safe_fixture_path as arrow_fixture_path, validate_python_certifications,
     write_python_certifications, ArrowCertification, ArrowCertifiedDistribution,
-    ArrowCertifiedSchemaMode, PythonCertificationArtifact, ARROW_CERTIFICATION_SCHEMA_VERSION,
-    PYTHON_CERTIFICATIONS_FILE,
+    ArrowCertifiedIdentityMethod, ArrowCertifiedKind, ArrowCertifiedSchemaMode,
+    PythonCertificationArtifact, ARROW_CERTIFICATION_SCHEMA_VERSION, PYTHON_CERTIFICATIONS_FILE,
 };
 pub use bridge_inventory::{
     discover_python_bridge_inventory, required_python_bridge_archive_entries,

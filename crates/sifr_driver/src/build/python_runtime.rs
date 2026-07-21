@@ -259,6 +259,8 @@ fn render_arrow_certifications(certifications: &[sifr_package::ArrowCertificatio
         .iter()
         .map(|certification| {
             (
+                certification.target.as_str(),
+                certified_arrow_kind(certification.kind),
                 certification.producer_module.as_str(),
                 certification.producer_type.as_str(),
             )
@@ -268,15 +270,27 @@ fn render_arrow_certifications(certifications: &[sifr_package::ArrowCertificatio
     identities.dedup();
     identities
         .into_iter()
-        .map(|(module, producer_type)| {
+        .map(|(target, kind, module, producer_type)| {
             format!(
-                "::sifr_runtime::python::PythonArrowCertification {{ producer_module: {}.to_string(), producer_type: {}.to_string() }}",
+                "::sifr_runtime::python::PythonArrowCertification {{ target: {}.to_string(), kind: {}.to_string(), producer_module: {}.to_string(), producer_type: {}.to_string() }}",
+                rust_string_literal(target),
+                rust_string_literal(kind),
                 rust_string_literal(module),
                 rust_string_literal(producer_type)
             )
         })
         .collect::<Vec<_>>()
         .join(", ")
+}
+
+const fn certified_arrow_kind(kind: sifr_package::ArrowCertifiedKind) -> &'static str {
+    match kind {
+        sifr_package::ArrowCertifiedKind::Array => "array",
+        sifr_package::ArrowCertifiedKind::Schema => "schema",
+        sifr_package::ArrowCertifiedKind::Stream => "stream",
+        sifr_package::ArrowCertifiedKind::DeviceArray => "device_array",
+        sifr_package::ArrowCertifiedKind::DeviceStream => "device_stream",
+    }
 }
 
 pub(super) fn inject_python_runtime_bootstrap(

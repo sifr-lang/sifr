@@ -552,9 +552,10 @@ def arrow_stream(self) -> Result[python.ArrowStream, PythonError]: ...
 
 Requested schemas are explicit. `schema=omitted` calls the protocol without a
 requested schema. `schema=parameter(name)` requires a same-declaration
-keyword-only borrowed `python.ArrowSchema` parameter and passes that capsule to
-`__arrow_c_array__` or `__arrow_c_stream__`; certification binds the exact
-schema/producer contract. No implicit schema request exists.
+keyword-only owned `python.ArrowSchema` parameter and passes that capsule once
+to `__arrow_c_array__` or `__arrow_c_stream__`; certification binds the exact
+schema/producer contract. Conforming producers may consume the requested schema
+capsule, so the source binding remains moved. No implicit schema request exists.
 
 The permitted return types are `python.ArrowArray` (owning the required schema
 and array capsule pair), `python.ArrowSchema`, `python.ArrowStream`,
@@ -574,10 +575,13 @@ zero-copy resource. There is no policy that silently accepts uncertain copying.
 
 Certification is package-authored, not a compiler allowlist. The package owns an
 executable Python fixture and the root `sifr.python-certifications.json`
-artifact, keyed by the exact Python declaration target. The versioned artifact
-records the target, fixture path and digest, exact producer module/type,
-distribution names and versions, schema mode, pointer-identity result, one
-release per capsule, and the no-copy result. Its environment digest binds the
+artifact, keyed by the exact Python declaration target and Arrow kind. Receiver
+declarations use the enclosing opaque type's exact Python target rather than
+the syntactic `Self`. The versioned artifact records the target, kind, fixture
+path and digest, exact producer module/type,
+distribution names and versions, schema mode, the explicit identity method
+(buffer-address equality or schema-format equivalence), its verified result,
+one release per capsule, and the no-copy result. Its environment digest binds the
 selected interpreter probe and locked environment. It never records absolute
 addresses, which are unstable across processes. The artifact, its fixtures,
 and its serialized identity participate in package archives and generated
@@ -593,12 +597,13 @@ sifr python certify --check
 ```
 
 The first command executes the package-local fixture with the selected CPython
-interpreter and exact target argument, validates its strict JSON evidence, and
+interpreter and exact target argument, validates its strict JSON evidence
+(including echoed target and kind), and
 writes or updates the root artifact. The read-only `--check` reruns every
 fixture and fails on environment, source, producer, distribution, schema,
 pointer-identity, release-count, or copy-result drift. A consumer build requires
-the exact target and schema mode before target probing and admits the returned
-resource only when its runtime module/type identity also matches. Any package
+the exact target, kind, and schema mode before target probing and admits the
+returned resource only when its runtime module/type identity also matches. Any package
 author can certify a new producer without changing Sifr itself.
 
 Arrow resources are affine and non-send, and invoke each owned capsule's exact

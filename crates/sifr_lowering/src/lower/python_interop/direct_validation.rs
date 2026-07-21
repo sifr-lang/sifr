@@ -41,16 +41,47 @@ pub(super) fn validate_direct_parameters(
                 shape.span,
             );
         }
-        if matches!(param.ty.resolve_alias(), Type::PythonArrow(_)) && !param.convention.is_owned()
-        {
-            arrow::invalid(
-                ctx,
-                &format!(
-                    "Arrow consumer parameter '{}' must transfer ownership with `own`",
-                    param.name
-                ),
-                shape.span,
-            );
+        if matches!(param.ty.resolve_alias(), Type::PythonArrow(_)) {
+            if !param.convention.is_owned() {
+                arrow::invalid(
+                    ctx,
+                    &format!(
+                        "Arrow consumer parameter '{}' must transfer ownership with `own`",
+                        param.name
+                    ),
+                    shape.span,
+                );
+            }
+            if param.convention.is_mutable() {
+                arrow::invalid(
+                    ctx,
+                    &format!(
+                        "Arrow consumer parameter '{}' cannot use mutable ownership; transfer it with plain `own`",
+                        param.name
+                    ),
+                    shape.span,
+                );
+            }
+            if shape.omit_when_absent {
+                arrow::invalid(
+                    ctx,
+                    &format!(
+                        "Arrow consumer parameter '{}' cannot be omitted because affine resources require an explicit one-shot transfer",
+                        param.name
+                    ),
+                    shape.span,
+                );
+            }
+            if declaration.effect == PythonInteropEffect::Async {
+                arrow::invalid(
+                    ctx,
+                    &format!(
+                        "Arrow consumer parameter '{}' is not supported on async Python declarations",
+                        param.name
+                    ),
+                    shape.span,
+                );
+            }
         }
         let supported = match shape.kind {
             PythonParameterKind::Positional | PythonParameterKind::KeywordOnly => {

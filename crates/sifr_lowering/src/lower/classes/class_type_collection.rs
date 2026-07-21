@@ -704,6 +704,24 @@ pub(in crate::lower) fn collect_class_type(
                             }
                         }
                     }
+                    let regular_count = func.parameters.args.len().saturating_sub(skip_count)
+                        + usize::from(func.parameters.vararg.is_some());
+                    for (i, param) in func.parameters.kwonlyargs.iter().enumerate() {
+                        if let Some(ref default_expr) = param.default {
+                            if let Some(hir_default) = lower_expr_simple(default_expr) {
+                                defaults.push((regular_count + i, hir_default));
+                            } else {
+                                ctx.error_with_code_at(
+                                    DiagnosticCode::TYPE_UNSUPPORTED_DEFAULT_ARGUMENT,
+                                    format!(
+                                        "class '{class_name}.{method_name}': unsupported default argument expression for parameter '{}'",
+                                        param.parameter.name
+                                    ),
+                                    default_expr.range(),
+                                );
+                            }
+                        }
+                    }
                     if !defaults.is_empty() {
                         ctx.function_defaults
                             .insert(format!("{class_name}.{method_name}"), defaults);

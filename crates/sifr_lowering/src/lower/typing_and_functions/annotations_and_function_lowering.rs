@@ -736,9 +736,11 @@ pub(in crate::lower) fn lower_function(
     ctx.current_function_is_async = effective_is_async;
     ctx.current_function_is_async_generator = is_async_generator;
     ctx.current_function_trusts_dynamic_python = has_decorator(func, "trust_python_dynamic");
-    for param in &params {
-        if param.convention.is_owned() {
-            ctx.record_must_use_binding(&param.name, &param.ty);
+    if !skips_normal_body_lowering {
+        for param in &params {
+            if param.convention.is_owned() {
+                ctx.record_must_use_binding(&param.name, &param.ty);
+            }
         }
     }
     let body = if skips_normal_body_lowering {

@@ -11,8 +11,8 @@ ARROW_EXAMPLE_CASES = {
         case_id="pyarrow-pandas-polars",
         relative_source="pyarrow_capsule/arrow_declaration_compiled.sifr",
         stdout_marker=(
-            "sifr-python-interop:arrow:pyarrow=array:pandas=stream:"
-            "polars=stream:resources=zero"
+            "sifr-python-interop:arrow:pyarrow=array:schema=parameter:pandas=stream:"
+            "polars=stream:owned-transfer=len3:rollback=ok:resources=zero"
         ),
         import_roots=("pandas", "polars", "pyarrow"),
         native_roots=("pandas", "polars", "pyarrow"),
@@ -21,7 +21,9 @@ ARROW_EXAMPLE_CASES = {
             ("pandas.DataFrame", "python_certifications/arrow_evidence.py"),
             ("polars.Series", "python_certifications/arrow_evidence.py"),
             ("pyarrow.array", "python_certifications/arrow_evidence.py"),
+            ("pyarrow.int64", "python_certifications/arrow_evidence.py"),
         ),
+        explicit_requirements=False,
     ),
 }
 
@@ -45,5 +47,5 @@ def run_arrow_examples_self_tests(paths: RunnerPaths) -> None:
         cases_by_id=ARROW_EXAMPLE_CASES,
     )
     case = ARROW_EXAMPLE_CASES["pyarrow-pandas-polars"]
-    if len(case.arrow_certifications) != 3:
+    if len(case.arrow_certifications) != 4:
         raise SystemExit("Arrow example certification matrix drift")

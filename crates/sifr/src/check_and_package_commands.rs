@@ -252,7 +252,7 @@ fn package_python_runtime(
     Ok(Some(runtime))
 }
 
-fn declaration_python_requirements(
+pub(super) fn declaration_python_requirements(
     source_map: &sifr_package::PackageSourceMap,
     entry_file: Option<(&Path, &sifr_package::SifrPackageId)>,
 ) -> Vec<sifr_package::PythonRequirementContribution> {
@@ -307,7 +307,11 @@ fn collect_statement_python_requirements(
                 let Expr::Call(call) = &decorator.expression else {
                     continue;
                 };
-                if !matches!(call.func.as_ref(), Expr::Name(name) if name.id.as_str() == "python") {
+                if dotted_root(&call.func).as_deref() != Some("python") {
+                    continue;
+                }
+                if matches!(call.func.as_ref(), Expr::Attribute(attribute) if attribute.attr.as_str() == "callback")
+                {
                     continue;
                 }
                 let Some(target) = call.arguments.args.first() else {

@@ -1672,7 +1672,10 @@ Tasks:
 - Implement receiver acquisition for `Self` and call-then-acquire for import-root
   or bridge producer targets.
 - Implement `schema=omitted | parameter(name)` and validate the latter as a
-  same-declaration keyword-only borrowed `python.ArrowSchema` parameter.
+  same-declaration keyword-only owned `python.ArrowSchema` parameter. Requested
+  schema capsules are consumed by conforming Arrow producers, so the type-level
+  contract must expose the one-shot transfer rather than promise a reusable
+  borrow.
 - Validate exact capsule names, non-null payloads, release callbacks, device
   metadata, producer identity, and paired schema/data consistency.
 - Require executable no-copy certification tied to the exact producer and

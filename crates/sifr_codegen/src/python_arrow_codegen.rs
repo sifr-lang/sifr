@@ -57,22 +57,25 @@ pub(crate) fn append_argument_preparation(
 pub(crate) fn acquire_python_arrow_from_foreign(
     producer: RustExpr,
     contract: &PythonArrowDeclaration,
+    certification_target: &str,
     error_type: &Type,
 ) -> RustExpr {
-    acquire_python_arrow(producer, contract, error_type, true)
+    acquire_python_arrow(producer, contract, certification_target, error_type, true)
 }
 
 fn acquire_python_arrow_from_receiver(
     producer: RustExpr,
     contract: &PythonArrowDeclaration,
+    certification_target: &str,
     error_type: &Type,
 ) -> RustExpr {
-    acquire_python_arrow(producer, contract, error_type, true)
+    acquire_python_arrow(producer, contract, certification_target, error_type, true)
 }
 
 fn acquire_python_arrow(
     producer: RustExpr,
     contract: &PythonArrowDeclaration,
+    certification_target: &str,
     error_type: &Type,
     foreign: bool,
 ) -> RustExpr {
@@ -89,6 +92,12 @@ fn acquire_python_arrow(
     if let PythonArrowSchemaMode::Parameter { name, .. } = &contract.schema {
         args.push(RustExpr::Ident(name.clone()));
     }
+    args.push(RustExpr::Ref {
+        mutable: false,
+        expr: Box::new(RustExpr::Literal(crate::RustLiteral::Str(
+            certification_target.to_string(),
+        ))),
+    });
     crate::python_interop_runtime_exprs::mapped_try(
         RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec![
@@ -103,7 +112,10 @@ fn acquire_python_arrow(
     )
 }
 
-pub(crate) fn receiver_interop_body(func: &HirFunction) -> Option<Vec<RustStmt>> {
+pub(crate) fn receiver_interop_body(
+    func: &HirFunction,
+    owner_declaration: Option<&sifr_ir::PythonInteropDeclaration>,
+) -> Option<Vec<RustStmt>> {
     let declaration = func.python_interop.first()?;
     if declaration.kind != PythonInteropDecoratorKind::Arrow {
         return None;
@@ -118,12 +130,14 @@ pub(crate) fn receiver_interop_body(func: &HirFunction) -> Option<Vec<RustStmt>>
     if target.segments.as_slice() != ["Self"] {
         return None;
     }
+    let certification_target = owner_declaration?.target.as_ref()?.dotted();
     let acquired = acquire_python_arrow_from_receiver(
         RustExpr::Field {
             expr: Box::new(RustExpr::Ident("self".to_string())),
             field: "__sifr_python_object".to_string(),
         },
         declaration.arrow.as_ref()?,
+        &certification_target,
         error_type,
     );
     Some(vec![RustStmt::Return(Some(RustExpr::FnCall {

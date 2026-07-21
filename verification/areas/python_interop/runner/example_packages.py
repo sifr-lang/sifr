@@ -23,6 +23,7 @@ class ExampleCase:
     copy_bridges: bool = True
     bridge_files: tuple[str, ...] | None = None
     arrow_certifications: tuple[tuple[str, str], ...] = ()
+    explicit_requirements: bool = True
 
 
 def build_examples_report(
@@ -282,29 +283,33 @@ def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCa
     roots = ", ".join(f'"{root}"' for root in case.import_roots)
     native_roots = case.native_roots if case.native_roots is not None else case.import_roots
     native_roots_toml = ", ".join(f'"{root}"' for root in native_roots)
+    manifest_lines = [
+        "[package]",
+        f'name = "python_interop_{suite_name}_examples"',
+        'edition = "2026"',
+        'sifr-version = ">=0.3,<0.4"',
+        "",
+        "[source]",
+        'root = "src"',
+        "",
+        "[python]",
+        'venv = ".venv"',
+        'pyproject = "pyproject.toml"',
+        'lock = "uv.lock"',
+    ]
+    if case.explicit_requirements:
+        manifest_lines.append(f"requires-imports = [{roots}]")
+    manifest_lines.extend(
+        [
+            "",
+            "[trust]",
+            f"python = [{roots}]",
+            f"python-native = [{native_roots_toml}]",
+            "",
+        ]
+    )
     (package_root / "sifr.toml").write_text(
-        "\n".join(
-            [
-                "[package]",
-                f'name = "python_interop_{suite_name}_examples"',
-                'edition = "2026"',
-                'sifr-version = ">=0.3,<0.4"',
-                "",
-                "[source]",
-                'root = "src"',
-                "",
-                "[python]",
-                'venv = ".venv"',
-                'pyproject = "pyproject.toml"',
-                'lock = "uv.lock"',
-                f"requires-imports = [{roots}]",
-                "",
-                "[trust]",
-                f"python = [{roots}]",
-                f"python-native = [{native_roots_toml}]",
-                "",
-            ]
-        ),
+        "\n".join(manifest_lines),
         encoding="utf-8",
     )
     venv_link = package_root / ".venv"

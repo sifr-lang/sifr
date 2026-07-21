@@ -1,8 +1,27 @@
 from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-@python.arrow(pyarrow.array, schema=omitted)
-def pyarrow_array(values: list[int]) -> Result[python.ArrowArray, PythonError]: ...
+@python.opaque(type=pyarrow.Array, cleanup=drop)
+class PyArrowArray(NonSend):
+    @python(Self.__len__)
+    def length(self) -> Result[int, PythonError]: ...
+
+
+@python.arrow(pyarrow.int64, schema=omitted)
+def int64_schema() -> Result[python.ArrowSchema, PythonError]: ...
+
+
+@python.arrow(pyarrow.array, schema=parameter(requested))
+def pyarrow_array(values: list[int], *, own requested: python.ArrowSchema) -> Result[python.ArrowArray, PythonError]: ...
+
+
+def acquire_array(values: list[int]) -> Result[python.ArrowArray, PythonError]:
+    try:
+        requested: python.ArrowSchema = int64_schema()
+        array: python.ArrowArray = pyarrow_array(values, requested=requested)
+        return array
+    except PythonError as error:
+        raise error
 
 
 @python.arrow(pandas.DataFrame, schema=omitted)
@@ -13,10 +32,36 @@ def pandas_frame(values: list[int]) -> Result[python.ArrowStream, PythonError]: 
 def polars_series(values: list[int]) -> Result[python.ArrowStream, PythonError]: ...
 
 
+@python(pyarrow.array)
+def import_arrow(own value: python.ArrowArray) -> Result[PyArrowArray, PythonError]: ...
+
+
+@python(pyarrow.array)
+def invalid_import(own value: python.ArrowArray, *, type: str) -> Result[PyArrowArray, PythonError]: ...
+
+
+def consume_length() -> Result[int, PythonError]:
+    try:
+        value: python.ArrowArray = acquire_array([1, 2, 3])
+        imported: PyArrowArray = import_arrow(value)
+        return imported.length()
+    except PythonError as error:
+        raise error
+
+
+def consume_failure() -> bool:
+    try:
+        value: python.ArrowArray = acquire_array([1, 2, 3])
+        converted: PyArrowArray = invalid_import(value, type="not-a-real-arrow-type")
+        return False
+    except PythonError:
+        return True
+
+
 def main() -> Result[None, PythonError]:
     try:
         before: ResourceDiagnostics = resource_diagnostics()
-        array: python.ArrowArray = pyarrow_array([1, 2, 3])
+        array: python.ArrowArray = acquire_array([1, 2, 3])
         pandas_stream: python.ArrowStream = pandas_frame([4, 5, 6])
         polars_stream: python.ArrowStream = polars_series([7, 8, 9])
         array_names: list[str] = array.capsule_names()
@@ -26,11 +71,13 @@ def main() -> Result[None, PythonError]:
         released_array: None = array.release()
         released_pandas: None = pandas_stream.release()
         released_polars: None = polars_stream.release()
+        consumed_length: int = consume_length()
+        rollback_ok: bool = consume_failure()
         after: ResourceDiagnostics = resource_diagnostics()
         resources_ok: bool = after.live_objects == before.live_objects and after.leaked_objects == before.leaked_objects
-        if not metadata_ok or not resources_ok:
+        if not metadata_ok or consumed_length != 3 or not rollback_ok or not resources_ok:
             raise PythonError("compiled Arrow declaration evidence was incorrect")
-        print("sifr-python-interop:arrow:pyarrow=array:pandas=stream:polars=stream:resources=zero")
+        print("sifr-python-interop:arrow:pyarrow=array:schema=parameter:pandas=stream:polars=stream:owned-transfer=len3:rollback=ok:resources=zero")
         return None
     except PythonError as error:
         raise error

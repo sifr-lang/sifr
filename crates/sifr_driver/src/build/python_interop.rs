@@ -91,7 +91,10 @@ pub(super) fn apply_python_interop_metadata(
         let Some(target) = declaration.declaration.target.as_ref() else {
             continue;
         };
-        let target = target.dotted();
+        let target = declaration
+            .certification_target
+            .clone()
+            .unwrap_or_else(|| target.dotted());
         let Some(certification) = runtime.arrow_certification(&target) else {
             diagnostics.push(diagnostic_with_code(
                 format!(
@@ -113,6 +116,19 @@ pub(super) fn apply_python_interop_metadata(
             diagnostics.push(diagnostic_with_code(
                 format!(
                     "Arrow declaration target '{target}' schema-request mode does not match its executable certification"
+                ),
+                DiagnosticCode::PYZC_INVALID_DECLARATION,
+            ));
+        }
+        if declaration
+            .declaration
+            .arrow
+            .as_ref()
+            .is_some_and(|arrow| !certified_kind_matches(certification.kind, arrow.kind))
+        {
+            diagnostics.push(diagnostic_with_code(
+                format!(
+                    "Arrow declaration target '{target}' return kind does not match its executable certification"
                 ),
                 DiagnosticCode::PYZC_INVALID_DECLARATION,
             ));
@@ -210,6 +226,31 @@ pub(super) fn apply_python_interop_metadata(
     } else {
         Err(diagnostics)
     }
+}
+
+const fn certified_kind_matches(
+    certified: sifr_package::ArrowCertifiedKind,
+    declared: sifr_type_system::PythonArrowKind,
+) -> bool {
+    matches!(
+        (certified, declared),
+        (
+            sifr_package::ArrowCertifiedKind::Array,
+            sifr_type_system::PythonArrowKind::Array
+        ) | (
+            sifr_package::ArrowCertifiedKind::Schema,
+            sifr_type_system::PythonArrowKind::Schema
+        ) | (
+            sifr_package::ArrowCertifiedKind::Stream,
+            sifr_type_system::PythonArrowKind::Stream
+        ) | (
+            sifr_package::ArrowCertifiedKind::DeviceArray,
+            sifr_type_system::PythonArrowKind::DeviceArray
+        ) | (
+            sifr_package::ArrowCertifiedKind::DeviceStream,
+            sifr_type_system::PythonArrowKind::DeviceStream
+        )
+    )
 }
 
 fn validate_signature(
@@ -483,6 +524,23 @@ mod tests {
     }
 
     #[test]
+    fn arrow_target_rejects_kind_mismatch() {
+        let mut runtime = PackagePythonRuntime::for_tests(python(), "probe");
+        let mut certification = arrow_certification("builtins.bytearray");
+        certification.kind = sifr_package::ArrowCertifiedKind::Stream;
+        runtime.set_arrow_certifications(vec![certification]);
+
+        let Err(diagnostics) =
+            apply_python_interop_metadata(arrow_project("builtins.bytearray"), Some(&runtime))
+        else {
+            panic!("kind mismatch must fail");
+        };
+        assert!(diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("return kind")));
+    }
+
+    #[test]
     fn record_expansion_rejects_uninspectable_target() {
         let runtime = PackagePythonRuntime::for_tests(python(), "probe");
         let mut generated = project("builtins.dir");
@@ -591,6 +649,7 @@ mod tests {
                 module_name: Some("main".to_string()),
                 function_name: "target".to_string(),
                 declaration,
+                certification_target: Some(target.to_string()),
                 parameter_types: if target == "math.sqrt" {
                     vec![sifr_type_system::Type::Float]
                 } else {
@@ -627,6 +686,7 @@ mod tests {
     fn arrow_certification(target: &str) -> sifr_package::ArrowCertification {
         sifr_package::ArrowCertification {
             target: target.to_string(),
+            kind: sifr_package::ArrowCertifiedKind::Array,
             fixture: "fixtures/arrow.py".to_string(),
             fixture_digest: "digest".to_string(),
             producer_module: "pyarrow.lib".to_string(),
@@ -636,6 +696,7 @@ mod tests {
                 version: "1".to_string(),
             }],
             schema_mode: sifr_package::ArrowCertifiedSchemaMode::Omitted,
+            identity_method: sifr_package::ArrowCertifiedIdentityMethod::BufferAddress,
             pointer_identity_verified: true,
             exact_release_count: 1,
             copy_performed: false,

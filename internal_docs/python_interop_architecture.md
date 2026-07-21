@@ -105,7 +105,11 @@ Zero-copy support is explicit:
 - DLPack enforces one-shot capsule consumption, `"used_dltensor"` marking, dtype/device validation, and exact-once deleter release.
 - Array-interface protocols retain owners and validate pointer/dtype/shape/stride/device metadata.
 
-Zero-copy APIs never fall back to copying. Copy-capable paths are represented by explicit copy APIs or `copy_possible` contract evidence.
+Zero-copy APIs never fall back to copying. The retained raw Arrow API reports
+`copy_possible = true` conservatively for every producer; only the
+package-authored executable certification artifact may establish a no-copy
+declaration for an exact target, kind, producer identity, distribution set,
+and schema mode.
 
 ## Verification Gates
 

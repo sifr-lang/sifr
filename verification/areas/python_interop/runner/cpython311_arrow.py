@@ -16,6 +16,7 @@ REPORT_PATH = REPO_ROOT / "target/verification/areas/python_interop/arrow-cpytho
 EXPECTED_TESTS = {
     "python::arrow_ops::abi::tests::rejects_invalid_device_metadata",
     "python::arrow_ops::abi::tests::rejects_missing_release_and_inconsistent_pairs",
+    "python::arrow_ops::abi::tests::rejects_misaligned_payloads_and_reserved_device_types",
     "python::arrow_ops::tests::arrow_array_stream_schema_track_metadata_and_release",
     "python::arrow_ops::tests::arrow_declaration_certification_requires_exact_producer_identity",
     "python::arrow_ops::tests::arrow_marks_pandas_like_producers_copy_possible",
@@ -24,7 +25,8 @@ EXPECTED_TESTS = {
     "python::arrow_ops::tests::arrow_owned_argument_proxy_is_one_shot",
     "python::arrow_ops::tests::arrow_rejects_capsules_without_destructors",
     "python::arrow_ops::tests::arrow_rejects_malformed_capsule_and_double_release",
-    "python::arrow_ops::tests::arrow_requested_schema_passes_the_borrowed_schema_capsule",
+    "python::arrow_ops::tests::arrow_requested_schema_consumes_the_schema_capsule",
+    "python::arrow_ops::tests::real_pyarrow_requested_schema_is_a_one_shot_transfer",
 }
 
 
@@ -56,7 +58,8 @@ def main() -> int:
     env = cargo_env_for_repo_manifest(REPO_ROOT)
     env["CARGO_TARGET_DIR"] = str(REPO_ROOT / "target/cpython311")
     env["PYO3_PYTHON"] = sys.executable
-    env["PATH"] = str(Path(sys.executable).resolve().parent) + os.pathsep + env.get("PATH", "")
+    env["PATH"] = str(Path(sys.executable).parent) + os.pathsep + env.get("PATH", "")
+    env["SIFR_ARROW_REAL_PRODUCER_TEST"] = "1"
     command = [
         "cargo",
         "test",

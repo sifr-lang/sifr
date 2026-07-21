@@ -71,6 +71,8 @@ fn arrow_declaration_certification_requires_exact_producer_identity() {
     reset_runtime_state_for_tests();
     let mut config = test_config("arrow-certification");
     config.arrow_certifications = vec![PythonArrowCertification {
+        target: "pkg.make_array".to_string(),
+        kind: "array".to_string(),
         producer_module: "pyarrow.lib".to_string(),
         producer_type: "ArrowExporter".to_string(),
     }];
@@ -78,14 +80,16 @@ fn arrow_declaration_certification_requires_exact_producer_identity() {
 
     let object = exporter().expect("exporter should be stored");
     let array = arrow_array(&object).expect("array should export");
-    require_arrow_certification(&array).expect("exact identity should certify");
+    require_arrow_certification(&array, "pkg.make_array").expect("exact identity should certify");
     let stream = arrow_stream(&object).expect("stream should export");
     let mut wrong = stream.clone();
     wrong.producer_type = "DifferentExporter".to_string();
-    assert!(require_arrow_certification(&wrong)
+    assert!(require_arrow_certification(&wrong, "pkg.make_array")
         .expect_err("different producer must fail")
         .message
         .contains("no exact executable no-copy certification"));
+    assert!(require_arrow_certification(&array, "pkg.other").is_err());
+    assert!(require_arrow_certification(&stream, "pkg.make_array").is_err());
 
     release_arrow((array.handle, array.token)).expect("array should release");
     release_arrow((stream.handle, stream.token)).expect("stream should release");
@@ -93,7 +97,7 @@ fn arrow_declaration_certification_requires_exact_producer_identity() {
 }
 
 #[test]
-fn arrow_requested_schema_passes_the_borrowed_schema_capsule() {
+fn arrow_requested_schema_consumes_the_schema_capsule() {
     let _guard = test_guard();
     reset_runtime_state_for_tests();
     initialize_runtime(test_config("arrow-requested-schema")).expect("init should succeed");
@@ -107,8 +111,52 @@ fn arrow_requested_schema_passes_the_borrowed_schema_capsule() {
 
     close_object(seen).expect("marker should close");
     release_arrow((stream.handle, stream.token)).expect("stream should release");
-    release_arrow((schema.handle, schema.token)).expect("schema should release");
+    assert!(release_arrow((schema.handle, schema.token)).is_err());
     close_object(object).expect("object should close");
+}
+
+#[test]
+fn real_pyarrow_requested_schema_is_a_one_shot_transfer() {
+    if std::env::var_os("SIFR_ARROW_REAL_PRODUCER_TEST").is_none() {
+        return;
+    }
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    let mut config = test_config("arrow-real-requested-schema");
+    config.required_import_roots.push("pyarrow".to_string());
+    config.trusted_import_roots.push("pyarrow".to_string());
+    config.native_import_roots.push("pyarrow".to_string());
+    config.trusted_native_roots.push("pyarrow".to_string());
+    initialize_runtime(config).expect("init should succeed");
+
+    let (array_object, schema_object) =
+        super::super::attach(|py| -> Result<(ObjectHandle, ObjectHandle), PythonError> {
+            let pyarrow = py.import("pyarrow").map_err(|error| {
+                PythonError::from_pyerr(py, error, "zero-copy", "import pyarrow")
+            })?;
+            let values = pyo3::types::PyList::new(py, [1_i64, 2, 3])
+                .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "values"))?;
+            let array = pyarrow.call_method1("array", (values,)).map_err(|error| {
+                PythonError::from_pyerr(py, error, "zero-copy", "pyarrow.array")
+            })?;
+            let schema = pyarrow.call_method0("int64").map_err(|error| {
+                PythonError::from_pyerr(py, error, "zero-copy", "pyarrow.int64")
+            })?;
+            Ok((
+                super::super::object_ops::store_object(array.unbind())?,
+                super::super::object_ops::store_object(schema.unbind())?,
+            ))
+        })
+        .expect("attach should succeed")
+        .expect("real PyArrow producers should be created");
+    let schema = arrow_schema(&schema_object).expect("schema should export");
+    let array = arrow_array_with_schema(&array_object, (schema.handle, schema.token))
+        .expect("array should accept and consume the requested schema");
+
+    assert!(release_arrow((schema.handle, schema.token)).is_err());
+    release_arrow((array.handle, array.token)).expect("array should release");
+    close_object(array_object).expect("array producer should close");
+    close_object(schema_object).expect("schema producer should close");
 }
 
 #[test]

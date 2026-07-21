@@ -261,6 +261,38 @@ fn method_only_async_python_declaration_requires_owned_loop() {
     assert!(plan.python.requires_async_loop);
 }
 
+#[test]
+fn arrow_receiver_declaration_uses_opaque_target_as_certification_key() {
+    let source = r#"
+class PythonError(Error):
+    message: str
+    kind: str
+    exception_type: str
+    traceback: str
+    context: str
+
+@python.opaque(type=pkg.Owner, cleanup=drop)
+class Owner(NonSend):
+    @python.arrow(Self, schema=omitted)
+    def array(self) -> Result[python.ArrowArray, PythonError]: ...
+"#;
+    let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
+    let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
+
+    let plan = interop_build_plan_for_named_modules([(Some("main"), &lowered.module)]);
+    let arrow = plan
+        .python
+        .declarations
+        .iter()
+        .find(|declaration| declaration.declaration.kind == PythonInteropDecoratorKind::Arrow)
+        .expect("Arrow method must be retained in the build plan");
+    assert_eq!(arrow.function_name, "Owner.array");
+    assert_eq!(arrow.certification_target.as_deref(), Some("pkg.Owner"));
+    assert!(plan
+        .cache_key_fragment()
+        .contains("python.certification_target=pkg.Owner"));
+}
+
 fn module_with_functions(functions: Vec<HirFunction>) -> HirModule {
     HirModule {
         functions,

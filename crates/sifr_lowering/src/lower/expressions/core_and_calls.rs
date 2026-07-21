@@ -563,6 +563,8 @@ pub(in crate::lower) fn consume_affine_value_name(
         HirExpr::Name { name, .. } => {
             if ctx.borrowed_params.contains(name) {
                 ownership_diagnostics::borrowed_affine_parameter_escape(ctx, name, "move", range);
+            } else if ctx.scope.is_moved(name) {
+                ownership_diagnostics::use_after_move(ctx, name, range);
             } else {
                 ctx.mark_moved_with_flow(name);
             }
@@ -600,6 +602,8 @@ pub(in crate::lower) fn consume_owned_value(
                     "pass as an owned argument",
                     range,
                 );
+            } else if ty.contains_affine_resource() && ctx.scope.is_moved(name) {
+                ownership_diagnostics::use_after_move(ctx, name, range);
             } else {
                 ctx.mark_moved_with_flow(name);
             }

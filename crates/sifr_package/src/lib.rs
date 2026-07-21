@@ -78,13 +78,14 @@ pub use crate::python::{
     resolved_python_bridge_package_key, resolved_python_bridge_runtime_package,
     validate_python_bridge_inventory_manifest, validate_python_environment_probe,
     write_python_bridge_inventory, write_python_certifications, ArrowCertification,
-    ArrowCertifiedDistribution, ArrowCertifiedSchemaMode, PythonBridgeImport,
-    PythonBridgeInventory, PythonBridgeModule, PythonCertificationArtifact,
-    PythonDistributionProbe, PythonEnvironmentProbe, PythonEnvironmentProbeRequest,
-    PythonRequirementContribution, PythonRequirementKind, ResolvedPythonBridgeGraph,
-    ResolvedPythonBridgeImport, ResolvedPythonBridgeModule, ResolvedPythonBridgePackage,
-    ResolvedPythonEnvironment, ARROW_CERTIFICATION_SCHEMA_VERSION, PYTHON_BRIDGE_INVENTORY,
-    PYTHON_BRIDGE_ROOT, PYTHON_BRIDGE_RUNTIME_ROOT, PYTHON_CERTIFICATIONS_FILE,
+    ArrowCertifiedDistribution, ArrowCertifiedIdentityMethod, ArrowCertifiedKind,
+    ArrowCertifiedSchemaMode, PythonBridgeImport, PythonBridgeInventory, PythonBridgeModule,
+    PythonCertificationArtifact, PythonDistributionProbe, PythonEnvironmentProbe,
+    PythonEnvironmentProbeRequest, PythonRequirementContribution, PythonRequirementKind,
+    ResolvedPythonBridgeGraph, ResolvedPythonBridgeImport, ResolvedPythonBridgeModule,
+    ResolvedPythonBridgePackage, ResolvedPythonEnvironment, ARROW_CERTIFICATION_SCHEMA_VERSION,
+    PYTHON_BRIDGE_INVENTORY, PYTHON_BRIDGE_ROOT, PYTHON_BRIDGE_RUNTIME_ROOT,
+    PYTHON_CERTIFICATIONS_FILE,
 };
 pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
 

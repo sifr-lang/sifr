@@ -56,6 +56,9 @@ pub struct PythonInteropPlanDeclaration {
     pub module_name: Option<String>,
     pub function_name: String,
     pub declaration: PythonInteropDeclaration,
+    /// Exact package certification key. Receiver declarations use their
+    /// enclosing opaque Python type target instead of the syntactic `Self`.
+    pub certification_target: Option<String>,
     pub parameter_types: Vec<Type>,
     pub return_type: Type,
     pub callback_attachments: Vec<PythonCallbackAttachmentPlan>,
@@ -132,10 +135,20 @@ pub(crate) fn python_interop_plan_for_named_modules<'a>(
                     module_name: module_name.map(str::to_string),
                     function_name: class.name.clone(),
                     declaration: declaration.clone(),
+                    certification_target: Some(target.dotted()),
                     parameter_types: Vec::new(),
                     return_type: Type::None,
                     callback_attachments: callback_attachments(declaration),
                 });
+                for method in &class.methods {
+                    collect_arrow_method(
+                        module_name,
+                        &class.name,
+                        method,
+                        &target.dotted(),
+                        &mut plan,
+                    );
+                }
             }
         }
     }
@@ -173,12 +186,41 @@ fn collect_function(
             module_name: module_name.map(str::to_string),
             function_name: function.name.clone(),
             declaration: declaration.clone(),
+            certification_target: Some(target.dotted()),
             parameter_types: function
                 .params
                 .iter()
                 .map(|param| param.ty.clone())
                 .collect(),
             return_type: function.return_type.clone(),
+            callback_attachments: callback_attachments(declaration),
+        });
+    }
+}
+
+fn collect_arrow_method(
+    module_name: Option<&str>,
+    class_name: &str,
+    method: &HirFunction,
+    owner_target: &str,
+    plan: &mut PythonInteropPlan,
+) {
+    for declaration in method
+        .python_interop
+        .iter()
+        .filter(|declaration| declaration.kind == sifr_ir::PythonInteropDecoratorKind::Arrow)
+    {
+        plan.declarations.push(PythonInteropPlanDeclaration {
+            module_name: module_name.map(str::to_string),
+            function_name: format!("{class_name}.{}", method.name),
+            declaration: declaration.clone(),
+            certification_target: Some(owner_target.to_string()),
+            parameter_types: method
+                .params
+                .iter()
+                .map(|parameter| parameter.ty.clone())
+                .collect(),
+            return_type: method.return_type.clone(),
             callback_attachments: callback_attachments(declaration),
         });
     }
@@ -301,6 +343,11 @@ pub(crate) fn push_python_plan_cache_key(out: &mut String, plan: &PythonInteropP
         if let Some(target) = &declaration.declaration.target {
             out.push_str("python.target=");
             out.push_str(&target.dotted());
+            out.push('\n');
+        }
+        if let Some(target) = &declaration.certification_target {
+            out.push_str("python.certification_target=");
+            out.push_str(target);
             out.push('\n');
         }
         out.push_str("python.declaration_kind=");
