@@ -75,19 +75,20 @@ environment selection, lock freshness, and trust. The report includes graph
 and source-content snapshot digests so results identify the inputs that were
 actually checked. Target states are `verified` for import-root targets proven
 in the selected interpreter, `runtime-checked` for hermetic embedded bridge
-targets, and `deferred` when a library has no authority to select an
-environment.
+targets, and `deferred` when a library is still missing environment or trust
+authority that its final application must provide.
 
-A library-only package without its own root environment selection is valid to
-inspect before a final application exists. Its required imports and target
-probes are reported as deferred to that final application. A standalone
-library that explicitly selects `[python]`, or a package containing one or more
-runnable applications, resolves the root environment and trust policy
-immediately; failures match ordinary `sifr check` diagnostics for the same
-snapshot.
+A library-only package without complete root environment/trust authority is
+valid to inspect before a final application exists. Its unresolved obligations
+and target probes are reported as deferred to that final application, and
+ordinary `sifr check` uses the same deferral decision. A standalone library
+with authorized imports and either explicit `[python]` paths or a conventional
+discoverable uv project resolves immediately, as does any package containing
+one or more runnable applications. Failures match ordinary `sifr check`
+diagnostics for the same snapshot.
 
-`sifr python doctor` adds deterministic patch-like suggestions, such as the
-root `[python]` and `[trust]` entries a library consumer must provide. The
+`sifr python doctor` adds deterministic patch-like suggestions containing only
+the root `[python]` and/or `[trust]` entries a library consumer must provide. The
 patches are output only: neither command writes a manifest or lockfile, grants
 trust, creates a virtual environment, installs packages, or runs `uv sync`.
 

@@ -1863,6 +1863,15 @@ clarifies the standalone-root/dependency distinction in public and internal
 documentation. The focused CLI, driver, verification, Clippy, file-size,
 driver-maintainability, and transfer-guardrail checks pass after remediation.
 
+Fable High pass 2 reproduced a discovery-based variant and the deeper ordinary
+check deferral mismatch. The second remediation replaces CLI-side environment
+guessing with the package layer's single `NotRequired` / `Resolved` /
+`DeferredToFinalApplication` decision, consumed by both ordinary check and
+Python inspection. It covers bare-library parity, explicit and uv-discovered
+standalone environments, strict build/run behavior, targeted doctor hunks, and
+valid/invalid non-mutation cases. Runtime resolution was split into a focused
+CLI module to keep every maintained source file below 900 lines.
+
 Tasks:
 
 - Add read-only `sifr python check` using the same package/driver plan as normal

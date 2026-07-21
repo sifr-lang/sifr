@@ -1,5 +1,5 @@
 use super::check_and_package_commands::{
-    declaration_python_requirements, load_package_graph_context, package_python_runtime,
+    declaration_python_requirements, load_package_graph_context,
 };
 use super::cli_model_and_entrypoint::{
     diagnostic_with_code, package_diagnostic, DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
@@ -8,10 +8,12 @@ use super::cli_model_and_entrypoint::{
 use super::diagnostic_rendering_and_run::{
     current_session_package_id, package_session_for_cwd, render_diagnostics,
 };
+use super::python_runtime_context::package_python_runtime_for_check;
 use clap::{Args, Subcommand};
 use serde::{Deserialize, Serialize};
 use sifr_diagnostics::DiagnosticCode;
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::Write as _;
 use std::io::{self, Write as _};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -137,7 +139,7 @@ struct PythonDoctorReport {
 #[derive(Serialize)]
 struct PythonDoctorSuggestion {
     file: &'static str,
-    reason: &'static str,
+    reason: String,
     patch: String,
 }
 
@@ -147,6 +149,7 @@ struct PythonReadOnlyContext {
     graph: sifr_package::SifrPackageGraph,
     source_map: sifr_package::PackageSourceMap,
     runtime: Option<sifr_driver::PackagePythonRuntime>,
+    deferral: Option<sifr_package::DeferredPythonEnvironment>,
     required_imports: Vec<String>,
     application: bool,
     graph_digest: String,
@@ -168,7 +171,7 @@ fn cmd_python_inspect(
         Err(diagnostics) => return render_diagnostics(&diagnostics, diagnostic_format),
     };
     if doctor {
-        render_python_doctor(inspection, args.json)
+        render_python_doctor(inspection, context.deferral.as_ref(), args.json)
     } else {
         render_python_check(&inspection, args.json)
     }
@@ -224,16 +227,13 @@ fn python_read_only_context(
         .collect::<BTreeSet<_>>()
         .into_iter()
         .collect::<Vec<_>>();
-    let runtime = if application || package.manifest.python.selects_environment() {
-        package_python_runtime(
-            &graph_context.graph,
-            &package_id,
-            &requirements,
-            diagnostic_format,
-        )?
-    } else {
-        None
-    };
+    let check_runtime = package_python_runtime_for_check(
+        &graph_context.graph,
+        &package_id,
+        &requirements,
+        !application,
+        diagnostic_format,
+    )?;
     let entrypoints = python_inspection_entrypoints(
         &graph_context.source_map,
         &package_id,
@@ -255,7 +255,8 @@ fn python_read_only_context(
         source_digest,
         graph: graph_context.graph,
         source_map: graph_context.source_map,
-        runtime,
+        runtime: check_runtime.runtime,
+        deferral: check_runtime.deferral,
         required_imports,
         application,
         entrypoints,
@@ -321,7 +322,12 @@ fn run_python_read_only_plan(
             digest: Some(runtime.environment_digest().to_string()),
         },
     );
-    let trust = if context.runtime.is_some() {
+    let trust = if context.runtime.is_some()
+        || context
+            .deferral
+            .as_ref()
+            .is_some_and(|deferral| deferral.missing_trusted_imports.is_empty())
+    {
         "verified"
     } else if context.required_imports.is_empty() {
         "not-required"
@@ -365,8 +371,12 @@ fn render_python_check(report: &PythonInspectionReport, json: bool) -> i32 {
     EXIT_SUCCESS
 }
 
-fn render_python_doctor(report: PythonInspectionReport, json: bool) -> i32 {
-    let suggestions = doctor_suggestions(&report);
+fn render_python_doctor(
+    report: PythonInspectionReport,
+    deferral: Option<&sifr_package::DeferredPythonEnvironment>,
+    json: bool,
+) -> i32 {
+    let suggestions = doctor_suggestions(deferral);
     if json {
         return write_json(&PythonDoctorReport {
             inspection: report,
@@ -411,22 +421,46 @@ fn render_inspection_human(report: &PythonInspectionReport, title: &str) {
     }
 }
 
-fn doctor_suggestions(report: &PythonInspectionReport) -> Vec<PythonDoctorSuggestion> {
-    if report.environment.status != "deferred" {
+fn doctor_suggestions(
+    deferral: Option<&sifr_package::DeferredPythonEnvironment>,
+) -> Vec<PythonDoctorSuggestion> {
+    let Some(deferral) = deferral else {
         return Vec::new();
-    }
-    let trusted = report
-        .required_imports
+    };
+    let trusted = deferral
+        .missing_trusted_imports
         .iter()
         .map(|root| serde_json::to_string(root).unwrap_or_else(|_| "\"<import>\"".to_string()))
         .collect::<Vec<_>>()
         .join(", ");
+    let mut patch = String::new();
+    if deferral.environment_selection_missing {
+        patch.push_str(
+            "@@ [python]\n+venv = \".venv\"\n+pyproject = \"pyproject.toml\"\n+lock = \"uv.lock\"",
+        );
+    }
+    if !deferral.missing_trusted_imports.is_empty() {
+        if !patch.is_empty() {
+            patch.push('\n');
+        }
+        let _ = write!(patch, "@@ [trust]\n+python = [{trusted}]");
+    }
     vec![PythonDoctorSuggestion {
         file: "final-application/sifr.toml",
-        reason: "select and trust the Python environment in the final application",
-        patch: format!(
-            "@@ [python]\n+venv = \".venv\"\n+pyproject = \"pyproject.toml\"\n+lock = \"uv.lock\"\n@@ [trust]\n+python = [{trusted}]"
-        ),
+        reason: match (
+            deferral.environment_selection_missing,
+            deferral.missing_trusted_imports.is_empty(),
+        ) {
+            (true, false) => {
+                "select and trust the Python environment in the final application".to_string()
+            }
+            (true, true) => "select the Python environment in the final application".to_string(),
+            (false, false) => {
+                "trust the required Python imports in the final application".to_string()
+            }
+            (false, true) => "complete the final-application Python authority".to_string(),
+        },
+        patch,
     }]
 }
 

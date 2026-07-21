@@ -109,7 +109,13 @@ fn library_check_and_doctor_are_deferred_deterministic_and_non_mutating() {
     let before = snapshot(&package.root);
 
     let check = run(&package.root, &["python", "check", "--json"]);
+    let normal_check = run(&package.root, &["check", "src/__init__.sifr", "--frozen"]);
     assert!(check.status.success(), "stderr: {}", stderr(&check));
+    assert!(
+        normal_check.status.success(),
+        "normal library check must share deferral: {}",
+        stderr(&normal_check)
+    );
     let report: serde_json::Value = serde_json::from_slice(&check.stdout).expect("valid JSON");
     assert_eq!(report["application"], false);
     assert_eq!(report["environment"]["status"], "deferred");
@@ -233,6 +239,115 @@ fn library_with_root_environment_selection_resolves_and_matches_normal_check() {
     assert!(stderr(&python_failure).contains("SIFR-PYIMP-0001"));
     assert!(stderr(&normal_failure).contains("SIFR-PYIMP-0001"));
     assert_eq!(snapshot(&package.root), invalid_before);
+}
+
+#[cfg(unix)]
+#[test]
+fn library_with_discovered_environment_resolves_and_matches_normal_check() {
+    let Some(package) = TestPackage::application() else {
+        return;
+    };
+    std::fs::remove_file(package.root.join("src/main.sifr"))
+        .expect("application entrypoint should be removed");
+    std::fs::remove_dir_all(package.root.join("src/bin"))
+        .expect("secondary application entrypoint should be removed");
+    let source = package.root.join("src/__init__.sifr");
+    std::fs::write(
+        &source,
+        "from sifr.python import PythonError\n\n\n@python(math.sqrt)\ndef sqrt(value: float) -> Result[float, PythonError]: ...\n",
+    )
+    .expect("library source should be written");
+    std::fs::write(
+        package.root.join("sifr.toml"),
+        manifest("readonly_app", "\n[trust]\npython = [\"math\"]\n"),
+    )
+    .expect("discovery-based library manifest should be written");
+
+    let resolved_before = snapshot(&package.root);
+    let resolved = run(&package.root, &["python", "check", "--json"]);
+    let normal = run(&package.root, &["check", "src/__init__.sifr", "--frozen"]);
+    assert!(resolved.status.success(), "stderr: {}", stderr(&resolved));
+    assert!(normal.status.success(), "stderr: {}", stderr(&normal));
+    let report: serde_json::Value =
+        serde_json::from_slice(&resolved.stdout).expect("valid discovered JSON");
+    assert_eq!(report["application"], false);
+    assert_eq!(report["environment"]["status"], "resolved");
+    assert_eq!(report["trust"], "verified");
+    assert_eq!(report["targets"][0]["status"], "verified");
+    assert_eq!(snapshot(&package.root), resolved_before);
+
+    std::fs::write(package.root.join("sifr.toml"), manifest("readonly_app", ""))
+        .expect("untrusted discovery-based library manifest should be written");
+    let deferred_before = snapshot(&package.root);
+    let deferred = run(&package.root, &["python", "check", "--json"]);
+    let normal_deferred = run(&package.root, &["check", "src/__init__.sifr", "--frozen"]);
+    let doctor = run(&package.root, &["python", "doctor", "--json"]);
+    assert!(deferred.status.success(), "stderr: {}", stderr(&deferred));
+    assert!(
+        normal_deferred.status.success(),
+        "stderr: {}",
+        stderr(&normal_deferred)
+    );
+    assert!(doctor.status.success(), "stderr: {}", stderr(&doctor));
+    let report: serde_json::Value =
+        serde_json::from_slice(&deferred.stdout).expect("valid deferred JSON");
+    assert_eq!(report["environment"]["status"], "deferred");
+    assert_eq!(report["trust"], "deferred-to-final-application");
+    let doctor: serde_json::Value =
+        serde_json::from_slice(&doctor.stdout).expect("valid doctor JSON");
+    assert_eq!(doctor["suggestions"].as_array().map(Vec::len), Some(1));
+    assert_eq!(
+        doctor["suggestions"][0]["patch"],
+        "@@ [trust]\n+python = [\"math\"]"
+    );
+    assert_eq!(snapshot(&package.root), deferred_before);
+
+    std::fs::write(
+        package.root.join("sifr.toml"),
+        manifest("readonly_app", "\n[trust]\npython = [\"math\"]\n"),
+    )
+    .expect("trusted discovery-based library manifest should be restored");
+
+    std::fs::write(
+        source,
+        "from sifr.python import PythonError\n\n\n@python(math.not_a_real_target)\ndef missing(value: float) -> Result[float, PythonError]: ...\n",
+    )
+    .expect("invalid discovered target should be written");
+    let invalid_before = snapshot(&package.root);
+    let python_failure = run(&package.root, &["python", "check"]);
+    let normal_failure = run(&package.root, &["check", "src/__init__.sifr", "--frozen"]);
+    assert_eq!(python_failure.status.code(), Some(1));
+    assert_eq!(normal_failure.status.code(), Some(1));
+    assert!(stderr(&python_failure).contains("SIFR-PYIMP-0001"));
+    assert!(stderr(&normal_failure).contains("SIFR-PYIMP-0001"));
+    assert_eq!(snapshot(&package.root), invalid_before);
+}
+
+#[test]
+fn trusted_library_without_environment_defers_only_environment_selection() {
+    let package = TestPackage::library();
+    std::fs::write(
+        package.root.join("sifr.toml"),
+        manifest("readonly_lib", "\n[trust]\npython = [\"math\"]\n"),
+    )
+    .expect("trusted library manifest should be written");
+    let before = snapshot(&package.root);
+
+    let check = run(&package.root, &["python", "check", "--json"]);
+    let normal = run(&package.root, &["check", "src/__init__.sifr", "--frozen"]);
+    let doctor = run(&package.root, &["python", "doctor", "--json"]);
+    assert!(check.status.success(), "stderr: {}", stderr(&check));
+    assert!(normal.status.success(), "stderr: {}", stderr(&normal));
+    assert!(doctor.status.success(), "stderr: {}", stderr(&doctor));
+    let report: serde_json::Value = serde_json::from_slice(&check.stdout).expect("valid JSON");
+    assert_eq!(report["environment"]["status"], "deferred");
+    assert_eq!(report["trust"], "verified");
+    let doctor: serde_json::Value = serde_json::from_slice(&doctor.stdout).expect("doctor JSON");
+    assert_eq!(
+        doctor["suggestions"][0]["patch"],
+        "@@ [python]\n+venv = \".venv\"\n+pyproject = \"pyproject.toml\"\n+lock = \"uv.lock\""
+    );
+    assert_eq!(snapshot(&package.root), before);
 }
 
 #[test]

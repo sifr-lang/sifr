@@ -1,7 +1,7 @@
 use super::test_support::{cargo_id, graph, package, package_id, request, valid_probe};
 use super::{
-    probe_python_environment, resolve_python_environment, validate_python_environment_probe,
-    PythonImportProbe,
+    probe_python_environment, resolve_python_environment, resolve_python_environment_for_check,
+    validate_python_environment_probe, PythonEnvironmentResolution, PythonImportProbe,
 };
 use crate::manifest::sifr::{PythonConfig, SifrManifest, TrustPolicy};
 use sifr_diagnostics::DiagnosticCode;
@@ -116,6 +116,66 @@ fn missing_uv_environment_selection_reports_pyenv_0003() {
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, DiagnosticCode::PYENV_MISSING_SELECTION);
+}
+
+#[test]
+fn read_only_library_resolution_defers_only_missing_final_application_authority() {
+    let mut library = package(
+        "lib",
+        PythonConfig {
+            requires_imports: vec!["numpy".to_string()],
+            ..PythonConfig::default()
+        },
+        TrustPolicy::default(),
+    );
+    library.package_root = temp_root("deferred-library");
+    let graph = graph(vec![library]);
+
+    let resolution = resolve_python_environment_for_check(&graph, &package_id("lib"), &[], true)
+        .expect("missing final-application authority should defer");
+    let PythonEnvironmentResolution::DeferredToFinalApplication(deferred) = resolution else {
+        panic!("library resolution should be deferred");
+    };
+    assert_eq!(deferred.required_imports, ["numpy"]);
+    assert_eq!(deferred.missing_trusted_imports, ["numpy"]);
+    assert!(deferred.environment_selection_missing);
+
+    let diagnostics = resolve_python_environment_for_check(&graph, &package_id("lib"), &[], false)
+        .expect_err("strict resolution must preserve trust failure");
+    assert_eq!(
+        diagnostics[0].code,
+        DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED
+    );
+}
+
+#[test]
+fn read_only_library_resolution_uses_discovered_environment_authority() {
+    let project_root = temp_root("check-default-discovery");
+    fs::create_dir_all(&project_root).expect("create uv project");
+    fs::write(project_root.join("pyproject.toml"), "[project]\n").expect("write project marker");
+    fs::write(project_root.join("uv.lock"), "version = 1\n").expect("write lock marker");
+    let mut library = package(
+        "lib",
+        PythonConfig {
+            requires_imports: vec!["numpy".to_string()],
+            ..PythonConfig::default()
+        },
+        TrustPolicy {
+            python: vec!["numpy".to_string()],
+            ..TrustPolicy::default()
+        },
+    );
+    library.package_root.clone_from(&project_root);
+    let graph = graph(vec![library]);
+
+    let resolution = resolve_python_environment_for_check(&graph, &package_id("lib"), &[], true)
+        .expect("discovered environment should resolve");
+    let PythonEnvironmentResolution::Resolved(resolved) = resolution else {
+        panic!("discovered library environment should not defer");
+    };
+    assert_eq!(resolved.venv_root, project_root.join(".venv"));
+    assert_eq!(resolved.trusted_imports, ["numpy"]);
+    fs::remove_dir_all(project_root).expect("remove uv project");
 }
 
 #[test]

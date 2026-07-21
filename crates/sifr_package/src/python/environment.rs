@@ -29,6 +29,20 @@ pub struct ResolvedPythonEnvironment {
     pub trusted_native_imports: Vec<String>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DeferredPythonEnvironment {
+    pub required_imports: Vec<String>,
+    pub missing_trusted_imports: Vec<String>,
+    pub environment_selection_missing: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PythonEnvironmentResolution {
+    NotRequired,
+    DeferredToFinalApplication(DeferredPythonEnvironment),
+    Resolved(ResolvedPythonEnvironment),
+}
+
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 pub struct PythonEnvironmentProbeRequest {
     pub venv_root: PathBuf,
@@ -90,6 +104,21 @@ pub fn resolve_python_environment_with_requirements(
     root_package_id: &SifrPackageId,
     derived: &[PythonRequirementContribution],
 ) -> Result<Option<ResolvedPythonEnvironment>, Vec<PackageDiagnostic>> {
+    match resolve_python_environment_for_check(graph, root_package_id, derived, false)? {
+        PythonEnvironmentResolution::NotRequired => Ok(None),
+        PythonEnvironmentResolution::Resolved(resolved) => Ok(Some(resolved)),
+        PythonEnvironmentResolution::DeferredToFinalApplication(_) => {
+            unreachable!("strict Python environment resolution cannot produce a deferred outcome")
+        }
+    }
+}
+
+pub fn resolve_python_environment_for_check(
+    graph: &SifrPackageGraph,
+    root_package_id: &SifrPackageId,
+    derived: &[PythonRequirementContribution],
+    allow_final_application_deferral: bool,
+) -> Result<PythonEnvironmentResolution, Vec<PackageDiagnostic>> {
     let requirements = canonical_python_requirements(graph, derived);
     let required_imports = requirements.import_roots();
     let declared_imports = required_imports
@@ -141,30 +170,73 @@ pub fn resolve_python_environment_with_requirements(
         || !trusted_native_imports.is_empty()
         || selects_environment(config);
     if !requires_python {
-        return Ok(None);
+        return Ok(PythonEnvironmentResolution::NotRequired);
     }
-    validate_python_trust_policy(
+    let trust_result = validate_python_trust_policy(
         graph,
         root_package_id,
         &requirements,
         &trusted_imports,
         &trusted_native_imports,
-    )?;
-    let selected = root_environment_selection(root_package_id, root_package)?;
+    );
+    let missing_trusted_imports = missing_trusted_imports(&required_imports, &trusted_imports);
+    if let Err(errors) = &trust_result {
+        let only_missing_root_authority = errors
+            .iter()
+            .all(|error| error.code == DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED);
+        if !allow_final_application_deferral || !only_missing_root_authority {
+            return Err(errors.clone());
+        }
+    }
+    let selection_result = root_environment_selection(root_package_id, root_package);
+    let environment_selection_missing = selection_result.as_ref().is_err_and(|errors| {
+        errors
+            .iter()
+            .all(|error| error.code == DiagnosticCode::PYENV_MISSING_SELECTION)
+    });
+    if let Err(errors) = &selection_result {
+        if !allow_final_application_deferral || !environment_selection_missing {
+            return Err(errors.clone());
+        }
+    }
+    if trust_result.is_err() || selection_result.is_err() {
+        return Ok(PythonEnvironmentResolution::DeferredToFinalApplication(
+            DeferredPythonEnvironment {
+                required_imports,
+                missing_trusted_imports,
+                environment_selection_missing,
+            },
+        ));
+    }
+    let selected = selection_result?;
     let native_imports = native_probe_imports(&required_imports, &trusted_native_imports);
-    Ok(Some(ResolvedPythonEnvironment {
-        selected_by: selected.package_id,
-        venv_root: selected.venv_root,
-        interpreter: selected.interpreter,
-        pyproject: selected.pyproject,
-        lock: selected.lock,
-        requirements,
-        required_imports,
-        declared_imports: declared_imports.clone(),
-        native_imports,
-        trusted_imports,
-        trusted_native_imports,
-    }))
+    Ok(PythonEnvironmentResolution::Resolved(
+        ResolvedPythonEnvironment {
+            selected_by: selected.package_id,
+            venv_root: selected.venv_root,
+            interpreter: selected.interpreter,
+            pyproject: selected.pyproject,
+            lock: selected.lock,
+            requirements,
+            required_imports,
+            declared_imports: declared_imports.clone(),
+            native_imports,
+            trusted_imports,
+            trusted_native_imports,
+        },
+    ))
+}
+
+fn missing_trusted_imports(required_imports: &[String], trusted_imports: &[String]) -> Vec<String> {
+    if trusted_imports.iter().any(|root| root == "*") {
+        return Vec::new();
+    }
+    let trusted = trusted_imports.iter().collect::<BTreeSet<_>>();
+    required_imports
+        .iter()
+        .filter(|root| !trusted.contains(root))
+        .cloned()
+        .collect()
 }
 
 pub fn probe_python_environment(

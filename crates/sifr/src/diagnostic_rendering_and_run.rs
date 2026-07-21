@@ -435,12 +435,12 @@ pub(super) fn cmd_run_package_file(
     quiet: bool,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    let context = match package_compiler_context(session, lock_mode, diagnostic_format, Some(file))
-    {
-        Ok(Some(context)) => context,
-        Ok(None) => return cmd_run_file(file, app_args, quiet, diagnostic_format),
-        Err(exit_code) => return exit_code,
-    };
+    let context =
+        match package_compiler_context(session, lock_mode, diagnostic_format, Some(file), false) {
+            Ok(Some(context)) => context,
+            Ok(None) => return cmd_run_file(file, app_args, quiet, diagnostic_format),
+            Err(exit_code) => return exit_code,
+        };
     let entrypoint = PackageEntrypoint {
         main_file: file.to_path_buf(),
         package_id: context.package_id,

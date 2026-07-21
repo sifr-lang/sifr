@@ -8,6 +8,7 @@ use super::diagnostic_rendering_and_run::{
     package_session_for_cwd, render_diagnostics,
 };
 use super::formatter_cli::FmtArgs;
+use super::python_runtime_context::{package_python_runtime, package_python_runtime_for_check};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_driver::{
@@ -113,8 +114,20 @@ pub(super) fn cmd_check_package_file(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    let entrypoint = match package_entrypoint_for_file(file, session, lock_mode, diagnostic_format)
-    {
+    let allow_python_deferral = match session.runnable_app_paths() {
+        Ok(paths) => paths.is_empty(),
+        Err(error) => {
+            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+            return EXIT_USER_DIAGNOSTIC;
+        }
+    };
+    let entrypoint = match package_entrypoint_for_file(
+        file,
+        session,
+        lock_mode,
+        diagnostic_format,
+        allow_python_deferral,
+    ) {
         Ok(Some(entrypoint)) => entrypoint,
         Ok(None) => return cmd_check_file(file, diagnostic_format),
         Err(exit_code) => return exit_code,
@@ -140,9 +153,15 @@ pub(super) fn package_entrypoint_for_file(
     session: &sifr_package::PackageSession,
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
+    allow_python_deferral: bool,
 ) -> Result<Option<PackageEntrypoint>, i32> {
-    let Some(context) =
-        package_compiler_context(session, lock_mode, diagnostic_format, Some(file))?
+    let Some(context) = package_compiler_context(
+        session,
+        lock_mode,
+        diagnostic_format,
+        Some(file),
+        allow_python_deferral,
+    )?
     else {
         return Ok(None);
     };
@@ -160,6 +179,7 @@ pub(super) fn package_compiler_context(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
     entry_file: Option<&Path>,
+    allow_python_deferral: bool,
 ) -> Result<Option<PackageCompilerContext>, i32> {
     let Some(context) = load_package_graph_context(session, lock_mode, diagnostic_format)? else {
         return Ok(None);
@@ -184,72 +204,29 @@ pub(super) fn package_compiler_context(
         }
     };
     derived_python_requirements.extend(bridge_graph.requirements);
-    let python_runtime = package_python_runtime(
-        &context.graph,
-        &package_id,
-        &derived_python_requirements,
-        diagnostic_format,
-    )?;
+    let python_runtime = if allow_python_deferral {
+        package_python_runtime_for_check(
+            &context.graph,
+            &package_id,
+            &derived_python_requirements,
+            true,
+            diagnostic_format,
+        )?
+        .runtime
+    } else {
+        package_python_runtime(
+            &context.graph,
+            &package_id,
+            &derived_python_requirements,
+            diagnostic_format,
+        )?
+    };
     Ok(Some(PackageCompilerContext {
         graph: context.graph,
         source_map: context.source_map,
         package_id,
         python_runtime,
     }))
-}
-
-pub(super) fn package_python_runtime(
-    graph: &sifr_package::SifrPackageGraph,
-    package_id: &sifr_package::SifrPackageId,
-    derived: &[sifr_package::PythonRequirementContribution],
-    diagnostic_format: DiagnosticFormat,
-) -> Result<Option<sifr_driver::PackagePythonRuntime>, i32> {
-    let resolved = match sifr_package::resolve_python_environment_with_requirements(
-        graph, package_id, derived,
-    ) {
-        Ok(resolved) => resolved,
-        Err(errors) => {
-            let diagnostics = errors
-                .into_iter()
-                .map(package_diagnostic)
-                .collect::<Vec<_>>();
-            render_diagnostics(&diagnostics, diagnostic_format);
-            return Err(EXIT_USER_DIAGNOSTIC);
-        }
-    };
-    let Some(resolved) = resolved else {
-        return Ok(None);
-    };
-    let request = sifr_package::PythonEnvironmentProbeRequest::from(&resolved);
-    let probe = match sifr_package::probe_python_environment(&request) {
-        Ok(probe) => probe,
-        Err(error) => {
-            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
-            return Err(EXIT_USER_DIAGNOSTIC);
-        }
-    };
-    let digest = sifr_package::digest_python_environment_probe(&request, &probe).hex;
-    let mut runtime = sifr_driver::PackagePythonRuntime::from_probe(
-        &request,
-        &probe,
-        digest.clone(),
-        resolved.required_imports,
-        resolved.trusted_imports,
-        resolved.trusted_native_imports,
-    );
-    let package_root = graph
-        .packages
-        .get(package_id)
-        .map(|package| package.package_root.as_path());
-    if let Some(package_root) = package_root {
-        super::package_python_certifications::load_into_runtime(
-            package_root,
-            &digest,
-            &mut runtime,
-            diagnostic_format,
-        )?;
-    }
-    Ok(Some(runtime))
 }
 
 pub(super) fn declaration_python_requirements(
@@ -554,7 +531,7 @@ pub(super) fn compile_package_entrypoint_report(
     diagnostic_format: DiagnosticFormat,
 ) -> Result<Option<BuildReport>, i32> {
     let Some(entrypoint) =
-        package_entrypoint_for_file(file, session, lock_mode, diagnostic_format)?
+        package_entrypoint_for_file(file, session, lock_mode, diagnostic_format, false)?
     else {
         return Ok(None);
     };

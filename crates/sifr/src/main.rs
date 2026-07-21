@@ -22,6 +22,7 @@ mod explain_cli;
 mod formatter_cli;
 mod lint_cli;
 mod package_python_certifications;
+mod python_runtime_context;
 mod self_update_cli;
 mod self_update_metadata;
 mod self_update_receipt;

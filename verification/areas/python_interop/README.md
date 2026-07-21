@@ -34,9 +34,11 @@ packages implicitly.
 
 The blocking `readonly-check-doctor` suite proves that `sifr python check` and
 normal check accept and reject the same final-application targets, library-only
-probes defer explicitly, doctor JSON and patches are byte-deterministic,
-source-content snapshot digests change with source bytes, and no inspected
-package file or symlink changes on success or failure.
+probes defer explicitly on both check surfaces, explicit and conventionally
+discovered standalone-library environments resolve, doctor JSON and
+missing-authority patches are byte-deterministic, source-content snapshot
+digests change with source bytes, and no inspected package file or symlink
+changes on success or failure.
 
 `declaration_capabilities.json` is the separate declaration/protocol capability
 ledger. Its `target_state` classifies the intended contract as

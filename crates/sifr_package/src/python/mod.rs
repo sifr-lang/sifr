@@ -29,9 +29,10 @@ pub use bridge_resolution::{
     ResolvedPythonBridgeModule, ResolvedPythonBridgePackage, PYTHON_BRIDGE_RUNTIME_ROOT,
 };
 pub use environment::{
-    probe_python_environment, resolve_python_environment,
-    resolve_python_environment_with_requirements, PythonDistributionProbe, PythonEnvironmentProbe,
-    PythonEnvironmentProbeRequest, PythonImportProbe, ResolvedPythonEnvironment,
+    probe_python_environment, resolve_python_environment, resolve_python_environment_for_check,
+    resolve_python_environment_with_requirements, DeferredPythonEnvironment,
+    PythonDistributionProbe, PythonEnvironmentProbe, PythonEnvironmentProbeRequest,
+    PythonEnvironmentResolution, PythonImportProbe, ResolvedPythonEnvironment,
 };
 pub use probe_validation::validate_python_environment_probe;
 pub use requirements::{

@@ -24,6 +24,8 @@ def main() -> int:
     library = create_package(root / "library", "readonly-library", application=False)
     library_before = snapshot(library)
     check = run_json(binary, library, "python", "check", "--json")
+    normal_library = run(binary, library, "check", "src/__init__.sifr", "--frozen")
+    require(normal_library.returncode == 0, "normal library check must share deferral")
     require(check["application"] is False, "library report must be deferred")
     require(check["environment"]["status"] == "deferred", "library environment must defer")
     require(check["trust"] == "deferred-to-final-application", "library trust must defer")
@@ -114,9 +116,64 @@ def main() -> int:
         "selected-library failure checks mutated files",
     )
 
+    discovered_library = create_package(
+        root / "discovered-library", "readonly-discovered-library", application=True
+    )
+    (discovered_library / "src" / "main.sifr").unlink()
+    shutil.rmtree(discovered_library / "src" / "bin")
+    discovered_source = discovered_library / "src" / "__init__.sifr"
+    discovered_source.write_text(application_source("math.sqrt"), encoding="utf-8")
+    write_manifest(discovered_library, "readonly-discovered-library", python=False)
+    discovered_before = snapshot(discovered_library)
+    discovered = run_json(binary, discovered_library, "python", "check", "--json")
+    discovered_normal = run(
+        binary,
+        discovered_library,
+        "check",
+        "src/__init__.sifr",
+        "--frozen",
+    )
+    require(discovered_normal.returncode == 0, "normal discovered-library check failed")
+    require(discovered["application"] is False, "discovered root must remain a library")
+    require(
+        discovered["environment"]["status"] == "resolved",
+        "discovered library environment must resolve",
+    )
+    require(discovered["trust"] == "verified", "discovered library trust must verify")
+    require(discovered["targets"][0]["status"] == "verified", "discovered target must verify")
+    require(
+        snapshot(discovered_library) == discovered_before,
+        "discovered-library checks mutated files",
+    )
+    discovered_source.write_text(application_source("math.not_a_real_target"), encoding="utf-8")
+    discovered_invalid_before = snapshot(discovered_library)
+    discovered_python_failure = run(
+        binary, discovered_library, "python", "check", expected=1
+    )
+    discovered_normal_failure = run(
+        binary,
+        discovered_library,
+        "check",
+        "src/__init__.sifr",
+        "--frozen",
+        expected=1,
+    )
+    require(
+        "SIFR-PYIMP-0001" in discovered_python_failure.stderr,
+        "discovered-library python diagnostic drifted",
+    )
+    require(
+        "SIFR-PYIMP-0001" in discovered_normal_failure.stderr,
+        "discovered-library normal diagnostic drifted",
+    )
+    require(
+        snapshot(discovered_library) == discovered_invalid_before,
+        "discovered-library failure checks mutated files",
+    )
+
     print(
         "python interop read-only check/doctor ok: "
-        "deferred=1 resolved=2 parity=3 mutations=0"
+        "deferred=1 resolved=3 parity=5 mutations=0"
     )
     return 0
 
@@ -148,20 +205,26 @@ def create_package(root: Path, name: str, *, application: bool) -> Path:
         f'version = 4\n\n[[package]]\nname = "{cargo_name}"\nversion = "0.1.0"\n',
         encoding="utf-8",
     )
+    if application:
+        (root / ".venv").symlink_to(AREA_ROOT / ".venv", target_is_directory=True)
+        (root / "pyproject.toml").symlink_to(AREA_ROOT / "pyproject.toml")
+        (root / "uv.lock").symlink_to(AREA_ROOT / "uv.lock")
+    write_manifest(root, name, python=application)
+    return root
+
+
+def write_manifest(root: Path, name: str, *, python: bool) -> None:
     manifest = (
         f'[package]\nname = "{name.replace("-", "_")}"\nedition = "2026"\n'
         'sifr-version = ">=0.3,<0.4"\n\n[source]\nroot = "src"\n'
     )
-    if application:
+    if python:
         manifest += (
             '\n[python]\nvenv = ".venv"\npyproject = "pyproject.toml"\nlock = "uv.lock"\n'
-            '\n[trust]\npython = ["math"]\n'
         )
-        (root / ".venv").symlink_to(AREA_ROOT / ".venv", target_is_directory=True)
-        (root / "pyproject.toml").symlink_to(AREA_ROOT / "pyproject.toml")
-        (root / "uv.lock").symlink_to(AREA_ROOT / "uv.lock")
+    if python or (root / "pyproject.toml").exists():
+        manifest += '\n[trust]\npython = ["math"]\n'
     (root / "sifr.toml").write_text(manifest, encoding="utf-8")
-    return root
 
 
 def application_source(target: str) -> str:
