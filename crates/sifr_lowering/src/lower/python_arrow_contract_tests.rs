@@ -511,6 +511,13 @@ fn affine_consuming_operator_parameters_fail_closed() {
 }
 
 #[test]
+fn borrowed_non_affine_operator_parameters_preserve_return_semantics() {
+    lower_ok(
+        "class Value:\n    number: int\n\nclass Identity:\n    def __add__(self, other: Value) -> Value:\n        return other\n",
+    );
+}
+
+#[test]
 fn inherited_instance_methods_remain_rejected_as_class_style_calls() {
     let errors = lower_errors(
         "class Parent:\n    def consume(self, value: int) -> None:\n        return None\n\nclass Child(Parent):\n    pass\n\ndef misuse() -> None:\n    Child.consume(1)\n",

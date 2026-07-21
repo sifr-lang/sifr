@@ -1,5 +1,5 @@
 use super::parameter_conventions::{
-    class_method_param_convention, class_method_param_default, prepare_class_method_param_ownership,
+    class_method_param_convention, class_method_param_default, prepare_method_param_ownership,
 };
 use super::{
     collect_enum_variants, function_body_contains_yield, get_newtype_inner, get_parent_class,
@@ -545,7 +545,7 @@ pub(in crate::lower) fn lower_class(
                 func.is_async && function_body_contains_yield(&func.body);
             let previous_must_use_bindings = std::mem::take(&mut ctx.live_must_use_bindings);
             let previous_borrowed_params = std::mem::take(&mut ctx.borrowed_params);
-            prepare_class_method_param_ownership(&params, skips_normal_body_lowering, ctx);
+            prepare_method_param_ownership(&params, &method_name, skips_normal_body_lowering, ctx);
             let body = if skips_normal_body_lowering {
                 Vec::new()
             } else {

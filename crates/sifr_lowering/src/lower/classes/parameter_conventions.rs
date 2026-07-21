@@ -133,8 +133,9 @@ pub(in crate::lower) fn class_method_param_default(
     })
 }
 
-pub(in crate::lower) fn prepare_class_method_param_ownership(
+pub(in crate::lower) fn prepare_method_param_ownership(
     params: &[HirParam],
+    method_name: &str,
     skips_normal_body_lowering: bool,
     ctx: &mut LowerCtx,
 ) {
@@ -145,6 +146,7 @@ pub(in crate::lower) fn prepare_class_method_param_ownership(
         if param.convention.is_borrowed()
             && param.ty.ownership() == sifr_type_system::OwnershipKind::Move
             && !matches!(param.ty, Type::TypeVar(_))
+            && (!super::is_operator_dunder(method_name) || param.ty.contains_affine_resource())
         {
             ctx.borrowed_params.insert(param.name.clone());
         }
