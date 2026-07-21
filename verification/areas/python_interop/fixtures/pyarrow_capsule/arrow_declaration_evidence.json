@@ -54,8 +54,8 @@
       "id": "pyarrow-pandas-polars",
       "source": "arrow_declaration_compiled.sifr",
       "fixture": "python_certifications/arrow_evidence.py",
-      "targets": ["pandas.DataFrame", "polars.Series", "pyarrow.array", "pyarrow.int64"],
-      "stdout_marker": "sifr-python-interop:arrow:pyarrow=array:schema=parameter:pandas=stream:polars=stream:owned-transfer=len3:rollback=ok:resources=zero"
+      "targets": ["pandas.DataFrame", "polars.Series", "pyarrow.Array", "pyarrow.array", "pyarrow.int64"],
+      "stdout_marker": "sifr-python-interop:arrow:pyarrow=array:schema=parameter:pandas=stream:polars=stream:owned-transfer=len3:method-transfer=len3:rollback=ok:resources=zero"
     }
   ],
   "profiles": ["create-pr", "merge", "nightly", "release"]

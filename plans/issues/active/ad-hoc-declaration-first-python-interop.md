@@ -1659,6 +1659,9 @@ Delivery waves:
 - [x] Wave 5 — add package, native, CPython, and malformed-capsule evidence,
   the compiled Arrow example, public/durable documentation, and delivery-profile
   wiring.
+- [x] Align ordinary class-method move parameters with the language-wide
+  borrow-by-default rule; escaping or storing one requires explicit `own`, and
+  instance, static, and `super()` calls enforce that transfer exactly once.
 - [ ] Milestone review — run the full M11 diff through repeated Fable High
   review after the authoritative merge gate, remediate until satisfied, then
   merge the M11 PR.

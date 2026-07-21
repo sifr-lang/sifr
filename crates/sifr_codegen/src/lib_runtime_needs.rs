@@ -38,26 +38,22 @@ struct __SifrChannelState<T> {
     sender_count: i64,
     receiver_alive: bool,
 }
-
-enum __SifrChannelPushState {
+enum __SifrChannelPushState<T> {
     Sent,
-    Closed,
-    Full,
+    Closed(T),
+    Full(T),
 }
-
 enum __SifrChannelPopState<T> {
     Item(T),
     Empty,
     Closed,
 }
-
 #[derive(Debug)]
 struct Channel<T: Clone> {
     _state: std::sync::Arc<std::sync::Mutex<__SifrChannelState<T>>>,
     _send_notify: std::sync::Arc<tokio::sync::Notify>,
     _recv_notify: std::sync::Arc<tokio::sync::Notify>,
 }
-
 impl<T: Clone> Clone for Channel<T> {
     fn clone(&self) -> Self {
         return Self {
@@ -67,7 +63,6 @@ impl<T: Clone> Clone for Channel<T> {
         };
     }
 }
-
 impl<T: Clone> Channel<T> {
     fn new(buffer: Vec<T>, capacity: i64) -> Self {
         return Self {
@@ -136,26 +131,26 @@ impl<T: Clone> Channel<T> {
         self._recv_notify.notify_waiters();
     }
 
-    fn try_push_ref(&self, value: &T) -> __SifrChannelPushState {
+    fn try_push(&self, value: T) -> __SifrChannelPushState<T> {
         self.with_state(|state| {
             if state.closed || !state.receiver_alive {
-                return __SifrChannelPushState::Closed;
+                return __SifrChannelPushState::Closed(value);
             }
             if state.capacity >= 0 && (state.buffer.len() as i64) >= state.capacity {
-                return __SifrChannelPushState::Full;
+                return __SifrChannelPushState::Full(value);
             }
-            state.buffer.push_back(value.clone());
+            state.buffer.push_back(value);
             self._recv_notify.notify_one();
             __SifrChannelPushState::Sent
         })
     }
 
-    fn push(&mut self, value: &T) -> Result<(), ClosedError> {
+    fn push(&mut self, value: T) -> Result<(), ClosedError> {
         self.with_state(|state| {
             if state.closed || !state.receiver_alive {
                 return Err(ClosedError::new());
             }
-            state.buffer.push_back(value.clone());
+            state.buffer.push_back(value);
             self._recv_notify.notify_one();
             Ok(())
         })
@@ -199,16 +194,19 @@ impl<T: Clone> ChannelSender<T> {
         return Self { _channel: channel };
     }
 
-    async fn send(&mut self, value: &T) -> Result<(), ClosedError> {
+    async fn send(&mut self, mut value: T) -> Result<(), ClosedError> {
         loop {
             let notify = self._channel._send_notify.clone();
             let notified = notify.notified();
             tokio::pin!(notified);
             notified.as_mut().enable();
-            match self._channel.try_push_ref(value) {
+            match self._channel.try_push(value) {
                 __SifrChannelPushState::Sent => return Ok(()),
-                __SifrChannelPushState::Closed => return Err(ClosedError::new()),
-                __SifrChannelPushState::Full => notified.await,
+                __SifrChannelPushState::Closed(_) => return Err(ClosedError::new()),
+                __SifrChannelPushState::Full(pending) => {
+                    value = pending;
+                    notified.await;
+                }
             }
         }
     }

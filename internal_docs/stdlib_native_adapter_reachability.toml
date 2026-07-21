@@ -7,7 +7,7 @@ schema_version = 1
 [[substrate]]
 adapter = "python.reconcile_arrow_argument"
 reason = "Generated Python declaration glue combines the Python call outcome with exact Arrow owned-argument consumption cleanup."
-consumer_files = ["crates/sifr_codegen/src/python_interop_direct.rs"]
+consumer_files = ["crates/sifr_codegen/src/python_arrow_codegen.rs"]
 
 [[substrate]]
 adapter = "process.process_child_close"

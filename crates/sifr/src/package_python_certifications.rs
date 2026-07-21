@@ -51,7 +51,7 @@ fn validate_installed_distributions(
         .iter()
         .flat_map(|certification| certification.distributions.iter())
         .collect::<std::collections::BTreeSet<_>>();
-    for distribution in expected {
+    validate_distribution_versions(expected, |distribution| {
         let output = Command::new(runtime.interpreter())
             .args([
                 "-I",
@@ -66,8 +66,24 @@ fn validate_installed_distributions(
                     distribution.name
                 )
             })?;
-        let installed = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        if !output.status.success() || installed != distribution.version {
+        if !output.status.success() {
+            return Err(format!(
+                "could not inspect certified Python distribution '{}'",
+                distribution.name
+            ));
+        }
+        Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+    })
+}
+
+fn validate_distribution_versions<'a>(
+    expected: impl IntoIterator<Item = &'a sifr_package::ArrowCertifiedDistribution>,
+    mut installed_version: impl FnMut(
+        &sifr_package::ArrowCertifiedDistribution,
+    ) -> Result<String, String>,
+) -> Result<(), String> {
+    for distribution in expected {
+        if installed_version(distribution)? != distribution.version {
             return Err(format!(
                 "certified Python distribution '{}=={}' does not match the selected environment",
                 distribution.name, distribution.version
@@ -75,4 +91,30 @@ fn validate_installed_distributions(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::validate_distribution_versions;
+    use sifr_package::ArrowCertifiedDistribution;
+
+    #[test]
+    fn certified_distribution_versions_fail_closed_on_drift_and_probe_failure() {
+        let expected = [ArrowCertifiedDistribution {
+            name: "pyarrow".to_string(),
+            version: "22.0.0".to_string(),
+        }];
+        validate_distribution_versions(&expected, |_| Ok("22.0.0".to_string()))
+            .expect("matching installed version should pass");
+        assert!(
+            validate_distribution_versions(&expected, |_| Ok("23.0.0".to_string()))
+                .expect_err("version drift must fail")
+                .contains("does not match")
+        );
+        assert_eq!(
+            validate_distribution_versions(&expected, |_| Err("probe failed".to_string()))
+                .expect_err("probe failure must fail"),
+            "probe failed"
+        );
+    }
 }

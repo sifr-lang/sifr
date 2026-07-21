@@ -429,20 +429,19 @@ fn consumption_state(
             })
     };
     match entry.kind {
-        ArrowKind::Array => Ok(abi::array_pair_consumption(
+        ArrowKind::Array => abi::array_pair_consumption(
             pointer(0, ARROW_SCHEMA_NAME)?,
             pointer(1, ARROW_ARRAY_NAME)?,
-        )),
-        ArrowKind::Schema => Ok(abi::schema_consumption(pointer(0, ARROW_SCHEMA_NAME)?)),
-        ArrowKind::Stream => Ok(abi::stream_consumption(pointer(0, ARROW_STREAM_NAME)?)),
-        ArrowKind::DeviceArray => Ok(abi::device_array_pair_consumption(
+        ),
+        ArrowKind::Schema => abi::schema_consumption(pointer(0, ARROW_SCHEMA_NAME)?),
+        ArrowKind::Stream => abi::stream_consumption(pointer(0, ARROW_STREAM_NAME)?),
+        ArrowKind::DeviceArray => abi::device_array_pair_consumption(
             pointer(0, ARROW_SCHEMA_NAME)?,
             pointer(1, ARROW_DEVICE_ARRAY_NAME)?,
-        )),
-        ArrowKind::DeviceStream => Ok(abi::device_stream_consumption(pointer(
-            0,
-            ARROW_DEVICE_STREAM_NAME,
-        )?)),
+        ),
+        ArrowKind::DeviceStream => {
+            abi::device_stream_consumption(pointer(0, ARROW_DEVICE_STREAM_NAME)?)
+        }
     }
 }
 

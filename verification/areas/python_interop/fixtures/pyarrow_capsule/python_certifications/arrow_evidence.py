@@ -181,14 +181,14 @@ def verify_stream(value: object, source_address: int) -> tuple[bool, bool]:
 
 
 def producer(target: str) -> tuple[object, str, str, str, str, int | None]:
-    if target == "pyarrow.array":
+    if target in {"pyarrow.array", "pyarrow.Array"}:
         import pyarrow
 
         return (
             pyarrow.array([1, 2, 3]),
             "pyarrow",
             "array",
-            "parameter",
+            "parameter" if target == "pyarrow.array" else "omitted",
             "buffer_address",
             None,
         )

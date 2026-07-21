@@ -1,3 +1,4 @@
+use crate::python_interop_direct_helpers::drop_value;
 use crate::rust_interop_error_mapping::bridge_error_expr;
 use crate::{RustEmitter, RustExpr, RustParam, RustStmt, RustType};
 use sifr_ir::{
@@ -52,6 +53,44 @@ pub(crate) fn append_argument_preparation(
         },
     );
     Some(guard_name)
+}
+
+pub(crate) fn append_argument_reconciliation(
+    body: &mut Vec<RustStmt>,
+    guard_names: &[String],
+    outcome_name: &str,
+) {
+    body.push(drop_value("__sifr_python_args"));
+    body.push(drop_value("__sifr_python_kwargs"));
+    for (index, guard_name) in guard_names.iter().enumerate() {
+        let cleanup_name = format!("__sifr_python_arrow_cleanup_{index}");
+        body.push(RustStmt::Let {
+            mutable: false,
+            name: cleanup_name.clone(),
+            ty: None,
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(guard_name.clone())),
+                method: "finish".to_string(),
+                args: Vec::new(),
+            },
+        });
+        body.push(RustStmt::Let {
+            mutable: false,
+            name: outcome_name.to_string(),
+            ty: None,
+            value: RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "sifr_stdlib".to_string(),
+                    "python".to_string(),
+                    "reconcile_arrow_argument".to_string(),
+                ])),
+                args: vec![
+                    RustExpr::Ident(outcome_name.to_string()),
+                    RustExpr::Ident(cleanup_name),
+                ],
+            },
+        });
+    }
 }
 
 pub(crate) fn acquire_python_arrow_from_foreign(

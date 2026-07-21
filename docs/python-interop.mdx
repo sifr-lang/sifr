@@ -358,8 +358,8 @@ def use_array(values: list[int]) -> Result[None, PythonError]:
         raise error
 ```
 
-`schema=parameter(name)` instead names a required keyword-only borrowed
-`python.ArrowSchema` parameter. Sifr passes that exact schema capsule to the
+`schema=parameter(name)` instead names a required keyword-only `own`
+`python.ArrowSchema` parameter. Sifr transfers that exact schema capsule to the
 Arrow protocol, but never forwards it to the producer call. Arrays own their
 schema/data capsule pair; device arrays own the corresponding schema/device-data
 pair. Owned Arrow values can cross another Python declaration only through an

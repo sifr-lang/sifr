@@ -9,16 +9,7 @@ pub(in crate::lower) fn class_method_param_convention(
     ctx: &LowerCtx,
 ) -> ParamConvention {
     let declared = ast_convention_to_param(syntax, ty);
-    if (matches!(
-        ty.resolve_alias(),
-        Type::PythonBuffer(_) | Type::PythonArrow(_)
-    ) && declared.is_owned())
-        || ctx.must_use_obligation_for_type(ty).is_some()
-        || (matches!(
-            ty.resolve_alias(),
-            Type::Callable(..) | Type::AsyncCallable(..)
-        ) && declared.is_owned())
-        || declared.is_mutable()
+    if syntax.is_owned() || ctx.must_use_obligation_for_type(ty).is_some() || declared.is_mutable()
     {
         declared
     } else {

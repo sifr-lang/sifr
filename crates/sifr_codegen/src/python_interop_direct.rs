@@ -7,7 +7,7 @@ use crate::python_interop_callbacks::{
     retained_failure_field, retained_slot_source,
 };
 use crate::python_interop_direct_helpers::{
-    drop_value, ok_return, push_for_shape, push_keyword_expr, push_named_keyword, push_positional,
+    ok_return, push_for_shape, push_keyword_expr, push_named_keyword, push_positional,
 };
 pub(crate) use crate::python_interop_direct_helpers::{push_to, reference, vector_let};
 pub(crate) use crate::python_interop_runtime_exprs::{mapped_let, mapped_try, runtime_call};
@@ -328,37 +328,11 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
             });
         }
         if !arrow_argument_guards.is_empty() {
-            body.push(drop_value("__sifr_python_args"));
-            body.push(drop_value("__sifr_python_kwargs"));
-            for (index, guard) in arrow_argument_guards.iter().enumerate() {
-                let cleanup_name = format!("__sifr_python_arrow_cleanup_{index}");
-                body.push(RustStmt::Let {
-                    mutable: false,
-                    name: cleanup_name.clone(),
-                    ty: None,
-                    value: RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(guard.clone())),
-                        method: "finish".to_string(),
-                        args: Vec::new(),
-                    },
-                });
-                body.push(RustStmt::Let {
-                    mutable: false,
-                    name: "__sifr_python_outcome".to_string(),
-                    ty: None,
-                    value: RustExpr::FnCall {
-                        func: Box::new(RustExpr::Path(vec![
-                            "sifr_stdlib".to_string(),
-                            "python".to_string(),
-                            "reconcile_arrow_argument".to_string(),
-                        ])),
-                        args: vec![
-                            RustExpr::Ident("__sifr_python_outcome".to_string()),
-                            RustExpr::Ident(cleanup_name),
-                        ],
-                    },
-                });
-            }
+            crate::python_arrow_codegen::append_argument_reconciliation(
+                &mut body,
+                &arrow_argument_guards,
+                "__sifr_python_outcome",
+            );
         }
         body.push(mapped_let(
             "__sifr_python_result",
@@ -568,6 +542,7 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
         );
     }
     let mut callback_setups = Vec::new();
+    let mut arrow_argument_guards = Vec::new();
     for (index, shape) in declaration.parameters.iter().enumerate() {
         let param = func.params.iter().find(|param| param.name == shape.name)?;
         let handle = format!("__sifr_python_arg_{index}");
@@ -631,6 +606,19 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
             ));
             body.push(push_for_shape(shape.kind, &shape.name, &handle)?);
             callback_setups.push(setup);
+            continue;
+        }
+        if let Type::PythonArrow(kind) = param.ty.resolve_alias() {
+            arrow_argument_guards.push(crate::python_arrow_codegen::append_argument_preparation(
+                &mut body,
+                &param.name,
+                index,
+                *kind,
+                shape.kind,
+                &shape.name,
+                false,
+                error_type,
+            )?);
             continue;
         }
         body.push(mapped_let(
@@ -796,7 +784,10 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
         }
         _ => return None,
     };
-    if callback_setups.is_empty() && owner_retained_errors.is_empty() {
+    if callback_setups.is_empty()
+        && arrow_argument_guards.is_empty()
+        && owner_retained_errors.is_empty()
+    {
         body.push(mapped_let("__sifr_python_result", operation, error_type));
     } else {
         body.push(RustStmt::Let {
@@ -827,6 +818,13 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
                     &cleanup_names,
                 ),
             });
+        }
+        if !arrow_argument_guards.is_empty() {
+            crate::python_arrow_codegen::append_argument_reconciliation(
+                &mut body,
+                &arrow_argument_guards,
+                "__sifr_python_outcome",
+            );
         }
         append_owner_failure_evidence(&mut body, owner_retained_errors);
         body.push(mapped_let(

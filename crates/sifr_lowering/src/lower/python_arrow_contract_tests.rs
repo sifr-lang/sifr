@@ -229,6 +229,37 @@ fn class_methods_preserve_owned_arrow_parameters() {
 }
 
 #[test]
+fn class_method_keyword_only_defaults_are_available_at_calls() {
+    lower_ok(
+        "class Config:\n    def value(self, *, extra: int = 5) -> int:\n        return extra\n\ndef read(config: Config) -> int:\n    return config.value()\n",
+    );
+}
+
+#[test]
+fn plain_method_move_parameters_follow_borrow_by_default() {
+    let errors =
+        lower_errors("class Echo:\n    def echo(self, value: str) -> str:\n        return value\n");
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES)
+                && error.message.contains("borrowed parameter")
+        }),
+        "{errors:?}"
+    );
+    lower_ok("class Echo:\n    def echo(self, own value: str) -> str:\n        return value\n");
+    let module = lower_ok(
+        "class Sink[T]:\n    def send(self, value: T) -> None:\n        return None\n\ndef send_int(sink: Sink[int]) -> None:\n    sink.send(1)\n",
+    );
+    assert!(module.classes[0].methods[0].params[0]
+        .convention
+        .is_borrowed());
+    let module = lower_ok(
+        "class Sink[T]:\n    def send(self, own value: T) -> None:\n        return None\n",
+    );
+    assert!(module.classes[0].methods[0].params[0].convention.is_owned());
+}
+
+#[test]
 fn class_method_borrowed_arrow_parameters_cannot_escape() {
     let errors = lower_errors(&format!(
         "{ERROR}\n@python(pkg.consume)\ndef consume(own value: python.ArrowArray) -> Result[int, PythonError]: ...\n\nclass Owner:\n    def misuse(self, value: python.ArrowArray) -> None:\n        result: int = consume(value)\n        return None\n"
@@ -254,6 +285,46 @@ fn a_single_call_cannot_consume_the_same_arrow_resource_twice() {
                     && error.message.contains("moved")
             }),
             "{call}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn method_calls_consume_owned_arrow_arguments_once() {
+    for invocation in [
+        "sink.consume(value)\n    second: None = sink.consume(value)",
+        "sink.consume2(value, right=value)",
+    ] {
+        let errors = lower_errors(&format!(
+            "{ERROR}\nclass Sink:\n    def consume(self, own value: python.ArrowArray) -> None:\n        return None\n\n    def consume2(self, own left: python.ArrowArray, *, own right: python.ArrowArray) -> None:\n        return None\n\ndef misuse(sink: Sink, own value: python.ArrowArray) -> None:\n    first: None = {invocation}\n    return None\n"
+        ));
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+                    && error.message.contains("moved")
+            }),
+            "{invocation}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn static_super_and_buffer_method_calls_consume_owned_arguments() {
+    for source in [
+        format!(
+            "{ERROR}\nclass Tools:\n    @staticmethod\n    def consume(own value: python.ArrowArray) -> None:\n        return None\n\ndef misuse(own value: python.ArrowArray) -> None:\n    first: None = Tools.consume(value)\n    second: None = Tools.consume(value)\n    return None\n"
+        ),
+        format!(
+            "{ERROR}\nclass Parent:\n    def consume(self, own value: python.ArrowArray) -> None:\n        return None\n\nclass Child(Parent):\n    def misuse(self, own value: python.ArrowArray) -> None:\n        first: None = super().consume(value)\n        second: None = super().consume(value)\n        return None\n"
+        ),
+        format!(
+            "{ERROR}\nclass Sink:\n    def consume(self, own value: python.Buffer[uint8]) -> None:\n        return None\n\ndef misuse(sink: Sink, own value: python.Buffer[uint8]) -> None:\n    first: None = sink.consume(value)\n    second: None = sink.consume(value)\n    return None\n"
+        ),
+    ] {
+        let errors = lower_errors(&source);
+        assert!(
+            errors.iter().any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+            "{source}: {errors:?}"
         );
     }
 }

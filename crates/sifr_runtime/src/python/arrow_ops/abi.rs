@@ -206,57 +206,75 @@ pub(super) fn validate_device_stream(
     Ok(())
 }
 
-pub(super) fn schema_consumption(pointer: NonNull<c_void>) -> ConsumptionState {
-    bool_state(
-        unsafe { pointer.cast::<ArrowSchema>().as_ref() }
+pub(super) fn schema_consumption(
+    pointer: NonNull<c_void>,
+) -> Result<ConsumptionState, PythonError> {
+    Ok(bool_state(
+        checked_ref::<ArrowSchema>(pointer, "Arrow argument finalization", "ArrowSchema")?
             .release
             .is_none(),
-    )
+    ))
 }
 
 pub(super) fn array_pair_consumption(
     schema_pointer: NonNull<c_void>,
     array_pointer: NonNull<c_void>,
-) -> ConsumptionState {
-    combined_state([
-        unsafe { schema_pointer.cast::<ArrowSchema>().as_ref() }
+) -> Result<ConsumptionState, PythonError> {
+    Ok(combined_state([
+        checked_ref::<ArrowSchema>(schema_pointer, "Arrow argument finalization", "ArrowSchema")?
             .release
             .is_none(),
-        unsafe { array_pointer.cast::<ArrowArray>().as_ref() }
+        checked_ref::<ArrowArray>(array_pointer, "Arrow argument finalization", "ArrowArray")?
             .release
             .is_none(),
-    ])
+    ]))
 }
 
-pub(super) fn stream_consumption(pointer: NonNull<c_void>) -> ConsumptionState {
-    bool_state(
-        unsafe { pointer.cast::<ArrowArrayStream>().as_ref() }
-            .release
-            .is_none(),
-    )
+pub(super) fn stream_consumption(
+    pointer: NonNull<c_void>,
+) -> Result<ConsumptionState, PythonError> {
+    Ok(bool_state(
+        checked_ref::<ArrowArrayStream>(
+            pointer,
+            "Arrow argument finalization",
+            "ArrowArrayStream",
+        )?
+        .release
+        .is_none(),
+    ))
 }
 
 pub(super) fn device_array_pair_consumption(
     schema_pointer: NonNull<c_void>,
     array_pointer: NonNull<c_void>,
-) -> ConsumptionState {
-    combined_state([
-        unsafe { schema_pointer.cast::<ArrowSchema>().as_ref() }
+) -> Result<ConsumptionState, PythonError> {
+    Ok(combined_state([
+        checked_ref::<ArrowSchema>(schema_pointer, "Arrow argument finalization", "ArrowSchema")?
             .release
             .is_none(),
-        unsafe { array_pointer.cast::<ArrowDeviceArray>().as_ref() }
-            .array
-            .release
-            .is_none(),
-    ])
+        checked_ref::<ArrowDeviceArray>(
+            array_pointer,
+            "Arrow argument finalization",
+            "ArrowDeviceArray",
+        )?
+        .array
+        .release
+        .is_none(),
+    ]))
 }
 
-pub(super) fn device_stream_consumption(pointer: NonNull<c_void>) -> ConsumptionState {
-    bool_state(
-        unsafe { pointer.cast::<ArrowDeviceArrayStream>().as_ref() }
-            .release
-            .is_none(),
-    )
+pub(super) fn device_stream_consumption(
+    pointer: NonNull<c_void>,
+) -> Result<ConsumptionState, PythonError> {
+    Ok(bool_state(
+        checked_ref::<ArrowDeviceArrayStream>(
+            pointer,
+            "Arrow argument finalization",
+            "ArrowDeviceArrayStream",
+        )?
+        .release
+        .is_none(),
+    ))
 }
 
 const fn bool_state(consumed: bool) -> ConsumptionState {
@@ -426,6 +444,10 @@ mod tests {
         .expect("offset pointer");
         assert!(validate_schema(pointer, "test")
             .expect_err("misaligned schema must fail before dereference")
+            .message
+            .contains("aligned"));
+        assert!(schema_consumption(pointer)
+            .expect_err("misaligned schema must fail during finalization")
             .message
             .contains("aligned"));
         for reserved in [5, 6] {

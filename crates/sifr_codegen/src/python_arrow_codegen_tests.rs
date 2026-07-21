@@ -140,6 +140,27 @@ fn arrow_owned_consumer_argument_commits_move_and_reconciles_after_call() {
 }
 
 #[test]
+fn arrow_owned_consumer_method_prepares_and_reconciles_argument() {
+    let rust = generate(&format!(
+        "{ERROR}\n@python.opaque(type=pkg.Sink, cleanup=drop)\nclass Sink(NonSend):\n    @python(Self.push)\n    def push(self, own value: python.ArrowArray) -> Result[None, PythonError]: ...\n"
+    ));
+
+    assert!(
+        rust.contains("::sifr_stdlib::python::PythonArrowArray::prepare_argument(value)"),
+        "{rust}"
+    );
+    assert!(
+        rust.contains("__sifr_python_arrow_argument_0.finish()"),
+        "{rust}"
+    );
+    assert!(
+        rust.contains("::sifr_stdlib::python::reconcile_arrow_argument"),
+        "{rust}"
+    );
+    syn::parse_file(&rust).expect("generated Arrow consumer method Rust should parse");
+}
+
+#[test]
 fn every_arrow_kind_has_a_certified_acquisition_path() {
     for (kind, rust_type) in [
         ("ArrowArray", "PythonArrowArray"),

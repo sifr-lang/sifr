@@ -87,6 +87,21 @@ fn public_constant_integer_value_exports_filter_to_public_recorded_values() {
 #[test]
 fn stdlib_class_exports_preserve_parent_markers_and_generic_templates() {
     let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let channel_sender = compiled
+        .defs
+        .classes
+        .get("sifr.sync")
+        .and_then(|classes| classes.get("ChannelSender"))
+        .expect("sifr.sync.ChannelSender should be exported");
+    let Type::Class { methods, .. } = channel_sender else {
+        panic!("ChannelSender should be a class");
+    };
+    let send = methods
+        .iter()
+        .find(|(name, _)| name == "send")
+        .map(|(_, method)| method)
+        .expect("ChannelSender.send should be exported");
+    assert!(send.params[0].2.is_owned(), "{send:?}");
     let object_ty = compiled
         .defs
         .classes

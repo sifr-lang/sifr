@@ -85,6 +85,11 @@ mod regular_calls;
 use regular_calls::lower_regular_call;
 mod methods_lambdas_and_comprehensions;
 pub(in crate::lower) use methods_lambdas_and_comprehensions::*;
+mod method_argument_ownership;
+use method_argument_ownership::{
+    consume_owned_method_arguments, method_function_type, try_lower_class_method_call,
+    try_lower_super_method_call,
+};
 mod named_expression;
 pub(in crate::lower) use named_expression::lower_named_expr;
 mod method_type_collections;

@@ -1,21 +1,21 @@
 use super::{
     callable_builtin_element_type, canonicalize_class_surface_type,
-    consume_affine_collection_method_arguments, container_literal_diagnostics,
-    invalidate_collection_flow_facts_for_method, is_task_handle_type, lower_expr,
-    lower_iterator_protocol_entry, lower_method_call_args, lower_signature_call_args,
-    lower_task_handle_method_call, refine_defaultdict_binding_expr, refine_empty_list_binding_expr,
-    refine_empty_set_binding_expr, refine_generic_class_binding_expr,
-    refine_nonempty_method_return_type, reject_immutable_method_mut_borrow_arguments,
-    reject_immutable_parameter_method_mutation, resolve_annotation_expr,
-    resolve_bigint_method_type, resolve_bytes_method_type, resolve_class_method_on_type,
-    resolve_decimal_method_type, resolve_dict_method_type, resolve_enum_method_type,
-    resolve_fixed_width_method_type, resolve_list_method_type, resolve_newtype_method_type,
-    resolve_protocol_method_type, resolve_python_arrow_method_type,
+    consume_affine_collection_method_arguments, consume_owned_method_arguments,
+    container_literal_diagnostics, invalidate_collection_flow_facts_for_method,
+    is_task_handle_type, lower_expr, lower_iterator_protocol_entry, lower_method_call_args,
+    lower_signature_call_args, lower_task_handle_method_call, method_function_type,
+    refine_defaultdict_binding_expr, refine_empty_list_binding_expr, refine_empty_set_binding_expr,
+    refine_generic_class_binding_expr, refine_nonempty_method_return_type,
+    reject_immutable_method_mut_borrow_arguments, reject_immutable_parameter_method_mutation,
+    resolve_annotation_expr, resolve_bigint_method_type, resolve_bytes_method_type,
+    resolve_class_method_on_type, resolve_decimal_method_type, resolve_dict_method_type,
+    resolve_enum_method_type, resolve_fixed_width_method_type, resolve_list_method_type,
+    resolve_newtype_method_type, resolve_protocol_method_type, resolve_python_arrow_method_type,
     resolve_python_buffer_method_type, resolve_set_method_type, resolve_str_method_type,
-    resolve_tuple_method_type, str, tsc, DiagnosticCode, Expr, ExprAttribute, ExprCall,
-    ExprDictComp, ExprLambda, ExprListComp, ExprSetComp, FunctionType, HirExpr, HirParam, LowerCtx,
-    ParamConvention, Ranged, TextRange, Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS,
-    DEFAULTDICT_SET_ALIAS,
+    resolve_tuple_method_type, str, try_lower_class_method_call, try_lower_super_method_call, tsc,
+    DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp, ExprLambda, ExprListComp,
+    ExprSetComp, FunctionType, HirExpr, HirParam, LowerCtx, ParamConvention, Ranged, TextRange,
+    Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
 };
 use crate::lower::python_interop::callback_method_arg_ranges;
 use crate::lower::{
@@ -29,72 +29,11 @@ pub(in crate::lower) fn lower_method_call(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
-    // Handle super().__init__() and super().method() calls
-    if let Expr::Call(super_call) = attr.value.as_ref() {
-        if let Expr::Name(name) = super_call.func.as_ref() {
-            if name.id.as_str() == "super" {
-                let method_name = attr.attr.to_string();
-                if let (Some(parent_name), Some(parent_type)) = (
-                    ctx.current_parent_class.clone(),
-                    ctx.current_parent_type.clone(),
-                ) {
-                    let mut args = Vec::new();
-                    for arg in &call.arguments.args {
-                        let expr = lower_expr(arg, ctx)?;
-                        args.push(expr);
-                    }
-
-                    return Some(HirExpr::SuperCall {
-                        parent_class: parent_name,
-                        parent_type,
-                        method: if method_name == "__init__" {
-                            "new".to_string()
-                        } else {
-                            method_name
-                        },
-                        args,
-                        ty: Type::None,
-                    });
-                }
-                ctx.error_with_code_at(
-                    DiagnosticCode::CLASS_INVALID_BASE,
-                    "super() used outside of a class with a parent".to_string(),
-                    attr.value.range(),
-                );
-                return None;
-            }
-        }
+    if let Some(result) = try_lower_super_method_call(attr, call, ctx) {
+        return result;
     }
-
-    // Handle ClassName.method() calls (classmethod/staticmethod)
-    if let Expr::Name(name) = attr.value.as_ref() {
-        let class_name = name.id.to_string();
-        if ctx.class_types.contains_key(&class_name) {
-            let method_name = attr.attr.to_string();
-            // Lower arguments
-            let mut args = Vec::new();
-            for arg in &call.arguments.args {
-                let expr = lower_expr(arg, ctx)?;
-                args.push(expr);
-            }
-            // Look up the method's return type from the class type
-            if let Some(Type::Class { methods, .. }) = ctx.class_types.get(&class_name) {
-                if let Some((_, ft)) = methods.iter().find(|(n, _)| n == &method_name) {
-                    let return_ty = *ft.return_type.clone();
-                    return Some(HirExpr::Call {
-                        func: format!("{class_name}::{method_name}"),
-                        args,
-                        ty: return_ty,
-                    });
-                }
-            }
-            ctx.error_with_code_at(
-                DiagnosticCode::CLASS_MISSING_MEMBER,
-                format!("type '{class_name}' has no class/static method '{method_name}'"),
-                attr.attr.range(),
-            );
-            return None;
-        }
+    if let Some(result) = try_lower_class_method_call(attr, call, ctx) {
+        return result;
     }
 
     let mut object = lower_expr(&attr.value, ctx)?;
@@ -140,6 +79,7 @@ pub(in crate::lower) fn lower_method_call(
         &method_name,
         attr.attr.range(),
     );
+    let method_type = method_function_type(&object_ty_for_args, &method_name);
     let args = match &object_ty_for_args {
         Type::Class { name, methods, .. } => {
             if let Some((_, ft)) = methods
@@ -220,6 +160,9 @@ pub(in crate::lower) fn lower_method_call(
         attr.attr.range(),
         ctx,
     )?;
+    if let Some(function_type) = &method_type {
+        consume_owned_method_arguments(&args, call, function_type, ctx);
+    }
     consume_affine_collection_method_arguments(
         &object_ty,
         &method_name,
