@@ -1885,6 +1885,12 @@ in their own responsibility-focused module, diagnostic registry evidence paths
 and generated diagnostic documentation were updated, and both the
 package-manager guardrail and all 133 package tests pass after the split.
 
+Post-remediation authoritative `create-pr` validation passes every blocking
+lane in `787.93s`: Python interop `17/17` (read-only evidence
+`deferred=1 resolved=3 parity=5 mutations=0`), create-PR E2E `131/131` with
+signature `7c39b8c1dd4fec7c`, and hardening `6/6`. The warm wall-time budget
+notice is advisory; all per-step blocking budgets pass.
+
 Tasks:
 
 - Add read-only `sifr python check` using the same package/driver plan as normal
