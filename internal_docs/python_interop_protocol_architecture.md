@@ -5,8 +5,8 @@
 This document defines the declaration-first Python interop contract. Typed
 coroutines, synchronous and asynchronous contexts, every callback dispatch
 mode, typed affine buffer declarations, and Arrow C Data Interface declarations
-are implemented. DLPack rows remain reserved and must implement the same
-contract without publishing reduced substitutes.
+are implemented. DLPack tensor/stream declarations and one-shot transfer are
+implemented under the same ownership and evidence contract.
 
 The common rules in
 [`python_interop_declaration_architecture.md`](./python_interop_declaration_architecture.md)
@@ -634,7 +634,7 @@ def tensor(
     self,
     *,
     consumer_stream: python.DlpackStream,
-) -> Result[python.DlpackTensor[float32], PythonError]: ...
+) -> Result[python.DlpackTensor[float], PythonError]: ...
 ```
 
 The element type comes from `python.DlpackTensor[T]`. `device=cpu | cuda | any`
@@ -662,9 +662,11 @@ call passes that exact token to `__dlpack__(stream=...)`. This makes the
 consumer's synchronization context explicit rather than guessing a current
 stream.
 
-Generated acquisition passes `copy=False` and pins `max_version=(1, 0)`; a newer
-supported DLPack contract requires an architecture update, not opportunistic
-adoption. It validates legacy or versioned capsule names, copied flags, dtype
+Generated acquisition passes `copy=False` and pins `max_version=(1, 0)`. The
+versioned ABI rejects a different major version; a newer 1.x minor version is
+layout-compatible and is admitted only when all encountered dtype and device
+codes are understood. A newer major contract requires an architecture update,
+not opportunistic adoption. It validates legacy or versioned capsule names, copied flags, dtype
 code/bits/lanes, device,
 dimensions, shape, strides, byte offset, deleter state, and stream contract.
 

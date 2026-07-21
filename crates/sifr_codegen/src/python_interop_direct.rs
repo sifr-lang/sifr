@@ -11,6 +11,7 @@ use crate::python_interop_direct_helpers::{
 };
 pub(crate) use crate::python_interop_direct_helpers::{push_to, reference, vector_let};
 pub(crate) use crate::python_interop_runtime_exprs::{mapped_let, mapped_try, runtime_call};
+use crate::python_zero_copy_arguments as zero_copy;
 use crate::{RustExpr, RustLiteral, RustStmt};
 use sifr_ir::{
     HirFunction, PythonCallbackLifetime, PythonInteropDeclaration, PythonInteropDecoratorKind,
@@ -46,6 +47,8 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
         PythonInteropDecoratorKind::Function
             | PythonInteropDecoratorKind::Buffer
             | PythonInteropDecoratorKind::Arrow
+            | PythonInteropDecoratorKind::Dlpack
+            | PythonInteropDecoratorKind::DlpackStream
     ) {
         return None;
     }
@@ -112,7 +115,7 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
     }
     let mut forward_positional_by_name = false;
     let mut callback_setups = Vec::new();
-    let mut arrow_argument_guards = Vec::new();
+    let mut zero_copy_guards = zero_copy::ArgumentGuards::default();
     for (index, shape) in declaration.parameters.iter().enumerate() {
         let param = func.params.iter().find(|param| param.name == shape.name)?;
         let handle_name = format!("__sifr_python_arg_{index}");
@@ -190,21 +193,18 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
         }
         match shape.kind {
             PythonParameterKind::Positional | PythonParameterKind::KeywordOnly => {
-                if let Type::PythonArrow(kind) = param.ty.resolve_alias() {
-                    arrow_argument_guards.push(
-                        crate::python_arrow_codegen::append_argument_preparation(
-                            &mut body,
-                            crate::python_arrow_codegen::ArgumentPreparation {
-                                parameter_name: &param.name,
-                                index,
-                                kind: *kind,
-                                shape_kind: shape.kind,
-                                shape_name: &shape.name,
-                                forward_positional_by_name,
-                                error_type,
-                            },
-                        )?,
-                    );
+                if zero_copy_guards.append_preparation(
+                    &mut body,
+                    zero_copy::ArgumentPreparation {
+                        parameter_name: &param.name,
+                        index,
+                        ty: &param.ty,
+                        shape_kind: shape.kind,
+                        shape_name: &shape.name,
+                        forward_positional_by_name,
+                        error_type,
+                    },
+                )? {
                     continue;
                 }
                 let conversion = if is_python_object(&param.ty) {
@@ -292,7 +292,7 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
             reference("__sifr_python_kwargs"),
         ],
     );
-    if callback_setups.is_empty() && arrow_argument_guards.is_empty() {
+    if callback_setups.is_empty() && zero_copy_guards.is_empty() {
         body.push(mapped_let("__sifr_python_result", call, error_type));
     } else {
         body.push(RustStmt::Let {
@@ -326,13 +326,7 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
                 ),
             });
         }
-        if !arrow_argument_guards.is_empty() {
-            crate::python_arrow_codegen::append_argument_reconciliation(
-                &mut body,
-                &arrow_argument_guards,
-                "__sifr_python_outcome",
-            );
-        }
+        zero_copy_guards.append_reconciliation(&mut body, "__sifr_python_outcome");
         body.push(mapped_let(
             "__sifr_python_result",
             RustExpr::Ident("__sifr_python_outcome".to_string()),
@@ -368,6 +362,16 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
             RustExpr::Ident("__sifr_python_result".to_string()),
             declaration.arrow.as_ref()?,
             &target.dotted(),
+            error_type,
+        )
+    } else if matches!(
+        declaration.kind,
+        PythonInteropDecoratorKind::Dlpack | PythonInteropDecoratorKind::DlpackStream
+    ) {
+        crate::python_dlpack_codegen::acquire_from_foreign(
+            RustExpr::Ident("__sifr_python_result".to_string()),
+            declaration.dlpack.as_ref()?,
+            ok_type,
             error_type,
         )
     } else {
@@ -450,6 +454,12 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
     if declaration.kind == PythonInteropDecoratorKind::Arrow {
         return crate::python_arrow_codegen::receiver_interop_body(func, owner_declaration);
     }
+    if matches!(
+        declaration.kind,
+        PythonInteropDecoratorKind::Dlpack | PythonInteropDecoratorKind::DlpackStream
+    ) {
+        return crate::python_dlpack_codegen::receiver_interop_body(func, owner_declaration);
+    }
     let mut body = Vec::new();
     if !declaration.consumes_receiver {
         append_owner_failure_observer_setup(&mut body, owner_retained_errors);
@@ -527,7 +537,7 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
         );
     }
     let mut callback_setups = Vec::new();
-    let mut arrow_argument_guards = Vec::new();
+    let mut zero_copy_guards = zero_copy::ArgumentGuards::default();
     for (index, shape) in declaration.parameters.iter().enumerate() {
         let param = func.params.iter().find(|param| param.name == shape.name)?;
         let handle = format!("__sifr_python_arg_{index}");
@@ -593,19 +603,18 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
             callback_setups.push(setup);
             continue;
         }
-        if let Type::PythonArrow(kind) = param.ty.resolve_alias() {
-            arrow_argument_guards.push(crate::python_arrow_codegen::append_argument_preparation(
-                &mut body,
-                crate::python_arrow_codegen::ArgumentPreparation {
-                    parameter_name: &param.name,
-                    index,
-                    kind: *kind,
-                    shape_kind: shape.kind,
-                    shape_name: &shape.name,
-                    forward_positional_by_name: false,
-                    error_type,
-                },
-            )?);
+        if zero_copy_guards.append_preparation(
+            &mut body,
+            zero_copy::ArgumentPreparation {
+                parameter_name: &param.name,
+                index,
+                ty: &param.ty,
+                shape_kind: shape.kind,
+                shape_name: &shape.name,
+                forward_positional_by_name: false,
+                error_type,
+            },
+        )? {
             continue;
         }
         body.push(mapped_let(
@@ -771,9 +780,7 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
         }
         _ => return None,
     };
-    if callback_setups.is_empty()
-        && arrow_argument_guards.is_empty()
-        && owner_retained_errors.is_empty()
+    if callback_setups.is_empty() && zero_copy_guards.is_empty() && owner_retained_errors.is_empty()
     {
         body.push(mapped_let("__sifr_python_result", operation, error_type));
     } else {
@@ -806,13 +813,7 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
                 ),
             });
         }
-        if !arrow_argument_guards.is_empty() {
-            crate::python_arrow_codegen::append_argument_reconciliation(
-                &mut body,
-                &arrow_argument_guards,
-                "__sifr_python_outcome",
-            );
-        }
+        zero_copy_guards.append_reconciliation(&mut body, "__sifr_python_outcome");
         append_owner_failure_evidence(&mut body, owner_retained_errors);
         body.push(mapped_let(
             "__sifr_python_result",

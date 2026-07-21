@@ -3,10 +3,10 @@
   "fixture": "tensorflow_dlpack",
   "groups": ["tensors", "dlpack", "native"],
   "packages": ["tensorflow", "numpy"],
-  "default_gate": "host_dependent_tensor_smoke",
-  "host_policy": "TensorFlow wheel availability is host dependent; CPU-only evidence accepted",
+  "default_gate": "offline_compiled_dlpack",
+  "host_policy": "Locked TensorFlow CPU wheel executes in every delivery profile",
   "cases": [
-    "tensorflow_import_is_host_dependent",
+    "tensorflow_declaration_compiles_and_runs",
     "cpu_tensor_dlpack_shape",
     "unsupported_device_is_reported"
   ]

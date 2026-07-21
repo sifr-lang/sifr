@@ -27,6 +27,7 @@ dependencies = [
     "schwifty>=2025,<2027",
     "sqlalchemy>=2,<3",
     "starlette>=0.40,<1",
+    "tensorflow>=2.20,<3",
     "testcontainers[kafka,localstack,postgres,redis]>=4.12,<5",
     "torch>=2.5,<3",
 ]

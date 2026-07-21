@@ -44,6 +44,8 @@ impl Type {
             Self::AsyncGenerator(item, error) => binary("async_generator", item, error),
             Self::PythonBuffer(element) => unary("python_buffer", element),
             Self::PythonArrow(kind) => format!("python_arrow:{}", kind.source_name()),
+            Self::PythonDlpackTensor(element) => unary("python_dlpack_tensor", element),
+            Self::PythonDlpackStream => atom("python_dlpack_stream"),
             Self::List(element) => unary("list", element),
             Self::Dict(key, value) => binary("dict", key, value),
             Self::Set(element) => unary("set", element),

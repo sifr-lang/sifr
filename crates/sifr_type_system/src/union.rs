@@ -209,8 +209,12 @@ fn type_sort_key(ty: &Type) -> (u8, String) {
         Type::Awaitable(_) => (26, String::new()),
         Type::AsyncIterator(_, _) => (27, String::new()),
         Type::AsyncGenerator(_, _) => (28, String::new()),
-        Type::PythonBuffer(element) => (29, element.display_name()),
-        Type::PythonArrow(kind) => (29, kind.source_name().to_string()),
+        Type::PythonBuffer(element) => (29, format!("buffer:{}", element.display_name())),
+        Type::PythonArrow(kind) => (29, format!("arrow:{}", kind.source_name())),
+        Type::PythonDlpackTensor(element) => {
+            (29, format!("dlpack_tensor:{}", element.display_name()))
+        }
+        Type::PythonDlpackStream => (29, "dlpack_stream".to_string()),
         Type::Unknown => (29, String::new()),
         Type::Any => (29, String::new()),
         Type::Never => (29, String::new()),
@@ -317,6 +321,18 @@ mod tests {
     fn test_make_union_sorted() {
         let u = make_union(vec![Type::Str, Type::Int, Type::None]);
         assert_eq!(u, Type::Union(vec![Type::None, Type::Int, Type::Str]));
+    }
+
+    #[test]
+    fn test_python_resource_union_order_is_canonical() {
+        let buffer = Type::PythonBuffer(Box::new(Type::Int));
+        let dlpack = Type::PythonDlpackTensor(Box::new(Type::Int));
+
+        let forward = make_union(vec![buffer.clone(), dlpack.clone()]);
+        let reversed = make_union(vec![dlpack, buffer]);
+
+        assert_eq!(forward, reversed);
+        assert!(matches!(forward, Type::Union(members) if members.len() == 2));
     }
 
     #[test]

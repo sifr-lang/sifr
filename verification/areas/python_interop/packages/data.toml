@@ -18,8 +18,6 @@ tier = "tier1"
 gate = "tier1b"
 groups = ["imports", "native", "dlpack", "tensors"]
 native = true
-host-dependent = true
-skip-reason = "TensorFlow wheel availability and CPU feature requirements vary by host"
 
 [[packages]]
 name = "scikit-learn"

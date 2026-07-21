@@ -1735,6 +1735,22 @@ Validation:
 
 Depends on M1 sealed affine resources and M4 conversion.
 
+Delivery waves:
+
+- [ ] Wave 1 — activate the nominal affine tensor/stream types, decorator and
+  `parameter(name)` grammar, device/stream signature contracts, and static
+  ownership failure matrices.
+- [ ] Wave 2 — replace the legacy raw DLPack helper with versioned runtime and
+  stdlib acquisition, validation, stream synchronization, one-shot capsule
+  ownership, transfer reconciliation, and exact-once deleter cleanup.
+- [ ] Wave 3 — generate receiver and producer acquisition plus owned consumer
+  transfer across direct, method, constructor, callable, and collection paths.
+- [ ] Wave 4 — add CPU/device, malformed-capsule, failure-transition, package,
+  PyTorch/TensorFlow, documentation, and delivery-profile evidence.
+- [ ] Milestone review — run the complete M12 diff through repeated Fable High
+  review, remediate until satisfied, pass both authoritative local gates, and
+  merge the M12 PR.
+
 Tasks:
 
 - Add affine `python.DlpackTensor[T]`.

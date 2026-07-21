@@ -168,6 +168,9 @@ fn rename_class_identities(ty: &Type, class_aliases: &HashMap<String, String>) -
         Type::PythonBuffer(inner) => {
             Type::PythonBuffer(Box::new(rename_class_identities(inner, class_aliases)))
         }
+        Type::PythonDlpackTensor(inner) => {
+            Type::PythonDlpackTensor(Box::new(rename_class_identities(inner, class_aliases)))
+        }
         Type::Dict(key, value) => Type::Dict(
             Box::new(rename_class_identities(key, class_aliases)),
             Box::new(rename_class_identities(value, class_aliases)),
@@ -355,6 +358,7 @@ fn set_canonical_identities(ty: &mut Type, local_classes: &HashMap<String, Strin
         | Type::Iterable(inner)
         | Type::Iterator(inner)
         | Type::PythonBuffer(inner)
+        | Type::PythonDlpackTensor(inner)
         | Type::Awaitable(inner)
         | Type::Failure(inner)
         | Type::TimeoutResult(inner)

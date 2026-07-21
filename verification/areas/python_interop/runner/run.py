@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import argparse
 import json
 import sys
 from pathlib import Path
@@ -26,11 +25,14 @@ from buffer_examples import (
 from buffer_evidence import BUFFER_MATRIX_SPECS
 from callback_examples import build_callback_examples_report, run_callback_examples_self_tests
 from certification_matrix import build_certification_report, validate_certification_policy
+from cli_args import parse_args
 from dataframe_examples import build_dataframe_examples_report, run_dataframe_examples_self_tests
 from declaration_capabilities import (
     load_and_validate_capabilities,
     run_declaration_capability_self_tests,
 )
+from dlpack_evidence import validate_dlpack_declaration_evidence
+from dlpack_examples import build_dlpack_examples_report, run_dlpack_examples_self_tests
 from env import discover_paths
 from env_probe import run_env_probe
 from import_matrix import PackageEntry, load_matrix
@@ -106,6 +108,7 @@ REQUIRED_FIXTURE_FILES = (
     "pubsub/pubsub_contract.json",
     "pyarrow_capsule/arrow_capsule_contract.json",
     "pyarrow_capsule/arrow_declaration_evidence.json",
+    "torch_dlpack/dlpack_declaration_evidence.json",
     "pydantic_models/pydantic_models_contract.json",
     "redis/redis_contract.json",
     "torch_dlpack/dlpack_tensor_contract.json",
@@ -146,6 +149,7 @@ REQUIRED_SOURCE_FIXTURES = (
     "pyarrow_capsule/arrow_declaration_compiled.sifr",
     "pyarrow_capsule/python_certifications/arrow_evidence.py",
     "pyarrow_capsule/pyarrow_full_example.sifr",
+    "torch_dlpack/dlpack_declaration_compiled.sifr",
     "fastapi_app/fastapi_pydantic_full_example.sifr",
     "cryptography_tls/cryptography_cffi_full_example.sifr",
     "aws_sqs/boto3_botocore_full_example.sifr",
@@ -154,6 +158,8 @@ REQUIRED_SOURCE_FIXTURES = (
     "torch_dlpack/dlpack_tensor_device_failure.sifr",
     "torch_dlpack/dlpack_tensor_roundtrip.sifr",
     "torch_dlpack/torch_full_example.sifr",
+    "tensorflow_dlpack/dlpack_declaration_compiled.sifr",
+    "tensorflow_dlpack/python_bridges/tensorflow_dlpack.py",
     "sklearn/sklearn_full_example.sifr",
     "cffi_callback/callback_roundtrip.sifr",
     "resource_cleanup/context_manager_body_failure.sifr",
@@ -171,51 +177,6 @@ REQUIRED_SOURCE_FIXTURES = (
 )
 
 
-def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run Sifr embedded Python interop verification.")
-    parser.add_argument("--group", action="append", default=[], help="Verification group filter.")
-    parser.add_argument("--tier", action="append", default=[], help="Package tier filter.")
-    parser.add_argument("--gate", action="append", default=[], help="Certification gate filter.")
-    parser.add_argument("--package", action="append", default=[], help="Package name filter.")
-    parser.add_argument(
-        "--report",
-        default="../../../target/verification/areas/python_interop/latest.json",
-        help="Report path relative to verification/areas/python_interop.",
-    )
-    parser.add_argument("--self-test", action="store_true", help="Run runner positive and negative self-tests.")
-    parser.add_argument("--live-policy", action="store_true", help="Validate live container-runtime policy.")
-    parser.add_argument("--live-examples", action="store_true", help="Run testcontainers-backed live examples.")
-    parser.add_argument("--dataframe-examples", action="store_true", help="Run full NumPy/pandas/Polars Sifr examples.")
-    parser.add_argument(
-        "--buffer-examples",
-        action="store_true",
-        help="Run compiled declaration-first Python buffer examples.",
-    )
-    parser.add_argument(
-        "--arrow-examples",
-        action="store_true",
-        help="Run compiled declaration-first Arrow C Data Interface examples.",
-    )
-    parser.add_argument("--ml-examples", action="store_true", help="Run full torch/scikit-learn Sifr examples.")
-    parser.add_argument("--library-examples", action="store_true", help="Run full library-family Sifr examples.")
-    parser.add_argument(
-        "--async-declaration-examples",
-        action="store_true",
-        help="Run compiled typed async Python declaration examples.",
-    )
-    parser.add_argument(
-        "--async-context-examples",
-        action="store_true",
-        help="Run compiled typed async Python context-manager examples.",
-    )
-    parser.add_argument(
-        "--callback-examples",
-        action="store_true",
-        help="Run compiled typed Python callback examples.",
-    )
-    return parser.parse_args(argv)
-
-
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     paths = discover_paths()
@@ -226,6 +187,7 @@ def main(argv: list[str] | None = None) -> int:
         run_dataframe_examples_self_tests(paths)
         run_buffer_examples_self_tests(paths)
         run_arrow_examples_self_tests(paths)
+        run_dlpack_examples_self_tests(paths)
         run_ml_examples_self_tests(paths)
         run_library_examples_self_tests(paths)
         run_async_declaration_examples_self_tests(paths)
@@ -272,6 +234,15 @@ def main(argv: list[str] | None = None) -> int:
         write_report(report_path, payload)
         print(
             "python interop arrow-examples "
+            f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
+        )
+        return 1 if payload["status"] == "examples-failed" else 0
+    if args.dlpack_examples:
+        payload = build_dlpack_examples_report(paths)
+        report_path = (paths.area_root / args.report).resolve()
+        write_report(report_path, payload)
+        print(
+            "python interop dlpack-examples "
             f"{payload['status']} ok: report={report_path.relative_to(paths.repo_root)}"
         )
         return 1 if payload["status"] == "examples-failed" else 0
@@ -456,6 +427,8 @@ def validate_fixture_files(fixtures_root: Path) -> None:
             validate_buffer_declaration_evidence(payload, fixtures_root)
         if name == "pyarrow_capsule/arrow_declaration_evidence.json":
             validate_arrow_declaration_evidence(payload, fixtures_root)
+        if name == "torch_dlpack/dlpack_declaration_evidence.json":
+            validate_dlpack_declaration_evidence(payload, fixtures_root)
     missing_sources = [
         name for name in REQUIRED_SOURCE_FIXTURES if not (fixtures_root / name).is_file()
     ]

@@ -6,10 +6,10 @@ use super::{
     is_valid_error_type, lower_expr, lower_stmts, make_union, ownership_diagnostics,
     reject_borrowed_affine_generator_params, reject_declared_async_generator_boundary,
     reject_live_join_sets_at_function_exit, reject_live_must_use_bindings_at_function_exit,
-    reserved_integer_width_name, resolve_type_annotation, str, substitute_type_vars, unknown_type,
-    workload_annotations, DiagnosticCode, Expr, FunctionType, HashMap, HirFunction, HirParam,
-    LowerCtx, MethodKind, Number, Operator, OwnershipKind, ParamConvention, Ranged,
-    StmtFunctionDef, Type,
+    reserved_integer_width_name, resolve_python_dlpack_tensor_annotation, resolve_type_annotation,
+    str, substitute_type_vars, unknown_type, workload_annotations, DiagnosticCode, Expr,
+    FunctionType, HashMap, HirFunction, HirParam, LowerCtx, MethodKind, Number, Operator,
+    OwnershipKind, ParamConvention, Ranged, StmtFunctionDef, Type,
 };
 use crate::lower::python_interop::{
     classify_python_interop_stub_body, collect_python_interop_declarations,
@@ -50,7 +50,10 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
         }
         Expr::NoneLiteral(_) => Type::None,
         Expr::Attribute(attribute) if matches!(attribute.value.as_ref(), Expr::Name(root) if root.id.as_str() == "python") => {
-            super::resolve_python_arrow_annotation(attribute.attr.as_str(), attribute.range(), ctx)
+            match attribute.attr.as_str() {
+                "DlpackStream" => Type::PythonDlpackStream,
+                name => super::resolve_python_arrow_annotation(name, attribute.range(), ctx),
+            }
         }
         // Union type syntax: int | str (parsed as BinOp with BitOr)
         Expr::BinOp(binop) if matches!(binop.op, Operator::BitOr) => {
@@ -103,6 +106,12 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                         && attribute.attr.as_str() == "Buffer" =>
                 {
                     return super::resolve_python_buffer_annotation(&sub.slice, ctx);
+                }
+                Expr::Attribute(attribute)
+                    if matches!(attribute.value.as_ref(), Expr::Name(root) if root.id.as_str() == "python")
+                        && attribute.attr.as_str() == "DlpackTensor" =>
+                {
+                    return resolve_python_dlpack_tensor_annotation(&sub.slice, ctx);
                 }
                 _ => {
                     invalid_type_annotation(

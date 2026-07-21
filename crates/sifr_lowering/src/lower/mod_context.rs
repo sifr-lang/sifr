@@ -546,6 +546,9 @@ pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<Strin
         Type::PythonBuffer(elem) => {
             Type::PythonBuffer(Box::new(substitute_type_vars(elem, bindings)))
         }
+        Type::PythonDlpackTensor(elem) => {
+            Type::PythonDlpackTensor(Box::new(substitute_type_vars(elem, bindings)))
+        }
         Type::JoinSet(ok, err) => Type::JoinSet(
             Box::new(substitute_type_vars(ok, bindings)),
             Box::new(substitute_type_vars(err, bindings)),

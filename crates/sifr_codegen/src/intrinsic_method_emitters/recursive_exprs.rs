@@ -93,6 +93,11 @@ impl RustEmitter {
                 ) {
                     return Some(lowered);
                 }
+                if let Some(lowered) = crate::python_dlpack_codegen::lower_python_dlpack_method(
+                    self, object, method, args, ty,
+                ) {
+                    return Some(lowered);
+                }
                 if method == "append" && args.len() == 1 {
                     if let HirExpr::Index {
                         object: index_object,

@@ -116,6 +116,7 @@
         "dataframe-examples",
         "buffer-examples",
         "arrow-examples",
+        "dlpack-examples",
         "arrow-cpython311",
         "buffer-cpython311",
         "ml",

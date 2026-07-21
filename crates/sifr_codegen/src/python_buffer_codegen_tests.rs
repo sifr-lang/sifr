@@ -231,6 +231,7 @@ fn buffer_function(
                 layout,
             }),
             arrow: None,
+            dlpack: None,
         }],
         compiler_intrinsic: None,
         type_params: Vec::new(),

@@ -9,8 +9,9 @@ hermetic package-local bridge targets, application-owned asyncio runtime,
 typed coroutine declarations, structured cancellation, and consuming async
 close are implemented. Typed async contexts, declaration-first current,
 foreign-thread and asyncio callbacks, typed affine buffer declarations, and
-certified Arrow C Data Interface declarations are active; DLPack declarations
-remain reserved.
+certified Arrow C Data Interface declarations are active. Declaration-first
+DLPack tensor and stream acquisition, validation, and one-shot transfer are
+active as well.
 
 ## Ownership Boundary
 
@@ -102,7 +103,10 @@ Zero-copy support is explicit:
   structural C metadata, paired schema/data ownership, and release callbacks;
   declared producers additionally require environment-bound executable
   no-copy certification and exact runtime producer identity.
-- DLPack enforces one-shot capsule consumption, `"used_dltensor"` marking, dtype/device validation, and exact-once deleter release.
+- DLPack declarations negotiate `copy=False` and `max_version=(1, 0)`, accept
+  the stable 1.x versioned ABI plus legacy capsules from producers supporting
+  that complete call shape, validate dtype/device/shape/stride/stream metadata,
+  mark capsules used, and release or transfer each deleter exactly once.
 - Array-interface protocols retain owners and validate pointer/dtype/shape/stride/device metadata.
 
 Zero-copy APIs never fall back to copying. The retained raw Arrow API reports
@@ -160,7 +164,7 @@ The public examples in `docs/python-interop.mdx` are intentionally backed by che
 | FastAPI app construction | `library-examples` runs `fastapi_app/fastapi_pydantic_full_example.sifr`; `fastapi_app_contract.json` remains the contract inventory. |
 | Pydantic / pydantic-core validation | `library-examples` runs `fastapi_app/fastapi_pydantic_full_example.sifr`; `pydantic_models_contract.json` remains the contract inventory. |
 | pandas / pyarrow / polars Arrow bridge | `arrow-examples` creates and read-only rechecks exact environment-bound certifications, then compiles and runs `pyarrow_capsule/arrow_declaration_compiled.sifr` against all three producers with zero residual resources. The lower-level dataframe/library examples remain dynamic API evidence. |
-| torch / TensorFlow DLPack | `ml-examples` runs `torch_dlpack/torch_full_example.sifr`; TensorFlow remains host-dependent matrix/contract evidence through `tensorflow_dlpack_contract.json`. |
+| torch / TensorFlow DLPack | `dlpack-examples` compiles and runs declaration-first PyTorch and TensorFlow transfers, checks stable data pointers and zero residual resources, and exercises TensorFlow through an explicit complete-signature package bridge. `ml-examples` retains the lower-level raw PyTorch example. |
 | Kafka / CFFI / asyncio / Pub/Sub callbacks | `callback-examples` compiles and runs all four offline examples, including foreign-thread CFFI and Kafka dispatch plus active retained Pub/Sub close/drain. |
 | cryptography / CFFI / certifi | `library-examples` runs `cryptography_tls/cryptography_cffi_full_example.sifr`; `cryptography_tls_contract.json` remains the contract inventory. |
 | boto3 / botocore cloud clients | `library-examples` runs `aws_sqs/boto3_botocore_full_example.sifr`; live LocalStack SNS/SQS examples cover service-backed delivery. |
@@ -183,7 +187,6 @@ Declaration diagnostics are activated with their owning compiler surfaces. `PYIM
 `PYCALL`, `PYCONV`, `PYRES`, `PYCTX`, `PYASYNC`, and `PYCB` cover synchronous and
 async declarations, opaque values, sync/async contexts, package bridges,
 consuming async close, typed current/foreign/asyncio callbacks, and the active
-typed buffer and Arrow protocols. `PYZC` is active for buffer and Arrow
-declaration, affine ownership, layout, certification, capsule validation,
-transfer, and release diagnostics; its DLPack rows remain reserved until that
-protocol activates.
+typed buffer, Arrow, and DLPack protocols. `PYZC` covers their declaration,
+affine ownership, layout or stream policy, certification where required,
+capsule validation, transfer, and release diagnostics.

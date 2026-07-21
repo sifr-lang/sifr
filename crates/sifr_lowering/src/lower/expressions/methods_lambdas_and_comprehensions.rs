@@ -11,11 +11,12 @@ use super::{
     resolve_class_method_on_type, resolve_decimal_method_type, resolve_dict_method_type,
     resolve_enum_method_type, resolve_fixed_width_method_type, resolve_list_method_type,
     resolve_newtype_method_type, resolve_protocol_method_type, resolve_python_arrow_method_type,
-    resolve_python_buffer_method_type, resolve_set_method_type, resolve_str_method_type,
-    resolve_tuple_method_type, str, try_lower_class_method_call, try_lower_super_method_call, tsc,
-    DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp, ExprLambda, ExprListComp,
-    ExprSetComp, FunctionType, HirExpr, HirParam, LowerCtx, ParamConvention, Ranged, TextRange,
-    Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS,
+    resolve_python_buffer_method_type, resolve_python_dlpack_method_type, resolve_set_method_type,
+    resolve_str_method_type, resolve_tuple_method_type, str, try_lower_class_method_call,
+    try_lower_super_method_call, tsc, DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp,
+    ExprLambda, ExprListComp, ExprSetComp, FunctionType, HirExpr, HirParam, LowerCtx,
+    ParamConvention, Ranged, TextRange, Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS,
+    DEFAULTDICT_SET_ALIAS,
 };
 use crate::lower::python_interop::callback_method_arg_ranges;
 use crate::lower::{
@@ -257,6 +258,12 @@ pub(in crate::lower) fn lower_method_call(
     {
         return None;
     }
+    if matches!(object_ty.resolve_alias(), Type::PythonDlpackTensor(_))
+        && method_name == "release"
+        && !super::consume_python_dlpack_release_receiver(&object, attr.value.range(), ctx)
+    {
+        return None;
+    }
 
     let receiver_is_current_class = matches!(
         object_ty.resolve_alias(),
@@ -331,6 +338,17 @@ pub(in crate::lower) fn resolve_method_type(
         }
         Type::PythonArrow(kind) => {
             resolve_python_arrow_method_type(*kind, method, args, arg_ranges, method_range, ctx)
+        }
+        Type::PythonDlpackTensor(element) => resolve_python_dlpack_method_type(
+            Some(element),
+            method,
+            args,
+            arg_ranges,
+            method_range,
+            ctx,
+        ),
+        Type::PythonDlpackStream => {
+            resolve_python_dlpack_method_type(None, method, args, arg_ranges, method_range, ctx)
         }
         class @ Type::Class { .. } => {
             resolve_class_method_on_type(class, method, args, arg_ranges, method_range, ctx)

@@ -1,6 +1,6 @@
 use super::{
-    arrow, buffer, invalid_shape, is_direct_type, unsupported_conversion, HirParam, LowerCtx,
-    PythonInteropDeclaration, PythonInteropEffect, PythonParameterKind, Type,
+    arrow, buffer, dlpack, invalid_shape, is_direct_type, unsupported_conversion, HirParam,
+    LowerCtx, PythonInteropDeclaration, PythonInteropEffect, PythonParameterKind, Type,
 };
 
 pub(super) fn validate_direct_parameters(
@@ -86,10 +86,44 @@ pub(super) fn validate_direct_parameters(
                 );
             }
         }
+        if matches!(param.ty.resolve_alias(), Type::PythonDlpackTensor(_)) {
+            if !param.convention.is_owned() || param.convention.is_mutable() {
+                dlpack::invalid(
+                    ctx,
+                    &format!(
+                        "DLPack tensor consumer parameter '{}' must transfer ownership with plain `own`",
+                        param.name
+                    ),
+                    shape.span,
+                );
+            }
+            if shape.omit_when_absent {
+                dlpack::invalid(
+                    ctx,
+                    &format!(
+                        "DLPack tensor consumer parameter '{}' cannot be omitted because transfer is one-shot",
+                        param.name
+                    ),
+                    shape.span,
+                );
+            }
+            if declaration.effect == PythonInteropEffect::Async {
+                dlpack::invalid(
+                    ctx,
+                    &format!(
+                        "DLPack tensor consumer parameter '{}' is not supported on async Python declarations",
+                        param.name
+                    ),
+                    shape.span,
+                );
+            }
+        }
         let supported = match shape.kind {
             PythonParameterKind::Positional | PythonParameterKind::KeywordOnly => {
-                matches!(param.ty.resolve_alias(), Type::PythonArrow(_))
-                    || is_direct_type(&param.ty, true, ctx)
+                matches!(
+                    param.ty.resolve_alias(),
+                    Type::PythonArrow(_) | Type::PythonDlpackTensor(_)
+                ) || is_direct_type(&param.ty, true, ctx)
             }
             PythonParameterKind::PositionalVariadic => {
                 matches!(param.ty.resolve_alias(), Type::List(element) if is_direct_type(element, false, ctx))

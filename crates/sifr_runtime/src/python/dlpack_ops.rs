@@ -4,12 +4,26 @@ use pyo3::ffi;
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyTuple};
 use std::collections::HashMap;
-use std::ffi::{c_void, CStr};
+use std::ffi::CStr;
 use std::hash::BuildHasher;
 use std::sync::{LazyLock, Mutex, MutexGuard};
 
-const DLTENSOR_NAME: &CStr = c"dltensor";
-const USED_DLTENSOR_NAME: &CStr = c"used_dltensor";
+mod abi;
+mod argument;
+#[cfg(test)]
+mod declaration_tests;
+
+pub use argument::{prepare_dlpack_argument, PythonDlpackArgument};
+
+use abi::{
+    metadata_for_managed_tensor, DLDataType, DLDevice, ManagedTensor, DLTENSOR_NAME,
+    DLTENSOR_VERSIONED_NAME,
+};
+#[cfg(test)]
+use abi::{DLManagedTensor, DLTensor, USED_DLTENSOR_NAME};
+#[cfg(test)]
+use std::ffi::c_void;
+
 const DEVICE_CPU: i32 = 1;
 
 static DLPACK_STORE: LazyLock<Mutex<DlpackStore>> =
@@ -37,37 +51,11 @@ pub struct PythonDlpackTensorMetadata {
     pub stream_sync_required: bool,
 }
 
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct DLDevice {
-    device_type: i32,
-    device_id: i32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-struct DLDataType {
-    code: u8,
-    bits: u8,
-    lanes: u16,
-}
-
-#[repr(C)]
-struct DLTensor {
-    data: *mut c_void,
-    device: DLDevice,
-    ndim: i32,
-    dtype: DLDataType,
-    shape: *mut i64,
-    strides: *mut i64,
-    byte_offset: u64,
-}
-
-#[repr(C)]
-struct DLManagedTensor {
-    dl_tensor: DLTensor,
-    manager_ctx: *mut c_void,
-    deleter: Option<unsafe extern "C" fn(*mut DLManagedTensor)>,
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PythonDlpackStreamMetadata {
+    pub device_type: i64,
+    pub device_id: i64,
+    pub stream_token: i64,
 }
 
 #[derive(Default)]
@@ -85,8 +73,7 @@ struct DlpackEntry {
 }
 
 struct TrackedDlpackTensor {
-    tensor_ptr: usize,
-    deleter: Option<unsafe extern "C" fn(*mut DLManagedTensor)>,
+    tensor: ManagedTensor,
     released: bool,
     _owner: Py<PyAny>,
     _capsule: Py<PyAny>,
@@ -95,10 +82,7 @@ struct TrackedDlpackTensor {
 impl Drop for TrackedDlpackTensor {
     fn drop(&mut self) {
         if !self.released {
-            if let Some(deleter) = self.deleter.take() {
-                let tensor = self.tensor_ptr as *mut DLManagedTensor;
-                unsafe { deleter(tensor) };
-            }
+            unsafe { self.tensor.release() };
             self.released = true;
         }
         let _ignored = super::update_object_count(-1);
@@ -106,17 +90,147 @@ impl Drop for TrackedDlpackTensor {
 }
 
 pub fn dlpack_tensor(object: &ObjectHandle) -> Result<PythonDlpackTensorMetadata, PythonError> {
+    acquire_dlpack_tensor(object, "cpu", None, None)
+}
+
+pub fn acquire_dlpack_tensor(
+    object: &ObjectHandle,
+    expected_device: &str,
+    stream: Option<&PythonDlpackStreamMetadata>,
+    expected_dtype: Option<&str>,
+) -> Result<PythonDlpackTensorMetadata, PythonError> {
     super::attach(|py| {
         let owner = clone_handle(py, object)?;
         let device = dlpack_device(py, owner.bind(py))?;
-        if device.device_type != DEVICE_CPU {
-            return Err(unsupported_device_error(device));
+        validate_device_policy(device, expected_device, stream)?;
+        let kwargs = pyo3::types::PyDict::new(py);
+        if let Some(stream) = stream {
+            kwargs
+                .set_item("stream", stream.stream_token)
+                .map_err(|error| {
+                    PythonError::from_pyerr(py, error, "zero-copy", "DLPack stream")
+                })?;
+        } else {
+            kwargs.set_item("stream", py.None()).map_err(|error| {
+                PythonError::from_pyerr(py, error, "zero-copy", "DLPack stream")
+            })?;
         }
+        kwargs
+            .set_item("max_version", (1_u32, 0_u32))
+            .map_err(|error| {
+                PythonError::from_pyerr(py, error, "zero-copy", "DLPack max_version")
+            })?;
+        kwargs.set_item("copy", false).map_err(|error| {
+            PythonError::from_pyerr(py, error, "zero-copy", "DLPack copy policy")
+        })?;
         let capsule = owner
             .bind(py)
-            .call_method0("__dlpack__")
+            .call_method("__dlpack__", (), Some(&kwargs))
             .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "__dlpack__"))?;
-        consume_capsule(py, owner, &capsule)
+        let metadata = consume_capsule(py, owner, &capsule)?;
+        if metadata.device_type != i64::from(device.device_type)
+            || metadata.device_id != i64::from(device.device_id)
+        {
+            let _ignored = release_dlpack((metadata.handle, metadata.token));
+            return Err(dlpack_error(
+                "DLPack capsule device does not match `__dlpack_device__`",
+            ));
+        }
+        if expected_dtype.is_some_and(|expected| metadata.dtype != expected) {
+            let actual = metadata.dtype.clone();
+            let _ignored = release_dlpack((metadata.handle, metadata.token));
+            return Err(dlpack_error(format!(
+                "DLPack dtype mismatch: declaration requires '{}', producer returned '{}'",
+                expected_dtype.unwrap_or_default(),
+                actual
+            )));
+        }
+        Ok(metadata)
+    })
+    .map_err(PythonError::runtime)?
+}
+
+pub fn dlpack_stream(
+    object: &ObjectHandle,
+    expected_device: &str,
+) -> Result<PythonDlpackStreamMetadata, PythonError> {
+    super::attach(|py| {
+        let owner = clone_handle(py, object)?;
+        let bound = owner.bind(py);
+        let (device_type, device_id, stream_token) = if let Ok(tuple) = bound.cast::<PyTuple>() {
+            if tuple.len() != 3 {
+                return Err(dlpack_error(
+                    "normalized DLPack stream tuple must contain device type, device id, and token",
+                ));
+            }
+            (
+                extract_stream_i64(
+                    py,
+                    &tuple.get_item(0).map_err(|error| {
+                        PythonError::from_pyerr(py, error, "zero-copy", "DLPack stream tuple")
+                    })?,
+                    "device type",
+                )?,
+                extract_stream_i64(
+                    py,
+                    &tuple.get_item(1).map_err(|error| {
+                        PythonError::from_pyerr(py, error, "zero-copy", "DLPack stream tuple")
+                    })?,
+                    "device id",
+                )?,
+                extract_stream_i64(
+                    py,
+                    &tuple.get_item(2).map_err(|error| {
+                        PythonError::from_pyerr(py, error, "zero-copy", "DLPack stream tuple")
+                    })?,
+                    "stream token",
+                )?,
+            )
+        } else {
+            let device = bound.getattr("device").map_err(|error| {
+                PythonError::from_pyerr(py, error, "zero-copy", "DLPack stream device")
+            })?;
+            let family = device
+                .getattr("type")
+                .and_then(|value| value.extract::<String>())
+                .map_err(|error| {
+                    PythonError::from_pyerr(py, error, "zero-copy", "DLPack stream device type")
+                })?;
+            let device_type = i64::from(device_code(&family)?);
+            let device_id = device
+                .getattr("index")
+                .and_then(|value| value.extract::<Option<i64>>())
+                .map_err(|error| {
+                    PythonError::from_pyerr(py, error, "zero-copy", "DLPack stream device id")
+                })?
+                .unwrap_or(0);
+            let token = bound
+                .getattr(if family == "cuda" {
+                    "cuda_stream"
+                } else {
+                    "ptr"
+                })
+                .and_then(|value| value.extract::<i64>())
+                .map_err(|error| {
+                    PythonError::from_pyerr(py, error, "zero-copy", "DLPack stream token")
+                })?;
+            (device_type, device_id, token)
+        };
+        if device_type != i64::from(device_code(expected_device)?) {
+            return Err(dlpack_error(format!(
+                "DLPack stream device family does not match declared device '{expected_device}'"
+            )));
+        }
+        if device_id < 0 || stream_token < 0 {
+            return Err(dlpack_error(
+                "DLPack stream device id and token must be non-negative",
+            ));
+        }
+        Ok(PythonDlpackStreamMetadata {
+            device_type,
+            device_id,
+            stream_token,
+        })
     })
     .map_err(PythonError::runtime)?
 }
@@ -154,14 +268,20 @@ fn consume_capsule(
     let capsule = capsule.cast::<PyCapsule>().map_err(|_| {
         dlpack_error("DLPack exporter returned a non-PyCapsule value; expected dltensor")
     })?;
-    validate_capsule_name(capsule, DLTENSOR_NAME, "__dlpack__")?;
+    let actual_name = capsule_name(capsule, "__dlpack__")?;
+    if actual_name != DLTENSOR_NAME && actual_name != DLTENSOR_VERSIONED_NAME {
+        return Err(dlpack_error(format!(
+            "__dlpack__ capsule has name '{}'; expected 'dltensor' or 'dltensor_versioned'",
+            actual_name.to_string_lossy()
+        )));
+    }
     let pointer = capsule
-        .pointer_checked(Some(DLTENSOR_NAME))
+        .pointer_checked(Some(actual_name))
         .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "__dlpack__"))?;
-    let tensor = pointer.as_ptr().cast::<DLManagedTensor>();
-    let metadata = metadata_for_tensor(tensor)?;
+    let tensor = ManagedTensor::from_capsule_name(pointer.as_ptr(), actual_name)?;
+    let metadata = metadata_for_managed_tensor(tensor)?;
     let rename_result =
-        unsafe { ffi::PyCapsule_SetName(capsule.as_ptr(), USED_DLTENSOR_NAME.as_ptr()) };
+        unsafe { ffi::PyCapsule_SetName(capsule.as_ptr(), tensor.used_capsule_name().as_ptr()) };
     if rename_result != 0 {
         return Err(PythonError::from_pyerr(
             py,
@@ -172,8 +292,7 @@ fn consume_capsule(
     }
     store_tensor(
         TrackedDlpackTensor {
-            tensor_ptr: tensor as usize,
-            deleter: unsafe { (*tensor).deleter },
+            tensor,
             released: false,
             _owner: owner,
             _capsule: capsule.clone().into_any().unbind(),
@@ -210,79 +329,6 @@ fn dlpack_device(py: Python<'_>, object: &Bound<'_, PyAny>) -> Result<DLDevice, 
     })
 }
 
-fn metadata_for_tensor(
-    tensor: *mut DLManagedTensor,
-) -> Result<PythonDlpackTensorMetadata, PythonError> {
-    if tensor.is_null() {
-        return Err(dlpack_error("DLPack capsule pointer is null"));
-    }
-    let tensor_ref = unsafe { &*tensor };
-    let dl_tensor = &tensor_ref.dl_tensor;
-    let dimensions = checked_i64_i32(dl_tensor.ndim, "DLPack dimensions")?;
-    let len = usize::try_from(dl_tensor.ndim)
-        .map_err(|_| dlpack_error("DLPack dimensions exceed Sifr list range"))?;
-    if dl_tensor.shape.is_null() && len > 0 {
-        return Err(dlpack_error("DLPack tensor shape pointer is null"));
-    }
-    let shape = if dl_tensor.shape.is_null() {
-        Vec::new()
-    } else {
-        unsafe { slice_to_vec(dl_tensor.shape, len) }
-    };
-    let strides = if dl_tensor.strides.is_null() {
-        Vec::new()
-    } else {
-        unsafe { slice_to_vec(dl_tensor.strides, len) }
-    };
-    let dtype = dtype_name(dl_tensor.dtype)?;
-    let byte_offset = i64::try_from(dl_tensor.byte_offset)
-        .map_err(|_| dlpack_error("DLPack byte offset exceeds Sifr int range"))?;
-    Ok(PythonDlpackTensorMetadata {
-        handle: -1,
-        token: 0,
-        dtype_code: i64::from(dl_tensor.dtype.code),
-        dtype_bits: i64::from(dl_tensor.dtype.bits),
-        dtype_lanes: i64::from(dl_tensor.dtype.lanes),
-        dtype,
-        device_type: i64::from(dl_tensor.device.device_type),
-        device_id: i64::from(dl_tensor.device.device_id),
-        dimensions,
-        shape,
-        strides,
-        byte_offset,
-        has_deleter: tensor_ref.deleter.is_some(),
-        stream_sync_required: dl_tensor.device.device_type != DEVICE_CPU,
-    })
-}
-
-unsafe fn slice_to_vec(pointer: *mut i64, len: usize) -> Vec<i64> {
-    unsafe { std::slice::from_raw_parts(pointer.cast_const(), len) }.to_vec()
-}
-
-fn dtype_name(dtype: DLDataType) -> Result<String, PythonError> {
-    let lanes = dtype.lanes;
-    if lanes != 1 {
-        return Err(unsupported_dtype_error(dtype));
-    }
-    let name = match (dtype.code, dtype.bits) {
-        (0, 8) => "int8",
-        (0, 16) => "int16",
-        (0, 32) => "int32",
-        (0, 64) => "int64",
-        (1, 8) => "uint8",
-        (1, 16) => "uint16",
-        (1, 32) => "uint32",
-        (1, 64) => "uint64",
-        (2, 16) => "float16",
-        (2, 32) => "float32",
-        (2, 64) => "float64",
-        (4, 16) => "bfloat16",
-        (6, 1 | 8) => "bool",
-        _ => return Err(unsupported_dtype_error(dtype)),
-    };
-    Ok(name.to_string())
-}
-
 fn store_tensor(
     tensor: TrackedDlpackTensor,
     mut metadata: PythonDlpackTensorMetadata,
@@ -314,27 +360,62 @@ fn dlpack_metadata(handle: DlpackHandle) -> Result<(Vec<i64>, Vec<i64>), PythonE
         .ok_or_else(|| closed_error(handle.0))
 }
 
-fn validate_capsule_name(
-    capsule: &Bound<'_, PyCapsule>,
-    expected_name: &'static CStr,
+fn capsule_name<'a>(
+    capsule: &'a Bound<'_, PyCapsule>,
     context: &'static str,
-) -> Result<(), PythonError> {
+) -> Result<&'a CStr, PythonError> {
     let actual_name = unsafe { ffi::PyCapsule_GetName(capsule.as_ptr()) };
     if actual_name.is_null() {
-        return Err(dlpack_error(format!(
-            "{context} capsule has no name; expected {}",
-            expected_name.to_string_lossy()
-        )));
+        return Err(dlpack_error(format!("{context} capsule has no name")));
     }
-    let actual_name = unsafe { CStr::from_ptr(actual_name) };
-    if actual_name != expected_name {
-        return Err(dlpack_error(format!(
-            "{context} capsule has name '{}'; expected '{}'",
-            actual_name.to_string_lossy(),
-            expected_name.to_string_lossy()
-        )));
+    Ok(unsafe { CStr::from_ptr(actual_name) })
+}
+
+fn validate_device_policy(
+    device: DLDevice,
+    expected: &str,
+    stream: Option<&PythonDlpackStreamMetadata>,
+) -> Result<(), PythonError> {
+    let expected_code = device_code(expected)?;
+    if expected != "any" && device.device_type != expected_code {
+        return Err(unsupported_device_error(device));
+    }
+    if device.device_type != DEVICE_CPU && stream.is_none() {
+        return Err(dlpack_error(
+            "non-CPU DLPack acquisition requires an explicit consumer stream",
+        ));
+    }
+    if let Some(stream) = stream {
+        if stream.device_type != i64::from(device.device_type)
+            || stream.device_id != i64::from(device.device_id)
+        {
+            return Err(dlpack_error(
+                "DLPack consumer stream family/id does not match the producer device",
+            ));
+        }
     }
     Ok(())
+}
+
+fn device_code(device: &str) -> Result<i32, PythonError> {
+    match device {
+        "cpu" => Ok(DEVICE_CPU),
+        "cuda" => Ok(2),
+        "any" => Ok(0),
+        _ => Err(dlpack_error(format!(
+            "unsupported DLPack device family '{device}'"
+        ))),
+    }
+}
+
+fn extract_stream_i64(
+    py: Python<'_>,
+    value: &Bound<'_, PyAny>,
+    context: &'static str,
+) -> Result<i64, PythonError> {
+    value
+        .extract::<i64>()
+        .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", context))
 }
 
 fn reserve_handle(store: &mut DlpackStore) -> Result<DlpackHandle, PythonError> {
@@ -352,13 +433,6 @@ fn reserve_handle(store: &mut DlpackStore) -> Result<DlpackHandle, PythonError> 
         store.next_handle,
         token_for(store.next_handle, store.next_nonce),
     ))
-}
-
-fn checked_i64_i32(value: i32, context: &'static str) -> Result<i64, PythonError> {
-    if value < 0 {
-        return Err(dlpack_error(format!("{context} must be non-negative")));
-    }
-    Ok(i64::from(value))
 }
 
 fn token_for(handle: i64, nonce: u64) -> i64 {
@@ -405,7 +479,7 @@ fn closed_error(handle: i64) -> PythonError {
     }
 }
 
-fn dlpack_error(message: impl Into<String>) -> PythonError {
+pub(super) fn dlpack_error(message: impl Into<String>) -> PythonError {
     PythonError {
         kind: "zero-copy".to_string(),
         exception_type: "SifrPythonDlpackError".to_string(),
@@ -425,6 +499,13 @@ fn dlpack_store() -> Result<MutexGuard<'static, DlpackStore>, PythonError> {
         context: "DLPack tensor store".to_string(),
         replay: None,
     })
+}
+
+#[cfg(test)]
+pub(super) fn reset_dlpack_store_for_tests() {
+    if let Ok(mut store) = DLPACK_STORE.lock() {
+        *store = DlpackStore::default();
+    }
 }
 
 #[cfg(test)]
@@ -579,7 +660,9 @@ class DlpackExporter:
     def __dlpack_device__(self):
         return (DEVICE_TYPE, DEVICE_ID)
 
-    def __dlpack__(self):
+    def __dlpack__(self, *, stream, max_version, copy):
+        assert max_version == (1, 0)
+        assert copy is False
         return CAPSULE
 
 obj = DlpackExporter()
@@ -609,7 +692,9 @@ class DlpackExporter:
     def __dlpack_device__(self):
         return (1, 0)
 
-    def __dlpack__(self):
+    def __dlpack__(self, *, stream, max_version, copy):
+        assert max_version == (1, 0)
+        assert copy is False
         return CAPSULE
 
 obj = DlpackExporter()

@@ -174,11 +174,7 @@ def run_declaration_capability_self_tests(area_root: Path, repo_root: Path) -> N
     _expect_rejection(duplicate, "duplicate declaration capability id")
 
     unsupported_claim = json.loads(json.dumps(matrix))
-    reserved_row = next(
-        row
-        for row in unsupported_claim["capabilities"]
-        if row["implementation_status"] == "reserved"
-    )
+    reserved_row = _make_first_row_reserved(unsupported_claim)
     required_item = next(
         item
         for item in reserved_row["evidence"]
@@ -197,11 +193,7 @@ def run_declaration_capability_self_tests(area_root: Path, repo_root: Path) -> N
     _expect_rejection(missing_cleanup, "missing required evidence")
 
     inapplicable_required = json.loads(json.dumps(matrix))
-    reserved_row = next(
-        row
-        for row in inapplicable_required["capabilities"]
-        if row["implementation_status"] == "reserved"
-    )
+    reserved_row = _make_first_row_reserved(inapplicable_required)
     required_item = next(
         item
         for item in reserved_row["evidence"]
@@ -223,6 +215,16 @@ def run_declaration_capability_self_tests(area_root: Path, repo_root: Path) -> N
     )
     required_item["status"] = "planned"
     _expect_rejection(incomplete_active, "requires passing")
+
+
+def _make_first_row_reserved(matrix: dict[str, Any]) -> dict[str, Any]:
+    row = matrix["capabilities"][0]
+    row["implementation_status"] = "reserved"
+    required = set(row["required_evidence"])
+    for item in row["evidence"]:
+        if item["kind"] in required:
+            item["status"] = "planned"
+    return row
 
 
 def _expect_rejection(matrix: dict[str, Any], expected: str) -> None:

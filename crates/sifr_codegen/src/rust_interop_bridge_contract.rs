@@ -493,6 +493,8 @@ fn bridge_type_contract(
         Type::Range
         | Type::PythonBuffer(_)
         | Type::PythonArrow(_)
+        | Type::PythonDlpackTensor(_)
+        | Type::PythonDlpackStream
         | Type::Iterable(_)
         | Type::Iterator(_)
         | Type::Coroutine(_, _)

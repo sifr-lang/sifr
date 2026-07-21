@@ -83,8 +83,9 @@ pub use coroutine_ops::run_coroutine_blocking;
 #[doc(hidden)]
 pub use declaration_object_bridge::*;
 pub use dlpack_ops::{
-    dlpack_shape, dlpack_strides, dlpack_tensor, release_dlpack, DlpackHandle,
-    PythonDlpackTensorMetadata,
+    acquire_dlpack_tensor, dlpack_shape, dlpack_stream, dlpack_strides, dlpack_tensor,
+    prepare_dlpack_argument, release_dlpack, DlpackHandle, PythonDlpackArgument,
+    PythonDlpackStreamMetadata, PythonDlpackTensorMetadata,
 };
 pub use foreign_object::ForeignObject;
 pub use object_ops::{
@@ -600,6 +601,7 @@ fn py_error(error: &PyErr) -> PythonRuntimeError {
 #[cfg(test)]
 fn reset_runtime_state_for_tests() {
     arrow_ops::reset_arrow_store_for_tests();
+    dlpack_ops::reset_dlpack_store_for_tests();
     let _ignored = async_runtime::shutdown();
     async_runtime::reset_for_tests();
     let _ignored = Python::try_attach(bridge_loader::reset_for_tests);

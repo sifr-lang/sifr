@@ -35,7 +35,10 @@ impl Type {
         visiting_classes: &mut HashSet<(String, Vec<Self>)>,
     ) -> bool {
         match self.resolve_alias() {
-            Self::PythonBuffer(_) | Self::PythonArrow(_) => true,
+            Self::PythonBuffer(_)
+            | Self::PythonArrow(_)
+            | Self::PythonDlpackTensor(_)
+            | Self::PythonDlpackStream => true,
             Self::List(element)
             | Self::Set(element)
             | Self::Iterable(element)
@@ -96,6 +99,8 @@ impl Type {
             | Self::Unknown
             | Self::PythonBuffer(_)
             | Self::PythonArrow(_)
+            | Self::PythonDlpackTensor(_)
+            | Self::PythonDlpackStream
             | Self::Protocol { .. }
             | Self::Callable(..)
             | Self::AsyncCallable(..)
@@ -170,6 +175,8 @@ impl Type {
             | Self::Intersection(_)
             | Self::PythonBuffer(_)
             | Self::PythonArrow(_)
+            | Self::PythonDlpackTensor(_)
+            | Self::PythonDlpackStream
             | Self::Protocol { .. }
             | Self::Callable(..)
             | Self::AsyncCallable(..)
@@ -421,6 +428,8 @@ impl Type {
             | Self::AsyncGenerator(_, _)
             | Self::PythonBuffer(_)
             | Self::PythonArrow(_)
+            | Self::PythonDlpackTensor(_)
+            | Self::PythonDlpackStream
             | Self::List(_)
             | Self::Dict(_, _)
             | Self::Set(_)
@@ -595,6 +604,10 @@ impl Type {
                 format!("python.Buffer[{}]", element.display_name())
             }
             Self::PythonArrow(kind) => format!("python.{}", kind.source_name()),
+            Self::PythonDlpackTensor(element) => {
+                format!("python.DlpackTensor[{}]", element.display_name())
+            }
+            Self::PythonDlpackStream => "python.DlpackStream".to_string(),
             Self::Protocol { name, .. } => name.clone(),
             Self::Newtype { name, .. } => name.clone(),
             Self::TypeVar(name) => name.clone(),
@@ -731,6 +744,11 @@ impl Type {
             Self::PythonArrow(kind) => {
                 format!("::sifr_stdlib::python::{}", kind.rust_name())
             }
+            Self::PythonDlpackTensor(element) => format!(
+                "::sifr_stdlib::python::PythonDlpackTensor<{}>",
+                element.rust_type()
+            ),
+            Self::PythonDlpackStream => "::sifr_stdlib::python::PythonDlpackStream".to_string(),
             Self::Protocol { name, .. } => {
                 format!("Box<dyn {}>", source_class_rust_name(name))
             }

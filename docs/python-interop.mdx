@@ -383,6 +383,35 @@ schema, pointer-identity, release-count, or copy-result drift. The artifact and
 its package-local fixtures are included in package archives and generated-build
 cache identity. There is no Arrow copy switch or uncertain-producer fallback.
 
+Typed DLPack declarations return affine `python.DlpackTensor[T]` resources:
+
+```python
+from sifr.python import PythonError
+
+@python.opaque(type=torch.Tensor, cleanup=drop)
+class TorchTensor(NonSend):
+    @python.dlpack(Self, device=cpu, stream=none)
+    def export(self) -> Result[python.DlpackTensor[int64], PythonError]: ...
+
+@python(torch.from_dlpack)
+def consume(own tensor: python.DlpackTensor[int64]) -> Result[TorchTensor, PythonError]: ...
+```
+
+Producer targets may be import-root callables, package-local bridges, or `Self`.
+`device=cpu | cuda | any` never requests a device change. CPU may use
+`stream=none`; CUDA and `any` require `stream=parameter(name)`, where `name` is
+a required keyword-only borrowed `python.DlpackStream` from an explicit
+`@python.dlpack.stream` declaration. Runtime acquisition validates the stream
+family/id before the one permitted `__dlpack__` call.
+
+Sifr passes `copy=False` and `max_version=(1, 0)` without an old-signature retry,
+accepts legacy or compatible 1.x versioned capsules, and validates copy flags,
+dtype/lanes, device, dimensions, shape, strides, byte offset, and deleter state.
+The source capsule is immediately marked used. Passing `own
+python.DlpackTensor[T]` creates a fresh consumer capsule and commits the move
+even if the Python call later fails; an unconsumed capsule invokes its producer
+deleter exactly once.
+
 Lower-level dynamic zero-copy APIs remain available when a typed declaration is
 not appropriate:
 
@@ -547,9 +576,9 @@ Compiler diagnostics use stable URLs and structured JSON fields:
   diagnostics. `SIFR-PYTRUST-0002` is retired.
 - `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, and `SIFR-PYRES`: active declaration, target, conversion, resource, and sequenced activation diagnostics.
 - `SIFR-PYCB`: active callback lifetime, dispatch, conversion, and shutdown diagnostics.
-- `SIFR-PYZC`: active buffer and Arrow declaration, ownership, layout,
-  certification, capsule-validation, transfer, and hidden-copy diagnostics;
-  later codes remain reserved for DLPack declaration activation.
+- `SIFR-PYZC`: active buffer, Arrow, and DLPack declaration, ownership, layout
+  or stream policy, certification where required, capsule-validation,
+  transfer, and hidden-copy diagnostics.
 
 Verification lives under `verification/areas/python_interop/`:
 

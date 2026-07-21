@@ -683,6 +683,7 @@ fn type_mentions_type_var(ty: &Type, type_param_name: &str) -> bool {
         | Type::Iterable(inner)
         | Type::Iterator(inner)
         | Type::PythonBuffer(inner)
+        | Type::PythonDlpackTensor(inner)
         | Type::Awaitable(inner)
         | Type::Failure(inner)
         | Type::TimeoutResult(inner)

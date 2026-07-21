@@ -1,0 +1,51 @@
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
+
+
+@python.opaque(type=tensorflow.Tensor, cleanup=drop)
+class TensorflowTensor(NonSend):
+    @python(Self.__len__)
+    def length(self) -> Result[int, PythonError]: ...
+
+
+@python.dlpack(bridge.tensorflow_dlpack.make, device=cpu, stream=none)
+def make_transfer(values: list[int]) -> Result[python.DlpackTensor[int64], PythonError]: ...
+
+
+@python(bridge.tensorflow_dlpack.consume)
+def consume_tensor(own value: python.DlpackTensor[int64]) -> Result[TensorflowTensor, PythonError]: ...
+
+
+@python(bridge.tensorflow_dlpack.pointer_stable)
+def pointer_stable(value: TensorflowTensor) -> Result[bool, PythonError]: ...
+
+
+@python(bridge.tensorflow_dlpack.sum_int)
+def sum_int(value: TensorflowTensor) -> Result[int, PythonError]: ...
+
+
+def transfer_once() -> Result[bool, PythonError]:
+    try:
+        transfer: python.DlpackTensor[int64] = make_transfer([1, 2, 3, 4])
+        shape: list[int] = transfer.shape()
+        metadata_ok: bool = transfer.device_type() == 1 and transfer.device_id() == 0 and len(shape) == 1 and shape[0] == 4
+        consumed: TensorflowTensor = consume_tensor(transfer)
+        stable: bool = pointer_stable(consumed)
+        length: int = consumed.length()
+        total: int = sum_int(consumed)
+        return metadata_ok and stable and length == 4 and total == 10
+    except PythonError as error:
+        raise error
+
+
+def main() -> Result[None, PythonError]:
+    try:
+        before: ResourceDiagnostics = resource_diagnostics()
+        transferred: bool = transfer_once()
+        after: ResourceDiagnostics = resource_diagnostics()
+        resources_ok: bool = before.live_objects == after.live_objects and before.leaked_objects == after.leaked_objects
+        if not transferred or not resources_ok:
+            raise PythonError("TensorFlow declaration-first DLPack transfer evidence failed")
+        print("sifr-python-interop:dlpack:tensorflow:pointer=stable:device=cpu:bridge=versioned-call:resources=zero")
+        return None
+    except PythonError as error:
+        raise error

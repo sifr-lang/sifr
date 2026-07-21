@@ -60,6 +60,8 @@ fn extract_ipc_schema_type_inner(ty: &Type) -> IpcSchemaType {
         Type::Set(_)
         | Type::PythonBuffer(_)
         | Type::PythonArrow(_)
+        | Type::PythonDlpackTensor(_)
+        | Type::PythonDlpackStream
         | Type::BigInt
         | Type::Decimal
         | Type::BigDecimal

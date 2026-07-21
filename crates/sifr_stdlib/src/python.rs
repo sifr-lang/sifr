@@ -4,6 +4,8 @@ mod buffer;
 pub use buffer::*;
 mod arrow;
 pub use arrow::*;
+mod dlpack;
+pub use dlpack::*;
 
 use sifr_runtime::{
     interop::{Handle, SifrIntBridge},

@@ -184,6 +184,20 @@
       ]
     },
     {
+      "name": "dlpack-examples",
+      "kind": "adapter",
+      "timeout_seconds": 600,
+      "cases": [
+        {
+          "id": "dlpack-examples",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-dlpack-examples",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "cloud-boto3",
       "kind": "adapter",
       "cases": [

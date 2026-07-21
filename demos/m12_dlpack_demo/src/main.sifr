@@ -1,0 +1,36 @@
+from sifr.python import PythonError
+
+
+# A Python tensor stays opaque until a protocol declaration exports it.
+@python.opaque(type=torch.Tensor, cleanup=drop)
+class TorchTensor(NonSend):
+    @python(Self.data_ptr)
+    def data_pointer(self) -> Result[int, PythonError]: ...
+
+    @python.dlpack(Self, device=cpu, stream=none)
+    def export(self) -> Result[python.DlpackTensor[int64], PythonError]: ...
+
+
+@python(torch.tensor)
+def make_tensor(values: list[int]) -> Result[TorchTensor, PythonError]: ...
+
+
+# `own` is the one-shot capsule handoff; `tensor` cannot be used afterward.
+@python(torch.from_dlpack)
+def consume(own tensor: python.DlpackTensor[int64]) -> Result[TorchTensor, PythonError]: ...
+
+
+def main() -> Result[None, PythonError]:
+    try:
+        source: TorchTensor = make_tensor([10, 20, 30])
+        before: int = source.data_pointer()
+        transfer: python.DlpackTensor[int64] = source.export()
+        shape: list[int] = transfer.shape()
+        received: TorchTensor = consume(transfer)
+        after: int = received.data_pointer()
+        if before != after or len(shape) != 1 or shape[0] != 3:
+            raise PythonError("DLPack transfer changed storage or shape")
+        print("DLPack demo: zero-copy one-shot transfer succeeded")
+        return None
+    except PythonError as error:
+        raise error

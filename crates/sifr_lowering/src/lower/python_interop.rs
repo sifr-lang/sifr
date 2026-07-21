@@ -14,6 +14,7 @@ mod callbacks;
 mod callsite;
 mod context;
 mod direct_validation;
+mod dlpack;
 mod parameters;
 mod stub_syntax;
 mod target;
@@ -114,6 +115,19 @@ pub(in crate::lower) fn collect_python_interop_declarations(
                 arrow::invalid(ctx, "`@python.arrow` requires synchronous `def`", span);
                 None
             }
+            (PythonInteropDecoratorKind::Dlpack, false) => {
+                dlpack::parse_declaration(call, parameters, false, false, ctx)
+            }
+            (PythonInteropDecoratorKind::DlpackStream, false) => {
+                dlpack::parse_declaration(call, parameters, false, true, ctx)
+            }
+            (
+                PythonInteropDecoratorKind::Dlpack | PythonInteropDecoratorKind::DlpackStream,
+                true,
+            ) => {
+                dlpack::invalid(ctx, "DLPack declarations require synchronous `def`", span);
+                None
+            }
             _ => {
                 reserved_declaration(ctx, kind, span);
                 None
@@ -176,6 +190,7 @@ pub(in crate::lower) fn collect_python_method_declarations(
                 callbacks: Vec::new(),
                 buffer: None,
                 arrow: None,
+                dlpack: None,
             });
             continue;
         }
@@ -243,6 +258,34 @@ pub(in crate::lower) fn collect_python_method_declarations(
             }
             (PythonInteropDecoratorKind::Arrow, true) => {
                 arrow::invalid(ctx, "`@python.arrow` requires synchronous `def`", span);
+                None
+            }
+            (
+                PythonInteropDecoratorKind::Dlpack | PythonInteropDecoratorKind::DlpackStream,
+                false,
+            ) => {
+                if has_receiver {
+                    dlpack::parse_declaration(
+                        call,
+                        parameters,
+                        true,
+                        kind == PythonInteropDecoratorKind::DlpackStream,
+                        ctx,
+                    )
+                } else {
+                    dlpack::invalid(
+                        ctx,
+                        "DLPack `Self` acquisition requires an opaque instance method",
+                        span,
+                    );
+                    None
+                }
+            }
+            (
+                PythonInteropDecoratorKind::Dlpack | PythonInteropDecoratorKind::DlpackStream,
+                true,
+            ) => {
+                dlpack::invalid(ctx, "DLPack declarations require synchronous `def`", span);
                 None
             }
             (PythonInteropDecoratorKind::Attribute, false) => {
@@ -339,6 +382,7 @@ fn parse_method(
         callbacks: Vec::new(),
         buffer: None,
         arrow: None,
+        dlpack: None,
     })
 }
 
@@ -381,6 +425,7 @@ fn parse_attribute_method(
         callbacks: Vec::new(),
         buffer: None,
         arrow: None,
+        dlpack: None,
     })
 }
 
@@ -549,6 +594,7 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
         callbacks: Vec::new(),
         buffer: None,
         arrow: None,
+        dlpack: None,
     })
 }
 
@@ -589,6 +635,10 @@ pub(in crate::lower) fn validate_python_interop_signature(
         return;
     }
     if arrow::validate_signature(declaration, params, ok_type, error_type, ctx) {
+        validate_direct_parameters(declaration, params, ctx);
+        return;
+    }
+    if dlpack::validate_signature(declaration, params, ok_type, error_type, ctx) {
         validate_direct_parameters(declaration, params, ctx);
         return;
     }
@@ -703,6 +753,7 @@ fn parse_function(
         callbacks: Vec::new(),
         buffer: None,
         arrow: None,
+        dlpack: None,
     })
 }
 
@@ -779,6 +830,9 @@ fn classify_decorator<'a>(
         [_, name] if name == "buffer" => PythonInteropDecoratorKind::Buffer,
         [_, name] if name == "arrow" => PythonInteropDecoratorKind::Arrow,
         [_, name] if name == "dlpack" => PythonInteropDecoratorKind::Dlpack,
+        [_, dlpack, name] if dlpack == "dlpack" && name == "stream" => {
+            PythonInteropDecoratorKind::DlpackStream
+        }
         [_, context, name] if context == "context" && name == "enter" => {
             PythonInteropDecoratorKind::ContextEnter
         }
@@ -822,6 +876,7 @@ fn decorator_label(kind: PythonInteropDecoratorKind) -> &'static str {
         PythonInteropDecoratorKind::Buffer => "python.buffer",
         PythonInteropDecoratorKind::Arrow => "python.arrow",
         PythonInteropDecoratorKind::Dlpack => "python.dlpack",
+        PythonInteropDecoratorKind::DlpackStream => "python.dlpack.stream",
     }
 }
 

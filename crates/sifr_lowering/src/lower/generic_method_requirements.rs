@@ -11,6 +11,7 @@ fn type_mentions_param(ty: &Type, param: &str) -> bool {
         | Type::Iterable(inner)
         | Type::Iterator(inner)
         | Type::PythonBuffer(inner)
+        | Type::PythonDlpackTensor(inner)
         | Type::Awaitable(inner)
         | Type::Failure(inner)
         | Type::TimeoutResult(inner)

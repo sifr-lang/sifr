@@ -743,6 +743,7 @@ fn declaration(
         callbacks: Vec::new(),
         buffer: None,
         arrow: None,
+        dlpack: None,
     }
 }
 
@@ -762,6 +763,7 @@ fn opaque_declaration() -> PythonInteropDeclaration {
         callbacks: Vec::new(),
         buffer: None,
         arrow: None,
+        dlpack: None,
     }
 }
 

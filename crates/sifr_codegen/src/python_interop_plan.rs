@@ -141,7 +141,7 @@ pub(crate) fn python_interop_plan_for_named_modules<'a>(
                     callback_attachments: callback_attachments(declaration),
                 });
                 for method in &class.methods {
-                    collect_arrow_method(
+                    collect_protocol_method(
                         module_name,
                         &class.name,
                         method,
@@ -198,18 +198,21 @@ fn collect_function(
     }
 }
 
-fn collect_arrow_method(
+fn collect_protocol_method(
     module_name: Option<&str>,
     class_name: &str,
     method: &HirFunction,
     owner_target: &str,
     plan: &mut PythonInteropPlan,
 ) {
-    for declaration in method
-        .python_interop
-        .iter()
-        .filter(|declaration| declaration.kind == sifr_ir::PythonInteropDecoratorKind::Arrow)
-    {
+    for declaration in method.python_interop.iter().filter(|declaration| {
+        matches!(
+            declaration.kind,
+            sifr_ir::PythonInteropDecoratorKind::Arrow
+                | sifr_ir::PythonInteropDecoratorKind::Dlpack
+                | sifr_ir::PythonInteropDecoratorKind::DlpackStream
+        )
+    }) {
         plan.declarations.push(PythonInteropPlanDeclaration {
             module_name: module_name.map(str::to_string),
             function_name: format!("{class_name}.{}", method.name),

@@ -140,6 +140,7 @@ pub(in crate::lower) fn parse_context_method(
         callbacks: Vec::new(),
         buffer: None,
         arrow: None,
+        dlpack: None,
     })
 }
 

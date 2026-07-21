@@ -188,6 +188,8 @@ pub(super) fn apply_python_interop_metadata(
                                 sifr_ir::PythonInteropDecoratorKind::Function
                                     | sifr_ir::PythonInteropDecoratorKind::Buffer
                                     | sifr_ir::PythonInteropDecoratorKind::Arrow
+                                    | sifr_ir::PythonInteropDecoratorKind::Dlpack
+                                    | sifr_ir::PythonInteropDecoratorKind::DlpackStream
                             ) && declaration
                                 .declaration
                                 .target
@@ -541,6 +543,34 @@ mod tests {
     }
 
     #[test]
+    fn dlpack_target_uses_call_shape_probe_without_arrow_certification() {
+        let runtime = PackagePythonRuntime::for_tests(python(), "probe");
+        let mut compatible = project("math.sqrt");
+        let declaration = &mut compatible.interop.python.declarations[0].declaration;
+        declaration.kind = sifr_ir::PythonInteropDecoratorKind::Dlpack;
+        declaration.dlpack = Some(sifr_ir::PythonDlpackDeclaration {
+            device: sifr_ir::PythonDlpackDevice::Cpu,
+            stream: sifr_ir::PythonDlpackStreamMode::None,
+            element_type: Some(sifr_type_system::Type::Float),
+        });
+        apply_python_interop_metadata(compatible, Some(&runtime))
+            .expect("DLPack target should need no Arrow certification");
+
+        let mut incompatible = project("math.pow");
+        let declaration = &mut incompatible.interop.python.declarations[0].declaration;
+        declaration.kind = sifr_ir::PythonInteropDecoratorKind::Dlpack;
+        declaration.dlpack = Some(sifr_ir::PythonDlpackDeclaration {
+            device: sifr_ir::PythonDlpackDevice::Cpu,
+            stream: sifr_ir::PythonDlpackStreamMode::None,
+            element_type: Some(sifr_type_system::Type::Float),
+        });
+        let Err(diagnostics) = apply_python_interop_metadata(incompatible, Some(&runtime)) else {
+            panic!("DLPack target with incompatible arity must fail");
+        };
+        assert_eq!(diagnostics[0].code, "SIFR-PYCALL-0001");
+    }
+
+    #[test]
     fn record_expansion_rejects_uninspectable_target() {
         let runtime = PackagePythonRuntime::for_tests(python(), "probe");
         let mut generated = project("builtins.dir");
@@ -634,6 +664,7 @@ mod tests {
             callbacks: Vec::new(),
             buffer: None,
             arrow: None,
+            dlpack: None,
         };
         let mut python = PythonInteropPlan::default();
         python.target_probes.push(PythonTargetProbe {
@@ -680,6 +711,7 @@ mod tests {
             kind: sifr_type_system::PythonArrowKind::Array,
             schema: sifr_ir::PythonArrowSchemaMode::Omitted,
         });
+        declaration.dlpack = None;
         generated
     }
 

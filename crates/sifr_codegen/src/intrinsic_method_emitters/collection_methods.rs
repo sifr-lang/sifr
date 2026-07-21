@@ -73,6 +73,15 @@ impl RustEmitter {
         ) {
             return Some(lowered);
         }
+        if let Some(lowered) = crate::python_dlpack_codegen::lower_python_dlpack_method(
+            self,
+            object,
+            method,
+            args,
+            method_return_ty,
+        ) {
+            return Some(lowered);
+        }
         if let Some(lowered) =
             self.try_lower_defaultdict_index_method_call_expr(object, method, args)
         {
