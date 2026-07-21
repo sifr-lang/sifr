@@ -53,7 +53,10 @@ are implemented and locally validated in
 [PR #2992](https://github.com/sifr-lang/sifr/pull/2992). Repeated whole-diff
 Fable High review found and closed shared call-frame cleanup, exact runtime-gate,
 ownership-matrix, empty-reconciliation, and CPU stream-policy gaps; pass 4
-returned **APPROVED** after independently reproducing the critical fixes. The
+returned **APPROVED** after independently reproducing the critical fixes, and
+final frozen-diff pass 5 independently returned **APPROVED** with no blockers
+or majors after fresh lifecycle, compiler-shape, gate, evidence, and
+documentation sweeps. The
 fresh authoritative merge gate passes every blocking lane in `3554.66s`,
 including E2E `674/674`, Python interop `22/22`, diagnostics `175/175`, and
 `261` hardening variants with zero failures. Its warm-time and group-skew notices
@@ -1771,7 +1774,10 @@ Delivery waves:
   exact CPython 3.11 DLPack checks), diagnostics `175/175`, the full crate-test
   matrix, and `261` hardening variants with zero failures. Workspace Clippy
   passes with warnings denied and file-size guardrails cover `2761` files.
-  Final frozen-diff review and merge are recorded before closing
+  Final frozen-diff
+  [pass 5](../../reviews/active/m12-dlpack-full-review-pass5.md) repeated the
+  focused tests plus roughly thirty adversarial compiler probes and returned
+  **APPROVED** with no blockers or majors. Merge is recorded before closing
   [PR #2992](https://github.com/sifr-lang/sifr/pull/2992).
 
 Tasks:
