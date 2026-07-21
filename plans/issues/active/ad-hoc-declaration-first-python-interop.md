@@ -48,8 +48,17 @@ blockers or majors; frozen-diff closure pass 9 independently confirmed the same
 verdict. The fresh authoritative merge gate passes every blocking
 lane in `3772.09s`, including E2E `674/674`, Python interop `20/20`, diagnostics
 `175/175`, and `261` hardening variants with zero failures; its warm-time and
-batch-skew notices are non-blocking advisories. M12 and later milestones are not
-yet implemented. Milestones sequence delivery; they do not create reduced language
+batch-skew notices are non-blocking advisories. M12's five DLPack delivery waves
+are implemented and locally validated in
+[PR #2992](https://github.com/sifr-lang/sifr/pull/2992). Repeated whole-diff
+Fable High review found and closed shared call-frame cleanup, exact runtime-gate,
+ownership-matrix, empty-reconciliation, and CPU stream-policy gaps; pass 4
+returned **APPROVED** after independently reproducing the critical fixes. The
+fresh authoritative merge gate passes every blocking lane in `3554.66s`,
+including E2E `674/674`, Python interop `22/22`, diagnostics `175/175`, and
+`261` hardening variants with zero failures. Its warm-time and group-skew notices
+are non-blocking advisories. M13 and later milestones are not yet implemented.
+Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
 
@@ -184,7 +193,7 @@ Implementation progress:
 - [x] M9 typed callback lifetimes and dispatch — [PR #2974](https://github.com/sifr-lang/sifr/pull/2974), [PR #2977](https://github.com/sifr-lang/sifr/pull/2977), [PR #2979](https://github.com/sifr-lang/sifr/pull/2979), remediation [PRs #2981](https://github.com/sifr-lang/sifr/pull/2981), [#2982](https://github.com/sifr-lang/sifr/pull/2982), [#2984](https://github.com/sifr-lang/sifr/pull/2984), and [#2985](https://github.com/sifr-lang/sifr/pull/2985)
 - [x] M10 typed buffer protocol ([PR #2990](https://github.com/sifr-lang/sifr/pull/2990))
 - [x] M11 Arrow C Data Interface ([PR #2991](https://github.com/sifr-lang/sifr/pull/2991))
-- [ ] M12 DLPack one-shot tensor transfer
+- [x] M12 DLPack one-shot tensor transfer ([PR #2992](https://github.com/sifr-lang/sifr/pull/2992))
 - [ ] M13 read-only check and doctor
 - [ ] M14 binding and certification authoring
 - [ ] M15 LSP declaration authoring
@@ -1737,19 +1746,33 @@ Depends on M1 sealed affine resources and M4 conversion.
 
 Delivery waves:
 
-- [ ] Wave 1 — activate the nominal affine tensor/stream types, decorator and
+- [x] Wave 1 — activate the nominal affine tensor/stream types, decorator and
   `parameter(name)` grammar, device/stream signature contracts, and static
   ownership failure matrices.
-- [ ] Wave 2 — replace the legacy raw DLPack helper with versioned runtime and
+- [x] Wave 2 — replace the legacy raw DLPack helper with versioned runtime and
   stdlib acquisition, validation, stream synchronization, one-shot capsule
   ownership, transfer reconciliation, and exact-once deleter cleanup.
-- [ ] Wave 3 — generate receiver and producer acquisition plus owned consumer
+- [x] Wave 3 — generate receiver and producer acquisition plus owned consumer
   transfer across direct, method, constructor, callable, and collection paths.
-- [ ] Wave 4 — add CPU/device, malformed-capsule, failure-transition, package,
+- [x] Wave 4 — add CPU/device, malformed-capsule, failure-transition, package,
   PyTorch/TensorFlow, documentation, and delivery-profile evidence.
-- [ ] Milestone review — run the complete M12 diff through repeated Fable High
-  review, remediate until satisfied, pass both authoritative local gates, and
-  merge the M12 PR.
+- [x] Milestone review — whole-diff Fable High
+  [pass 1](../../reviews/active/m12-dlpack-full-review-pass1.md) identified
+  shared call-frame cleanup, runtime-gate, and ownership-matrix gaps. Pass 2 is
+  explicitly invalid and superseded because it contains progress text rather
+  than a verdict. [Pass 3](../../reviews/active/m12-dlpack-full-review-pass3.md)
+  found the empty-reconciliation attribute-owner regression and CPU stream
+  policy mismatch; both were reproduced and fixed. Independent
+  [pass 4](../../reviews/active/m12-dlpack-full-review-pass4.md) returned
+  **APPROVED** after re-running the focused runtime, lowering, codegen, full
+  E2E, formatting, maintainability, and file-size checks. The fresh
+  authoritative merge gate then passed in `3554.66s`: E2E `674/674` with
+  signature `1f8b1cadc4f48ec8`, Python interop `22/22` (including all `18`
+  exact CPython 3.11 DLPack checks), diagnostics `175/175`, the full crate-test
+  matrix, and `261` hardening variants with zero failures. Workspace Clippy
+  passes with warnings denied and file-size guardrails cover `2761` files.
+  Final frozen-diff review and merge are recorded before closing
+  [PR #2992](https://github.com/sifr-lang/sifr/pull/2992).
 
 Tasks:
 
