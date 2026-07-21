@@ -121,3 +121,48 @@ fn owned_consumer_method_uses_the_same_one_shot_transfer_path() {
     assert!(rust.contains("reconcile_dlpack_argument"), "{rust}");
     syn::parse_file(&rust).expect("generated consumer method DLPack Rust should parse");
 }
+
+#[test]
+fn mixed_arrow_and_dlpack_arguments_drop_call_handles_once_before_reconciliation() {
+    let rust = generate(&format!(
+        "{ERROR}\n@python(pkg.consume)\ndef consume(own array: python.ArrowArray, own tensor: python.DlpackTensor[int64]) -> Result[int, PythonError]: ...\n"
+    ));
+
+    assert_eq!(
+        rust.matches("::std::mem::drop(__sifr_python_args)").count(),
+        1
+    );
+    assert_eq!(
+        rust.matches("::std::mem::drop(__sifr_python_kwargs)")
+            .count(),
+        1
+    );
+    assert!(rust.contains("reconcile_arrow_argument"), "{rust}");
+    assert!(rust.contains("reconcile_dlpack_argument"), "{rust}");
+    let call = rust.find("call_object_owned").expect("owned Python call");
+    let drop_args = rust
+        .find("::std::mem::drop(__sifr_python_args)")
+        .expect("argument-vector drop");
+    let arrow_finish = rust
+        .find("reconcile_arrow_argument")
+        .expect("Arrow cleanup");
+    let dlpack_finish = rust
+        .find("reconcile_dlpack_argument")
+        .expect("DLPack cleanup");
+    assert!(call < drop_args && drop_args < arrow_finish && arrow_finish < dlpack_finish);
+    syn::parse_file(&rust).expect("mixed zero-copy consumer Rust should parse");
+}
+
+#[test]
+fn multiple_dlpack_arguments_share_one_call_handle_cleanup() {
+    let rust = generate(&format!(
+        "{ERROR}\n@python(pkg.consume)\ndef consume(own left: python.DlpackTensor[int64], own right: python.DlpackTensor[int64]) -> Result[int, PythonError]: ...\n"
+    ));
+
+    assert_eq!(
+        rust.matches("::std::mem::drop(__sifr_python_args)").count(),
+        1
+    );
+    assert_eq!(rust.matches("reconcile_dlpack_argument").count(), 2);
+    syn::parse_file(&rust).expect("multi-tensor consumer Rust should parse");
+}

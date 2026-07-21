@@ -1,4 +1,25 @@
-use super::{invalid_type_annotation, resolve_annotation_expr, Expr, LowerCtx, Ranged, Type};
+use super::{
+    invalid_type_annotation, resolve_annotation_expr, Expr, LowerCtx, Ranged, TextRange, Type,
+};
+
+pub(super) fn resolve_python_resource_attribute_annotation(
+    name: &str,
+    span: TextRange,
+    ctx: &mut LowerCtx,
+) -> Type {
+    match name {
+        "DlpackStream" => Type::PythonDlpackStream,
+        "DlpackTensor" => {
+            invalid_type_annotation(
+                ctx,
+                "python.DlpackTensor type annotation requires exactly 1 element type",
+                span,
+            );
+            Type::Any
+        }
+        _ => super::resolve_python_arrow_annotation(name, span, ctx),
+    }
+}
 
 pub(super) fn resolve_python_dlpack_tensor_annotation(slice: &Expr, ctx: &mut LowerCtx) -> Type {
     if matches!(slice, Expr::Tuple(_)) {

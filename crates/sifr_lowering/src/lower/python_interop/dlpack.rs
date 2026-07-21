@@ -179,6 +179,14 @@ fn parse_policies(
         };
         match name.as_str() {
             "device" if device.is_none() => device = parse_device(&keyword.value, ctx),
+            "stream" if is_stream_declaration => {
+                invalid(
+                    ctx,
+                    "`@python.dlpack.stream` does not accept a `stream` argument",
+                    keyword.range(),
+                );
+                return None;
+            }
             "stream" if !is_stream_declaration && stream.is_none() => {
                 stream = parse_stream(&keyword.value, parameters, ctx)
             }

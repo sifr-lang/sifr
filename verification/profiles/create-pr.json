@@ -122,6 +122,7 @@
         "arrow-examples",
         "dlpack-examples",
         "arrow-cpython311",
+        "dlpack-cpython311",
         "buffer-cpython311",
         "async-declaration-examples",
         "async-context-examples",

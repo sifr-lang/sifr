@@ -25,6 +25,7 @@ use abi::{DLManagedTensor, DLTensor, USED_DLTENSOR_NAME};
 use std::ffi::c_void;
 
 const DEVICE_CPU: i32 = 1;
+const DEVICE_CUDA: i32 = 2;
 
 static DLPACK_STORE: LazyLock<Mutex<DlpackStore>> =
     LazyLock::new(|| Mutex::new(DlpackStore::default()));
@@ -75,6 +76,7 @@ struct DlpackEntry {
 struct TrackedDlpackTensor {
     tensor: ManagedTensor,
     released: bool,
+    counted: bool,
     _owner: Py<PyAny>,
     _capsule: Py<PyAny>,
 }
@@ -85,7 +87,9 @@ impl Drop for TrackedDlpackTensor {
             unsafe { self.tensor.release() };
             self.released = true;
         }
-        let _ignored = super::update_object_count(-1);
+        if self.counted {
+            let _ignored = super::update_object_count(-1);
+        }
     }
 }
 
@@ -226,6 +230,11 @@ pub fn dlpack_stream(
                 "DLPack stream device id and token must be non-negative",
             ));
         }
+        if device_type == i64::from(DEVICE_CUDA) && stream_token == 0 {
+            return Err(dlpack_error(
+                "CUDA DLPack stream token 0 is ambiguous and unsupported",
+            ));
+        }
         Ok(PythonDlpackStreamMetadata {
             device_type,
             device_id,
@@ -294,6 +303,7 @@ fn consume_capsule(
         TrackedDlpackTensor {
             tensor,
             released: false,
+            counted: false,
             _owner: owner,
             _capsule: capsule.clone().into_any().unbind(),
         },
@@ -330,12 +340,13 @@ fn dlpack_device(py: Python<'_>, object: &Bound<'_, PyAny>) -> Result<DLDevice, 
 }
 
 fn store_tensor(
-    tensor: TrackedDlpackTensor,
+    mut tensor: TrackedDlpackTensor,
     mut metadata: PythonDlpackTensorMetadata,
 ) -> Result<PythonDlpackTensorMetadata, PythonError> {
     let mut store = dlpack_store()?;
     let (handle, token) = reserve_handle(&mut store)?;
     super::update_object_count(1).map_err(PythonError::runtime)?;
+    tensor.counted = true;
     metadata.handle = handle;
     metadata.token = token;
     store.tensors.insert(

@@ -331,6 +331,20 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "dlpack-cpython311",
+      "kind": "adapter",
+      "timeout_seconds": 900,
+      "cases": [
+        {
+          "id": "dlpack-cpython311",
+          "entry": "verification/areas/python_interop/runner/cpython311_dlpack.py",
+          "command": "python-interop-dlpack-cpython311",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ],
   "network_mode": "offline",

@@ -1,5 +1,5 @@
 use crate::python_interop_direct::{mapped_let, mapped_try};
-use crate::python_interop_direct_helpers::{drop_value, push_for_shape, push_named_keyword};
+use crate::python_interop_direct_helpers::{push_for_shape, push_named_keyword};
 use crate::rust_interop_error_mapping::bridge_error_expr;
 use crate::{RustEmitter, RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 use sifr_ir::{
@@ -64,8 +64,6 @@ pub(crate) fn append_argument_reconciliation(
     guard_names: &[String],
     outcome_name: &str,
 ) {
-    body.push(drop_value("__sifr_python_args"));
-    body.push(drop_value("__sifr_python_kwargs"));
     for (index, guard_name) in guard_names.iter().enumerate() {
         let cleanup_name = format!("__sifr_python_dlpack_cleanup_{index}");
         body.push(RustStmt::Let {
@@ -102,7 +100,7 @@ pub(crate) fn acquire_from_foreign(
     contract: &PythonDlpackDeclaration,
     ok_type: &Type,
     error_type: &Type,
-) -> RustExpr {
+) -> Option<RustExpr> {
     let (rust_type, method) = match ok_type.resolve_alias() {
         Type::PythonDlpackTensor(element) => (
             format!(
@@ -115,7 +113,7 @@ pub(crate) fn acquire_from_foreign(
             "::sifr_stdlib::python::PythonDlpackStream".to_string(),
             "acquire_foreign",
         ),
-        _ => return producer,
+        _ => return None,
     };
     let mut args = vec![RustExpr::Ref {
         mutable: false,
@@ -130,13 +128,13 @@ pub(crate) fn acquire_from_foreign(
     if matches!(ok_type.resolve_alias(), Type::PythonDlpackTensor(_)) {
         args.push(stream_option(&contract.stream));
     }
-    mapped_try(
+    Some(mapped_try(
         RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec![rust_type, method.to_string()])),
             args,
         },
         error_type,
-    )
+    ))
 }
 
 fn stream_option(stream: &PythonDlpackStreamMode) -> RustExpr {
@@ -178,7 +176,7 @@ pub(crate) fn receiver_interop_body(
         declaration.dlpack.as_ref()?,
         ok_type,
         error_type,
-    );
+    )?;
     Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
         args: vec![acquired],

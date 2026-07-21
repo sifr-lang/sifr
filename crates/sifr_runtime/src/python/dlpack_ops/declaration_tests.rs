@@ -191,6 +191,11 @@ fn normalized_stream_metadata_is_closed_and_checked() {
     let error = dlpack_stream(&wrong, "cuda").expect_err("wrong family should fail");
     assert!(error.message.contains("device family"));
     close_object(wrong).expect("tuple should close");
+
+    let ambiguous = tuple_object((2_i64, 0_i64, 0_i64)).expect("tuple should be stored");
+    let error = dlpack_stream(&ambiguous, "cuda").expect_err("zero CUDA stream should fail");
+    assert!(error.message.contains("token 0"));
+    close_object(ambiguous).expect("tuple should close");
 }
 
 #[test]

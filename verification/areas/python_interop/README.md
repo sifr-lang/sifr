@@ -143,6 +143,9 @@ one-shot consumption, and zero residual resources. PyTorch exercises direct
 import-root and `Self` acquisition. TensorFlow exercises an explicit
 package-local bridge that adapts its capsule API to the complete versioned
 `__dlpack__` call shape without copying.
+The companion `dlpack-cpython311` suite runs the exact Python-feature runtime
+test inventory, so malformed capsules, copied flags, no-retry behavior,
+stream/device mismatches, and exact-once cleanup remain blocking evidence.
 
 Library examples are offline but executable. The `library-examples` suite covers
 the remaining non-service, non-host-dependent library contracts that previously

@@ -108,7 +108,7 @@ REQUIRED_FIXTURE_FILES = (
     "pubsub/pubsub_contract.json",
     "pyarrow_capsule/arrow_capsule_contract.json",
     "pyarrow_capsule/arrow_declaration_evidence.json",
-    "torch_dlpack/dlpack_declaration_evidence.json",
+    "dlpack_declaration_evidence.json",
     "pydantic_models/pydantic_models_contract.json",
     "redis/redis_contract.json",
     "torch_dlpack/dlpack_tensor_contract.json",
@@ -427,7 +427,7 @@ def validate_fixture_files(fixtures_root: Path) -> None:
             validate_buffer_declaration_evidence(payload, fixtures_root)
         if name == "pyarrow_capsule/arrow_declaration_evidence.json":
             validate_arrow_declaration_evidence(payload, fixtures_root)
-        if name == "torch_dlpack/dlpack_declaration_evidence.json":
+        if name == "dlpack_declaration_evidence.json":
             validate_dlpack_declaration_evidence(payload, fixtures_root)
     missing_sources = [
         name for name in REQUIRED_SOURCE_FIXTURES if not (fixtures_root / name).is_file()

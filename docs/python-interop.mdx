@@ -407,6 +407,11 @@ family/id before the one permitted `__dlpack__` call.
 Sifr passes `copy=False` and `max_version=(1, 0)` without an old-signature retry,
 accepts legacy or compatible 1.x versioned capsules, and validates copy flags,
 dtype/lanes, device, dimensions, shape, strides, byte offset, and deleter state.
+Declaration element types are the closed Sifr scalar set: fixed-width integers,
+`float` (DLPack float64), and `bool`; producers with other dtypes fail closed.
+Sifr transfers the producer's managed tensor without reading or mutating its
+payload, so a versioned capsule's `READ_ONLY` flag is preserved unchanged for
+the eventual consumer.
 The source capsule is immediately marked used. Passing `own
 python.DlpackTensor[T]` creates a fresh consumer capsule and commits the move
 even if the Python call later fails; an unconsumed capsule invokes its producer

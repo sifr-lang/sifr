@@ -1,4 +1,3 @@
-use crate::python_interop_direct_helpers::drop_value;
 use crate::rust_interop_error_mapping::bridge_error_expr;
 use crate::{RustEmitter, RustExpr, RustParam, RustStmt, RustType};
 use sifr_ir::{
@@ -74,8 +73,6 @@ pub(crate) fn append_argument_reconciliation(
     guard_names: &[String],
     outcome_name: &str,
 ) {
-    body.push(drop_value("__sifr_python_args"));
-    body.push(drop_value("__sifr_python_kwargs"));
     for (index, guard_name) in guard_names.iter().enumerate() {
         let cleanup_name = format!("__sifr_python_arrow_cleanup_{index}");
         body.push(RustStmt::Let {

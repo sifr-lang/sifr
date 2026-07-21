@@ -1,3 +1,4 @@
+use crate::python_interop_direct_helpers::drop_value;
 use crate::RustStmt;
 use sifr_ir::PythonParameterKind;
 use sifr_type_system::Type;
@@ -65,6 +66,8 @@ impl ArgumentGuards {
     }
 
     pub(crate) fn append_reconciliation(&self, body: &mut Vec<RustStmt>, outcome_name: &str) {
+        body.push(drop_value("__sifr_python_args"));
+        body.push(drop_value("__sifr_python_kwargs"));
         if !self.arrow.is_empty() {
             crate::python_arrow_codegen::append_argument_reconciliation(
                 body,

@@ -97,6 +97,22 @@ fn stream_declaration_requires_concrete_device() {
 }
 
 #[test]
+fn dlpack_surface_diagnostics_identify_invalid_stream_and_missing_element_type() {
+    let stream_errors = lower_errors(&format!(
+        "{ERROR}\n@python.dlpack.stream(pkg.stream, device=cuda, stream=none)\ndef stream() -> Result[python.DlpackStream, PythonError]: ...\n"
+    ));
+    assert!(stream_errors.iter().any(|error| error
+        .message
+        .contains("does not accept a `stream` argument")));
+
+    let annotation_errors =
+        lower_errors("def bad(value: python.DlpackTensor) -> None:\n    return None\n");
+    assert!(annotation_errors
+        .iter()
+        .any(|error| error.message.contains("requires exactly 1 element type")));
+}
+
+#[test]
 fn dlpack_declarations_reject_invalid_policy_and_signature_shapes() {
     for source in [
         "@python.dlpack(pkg.make, device=cpu)\ndef bad() -> Result[python.DlpackTensor[float], PythonError]: ...",
@@ -133,4 +149,68 @@ fn dlpack_consumer_requires_owned_one_shot_transfer() {
     lower_ok(&format!(
         "{ERROR}\n@python(pkg.consume)\ndef consume(own value: python.DlpackTensor[float]) -> Result[int, PythonError]: ...\n"
     ));
+}
+
+#[test]
+fn dlpack_resources_cannot_be_implicitly_copied_or_consumed_twice() {
+    let duplicate = lower_errors(
+        "def duplicate(value: python.DlpackTensor[int64]) -> tuple[python.DlpackTensor[int64], python.DlpackTensor[int64]]:\n    return (value, value)\n",
+    );
+    assert!(duplicate.iter().any(|error| {
+        error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+            && error.message.contains("borrowed affine Python resource")
+    }));
+
+    for call in ["consume2(value, value)", "consume2(value, take(value))"] {
+        let errors = lower_errors(&format!(
+            "{ERROR}\ndef take(own value: python.DlpackTensor[int64]) -> python.DlpackTensor[int64]:\n    return value\n\n@python(pkg.consume2)\ndef consume2(own left: python.DlpackTensor[int64], own right: python.DlpackTensor[int64]) -> Result[int, PythonError]: ...\n\ndef misuse(own value: python.DlpackTensor[int64]) -> None:\n    result: int = {call}\n    return None\n"
+        ));
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+            "{call}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn dlpack_release_and_owned_calls_leave_the_tensor_moved() {
+    for body in [
+        "released: None = value.release()\n    shape: list[int] = value.shape()",
+        "first: int = consume(value)\n    second: int = consume(value)",
+    ] {
+        let errors = lower_errors(&format!(
+            "{ERROR}\n@python(pkg.consume)\ndef consume(own value: python.DlpackTensor[int64]) -> Result[int, PythonError]: ...\n\ndef misuse(own value: python.DlpackTensor[int64]) -> None:\n    {body}\n    return None\n"
+        ));
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+            "{body}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn dlpack_constructor_callable_and_loop_moves_are_checked() {
+    for source in [
+        "class Holder:\n    value: python.DlpackTensor[int64]\n\n    def __init__(self, own value: python.DlpackTensor[int64]):\n        self.value = value\n\ndef misuse(own value: python.DlpackTensor[int64]) -> None:\n    first: Holder = Holder(value)\n    second: Holder = Holder(value)\n",
+        "class Consumer:\n    def __call__(self, own value: python.DlpackTensor[int64]) -> None:\n        return None\n\ndef misuse(consumer: Consumer, own value: python.DlpackTensor[int64]) -> None:\n    consumer(value)\n    consumer(value)\n",
+    ] {
+        let errors = lower_errors(source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+            "{source}: {errors:?}"
+        );
+    }
+
+    let loop_errors = lower_errors(
+        "def consume(own value: python.DlpackTensor[int64]) -> int:\n    return 1\n\ndef misuse(own value: python.DlpackTensor[int64]) -> None:\n    results = [consume(value) for index in range(3)]\n    return None\n",
+    );
+    assert!(loop_errors
+        .iter()
+        .any(|error| error.code == Some(DiagnosticCode::OWN_MOVED_ACROSS_LOOP)));
 }

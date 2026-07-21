@@ -89,12 +89,21 @@ fn finalize(
         drop(entry);
         return Ok(());
     };
-    let capsule = super::super::object_ops::clone_handle(py, &object)?;
-    let capsule = capsule
-        .bind(py)
-        .cast::<PyCapsule>()
-        .map_err(|_| dlpack_error("generated DLPack consumer argument is not a PyCapsule"))?;
-    let name = capsule_name(capsule)?;
+    let capsule = match super::super::object_ops::clone_handle(py, &object) {
+        Ok(capsule) => capsule,
+        Err(error) => return relinquish_to_capsule(py, entry, object, error),
+    };
+    let capsule = match capsule.bind(py).cast::<PyCapsule>() {
+        Ok(capsule) => capsule,
+        Err(_) => {
+            let error = dlpack_error("generated DLPack consumer argument is not a PyCapsule");
+            return relinquish_to_capsule(py, entry, object, error);
+        }
+    };
+    let name = match capsule_name(capsule) {
+        Ok(name) => name,
+        Err(error) => return relinquish_to_capsule(py, entry, object, error),
+    };
     let tensor = entry._tensor.tensor;
     if name == tensor.used_capsule_name() {
         entry._tensor.released = true;
@@ -122,6 +131,22 @@ fn finalize(
     drop(entry);
     super::super::foreign_object::drain_pending_releases(py);
     Ok(())
+}
+
+fn relinquish_to_capsule(
+    py: Python<'_>,
+    mut entry: DlpackEntry,
+    object: ObjectHandle,
+    error: PythonError,
+) -> Result<(), PythonError> {
+    // The compiler-created capsule still has its producer name. Its destructor
+    // is therefore the sole deleter owner when an internal handle invariant
+    // prevents reconciliation from inspecting or renaming the capsule.
+    entry._tensor.released = true;
+    drop(object);
+    drop(entry);
+    super::super::foreign_object::drain_pending_releases(py);
+    Err(error)
 }
 
 fn capsule_name<'a>(capsule: &'a Bound<'_, PyCapsule>) -> Result<&'a CStr, PythonError> {

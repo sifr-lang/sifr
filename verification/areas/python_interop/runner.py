@@ -93,6 +93,7 @@ COMMAND_ARGS: dict[str, list[str]] = {
     ],
     "python-interop-buffer-cpython311": [],
     "python-interop-arrow-cpython311": [],
+    "python-interop-dlpack-cpython311": [],
     "python-interop-ml-examples": [
         "--ml-examples",
         "--report",
@@ -147,6 +148,7 @@ AREA_PROJECT_COMMANDS = {
 }
 CPYTHON311_PROJECT_COMMANDS = {
     "python-interop-arrow-cpython311",
+    "python-interop-dlpack-cpython311",
     "python-interop-buffer-cpython311",
 }
 

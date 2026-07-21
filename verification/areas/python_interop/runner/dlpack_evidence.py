@@ -89,6 +89,16 @@ def validate_dlpack_declaration_evidence(payload: object, fixtures_root: Path) -
         != "python-interop-dlpack-examples"
     ):
         raise SystemExit("DLPack example manifest ownership drift")
+    runtime_suites = [
+        suite for suite in manifest["suites"] if suite["name"] == "dlpack-cpython311"
+    ]
+    if (
+        len(runtime_suites) != 1
+        or runtime_suites[0].get("kind") != "adapter"
+        or runtime_suites[0].get("cases", [{}])[0].get("command")
+        != "python-interop-dlpack-cpython311"
+    ):
+        raise SystemExit("DLPack runtime test manifest ownership drift")
     for profile in required_profiles:
         profile_payload = json.loads(
             (repo_root / f"verification/profiles/{profile}.json").read_text(encoding="utf-8")
@@ -98,5 +108,8 @@ def validate_dlpack_declaration_evidence(payload: object, fixtures_root: Path) -
             for area in profile_payload["selected_areas"]
             if area["area"] == "python_interop"
         ]
-        if len(python_areas) != 1 or "dlpack-examples" not in python_areas[0]["suites"]:
-            raise SystemExit(f"DLPack examples are not blocking in {profile}")
+        required_suites = {"dlpack-examples", "dlpack-cpython311"}
+        if len(python_areas) != 1 or not required_suites.issubset(
+            python_areas[0]["suites"]
+        ):
+            raise SystemExit(f"DLPack evidence suites are not blocking in {profile}")

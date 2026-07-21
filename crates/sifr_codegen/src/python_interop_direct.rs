@@ -373,7 +373,7 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
             declaration.dlpack.as_ref()?,
             ok_type,
             error_type,
-        )
+        )?
     } else {
         output_value_expr("__sifr_python_result", ok_type, error_type, opaque_classes)?
     };
