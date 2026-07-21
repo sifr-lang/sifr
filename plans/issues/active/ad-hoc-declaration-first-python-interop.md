@@ -44,7 +44,8 @@ validated, and milestone-reviewed in
 [PR #2991](https://github.com/sifr-lang/sifr/pull/2991). Repeated whole-diff
 Fable High review drove ownership, identity, async-move, operator, and
 certification remediation through pass 8, which returned **SATISFIED** with no
-blockers or majors. The fresh authoritative merge gate passes every blocking
+blockers or majors; frozen-diff closure pass 9 independently confirmed the same
+verdict. The fresh authoritative merge gate passes every blocking
 lane in `3772.09s`, including E2E `674/674`, Python interop `20/20`, diagnostics
 `175/175`, and `261` hardening variants with zero failures; its warm-time and
 batch-skew notices are non-blocking advisories. M12 and later milestones are not
@@ -1680,7 +1681,10 @@ Delivery waves:
   and major findings to closure. Pass 7 is explicitly superseded because its
   timer placeholder predated the real gate result; pass 8 independently
   rechecked the remediation and returned **SATISFIED** with no blockers or
-  majors. The fresh authoritative merge gate then passed every blocking lane
+  majors. Final frozen-diff
+  [pass 9](../../reviews/active/m11-arrow-full-review-pass-9.md) verified the
+  complete PR and truthful closure ledger, then again returned **SATISFIED**
+  with no blockers or majors. The fresh authoritative merge gate passed every blocking lane
   in `3772.09s`: E2E `674/674` with signature `1f8b1cadc4f48ec8`, Python
   interop `20/20`, diagnostics `175/175`, codegen `878/878`, lowering
   `812/812` plus one ignored test, driver `365/365` plus 33 ignored tests and
