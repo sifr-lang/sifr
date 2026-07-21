@@ -54,7 +54,7 @@ pub(super) fn resolve_list_method_type(
         ctx.error_with_code_at(
             DiagnosticCode::PYZC_INVALID_DECLARATION,
             format!(
-                "list.{method}() is unavailable for elements containing affine Python buffers because it requires cloning, comparing, or repeatedly projecting them"
+                "list.{method}() is unavailable for elements containing affine Python resources because it requires cloning, comparing, or repeatedly projecting them"
             ),
             method_range,
         );
@@ -333,7 +333,7 @@ pub(super) fn resolve_dict_method_type(
         ctx.error_with_code_at(
             DiagnosticCode::PYZC_INVALID_DECLARATION,
             format!(
-                "dict.{method}() is unavailable for values containing affine Python buffers because it clones or projects stored values"
+                "dict.{method}() is unavailable for values containing affine Python resources because it clones or projects stored values"
             ),
             method_range,
         );

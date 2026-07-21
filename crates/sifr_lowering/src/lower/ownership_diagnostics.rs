@@ -93,7 +93,7 @@ pub(in crate::lower) fn borrowed_affine_parameter_escape(
     ctx.error_with_code_at(
         DiagnosticCode::PYZC_INVALID_DECLARATION,
         format!(
-            "cannot {action} borrowed affine Python buffer parameter '{name}'; accept it with `own` before transferring the resource"
+            "cannot {action} borrowed affine Python resource parameter '{name}'; accept it with `own` before transferring the resource"
         ),
         range,
     );
@@ -109,7 +109,7 @@ pub(in crate::lower) fn affine_reusable_callable_capture(
     ctx.error_with_code_at(
         DiagnosticCode::PYZC_INVALID_DECLARATION,
         format!(
-            "{callable_kind} cannot capture '{name}' of type '{}' because reusable callables cannot own or repeatedly expose an affine Python buffer",
+            "{callable_kind} cannot capture '{name}' of type '{}' because reusable callables cannot own or repeatedly expose an affine Python resource",
             ty.display_name()
         ),
         range,
@@ -157,6 +157,16 @@ pub(in crate::lower) fn moved_across_loop(ctx: &mut LowerCtx, name: &str, range:
     );
 }
 
+pub(in crate::lower) fn report_moved_across_loop(
+    ctx: &mut LowerCtx,
+    snapshot: &crate::scope::MovedSnapshot,
+    range: TextRange,
+) {
+    for name in ctx.scope.moved_since(snapshot) {
+        moved_across_loop(ctx, &name, range);
+    }
+}
+
 pub(in crate::lower) fn immutable_parameter_mutation(
     ctx: &mut LowerCtx,
     name: &str,
@@ -196,7 +206,7 @@ pub(in crate::lower) fn reject_borrowed_affine_parameter_reassignment(
     ctx.error_with_code_at(
         DiagnosticCode::PYZC_INVALID_DECLARATION,
         format!(
-            "cannot reassign borrowed affine Python buffer parameter '{name}'; mutable parameter shadowing would require cloning it"
+            "cannot reassign borrowed affine Python resource parameter '{name}'; mutable parameter shadowing would require cloning it"
         ),
         range,
     );

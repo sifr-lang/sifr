@@ -13,6 +13,11 @@ pub struct ExternalDefs {
         std::collections::HashMap<String, std::collections::HashMap<String, CompilerIntrinsicId>>,
     /// Map of `module_name` -> (`class_name` -> Type)
     pub classes: std::collections::HashMap<String, std::collections::HashMap<String, Type>>,
+    /// Map of `module_name` -> (`class_name` -> locally callable instance method names).
+    pub class_instance_methods: std::collections::HashMap<
+        String,
+        std::collections::HashMap<String, std::collections::HashSet<String>>,
+    >,
     /// Map of `module_name` -> (`class_name` -> `type_param_names`)
     pub class_type_params:
         std::collections::HashMap<String, std::collections::HashMap<String, Vec<String>>>,

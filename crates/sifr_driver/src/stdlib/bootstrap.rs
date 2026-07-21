@@ -132,6 +132,7 @@ fn compile_stdlib_sources_with_sysroot(
         let mut fn_exports = HashMap::new();
         let mut compiler_intrinsic_exports = HashMap::new();
         let mut class_exports = HashMap::new();
+        let mut class_instance_method_exports = HashMap::new();
         let mut class_type_param_exports = HashMap::new();
         let mut default_exports = HashMap::new();
         let mut vararg_exports = HashMap::new();
@@ -252,6 +253,18 @@ fn compile_stdlib_sources_with_sysroot(
 
         for class in &result.module.classes {
             if private_declaration || !class.name.starts_with('_') {
+                class_instance_method_exports.insert(
+                    class.name.clone(),
+                    class
+                        .methods
+                        .iter()
+                        .filter(|method| {
+                            method.name != "new"
+                                && method.method_kind == sifr_ir::MethodKind::Regular
+                        })
+                        .map(|method| method.name.clone())
+                        .collect(),
+                );
                 let mut methods: Vec<(String, FunctionType)> = class
                     .methods
                     .iter()
@@ -455,6 +468,9 @@ fn compile_stdlib_sources_with_sysroot(
         stdlib_defs
             .classes
             .insert(module_name.to_string(), class_exports);
+        stdlib_defs
+            .class_instance_methods
+            .insert(module_name.to_string(), class_instance_method_exports);
         if !class_type_param_exports.is_empty() {
             stdlib_defs
                 .class_type_params

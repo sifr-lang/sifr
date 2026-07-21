@@ -144,6 +144,7 @@ fn collect_type_error_refs(
         | Type::LiteralBool(_)
         | Type::Unknown
         | Type::TypeVar(_)
+        | Type::PythonArrow(_)
         | Type::BigInt
         | Type::Decimal
         | Type::BigDecimal => {}

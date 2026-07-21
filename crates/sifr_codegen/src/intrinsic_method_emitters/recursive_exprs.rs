@@ -88,6 +88,11 @@ impl RustEmitter {
                 ) {
                     return Some(lowered);
                 }
+                if let Some(lowered) = crate::python_arrow_codegen::lower_python_arrow_method(
+                    self, object, method, args, ty,
+                ) {
+                    return Some(lowered);
+                }
                 if method == "append" && args.len() == 1 {
                     if let HirExpr::Index {
                         object: index_object,

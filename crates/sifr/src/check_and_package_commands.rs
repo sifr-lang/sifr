@@ -229,17 +229,30 @@ fn package_python_runtime(
         }
     };
     let digest = sifr_package::digest_python_environment_probe(&request, &probe).hex;
-    Ok(Some(sifr_driver::PackagePythonRuntime::from_probe(
+    let mut runtime = sifr_driver::PackagePythonRuntime::from_probe(
         &request,
         &probe,
-        digest,
+        digest.clone(),
         resolved.required_imports,
         resolved.trusted_imports,
         resolved.trusted_native_imports,
-    )))
+    );
+    let package_root = graph
+        .packages
+        .get(package_id)
+        .map(|package| package.package_root.as_path());
+    if let Some(package_root) = package_root {
+        super::package_python_certifications::load_into_runtime(
+            package_root,
+            &digest,
+            &mut runtime,
+            diagnostic_format,
+        )?;
+    }
+    Ok(Some(runtime))
 }
 
-fn declaration_python_requirements(
+pub(super) fn declaration_python_requirements(
     source_map: &sifr_package::PackageSourceMap,
     entry_file: Option<(&Path, &sifr_package::SifrPackageId)>,
 ) -> Vec<sifr_package::PythonRequirementContribution> {
@@ -294,7 +307,11 @@ fn collect_statement_python_requirements(
                 let Expr::Call(call) = &decorator.expression else {
                     continue;
                 };
-                if !matches!(call.func.as_ref(), Expr::Name(name) if name.id.as_str() == "python") {
+                if dotted_root(&call.func).as_deref() != Some("python") {
+                    continue;
+                }
+                if matches!(call.func.as_ref(), Expr::Attribute(attribute) if attribute.attr.as_str() == "callback")
+                {
                     continue;
                 }
                 let Some(target) = call.arguments.args.first() else {

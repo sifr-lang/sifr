@@ -563,6 +563,8 @@ pub(in crate::lower) fn consume_affine_value_name(
         HirExpr::Name { name, .. } => {
             if ctx.borrowed_params.contains(name) {
                 ownership_diagnostics::borrowed_affine_parameter_escape(ctx, name, "move", range);
+            } else if ctx.scope.is_moved(name) {
+                ownership_diagnostics::use_after_move(ctx, name, range);
             } else {
                 ctx.mark_moved_with_flow(name);
             }
@@ -600,6 +602,8 @@ pub(in crate::lower) fn consume_owned_value(
                     "pass as an owned argument",
                     range,
                 );
+            } else if ty.contains_affine_resource() && ctx.scope.is_moved(name) {
+                ownership_diagnostics::use_after_move(ctx, name, range);
             } else {
                 ctx.mark_moved_with_flow(name);
             }
@@ -736,7 +740,7 @@ pub(in crate::lower) fn lower_subscript(
         if result_ty.contains_affine_resource() {
             ctx.error_with_code_at(
                 DiagnosticCode::PYZC_INVALID_DECLARATION,
-                "cannot slice an aggregate containing an affine Python buffer; slicing would duplicate the resource"
+                "cannot slice an aggregate containing an affine Python resource; slicing would duplicate the resource"
                     .to_string(),
                 sub.range(),
             );
@@ -759,7 +763,7 @@ pub(in crate::lower) fn lower_subscript(
     if result_ty.contains_affine_resource() {
         ctx.error_with_code_at(
             DiagnosticCode::PYZC_INVALID_DECLARATION,
-            "cannot project an affine Python buffer through indexing; use a consuming aggregate operation"
+            "cannot project an affine Python resource through indexing; use a consuming aggregate operation"
                 .to_string(),
             sub.range(),
         );
@@ -809,7 +813,7 @@ pub(in crate::lower) fn lower_attribute(
             if field_ty.contains_affine_resource() {
                 ctx.error_with_code_at(
                     DiagnosticCode::PYZC_INVALID_DECLARATION,
-                    "cannot project a field containing an affine Python buffer; move the aggregate as a whole"
+                    "cannot project a field containing an affine Python resource; move the aggregate as a whole"
                         .to_string(),
                     attr.range(),
                 );
@@ -839,7 +843,7 @@ pub(in crate::lower) fn lower_attribute(
         if field_ty.contains_affine_resource() {
             ctx.error_with_code_at(
                 DiagnosticCode::PYZC_INVALID_DECLARATION,
-                "cannot project a field containing an affine Python buffer; move the aggregate as a whole"
+                "cannot project a field containing an affine Python resource; move the aggregate as a whole"
                     .to_string(),
                 attr.range(),
             );

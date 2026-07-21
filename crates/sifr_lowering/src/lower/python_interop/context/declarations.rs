@@ -139,6 +139,7 @@ pub(in crate::lower) fn parse_context_method(
         required_import_root: None,
         callbacks: Vec::new(),
         buffer: None,
+        arrow: None,
     })
 }
 

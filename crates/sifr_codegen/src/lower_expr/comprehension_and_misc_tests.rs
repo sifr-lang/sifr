@@ -129,6 +129,32 @@ pub(super) fn lowers_super_call_with_leaf_args() {
 }
 
 #[test]
+pub(super) fn lowers_regular_super_call_with_self_receiver() {
+    let expr = HirExpr::SuperCall {
+        parent_class: "Base".to_string(),
+        parent_type: Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "Base".to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        },
+        method: "count".to_string(),
+        args: vec![HirExpr::IntLiteral(1)],
+        ty: Type::Int,
+    };
+
+    let lowered = try_lower_leaf_expr(&expr).expect("super call lowered");
+    assert!(matches!(
+        lowered,
+        RustExpr::FnCall { args, .. }
+            if args.len() == 2
+                && matches!(args.first(), Some(RustExpr::Ident(name)) if name == "self")
+    ));
+}
+
+#[test]
 pub(super) fn does_not_lower_non_path_call_with_leaf_args() {
     let expr = HirExpr::Call {
         func: "compute".to_string(),

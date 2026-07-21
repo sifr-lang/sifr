@@ -20,6 +20,77 @@ def main():
 }
 
 #[test]
+fn inherited_constructor_evaluates_super_at_its_source_position() {
+    let rust_code = generate_rust_from_source(
+        r#"class Parent:
+    value: int
+
+def mark() -> None:
+    return None
+
+class Child(Parent):
+    def __init__(self, value: int):
+        super().__init__(value)
+        mark()
+
+def main() -> None:
+    child: Child = Child(1)
+"#,
+    );
+
+    let child_impl = rust_code
+        .split("impl Child")
+        .nth(1)
+        .expect("Child implementation");
+    let parent_init = child_impl.find("Parent::new(value)").expect("parent init");
+    let mark = child_impl.find("mark();").expect("following statement");
+    assert!(parent_init < mark, "{child_impl}");
+    assert!(child_impl.contains("parent: __sifr_parent"), "{child_impl}");
+}
+
+#[test]
+fn grandparent_super_call_uses_the_defining_ancestor() {
+    let rust_code = generate_rust_from_source(
+        r#"class Root:
+    def value(self) -> int:
+        return 5
+
+class Middle(Root):
+    pass
+
+class Leaf(Middle):
+    def value(self) -> int:
+        return super().value()
+
+def main() -> None:
+    leaf: Leaf = Leaf()
+    assert leaf.value() == 5
+"#,
+    );
+
+    assert!(rust_code.contains("Root::value(self)"), "{rust_code}");
+    assert!(!rust_code.contains("Middle::value(self)"), "{rust_code}");
+}
+
+#[test]
+fn explicit_non_affine_pow_dunder_remains_an_inherent_method() {
+    let rust_code = generate_rust_from_source(
+        r#"class Power:
+    def __pow__(self, exponent: int) -> int:
+        return exponent
+
+def main() -> None:
+    power: Power = Power()
+    value: int = power.__pow__(3)
+    assert value == 3
+"#,
+    );
+
+    assert!(rust_code.contains("fn __pow__"), "{rust_code}");
+    assert!(rust_code.contains("power.__pow__(3_i64)"), "{rust_code}");
+}
+
+#[test]
 fn consuming_class_upcasts_enter_union_and_result_payloads() {
     let rust_code = generate_rust_from_source(
         r#"class Root:

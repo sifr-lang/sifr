@@ -7,6 +7,7 @@ use super::diagnostic_rendering_and_run::{
 use super::explain_cli::cmd_explain;
 use super::formatter_cli::FmtArgs;
 use super::lint_cli::{cmd_lint, LintArgs};
+use super::python_cli::{cmd_python, PythonArgs};
 use super::self_update_cli::{cmd_self, SelfArgs};
 use super::sysroot_cli::{cmd_doctor, cmd_print, PrintKind};
 use super::trace_cli::cmd_trace;
@@ -154,6 +155,8 @@ pub(crate) enum Commands {
         #[command(subcommand)]
         command: BridgeCommands,
     },
+    /// Manage declaration-first Python interop evidence
+    Python(PythonArgs),
     /// Type-check a .sifr file without compiling
     Check {
         /// Input .sifr file, or omit for package check
@@ -479,6 +482,7 @@ fn run_cli(cli: Cli) -> i32 {
                 )
             }
         },
+        Commands::Python(args) => cmd_python(args, diagnostic_format),
         Commands::Check {
             path,
             workspace,

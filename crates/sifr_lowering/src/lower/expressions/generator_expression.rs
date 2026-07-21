@@ -3,7 +3,7 @@ use super::{
     reject_invalid_expression_iteration, reject_invalid_expression_target,
     reject_unsupported_expression_form, Expr, HirExpr, LowerCtx, Ranged, Type,
 };
-use crate::lower::{statement_diagnostics, ExprGenerator};
+use crate::lower::{ownership_diagnostics, statement_diagnostics, ExprGenerator};
 
 pub(in crate::lower) fn lower_generator_expr(
     gen: &ExprGenerator,
@@ -44,7 +44,8 @@ pub(in crate::lower) fn lower_generator_expr(
         return None;
     }
 
-    let (expr, expr_ty, filter) = ctx.with_pushed_scope(|ctx| {
+    let moved_before_loop = ctx.scope.save_moved_state();
+    let lowered = ctx.with_pushed_scope(|ctx| {
         ctx.scope.define(var_name.clone(), elem_ty.clone());
         let expr = lower_expr(&gen.elt, ctx)?;
         let expr_ty = expr.ty().clone();
@@ -72,7 +73,9 @@ pub(in crate::lower) fn lower_generator_expr(
             }
         };
         Some((expr, expr_ty, filter))
-    })?;
+    });
+    ownership_diagnostics::report_moved_across_loop(ctx, &moved_before_loop, gen.range());
+    let (expr, expr_ty, filter) = lowered?;
     let result_ty = Type::Iterator(Box::new(expr_ty));
     let iter_expr = lower_iterator_protocol_entry(iter_source_expr, elem_ty);
     Some(HirExpr::GeneratorExpr {

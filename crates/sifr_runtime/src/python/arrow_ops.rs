@@ -2,15 +2,19 @@ use super::object_ops::clone_handle;
 use super::{ObjectHandle, PythonError, PythonRuntimeError};
 use pyo3::ffi;
 use pyo3::prelude::*;
-use pyo3::types::{PyCapsule, PyTuple};
+use pyo3::types::{PyCapsule, PyDict, PyTuple};
 use std::collections::HashMap;
 use std::ffi::CStr;
 use std::hash::BuildHasher;
 use std::sync::{LazyLock, Mutex, MutexGuard};
 
+mod abi;
+
 const ARROW_SCHEMA_NAME: &CStr = c"arrow_schema";
 const ARROW_ARRAY_NAME: &CStr = c"arrow_array";
 const ARROW_STREAM_NAME: &CStr = c"arrow_array_stream";
+const ARROW_DEVICE_ARRAY_NAME: &CStr = c"arrow_device_array";
+const ARROW_DEVICE_STREAM_NAME: &CStr = c"arrow_device_array_stream";
 
 static ARROW_STORE: LazyLock<Mutex<ArrowStore>> =
     LazyLock::new(|| Mutex::new(ArrowStore::default()));
@@ -39,8 +43,61 @@ struct ArrowStore {
 
 struct ArrowEntry {
     token: i64,
-    _capsules: TrackedArrowCapsules,
+    kind: ArrowKind,
+    capsules: TrackedArrowCapsules,
     capsule_names: Vec<String>,
+}
+
+pub struct PythonArrowArgument {
+    entry: Option<ArrowEntry>,
+    object: Option<ObjectHandle>,
+}
+
+impl PythonArrowArgument {
+    pub fn object(&self) -> Result<ObjectHandle, PythonError> {
+        let object = self
+            .object
+            .as_ref()
+            .ok_or_else(|| arrow_error("Python Arrow argument is already finalized"))?;
+        super::object_ops::temporary_argument_handle(object)
+    }
+
+    pub fn finish(mut self) -> Result<(), PythonError> {
+        let entry = self
+            .entry
+            .take()
+            .ok_or_else(|| arrow_error("Python Arrow argument is already finalized"))?;
+        let object = self.object.take();
+        let state = super::attach(move |py| {
+            let state = consumption_state(py, &entry)?;
+            drop(object);
+            drop(entry);
+            super::foreign_object::drain_pending_releases(py);
+            Ok(state)
+        })
+        .map_err(PythonError::runtime)??;
+        if state == abi::ConsumptionState::Partial {
+            Err(arrow_error(
+                "Python Arrow consumer partially consumed a paired schema/data resource",
+            ))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+impl Drop for PythonArrowArgument {
+    fn drop(&mut self) {
+        let Some(entry) = self.entry.take() else {
+            return;
+        };
+        let object = self.object.take();
+        let _ignored = super::attach(move |py| {
+            drop(object);
+            drop(entry);
+            super::foreign_object::drain_pending_releases(py);
+        });
+    }
 }
 
 struct TrackedArrowCapsules {
@@ -55,15 +112,55 @@ impl Drop for TrackedArrowCapsules {
 }
 
 pub fn arrow_array(object: &ObjectHandle) -> Result<PythonArrowCapsuleMetadata, PythonError> {
-    acquire_arrow_capsules(object, ArrowKind::Array)
+    acquire_arrow_capsules(object, ArrowKind::Array, None)
+}
+
+pub fn arrow_array_with_schema(
+    object: &ObjectHandle,
+    schema: ArrowHandle,
+) -> Result<PythonArrowCapsuleMetadata, PythonError> {
+    acquire_arrow_capsules(object, ArrowKind::Array, Some(schema))
 }
 
 pub fn arrow_stream(object: &ObjectHandle) -> Result<PythonArrowCapsuleMetadata, PythonError> {
-    acquire_arrow_capsules(object, ArrowKind::Stream)
+    acquire_arrow_capsules(object, ArrowKind::Stream, None)
+}
+
+pub fn arrow_stream_with_schema(
+    object: &ObjectHandle,
+    schema: ArrowHandle,
+) -> Result<PythonArrowCapsuleMetadata, PythonError> {
+    acquire_arrow_capsules(object, ArrowKind::Stream, Some(schema))
 }
 
 pub fn arrow_schema(object: &ObjectHandle) -> Result<PythonArrowCapsuleMetadata, PythonError> {
-    acquire_arrow_capsules(object, ArrowKind::Schema)
+    acquire_arrow_capsules(object, ArrowKind::Schema, None)
+}
+
+pub fn arrow_device_array(
+    object: &ObjectHandle,
+) -> Result<PythonArrowCapsuleMetadata, PythonError> {
+    acquire_arrow_capsules(object, ArrowKind::DeviceArray, None)
+}
+
+pub fn arrow_device_array_with_schema(
+    object: &ObjectHandle,
+    schema: ArrowHandle,
+) -> Result<PythonArrowCapsuleMetadata, PythonError> {
+    acquire_arrow_capsules(object, ArrowKind::DeviceArray, Some(schema))
+}
+
+pub fn arrow_device_stream(
+    object: &ObjectHandle,
+) -> Result<PythonArrowCapsuleMetadata, PythonError> {
+    acquire_arrow_capsules(object, ArrowKind::DeviceStream, None)
+}
+
+pub fn arrow_device_stream_with_schema(
+    object: &ObjectHandle,
+    schema: ArrowHandle,
+) -> Result<PythonArrowCapsuleMetadata, PythonError> {
+    acquire_arrow_capsules(object, ArrowKind::DeviceStream, Some(schema))
 }
 
 pub fn release_arrow((handle, token): ArrowHandle) -> Result<(), PythonError> {
@@ -93,11 +190,62 @@ pub fn arrow_capsule_names(handle: ArrowHandle) -> Result<Vec<String>, PythonErr
         .ok_or_else(|| closed_error(handle.0))
 }
 
-#[derive(Clone, Copy)]
+pub fn require_arrow_certification(
+    metadata: &PythonArrowCapsuleMetadata,
+    target: &str,
+) -> Result<(), PythonError> {
+    let config = super::runtime_config().map_err(PythonError::runtime)?;
+    if config.arrow_certifications.iter().any(|certification| {
+        certification.target == target
+            && certification.kind == metadata.kind
+            && certification.producer_module == metadata.producer_module
+            && certification.producer_type == metadata.producer_type
+    }) {
+        Ok(())
+    } else {
+        Err(arrow_error(format!(
+            "target '{target}' returning '{}.{}' as '{}' has no exact executable no-copy certification for this environment",
+            metadata.producer_module, metadata.producer_type, metadata.kind
+        )))
+    }
+}
+
+pub fn prepare_arrow_argument(handle: ArrowHandle) -> Result<PythonArrowArgument, PythonError> {
+    let entry = {
+        let mut store = arrow_store()?;
+        if store
+            .capsules
+            .get(&handle.0)
+            .is_some_and(|entry| entry.token == handle.1)
+        {
+            store.capsules.remove(&handle.0)
+        } else {
+            return Err(closed_error(handle.0));
+        }
+    }
+    .ok_or_else(|| closed_error(handle.0))?;
+    let (entry, object) = super::attach(move |py| match build_argument_proxy(py, &entry) {
+        Ok(object) => Ok((entry, object)),
+        Err(error) => {
+            drop(entry);
+            super::foreign_object::drain_pending_releases(py);
+            Err(error)
+        }
+    })
+    .map_err(PythonError::runtime)??;
+    Ok(PythonArrowArgument {
+        entry: Some(entry),
+        object: Some(object),
+    })
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum ArrowKind {
     Array,
     Stream,
     Schema,
+    DeviceArray,
+    DeviceStream,
 }
 
 impl ArrowKind {
@@ -106,6 +254,8 @@ impl ArrowKind {
             Self::Array => "array",
             Self::Stream => "stream",
             Self::Schema => "schema",
+            Self::DeviceArray => "device_array",
+            Self::DeviceStream => "device_stream",
         }
     }
 
@@ -114,6 +264,8 @@ impl ArrowKind {
             Self::Array => "__arrow_c_array__",
             Self::Stream => "__arrow_c_stream__",
             Self::Schema => "__arrow_c_schema__",
+            Self::DeviceArray => "__arrow_c_device_array__",
+            Self::DeviceStream => "__arrow_c_device_stream__",
         }
     }
 }
@@ -121,13 +273,26 @@ impl ArrowKind {
 fn acquire_arrow_capsules(
     object: &ObjectHandle,
     kind: ArrowKind,
+    requested_schema: Option<ArrowHandle>,
 ) -> Result<PythonArrowCapsuleMetadata, PythonError> {
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         let producer = producer_info(object.bind(py));
-        let exported = call_export_method(py, object.bind(py), kind)
-            .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", kind.method()))?;
+        let requested_schema = requested_schema.map(take_requested_schema).transpose()?;
+        let exported = call_export_method(
+            object.bind(py),
+            kind,
+            requested_schema.as_ref().and_then(|entry| {
+                entry
+                    .capsules
+                    .capsules
+                    .first()
+                    .map(|schema| schema.bind(py))
+            }),
+        )
+        .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", kind.method()))?;
         let capsules = extract_capsules(py, &exported, kind)?;
+        drop(requested_schema);
         let capsule_names = capsule_names(kind);
         store_arrow_capsules(capsules, kind, capsule_names, producer)
     })
@@ -135,13 +300,148 @@ fn acquire_arrow_capsules(
 }
 
 fn call_export_method<'py>(
-    py: Python<'py>,
     object: &Bound<'py, PyAny>,
     kind: ArrowKind,
+    requested_schema: Option<&Bound<'py, PyAny>>,
 ) -> PyResult<Bound<'py, PyAny>> {
     match kind {
-        ArrowKind::Array | ArrowKind::Stream => object.call_method1(kind.method(), (py.None(),)),
+        ArrowKind::Array | ArrowKind::Stream | ArrowKind::DeviceArray | ArrowKind::DeviceStream => {
+            match requested_schema {
+                Some(schema) => object.call_method1(kind.method(), (schema,)),
+                None => object.call_method0(kind.method()),
+            }
+        }
         ArrowKind::Schema => object.call_method0(kind.method()),
+    }
+}
+
+fn take_requested_schema(handle: ArrowHandle) -> Result<ArrowEntry, PythonError> {
+    let mut store = arrow_store()?;
+    let entry = store
+        .capsules
+        .get(&handle.0)
+        .filter(|entry| entry.token == handle.1)
+        .ok_or_else(|| closed_error(handle.0))?;
+    if entry.kind != ArrowKind::Schema {
+        return Err(arrow_error(
+            "requested_schema must be an owned python.ArrowSchema resource",
+        ));
+    }
+    if entry.capsules.capsules.len() != 1 {
+        return Err(arrow_error(
+            "requested ArrowSchema resource must own exactly one capsule",
+        ));
+    }
+    store
+        .capsules
+        .remove(&handle.0)
+        .ok_or_else(|| closed_error(handle.0))
+}
+
+fn build_argument_proxy(py: Python<'_>, entry: &ArrowEntry) -> Result<ObjectHandle, PythonError> {
+    let globals = PyDict::new(py);
+    let capsules = PyTuple::new(
+        py,
+        entry
+            .capsules
+            .capsules
+            .iter()
+            .map(|capsule| capsule.clone_ref(py)),
+    )
+    .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "Arrow argument"))?;
+    globals
+        .set_item("CAPSULES", capsules)
+        .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "Arrow argument"))?;
+    globals
+        .set_item("ARROW_KIND", entry.kind.method())
+        .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "Arrow argument"))?;
+    py.run(
+        cr#"
+class _SifrOwnedArrowArgument:
+    def __init__(self, capsules, arrow_kind):
+        self._capsules = capsules
+        self._arrow_kind = arrow_kind
+        self._exported = False
+    def _require(self, arrow_kind):
+        if self._exported:
+            raise RuntimeError("owned Arrow resource was already exported")
+        self._exported = True
+    def _reject_requested_schema(self, requested_schema):
+        if requested_schema is not None:
+            raise ValueError("owned Arrow transfer cannot satisfy a new requested schema")
+
+def _export_pair(self, requested_schema=None):
+    self._reject_requested_schema(requested_schema)
+    self._require(self._arrow_kind)
+    return self._capsules
+
+def _export_single(self, requested_schema=None):
+    self._reject_requested_schema(requested_schema)
+    self._require(self._arrow_kind)
+    return self._capsules[0]
+
+def _export_schema(self):
+    self._require(self._arrow_kind)
+    return self._capsules[0]
+
+if ARROW_KIND == "__arrow_c_schema__":
+    setattr(_SifrOwnedArrowArgument, ARROW_KIND, _export_schema)
+elif ARROW_KIND in ("__arrow_c_array__", "__arrow_c_device_array__"):
+    setattr(_SifrOwnedArrowArgument, ARROW_KIND, _export_pair)
+else:
+    setattr(_SifrOwnedArrowArgument, ARROW_KIND, _export_single)
+obj = _SifrOwnedArrowArgument(CAPSULES, ARROW_KIND)
+"#,
+        Some(&globals),
+        None,
+    )
+    .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "Arrow argument"))?;
+    let object = globals
+        .get_item("obj")
+        .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "Arrow argument"))?
+        .ok_or_else(|| arrow_error("failed to create Python Arrow argument proxy"))?
+        .unbind();
+    globals
+        .del_item("CAPSULES")
+        .and_then(|()| globals.del_item("ARROW_KIND"))
+        .and_then(|()| globals.del_item("obj"))
+        .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "Arrow argument"))?;
+    super::foreign_object::ForeignObject::new(object).map_err(PythonError::runtime)
+}
+
+fn consumption_state(
+    py: Python<'_>,
+    entry: &ArrowEntry,
+) -> Result<abi::ConsumptionState, PythonError> {
+    let pointer = |index: usize, name: &'static CStr| {
+        let object = entry
+            .capsules
+            .capsules
+            .get(index)
+            .ok_or_else(|| arrow_error("Python Arrow argument capsule is missing"))?;
+        object
+            .bind(py)
+            .cast::<PyCapsule>()
+            .map_err(|_| arrow_error("Python Arrow argument capsule identity changed"))?
+            .pointer_checked(Some(name))
+            .map_err(|error| {
+                PythonError::from_pyerr(py, error, "zero-copy", "Arrow argument finalization")
+            })
+    };
+    match entry.kind {
+        ArrowKind::Array => abi::array_pair_consumption(
+            pointer(0, ARROW_SCHEMA_NAME)?,
+            pointer(1, ARROW_ARRAY_NAME)?,
+        ),
+        ArrowKind::Schema => abi::schema_consumption(pointer(0, ARROW_SCHEMA_NAME)?),
+        ArrowKind::Stream => abi::stream_consumption(pointer(0, ARROW_STREAM_NAME)?),
+        ArrowKind::DeviceArray => abi::device_array_pair_consumption(
+            pointer(0, ARROW_SCHEMA_NAME)?,
+            pointer(1, ARROW_DEVICE_ARRAY_NAME)?,
+        ),
+        ArrowKind::DeviceStream => {
+            abi::device_stream_consumption(pointer(0, ARROW_DEVICE_STREAM_NAME)?)
+        }
     }
 }
 
@@ -166,16 +466,67 @@ fn extract_capsules(
             let array = tuple.get_item(1).map_err(|error| {
                 PythonError::from_pyerr(py, error, "zero-copy", "__arrow_c_array__ array")
             })?;
-            validate_capsule(py, &schema, ARROW_SCHEMA_NAME, "__arrow_c_array__ schema")?;
-            validate_capsule(py, &array, ARROW_ARRAY_NAME, "__arrow_c_array__ array")?;
+            let schema_pointer =
+                validate_capsule(py, &schema, ARROW_SCHEMA_NAME, "__arrow_c_array__ schema")?;
+            let array_pointer =
+                validate_capsule(py, &array, ARROW_ARRAY_NAME, "__arrow_c_array__ array")?;
+            abi::validate_array_pair(schema_pointer, array_pointer, "__arrow_c_array__")?;
             Ok(vec![schema.unbind(), array.unbind()])
         }
         ArrowKind::Stream => {
-            validate_capsule(py, exported, ARROW_STREAM_NAME, "__arrow_c_stream__")?;
+            let pointer = validate_capsule(py, exported, ARROW_STREAM_NAME, "__arrow_c_stream__")?;
+            abi::validate_stream(pointer, "__arrow_c_stream__")?;
             Ok(vec![exported.clone().unbind()])
         }
         ArrowKind::Schema => {
-            validate_capsule(py, exported, ARROW_SCHEMA_NAME, "__arrow_c_schema__")?;
+            let pointer = validate_capsule(py, exported, ARROW_SCHEMA_NAME, "__arrow_c_schema__")?;
+            abi::validate_schema(pointer, "__arrow_c_schema__")?;
+            Ok(vec![exported.clone().unbind()])
+        }
+        ArrowKind::DeviceArray => {
+            let tuple = exported.cast::<PyTuple>().map_err(|_| {
+                arrow_error(
+                    "__arrow_c_device_array__ must return (arrow_schema, arrow_device_array)",
+                )
+            })?;
+            if tuple.len() != 2 {
+                return Err(arrow_error(
+                    "__arrow_c_device_array__ must return exactly two capsules",
+                ));
+            }
+            let schema = tuple.get_item(0).map_err(|error| {
+                PythonError::from_pyerr(py, error, "zero-copy", "__arrow_c_device_array__ schema")
+            })?;
+            let array = tuple.get_item(1).map_err(|error| {
+                PythonError::from_pyerr(py, error, "zero-copy", "__arrow_c_device_array__ array")
+            })?;
+            let schema_pointer = validate_capsule(
+                py,
+                &schema,
+                ARROW_SCHEMA_NAME,
+                "__arrow_c_device_array__ schema",
+            )?;
+            let array_pointer = validate_capsule(
+                py,
+                &array,
+                ARROW_DEVICE_ARRAY_NAME,
+                "__arrow_c_device_array__ array",
+            )?;
+            abi::validate_device_array_pair(
+                schema_pointer,
+                array_pointer,
+                "__arrow_c_device_array__",
+            )?;
+            Ok(vec![schema.unbind(), array.unbind()])
+        }
+        ArrowKind::DeviceStream => {
+            let pointer = validate_capsule(
+                py,
+                exported,
+                ARROW_DEVICE_STREAM_NAME,
+                "__arrow_c_device_stream__",
+            )?;
+            abi::validate_device_stream(pointer, "__arrow_c_device_stream__")?;
             Ok(vec![exported.clone().unbind()])
         }
     }
@@ -186,7 +537,7 @@ fn validate_capsule(
     object: &Bound<'_, PyAny>,
     expected_name: &'static CStr,
     context: &'static str,
-) -> Result<(), PythonError> {
+) -> Result<std::ptr::NonNull<std::ffi::c_void>, PythonError> {
     let capsule = object.cast::<PyCapsule>().map_err(|_| {
         arrow_error(format!(
             "{context} returned a non-PyCapsule value; expected {}",
@@ -208,7 +559,7 @@ fn validate_capsule(
             expected_name.to_string_lossy()
         )));
     }
-    capsule
+    let pointer = capsule
         .pointer_checked(Some(expected_name))
         .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", context))?;
     let destructor = unsafe { ffi::PyCapsule_GetDestructor(capsule.as_ptr()) };
@@ -219,7 +570,7 @@ fn validate_capsule(
             expected_name.to_string_lossy()
         )));
     }
-    Ok(())
+    Ok(pointer)
 }
 
 fn store_arrow_capsules(
@@ -235,7 +586,8 @@ fn store_arrow_capsules(
         handle,
         ArrowEntry {
             token,
-            _capsules: TrackedArrowCapsules { capsules },
+            kind,
+            capsules: TrackedArrowCapsules { capsules },
             capsule_names: capsule_names.clone(),
         },
     );
@@ -265,20 +617,14 @@ fn producer_info(object: &Bound<'_, PyAny>) -> ProducerInfo {
     let name = type_object
         .name()
         .map_or_else(|_| "object".to_string(), |name| name.to_string());
-    let copy_possible = !is_proven_zero_copy_module(&module);
     ProducerInfo {
         module,
         name,
-        copy_possible,
+        // The Arrow protocol alone never proves representation-preserving
+        // export. Declaration activation requires package-authored executable
+        // certification, so the raw runtime substrate remains conservative.
+        copy_possible: true,
     }
-}
-
-fn is_proven_zero_copy_module(module: &str) -> bool {
-    // Only audited zero-copy producers belong here.
-    module == "pyarrow"
-        || module.starts_with("pyarrow.")
-        || module == "polars"
-        || module.starts_with("polars.")
 }
 
 fn capsule_names(kind: ArrowKind) -> Vec<String> {
@@ -286,6 +632,10 @@ fn capsule_names(kind: ArrowKind) -> Vec<String> {
         ArrowKind::Array => vec!["arrow_schema".to_string(), "arrow_array".to_string()],
         ArrowKind::Stream => vec!["arrow_array_stream".to_string()],
         ArrowKind::Schema => vec!["arrow_schema".to_string()],
+        ArrowKind::DeviceArray => {
+            vec!["arrow_schema".to_string(), "arrow_device_array".to_string()]
+        }
+        ArrowKind::DeviceStream => vec!["arrow_device_array_stream".to_string()],
     }
 }
 
@@ -345,235 +695,11 @@ fn arrow_store() -> Result<MutexGuard<'static, ArrowStore>, PythonError> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::python::{
-        close_object, initialize_runtime, reset_runtime_state_for_tests, resource_diagnostics,
-        test_config, test_guard, PythonResourceDiagnostics,
-    };
-    use pyo3::types::{PyCapsule, PyDict};
-
-    #[test]
-    fn arrow_array_stream_schema_track_metadata_and_release() {
-        let _guard = test_guard();
-        reset_runtime_state_for_tests();
-        initialize_runtime(test_config("arrow-capsules")).expect("init should succeed");
-
-        let object = exporter().expect("exporter should be stored");
-        let array = arrow_array(&object).expect("array capsules should export");
-        let stream = arrow_stream(&object).expect("stream capsule should export");
-        let schema = arrow_schema(&object).expect("schema capsule should export");
-
-        assert_eq!(array.kind, "array");
-        assert_eq!(array.capsule_names, ["arrow_schema", "arrow_array"]);
-        assert!(!array.copy_possible);
-        assert_eq!(stream.capsule_names, ["arrow_array_stream"]);
-        assert_eq!(schema.capsule_names, ["arrow_schema"]);
-        assert_eq!(
-            resource_diagnostics().expect("diagnostics should be available"),
-            PythonResourceDiagnostics {
-                initialized: true,
-                live_objects: 4,
-                leaked_objects: 0,
-            }
-        );
-
-        release_arrow((array.handle, array.token)).expect("array should release");
-        release_arrow((stream.handle, stream.token)).expect("stream should release");
-        release_arrow((schema.handle, schema.token)).expect("schema should release");
-        close_object(object).expect("object should close");
-    }
-
-    #[test]
-    fn arrow_marks_pandas_like_producers_copy_possible() {
-        let _guard = test_guard();
-        reset_runtime_state_for_tests();
-        initialize_runtime(test_config("arrow-copy-possible")).expect("init should succeed");
-
-        let object = pandas_exporter().expect("exporter should be stored");
-        let stream = arrow_stream(&object).expect("stream capsule should export");
-
-        assert!(stream.copy_possible);
-        release_arrow((stream.handle, stream.token)).expect("stream should release");
-        close_object(object).expect("object should close");
-    }
-
-    #[test]
-    fn arrow_rejects_malformed_capsule_and_double_release() {
-        let _guard = test_guard();
-        reset_runtime_state_for_tests();
-        initialize_runtime(test_config("arrow-errors")).expect("init should succeed");
-
-        let malformed = malformed_exporter().expect("malformed exporter should be stored");
-        let error = arrow_array(&malformed).expect_err("wrong capsule names must fail");
-        assert_eq!(error.kind, "zero-copy");
-        assert_eq!(error.exception_type, "SifrPythonArrowCapsuleError");
-
-        let object = exporter().expect("exporter should be stored");
-        let stream = arrow_stream(&object).expect("stream capsule should export");
-        release_arrow((stream.handle, stream.token)).expect("stream should release");
-        let closed =
-            release_arrow((stream.handle, stream.token)).expect_err("second release should fail");
-        assert_eq!(closed.kind, "resource");
-        assert_eq!(closed.exception_type, "SifrPythonClosedArrowCapsule");
-
-        close_object(malformed).expect("malformed object should close");
-        close_object(object).expect("object should close");
-    }
-
-    #[test]
-    fn arrow_rejects_capsules_without_destructors() {
-        let _guard = test_guard();
-        reset_runtime_state_for_tests();
-        initialize_runtime(test_config("arrow-no-destructor")).expect("init should succeed");
-
-        let malformed = exporter_without_destructor().expect("exporter should be stored");
-        let error = arrow_schema(&malformed).expect_err("missing destructor must fail");
-
-        assert_eq!(error.kind, "zero-copy");
-        assert_eq!(error.exception_type, "SifrPythonArrowCapsuleError");
-        assert!(error.message.contains("has no destructor"));
-        close_object(malformed).expect("malformed object should close");
-    }
-
-    fn exporter() -> Result<ObjectHandle, PythonError> {
-        exporter_with_schema("pyarrow.lib", ARROW_SCHEMA_NAME)
-    }
-
-    fn pandas_exporter() -> Result<ObjectHandle, PythonError> {
-        super::super::attach(|py| {
-            let globals = PyDict::new(py);
-            globals
-                .set_item("STREAM", capsule_any(py, ARROW_STREAM_NAME)?.bind(py))
-                .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "test stream"))?;
-            py.run(
-                cr#"
-class PandasExporter:
-    __module__ = "pandas.core.frame"
-
-    def __arrow_c_stream__(self, requested_schema=None):
-        return STREAM
-
-obj = PandasExporter()
-"#,
-                Some(&globals),
-                None,
-            )
-            .map_err(|error| {
-                PythonError::from_pyerr(py, error, "zero-copy", "test pandas exporter")
-            })?;
-            let object = globals
-                .get_item("obj")
-                .map_err(|error| {
-                    PythonError::from_pyerr(py, error, "zero-copy", "test pandas exporter")
-                })?
-                .ok_or_else(|| arrow_error("test pandas exporter did not create obj"))?;
-            super::super::object_ops::store_object(object.unbind())
-        })
-        .map_err(PythonError::runtime)?
-    }
-
-    fn malformed_exporter() -> Result<ObjectHandle, PythonError> {
-        exporter_with_schema("pyarrow.lib", ARROW_STREAM_NAME)
-    }
-
-    fn exporter_without_destructor() -> Result<ObjectHandle, PythonError> {
-        super::super::attach(|py| {
-            let globals = PyDict::new(py);
-            globals
-                .set_item("SCHEMA", capsule_without_destructor(py)?.bind(py))
-                .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "test schema"))?;
-            py.run(
-                cr#"
-class ArrowExporter:
-    __module__ = "pyarrow.lib"
-
-    def __arrow_c_schema__(self):
-        return SCHEMA
-
-obj = ArrowExporter()
-"#,
-                Some(&globals),
-                None,
-            )
-            .map_err(|error| {
-                PythonError::from_pyerr(py, error, "zero-copy", "test destructorless exporter")
-            })?;
-            let object = globals
-                .get_item("obj")
-                .map_err(|error| {
-                    PythonError::from_pyerr(py, error, "zero-copy", "test destructorless exporter")
-                })?
-                .ok_or_else(|| arrow_error("test destructorless exporter did not create obj"))?;
-            super::super::object_ops::store_object(object.unbind())
-        })
-        .map_err(PythonError::runtime)?
-    }
-
-    fn exporter_with_schema(
-        module_name: &str,
-        schema_name: &'static CStr,
-    ) -> Result<ObjectHandle, PythonError> {
-        super::super::attach(|py| {
-            let globals = PyDict::new(py);
-            globals
-                .set_item("MODULE_NAME", module_name)
-                .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "test module"))?;
-            globals
-                .set_item("SCHEMA", capsule_any(py, schema_name)?.bind(py))
-                .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "test schema"))?;
-            globals
-                .set_item("ARRAY", capsule_any(py, ARROW_ARRAY_NAME)?.bind(py))
-                .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "test array"))?;
-            globals
-                .set_item("STREAM", capsule_any(py, ARROW_STREAM_NAME)?.bind(py))
-                .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "test stream"))?;
-            py.run(
-                cr#"
-class ArrowExporter:
-    __module__ = MODULE_NAME
-
-    def __arrow_c_array__(self, requested_schema=None):
-        return (SCHEMA, ARRAY)
-
-    def __arrow_c_stream__(self, requested_schema=None):
-        return STREAM
-
-    def __arrow_c_schema__(self):
-        return SCHEMA
-
-obj = ArrowExporter()
-"#,
-                Some(&globals),
-                None,
-            )
-            .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "test exporter"))?;
-            let object = globals
-                .get_item("obj")
-                .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "test exporter"))?
-                .ok_or_else(|| arrow_error("test exporter did not create obj"))?;
-            super::super::object_ops::store_object(object.unbind())
-        })
-        .map_err(PythonError::runtime)?
-    }
-
-    fn capsule<'py>(py: Python<'py>, name: &'static CStr) -> PyResult<Bound<'py, PyCapsule>> {
-        PyCapsule::new_with_value(py, 1_u8, name)
-    }
-
-    fn capsule_any(py: Python<'_>, name: &'static CStr) -> Result<Py<PyAny>, PythonError> {
-        capsule(py, name)
-            .map(|capsule| capsule.into_any().unbind())
-            .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "test capsule"))
-    }
-
-    fn capsule_without_destructor(py: Python<'_>) -> Result<Py<PyAny>, PythonError> {
-        let leaked = Box::leak(Box::new(1_u8));
-        let pointer = std::ptr::NonNull::from(leaked).cast();
-        let capsule = unsafe { PyCapsule::new_with_pointer(py, pointer, ARROW_SCHEMA_NAME) }
-            .map_err(|error| {
-                PythonError::from_pyerr(py, error, "zero-copy", "test destructorless capsule")
-            })?;
-        Ok(capsule.into_any().unbind())
+pub(super) fn reset_arrow_store_for_tests() {
+    if let Ok(mut store) = ARROW_STORE.lock() {
+        *store = ArrowStore::default();
     }
 }
+
+#[cfg(test)]
+mod tests;

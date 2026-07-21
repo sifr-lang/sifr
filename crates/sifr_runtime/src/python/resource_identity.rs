@@ -55,6 +55,17 @@ impl PythonResourceIdentity {
         self.key_for(ResourceKind::Arrow, "Arrow")
     }
 
+    pub fn into_arrow_key(mut self) -> Result<ArrowHandle, PythonError> {
+        if self.kind != ResourceKind::Arrow {
+            return Err(identity_error(
+                "sealed Python resource identity is not an Arrow resource".to_string(),
+            ));
+        }
+        self.key
+            .take()
+            .ok_or_else(|| identity_error("sealed Python Arrow resource is closed".to_string()))
+    }
+
     pub fn dlpack_key(&self) -> Result<DlpackHandle, PythonError> {
         self.key_for(ResourceKind::Dlpack, "DLPack")
     }

@@ -1,12 +1,32 @@
 use ruff_text_size::TextRange;
 use sifr_python_ast::Stmt;
-use sifr_type_system::{FunctionType, Type};
 
 use super::imported_defaults::{
     import_callable_vararg, import_callable_workload, import_python_call_shape,
 };
 use super::{import_diagnostics, name_diagnostics, ExternalDefs, LowerCtx};
 use std::collections::HashMap;
+
+pub(super) fn register_imported_class_instance_methods(
+    ctx: &mut LowerCtx,
+    externals: &ExternalDefs,
+    module: &str,
+    source_name: &str,
+    local_name: &str,
+) {
+    let Some(methods) = externals
+        .class_instance_methods
+        .get(module)
+        .and_then(|classes| classes.get(source_name))
+    else {
+        return;
+    };
+    ctx.class_instance_methods.extend(
+        methods
+            .iter()
+            .map(|method| format!("{local_name}.{method}")),
+    );
+}
 
 pub(in crate::lower) fn class_aliases_by_module(
     stmts: &[Stmt],
@@ -161,6 +181,13 @@ pub(in crate::lower) fn resolve_imports_early(
                             );
                             ctx.class_types
                                 .insert(local.clone(), imported_class_ty.clone());
+                            register_imported_class_instance_methods(
+                                ctx,
+                                externals,
+                                &module_key,
+                                name,
+                                &local,
+                            );
                             if let Some(module_class_type_params) =
                                 externals.class_type_params.get(&module_key)
                             {
@@ -196,24 +223,11 @@ pub(in crate::lower) fn resolve_imports_early(
                                     &local,
                                 );
                             }
-                            // Register constructor
-                            if let Type::Class {
-                                fields, methods, ..
-                            } = &imported_class_ty
+                            if let Some(ft) =
+                                super::imported_class_identity::imported_constructor_function_type(
+                                    &imported_class_ty,
+                                )
                             {
-                                let ft = if let Some((_, new_ft)) =
-                                    methods.iter().find(|(n, _)| n == "new")
-                                {
-                                    let params: Vec<(String, Type)> = new_ft
-                                        .params
-                                        .iter()
-                                        .map(|(n, t, _)| (n.clone(), t.clone()))
-                                        .collect();
-                                    FunctionType::new(params, imported_class_ty.clone())
-                                } else {
-                                    let params: Vec<(String, Type)> = fields.clone();
-                                    FunctionType::new(params, imported_class_ty.clone())
-                                };
                                 ctx.functions.insert(local, ft);
                             }
                         }

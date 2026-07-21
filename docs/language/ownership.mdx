@@ -17,6 +17,10 @@ Sifr gives you Rust's memory-safety guarantees without making every call site lo
 
 This table is the core model. A bare heap parameter is borrowed immutably. `mut` lets the function update the caller's value during the call. `own` moves the value into the function. `own mut` moves it and lets the function change it.
 
+The same conventions apply to class methods. In particular, a bare move-only
+method parameter is borrowed and cannot be returned or stored as an owned
+value; spell it `own` when the method intentionally consumes it.
+
 ## Borrow By Default
 
 When you pass a heap value to a function, Sifr borrows it by default. The function can read the value, and the caller keeps ownership.

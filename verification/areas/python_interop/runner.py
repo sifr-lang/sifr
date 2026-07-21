@@ -81,7 +81,13 @@ COMMAND_ARGS: dict[str, list[str]] = {
         "--report",
         "../../../target/verification/areas/python_interop/buffer-examples.latest.json",
     ],
+    "python-interop-arrow-examples": [
+        "--arrow-examples",
+        "--report",
+        "../../../target/verification/areas/python_interop/arrow-examples.latest.json",
+    ],
     "python-interop-buffer-cpython311": [],
+    "python-interop-arrow-cpython311": [],
     "python-interop-ml-examples": [
         "--ml-examples",
         "--report",
@@ -126,13 +132,17 @@ AREA_PROJECT_COMMANDS = {
     "python-interop-callback-examples",
     "python-interop-dataframe-examples",
     "python-interop-buffer-examples",
+    "python-interop-arrow-examples",
     "python-interop-library-examples",
     "python-interop-async-declaration-examples",
     "python-interop-async-context-examples",
     "python-interop-ml-examples",
     "python-interop-live-examples",
 }
-CPYTHON311_PROJECT_COMMANDS = {"python-interop-buffer-cpython311"}
+CPYTHON311_PROJECT_COMMANDS = {
+    "python-interop-arrow-cpython311",
+    "python-interop-buffer-cpython311",
+}
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

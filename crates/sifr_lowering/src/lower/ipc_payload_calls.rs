@@ -122,6 +122,9 @@ fn non_ipc_serializable_reason_inner(ty: &Type, visiting: &mut HashSet<String>) 
         Type::PythonBuffer(_) => {
             Some("Python buffer resources are affine and process-local".to_string())
         }
+        Type::PythonArrow(_) => {
+            Some("Python Arrow resources are affine and process-local".to_string())
+        }
         Type::BigInt | Type::Decimal | Type::BigDecimal => {
             Some("this numeric family is not part of the initial IPC schema set".to_string())
         }

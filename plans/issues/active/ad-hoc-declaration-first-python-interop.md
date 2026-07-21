@@ -39,9 +39,19 @@ synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
 retained-owner integration are merged, publicly active, and milestone-reviewed.
-M11 and later milestones are not yet implemented. Milestones sequence
-delivery; they do not create reduced language versions, temporary public
-contracts, dual authorities, or alternate lowering paths.
+M11's five Arrow C Data Interface delivery waves are implemented, locally
+validated, and milestone-reviewed in
+[PR #2991](https://github.com/sifr-lang/sifr/pull/2991). Repeated whole-diff
+Fable High review drove ownership, identity, async-move, operator, and
+certification remediation through pass 8, which returned **SATISFIED** with no
+blockers or majors; frozen-diff closure pass 9 independently confirmed the same
+verdict. The fresh authoritative merge gate passes every blocking
+lane in `3772.09s`, including E2E `674/674`, Python interop `20/20`, diagnostics
+`175/175`, and `261` hardening variants with zero failures; its warm-time and
+batch-skew notices are non-blocking advisories. M12 and later milestones are not
+yet implemented. Milestones sequence delivery; they do not create reduced language
+versions, temporary public contracts, dual authorities, or alternate lowering
+paths.
 
 The durable contracts are:
 
@@ -173,7 +183,7 @@ Implementation progress:
 - [x] M8 async context managers — [PR #2970](https://github.com/sifr-lang/sifr/pull/2970), [PR #2972](https://github.com/sifr-lang/sifr/pull/2972)
 - [x] M9 typed callback lifetimes and dispatch — [PR #2974](https://github.com/sifr-lang/sifr/pull/2974), [PR #2977](https://github.com/sifr-lang/sifr/pull/2977), [PR #2979](https://github.com/sifr-lang/sifr/pull/2979), remediation [PRs #2981](https://github.com/sifr-lang/sifr/pull/2981), [#2982](https://github.com/sifr-lang/sifr/pull/2982), [#2984](https://github.com/sifr-lang/sifr/pull/2984), and [#2985](https://github.com/sifr-lang/sifr/pull/2985)
 - [x] M10 typed buffer protocol ([PR #2990](https://github.com/sifr-lang/sifr/pull/2990))
-- [ ] M11 Arrow C Data Interface
+- [x] M11 Arrow C Data Interface ([PR #2991](https://github.com/sifr-lang/sifr/pull/2991))
 - [ ] M12 DLPack one-shot tensor transfer
 - [ ] M13 read-only check and doctor
 - [ ] M14 binding and certification authoring
@@ -1640,6 +1650,49 @@ Validation:
 
 Depends on M1 sealed affine resources and M4 conversion.
 
+Delivery waves:
+
+- [x] Wave 1 — add the five nominal affine Arrow resource types, HIR contract,
+  decorator/schema grammar, exact return-kind derivation, and static ownership
+  failure matrices.
+- [x] Wave 2 — implement runtime and stdlib acquisition for array/schema,
+  stream, device-array, and device-stream capsules with structural C-interface
+  validation, paired ownership, rollback, and exact-once release.
+- [x] Wave 3 — generate receiver and producer acquisition plus owned consumer
+  transfer, consumed-state inspection, and failure cleanup without copy paths.
+- [x] Wave 4 — bootstrap `sifr python certify arrow` and read-only
+  `sifr python certify --check`, define the package artifact schema, and bind
+  exact producer/distribution/schema evidence into build and archive identity.
+- [x] Wave 5 — add package, native, CPython, and malformed-capsule evidence,
+  the compiled Arrow example, public/durable documentation, and delivery-profile
+  wiring.
+- [x] Align ordinary class-method move parameters with the language-wide
+  borrow-by-default rule; escaping or storing one requires explicit `own`, and
+  instance, static, and `super()` calls enforce that transfer exactly once.
+- [x] Milestone review — repeated whole-diff Fable High review passes
+  [1](../../reviews/active/m11-arrow-full-review-pass-1.md),
+  [2](../../reviews/active/m11-arrow-full-review-pass-2.md),
+  [3b](../../reviews/active/m11-arrow-full-review-pass-3b.md),
+  [4](../../reviews/active/m11-arrow-full-review-pass-4.md),
+  [5](../../reviews/active/m11-arrow-full-review-pass-5.md),
+  [6](../../reviews/active/m11-arrow-full-review-pass-6.md),
+  [7](../../reviews/active/m11-arrow-full-review-pass-7.md), and
+  [8](../../reviews/active/m11-arrow-full-review-pass-8.md) drove all blocker
+  and major findings to closure. Pass 7 is explicitly superseded because its
+  timer placeholder predated the real gate result; pass 8 independently
+  rechecked the remediation and returned **SATISFIED** with no blockers or
+  majors. Final frozen-diff
+  [pass 9](../../reviews/active/m11-arrow-full-review-pass-9.md) verified the
+  complete PR and truthful closure ledger, then again returned **SATISFIED**
+  with no blockers or majors. The fresh authoritative merge gate passed every blocking lane
+  in `3772.09s`: E2E `674/674` with signature `1f8b1cadc4f48ec8`, Python
+  interop `20/20`, diagnostics `175/175`, codegen `878/878`, lowering
+  `812/812` plus one ignored test, driver `365/365` plus 33 ignored tests and
+  generated builds `33/33`, file-size guardrails over `2744` files, and `261`
+  hardening variants with zero failures. The warm-time and batching-skew
+  notices are non-blocking advisories. [PR #2991](https://github.com/sifr-lang/sifr/pull/2991)
+  is the reviewed and validated M11 delivery PR.
+
 Tasks:
 
 - Add affine `python.ArrowArray`, `ArrowSchema`, `ArrowStream`,
@@ -1649,7 +1702,10 @@ Tasks:
 - Implement receiver acquisition for `Self` and call-then-acquire for import-root
   or bridge producer targets.
 - Implement `schema=omitted | parameter(name)` and validate the latter as a
-  same-declaration keyword-only borrowed `python.ArrowSchema` parameter.
+  same-declaration keyword-only owned `python.ArrowSchema` parameter. Requested
+  schema capsules are consumed by conforming Arrow producers, so the type-level
+  contract must expose the one-shot transfer rather than promise a reusable
+  borrow.
 - Validate exact capsule names, non-null payloads, release callbacks, device
   metadata, producer identity, and paired schema/data consistency.
 - Require executable no-copy certification tied to the exact producer and

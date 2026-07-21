@@ -1,5 +1,38 @@
-use sifr_type_system::{FunctionType, Type};
+use sifr_type_system::{FunctionType, OwnershipKind, ParamConvention, Type};
 use std::collections::HashMap;
+
+pub(super) fn imported_constructor_function_type(class_ty: &Type) -> Option<FunctionType> {
+    let Type::Class {
+        fields, methods, ..
+    } = class_ty.resolve_alias()
+    else {
+        return None;
+    };
+    if let Some((_, constructor)) = methods.iter().find(|(name, _)| name == "new") {
+        return Some(FunctionType {
+            params: constructor.params.clone(),
+            return_type: Box::new(class_ty.clone()),
+        });
+    }
+    let params = fields
+        .iter()
+        .map(|(name, ty)| {
+            let convention = if ty.contains_affine_resource()
+                || matches!(ty, Type::TypeVar(_))
+                || ty.ownership() == OwnershipKind::Copy
+            {
+                ParamConvention::own()
+            } else {
+                ParamConvention::borrow()
+            };
+            (name.clone(), ty.clone(), convention)
+        })
+        .collect();
+    Some(FunctionType {
+        params,
+        return_type: Box::new(class_ty.clone()),
+    })
+}
 
 pub(super) fn complete_class_type_with_identity(
     class_types: &HashMap<String, Type>,

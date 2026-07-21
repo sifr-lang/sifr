@@ -12,7 +12,10 @@ use super::diagnostics::{
     collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
     is_error_class, is_protocol_class,
 };
-use super::parameter_conventions::class_method_param_convention;
+use super::parameter_conventions::{
+    class_declared_method_param_convention, class_method_param_convention, inherit_class_methods,
+    record_declared_class_method_metadata, replace_method_signature,
+};
 use super::protocol_diagnostics;
 use super::simple_expr::lower_expr_simple;
 use super::typing_and_functions::resolve_annotation_expr;
@@ -481,10 +484,7 @@ pub(in crate::lower) fn collect_class_type(
                 for (fname, fty) in &parent_fields {
                     fields.push((fname.clone(), fty.clone()));
                 }
-                // Inherit parent methods
-                for (mname, mft) in &parent_methods {
-                    methods.push((mname.clone(), mft.clone()));
-                }
+                inherit_class_methods(&mut methods, &parent_methods, ctx, parent_name, &class_name);
                 let parent_identity = parent_identity.unwrap_or(parent_type_name);
                 parent_class_chain = Some(if let Some(chain) = parent_parent_chain {
                     format!("{parent_identity}|{chain}")
@@ -587,10 +587,18 @@ pub(in crate::lower) fn collect_class_type(
                             Type::Any
                         };
                         constructor_locals.insert(param_name.clone(), param_ty.clone());
-                        params.push((param_name, param_ty));
+                        let convention = class_method_param_convention(
+                            param.parameter.convention,
+                            &param_ty,
+                            ctx,
+                        );
+                        params.push((param_name, param_ty, convention));
                     }
                     // Constructor return type is registered after field collection.
-                    let constructor_ft = FunctionType::new(params.clone(), Type::None);
+                    let constructor_ft = FunctionType {
+                        params,
+                        return_type: Box::new(Type::None),
+                    };
                     ctx.functions.insert(class_name.clone(), constructor_ft);
 
                     collect_constructor_self_field_assignments(
@@ -622,10 +630,14 @@ pub(in crate::lower) fn collect_class_type(
                         ctx.function_defaults.insert(class_name.clone(), defaults);
                     }
                 } else {
-                    // Regular/class/static method: extract params
-                    // For @staticmethod, don't skip any params
-                    // For @classmethod and regular methods, skip `self`/`cls`
                     let is_static = has_decorator(func, "staticmethod");
+                    let is_class = has_decorator(func, "classmethod");
+                    record_declared_class_method_metadata(
+                        ctx,
+                        &class_name,
+                        &method_name,
+                        !is_static && !is_class,
+                    );
                     let skip_count = usize::from(!is_static);
                     let callback_policies = crate::lower::python_interop::callback_call_policies(
                         &func.decorator_list,
@@ -653,10 +665,36 @@ pub(in crate::lower) fn collect_class_type(
                             Type::Any
                         };
                         method_locals.insert(param_name.clone(), param_ty.clone());
-                        let convention = class_method_param_convention(
+                        let convention = class_declared_method_param_convention(
                             param.parameter.convention,
                             &param_ty,
                             ctx,
+                            (&class_name, &method_name),
+                            (&param_name, param.parameter.name.range()),
+                        );
+                        params.push((param_name, param_ty, convention));
+                    }
+                    for param in &func.parameters.kwonlyargs {
+                        let param_name = param.parameter.name.to_string();
+                        let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                            resolve_annotation_expr(ann, ctx)
+                        } else {
+                            missing_method_param_annotation(
+                                ctx,
+                                &class_name,
+                                &method_name,
+                                &param_name,
+                                param.parameter.name.range(),
+                            );
+                            Type::Any
+                        };
+                        method_locals.insert(param_name.clone(), param_ty.clone());
+                        let convention = class_declared_method_param_convention(
+                            param.parameter.convention,
+                            &param_ty,
+                            ctx,
+                            (&class_name, &method_name),
+                            (&param_name, param.parameter.name.range()),
                         );
                         params.push((param_name, param_ty, convention));
                     }
@@ -682,6 +720,24 @@ pub(in crate::lower) fn collect_class_type(
                             }
                         }
                     }
+                    let regular_count = func.parameters.args.len().saturating_sub(skip_count)
+                        + usize::from(func.parameters.vararg.is_some());
+                    for (i, param) in func.parameters.kwonlyargs.iter().enumerate() {
+                        if let Some(ref default_expr) = param.default {
+                            if let Some(hir_default) = lower_expr_simple(default_expr) {
+                                defaults.push((regular_count + i, hir_default));
+                            } else {
+                                ctx.error_with_code_at(
+                                    DiagnosticCode::TYPE_UNSUPPORTED_DEFAULT_ARGUMENT,
+                                    format!(
+                                        "class '{class_name}.{method_name}': unsupported default argument expression for parameter '{}'",
+                                        param.parameter.name
+                                    ),
+                                    default_expr.range(),
+                                );
+                            }
+                        }
+                    }
                     if !defaults.is_empty() {
                         ctx.function_defaults
                             .insert(format!("{class_name}.{method_name}"), defaults);
@@ -692,13 +748,14 @@ pub(in crate::lower) fn collect_class_type(
                         ctx.function_workload_annotations
                             .insert(format!("{class_name}.{method_name}"), workload);
                     }
-                    methods.push((
+                    replace_method_signature(
+                        &mut methods,
                         method_name,
                         FunctionType {
                             params,
                             return_type: Box::new(method_signature_return_type(func, return_ty)),
                         },
-                    ));
+                    );
 
                     collect_constructor_self_field_assignments(
                         &func.body,

@@ -369,6 +369,7 @@ fn retained_foreign_callback_is_aggregated_into_the_opaque_result_owner() {
         required_import_root: Some("pkg".to_string()),
         callbacks: Vec::new(),
         buffer: None,
+        arrow: None,
     };
     let mut opaque_classes = std::collections::HashMap::new();
     opaque_classes.insert("Subscription".to_string(), opaque);
@@ -774,6 +775,7 @@ fn declaration() -> PythonInteropDeclaration {
         required_import_root: Some("pkg".to_string()),
         callbacks: Vec::new(),
         buffer: None,
+        arrow: None,
     }
 }
 

@@ -49,6 +49,9 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
             })
         }
         Expr::NoneLiteral(_) => Type::None,
+        Expr::Attribute(attribute) if matches!(attribute.value.as_ref(), Expr::Name(root) if root.id.as_str() == "python") => {
+            super::resolve_python_arrow_annotation(attribute.attr.as_str(), attribute.range(), ctx)
+        }
         // Union type syntax: int | str (parsed as BinOp with BitOr)
         Expr::BinOp(binop) if matches!(binop.op, Operator::BitOr) => {
             let left = resolve_annotation_expr(&binop.left, ctx);
@@ -733,9 +736,11 @@ pub(in crate::lower) fn lower_function(
     ctx.current_function_is_async = effective_is_async;
     ctx.current_function_is_async_generator = is_async_generator;
     ctx.current_function_trusts_dynamic_python = has_decorator(func, "trust_python_dynamic");
-    for param in &params {
-        if param.convention.is_owned() {
-            ctx.record_must_use_binding(&param.name, &param.ty);
+    if !skips_normal_body_lowering {
+        for param in &params {
+            if param.convention.is_owned() {
+                ctx.record_must_use_binding(&param.name, &param.ty);
+            }
         }
     }
     let body = if skips_normal_body_lowering {

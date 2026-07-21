@@ -21,6 +21,7 @@ mod diagnostic_rendering_and_run;
 mod explain_cli;
 mod formatter_cli;
 mod lint_cli;
+mod package_python_certifications;
 mod self_update_cli;
 mod self_update_metadata;
 mod self_update_receipt;
@@ -35,3 +36,4 @@ mod bridge_cli_tests;
 mod diagnostics_and_packages_tests;
 #[cfg(test)]
 mod mode_resolution_tests;
+mod python_cli;

@@ -42,7 +42,7 @@ pub(in crate::lower) fn reject_affine_iteration(
     }
     invalid_iteration(
         ctx,
-        "cannot iterate over affine Python buffer elements because iteration projects values from an aggregate",
+        "cannot iterate over affine Python resource elements because iteration projects values from an aggregate",
         range,
     );
     true
@@ -68,7 +68,7 @@ pub(in crate::lower) fn reject_affine_iterator_builtin(
     ctx.error_with_code_at(
         DiagnosticCode::PYZC_INVALID_DECLARATION,
         format!(
-            "{builtin}() cannot project elements containing an affine Python buffer from an iterable"
+            "{builtin}() cannot project elements containing an affine Python resource from an iterable"
         ),
         range,
     );
@@ -85,7 +85,7 @@ pub(in crate::lower) fn reject_affine_comprehension_value(
     }
     ctx.error_with_code_at(
         DiagnosticCode::PYZC_INVALID_DECLARATION,
-        "cannot produce a value containing an affine Python buffer from a comprehension or generator because its body may execute repeatedly"
+        "cannot produce a value containing an affine Python resource from a comprehension or generator because its body may execute repeatedly"
             .to_string(),
         range,
     );

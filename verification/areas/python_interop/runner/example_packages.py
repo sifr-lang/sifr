@@ -22,6 +22,8 @@ class ExampleCase:
     native_roots: tuple[str, ...] | None = None
     copy_bridges: bool = True
     bridge_files: tuple[str, ...] | None = None
+    arrow_certifications: tuple[tuple[str, str], ...] = ()
+    explicit_requirements: bool = True
 
 
 def build_examples_report(
@@ -113,6 +115,9 @@ def run_examples_self_tests(
                 or len(case.bridge_files) != len(set(case.bridge_files))
             )
         )
+        or any(not target or not fixture for target, fixture in case.arrow_certifications)
+        or len({target for target, _fixture in case.arrow_certifications})
+        != len(case.arrow_certifications)
     }
     if invalid_roots:
         raise SystemExit(
@@ -182,6 +187,24 @@ def validate_source_presence(
                     }
                 )
                 continue
+        missing_certification_fixtures = [
+            fixture
+            for _target, fixture in case.arrow_certifications
+            if not (source_path.parent / fixture).is_file()
+        ]
+        if missing_certification_fixtures:
+            checks.append(
+                {
+                    "id": case.case_id,
+                    "status": "fail",
+                    "sifr_source": case.relative_source,
+                    "reason": (
+                        "missing Arrow certification fixtures: "
+                        f"{missing_certification_fixtures}"
+                    ),
+                }
+            )
+            continue
         checks.append(
             {
                 "id": case.case_id,
@@ -231,6 +254,11 @@ def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCa
             bridge_target.mkdir()
             for bridge_file in case.bridge_files:
                 shutil.copy2(bridge_source / bridge_file, bridge_target / bridge_file)
+    for _target, fixture in case.arrow_certifications:
+        fixture_source = source_path.parent / fixture
+        fixture_target = package_root / fixture
+        fixture_target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(fixture_source, fixture_target)
     (source_root / "lib.rs").write_text(
         "// Cargo package marker required for metadata discovery; runnable Sifr source is src/main.sifr.\n",
         encoding="utf-8",
@@ -255,29 +283,33 @@ def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCa
     roots = ", ".join(f'"{root}"' for root in case.import_roots)
     native_roots = case.native_roots if case.native_roots is not None else case.import_roots
     native_roots_toml = ", ".join(f'"{root}"' for root in native_roots)
+    manifest_lines = [
+        "[package]",
+        f'name = "python_interop_{suite_name}_examples"',
+        'edition = "2026"',
+        'sifr-version = ">=0.3,<0.4"',
+        "",
+        "[source]",
+        'root = "src"',
+        "",
+        "[python]",
+        'venv = ".venv"',
+        'pyproject = "pyproject.toml"',
+        'lock = "uv.lock"',
+    ]
+    if case.explicit_requirements:
+        manifest_lines.append(f"requires-imports = [{roots}]")
+    manifest_lines.extend(
+        [
+            "",
+            "[trust]",
+            f"python = [{roots}]",
+            f"python-native = [{native_roots_toml}]",
+            "",
+        ]
+    )
     (package_root / "sifr.toml").write_text(
-        "\n".join(
-            [
-                "[package]",
-                f'name = "python_interop_{suite_name}_examples"',
-                'edition = "2026"',
-                'sifr-version = ">=0.3,<0.4"',
-                "",
-                "[source]",
-                'root = "src"',
-                "",
-                "[python]",
-                'venv = ".venv"',
-                'pyproject = "pyproject.toml"',
-                'lock = "uv.lock"',
-                f"requires-imports = [{roots}]",
-                "",
-                "[trust]",
-                f"python = [{roots}]",
-                f"python-native = [{native_roots_toml}]",
-                "",
-            ]
-        ),
+        "\n".join(manifest_lines),
         encoding="utf-8",
     )
     venv_link = package_root / ".venv"
@@ -295,6 +327,25 @@ def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCa
 
 def _run_case(paths: RunnerPaths, package_root: Path, case_config: ExampleCase) -> dict[str, Any]:
     started = time.perf_counter()
+    certification_commands = [
+        ["python", "certify", "arrow", target, "--fixture", fixture]
+        for target, fixture in case_config.arrow_certifications
+    ]
+    if certification_commands:
+        certification_commands.append(["python", "certify", "--check"])
+    certification_results: list[dict[str, Any]] = []
+    for arguments in certification_commands:
+        result = _run_sifr_command(paths, package_root, arguments)
+        certification_results.append(result)
+        if result["exit_code"] != 0:
+            return {
+                "id": case_config.case_id,
+                "status": "example-failed",
+                "sifr_source": case_config.relative_source,
+                "elapsed_ms": round((time.perf_counter() - started) * 1000.0),
+                "reason": "Arrow certification failed",
+                "certification_commands": certification_results,
+            }
     try:
         proc = subprocess.run(
             [
@@ -339,6 +390,7 @@ def _run_case(paths: RunnerPaths, package_root: Path, case_config: ExampleCase) 
         "stdout_marker_observed": marker_observed,
         "trusted_import_roots": list(case_config.import_roots),
         "trusted_native_roots": list(case_config.native_roots if case_config.native_roots is not None else case_config.import_roots),
+        "certification_commands": certification_results,
         "stdout": proc.stdout[-4000:],
     }
     if status != "example-passed":
@@ -347,6 +399,38 @@ def _run_case(paths: RunnerPaths, package_root: Path, case_config: ExampleCase) 
         if proc.returncode == 0 and not marker_observed:
             case["reason"] = "missing stdout marker"
     return case
+
+
+def _run_sifr_command(
+    paths: RunnerPaths,
+    package_root: Path,
+    arguments: list[str],
+) -> dict[str, Any]:
+    proc = subprocess.run(
+        [
+            "cargo",
+            "run",
+            "-q",
+            "-p",
+            "sifr",
+            "--manifest-path",
+            str(paths.repo_root / "Cargo.toml"),
+            "--",
+            *arguments,
+        ],
+        cwd=package_root,
+        env=cargo_env_for_repo_manifest(paths.repo_root),
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=EXAMPLE_TIMEOUT_SECONDS,
+    )
+    return {
+        "arguments": arguments,
+        "exit_code": proc.returncode,
+        "stdout": proc.stdout[-4000:],
+        "stderr": proc.stderr[-4000:],
+    }
 
 
 def _report(

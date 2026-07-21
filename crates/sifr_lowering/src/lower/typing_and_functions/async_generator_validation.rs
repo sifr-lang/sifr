@@ -52,7 +52,7 @@ pub(in crate::lower) fn reject_affine_async_generator_boundary(
             ctx.error_with_code_at(
                 DiagnosticCode::PYZC_INVALID_DECLARATION,
                 format!(
-                    "nested async generator capture '{name}' of type '{}' contains an affine Python buffer and cannot enter the lazy Send factory",
+                    "nested async generator capture '{name}' of type '{}' contains an affine Python resource and cannot enter the lazy Send factory",
                     ty.display_name()
                 ),
                 yield_range,
@@ -74,7 +74,7 @@ pub(in crate::lower) fn reject_affine_async_generator_boundary(
     {
         ctx.error_with_code_at(
             DiagnosticCode::PYZC_INVALID_DECLARATION,
-            "async generators cannot capture or yield affine Python buffers because their lazy factory must be Send"
+            "async generators cannot capture or yield affine Python resources because their lazy factory must be Send"
                 .to_string(),
             yield_range,
         );

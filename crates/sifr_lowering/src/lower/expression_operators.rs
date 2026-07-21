@@ -435,7 +435,7 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
                     if elem_ty.contains_affine_resource() || left.ty().contains_affine_resource() {
                         ctx.error_with_code_at(
                             sifr_diagnostics::DiagnosticCode::PYZC_INVALID_DECLARATION,
-                            "membership is unavailable for values containing affine Python buffers because it requires reusable structural equality"
+                            "membership is unavailable for values containing affine Python resources because it requires reusable structural equality"
                                 .to_string(),
                             cmp.range(),
                         );
@@ -495,7 +495,7 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
                     if elem_ty.contains_affine_resource() || left.ty().contains_affine_resource() {
                         ctx.error_with_code_at(
                             sifr_diagnostics::DiagnosticCode::PYZC_INVALID_DECLARATION,
-                            "membership is unavailable for values containing affine Python buffers because it requires reusable structural equality"
+                            "membership is unavailable for values containing affine Python resources because it requires reusable structural equality"
                                 .to_string(),
                             cmp.range(),
                         );

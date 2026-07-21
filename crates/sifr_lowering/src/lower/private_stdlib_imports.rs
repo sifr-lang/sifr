@@ -1,6 +1,5 @@
 use super::{
-    import_resolution, imported_defaults, name_diagnostics, ExternalDefs, FunctionType, LowerCtx,
-    TextRange, Type,
+    import_resolution, imported_defaults, name_diagnostics, ExternalDefs, LowerCtx, TextRange, Type,
 };
 
 pub(in crate::lower) fn resolve_compiled_private_imports(
@@ -109,6 +108,13 @@ fn resolve_class(
         return false;
     };
     ctx.class_types.insert(local.to_string(), class_ty.clone());
+    super::imports::register_imported_class_instance_methods(
+        ctx,
+        externals,
+        module_name,
+        name,
+        local,
+    );
     import_class_type_params(ctx, externals, module_name, name, local);
     if let Some(module_bounds) = externals.type_param_bounds.get(module_name) {
         super::generic_method_requirements::import_generic_method_requirements(
@@ -159,22 +165,9 @@ fn register_constructor(
     local: &str,
     class_ty: &Type,
 ) {
-    let Type::Class {
-        fields, methods, ..
-    } = class_ty
+    let Some(ft) = super::imported_class_identity::imported_constructor_function_type(class_ty)
     else {
         return;
-    };
-    let ft = if let Some((_, new_ft)) = methods.iter().find(|(method_name, _)| method_name == "new")
-    {
-        let params = new_ft
-            .params
-            .iter()
-            .map(|(param_name, ty, _)| (param_name.clone(), ty.clone()))
-            .collect();
-        FunctionType::new(params, class_ty.clone())
-    } else {
-        FunctionType::new(fields.clone(), class_ty.clone())
     };
     ctx.functions.insert(local.to_string(), ft);
     if let Some(module_defaults) = externals.function_defaults.get(module_name) {

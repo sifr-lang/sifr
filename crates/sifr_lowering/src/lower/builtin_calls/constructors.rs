@@ -206,7 +206,7 @@ pub(in crate::lower) fn lower_list_constructor_call(
             if list_ty.contains_affine_resource() {
                 ctx.error_with_code_at(
                     DiagnosticCode::PYZC_INVALID_DECLARATION,
-                    "list() cannot copy an iterable containing affine Python buffers".to_string(),
+                    "list() cannot copy an iterable containing affine Python resources".to_string(),
                     call.arguments.args[0].range(),
                 );
                 return None;
@@ -363,7 +363,7 @@ pub(in crate::lower) fn lower_dict_constructor_call(
             if dict_ty.contains_affine_resource() {
                 ctx.error_with_code_at(
                     DiagnosticCode::PYZC_INVALID_DECLARATION,
-                    "dict() cannot copy keys or values containing affine Python buffers"
+                    "dict() cannot copy keys or values containing affine Python resources"
                         .to_string(),
                     arg_expr.range(),
                 );
@@ -411,7 +411,7 @@ pub(in crate::lower) fn lower_dict_constructor_call(
             if arg.ty().contains_affine_resource() {
                 ctx.error_with_code_at(
                     DiagnosticCode::PYZC_INVALID_DECLARATION,
-                    "dict() cannot copy keys or values containing affine Python buffers"
+                    "dict() cannot copy keys or values containing affine Python resources"
                         .to_string(),
                     arg_expr.range(),
                 );

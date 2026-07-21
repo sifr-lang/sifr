@@ -321,7 +321,7 @@ fn writable_access_requires_exclusive_parameter_borrow() {
         assert!(
             errors.iter().any(|error| {
                 error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
-                    && error.message.contains("affine Python buffer")
+                    && error.message.contains("affine Python resource")
             }),
             "{function}: {errors:?}"
         );
@@ -388,7 +388,7 @@ fn affine_buffer_aggregate_projections_are_rejected_before_codegen() {
         let errors = lower_errors(source);
         assert!(errors.iter().any(|error| {
             error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
-                || error.message.contains("affine Python buffer")
+                || error.message.contains("affine Python resource")
         }), "{source}: {errors:?}");
     }
 }
@@ -450,7 +450,7 @@ fn affine_buffer_collection_insertion_consumes_the_source() {
     );
     assert!(borrowed.iter().any(|error| {
         error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
-            && error.message.contains("borrowed affine Python buffer")
+            && error.message.contains("borrowed affine Python resource")
     }));
 }
 
@@ -476,7 +476,7 @@ fn affine_buffer_storage_assignments_transfer_owned_values() {
     );
     assert!(borrowed.iter().any(|error| {
         error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
-            && error.message.contains("borrowed affine Python buffer")
+            && error.message.contains("borrowed affine Python resource")
     }));
 }
 
@@ -574,7 +574,9 @@ fn affine_buffer_yield_is_consuming_and_borrowed_generator_inputs_are_rejected()
     assert!(
         borrowed.iter().any(|error| {
             error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
-                && error.message.contains("cannot borrow affine Python buffer")
+                && error
+                    .message
+                    .contains("cannot borrow affine Python resource")
         }),
         "{borrowed:?}"
     );
@@ -605,7 +607,7 @@ fn borrowed_affine_buffers_cannot_enter_owned_calls_or_aggregate_returns() {
         assert!(
             errors.iter().any(|error| {
                 error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
-                    && error.message.contains("borrowed affine Python buffer")
+                    && error.message.contains("borrowed affine Python resource")
             }),
             "{source}: {errors:?}"
         );
@@ -695,7 +697,7 @@ fn tuple_unpack_consumes_owned_affine_source_and_rejects_borrowed_source() {
     );
     assert!(borrowed.iter().any(|error| {
         error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
-            && error.message.contains("borrowed affine Python buffer")
+            && error.message.contains("borrowed affine Python resource")
     }));
 }
 

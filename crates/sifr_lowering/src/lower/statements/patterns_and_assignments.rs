@@ -526,7 +526,7 @@ pub(in crate::lower) fn lower_chained_assign(
     if val_ty.contains_affine_resource() {
         ctx.error_with_code_at(
             DiagnosticCode::PYZC_INVALID_DECLARATION,
-            "chained assignment is unavailable for values containing affine Python buffers because one affine value cannot initialize multiple owners"
+            "chained assignment is unavailable for values containing affine Python resources because one affine value cannot initialize multiple owners"
                 .to_string(),
             assign.range(),
         );

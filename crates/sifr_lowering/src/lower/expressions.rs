@@ -75,6 +75,8 @@ pub(in crate::lower) use affine_resources::affine_value_references_name;
 use affine_resources::consume_affine_collection_method_arguments;
 mod generator_expression;
 pub(in crate::lower) use generator_expression::lower_generator_expr;
+mod iterator_protocol_entry;
+pub(in crate::lower) use iterator_protocol_entry::lower_iterator_protocol_entry;
 mod call_builtins;
 use call_builtins::{lower_unshadowed_builtin_call, CallLowering};
 mod call_shadowable_builtins;
@@ -83,6 +85,11 @@ mod regular_calls;
 use regular_calls::lower_regular_call;
 mod methods_lambdas_and_comprehensions;
 pub(in crate::lower) use methods_lambdas_and_comprehensions::*;
+mod method_argument_ownership;
+use method_argument_ownership::{
+    consume_owned_method_arguments, method_function_type, try_lower_class_method_call,
+    try_lower_super_method_call,
+};
 mod named_expression;
 pub(in crate::lower) use named_expression::lower_named_expr;
 mod method_type_collections;
@@ -98,6 +105,10 @@ use method_type_objects::{
 mod python_buffer_methods;
 use python_buffer_methods::{
     consume_python_buffer_release_receiver, resolve_python_buffer_method_type,
+};
+mod python_arrow_methods;
+use python_arrow_methods::{
+    consume_python_arrow_release_receiver, resolve_python_arrow_method_type,
 };
 
 pub(in crate::lower) fn is_poisoned_binding_expr(expr: &HirExpr, ctx: &mut LowerCtx) -> bool {

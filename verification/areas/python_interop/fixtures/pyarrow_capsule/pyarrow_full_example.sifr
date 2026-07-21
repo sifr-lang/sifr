@@ -31,7 +31,7 @@ def main() -> Result[None, PythonError]:
 
         capsule_ok: bool = (
             capsule.kind == "array"
-            and not capsule.copy_possible
+            and capsule.copy_possible
             and len(capsule.capsule_names) == 2
             and capsule.producer_module == "pyarrow.lib"
         )

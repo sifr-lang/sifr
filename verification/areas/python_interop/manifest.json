@@ -170,6 +170,20 @@
       ]
     },
     {
+      "name": "arrow-examples",
+      "kind": "adapter",
+      "timeout_seconds": 600,
+      "cases": [
+        {
+          "id": "arrow-examples",
+          "entry": "verification/areas/python_interop/runner/run.py",
+          "command": "python-interop-arrow-examples",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "cloud-boto3",
       "kind": "adapter",
       "cases": [
@@ -285,6 +299,20 @@
           "id": "buffer-cpython311",
           "entry": "verification/areas/python_interop/runner/cpython311_buffer.py",
           "command": "python-interop-buffer-cpython311",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "arrow-cpython311",
+      "kind": "adapter",
+      "timeout_seconds": 900,
+      "cases": [
+        {
+          "id": "arrow-cpython311",
+          "entry": "verification/areas/python_interop/runner/cpython311_arrow.py",
+          "command": "python-interop-arrow-cpython311",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

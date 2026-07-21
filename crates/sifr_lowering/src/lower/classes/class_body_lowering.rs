@@ -1,4 +1,6 @@
-use super::parameter_conventions::class_method_param_convention;
+use super::parameter_conventions::{
+    class_method_param_convention, class_method_param_default, prepare_method_param_ownership,
+};
 use super::{
     collect_enum_variants, function_body_contains_yield, get_newtype_inner, get_parent_class,
     has_decorator, is_enum_class, is_operator_dunder, is_protocol_class, lower_stmts,
@@ -412,6 +414,7 @@ pub(in crate::lower) fn lower_class(
             }
 
             // Define method parameters (skip `self`/`cls`)
+            let has_python_interop = has_python_interop_decorator_syntax(&func.decorator_list);
             let mut params = Vec::new();
             for param in func.parameters.args.iter().skip(skip_count) {
                 let param_name = param.parameter.name.to_string();
@@ -430,8 +433,38 @@ pub(in crate::lower) fn lower_class(
                 params.push(HirParam {
                     name: param_name,
                     ty: param_ty,
-                    default: None,
+                    default: class_method_param_default(
+                        param.default.as_deref(),
+                        has_python_interop,
+                        ctx,
+                    ),
                     keyword_only: false,
+                    convention,
+                });
+            }
+            for param in &func.parameters.kwonlyargs {
+                let param_name = param.parameter.name.to_string();
+                let param_ty = if let Some(ref ann) = param.parameter.annotation {
+                    resolve_annotation_expr(ann, ctx)
+                } else {
+                    Type::Any
+                };
+                let convention =
+                    class_method_param_convention(param.parameter.convention, &param_ty, ctx);
+                ctx.scope.define_parameter(
+                    param_name.clone(),
+                    param_ty.clone(),
+                    convention.is_mutable(),
+                );
+                params.push(HirParam {
+                    name: param_name,
+                    ty: param_ty,
+                    default: class_method_param_default(
+                        param.default.as_deref(),
+                        has_python_interop,
+                        ctx,
+                    ),
+                    keyword_only: true,
                     convention,
                 });
             }
@@ -461,7 +494,6 @@ pub(in crate::lower) fn lower_class(
                 has_decorator(func, "cpu_heavy"),
                 func.is_async,
             );
-            let has_python_interop = has_python_interop_decorator_syntax(&func.decorator_list);
             let mut python_interop = collect_python_method_declarations(
                 &func.decorator_list,
                 &func.parameters,
@@ -512,11 +544,8 @@ pub(in crate::lower) fn lower_class(
             ctx.current_function_is_async_generator =
                 func.is_async && function_body_contains_yield(&func.body);
             let previous_must_use_bindings = std::mem::take(&mut ctx.live_must_use_bindings);
-            for param in &params {
-                if param.convention.is_owned() {
-                    ctx.record_must_use_binding(&param.name, &param.ty);
-                }
-            }
+            let previous_borrowed_params = std::mem::take(&mut ctx.borrowed_params);
+            prepare_method_param_ownership(&params, &method_name, skips_normal_body_lowering, ctx);
             let body = if skips_normal_body_lowering {
                 Vec::new()
             } else {
@@ -541,6 +570,7 @@ pub(in crate::lower) fn lower_class(
                 );
             }
             ctx.live_must_use_bindings = previous_must_use_bindings;
+            ctx.borrowed_params = previous_borrowed_params;
             ctx.current_function_is_async = previous_async;
             ctx.current_function_is_async_generator = previous_async_generator;
             ctx.current_function_trusts_dynamic_python = previous_dynamic_python;

@@ -44,7 +44,7 @@ pub(in crate::lower) fn reject_unhashable_container_type(
     } else if ty.contains_affine_resource() {
         (
             DiagnosticCode::PYZC_INVALID_DECLARATION,
-            "contains an affine Python buffer",
+            "contains an affine Python resource",
         )
     } else {
         (DiagnosticCode::TYPE_MISMATCH, "is not hashable")

@@ -1,3 +1,4 @@
+use super::consume_owned_method_arguments;
 use super::{
     call_argument_ranges_by_param, collect_type_vars, consume_owned_value, coroutine_result_type,
     decode_typevar_constraint, expression_diagnostics, infer_type_var_bindings,
@@ -178,6 +179,7 @@ pub(super) fn lower_regular_call(
         let object = lower_name(name_expr, ctx)?;
         let args =
             lower_signature_call_args(call, &format!("{func_name}.__call__"), &call_ft, None, ctx)?;
+        consume_owned_method_arguments(&args, call, &call_ft, ctx);
         return Some(HirExpr::MethodCall {
             object: Box::new(object),
             method: "__call__".to_string(),
@@ -491,7 +493,7 @@ pub(super) fn lower_regular_call(
                 ctx.error_with_code_at(
                     DiagnosticCode::PYZC_INVALID_DECLARATION,
                     format!(
-                        "generic function '{func_name}' cannot bind type parameter '{type_param}' to '{}' because its generated reusable-value contract requires clone, comparison, and display capabilities unavailable to affine Python buffers",
+                        "generic function '{func_name}' cannot bind type parameter '{type_param}' to '{}' because its generated reusable-value contract requires clone, comparison, and display capabilities unavailable to affine Python resources",
                         concrete_ty.display_name()
                     ),
                     primary_range,

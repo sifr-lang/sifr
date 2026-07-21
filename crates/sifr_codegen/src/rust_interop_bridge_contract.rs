@@ -492,6 +492,7 @@ fn bridge_type_contract(
         }
         Type::Range
         | Type::PythonBuffer(_)
+        | Type::PythonArrow(_)
         | Type::Iterable(_)
         | Type::Iterator(_)
         | Type::Coroutine(_, _)

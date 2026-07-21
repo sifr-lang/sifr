@@ -1,3 +1,4 @@
+mod arrow_certification;
 mod bridge_inventory;
 mod bridge_resolution;
 mod environment;
@@ -6,6 +7,14 @@ mod requirements;
 mod selection;
 mod trust_policy;
 
+pub use arrow_certification::{
+    fixture_digest as arrow_fixture_digest, load_python_certifications,
+    load_python_certifications_for_update, required_python_certification_archive_entries,
+    safe_fixture_path as arrow_fixture_path, validate_python_certifications,
+    write_python_certifications, ArrowCertification, ArrowCertifiedDistribution,
+    ArrowCertifiedIdentityMethod, ArrowCertifiedKind, ArrowCertifiedSchemaMode,
+    PythonCertificationArtifact, ARROW_CERTIFICATION_SCHEMA_VERSION, PYTHON_CERTIFICATIONS_FILE,
+};
 pub use bridge_inventory::{
     discover_python_bridge_inventory, required_python_bridge_archive_entries,
     validate_python_bridge_inventory_manifest, write_python_bridge_inventory, PythonBridgeImport,

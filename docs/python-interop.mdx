@@ -338,8 +338,53 @@ Writable access requires an exclusive `mut` receiver. `read` and `write` are
 bounds checked; `copy_slice` is an explicit copy. No borrowed Rust or Sifr slice
 can outlive the buffer.
 
-Lower-level dynamic zero-copy APIs remain available when the declaration shape
-is not appropriate:
+Typed Arrow declarations use one of five affine, non-send return resources:
+`python.ArrowArray`, `python.ArrowSchema`, `python.ArrowStream`,
+`python.ArrowDeviceArray`, or `python.ArrowDeviceStream`. The return type selects
+the Arrow protocol and capsule shape:
+
+```python
+from sifr.python import PythonError
+
+@python.arrow(pyarrow.array, schema=omitted)
+def make_array(values: list[int]) -> Result[python.ArrowArray, PythonError]: ...
+
+def use_array(values: list[int]) -> Result[None, PythonError]:
+    try:
+        array: python.ArrowArray = make_array(values)
+        print(array.capsule_names())
+        return array.release()
+    except PythonError as error:
+        raise error
+```
+
+`schema=parameter(name)` instead names a required keyword-only `own`
+`python.ArrowSchema` parameter. Sifr transfers that exact schema capsule to the
+Arrow protocol, but never forwards it to the producer call. Arrays own their
+schema/data capsule pair; device arrays own the corresponding schema/device-data
+pair. Owned Arrow values can cross another Python declaration only through an
+`own` parameter, which commits the move before the call and reconciles full,
+partial, or absent capsule consumption afterward.
+
+Arrow declarations require package-authored executable no-copy certification
+for the exact target, selected environment, distribution versions, schema mode,
+and runtime producer module/type:
+
+```bash
+sifr python certify arrow pyarrow.array \
+  --fixture python_certifications/arrow_array.py
+sifr python certify --check
+```
+
+The first command writes or updates the package-root
+`sifr.python-certifications.json`. The second is read-only and reruns every
+recorded fixture, rejecting environment, fixture, producer, distribution,
+schema, pointer-identity, release-count, or copy-result drift. The artifact and
+its package-local fixtures are included in package archives and generated-build
+cache identity. There is no Arrow copy switch or uncertain-producer fallback.
+
+Lower-level dynamic zero-copy APIs remain available when a typed declaration is
+not appropriate:
 
 ```python
 from sifr.python import ArrowCapsule, DlpackTensor, Object, PythonError, zero_copy_arrow_stream, zero_copy_dlpack_tensor
@@ -360,7 +405,8 @@ def torch_tensor_to_dlpack(tensor: Object) -> Result[DlpackTensor, PythonError]:
 Supported surfaces:
 
 - `Py_buffer` for bytes-like objects, memoryview, NumPy, and other buffer protocol producers.
-- Arrow PyCapsules for `__arrow_c_array__`, `__arrow_c_stream__`, and `__arrow_c_schema__`.
+- Arrow PyCapsules for array, schema, stream, device-array, and device-stream
+  protocol methods.
 - DLPack capsules for NumPy, torch, and TensorFlow CPU tensor paths.
 - Array-interface protocols with owner retention and metadata validation.
 
@@ -501,9 +547,9 @@ Compiler diagnostics use stable URLs and structured JSON fields:
   diagnostics. `SIFR-PYTRUST-0002` is retired.
 - `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, and `SIFR-PYRES`: active declaration, target, conversion, resource, and sequenced activation diagnostics.
 - `SIFR-PYCB`: active callback lifetime, dispatch, conversion, and shutdown diagnostics.
-- `SIFR-PYZC`: active buffer declaration, ownership, layout, and hidden-copy
-  diagnostics; later codes remain reserved for Arrow and DLPack declaration
-  activation.
+- `SIFR-PYZC`: active buffer and Arrow declaration, ownership, layout,
+  certification, capsule-validation, transfer, and hidden-copy diagnostics;
+  later codes remain reserved for DLPack declaration activation.
 
 Verification lives under `verification/areas/python_interop/`:
 
@@ -513,6 +559,7 @@ verification/areas/python_interop/run.sh --tier tier1
 verification/areas/python_interop/run.sh --group callbacks
 verification/areas/python_interop/run.sh --group dataframes
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --async-declaration-examples
+uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --arrow-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --callback-examples
 uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --buffer-examples
 verification/areas/python_interop/run.sh --self-test

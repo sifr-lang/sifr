@@ -22,6 +22,8 @@ pub struct PackagePythonRuntime {
     trusted_native_roots: Vec<String>,
     libpython: Option<String>,
     bridge_sources: Vec<EmbeddedPythonBridgeSource>,
+    arrow_certifications: Vec<sifr_package::ArrowCertification>,
+    arrow_certification_identity: String,
     start_async_loop: bool,
 }
 
@@ -62,6 +64,8 @@ impl PackagePythonRuntime {
             trusted_native_roots,
             libpython: probe.libpython.clone(),
             bridge_sources: Vec::new(),
+            arrow_certifications: Vec::new(),
+            arrow_certification_identity: String::new(),
             start_async_loop: false,
         }
     }
@@ -72,8 +76,36 @@ impl PackagePythonRuntime {
     }
 
     #[must_use]
-    pub(crate) fn interpreter(&self) -> &std::path::Path {
+    pub fn interpreter(&self) -> &std::path::Path {
         &self.interpreter
+    }
+
+    #[must_use]
+    pub fn environment_digest(&self) -> &str {
+        &self.probe_digest
+    }
+
+    pub fn set_arrow_certifications(
+        &mut self,
+        certifications: Vec<sifr_package::ArrowCertification>,
+    ) {
+        self.arrow_certification_identity =
+            serde_json::to_string(&certifications).unwrap_or_default();
+        self.arrow_certifications = certifications;
+    }
+
+    #[must_use]
+    pub(super) fn arrow_certification_identity(&self) -> &str {
+        &self.arrow_certification_identity
+    }
+
+    pub(super) fn arrow_certification(
+        &self,
+        target: &str,
+    ) -> Option<&sifr_package::ArrowCertification> {
+        self.arrow_certifications
+            .iter()
+            .find(|certification| certification.target == target)
     }
 
     #[must_use]
@@ -107,6 +139,8 @@ impl PackagePythonRuntime {
             trusted_native_roots: Vec::new(),
             libpython: None,
             bridge_sources: Vec::new(),
+            arrow_certifications: Vec::new(),
+            arrow_certification_identity: String::new(),
             start_async_loop: false,
         }
     }
@@ -188,6 +222,7 @@ pub(super) fn render_python_runtime_prelude(metadata: &PackagePythonRuntime) -> 
         native_import_roots: vec![{native_import_roots}],
         trusted_native_roots: vec![{trusted_native_roots}],
         bridge_sources: vec![{bridge_sources}],
+        arrow_certifications: vec![{arrow_certifications}],
         start_async_loop: {start_async_loop},
     }}
 }}
@@ -214,8 +249,48 @@ fn __sifr_initialize_python_runtime() -> Result<::sifr_runtime::python::PythonRu
         native_import_roots = render_string_vec(&metadata.native_import_roots),
         trusted_native_roots = render_string_vec(&metadata.trusted_native_roots),
         bridge_sources = render_bridge_sources(&metadata.bridge_sources),
+        arrow_certifications = render_arrow_certifications(&metadata.arrow_certifications),
         start_async_loop = metadata.start_async_loop,
     )
+}
+
+fn render_arrow_certifications(certifications: &[sifr_package::ArrowCertification]) -> String {
+    let mut identities = certifications
+        .iter()
+        .map(|certification| {
+            (
+                certification.target.as_str(),
+                certified_arrow_kind(certification.kind),
+                certification.producer_module.as_str(),
+                certification.producer_type.as_str(),
+            )
+        })
+        .collect::<Vec<_>>();
+    identities.sort_unstable();
+    identities.dedup();
+    identities
+        .into_iter()
+        .map(|(target, kind, module, producer_type)| {
+            format!(
+                "::sifr_runtime::python::PythonArrowCertification {{ target: {}.to_string(), kind: {}.to_string(), producer_module: {}.to_string(), producer_type: {}.to_string() }}",
+                rust_string_literal(target),
+                rust_string_literal(kind),
+                rust_string_literal(module),
+                rust_string_literal(producer_type)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+const fn certified_arrow_kind(kind: sifr_package::ArrowCertifiedKind) -> &'static str {
+    match kind {
+        sifr_package::ArrowCertifiedKind::Array => "array",
+        sifr_package::ArrowCertifiedKind::Schema => "schema",
+        sifr_package::ArrowCertifiedKind::Stream => "stream",
+        sifr_package::ArrowCertifiedKind::DeviceArray => "device_array",
+        sifr_package::ArrowCertifiedKind::DeviceStream => "device_stream",
+    }
 }
 
 pub(super) fn inject_python_runtime_bootstrap(

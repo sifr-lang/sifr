@@ -8,13 +8,17 @@ use sifr_ir::{
 use sifr_python_ast::{Decorator, Expr, ExprCall, Parameters, Stmt};
 use sifr_type_system::Type;
 
+mod arrow;
 mod buffer;
 mod callbacks;
 mod callsite;
 mod context;
+mod direct_validation;
 mod parameters;
 mod stub_syntax;
 mod target;
+
+use direct_validation::validate_direct_parameters;
 
 pub(in crate::lower) use callsite::{
     callback_call_policies, callback_method_arg_ranges, validate_callback_call_captures,
@@ -103,6 +107,13 @@ pub(in crate::lower) fn collect_python_interop_declarations(
                 buffer::invalid(ctx, "`@python.buffer` requires synchronous `def`", span);
                 None
             }
+            (PythonInteropDecoratorKind::Arrow, false) => {
+                arrow::parse_declaration(call, parameters, false, ctx)
+            }
+            (PythonInteropDecoratorKind::Arrow, true) => {
+                arrow::invalid(ctx, "`@python.arrow` requires synchronous `def`", span);
+                None
+            }
             _ => {
                 reserved_declaration(ctx, kind, span);
                 None
@@ -164,6 +175,7 @@ pub(in crate::lower) fn collect_python_method_declarations(
                 required_import_root: None,
                 callbacks: Vec::new(),
                 buffer: None,
+                arrow: None,
             });
             continue;
         }
@@ -215,6 +227,22 @@ pub(in crate::lower) fn collect_python_method_declarations(
             }
             (PythonInteropDecoratorKind::Buffer, true) => {
                 buffer::invalid(ctx, "`@python.buffer` requires synchronous `def`", span);
+                None
+            }
+            (PythonInteropDecoratorKind::Arrow, false) => {
+                if has_receiver {
+                    arrow::parse_declaration(call, parameters, true, ctx)
+                } else {
+                    arrow::invalid(
+                        ctx,
+                        "`@python.arrow(Self, ...)` requires an opaque instance method",
+                        span,
+                    );
+                    None
+                }
+            }
+            (PythonInteropDecoratorKind::Arrow, true) => {
+                arrow::invalid(ctx, "`@python.arrow` requires synchronous `def`", span);
                 None
             }
             (PythonInteropDecoratorKind::Attribute, false) => {
@@ -310,6 +338,7 @@ fn parse_method(
         required_import_root: None,
         callbacks: Vec::new(),
         buffer: None,
+        arrow: None,
     })
 }
 
@@ -351,6 +380,7 @@ fn parse_attribute_method(
         required_import_root: None,
         callbacks: Vec::new(),
         buffer: None,
+        arrow: None,
     })
 }
 
@@ -518,6 +548,7 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
         parameters: Vec::new(),
         callbacks: Vec::new(),
         buffer: None,
+        arrow: None,
     })
 }
 
@@ -554,6 +585,10 @@ pub(in crate::lower) fn validate_python_interop_signature(
         return;
     };
     if buffer::validate_signature(declaration, ok_type, error_type, ctx) {
+        validate_direct_parameters(declaration, params, ctx);
+        return;
+    }
+    if arrow::validate_signature(declaration, params, ok_type, error_type, ctx) {
         validate_direct_parameters(declaration, params, ctx);
         return;
     }
@@ -597,80 +632,6 @@ pub(in crate::lower) fn validate_python_interop_signature(
         );
     }
     validate_direct_parameters(declaration, params, ctx);
-}
-
-fn validate_direct_parameters(
-    declaration: &PythonInteropDeclaration,
-    params: &[HirParam],
-    ctx: &mut LowerCtx,
-) {
-    let receiver_offset = usize::from(
-        declaration
-            .target
-            .as_ref()
-            .is_some_and(|target| target.segments.as_slice() == ["Self"]),
-    );
-    let mut saw_omittable_positional = false;
-    for (param, shape) in params
-        .iter()
-        .skip(receiver_offset)
-        .zip(&declaration.parameters)
-    {
-        if declaration
-            .callbacks
-            .iter()
-            .any(|callback| callback.parameter_name == param.name)
-        {
-            continue;
-        }
-        if shape.kind == PythonParameterKind::Positional && shape.omit_when_absent {
-            saw_omittable_positional = true;
-        }
-        if shape.kind == PythonParameterKind::PositionalVariadic && saw_omittable_positional {
-            invalid_shape(
-                ctx,
-                "typed `*args` cannot follow an omittable positional parameter",
-                shape.span,
-            );
-        }
-        if declaration.buffer.as_ref().is_some_and(|buffer| {
-            buffer.access == sifr_ir::PythonBufferAccess::Write
-                && !param.convention.is_owned()
-                && buffer::contains_python_identity(&param.ty, ctx)
-        }) {
-            buffer::invalid(
-                ctx,
-                &format!(
-                    "writable buffer producer parameter '{}' can carry an existing Python identity and must transfer ownership with `own`",
-                    param.name
-                ),
-                shape.span,
-            );
-        }
-        let supported = match shape.kind {
-            PythonParameterKind::Positional | PythonParameterKind::KeywordOnly => {
-                is_direct_type(&param.ty, true, ctx)
-            }
-            PythonParameterKind::PositionalVariadic => {
-                matches!(param.ty.resolve_alias(), Type::List(element) if is_direct_type(element, false, ctx))
-            }
-            PythonParameterKind::KeywordVariadic => {
-                matches!(param.ty.resolve_alias(), Type::Dict(key, value) if key.resolve_alias() == &Type::Str && is_direct_type(value, false, ctx))
-            }
-        };
-        if !supported {
-            unsupported_conversion(
-                ctx,
-                &format!(
-                    "parameter '{}' has unsupported type `{}` for {:?}",
-                    param.name,
-                    param.ty.display_name(),
-                    shape.kind
-                ),
-                shape.span,
-            );
-        }
-    }
 }
 
 pub(super) fn is_direct_type(ty: &Type, allow_option: bool, ctx: &LowerCtx) -> bool {
@@ -741,6 +702,7 @@ fn parse_function(
         required_import_root,
         callbacks: Vec::new(),
         buffer: None,
+        arrow: None,
     })
 }
 
