@@ -1891,6 +1891,12 @@ lane in `787.93s`: Python interop `17/17` (read-only evidence
 signature `7c39b8c1dd4fec7c`, and hardening `6/6`. The warm wall-time budget
 notice is advisory; all per-step blocking budgets pass.
 
+Fable High pass 4 reconfirmed the complete behavioral contract but found eight
+stale `representative_fixture` paths in the diagnostic code catalog after the
+probe-test split, so it returned `NOT SATISFIED`. The catalog now points to the
+new probe-validation module for `SIFR-PYENV-0004` through `0011`; the complete
+five-case diagnostics rules suite passes after remediation.
+
 Tasks:
 
 - Add read-only `sifr python check` using the same package/driver plan as normal
