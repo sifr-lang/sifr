@@ -83,10 +83,7 @@ pub(super) fn non_root_environment_configuration(
 }
 
 pub(super) fn selects_environment(config: &crate::manifest::sifr::PythonConfig) -> bool {
-    config.venv.is_some()
-        || config.interpreter.is_some()
-        || config.pyproject.is_some()
-        || config.lock.is_some()
+    config.selects_environment()
 }
 
 fn configured_or_discovered_project_root(

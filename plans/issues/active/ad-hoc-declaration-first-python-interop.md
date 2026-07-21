@@ -1854,6 +1854,15 @@ Python interop `17/17`, create-PR E2E `131/131` with signature
 `7c39b8c1dd4fec7c`, and hardening `6/6`. The warm wall-time notice is a
 non-blocking advisory; every per-step blocking budget passes.
 
+Fable High review pass 1 found one major selected-library parity gap: a
+standalone library with an explicit root `[python]` selection deferred probes
+while ordinary check honored the selection. The remediation now resolves that
+environment on both paths without injecting binary startup into a library,
+adds valid/invalid selected-library parity and non-mutation evidence, and
+clarifies the standalone-root/dependency distinction in public and internal
+documentation. The focused CLI, driver, verification, Clippy, file-size,
+driver-maintainability, and transfer-guardrail checks pass after remediation.
+
 Tasks:
 
 - Add read-only `sifr python check` using the same package/driver plan as normal

@@ -78,11 +78,13 @@ in the selected interpreter, `runtime-checked` for hermetic embedded bridge
 targets, and `deferred` when a library has no authority to select an
 environment.
 
-A library-only package is valid to inspect without a root Python environment.
-Its required imports and target probes are reported as deferred to the final
-application. A package containing one or more runnable applications must
-resolve the root environment and trust policy immediately; failures match
-ordinary `sifr check` diagnostics for the same snapshot.
+A library-only package without its own root environment selection is valid to
+inspect before a final application exists. Its required imports and target
+probes are reported as deferred to that final application. A standalone
+library that explicitly selects `[python]`, or a package containing one or more
+runnable applications, resolves the root environment and trust policy
+immediately; failures match ordinary `sifr check` diagnostics for the same
+snapshot.
 
 `sifr python doctor` adds deterministic patch-like suggestions, such as the
 root `[python]` and `[trust]` entries a library consumer must provide. The

@@ -610,18 +610,24 @@ impl RootedEntrypointPlan {
             attach_stdlib_rust_interop(generated, rust_interop_context, &stdlib_interop);
         let generated = apply_package_rust_interop_metadata(generated, rust_interop_context)?;
         let generated = apply_package_python_bridge_metadata(generated, python_bridges.as_ref());
-        let generated = if allow_deferred_python_probes {
-            super::python_interop::apply_python_interop_metadata_for_check(
+        if allow_deferred_python_probes {
+            let generated = super::python_interop::apply_python_interop_metadata_for_check(
                 generated,
                 python_runtime.as_ref(),
-            )?
+            )?;
+            Ok(
+                super::project_codegen::attach_package_runtime_metadata_for_check(
+                    generated,
+                    python_runtime,
+                ),
+            )
         } else {
-            super::python_interop::apply_python_interop_metadata(
+            let generated = super::python_interop::apply_python_interop_metadata(
                 generated,
                 python_runtime.as_ref(),
-            )?
-        };
-        apply_package_runtime_metadata(generated, python_runtime)
+            )?;
+            apply_package_runtime_metadata(generated, python_runtime)
+        }
     }
 }
 

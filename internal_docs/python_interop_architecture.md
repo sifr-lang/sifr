@@ -55,11 +55,18 @@ applications use the exact environment, uv-lock, trust, certification, and
 probe resolver used by normal check/build. Packages with multiple runnable
 targets remain applications and every target is checked.
 
-Library-only packages have no authority to select an environment. Their full
-compiler/protocol plan still runs, while environment-dependent import-root
-probes are reported as `deferred`; embedded bridge targets are
-`runtime-checked`. The final application resolves those deferred obligations.
-Reports include deterministic package-graph and source-content digests.
+Library-only dependency packages have no authority to select an environment.
+When a library is inspected as the standalone session root and explicitly
+selects `[python]`, inspection honors that selection exactly as ordinary check
+does. A library root without a selection still runs its full compiler/protocol
+plan while environment-dependent import-root probes are reported as
+`deferred`; embedded bridge targets are `runtime-checked`. The final
+application resolves those deferred obligations. Reports include deterministic
+package-graph and source-content digests.
+
+Ordinary package `sifr check` also executes this full plan, including live
+read-only target probes when an environment resolves. This is the shared
+authority that keeps normal check and Python inspection diagnostics aligned.
 
 `sifr python doctor` renders the same report plus stable patch-like suggestions.
 Both commands are observational: they never update Cargo/Sifr manifests,

@@ -72,7 +72,52 @@ def main() -> int:
     require("SIFR-PYIMP-0001" in normal_failure.stderr, "normal check target diagnostic drifted")
     require(snapshot(application) == invalid_before, "failure checks mutated their package")
 
-    print("python interop read-only check/doctor ok: deferred=1 resolved=1 parity=2 mutations=0")
+    selected_library = create_package(
+        root / "selected-library", "readonly-selected-library", application=True
+    )
+    (selected_library / "src" / "main.sifr").unlink()
+    shutil.rmtree(selected_library / "src" / "bin")
+    selected_source = selected_library / "src" / "__init__.sifr"
+    selected_source.write_text(application_source("math.sqrt"), encoding="utf-8")
+    selected_before = snapshot(selected_library)
+    selected = run_json(binary, selected_library, "python", "check", "--json")
+    require(selected["application"] is False, "selected library must remain a library")
+    require(
+        selected["environment"]["status"] == "resolved",
+        "session-root library selection must resolve",
+    )
+    require(selected["trust"] == "verified", "selected library trust must verify")
+    require(selected["targets"][0]["status"] == "verified", "selected library target must verify")
+    require(snapshot(selected_library) == selected_before, "selected library check mutated files")
+
+    selected_source.write_text(application_source("math.not_a_real_target"), encoding="utf-8")
+    selected_invalid_before = snapshot(selected_library)
+    selected_python_failure = run(binary, selected_library, "python", "check", expected=1)
+    selected_normal_failure = run(
+        binary,
+        selected_library,
+        "check",
+        "src/__init__.sifr",
+        "--frozen",
+        expected=1,
+    )
+    require(
+        "SIFR-PYIMP-0001" in selected_python_failure.stderr,
+        "selected-library python check target diagnostic drifted",
+    )
+    require(
+        "SIFR-PYIMP-0001" in selected_normal_failure.stderr,
+        "selected-library normal check target diagnostic drifted",
+    )
+    require(
+        snapshot(selected_library) == selected_invalid_before,
+        "selected-library failure checks mutated files",
+    )
+
+    print(
+        "python interop read-only check/doctor ok: "
+        "deferred=1 resolved=2 parity=3 mutations=0"
+    )
     return 0
 
 

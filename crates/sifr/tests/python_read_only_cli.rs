@@ -23,6 +23,7 @@ impl TestPackage {
     #[cfg(unix)]
     fn application() -> Option<Self> {
         if Command::new("uv").arg("--version").output().is_err() {
+            eprintln!("skipping Python application fixture: uv is unavailable");
             return None;
         }
         let package = Self::new("application", "sifr-python-readonly-app", "readonly_app");
@@ -52,6 +53,7 @@ impl TestPackage {
         let repository = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         let shared_venv = repository.join("verification/.venv");
         if !shared_venv.join("bin/python").is_file() {
+            eprintln!("skipping Python application fixture: verification/.venv is unavailable");
             return None;
         }
         std::os::unix::fs::symlink(&shared_venv, package.root.join(".venv"))
@@ -184,6 +186,48 @@ fn final_application_python_check_matches_normal_check_and_resolves_targets() {
     let invalid_before = snapshot(&package.root);
     let python_failure = run(&package.root, &["python", "check"]);
     let normal_failure = run(&package.root, &["check", "src/main.sifr", "--frozen"]);
+    assert_eq!(python_failure.status.code(), Some(1));
+    assert_eq!(normal_failure.status.code(), Some(1));
+    assert!(stderr(&python_failure).contains("SIFR-PYIMP-0001"));
+    assert!(stderr(&normal_failure).contains("SIFR-PYIMP-0001"));
+    assert_eq!(snapshot(&package.root), invalid_before);
+}
+
+#[cfg(unix)]
+#[test]
+fn library_with_root_environment_selection_resolves_and_matches_normal_check() {
+    let Some(package) = TestPackage::application() else {
+        return;
+    };
+    std::fs::remove_file(package.root.join("src/main.sifr"))
+        .expect("application entrypoint should be removed");
+    std::fs::remove_dir_all(package.root.join("src/bin"))
+        .expect("secondary application entrypoint should be removed");
+    std::fs::write(
+        package.root.join("src/__init__.sifr"),
+        "from sifr.python import PythonError\n\n\n@python(math.sqrt)\ndef sqrt(value: float) -> Result[float, PythonError]: ...\n",
+    )
+    .expect("library source should be written");
+
+    let resolved_before = snapshot(&package.root);
+    let resolved = run(&package.root, &["python", "check", "--json"]);
+    assert!(resolved.status.success(), "stderr: {}", stderr(&resolved));
+    let report: serde_json::Value =
+        serde_json::from_slice(&resolved.stdout).expect("valid resolved JSON");
+    assert_eq!(report["application"], false);
+    assert_eq!(report["environment"]["status"], "resolved");
+    assert_eq!(report["trust"], "verified");
+    assert_eq!(report["targets"][0]["status"], "verified");
+    assert_eq!(snapshot(&package.root), resolved_before);
+
+    std::fs::write(
+        package.root.join("src/__init__.sifr"),
+        "from sifr.python import PythonError\n\n\n@python(math.not_a_real_target)\ndef missing(value: float) -> Result[float, PythonError]: ...\n",
+    )
+    .expect("invalid library target should be written");
+    let invalid_before = snapshot(&package.root);
+    let python_failure = run(&package.root, &["python", "check"]);
+    let normal_failure = run(&package.root, &["check", "src/__init__.sifr", "--frozen"]);
     assert_eq!(python_failure.status.code(), Some(1));
     assert_eq!(normal_failure.status.code(), Some(1));
     assert!(stderr(&python_failure).contains("SIFR-PYIMP-0001"));

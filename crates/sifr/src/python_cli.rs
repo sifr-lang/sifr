@@ -224,7 +224,7 @@ fn python_read_only_context(
         .collect::<BTreeSet<_>>()
         .into_iter()
         .collect::<Vec<_>>();
-    let runtime = if application {
+    let runtime = if application || package.manifest.python.selects_environment() {
         package_python_runtime(
             &graph_context.graph,
             &package_id,
