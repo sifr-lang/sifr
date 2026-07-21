@@ -411,6 +411,74 @@ fn super_calls_apply_defaults_and_reject_missing_methods() {
 }
 
 #[test]
+fn owned_affine_method_overrides_replace_inherited_conventions() {
+    for resource in ["python.ArrowArray", "python.Buffer[uint8]"] {
+        let source = format!(
+            "class Base:\n    def consume(self, value: {resource}) -> None:\n        return None\n\nclass Child(Base):\n    def consume(self, own value: {resource}) -> None:\n        return None\n\ndef misuse(child: Child, own value: {resource}) -> None:\n    child.consume(value)\n    child.consume(value)\n"
+        );
+        let errors = lower_errors(&source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn comprehension_and_generator_bodies_cannot_repeat_affine_moves() {
+    for resource in ["python.ArrowArray", "python.Buffer[uint8]"] {
+        for expression in [
+            "[consume(value) for i in range(3)]",
+            "{consume(value) for i in range(3)}",
+            "{i: consume(value) for i in range(3)}",
+            "(consume(value) for i in range(3))",
+        ] {
+            let source = format!(
+                "def consume(own value: {resource}) -> int:\n    return 1\n\ndef misuse(own value: {resource}) -> None:\n    result = {expression}\n    return None\n"
+            );
+            let errors = lower_errors(&source);
+            assert!(
+                errors
+                    .iter()
+                    .any(|error| error.code == Some(DiagnosticCode::OWN_MOVED_ACROSS_LOOP)),
+                "{source}: {errors:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn affine_consuming_operator_parameters_fail_closed() {
+    for resource in ["python.ArrowArray", "python.Buffer[uint8]"] {
+        let source = format!(
+            "class Accumulator:\n    def __add__(self, own value: {resource}) -> int:\n        return 1\n"
+        );
+        let errors = lower_errors(&source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)),
+            "{source}: {errors:?}"
+        );
+    }
+}
+
+#[test]
+fn inherited_instance_methods_remain_rejected_as_class_style_calls() {
+    let errors = lower_errors(
+        "class Parent:\n    def consume(self, value: int) -> None:\n        return None\n\nclass Child(Parent):\n    pass\n\ndef misuse() -> None:\n    Child.consume(1)\n",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::CLASS_MISSING_MEMBER)),
+        "{errors:?}"
+    );
+}
+
+#[test]
 fn arrow_release_and_owned_transfer_leave_the_resource_moved() {
     for body in [
         "released: None = value.release()\n    names: list[str] = value.capsule_names()",

@@ -1,4 +1,7 @@
-use super::*;
+use super::{
+    arrow, buffer, invalid_shape, is_direct_type, unsupported_conversion, HirParam, LowerCtx,
+    PythonInteropDeclaration, PythonInteropEffect, PythonParameterKind, Type,
+};
 
 pub(super) fn validate_direct_parameters(
     declaration: &PythonInteropDeclaration,

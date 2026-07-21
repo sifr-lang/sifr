@@ -7,16 +7,30 @@ use sifr_ir::{
 };
 use sifr_type_system::{PythonArrowKind, Type};
 
+#[derive(Clone, Copy)]
+pub(crate) struct ArgumentPreparation<'a> {
+    pub(crate) parameter_name: &'a str,
+    pub(crate) index: usize,
+    pub(crate) kind: PythonArrowKind,
+    pub(crate) shape_kind: PythonParameterKind,
+    pub(crate) shape_name: &'a str,
+    pub(crate) forward_positional_by_name: bool,
+    pub(crate) error_type: &'a Type,
+}
+
 pub(crate) fn append_argument_preparation(
     body: &mut Vec<RustStmt>,
-    parameter_name: &str,
-    index: usize,
-    kind: PythonArrowKind,
-    shape_kind: PythonParameterKind,
-    shape_name: &str,
-    forward_positional_by_name: bool,
-    error_type: &Type,
+    preparation: ArgumentPreparation<'_>,
 ) -> Option<String> {
+    let ArgumentPreparation {
+        parameter_name,
+        index,
+        kind,
+        shape_kind,
+        shape_name,
+        forward_positional_by_name,
+        error_type,
+    } = preparation;
     let guard_name = format!("__sifr_python_arrow_argument_{index}");
     let handle_name = format!("__sifr_python_arg_{index}");
     body.push(crate::python_interop_runtime_exprs::mapped_let(

@@ -247,8 +247,7 @@ pub fn safe_fixture_path(package_root: &Path, fixture: &str) -> Result<PathBuf, 
             .any(|component| matches!(component, std::path::Component::ParentDir))
     {
         return Err(format!(
-            "Arrow certification fixture '{}' must stay inside the package",
-            fixture
+            "Arrow certification fixture '{fixture}' must stay inside the package"
         ));
     }
     Ok(package_root.join(relative))

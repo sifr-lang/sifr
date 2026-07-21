@@ -526,6 +526,16 @@ pub(super) fn reject_unsupported_expression_form(
     );
 }
 
+pub(super) fn report_expression_loop_moves(
+    ctx: &mut LowerCtx,
+    snapshot: &crate::scope::MovedSnapshot,
+    range: TextRange,
+) {
+    for name in ctx.scope.moved_since(snapshot) {
+        ownership_diagnostics::moved_across_loop(ctx, &name, range);
+    }
+}
+
 pub(in crate::lower) fn lower_list_comp(
     comp: &ExprListComp,
     ctx: &mut LowerCtx,
@@ -554,6 +564,7 @@ pub(in crate::lower) fn lower_list_comp(
 
     let mut generators = Vec::new();
     let mut pushed_scopes = 0;
+    let mut moved_before_loop = None;
     let result = (|| {
         // Process each generator: push scope, define var, lower iter
         for gen in &comp.generators {
@@ -592,6 +603,7 @@ pub(in crate::lower) fn lower_list_comp(
             };
 
             let iter_source_expr = lower_expr(&gen.iter, ctx)?;
+            moved_before_loop.get_or_insert_with(|| ctx.scope.save_moved_state());
             let iter_ty = iter_source_expr.ty().clone();
             let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
                 reject_invalid_expression_iteration(ctx, &iter_ty, gen.iter.range());
@@ -659,6 +671,9 @@ pub(in crate::lower) fn lower_list_comp(
         })
     })();
     ctx.pop_scopes(pushed_scopes);
+    if let Some(snapshot) = &moved_before_loop {
+        report_expression_loop_moves(ctx, snapshot, comp.range());
+    }
     result
 }
 
@@ -674,6 +689,7 @@ pub(in crate::lower) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -
 
     let mut generators = Vec::new();
     let mut pushed_scopes = 0;
+    let mut moved_before_loop = None;
     let result = (|| {
         for gen in &comp.generators {
             let var_name = if let Expr::Name(n) = &gen.target {
@@ -687,6 +703,7 @@ pub(in crate::lower) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -
                 return None;
             };
             let iter_source_expr = lower_expr(&gen.iter, ctx)?;
+            moved_before_loop.get_or_insert_with(|| ctx.scope.save_moved_state());
             let iter_ty = iter_source_expr.ty().clone();
             let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
                 reject_invalid_expression_iteration(ctx, &iter_ty, gen.iter.range());
@@ -726,6 +743,9 @@ pub(in crate::lower) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -
         })
     })();
     ctx.pop_scopes(pushed_scopes);
+    if let Some(snapshot) = &moved_before_loop {
+        report_expression_loop_moves(ctx, snapshot, comp.range());
+    }
     result
 }
 
@@ -744,6 +764,7 @@ pub(in crate::lower) fn lower_dict_comp(
 
     let mut generators = Vec::new();
     let mut pushed_scopes = 0;
+    let mut moved_before_loop = None;
     let result = (|| {
         for gen in &comp.generators {
             let var_name = match &gen.target {
@@ -780,6 +801,7 @@ pub(in crate::lower) fn lower_dict_comp(
                 }
             };
             let iter_source_expr = lower_expr(&gen.iter, ctx)?;
+            moved_before_loop.get_or_insert_with(|| ctx.scope.save_moved_state());
             let iter_ty = iter_source_expr.ty().clone();
             let Some(elem_ty) = callable_builtin_element_type(&iter_ty) else {
                 reject_invalid_expression_iteration(ctx, &iter_ty, gen.iter.range());
@@ -838,5 +860,8 @@ pub(in crate::lower) fn lower_dict_comp(
         })
     })();
     ctx.pop_scopes(pushed_scopes);
+    if let Some(snapshot) = &moved_before_loop {
+        report_expression_loop_moves(ctx, snapshot, comp.range());
+    }
     result
 }

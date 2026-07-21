@@ -23,7 +23,6 @@ pub(crate) use crate::python_interop_direct_conversions::{
     callback_output_value_expr, input_conversion, input_conversion_borrowed, is_python_object,
     output_value_expr,
 };
-
 pub(crate) fn python_interop_function_body(
     func: &HirFunction,
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
@@ -197,13 +196,15 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
                     arrow_argument_guards.push(
                         crate::python_arrow_codegen::append_argument_preparation(
                             &mut body,
-                            &param.name,
-                            index,
-                            *kind,
-                            shape.kind,
-                            &shape.name,
-                            forward_positional_by_name,
-                            error_type,
+                            crate::python_arrow_codegen::ArgumentPreparation {
+                                parameter_name: &param.name,
+                                index,
+                                kind: *kind,
+                                shape_kind: shape.kind,
+                                shape_name: &shape.name,
+                                forward_positional_by_name,
+                                error_type,
+                            },
                         )?,
                     );
                     continue;
@@ -611,13 +612,15 @@ pub(crate) fn python_interop_method_body_with_retained_errors(
         if let Type::PythonArrow(kind) = param.ty.resolve_alias() {
             arrow_argument_guards.push(crate::python_arrow_codegen::append_argument_preparation(
                 &mut body,
-                &param.name,
-                index,
-                *kind,
-                shape.kind,
-                &shape.name,
-                false,
-                error_type,
+                crate::python_arrow_codegen::ArgumentPreparation {
+                    parameter_name: &param.name,
+                    index,
+                    kind: *kind,
+                    shape_kind: shape.kind,
+                    shape_name: &shape.name,
+                    forward_positional_by_name: false,
+                    error_type,
+                },
             )?);
             continue;
         }

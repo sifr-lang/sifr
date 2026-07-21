@@ -61,15 +61,31 @@ pub(super) fn try_lower_super_method_call(
         );
         return Some(None);
     };
-    let defaults_key = if method_name == "__init__" {
+    let defining_name = if method_name == "__init__" {
         parent_name.clone()
     } else {
-        format!("{parent_name}.{method_name}")
+        ctx.class_method_origins
+            .get(&format!("{parent_name}.{method_name}"))
+            .cloned()
+            .unwrap_or_else(|| parent_name.clone())
+    };
+    let defining_type = if defining_name == parent_name {
+        parent_type
+    } else {
+        ctx.class_types
+            .get(&defining_name)
+            .cloned()
+            .unwrap_or(parent_type)
+    };
+    let defaults_key = if method_name == "__init__" {
+        defining_name.clone()
+    } else {
+        format!("{defining_name}.{method_name}")
     };
     let method_type = if method_name == "__init__" {
-        ctx.functions.get(&parent_name).cloned()
+        ctx.functions.get(&defining_name).cloned()
     } else {
-        method_function_type(&parent_type, &method_name)
+        method_function_type(&defining_type, &method_name)
     };
     let Some(function_type) = method_type else {
         ctx.error_with_code_at(
@@ -92,8 +108,8 @@ pub(super) fn try_lower_super_method_call(
     consume_owned_method_arguments(&args, call, &function_type, ctx);
     let return_type = *function_type.return_type;
     Some(Some(HirExpr::SuperCall {
-        parent_class: parent_name,
-        parent_type,
+        parent_class: defining_name,
+        parent_type: defining_type,
         method: if method_name == "__init__" {
             "new".to_string()
         } else {
@@ -113,9 +129,7 @@ pub(super) fn try_lower_class_method_call(
         return None;
     };
     let class_name = name.id.to_string();
-    let Some(class_type) = ctx.class_types.get(&class_name).cloned() else {
-        return None;
-    };
+    let class_type = ctx.class_types.get(&class_name).cloned()?;
     let method_name = attr.attr.to_string();
     let qualified_method = format!("{class_name}.{method_name}");
     if matches!(class_type.resolve_alias(), Type::Protocol { .. })

@@ -6,8 +6,7 @@ use super::{
     name_diagnostics, parse_typevar_bound_expr, parse_typevar_declaration_specs,
     predeclare_type_aliases, private_stdlib_imports, python_interop, register_builtins,
     resolve_imports_early, resolve_type_aliases, str, workload_annotations, Expr, ExternalDefs,
-    FunctionType, HirDiagnostic, HirExpr, HirImport, HirModule, LowerCtx, Ranged, Stmt, TextRange,
-    Type,
+    HirDiagnostic, HirExpr, HirImport, HirModule, LowerCtx, Ranged, Stmt, TextRange, Type,
 };
 use sifr_ir::LoweringResult;
 pub(in crate::lower) fn lower_module_impl(
@@ -469,6 +468,13 @@ pub(in crate::lower) fn lower_module_impl(
                             {
                                 if let Some(class_ty) = module_classes.get(name) {
                                     ctx.class_types.insert(local.clone(), class_ty.clone());
+                                    imports::register_imported_class_instance_methods(
+                                        &mut ctx,
+                                        externals,
+                                        &stdlib_module_key,
+                                        name,
+                                        &local,
+                                    );
                                     if let Some(module_class_type_params) =
                                         externals.class_type_params.get(&stdlib_module_key)
                                     {
@@ -500,24 +506,7 @@ pub(in crate::lower) fn lower_module_impl(
                                     if externals.error_types.contains(name) {
                                         ctx.error_types.insert(local.clone());
                                     }
-                                    // Register constructor: prefer `new` method params if available
-                                    if let Type::Class {
-                                        fields, methods, ..
-                                    } = class_ty
-                                    {
-                                        let ft = if let Some((_, new_ft)) =
-                                            methods.iter().find(|(n, _)| n == "new")
-                                        {
-                                            let params: Vec<(String, Type)> = new_ft
-                                                .params
-                                                .iter()
-                                                .map(|(n, t, _)| (n.clone(), t.clone()))
-                                                .collect();
-                                            FunctionType::new(params, class_ty.clone())
-                                        } else {
-                                            let params: Vec<(String, Type)> = fields.clone();
-                                            FunctionType::new(params, class_ty.clone())
-                                        };
+                                    if let Some(ft) = super::imported_class_identity::imported_constructor_function_type(class_ty) {
                                         ctx.functions.insert(local.clone(), ft);
                                         if let Some(module_defaults) =
                                             externals.function_defaults.get(&stdlib_module_key)
@@ -686,23 +675,18 @@ pub(in crate::lower) fn lower_module_impl(
                             if externals.error_types.contains(name) {
                                 ctx.error_types.insert(local.clone());
                             }
-                            if let Type::Class {
-                                fields, methods, ..
-                            } = &imported_class_ty
+                            imports::register_imported_class_instance_methods(
+                                &mut ctx,
+                                externals,
+                                &module_name,
+                                name,
+                                &local,
+                            );
+                            if let Some(ft) =
+                                super::imported_class_identity::imported_constructor_function_type(
+                                    &imported_class_ty,
+                                )
                             {
-                                let ft = if let Some((_, new_ft)) =
-                                    methods.iter().find(|(n, _)| n == "new")
-                                {
-                                    let params: Vec<(String, Type)> = new_ft
-                                        .params
-                                        .iter()
-                                        .map(|(n, t, _)| (n.clone(), t.clone()))
-                                        .collect();
-                                    FunctionType::new(params, imported_class_ty.clone())
-                                } else {
-                                    let params: Vec<(String, Type)> = fields.clone();
-                                    FunctionType::new(params, imported_class_ty.clone())
-                                };
                                 ctx.functions.insert(local.clone(), ft);
                                 if let Some(module_defaults) =
                                     externals.function_defaults.get(&module_name)

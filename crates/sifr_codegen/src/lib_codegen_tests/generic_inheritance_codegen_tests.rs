@@ -49,6 +49,30 @@ def main() -> None:
 }
 
 #[test]
+fn grandparent_super_call_uses_the_defining_ancestor() {
+    let rust_code = generate_rust_from_source(
+        r#"class Root:
+    def value(self) -> int:
+        return 5
+
+class Middle(Root):
+    pass
+
+class Leaf(Middle):
+    def value(self) -> int:
+        return super().value()
+
+def main() -> None:
+    leaf: Leaf = Leaf()
+    assert leaf.value() == 5
+"#,
+    );
+
+    assert!(rust_code.contains("Root::value(self)"), "{rust_code}");
+    assert!(!rust_code.contains("Middle::value(self)"), "{rust_code}");
+}
+
+#[test]
 fn consuming_class_upcasts_enter_union_and_result_payloads() {
     let rust_code = generate_rust_from_source(
         r#"class Root:

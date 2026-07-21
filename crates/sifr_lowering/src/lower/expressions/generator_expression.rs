@@ -44,7 +44,8 @@ pub(in crate::lower) fn lower_generator_expr(
         return None;
     }
 
-    let (expr, expr_ty, filter) = ctx.with_pushed_scope(|ctx| {
+    let moved_before_loop = ctx.scope.save_moved_state();
+    let lowered = ctx.with_pushed_scope(|ctx| {
         ctx.scope.define(var_name.clone(), elem_ty.clone());
         let expr = lower_expr(&gen.elt, ctx)?;
         let expr_ty = expr.ty().clone();
@@ -72,7 +73,9 @@ pub(in crate::lower) fn lower_generator_expr(
             }
         };
         Some((expr, expr_ty, filter))
-    })?;
+    });
+    super::report_expression_loop_moves(ctx, &moved_before_loop, gen.range());
+    let (expr, expr_ty, filter) = lowered?;
     let result_ty = Type::Iterator(Box::new(expr_ty));
     let iter_expr = lower_iterator_protocol_entry(iter_source_expr, elem_ty);
     Some(HirExpr::GeneratorExpr {
