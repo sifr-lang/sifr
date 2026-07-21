@@ -39,10 +39,16 @@ synchronous and asynchronous declarations and context managers run on the
 application-owned Python loop with structured cancellation and consuming
 cleanup; M9 current-thread, foreign-thread, and asyncio callback execution plus
 retained-owner integration are merged, publicly active, and milestone-reviewed.
-M11's five Arrow C Data Interface delivery waves are implemented and pass the
-authoritative create-PR and merge gates; repeated whole-diff Fable High review
-and PR closure remain in progress. M12 and later milestones are not yet
-implemented. Milestones sequence delivery; they do not create reduced language
+M11's five Arrow C Data Interface delivery waves are implemented, locally
+validated, and milestone-reviewed in
+[PR #2991](https://github.com/sifr-lang/sifr/pull/2991). Repeated whole-diff
+Fable High review drove ownership, identity, async-move, operator, and
+certification remediation through pass 8, which returned **SATISFIED** with no
+blockers or majors. The fresh authoritative merge gate passes every blocking
+lane in `3772.09s`, including E2E `674/674`, Python interop `20/20`, diagnostics
+`175/175`, and `261` hardening variants with zero failures; its warm-time and
+batch-skew notices are non-blocking advisories. M12 and later milestones are not
+yet implemented. Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
 
@@ -176,7 +182,7 @@ Implementation progress:
 - [x] M8 async context managers — [PR #2970](https://github.com/sifr-lang/sifr/pull/2970), [PR #2972](https://github.com/sifr-lang/sifr/pull/2972)
 - [x] M9 typed callback lifetimes and dispatch — [PR #2974](https://github.com/sifr-lang/sifr/pull/2974), [PR #2977](https://github.com/sifr-lang/sifr/pull/2977), [PR #2979](https://github.com/sifr-lang/sifr/pull/2979), remediation [PRs #2981](https://github.com/sifr-lang/sifr/pull/2981), [#2982](https://github.com/sifr-lang/sifr/pull/2982), [#2984](https://github.com/sifr-lang/sifr/pull/2984), and [#2985](https://github.com/sifr-lang/sifr/pull/2985)
 - [x] M10 typed buffer protocol ([PR #2990](https://github.com/sifr-lang/sifr/pull/2990))
-- [ ] M11 Arrow C Data Interface
+- [x] M11 Arrow C Data Interface ([PR #2991](https://github.com/sifr-lang/sifr/pull/2991))
 - [ ] M12 DLPack one-shot tensor transfer
 - [ ] M13 read-only check and doctor
 - [ ] M14 binding and certification authoring
@@ -1662,9 +1668,26 @@ Delivery waves:
 - [x] Align ordinary class-method move parameters with the language-wide
   borrow-by-default rule; escaping or storing one requires explicit `own`, and
   instance, static, and `super()` calls enforce that transfer exactly once.
-- [ ] Milestone review — run the full M11 diff through repeated Fable High
-  review after the authoritative merge gate, remediate until satisfied, then
-  merge the M11 PR.
+- [x] Milestone review — repeated whole-diff Fable High review passes
+  [1](../../reviews/active/m11-arrow-full-review-pass-1.md),
+  [2](../../reviews/active/m11-arrow-full-review-pass-2.md),
+  [3b](../../reviews/active/m11-arrow-full-review-pass-3b.md),
+  [4](../../reviews/active/m11-arrow-full-review-pass-4.md),
+  [5](../../reviews/active/m11-arrow-full-review-pass-5.md),
+  [6](../../reviews/active/m11-arrow-full-review-pass-6.md),
+  [7](../../reviews/active/m11-arrow-full-review-pass-7.md), and
+  [8](../../reviews/active/m11-arrow-full-review-pass-8.md) drove all blocker
+  and major findings to closure. Pass 7 is explicitly superseded because its
+  timer placeholder predated the real gate result; pass 8 independently
+  rechecked the remediation and returned **SATISFIED** with no blockers or
+  majors. The fresh authoritative merge gate then passed every blocking lane
+  in `3772.09s`: E2E `674/674` with signature `1f8b1cadc4f48ec8`, Python
+  interop `20/20`, diagnostics `175/175`, codegen `878/878`, lowering
+  `812/812` plus one ignored test, driver `365/365` plus 33 ignored tests and
+  generated builds `33/33`, file-size guardrails over `2744` files, and `261`
+  hardening variants with zero failures. The warm-time and batching-skew
+  notices are non-blocking advisories. [PR #2991](https://github.com/sifr-lang/sifr/pull/2991)
+  is the reviewed and validated M11 delivery PR.
 
 Tasks:
 
