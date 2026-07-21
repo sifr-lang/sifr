@@ -3,7 +3,7 @@ use super::{
     reject_invalid_expression_iteration, reject_invalid_expression_target,
     reject_unsupported_expression_form, Expr, HirExpr, LowerCtx, Ranged, Type,
 };
-use crate::lower::{statement_diagnostics, ExprGenerator};
+use crate::lower::{ownership_diagnostics, statement_diagnostics, ExprGenerator};
 
 pub(in crate::lower) fn lower_generator_expr(
     gen: &ExprGenerator,
@@ -74,7 +74,7 @@ pub(in crate::lower) fn lower_generator_expr(
         };
         Some((expr, expr_ty, filter))
     });
-    super::report_expression_loop_moves(ctx, &moved_before_loop, gen.range());
+    ownership_diagnostics::report_moved_across_loop(ctx, &moved_before_loop, gen.range());
     let (expr, expr_ty, filter) = lowered?;
     let result_ty = Type::Iterator(Box::new(expr_ty));
     let iter_expr = lower_iterator_protocol_entry(iter_source_expr, elem_ty);

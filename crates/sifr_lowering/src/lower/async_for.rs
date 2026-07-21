@@ -1,3 +1,4 @@
+use super::ownership_diagnostics;
 use super::python_interop::lower_python_context_owned_expr;
 use super::statement_diagnostics;
 use super::statements::lower_stmts;
@@ -216,12 +217,14 @@ pub(in crate::lower) fn lower_async_for(
     }
 
     let (target, _) = simple_for_target_name(&for_stmt.target, ctx)?;
+    let moved_before_loop = ctx.scope.save_moved_state();
     ctx.scope.push();
     ctx.scope.define(target.clone(), target_ty.clone());
     ctx.loop_depth += 1;
     let body = lower_stmts(&for_stmt.body, func_type, ctx);
     ctx.loop_depth -= 1;
     ctx.scope.pop();
+    ownership_diagnostics::report_moved_across_loop(ctx, &moved_before_loop, for_stmt.range());
     if let Some(close_error_ty) = &close_error_ty {
         if stmts_contain_early_exit_for_current_loop(&body)
             && !return_type_accepts_error(&func_type.return_type, close_error_ty)

@@ -450,18 +450,57 @@ fn comprehension_and_generator_bodies_cannot_repeat_affine_moves() {
 }
 
 #[test]
-fn affine_consuming_operator_parameters_fail_closed() {
+fn async_loops_and_comprehensions_cannot_repeat_affine_moves() {
+    lower_ok(
+        "async def readings(own value: str) -> AsyncGenerator[int, GeneratorCloseError]:\n    yield len(value)\n\nasync def valid(own value: str) -> Result[None, GeneratorCloseError]:\n    result = [i async for i in readings(value)]\n    return None\n",
+    );
+
     for resource in ["python.ArrowArray", "python.Buffer[uint8]"] {
-        let source = format!(
-            "class Accumulator:\n    def __add__(self, own value: {resource}) -> int:\n        return 1\n"
+        let statement = format!(
+            "def consume(own value: {resource}) -> int:\n    return 1\n\nasync def readings() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 2\n\nasync def misuse(own value: {resource}) -> Result[None, GeneratorCloseError]:\n    async for i in readings():\n        result: int = consume(value)\n    return None\n"
         );
-        let errors = lower_errors(&source);
+        let errors = lower_errors(&statement);
         assert!(
             errors
                 .iter()
-                .any(|error| error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)),
-            "{source}: {errors:?}"
+                .any(|error| error.code == Some(DiagnosticCode::OWN_MOVED_ACROSS_LOOP)),
+            "{statement}: {errors:?}"
         );
+
+        for expression in [
+            "[consume(value) async for i in readings()]",
+            "{consume(value) async for i in readings()}",
+            "{i: consume(value) async for i in readings()}",
+        ] {
+            let source = format!(
+                "def consume(own value: {resource}) -> int:\n    return 1\n\nasync def readings() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 2\n\nasync def misuse(own value: {resource}) -> Result[None, GeneratorCloseError]:\n    result = {expression}\n    return None\n"
+            );
+            let errors = lower_errors(&source);
+            assert!(
+                errors
+                    .iter()
+                    .any(|error| error.code == Some(DiagnosticCode::OWN_MOVED_ACROSS_LOOP)),
+                "{source}: {errors:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn affine_consuming_operator_parameters_fail_closed() {
+    for resource in ["python.ArrowArray", "python.Buffer[uint8]"] {
+        for method in ["__add__", "__pow__", "__getitem__"] {
+            let source = format!(
+                "class Accumulator:\n    def {method}(self, own value: {resource}) -> int:\n        return 1\n"
+            );
+            let errors = lower_errors(&source);
+            assert!(
+                errors
+                    .iter()
+                    .any(|error| error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)),
+                "{source}: {errors:?}"
+            );
+        }
     }
 }
 

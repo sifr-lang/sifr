@@ -105,6 +105,8 @@ mod python_interop_direct_conversions;
 mod python_interop_direct_helpers;
 #[cfg(test)]
 mod python_interop_direct_tests;
+#[cfg(test)]
+mod python_interop_entrypoints;
 mod python_interop_plan;
 #[cfg(test)]
 mod python_interop_plan_tests;

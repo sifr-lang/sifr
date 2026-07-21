@@ -23,12 +23,10 @@ pub(crate) use crate::python_interop_direct_conversions::{
     callback_output_value_expr, input_conversion, input_conversion_borrowed, is_python_object,
     output_value_expr,
 };
-pub(crate) fn python_interop_function_body(
-    func: &HirFunction,
-    opaque_classes: &HashMap<String, PythonInteropDeclaration>,
-) -> Option<Vec<RustStmt>> {
-    python_interop_function_body_with_retained_errors(func, opaque_classes, &HashMap::new())
-}
+#[cfg(test)]
+pub(crate) use crate::python_interop_entrypoints::{
+    python_interop_function_body, python_interop_method_body,
+};
 
 pub(crate) fn python_interop_function_body_with_retained_errors(
     func: &HirFunction,
@@ -424,20 +422,6 @@ pub(crate) fn python_interop_function_body_with_retained_errors(
     }
     body.push(ok_return(converted));
     Some(body)
-}
-
-pub(crate) fn python_interop_method_body(
-    func: &HirFunction,
-    opaque_classes: &HashMap<String, PythonInteropDeclaration>,
-    owner_declaration: Option<&PythonInteropDeclaration>,
-) -> Option<Vec<RustStmt>> {
-    python_interop_method_body_with_retained_errors(
-        func,
-        opaque_classes,
-        owner_declaration,
-        &HashMap::new(),
-        &[],
-    )
 }
 
 pub(crate) fn python_interop_method_body_with_retained_errors(

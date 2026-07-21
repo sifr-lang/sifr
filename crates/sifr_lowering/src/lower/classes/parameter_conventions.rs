@@ -87,7 +87,7 @@ pub(in crate::lower) fn reject_owned_affine_operator_parameter(
     convention: ParamConvention,
     range: ruff_text_size::TextRange,
 ) {
-    if super::is_operator_dunder(method_name)
+    if (super::is_operator_dunder(method_name) || method_name == "__getitem__")
         && convention.is_owned()
         && ty.contains_affine_resource()
     {

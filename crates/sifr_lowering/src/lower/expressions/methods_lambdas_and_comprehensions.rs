@@ -526,16 +526,6 @@ pub(super) fn reject_unsupported_expression_form(
     );
 }
 
-pub(super) fn report_expression_loop_moves(
-    ctx: &mut LowerCtx,
-    snapshot: &crate::scope::MovedSnapshot,
-    range: TextRange,
-) {
-    for name in ctx.scope.moved_since(snapshot) {
-        ownership_diagnostics::moved_across_loop(ctx, &name, range);
-    }
-}
-
 pub(in crate::lower) fn lower_list_comp(
     comp: &ExprListComp,
     ctx: &mut LowerCtx,
@@ -672,7 +662,7 @@ pub(in crate::lower) fn lower_list_comp(
     })();
     ctx.pop_scopes(pushed_scopes);
     if let Some(snapshot) = &moved_before_loop {
-        report_expression_loop_moves(ctx, snapshot, comp.range());
+        ownership_diagnostics::report_moved_across_loop(ctx, snapshot, comp.range());
     }
     result
 }
@@ -744,7 +734,7 @@ pub(in crate::lower) fn lower_set_comp(comp: &ExprSetComp, ctx: &mut LowerCtx) -
     })();
     ctx.pop_scopes(pushed_scopes);
     if let Some(snapshot) = &moved_before_loop {
-        report_expression_loop_moves(ctx, snapshot, comp.range());
+        ownership_diagnostics::report_moved_across_loop(ctx, snapshot, comp.range());
     }
     result
 }
@@ -861,7 +851,7 @@ pub(in crate::lower) fn lower_dict_comp(
     })();
     ctx.pop_scopes(pushed_scopes);
     if let Some(snapshot) = &moved_before_loop {
-        report_expression_loop_moves(ctx, snapshot, comp.range());
+        ownership_diagnostics::report_moved_across_loop(ctx, snapshot, comp.range());
     }
     result
 }

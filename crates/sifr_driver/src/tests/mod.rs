@@ -5,6 +5,7 @@ mod panic_boundary;
 mod project_build_check;
 mod project_generic_identity;
 mod project_graph;
+mod project_python_class_metadata;
 mod single_file_frontend;
 mod stdlib_exports;
 mod support;

@@ -157,6 +157,16 @@ pub(in crate::lower) fn moved_across_loop(ctx: &mut LowerCtx, name: &str, range:
     );
 }
 
+pub(in crate::lower) fn report_moved_across_loop(
+    ctx: &mut LowerCtx,
+    snapshot: &crate::scope::MovedSnapshot,
+    range: TextRange,
+) {
+    for name in ctx.scope.moved_since(snapshot) {
+        moved_across_loop(ctx, &name, range);
+    }
+}
+
 pub(in crate::lower) fn immutable_parameter_mutation(
     ctx: &mut LowerCtx,
     name: &str,

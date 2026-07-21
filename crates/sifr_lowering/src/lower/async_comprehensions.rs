@@ -1,6 +1,7 @@
 use super::expressions::lower_expr;
-use super::LowerCtx;
+use super::{ownership_diagnostics, LowerCtx};
 use crate::hir_nodes::HirExpr;
+use crate::scope::MovedSnapshot;
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, ExprDictComp, ExprListComp, ExprSetComp};
@@ -71,6 +72,7 @@ pub(in crate::lower) fn lower_list_comp(
         return Some(None);
     }
 
+    let moved_before_loop = ctx.scope.save_moved_state();
     ctx.scope.push();
     ctx.scope.define(var_name.clone(), elem_ty);
     let result = (|| {
@@ -109,6 +111,7 @@ pub(in crate::lower) fn lower_list_comp(
         })
     })();
     ctx.scope.pop();
+    ownership_diagnostics::report_moved_across_loop(ctx, &moved_before_loop, comp.range());
     Some(result)
 }
 
@@ -119,7 +122,7 @@ pub(in crate::lower) fn lower_set_comp(
     if !comp.generators.iter().any(|generator| generator.is_async) {
         return None;
     }
-    let Some((var_name, iter_source_expr, filter)) =
+    let Some((var_name, iter_source_expr, filter, moved_before_loop)) =
         lower_single_async_generator(&comp.generators, comp.range(), ctx)
     else {
         return Some(None);
@@ -155,6 +158,7 @@ pub(in crate::lower) fn lower_set_comp(
         })
     })();
     ctx.scope.pop();
+    ownership_diagnostics::report_moved_across_loop(ctx, &moved_before_loop, comp.range());
     Some(result)
 }
 
@@ -165,7 +169,7 @@ pub(in crate::lower) fn lower_dict_comp(
     if !comp.generators.iter().any(|generator| generator.is_async) {
         return None;
     }
-    let Some((var_name, iter_source_expr, filter)) =
+    let Some((var_name, iter_source_expr, filter, moved_before_loop)) =
         lower_single_async_generator(&comp.generators, comp.range(), ctx)
     else {
         return Some(None);
@@ -204,6 +208,7 @@ pub(in crate::lower) fn lower_dict_comp(
         })
     })();
     ctx.scope.pop();
+    ownership_diagnostics::report_moved_across_loop(ctx, &moved_before_loop, comp.range());
     Some(result)
 }
 
@@ -211,7 +216,7 @@ fn lower_single_async_generator(
     generators: &[sifr_python_ast::Comprehension],
     fallback_range: ruff_text_size::TextRange,
     ctx: &mut LowerCtx,
-) -> Option<(String, HirExpr, Option<HirExpr>)> {
+) -> Option<(String, HirExpr, Option<HirExpr>, MovedSnapshot)> {
     if super::async_comprehension_diagnostics::reject_unsupported_basic_async_comprehension_shape(
         ctx,
         generators,
@@ -265,6 +270,7 @@ fn lower_single_async_generator(
         return None;
     }
 
+    let moved_before_loop = ctx.scope.save_moved_state();
     ctx.scope.push();
     ctx.scope.define(var_name.clone(), elem_ty);
     let filter = if generator.ifs.is_empty() {
@@ -288,5 +294,5 @@ fn lower_single_async_generator(
     };
     ctx.scope.pop();
 
-    Some((var_name, iter_source_expr, filter))
+    Some((var_name, iter_source_expr, filter, moved_before_loop))
 }
