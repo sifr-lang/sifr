@@ -219,7 +219,10 @@ pub fn apply_python_target_inspection(
         let diagnostics = plan
             .declarations
             .iter()
-            .filter(|declaration| declaration_targets(declaration, target))
+            .filter(|declaration| {
+                declaration_targets(declaration, target)
+                    && declaration_requires_signature_validation(declaration)
+            })
             .filter_map(|declaration| {
                 validate_signature(declaration, &output.parameters).map(|reason| {
                     scoped_diagnostic(
@@ -244,6 +247,19 @@ pub fn apply_python_target_inspection(
         PythonTargetProbeStatus::RuntimeChecked
     };
     Vec::new()
+}
+
+fn declaration_requires_signature_validation(
+    declaration: &sifr_codegen::PythonInteropPlanDeclaration,
+) -> bool {
+    matches!(
+        declaration.declaration.kind,
+        sifr_ir::PythonInteropDecoratorKind::Function
+            | sifr_ir::PythonInteropDecoratorKind::Buffer
+            | sifr_ir::PythonInteropDecoratorKind::Arrow
+            | sifr_ir::PythonInteropDecoratorKind::Dlpack
+            | sifr_ir::PythonInteropDecoratorKind::DlpackStream
+    )
 }
 
 fn declaration_targets(
@@ -488,6 +504,33 @@ mod tests {
             sifr_ir::PythonInteropDecoratorKind::Opaque;
         apply_python_interop_metadata(generated, Some(&runtime))
             .expect("Python class target should verify");
+    }
+
+    #[test]
+    fn opaque_target_does_not_validate_constructor_signature() {
+        let mut generated = project("pkg.Connection");
+        generated.interop.python.declarations[0].declaration.kind =
+            sifr_ir::PythonInteropDecoratorKind::Opaque;
+        generated.interop.python.target_probes[0].expects_type = true;
+        let inspection = PythonTargetInspection {
+            ok: true,
+            callable: true,
+            is_type: true,
+            inspectable: true,
+            parameters: vec![probe_parameter("connector", "POSITIONAL_OR_KEYWORD", false)],
+            error: None,
+        };
+
+        assert!(apply_python_target_inspection(
+            &mut generated.interop.python,
+            "pkg.Connection",
+            Ok(&inspection),
+        )
+        .is_empty());
+        assert_eq!(
+            generated.interop.python.target_probes[0].status,
+            PythonTargetProbeStatus::Verified
+        );
     }
 
     #[test]

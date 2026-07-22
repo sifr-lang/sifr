@@ -2131,8 +2131,12 @@ findings are covered by focused regressions for same-name and substring symbol
 isolation, declaration-file/range diagnostics, live certification digest drift,
 application trust rejection, library deferral, environment/target cache reuse,
 and direct analysis-plan identity. The focused LSP suite now passes `13/13`,
-the driver probe suite passes `15/15`, workspace clippy and formatting pass,
+the driver probe suite passes `16/16`, workspace clippy and formatting pass,
 and the HIR, driver-maintainability, and 900-line file-size guardrails pass.
+The full gate additionally caught an over-broad structured-probe refactor that
+applied callable signature validation to opaque Python type declarations; the
+original callable-kind boundary is restored, a focused opaque-constructor
+regression passes, and the `aiosqlite` async-context executable is green again.
 The post-remediation authoritative gate and fresh whole-diff review remain the
 Wave 5 closure gate.
 
