@@ -330,6 +330,12 @@ fn resolve_package_python_environment_inner(
         lock_mode: sifr_package::CargoLockMode::Frozen,
     })
     .map_err(|error| vec![sifr_driver::render_package_diagnostic(error)])?;
+    if graph_independent_no_python_package(&session, package_root, required_import_roots) {
+        return Ok(EnvironmentSnapshot {
+            runtime: None,
+            diagnostics: Vec::new(),
+        });
+    }
     let snapshot = sifr_package::load_package_graph_snapshot(
         &session.workspace_root,
         sifr_package::CargoLockMode::Frozen,
@@ -393,14 +399,14 @@ fn resolve_package_python_environment_inner(
             Ok(artifact) => match serde_json::to_string(&artifact.bindings) {
                 Ok(identity) => runtime.set_binding_identity(identity),
                 Err(error) => diagnostics.push(diagnostic_with_code(
-                    DiagnosticCode::PYENV_LOCK_OR_PROJECT_STALE,
+                    DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE,
                     format!("could not fingerprint Python bindings: {error}"),
                     "rerun `sifr python bind --check`".to_string(),
                 )),
             },
             Err(reason) => diagnostics.push(diagnostic_with_code(
-                DiagnosticCode::PYENV_LOCK_OR_PROJECT_STALE,
-                format!("invalid or drifted Python binding artifact: {reason}"),
+                DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE,
+                format!("invalid Python binding artifact: {reason}"),
                 "rerun `sifr python bind --check`".to_string(),
             )),
         }
@@ -416,14 +422,14 @@ fn resolve_package_python_environment_inner(
                     }
                     Err(reason) => diagnostics.push(diagnostic_with_code(
                         DiagnosticCode::PYZC_INVALID_DECLARATION,
-                        format!("invalid or drifted Python certification artifact: {reason}"),
+                        format!("invalid Python certification artifact: {reason}"),
                         "rerun `sifr python certify --check`".to_string(),
                     )),
                 }
             }
             Err(reason) => diagnostics.push(diagnostic_with_code(
                 DiagnosticCode::PYZC_INVALID_DECLARATION,
-                format!("invalid or drifted Python certification artifact: {reason}"),
+                format!("invalid Python certification artifact: {reason}"),
                 "rerun `sifr python certify --check`".to_string(),
             )),
         }
@@ -432,6 +438,32 @@ fn resolve_package_python_environment_inner(
         runtime: diagnostics.is_empty().then_some(runtime),
         diagnostics,
     })
+}
+
+fn graph_independent_no_python_package(
+    session: &sifr_package::PackageSession,
+    package_root: &Path,
+    required_import_roots: &[String],
+) -> bool {
+    let Some(manifest) = session.manifest.as_ref() else {
+        return false;
+    };
+    required_import_roots.is_empty()
+        && manifest.dependencies.is_empty()
+        && manifest.dev_dependencies.is_empty()
+        && manifest.python.requires_imports.is_empty()
+        && !manifest.python.selects_environment()
+        && manifest.trust.python.is_empty()
+        && manifest.trust.python_native.is_empty()
+        && !package_root
+            .join(sifr_package::PYTHON_BINDINGS_FILE)
+            .is_file()
+        && !package_root
+            .join(sifr_package::PYTHON_CERTIFICATIONS_FILE)
+            .is_file()
+        && !package_root
+            .join(sifr_package::PYTHON_BRIDGE_INVENTORY)
+            .is_file()
 }
 
 fn render_package_diagnostics(

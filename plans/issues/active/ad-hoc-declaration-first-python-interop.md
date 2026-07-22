@@ -2164,7 +2164,18 @@ expected generated-build ignores, runtime-platform `28` variants with one
 capability-gated skip, and E2E `131/131` with signature
 `7c39b8c1dd4fec7c`. Every per-step budget passes. The cold E2E cache (`0/42`)
 and overall warm wall-time produce one non-blocking advisory; frozen-diff
-review remains the final Wave 5 closure gate.
+review remains the final Wave 5 closure gate. Whole-diff Fable High
+[pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-3.md)
+found two closure regressions and three parity/documentation gaps. The shared
+target probe now conservatively combines every matching declaration's type and
+inspectability constraints; graph-independent packages with no Python inputs
+skip the editor's frozen Cargo graph read; hover identity now carries the
+canonical definition module and symbol through aliases; LSP binding and
+certification artifact diagnostics match CLI codes/messages; and the editor
+architecture records environment-first diagnostics accurately. Mixed-flag,
+lockfile-less, false-positive alias, and positive aliased-declaration
+regressions cover these remediations. A fresh authoritative gate and repeated
+whole-diff review remain the Wave 5 closure gates.
 
 Tasks:
 

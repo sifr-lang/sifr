@@ -185,6 +185,81 @@ fn same_named_symbol_in_another_module_is_not_certified() {
 }
 
 #[test]
+fn imported_alias_does_not_inherit_an_unrelated_python_declaration_status() {
+    let helper_source =
+        "from ordinary import value as sqrt\n\ndef use_helper() -> int:\n    return sqrt()\n";
+    let ordinary_source = "def value() -> int:\n    return 1\n";
+    let primary = SOURCE.replace(
+        "from sifr.python import PythonError",
+        "from sifr.python import PythonError\nfrom helper import use_helper",
+    );
+    let (mut session, temp, _uri) = open_fixture_with_extras(
+        &primary,
+        "main.sifr",
+        &[
+            ("helper.sifr", helper_source),
+            ("ordinary.sifr", ordinary_source),
+        ],
+    );
+    let helper_path = temp.path().join("helper.sifr");
+    let helper_uri = url::Url::from_file_path(&helper_path)
+        .expect("helper file uri")
+        .to_string();
+    session
+        .open_document(
+            helper_uri.clone(),
+            crate::capabilities::LANGUAGE_ID,
+            Some(1),
+            helper_source.to_string(),
+        )
+        .expect("open helper document");
+
+    let hover = request(&mut session, "textDocument/hover", &helper_uri, 3, 12);
+    let markdown = hover
+        .pointer("/contents/value")
+        .and_then(serde_json::Value::as_str)
+        .expect("aliased function hover");
+
+    assert!(!markdown.contains("Python target"));
+}
+
+#[test]
+fn imported_alias_uses_its_exact_python_declaration_identity() {
+    let declaration_source = "from sifr.python import PythonError\n\n@python(math.sqrt)\ndef sqrt(value: float) -> Result[float, PythonError]: ...\n";
+    let helper_source = "from sifr.python import PythonError\nfrom declarations import sqrt as root\n\ndef use_helper() -> Result[float, PythonError]:\n    return root(9.0)\n";
+    let primary = "from sifr.python import PythonError\nfrom declarations import sqrt\nfrom helper import use_helper\n\ndef main() -> Result[float, PythonError]:\n    return use_helper()\n";
+    let (mut session, temp, _uri) = open_fixture_with_extras(
+        primary,
+        "main.sifr",
+        &[
+            ("declarations.sifr", declaration_source),
+            ("helper.sifr", helper_source),
+        ],
+    );
+    let helper_path = temp.path().join("helper.sifr");
+    let helper_uri = url::Url::from_file_path(&helper_path)
+        .expect("helper file uri")
+        .to_string();
+    session
+        .open_document(
+            helper_uri.clone(),
+            crate::capabilities::LANGUAGE_ID,
+            Some(1),
+            helper_source.to_string(),
+        )
+        .expect("open helper document");
+
+    let hover = request(&mut session, "textDocument/hover", &helper_uri, 4, 13);
+    let markdown = hover
+        .pointer("/contents/value")
+        .and_then(serde_json::Value::as_str)
+        .expect("aliased Python function hover");
+
+    assert!(markdown.contains("Python target: `math.sqrt`"));
+    assert!(markdown.contains("Status: **verified**"));
+}
+
+#[test]
 fn declarations_sharing_a_target_report_the_same_verified_status() {
     let source = SOURCE.replace(
         "def sqrt(value: float) -> Result[float, PythonError]: ...",
@@ -289,7 +364,7 @@ fn watcher_drift_revalidates_authoring_artifacts() {
     let diagnostics =
         crate::diagnostics::document_diagnostics(&mut session, &uri).expect("artifact diagnostics");
     assert!(diagnostics.iter().any(|diagnostic| {
-        diagnostic.get("code").and_then(serde_json::Value::as_str) == Some("SIFR-PYENV-0011")
+        diagnostic.get("code").and_then(serde_json::Value::as_str) == Some("SIFR-PYCONV-0001")
             && diagnostic
                 .get("message")
                 .and_then(serde_json::Value::as_str)
@@ -339,6 +414,29 @@ fn configured_environment_is_validated_without_python_declarations() {
                 .and_then(serde_json::Value::as_str)
                 .is_some_and(|message| message.contains("environment digest"))
     }));
+}
+
+#[test]
+fn lockfile_less_package_without_python_inputs_has_no_editor_diagnostic() {
+    let source = "def main() -> int:\n    return 1\n";
+    let (mut session, temp, uri) = open_fixture(source);
+    std::fs::write(
+        temp.path().join("sifr.toml"),
+        "[package]\nname = \"lsp-pure\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n",
+    )
+    .expect("write pure Sifr manifest");
+    std::fs::remove_file(temp.path().join("Cargo.lock")).expect("remove fixture lockfile");
+    session.record_watcher_events(1);
+
+    let diagnostics = crate::diagnostics::document_diagnostics(&mut session, &uri)
+        .expect("lockfile-less pure package diagnostics");
+
+    assert!(
+        diagnostics.is_empty(),
+        "unexpected diagnostics: {diagnostics:?}"
+    );
+    assert!(!temp.path().join("Cargo.lock").exists());
+    assert_eq!(session.python_declarations.environment_probe_runs(), 0);
 }
 
 #[test]
@@ -504,6 +602,15 @@ fn open_fixture_with_extra(
     source_name: &str,
     extra_source: Option<(&str, &str)>,
 ) -> (Session, tempfile::TempDir, String) {
+    let extra_sources = extra_source.into_iter().collect::<Vec<_>>();
+    open_fixture_with_extras(source, source_name, &extra_sources)
+}
+
+fn open_fixture_with_extras(
+    source: &str,
+    source_name: &str,
+    extra_sources: &[(&str, &str)],
+) -> (Session, tempfile::TempDir, String) {
     let temp = tempfile::tempdir().expect("temp dir");
     let src = temp.path().join("src");
     std::fs::create_dir(&src).expect("create src");
@@ -536,7 +643,7 @@ fn open_fixture_with_extra(
     .expect("write manifest");
     let path = src.join(source_name);
     std::fs::write(&path, source).expect("write source");
-    if let Some((name, contents)) = extra_source {
+    for (name, contents) in extra_sources {
         std::fs::write(temp.path().join(name), contents).expect("write extra source");
     }
     let uri = url::Url::from_file_path(&path)

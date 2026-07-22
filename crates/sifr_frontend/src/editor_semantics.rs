@@ -17,6 +17,13 @@ pub struct EditorSemanticEntry {
     pub name: String,
     pub detail: String,
     pub kind: EditorSemanticKind,
+    pub definition: Option<EditorSemanticDefinition>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EditorSemanticDefinition {
+    pub module_name: String,
+    pub name: String,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -51,6 +58,7 @@ pub(super) fn editor_semantics_from_module(
     let signatures = callable_signatures(module_name, module, external_defs);
     let mut collector = EditorSemanticCollector {
         signatures,
+        definitions: callable_definitions(module_name, suite),
         source: source.to_string(),
         view: EditorSemanticView::default(),
     };
@@ -77,6 +85,7 @@ pub(super) fn editor_semantics_from_module(
 
 struct EditorSemanticCollector {
     signatures: BTreeMap<String, EditorCallableSignatureView>,
+    definitions: BTreeMap<String, EditorSemanticDefinition>,
     source: String,
     view: EditorSemanticView,
 }
@@ -493,6 +502,9 @@ impl EditorSemanticCollector {
         }
         self.view.entries.push(EditorSemanticEntry {
             range,
+            definition: (kind == EditorSemanticKind::Function)
+                .then(|| self.definitions.get(&name).cloned())
+                .flatten(),
             name,
             detail,
             kind,
@@ -521,6 +533,47 @@ impl EditorSemanticCollector {
             .calls
             .sort_by_key(|call| (call.call_range.start(), call.call_range.len()));
     }
+}
+
+fn callable_definitions(
+    module_name: &str,
+    suite: &[Stmt],
+) -> BTreeMap<String, EditorSemanticDefinition> {
+    let mut definitions = BTreeMap::new();
+    for stmt in suite {
+        match stmt {
+            Stmt::ImportFrom(import_from) => {
+                let Some(imported_module) = import_from.module.as_ref() else {
+                    continue;
+                };
+                for alias in &import_from.names {
+                    let local_name = alias
+                        .asname
+                        .as_ref()
+                        .map_or_else(|| alias.name.to_string(), ToString::to_string);
+                    definitions.insert(
+                        local_name,
+                        EditorSemanticDefinition {
+                            module_name: imported_module.to_string(),
+                            name: alias.name.to_string(),
+                        },
+                    );
+                }
+            }
+            Stmt::FunctionDef(function) => {
+                let name = function.name.to_string();
+                definitions.insert(
+                    name.clone(),
+                    EditorSemanticDefinition {
+                        module_name: module_name.to_string(),
+                        name,
+                    },
+                );
+            }
+            _ => {}
+        }
+    }
+    definitions
 }
 
 fn callable_signatures(

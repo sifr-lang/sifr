@@ -2,7 +2,7 @@ use super::implementation::{unknown_file, AnalysisHost};
 use crate::queries::{HoverInfo, SignatureHelp};
 use crate::snapshot::{AnalysisError, AnalysisErrorKind};
 use ruff_text_size::{TextRange, TextSize};
-use sifr_frontend::{EditorSemanticKind, FileId, ModuleAnalysisView};
+use sifr_frontend::{EditorSemanticDefinition, FileId, ModuleAnalysisView};
 use sifr_syntax::{SourceText as SyntaxSourceText, TextPosition};
 
 impl AnalysisHost {
@@ -26,10 +26,14 @@ impl AnalysisHost {
         let Some(entry) = entry else {
             return Ok(None);
         };
-        let symbol_file = self.hover_symbol_file(file, &entry.name, entry.kind)?;
+        let symbol_file = self.hover_symbol_file(entry.definition.as_ref())?;
+        let symbol_name = entry
+            .definition
+            .as_ref()
+            .map_or_else(|| entry.name.clone(), |definition| definition.name.clone());
         Ok(Some(HoverInfo {
             contents: entry.detail,
-            symbol_name: entry.name,
+            symbol_name,
             symbol_file,
         }))
     }
@@ -91,26 +95,31 @@ impl AnalysisHost {
 
     fn hover_symbol_file(
         &mut self,
-        current_file: FileId,
-        name: &str,
-        kind: EditorSemanticKind,
+        definition: Option<&EditorSemanticDefinition>,
     ) -> Result<Option<FileId>, AnalysisError> {
-        if kind != EditorSemanticKind::Function {
+        let Some(definition) = definition else {
             return Ok(None);
-        }
-        let mut files = self
+        };
+        let definition_file = self
+            .context()?
+            .source_map()
+            .files
+            .iter()
+            .find(|source| source.module_name.as_deref() == Some(&definition.module_name))
+            .map(|source| source.id);
+        let Some(definition_file) = definition_file else {
+            return Ok(None);
+        };
+        Ok(self
             .symbol_index()?
             .entries()
             .iter()
-            .filter(|entry| entry.kind == "function" && entry.name == name)
-            .map(|entry| entry.file)
-            .collect::<Vec<_>>();
-        files.sort();
-        files.dedup();
-        if files.contains(&current_file) {
-            return Ok(Some(current_file));
-        }
-        Ok((files.len() == 1).then(|| files[0]))
+            .any(|entry| {
+                entry.kind == "function"
+                    && entry.name == definition.name
+                    && entry.file == definition_file
+            })
+            .then_some(definition_file))
     }
 }
 

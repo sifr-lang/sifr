@@ -181,7 +181,12 @@ pub fn apply_python_target_inspection(
         }
         return Vec::new();
     }
-    let probe = &plan.target_probes[probe_indices[0]];
+    let expects_type = probe_indices
+        .iter()
+        .any(|index| plan.target_probes[*index].expects_type);
+    let requires_inspectable_signature = probe_indices
+        .iter()
+        .any(|index| plan.target_probes[*index].requires_inspectable_signature);
     let diagnostic = match inspection {
         Ok(output) if !output.ok => Some(diagnostic_with_code(
             format!(
@@ -197,11 +202,11 @@ pub fn apply_python_target_inspection(
             format!("invalid Python declaration call shape: target '{target}' is not callable"),
             DiagnosticCode::PYCALL_INVALID_SHAPE,
         )),
-        Ok(output) if probe.expects_type && !output.is_type => Some(diagnostic_with_code(
+        Ok(output) if expects_type && !output.is_type => Some(diagnostic_with_code(
             format!("invalid Python opaque declaration: target '{target}' is not a Python type"),
             DiagnosticCode::PYCALL_INVALID_SHAPE,
         )),
-        Ok(output) if !output.inspectable && probe.requires_inspectable_signature => {
+        Ok(output) if !output.inspectable && requires_inspectable_signature => {
             Some(diagnostic_with_code(
                 format!(
                     "invalid Python declaration call shape: target '{target}' must be inspectable for `**record` expansion"

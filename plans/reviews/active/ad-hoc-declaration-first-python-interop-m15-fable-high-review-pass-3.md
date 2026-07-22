@@ -1,0 +1,58 @@
+All three audits are complete and I've finished my own verification. Composing the final review now.
+
+---
+
+# M15 LSP Declaration Authoring — Final Frozen-Diff Review (pass 3, commit 02ea59fa2c vs origin/main)
+
+**Verdict: NEEDS CHANGES.** The five pass-2 minors were all substantively addressed, and four of the five closures hold up under adversarial inspection. But the shared-target remediation itself introduced a new anti-conservative correctness regression in the driver's probe application (shared by build, check, and LSP), and extending environment validation to every package root introduced a user-visible LSP/check parity break on lockfile-less projects. Both are actionable.
+
+**How I reviewed:** full 50-file frozen diff at 02ea59fa2c against main, the M15 plan section and acceptance criteria, the architecture doc, and both prior review artifacts; three parallel deep-dive audits (hover semantic identity end-to-end, zero-declaration environment parity vs `sifr check` and vs main's LSP, CLI failure-mapping byte-parity vs main including all callers); my own line-level trace of the driver probe change against main's implementation; and local re-runs — sifr_lsp 61/61, sifr_driver python_interop 17/17, sifr_analysis 48/48, all touched hand-maintained files under the 900-line cap (max 887).
+
+## The five pass-2 closures
+
+1. **Hover identity — mostly closed, claim overstated (minor 3 below).** Both pass-2 scenarios (shadowing parameter, cross-module same name) are structurally closed by the `EditorSemanticKind::Function` gate and current-file preference in `hover_symbol_file` (`crates/sifr_analysis/src/host/semantic_editor.rs:92-114`), and both new tests genuinely fail on the pre-fix code. Method references and class bodies never produce Function-kind entries, so those paths can't misfire.
+2. **Shared-target probing — status fix correct, but the flag handling regressed (major 1 below).** Deduplication (`python_interop.rs:135-142`, `python_declarations.rs:256-263`) and all-indices status updates (`python_interop.rs:255-257`) are right and test-pinned (`shared_target_inspection_updates_every_probe_status`, plus the LSP test asserting both declarations verified with `probe_runs() == 1`).
+3. **Binding drift test + strict deferral — genuinely closed.** The watcher test now writes a schema-valid artifact with a stale `environment_digest` and asserts `SIFR-PYENV-0011` with probe count intact; the deferral test now asserts an empty diagnostics list (`python_declaration_tests.rs:279-299, 370-375`).
+4. **Shared distribution validation / binding identity / zero-declaration checks — closed with two parity wrinkles (major 2, minor 4 below).** `validate_certification_distributions` moved into `sifr_driver` and both CLI and LSP call the same function; binding identity is byte-identical on both sides (`serde_json::to_string(&artifact.bindings)` at `python_runtime_context.rs:151-160` and `python_declarations.rs:393-394`); the configured-zero-declaration test is valid (the fixture writes `[python]` config, schema_version 3 is current, the failure is the intended digest mismatch). Removing the `compiler_has_errors` gate on environment resolution actually *improves* parity — check resolves the environment before compiling.
+5. **Structured graph-loader failures — fully closed, byte-level parity.** All five CLI failure paths (spawn, non-zero exit including the stderr-empty→stdout fallback, metadata parse, graph derivation, source map) map to the identical diagnostic function, args, `bounded_excerpt`, and exit codes as main; `cargo_failure_diagnostic` and the command plan are unchanged vs main; the CLI match is exhaustive with no wildcard; only two callers exist and both handle the failure correctly; `map_cargo_failure` redacts internally so the LSP path is redacted too.
+
+## Actionable findings
+
+### MAJOR 1 — Shared-target inspection validates only the first probe's flags, silently accepting declarations main rejected
+
+`apply_python_target_inspection` collects all probe indices for a target but reads `expects_type` and `requires_inspectable_signature` from `probe_indices[0]` only (`crates/sifr_driver/src/build/python_interop.rs:184, 200, 204`). Codegen emits one probe **per declaration** with per-declaration flags and no dedup — opaque probes carry `expects_type: true` (`crates/sifr_codegen/src/python_interop_plan.rs:127-132`), and `requires_inspectable_signature` is set per declaration from `**record` call sites (`:181`, `record_expansion_functions` at `:299`). Main iterated every probe entry and validated each with its own flags (`git show origin/main:...python_interop.rs`, per-probe loop); HEAD dedups per target and validates once with first-match flags.
+
+Concrete failure, no exotic features needed: two `@python` declarations targeting the same uninspectable callable (e.g. `builtins.dir`), where only the *second* declaration's call sites use `**record` expansion. Declaration order puts the flag-false probe first → the "must be inspectable for `**record` expansion" rejection (which main emitted, and which `record_expansion_rejects_uninspectable_target` pins for the single-declaration case) is skipped, both probes are marked RuntimeChecked, and `sifr build` succeeds where main failed. The opaque variant is the same shape: a function declaration and a `@python.opaque` sharing a target — function probes are pushed before class probes within a module, so a non-type opaque target is no longer rejected and both LSP insights show **verified**, brushing directly against acceptance criterion 2 (completion never offers an unsupported declaration as certified). This is an anti-conservative regression introduced by the closure commit 662d5ea499 itself, affecting build, check, and LSP identically. The new shared-target test only covers two probes with *identical* flags, so it cannot catch this.
+
+Fix is small: evaluate the two flag checks with the OR across all matching probe indices (or validate per index), and add a mixed-flag regression test.
+
+### MAJOR 2 — LSP now shows a package error on lockfile-less projects that `sifr check` passes cleanly, including zero-Python packages
+
+The LSP hard-codes `CargoLockMode::Frozen` (`crates/sifr_lsp/src/python_declarations.rs:330, 335`), and `cargo metadata --frozen` fails (verified empirically, exit 101 "cannot create the lock file") on any package without a `Cargo.lock`. That failure renders as a `SIFR-PACKAGE-0101` **error** diagnostic on the owner document. `sifr check` uses `CargoLockMode::Normal` by default (`cli_model_and_entrypoint.rs:679-693`) and passes silently on the same tree. Before 662d5ea499 this could only hit declaration-bearing, cleanly-compiling packages; the closure extended environment resolution to **every** package root, so a fresh, never-built project with zero Python usage — which main's LSP said nothing about — now shows a persistent editor error that check contradicts. That is a direct violation of acceptance criterion 1 ("LSP results agree with compiler/check results for the same package snapshot") on a common path, and it is untested (`open_fixture` always writes a `Cargo.lock`). Frozen is a defensible no-mutation choice for an editor; the fix is to suppress (or downgrade) graph-load failures when resolution would be `NotRequired` anyway, or otherwise reconcile the lock-mode divergence, plus a missing-lockfile test.
+
+### MINOR 3 — Hover identity is still a bare-name join; one reachable false positive survives via import aliasing
+
+`hover_symbol_file`'s `files.len() == 1` fallback (`semantic_editor.rs:113`) assumes name ⇒ identity. Import aliases break it: with `from a import sqrt2 as sqrt` plus a call `sqrt(...)` in module C, and a Python-declared `sqrt` in module D, the only kind-"function" index entry named `sqrt` is D's (imports aren't indexed as functions, A's is `sqrt2`) → hover on C's alias of the pure-Sifr function shows "Python target `math.sqrt` / Status: **verified**". The inverse alias direction produces false negatives (aliased genuinely-Python imports never enrich), as does any cross-file name ambiguity including stdlib collisions. The `files.len()==1` branch has no adversarial test. The plan's closure wording "exact semantic hover identity" overstates what was built; either resolve through real semantic definition data or document the alias limitation and add the fallback-branch tests.
+
+### MINOR 4 — Binding-artifact drift emits different diagnostic codes in LSP vs check
+
+For the same drifted `sifr.python-bindings.json`, check emits `SIFR-PYCONV-0001` (`python_runtime_context.rs:267-272`) while the LSP emits `SIFR-PYENV-0011` (`python_declarations.rs:396, 402`). Cosmetic message drift also exists on the certification diagnostic ("invalid Python certification artifact" vs "invalid or drifted…"). Small, but it sits exactly on the "shares … binding identity with the CLI" closure claim; align the codes (the LSP's is arguably the better one).
+
+### MINOR 5 — Doc/claim drift from the closure changes
+
+`internal_docs/python_interop_declaration_architecture.md` (new "Editor Declaration Authoring" section) states "Target and authoring diagnostics are attached only after compiler checking" — no longer accurate: environment/artifact drift diagnostics now surface even with compiler errors (intentionally, for check parity). The plan's "hover status uses exact semantic function/file identity" should also be tempered per minor 3. One-paragraph doc fix.
+
+## Non-actionable observations (no change requested)
+
+- LSP cargo-failure diagnostics are redacted and whitespace-collapsed but not length-bounded (CLI applies `bounded_excerpt`); new-surface nit.
+- `resolve_package_python_environment_inner` runs cargo metadata + uv lock check + interpreter probe + one interpreter spawn per certified distribution as a single non-cancellable block, and the background-diagnostics path has no active request to cancel; pre-existing shape, widened by closure 4, correctly cached (including failures) under `(package_root, external_fingerprint, import_roots)`.
+- `external_fingerprint` doesn't cover other package roots' manifests (bridge deps) — correctness there rests on client watcher events; cache maps only evict via `invalidate_external`.
+- Shared *failing* targets still fan one diagnostic per matching declaration — same count as main with better attribution; fine.
+
+## Everything else checked
+
+Diagnostic ownership (deterministic single owner document), inter-probe cancellation, unsupported-declaration non-promotion, opaque call-shape boundary (2279d2cc2), least-authority (no new capabilities beyond the interpreter/cargo spawns the CLI already performs, redaction preserved), module boundaries and the 900-line cap, and the blocking verification wiring are all in order and unchanged since pass 2's verification. Evidence claims in the plan match what I measured (LSP 61/61, analysis 48/48, driver python_interop 17/17 within the 380-test suite; the stated gate numbers at HEAD are consistent). The untracked empty `...pass-3.md` placeholder in the worktree was left untouched per the no-modification instruction.
+
+## Verdict
+
+**NEEDS CHANGES.** Majors 1 and 2 are regressions introduced by the closure commit itself — one silently accepts programs main rejected in the compiler's own probe path, the other makes the editor contradict `sifr check` on ordinary lockfile-less projects — and both sit on the milestone's two acceptance criteria. Fixes are small and well-localized (OR-merge probe flags + mixed-flag test; suppress/downgrade graph-load failure when Python is not required + missing-lockfile test), after which minors 3–5 can ride along or be ledgered as follow-ups.
