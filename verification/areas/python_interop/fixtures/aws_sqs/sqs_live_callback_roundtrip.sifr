@@ -1,86 +1,32 @@
-from sifr.python import (
-    Object,
-    PythonError,
-    ThreadsafeCallback,
-    call,
-    call_attr,
-    close,
-    close_threadsafe_callback,
-    from_int,
-    from_str,
-    get_item,
-    import_module,
-    threadsafe_callback,
-)
+from sifr.env import getenv
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-def handle_sqs_message(delivery: Object) -> Result[Object, PythonError]:
-    try:
-        messages: Object = get_item(delivery, "Messages")
-        closed_messages: None = close(messages)
-        ack: Object = from_str("sifr:sqs:handled")
-        return ack
-    except PythonError as e:
-        raise e
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
+@python(bridge.aws_live.run_sqs)
+def run_live(
+    handler: Callable[[str], str],
+    endpoint: str,
+    token: str,
+) -> Result[str, PythonError]: ...
 
 
-@trust_python_dynamic
-@blocking_io
+def acknowledge(message: str) -> str:
+    return "ack:" + message
+
+
 def main() -> Result[None, PythonError]:
     try:
-        boto3: Object = import_module("boto3")
-        service: Object = from_str("sqs")
-        endpoint: Object = from_str("http://127.0.0.1:4566")
-        region: Object = from_str("us-east-1")
-        access_key: Object = from_str("test")
-        secret_key: Object = from_str("test")
-        sqs: Object = call_attr(
-            boto3,
-            "client",
-            [service],
-            [
-                ("endpoint_url", endpoint),
-                ("region_name", region),
-                ("aws_access_key_id", access_key),
-                ("aws_secret_access_key", secret_key),
-            ],
+        before: ResourceDiagnostics = resource_diagnostics()
+        marker: str = run_live(
+            acknowledge,
+            getenv("SIFR_LIVE_ENDPOINT", ""),
+            getenv("SIFR_LIVE_TOKEN", ""),
         )
-        queue_name: Object = from_str("sifr-live-sqs-queue")
-        body: Object = from_str("sqs-ready")
-        queue: Object = call_attr(sqs, "create_queue", [], [("QueueName", queue_name)])
-        queue_url: Object = get_item(queue, "QueueUrl")
-        sent: Object = call_attr(sqs, "send_message", [], [("QueueUrl", queue_url), ("MessageBody", body)])
-        max_messages: Object = from_int(1)
-        wait_seconds: Object = from_int(10)
-        delivery: Object = call_attr(
-            sqs,
-            "receive_message",
-            [],
-            [
-                ("QueueUrl", queue_url),
-                ("MaxNumberOfMessages", max_messages),
-                ("WaitTimeSeconds", wait_seconds),
-            ],
-        )
-        handler: ThreadsafeCallback = threadsafe_callback(handle_sqs_message)
-        handled: Object = call(handler.callable, [delivery], [])
-        closed_handled: None = close(handled)
-        closed_handler: None = close_threadsafe_callback(handler)
-        closed_delivery: None = close(delivery)
-        closed_wait_seconds: None = close(wait_seconds)
-        closed_max_messages: None = close(max_messages)
-        closed_sent: None = close(sent)
-        closed_queue_url: None = close(queue_url)
-        closed_queue: None = close(queue)
-        closed_body: None = close(body)
-        closed_queue_name: None = close(queue_name)
-        closed_sqs: None = close(sqs)
-        closed_secret_key: None = close(secret_key)
-        closed_access_key: None = close(access_key)
-        closed_region: None = close(region)
-        closed_endpoint: None = close(endpoint)
-        closed_service: None = close(service)
-        closed_boto3: None = close(boto3)
-        return None
-    except PythonError as e:
-        raise e
+        after: ResourceDiagnostics = resource_diagnostics()
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("SQS live declaration leaked Python resources")
+        print(marker)
+    except PythonError as error:
+        raise error
+    return None

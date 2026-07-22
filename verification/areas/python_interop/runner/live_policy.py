@@ -29,10 +29,13 @@ REQUIRED_CONTAINER_KEYS = {
     "timeout_seconds",
 }
 REQUIRED_LIVE_EXAMPLE_KEYS = {
+    "compiled_sifr_binaries_required",
     "provider",
     "services",
+    "service_client_owner",
     "sifr_sources_required",
     "structured_skip_when_docker_unavailable",
+    "testcontainers_responsibility",
 }
 EXPECTED_STATUSES = {"policy-passed", "live-passed", "structured-skip", "live-failed"}
 EXPECTED_LIVE_SUITES = {"live-policy", "live-examples"}
@@ -55,6 +58,7 @@ def build_live_policy_report(paths: RunnerPaths) -> dict[str, Any]:
     profile = _load_json(paths.repo_root / "verification" / "profiles" / f"{policy['profile']}.json")
     _validate_live_profile(profile, policy)
     _validate_offline_profiles(paths.repo_root, policy)
+    _validate_service_runner_boundary(paths.area_root)
     return {
         "schema_version": 1,
         "area": "python_interop",
@@ -124,6 +128,12 @@ def run_live_policy_self_tests(paths: RunnerPaths) -> None:
         lambda: _validate_live_profile(poisoned_selection, policy),
         "missing live python interop suites: live-examples",
     )
+    _expect_policy_failure(
+        lambda: _validate_service_runner_source(
+            "from kafka import KafkaProducer\nexecute_live_binary(binary, environment)\n"
+        ),
+        "runner owns service clients",
+    )
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -183,8 +193,40 @@ def _validate_policy_shape(policy: dict[str, Any]) -> None:
         raise SystemExit(f"python interop live examples service drift: {sorted(services)}")
     if live_examples["sifr_sources_required"] is not True:
         raise SystemExit("python interop live examples must require Sifr sources")
+    if live_examples["compiled_sifr_binaries_required"] is not True:
+        raise SystemExit("python interop live examples must require compiled Sifr binaries")
+    if live_examples["service_client_owner"] != "compiled-sifr-bridge":
+        raise SystemExit("python interop live service clients must be owned by compiled Sifr bridges")
+    if (
+        live_examples["testcontainers_responsibility"]
+        != "container-lifecycle-and-endpoint-discovery-only"
+    ):
+        raise SystemExit("python interop live testcontainers responsibility drifted")
     if live_examples["structured_skip_when_docker_unavailable"] is not True:
         raise SystemExit("python interop live examples must declare structured Docker skip semantics")
+
+
+def _validate_service_runner_boundary(area_root: Path) -> None:
+    runner = area_root / "runner" / "live_services.py"
+    if not runner.is_file():
+        raise SystemExit("python interop live service runner is missing")
+    _validate_service_runner_source(runner.read_text(encoding="utf-8"))
+
+
+def _validate_service_runner_source(source: str) -> None:
+    forbidden = {
+        "KafkaConsumer": "Kafka client",
+        "KafkaProducer": "Kafka client",
+        "boto3": "AWS client",
+        "get_client(": "testcontainers service client",
+        "psycopg": "Postgres client",
+        "redis.Redis": "Redis client",
+    }
+    observed = sorted(label for token, label in forbidden.items() if token in source)
+    if observed:
+        raise SystemExit(f"python interop live runner owns service clients: {observed}")
+    if "execute_live_binary" not in source:
+        raise SystemExit("python interop live runner does not execute compiled Sifr binaries")
 
 
 def _validate_live_profile(profile: dict[str, Any], policy: dict[str, Any]) -> None:
