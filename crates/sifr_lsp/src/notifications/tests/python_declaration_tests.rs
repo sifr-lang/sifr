@@ -51,6 +51,35 @@ fn closing_python_package_diagnostic_owner_republishes_on_remaining_document() {
     }));
 }
 
+#[test]
+fn unanalyzable_document_cannot_own_python_package_diagnostics() {
+    let (mut session, temp, owner_uri, _remaining_uri) = open_two_document_python_package();
+    let excluded_dir = temp.path().join("a");
+    std::fs::create_dir(&excluded_dir).expect("create excluded module directory");
+    let excluded_path = excluded_dir.join("aux.sifr");
+    let excluded_source = "def aux() -> int:\n    return 1\n";
+    std::fs::write(&excluded_path, excluded_source).expect("write excluded source");
+    let excluded_uri = url::Url::from_file_path(excluded_path)
+        .expect("excluded URI")
+        .to_string();
+    assert!(excluded_uri < owner_uri);
+    session
+        .open_document(
+            excluded_uri.clone(),
+            crate::capabilities::LANGUAGE_ID,
+            Some(1),
+            excluded_source.to_string(),
+        )
+        .expect("open excluded document");
+
+    let excluded_error = crate::diagnostics::document_diagnostics(&mut session, &excluded_uri)
+        .expect_err("excluded document must remain outside project analysis");
+    assert!(excluded_error.message().contains("analysis is unavailable"));
+    let owner_diagnostics = crate::diagnostics::document_diagnostics(&mut session, &owner_uri)
+        .expect("publishable owner diagnostics");
+    assert!(contains_code(&owner_diagnostics, "SIFR-PYZC-0001"));
+}
+
 fn contains_code(diagnostics: &[Value], code: &str) -> bool {
     diagnostics
         .iter()

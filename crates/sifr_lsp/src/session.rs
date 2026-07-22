@@ -157,6 +157,12 @@ impl Session {
         self.store.document_uris()
     }
 
+    pub(crate) fn can_analyze_document(&self, uri: &str) -> bool {
+        self.store
+            .document(uri)
+            .is_ok_and(|document| self.analysis.can_analyze_document(document))
+    }
+
     pub(crate) fn load_diagnostics(&self, uri: &str) -> &[RenderedDiagnostic] {
         self.analysis.load_diagnostics(uri)
     }

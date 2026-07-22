@@ -299,6 +299,7 @@ impl Session {
         let owner = self
             .document_uris()
             .into_iter()
+            .filter(|candidate| self.can_analyze_document(candidate))
             .filter_map(|candidate| {
                 let path = self.store().document(&candidate).ok()?.path();
                 (package_root_for(path).as_deref() == Some(package_root)).then_some(candidate)

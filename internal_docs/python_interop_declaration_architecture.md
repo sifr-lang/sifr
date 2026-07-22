@@ -613,6 +613,13 @@ Protocol-specific completion help reports the compiler's
 ownership, cancellation, release, and transfer policy, but never promotes a
 target probe into protocol certification.
 
+Package-scoped Python diagnostics have one deterministic owner: the
+lexicographically first open document in that package that the analysis
+workspace can serve. Open files excluded from the current analysis project do
+not participate in ownership election and therefore cannot suppress package
+diagnostics on publishable sibling documents. Closing the current owner clears
+it and republishes the package diagnostic on the next eligible document.
+
 The editor cache is keyed by analysis graph/source revisions plus the package
 manifest, Cargo lock, live bridge sources, selected pyproject and lock,
 checked-in binding/certification artifacts, and selected interpreter metadata.

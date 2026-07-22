@@ -2227,21 +2227,36 @@ modules under `-I` and cannot write in the workspace. Snapshot-construction
 failure preserves compiler diagnostics and is trace-only. Package fingerprints
 are recomputed per remaining document after close, dependency-manifest cache
 invalidation remains watcher-dependent, transient probe failures have no TTL,
-and caches shrink only on watcher invalidation. LSP/CLI artifact help remains
-asymmetric, protocol help uses the broad `certified` label for some uncertified
-declarations, and the test environment uses a symlinked fixture interpreter.
-Alias-aware status is single-hop, and external probes are not preempted
-mid-process. The architecture summary's short cancellation phrase is read under
-that non-preemptive constraint. The driver Python interop module is `894/900`
-lines and must be split by responsibility before further growth.
+and environment/target caches shrink only on watcher invalidation while plan
+snapshots clear on source lifecycle events. Governing workspace-root Cargo locks
+for member packages and content behind symlinked bridge paths are not directly
+fingerprinted. LSP/CLI artifact help remains asymmetric, protocol help uses the
+broad `certified` label for some uncertified declarations, and the test
+environment uses a symlinked fixture interpreter. Hover status enrichment is
+function-only and alias-aware status is limited to absolute single-hop imports;
+external probes are not preempted mid-process. The architecture summary's short
+cancellation phrase is read under that non-preemptive constraint. The blocking
+lane's name filters are not fail-hard against future test renames, the workspace
+member trust regression asserts its code rather than message attribution, and
+LSP target aggregation duplicates a small amount of driver bridge-marking logic.
+The driver Python interop module is `894/900` lines and must be split by
+responsibility before further growth.
 
 Post-pass-5 authoritative create-PR validation passes every blocking lane in
-`1164.53s`: Python interop `19/19`, LSP `70/70`, package `139/139`, driver
-`382/382` plus `33` expected generated-build ignores, runtime-platform `28`
-variants with one capability-gated skip, and E2E `131/131` with signature
-`7c39b8c1dd4fec7c`. Every per-step blocking budget passes. The E2E cache was
+`1164.53s`: Python interop `19/19`, LSP `70/70`, analysis `48/48`, package
+`139/139`, driver `382/382` plus `33` expected generated-build ignores,
+runtime-platform `28` variants with one capability-gated skip, and E2E `131/131`
+with signature `7c39b8c1dd4fec7c`. Every per-step blocking budget passes. The E2E cache was
 cold (`0/42`), so the overall warm wall-time notice is a non-blocking advisory.
-Repeated frozen whole-diff review remains the final Wave 5 closure gate.
+Whole-diff Fable High
+[pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-6.md)
+closed both pass-5 minors and independently reproduced the gate, but found one
+new major: a loader-excluded open document could sort first in package
+diagnostic ownership despite being unable to publish, suppressing package errors
+from every analyzable sibling. Owner election now filters through the analysis
+workspace's actual publishability predicate, and a nested excluded-document regression pins
+the anti-conservative failure shape. Fresh authoritative validation and another
+frozen whole-diff review remain required.
 
 Tasks:
 
