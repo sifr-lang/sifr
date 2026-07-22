@@ -66,6 +66,17 @@ positive, negative, cleanup, cancellation, and live evidence. The scaffold and
 self-test suites reject missing ownership, unsupported states, duplicate rows,
 or a supported claim without the evidence required by that row.
 
+Schema 2 adds `compiled_evidence` to the seven ecosystem-facing capability
+rows. The outer area runner removes each generated report before its suite
+runs, then binds the current invocation's callback, offline async HTTP, buffer,
+Arrow, and DLPack reports to exact case IDs, Sifr sources, execution models,
+markers, trust roots, certification-command counts, and report SHA-256 digests.
+The emitted `compiled_certification` section is `complete` only when all five
+owning suites ran successfully. Targeted invocations remain `partial` or
+`not-selected`; a missing, stale, skipped, duplicate, Python-runner, or
+marker-drifted case fails closed. NumPy buffer, Arrow, and both DLPack records
+must additionally observe `resources=zero`.
+
 Ordinary runnable ecosystem examples are declaration-first. Library-specific
 dynamic workflows live in package-local `python_bridges/` modules and expose
 only typed Sifr declarations. A token-aware allowlist restricts ordinary

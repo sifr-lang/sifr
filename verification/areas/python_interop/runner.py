@@ -11,6 +11,16 @@ import time
 from pathlib import Path
 from typing import Any
 
+AREA_MODULE_ROOT = str(Path(__file__).resolve().parent)
+if AREA_MODULE_ROOT not in sys.path:
+    sys.path.insert(0, AREA_MODULE_ROOT)
+RUNNER_MODULE_ROOT = str(Path(__file__).resolve().parent / "runner")
+if RUNNER_MODULE_ROOT not in sys.path:
+    sys.path.insert(0, RUNNER_MODULE_ROOT)
+
+from certification_ledger import build_compiled_certification
+from declaration_capabilities import load_and_validate_capabilities
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
@@ -185,6 +195,12 @@ def main(argv: list[str] | None = None) -> int:
     print("  bless=no", flush=True)
 
     suite_results = [run_suite(suite) for suite in selected]
+    capability_matrix = load_and_validate_capabilities(AREA_ROOT, REPO_ROOT)
+    compiled_certification = build_compiled_certification(
+        capability_matrix,
+        REPO_ROOT,
+        suite_results,
+    )
     total_variants = sum(int(result["total_variants"]) for result in suite_results)
     total_failures = sum(int(result["total_failures"]) for result in suite_results)
     payload = {
@@ -193,6 +209,7 @@ def main(argv: list[str] | None = None) -> int:
         "bless": False,
         "manifest": str(MANIFEST_PATH.relative_to(REPO_ROOT)),
         "suites": suite_results,
+        "compiled_certification": compiled_certification,
         "summary": {
             "total_variants": total_variants,
             "total_failures": total_failures,
@@ -303,6 +320,9 @@ def run_case(case: dict[str, Any]) -> dict[str, Any]:
         env.pop("VIRTUAL_ENV", None)
     else:
         argv = [sys.executable, str(entry), *COMMAND_ARGS[command]]
+    report_path = _command_report_path(command)
+    if report_path is not None:
+        report_path.unlink(missing_ok=True)
     started = time.perf_counter()
     proc = subprocess.run(
         argv,
@@ -336,6 +356,20 @@ def run_case(case: dict[str, Any]) -> dict[str, Any]:
         "actual_exit_code": proc.returncode,
         "duration_ms": round(elapsed_ms, 3),
     }
+
+
+def _command_report_path(command: str) -> Path | None:
+    arguments = COMMAND_ARGS[command]
+    if "--report" not in arguments:
+        return None
+    report_index = arguments.index("--report") + 1
+    if report_index >= len(arguments):
+        raise SystemExit(f"python_interop command has no report argument: {command}")
+    report_path = (AREA_ROOT / arguments[report_index]).resolve()
+    target_root = (REPO_ROOT / "target").resolve()
+    if not report_path.is_relative_to(target_root):
+        raise SystemExit(f"python_interop command report escapes target: {command}")
+    return report_path
 
 
 if __name__ == "__main__":

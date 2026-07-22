@@ -152,6 +152,23 @@ Its first isolated compiled run completed in 26.5 seconds and the preceding
 create-PR Python interop lane measured 9.5 seconds, so the existing blocking
 180,000 ms lane budget remains sufficient and was not increased.
 
+## Ecosystem Compiled Certification Ledger
+
+Schema 2 of `declaration_capabilities.json` binds seven active capability rows
+to ten compiled evidence records across callback dispatch, offline async HTTP,
+NumPy buffer, Arrow, and DLPack. The outer area runner deletes the owning target
+report before each suite invocation and accepts only a newly written,
+zero-failure, zero-skip report whose exact case executed as a
+`compiled-sifr-declaration`, observed its locked marker, names the checked-in
+Sifr source and trust roots, and satisfies its certification-command floor.
+The area report records each source report's SHA-256 digest. Buffer, Arrow, and
+both DLPack records additionally require `resources=zero`; targeted suite runs
+remain partial or unselected and cannot promote missing capability rows.
+
+The runnable `demos/python_ecosystem_certification` entry executes all five
+owning suites and requires a complete result with seven passing capabilities,
+ten compiled evidence records, and four resource-zero records.
+
 Repository gates:
 
 ```bash

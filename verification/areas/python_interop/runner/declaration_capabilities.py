@@ -17,6 +17,32 @@ CAPABILITY_STATES = {
 IMPLEMENTATION_STATUSES = {"reserved", "active"}
 EVIDENCE_KINDS = {"positive", "negative", "cleanup", "cancellation", "live"}
 EVIDENCE_STATUSES = {"planned", "passing", "not-applicable"}
+COMPILED_CERTIFICATION_CAPABILITIES = {
+    "arrow-c-data",
+    "buffer-protocol",
+    "callback-asyncio",
+    "callback-current",
+    "callback-foreign",
+    "coroutine-declaration",
+    "dlpack-transfer",
+}
+COMPILED_EVIDENCE_SUITES = {
+    "arrow-examples",
+    "async-declaration-examples",
+    "buffer-examples",
+    "callback-examples",
+    "dlpack-examples",
+}
+COMPILED_EVIDENCE_KEYS = {
+    "id",
+    "suite",
+    "report",
+    "case",
+    "sifr_source",
+    "stdout_marker",
+    "requires_resource_zero",
+    "minimum_certification_commands",
+}
 
 REQUIRED_DESIGN_FRAGMENTS = {
     "internal_docs/python_interop_declaration_architecture.md": (
@@ -68,13 +94,14 @@ def load_and_validate_capabilities(area_root: Path, repo_root: Path) -> dict[str
 
 
 def _validate_matrix(matrix: dict[str, Any]) -> None:
-    if matrix.get("schema_version") != 1:
-        raise SystemExit("declaration capability matrix schema_version must be 1")
+    if matrix.get("schema_version") != 2:
+        raise SystemExit("declaration capability matrix schema_version must be 2")
     rows = matrix.get("capabilities")
     if not isinstance(rows, list) or not rows:
         raise SystemExit("declaration capability matrix must contain capabilities")
 
     seen: set[str] = set()
+    compiled_evidence_ids: set[str] = set()
     for row in rows:
         if not isinstance(row, dict):
             raise SystemExit("declaration capability rows must be objects")
@@ -140,6 +167,71 @@ def _validate_matrix(matrix: dict[str, Any]) -> None:
                 raise SystemExit(
                     f"non-required {item['kind']} evidence for {capability_id} must be not-applicable"
                 )
+
+        compiled_evidence = row.get("compiled_evidence")
+        if capability_id in COMPILED_CERTIFICATION_CAPABILITIES:
+            if not isinstance(compiled_evidence, list) or not compiled_evidence:
+                raise SystemExit(
+                    f"missing compiled evidence for certified capability {capability_id}"
+                )
+        elif compiled_evidence is not None:
+            raise SystemExit(
+                f"unexpected compiled evidence for uncertified capability {capability_id}"
+            )
+        if compiled_evidence is not None:
+            _validate_compiled_evidence(
+                capability_id,
+                compiled_evidence,
+                compiled_evidence_ids,
+            )
+
+
+def _validate_compiled_evidence(
+    capability_id: str,
+    entries: list[object],
+    seen_ids: set[str],
+) -> None:
+    for entry in entries:
+        if not isinstance(entry, dict) or set(entry) != COMPILED_EVIDENCE_KEYS:
+            raise SystemExit(f"invalid compiled evidence shape for {capability_id}")
+        evidence_id = entry["id"]
+        if not isinstance(evidence_id, str) or not re.fullmatch(r"[a-z][a-z0-9-]+", evidence_id):
+            raise SystemExit(f"invalid compiled evidence id for {capability_id}: {evidence_id}")
+        if evidence_id in seen_ids:
+            raise SystemExit(f"duplicate compiled evidence id: {evidence_id}")
+        seen_ids.add(evidence_id)
+
+        suite = entry["suite"]
+        if suite not in COMPILED_EVIDENCE_SUITES:
+            raise SystemExit(f"invalid compiled evidence suite for {evidence_id}: {suite}")
+        report = entry["report"]
+        expected_report = f"target/verification/areas/python_interop/{suite}.latest.json"
+        if report != expected_report:
+            raise SystemExit(
+                f"compiled evidence report drift for {evidence_id}: expected {expected_report}"
+            )
+        case_id = entry["case"]
+        sifr_source = entry["sifr_source"]
+        marker = entry["stdout_marker"]
+        if not isinstance(case_id, str) or not case_id:
+            raise SystemExit(f"missing compiled evidence case for {evidence_id}")
+        if (
+            not isinstance(sifr_source, str)
+            or not re.fullmatch(r"[a-z0-9_./-]+\.sifr", sifr_source)
+            or ".." in Path(sifr_source).parts
+            or Path(sifr_source).is_absolute()
+        ):
+            raise SystemExit(f"invalid compiled evidence source for {evidence_id}")
+        if not isinstance(marker, str) or not marker.startswith("sifr-python-interop:"):
+            raise SystemExit(f"invalid compiled evidence marker for {evidence_id}")
+        resource_zero = entry["requires_resource_zero"]
+        if not isinstance(resource_zero, bool):
+            raise SystemExit(f"invalid resource-zero policy for {evidence_id}")
+        if resource_zero and not marker.endswith(":resources=zero"):
+            raise SystemExit(f"resource-zero marker drift for {evidence_id}")
+        command_count = entry["minimum_certification_commands"]
+        if not isinstance(command_count, int) or isinstance(command_count, bool) or command_count < 0:
+            raise SystemExit(f"invalid certification command count for {evidence_id}")
 
 
 def _validate_design_contract(repo_root: Path) -> None:
@@ -215,6 +307,28 @@ def run_declaration_capability_self_tests(area_root: Path, repo_root: Path) -> N
     )
     required_item["status"] = "planned"
     _expect_rejection(incomplete_active, "requires passing")
+
+    missing_compiled = json.loads(json.dumps(matrix))
+    compiled_row = next(row for row in missing_compiled["capabilities"] if "compiled_evidence" in row)
+    del compiled_row["compiled_evidence"]
+    _expect_rejection(missing_compiled, "missing compiled evidence")
+
+    duplicate_compiled = json.loads(json.dumps(matrix))
+    compiled_rows = [row for row in duplicate_compiled["capabilities"] if "compiled_evidence" in row]
+    compiled_rows[1]["compiled_evidence"][0]["id"] = compiled_rows[0]["compiled_evidence"][0]["id"]
+    _expect_rejection(duplicate_compiled, "duplicate compiled evidence id")
+
+    resource_drift = json.loads(json.dumps(matrix))
+    resource_entry = next(
+        entry
+        for row in resource_drift["capabilities"]
+        for entry in row.get("compiled_evidence", [])
+        if entry["requires_resource_zero"]
+    )
+    resource_entry["stdout_marker"] = resource_entry["stdout_marker"].removesuffix(
+        ":resources=zero"
+    )
+    _expect_rejection(resource_drift, "resource-zero marker drift")
 
 
 def _make_first_row_reserved(matrix: dict[str, Any]) -> dict[str, Any]:

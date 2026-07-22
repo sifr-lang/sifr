@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "description": "Target capability classification and evidence ownership for declaration-first Python interop. A target state is architectural intent; only active rows with passing required evidence are implemented claims.",
+  "schema_version": 2,
+  "description": "Target capability classification and evidence ownership for declaration-first Python interop. A target state is architectural intent; only active rows with passing required evidence are implemented claims. compiled_evidence binds ecosystem claims to fresh reports from the current area-runner invocation.",
   "capabilities": [
     {
       "id": "sync-declaration",
@@ -90,6 +90,18 @@
         {"kind": "cleanup", "status": "passing", "owner": "consuming async-close success, failure, poison, abandonment, and ordered-shutdown fixtures"},
         {"kind": "cancellation", "status": "passing", "owner": "pre-registration, in-flight, finally ordering, suppression, and native-cause runtime matrix"},
         {"kind": "live", "status": "passing", "owner": "async_declaration/httpx_client.sifr compiled against an offline ASGI transport"}
+      ],
+      "compiled_evidence": [
+        {
+          "id": "async-httpx-offline-asgi",
+          "suite": "async-declaration-examples",
+          "report": "target/verification/areas/python_interop/async-declaration-examples.latest.json",
+          "case": "httpx-client",
+          "sifr_source": "async_declaration/httpx_client.sifr",
+          "stdout_marker": "sifr-python-interop:async-declaration:status=207:message=async-ready:close=1:loop=shared:failure=covered:conversion=covered",
+          "requires_resource_zero": false,
+          "minimum_certification_commands": 0
+        }
       ]
     },
     {
@@ -120,6 +132,18 @@
         {"kind": "cleanup", "status": "passing", "owner": "call-scoped owner drain and exact-once capture release matrix"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "current-thread callable is synchronous"},
         {"kind": "live", "status": "passing", "owner": "cffi_callback/current_declaration_callback.sifr compiled against real CFFI with synchronous caller-thread invocation"}
+      ],
+      "compiled_evidence": [
+        {
+          "id": "callback-current-cffi",
+          "suite": "callback-examples",
+          "report": "target/verification/areas/python_interop/callback-examples.latest.json",
+          "case": "cffi-current-thread",
+          "sifr_source": "cffi_callback/current_declaration_callback.sifr",
+          "stdout_marker": "sifr-python-interop:callback:cffi-current=42",
+          "requires_resource_zero": false,
+          "minimum_certification_commands": 0
+        }
       ]
     },
     {
@@ -135,6 +159,28 @@
         {"kind": "cleanup", "status": "passing", "owner": "unregister-first drain, concurrent close, post-close rejection, and runtime shutdown matrix"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "foreign callback is synchronous"},
         {"kind": "live", "status": "passing", "owner": "compiled kafka-python foreign-thread callback example"}
+      ],
+      "compiled_evidence": [
+        {
+          "id": "callback-foreign-cffi",
+          "suite": "callback-examples",
+          "report": "target/verification/areas/python_interop/callback-examples.latest.json",
+          "case": "cffi-foreign-thread",
+          "sifr_source": "cffi_callback/declaration_callback.sifr",
+          "stdout_marker": "sifr-python-interop:callback:cffi=42",
+          "requires_resource_zero": false,
+          "minimum_certification_commands": 0
+        },
+        {
+          "id": "callback-foreign-kafka",
+          "suite": "callback-examples",
+          "report": "target/verification/areas/python_interop/callback-examples.latest.json",
+          "case": "kafka-foreign",
+          "sifr_source": "kafka/declaration_callback.sifr",
+          "stdout_marker": "sifr-python-interop:callback:kafka=42",
+          "requires_resource_zero": false,
+          "minimum_certification_commands": 0
+        }
       ]
     },
     {
@@ -150,6 +196,28 @@
         {"kind": "cleanup", "status": "passing", "owner": "async owner drain, failed-factory rollback, and retained async-close matrices"},
         {"kind": "cancellation", "status": "passing", "owner": "exact Python Future to Sifr handler cancellation test"},
         {"kind": "live", "status": "passing", "owner": "compiled asyncio and retained Pub/Sub-style callback examples"}
+      ],
+      "compiled_evidence": [
+        {
+          "id": "callback-asyncio-roundtrip",
+          "suite": "callback-examples",
+          "report": "target/verification/areas/python_interop/callback-examples.latest.json",
+          "case": "asyncio-roundtrip",
+          "sifr_source": "callback/asyncio_roundtrip.sifr",
+          "stdout_marker": "sifr-python-interop:callback:asyncio=42",
+          "requires_resource_zero": false,
+          "minimum_certification_commands": 0
+        },
+        {
+          "id": "callback-asyncio-retained-drain",
+          "suite": "callback-examples",
+          "report": "target/verification/areas/python_interop/callback-examples.latest.json",
+          "case": "pubsub-retained-async-close",
+          "sifr_source": "pubsub/declaration_callback.sifr",
+          "stdout_marker": "sifr-python-interop:callback:pubsub=42:close=drained",
+          "requires_resource_zero": false,
+          "minimum_certification_commands": 0
+        }
       ]
     },
     {
@@ -165,6 +233,18 @@
         {"kind": "cleanup", "status": "passing", "owner": "validated buffer_declaration_evidence.json instrumented pointer identity and exact exporter counters for explicit release, automatic aggregate drop, validation/admission failure, and store rollback"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "buffer acquisition is synchronous"},
         {"kind": "live", "status": "passing", "owner": "five compiled buffer examples: import-root bytearray, mmap Self receiver, package bridge, affine aggregate, and NumPy ndarray"}
+      ],
+      "compiled_evidence": [
+        {
+          "id": "buffer-numpy-resource-zero",
+          "suite": "buffer-examples",
+          "report": "target/verification/areas/python_interop/buffer-examples.latest.json",
+          "case": "numpy",
+          "sifr_source": "numpy_buffer/buffer_declaration_numpy.sifr",
+          "stdout_marker": "sifr-python-interop:buffer:numpy=int64:write=42:identity=shared:resources=zero",
+          "requires_resource_zero": true,
+          "minimum_certification_commands": 0
+        }
       ]
     },
     {
@@ -180,6 +260,18 @@
         {"kind": "cleanup", "status": "passing", "owner": "instrumented exact release plus full, partial, unconsumed, requested-schema, and early-exit reconciliation"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "Arrow transfer is synchronous"},
         {"kind": "live", "status": "passing", "owner": "compiled PyArrow, pandas, and Polars declaration binary with measured certification fixture"}
+      ],
+      "compiled_evidence": [
+        {
+          "id": "arrow-pyarrow-pandas-polars-resource-zero",
+          "suite": "arrow-examples",
+          "report": "target/verification/areas/python_interop/arrow-examples.latest.json",
+          "case": "pyarrow-pandas-polars",
+          "sifr_source": "pyarrow_capsule/arrow_declaration_compiled.sifr",
+          "stdout_marker": "sifr-python-interop:arrow:pyarrow=array:schema=parameter:pandas=stream:polars=stream:owned-transfer=len3:method-transfer=len3:rollback=ok:resources=zero",
+          "requires_resource_zero": true,
+          "minimum_certification_commands": 6
+        }
       ]
     },
     {
@@ -195,6 +287,28 @@
         {"kind": "cleanup", "status": "passing", "owner": "instrumented consumed, unconsumed, mismatch, shutdown, and exact-once deleter counters"},
         {"kind": "cancellation", "status": "not-applicable", "owner": "DLPack transfer is synchronous"},
         {"kind": "live", "status": "passing", "owner": "blocking compiled PyTorch and TensorFlow pointer-identity binaries"}
+      ],
+      "compiled_evidence": [
+        {
+          "id": "dlpack-torch-resource-zero",
+          "suite": "dlpack-examples",
+          "report": "target/verification/areas/python_interop/dlpack-examples.latest.json",
+          "case": "torch-declaration",
+          "sifr_source": "torch_dlpack/dlpack_declaration_compiled.sifr",
+          "stdout_marker": "sifr-python-interop:dlpack:torch:pointer=stable:device=cpu:one-shot=ok:resources=zero",
+          "requires_resource_zero": true,
+          "minimum_certification_commands": 2
+        },
+        {
+          "id": "dlpack-tensorflow-resource-zero",
+          "suite": "dlpack-examples",
+          "report": "target/verification/areas/python_interop/dlpack-examples.latest.json",
+          "case": "tensorflow-declaration",
+          "sifr_source": "tensorflow_dlpack/dlpack_declaration_compiled.sifr",
+          "stdout_marker": "sifr-python-interop:dlpack:tensorflow:pointer=stable:device=cpu:bridge=versioned-call:resources=zero",
+          "requires_resource_zero": true,
+          "minimum_certification_commands": 2
+        }
       ]
     },
     {
