@@ -198,3 +198,7 @@ fn text_document_did_close(
         .map_err(|error| LspError::internal(format!("failed to clear diagnostics: {error}")))?;
     DiagnosticsController::publish_all(connection, session)
 }
+
+#[cfg(test)]
+#[path = "tests/python_declaration_tests.rs"]
+mod python_declaration_tests;

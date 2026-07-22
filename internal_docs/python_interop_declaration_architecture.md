@@ -604,11 +604,12 @@ interpreter. Editor status is therefore `verified`, `runtime-checked`, or
 `deferred` under the same meanings as check/build; it is not inferred from
 Python hints or completion text.
 
-Package-environment and checked-in authoring-artifact diagnostics are resolved
-before compiler results, matching ordinary check's environment-first ordering.
-Exact target and call-shape probes run only after compiler checking succeeds;
-if the source has an error, an unsupported or untyped declaration cannot gain a
-verified status. Protocol-specific completion help reports the compiler's
+Compiler diagnostics and package-environment/checked-in artifact diagnostics
+are gathered in one publication. The Python snapshot resolves its environment
+and artifact state before target inspection, while exact target and call-shape
+probes run only after compiler checking succeeds; if the source has an error,
+an unsupported or untyped declaration cannot gain a verified status.
+Protocol-specific completion help reports the compiler's
 ownership, cancellation, release, and transfer policy, but never promotes a
 target probe into protocol certification.
 

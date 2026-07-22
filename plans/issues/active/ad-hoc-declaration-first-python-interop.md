@@ -2168,12 +2168,12 @@ review remains the final Wave 5 closure gate. Whole-diff Fable High
 [pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-3.md)
 found two closure regressions and three parity/documentation gaps. The shared
 target probe now conservatively combines every matching declaration's type and
-inspectability constraints; graph-independent packages with no Python inputs
-skip the editor's frozen Cargo graph read; hover identity now carries the
-canonical definition module and symbol through single-hop import aliases; LSP
-binding and certification artifact diagnostics match CLI codes/messages; and
-the editor architecture records environment-first diagnostics accurately. Mixed-flag,
-lockfile-less, false-positive alias, and positive aliased-declaration
+inspectability constraints; an initial optimization made graph-independent
+packages skip the editor's frozen Cargo graph read; hover identity now carries
+the canonical definition module and symbol through single-hop import aliases;
+LSP binding and certification artifact diagnostics match CLI codes/messages; and
+the editor architecture records environment-before-target diagnostics
+accurately. Mixed-flag, lockfile-less, false-positive alias, and positive aliased-declaration
 regressions cover these remediations. A fresh authoritative gate and repeated
 whole-diff review remain the Wave 5 closure gates. The post-pass-3
 authoritative create-PR gate passes every blocking lane in `852.51s`: Python
@@ -2190,19 +2190,50 @@ canonical graph, including live bridge discovery and workspace-member Python
 requirements, while only Cargo's specific missing-lock/frozen failure becomes a
 read-only deferred status across dependency, configured-environment, and
 declaration shapes. Stale existing locks remain hard package diagnostics. Live
-bridge inputs participate in the cache fingerprint, interpreter probes disable
-bytecode writes, package-wide diagnostic ownership is reassigned when its owner
-document closes, and mixed shared-target failures use kind-neutral
-wording with end-to-end attribution coverage. Cancellation documentation now
-states the sequential server's non-preemptive boundary, and alias identity is
-scoped to the implemented single-hop semantic definition mapping. Fresh
+bridge inputs participate in the cache fingerprint, workspace-importing
+interpreter probes disable bytecode writes, package-wide diagnostic ownership
+is reassigned when its owner document closes, and mixed shared-target failures
+use kind-neutral wording with end-to-end attribution coverage. Cancellation
+documentation now states the sequential server's non-preemptive boundary, and
+alias identity is scoped to the implemented single-hop semantic definition mapping. Fresh
 authoritative create-PR validation passes every blocking lane on the exact
 post-pass-4 candidate in `795.90s`: Python interop `19/19`, LSP `69/69`,
 analysis `48/48`, package `139/139`, runtime-platform `28` variants with one
 capability-gated skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c`
 and a warm `42/42` cache. The live LSP protocol smoke passes, every per-step
 budget passes, and the overall warm wall-time notice is the only non-blocking
-advisory. Another frozen whole-diff review remains required.
+advisory. That pre-existing smoke covers generic diagnostic publication and
+notification ordering; it does not exercise Python declaration authoring over
+the wire. Another frozen whole-diff review remains required.
+
+Residual ledger for closure: declaration behavior is exercised through shared
+compiler/driver queries and in-process LSP tests, but there is no direct
+wire-protocol LSP-versus-CLI parity fixture. Per-document publication on open,
+change, and save preserves protocol ordering but can transiently leave a
+package-wide diagnostic duplicated or a sibling's Python diagnostics stale
+until its next publication trigger; closing the current owner recomputes and
+republishes the remaining owner, with a dedicated regression. A missing Cargo
+lock remains a read-only `deferred` editor status without a command hint until
+ordinary package resolution creates the lock, while a stale existing lock is a
+hard package error. Missing-lock classification keys the invocation directory
+and current Cargo create-versus-update wording; a legacy Cargo workspace-member
+lockfile path is not independently hardened. Shared targets report the first
+violated combined constraint, and the mixed-constraint success shape is not
+independently pinned.
+
+The target and environment probes disable bytecode writes; the isolated
+certification version probe does not pass `-B`, but imports only standard-library
+modules under `-I` and cannot write in the workspace. Snapshot-construction
+failure preserves compiler diagnostics and is trace-only. Package fingerprints
+are recomputed per remaining document after close, dependency-manifest cache
+invalidation remains watcher-dependent, transient probe failures have no TTL,
+and caches shrink only on watcher invalidation. LSP/CLI artifact help remains
+asymmetric, protocol help uses the broad `certified` label for some uncertified
+declarations, and the test environment uses a symlinked fixture interpreter.
+Alias-aware status is single-hop, and external probes are not preempted
+mid-process. The architecture summary's short cancellation phrase is read under
+that non-preemptive constraint. The driver Python interop module is `894/900`
+lines and must be split by responsibility before further growth.
 
 Tasks:
 
