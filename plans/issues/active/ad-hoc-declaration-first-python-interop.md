@@ -66,10 +66,13 @@ and `python doctor` CLI surfaces, multi-app/final-app resolution, deferred
 library reporting, executable non-mutation/parity evidence, demo, and docs are
 implemented, locally validated, milestone-reviewed, and closed in
 [PR #2993](https://github.com/sifr-lang/sifr/pull/2993). M14 binding and
-certification authoring delivery waves 1 through 4 are implemented with focused
-local validation, and the authoritative create-PR gate passes every blocking
-lane; repeated milestone review and merge are in progress. M15 and later
-milestones are not yet implemented.
+certification authoring is implemented, locally validated, and
+closure-approved in [PR #2994](https://github.com/sifr-lang/sifr/pull/2994).
+Direct Fable High pass 1 drove delivery-profile, environment-freshness,
+mutation-ordering, positional-only, symlink-confinement, cross-module runtime,
+and schema-diagnostic remediation; pass 2 returned **SATISFIED** with no
+blocker, major, or minor findings. M15 and later milestones are not yet
+implemented.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
@@ -207,7 +210,7 @@ Implementation progress:
 - [x] M11 Arrow C Data Interface ([PR #2991](https://github.com/sifr-lang/sifr/pull/2991))
 - [x] M12 DLPack one-shot tensor transfer ([PR #2992](https://github.com/sifr-lang/sifr/pull/2992))
 - [x] M13 read-only check and doctor ([PR #2993](https://github.com/sifr-lang/sifr/pull/2993))
-- [ ] M14 binding and certification authoring
+- [x] M14 binding and certification authoring ([PR #2994](https://github.com/sifr-lang/sifr/pull/2994))
 - [ ] M15 LSP declaration authoring
 - [ ] M16 raw API ergonomics on shared ownership
 - [ ] M17 ecosystem migration and certification
@@ -1962,7 +1965,7 @@ Delivery waves:
 - [x] Wave 4 — add stub-only, inline, native-extension, overload, unresolved,
   drift, certification, non-mutation, demo, public/internal documentation, and
   delivery-profile evidence.
-- [ ] Wave 5 — authoritative validation, repeated full milestone review,
+- [x] Wave 5 — authoritative validation, repeated full milestone review,
   closure ledger, and merge.
 
 Focused evidence:
@@ -2001,6 +2004,17 @@ v3 payload. Focused package `61/61`, driver Python `52/52` plus seven expected
 integration ignores, codegen `887/887`, expanded blocking authoring,
 profile-readiness, package/file-size, Clippy, transfer-inventory, and diff
 checks pass after remediation. [Review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-1-direct.md)
+
+The fresh post-remediation authoritative `create-pr` profile passes every
+blocking lane in `839.93s`, including Python interop `18/18` with the newly
+selected binding-authoring suite, E2E `131/131` with signature
+`7c39b8c1dd4fec7c`, runtime platform `28/28`, and hardening `6/6`. Every
+per-step blocking budget passes; the warm wall-time notice is a non-blocking
+advisory. Direct Fable High pass 2 independently reran the authoring suite and
+focused package/driver checks, verified every pass-1 remediation, found no
+remaining blocker, major, or minor issue, and returned **SATISFIED**. Its four
+notes document non-blocking future hardening opportunities without weakening
+the M14 acceptance contract. [Review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-2.md)
 
 Tasks:
 
