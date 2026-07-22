@@ -2319,7 +2319,12 @@ second package. Whole-diff Fable High
 confirmed the product shortcut was fully removed and the benchmark correction
 is deterministic with unchanged budgets, then requested the didOpen setup
 clarification and durable `workspace_mode` documentation now included in this
-merge unit. A fresh frozen whole-diff review remains required.
+merge unit. Frozen whole-diff Fable High
+[pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-fable-high-review-pass-5.md)
+re-verified every prior finding, the complete M16 feature body, and the final
+benchmark routing at the exact pushed head, then returned **SATISFIED** with no
+blocker, major, or minor findings. The authoritative merge-profile gate and PR
+merge remain before Wave 5 can close.
 
 Tasks:
 
