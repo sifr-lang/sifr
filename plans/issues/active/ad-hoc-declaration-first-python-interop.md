@@ -85,8 +85,10 @@ per-environment and per-target caches, declaration-scoped diagnostics, and
 direct regression evidence. Repeated whole-diff review through pass 8 closed
 lockfile parity, live bridge/workspace aggregation, diagnostic-owner election,
 and excluded-document publication gaps and returned **SATISFIED**. The final
-authoritative create-PR gate passes every blocking lane. M16 and later
-milestones are not yet implemented.
+authoritative create-PR gate passes every blocking lane. M16 is implemented,
+authoritatively validated, repeatedly reviewed to satisfaction, and
+closure-approved on [PR #2996](https://github.com/sifr-lang/sifr/pull/2996).
+M17 is not yet implemented.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
@@ -226,7 +228,7 @@ Implementation progress:
 - [x] M13 read-only check and doctor ([PR #2993](https://github.com/sifr-lang/sifr/pull/2993))
 - [x] M14 binding and certification authoring ([PR #2994](https://github.com/sifr-lang/sifr/pull/2994))
 - [x] M15 LSP declaration authoring ([PR #2995](https://github.com/sifr-lang/sifr/pull/2995))
-- [ ] M16 raw API ergonomics on shared ownership
+- [x] M16 raw API ergonomics on shared ownership ([PR #2996](https://github.com/sifr-lang/sifr/pull/2996))
 - [ ] M17 ecosystem migration and certification
 
 ### M0. Complete Contract Lock And Evidence Model
@@ -2323,8 +2325,14 @@ merge unit. Frozen whole-diff Fable High
 [pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-fable-high-review-pass-5.md)
 re-verified every prior finding, the complete M16 feature body, and the final
 benchmark routing at the exact pushed head, then returned **SATISFIED** with no
-blocker, major, or minor findings. The authoritative merge-profile gate and PR
-merge remain before Wave 5 can close.
+blocker, major, or minor findings. The fresh authoritative merge-profile gate
+passes every blocking lane in `4410.10s`: Python interop `25/25`, LSP `72/72`,
+package `139/139`, driver `383/383` plus `34/34` generated builds, representative
+performance `8/8`, runtime-platform `30` variants with three capability/tooling
+skips, E2E `674/674` with signature `1f8b1cadc4f48ec8`, and hardening `261`
+variants with zero failures. The cold E2E cache (`0/178`), aggregate warm
+wall-time, and group-skew notices are non-blocking advisories; every lane and
+blocking budget passes. M16 is closure-approved for PR merge.
 
 Tasks:
 
@@ -2355,7 +2363,7 @@ Delivery waves:
 - [x] Wave 4 — prove ordinary automatic drop and raw/declaration cleanup
   equivalence, and prove raw coroutine execution uses the application-owned
   loop under success, failure, concurrency, cancellation, and shutdown.
-- [ ] Wave 5 — add focused verification/demo/docs, run authoritative validation,
+- [x] Wave 5 — add focused verification/demo/docs, run authoritative validation,
   repeat whole-milestone review to satisfaction, close the ledger, and merge.
 
 Implementation candidate: the public generic intrinsics reuse the declaration
@@ -2392,8 +2400,13 @@ pass 3 rejected the first shortcut remediation with two major false negatives;
 canonical resolution is restored, both findings have discriminating regressions,
 and benchmark workspace mode is now explicit. The full representative suite
 passes `8/8`; its LSP diagnostics case records a `4.009 ms` median, `4.134 ms`
-p95, and `71.5 MiB` peak RSS. Repeated whole-diff review, the authoritative
-merge-gate rerun, and PR merge remain before Wave 5 can close.
+p95, and `71.5 MiB` peak RSS. Whole-diff pass 5 is **SATISFIED** with no
+findings. The fresh authoritative merge profile passes every blocking lane in
+`4410.10s`, including Python interop `25/25`, representative performance `8/8`,
+driver `383/383` plus `34/34` generated builds, E2E `674/674` with signature
+`1f8b1cadc4f48ec8`, and hardening `261/261`. The cold-cache wall-time and group
+skew are non-blocking advisories. M16 is closure-approved for merge on
+[PR #2996](https://github.com/sifr-lang/sifr/pull/2996).
 
 Tasks:
 
