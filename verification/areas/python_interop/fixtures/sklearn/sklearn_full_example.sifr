@@ -1,83 +1,18 @@
-from sifr.python import (
-    Object,
-    PythonError,
-    call_attr,
-    close,
-    copy_list_int,
-    from_int,
-    from_list,
-    get_attr,
-    import_module,
-)
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-@blocking_io
-def run_example() -> Result[None, PythonError]:
-    try:
-        tree: Object = import_module("sklearn.tree")
-        train_a_x: Object = from_int(0)
-        train_a_y: Object = from_int(0)
-        train_b_x: Object = from_int(0)
-        train_b_y: Object = from_int(1)
-        train_c_x: Object = from_int(2)
-        train_c_y: Object = from_int(2)
-        train_d_x: Object = from_int(3)
-        train_d_y: Object = from_int(2)
-        train_a: Object = from_list([train_a_x, train_a_y])
-        train_b: Object = from_list([train_b_x, train_b_y])
-        train_c: Object = from_list([train_c_x, train_c_y])
-        train_d: Object = from_list([train_d_x, train_d_y])
-        x_train: Object = from_list([train_a, train_b, train_c, train_d])
-        label_a: Object = from_int(0)
-        label_b: Object = from_int(0)
-        label_c: Object = from_int(1)
-        label_d: Object = from_int(1)
-        y_train: Object = from_list([label_a, label_b, label_c, label_d])
-        random_state: Object = from_int(11)
-        model: Object = call_attr(tree, "DecisionTreeClassifier", [], [("random_state", random_state)])
-        fitted: Object = call_attr(model, "fit", [x_train, y_train], [])
-
-        query_a_x: Object = from_int(0)
-        query_a_y: Object = from_int(0)
-        query_b_x: Object = from_int(3)
-        query_b_y: Object = from_int(3)
-        query_a: Object = from_list([query_a_x, query_a_y])
-        query_b: Object = from_list([query_b_x, query_b_y])
-        x_query: Object = from_list([query_a, query_b])
-        predictions_obj: Object = call_attr(fitted, "predict", [x_query], [])
-        predictions_list_obj: Object = call_attr(predictions_obj, "tolist", [], [])
-        predictions: list[int] = copy_list_int(predictions_list_obj)
-        classes_obj: Object = get_attr(fitted, "classes_")
-        classes_list_obj: Object = call_attr(classes_obj, "tolist", [], [])
-        classes: list[int] = copy_list_int(classes_list_obj)
-
-        predictions_ok: bool = len(predictions) == 2 and predictions[0] == 0 and predictions[1] == 1
-        classes_ok: bool = len(classes) == 2 and classes[0] == 0 and classes[1] == 1
-        passed: bool = predictions_ok and classes_ok
-
-        closed_classes_list: None = close(classes_list_obj)
-        closed_classes: None = close(classes_obj)
-        closed_predictions_list: None = close(predictions_list_obj)
-        closed_predictions: None = close(predictions_obj)
-        closed_x_query: None = close(x_query)
-        closed_fitted: None = close(fitted)
-        closed_model: None = close(model)
-        closed_random_state: None = close(random_state)
-        closed_y_train: None = close(y_train)
-        closed_x_train: None = close(x_train)
-        closed_tree: None = close(tree)
-        if passed:
-            print("sifr-python-interop:sklearn:predictions=0,1:classes=0,1")
-        else:
-            raise PythonError("scikit-learn full example did not round-trip expected predictions")
-    except PythonError as e:
-        raise e
-    return None
+@python(bridge.sklearn_example.run)
+def run_example() -> Result[str, PythonError]: ...
 
 
 def main() -> Result[None, PythonError]:
     try:
-        completed: None = run_example()
-    except PythonError as e:
-        raise e
+        before: ResourceDiagnostics = resource_diagnostics()
+        marker: str = run_example()
+        after: ResourceDiagnostics = resource_diagnostics()
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("scikit-learn bridge leaked Python objects")
+        print(marker)
+    except PythonError as error:
+        raise error
     return None

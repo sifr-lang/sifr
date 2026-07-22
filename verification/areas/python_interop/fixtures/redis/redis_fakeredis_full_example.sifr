@@ -1,64 +1,18 @@
-from sifr.python import (
-    Object,
-    PythonError,
-    call,
-    call_attr,
-    close,
-    from_bool,
-    from_bytes,
-    from_str,
-    get_attr,
-    import_module,
-    to_bytes,
-    to_str,
-)
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-@blocking_io
+@python(bridge.redis_fakeredis_example.run)
+def run_example() -> Result[str, PythonError]: ...
+
+
 def main() -> Result[None, PythonError]:
     try:
-        redis_module: Object = import_module("redis")
-        fakeredis: Object = import_module("fakeredis")
-        hiredis: Object = import_module("hiredis")
-
-        decode: Object = from_bool(True)
-        fake_client: Object = call_attr(fakeredis, "FakeRedis", [], [("decode_responses", decode)])
-        key: Object = from_str("sifr:library:redis")
-        value: Object = from_str("ready")
-        set_result: Object = call_attr(fake_client, "set", [key, value], [])
-        get_result: Object = call_attr(fake_client, "get", [key], [])
-        observed: str = to_str(get_result)
-
-        reader_class: Object = get_attr(hiredis, "Reader")
-        reader: Object = call(reader_class, [], [])
-        payload: Object = from_bytes(b"+PONG\r\n")
-        feed_result: Object = call_attr(reader, "feed", [payload], [])
-        reply_obj: Object = call_attr(reader, "gets", [], [])
-        reply: bytes = to_bytes(reply_obj)
-
-        redis_version_obj: Object = get_attr(redis_module, "__version__")
-        redis_version: str = to_str(redis_version_obj)
-        passed: bool = observed == "ready" and reply == b"PONG" and redis_version != ""
-
-        closed_redis_version_obj: None = close(redis_version_obj)
-        closed_reply_obj: None = close(reply_obj)
-        closed_feed_result: None = close(feed_result)
-        closed_payload: None = close(payload)
-        closed_reader: None = close(reader)
-        closed_reader_class: None = close(reader_class)
-        closed_get_result: None = close(get_result)
-        closed_set_result: None = close(set_result)
-        closed_value: None = close(value)
-        closed_key: None = close(key)
-        closed_fake_client: None = close(fake_client)
-        closed_decode: None = close(decode)
-        closed_hiredis: None = close(hiredis)
-        closed_fakeredis: None = close(fakeredis)
-        closed_redis_module: None = close(redis_module)
-        if passed:
-            print("sifr-python-interop:redis-fakeredis:value=ready:reply=PONG")
-        else:
-            raise PythonError("redis/fakeredis/hiredis full example did not validate expected results")
-    except PythonError as e:
-        raise e
+        before: ResourceDiagnostics = resource_diagnostics()
+        marker: str = run_example()
+        after: ResourceDiagnostics = resource_diagnostics()
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("Redis/fakeredis bridge leaked Python objects")
+        print(marker)
+    except PythonError as error:
+        raise error
     return None

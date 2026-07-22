@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 import time
@@ -11,6 +12,31 @@ from typing import Any
 from env import RunnerPaths, cargo_env_for_repo_manifest
 
 EXAMPLE_TIMEOUT_SECONDS = 600
+RAW_API_SYMBOLS = {
+    "Object",
+    "call",
+    "call_attr",
+    "close",
+    "from_bool",
+    "from_bytes",
+    "from_dict_str",
+    "from_float",
+    "from_int",
+    "from_list",
+    "from_none",
+    "from_record",
+    "from_str",
+    "from_tuple",
+    "get_attr",
+    "get_item",
+    "import_module",
+    "to_bool",
+    "to_bytes",
+    "to_float",
+    "to_int",
+    "to_none",
+    "to_str",
+}
 
 
 @dataclass(frozen=True)
@@ -52,8 +78,15 @@ def build_examples_report(
     case_results = runner(paths)
     failures = sum(1 for case in case_results if case["status"] != "example-passed")
     observed_case_ids = [case.get("id") for case in case_results]
-    if len(observed_case_ids) != len(set(observed_case_ids)) or set(observed_case_ids) != set(
-        cases_by_id
+    invalid_execution_models = [
+        case.get("id")
+        for case in case_results
+        if case.get("execution_model") != "compiled-sifr-declaration"
+    ]
+    if (
+        len(observed_case_ids) != len(set(observed_case_ids))
+        or set(observed_case_ids) != set(cases_by_id)
+        or invalid_execution_models
     ):
         failures = max(1, failures)
     return _report(
@@ -80,6 +113,7 @@ def run_examples_self_tests(
             {
                 "id": case.case_id,
                 "status": "example-passed",
+                "execution_model": "compiled-sifr-declaration",
                 "sifr_source": case.relative_source,
                 "elapsed_ms": 0,
             }
@@ -88,6 +122,8 @@ def run_examples_self_tests(
     )
     if skipped_payload["status"] != "examples-passed":
         raise SystemExit(f"{suite_name} examples self-test expected examples-passed")
+    if skipped_payload["execution_model"] != "compiled-sifr-declaration":
+        raise SystemExit(f"{suite_name} examples self-test execution-model drift")
     case_ids = {case["id"] for case in skipped_payload["cases"]}
     if case_ids != set(cases_by_id):
         raise SystemExit(f"{suite_name} examples self-test case drift: {sorted(case_ids)}")
@@ -127,6 +163,9 @@ def run_examples_self_tests(
         raise SystemExit(
             f"{suite_name} examples self-test invalid trust roots: {sorted(invalid_roots)}"
         )
+    raw_seed = "from sifr.python import Object, PythonError, call_attr\n"
+    if imported_raw_api_symbols(raw_seed) != {"Object", "call_attr"}:
+        raise SystemExit(f"{suite_name} examples self-test raw API guard drift")
 
     empty_payload = build_examples_report(
         paths,
@@ -146,6 +185,7 @@ def run_examples_self_tests(
             {
                 "id": first_case.case_id,
                 "status": "example-failed",
+                "execution_model": "compiled-sifr-declaration",
                 "sifr_source": first_case.relative_source,
                 "error": "synthetic example failure",
             }
@@ -171,6 +211,21 @@ def validate_source_presence(
                     "status": "fail",
                     "sifr_source": case.relative_source,
                     "reason": "missing source fixture",
+                }
+            )
+            continue
+        source = source_path.read_text(encoding="utf-8")
+        raw_symbols = imported_raw_api_symbols(source)
+        if raw_symbols or "@trust_python_dynamic" in source:
+            details = sorted(raw_symbols)
+            if "@trust_python_dynamic" in source:
+                details.append("@trust_python_dynamic")
+            checks.append(
+                {
+                    "id": case.case_id,
+                    "status": "fail",
+                    "sifr_source": case.relative_source,
+                    "reason": f"ordinary example uses raw Python API: {details}",
                 }
             )
             continue
@@ -216,10 +271,22 @@ def validate_source_presence(
                 "id": case.case_id,
                 "status": "pass",
                 "sifr_source": case.relative_source,
-                "check": "source-present",
+                "check": "declaration-first-source",
             }
         )
     return checks
+
+
+def imported_raw_api_symbols(source: str) -> set[str]:
+    imported: set[str] = set()
+    pattern = re.compile(
+        r"from\s+sifr\.python\s+import\s+(?:\((.*?)\)|([^\n]+))",
+        re.DOTALL,
+    )
+    for match in pattern.finditer(source):
+        body = match.group(1) if match.group(1) is not None else match.group(2)
+        imported.update(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", body or ""))
+    return imported.intersection(RAW_API_SYMBOLS)
 
 
 def run_example_cases(
@@ -409,6 +476,7 @@ def _run_case(paths: RunnerPaths, package_root: Path, case_config: ExampleCase) 
     case: dict[str, Any] = {
         "id": case_config.case_id,
         "status": status,
+        "execution_model": "compiled-sifr-declaration",
         "sifr_source": case_config.relative_source,
         "elapsed_ms": elapsed_ms,
         "stdout_marker": case_config.stdout_marker,
@@ -486,6 +554,8 @@ def _report(
         "area": "python_interop",
         "suite": f"{suite_name}-examples",
         "status": status,
+        "execution_model": "compiled-sifr-declaration",
+        "source_policy": "ordinary-examples-forbid-raw-python-api",
         "result_statuses": ["example-passed", "example-failed"],
         "dependencies": sorted({root for case in cases_by_id.values() for root in case.import_roots}),
         "source_checks": source_checks,

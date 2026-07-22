@@ -2433,6 +2433,39 @@ Validation:
 Depends on all preceding declaration, protocol, tooling, and raw-runtime
 milestones.
 
+Delivery waves:
+
+- [ ] Wave 1 — migrate every ordinary runnable ecosystem example to typed
+  declarations or hermetic bridges, retain exactly one small intentional raw
+  example, and add a fail-closed source-policy guard.
+- [ ] Wave 2 — replace Python-client live service execution with built Sifr
+  binaries for Redis, Postgres, Kafka, direct SQS, and SNS-to-SQS delivery,
+  including callback handoff and structured host skips.
+- [ ] Wave 3 — consolidate compiled callback, async HTTP, Arrow, DLPack, and
+  resource-zero evidence into the capability certification ledger; add the M17
+  demo and finish public/internal documentation.
+- [ ] Wave 4 — run authoritative validation, repeat whole-milestone and
+  whole-phase review to satisfaction, merge, update phase/roadmap/architecture
+  status, and archive the completed phase.
+
+Initial inventory after M16 closure found eleven ordinary runnable examples
+still using raw `Object` plumbing and manual close chains: NumPy, pandas,
+Polars, PyArrow, Torch, scikit-learn, FastAPI/Pydantic,
+cryptography/CFFI, boto3/botocore, Redis/fakeredis/hiredis, and
+SQLAlchemy/Alembic/psycopg. The live lane only type-checked six Sifr sources,
+then executed every service operation in Python clients. These are the two
+primary M17 gaps; existing compiled declaration suites already own async HTTP,
+callbacks, Arrow, DLPack, context, buffer, cancellation, and cleanup evidence
+and must remain executable certification inputs rather than inventory claims.
+
+Wave 1 pre-review validation passes the authoritative `create-pr` profile in
+`1341.56s`: Python interop `19/19`, create-PR E2E `131/131` with signature
+`7c39b8c1dd4fec7c`, runtime-platform `28/28` with one declared capability skip,
+and hardening `6/6`. Every blocking step budget passes; the cold-cache wall-time
+notice is advisory. All eleven inventoried ordinary examples now execute typed
+declarations backed by package-local hermetic bridges, and the shared runner
+records `compiled-sifr-declaration` evidence while rejecting raw API imports.
+
 Tasks:
 
 - Migrate all runnable biip/schwifty, dataframe, ML, web, database, cloud,

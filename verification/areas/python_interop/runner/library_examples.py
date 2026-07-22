@@ -20,6 +20,7 @@ LIBRARY_EXAMPLE_CASES = {
         stdout_marker="sifr-python-interop:pyarrow:sum=10:kind=array:producer=pyarrow.lib",
         import_roots=("pyarrow",),
         native_roots=("pyarrow",),
+        bridge_files=("pyarrow_example.py",),
     ),
     "fastapi-pydantic": ExampleCase(
         case_id="fastapi-pydantic",
@@ -27,6 +28,7 @@ LIBRARY_EXAMPLE_CASES = {
         stdout_marker="sifr-python-interop:fastapi-pydantic:value=42:title=Sifr API:status=201",
         import_roots=("builtins", "fastapi", "pydantic", "pydantic_core", "starlette"),
         native_roots=("pydantic_core",),
+        bridge_files=("fastapi_pydantic_example.py",),
     ),
     "cryptography-cffi": ExampleCase(
         case_id="cryptography-cffi",
@@ -34,6 +36,7 @@ LIBRARY_EXAMPLE_CASES = {
         stdout_marker="sifr-python-interop:cryptography-cffi:roundtrip=sifr-secret:certifi=ok",
         import_roots=("certifi", "cffi", "cryptography"),
         native_roots=("cffi", "cryptography"),
+        bridge_files=("cryptography_cffi_example.py",),
     ),
     "boto3-botocore": ExampleCase(
         case_id="boto3-botocore",
@@ -41,6 +44,7 @@ LIBRARY_EXAMPLE_CASES = {
         stdout_marker="sifr-python-interop:boto3-botocore:queue=https://sqs.us-east-1.amazonaws.com/123456789012/sifr-queue",
         import_roots=("boto3", "botocore"),
         native_roots=(),
+        bridge_files=("boto3_botocore_example.py",),
     ),
     "redis-fakeredis": ExampleCase(
         case_id="redis-fakeredis",
@@ -48,6 +52,7 @@ LIBRARY_EXAMPLE_CASES = {
         stdout_marker="sifr-python-interop:redis-fakeredis:value=ready:reply=PONG",
         import_roots=("fakeredis", "hiredis", "redis"),
         native_roots=("hiredis",),
+        bridge_files=("redis_fakeredis_example.py",),
     ),
     "sqlalchemy-psycopg": ExampleCase(
         case_id="sqlalchemy-psycopg",
@@ -55,6 +60,7 @@ LIBRARY_EXAMPLE_CASES = {
         stdout_marker="sifr-python-interop:sqlalchemy-psycopg:scalar=42:dialect=sqlite:conninfo=ok",
         import_roots=("alembic", "psycopg", "sqlalchemy"),
         native_roots=("psycopg", "sqlalchemy"),
+        bridge_files=("sqlalchemy_psycopg_example.py",),
     ),
     "sqlite-context": ExampleCase(
         case_id="sqlite-context",

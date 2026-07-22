@@ -1,78 +1,18 @@
-from sifr.python import (
-    Object,
-    PythonError,
-    call,
-    call_attr,
-    close,
-    from_bool,
-    from_dict_str,
-    from_int,
-    from_str,
-    get_attr,
-    import_module,
-    to_bytes,
-    to_int,
-    to_str,
-)
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-@blocking_io
+@python(bridge.fastapi_pydantic_example.run)
+def run_example() -> Result[str, PythonError]: ...
+
+
 def main() -> Result[None, PythonError]:
     try:
-        builtins: Object = import_module("builtins")
-        fastapi: Object = import_module("fastapi")
-        pydantic: Object = import_module("pydantic")
-        responses: Object = import_module("starlette.responses")
-
-        title_value: Object = from_str("Sifr API")
-        app: Object = call_attr(fastapi, "FastAPI", [], [("title", title_value)])
-        title_obj: Object = get_attr(app, "title")
-        title: str = to_str(title_obj)
-
-        int_type: Object = get_attr(builtins, "int")
-        adapter_module: Object = from_str("builtins")
-        parent_depth: Object = from_int(0)
-        # Embedded calls may not provide Pydantic's default two-frame caller context.
-        adapter: Object = call_attr(pydantic, "TypeAdapter", [int_type], [("_parent_depth", parent_depth), ("module", adapter_module)])
-        raw_value: Object = from_str("42")
-        validated_obj: Object = call_attr(adapter, "validate_python", [raw_value], [])
-        value: int = to_int(validated_obj)
-
-        ok_value: Object = from_bool(True)
-        content: Object = from_dict_str([("ok", ok_value)])
-        status_arg: Object = from_int(201)
-        response_class: Object = get_attr(responses, "JSONResponse")
-        response: Object = call(response_class, [content], [("status_code", status_arg)])
-        status_obj: Object = get_attr(response, "status_code")
-        status: int = to_int(status_obj)
-        rendered: Object = call_attr(response, "render", [content], [])
-        rendered_body: bytes = to_bytes(rendered)
-
-        passed: bool = value == 42 and title == "Sifr API" and status == 201 and rendered_body == b"{\"ok\":true}"
-
-        closed_rendered: None = close(rendered)
-        closed_status_obj: None = close(status_obj)
-        closed_response: None = close(response)
-        closed_response_class: None = close(response_class)
-        closed_status_arg: None = close(status_arg)
-        closed_content: None = close(content)
-        closed_validated_obj: None = close(validated_obj)
-        closed_raw_value: None = close(raw_value)
-        closed_adapter: None = close(adapter)
-        closed_parent_depth: None = close(parent_depth)
-        closed_adapter_module: None = close(adapter_module)
-        closed_int_type: None = close(int_type)
-        closed_title_obj: None = close(title_obj)
-        closed_app: None = close(app)
-        closed_title_value: None = close(title_value)
-        closed_responses: None = close(responses)
-        closed_pydantic: None = close(pydantic)
-        closed_fastapi: None = close(fastapi)
-        closed_builtins: None = close(builtins)
-        if passed:
-            print("sifr-python-interop:fastapi-pydantic:value=42:title=Sifr API:status=201")
-        else:
-            raise PythonError("FastAPI/Pydantic full example did not validate expected results")
-    except PythonError as e:
-        raise e
+        before: ResourceDiagnostics = resource_diagnostics()
+        marker: str = run_example()
+        after: ResourceDiagnostics = resource_diagnostics()
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("FastAPI/Pydantic bridge leaked Python objects")
+        print(marker)
+    except PythonError as error:
+        raise error
     return None

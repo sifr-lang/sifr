@@ -1,72 +1,18 @@
-from sifr.python import (
-    Object,
-    PythonError,
-    call_attr,
-    close,
-    copy_list_int,
-    from_dict_str,
-    from_int,
-    from_list,
-    from_str,
-    get_item,
-    import_module,
-    to_int,
-)
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-@blocking_io
-def run_example() -> Result[None, PythonError]:
-    try:
-        pd: Object = import_module("pandas")
-        city_a: Object = from_str("oslo")
-        city_b: Object = from_str("oslo")
-        city_c: Object = from_str("paris")
-        cities: Object = from_list([city_a, city_b, city_c])
-        value_a: Object = from_int(2)
-        value_b: Object = from_int(3)
-        value_c: Object = from_int(5)
-        values: Object = from_list([value_a, value_b, value_c])
-        data: Object = from_dict_str([("city", cities), ("value", values)])
-        frame: Object = call_attr(pd, "DataFrame", [data], [])
-        value_series: Object = get_item(frame, "value")
-        factor: Object = from_int(2)
-        doubled_series: Object = call_attr(value_series, "mul", [factor], [])
-        assigned: Object = call_attr(frame, "assign", [], [("double", doubled_series)])
-        city_key: Object = from_str("city")
-        grouped: Object = call_attr(assigned, "groupby", [city_key], [])
-        summed: Object = call_attr(grouped, "sum", [], [])
-        double_totals: Object = get_item(summed, "double")
-        total_obj: Object = call_attr(double_totals, "sum", [], [])
-        total: int = to_int(total_obj)
-        value_list_obj: Object = call_attr(value_series, "tolist", [], [])
-        copied: list[int] = copy_list_int(value_list_obj)
-
-        passed: bool = len(copied) == 3 and copied[0] == 2 and copied[2] == 5 and total == 20
-        closed_value_list: None = close(value_list_obj)
-        closed_total: None = close(total_obj)
-        closed_double_totals: None = close(double_totals)
-        closed_summed: None = close(summed)
-        closed_grouped: None = close(grouped)
-        closed_city_key: None = close(city_key)
-        closed_assigned: None = close(assigned)
-        closed_doubled: None = close(doubled_series)
-        closed_factor: None = close(factor)
-        closed_value_series: None = close(value_series)
-        closed_frame: None = close(frame)
-        closed_data: None = close(data)
-        closed_pd: None = close(pd)
-        if passed:
-            print("sifr-python-interop:pandas:double-total=20:values=2,3,5")
-        else:
-            raise PythonError("pandas full example did not round-trip expected values")
-    except PythonError as e:
-        raise e
-    return None
+@python(bridge.pandas_example.run)
+def run_example() -> Result[str, PythonError]: ...
 
 
 def main() -> Result[None, PythonError]:
     try:
-        completed: None = run_example()
-    except PythonError as e:
-        raise e
+        before: ResourceDiagnostics = resource_diagnostics()
+        marker: str = run_example()
+        after: ResourceDiagnostics = resource_diagnostics()
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("pandas bridge leaked Python objects")
+        print(marker)
+    except PythonError as error:
+        raise error
     return None
