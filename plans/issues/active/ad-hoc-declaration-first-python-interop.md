@@ -2438,7 +2438,7 @@ Delivery waves:
 - [x] Wave 1 — migrate every ordinary runnable ecosystem example to typed
   declarations or hermetic bridges, retain exactly one small intentional raw
   example, and add a fail-closed source-policy guard.
-- [ ] Wave 2 — replace Python-client live service execution with built Sifr
+- [x] Wave 2 — replace Python-client live service execution with built Sifr
   binaries for Redis, Postgres, Kafka, direct SQS, and SNS-to-SQS delivery,
   including callback handoff and structured host skips.
 - [ ] Wave 3 — consolidate compiled callback, async HTTP, Arrow, DLPack, and
@@ -2511,6 +2511,17 @@ Python interop `19/19`, create-PR E2E `131/131` with signature
 `7c39b8c1dd4fec7c`, runtime-platform `28` variants with zero failures and one
 declared capability skip, and hardening `6/6`. Every per-step blocking budget
 passes; only the aggregate warm wall-time target is advisory.
+
+Whole-diff Fable High
+[review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m17-wave2-fable-high-review-pass-1.md)
+independently rebuilt and SHA-256 hashed all six binaries, reproduced the six
+Docker-unavailable structured skips, and directly ran the Redis binary against
+an unreachable endpoint to prove embedded-bridge execution, typed error
+propagation, and absence of a false success marker. It rechecked the complete
+runner, trust, callback, cleanup, reporting, policy, documentation, and tracking
+diff and returned **SATISFIED** with no blocker, major, or actionable minor.
+Wave 2 is closure-approved in
+[PR #2998](https://github.com/sifr-lang/sifr/pull/2998).
 
 Tasks:
 
