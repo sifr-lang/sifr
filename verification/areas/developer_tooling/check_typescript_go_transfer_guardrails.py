@@ -121,6 +121,7 @@ REQUIRED_DOC_SNIPPETS = [
     "crates/sifr/src/check_and_package_commands.rs:417",
     "crates/sifr/src/check_and_package_commands.rs:418",
     "crates/sifr/src/check_and_package_commands.rs:610",
+    "crates/sifr/src/check_and_package_commands.rs:716",
     "crates/sifr/src/check_and_package_commands.rs:743",
     "crates/sifr/src/check_and_package_commands.rs:746",
     "crates/sifr/src/check_and_package_commands.rs:778",
