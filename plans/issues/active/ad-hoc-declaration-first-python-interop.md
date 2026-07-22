@@ -2175,7 +2175,14 @@ certification artifact diagnostics match CLI codes/messages; and the editor
 architecture records environment-first diagnostics accurately. Mixed-flag,
 lockfile-less, false-positive alias, and positive aliased-declaration
 regressions cover these remediations. A fresh authoritative gate and repeated
-whole-diff review remain the Wave 5 closure gates.
+whole-diff review remain the Wave 5 closure gates. The post-pass-3
+authoritative create-PR gate passes every blocking lane in `852.51s`: Python
+interop `19/19`, LSP `64/64`, analysis `48/48`, package `139/139`, driver
+`382/382` plus `33` expected generated-build ignores, runtime-platform `28`
+variants with one capability-gated skip, and E2E `131/131` with signature
+`7c39b8c1dd4fec7c` and a warm `42/42` cache. Every per-step budget passes; the
+overall warm wall-time is the only non-blocking advisory. Repeated whole-diff
+review remains the final Wave 5 closure gate.
 
 Tasks:
 
