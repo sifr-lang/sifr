@@ -2477,6 +2477,12 @@ path. Torch now verifies the reported `float32` dtype and PyArrow verifies both
 reported capsule names. The full runner self-test and the compiled ML and
 library suites pass after remediation.
 
+Post-remediation authoritative `create-pr` validation passes every blocking
+lane in `770.76s`: Python interop `19/19`, create-PR E2E `131/131` with
+signature `7c39b8c1dd4fec7c`, runtime-platform `28` variants with zero failures
+and one declared capability skip, and hardening `6/6`. All per-step blocking
+budgets pass; the warm wall-time notice remains advisory.
+
 Tasks:
 
 - Migrate all runnable biip/schwifty, dataframe, ML, web, database, cloud,
