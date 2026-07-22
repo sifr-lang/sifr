@@ -2,7 +2,7 @@ use super::implementation::{unknown_file, AnalysisHost};
 use crate::queries::{HoverInfo, SignatureHelp};
 use crate::snapshot::{AnalysisError, AnalysisErrorKind};
 use ruff_text_size::{TextRange, TextSize};
-use sifr_frontend::{FileId, ModuleAnalysisView};
+use sifr_frontend::{EditorSemanticKind, FileId, ModuleAnalysisView};
 use sifr_syntax::{SourceText as SyntaxSourceText, TextPosition};
 
 impl AnalysisHost {
@@ -16,16 +16,22 @@ impl AnalysisHost {
             return Ok(None);
         };
         let analysis = self.semantic_analysis_for_file(file)?;
-        Ok(analysis
+        let entry = analysis
             .editor_semantics
             .entries
             .iter()
             .filter(|entry| contains_offset(entry.range, offset))
             .min_by_key(|entry| entry.range.len())
-            .map(|entry| HoverInfo {
-                contents: entry.detail.clone(),
-                symbol_name: entry.name.clone(),
-            }))
+            .cloned();
+        let Some(entry) = entry else {
+            return Ok(None);
+        };
+        let symbol_file = self.hover_symbol_file(file, &entry.name, entry.kind)?;
+        Ok(Some(HoverInfo {
+            contents: entry.detail,
+            symbol_name: entry.name,
+            symbol_file,
+        }))
     }
 
     pub(super) fn semantic_signature_help(
@@ -81,6 +87,30 @@ impl AnalysisHost {
             .and_then(|context| context.source_text_for_file(file))
             .map(str::to_owned)
             .ok_or_else(|| unknown_file(file))
+    }
+
+    fn hover_symbol_file(
+        &mut self,
+        current_file: FileId,
+        name: &str,
+        kind: EditorSemanticKind,
+    ) -> Result<Option<FileId>, AnalysisError> {
+        if kind != EditorSemanticKind::Function {
+            return Ok(None);
+        }
+        let mut files = self
+            .symbol_index()?
+            .entries()
+            .iter()
+            .filter(|entry| entry.kind == "function" && entry.name == name)
+            .map(|entry| entry.file)
+            .collect::<Vec<_>>();
+        files.sort();
+        files.dedup();
+        if files.contains(&current_file) {
+            return Ok(Some(current_file));
+        }
+        Ok((files.len() == 1).then(|| files[0]))
     }
 }
 

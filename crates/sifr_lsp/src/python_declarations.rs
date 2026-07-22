@@ -169,17 +169,16 @@ impl Session {
 
         let mut plan = analysis_plan.plan;
         let mut diagnostics = Vec::new();
-        if !compiler_has_errors && !plan.declarations.is_empty() {
-            if let Some(root) = package_root.as_deref() {
-                let environment =
-                    self.package_python_environment(root, external_fingerprint, &plan);
-                diagnostics.extend(environment.diagnostics.into_iter().map(|diagnostic| {
-                    ScopedDiagnostic {
-                        file: None,
-                        diagnostic,
-                    }
-                }));
-                if let Some(runtime) = environment.runtime {
+        if let Some(root) = package_root.as_deref() {
+            let environment = self.package_python_environment(root, external_fingerprint, &plan);
+            diagnostics.extend(environment.diagnostics.into_iter().map(|diagnostic| {
+                ScopedDiagnostic {
+                    file: None,
+                    diagnostic,
+                }
+            }));
+            if let Some(runtime) = environment.runtime {
+                if !compiler_has_errors && !plan.declarations.is_empty() {
                     diagnostics.extend(scoped_diagnostics(
                         sifr_driver::validate_protocol_certifications_for_plan(&plan, &runtime),
                         &analysis_plan.module_files,
@@ -197,6 +196,8 @@ impl Session {
             } else {
                 mark_embedded_bridge_targets(&mut plan);
             }
+        } else {
+            mark_embedded_bridge_targets(&mut plan);
         }
         self.check_active_request_cancelled()?;
         let snapshot = PackageSnapshot {
@@ -252,10 +253,12 @@ impl Session {
         module_files: &BTreeMap<String, FileId>,
     ) -> LspResult<Vec<ScopedDiagnostic>> {
         mark_embedded_bridge_targets(plan);
+        let mut seen_targets = std::collections::BTreeSet::new();
         let targets = plan
             .target_probes
             .iter()
             .filter(|probe| !probe.target_path.starts_with("__sifr_bridge__."))
+            .filter(|probe| seen_targets.insert(probe.target_path.clone()))
             .map(|probe| probe.target_path.clone())
             .collect::<Vec<_>>();
         let mut diagnostics = Vec::new();
@@ -331,7 +334,7 @@ fn resolve_package_python_environment_inner(
         &session.workspace_root,
         sifr_package::CargoLockMode::Frozen,
     )
-    .map_err(render_package_diagnostics)?;
+    .map_err(|failure| render_package_diagnostics(failure.into_diagnostics()))?;
     let package_id = session.package_id(&snapshot.graph).ok_or_else(|| {
         vec![diagnostic_with_code(
             DiagnosticCode::PACKAGE_METADATA_PARSE,
@@ -383,22 +386,40 @@ fn resolve_package_python_environment_inner(
     let mut diagnostics = Vec::new();
     let binding_path = package_root.join(sifr_package::PYTHON_BINDINGS_FILE);
     if binding_path.is_file() {
-        if let Err(reason) =
-            sifr_package::load_python_bindings(package_root, runtime.authoring_environment_digest())
-        {
-            diagnostics.push(diagnostic_with_code(
+        match sifr_package::load_python_bindings(
+            package_root,
+            runtime.authoring_environment_digest(),
+        ) {
+            Ok(artifact) => match serde_json::to_string(&artifact.bindings) {
+                Ok(identity) => runtime.set_binding_identity(identity),
+                Err(error) => diagnostics.push(diagnostic_with_code(
+                    DiagnosticCode::PYENV_LOCK_OR_PROJECT_STALE,
+                    format!("could not fingerprint Python bindings: {error}"),
+                    "rerun `sifr python bind --check`".to_string(),
+                )),
+            },
+            Err(reason) => diagnostics.push(diagnostic_with_code(
                 DiagnosticCode::PYENV_LOCK_OR_PROJECT_STALE,
                 format!("invalid or drifted Python binding artifact: {reason}"),
                 "rerun `sifr python bind --check`".to_string(),
-            ));
+            )),
         }
     }
     let certification_path = package_root.join(sifr_package::PYTHON_CERTIFICATIONS_FILE);
     if certification_path.is_file() {
         match sifr_package::load_python_certifications(package_root, &digest) {
             Ok(artifact) => {
-                runtime.set_arrow_certifications(artifact.arrow);
-                runtime.set_dlpack_certifications(artifact.dlpack);
+                match sifr_driver::validate_certification_distributions(&runtime, &artifact) {
+                    Ok(()) => {
+                        runtime.set_arrow_certifications(artifact.arrow);
+                        runtime.set_dlpack_certifications(artifact.dlpack);
+                    }
+                    Err(reason) => diagnostics.push(diagnostic_with_code(
+                        DiagnosticCode::PYZC_INVALID_DECLARATION,
+                        format!("invalid or drifted Python certification artifact: {reason}"),
+                        "rerun `sifr python certify --check`".to_string(),
+                    )),
+                }
             }
             Err(reason) => diagnostics.push(diagnostic_with_code(
                 DiagnosticCode::PYZC_INVALID_DECLARATION,

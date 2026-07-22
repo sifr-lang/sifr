@@ -2143,8 +2143,21 @@ The post-remediation authoritative create-PR gate passes every blocking lane in
 `870.11s`: Python interop `19/19`, LSP `59/59`, analysis `48/48`, package
 `139/139`, runtime-platform `28` variants with zero failures, and E2E `131/131`
 with signature `7c39b8c1dd4fec7c`. Every per-step blocking budget passes; the
-overall warm wall-time notice is a non-blocking advisory. Fresh whole-diff
-review remains the Wave 5 closure gate.
+overall warm wall-time notice is a non-blocking advisory. Whole-diff Fable High
+[pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-2.md)
+confirmed all seven pass-1 findings resolved and returned **SATISFIED**. Its
+five conservative follow-ups are also remediated before closure: hover status
+uses exact semantic function/file identity; shared targets are probed once and
+update every declaration status; binding drift uses a schema-valid stale
+artifact regression; the LSP shares certification distribution checks and
+binding identity with the CLI and validates configured environments even with
+zero declarations; and the shared package-graph loader preserves the CLI's
+structured Cargo context and exit classification. Focused suites pass LSP
+`61/61`, analysis `48/48`, package `139/139`, driver `380/380` with `33`
+expected generated-build ignores, and CLI/E2E `37/37`; workspace Clippy,
+formatting, HIR and driver maintainability, and the `900`-line file-size
+guardrail over `2788` files pass. A fresh authoritative gate and frozen-diff
+review remain the Wave 5 closure gates.
 
 Tasks:
 

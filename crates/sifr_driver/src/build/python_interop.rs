@@ -132,10 +132,12 @@ pub fn probe_python_interop_plan(
     interpreter: &Path,
 ) -> Vec<RenderedDiagnostic> {
     mark_embedded_bridge_targets(plan);
+    let mut seen_targets = std::collections::BTreeSet::new();
     let targets = plan
         .target_probes
         .iter()
         .filter(|probe| !probe.target_path.starts_with("__sifr_bridge__."))
+        .filter(|probe| seen_targets.insert(probe.target_path.clone()))
         .map(|probe| probe.target_path.clone())
         .collect::<Vec<_>>();
     targets
@@ -164,18 +166,22 @@ pub fn apply_python_target_inspection(
     target: &str,
     inspection: Result<&PythonTargetInspection, &str>,
 ) -> Vec<PythonInteropPlanDiagnostic> {
-    let Some(probe_index) = plan
+    let probe_indices = plan
         .target_probes
         .iter()
-        .position(|probe| probe.target_path == target)
-    else {
-        return Vec::new();
-    };
-    if target.starts_with("__sifr_bridge__.") {
-        plan.target_probes[probe_index].status = PythonTargetProbeStatus::RuntimeChecked;
+        .enumerate()
+        .filter_map(|(index, probe)| (probe.target_path == target).then_some(index))
+        .collect::<Vec<_>>();
+    if probe_indices.is_empty() {
         return Vec::new();
     }
-    let probe = &plan.target_probes[probe_index];
+    if target.starts_with("__sifr_bridge__.") {
+        for index in probe_indices {
+            plan.target_probes[index].status = PythonTargetProbeStatus::RuntimeChecked;
+        }
+        return Vec::new();
+    }
+    let probe = &plan.target_probes[probe_indices[0]];
     let diagnostic = match inspection {
         Ok(output) if !output.ok => Some(diagnostic_with_code(
             format!(
@@ -241,11 +247,14 @@ pub fn apply_python_target_inspection(
             return diagnostics;
         }
     }
-    plan.target_probes[probe_index].status = if output.inspectable {
+    let status = if output.inspectable {
         PythonTargetProbeStatus::Verified
     } else {
         PythonTargetProbeStatus::RuntimeChecked
     };
+    for index in probe_indices {
+        plan.target_probes[index].status = status;
+    }
     Vec::new()
 }
 

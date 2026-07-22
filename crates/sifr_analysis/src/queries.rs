@@ -23,6 +23,7 @@ pub struct CompletionItem {
 pub struct HoverInfo {
     pub contents: String,
     pub symbol_name: String,
+    pub symbol_file: Option<FileId>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

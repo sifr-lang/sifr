@@ -4,7 +4,8 @@ use super::cli_model_and_entrypoint::{
     PackageGraphContext, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
 };
 use super::diagnostic_rendering_and_run::{
-    current_session_package_id, execute_cargo_plan, package_session_for_cwd, render_diagnostics,
+    cargo_failure_diagnostic, current_session_package_id, execute_cargo_plan,
+    package_session_for_cwd, render_diagnostics,
 };
 use super::formatter_cli::FmtArgs;
 use super::python_runtime_context::{package_python_runtime, package_python_runtime_for_check};
@@ -341,15 +342,49 @@ pub(super) fn load_package_graph_context_from_root(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> Result<PackageGraphContext, i32> {
-    let snapshot =
-        sifr_package::load_package_graph_snapshot(workspace_root, lock_mode).map_err(|errors| {
-            let diagnostics = errors
-                .into_iter()
-                .map(package_diagnostic)
-                .collect::<Vec<_>>();
-            render_diagnostics(&diagnostics, diagnostic_format);
-            EXIT_USER_DIAGNOSTIC
-        })?;
+    let snapshot = match sifr_package::load_package_graph_snapshot(workspace_root, lock_mode) {
+        Ok(snapshot) => snapshot,
+        Err(failure) => {
+            let exit = match &failure.kind {
+                sifr_package::PackageGraphLoadFailureKind::Spawn { message } => {
+                    let diagnostic =
+                        cargo_failure_diagnostic(&failure.plan, lock_mode, None, message);
+                    render_diagnostics(&[diagnostic], diagnostic_format);
+                    EXIT_USAGE_OR_CONFIG
+                }
+                sifr_package::PackageGraphLoadFailureKind::Command {
+                    exit_status,
+                    output,
+                } => {
+                    let diagnostic = cargo_failure_diagnostic(
+                        &failure.plan,
+                        lock_mode,
+                        *exit_status,
+                        &bounded_excerpt(output),
+                    );
+                    render_diagnostics(&[diagnostic], diagnostic_format);
+                    EXIT_USER_DIAGNOSTIC
+                }
+                sifr_package::PackageGraphLoadFailureKind::Package {
+                    diagnostics,
+                    usage_error,
+                } => {
+                    let diagnostics = diagnostics
+                        .iter()
+                        .cloned()
+                        .map(package_diagnostic)
+                        .collect::<Vec<_>>();
+                    render_diagnostics(&diagnostics, diagnostic_format);
+                    if *usage_error {
+                        EXIT_USAGE_OR_CONFIG
+                    } else {
+                        EXIT_USER_DIAGNOSTIC
+                    }
+                }
+            };
+            return Err(exit);
+        }
+    };
     Ok(PackageGraphContext {
         metadata: snapshot.metadata,
         graph: snapshot.graph,

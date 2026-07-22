@@ -15,7 +15,10 @@ pub use crate::cargo::commands::{
     CargoPackageSelection, CargoPublishOptions, CargoVendorOptions,
 };
 pub use crate::cargo::errors::{map_cargo_failure, CargoAction};
-pub use crate::cargo::load::{load_package_graph_snapshot, PackageGraphSnapshot};
+pub use crate::cargo::load::{
+    load_package_graph_snapshot, PackageGraphLoadFailure, PackageGraphLoadFailureKind,
+    PackageGraphSnapshot,
+};
 pub use crate::cargo::lock_modes::{validate_offline_source_availability, CargoLockMode};
 pub use crate::cargo::metadata::{
     parse_metadata_json, CargoDependency, CargoMetadata, CargoPackage, CargoPackageId,

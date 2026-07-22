@@ -114,6 +114,24 @@ def main() -> int:
         .and_then(serde_json::Value::as_str)
         .expect("sqrt_table hover");
     assert!(!markdown.contains("Python target"));
+
+    let shadowed = source.replace(
+        "def main() -> int:\n    return sqrt_table()",
+        "def main(sqrt: int) -> int:\n    return sqrt",
+    );
+    let (mut shadowed_session, _shadowed_temp, shadowed_uri) = open_fixture(&shadowed);
+    let hover = request(
+        &mut shadowed_session,
+        "textDocument/hover",
+        &shadowed_uri,
+        9,
+        12,
+    );
+    let markdown = hover
+        .pointer("/contents/value")
+        .and_then(serde_json::Value::as_str)
+        .expect("shadowing parameter hover");
+    assert!(!markdown.contains("Python target"));
 }
 
 #[test]
@@ -157,6 +175,39 @@ fn same_named_symbol_in_another_module_is_not_certified() {
         })
         .expect("helper sqrt completion");
     assert!(helper_sqrt.pointer("/data/pythonStatus").is_none());
+
+    let hover = request(&mut session, "textDocument/hover", &helper_uri, 4, 12);
+    let markdown = hover
+        .pointer("/contents/value")
+        .and_then(serde_json::Value::as_str)
+        .expect("helper sqrt hover");
+    assert!(!markdown.contains("Python target"));
+}
+
+#[test]
+fn declarations_sharing_a_target_report_the_same_verified_status() {
+    let source = SOURCE.replace(
+        "def sqrt(value: float) -> Result[float, PythonError]: ...",
+        "def sqrt(value: float) -> Result[float, PythonError]: ...\n\n@python(math.sqrt)\ndef other_sqrt(value: float) -> Result[float, PythonError]: ...",
+    );
+    let (mut session, _temp, uri) = open_fixture(&source);
+    let completion = request(&mut session, "textDocument/completion", &uri, 9, 15);
+    let items = completion
+        .get("items")
+        .and_then(serde_json::Value::as_array)
+        .expect("completion items");
+    for label in ["sqrt", "other_sqrt"] {
+        let item = items
+            .iter()
+            .find(|item| item.get("label").and_then(serde_json::Value::as_str) == Some(label))
+            .expect("shared-target completion");
+        assert_eq!(
+            item.pointer("/data/pythonStatus")
+                .and_then(serde_json::Value::as_str),
+            Some("verified")
+        );
+    }
+    assert_eq!(session.python_declarations.probe_runs(), 1);
 }
 
 #[test]
@@ -228,8 +279,11 @@ fn watcher_drift_revalidates_authoring_artifacts() {
     let (mut session, temp, uri) = open_fixture(SOURCE);
     let _ =
         crate::diagnostics::document_diagnostics(&mut session, &uri).expect("initial diagnostics");
-    std::fs::write(temp.path().join("sifr.python-bindings.json"), "{}\n")
-        .expect("write drifted artifact");
+    std::fs::write(
+        temp.path().join("sifr.python-bindings.json"),
+        "{\"schema_version\":1,\"environment_digest\":\"stale\",\"bindings\":[]}\n",
+    )
+    .expect("write drifted artifact");
     session.record_watcher_events(1);
 
     let diagnostics =
@@ -256,6 +310,28 @@ fn certification_drift_is_checked_against_the_live_environment_digest() {
 
     let diagnostics =
         crate::diagnostics::document_diagnostics(&mut session, &uri).expect("drift diagnostics");
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.get("code").and_then(serde_json::Value::as_str) == Some("SIFR-PYZC-0001")
+            && diagnostic
+                .get("message")
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|message| message.contains("environment digest"))
+    }));
+}
+
+#[test]
+fn configured_environment_is_validated_without_python_declarations() {
+    let source = "def main() -> int:\n    return 1\n";
+    let (mut session, temp, uri) = open_fixture(source);
+    std::fs::write(
+        temp.path().join("sifr.python-certifications.json"),
+        "{\"schema_version\":3,\"environment_digest\":\"stale\",\"arrow\":[],\"dlpack\":[]}\n",
+    )
+    .expect("write stale certification artifact");
+    session.record_watcher_events(1);
+
+    let diagnostics = crate::diagnostics::document_diagnostics(&mut session, &uri)
+        .expect("environment diagnostics");
     assert!(diagnostics.iter().any(|diagnostic| {
         diagnostic.get("code").and_then(serde_json::Value::as_str) == Some("SIFR-PYZC-0001")
             && diagnostic
@@ -294,9 +370,10 @@ fn library_without_root_environment_selection_defers_python_status() {
 
     let diagnostics = crate::diagnostics::document_diagnostics(&mut session, &uri)
         .expect("deferred library diagnostics");
-    assert!(diagnostics.iter().all(|diagnostic| {
-        diagnostic.get("code").and_then(serde_json::Value::as_str) != Some("SIFR-PYENV-0001")
-    }));
+    assert!(
+        diagnostics.is_empty(),
+        "unexpected deferred-library diagnostics: {diagnostics:?}"
+    );
     let completion = request(&mut session, "textDocument/completion", &uri, 6, 15);
     let item = completion
         .get("items")
