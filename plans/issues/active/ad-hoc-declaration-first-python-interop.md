@@ -2157,7 +2157,14 @@ structured Cargo context and exit classification. Focused suites pass LSP
 expected generated-build ignores, and CLI/E2E `37/37`; workspace Clippy,
 formatting, HIR and driver maintainability, and the `900`-line file-size
 guardrail over `2788` files pass. A fresh authoritative gate and frozen-diff
-review remain the Wave 5 closure gates.
+review remain the Wave 5 closure gates. The fresh authoritative create-PR gate
+now passes every blocking lane in `1209.07s`: Python interop `19/19`, LSP
+`61/61`, analysis `48/48`, package `139/139`, driver `380/380` plus `33`
+expected generated-build ignores, runtime-platform `28` variants with one
+capability-gated skip, and E2E `131/131` with signature
+`7c39b8c1dd4fec7c`. Every per-step budget passes. The cold E2E cache (`0/42`)
+and overall warm wall-time produce one non-blocking advisory; frozen-diff
+review remains the final Wave 5 closure gate.
 
 Tasks:
 
