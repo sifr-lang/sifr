@@ -106,6 +106,22 @@ fn dlpack_artifact_requires_within_run_identity_and_exact_deleter() {
     fs::remove_dir_all(root).expect("cleanup");
 }
 
+#[test]
+fn version_two_artifact_reports_schema_before_new_required_fields() {
+    let root = temp_root("schema-v2");
+    fs::create_dir_all(&root).expect("fixture directory");
+    fs::write(
+        root.join(PYTHON_CERTIFICATIONS_FILE),
+        r#"{"schema_version":2,"environment_digest":"environment-a","arrow":[]}"#,
+    )
+    .expect("legacy artifact");
+    let error = load_python_certifications(&root, "environment-a")
+        .expect_err("legacy schema must fail with a version diagnostic");
+    assert!(error.contains("schema version 2; expected 3"), "{error}");
+    assert!(!error.contains("missing field 'dlpack'"), "{error}");
+    fs::remove_dir_all(root).expect("cleanup");
+}
+
 fn artifact(fixture: &Path) -> PythonCertificationArtifact {
     PythonCertificationArtifact {
         schema_version: ARROW_CERTIFICATION_SCHEMA_VERSION,

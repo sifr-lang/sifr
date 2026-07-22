@@ -194,6 +194,12 @@ fn validate_declaration(
                 declaration.name, parameter.name
             ));
         }
+        if parameter.kind == PythonBindingParameterKind::PositionalOnly && parameter.optional {
+            errors.push(format!(
+                "Python function '{}' has optional positional-only parameter '{}', which cannot be represented by the declaration call plan",
+                declaration.name, parameter.name
+            ));
+        }
         let rank = parameter_kind_rank(parameter.kind);
         if rank < previous_rank {
             errors.push(format!(
@@ -406,6 +412,33 @@ mod tests {
         .expect_err("untyped reports must fail closed");
         assert!(errors.iter().any(|error| error.contains("Any")));
         assert!(errors.iter().any(|error| error.contains("Unknown")));
+    }
+
+    #[test]
+    fn rejects_optional_positional_only_parameters() {
+        let report = PythonBindingProbeReport {
+            module: "sample".to_string(),
+            soabi: "cpython-test".to_string(),
+            distribution: None,
+            symbols: vec![symbol(
+                "pow",
+                PythonBindingDeclarationKind::Function,
+                false,
+                vec![parameter(
+                    "exponent",
+                    "float",
+                    PythonBindingParameterKind::PositionalOnly,
+                    true,
+                )],
+                Some("float"),
+            )],
+            errors: vec![],
+        };
+        let errors = render_python_binding_scaffold("sample", &["pow".to_string()], &report)
+            .expect_err("optional positional-only declarations must fail closed");
+        assert!(errors
+            .iter()
+            .any(|error| { error.contains("optional positional-only parameter 'exponent'") }));
     }
 
     fn symbol(

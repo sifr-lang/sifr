@@ -1985,6 +1985,23 @@ blocking lane in `1352.80s`, including Python interop `17/17`, create-PR E2E
 hardening `6/6`. The cold-cache warm wall-time notice is a non-blocking
 advisory; every per-step blocking budget passes.
 
+Direct Fable High review pass 1 returned `NEEDS CHANGES`. It confirmed that the
+new blocking suite was missing from all delivery-profile selections, found two
+authoring-integrity majors (retained bindings could be relabeled after an
+environment change without re-probing, and output could be clobbered before
+artifact validation), and identified optional positional-only mismatch,
+symlinked typing/output acceptance, missing cross-module `PythonError` runtime
+coverage, and legacy certification schema diagnostics. The remediation adds
+the suite to create-PR/merge/nightly/release; re-probes every retained binding
+before environment adoption; validates the complete in-memory artifact before
+writes; rejects collisions, user-owned outputs, symlinks, and unsupported
+positional-only defaults; executes the generated binding across a project
+module at runtime; and parses the certification schema header before the full
+v3 payload. Focused package `61/61`, driver Python `52/52` plus seven expected
+integration ignores, codegen `887/887`, expanded blocking authoring,
+profile-readiness, package/file-size, Clippy, transfer-inventory, and diff
+checks pass after remediation. [Review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-1-direct.md)
+
 Tasks:
 
 - Add symbol-selective `sifr python bind` from explicit user overrides,

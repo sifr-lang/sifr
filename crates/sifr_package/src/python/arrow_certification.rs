@@ -15,6 +15,11 @@ pub struct PythonCertificationArtifact {
     pub dlpack: Vec<DlpackCertification>,
 }
 
+#[derive(Deserialize)]
+struct PythonCertificationHeader {
+    schema_version: u32,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct ArrowCertification {
@@ -102,8 +107,7 @@ pub fn load_python_certifications(
     let path = package_root.join(PYTHON_CERTIFICATIONS_FILE);
     let bytes = std::fs::read(&path)
         .map_err(|error| format!("could not read '{}': {error}", path.display()))?;
-    let artifact = serde_json::from_slice::<PythonCertificationArtifact>(&bytes)
-        .map_err(|error| format!("invalid '{}': {error}", path.display()))?;
+    let artifact = parse_python_certification_artifact(&path, &bytes)?;
     validate_python_certifications(package_root, environment_digest, &artifact)?;
     Ok(artifact)
 }
@@ -116,8 +120,7 @@ pub fn load_python_certifications_for_update(
     let path = package_root.join(PYTHON_CERTIFICATIONS_FILE);
     let bytes = std::fs::read(&path)
         .map_err(|error| format!("could not read '{}': {error}", path.display()))?;
-    let mut artifact = serde_json::from_slice::<PythonCertificationArtifact>(&bytes)
-        .map_err(|error| format!("invalid '{}': {error}", path.display()))?;
+    let mut artifact = parse_python_certification_artifact(&path, &bytes)?;
     artifact
         .arrow
         .retain(|certification| certification.target != replaced_target);
@@ -133,8 +136,7 @@ pub fn load_python_certifications_for_dlpack_update(
     let path = package_root.join(PYTHON_CERTIFICATIONS_FILE);
     let bytes = std::fs::read(&path)
         .map_err(|error| format!("could not read '{}': {error}", path.display()))?;
-    let mut artifact = serde_json::from_slice::<PythonCertificationArtifact>(&bytes)
-        .map_err(|error| format!("invalid '{}': {error}", path.display()))?;
+    let mut artifact = parse_python_certification_artifact(&path, &bytes)?;
     artifact
         .dlpack
         .retain(|certification| certification.target != replaced_target);
@@ -154,6 +156,22 @@ pub fn write_python_certifications(
     std::fs::write(&path, bytes)
         .map_err(|error| format!("could not write '{}': {error}", path.display()))?;
     Ok(path)
+}
+
+fn parse_python_certification_artifact(
+    path: &Path,
+    bytes: &[u8],
+) -> Result<PythonCertificationArtifact, String> {
+    let header = serde_json::from_slice::<PythonCertificationHeader>(bytes)
+        .map_err(|error| format!("invalid '{}': {error}", path.display()))?;
+    if header.schema_version != PYTHON_CERTIFICATION_SCHEMA_VERSION {
+        return Err(format!(
+            "unsupported Python certification schema version {}; expected {}",
+            header.schema_version, PYTHON_CERTIFICATION_SCHEMA_VERSION
+        ));
+    }
+    serde_json::from_slice::<PythonCertificationArtifact>(bytes)
+        .map_err(|error| format!("invalid '{}': {error}", path.display()))
 }
 
 pub fn validate_python_certifications(

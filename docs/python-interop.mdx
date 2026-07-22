@@ -194,12 +194,16 @@ source digest in `sifr.python-bindings.json`. Generated `.sifr` files, the
 artifact, and consumed package-local typing sources are package archive inputs.
 
 Generation fails closed on `Any`, bare `object`, unknown overloads, callable or
-generic shapes without a Sifr contract, missing annotations, and unresolved
-types. It never substitutes a dynamic `Object`. `bind --check` is frozen and
-read-only: it reruns resolution and generation in memory and rejects typing,
-environment, distribution, source, or generated-file drift. Ordinary package
-check/build also validates checked-in outputs and consumed local typing hashes
-and includes binding identity in its build cache key.
+generic shapes without a Sifr contract, missing annotations, unresolved types,
+and optional positional-only parameters that the declaration call plan cannot
+represent. It never substitutes a dynamic `Object` or overwrites an unrelated
+package file. If the selected environment identity changes while adding or
+replacing one module, every retained binding is re-probed before the artifact
+can adopt the new identity. `bind --check` is frozen and read-only: it reruns
+resolution and generation in memory and rejects typing, environment,
+distribution, source, or generated-file drift. Ordinary package check/build
+also validates checked-in outputs and consumed local typing hashes and includes
+binding identity in its build cache key.
 
 ## Blocking And Async
 

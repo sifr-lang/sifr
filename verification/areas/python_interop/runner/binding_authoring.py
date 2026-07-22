@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import shutil
 import subprocess
 import sys
@@ -103,6 +104,100 @@ def main() -> int:
         "generated source is not reviewable checked-in Sifr",
     )
 
+    original_artifact = artifact_path.read_bytes()
+    tampered = json.loads(original_artifact)
+    retained = next(entry for entry in tampered["bindings"] if entry["module"] == "wrapt")
+    require(retained["distribution"] is not None, "wrapt distribution identity is missing")
+    retained["distribution"]["version"] += ".stale"
+    retained["source_fingerprint"] = binding_fingerprint(retained)
+    tampered["environment_digest"] = "f" * 64
+    artifact_path.write_text(json.dumps(tampered, indent=2) + "\n", encoding="utf-8")
+    stale_snapshot = snapshot(package)
+    stale = run(
+        binary,
+        package,
+        "python",
+        "bind",
+        "math",
+        "--symbols",
+        "sqrt,ceil",
+        "--override",
+        "typing/math_override.pyi",
+        "--external-stub",
+        "typing/math_external.pyi",
+        expected=1,
+    )
+    require("wrapt" in stale.stderr and "drift" in stale.stderr.lower(),
+            "environment update did not revalidate retained bindings")
+    require(snapshot(package) == stale_snapshot,
+            "retained-binding environment drift mutated package inputs")
+    artifact_path.write_bytes(original_artifact)
+
+    collision_snapshot = snapshot(package)
+    collision = run(
+        binary,
+        package,
+        "python",
+        "bind",
+        "wrapt",
+        "--symbols",
+        "ObjectProxy",
+        "--stub-package",
+        "wrapt",
+        "--output",
+        "src/math_python.sifr",
+        expected=1,
+    )
+    require("duplicate Python binding output" in collision.stderr,
+            "binding output collision did not fail before writing")
+    require(snapshot(package) == collision_snapshot,
+            "failed binding output collision mutated package inputs")
+
+    user_output = package / "src" / "user_owned.sifr"
+    user_output.write_text("def user_owned():\n    pass\n", encoding="utf-8")
+    user_snapshot = snapshot(package)
+    user_collision = run(
+        binary,
+        package,
+        "python",
+        "bind",
+        "math",
+        "--symbols",
+        "sqrt",
+        "--override",
+        "typing/math_override.pyi",
+        "--output",
+        "src/user_owned.sifr",
+        expected=1,
+    )
+    require("refusing to overwrite non-generated" in user_collision.stderr,
+            "binding authoring allowed a user-owned output overwrite")
+    require(snapshot(package) == user_snapshot,
+            "failed user-owned output overwrite mutated package inputs")
+
+    positional_snapshot = snapshot(package)
+    positional_only = run(
+        binary,
+        package,
+        "python",
+        "bind",
+        "math",
+        "--symbols",
+        "pow",
+        "--override",
+        "typing/positional_only.pyi",
+        expected=1,
+    )
+    require("optional positional-only" in positional_only.stderr,
+            "optional positional-only declaration did not fail closed")
+    require(snapshot(package) == positional_snapshot,
+            "failed positional-only authoring mutated package inputs")
+
+    write_runtime_main(package)
+    runtime = run(binary, package, "run", "src/main.sifr", "--frozen")
+    require("binding runtime ok" in runtime.stdout,
+            "cross-module PythonError binding execution did not run")
+
     before = snapshot(package)
     run(binary, package, "python", "bind", "--check")
     run(binary, package, "check", "src/main.sifr", "--frozen")
@@ -171,6 +266,9 @@ def create_package(root: Path) -> Path:
     (root / "typing" / "unresolved.pyi").write_text(
         "from typing import Any\ndef Fraction(value: Any) -> Any: ...\n", encoding="utf-8"
     )
+    (root / "typing" / "positional_only.pyi").write_text(
+        "def pow(x: float, y: float = 2.0, /) -> float: ...\n", encoding="utf-8"
+    )
     (root / ".venv").symlink_to(AREA_ROOT / ".venv", target_is_directory=True)
     (root / "pyproject.toml").symlink_to(AREA_ROOT / "pyproject.toml")
     (root / "uv.lock").symlink_to(AREA_ROOT / "uv.lock")
@@ -207,6 +305,55 @@ def write_main(root: Path, imports: list[str]) -> None:
         "\n".join(imports) + "\n\n\ndef main():\n    pass\n",
         encoding="utf-8",
     )
+
+
+def write_runtime_main(root: Path) -> None:
+    (root / "src" / "main.sifr").write_text(
+        "from .math_python import sqrt as py_sqrt\n"
+        "from sifr.python import PythonError\n\n\n"
+        "def main() -> Result[None, PythonError]:\n"
+        "    try:\n"
+        "        value: float = py_sqrt(144.0)\n"
+        "        if value != 12.0:\n"
+        "            raise PythonError(\"unexpected binding result\")\n"
+        "        print(\"binding runtime ok\")\n"
+        "        return None\n"
+        "    except PythonError as error:\n"
+        "        raise error\n",
+        encoding="utf-8",
+    )
+
+
+def binding_fingerprint(binding: dict[str, object]) -> str:
+    digest = hashlib.sha256()
+    digest.update(b"sifr-python-binding-v1\0")
+    digest.update(str(binding["module"]).encode())
+    for symbol in binding["symbols"]:
+        digest.update(b"\0")
+        digest.update(str(symbol).encode())
+    digest.update(b"\0")
+    digest.update(str(binding["soabi"]).encode())
+    distribution = binding["distribution"]
+    if distribution is not None:
+        digest.update(b"\0")
+        digest.update(str(distribution["name"]).encode())
+        digest.update(b"\0")
+        digest.update(str(distribution["version"]).encode())
+    precedence = {
+        "override": 0,
+        "stub_package": 1,
+        "py_typed": 2,
+        "external_stub": 3,
+        "introspection": 4,
+    }
+    for source in binding["sources"]:
+        digest.update(bytes([precedence[source["kind"]]]))
+        digest.update(str(source["symbol"]).encode())
+        digest.update(b"\0")
+        digest.update(str(source["identity"]).encode())
+        digest.update(b"\0")
+        digest.update(str(source["digest"]).encode())
+    return digest.hexdigest()
 
 
 def run(

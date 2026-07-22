@@ -1,5 +1,6 @@
 mod arrow_certification;
 mod binding_authoring;
+mod binding_validation;
 mod bridge_inventory;
 mod bridge_resolution;
 mod dlpack_certification;
@@ -22,9 +23,12 @@ pub use arrow_certification::{
 pub use binding_authoring::{
     load_python_bindings, load_python_bindings_for_update, python_binding_generated_digest,
     python_binding_source_fingerprint, required_python_binding_archive_entries,
-    safe_python_binding_output, validate_python_bindings, write_python_bindings, PythonBinding,
-    PythonBindingArtifact, PythonBindingDistribution, PythonBindingSource, PythonBindingSourceKind,
-    PYTHON_BINDINGS_FILE, PYTHON_BINDING_SCHEMA_VERSION,
+    safe_python_binding_output, write_python_bindings, PythonBinding, PythonBindingArtifact,
+    PythonBindingDistribution, PythonBindingSource, PythonBindingSourceKind, PYTHON_BINDINGS_FILE,
+    PYTHON_BINDING_SCHEMA_VERSION,
+};
+pub use binding_validation::{
+    validate_python_bindings, validate_python_bindings_with_generated_source,
 };
 pub use bridge_inventory::{
     discover_python_bridge_inventory, required_python_bridge_archive_entries,

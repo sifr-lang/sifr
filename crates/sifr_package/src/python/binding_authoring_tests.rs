@@ -68,6 +68,53 @@ fn binding_artifact_rejects_environment_generated_and_path_drift() {
     fs::remove_dir_all(root).expect("remove fixture");
 }
 
+#[cfg(unix)]
+#[test]
+fn binding_artifact_rejects_symlinked_typing_sources_and_outputs() {
+    use std::os::unix::fs::symlink;
+
+    let root = temp_root("symlink");
+    let outside = temp_root("symlink-outside");
+    fs::create_dir_all(root.join("src")).expect("source directory");
+    fs::create_dir_all(root.join("typing")).expect("typing directory");
+    fs::create_dir_all(&outside).expect("outside directory");
+    let generated = "def sqrt(): ...\n";
+    let typing = "def sqrt() -> float: ...\n";
+    fs::write(root.join("src/math_python.sifr"), generated).expect("binding");
+    fs::write(root.join("typing/math.pyi"), typing).expect("typing source");
+    fs::write(outside.join("math.pyi"), typing).expect("outside typing source");
+    fs::write(outside.join("math_python.sifr"), generated).expect("outside binding");
+    let artifact = artifact(&root);
+    write_python_bindings(&root, &artifact).expect("artifact should write");
+
+    fs::remove_file(root.join("typing/math.pyi")).expect("remove typing source");
+    symlink(outside.join("math.pyi"), root.join("typing/math.pyi")).expect("typing symlink");
+    let typing_error = load_python_bindings(&root, "environment-a")
+        .expect_err("symlinked typing source must fail");
+    assert!(
+        typing_error.contains("regular package file"),
+        "{typing_error}"
+    );
+
+    fs::remove_file(root.join("typing/math.pyi")).expect("remove typing symlink");
+    fs::write(root.join("typing/math.pyi"), typing).expect("restore typing source");
+    fs::remove_file(root.join("src/math_python.sifr")).expect("remove generated source");
+    symlink(
+        outside.join("math_python.sifr"),
+        root.join("src/math_python.sifr"),
+    )
+    .expect("output symlink");
+    let output_error =
+        load_python_bindings(&root, "environment-a").expect_err("symlinked output must fail");
+    assert!(
+        output_error.contains("regular package file"),
+        "{output_error}"
+    );
+
+    fs::remove_dir_all(root).expect("remove fixture");
+    fs::remove_dir_all(outside).expect("remove outside fixture");
+}
+
 fn artifact(root: &std::path::Path) -> PythonBindingArtifact {
     let symbols = vec!["sqrt".to_string()];
     let sources = vec![PythonBindingSource {
