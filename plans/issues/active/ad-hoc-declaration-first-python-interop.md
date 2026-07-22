@@ -74,17 +74,19 @@ and schema-diagnostic remediation; pass 2 returned **SATISFIED**. Frozen pass
 3 found one additional direct-conversion grammar minor; the root remediation
 and expanded regression evidence passed the authoritative gate, and full pass
 4 returned **SATISFIED** with no blocker, major, or minor findings. M15 is
-implemented on PR #2995 and in closure review. Fable High pass 1 validated the
+implemented, authoritatively validated, and closure-approved on
+[PR #2995](https://github.com/sifr-lang/sifr/pull/2995). Fable High pass 1 validated the
 shared compiler-plan/driver-probe architecture and identified symbol
 misattribution, live environment-digest, library deferral, graph/trust,
 certification, probe-cache/cancellation, diagnostic-scoping, and evidence
 precision gaps. Those findings are remediated with exact `(FileId, symbol)`
 identity, the canonical package graph/environment resolver, live probe digests,
 per-environment and per-target caches, declaration-scoped diagnostics, and
-direct regression evidence; fresh authoritative validation and repeated review
-are in closure. The post-remediation authoritative create-PR gate passes every
-blocking lane; fresh repeated review is pending. M16 and later milestones are
-not yet implemented.
+direct regression evidence. Repeated whole-diff review through pass 8 closed
+lockfile parity, live bridge/workspace aggregation, diagnostic-owner election,
+and excluded-document publication gaps and returned **SATISFIED**. The final
+authoritative create-PR gate passes every blocking lane. M16 and later
+milestones are not yet implemented.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
@@ -2104,7 +2106,7 @@ Delivery waves:
 - [x] Wave 4 — cache by analysis revisions and selected package inputs, with
   source, lifecycle, watcher, custom metadata, artifact, and interpreter
   invalidation.
-- [ ] Wave 5 — authoritative validation, repeated full milestone review,
+- [x] Wave 5 — authoritative validation, repeated full milestone review,
   closure ledger, and merge.
 
 Focused evidence:
@@ -2239,6 +2241,9 @@ cancellation phrase is read under that non-preemptive constraint. The blocking
 lane's name filters are not fail-hard against future test renames, the workspace
 member trust regression asserts its code rather than message attribution, and
 LSP target aggregation duplicates a small amount of driver bridge-marking logic.
+No regression independently pins the load-diagnostic disjunct of the full
+publication predicate, although the combined owner-handoff regression pins both
+the excluded-document and eligible-document directions.
 The driver Python interop module is `894/900` lines and must be split by
 responsibility before further growth.
 
@@ -2270,8 +2275,8 @@ verified the pass-6 major closed but found one combined lifecycle minor: full
 publication still scheduled an analysis-excluded document, whose expected
 analysis error aborted the diagnostic drain before the eligible sibling's
 owner handoff. Full publication now schedules only documents that can provide
-analysis or load diagnostics, using the same publishability boundary as owner
-election. The close-owner regression includes an excluded document and pins
+analysis or load diagnostics, a publication-compatible superset of the
+analysis-only owner-election boundary. The close-owner regression includes an excluded document and pins
 the clear-plus-republish transition. Post-pass-7 authoritative create-PR
 validation passes every blocking lane in `780.26s`: Python interop `19/19`, LSP
 `71/71`, analysis `48/48`, package `139/139`, driver `382/382` plus `33`
@@ -2279,7 +2284,12 @@ expected generated-build ignores, runtime-platform `28` variants with one
 capability-gated skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c`
 and a warm `42/42` cache. Every per-step blocking budget passes; overall warm
 wall time is the only non-blocking advisory. Another frozen whole-diff review
-remains required.
+remains required. Whole-diff Fable High
+[pass 8](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-8.md)
+independently verified the combined publication predicate by inspection and
+mutation testing, confirmed every prior finding remains closed and both
+acceptance criteria hold, and returned **SATISFIED** with no blocker, major, or
+minor findings. M15 is closure-approved for merge.
 
 Tasks:
 
