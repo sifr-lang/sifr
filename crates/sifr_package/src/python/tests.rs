@@ -1,7 +1,6 @@
-use super::test_support::{cargo_id, graph, package, package_id, request, valid_probe};
+use super::test_support::{cargo_id, graph, package, package_id};
 use super::{
-    probe_python_environment, resolve_python_environment, validate_python_environment_probe,
-    PythonImportProbe,
+    resolve_python_environment, resolve_python_environment_for_check, PythonEnvironmentResolution,
 };
 use crate::manifest::sifr::{PythonConfig, SifrManifest, TrustPolicy};
 use sifr_diagnostics::DiagnosticCode;
@@ -116,6 +115,66 @@ fn missing_uv_environment_selection_reports_pyenv_0003() {
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, DiagnosticCode::PYENV_MISSING_SELECTION);
+}
+
+#[test]
+fn read_only_library_resolution_defers_only_missing_final_application_authority() {
+    let mut library = package(
+        "lib",
+        PythonConfig {
+            requires_imports: vec!["numpy".to_string()],
+            ..PythonConfig::default()
+        },
+        TrustPolicy::default(),
+    );
+    library.package_root = temp_root("deferred-library");
+    let graph = graph(vec![library]);
+
+    let resolution = resolve_python_environment_for_check(&graph, &package_id("lib"), &[], true)
+        .expect("missing final-application authority should defer");
+    let PythonEnvironmentResolution::DeferredToFinalApplication(deferred) = resolution else {
+        panic!("library resolution should be deferred");
+    };
+    assert_eq!(deferred.required_imports, ["numpy"]);
+    assert_eq!(deferred.missing_trusted_imports, ["numpy"]);
+    assert!(deferred.environment_selection_missing);
+
+    let diagnostics = resolve_python_environment_for_check(&graph, &package_id("lib"), &[], false)
+        .expect_err("strict resolution must preserve trust failure");
+    assert_eq!(
+        diagnostics[0].code,
+        DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED
+    );
+}
+
+#[test]
+fn read_only_library_resolution_uses_discovered_environment_authority() {
+    let project_root = temp_root("check-default-discovery");
+    fs::create_dir_all(&project_root).expect("create uv project");
+    fs::write(project_root.join("pyproject.toml"), "[project]\n").expect("write project marker");
+    fs::write(project_root.join("uv.lock"), "version = 1\n").expect("write lock marker");
+    let mut library = package(
+        "lib",
+        PythonConfig {
+            requires_imports: vec!["numpy".to_string()],
+            ..PythonConfig::default()
+        },
+        TrustPolicy {
+            python: vec!["numpy".to_string()],
+            ..TrustPolicy::default()
+        },
+    );
+    library.package_root.clone_from(&project_root);
+    let graph = graph(vec![library]);
+
+    let resolution = resolve_python_environment_for_check(&graph, &package_id("lib"), &[], true)
+        .expect("discovered environment should resolve");
+    let PythonEnvironmentResolution::Resolved(resolved) = resolution else {
+        panic!("discovered library environment should not defer");
+    };
+    assert_eq!(resolved.venv_root, project_root.join(".venv"));
+    assert_eq!(resolved.trusted_imports, ["numpy"]);
+    fs::remove_dir_all(project_root).expect("remove uv project");
 }
 
 #[test]
@@ -254,14 +313,6 @@ fn dependency_python_environment_selection_reports_pyenv_0001() {
     assert_eq!(diagnostics[0].code, DiagnosticCode::PYENV_INVALID_CONFIG);
 }
 
-#[test]
-fn probe_rejects_missing_interpreter_with_pyenv_0004() {
-    let request = request();
-    let diagnostic = probe_python_environment(&request).expect_err("missing interpreter must fail");
-
-    assert_eq!(diagnostic.code, DiagnosticCode::PYENV_PROBE_FAILED);
-}
-
 fn temp_root(label: &str) -> PathBuf {
     let nonce = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -271,143 +322,4 @@ fn temp_root(label: &str) -> PathBuf {
         "sifr-python-{label}-{}-{nonce}",
         std::process::id()
     ))
-}
-
-#[test]
-fn probe_rejects_non_cpython_json_with_pyenv_0005() {
-    let request = request();
-    let mut probe = valid_probe();
-    probe.implementation_name = "PyPy".to_string();
-
-    let diagnostic = validate_python_environment_probe(&request, probe)
-        .expect_err("non-CPython probe must fail");
-
-    assert_eq!(
-        diagnostic.code,
-        DiagnosticCode::PYENV_UNSUPPORTED_INTERPRETER
-    );
-}
-
-#[test]
-fn probe_rejects_prefix_outside_venv_with_pyenv_0006() {
-    let request = request();
-    let mut probe = valid_probe();
-    probe.sys_prefix = "/tmp/other".to_string();
-
-    let diagnostic = validate_python_environment_probe(&request, probe)
-        .expect_err("prefix outside venv must fail");
-
-    assert_eq!(diagnostic.code, DiagnosticCode::PYENV_VENV_PREFIX_MISMATCH);
-}
-
-#[test]
-fn probe_rejects_system_prefix_matching_base_prefix_with_pyenv_0006() {
-    let request = request();
-    let mut probe = valid_probe();
-    probe.sys_base_prefix = probe.sys_prefix.clone();
-
-    let diagnostic = validate_python_environment_probe(&request, probe)
-        .expect_err("system interpreter must fail venv isolation");
-
-    assert_eq!(diagnostic.code, DiagnosticCode::PYENV_VENV_PREFIX_MISMATCH);
-}
-
-#[test]
-fn probe_rejects_missing_site_packages_with_pyenv_0007() {
-    let request = request();
-    let mut probe = valid_probe();
-    probe.site_packages = Vec::new();
-
-    let diagnostic = validate_python_environment_probe(&request, probe)
-        .expect_err("missing site-packages must fail");
-
-    assert_eq!(diagnostic.code, DiagnosticCode::PYENV_SITE_PACKAGES_MISSING);
-}
-
-#[test]
-fn probe_rejects_site_packages_outside_venv_with_pyenv_0007() {
-    let request = request();
-    let mut probe = valid_probe();
-    probe.site_packages = vec!["/usr/local/lib/python3.13/site-packages".to_string()];
-
-    let diagnostic = validate_python_environment_probe(&request, probe)
-        .expect_err("system site-packages must fail venv isolation");
-
-    assert_eq!(diagnostic.code, DiagnosticCode::PYENV_SITE_PACKAGES_MISSING);
-}
-
-#[test]
-fn probe_rejects_missing_declared_import_with_pyenv_0008() {
-    let request = request();
-    let mut probe = valid_probe();
-    probe.imports = vec![PythonImportProbe {
-        root: "numpy".to_string(),
-        ok: false,
-        origin: None,
-        distributions: Vec::new(),
-        error: Some("module spec not found".to_string()),
-    }];
-
-    let diagnostic = validate_python_environment_probe(&request, probe)
-        .expect_err("missing declared import must fail");
-
-    assert_eq!(
-        diagnostic.code,
-        DiagnosticCode::PYENV_DECLARED_IMPORT_MISSING
-    );
-}
-
-#[test]
-fn probe_rejects_native_import_failure_with_pyenv_0009() {
-    let request = request();
-    let mut probe = valid_probe();
-    probe.native_imports = vec![PythonImportProbe {
-        root: "numpy".to_string(),
-        ok: false,
-        origin: None,
-        distributions: Vec::new(),
-        error: Some("ImportError: broken extension".to_string()),
-    }];
-
-    let diagnostic = validate_python_environment_probe(&request, probe)
-        .expect_err("native import failure must fail");
-
-    assert_eq!(diagnostic.code, DiagnosticCode::PYENV_NATIVE_IMPORT_FAILED);
-}
-
-#[test]
-fn probe_rejects_free_threaded_cpython_with_pyenv_0010() {
-    let request = request();
-    let mut probe = valid_probe();
-    probe.free_threaded = true;
-
-    let diagnostic = validate_python_environment_probe(&request, probe)
-        .expect_err("free-threaded CPython must fail");
-
-    assert_eq!(
-        diagnostic.code,
-        DiagnosticCode::PYENV_FREE_THREADED_UNSUPPORTED
-    );
-}
-
-#[test]
-fn probe_rejects_missing_lock_digest_with_pyenv_0011() {
-    let mut request = request();
-    request.lock = Some(PathBuf::from("/tmp/venv/uv.lock"));
-    let probe = valid_probe();
-
-    let diagnostic = validate_python_environment_probe(&request, probe)
-        .expect_err("missing lock digest must fail");
-
-    assert_eq!(diagnostic.code, DiagnosticCode::PYENV_LOCK_OR_PROJECT_STALE);
-}
-
-#[test]
-fn valid_probe_preserves_canonical_environment_json() {
-    let request = request();
-    let probe = validate_python_environment_probe(&request, valid_probe())
-        .expect("valid probe should pass");
-
-    assert_eq!(probe.implementation_name, "CPython");
-    assert_eq!(probe.pointer_width, 64);
 }

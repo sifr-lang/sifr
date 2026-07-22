@@ -38,4 +38,16 @@ impl PackageSession {
         }
         self.default_app_target().map(|target| target.is_some())
     }
+
+    /// Return every runnable application entrypoint in deterministic target order.
+    ///
+    /// Read-only package inspection uses this instead of default-target selection so
+    /// a package with multiple applications is still treated as a final application.
+    pub fn runnable_app_paths(&self) -> Result<Vec<PathBuf>, PackageDiagnostic> {
+        Ok(self
+            .discover_app_targets()?
+            .into_iter()
+            .map(|target| target.path)
+            .collect())
+    }
 }

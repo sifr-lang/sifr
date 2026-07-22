@@ -1,3 +1,4 @@
+use super::entrypoint_stages::{import_closure_label, measure_stage, module_analysis_label};
 use super::materialize::{
     cached_binary_path, materialize_binary_project_with_report,
     materialize_cached_binary_project_with_report,
@@ -105,36 +106,6 @@ pub(crate) struct RootedEntrypointPlan {
     python_runtime: Option<PackagePythonRuntime>,
     python_bridges: Option<sifr_package::ResolvedPythonBridgeGraph>,
     rust_interop_context: Option<PackageRustInteropContext>,
-}
-
-fn measure_stage<T>(
-    stages: &mut Vec<BuildStageReport>,
-    label: impl Into<String>,
-    f: impl FnOnce() -> Result<T, Vec<RenderedDiagnostic>>,
-) -> Result<T, Vec<RenderedDiagnostic>> {
-    let start = Instant::now();
-    let value = f()?;
-    stages.push(BuildStageReport::new(label, start.elapsed()));
-    Ok(value)
-}
-
-fn import_closure_label(module_count: usize) -> String {
-    format!(
-        "Parsing import closure ({})",
-        module_count_label(module_count)
-    )
-}
-
-fn module_analysis_label(module_count: usize) -> String {
-    format!("Analyzing {}", module_count_label(module_count))
-}
-
-fn module_count_label(module_count: usize) -> String {
-    if module_count == 1 {
-        "1 module".to_string()
-    } else {
-        format!("{module_count} modules")
-    }
 }
 
 pub(crate) fn compile_single_file_frontend(
@@ -615,6 +586,13 @@ impl RootedEntrypointPlan {
     fn into_generated_binary_project(
         self,
     ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
+        self.into_generated_binary_project_with_probe_policy(false)
+    }
+
+    pub(super) fn into_generated_binary_project_with_probe_policy(
+        self,
+        allow_deferred_python_probes: bool,
+    ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
         let python_runtime = self.python_runtime.clone();
         let python_bridges = self.python_bridges.clone();
         let rust_interop_context = self.rust_interop_context.clone();
@@ -632,11 +610,24 @@ impl RootedEntrypointPlan {
             attach_stdlib_rust_interop(generated, rust_interop_context, &stdlib_interop);
         let generated = apply_package_rust_interop_metadata(generated, rust_interop_context)?;
         let generated = apply_package_python_bridge_metadata(generated, python_bridges.as_ref());
-        let generated = super::python_interop::apply_python_interop_metadata(
-            generated,
-            python_runtime.as_ref(),
-        )?;
-        apply_package_runtime_metadata(generated, python_runtime)
+        if allow_deferred_python_probes {
+            let generated = super::python_interop::apply_python_interop_metadata_for_check(
+                generated,
+                python_runtime.as_ref(),
+            )?;
+            Ok(
+                super::project_codegen::attach_package_runtime_metadata_for_check(
+                    generated,
+                    python_runtime,
+                ),
+            )
+        } else {
+            let generated = super::python_interop::apply_python_interop_metadata(
+                generated,
+                python_runtime.as_ref(),
+            )?;
+            apply_package_runtime_metadata(generated, python_runtime)
+        }
     }
 }
 

@@ -1,0 +1,9 @@
+[package]
+name = "sifr-python-read-only-demo"
+version = "0.1.0"
+edition = "2024"
+
+[package.metadata.sifr]
+manifest = "sifr.toml"
+
+[workspace]

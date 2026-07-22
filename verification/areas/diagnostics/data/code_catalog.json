@@ -2299,7 +2299,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_missing_interpreter_with_pyenv_0004",
+      "representative_fixture": "crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_missing_interpreter_with_pyenv_0004",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2315,7 +2315,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_non_cpython_json_with_pyenv_0005",
+      "representative_fixture": "crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_non_cpython_json_with_pyenv_0005",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2331,7 +2331,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_prefix_outside_venv_with_pyenv_0006",
+      "representative_fixture": "crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_prefix_outside_venv_with_pyenv_0006",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2347,7 +2347,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_missing_site_packages_with_pyenv_0007",
+      "representative_fixture": "crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_missing_site_packages_with_pyenv_0007",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2363,7 +2363,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_missing_declared_import_with_pyenv_0008",
+      "representative_fixture": "crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_missing_declared_import_with_pyenv_0008",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2379,7 +2379,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_native_import_failure_with_pyenv_0009",
+      "representative_fixture": "crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_native_import_failure_with_pyenv_0009",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2395,7 +2395,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_free_threaded_cpython_with_pyenv_0010",
+      "representative_fixture": "crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_free_threaded_cpython_with_pyenv_0010",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2411,7 +2411,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_package/src/python/tests.rs::probe_rejects_missing_lock_digest_with_pyenv_0011",
+      "representative_fixture": "crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_missing_lock_digest_with_pyenv_0011",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"

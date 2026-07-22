@@ -1,0 +1,16 @@
+from sifr.python import PythonError
+
+
+@python(math.sqrt)
+def sqrt(value: float) -> Result[float, PythonError]: ...
+
+
+def main() -> Result[None, PythonError]:
+    try:
+        value: float = sqrt(81.0)
+        if value != 9.0:
+            raise PythonError("unexpected square root")
+        print("Python read-only check demo: target verified")
+        return None
+    except PythonError as error:
+        raise error

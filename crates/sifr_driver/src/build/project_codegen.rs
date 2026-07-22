@@ -135,6 +135,14 @@ pub(super) fn apply_package_runtime_metadata(
     Ok(generated)
 }
 
+pub(super) fn attach_package_runtime_metadata_for_check(
+    mut generated: GeneratedBinaryProject,
+    python_runtime: Option<PackagePythonRuntime>,
+) -> GeneratedBinaryProject {
+    generated.python_runtime = python_runtime;
+    generated
+}
+
 pub(super) fn push_cache_key_fragment(fragment: &mut Option<String>, label: &str, value: &str) {
     let mut next = fragment.take().unwrap_or_default();
     next.push('[');

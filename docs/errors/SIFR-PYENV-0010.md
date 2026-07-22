@@ -11,6 +11,6 @@ Free-threaded CPython is not supported for embedded interop.
 | Severity | Error |
 | Owner | `sifr_package::python` |
 | Message template | `free-threaded CPython is not supported` |
-| Representative fixture | `crates/sifr_package/src/python/tests.rs::probe_rejects_free_threaded_cpython_with_pyenv_0010` |
+| Representative fixture | `crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_free_threaded_cpython_with_pyenv_0010` |
 | Declared args | `interpreter (json-only)`, `venv (json-only)` |
 | Dedupe args | `interpreter`, `venv` |

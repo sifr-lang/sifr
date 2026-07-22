@@ -65,13 +65,36 @@ struct ProbeParameter {
 }
 
 pub(super) fn apply_python_interop_metadata(
+    generated: GeneratedBinaryProject,
+    runtime: Option<&PackagePythonRuntime>,
+) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
+    apply_python_interop_metadata_with_policy(generated, runtime, false)
+}
+
+pub(super) fn apply_python_interop_metadata_for_check(
+    generated: GeneratedBinaryProject,
+    runtime: Option<&PackagePythonRuntime>,
+) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
+    apply_python_interop_metadata_with_policy(generated, runtime, true)
+}
+
+fn apply_python_interop_metadata_with_policy(
     mut generated: GeneratedBinaryProject,
     runtime: Option<&PackagePythonRuntime>,
+    allow_deferred: bool,
 ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
     if generated.interop.python.declarations.is_empty() {
         return Ok(generated);
     }
+    for probe in &mut generated.interop.python.target_probes {
+        if probe.target_path.starts_with("__sifr_bridge__.") {
+            probe.status = PythonTargetProbeStatus::RuntimeChecked;
+        }
+    }
     let Some(runtime) = runtime else {
+        if allow_deferred {
+            return Ok(generated);
+        }
         return Err(vec![diagnostic_with_code(
             "Python declarations require a root-selected Python environment",
             DiagnosticCode::PYENV_MISSING_SELECTION,
@@ -136,7 +159,6 @@ pub(super) fn apply_python_interop_metadata(
     }
     for probe in &mut generated.interop.python.target_probes {
         if probe.target_path.starts_with("__sifr_bridge__.") {
-            probe.status = PythonTargetProbeStatus::RuntimeChecked;
             continue;
         }
         match execute_probe(runtime, &probe.target_path) {
@@ -468,6 +490,33 @@ mod tests {
         )
         .expect("embedded bridge target should be runtime checked by the reserved loader");
 
+        assert_eq!(
+            generated.interop.python.target_probes[0].status,
+            PythonTargetProbeStatus::RuntimeChecked
+        );
+    }
+
+    #[test]
+    fn read_only_check_defers_library_target_without_an_environment() {
+        let generated = apply_python_interop_metadata_for_check(project("math.sqrt"), None)
+            .expect("library checks defer final-application probing");
+        assert_eq!(
+            generated.interop.python.target_probes[0].status,
+            PythonTargetProbeStatus::Planned
+        );
+        let Err(error) = apply_python_interop_metadata(project("math.sqrt"), None) else {
+            panic!("builds still require a selected environment");
+        };
+        assert_eq!(error[0].code, "SIFR-PYENV-0003");
+    }
+
+    #[test]
+    fn read_only_check_marks_embedded_bridge_target_runtime_checked_when_deferred() {
+        let generated = apply_python_interop_metadata_for_check(
+            project("__sifr_bridge__.p_abc123.adapter.value"),
+            None,
+        )
+        .expect("embedded bridge structure is checked without an external interpreter");
         assert_eq!(
             generated.interop.python.target_probes[0].status,
             PythonTargetProbeStatus::RuntimeChecked

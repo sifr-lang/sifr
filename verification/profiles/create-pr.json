@@ -114,6 +114,7 @@
         "self-test",
         "scaffold",
         "env",
+        "readonly-check-doctor",
         "tier1",
         "callbacks",
         "callback-examples",

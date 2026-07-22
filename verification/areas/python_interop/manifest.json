@@ -51,6 +51,19 @@
       ]
     },
     {
+      "name": "readonly-check-doctor",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "readonly-check-doctor",
+          "entry": "verification/areas/python_interop/runner/readonly_check_doctor.py",
+          "command": "python-interop-readonly-check-doctor",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "tier1",
       "kind": "adapter",
       "cases": [

@@ -61,7 +61,12 @@ and returned **APPROVED** with no blockers. The
 fresh authoritative merge gate passes every blocking lane in `3554.66s`,
 including E2E `674/674`, Python interop `22/22`, diagnostics `175/175`, and
 `261` hardening variants with zero failures. Its warm-time and group-skew notices
-are non-blocking advisories. M13 and later milestones are not yet implemented.
+are non-blocking advisories. M13's shared read-only driver plan, `python check`
+and `python doctor` CLI surfaces, multi-app/final-app resolution, deferred
+library reporting, executable non-mutation/parity evidence, demo, and docs are
+implemented, locally validated, milestone-reviewed, and closed in
+[PR #2993](https://github.com/sifr-lang/sifr/pull/2993). M14 and later
+milestones are not yet implemented.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
@@ -198,7 +203,7 @@ Implementation progress:
 - [x] M10 typed buffer protocol ([PR #2990](https://github.com/sifr-lang/sifr/pull/2990))
 - [x] M11 Arrow C Data Interface ([PR #2991](https://github.com/sifr-lang/sifr/pull/2991))
 - [x] M12 DLPack one-shot tensor transfer ([PR #2992](https://github.com/sifr-lang/sifr/pull/2992))
-- [ ] M13 read-only check and doctor
+- [x] M13 read-only check and doctor ([PR #2993](https://github.com/sifr-lang/sifr/pull/2993))
 - [ ] M14 binding and certification authoring
 - [ ] M15 LSP declaration authoring
 - [ ] M16 raw API ergonomics on shared ownership
@@ -1830,6 +1835,92 @@ Validation:
 ### M13. Read-Only Check And Doctor
 
 Depends on the completed compiler/runtime protocol plans from M2 through M12.
+
+- [x] Wave 1 — route ordinary package check and read-only inspection through
+  one codegen/protocol/target-probe plan with an explicit deferred-library
+  policy and structured report.
+- [x] Wave 2 — add frozen, non-mutating `sifr python check` and deterministic
+  patch-reporting `sifr python doctor`, including all runnable application
+  targets and graph/source-content snapshot identity.
+- [x] Wave 3 — add library/final-application success and failure parity,
+  deterministic JSON/patch, source-digest, and byte-level non-mutation tests;
+  add the blocking delivery-profile suite, runnable demo, and public/internal
+  documentation.
+- [x] Wave 4 — authoritative validation, repeated full milestone review,
+  closure ledger, and merge.
+
+Pre-review validation: the authoritative `create-pr` profile passes every
+blocking lane in `1110.82s`, including the new read-only check/doctor suite,
+Python interop `17/17`, create-PR E2E `131/131` with signature
+`7c39b8c1dd4fec7c`, and hardening `6/6`. The warm wall-time notice is a
+non-blocking advisory; every per-step blocking budget passes.
+
+Fable High review pass 1 found one major selected-library parity gap: a
+standalone library with an explicit root `[python]` selection deferred probes
+while ordinary check honored the selection. The remediation now resolves that
+environment on both paths without injecting binary startup into a library,
+adds valid/invalid selected-library parity and non-mutation evidence, and
+clarifies the standalone-root/dependency distinction in public and internal
+documentation. The focused CLI, driver, verification, Clippy, file-size,
+driver-maintainability, and transfer-guardrail checks pass after remediation.
+
+Fable High pass 2 reproduced a discovery-based variant and the deeper ordinary
+check deferral mismatch. The second remediation replaces CLI-side environment
+guessing with the package layer's single `NotRequired` / `Resolved` /
+`DeferredToFinalApplication` decision, consumed by both ordinary check and
+Python inspection. It covers bare-library parity, explicit and uv-discovered
+standalone environments, strict build/run behavior, targeted doctor hunks, and
+valid/invalid non-mutation cases. Runtime resolution was split into a focused
+CLI module to keep every maintained source file below 900 lines.
+
+Fable High pass 3 reviewed the complete branch and returned `SATISFIED`. It
+independently reproduced explicit and uv-discovered standalone resolution,
+bare/trust-only library deferral parity, strict application/build/run errors,
+both one-sided doctor patches, deterministic byte-level non-mutation,
+multi-application coverage, focused test suites, and the maintained-source
+guardrails. The unrelated dirty Ruff submodule is absent from the PR diff.
+
+The post-review authoritative gate exposed the package-manager's stricter
+420-line module limit for `sifr_package` tests. Probe-validation cases now live
+in their own responsibility-focused module, diagnostic registry evidence paths
+and generated diagnostic documentation were updated, and both the
+package-manager guardrail and all 133 package tests pass after the split.
+
+Post-remediation authoritative `create-pr` validation passes every blocking
+lane in `787.93s`: Python interop `17/17` (read-only evidence
+`deferred=1 resolved=3 parity=5 mutations=0`), create-PR E2E `131/131` with
+signature `7c39b8c1dd4fec7c`, and hardening `6/6`. The warm wall-time budget
+notice is advisory; all per-step blocking budgets pass.
+
+Fable High pass 4 reconfirmed the complete behavioral contract but found eight
+stale `representative_fixture` paths in the diagnostic code catalog after the
+probe-test split, so it returned `NOT SATISFIED`. The catalog now points to the
+new probe-validation module for `SIFR-PYENV-0004` through `0011`; the complete
+five-case diagnostics rules suite passes after remediation.
+
+Fable High pass 5 confirmed the catalog remediation and the complete runtime
+contract, then reproduced a parallel-test fixture collision in the new CLI
+suite. Fixture roots now include a process-wide atomic discriminator and use
+collision-detecting root creation. Eight consecutive default-parallel suite
+runs pass `48/48`, exceeding the reviewer's six-run reproduction sample.
+
+Fable High pass 6 returned `SATISFIED`. It independently completed thirteen
+consecutive default-parallel runs (`78/78`), verified the suite within the full
+`sifr_cli_full` merge step, reconfirmed the four-way diagnostic evidence
+consistency, and revalidated every M13 behavioral and safety acceptance item.
+
+Frozen-branch closure pass 7 returned `SATISFIED` with no blockers or majors.
+It independently re-ran the blocking suite, three default-parallel CLI suite
+runs, package and driver tests, formatting, Clippy, guardrails, diagnostics
+consistency, and the runnable demo, and corroborated the recorded merge-gate
+counts and signature from the checked-in manifests and fixtures.
+
+The fresh authoritative merge gate passes every blocking lane in `4056.35s`:
+Python interop `23/23` with read-only evidence
+`deferred=1 resolved=3 parity=5 mutations=0`, E2E `674/674` with signature
+`1f8b1cadc4f48ec8`, diagnostics `175/175`, and `261` hardening variants with
+zero failures. The warm-time and group-skew notices are non-blocking advisories.
+M13 is complete and closure-approved.
 
 Tasks:
 

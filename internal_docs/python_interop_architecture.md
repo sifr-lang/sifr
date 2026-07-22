@@ -11,7 +11,8 @@ close are implemented. Typed async contexts, declaration-first current,
 foreign-thread and asyncio callbacks, typed affine buffer declarations, and
 certified Arrow C Data Interface declarations are active. Declaration-first
 DLPack tensor and stream acquisition, validation, and one-shot transfer are
-active as well.
+active as well. Read-only Python plan inspection and deterministic doctor
+suggestions are active on the same package/driver path used by compilation.
 
 ## Ownership Boundary
 
@@ -44,6 +45,37 @@ Probe metadata participates in generated artifact cache keys: interpreter path,
 CPython version tuple, SOABI, extension suffixes, pointer width, platform,
 `libpython` when available, project/lock digests, canonical required imports,
 root-owned trust config, and sorted owning distribution names and versions.
+
+## Read-Only Inspection
+
+`sifr python check` resolves packages with frozen Cargo lock semantics, derives
+all declaration and bridge requirements, and invokes the production driver
+codegen/protocol/target-probe plan without Rust emission or build. Final
+applications use the exact environment, uv-lock, trust, certification, and
+probe resolver used by normal check/build. Packages with multiple runnable
+targets remain applications and every target is checked.
+
+Library-only dependency packages have no authority to select an environment.
+The package layer exposes one resolution outcome shared by ordinary check and
+Python inspection: `NotRequired`, `Resolved`, or
+`DeferredToFinalApplication`. A standalone library root resolves when its
+imports are authorized and an environment is explicitly selected or found by
+normal uv-project discovery. Missing root trust and/or selection may defer only
+when the session has no runnable application; every other trust, selection,
+lock, probe, and certification failure remains blocking. Deferred import-root
+probes are reported as `deferred`, while embedded bridge targets are
+`runtime-checked`. Reports include deterministic package-graph and
+source-content digests.
+
+Ordinary package `sifr check` also consumes the same resolution outcome and
+executes this full plan, including live read-only target probes when an
+environment resolves. Build and run retain strict final-application authority
+and never defer.
+
+`sifr python doctor` renders the same report plus stable patch-like suggestions.
+Both commands are observational: they never update Cargo/Sifr manifests,
+lockfiles, trust policy, certification artifacts, or virtual environments, and
+never invoke environment synchronization or installation.
 
 ## Runtime Lifecycle
 
@@ -123,6 +155,9 @@ Important selectors:
 
 - `--group scaffold`: matrix, fixture, and runner contract shape.
 - `--group env`: live interpreter probe plus checked-in positive/negative probe fixtures.
+- `readonly-check-doctor`: executable CLI parity, source-snapshot,
+  deterministic-doctor, deferred-library, final-application, and byte-level
+  non-mutation evidence.
 - `--tier tier1`, `--tier tier2`, `--tier tier3`, `--tier tier4`: deterministic package certification evidence.
 - `--group callbacks`, `--group dataframes`, `--group cloud`, `--group brokers`, and similar group filters: representative contract coverage.
 - `--self-test`: runner positive/negative tests, certification-policy invariants, fixture JSON validation, and env-probe smoke.

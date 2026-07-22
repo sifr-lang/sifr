@@ -118,6 +118,7 @@
         "self-test",
         "scaffold",
         "env",
+        "readonly-check-doctor",
         "tier1",
         "tier2",
         "tier3",

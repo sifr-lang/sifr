@@ -55,6 +55,16 @@ pub struct PythonConfig {
     pub requires_imports: Vec<String>,
 }
 
+impl PythonConfig {
+    #[must_use]
+    pub fn selects_environment(&self) -> bool {
+        self.venv.is_some()
+            || self.interpreter.is_some()
+            || self.pyproject.is_some()
+            || self.lock.is_some()
+    }
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct RustInteropConfig {
     pub bridge_version: Option<u32>,

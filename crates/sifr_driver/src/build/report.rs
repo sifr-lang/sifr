@@ -111,6 +111,47 @@ pub struct BuildReportInput {
     pub cache_hit: bool,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PythonInteropCheckReport {
+    pub declarations: Vec<PythonDeclarationCheck>,
+    pub required_import_roots: Vec<String>,
+    pub target_probes: Vec<PythonTargetCheck>,
+    pub bridge_package_count: usize,
+    pub requires_async_loop: bool,
+    pub environment: PythonEnvironmentCheck,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PythonDeclarationCheck {
+    pub module_name: Option<String>,
+    pub function_name: String,
+    pub target: Option<String>,
+    pub kind: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PythonTargetCheck {
+    pub target: String,
+    pub status: PythonTargetCheckStatus,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum PythonTargetCheckStatus {
+    Deferred,
+    Verified,
+    RuntimeChecked,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PythonEnvironmentCheck {
+    NotRequired,
+    Deferred,
+    Resolved {
+        interpreter: PathBuf,
+        digest: String,
+    },
+}
+
 impl BuildReport {
     pub fn new(input: BuildReportInput) -> Self {
         let BuildReportInput {

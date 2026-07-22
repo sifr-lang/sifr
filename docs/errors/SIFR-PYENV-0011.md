@@ -11,6 +11,6 @@ Configured Python project or lockfile is missing or stale.
 | Severity | Error |
 | Owner | `sifr_package::python` |
 | Message template | `Python environment metadata is stale: {reason}` |
-| Representative fixture | `crates/sifr_package/src/python/tests.rs::probe_rejects_missing_lock_digest_with_pyenv_0011` |
+| Representative fixture | `crates/sifr_package/src/python/probe_validation_tests.rs::probe_rejects_missing_lock_digest_with_pyenv_0011` |
 | Declared args | `reason (message+json)`, `interpreter (json-only)`, `venv (json-only)` |
 | Dedupe args | `interpreter`, `venv`, `reason` |
