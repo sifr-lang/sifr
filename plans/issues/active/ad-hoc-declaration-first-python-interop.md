@@ -82,7 +82,9 @@ precision gaps. Those findings are remediated with exact `(FileId, symbol)`
 identity, the canonical package graph/environment resolver, live probe digests,
 per-environment and per-target caches, declaration-scoped diagnostics, and
 direct regression evidence; fresh authoritative validation and repeated review
-are pending. M16 and later milestones are not yet implemented.
+are in closure. The post-remediation authoritative create-PR gate passes every
+blocking lane; fresh repeated review is pending. M16 and later milestones are
+not yet implemented.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
@@ -2137,8 +2139,12 @@ The full gate additionally caught an over-broad structured-probe refactor that
 applied callable signature validation to opaque Python type declarations; the
 original callable-kind boundary is restored, a focused opaque-constructor
 regression passes, and the `aiosqlite` async-context executable is green again.
-The post-remediation authoritative gate and fresh whole-diff review remain the
-Wave 5 closure gate.
+The post-remediation authoritative create-PR gate passes every blocking lane in
+`870.11s`: Python interop `19/19`, LSP `59/59`, analysis `48/48`, package
+`139/139`, runtime-platform `28` variants with zero failures, and E2E `131/131`
+with signature `7c39b8c1dd4fec7c`. Every per-step blocking budget passes; the
+overall warm wall-time notice is a non-blocking advisory. Fresh whole-diff
+review remains the Wave 5 closure gate.
 
 Tasks:
 
