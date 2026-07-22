@@ -1,0 +1,51 @@
+# M15 LSP Declaration Authoring — Frozen-Ledger Confirmation (pass 9, commit afa4c9686 vs origin/main)
+
+**Verdict: SATISFIED.** This is the final frozen-ledger confirmation after pass 8 returned SATISFIED. The only delta since pass 8 is the docs-only closure commit `afa4c9686`, which checks in the pass-8 artifact verbatim-consistent with its review, completes Wave 5, upgrades the top status to closure-approved, fixes pass-8's ledger-wording nit exactly as demanded ("a publication-compatible superset of the analysis-only owner-election boundary"), and absorbs pass-8's untested-disjunct nit into the residual ledger. No implementation, test, verification, or non-plan documentation file changed after the satisfied review; the 780.26s authoritative gate on `4c74771a7` therefore still covers HEAD's code byte-exactly. Every closure claim was verified clause-by-clause against pass 8 and against live re-measurement. No blocker, major, or minor remains open anywhere in the milestone.
+
+## Scope and commit
+
+Frozen PR #2995 diff, `origin/main..afa4c96866d37edf36b737f61c9b67b990803dc9` (61 files, +3633/−373). HEAD verified as exactly `afa4c9686` before review. The delta since pass 8's reviewed commit (`416ee9e3d`, 60 files, +3565/−373 — figure re-verified exact this pass) is precisely one commit, `afa4c9686` "docs: close M15 declaration authoring", touching only two files: `plans/issues/active/ad-hoc-declaration-first-python-interop.md` (+28/−9) and the new `plans/reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-8.md` (+58). Every line of that delta was read.
+
+**No implementation changed after the satisfied review:** `git diff 4c74771a7..HEAD -- crates/ verification/ docs/ internal_docs/ scripts/` is empty. Both commits after the remediation/gate commit (`416ee9e3d`, `afa4c9686`) are plan-and-review-artifact-only, so `crates/`, `verification/`, `docs/`, `internal_docs/`, and `scripts/` at HEAD are byte-identical to the tree the 780.26s authoritative gate and pass 8's code audit ran against. Nothing can have reopened any pass-1 through pass-8 finding.
+
+Worktree hygiene: the only working-tree drift is the pre-existing dirty `third_party/ruff` submodule (same commit `811141549`, dirty contents) — the identical semantically-inert reformat observed at passes 4–8. No implementation or documentation file was modified by this review; per instruction, no full gate was rerun and nothing was written except this artifact.
+
+## Commands and evidence
+
+- `git rev-parse HEAD` → `afa4c96866d37edf36b737f61c9b67b990803dc9`; `git log origin/main..HEAD` → the 21 M15 commits, ending in the docs-only closure commit.
+- `git diff --stat origin/main..HEAD` → 61 files, +3633/−373; `origin/main..416ee9e3d` → 60 files, +3565/−373 (pass-8's recorded figure, exact; delta arithmetic 3565+77−9=3633, 60+1=61 checks).
+- `git diff 4c74771a7..HEAD -- crates/ verification/ docs/ internal_docs/ scripts/` → **empty** (the frozen-implementation guarantee above).
+- `cargo test -p sifr_lsp` at HEAD → **71/71 pass** (4.14s), matching the ledger, pass 8's live run, and the recorded gate's LSP lane exactly.
+- Spot re-verification of the pass-8-pinned code sites at HEAD: `can_publish_document_diagnostics` (`crates/sifr_lsp/src/session.rs:166-168`) is exactly `!self.load_diagnostics(uri).is_empty() || self.can_analyze_document(uri)`; the filtered `publish_all` collection (`crates/sifr_lsp/src/diagnostics.rs:34-38`) schedules only publishable URIs; both regressions (`closing_python_package_diagnostic_owner_republishes_on_remaining_document` at `python_declaration_tests.rs:6`, `unanalyzable_document_cannot_own_python_package_diagnostics` at `:57`) are present at their artifact-cited locations.
+- Clause-by-clause read of the two changed files against pass 8's artifact content and against the plan sections cited below.
+
+## Pass-8 disposition
+
+Pass 8 (artifact now checked in at `plans/reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-8.md`) reviewed the frozen diff at `416ee9e3d`, verified the pass-7 minor closed via inspection (the predicate/`document_diagnostics` success-precondition equivalence proof) and three mutation tests (filter removal → close-owner regression fails in pass-7's exact shape; predicate weakening → suite stays green, recorded as a nit; over-strict predicate → close-owner regression fails, guarding the skip-valid direction), confirmed the pass-6 major and all pass-1–5 findings remain closed, confirmed both acceptance criteria hold, accepted the 780.26s authoritative create-pr gate on `4c74771a7` as covering that HEAD's code exactly, and returned **SATISFIED** with no blocker, major, or minor — leaving only nit-grade items "for the ledger's next touch." The checked-in artifact is internally consistent, names the correct commit and diff shape, and its quantitative claims re-measured this pass (71/71 LSP; 60-file/+3565/−373 diff; regression locations) are exact.
+
+Disposition of pass-8's nits at the ledger's next touch (this closure commit):
+
+- **Nit 1 (untested load-diagnostic disjunct)** — **absorbed into the residual ledger** as demanded: the plan now records "No regression independently pins the load-diagnostic disjunct of the full publication predicate, although the combined owner-handoff regression pins both the excluded-document and eligible-document directions" (`plans/issues/active/ad-hoc-declaration-first-python-interop.md:2244-2246`). Both halves are accurate: mutation 2 showed the disjunct untested; mutations 1 and 3 pinned the two error directions of the combined regression.
+- **Nit 2 (loose "same publishability boundary" wording)** — **fixed exactly**: the pass-7 closure paragraph now reads "a publication-compatible superset of the analysis-only owner-election boundary" (`:2278-2279`), which is the precise relationship pass 8 established (publication = election's `can_analyze_document` plus the load-diagnostics arm).
+- **Pass-7 carried nits** (redundant `host.is_some()` conjunct with undocumented invariant; election regression asserting via `document_diagnostics`) — carried, still nit-grade; the second was already materially mitigated by the strengthened close regression. Code-level nits of this kind are not residual-ledger behavior items; they remain recorded in the pass-7/8 artifacts.
+
+## Closure-ledger audit
+
+Every clause of the docs delta verified against pass 8 and the repository:
+
+- **Pass-8 artifact** — reviewed in full; consistent with the pass-8 review it records (commit, scope, mutations, dispositions, nits, verdict) and with everything independently re-measurable at HEAD.
+- **Wave 5 completion** (`:2109-2110`) — now `[x]` "authoritative validation, repeated full milestone review, closure ledger, and merge." Accurate: the gate is recorded and accepted, review ran through a SATISFIED pass 8, and this commit is the closure ledger; merge is the PR action this closure approves.
+- **Top status** (`:74-90`) — "implemented, authoritatively validated, and closure-approved on PR #2995"; "Repeated whole-diff review through pass 8 closed lockfile parity, live bridge/workspace aggregation, diagnostic-owner election, and excluded-document publication gaps and returned **SATISFIED**"; "The final authoritative create-PR gate passes every blocking lane." All three claims hold: the four named gap families map to the pass-2–4 lockfile/parity remediations, the pass-5 live-bridge and workspace-aggregation minors, the pass-6 election major, and the pass-7 publication minor, each verified closed in the corresponding artifacts; the final gate is the accepted 780.26s run whose enumeration the ledger reproduces figure-for-figure (Python interop 19/19, LSP 71/71, analysis 48/48, package 139/139, driver 382/382 + 33 expected ignores, runtime-platform 28 variants with one capability-gated skip, E2E 131/131 signature `7c39b8c1dd4fec7c`, warm 42/42 cache, warm wall time the only non-blocking advisory).
+- **Residual-ledger precision** — the new untested-disjunct sentence (above) is exact; all pre-existing residual entries are untouched and remain accurate for a byte-unchanged implementation.
+- **Closure narrative** (`:2286-2292`) — "independently verified the combined publication predicate by inspection and mutation testing, confirmed every prior finding remains closed and both acceptance criteria hold, and returned **SATISFIED** with no blocker, major, or minor findings. M15 is closure-approved for merge." Matches pass 8's artifact clause-for-clause; the retained earlier sentence "Another frozen whole-diff review remains required" is chronological narrative immediately resolved by the pass-8 sentence that follows it, consistent with the ledger's established style.
+- **Superset relationship** — re-confirmed at the code level this pass: `can_publish_document_diagnostics` is election's `can_analyze_document` OR-extended with the load-diagnostics arm (`session.rs:166-168`), so every electable owner is publishable and load-diagnostic-only documents still publish their load errors — the publication predicate is a strict, publication-compatible superset of owner election, exactly as the ledger now states.
+
+**Acceptance criteria** — both **HOLD**, unchanged from pass 8: the docs-only delta cannot affect LSP/compiler agreement or completion certification behavior, and the implementation is byte-identical to the tree pass 8 verified and the gate validated.
+
+## New findings
+
+No blocker, major, or minor. No new nits: the delta is two documentation files whose every claim verified accurate, and the one wording imprecision pass 8 flagged is the very thing this commit fixed.
+
+## Verdict
+
+**SATISFIED.** At exact HEAD `afa4c9686`, the M15 milestone diff is frozen in the state pass 8 approved: no implementation changed after the satisfied review, the 780.26s authoritative create-pr gate covers HEAD's code exactly, the checked-in pass-8 artifact and the closure ledger (Wave 5 completion, top status, residual-ledger precision, superset phrasing, closure narrative) accurately record pass 8 and all residuals, both acceptance criteria hold, and no unresolved blocker, major, or minor remains anywhere in the full milestone across all nine passes. M15 is confirmed closure-approved for merge.
