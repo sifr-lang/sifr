@@ -245,6 +245,28 @@ def _crate_membership_self_test() -> None:
     else:
         raise AssertionError("unknown selected area suite was accepted")
 
+    incomplete_certification_profile = {
+        "name": "self-test",
+        "selected_areas": [
+            {
+                "area": "python_interop",
+                "suites": [
+                    "async-declaration-examples",
+                    "buffer-examples",
+                    "callback-examples",
+                    "dlpack-examples",
+                ],
+            }
+        ],
+    }
+    try:
+        validate_selected_area_suites(incomplete_certification_profile)
+    except ProfileError as exc:
+        if "omits required Python interop certification suites: arrow-examples" not in str(exc):
+            raise
+    else:
+        raise AssertionError("incomplete Python interop certification profile was accepted")
+
 
 def _e2e_profile_self_test() -> None:
     profiles = load_all_profiles()

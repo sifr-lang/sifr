@@ -14,8 +14,12 @@ from typing import Any
 AREA_MODULE_ROOT = str(Path(__file__).resolve().parent)
 if AREA_MODULE_ROOT not in sys.path:
     sys.path.insert(0, AREA_MODULE_ROOT)
+RUNNER_MODULE_ROOT = str(Path(__file__).resolve().parent / "runner")
+if RUNNER_MODULE_ROOT not in sys.path:
+    sys.path.insert(0, RUNNER_MODULE_ROOT)
 
 from certification_ledger import build_compiled_certification
+from declaration_capabilities import load_and_validate_capabilities
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
@@ -191,9 +195,7 @@ def main(argv: list[str] | None = None) -> int:
     print("  bless=no", flush=True)
 
     suite_results = [run_suite(suite) for suite in selected]
-    capability_matrix = json.loads(
-        (AREA_ROOT / "declaration_capabilities.json").read_text(encoding="utf-8")
-    )
+    capability_matrix = load_and_validate_capabilities(AREA_ROOT, REPO_ROOT)
     compiled_certification = build_compiled_certification(
         capability_matrix,
         REPO_ROOT,

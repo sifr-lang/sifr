@@ -15,7 +15,13 @@ uv run --project verification/areas/python_interop --locked python \
   --suite async-declaration-examples \
   --result-json "${REPORT}"
 
-jq -r '
+jq -er '
   .compiled_certification
+  | select(
+      .status == "complete"
+      and .summary.passing == 7
+      and .summary.compiled_evidence == 10
+      and .summary.resource_zero_evidence == 4
+    )
   | "Python ecosystem certification: status=\(.status):capabilities=\(.summary.passing):evidence=\(.summary.compiled_evidence):resources-zero=\(.summary.resource_zero_evidence)"
 ' "${REPORT}"

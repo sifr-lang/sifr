@@ -43,6 +43,9 @@ PROFILE_STEP_NAMES = {
     "verification_hardening_suites",
     "extra_e2e_checks",
 }
+PYTHON_INTEROP_CAPABILITY_MATRIX = (
+    REPO_ROOT / "verification" / "areas" / "python_interop" / "declaration_capabilities.json"
+)
 
 
 def profile_path(profile: str, profiles_dir: Path = PROFILES_DIR) -> Path:
@@ -147,11 +150,46 @@ def validate_selected_area_suites(profile: dict[str, Any]) -> None:
         area = selection.get("area") if isinstance(selection, dict) else None
         if not isinstance(area, str) or area not in area_suites:
             raise ProfileError(f"profile {profile.get('name')} selects unknown area: {area}")
-        for suite in selection.get("suites", []):
+        selected_suites = selection.get("suites", [])
+        for suite in selected_suites:
             if suite not in area_suites[area]:
                 raise ProfileError(
                     f"profile {profile.get('name')} selects unknown suite {area}:{suite}"
                 )
+        if area == "python_interop" and profile.get("execution_mode") != "selected-areas-only":
+            required_suites = _compiled_evidence_suites()
+            missing = sorted(required_suites.difference(selected_suites))
+            if missing:
+                raise ProfileError(
+                    f"profile {profile.get('name')} omits required Python interop "
+                    f"certification suites: {', '.join(missing)}"
+                )
+
+
+def _compiled_evidence_suites() -> set[str]:
+    matrix = load_json(PYTHON_INTEROP_CAPABILITY_MATRIX)
+    if not isinstance(matrix, dict) or matrix.get("schema_version") != 2:
+        raise ProfileError("invalid Python interop capability matrix for profile validation")
+    capabilities = matrix.get("capabilities")
+    if not isinstance(capabilities, list):
+        raise ProfileError("Python interop capability matrix has no capability rows")
+    suites: set[str] = set()
+    for row in capabilities:
+        if not isinstance(row, dict):
+            raise ProfileError("Python interop capability matrix contains an invalid row")
+        evidence = row.get("compiled_evidence")
+        if evidence is None:
+            continue
+        if not isinstance(evidence, list):
+            raise ProfileError("Python interop capability matrix contains invalid compiled evidence")
+        for item in evidence:
+            suite = item.get("suite") if isinstance(item, dict) else None
+            if not isinstance(suite, str) or not suite:
+                raise ProfileError("Python interop compiled evidence has no owning suite")
+            suites.add(suite)
+    if not suites:
+        raise ProfileError("Python interop capability matrix has no compiled evidence suites")
+    return suites
 
 
 def validate_crate_test_membership(profile: dict[str, Any]) -> None:

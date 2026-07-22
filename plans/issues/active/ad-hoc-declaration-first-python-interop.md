@@ -2556,6 +2556,23 @@ complete with seven passing capabilities, ten compiled evidence records, and
 four resource-zero records. Every per-step blocking budget passes; only the
 aggregate warm wall-time target is advisory.
 
+Whole-diff Fable High
+[review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m17-wave3-fable-high-review-pass-1.md)
+confirmed the current-run freshness mechanism, all ten exact bindings, the
+adversarial ledger coverage, and the declaration-first documentation, but
+returned **NOT SATISFIED** with three actionable hardening minors. The
+remediation makes the demo's `7/10/4` contract an executable `jq -e` assertion,
+derives the required owning suites from the capability matrix and rejects any
+full validation profile that omits one, and routes every targeted certification
+invocation through the complete matrix/design validator before reading reports.
+The exact importlib orchestration path, all profile and runner-foundation
+self-tests, and the full five-suite demo pass after remediation.
+Post-remediation authoritative `create-pr` validation passes every blocking
+lane in `761.82s`: Python interop `19/19`, create-PR E2E `131/131` with
+signature `7c39b8c1dd4fec7c`, runtime-platform `28` variants with zero failures
+and one declared capability skip, and hardening `6/6`. All per-step blocking
+budgets pass; the aggregate warm wall-time target remains advisory.
+
 Tasks:
 
 - Migrate all runnable biip/schwifty, dataframe, ML, web, database, cloud,
