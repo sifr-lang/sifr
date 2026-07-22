@@ -1,42 +1,23 @@
 from __future__ import annotations
 
-import re
+import io
 import shutil
 import subprocess
 import time
+import tokenize
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 from env import RunnerPaths, cargo_env_for_repo_manifest
+from ordinary_example_policy import (
+    ORDINARY_PYTHON_API_ALLOWED_IMPORTS,
+    POLICY_REJECTION_SEEDS,
+)
 
 EXAMPLE_TIMEOUT_SECONDS = 600
-RAW_API_SYMBOLS = {
-    "Object",
-    "call",
-    "call_attr",
-    "close",
-    "from_bool",
-    "from_bytes",
-    "from_dict_str",
-    "from_float",
-    "from_int",
-    "from_list",
-    "from_none",
-    "from_record",
-    "from_str",
-    "from_tuple",
-    "get_attr",
-    "get_item",
-    "import_module",
-    "to_bool",
-    "to_bytes",
-    "to_float",
-    "to_int",
-    "to_none",
-    "to_str",
-}
 
 
 @dataclass(frozen=True)
@@ -163,9 +144,8 @@ def run_examples_self_tests(
         raise SystemExit(
             f"{suite_name} examples self-test invalid trust roots: {sorted(invalid_roots)}"
         )
-    raw_seed = "from sifr.python import Object, PythonError, call_attr\n"
-    if imported_raw_api_symbols(raw_seed) != {"Object", "call_attr"}:
-        raise SystemExit(f"{suite_name} examples self-test raw API guard drift")
+    for seed_id, source in POLICY_REJECTION_SEEDS.items():
+        _assert_policy_seed_rejected(paths, suite_name, seed_id, source)
 
     empty_payload = build_examples_report(
         paths,
@@ -215,17 +195,17 @@ def validate_source_presence(
             )
             continue
         source = source_path.read_text(encoding="utf-8")
-        raw_symbols = imported_raw_api_symbols(source)
-        if raw_symbols or "@trust_python_dynamic" in source:
-            details = sorted(raw_symbols)
-            if "@trust_python_dynamic" in source:
-                details.append("@trust_python_dynamic")
+        policy_violations = ordinary_python_api_policy_violations(source)
+        if policy_violations:
             checks.append(
                 {
                     "id": case.case_id,
                     "status": "fail",
                     "sifr_source": case.relative_source,
-                    "reason": f"ordinary example uses raw Python API: {details}",
+                    "reason": (
+                        "ordinary example violates declaration-first Python policy: "
+                        f"{sorted(policy_violations)}"
+                    ),
                 }
             )
             continue
@@ -277,16 +257,164 @@ def validate_source_presence(
     return checks
 
 
-def imported_raw_api_symbols(source: str) -> set[str]:
-    imported: set[str] = set()
-    pattern = re.compile(
-        r"from\s+sifr\.python\s+import\s+(?:\((.*?)\)|([^\n]+))",
-        re.DOTALL,
-    )
-    for match in pattern.finditer(source):
-        body = match.group(1) if match.group(1) is not None else match.group(2)
-        imported.update(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", body or ""))
-    return imported.intersection(RAW_API_SYMBOLS)
+def ordinary_python_api_policy_violations(source: str) -> set[str]:
+    try:
+        tokens = list(tokenize.generate_tokens(io.StringIO(source).readline))
+    except (IndentationError, tokenize.TokenError):
+        return {"unparseable-source"}
+    significant = [
+        item
+        for item in tokens
+        if item.type
+        not in {tokenize.COMMENT, tokenize.DEDENT, tokenize.ENCODING, tokenize.INDENT, tokenize.NL}
+    ]
+    violations: set[str] = set()
+    index = 0
+    while index < len(significant):
+        item = significant[index]
+        if item.string == "@" and _token_string(significant, index + 1) == "trust_python_dynamic":
+            violations.add("@trust_python_dynamic")
+        if item.type == tokenize.NAME and item.string == "import":
+            index = _collect_direct_import_violations(significant, index + 1, violations)
+            continue
+        if item.type == tokenize.NAME and item.string == "from":
+            index = _collect_from_import_violations(significant, index + 1, violations)
+            continue
+        index += 1
+    return violations
+
+
+def _collect_direct_import_violations(
+    tokens: list[tokenize.TokenInfo],
+    index: int,
+    violations: set[str],
+) -> int:
+    while index < len(tokens) and tokens[index].type != tokenize.NEWLINE:
+        if tokens[index].string == ";":
+            return index + 1
+        module, index = _consume_dotted_name(tokens, index)
+        if module in {"sifr.python", "sifr.python_core"}:
+            violations.add(f"module-import:{module}")
+        if _token_string(tokens, index) == "as":
+            index += 2
+        if _token_string(tokens, index) == ",":
+            index += 1
+        elif not module:
+            index += 1
+    return index
+
+
+def _collect_from_import_violations(
+    tokens: list[tokenize.TokenInfo],
+    index: int,
+    violations: set[str],
+) -> int:
+    module, index = _consume_dotted_name(tokens, index)
+    if _token_string(tokens, index) != "import":
+        return index
+    imported_names, index = _consume_imported_names(tokens, index + 1)
+    if module in {"sifr.python", "sifr.python_core"}:
+        violations.update(
+            name
+            for name in imported_names
+            if name not in ORDINARY_PYTHON_API_ALLOWED_IMPORTS
+        )
+    elif module == "sifr":
+        violations.update(
+            f"module-import:sifr.{name}"
+            for name in imported_names
+            if name in {"python", "python_core"}
+        )
+    return index
+
+
+def _consume_dotted_name(
+    tokens: list[tokenize.TokenInfo],
+    index: int,
+) -> tuple[str, int]:
+    parts: list[str] = []
+    if index >= len(tokens) or tokens[index].type != tokenize.NAME:
+        return "", index
+    parts.append(tokens[index].string)
+    index += 1
+    while _token_string(tokens, index) == "." and index + 1 < len(tokens):
+        if tokens[index + 1].type != tokenize.NAME:
+            break
+        parts.append(tokens[index + 1].string)
+        index += 2
+    return ".".join(parts), index
+
+
+def _consume_imported_names(
+    tokens: list[tokenize.TokenInfo],
+    index: int,
+) -> tuple[set[str], int]:
+    names: set[str] = set()
+    parenthesized = _token_string(tokens, index) == "("
+    if parenthesized:
+        index += 1
+    expect_name = True
+    while index < len(tokens):
+        item = tokens[index]
+        if item.type == tokenize.NEWLINE or item.string == ";":
+            break
+        if parenthesized and item.string == ")":
+            index += 1
+            break
+        if expect_name and (item.type == tokenize.NAME or item.string == "*"):
+            names.add(item.string)
+            expect_name = False
+        elif item.string == "as":
+            index += 1
+        elif item.string == ",":
+            expect_name = True
+        index += 1
+    return names, index
+
+
+def _token_string(tokens: list[tokenize.TokenInfo], index: int) -> str | None:
+    if 0 <= index < len(tokens):
+        return tokens[index].string
+    return None
+
+
+def _assert_policy_seed_rejected(
+    paths: RunnerPaths,
+    suite_name: str,
+    seed_id: str,
+    source: str,
+) -> None:
+    with TemporaryDirectory(prefix="sifr-python-example-policy-") as temp_dir:
+        fixture_root = Path(temp_dir)
+        relative_source = f"{seed_id}.sifr"
+        (fixture_root / relative_source).write_text(source, encoding="utf-8")
+        synthetic_paths = RunnerPaths(
+            repo_root=paths.repo_root,
+            area_root=paths.area_root,
+            packages_root=paths.packages_root,
+            fixtures_root=fixture_root,
+            reports_root=paths.reports_root,
+        )
+        payload = build_examples_report(
+            synthetic_paths,
+            suite_name=f"{suite_name}-{seed_id}-policy-self-test",
+            cases_by_id={
+                seed_id: ExampleCase(
+                    case_id=seed_id,
+                    relative_source=relative_source,
+                    stdout_marker="unreachable",
+                    import_roots=(),
+                )
+            },
+            example_runner=lambda _paths: (_ for _ in ()).throw(
+                AssertionError("policy-rejected example runner was invoked")
+            ),
+        )
+        reason = payload["source_checks"][0].get("reason", "")
+        if payload["status"] != "examples-failed" or "declaration-first" not in reason:
+            raise SystemExit(
+                f"{suite_name} examples self-test accepted policy seed {seed_id}: {payload}"
+            )
 
 
 def run_example_cases(

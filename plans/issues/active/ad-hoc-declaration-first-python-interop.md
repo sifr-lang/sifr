@@ -2466,6 +2466,17 @@ notice is advisory. All eleven inventoried ordinary examples now execute typed
 declarations backed by package-local hermetic bridges, and the shared runner
 records `compiled-sifr-declaration` evidence while rejecting raw API imports.
 
+Fable High review pass 1 confirmed that all eleven migrations are faithful,
+deterministic, hermetic, and leak-checked, but returned `NOT SATISFIED` because
+the initial raw-symbol denylist missed `from_value`/`to_value`, method-style raw
+calls, `sifr.python_core`, module imports, and legal whitespace/continuation
+forms. The remediation replaces it with a token-aware allowlist across both
+public Python modules, fails closed on tokenization errors and dynamic trust,
+and drives eight adversarial sources through the complete report rejection
+path. Torch now verifies the reported `float32` dtype and PyArrow verifies both
+reported capsule names. The full runner self-test and the compiled ML and
+library suites pass after remediation.
+
 Tasks:
 
 - Migrate all runnable biip/schwifty, dataframe, ML, web, database, cloud,

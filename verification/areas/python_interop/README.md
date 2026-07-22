@@ -68,9 +68,11 @@ or a supported claim without the evidence required by that row.
 
 Ordinary runnable ecosystem examples are declaration-first. Library-specific
 dynamic workflows live in package-local `python_bridges/` modules and expose
-only typed Sifr declarations; the example runner rejects raw `Object` imports,
-raw call/conversion helpers, and `@trust_python_dynamic` before execution. The
-one intentional dynamic-API demo remains, with
+only typed Sifr declarations. A token-aware allowlist restricts ordinary
+examples to the error, exit, and resource-diagnostic names they need from
+`sifr.python`; imports from `sifr.python_core`, module-style access, every raw
+object/conversion/protocol helper, and `@trust_python_dynamic` fail before
+execution. One intentional dynamic-API demo remains, with
 `fixtures/primitive_conversion/raw_typed_ergonomics.sifr` as its focused
 verification counterpart. Low-level negative and protocol-mechanics fixtures
 remain certification inputs rather than user-facing ecosystem examples.
