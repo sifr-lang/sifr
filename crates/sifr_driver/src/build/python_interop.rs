@@ -203,13 +203,15 @@ pub fn apply_python_target_inspection(
             DiagnosticCode::PYCALL_INVALID_SHAPE,
         )),
         Ok(output) if expects_type && !output.is_type => Some(diagnostic_with_code(
-            format!("invalid Python opaque declaration: target '{target}' is not a Python type"),
+            format!(
+                "invalid Python declaration target '{target}': a declaration requires this target to be a Python type"
+            ),
             DiagnosticCode::PYCALL_INVALID_SHAPE,
         )),
         Ok(output) if !output.inspectable && requires_inspectable_signature => {
             Some(diagnostic_with_code(
                 format!(
-                    "invalid Python declaration call shape: target '{target}' must be inspectable for `**record` expansion"
+                    "invalid Python declaration call shape: a declaration requires target '{target}' to be inspectable for `**record` expansion"
                 ),
                 DiagnosticCode::PYCALL_INVALID_SHAPE,
             ))
@@ -458,6 +460,7 @@ fn validate_signature(
 
 fn execute_probe(interpreter: &Path, target: &str) -> Result<PythonTargetInspection, String> {
     let output = Command::new(interpreter)
+        .arg("-B")
         .arg("-I")
         .arg("-c")
         .arg(TARGET_PROBE)

@@ -330,17 +330,19 @@ fn resolve_package_python_environment_inner(
         lock_mode: sifr_package::CargoLockMode::Frozen,
     })
     .map_err(|error| vec![sifr_driver::render_package_diagnostic(error)])?;
-    if graph_independent_no_python_package(&session, package_root, required_import_roots) {
-        return Ok(EnvironmentSnapshot {
-            runtime: None,
-            diagnostics: Vec::new(),
-        });
-    }
-    let snapshot = sifr_package::load_package_graph_snapshot(
+    let snapshot = match sifr_package::load_package_graph_snapshot(
         &session.workspace_root,
         sifr_package::CargoLockMode::Frozen,
-    )
-    .map_err(|failure| render_package_diagnostics(failure.into_diagnostics()))?;
+    ) {
+        Ok(snapshot) => snapshot,
+        Err(failure) if missing_lockfile_frozen_failure(&failure) => {
+            return Ok(EnvironmentSnapshot {
+                runtime: None,
+                diagnostics: Vec::new(),
+            });
+        }
+        Err(failure) => return Err(render_package_diagnostics(failure.into_diagnostics())),
+    };
     let package_id = session.package_id(&snapshot.graph).ok_or_else(|| {
         vec![diagnostic_with_code(
             DiagnosticCode::PACKAGE_METADATA_PARSE,
@@ -440,30 +442,18 @@ fn resolve_package_python_environment_inner(
     })
 }
 
-fn graph_independent_no_python_package(
-    session: &sifr_package::PackageSession,
-    package_root: &Path,
-    required_import_roots: &[String],
-) -> bool {
-    let Some(manifest) = session.manifest.as_ref() else {
+fn missing_lockfile_frozen_failure(failure: &sifr_package::PackageGraphLoadFailure) -> bool {
+    if failure.plan.current_dir.join("Cargo.lock").exists() {
+        return false;
+    }
+    let sifr_package::PackageGraphLoadFailureKind::Command { output, .. } = &failure.kind else {
         return false;
     };
-    required_import_roots.is_empty()
-        && manifest.dependencies.is_empty()
-        && manifest.dev_dependencies.is_empty()
-        && manifest.python.requires_imports.is_empty()
-        && !manifest.python.selects_environment()
-        && manifest.trust.python.is_empty()
-        && manifest.trust.python_native.is_empty()
-        && !package_root
-            .join(sifr_package::PYTHON_BINDINGS_FILE)
-            .is_file()
-        && !package_root
-            .join(sifr_package::PYTHON_CERTIFICATIONS_FILE)
-            .is_file()
-        && !package_root
-            .join(sifr_package::PYTHON_BRIDGE_INVENTORY)
-            .is_file()
+    let output = output.to_ascii_lowercase();
+    output.contains("lock file")
+        && (output.contains("needs to be updated")
+            || output.contains("cannot create")
+            || output.contains("could not be updated"))
 }
 
 fn render_package_diagnostics(
@@ -612,6 +602,7 @@ fn package_input_fingerprint(root: &Path) -> u64 {
             Err(error) => error.kind().hash(&mut hasher),
         }
     }
+    hash_python_bridge_inputs(root, &mut hasher);
     if let Some(interpreter) = interpreter {
         interpreter.hash(&mut hasher);
         match std::fs::metadata(&interpreter) {
@@ -623,6 +614,38 @@ fn package_input_fingerprint(root: &Path) -> u64 {
         }
     }
     hasher.finish()
+}
+
+fn hash_python_bridge_inputs(root: &Path, hasher: &mut DefaultHasher) {
+    let bridge_root = root.join(sifr_package::PYTHON_BRIDGE_ROOT);
+    bridge_root.hash(hasher);
+    let mut pending = vec![bridge_root];
+    while let Some(directory) = pending.pop() {
+        let entries = match std::fs::read_dir(&directory) {
+            Ok(entries) => entries,
+            Err(error) => {
+                error.kind().hash(hasher);
+                continue;
+            }
+        };
+        let mut entries = entries.filter_map(Result::ok).collect::<Vec<_>>();
+        entries.sort_by_key(std::fs::DirEntry::path);
+        for entry in entries {
+            let path = entry.path();
+            path.hash(hasher);
+            match entry.file_type() {
+                Ok(kind) if kind.is_dir() => pending.push(path),
+                Ok(kind) if kind.is_file() => match std::fs::read(&path) {
+                    Ok(bytes) => bytes.hash(hasher),
+                    Err(error) => error.kind().hash(hasher),
+                },
+                Ok(kind) => {
+                    kind.is_symlink().hash(hasher);
+                }
+                Err(error) => error.kind().hash(hasher),
+            }
+        }
+    }
 }
 
 fn python_environment_selection(root: &Path) -> Option<sifr_package::PythonEnvironmentSelection> {

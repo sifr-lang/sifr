@@ -61,6 +61,7 @@ pub(crate) fn run_python_probe_command(
     validate_python_interpreter_exists(request)?;
 
     let output = Command::new(&request.interpreter)
+        .arg("-B")
         .arg("-I")
         .arg("-c")
         .arg(PROBE_SCRIPT)

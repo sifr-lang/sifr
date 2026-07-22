@@ -2099,8 +2099,8 @@ Delivery waves:
 - [x] Wave 2 — enrich completion and hover with target status and protocol
   policy help while retaining ordinary compiler definition navigation.
 - [x] Wave 3 — append compiler/driver target and authoring-artifact diagnostics,
-  refuse verification when compiler errors exist, and honor request
-  cancellation around external probes.
+  refuse verification when compiler errors exist, and check already-observed
+  cancellation at request boundaries and between external probes.
 - [x] Wave 4 — cache by analysis revisions and selected package inputs, with
   source, lifecycle, watcher, custom metadata, artifact, and interpreter
   invalidation.
@@ -2170,9 +2170,9 @@ found two closure regressions and three parity/documentation gaps. The shared
 target probe now conservatively combines every matching declaration's type and
 inspectability constraints; graph-independent packages with no Python inputs
 skip the editor's frozen Cargo graph read; hover identity now carries the
-canonical definition module and symbol through aliases; LSP binding and
-certification artifact diagnostics match CLI codes/messages; and the editor
-architecture records environment-first diagnostics accurately. Mixed-flag,
+canonical definition module and symbol through single-hop import aliases; LSP
+binding and certification artifact diagnostics match CLI codes/messages; and
+the editor architecture records environment-first diagnostics accurately. Mixed-flag,
 lockfile-less, false-positive alias, and positive aliased-declaration
 regressions cover these remediations. A fresh authoritative gate and repeated
 whole-diff review remain the Wave 5 closure gates. The post-pass-3
@@ -2182,7 +2182,21 @@ interop `19/19`, LSP `64/64`, analysis `48/48`, package `139/139`, driver
 variants with one capability-gated skip, and E2E `131/131` with signature
 `7c39b8c1dd4fec7c` and a warm `42/42` cache. Every per-step budget passes; the
 overall warm wall-time is the only non-blocking advisory. Repeated whole-diff
-review remains the final Wave 5 closure gate.
+review remains the final Wave 5 closure gate. Whole-diff Fable High
+[pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-4.md)
+confirmed four pass-3 closures but found the lockfile shortcut incomplete and
+anti-conservative. The shortcut is removed: locked packages always use the
+canonical graph, including live bridge discovery and workspace-member Python
+requirements, while only Cargo's specific missing-lock/frozen failure becomes a
+read-only deferred status across dependency, configured-environment, and
+declaration shapes. Stale existing locks remain hard package diagnostics. Live
+bridge inputs participate in the cache fingerprint, interpreter probes disable
+bytecode writes, package-wide diagnostic ownership is republished on every
+document lifecycle change, and mixed shared-target failures use kind-neutral
+wording with end-to-end attribution coverage. Cancellation documentation now
+states the sequential server's non-preemptive boundary, and alias identity is
+scoped to the implemented single-hop semantic definition mapping. Fresh
+validation and another whole-diff review remain required.
 
 Tasks:
 

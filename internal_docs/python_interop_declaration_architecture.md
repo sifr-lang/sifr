@@ -613,11 +613,15 @@ ownership, cancellation, release, and transfer policy, but never promotes a
 target probe into protocol certification.
 
 The editor cache is keyed by analysis graph/source revisions plus the package
-manifest, selected pyproject and lock, checked-in binding/certification
-artifacts, and selected interpreter metadata. Source edits, document lifecycle
-events, watched-file events, custom path changes, and environment replacement
-invalidate the cached plan. Cancellation is checked before and after external
-probing so a cancelled request cannot publish a partially refreshed result.
+manifest, Cargo lock, live bridge sources, selected pyproject and lock,
+checked-in binding/certification artifacts, and selected interpreter metadata.
+Source edits, document lifecycle events, watched-file events, custom path
+changes, and environment replacement invalidate the cached plan. A missing
+Cargo lock is never created by the editor: the Python status remains deferred
+until ordinary package resolution creates it, while stale or malformed existing
+locks remain diagnostics. Cancellation state is checked at scheduler boundaries
+and between probes when it is observable; the sequential server does not
+preempt an already-running external process.
 
 ## Compiler And Build Model
 

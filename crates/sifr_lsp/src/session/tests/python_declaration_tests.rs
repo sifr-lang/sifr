@@ -440,6 +440,186 @@ fn lockfile_less_package_without_python_inputs_has_no_editor_diagnostic() {
 }
 
 #[test]
+fn lockfile_less_nontrivial_packages_defer_without_mutation() {
+    let pure_source = "def main() -> int:\n    return 1\n";
+
+    let (mut dependency_session, dependency_temp, dependency_uri) = open_fixture(pure_source);
+    std::fs::write(
+        dependency_temp.path().join("sifr.toml"),
+        "[package]\nname = \"lsp-dependency\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n",
+    )
+    .expect("write dependency Sifr manifest");
+    let cargo_manifest = std::fs::read_to_string(dependency_temp.path().join("Cargo.toml"))
+        .expect("read dependency Cargo manifest")
+        .replace(
+            "\n[workspace]\n",
+            "\n[dependencies]\nserde = \"1\"\n\n[workspace]\n",
+        );
+    std::fs::write(dependency_temp.path().join("Cargo.toml"), cargo_manifest)
+        .expect("write dependency Cargo manifest");
+    std::fs::remove_file(dependency_temp.path().join("Cargo.lock"))
+        .expect("remove dependency fixture lockfile");
+    dependency_session.record_watcher_events(1);
+    let dependency_diagnostics =
+        crate::diagnostics::document_diagnostics(&mut dependency_session, &dependency_uri)
+            .expect("lockfile-less dependency diagnostics");
+    assert!(dependency_diagnostics.is_empty());
+    assert!(!dependency_temp.path().join("Cargo.lock").exists());
+
+    let (mut configured_session, configured_temp, configured_uri) = open_fixture(pure_source);
+    std::fs::remove_file(configured_temp.path().join("Cargo.lock"))
+        .expect("remove configured fixture lockfile");
+    configured_session.record_watcher_events(1);
+    let configured_diagnostics =
+        crate::diagnostics::document_diagnostics(&mut configured_session, &configured_uri)
+            .expect("lockfile-less configured diagnostics");
+    assert!(configured_diagnostics.is_empty());
+    assert!(!configured_temp.path().join("Cargo.lock").exists());
+
+    let (mut declaration_session, declaration_temp, declaration_uri) = open_fixture(SOURCE);
+    std::fs::remove_file(declaration_temp.path().join("Cargo.lock"))
+        .expect("remove declaration fixture lockfile");
+    declaration_session.record_watcher_events(1);
+    let declaration_diagnostics =
+        crate::diagnostics::document_diagnostics(&mut declaration_session, &declaration_uri)
+            .expect("lockfile-less declaration diagnostics");
+    assert!(declaration_diagnostics.is_empty());
+    let completion = request(
+        &mut declaration_session,
+        "textDocument/completion",
+        &declaration_uri,
+        6,
+        15,
+    );
+    let sqrt = completion
+        .get("items")
+        .and_then(serde_json::Value::as_array)
+        .and_then(|items| {
+            items
+                .iter()
+                .find(|item| item.get("label").and_then(serde_json::Value::as_str) == Some("sqrt"))
+        })
+        .expect("deferred sqrt completion");
+    assert_eq!(
+        sqrt.pointer("/data/pythonStatus")
+            .and_then(serde_json::Value::as_str),
+        Some("deferred")
+    );
+    assert!(!declaration_temp.path().join("Cargo.lock").exists());
+}
+
+#[test]
+fn live_bridge_sources_without_inventory_are_validated_and_fingerprinted() {
+    let source = "def main() -> int:\n    return 1\n";
+    let (mut session, temp, uri) = open_fixture(source);
+    let initial =
+        crate::diagnostics::document_diagnostics(&mut session, &uri).expect("initial diagnostics");
+    assert!(initial.is_empty());
+    let bridge_root = temp.path().join("src/python_bridges");
+    std::fs::create_dir_all(&bridge_root).expect("create bridge source root");
+    std::fs::write(
+        bridge_root.join("util.py"),
+        "import numpy\n\ndef value():\n    return numpy.array([1])\n",
+    )
+    .expect("write live bridge source");
+
+    let diagnostics = crate::diagnostics::document_diagnostics(&mut session, &uri)
+        .expect("live bridge diagnostics without watcher invalidation");
+
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.get("code").and_then(serde_json::Value::as_str) == Some("SIFR-PYTRUST-0005")
+    }));
+    assert!(!bridge_root.join("__sifr_inventory__.json").exists());
+}
+
+#[test]
+fn workspace_member_python_requirements_are_validated() {
+    let source = "def main() -> int:\n    return 1\n";
+    let (mut session, temp, uri) = open_fixture(source);
+    let cargo_manifest = std::fs::read_to_string(temp.path().join("Cargo.toml"))
+        .expect("read root Cargo manifest")
+        .replace("[workspace]\n", "[workspace]\nmembers = [\"member\"]\n");
+    std::fs::write(temp.path().join("Cargo.toml"), cargo_manifest)
+        .expect("write workspace Cargo manifest");
+    let member = temp.path().join("member");
+    std::fs::create_dir_all(member.join("src")).expect("create member source root");
+    std::fs::write(
+        member.join("Cargo.toml"),
+        "[package]\nname = \"lsp-python-member\"\nversion = \"0.0.0\"\nedition = \"2024\"\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n",
+    )
+    .expect("write member Cargo manifest");
+    std::fs::write(member.join("src/lib.rs"), "").expect("write member pure marker");
+    std::fs::write(
+        member.join("sifr.toml"),
+        "[package]\nname = \"lsp-python-member\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n\n[python]\nrequires-imports = [\"numpy\"]\n",
+    )
+    .expect("write member Sifr manifest");
+    let cargo_lock =
+        std::fs::read_to_string(temp.path().join("Cargo.lock")).expect("read root Cargo lock");
+    std::fs::write(
+        temp.path().join("Cargo.lock"),
+        format!("{cargo_lock}\n[[package]]\nname = \"lsp-python-member\"\nversion = \"0.0.0\"\n"),
+    )
+    .expect("write workspace Cargo lock");
+    session.record_watcher_events(1);
+
+    let diagnostics = crate::diagnostics::document_diagnostics(&mut session, &uri)
+        .expect("workspace member Python diagnostics");
+
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.get("code").and_then(serde_json::Value::as_str) == Some("SIFR-PYTRUST-0005")
+    }));
+}
+
+#[test]
+fn stale_existing_lockfile_remains_a_package_error() {
+    let source = "def main() -> int:\n    return 1\n";
+    let (mut session, temp, uri) = open_fixture(source);
+    let cargo_manifest = std::fs::read_to_string(temp.path().join("Cargo.toml"))
+        .expect("read Cargo manifest")
+        .replace(
+            "\n[workspace]\n",
+            "\n[dependencies]\nserde = \"1\"\n\n[workspace]\n",
+        );
+    std::fs::write(temp.path().join("Cargo.toml"), cargo_manifest)
+        .expect("write stale Cargo manifest");
+    session.record_watcher_events(1);
+
+    let diagnostics = crate::diagnostics::document_diagnostics(&mut session, &uri)
+        .expect("stale lockfile diagnostics");
+
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.get("code").and_then(serde_json::Value::as_str) == Some("SIFR-PACKAGE-0101")
+    }));
+    assert!(temp.path().join("Cargo.lock").exists());
+}
+
+#[test]
+fn mixed_shared_target_constraints_are_reported_without_wrong_kind_attribution() {
+    let source = "from sifr.python import PythonError\n\n@python(math.sqrt)\ndef sqrt(value: float) -> Result[float, PythonError]: ...\n\n@python.opaque(type=math.sqrt, cleanup=drop)\nclass Root:\n    pass\n\ndef main() -> Result[float, PythonError]:\n    return sqrt(9.0)\n";
+    let (mut session, _temp, uri) = open_fixture(source);
+
+    let diagnostics = crate::diagnostics::document_diagnostics(&mut session, &uri)
+        .expect("mixed shared-target diagnostics");
+    let target_diagnostics = diagnostics
+        .iter()
+        .filter(|diagnostic| {
+            diagnostic.get("code").and_then(serde_json::Value::as_str) == Some("SIFR-PYCALL-0001")
+        })
+        .collect::<Vec<_>>();
+
+    assert_eq!(target_diagnostics.len(), 2);
+    assert!(target_diagnostics.iter().all(|diagnostic| {
+        diagnostic
+            .get("message")
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|message| {
+                message.contains("a declaration requires") && !message.contains("opaque")
+            })
+    }));
+}
+
+#[test]
 fn app_trust_policy_is_enforced_by_the_editor_environment_path() {
     let (mut session, temp, uri) = open_fixture(SOURCE);
     let manifest = std::fs::read_to_string(temp.path().join("sifr.toml"))

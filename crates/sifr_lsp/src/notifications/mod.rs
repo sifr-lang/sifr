@@ -125,8 +125,7 @@ fn text_document_did_open(
     let version = optional_i32(&params, "/textDocument/version")?;
     let text = required_string(&params, "/textDocument/text")?;
     session.open_document(uri.clone(), &language_id, version, text)?;
-    let mode = session.store().settings().diagnostics_mode;
-    DiagnosticsController::publish_document(connection, session, &uri, mode)
+    DiagnosticsController::publish_all(connection, session)
 }
 
 fn text_document_did_change(
@@ -150,8 +149,7 @@ fn text_document_did_change(
             summary.raw_change_count, summary.compacted_change_count, summary.text_changed
         ),
     );
-    let mode = session.store().settings().diagnostics_mode;
-    DiagnosticsController::publish_document(connection, session, &uri, mode)
+    DiagnosticsController::publish_all(connection, session)
 }
 
 fn text_document_did_save(
@@ -165,8 +163,7 @@ fn text_document_did_save(
         .and_then(Value::as_str)
         .map(str::to_owned);
     if session.save_document(&uri, text)? {
-        let mode = session.store().settings().diagnostics_mode;
-        DiagnosticsController::publish_document(connection, session, &uri, mode)?;
+        DiagnosticsController::publish_all(connection, session)?;
     }
     Ok(())
 }
@@ -196,5 +193,5 @@ fn text_document_did_close(
             },
         ))
         .map_err(|error| LspError::internal(format!("failed to clear diagnostics: {error}")))?;
-    Ok(())
+    DiagnosticsController::publish_all(connection, session)
 }

@@ -11,20 +11,6 @@ use sifr_analysis::WorkspaceTracePhase;
 pub(crate) struct DiagnosticsController;
 
 impl DiagnosticsController {
-    pub(crate) fn publish_document(
-        connection: &Connection,
-        session: &mut Session,
-        uri: &str,
-        mode: DiagnosticsMode,
-    ) -> LspResult<()> {
-        if mode == DiagnosticsMode::Off {
-            session.clear_diagnostic_jobs();
-            return Ok(());
-        }
-        session.schedule_document_diagnostics(uri)?;
-        Self::flush_ready(connection, session, mode)
-    }
-
     pub(crate) fn publish_all(connection: &Connection, session: &mut Session) -> LspResult<()> {
         let mode = session.store().settings().diagnostics_mode;
         if mode == DiagnosticsMode::Off {
@@ -143,13 +129,21 @@ pub(crate) fn document_diagnostics(session: &mut Session, uri: &str) -> LspResul
             .map(|diagnostic| conversion::diagnostic(diagnostic, source, position_encoding))
             .collect::<LspResult<Vec<_>>>()
     })?;
-    let python = session.python_declaration_snapshot(uri)?;
-    diagnostics.extend(
-        python
-            .diagnostics
-            .into_iter()
-            .map(|diagnostic| conversion::diagnostic(diagnostic, &source, position_encoding))
-            .collect::<LspResult<Vec<_>>>()?,
-    );
+    match session.python_declaration_snapshot(uri) {
+        Ok(python) => diagnostics.extend(
+            python
+                .diagnostics
+                .into_iter()
+                .map(|diagnostic| conversion::diagnostic(diagnostic, &source, position_encoding))
+                .collect::<LspResult<Vec<_>>>()?,
+        ),
+        Err(error) => session.trace(
+            WorkspaceTracePhase::LspTiming,
+            format!(
+                "python_declaration_diagnostics_failed uri={uri} error={}",
+                error.message()
+            ),
+        ),
+    }
     Ok(diagnostics)
 }
