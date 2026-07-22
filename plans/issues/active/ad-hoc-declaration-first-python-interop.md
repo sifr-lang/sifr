@@ -2350,8 +2350,11 @@ owners. The authoritative create-PR gate also passes every blocking lane,
 including Python interop `19/19`, the core-language E2E suite `131/131`, and all
 crate, guardrail, diagnostics, tooling, runtime, and generated-code checks. Its
 only advisory is the aggregate warm wall-time target; every blocking per-step
-budget passes. Frozen whole-diff review remains required before Wave 5 can
-close.
+budget passes. Fable High whole-diff review pass 1 found two minor closure
+defects: polluted async-negative fixtures and a stale architecture status
+paragraph. Both are remediated with exact single-diagnostic checks and the M16
+architecture contract update. A fresh frozen whole-diff review remains required
+before Wave 5 can close.
 
 Tasks:
 
