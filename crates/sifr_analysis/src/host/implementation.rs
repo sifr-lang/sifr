@@ -203,6 +203,7 @@ impl AnalysisHost {
                 label: symbol.name,
                 kind: symbol.kind,
                 detail: symbol.container_name,
+                symbol_file: Some(symbol.file),
             })
             .collect();
         candidates.extend(rust_interop_completion_candidates(&facts.source, position));
@@ -214,6 +215,7 @@ impl AnalysisHost {
                 label: candidate.label,
                 kind: candidate.kind,
                 detail: candidate.detail,
+                symbol_file: candidate.symbol_file,
             })
             .collect();
         Ok(self.result(AnalysisQueryKind::Completion, CompletionItems { items }))
@@ -822,7 +824,7 @@ impl AnalysisHost {
         }
     }
 
-    fn result<T>(&self, query: AnalysisQueryKind, value: T) -> AnalysisQueryResult<T> {
+    pub(super) fn result<T>(&self, query: AnalysisQueryKind, value: T) -> AnalysisQueryResult<T> {
         AnalysisQueryResult::new(value, self.metadata(query))
     }
 }

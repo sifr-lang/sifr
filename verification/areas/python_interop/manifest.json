@@ -77,6 +77,19 @@
       ]
     },
     {
+      "name": "lsp-declaration-authoring",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "lsp-declaration-authoring",
+          "entry": "verification/areas/python_interop/runner/lsp_declaration_authoring.py",
+          "command": "python-interop-lsp-declaration-authoring",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "tier1",
       "kind": "adapter",
       "cases": [

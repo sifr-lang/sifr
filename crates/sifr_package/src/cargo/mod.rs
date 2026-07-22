@@ -1,5 +1,6 @@
 pub mod commands;
 pub mod errors;
+pub mod load;
 pub mod lock_modes;
 pub mod metadata;
 pub mod package;

@@ -148,6 +148,19 @@ impl LspAnalysisWorkspace {
             .map_or(&[][..], |analysis| analysis.load_diagnostics.as_slice())
     }
 
+    pub(crate) fn can_analyze_document(&self, document: &DocumentState) -> bool {
+        if let Some(root) = workspace_root_for(document.path()) {
+            if self.projects.get(&root).is_some_and(|project| {
+                project.host.is_some() && project.files_by_uri.contains_key(document.uri())
+            }) {
+                return true;
+            }
+        }
+        self.documents
+            .get(document.uri())
+            .is_some_and(|analysis| analysis.host.is_some() && analysis.file.is_some())
+    }
+
     pub(crate) fn file_maps_for_document(
         &self,
         document: &DocumentState,

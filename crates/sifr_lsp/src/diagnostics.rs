@@ -31,7 +31,11 @@ impl DiagnosticsController {
             session.clear_diagnostic_jobs();
             return Ok(());
         }
-        let uris = session.document_uris();
+        let uris = session
+            .document_uris()
+            .into_iter()
+            .filter(|uri| session.can_publish_document_diagnostics(uri))
+            .collect::<Vec<_>>();
         let progress = session.begin_progress(ProgressKind::FullDiagnostics, uris.len());
         if let Some(handle) = &progress {
             publish_progress(
@@ -133,7 +137,7 @@ pub(crate) fn document_diagnostics(session: &mut Session, uri: &str) -> LspResul
             .map(|diagnostic| conversion::diagnostic(diagnostic, &source, position_encoding))
             .collect::<LspResult<Vec<_>>>();
     }
-    session.with_document_analysis(uri, |snapshot, host, file, source| {
+    let mut diagnostics = session.with_document_analysis(uri, |snapshot, host, file, source| {
         let diagnostics = snapshot
             .diagnostics(host, file)
             .map_err(|error| crate::errors::LspError::internal(error.message))?
@@ -142,5 +146,22 @@ pub(crate) fn document_diagnostics(session: &mut Session, uri: &str) -> LspResul
             .into_iter()
             .map(|diagnostic| conversion::diagnostic(diagnostic, source, position_encoding))
             .collect::<LspResult<Vec<_>>>()
-    })
+    })?;
+    match session.python_declaration_snapshot(uri) {
+        Ok(python) => diagnostics.extend(
+            python
+                .diagnostics
+                .into_iter()
+                .map(|diagnostic| conversion::diagnostic(diagnostic, &source, position_encoding))
+                .collect::<LspResult<Vec<_>>>()?,
+        ),
+        Err(error) => session.trace(
+            WorkspaceTracePhase::LspTiming,
+            format!(
+                "python_declaration_diagnostics_failed uri={uri} error={}",
+                error.message()
+            ),
+        ),
+    }
+    Ok(diagnostics)
 }

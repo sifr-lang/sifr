@@ -5,6 +5,7 @@ use crate::document_events::{compact_content_changes, CompactedDocumentChange};
 use crate::document_store::DocumentStore;
 use crate::errors::{LspError, LspResult};
 use crate::progress::{ProgressHandle, ProgressKind, ProgressState};
+use crate::python_declarations::PythonDeclarationCache;
 use crate::request_queue::{CancellationTarget, RequestQueue, ScheduledRequest};
 use crate::scheduler::WorkLane;
 use lsp_server::RequestId;
@@ -31,6 +32,7 @@ pub(crate) struct Session {
     traces: Vec<WorkspaceTraceEvent>,
     next_trace_sequence: u64,
     diagnostic_jobs: DiagnosticJobs,
+    pub(crate) python_declarations: PythonDeclarationCache,
 }
 
 pub(crate) struct DocumentChangeSummary {
@@ -54,6 +56,7 @@ impl Session {
             traces: Vec::new(),
             next_trace_sequence: 0,
             diagnostic_jobs: DiagnosticJobs::default(),
+            python_declarations: PythonDeclarationCache::default(),
         }
     }
 
@@ -80,6 +83,7 @@ impl Session {
         version: Option<i32>,
         text: String,
     ) -> LspResult<()> {
+        self.python_declarations.invalidate_source();
         self.store.open(uri.clone(), language_id, version, text)?;
         let document = self.store.document(&uri)?;
         if self.analysis.open_document(document) {
@@ -104,6 +108,7 @@ impl Session {
         version: Option<i32>,
         compacted: CompactedDocumentChange,
     ) -> LspResult<DocumentChangeSummary> {
+        self.python_declarations.invalidate_source();
         let text_changed =
             self.store
                 .apply_compacted_change(uri, version, &compacted, self.position_encoding)?;
@@ -119,6 +124,7 @@ impl Session {
     }
 
     pub(crate) fn save_document(&mut self, uri: &str, text: Option<String>) -> LspResult<bool> {
+        self.python_declarations.invalidate_source();
         if !self.store.save(uri, text) {
             return Ok(false);
         }
@@ -130,6 +136,7 @@ impl Session {
     }
 
     pub(crate) fn close_document(&mut self, uri: &str) -> bool {
+        self.python_declarations.invalidate_source();
         self.diagnostic_jobs.remove(uri);
         self.analysis.close_document(uri);
         let closed = self.store.close(uri);
@@ -138,6 +145,7 @@ impl Session {
     }
 
     pub(crate) fn record_watcher_events(&mut self, event_count: usize) {
+        self.python_declarations.invalidate_external();
         self.analysis.record_watcher_events(event_count);
         self.trace(
             WorkspaceTracePhase::SourceUpdate,
@@ -147,6 +155,16 @@ impl Session {
 
     pub(crate) fn document_uris(&self) -> Vec<String> {
         self.store.document_uris()
+    }
+
+    pub(crate) fn can_analyze_document(&self, uri: &str) -> bool {
+        self.store
+            .document(uri)
+            .is_ok_and(|document| self.analysis.can_analyze_document(document))
+    }
+
+    pub(crate) fn can_publish_document_diagnostics(&self, uri: &str) -> bool {
+        !self.load_diagnostics(uri).is_empty() || self.can_analyze_document(uri)
     }
 
     pub(crate) fn load_diagnostics(&self, uri: &str) -> &[RenderedDiagnostic] {
@@ -388,6 +406,8 @@ mod tests {
 
     #[path = "project_ownership_tests.rs"]
     mod project_ownership_tests;
+    #[path = "python_declaration_tests.rs"]
+    mod python_declaration_tests;
     #[path = "sysroot_request_tests.rs"]
     mod sysroot_request_tests;
 

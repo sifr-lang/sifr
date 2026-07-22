@@ -73,8 +73,20 @@ mutation-ordering, positional-only, symlink-confinement, cross-module runtime,
 and schema-diagnostic remediation; pass 2 returned **SATISFIED**. Frozen pass
 3 found one additional direct-conversion grammar minor; the root remediation
 and expanded regression evidence passed the authoritative gate, and full pass
-4 returned **SATISFIED** with no blocker, major, or minor findings. M15 and
-later milestones are not yet implemented.
+4 returned **SATISFIED** with no blocker, major, or minor findings. M15 is
+implemented, authoritatively validated, and closure-approved on
+[PR #2995](https://github.com/sifr-lang/sifr/pull/2995). Fable High pass 1 validated the
+shared compiler-plan/driver-probe architecture and identified symbol
+misattribution, live environment-digest, library deferral, graph/trust,
+certification, probe-cache/cancellation, diagnostic-scoping, and evidence
+precision gaps. Those findings are remediated with exact `(FileId, symbol)`
+identity, the canonical package graph/environment resolver, live probe digests,
+per-environment and per-target caches, declaration-scoped diagnostics, and
+direct regression evidence. Repeated whole-diff review through pass 8 closed
+lockfile parity, live bridge/workspace aggregation, diagnostic-owner election,
+and excluded-document publication gaps and returned **SATISFIED**. The final
+authoritative create-PR gate passes every blocking lane. M16 and later
+milestones are not yet implemented.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
@@ -2081,6 +2093,207 @@ Validation:
 ### M15. LSP Declaration Authoring
 
 Depends on M13/M14 compiler and authoring queries.
+
+Delivery waves:
+
+- [x] Wave 1 — expose the canonical analysis-host `PythonInteropPlan` query and
+  factor the driver's exact target/call-shape probe for tooling reuse.
+- [x] Wave 2 — enrich completion and hover with target status and protocol
+  policy help while retaining ordinary compiler definition navigation.
+- [x] Wave 3 — append compiler/driver target and authoring-artifact diagnostics,
+  refuse verification when compiler errors exist, and check already-observed
+  cancellation at request boundaries and between external probes.
+- [x] Wave 4 — cache by analysis revisions and selected package inputs, with
+  source, lifecycle, watcher, custom metadata, artifact, and interpreter
+  invalidation.
+- [x] Wave 5 — authoritative validation, repeated full milestone review,
+  closure ledger, and merge.
+
+Focused evidence:
+
+- `cargo test -p sifr_lsp` covers completion, hover, definition navigation,
+  diagnostics, cancellation, source/watcher invalidation, exact cache reuse,
+  runtime-checked targets, and unsupported-type non-promotion.
+- `cargo test -p sifr_analysis` and `cargo test -p sifr_driver python_interop`
+  cover the compiler plan query's module/file identity and the shared exact
+  target/protocol probes.
+- blocking `lsp-declaration-authoring` verification is selected by create-PR,
+  merge, nightly, and release profiles.
+
+Pre-review validation: the authoritative `create-pr` profile passes every
+blocking lane in `1268.49s`. Python interop passes `19/19`, including
+`lsp-declaration-authoring` with verified completion, compiler navigation,
+diagnostic parity, cancellation, cache drift, and zero unsupported
+certifications; create-PR E2E passes `131/131` with signature
+`7c39b8c1dd4fec7c`; runtime-platform passes `28` variants with zero failures.
+Every per-step blocking budget passes. The overall warm wall-time notice is a
+non-blocking advisory; the first cold attempt also passed all `19` Python
+variants but exceeded that lane's time budget before the successful warm run.
+
+Fable High pass 1 returned **NEEDS CHANGES** after the initial gate. Its seven
+findings are covered by focused regressions for same-name and substring symbol
+isolation, declaration-file/range diagnostics, live certification digest drift,
+application trust rejection, library deferral, environment/target cache reuse,
+and direct analysis-plan identity. The focused LSP suite now passes `13/13`,
+the driver probe suite passes `16/16`, workspace clippy and formatting pass,
+and the HIR, driver-maintainability, and 900-line file-size guardrails pass.
+The full gate additionally caught an over-broad structured-probe refactor that
+applied callable signature validation to opaque Python type declarations; the
+original callable-kind boundary is restored, a focused opaque-constructor
+regression passes, and the `aiosqlite` async-context executable is green again.
+The post-remediation authoritative create-PR gate passes every blocking lane in
+`870.11s`: Python interop `19/19`, LSP `59/59`, analysis `48/48`, package
+`139/139`, runtime-platform `28` variants with zero failures, and E2E `131/131`
+with signature `7c39b8c1dd4fec7c`. Every per-step blocking budget passes; the
+overall warm wall-time notice is a non-blocking advisory. Whole-diff Fable High
+[pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-2.md)
+confirmed all seven pass-1 findings resolved and returned **SATISFIED**. Its
+five conservative follow-ups are also remediated before closure: hover status
+uses exact semantic function/file identity; shared targets are probed once and
+update every declaration status; binding drift uses a schema-valid stale
+artifact regression; the LSP shares certification distribution checks and
+binding identity with the CLI and validates configured environments even with
+zero declarations; and the shared package-graph loader preserves the CLI's
+structured Cargo context and exit classification. Focused suites pass LSP
+`61/61`, analysis `48/48`, package `139/139`, driver `380/380` with `33`
+expected generated-build ignores, and CLI/E2E `37/37`; workspace Clippy,
+formatting, HIR and driver maintainability, and the `900`-line file-size
+guardrail over `2788` files pass. A fresh authoritative gate and frozen-diff
+review remain the Wave 5 closure gates. The fresh authoritative create-PR gate
+now passes every blocking lane in `1209.07s`: Python interop `19/19`, LSP
+`61/61`, analysis `48/48`, package `139/139`, driver `380/380` plus `33`
+expected generated-build ignores, runtime-platform `28` variants with one
+capability-gated skip, and E2E `131/131` with signature
+`7c39b8c1dd4fec7c`. Every per-step budget passes. The cold E2E cache (`0/42`)
+and overall warm wall-time produce one non-blocking advisory; frozen-diff
+review remains the final Wave 5 closure gate. Whole-diff Fable High
+[pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-3.md)
+found two closure regressions and three parity/documentation gaps. The shared
+target probe now conservatively combines every matching declaration's type and
+inspectability constraints; an initial optimization made graph-independent
+packages skip the editor's frozen Cargo graph read; hover identity now carries
+the canonical definition module and symbol through single-hop import aliases;
+LSP binding and certification artifact diagnostics match CLI codes/messages; and
+the editor architecture records environment-before-target diagnostics
+accurately. Mixed-flag, lockfile-less, false-positive alias, and positive aliased-declaration
+regressions cover these remediations. A fresh authoritative gate and repeated
+whole-diff review remain the Wave 5 closure gates. The post-pass-3
+authoritative create-PR gate passes every blocking lane in `852.51s`: Python
+interop `19/19`, LSP `64/64`, analysis `48/48`, package `139/139`, driver
+`382/382` plus `33` expected generated-build ignores, runtime-platform `28`
+variants with one capability-gated skip, and E2E `131/131` with signature
+`7c39b8c1dd4fec7c` and a warm `42/42` cache. Every per-step budget passes; the
+overall warm wall-time is the only non-blocking advisory. Repeated whole-diff
+review remains the final Wave 5 closure gate. Whole-diff Fable High
+[pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-4.md)
+confirmed four pass-3 closures but found the lockfile shortcut incomplete and
+anti-conservative. The shortcut is removed: locked packages always use the
+canonical graph, including live bridge discovery and workspace-member Python
+requirements, while only Cargo's specific missing-lock/frozen failure becomes a
+read-only deferred status across dependency, configured-environment, and
+declaration shapes. Stale existing locks remain hard package diagnostics. Live
+bridge inputs participate in the cache fingerprint, workspace-importing
+interpreter probes disable bytecode writes, package-wide diagnostic ownership
+is reassigned when its owner document closes, and mixed shared-target failures
+use kind-neutral wording with end-to-end attribution coverage. Cancellation
+documentation now states the sequential server's non-preemptive boundary, and
+alias identity is scoped to the implemented single-hop semantic definition mapping. Fresh
+authoritative create-PR validation passes every blocking lane on the exact
+post-pass-4 candidate in `795.90s`: Python interop `19/19`, LSP `69/69`,
+analysis `48/48`, package `139/139`, runtime-platform `28` variants with one
+capability-gated skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c`
+and a warm `42/42` cache. The live LSP protocol smoke passes, every per-step
+budget passes, and the overall warm wall-time notice is the only non-blocking
+advisory. That pre-existing smoke covers generic diagnostic publication and
+notification ordering; it does not exercise Python declaration authoring over
+the wire. Another frozen whole-diff review remains required.
+
+Residual ledger for closure: declaration behavior is exercised through shared
+compiler/driver queries and in-process LSP tests, but there is no direct
+wire-protocol LSP-versus-CLI parity fixture. Per-document publication on open,
+change, and save preserves protocol ordering but can transiently leave a
+package-wide diagnostic duplicated or a sibling's Python diagnostics stale
+until its next publication trigger; closing the current owner recomputes and
+republishes the remaining owner, with a dedicated regression. A missing Cargo
+lock remains a read-only `deferred` editor status without a command hint until
+ordinary package resolution creates the lock, while a stale existing lock is a
+hard package error. Missing-lock classification keys the invocation directory
+and current Cargo create-versus-update wording; a legacy Cargo workspace-member
+lockfile path is not independently hardened. Shared targets report the first
+violated combined constraint, and the mixed-constraint success shape is not
+independently pinned.
+
+The target and environment probes disable bytecode writes; the isolated
+certification version probe does not pass `-B`, but imports only standard-library
+modules under `-I` and cannot write in the workspace. Snapshot-construction
+failure preserves compiler diagnostics and is trace-only. Package fingerprints
+are recomputed per remaining document after close, dependency-manifest cache
+invalidation remains watcher-dependent, transient probe failures have no TTL,
+and environment/target caches shrink only on watcher invalidation while plan
+snapshots clear on source lifecycle events. Governing workspace-root Cargo locks
+for member packages and content behind symlinked bridge paths are not directly
+fingerprinted. LSP/CLI artifact help remains asymmetric, protocol help uses the
+broad `certified` label for some uncertified declarations, and the test
+environment uses a symlinked fixture interpreter. Hover status enrichment is
+function-only and alias-aware status is limited to absolute single-hop imports;
+external probes are not preempted mid-process. The architecture summary's short
+cancellation phrase is read under that non-preemptive constraint. The blocking
+lane's name filters are not fail-hard against future test renames, the workspace
+member trust regression asserts its code rather than message attribution, and
+LSP target aggregation duplicates a small amount of driver bridge-marking logic.
+No regression independently pins the load-diagnostic disjunct of the full
+publication predicate, although the combined owner-handoff regression pins both
+the excluded-document and eligible-document directions.
+The driver Python interop module is `894/900` lines and must be split by
+responsibility before further growth.
+
+Post-pass-5 authoritative create-PR validation passes every blocking lane in
+`1164.53s`: Python interop `19/19`, LSP `70/70`, analysis `48/48`, package
+`139/139`, driver `382/382` plus `33` expected generated-build ignores,
+runtime-platform `28` variants with one capability-gated skip, and E2E `131/131`
+with signature `7c39b8c1dd4fec7c`. Every per-step blocking budget passes. The E2E cache was
+cold (`0/42`), so the overall warm wall-time notice is a non-blocking advisory.
+Whole-diff Fable High
+[pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-6.md)
+closed both pass-5 minors and independently reproduced the gate, but found one
+new major: a loader-excluded open document could sort first in package
+diagnostic ownership despite being unable to publish, suppressing package errors
+from every analyzable sibling. Owner election now filters through the analysis
+workspace's actual publishability predicate, and a nested excluded-document regression pins
+the anti-conservative failure shape. Post-pass-6 authoritative create-PR
+validation passes every blocking lane in `784.12s`: Python interop `19/19`, LSP
+`71/71`, analysis `48/48`, package `139/139`, driver `382/382` plus `33`
+expected generated-build ignores, runtime-platform `28` variants with one
+capability-gated skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c`
+and a warm `42/42` cache. Every per-step blocking budget passes; overall warm
+wall time is the only non-blocking advisory. Another frozen whole-diff review
+remains required.
+
+Whole-diff Fable High
+[pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-7.md)
+verified the pass-6 major closed but found one combined lifecycle minor: full
+publication still scheduled an analysis-excluded document, whose expected
+analysis error aborted the diagnostic drain before the eligible sibling's
+owner handoff. Full publication now schedules only documents that can provide
+analysis or load diagnostics, a publication-compatible superset of the
+analysis-only owner-election boundary. The close-owner regression includes an excluded document and pins
+the clear-plus-republish transition. Post-pass-7 authoritative create-PR
+validation passes every blocking lane in `780.26s`: Python interop `19/19`, LSP
+`71/71`, analysis `48/48`, package `139/139`, driver `382/382` plus `33`
+expected generated-build ignores, runtime-platform `28` variants with one
+capability-gated skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c`
+and a warm `42/42` cache. Every per-step blocking budget passes; overall warm
+wall time is the only non-blocking advisory. Another frozen whole-diff review
+remains required. Whole-diff Fable High
+[pass 8](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-8.md)
+independently verified the combined publication predicate by inspection and
+mutation testing, confirmed every prior finding remains closed and both
+acceptance criteria hold, and returned **SATISFIED** with no blocker, major, or
+minor findings. M15 is closure-approved for merge.
+Frozen-ledger Fable High
+[pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-9.md)
+confirmed the exact pushed PR head remains code-identical to the satisfied
+candidate and returned **SATISFIED**.
 
 Tasks:
 

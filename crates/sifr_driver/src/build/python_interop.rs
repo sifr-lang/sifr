@@ -1,9 +1,11 @@
 use super::project_codegen::GeneratedBinaryProject;
 use super::python_runtime::PackagePythonRuntime;
 use crate::diagnostics::diagnostic_with_code;
+use ruff_text_size::TextRange;
 use serde::Deserialize;
 use sifr_codegen::PythonTargetProbeStatus;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
+use std::path::Path;
 use std::process::Command;
 
 const TARGET_PROBE: &str = r#"
@@ -45,23 +47,30 @@ if is_callable:
 print(json.dumps({"ok": True, "callable": is_callable, "is_type": isinstance(value, type), "inspectable": inspectable, "parameters": parameters, "error": None}))
 "#;
 
-#[derive(Deserialize)]
-struct ProbeOutput {
-    ok: bool,
-    callable: bool,
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+pub struct PythonTargetInspection {
+    pub ok: bool,
+    pub callable: bool,
     #[serde(default)]
-    is_type: bool,
-    inspectable: bool,
+    pub is_type: bool,
+    pub inspectable: bool,
     #[serde(default)]
-    parameters: Vec<ProbeParameter>,
-    error: Option<String>,
+    pub parameters: Vec<PythonTargetParameter>,
+    pub error: Option<String>,
 }
 
-#[derive(Deserialize)]
-struct ProbeParameter {
-    name: String,
-    kind: String,
-    has_default: bool,
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+pub struct PythonTargetParameter {
+    pub name: String,
+    pub kind: String,
+    pub has_default: bool,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct PythonInteropPlanDiagnostic {
+    pub module_name: Option<String>,
+    pub span: TextRange,
+    pub diagnostic: RenderedDiagnostic,
 }
 
 pub(super) fn apply_python_interop_metadata(
@@ -86,12 +95,8 @@ fn apply_python_interop_metadata_with_policy(
     if generated.interop.python.declarations.is_empty() {
         return Ok(generated);
     }
-    for probe in &mut generated.interop.python.target_probes {
-        if probe.target_path.starts_with("__sifr_bridge__.") {
-            probe.status = PythonTargetProbeStatus::RuntimeChecked;
-        }
-    }
     let Some(runtime) = runtime else {
+        mark_embedded_bridge_targets(&mut generated.interop.python);
         if allow_deferred {
             return Ok(generated);
         }
@@ -101,96 +106,17 @@ fn apply_python_interop_metadata_with_policy(
         )]);
     };
 
-    let mut diagnostics =
-        super::python_certification::validate_protocol_certifications(&generated, runtime);
-    for probe in &mut generated.interop.python.target_probes {
-        if probe.target_path.starts_with("__sifr_bridge__.") {
-            continue;
-        }
-        match execute_probe(runtime, &probe.target_path) {
-            Ok(output) if !output.ok => diagnostics.push(diagnostic_with_code(
-                format!(
-                    "invalid Python declaration target '{}': {}",
-                    probe.target_path,
-                    output
-                        .error
-                        .unwrap_or_else(|| "target is unresolved".to_string())
-                ),
-                DiagnosticCode::PYIMP_INVALID_TARGET,
-            )),
-            Ok(output) if !output.callable => diagnostics.push(diagnostic_with_code(
-                format!(
-                    "invalid Python declaration call shape: target '{}' is not callable",
-                    probe.target_path
-                ),
-                DiagnosticCode::PYCALL_INVALID_SHAPE,
-            )),
-            Ok(output) if probe.expects_type && !output.is_type => {
-                diagnostics.push(diagnostic_with_code(
-                    format!(
-                        "invalid Python opaque declaration: target '{}' is not a Python type",
-                        probe.target_path
-                    ),
-                    DiagnosticCode::PYCALL_INVALID_SHAPE,
-                ));
-            }
-            Ok(output) if !output.inspectable && probe.requires_inspectable_signature => {
-                diagnostics.push(diagnostic_with_code(
-                    format!(
-                        "invalid Python declaration call shape: target '{}' must be inspectable for `**record` expansion",
-                        probe.target_path
-                    ),
-                    DiagnosticCode::PYCALL_INVALID_SHAPE,
-                ));
-            }
-            Ok(output) => {
-                if output.inspectable {
-                    if let Some(reason) = generated
-                        .interop
-                        .python
-                        .declarations
-                        .iter()
-                        .filter(|declaration| {
-                            matches!(
-                                declaration.declaration.kind,
-                                sifr_ir::PythonInteropDecoratorKind::Function
-                                    | sifr_ir::PythonInteropDecoratorKind::Buffer
-                                    | sifr_ir::PythonInteropDecoratorKind::Arrow
-                                    | sifr_ir::PythonInteropDecoratorKind::Dlpack
-                                    | sifr_ir::PythonInteropDecoratorKind::DlpackStream
-                            ) && declaration
-                                .declaration
-                                .target
-                                .as_ref()
-                                .is_some_and(|target| target.dotted() == probe.target_path)
-                        })
-                        .find_map(|declaration| validate_signature(declaration, &output.parameters))
-                    {
-                        diagnostics.push(diagnostic_with_code(
-                            format!(
-                                "invalid Python declaration call shape for '{}': {reason}",
-                                probe.target_path
-                            ),
-                            DiagnosticCode::PYCALL_INVALID_SHAPE,
-                        ));
-                        continue;
-                    }
-                }
-                probe.status = if output.inspectable {
-                    PythonTargetProbeStatus::Verified
-                } else {
-                    PythonTargetProbeStatus::RuntimeChecked
-                };
-            }
-            Err(reason) => diagnostics.push(diagnostic_with_code(
-                format!(
-                    "invalid Python declaration target '{}': probe failed: {reason}",
-                    probe.target_path
-                ),
-                DiagnosticCode::PYIMP_INVALID_TARGET,
-            )),
-        }
-    }
+    let mut diagnostics = super::python_certification::validate_protocol_certifications_for_plan(
+        &generated.interop.python,
+        runtime,
+    )
+    .into_iter()
+    .map(|diagnostic| diagnostic.diagnostic)
+    .collect::<Vec<_>>();
+    diagnostics.extend(probe_python_interop_plan(
+        &mut generated.interop.python,
+        runtime.interpreter(),
+    ));
     if diagnostics.is_empty() {
         Ok(generated)
     } else {
@@ -198,9 +124,214 @@ fn apply_python_interop_metadata_with_policy(
     }
 }
 
+/// Apply the compiler's exact declaration target and call-shape probe to an
+/// already lowered Python interop plan. Tooling uses this query so editor
+/// status never invents a second interpretation of declaration compatibility.
+pub fn probe_python_interop_plan(
+    plan: &mut sifr_codegen::PythonInteropPlan,
+    interpreter: &Path,
+) -> Vec<RenderedDiagnostic> {
+    mark_embedded_bridge_targets(plan);
+    let mut seen_targets = std::collections::BTreeSet::new();
+    let targets = plan
+        .target_probes
+        .iter()
+        .filter(|probe| !probe.target_path.starts_with("__sifr_bridge__."))
+        .filter(|probe| seen_targets.insert(probe.target_path.clone()))
+        .map(|probe| probe.target_path.clone())
+        .collect::<Vec<_>>();
+    targets
+        .into_iter()
+        .flat_map(|target| {
+            let inspection = inspect_python_target(interpreter, &target);
+            apply_python_target_inspection(
+                plan,
+                &target,
+                inspection.as_ref().map_err(String::as_str),
+            )
+        })
+        .map(|diagnostic| diagnostic.diagnostic)
+        .collect()
+}
+
+pub fn inspect_python_target(
+    interpreter: &Path,
+    target: &str,
+) -> Result<PythonTargetInspection, String> {
+    execute_probe(interpreter, target)
+}
+
+pub fn apply_python_target_inspection(
+    plan: &mut sifr_codegen::PythonInteropPlan,
+    target: &str,
+    inspection: Result<&PythonTargetInspection, &str>,
+) -> Vec<PythonInteropPlanDiagnostic> {
+    let probe_indices = plan
+        .target_probes
+        .iter()
+        .enumerate()
+        .filter_map(|(index, probe)| (probe.target_path == target).then_some(index))
+        .collect::<Vec<_>>();
+    if probe_indices.is_empty() {
+        return Vec::new();
+    }
+    if target.starts_with("__sifr_bridge__.") {
+        for index in probe_indices {
+            plan.target_probes[index].status = PythonTargetProbeStatus::RuntimeChecked;
+        }
+        return Vec::new();
+    }
+    let expects_type = probe_indices
+        .iter()
+        .any(|index| plan.target_probes[*index].expects_type);
+    let requires_inspectable_signature = probe_indices
+        .iter()
+        .any(|index| plan.target_probes[*index].requires_inspectable_signature);
+    let diagnostic = match inspection {
+        Ok(output) if !output.ok => Some(diagnostic_with_code(
+            format!(
+                "invalid Python declaration target '{target}': {}",
+                output
+                    .error
+                    .clone()
+                    .unwrap_or_else(|| "target is unresolved".to_string())
+            ),
+            DiagnosticCode::PYIMP_INVALID_TARGET,
+        )),
+        Ok(output) if !output.callable => Some(diagnostic_with_code(
+            format!("invalid Python declaration call shape: target '{target}' is not callable"),
+            DiagnosticCode::PYCALL_INVALID_SHAPE,
+        )),
+        Ok(output) if expects_type && !output.is_type => Some(diagnostic_with_code(
+            format!(
+                "invalid Python declaration target '{target}': a declaration requires this target to be a Python type"
+            ),
+            DiagnosticCode::PYCALL_INVALID_SHAPE,
+        )),
+        Ok(output) if !output.inspectable && requires_inspectable_signature => {
+            Some(diagnostic_with_code(
+                format!(
+                    "invalid Python declaration call shape: a declaration requires target '{target}' to be inspectable for `**record` expansion"
+                ),
+                DiagnosticCode::PYCALL_INVALID_SHAPE,
+            ))
+        }
+        Err(reason) => Some(diagnostic_with_code(
+            format!("invalid Python declaration target '{target}': probe failed: {reason}"),
+            DiagnosticCode::PYIMP_INVALID_TARGET,
+        )),
+        Ok(_) => None,
+    };
+    if let Some(diagnostic) = diagnostic {
+        return scoped_target_diagnostics(plan, target, diagnostic);
+    }
+    let Ok(output) = inspection else {
+        return Vec::new();
+    };
+    if output.inspectable {
+        let diagnostics = plan
+            .declarations
+            .iter()
+            .filter(|declaration| {
+                declaration_targets(declaration, target)
+                    && declaration_requires_signature_validation(declaration)
+            })
+            .filter_map(|declaration| {
+                validate_signature(declaration, &output.parameters).map(|reason| {
+                    scoped_diagnostic(
+                        declaration,
+                        diagnostic_with_code(
+                            format!(
+                                "invalid Python declaration call shape for '{target}': {reason}"
+                            ),
+                            DiagnosticCode::PYCALL_INVALID_SHAPE,
+                        ),
+                    )
+                })
+            })
+            .collect::<Vec<_>>();
+        if !diagnostics.is_empty() {
+            return diagnostics;
+        }
+    }
+    let status = if output.inspectable {
+        PythonTargetProbeStatus::Verified
+    } else {
+        PythonTargetProbeStatus::RuntimeChecked
+    };
+    for index in probe_indices {
+        plan.target_probes[index].status = status;
+    }
+    Vec::new()
+}
+
+fn declaration_requires_signature_validation(
+    declaration: &sifr_codegen::PythonInteropPlanDeclaration,
+) -> bool {
+    matches!(
+        declaration.declaration.kind,
+        sifr_ir::PythonInteropDecoratorKind::Function
+            | sifr_ir::PythonInteropDecoratorKind::Buffer
+            | sifr_ir::PythonInteropDecoratorKind::Arrow
+            | sifr_ir::PythonInteropDecoratorKind::Dlpack
+            | sifr_ir::PythonInteropDecoratorKind::DlpackStream
+    )
+}
+
+fn declaration_targets(
+    declaration: &sifr_codegen::PythonInteropPlanDeclaration,
+    target: &str,
+) -> bool {
+    declaration
+        .declaration
+        .target
+        .as_ref()
+        .is_some_and(|candidate| candidate.dotted() == target)
+}
+
+fn scoped_target_diagnostics(
+    plan: &sifr_codegen::PythonInteropPlan,
+    target: &str,
+    diagnostic: RenderedDiagnostic,
+) -> Vec<PythonInteropPlanDiagnostic> {
+    let mut diagnostics = plan
+        .declarations
+        .iter()
+        .filter(|declaration| declaration_targets(declaration, target))
+        .map(|declaration| scoped_diagnostic(declaration, diagnostic.clone()))
+        .collect::<Vec<_>>();
+    if diagnostics.is_empty() {
+        diagnostics.push(PythonInteropPlanDiagnostic {
+            module_name: None,
+            span: TextRange::default(),
+            diagnostic,
+        });
+    }
+    diagnostics
+}
+
+pub(crate) fn scoped_diagnostic(
+    declaration: &sifr_codegen::PythonInteropPlanDeclaration,
+    diagnostic: RenderedDiagnostic,
+) -> PythonInteropPlanDiagnostic {
+    PythonInteropPlanDiagnostic {
+        module_name: declaration.module_name.clone(),
+        span: declaration.declaration.span,
+        diagnostic,
+    }
+}
+
+fn mark_embedded_bridge_targets(plan: &mut sifr_codegen::PythonInteropPlan) {
+    for probe in &mut plan.target_probes {
+        if probe.target_path.starts_with("__sifr_bridge__.") {
+            probe.status = PythonTargetProbeStatus::RuntimeChecked;
+        }
+    }
+}
+
 fn validate_signature(
     declaration: &sifr_codegen::PythonInteropPlanDeclaration,
-    target: &[ProbeParameter],
+    target: &[PythonTargetParameter],
 ) -> Option<String> {
     use sifr_ir::PythonParameterKind;
 
@@ -327,8 +458,9 @@ fn validate_signature(
     None
 }
 
-fn execute_probe(runtime: &PackagePythonRuntime, target: &str) -> Result<ProbeOutput, String> {
-    let output = Command::new(runtime.interpreter())
+fn execute_probe(interpreter: &Path, target: &str) -> Result<PythonTargetInspection, String> {
+    let output = Command::new(interpreter)
+        .arg("-B")
         .arg("-I")
         .arg("-c")
         .arg(TARGET_PROBE)
@@ -389,6 +521,33 @@ mod tests {
             sifr_ir::PythonInteropDecoratorKind::Opaque;
         apply_python_interop_metadata(generated, Some(&runtime))
             .expect("Python class target should verify");
+    }
+
+    #[test]
+    fn opaque_target_does_not_validate_constructor_signature() {
+        let mut generated = project("pkg.Connection");
+        generated.interop.python.declarations[0].declaration.kind =
+            sifr_ir::PythonInteropDecoratorKind::Opaque;
+        generated.interop.python.target_probes[0].expects_type = true;
+        let inspection = PythonTargetInspection {
+            ok: true,
+            callable: true,
+            is_type: true,
+            inspectable: true,
+            parameters: vec![probe_parameter("connector", "POSITIONAL_OR_KEYWORD", false)],
+            error: None,
+        };
+
+        assert!(apply_python_target_inspection(
+            &mut generated.interop.python,
+            "pkg.Connection",
+            Ok(&inspection),
+        )
+        .is_empty());
+        assert_eq!(
+            generated.interop.python.target_probes[0].status,
+            PythonTargetProbeStatus::Verified
+        );
     }
 
     #[test]
@@ -599,8 +758,8 @@ mod tests {
         }
     }
 
-    fn probe_parameter(name: &str, kind: &str, has_default: bool) -> ProbeParameter {
-        ProbeParameter {
+    fn probe_parameter(name: &str, kind: &str, has_default: bool) -> PythonTargetParameter {
+        PythonTargetParameter {
             name: name.to_string(),
             kind: kind.to_string(),
             has_default,

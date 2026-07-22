@@ -189,11 +189,12 @@ pub(crate) fn document_symbol(
 }
 
 pub(crate) fn completion_item(item: CompletionItem) -> Value {
+    let symbol_file = item.symbol_file.map(sifr_analysis::FileId::as_u32);
     json!({
         "label": item.label,
         "kind": completion_kind(&item.kind),
         "detail": item.detail,
-        "data": { "sifrKind": item.kind }
+        "data": { "sifrKind": item.kind, "sifrFile": symbol_file }
     })
 }
 
@@ -606,6 +607,7 @@ mod tests {
             label: "rust.callback".to_string(),
             kind: "decorator".to_string(),
             detail: Some("Rust interop decorator".to_string()),
+            symbol_file: None,
         });
         assert_eq!(decorator["kind"], json!(15));
 
@@ -613,6 +615,7 @@ mod tests {
             label: "panic".to_string(),
             kind: "property".to_string(),
             detail: Some("Rust interop policy key".to_string()),
+            symbol_file: None,
         });
         assert_eq!(property["kind"], json!(10));
     }

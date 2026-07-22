@@ -87,6 +87,19 @@ discoverable uv project resolves immediately, as does any package containing
 one or more runnable applications. Failures match ordinary `sifr check`
 diagnostics for the same snapshot.
 
+The language server uses the compiler's lowered declaration plan and the same
+driver target probe. Completion and hover show the structured Python target,
+its `verified`, `runtime-checked`, or `deferred` status, and protocol-specific
+ownership or cancellation guidance. Go-to-definition continues to navigate to
+the checked Sifr declaration. Invalid, unsupported, or untyped declarations
+are never shown as verified.
+
+Editor results are cached by the compiler graph/source revision and selected
+package inputs. Changes to `sifr.toml`, custom pyproject or lock paths,
+`sifr.python-bindings.json`, `sifr.python-certifications.json`, or the selected
+interpreter invalidate the cached status; watched-file notifications trigger
+the same refresh.
+
 `sifr python doctor` adds deterministic patch-like suggestions containing only
 the root `[python]` and/or `[trust]` entries a library consumer must provide. The
 patches are output only: neither command writes a manifest or lockfile, grants

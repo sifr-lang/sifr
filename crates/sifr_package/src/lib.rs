@@ -15,6 +15,10 @@ pub use crate::cargo::commands::{
     CargoPackageSelection, CargoPublishOptions, CargoVendorOptions,
 };
 pub use crate::cargo::errors::{map_cargo_failure, CargoAction};
+pub use crate::cargo::load::{
+    load_package_graph_snapshot, PackageGraphLoadFailure, PackageGraphLoadFailureKind,
+    PackageGraphSnapshot,
+};
 pub use crate::cargo::lock_modes::{validate_offline_source_availability, CargoLockMode};
 pub use crate::cargo::metadata::{
     parse_metadata_json, CargoDependency, CargoMetadata, CargoPackage, CargoPackageId,
@@ -79,7 +83,8 @@ pub use crate::python::{
     required_python_binding_archive_entries, required_python_certification_archive_entries,
     resolve_python_bridge_graph, resolve_python_environment, resolve_python_environment_for_check,
     resolve_python_environment_with_requirements, resolved_python_bridge_package_key,
-    resolved_python_bridge_runtime_package, safe_python_binding_output, validate_python_bindings,
+    resolved_python_bridge_runtime_package, safe_python_binding_output,
+    select_root_python_environment, validate_python_bindings,
     validate_python_bindings_with_generated_source, validate_python_bridge_inventory_manifest,
     validate_python_environment_probe, write_python_bindings, write_python_bridge_inventory,
     write_python_certifications, ArrowCertification, ArrowCertifiedDistribution,
@@ -89,11 +94,12 @@ pub use crate::python::{
     PythonBindingSource, PythonBindingSourceKind, PythonBridgeImport, PythonBridgeInventory,
     PythonBridgeModule, PythonCertificationArtifact, PythonDistributionProbe,
     PythonEnvironmentProbe, PythonEnvironmentProbeRequest, PythonEnvironmentResolution,
-    PythonRequirementContribution, PythonRequirementKind, ResolvedPythonBridgeGraph,
-    ResolvedPythonBridgeImport, ResolvedPythonBridgeModule, ResolvedPythonBridgePackage,
-    ResolvedPythonEnvironment, ARROW_CERTIFICATION_SCHEMA_VERSION, PYTHON_BINDINGS_FILE,
-    PYTHON_BINDING_SCHEMA_VERSION, PYTHON_BRIDGE_INVENTORY, PYTHON_BRIDGE_ROOT,
-    PYTHON_BRIDGE_RUNTIME_ROOT, PYTHON_CERTIFICATIONS_FILE, PYTHON_CERTIFICATION_SCHEMA_VERSION,
+    PythonEnvironmentSelection, PythonRequirementContribution, PythonRequirementKind,
+    ResolvedPythonBridgeGraph, ResolvedPythonBridgeImport, ResolvedPythonBridgeModule,
+    ResolvedPythonBridgePackage, ResolvedPythonEnvironment, ARROW_CERTIFICATION_SCHEMA_VERSION,
+    PYTHON_BINDINGS_FILE, PYTHON_BINDING_SCHEMA_VERSION, PYTHON_BRIDGE_INVENTORY,
+    PYTHON_BRIDGE_ROOT, PYTHON_BRIDGE_RUNTIME_ROOT, PYTHON_CERTIFICATIONS_FILE,
+    PYTHON_CERTIFICATION_SCHEMA_VERSION,
 };
 pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
 

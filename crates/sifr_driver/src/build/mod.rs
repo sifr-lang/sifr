@@ -8,6 +8,8 @@ mod python_bridges;
 mod python_certification;
 mod python_check;
 mod python_interop;
+#[cfg(test)]
+mod python_interop_shared_target_tests;
 mod python_runtime;
 mod report;
 mod rust_interop;
@@ -51,6 +53,13 @@ pub use cargo_manifest::{
     try_generate_standalone_dependency_plan,
 };
 pub use entrypoint::{CachedBinaryArtifact, PackageEntrypoint};
+pub use python_certification::{
+    validate_certification_distributions, validate_protocol_certifications_for_plan,
+};
+pub use python_interop::{
+    apply_python_target_inspection, inspect_python_target, probe_python_interop_plan,
+    PythonInteropPlanDiagnostic, PythonTargetInspection, PythonTargetParameter,
+};
 pub use python_runtime::PackagePythonRuntime;
 pub use report::{
     BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport, BuildSysrootReport,

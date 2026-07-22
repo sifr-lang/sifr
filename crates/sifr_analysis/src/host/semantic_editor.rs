@@ -2,7 +2,7 @@ use super::implementation::{unknown_file, AnalysisHost};
 use crate::queries::{HoverInfo, SignatureHelp};
 use crate::snapshot::{AnalysisError, AnalysisErrorKind};
 use ruff_text_size::{TextRange, TextSize};
-use sifr_frontend::{FileId, ModuleAnalysisView};
+use sifr_frontend::{EditorSemanticDefinition, FileId, ModuleAnalysisView};
 use sifr_syntax::{SourceText as SyntaxSourceText, TextPosition};
 
 impl AnalysisHost {
@@ -16,15 +16,26 @@ impl AnalysisHost {
             return Ok(None);
         };
         let analysis = self.semantic_analysis_for_file(file)?;
-        Ok(analysis
+        let entry = analysis
             .editor_semantics
             .entries
             .iter()
             .filter(|entry| contains_offset(entry.range, offset))
             .min_by_key(|entry| entry.range.len())
-            .map(|entry| HoverInfo {
-                contents: entry.detail.clone(),
-            }))
+            .cloned();
+        let Some(entry) = entry else {
+            return Ok(None);
+        };
+        let symbol_file = self.hover_symbol_file(entry.definition.as_ref())?;
+        let symbol_name = entry
+            .definition
+            .as_ref()
+            .map_or_else(|| entry.name.clone(), |definition| definition.name.clone());
+        Ok(Some(HoverInfo {
+            contents: entry.detail,
+            symbol_name,
+            symbol_file,
+        }))
     }
 
     pub(super) fn semantic_signature_help(
@@ -80,6 +91,35 @@ impl AnalysisHost {
             .and_then(|context| context.source_text_for_file(file))
             .map(str::to_owned)
             .ok_or_else(|| unknown_file(file))
+    }
+
+    fn hover_symbol_file(
+        &mut self,
+        definition: Option<&EditorSemanticDefinition>,
+    ) -> Result<Option<FileId>, AnalysisError> {
+        let Some(definition) = definition else {
+            return Ok(None);
+        };
+        let definition_file = self
+            .context()?
+            .source_map()
+            .files
+            .iter()
+            .find(|source| source.module_name.as_deref() == Some(&definition.module_name))
+            .map(|source| source.id);
+        let Some(definition_file) = definition_file else {
+            return Ok(None);
+        };
+        Ok(self
+            .symbol_index()?
+            .entries()
+            .iter()
+            .any(|entry| {
+                entry.kind == "function"
+                    && entry.name == definition.name
+                    && entry.file == definition_file
+            })
+            .then_some(definition_file))
     }
 }
 
