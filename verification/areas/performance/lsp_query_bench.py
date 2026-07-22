@@ -271,7 +271,7 @@ def run_did_open_diagnostics(source: str, iterations: int, inner_repetitions: in
 
 @contextmanager
 def benchmark_source(
-    source_path: Path, source: str, workspace_mode: str
+    scenario: str, source_path: Path, source: str, workspace_mode: str
 ) -> Iterator[Path]:
     if workspace_mode == "package":
         if not source_path.parent.joinpath("sifr.toml").is_file():
@@ -282,6 +282,12 @@ def benchmark_source(
         raise ValueError(f"unknown LSP benchmark workspace mode {workspace_mode!r}")
     if source_path.parent.joinpath("sifr.toml").is_file():
         raise ValueError("isolated LSP benchmark cannot use a package source")
+    if scenario == "lsp.did_open_diagnostics":
+        # This case deliberately measures document synchronization without a
+        # package. run_did_open_diagnostics owns that temporary workspace, so
+        # constructing a second locked package here would be dead setup.
+        yield source_path
+        return
     with tempfile.TemporaryDirectory(prefix="sifr-lsp-isolated-bench-") as raw:
         root = Path(raw)
         source_root = root / "src"
@@ -356,7 +362,9 @@ def main() -> int:
     if inner_repetitions <= 0:
         raise ValueError("inner-repetitions must be positive")
     source = source_path.read_text(encoding="utf-8")
-    with benchmark_source(source_path, source, workspace_mode) as benchmark_path:
+    with benchmark_source(
+        scenario, source_path, source, workspace_mode
+    ) as benchmark_path:
         samples = run_scenario(
             scenario, benchmark_path, source, iterations, inner_repetitions
         )

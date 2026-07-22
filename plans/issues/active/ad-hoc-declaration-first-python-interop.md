@@ -2311,7 +2311,15 @@ package graph. Pure-root workspace-member and misplaced-bridge regressions pin
 `SIFR-PYTRUST-0005` and `SIFR-PYIMP-0002`; all Python declaration LSP tests pass
 `24/24`. The direct isolated-package diagnostics benchmark is `4.02 ms` median
 at `73.1 MiB`, preserving both timing and memory budgets without weakening the
-canonical package-resolution path.
+canonical package-resolution path. Isolated warm/cold cases use that locked
+package boundary; the didOpen diagnostics sync case deliberately retains its
+historical package-less temporary directory and no longer constructs an unused
+second package. Whole-diff Fable High
+[pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-fable-high-review-pass-4.md)
+confirmed the product shortcut was fully removed and the benchmark correction
+is deterministic with unchanged budgets, then requested the didOpen setup
+clarification and durable `workspace_mode` documentation now included in this
+merge unit. A fresh frozen whole-diff review remains required.
 
 Tasks:
 
