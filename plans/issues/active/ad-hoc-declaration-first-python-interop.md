@@ -66,14 +66,15 @@ and `python doctor` CLI surfaces, multi-app/final-app resolution, deferred
 library reporting, executable non-mutation/parity evidence, demo, and docs are
 implemented, locally validated, milestone-reviewed, and closed in
 [PR #2993](https://github.com/sifr-lang/sifr/pull/2993). M14 binding and
-certification authoring is implemented and in final remediation/review in
-[PR #2994](https://github.com/sifr-lang/sifr/pull/2994). Direct Fable High pass
-1 drove delivery-profile, environment-freshness, mutation-ordering,
-positional-only, symlink-confinement, cross-module runtime, and
-schema-diagnostic remediation; pass 2 returned **SATISFIED**. Frozen pass 3
-then found one additional direct-conversion grammar minor, whose remediation
-and regression evidence are implemented and awaiting fresh full review. M15
-and later milestones are not yet implemented.
+certification authoring is implemented, locally validated, and
+closure-approved in [PR #2994](https://github.com/sifr-lang/sifr/pull/2994).
+Direct Fable High pass 1 drove delivery-profile, environment-freshness,
+mutation-ordering, positional-only, symlink-confinement, cross-module runtime,
+and schema-diagnostic remediation; pass 2 returned **SATISFIED**. Frozen pass
+3 found one additional direct-conversion grammar minor; the root remediation
+and expanded regression evidence passed the authoritative gate, and full pass
+4 returned **SATISFIED** with no blocker, major, or minor findings. M15 and
+later milestones are not yet implemented.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
@@ -211,7 +212,7 @@ Implementation progress:
 - [x] M11 Arrow C Data Interface ([PR #2991](https://github.com/sifr-lang/sifr/pull/2991))
 - [x] M12 DLPack one-shot tensor transfer ([PR #2992](https://github.com/sifr-lang/sifr/pull/2992))
 - [x] M13 read-only check and doctor ([PR #2993](https://github.com/sifr-lang/sifr/pull/2993))
-- [ ] M14 binding and certification authoring ([PR #2994](https://github.com/sifr-lang/sifr/pull/2994))
+- [x] M14 binding and certification authoring ([PR #2994](https://github.com/sifr-lang/sifr/pull/2994))
 - [ ] M15 LSP declaration authoring
 - [ ] M16 raw API ergonomics on shared ownership
 - [ ] M17 ecosystem migration and certification
@@ -1966,7 +1967,7 @@ Delivery waves:
 - [x] Wave 4 — add stub-only, inline, native-extension, overload, unresolved,
   drift, certification, non-mutation, demo, public/internal documentation, and
   delivery-profile evidence.
-- [ ] Wave 5 — authoritative validation, repeated full milestone review,
+- [x] Wave 5 — authoritative validation, repeated full milestone review,
   closure ledger, and merge.
 
 Focused evidence:
@@ -2028,6 +2029,17 @@ attempts now fail before mutation; driver Python `56/56` with seven expected
 integration ignores, workspace Clippy, formatting, maintainability,
 file-size, Python syntax, diff checks, and the expanded blocking
 binding-authoring suite all pass. [Review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-3-frozen.md)
+
+The fresh authoritative `create-pr` profile passes at the committed
+post-remediation candidate in `1205.40s`: Python interop `18/18`, including
+the expanded binding-authoring suite with three unsupported-type failures and
+zero mutations; E2E `131/131` with signature `7c39b8c1dd4fec7c`; runtime
+platform `28/28`; and hardening `6/6`. Every blocking step budget passes; the
+wall-time notice reflects a zero-hit E2E rebuild and is non-blocking. Direct
+Fable High pass 4 independently exercised supported recursive grammar and
+twelve adversarial rejection shapes, verified the pass-3 remediation in both
+the probe and scaffold validator, rechecked all earlier findings, found no
+blocker, major, or minor issue, and returned **SATISFIED**. [Review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-4.md)
 
 Tasks:
 
