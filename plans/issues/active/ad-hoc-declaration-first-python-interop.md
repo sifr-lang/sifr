@@ -2435,7 +2435,7 @@ milestones.
 
 Delivery waves:
 
-- [ ] Wave 1 — migrate every ordinary runnable ecosystem example to typed
+- [x] Wave 1 — migrate every ordinary runnable ecosystem example to typed
   declarations or hermetic bridges, retain exactly one small intentional raw
   example, and add a fail-closed source-policy guard.
 - [ ] Wave 2 — replace Python-client live service execution with built Sifr
@@ -2482,6 +2482,13 @@ lane in `770.76s`: Python interop `19/19`, create-PR E2E `131/131` with
 signature `7c39b8c1dd4fec7c`, runtime-platform `28` variants with zero failures
 and one declared capability skip, and hardening `6/6`. All per-step blocking
 budgets pass; the warm wall-time notice remains advisory.
+
+Fable High review pass 2 independently re-ran the runner self-test, exercised
+roughly forty adversarial import forms, compiled the remaining theoretical
+bypass candidates against the actual Sifr import policy, and rechecked every
+migration, bridge, marker, and resource assertion. It returned `SATISFIED` with
+no blocker, major, or actionable minor. Wave 1 is closure-approved in
+[PR #2997](https://github.com/sifr-lang/sifr/pull/2997).
 
 Tasks:
 
