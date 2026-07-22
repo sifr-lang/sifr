@@ -212,7 +212,7 @@ pub fn resolve_python_environment_for_check(
     let native_imports = native_probe_imports(&required_imports, &trusted_native_imports);
     Ok(PythonEnvironmentResolution::Resolved(
         ResolvedPythonEnvironment {
-            selected_by: selected.package_id,
+            selected_by: root_package_id.clone(),
             venv_root: selected.venv_root,
             interpreter: selected.interpreter,
             pyproject: selected.pyproject,

@@ -133,7 +133,7 @@ pub(crate) fn document_diagnostics(session: &mut Session, uri: &str) -> LspResul
             .map(|diagnostic| conversion::diagnostic(diagnostic, &source, position_encoding))
             .collect::<LspResult<Vec<_>>>();
     }
-    session.with_document_analysis(uri, |snapshot, host, file, source| {
+    let mut diagnostics = session.with_document_analysis(uri, |snapshot, host, file, source| {
         let diagnostics = snapshot
             .diagnostics(host, file)
             .map_err(|error| crate::errors::LspError::internal(error.message))?
@@ -142,5 +142,14 @@ pub(crate) fn document_diagnostics(session: &mut Session, uri: &str) -> LspResul
             .into_iter()
             .map(|diagnostic| conversion::diagnostic(diagnostic, source, position_encoding))
             .collect::<LspResult<Vec<_>>>()
-    })
+    })?;
+    let python = session.python_declaration_snapshot(uri)?;
+    diagnostics.extend(
+        python
+            .diagnostics
+            .into_iter()
+            .map(|diagnostic| conversion::diagnostic(diagnostic, &source, position_encoding))
+            .collect::<LspResult<Vec<_>>>()?,
+    );
+    Ok(diagnostics)
 }

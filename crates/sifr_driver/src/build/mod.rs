@@ -51,6 +51,7 @@ pub use cargo_manifest::{
     try_generate_standalone_dependency_plan,
 };
 pub use entrypoint::{CachedBinaryArtifact, PackageEntrypoint};
+pub use python_interop::probe_python_interop_plan;
 pub use python_runtime::PackagePythonRuntime;
 pub use report::{
     BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport, BuildSysrootReport,

@@ -32,6 +32,7 @@ COMMAND_ARGS: dict[str, list[str]] = {
     ],
     "python-interop-readonly-check-doctor": [],
     "python-interop-binding-authoring": [],
+    "python-interop-lsp-declaration-authoring": [],
     "python-interop-tier1": [
         "--tier",
         "tier1",

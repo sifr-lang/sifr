@@ -7,13 +7,16 @@ use serde_json::Value;
 pub(crate) fn hover(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let position = document_position(session, &uri, &params)?;
-    session.with_document_analysis(&uri, |snapshot, host, file, _source| {
+    let python = session.python_declaration_snapshot(&uri)?;
+    let mut response = session.with_document_analysis(&uri, |snapshot, host, file, _source| {
         let hover = snapshot
             .hover(host, file, &position)
             .map_err(|error| LspError::internal(error.message))?
             .into_value();
         Ok(hover.map_or(Value::Null, conversion::hover))
-    })
+    })?;
+    crate::python_declarations::enrich_hover(&mut response, &python);
+    Ok(response)
 }
 
 pub(crate) fn signature_help(session: &mut Session, params: Value) -> LspResult<Value> {

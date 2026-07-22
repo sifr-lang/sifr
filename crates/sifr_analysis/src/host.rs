@@ -8,6 +8,7 @@ mod generated_rust_preview_tests;
 mod implementation;
 pub use implementation::*;
 mod overlay_updates;
+mod python_interop;
 mod semantic_editor;
 #[cfg(test)]
 mod semantic_editor_tests;

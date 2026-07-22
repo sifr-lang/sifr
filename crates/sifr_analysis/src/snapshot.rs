@@ -10,6 +10,7 @@ pub struct AnalysisRevision {
 pub enum AnalysisQueryKind {
     Diagnostics,
     WorkspaceDiagnostics,
+    PythonInterop,
     Completion,
     Hover,
     SignatureHelp,

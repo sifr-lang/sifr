@@ -4,6 +4,7 @@ use crate::diagnostics::diagnostic_with_code;
 use serde::Deserialize;
 use sifr_codegen::PythonTargetProbeStatus;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
+use std::path::Path;
 use std::process::Command;
 
 const TARGET_PROBE: &str = r#"
@@ -86,12 +87,8 @@ fn apply_python_interop_metadata_with_policy(
     if generated.interop.python.declarations.is_empty() {
         return Ok(generated);
     }
-    for probe in &mut generated.interop.python.target_probes {
-        if probe.target_path.starts_with("__sifr_bridge__.") {
-            probe.status = PythonTargetProbeStatus::RuntimeChecked;
-        }
-    }
     let Some(runtime) = runtime else {
+        mark_embedded_bridge_targets(&mut generated.interop.python);
         if allow_deferred {
             return Ok(generated);
         }
@@ -103,11 +100,31 @@ fn apply_python_interop_metadata_with_policy(
 
     let mut diagnostics =
         super::python_certification::validate_protocol_certifications(&generated, runtime);
-    for probe in &mut generated.interop.python.target_probes {
+    diagnostics.extend(probe_python_interop_plan(
+        &mut generated.interop.python,
+        runtime.interpreter(),
+    ));
+    if diagnostics.is_empty() {
+        Ok(generated)
+    } else {
+        Err(diagnostics)
+    }
+}
+
+/// Apply the compiler's exact declaration target and call-shape probe to an
+/// already lowered Python interop plan. Tooling uses this query so editor
+/// status never invents a second interpretation of declaration compatibility.
+pub fn probe_python_interop_plan(
+    plan: &mut sifr_codegen::PythonInteropPlan,
+    interpreter: &Path,
+) -> Vec<RenderedDiagnostic> {
+    mark_embedded_bridge_targets(plan);
+    let mut diagnostics = Vec::new();
+    for probe in &mut plan.target_probes {
         if probe.target_path.starts_with("__sifr_bridge__.") {
             continue;
         }
-        match execute_probe(runtime, &probe.target_path) {
+        match execute_probe(interpreter, &probe.target_path) {
             Ok(output) if !output.ok => diagnostics.push(diagnostic_with_code(
                 format!(
                     "invalid Python declaration target '{}': {}",
@@ -145,9 +162,7 @@ fn apply_python_interop_metadata_with_policy(
             }
             Ok(output) => {
                 if output.inspectable {
-                    if let Some(reason) = generated
-                        .interop
-                        .python
+                    if let Some(reason) = plan
                         .declarations
                         .iter()
                         .filter(|declaration| {
@@ -191,10 +206,14 @@ fn apply_python_interop_metadata_with_policy(
             )),
         }
     }
-    if diagnostics.is_empty() {
-        Ok(generated)
-    } else {
-        Err(diagnostics)
+    diagnostics
+}
+
+fn mark_embedded_bridge_targets(plan: &mut sifr_codegen::PythonInteropPlan) {
+    for probe in &mut plan.target_probes {
+        if probe.target_path.starts_with("__sifr_bridge__.") {
+            probe.status = PythonTargetProbeStatus::RuntimeChecked;
+        }
     }
 }
 
@@ -327,8 +346,8 @@ fn validate_signature(
     None
 }
 
-fn execute_probe(runtime: &PackagePythonRuntime, target: &str) -> Result<ProbeOutput, String> {
-    let output = Command::new(runtime.interpreter())
+fn execute_probe(interpreter: &Path, target: &str) -> Result<ProbeOutput, String> {
+    let output = Command::new(interpreter)
         .arg("-I")
         .arg("-c")
         .arg(TARGET_PROBE)

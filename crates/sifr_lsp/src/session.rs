@@ -5,6 +5,7 @@ use crate::document_events::{compact_content_changes, CompactedDocumentChange};
 use crate::document_store::DocumentStore;
 use crate::errors::{LspError, LspResult};
 use crate::progress::{ProgressHandle, ProgressKind, ProgressState};
+use crate::python_declarations::PythonDeclarationCache;
 use crate::request_queue::{CancellationTarget, RequestQueue, ScheduledRequest};
 use crate::scheduler::WorkLane;
 use lsp_server::RequestId;
@@ -31,6 +32,7 @@ pub(crate) struct Session {
     traces: Vec<WorkspaceTraceEvent>,
     next_trace_sequence: u64,
     diagnostic_jobs: DiagnosticJobs,
+    pub(crate) python_declarations: PythonDeclarationCache,
 }
 
 pub(crate) struct DocumentChangeSummary {
@@ -54,6 +56,7 @@ impl Session {
             traces: Vec::new(),
             next_trace_sequence: 0,
             diagnostic_jobs: DiagnosticJobs::default(),
+            python_declarations: PythonDeclarationCache::default(),
         }
     }
 
@@ -80,6 +83,7 @@ impl Session {
         version: Option<i32>,
         text: String,
     ) -> LspResult<()> {
+        self.python_declarations.clear();
         self.store.open(uri.clone(), language_id, version, text)?;
         let document = self.store.document(&uri)?;
         if self.analysis.open_document(document) {
@@ -104,6 +108,7 @@ impl Session {
         version: Option<i32>,
         compacted: CompactedDocumentChange,
     ) -> LspResult<DocumentChangeSummary> {
+        self.python_declarations.clear();
         let text_changed =
             self.store
                 .apply_compacted_change(uri, version, &compacted, self.position_encoding)?;
@@ -119,6 +124,7 @@ impl Session {
     }
 
     pub(crate) fn save_document(&mut self, uri: &str, text: Option<String>) -> LspResult<bool> {
+        self.python_declarations.clear();
         if !self.store.save(uri, text) {
             return Ok(false);
         }
@@ -130,6 +136,7 @@ impl Session {
     }
 
     pub(crate) fn close_document(&mut self, uri: &str) -> bool {
+        self.python_declarations.clear();
         self.diagnostic_jobs.remove(uri);
         self.analysis.close_document(uri);
         let closed = self.store.close(uri);
@@ -138,6 +145,7 @@ impl Session {
     }
 
     pub(crate) fn record_watcher_events(&mut self, event_count: usize) {
+        self.python_declarations.clear();
         self.analysis.record_watcher_events(event_count);
         self.trace(
             WorkspaceTracePhase::SourceUpdate,
@@ -388,6 +396,8 @@ mod tests {
 
     #[path = "project_ownership_tests.rs"]
     mod project_ownership_tests;
+    #[path = "python_declaration_tests.rs"]
+    mod python_declaration_tests;
     #[path = "sysroot_request_tests.rs"]
     mod sysroot_request_tests;
 

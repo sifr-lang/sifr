@@ -822,7 +822,7 @@ impl AnalysisHost {
         }
     }
 
-    fn result<T>(&self, query: AnalysisQueryKind, value: T) -> AnalysisQueryResult<T> {
+    pub(super) fn result<T>(&self, query: AnalysisQueryKind, value: T) -> AnalysisQueryResult<T> {
         AnalysisQueryResult::new(value, self.metadata(query))
     }
 }

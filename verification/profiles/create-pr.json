@@ -116,6 +116,7 @@
         "env",
         "readonly-check-doctor",
         "binding-authoring",
+        "lsp-declaration-authoring",
         "tier1",
         "callbacks",
         "callback-examples",

@@ -2082,6 +2082,41 @@ Validation:
 
 Depends on M13/M14 compiler and authoring queries.
 
+Delivery waves:
+
+- [x] Wave 1 — expose the canonical analysis-host `PythonInteropPlan` query and
+  factor the driver's exact target/call-shape probe for tooling reuse.
+- [x] Wave 2 — enrich completion and hover with target status and protocol
+  policy help while retaining ordinary compiler definition navigation.
+- [x] Wave 3 — append compiler/driver target and authoring-artifact diagnostics,
+  refuse verification when compiler errors exist, and honor request
+  cancellation around external probes.
+- [x] Wave 4 — cache by analysis revisions and selected package inputs, with
+  source, lifecycle, watcher, custom metadata, artifact, and interpreter
+  invalidation.
+- [ ] Wave 5 — authoritative validation, repeated full milestone review,
+  closure ledger, and merge.
+
+Focused evidence:
+
+- `cargo test -p sifr_lsp` covers completion, hover, definition navigation,
+  diagnostics, cancellation, source/watcher invalidation, exact cache reuse,
+  runtime-checked targets, and unsupported-type non-promotion.
+- `cargo test -p sifr_analysis` and `cargo test -p sifr_driver python_interop`
+  cover the compiler plan query and shared exact target probe.
+- blocking `lsp-declaration-authoring` verification is selected by create-PR,
+  merge, nightly, and release profiles.
+
+Pre-review validation: the authoritative `create-pr` profile passes every
+blocking lane in `1268.49s`. Python interop passes `19/19`, including
+`lsp-declaration-authoring` with verified completion, compiler navigation,
+diagnostic parity, cancellation, cache drift, and zero unsupported
+certifications; create-PR E2E passes `131/131` with signature
+`7c39b8c1dd4fec7c`; runtime-platform passes `28` variants with zero failures.
+Every per-step blocking budget passes. The overall warm wall-time notice is a
+non-blocking advisory; the first cold attempt also passed all `19` Python
+variants but exceeded that lane's time budget before the successful warm run.
+
 Tasks:
 
 - Add LSP completion, navigation, diagnostics, verified/runtime-checked status,

@@ -54,6 +54,7 @@ pub use requirements::{
     canonical_python_requirements, CanonicalPythonRequirement, CanonicalPythonRequirements,
     PythonRequirementContribution, PythonRequirementKind,
 };
+pub use selection::{select_root_python_environment, PythonEnvironmentSelection};
 
 #[cfg(test)]
 mod arrow_certification_tests;

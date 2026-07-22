@@ -3,22 +3,53 @@ use crate::graph::derive::{SifrPackageGraph, SifrPackageId, SifrPackageMetadata}
 use sifr_diagnostics::DiagnosticCode;
 use std::path::{Path, PathBuf};
 
+/// Root-owned paths selected for a package Python environment.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct PythonEnvironmentSelection {
-    pub package_id: SifrPackageId,
+pub struct PythonEnvironmentSelection {
     pub venv_root: PathBuf,
     pub interpreter: PathBuf,
     pub pyproject: Option<PathBuf>,
     pub lock: Option<PathBuf>,
 }
 
+/// Select canonical environment paths from the root manifest and uv project
+/// discovery without probing or mutating the environment.
+#[must_use]
+pub fn select_root_python_environment(
+    package_root: &Path,
+    config: &crate::manifest::sifr::PythonConfig,
+) -> Option<PythonEnvironmentSelection> {
+    let project_root = configured_or_discovered_project_root(package_root, config)?;
+    let venv_root = config.venv.as_ref().map_or_else(
+        || project_root.join(".venv"),
+        |path| absolutize(package_root, path),
+    );
+    Some(PythonEnvironmentSelection {
+        interpreter: config.interpreter.as_ref().map_or_else(
+            || default_interpreter(&venv_root),
+            |path| absolutize(package_root, path),
+        ),
+        pyproject: Some(config.pyproject.as_ref().map_or_else(
+            || project_root.join("pyproject.toml"),
+            |path| absolutize(package_root, path),
+        )),
+        lock: Some(config.lock.as_ref().map_or_else(
+            || project_root.join("uv.lock"),
+            |path| absolutize(package_root, path),
+        )),
+        venv_root,
+    })
+}
+
 pub(super) fn root_environment_selection(
-    root_package_id: &SifrPackageId,
+    _root_package_id: &SifrPackageId,
     package: &SifrPackageMetadata,
 ) -> Result<PythonEnvironmentSelection, Vec<PackageDiagnostic>> {
-    let config = &package.manifest.python;
-    let project_root = configured_or_discovered_project_root(&package.package_root, config)
-        .ok_or_else(|| {
+    let selection = select_root_python_environment(
+        &package.package_root,
+        &package.manifest.python,
+    )
+    .ok_or_else(|| {
             vec![PackageDiagnostic::python_environment_graph(
                 DiagnosticCode::PYENV_MISSING_SELECTION,
                 format!(
@@ -29,26 +60,7 @@ pub(super) fn root_environment_selection(
                 "create pyproject.toml, uv.lock, and .venv in the project ancestry or configure root-owned [python] path overrides",
             )]
         })?;
-    let venv_root = config.venv.as_ref().map_or_else(
-        || project_root.join(".venv"),
-        |path| absolutize(&package.package_root, path),
-    );
-    Ok(PythonEnvironmentSelection {
-        package_id: root_package_id.clone(),
-        interpreter: config.interpreter.as_ref().map_or_else(
-            || default_interpreter(&venv_root),
-            |path| absolutize(&package.package_root, path),
-        ),
-        pyproject: Some(config.pyproject.as_ref().map_or_else(
-            || project_root.join("pyproject.toml"),
-            |path| absolutize(&package.package_root, path),
-        )),
-        lock: Some(config.lock.as_ref().map_or_else(
-            || project_root.join("uv.lock"),
-            |path| absolutize(&package.package_root, path),
-        )),
-        venv_root,
-    })
+    Ok(selection)
 }
 
 pub(super) fn non_root_environment_configuration(

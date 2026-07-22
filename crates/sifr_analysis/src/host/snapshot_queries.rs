@@ -37,6 +37,13 @@ impl AnalysisSnapshot {
         self.run(host, AnalysisHost::workspace_diagnostics)
     }
 
+    pub fn python_interop_plan(
+        &self,
+        host: &mut AnalysisHost,
+    ) -> QueryResult<sifr_driver::PythonInteropPlan> {
+        self.run(host, AnalysisHost::python_interop_plan)
+    }
+
     pub fn completion(
         &self,
         host: &mut AnalysisHost,

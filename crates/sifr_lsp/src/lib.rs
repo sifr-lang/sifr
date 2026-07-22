@@ -18,6 +18,7 @@ mod document_store;
 mod errors;
 mod notifications;
 mod progress;
+mod python_declarations;
 mod request_queue;
 mod requests;
 mod scheduler;

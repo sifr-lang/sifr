@@ -3314,6 +3314,8 @@ dependencies = [
  "serde_json",
  "sifr_analysis",
  "sifr_diagnostics",
+ "sifr_driver",
+ "sifr_package",
  "sifr_source",
  "tempfile",
  "url",

@@ -21,11 +21,11 @@ pub use build::{
     build, build_cached_package_project, build_cached_project, build_cached_single_file,
     build_package_project_report, build_project, build_project_report, build_single_file_report,
     check_package_project, check_package_python_interop, check_project, check_single_file,
-    emit_project, generate_dependency_cargo_toml, sysroot_cargo_config_args,
-    try_generate_standalone_dependency_plan, BuildCompilationMode, BuildReport, BuildReportInput,
-    BuildStageReport, BuildSysrootReport, CachedBinaryArtifact, PackageEntrypoint,
-    PackagePythonRuntime, PythonDeclarationCheck, PythonEnvironmentCheck, PythonInteropCheckReport,
-    PythonTargetCheck, PythonTargetCheckStatus,
+    emit_project, generate_dependency_cargo_toml, probe_python_interop_plan,
+    sysroot_cargo_config_args, try_generate_standalone_dependency_plan, BuildCompilationMode,
+    BuildReport, BuildReportInput, BuildStageReport, BuildSysrootReport, CachedBinaryArtifact,
+    PackageEntrypoint, PackagePythonRuntime, PythonDeclarationCheck, PythonEnvironmentCheck,
+    PythonInteropCheckReport, PythonTargetCheck, PythonTargetCheckStatus,
 };
 pub use diagnostics::{
     apply_diagnostic_recovery_limits, diagnostic_label_for_code, diagnostic_label_for_code_str,
@@ -40,7 +40,10 @@ pub use python_binding::{
     PythonBindingProbeReport, PythonBindingProbeSource, PythonBindingProbeSymbol,
     PythonBindingScaffold,
 };
-pub use sifr_codegen::{InteropBuildPlan, LoweringStats};
+pub use sifr_codegen::{
+    interop_build_plan_for_named_modules, InteropBuildPlan, LoweringStats, PythonInteropPlan,
+    PythonInteropPlanDeclaration, PythonTargetProbe, PythonTargetProbeStatus,
+};
 pub use stdlib::{
     external_defs as stdlib_external_defs, sysroot_probe as stdlib_tooling_sysroot_probe,
     sysroot_status as stdlib_tooling_sysroot_status, tooling_sources as stdlib_tooling_sources,

@@ -12,6 +12,7 @@ verification/areas/python_interop/run.sh --group scaffold
 verification/areas/python_interop/run.sh --group env
 python3 verification/areas/python_interop/runner.py --suite readonly-check-doctor
 python3 verification/areas/python_interop/runner.py --suite binding-authoring
+python3 verification/areas/python_interop/runner.py --suite lsp-declaration-authoring
 verification/areas/python_interop/run.sh --tier tier1
 verification/areas/python_interop/run.sh --tier tier4
 verification/areas/python_interop/run.sh --package pandas
@@ -47,6 +48,13 @@ distribution, `py.typed` inline source, configured external stubs, and safe
 introspection. It compiles the generated declarations, rejects overload and
 `Any` boundaries, checks ordinary-check and `bind --check` drift parity, and
 asserts that both success and failure rechecks leave package inputs unchanged.
+
+The blocking `lsp-declaration-authoring` suite exercises the compiler-owned
+interop plan through LSP completion, hover policy help, navigation, target
+diagnostics, cancellation, compiler-snapshot cache reuse, source invalidation,
+and watched binding-artifact drift. Verified/runtime-checked labels come from
+the driver's ordinary declaration probe; compiler-rejected typing shapes are
+never labeled as certified.
 
 `declaration_capabilities.json` is the separate declaration/protocol capability
 ledger. Its `target_state` classifies the intended contract as
