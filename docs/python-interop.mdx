@@ -720,12 +720,12 @@ scripts/run_all_tests.sh --profile python-interop-live
 Matrix-only package evidence reports `matrix-passed`; live environment execution reports `passed`. Host-dependent packages include explicit skip reasons.
 The `python-interop-live` profile is explicit opt-in container-runtime policy
 for service-backed examples; it is not part of offline `create-pr`, `merge`,
-`nightly`, or `release` validation. It first validates live policy, then checks
-Sifr source examples for Redis, Postgres, a Kafka-compatible broker,
-Pub/Sub-style LocalStack fanout, SNS delivery, and SQS delivery before running
-the matching testcontainers-backed Python client examples. Kafka, Pub/Sub-style,
-SNS, and SQS live cases consume through Python clients; the checked Sifr
-fixtures pass the consumed Python object to a Sifr `threadsafe_callback`
-handler. If Docker is not running locally, the service cases report
-`structured-skip` after source checks pass; with Docker running they must report
-`live-passed`.
+`nightly`, or `release` validation. It first validates live policy, then builds
+native Sifr binaries for Redis, Postgres, a Kafka-compatible broker,
+Pub/Sub-style LocalStack fanout, SNS-to-SQS delivery, and direct SQS delivery.
+Testcontainers owns container lifecycle and endpoint discovery only; each
+binary's hermetic declaration bridge owns the real service-client operations.
+Kafka and cloud-message deliveries cross a foreign-thread typed Sifr callback
+and require its acknowledgement. If Docker is not running locally, all binaries
+must still build before the service cases report `structured-skip`; with Docker
+running every binary must execute and report `live-passed`.

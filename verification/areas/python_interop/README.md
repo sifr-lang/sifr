@@ -82,20 +82,19 @@ profile uses selected-areas-only execution and runs both:
 
 - `live-policy`: verifies the container-runtime/testcontainers policy without
   starting containers.
-- `live-examples`: type-checks Sifr interop source examples through an explicit
-  package trust policy, then runs testcontainers-backed Python client examples
-  for Redis, Postgres, a Kafka-compatible Redpanda broker, and LocalStack
-  Pub/Sub-style SNS fanout, SNS, and SQS message delivery.
+- `live-examples`: builds native Sifr binaries through explicit package trust
+  policy, then runs those binaries against Redis, Postgres, a Kafka-compatible
+  Redpanda broker, and LocalStack Pub/Sub-style SNS fanout, SNS, and SQS.
 
 The live examples use the area-local locked Python project and never install
-packages from the runner itself. If Docker is unavailable, the suite emits
-`structured-skip` for the service cases after the Sifr source checks pass. When
-Docker is running, those same cases must reach `live-passed` or fail the profile.
-The Kafka, Pub/Sub-style, SNS, and SQS live cases produce and consume messages
-in Python client code. Their checked Sifr source fixtures pass the consumed
-Python object to a Sifr `threadsafe_callback` handler, and the report labels
-that portion as a source-checked callback contract rather than a live Sifr binary
-invocation.
+packages from the runner itself. It builds and hashes all six native binaries
+before probing Docker. If Docker is unavailable, the suite emits
+`structured-skip` only for service execution, preserving the successful binary
+build evidence. When Docker is running, testcontainers owns container lifecycle
+and endpoint discovery only; each compiled Sifr binary invokes its hermetic
+bridge to own every service-client operation. Kafka, Pub/Sub-style, SNS, and
+SQS deliveries cross a foreign-thread typed Sifr callback and must return a
+typed acknowledgement before the binary can report `live-passed`.
 Declaration-first callback evidence is also compiled offline with
 `runner/run.py --callback-examples`: separate real CFFI caller-thread and
 worker-thread fixtures for current and foreign dispatch, kafka-python
@@ -225,11 +224,10 @@ gates.
 
 Live example reports additionally include:
 
-- `source_checks`: `sifr check` results for the Sifr interop examples, compiled
-  through generated package metadata that declares allowed and trusted Python
-  roots.
-- `cases`: service-backed testcontainers results, each tied to the Sifr source
-  it proves.
+- `source_checks`: native-binary build command, path, digest, declaration-first
+  source/bridge identity, and explicit allowed/trusted Python roots.
+- `cases`: service-backed native-binary execution results, including the exact
+  binary command and deterministic resource-zero stdout marker.
 - `container_runtime`: Docker daemon availability and structured skip reason
   when the local runtime is absent.
 

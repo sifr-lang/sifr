@@ -2490,6 +2490,28 @@ migration, bridge, marker, and resource assertion. It returned `SATISFIED` with
 no blocker, major, or actionable minor. Wave 1 is closure-approved in
 [PR #2997](https://github.com/sifr-lang/sifr/pull/2997).
 
+Wave 2 implementation removes every service-client import and operation from
+the testcontainers runner. Six declaration-first packages now build native
+Sifr binaries for Redis, Postgres, Kafka, direct SQS, SNS-to-SQS, and the
+Pub/Sub-style SNS-to-SQS alias. The binaries receive only discovered endpoints
+and unique tokens, while hermetic bridges own the real clients and broker/cloud
+deliveries cross a foreign-thread typed Sifr callback. Each binary checks
+resource diagnostics and emits a deterministic `resources=zero` marker. On the
+current Docker-less host, the live suite built and SHA-256 recorded all six
+binaries, then reported six structured service-execution skips with zero
+failures; it did not promote any skipped live case.
+
+The fresh authoritative `python-interop-live` profile passes in `119.86s`: both the
+policy suite and the compiled-binary live suite report zero failures, all six
+native packages build before the Docker probe, and the unavailable local
+daemon produces six structured execution skips without promoting live evidence.
+
+Authoritative `create-pr` validation passes every blocking lane in `768.96s`:
+Python interop `19/19`, create-PR E2E `131/131` with signature
+`7c39b8c1dd4fec7c`, runtime-platform `28` variants with zero failures and one
+declared capability skip, and hardening `6/6`. Every per-step blocking budget
+passes; only the aggregate warm wall-time target is advisory.
+
 Tasks:
 
 - Migrate all runnable biip/schwifty, dataframe, ML, web, database, cloud,

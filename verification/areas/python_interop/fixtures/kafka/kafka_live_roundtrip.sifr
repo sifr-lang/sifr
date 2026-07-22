@@ -1,81 +1,32 @@
-from sifr.python import (
-    Object,
-    PythonError,
-    ThreadsafeCallback,
-    call,
-    call_attr,
-    close,
-    close_threadsafe_callback,
-    from_bool,
-    from_bytes,
-    from_int,
-    from_str,
-    import_module,
-    threadsafe_callback,
-)
+from sifr.env import getenv
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-def handle_kafka_poll_result(message_batch: Object) -> Result[Object, PythonError]:
-    try:
-        batch_len: Object = call_attr(message_batch, "__len__", [], [])
-        closed_batch_len: None = close(batch_len)
-        ack: Object = from_str("sifr:kafka:handled")
-        return ack
-    except PythonError as e:
-        raise e
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
+@python(bridge.kafka_live.run)
+def run_live(
+    handler: Callable[[str], str],
+    endpoint: str,
+    token: str,
+) -> Result[str, PythonError]: ...
 
 
-@trust_python_dynamic
-@blocking_io
+def acknowledge(message: str) -> str:
+    return "ack:" + message
+
+
 def main() -> Result[None, PythonError]:
     try:
-        kafka: Object = import_module("kafka")
-        bootstrap: Object = from_str("127.0.0.1:9092")
-        topic: Object = from_str("sifr-live-topic")
-        group_id: Object = from_str("sifr-live-handler")
-        payload: Object = from_bytes(b"{\"source\":\"sifr\",\"status\":\"kafka-ready\"}")
-        producer: Object = call_attr(kafka, "KafkaProducer", [], [("bootstrap_servers", bootstrap)])
-        send_result: Object = call_attr(producer, "send", [topic, payload], [])
-        flush_result: Object = call_attr(producer, "flush", [], [])
-        auto_offset_reset: Object = from_str("earliest")
-        enable_auto_commit: Object = from_bool(False)
-        timeout_ms: Object = from_int(10000)
-        max_records: Object = from_int(1)
-        consumer: Object = call_attr(
-            kafka,
-            "KafkaConsumer",
-            [topic],
-            [
-                ("bootstrap_servers", bootstrap),
-                ("group_id", group_id),
-                ("auto_offset_reset", auto_offset_reset),
-                ("enable_auto_commit", enable_auto_commit),
-            ],
+        before: ResourceDiagnostics = resource_diagnostics()
+        marker: str = run_live(
+            acknowledge,
+            getenv("SIFR_LIVE_ENDPOINT", ""),
+            getenv("SIFR_LIVE_TOKEN", ""),
         )
-        polled_messages: Object = call_attr(
-            consumer,
-            "poll",
-            [],
-            [("timeout_ms", timeout_ms), ("max_records", max_records)],
-        )
-        handler: ThreadsafeCallback = threadsafe_callback(handle_kafka_poll_result)
-        handled: Object = call(handler.callable, [polled_messages], [])
-        closed_handled: None = close(handled)
-        closed_handler: None = close_threadsafe_callback(handler)
-        closed_polled_messages: None = close(polled_messages)
-        closed_consumer: None = close(consumer)
-        closed_max_records: None = close(max_records)
-        closed_timeout_ms: None = close(timeout_ms)
-        closed_enable_auto_commit: None = close(enable_auto_commit)
-        closed_auto_offset_reset: None = close(auto_offset_reset)
-        closed_flush: None = close(flush_result)
-        closed_send: None = close(send_result)
-        closed_producer: None = close(producer)
-        closed_payload: None = close(payload)
-        closed_group_id: None = close(group_id)
-        closed_topic: None = close(topic)
-        closed_bootstrap: None = close(bootstrap)
-        closed_kafka: None = close(kafka)
-        return None
-    except PythonError as e:
-        raise e
+        after: ResourceDiagnostics = resource_diagnostics()
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("Kafka live declaration leaked Python resources")
+        print(marker)
+    except PythonError as error:
+        raise error
+    return None

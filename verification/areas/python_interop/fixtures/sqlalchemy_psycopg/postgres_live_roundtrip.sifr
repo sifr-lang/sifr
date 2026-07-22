@@ -1,34 +1,22 @@
-from sifr.python import Object, PythonError, call_attr, close, from_str, import_module
+from sifr.env import getenv
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-@trust_python_dynamic
-@blocking_io
+@python(bridge.postgres_live.run)
+def run_live(endpoint: str, token: str) -> Result[str, PythonError]: ...
+
+
 def main() -> Result[None, PythonError]:
     try:
-        psycopg: Object = import_module("psycopg")
-        conninfo: Object = from_str("postgresql://postgres:postgres@127.0.0.1:5432/postgres")
-        connection: Object = call_attr(psycopg, "connect", [conninfo], [])
-        cursor: Object = call_attr(connection, "cursor", [], [])
-        create_sql: Object = from_str("create table sifr_live_example (id integer primary key, label text)")
-        insert_sql: Object = from_str("insert into sifr_live_example (id, label) values (1, 'postgres-ready')")
-        select_sql: Object = from_str("select label from sifr_live_example where id = 1")
-        create_result: Object = call_attr(cursor, "execute", [create_sql], [])
-        insert_result: Object = call_attr(cursor, "execute", [insert_sql], [])
-        select_result: Object = call_attr(cursor, "execute", [select_sql], [])
-        row: Object = call_attr(cursor, "fetchone", [], [])
-        commit_result: Object = call_attr(connection, "commit", [], [])
-        closed_commit: None = close(commit_result)
-        closed_row: None = close(row)
-        closed_select_result: None = close(select_result)
-        closed_insert_result: None = close(insert_result)
-        closed_create_result: None = close(create_result)
-        closed_select_sql: None = close(select_sql)
-        closed_insert_sql: None = close(insert_sql)
-        closed_create_sql: None = close(create_sql)
-        closed_cursor: None = close(cursor)
-        closed_connection: None = close(connection)
-        closed_conninfo: None = close(conninfo)
-        closed_psycopg: None = close(psycopg)
-        return None
-    except PythonError as e:
-        raise e
+        before: ResourceDiagnostics = resource_diagnostics()
+        marker: str = run_live(
+            getenv("SIFR_LIVE_ENDPOINT", ""),
+            getenv("SIFR_LIVE_TOKEN", ""),
+        )
+        after: ResourceDiagnostics = resource_diagnostics()
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("Postgres live declaration leaked Python resources")
+        print(marker)
+    except PythonError as error:
+        raise error
+    return None

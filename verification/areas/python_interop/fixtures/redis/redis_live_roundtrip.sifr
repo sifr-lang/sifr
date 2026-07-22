@@ -1,44 +1,22 @@
-from sifr.python import (
-    Object,
-    PythonError,
-    call_attr,
-    close,
-    from_bool,
-    from_int,
-    from_str,
-    import_module,
-    to_str,
-)
+from sifr.env import getenv
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-@trust_python_dynamic
-@blocking_io
+@python(bridge.redis_live.run)
+def run_live(endpoint: str, token: str) -> Result[str, PythonError]: ...
+
+
 def main() -> Result[None, PythonError]:
     try:
-        redis_module: Object = import_module("redis")
-        host: Object = from_str("127.0.0.1")
-        port: Object = from_int(6379)
-        decode: Object = from_bool(True)
-        client: Object = call_attr(
-            redis_module,
-            "Redis",
-            [],
-            [("host", host), ("port", port), ("decode_responses", decode)],
+        before: ResourceDiagnostics = resource_diagnostics()
+        marker: str = run_live(
+            getenv("SIFR_LIVE_ENDPOINT", ""),
+            getenv("SIFR_LIVE_TOKEN", ""),
         )
-        key: Object = from_str("sifr:live:redis")
-        value: Object = from_str("ready")
-        set_result: Object = call_attr(client, "set", [key, value], [])
-        get_result: Object = call_attr(client, "get", [key], [])
-        observed: str = to_str(get_result)
-        closed_get: None = close(get_result)
-        closed_set: None = close(set_result)
-        closed_value: None = close(value)
-        closed_key: None = close(key)
-        closed_client: None = close(client)
-        closed_decode: None = close(decode)
-        closed_port: None = close(port)
-        closed_host: None = close(host)
-        closed_module: None = close(redis_module)
-        return None
-    except PythonError as e:
-        raise e
+        after: ResourceDiagnostics = resource_diagnostics()
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("Redis live declaration leaked Python resources")
+        print(marker)
+    except PythonError as error:
+        raise error
+    return None

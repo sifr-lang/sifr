@@ -40,6 +40,9 @@
       "aws-compatible-sns-sqs"
     ],
     "sifr_sources_required": true,
+    "compiled_sifr_binaries_required": true,
+    "service_client_owner": "compiled-sifr-bridge",
+    "testcontainers_responsibility": "container-lifecycle-and-endpoint-discovery-only",
     "structured_skip_when_docker_unavailable": true
   },
   "result_statuses": [
