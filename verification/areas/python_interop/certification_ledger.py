@@ -28,6 +28,16 @@ def build_compiled_certification(
         for row in compiled_rows
         for entry in row["compiled_evidence"]
     }
+    required_reports_by_suite = {
+        suite: {
+            str(entry["report"])
+            for row in compiled_rows
+            for entry in row["compiled_evidence"]
+            if str(entry["suite"]) == suite
+        }
+        for suite in required_suites
+    }
+    _validate_suite_report_invocations(required_reports_by_suite, suites, repo_root)
     report_cache: dict[str, tuple[bytes, object]] = {}
     records: list[dict[str, Any]] = []
 
@@ -108,6 +118,49 @@ def build_compiled_certification(
         },
         "capabilities": records,
     }
+
+
+def _validate_suite_report_invocations(
+    required_reports_by_suite: dict[str, set[str]],
+    suites: dict[str, dict[str, Any]],
+    repo_root: Path,
+) -> None:
+    area_root = repo_root / "verification" / "areas" / "python_interop"
+    for suite_name in sorted(required_reports_by_suite.keys() & suites.keys()):
+        expected_reports = required_reports_by_suite[suite_name]
+        if len(expected_reports) != 1:
+            raise SystemExit(
+                f"compiled certification suite {suite_name} must own exactly one report"
+            )
+        expected_path = (repo_root / next(iter(expected_reports))).resolve()
+        observed_paths: set[Path] = set()
+        cases = suites[suite_name].get("cases")
+        if not isinstance(cases, list):
+            raise SystemExit(f"compiled certification invocation drift for {suite_name}")
+        for case in cases:
+            variants = case.get("variants") if isinstance(case, dict) else None
+            if not isinstance(variants, list):
+                raise SystemExit(f"compiled certification invocation drift for {suite_name}")
+            for variant in variants:
+                argv = variant.get("argv") if isinstance(variant, dict) else None
+                if not isinstance(argv, list) or not all(isinstance(arg, str) for arg in argv):
+                    raise SystemExit(f"compiled certification invocation drift for {suite_name}")
+                report_indexes = [index for index, arg in enumerate(argv) if arg == "--report"]
+                for report_index in report_indexes:
+                    value_index = report_index + 1
+                    if value_index >= len(argv):
+                        raise SystemExit(
+                            f"compiled certification invocation drift for {suite_name}"
+                        )
+                    report_argument = Path(argv[value_index])
+                    resolved = (
+                        report_argument.resolve()
+                        if report_argument.is_absolute()
+                        else (area_root / report_argument).resolve()
+                    )
+                    observed_paths.add(resolved)
+        if observed_paths != {expected_path}:
+            raise SystemExit(f"compiled certification invocation drift for {suite_name}")
 
 
 def _validate_entry(
@@ -217,7 +270,36 @@ def run_compiled_certification_self_tests(matrix: dict[str, Any], repo_root: Pat
             for entry in row.get("compiled_evidence", [])
         }
     )
-    suite_results = [{"name": suite, "total_failures": 0} for suite in suites]
+    reports_by_suite = {
+        suite: next(
+            entry["report"]
+            for row in matrix["capabilities"]
+            for entry in row.get("compiled_evidence", [])
+            if entry["suite"] == suite
+        )
+        for suite in suites
+    }
+    suite_results = [
+        {
+            "name": suite,
+            "total_failures": 0,
+            "cases": [
+                {
+                    "variants": [
+                        {
+                            "argv": [
+                                "python",
+                                "runner.py",
+                                "--report",
+                                str(repo_root / reports_by_suite[suite]),
+                            ]
+                        }
+                    ]
+                }
+            ],
+        }
+        for suite in suites
+    ]
     reports = _synthetic_reports(matrix)
 
     def load(path: Path) -> tuple[bytes, object]:
@@ -234,6 +316,16 @@ def run_compiled_certification_self_tests(matrix: dict[str, Any], repo_root: Pat
     )
     if complete["status"] != "complete" or complete["summary"]["failed"] != 0:
         raise SystemExit("compiled certification self-test expected complete evidence")
+
+    rebound_suite = json.loads(json.dumps(suite_results))
+    rebound_suite[0]["cases"][0]["variants"][0]["argv"] = ["python", "runner.py"]
+    _expect_certification_rejection(
+        matrix,
+        repo_root,
+        rebound_suite,
+        reports,
+        "invocation drift",
+    )
 
     python_runner = json.loads(json.dumps(reports))
     next(iter(python_runner.values()))["cases"][0]["execution_model"] = "python-runner"

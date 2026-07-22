@@ -2573,6 +2573,16 @@ signature `7c39b8c1dd4fec7c`, runtime-platform `28` variants with zero failures
 and one declared capability skip, and hardening `6/6`. All per-step blocking
 budgets pass; the aggregate warm wall-time target remains advisory.
 
+Whole-diff Fable High
+[review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m17-wave3-fable-high-review-pass-2.md)
+verified all three pass-1 findings closed, then found one remaining
+freshness-chain minor: manifest suite names and command report targets were not
+bound for three owning suites. The ledger now requires every selected owning
+suite's recorded invocation arguments to contain exactly its matrix-pinned
+report path before evidence is read. A rebinding self-test removes that report
+argument and proves rejection with `invocation drift`; the exact importlib path,
+runner foundation, and full five-suite `7/10/4` demo pass after remediation.
+
 Tasks:
 
 - Migrate all runnable biip/schwifty, dataframe, ML, web, database, cloud,
