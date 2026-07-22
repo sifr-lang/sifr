@@ -2191,8 +2191,8 @@ requirements, while only Cargo's specific missing-lock/frozen failure becomes a
 read-only deferred status across dependency, configured-environment, and
 declaration shapes. Stale existing locks remain hard package diagnostics. Live
 bridge inputs participate in the cache fingerprint, interpreter probes disable
-bytecode writes, package-wide diagnostic ownership is republished on every
-document lifecycle change, and mixed shared-target failures use kind-neutral
+bytecode writes, package-wide diagnostic ownership is reassigned when its owner
+document closes, and mixed shared-target failures use kind-neutral
 wording with end-to-end attribution coverage. Cancellation documentation now
 states the sequential server's non-preemptive boundary, and alias identity is
 scoped to the implemented single-hop semantic definition mapping. Fresh

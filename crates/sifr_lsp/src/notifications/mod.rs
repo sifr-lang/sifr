@@ -125,7 +125,8 @@ fn text_document_did_open(
     let version = optional_i32(&params, "/textDocument/version")?;
     let text = required_string(&params, "/textDocument/text")?;
     session.open_document(uri.clone(), &language_id, version, text)?;
-    DiagnosticsController::publish_all(connection, session)
+    let mode = session.store().settings().diagnostics_mode;
+    DiagnosticsController::publish_document(connection, session, &uri, mode)
 }
 
 fn text_document_did_change(
@@ -149,7 +150,8 @@ fn text_document_did_change(
             summary.raw_change_count, summary.compacted_change_count, summary.text_changed
         ),
     );
-    DiagnosticsController::publish_all(connection, session)
+    let mode = session.store().settings().diagnostics_mode;
+    DiagnosticsController::publish_document(connection, session, &uri, mode)
 }
 
 fn text_document_did_save(
@@ -163,7 +165,8 @@ fn text_document_did_save(
         .and_then(Value::as_str)
         .map(str::to_owned);
     if session.save_document(&uri, text)? {
-        DiagnosticsController::publish_all(connection, session)?;
+        let mode = session.store().settings().diagnostics_mode;
+        DiagnosticsController::publish_document(connection, session, &uri, mode)?;
     }
     Ok(())
 }

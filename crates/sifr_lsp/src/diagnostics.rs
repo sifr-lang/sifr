@@ -11,6 +11,20 @@ use sifr_analysis::WorkspaceTracePhase;
 pub(crate) struct DiagnosticsController;
 
 impl DiagnosticsController {
+    pub(crate) fn publish_document(
+        connection: &Connection,
+        session: &mut Session,
+        uri: &str,
+        mode: DiagnosticsMode,
+    ) -> LspResult<()> {
+        if mode == DiagnosticsMode::Off {
+            session.clear_diagnostic_jobs();
+            return Ok(());
+        }
+        session.schedule_document_diagnostics(uri)?;
+        Self::flush_ready(connection, session, mode)
+    }
+
     pub(crate) fn publish_all(connection: &Connection, session: &mut Session) -> LspResult<()> {
         let mode = session.store().settings().diagnostics_mode;
         if mode == DiagnosticsMode::Off {
