@@ -2235,6 +2235,14 @@ mid-process. The architecture summary's short cancellation phrase is read under
 that non-preemptive constraint. The driver Python interop module is `894/900`
 lines and must be split by responsibility before further growth.
 
+Post-pass-5 authoritative create-PR validation passes every blocking lane in
+`1164.53s`: Python interop `19/19`, LSP `70/70`, package `139/139`, driver
+`382/382` plus `33` expected generated-build ignores, runtime-platform `28`
+variants with one capability-gated skip, and E2E `131/131` with signature
+`7c39b8c1dd4fec7c`. Every per-step blocking budget passes. The E2E cache was
+cold (`0/42`), so the overall warm wall-time notice is a non-blocking advisory.
+Repeated frozen whole-diff review remains the final Wave 5 closure gate.
+
 Tasks:
 
 - Add LSP completion, navigation, diagnostics, verified/runtime-checked status,
