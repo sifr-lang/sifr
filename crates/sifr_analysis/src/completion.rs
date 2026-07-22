@@ -1,8 +1,11 @@
+use sifr_frontend::FileId;
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CompletionCandidate {
     pub label: String,
     pub kind: String,
     pub detail: Option<String>,
+    pub symbol_file: Option<FileId>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -106,6 +109,7 @@ fn rust_interop_decorator_candidates() -> Vec<CompletionCandidate> {
         label: label.to_string(),
         kind: "decorator".to_string(),
         detail: Some(detail.to_string()),
+        symbol_file: None,
     })
     .collect()
 }
@@ -278,6 +282,7 @@ fn rust_interop_policy_key_candidates(
         label: label.to_string(),
         kind: "property".to_string(),
         detail: Some(detail.to_string()),
+        symbol_file: None,
     })
     .collect()
 }
@@ -295,6 +300,7 @@ mod tests {
             label: label.to_string(),
             kind: "function".to_string(),
             detail: None,
+            symbol_file: None,
         }
     }
 

@@ -6,6 +6,16 @@ use std::path::PathBuf;
 
 impl PackageSession {
     #[must_use]
+    pub fn package_id(&self, graph: &crate::SifrPackageGraph) -> Option<crate::SifrPackageId> {
+        let manifest_path = self.manifest_path.as_ref()?;
+        graph
+            .packages
+            .values()
+            .find(|package| same_path(&package.sifr_manifest, manifest_path))
+            .map(|package| package.package_id.clone())
+    }
+
+    #[must_use]
     pub fn from_package_metadata(
         workspace_root: PathBuf,
         package: &SifrPackageMetadata,
@@ -50,4 +60,9 @@ impl PackageSession {
             .map(|target| target.path)
             .collect())
     }
+}
+
+fn same_path(left: &std::path::Path, right: &std::path::Path) -> bool {
+    left.canonicalize().unwrap_or_else(|_| left.to_path_buf())
+        == right.canonicalize().unwrap_or_else(|_| right.to_path_buf())
 }

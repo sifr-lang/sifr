@@ -24,6 +24,7 @@ impl AnalysisHost {
             .min_by_key(|entry| entry.range.len())
             .map(|entry| HoverInfo {
                 contents: entry.detail.clone(),
+                symbol_name: entry.name.clone(),
             }))
     }
 

@@ -22,11 +22,17 @@ def main() -> int:
         ["cargo", "test", "-p", "sifr_driver", "python_interop"],
         environment,
     )
-    print(
-        "lsp-declaration-authoring: completion=verified navigation=compiler "
-        "diagnostics=parity cancellation=checked cache_drift=checked unsupported_certified=0",
-        flush=True,
+    run(
+        [
+            "cargo",
+            "test",
+            "-p",
+            "sifr_analysis",
+            "plan_preserves_declaration_module_file_identity",
+        ],
+        environment,
     )
+    print("lsp-declaration-authoring: focused_commands=4 passed", flush=True)
     return 0
 
 

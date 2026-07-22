@@ -83,7 +83,7 @@ impl Session {
         version: Option<i32>,
         text: String,
     ) -> LspResult<()> {
-        self.python_declarations.clear();
+        self.python_declarations.invalidate_source();
         self.store.open(uri.clone(), language_id, version, text)?;
         let document = self.store.document(&uri)?;
         if self.analysis.open_document(document) {
@@ -108,7 +108,7 @@ impl Session {
         version: Option<i32>,
         compacted: CompactedDocumentChange,
     ) -> LspResult<DocumentChangeSummary> {
-        self.python_declarations.clear();
+        self.python_declarations.invalidate_source();
         let text_changed =
             self.store
                 .apply_compacted_change(uri, version, &compacted, self.position_encoding)?;
@@ -124,7 +124,7 @@ impl Session {
     }
 
     pub(crate) fn save_document(&mut self, uri: &str, text: Option<String>) -> LspResult<bool> {
-        self.python_declarations.clear();
+        self.python_declarations.invalidate_source();
         if !self.store.save(uri, text) {
             return Ok(false);
         }
@@ -136,7 +136,7 @@ impl Session {
     }
 
     pub(crate) fn close_document(&mut self, uri: &str) -> bool {
-        self.python_declarations.clear();
+        self.python_declarations.invalidate_source();
         self.diagnostic_jobs.remove(uri);
         self.analysis.close_document(uri);
         let closed = self.store.close(uri);
@@ -145,7 +145,7 @@ impl Session {
     }
 
     pub(crate) fn record_watcher_events(&mut self, event_count: usize) {
-        self.python_declarations.clear();
+        self.python_declarations.invalidate_external();
         self.analysis.record_watcher_events(event_count);
         self.trace(
             WorkspaceTracePhase::SourceUpdate,

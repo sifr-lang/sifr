@@ -16,11 +16,13 @@ pub struct CompletionItem {
     pub label: String,
     pub kind: String,
     pub detail: Option<String>,
+    pub symbol_file: Option<FileId>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HoverInfo {
     pub contents: String,
+    pub symbol_name: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

@@ -48,6 +48,7 @@ pub use crate::graph::workspace::{
     explicit_package_selection, select_sifr_workspace_members, selected_workspace_members,
     WorkspacePackageSelection,
 };
+pub use crate::graph::{load_package_graph_snapshot, PackageGraphSnapshot};
 pub use crate::imports::source_map::{
     DottedModulePath, PackageImportAmbiguity, PackageImportOrigin, PackageImportResolution,
     PackageImportResolutionResult, PackageModuleKey, PackageModuleSource, PackageSourceMap,

@@ -1,26 +1,24 @@
-use super::project_codegen::GeneratedBinaryProject;
+use super::python_interop::{scoped_diagnostic, PythonInteropPlanDiagnostic};
 use super::python_runtime::PackagePythonRuntime;
 use crate::diagnostics::diagnostic_with_code;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 
-pub(super) fn validate_protocol_certifications(
-    generated: &GeneratedBinaryProject,
+pub fn validate_protocol_certifications_for_plan(
+    plan: &sifr_codegen::PythonInteropPlan,
     runtime: &PackagePythonRuntime,
-) -> Vec<RenderedDiagnostic> {
+) -> Vec<PythonInteropPlanDiagnostic> {
     let mut diagnostics = Vec::new();
-    validate_arrow(generated, runtime, &mut diagnostics);
-    validate_dlpack(generated, runtime, &mut diagnostics);
+    validate_arrow(plan, runtime, &mut diagnostics);
+    validate_dlpack(plan, runtime, &mut diagnostics);
     diagnostics
 }
 
 fn validate_arrow(
-    generated: &GeneratedBinaryProject,
+    plan: &sifr_codegen::PythonInteropPlan,
     runtime: &PackagePythonRuntime,
-    diagnostics: &mut Vec<RenderedDiagnostic>,
+    diagnostics: &mut Vec<PythonInteropPlanDiagnostic>,
 ) {
-    for declaration in generated
-        .interop
-        .python
+    for declaration in plan
         .declarations
         .iter()
         .filter(|item| item.declaration.kind == sifr_ir::PythonInteropDecoratorKind::Arrow)
@@ -32,9 +30,9 @@ fn validate_arrow(
             .certification_target
             .clone()
             .unwrap_or_else(|| runtime_target.dotted());
-        let target = logical_target(&target, &generated.interop.python.bridge_packages);
+        let target = logical_target(&target, &plan.bridge_packages);
         let Some(certification) = runtime.arrow_certification(&target) else {
-            diagnostics.push(missing("Arrow", &target));
+            diagnostics.push(scoped_diagnostic(declaration, missing("Arrow", &target)));
             continue;
         };
         let requested = declaration.declaration.arrow.as_ref().is_some_and(|arrow| {
@@ -46,9 +44,12 @@ fn validate_arrow(
         let certified_requested =
             certification.schema_mode == sifr_package::ArrowCertifiedSchemaMode::Parameter;
         if requested != certified_requested {
-            diagnostics.push(invalid(format!(
-                "Arrow declaration target '{target}' schema-request mode does not match its executable certification"
-            )));
+            diagnostics.push(scoped_diagnostic(
+                declaration,
+                invalid(format!(
+                    "Arrow declaration target '{target}' schema-request mode does not match its executable certification"
+                )),
+            ));
         }
         if declaration
             .declaration
@@ -56,19 +57,22 @@ fn validate_arrow(
             .as_ref()
             .is_some_and(|arrow| !arrow_kind_matches(certification.kind, arrow.kind))
         {
-            diagnostics.push(invalid(format!(
-                "Arrow declaration target '{target}' return kind does not match its executable certification"
-            )));
+            diagnostics.push(scoped_diagnostic(
+                declaration,
+                invalid(format!(
+                    "Arrow declaration target '{target}' return kind does not match its executable certification"
+                )),
+            ));
         }
     }
 }
 
 fn validate_dlpack(
-    generated: &GeneratedBinaryProject,
+    plan: &sifr_codegen::PythonInteropPlan,
     runtime: &PackagePythonRuntime,
-    diagnostics: &mut Vec<RenderedDiagnostic>,
+    diagnostics: &mut Vec<PythonInteropPlanDiagnostic>,
 ) {
-    for declaration in generated.interop.python.declarations.iter().filter(|item| {
+    for declaration in plan.declarations.iter().filter(|item| {
         matches!(
             item.declaration.kind,
             sifr_ir::PythonInteropDecoratorKind::Dlpack
@@ -78,18 +82,21 @@ fn validate_dlpack(
         let Some(runtime_target) = declaration.certification_target.as_deref() else {
             continue;
         };
-        let target = logical_target(runtime_target, &generated.interop.python.bridge_packages);
+        let target = logical_target(runtime_target, &plan.bridge_packages);
         let Some(certification) = runtime.dlpack_certification(&target) else {
-            diagnostics.push(missing("DLPack", &target));
+            diagnostics.push(scoped_diagnostic(declaration, missing("DLPack", &target)));
             continue;
         };
         let Some(contract) = declaration.declaration.dlpack.as_ref() else {
             continue;
         };
         if !dlpack_device_matches(certification.device, contract.device) {
-            diagnostics.push(invalid(format!(
-                "DLPack declaration target '{target}' device policy does not match its executable certification"
-            )));
+            diagnostics.push(scoped_diagnostic(
+                declaration,
+                invalid(format!(
+                    "DLPack declaration target '{target}' device policy does not match its executable certification"
+                )),
+            ));
         }
         let parameter_stream = matches!(
             contract.stream,
@@ -98,9 +105,12 @@ fn validate_dlpack(
         let certified_parameter_stream =
             certification.stream_policy == sifr_package::DlpackCertifiedStreamPolicy::Parameter;
         if parameter_stream != certified_parameter_stream {
-            diagnostics.push(invalid(format!(
-                "DLPack declaration target '{target}' stream policy does not match its executable certification"
-            )));
+            diagnostics.push(scoped_diagnostic(
+                declaration,
+                invalid(format!(
+                    "DLPack declaration target '{target}' stream policy does not match its executable certification"
+                )),
+            ));
         }
     }
 }

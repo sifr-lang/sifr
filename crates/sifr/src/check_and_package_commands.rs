@@ -4,8 +4,7 @@ use super::cli_model_and_entrypoint::{
     PackageGraphContext, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
 };
 use super::diagnostic_rendering_and_run::{
-    cargo_failure_diagnostic, current_session_package_id, execute_cargo_plan,
-    package_session_for_cwd, render_diagnostics,
+    current_session_package_id, execute_cargo_plan, package_session_for_cwd, render_diagnostics,
 };
 use super::formatter_cli::FmtArgs;
 use super::python_runtime_context::{package_python_runtime, package_python_runtime_for_check};
@@ -342,81 +341,20 @@ pub(super) fn load_package_graph_context_from_root(
     lock_mode: sifr_package::CargoLockMode,
     diagnostic_format: DiagnosticFormat,
 ) -> Result<PackageGraphContext, i32> {
-    let metadata_plan =
-        sifr_package::CargoCommandPlan::metadata(workspace_root.to_path_buf(), lock_mode);
-    let output = match std::process::Command::new(&metadata_plan.program)
-        .args(&metadata_plan.args)
-        .current_dir(&metadata_plan.current_dir)
-        .output()
-    {
-        Ok(output) => output,
-        Err(error) => {
-            let diagnostic =
-                cargo_failure_diagnostic(&metadata_plan, lock_mode, None, &error.to_string());
-            render_diagnostics(&[diagnostic], diagnostic_format);
-            return Err(EXIT_USAGE_OR_CONFIG);
-        }
-    };
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        let excerpt = if stderr.trim().is_empty() {
-            stdout.as_ref()
-        } else {
-            stderr.as_ref()
-        };
-        let diagnostic = cargo_failure_diagnostic(
-            &metadata_plan,
-            lock_mode,
-            output.status.code(),
-            &bounded_excerpt(excerpt),
-        );
-        render_diagnostics(&[diagnostic], diagnostic_format);
-        return Err(EXIT_USER_DIAGNOSTIC);
-    }
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let metadata = match sifr_package::parse_metadata_json(&stdout) {
-        Ok(metadata) => metadata,
-        Err(error) => {
-            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
-            return Err(EXIT_USAGE_OR_CONFIG);
-        }
-    };
-    let normalized = metadata.clone().normalize();
-    let graph = match sifr_package::derive_package_graph(metadata) {
-        Ok(graph) => graph,
-        Err(errors) => {
+    let snapshot =
+        sifr_package::load_package_graph_snapshot(workspace_root, lock_mode).map_err(|errors| {
             let diagnostics = errors
                 .into_iter()
                 .map(package_diagnostic)
                 .collect::<Vec<_>>();
             render_diagnostics(&diagnostics, diagnostic_format);
-            return Err(EXIT_USER_DIAGNOSTIC);
-        }
-    };
-    let source_map = match sifr_package::PackageSourceMap::build(&graph) {
-        Ok(source_map) => source_map,
-        Err(errors) => {
-            let diagnostics = errors
-                .into_iter()
-                .map(package_diagnostic)
-                .collect::<Vec<_>>();
-            render_diagnostics(&diagnostics, diagnostic_format);
-            return Err(EXIT_USER_DIAGNOSTIC);
-        }
-    };
+            EXIT_USER_DIAGNOSTIC
+        })?;
     Ok(PackageGraphContext {
-        metadata: normalized,
-        graph,
-        source_map,
+        metadata: snapshot.metadata,
+        graph: snapshot.graph,
+        source_map: snapshot.source_map,
     })
-}
-
-pub(super) fn paths_equal(left: &Path, right: &Path) -> bool {
-    let left = left.canonicalize().unwrap_or_else(|_| left.to_path_buf());
-    let right = right.canonicalize().unwrap_or_else(|_| right.to_path_buf());
-    left == right
 }
 
 pub(super) fn cmd_fmt(

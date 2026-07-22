@@ -8,14 +8,26 @@ pub(crate) fn hover(session: &mut Session, params: Value) -> LspResult<Value> {
     let uri = text_document_uri(&params)?;
     let position = document_position(session, &uri, &params)?;
     let python = session.python_declaration_snapshot(&uri)?;
-    let mut response = session.with_document_analysis(&uri, |snapshot, host, file, _source| {
-        let hover = snapshot
-            .hover(host, file, &position)
-            .map_err(|error| LspError::internal(error.message))?
-            .into_value();
-        Ok(hover.map_or(Value::Null, conversion::hover))
-    })?;
-    crate::python_declarations::enrich_hover(&mut response, &python);
+    let (hover, definition_file) =
+        session.with_document_analysis(&uri, |snapshot, host, file, _source| {
+            let hover = snapshot
+                .hover(host, file, &position)
+                .map_err(|error| LspError::internal(error.message))?
+                .into_value();
+            let definition_file = snapshot
+                .definition(host, file, &position)
+                .map_err(|error| LspError::internal(error.message))?
+                .into_value()
+                .first()
+                .map_or(file, |location| location.file);
+            Ok((hover, definition_file))
+        })?;
+    let Some(hover) = hover else {
+        return Ok(Value::Null);
+    };
+    let symbol_name = hover.symbol_name.clone();
+    let mut response = conversion::hover(hover);
+    crate::python_declarations::enrich_hover(&mut response, &python, definition_file, &symbol_name);
     Ok(response)
 }
 

@@ -18,7 +18,7 @@ pub use completion::{
     evaluate_completion_ranking, rank_completion_candidates, CompletionCandidate,
     CompletionEvaluation, CompletionRankingResult,
 };
-pub use host::AnalysisHost;
+pub use host::{AnalysisHost, PythonInteropAnalysisPlan};
 pub use queries::{
     CodeAction, CodeActionContext, CodeActionData, CompletionItem, CompletionItems, Declaration,
     DeferredCodeAction, DiagnosticClass, DiagnosticExplanation, DiagnosticId, DocumentHighlight,

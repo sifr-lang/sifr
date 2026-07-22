@@ -73,8 +73,16 @@ mutation-ordering, positional-only, symlink-confinement, cross-module runtime,
 and schema-diagnostic remediation; pass 2 returned **SATISFIED**. Frozen pass
 3 found one additional direct-conversion grammar minor; the root remediation
 and expanded regression evidence passed the authoritative gate, and full pass
-4 returned **SATISFIED** with no blocker, major, or minor findings. M15 and
-later milestones are not yet implemented.
+4 returned **SATISFIED** with no blocker, major, or minor findings. M15 is
+implemented on PR #2995 and in closure review. Fable High pass 1 validated the
+shared compiler-plan/driver-probe architecture and identified symbol
+misattribution, live environment-digest, library deferral, graph/trust,
+certification, probe-cache/cancellation, diagnostic-scoping, and evidence
+precision gaps. Those findings are remediated with exact `(FileId, symbol)`
+identity, the canonical package graph/environment resolver, live probe digests,
+per-environment and per-target caches, declaration-scoped diagnostics, and
+direct regression evidence; fresh authoritative validation and repeated review
+are pending. M16 and later milestones are not yet implemented.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
@@ -2103,7 +2111,8 @@ Focused evidence:
   diagnostics, cancellation, source/watcher invalidation, exact cache reuse,
   runtime-checked targets, and unsupported-type non-promotion.
 - `cargo test -p sifr_analysis` and `cargo test -p sifr_driver python_interop`
-  cover the compiler plan query and shared exact target probe.
+  cover the compiler plan query's module/file identity and the shared exact
+  target/protocol probes.
 - blocking `lsp-declaration-authoring` verification is selected by create-PR,
   merge, nightly, and release profiles.
 
@@ -2116,6 +2125,16 @@ certifications; create-PR E2E passes `131/131` with signature
 Every per-step blocking budget passes. The overall warm wall-time notice is a
 non-blocking advisory; the first cold attempt also passed all `19` Python
 variants but exceeded that lane's time budget before the successful warm run.
+
+Fable High pass 1 returned **NEEDS CHANGES** after the initial gate. Its seven
+findings are covered by focused regressions for same-name and substring symbol
+isolation, declaration-file/range diagnostics, live certification digest drift,
+application trust rejection, library deferral, environment/target cache reuse,
+and direct analysis-plan identity. The focused LSP suite now passes `13/13`,
+the driver probe suite passes `15/15`, workspace clippy and formatting pass,
+and the HIR, driver-maintainability, and 900-line file-size guardrails pass.
+The post-remediation authoritative gate and fresh whole-diff review remain the
+Wave 5 closure gate.
 
 Tasks:
 

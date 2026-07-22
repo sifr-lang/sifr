@@ -2,7 +2,7 @@ use super::build_output::{render_build_success, BuildOutputOptions};
 use super::check_and_package_commands::{
     bounded_excerpt, build_run_artifact, cmd_check, compile_entrypoint_report,
     compile_package_entrypoint_report, load_package_graph_context, package_compiler_context,
-    paths_equal, redacted_args,
+    redacted_args,
 };
 use super::cli_model_and_entrypoint::{
     diagnostic_exit_code, diagnostic_with_code, package_diagnostic, run_with_panic_boundary,
@@ -723,12 +723,7 @@ pub(super) fn current_session_package_id(
     session: &sifr_package::PackageSession,
     graph: &sifr_package::SifrPackageGraph,
 ) -> Option<sifr_package::SifrPackageId> {
-    let manifest_path = session.manifest_path.as_ref()?;
-    graph
-        .packages
-        .values()
-        .find(|package| paths_equal(&package.sifr_manifest, manifest_path))
-        .map(|package| package.package_id.clone())
+    session.package_id(graph)
 }
 
 pub(super) fn cargo_package_list_entries(

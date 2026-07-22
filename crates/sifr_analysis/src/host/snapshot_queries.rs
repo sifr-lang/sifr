@@ -40,7 +40,7 @@ impl AnalysisSnapshot {
     pub fn python_interop_plan(
         &self,
         host: &mut AnalysisHost,
-    ) -> QueryResult<sifr_driver::PythonInteropPlan> {
+    ) -> QueryResult<super::PythonInteropAnalysisPlan> {
         self.run(host, AnalysisHost::python_interop_plan)
     }
 
