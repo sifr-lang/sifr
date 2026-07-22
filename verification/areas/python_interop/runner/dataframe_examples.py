@@ -12,19 +12,21 @@ DATAFRAME_EXAMPLE_CASES = {
         relative_source="numpy_buffer/numpy_full_example.sifr",
         stdout_marker="sifr-python-interop:numpy:sum=20:values=2,4,6,8",
         import_roots=("numpy",),
-        copy_bridges=False,
+        bridge_files=("numpy_example.py",),
     ),
     "pandas": ExampleCase(
         case_id="pandas",
         relative_source="pandas_arrow/pandas_full_example.sifr",
         stdout_marker="sifr-python-interop:pandas:double-total=20:values=2,3,5",
         import_roots=("numpy", "pandas"),
+        bridge_files=("pandas_example.py",),
     ),
     "polars": ExampleCase(
         case_id="polars",
         relative_source="polars_arrow/polars_full_example.sifr",
         stdout_marker="sifr-python-interop:polars:sum=10:first-city=oslo",
         import_roots=("polars",),
+        bridge_files=("polars_example.py",),
     ),
 }
 
@@ -52,9 +54,9 @@ def run_dataframe_examples_self_tests(paths: RunnerPaths) -> None:
         for case_id, case in DATAFRAME_EXAMPLE_CASES.items()
     }
     expected_policy = {
-        "numpy": (("numpy",), None, False, None),
-        "pandas": (("numpy", "pandas"), None, True, None),
-        "polars": (("polars",), None, True, None),
+        "numpy": (("numpy",), None, True, ("numpy_example.py",)),
+        "pandas": (("numpy", "pandas"), None, True, ("pandas_example.py",)),
+        "polars": (("polars",), None, True, ("polars_example.py",)),
     }
     if observed_policy != expected_policy:
         raise SystemExit(f"dataframe example package-policy drift: {observed_policy}")

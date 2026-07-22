@@ -1,68 +1,18 @@
-from sifr.python import (
-    Object,
-    PythonError,
-    call_attr,
-    close,
-    copy_list_int,
-    copy_list_str,
-    from_dict_str,
-    from_int,
-    from_list,
-    from_str,
-    get_item,
-    import_module,
-    to_int,
-)
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-@blocking_io
-def run_example() -> Result[None, PythonError]:
-    try:
-        pl: Object = import_module("polars")
-        city_a: Object = from_str("paris")
-        city_b: Object = from_str("oslo")
-        city_c: Object = from_str("rome")
-        cities: Object = from_list([city_a, city_b, city_c])
-        value_a: Object = from_int(5)
-        value_b: Object = from_int(2)
-        value_c: Object = from_int(3)
-        values: Object = from_list([value_a, value_b, value_c])
-        data: Object = from_dict_str([("city", cities), ("value", values)])
-        frame: Object = call_attr(pl, "DataFrame", [data], [])
-        sort_key: Object = from_str("value")
-        sorted_frame: Object = call_attr(frame, "sort", [sort_key], [])
-        value_series: Object = get_item(sorted_frame, "value")
-        city_series: Object = get_item(sorted_frame, "city")
-        total_obj: Object = call_attr(value_series, "sum", [], [])
-        total: int = to_int(total_obj)
-        value_list_obj: Object = call_attr(value_series, "to_list", [], [])
-        city_list_obj: Object = call_attr(city_series, "to_list", [], [])
-        copied_values: list[int] = copy_list_int(value_list_obj)
-        copied_cities: list[str] = copy_list_str(city_list_obj)
-
-        passed: bool = len(copied_values) == 3 and copied_values[0] == 2 and copied_values[2] == 5 and copied_cities[0] == "oslo" and total == 10
-        closed_city_list: None = close(city_list_obj)
-        closed_value_list: None = close(value_list_obj)
-        closed_total: None = close(total_obj)
-        closed_city_series: None = close(city_series)
-        closed_value_series: None = close(value_series)
-        closed_sorted: None = close(sorted_frame)
-        closed_sort_key: None = close(sort_key)
-        closed_frame: None = close(frame)
-        closed_data: None = close(data)
-        closed_pl: None = close(pl)
-        if passed:
-            print("sifr-python-interop:polars:sum=10:first-city=oslo")
-        else:
-            raise PythonError("polars full example did not round-trip expected values")
-    except PythonError as e:
-        raise e
-    return None
+@python(bridge.polars_example.run)
+def run_example() -> Result[str, PythonError]: ...
 
 
 def main() -> Result[None, PythonError]:
     try:
-        completed: None = run_example()
-    except PythonError as e:
-        raise e
+        before: ResourceDiagnostics = resource_diagnostics()
+        marker: str = run_example()
+        after: ResourceDiagnostics = resource_diagnostics()
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("Polars bridge leaked Python objects")
+        print(marker)
+    except PythonError as error:
+        raise error
     return None

@@ -1,64 +1,18 @@
-from sifr.python import (
-    Object,
-    PythonError,
-    call_attr,
-    close,
-    copy_list_int,
-    from_int,
-    from_list,
-    from_str,
-    import_module,
-    to_int,
-)
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-@blocking_io
-def run_example() -> Result[None, PythonError]:
-    try:
-        np: Object = import_module("numpy")
-        one: Object = from_int(1)
-        two: Object = from_int(2)
-        three: Object = from_int(3)
-        four: Object = from_int(4)
-        values: Object = from_list([one, two, three, four])
-        dtype: Object = from_str("int64")
-        array: Object = call_attr(np, "array", [values], [("dtype", dtype)])
-        rows: Object = from_int(2)
-        cols: Object = from_int(2)
-        reshaped: Object = call_attr(array, "reshape", [rows, cols], [])
-        factor: Object = from_int(2)
-        doubled: Object = call_attr(np, "multiply", [reshaped, factor], [])
-        total_obj: Object = call_attr(doubled, "sum", [], [])
-        total: int = to_int(total_obj)
-        flattened: Object = call_attr(doubled, "ravel", [], [])
-        list_obj: Object = call_attr(flattened, "tolist", [], [])
-        copied: list[int] = copy_list_int(list_obj)
-
-        passed: bool = len(copied) == 4 and copied[0] == 2 and copied[3] == 8 and total == 20
-        closed_list: None = close(list_obj)
-        closed_flattened: None = close(flattened)
-        closed_total: None = close(total_obj)
-        closed_doubled: None = close(doubled)
-        closed_factor: None = close(factor)
-        closed_reshaped: None = close(reshaped)
-        closed_cols: None = close(cols)
-        closed_rows: None = close(rows)
-        closed_array: None = close(array)
-        closed_dtype: None = close(dtype)
-        closed_values: None = close(values)
-        closed_np: None = close(np)
-        if passed:
-            print("sifr-python-interop:numpy:sum=20:values=2,4,6,8")
-        else:
-            raise PythonError("numpy full example did not round-trip expected values")
-    except PythonError as e:
-        raise e
-    return None
+@python(bridge.numpy_example.run)
+def run_example() -> Result[str, PythonError]: ...
 
 
 def main() -> Result[None, PythonError]:
     try:
-        completed: None = run_example()
-    except PythonError as e:
-        raise e
+        before: ResourceDiagnostics = resource_diagnostics()
+        marker: str = run_example()
+        after: ResourceDiagnostics = resource_diagnostics()
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("NumPy bridge leaked Python objects")
+        print(marker)
+    except PythonError as error:
+        raise error
     return None

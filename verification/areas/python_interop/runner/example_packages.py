@@ -1,14 +1,21 @@
 from __future__ import annotations
 
+import io
 import shutil
 import subprocess
 import time
+import tokenize
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 from env import RunnerPaths, cargo_env_for_repo_manifest
+from ordinary_example_policy import (
+    ORDINARY_PYTHON_API_ALLOWED_IMPORTS,
+    POLICY_REJECTION_SEEDS,
+)
 
 EXAMPLE_TIMEOUT_SECONDS = 600
 
@@ -52,8 +59,15 @@ def build_examples_report(
     case_results = runner(paths)
     failures = sum(1 for case in case_results if case["status"] != "example-passed")
     observed_case_ids = [case.get("id") for case in case_results]
-    if len(observed_case_ids) != len(set(observed_case_ids)) or set(observed_case_ids) != set(
-        cases_by_id
+    invalid_execution_models = [
+        case.get("id")
+        for case in case_results
+        if case.get("execution_model") != "compiled-sifr-declaration"
+    ]
+    if (
+        len(observed_case_ids) != len(set(observed_case_ids))
+        or set(observed_case_ids) != set(cases_by_id)
+        or invalid_execution_models
     ):
         failures = max(1, failures)
     return _report(
@@ -80,6 +94,7 @@ def run_examples_self_tests(
             {
                 "id": case.case_id,
                 "status": "example-passed",
+                "execution_model": "compiled-sifr-declaration",
                 "sifr_source": case.relative_source,
                 "elapsed_ms": 0,
             }
@@ -88,6 +103,8 @@ def run_examples_self_tests(
     )
     if skipped_payload["status"] != "examples-passed":
         raise SystemExit(f"{suite_name} examples self-test expected examples-passed")
+    if skipped_payload["execution_model"] != "compiled-sifr-declaration":
+        raise SystemExit(f"{suite_name} examples self-test execution-model drift")
     case_ids = {case["id"] for case in skipped_payload["cases"]}
     if case_ids != set(cases_by_id):
         raise SystemExit(f"{suite_name} examples self-test case drift: {sorted(case_ids)}")
@@ -127,6 +144,8 @@ def run_examples_self_tests(
         raise SystemExit(
             f"{suite_name} examples self-test invalid trust roots: {sorted(invalid_roots)}"
         )
+    for seed_id, source in POLICY_REJECTION_SEEDS.items():
+        _assert_policy_seed_rejected(paths, suite_name, seed_id, source)
 
     empty_payload = build_examples_report(
         paths,
@@ -146,6 +165,7 @@ def run_examples_self_tests(
             {
                 "id": first_case.case_id,
                 "status": "example-failed",
+                "execution_model": "compiled-sifr-declaration",
                 "sifr_source": first_case.relative_source,
                 "error": "synthetic example failure",
             }
@@ -171,6 +191,21 @@ def validate_source_presence(
                     "status": "fail",
                     "sifr_source": case.relative_source,
                     "reason": "missing source fixture",
+                }
+            )
+            continue
+        source = source_path.read_text(encoding="utf-8")
+        policy_violations = ordinary_python_api_policy_violations(source)
+        if policy_violations:
+            checks.append(
+                {
+                    "id": case.case_id,
+                    "status": "fail",
+                    "sifr_source": case.relative_source,
+                    "reason": (
+                        "ordinary example violates declaration-first Python policy: "
+                        f"{sorted(policy_violations)}"
+                    ),
                 }
             )
             continue
@@ -216,10 +251,170 @@ def validate_source_presence(
                 "id": case.case_id,
                 "status": "pass",
                 "sifr_source": case.relative_source,
-                "check": "source-present",
+                "check": "declaration-first-source",
             }
         )
     return checks
+
+
+def ordinary_python_api_policy_violations(source: str) -> set[str]:
+    try:
+        tokens = list(tokenize.generate_tokens(io.StringIO(source).readline))
+    except (IndentationError, tokenize.TokenError):
+        return {"unparseable-source"}
+    significant = [
+        item
+        for item in tokens
+        if item.type
+        not in {tokenize.COMMENT, tokenize.DEDENT, tokenize.ENCODING, tokenize.INDENT, tokenize.NL}
+    ]
+    violations: set[str] = set()
+    index = 0
+    while index < len(significant):
+        item = significant[index]
+        if item.string == "@" and _token_string(significant, index + 1) == "trust_python_dynamic":
+            violations.add("@trust_python_dynamic")
+        if item.type == tokenize.NAME and item.string == "import":
+            index = _collect_direct_import_violations(significant, index + 1, violations)
+            continue
+        if item.type == tokenize.NAME and item.string == "from":
+            index = _collect_from_import_violations(significant, index + 1, violations)
+            continue
+        index += 1
+    return violations
+
+
+def _collect_direct_import_violations(
+    tokens: list[tokenize.TokenInfo],
+    index: int,
+    violations: set[str],
+) -> int:
+    while index < len(tokens) and tokens[index].type != tokenize.NEWLINE:
+        if tokens[index].string == ";":
+            return index + 1
+        module, index = _consume_dotted_name(tokens, index)
+        if module in {"sifr.python", "sifr.python_core"}:
+            violations.add(f"module-import:{module}")
+        if _token_string(tokens, index) == "as":
+            index += 2
+        if _token_string(tokens, index) == ",":
+            index += 1
+        elif not module:
+            index += 1
+    return index
+
+
+def _collect_from_import_violations(
+    tokens: list[tokenize.TokenInfo],
+    index: int,
+    violations: set[str],
+) -> int:
+    module, index = _consume_dotted_name(tokens, index)
+    if _token_string(tokens, index) != "import":
+        return index
+    imported_names, index = _consume_imported_names(tokens, index + 1)
+    if module in {"sifr.python", "sifr.python_core"}:
+        violations.update(
+            name
+            for name in imported_names
+            if name not in ORDINARY_PYTHON_API_ALLOWED_IMPORTS
+        )
+    elif module == "sifr":
+        violations.update(
+            f"module-import:sifr.{name}"
+            for name in imported_names
+            if name in {"python", "python_core"}
+        )
+    return index
+
+
+def _consume_dotted_name(
+    tokens: list[tokenize.TokenInfo],
+    index: int,
+) -> tuple[str, int]:
+    parts: list[str] = []
+    if index >= len(tokens) or tokens[index].type != tokenize.NAME:
+        return "", index
+    parts.append(tokens[index].string)
+    index += 1
+    while _token_string(tokens, index) == "." and index + 1 < len(tokens):
+        if tokens[index + 1].type != tokenize.NAME:
+            break
+        parts.append(tokens[index + 1].string)
+        index += 2
+    return ".".join(parts), index
+
+
+def _consume_imported_names(
+    tokens: list[tokenize.TokenInfo],
+    index: int,
+) -> tuple[set[str], int]:
+    names: set[str] = set()
+    parenthesized = _token_string(tokens, index) == "("
+    if parenthesized:
+        index += 1
+    expect_name = True
+    while index < len(tokens):
+        item = tokens[index]
+        if item.type == tokenize.NEWLINE or item.string == ";":
+            break
+        if parenthesized and item.string == ")":
+            index += 1
+            break
+        if expect_name and (item.type == tokenize.NAME or item.string == "*"):
+            names.add(item.string)
+            expect_name = False
+        elif item.string == "as":
+            index += 1
+        elif item.string == ",":
+            expect_name = True
+        index += 1
+    return names, index
+
+
+def _token_string(tokens: list[tokenize.TokenInfo], index: int) -> str | None:
+    if 0 <= index < len(tokens):
+        return tokens[index].string
+    return None
+
+
+def _assert_policy_seed_rejected(
+    paths: RunnerPaths,
+    suite_name: str,
+    seed_id: str,
+    source: str,
+) -> None:
+    with TemporaryDirectory(prefix="sifr-python-example-policy-") as temp_dir:
+        fixture_root = Path(temp_dir)
+        relative_source = f"{seed_id}.sifr"
+        (fixture_root / relative_source).write_text(source, encoding="utf-8")
+        synthetic_paths = RunnerPaths(
+            repo_root=paths.repo_root,
+            area_root=paths.area_root,
+            packages_root=paths.packages_root,
+            fixtures_root=fixture_root,
+            reports_root=paths.reports_root,
+        )
+        payload = build_examples_report(
+            synthetic_paths,
+            suite_name=f"{suite_name}-{seed_id}-policy-self-test",
+            cases_by_id={
+                seed_id: ExampleCase(
+                    case_id=seed_id,
+                    relative_source=relative_source,
+                    stdout_marker="unreachable",
+                    import_roots=(),
+                )
+            },
+            example_runner=lambda _paths: (_ for _ in ()).throw(
+                AssertionError("policy-rejected example runner was invoked")
+            ),
+        )
+        reason = payload["source_checks"][0].get("reason", "")
+        if payload["status"] != "examples-failed" or "declaration-first" not in reason:
+            raise SystemExit(
+                f"{suite_name} examples self-test accepted policy seed {seed_id}: {payload}"
+            )
 
 
 def run_example_cases(
@@ -409,6 +604,7 @@ def _run_case(paths: RunnerPaths, package_root: Path, case_config: ExampleCase) 
     case: dict[str, Any] = {
         "id": case_config.case_id,
         "status": status,
+        "execution_model": "compiled-sifr-declaration",
         "sifr_source": case_config.relative_source,
         "elapsed_ms": elapsed_ms,
         "stdout_marker": case_config.stdout_marker,
@@ -486,6 +682,8 @@ def _report(
         "area": "python_interop",
         "suite": f"{suite_name}-examples",
         "status": status,
+        "execution_model": "compiled-sifr-declaration",
+        "source_policy": "ordinary-examples-forbid-raw-python-api",
         "result_statuses": ["example-passed", "example-failed"],
         "dependencies": sorted({root for case in cases_by_id.values() for root in case.import_roots}),
         "source_checks": source_checks,

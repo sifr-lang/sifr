@@ -1,79 +1,18 @@
-from sifr.python import (
-    DlpackTensor,
-    Object,
-    PythonError,
-    call_attr,
-    close,
-    copy_list_float,
-    from_float,
-    from_int,
-    from_list,
-    get_attr,
-    import_module,
-    release_dlpack,
-    to_float,
-    zero_copy_dlpack_tensor,
-)
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-@blocking_io
-def run_example() -> Result[None, PythonError]:
-    try:
-        torch: Object = import_module("torch")
-        one: Object = from_float(1.0)
-        two: Object = from_float(2.0)
-        three: Object = from_float(3.0)
-        four: Object = from_float(4.0)
-        five: Object = from_float(5.0)
-        six: Object = from_float(6.0)
-        values: Object = from_list([one, two, three, four, five, six])
-        dtype: Object = get_attr(torch, "float32")
-        tensor: Object = call_attr(torch, "tensor", [values], [("dtype", dtype)])
-        rows: Object = from_int(2)
-        cols: Object = from_int(3)
-        shaped: Object = call_attr(tensor, "reshape", [rows, cols], [])
-        factor: Object = from_float(2.0)
-        doubled: Object = call_attr(torch, "mul", [shaped, factor], [])
-        total_tensor: Object = call_attr(doubled, "sum", [], [])
-        total_obj: Object = call_attr(total_tensor, "item", [], [])
-        total: float = to_float(total_obj)
-        flattened: Object = call_attr(doubled, "flatten", [], [])
-        list_obj: Object = call_attr(flattened, "tolist", [], [])
-        copied: list[float] = copy_list_float(list_obj)
-        dlpack: DlpackTensor = zero_copy_dlpack_tensor(doubled)
-
-        shape_ok: bool = len(dlpack.shape) == 2 and dlpack.shape[0] == 2 and dlpack.shape[1] == 3
-        values_ok: bool = len(copied) == 6 and copied[0] == 2.0 and copied[5] == 12.0
-        metadata_ok: bool = dlpack.dtype == "float32" and dlpack.dimensions == 2 and shape_ok
-        total_ok: bool = total == 42.0
-        passed: bool = values_ok and metadata_ok and total_ok
-
-        released: None = release_dlpack(dlpack)
-        closed_list: None = close(list_obj)
-        closed_flattened: None = close(flattened)
-        closed_total_obj: None = close(total_obj)
-        closed_total_tensor: None = close(total_tensor)
-        closed_doubled: None = close(doubled)
-        closed_factor: None = close(factor)
-        closed_shaped: None = close(shaped)
-        closed_cols: None = close(cols)
-        closed_rows: None = close(rows)
-        closed_tensor: None = close(tensor)
-        closed_dtype: None = close(dtype)
-        closed_values: None = close(values)
-        closed_torch: None = close(torch)
-        if passed:
-            print("sifr-python-interop:torch:sum=42.0:shape=2x3:dtype=float32")
-        else:
-            raise PythonError("torch full example did not round-trip expected values")
-    except PythonError as e:
-        raise e
-    return None
+@python(bridge.torch_example.run)
+def run_example() -> Result[str, PythonError]: ...
 
 
 def main() -> Result[None, PythonError]:
     try:
-        completed: None = run_example()
-    except PythonError as e:
-        raise e
+        before: ResourceDiagnostics = resource_diagnostics()
+        marker: str = run_example()
+        after: ResourceDiagnostics = resource_diagnostics()
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("Torch bridge leaked Python objects")
+        print(marker)
+    except PythonError as error:
+        raise error
     return None

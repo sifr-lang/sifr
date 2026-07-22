@@ -12,12 +12,14 @@ ML_EXAMPLE_CASES = {
         relative_source="torch_dlpack/torch_full_example.sifr",
         stdout_marker="sifr-python-interop:torch:sum=42.0:shape=2x3:dtype=float32",
         import_roots=("torch",),
+        bridge_files=("torch_example.py",),
     ),
     "scikit-learn": ExampleCase(
         case_id="scikit-learn",
         relative_source="sklearn/sklearn_full_example.sifr",
         stdout_marker="sifr-python-interop:sklearn:predictions=0,1:classes=0,1",
         import_roots=("numpy", "sklearn"),
+        bridge_files=("sklearn_example.py",),
     ),
 }
 

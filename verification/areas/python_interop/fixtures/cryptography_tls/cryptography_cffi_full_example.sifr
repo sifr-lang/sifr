@@ -1,58 +1,18 @@
-from sifr.python import (
-    Object,
-    PythonError,
-    call,
-    call_attr,
-    close,
-    from_bytes,
-    from_str,
-    get_attr,
-    import_module,
-    to_bytes,
-    to_str,
-)
+from sifr.python import PythonError, ResourceDiagnostics, resource_diagnostics
 
 
-@blocking_io
+@python(bridge.cryptography_cffi_example.run)
+def run_example() -> Result[str, PythonError]: ...
+
+
 def main() -> Result[None, PythonError]:
     try:
-        certifi: Object = import_module("certifi")
-        cffi: Object = import_module("cffi")
-        fernet_module: Object = import_module("cryptography.fernet")
-
-        fernet_class: Object = get_attr(fernet_module, "Fernet")
-        key: Object = call_attr(fernet_class, "generate_key", [], [])
-        cipher: Object = call(fernet_class, [key], [])
-        message: Object = from_bytes(b"sifr-secret")
-        token: Object = call_attr(cipher, "encrypt", [message], [])
-        decrypted: Object = call_attr(cipher, "decrypt", [token], [])
-        roundtrip: bytes = to_bytes(decrypted)
-
-        ffi: Object = call_attr(cffi, "FFI", [], [])
-        declaration: Object = from_str("int add(int, int);")
-        cdef_result: Object = call_attr(ffi, "cdef", [declaration], [])
-        cert_path_obj: Object = call_attr(certifi, "where", [], [])
-        cert_path: str = to_str(cert_path_obj)
-
-        passed: bool = roundtrip == b"sifr-secret" and cert_path != ""
-
-        closed_cert_path_obj: None = close(cert_path_obj)
-        closed_cdef_result: None = close(cdef_result)
-        closed_declaration: None = close(declaration)
-        closed_ffi: None = close(ffi)
-        closed_decrypted: None = close(decrypted)
-        closed_token: None = close(token)
-        closed_message: None = close(message)
-        closed_cipher: None = close(cipher)
-        closed_key: None = close(key)
-        closed_fernet_class: None = close(fernet_class)
-        closed_fernet_module: None = close(fernet_module)
-        closed_cffi: None = close(cffi)
-        closed_certifi: None = close(certifi)
-        if passed:
-            print("sifr-python-interop:cryptography-cffi:roundtrip=sifr-secret:certifi=ok")
-        else:
-            raise PythonError("cryptography/CFFI full example did not validate expected results")
-    except PythonError as e:
-        raise e
+        before: ResourceDiagnostics = resource_diagnostics()
+        marker: str = run_example()
+        after: ResourceDiagnostics = resource_diagnostics()
+        if after.live_objects != before.live_objects or after.leaked_objects != before.leaked_objects:
+            raise PythonError("cryptography/CFFI bridge leaked Python objects")
+        print(marker)
+    except PythonError as error:
+        raise error
     return None

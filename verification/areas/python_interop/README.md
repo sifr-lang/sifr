@@ -66,6 +66,17 @@ positive, negative, cleanup, cancellation, and live evidence. The scaffold and
 self-test suites reject missing ownership, unsupported states, duplicate rows,
 or a supported claim without the evidence required by that row.
 
+Ordinary runnable ecosystem examples are declaration-first. Library-specific
+dynamic workflows live in package-local `python_bridges/` modules and expose
+only typed Sifr declarations. A token-aware allowlist restricts ordinary
+examples to the error, exit, and resource-diagnostic names they need from
+`sifr.python`; imports from `sifr.python_core`, module-style access, every raw
+object/conversion/protocol helper, and `@trust_python_dynamic` fail before
+execution. One intentional dynamic-API demo remains, with
+`fixtures/primitive_conversion/raw_typed_ergonomics.sifr` as its focused
+verification counterpart. Low-level negative and protocol-mechanics fixtures
+remain certification inputs rather than user-facing ecosystem examples.
+
 Live dependency examples are intentionally opt-in. The `python-interop-live`
 profile uses selected-areas-only execution and runs both:
 
@@ -129,9 +140,10 @@ package execution gates exist.
 Dataframe examples are offline but executable. The `dataframe-examples` case
 links a temporary Sifr package to the area-local locked uv environment and runs
 real Sifr programs for NumPy, pandas, and Polars. These examples cover array or
-dataframe construction, library operations, conversion back into typed Sifr
-values, explicit result assertions, and deterministic stdout markers checked by
-the runner. They are separate from the dataframes matrix case so reviewers can
+dataframe construction and library operations behind hermetic package-local
+bridges, typed declaration results, resource-diagnostic equality, and
+deterministic stdout markers checked by the runner. They are separate from the
+dataframes matrix case so reviewers can
 distinguish package-certification metadata from compiled Sifr execution
 evidence. Runner self-tests validate report aggregation and fixture drift; the
 actual Cargo/Sifr/venv execution path is covered by `--dataframe-examples`.
@@ -155,11 +167,11 @@ runner self-test.
 
 ML examples are offline but executable. The `ml-examples` suite uses the same
 temporary-package execution path and runs real Sifr programs for torch and
-scikit-learn. The torch example constructs a CPU `float32` tensor, performs
-tensor math, converts results back to typed Sifr values, and validates DLPack
-metadata/release. The scikit-learn example trains a deterministic decision tree,
-predicts labels, copies predictions/classes back into typed Sifr lists, and
-checks deterministic stdout markers.
+scikit-learn through typed declarations over hermetic bridges. The torch bridge
+constructs a CPU `float32` tensor and validates tensor math and shape metadata;
+the scikit-learn bridge trains a deterministic decision tree and checks its
+predictions/classes. Both compiled Sifr callers require resource diagnostics to
+return to their baseline and emit deterministic markers.
 
 DLPack declaration examples are offline, compiled, and blocking in every
 delivery profile. The `dlpack-examples` suite runs real PyTorch and TensorFlow
@@ -175,7 +187,9 @@ stream/device mismatches, and exact-once cleanup remain blocking evidence.
 
 Library examples are offline but executable. The `library-examples` suite covers
 the remaining non-service, non-host-dependent library contracts that previously
-had only matrix or JSON/source-fixture evidence:
+had only matrix or JSON/source-fixture evidence. Complex library-specific
+object graphs stay in hermetic bridges; compiled Sifr calls typed declarations
+and verifies that ordinary object/leak diagnostics return to their baseline:
 
 - biip GTIN parsing and schwifty BIC validation.
 - pyarrow array compute plus Arrow PyCapsule metadata/release.
