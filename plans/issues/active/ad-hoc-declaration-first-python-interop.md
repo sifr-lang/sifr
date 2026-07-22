@@ -2441,7 +2441,7 @@ Delivery waves:
 - [x] Wave 2 — replace Python-client live service execution with built Sifr
   binaries for Redis, Postgres, Kafka, direct SQS, and SNS-to-SQS delivery,
   including callback handoff and structured host skips.
-- [ ] Wave 3 — consolidate compiled callback, async HTTP, Arrow, DLPack, and
+- [x] Wave 3 — consolidate compiled callback, async HTTP, Arrow, DLPack, and
   resource-zero evidence into the capability certification ledger; add the M17
   demo and finish public/internal documentation.
 - [ ] Wave 4 — run authoritative validation, repeat whole-milestone and
@@ -2582,6 +2582,20 @@ suite's recorded invocation arguments to contain exactly its matrix-pinned
 report path before evidence is read. A rebinding self-test removes that report
 argument and proves rejection with `invocation drift`; the exact importlib path,
 runner foundation, and full five-suite `7/10/4` demo pass after remediation.
+
+The first attempted third review exited without a verdict and is not counted as
+closure evidence. The replacement whole-diff Fable High
+[satisfaction pass](../../reviews/active/ad-hoc-declaration-first-python-interop-m17-wave3-fable-high-review-pass-4.md)
+re-probed correct, wrong-suite, extra-report, missing-report, dangling-report,
+empty-case, and malformed-argument forms; it verified every drifted form fails
+before report loading, rescanned the whole milestone, and returned
+**SATISFIED** with no blocker, major, or actionable minor.
+The final reviewer-approved `create-pr` gate passes every blocking lane in
+`766.39s`: Python interop `19/19`, create-PR E2E `131/131` with signature
+`7c39b8c1dd4fec7c`, runtime-platform `28` variants with zero failures and one
+declared capability skip, and hardening `6/6`. Only the aggregate warm
+wall-time target is advisory. Wave 3 is closure-approved in
+[PR #2999](https://github.com/sifr-lang/sifr/pull/2999).
 
 Tasks:
 
