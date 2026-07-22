@@ -129,6 +129,48 @@ pub fn py_call_attr(
     ))
 }
 
+pub fn py_call_keyed(
+    object: &PythonObject,
+    args: &[PythonObject],
+    kwargs: &[(String, PythonObject)],
+) -> Result<PythonObject, PythonError> {
+    let keys = kwargs
+        .iter()
+        .map(|(key, _value)| key.clone())
+        .collect::<Vec<_>>();
+    let values = kwargs
+        .iter()
+        .map(|(_key, value)| object_value(value).cloned())
+        .collect::<Result<Vec<_>, _>>()?;
+    wrap(python::call_object(
+        object_value(object)?,
+        &object_values(args)?,
+        &keyed_objects(&keys, &values)?,
+    ))
+}
+
+pub fn py_call_attr_keyed(
+    object: &PythonObject,
+    name: &str,
+    args: &[PythonObject],
+    kwargs: &[(String, PythonObject)],
+) -> Result<PythonObject, PythonError> {
+    let keys = kwargs
+        .iter()
+        .map(|(key, _value)| key.clone())
+        .collect::<Vec<_>>();
+    let values = kwargs
+        .iter()
+        .map(|(_key, value)| object_value(value).cloned())
+        .collect::<Result<Vec<_>, _>>()?;
+    wrap(python::call_attr(
+        object_value(object)?,
+        name,
+        &object_values(args)?,
+        &keyed_objects(&keys, &values)?,
+    ))
+}
+
 pub fn py_close(object: PythonObject) -> Result<(), PythonError> {
     drop(object);
     Ok(())

@@ -22,7 +22,7 @@ impl RustEmitter {
             intrinsic, args, ..
         } = expr
         {
-            return Ok(self.try_lower_registry_intrinsic_call_expr(*intrinsic, args));
+            return Ok(self.try_lower_registry_intrinsic_call_expr(*intrinsic, args, expr.ty()));
         }
         if let Some((func, args)) = call_expr_parts(expr) {
             if func == "print" {

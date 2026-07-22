@@ -10,7 +10,7 @@ use super::{
     HirExpr, LowerCtx, ParamConvention, Ranged, Type,
 };
 use crate::lower::type_bounds::supports_print_formatting;
-use crate::lower::{ipc_payload_calls, parallel_calls};
+use crate::lower::{ipc_payload_calls, parallel_calls, python_interop};
 
 pub(super) fn lower_regular_call(
     func_name: String,
@@ -481,6 +481,11 @@ pub(super) fn lower_regular_call(
             collect_type_vars(expected_type, &mut expected_type_vars);
             if expected_type_vars.is_empty() {
                 infer_type_var_bindings(&ft.return_type, expected_type, &mut bindings);
+                if bindings.is_empty() {
+                    if let Type::Result(ok_type, _error_type) = ft.return_type.resolve_alias() {
+                        infer_type_var_bindings(ok_type, expected_type, &mut bindings);
+                    }
+                }
             }
         }
         for (arg, (_, param_ty, _)) in args.iter().zip(ft.params.iter()) {
@@ -631,6 +636,13 @@ pub(super) fn lower_regular_call(
     };
 
     if let Some(intrinsic) = ctx.compiler_intrinsics.get(&func_name).copied() {
+        python_interop::validate_raw_conversion_intrinsic(
+            intrinsic,
+            &args,
+            &call_type,
+            call.range(),
+            ctx,
+        );
         let intrinsic_arg_ranges = arg_ranges
             .iter()
             .map(|range| range.unwrap_or_else(|| call.range()))

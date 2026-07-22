@@ -170,6 +170,9 @@ pub enum CompilerIntrinsicId {
     BytesDecode,
     BytesDecodeWithEncoding,
     TaskCurrentContext,
+    PythonFromValue,
+    PythonToValue,
+    PythonKwarg,
 }
 
 impl CompilerIntrinsicId {
@@ -193,6 +196,9 @@ impl CompilerIntrinsicId {
             Self::BytesDecode => "bytes_decode",
             Self::BytesDecodeWithEncoding => "bytes_decode_with_encoding",
             Self::TaskCurrentContext => "task_current_context",
+            Self::PythonFromValue => "python_from_value",
+            Self::PythonToValue => "python_to_value",
+            Self::PythonKwarg => "python_kwarg",
         }
     }
 
@@ -216,6 +222,9 @@ impl CompilerIntrinsicId {
             "bytes_decode" => Self::BytesDecode,
             "bytes_decode_with_encoding" => Self::BytesDecodeWithEncoding,
             "task_current_context" => Self::TaskCurrentContext,
+            "python_from_value" => Self::PythonFromValue,
+            "python_to_value" => Self::PythonToValue,
+            "python_kwarg" => Self::PythonKwarg,
             _ => return None,
         })
     }

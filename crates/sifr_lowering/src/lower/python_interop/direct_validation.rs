@@ -2,6 +2,40 @@ use super::{
     arrow, buffer, dlpack, invalid_shape, is_direct_type, unsupported_conversion, HirParam,
     LowerCtx, PythonInteropDeclaration, PythonInteropEffect, PythonParameterKind, Type,
 };
+use ruff_text_size::TextRange;
+use sifr_diagnostics::DiagnosticCode;
+use sifr_ir::{CompilerIntrinsicId, HirExpr};
+
+pub(in crate::lower) fn validate_raw_conversion_intrinsic(
+    intrinsic: CompilerIntrinsicId,
+    args: &[HirExpr],
+    result_type: &Type,
+    span: TextRange,
+    ctx: &mut LowerCtx,
+) {
+    let conversion_type = match intrinsic {
+        CompilerIntrinsicId::PythonFromValue => args.first().map(HirExpr::ty),
+        CompilerIntrinsicId::PythonKwarg => args.get(1).map(HirExpr::ty),
+        CompilerIntrinsicId::PythonToValue => match result_type.resolve_alias() {
+            Type::Result(ok_type, _error_type) => Some(ok_type.as_ref()),
+            _ => None,
+        },
+        _ => return,
+    };
+    let Some(conversion_type) = conversion_type else {
+        return;
+    };
+    if !is_direct_type(conversion_type, true, ctx) {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE,
+            format!(
+                "unsupported raw Python conversion type: `{}` is not in the declaration conversion set",
+                conversion_type.display_name()
+            ),
+            span,
+        );
+    }
+}
 
 pub(super) fn validate_direct_parameters(
     declaration: &PythonInteropDeclaration,

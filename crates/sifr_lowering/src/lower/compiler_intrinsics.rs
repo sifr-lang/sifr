@@ -140,5 +140,8 @@ const fn is_source_declared_callable(id: CompilerIntrinsicId) -> bool {
             | CompilerIntrinsicId::TestAssertGreaterThan
             | CompilerIntrinsicId::TestAssertLessThan
             | CompilerIntrinsicId::TaskCurrentContext
+            | CompilerIntrinsicId::PythonFromValue
+            | CompilerIntrinsicId::PythonToValue
+            | CompilerIntrinsicId::PythonKwarg
     )
 }

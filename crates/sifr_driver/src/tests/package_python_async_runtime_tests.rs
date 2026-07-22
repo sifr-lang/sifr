@@ -234,21 +234,19 @@ fn raw_coroutine_api_builds_and_runs_on_the_owned_loop() {
     write_package_source(
         &app,
         "main.sifr",
-        r#"from sifr.python import Object, PythonError, call_attr, close, from_float, from_int, import_module, run_coroutine_blocking, to_int
+        r#"from sifr.python import Object, PythonError, from_value, import_module, kwarg, resource_diagnostics, run_coroutine_blocking, to_value
+from sifr.python_core import ResourceDiagnostics
 
 @trust_python_dynamic
 @blocking_io
 def python_value() -> Result[int, PythonError]:
     try:
         asyncio: Object = import_module("asyncio")
-        delay: Object = from_float(0.0)
-        expected: Object = from_int(42)
-        coroutine: Object = call_attr(asyncio, "sleep", [delay], [("result", expected)])
+        delay: Object = from_value(0.0)
+        result_kwarg: tuple[str, Object] = kwarg("result", 42)
+        coroutine: Object = asyncio.call_method("sleep", [delay], [result_kwarg])
         result_object: Object = run_coroutine_blocking(coroutine)
-        result: int = to_int(result_object)
-        _closed_result: None = close(result_object)
-        _closed_coroutine: None = close(coroutine)
-        _closed_asyncio: None = close(asyncio)
+        result: int = to_value(result_object)
         return result
     except PythonError as error:
         raise error
@@ -256,9 +254,12 @@ def python_value() -> Result[int, PythonError]:
 @blocking_io
 def main() -> Result[None, PythonError]:
     try:
+        before: ResourceDiagnostics = resource_diagnostics()
         value: int = python_value()
         assert value == 42
-        print("sifr-python-interop:owned-async-loop:value=42")
+        after: ResourceDiagnostics = resource_diagnostics()
+        assert after.live_objects == before.live_objects
+        print("sifr-python-interop:owned-async-loop:value=42:released")
     except PythonError as error:
         raise error
     return None
@@ -283,7 +284,7 @@ def main() -> Result[None, PythonError]:
     );
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
-        "sifr-python-interop:owned-async-loop:value=42"
+        "sifr-python-interop:owned-async-loop:value=42:released"
     );
     let _ignored = std::fs::remove_dir_all(dir);
 }

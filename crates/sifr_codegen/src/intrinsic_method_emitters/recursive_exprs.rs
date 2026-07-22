@@ -53,7 +53,7 @@ impl RustEmitter {
             }
             HirExpr::IntrinsicCall {
                 intrinsic, args, ..
-            } => self.try_lower_registry_intrinsic_call_expr(*intrinsic, args),
+            } => self.try_lower_registry_intrinsic_call_expr(*intrinsic, args, expr.ty()),
             HirExpr::Call { func, args, .. } => {
                 if let Some(lowered) =
                     self.try_lower_registry_builtin_call_expr(func, args, Some(expr.ty()))

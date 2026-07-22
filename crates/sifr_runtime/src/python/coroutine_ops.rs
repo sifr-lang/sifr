@@ -106,6 +106,44 @@ mod tests {
     }
 
     #[test]
+    fn raw_coroutine_python_failure_returns_checked_error_on_owned_loop() {
+        let _guard = test_guard();
+        reset_runtime_state_for_tests();
+        let mut config = test_config("raw-failure");
+        config
+            .required_import_roots
+            .push("__sifr_async_identity__".to_string());
+        config
+            .trusted_import_roots
+            .push("__sifr_async_identity__".to_string());
+        initialize_runtime(config).expect("init should preserve owned-loop startup");
+        install_identity_module();
+
+        let module = import_module("__sifr_async_identity__").expect("module should import");
+        let fail = get_attr(&module, "fail").expect("failure function should resolve");
+        let coroutine = call_object(&fail, &[], &[]).expect("coroutine should be created");
+        let error =
+            run_coroutine_blocking(&coroutine).expect_err("Python failure should be checked");
+
+        assert_eq!(error.kind, "await");
+        assert_eq!(error.exception_type, "ValueError");
+        assert!(error.message.contains("raw failure"));
+        drop(error);
+        for handle in [module, fail, coroutine] {
+            close_object(handle).expect("failure handle should close");
+        }
+        super::super::async_runtime::shutdown().expect("owned loop should stop");
+        assert_eq!(
+            shutdown_diagnostics().expect("diagnostics should be available"),
+            PythonRuntimeDiagnostics {
+                initialized: true,
+                live_objects: 0,
+                leaked_objects: 0,
+            }
+        );
+    }
+
+    #[test]
     fn shutdown_cancels_and_joins_an_in_flight_raw_coroutine() {
         let _guard = test_guard();
         reset_runtime_state_for_tests();
@@ -152,7 +190,7 @@ mod tests {
         super::super::attach(|py| {
             let module = PyModule::from_code(
                 py,
-                c"import asyncio\nimport threading\n\nasync def identity():\n    return f'{id(asyncio.get_running_loop())}:{threading.get_ident()}'\n\nasync def wait():\n    await asyncio.sleep(60)\n",
+                c"import asyncio\nimport threading\n\nasync def identity():\n    return f'{id(asyncio.get_running_loop())}:{threading.get_ident()}'\n\nasync def fail():\n    raise ValueError('raw failure')\n\nasync def wait():\n    await asyncio.sleep(60)\n",
                 c"<sifr-async-identity>",
                 c"__sifr_async_identity__",
             )

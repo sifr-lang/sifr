@@ -1,0 +1,67 @@
+from sifr.python import Object, PythonError, from_value, import_module, kwarg, resource_diagnostics, to_value
+from sifr.python_core import ResourceDiagnostics
+
+
+class Payload:
+    label: str
+    values: list[int]
+
+    def __init__(self, label: str, values: list[int]):
+        self.label = label
+        self.values = values
+
+
+@blocking_io
+def exercise() -> Result[str, PythonError]:
+    try:
+        payload_object: Object = from_value(Payload("sifr", [3, 6, 9]))
+        payload: Payload = to_value(payload_object)
+        assert payload.values == [3, 6, 9]
+
+        label_object: Object = payload_object.get_item("label")
+        upper: Object = label_object.call_method("upper", [], [])
+        upper_text: str = to_value(upper)
+
+        math: Object = import_module("math")
+        eighty_one: Object = from_value(81.0)
+        root_object: Object = math.call_method("sqrt", [eighty_one], [])
+        root: float = to_value(root_object)
+        assert root == 9.0
+
+        template: Object = from_value("{label}:{root}")
+        label_kwarg: tuple[str, Object] = kwarg("label", upper_text)
+        root_kwarg: tuple[str, Object] = kwarg("root", 9)
+        rendered_object: Object = template.call_method(
+            "format",
+            [],
+            [label_kwarg, root_kwarg],
+        )
+        return to_value(rendered_object)
+    except PythonError as error:
+        raise error
+
+
+@blocking_io
+def conversion_fails_safely() -> Result[bool, PythonError]:
+    try:
+        text: Object = from_value("not an integer")
+        invalid: int = to_value(text)
+        return invalid == 0
+    except PythonError as error:
+        return error.kind == "conversion"
+
+
+@blocking_io
+def main() -> Result[None, PythonError]:
+    try:
+        before: ResourceDiagnostics = resource_diagnostics()
+        rendered: str = exercise()
+        assert rendered == "SIFR:9"
+        failed_safely: bool = conversion_fails_safely()
+        assert failed_safely
+        after: ResourceDiagnostics = resource_diagnostics()
+        assert after.live_objects == before.live_objects
+        print("Python raw API demo: " + rendered + ":resources=zero")
+        return None
+    except PythonError as error:
+        raise error

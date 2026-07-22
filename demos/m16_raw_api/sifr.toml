@@ -1,0 +1,16 @@
+[package]
+name = "python_raw_api_demo"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[python]
+venv = ".venv"
+pyproject = "pyproject.toml"
+lock = "uv.lock"
+requires-imports = ["math"]
+
+[trust]
+python = ["math"]

@@ -2313,6 +2313,46 @@ Validation:
 
 Depends on M1 shared identity, M7 owned loop, and M10-M12 affine resources.
 
+Delivery waves:
+
+- [x] Wave 1 — inventory the existing sealed-object runtime and lock one generic
+  conversion authority shared with declaration conversion.
+- [x] Wave 2 — add public typed `from_value`/`to_value` conversion and typed
+  keyword construction without exposing handles or parallel ownership state.
+- [x] Wave 3 — add method-style attribute, item, call, and call-method helpers on
+  the canonical `sifr.python.Object`, retaining checked `Result` errors.
+- [x] Wave 4 — prove ordinary automatic drop and raw/declaration cleanup
+  equivalence, and prove raw coroutine execution uses the application-owned
+  loop under success, failure, concurrency, cancellation, and shutdown.
+- [ ] Wave 5 — add focused verification/demo/docs, run authoritative validation,
+  repeat whole-milestone review to satisfaction, close the ledger, and merge.
+
+Implementation candidate: the public generic intrinsics reuse the declaration
+input/output converters and canonical sealed `Object`; typed kwargs erase only
+after conversion into the existing `(str, Object)` shape. Compiler-known
+`Object.get_attr`, `get_item`, `call`, and `call_method` signatures retain
+checked `Result[Object, PythonError]` behavior without adding source-visible
+handle fields or a parallel ownership type. Native package evidence exercises
+closed-record and nested-list round trips, typed heterogeneous kwargs,
+attribute/item/call operations, conversion failure, and equality of live-object
+counts across success and handled-error exits. The owned-loop package test now
+uses generic conversion and automatic release rather than a manual close chain;
+the raw coroutine and exact-task runtime suites cover shared loop identity,
+Python failure, concurrency, cancellation, terminal drain, and shutdown.
+
+Focused validation passes: the typed raw package and owned-loop package build
+and execute against a probed local CPython runtime; the recursive mapping-field
+regression passes with the Python runtime feature; raw coroutine `4/4` and
+owned-loop terminal/cancellation `14/14` pass; all `537` E2E fail fixtures pass,
+including the new unsupported-conversion and async blocking-effect cases; and
+the Python interop scaffold accepts the new source fixture and capability
+owners. The authoritative create-PR gate also passes every blocking lane,
+including Python interop `19/19`, the core-language E2E suite `131/131`, and all
+crate, guardrail, diagnostics, tooling, runtime, and generated-code checks. Its
+only advisory is the aggregate warm wall-time target; every blocking per-step
+budget passes. Frozen whole-diff review remains required before Wave 5 can
+close.
+
 Tasks:
 
 - Improve raw `sifr.python` with sealed automatic ownership, typed generic

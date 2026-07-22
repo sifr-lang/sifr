@@ -208,3 +208,28 @@ issue = "python-runtime-boundary"
 evidence_links = ["declaration-first-python-runtime"]
 reason = "Generated declaration-first Python wrappers are compiler-owned boundary glue that must call the sealed sifr_runtime::python identity, conversion, invocation, and lifecycle substrate directly."
 direct_runtime_roots = ["sifr_runtime::python"]
+
+[[surface]]
+id = "sifr.python::typed_raw_api"
+state = "retained-by-design"
+owner = "python-runtime-boundary"
+issue = "python-runtime-boundary"
+evidence_links = ["declaration-first-python-runtime"]
+declaration_files = ["stdlib/sifr/python.sifr"]
+reason = "Typed raw from_value, to_value, and kwarg calls require compiler-owned generic specialization so they reuse the exact declaration conversion plan and canonical sealed Object representation without exposing a parallel runtime type."
+lowering_files = [
+  "crates/sifr_lowering/src/lower/python_interop/direct_validation.rs",
+]
+codegen_files = [
+  "crates/sifr_codegen/src/python_raw_api_codegen.rs",
+]
+exact_intrinsics = [
+  "python_from_value",
+  "python_kwarg",
+  "python_to_value",
+]
+source_declared_intrinsics = [
+  "python_from_value",
+  "python_kwarg",
+  "python_to_value",
+]

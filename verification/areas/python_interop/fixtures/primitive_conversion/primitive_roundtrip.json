@@ -27,6 +27,11 @@
       "name": "explicit_typed_container_copies",
       "operations": ["copy_list_int", "copy_list_u8", "copy_tuple_i32", "copy_dict_str_int", "copy_record_fields"],
       "expected": "Python lists, tuples, dictionaries, and record fields are copied only through explicit typed conversion APIs"
+    },
+    {
+      "name": "generic_raw_conversion_and_methods",
+      "operations": ["from_value", "to_value", "kwarg", "Object.get_attr", "Object.get_item", "Object.call", "Object.call_method"],
+      "expected": "Generic conversion reuses the declaration conversion set, typed kwargs erase only to the canonical sealed Object, and method-style operations return checked Results"
     }
   ],
   "negative_cases": [
@@ -65,6 +70,6 @@
   ],
   "non_goals": [
     "Deep list, tuple, dict, and record conversions are never performed implicitly by primitive constructors or Python call arguments.",
-    "Generic py.to[T] syntax remains future sugar over explicit typed conversion APIs until HIR lowering preserves explicit type arguments for intrinsics."
+    "Arbitrary unions, mapping-key types, callables, and affine protocol resources remain outside raw generic conversion and require a declaration or package bridge."
   ]
 }

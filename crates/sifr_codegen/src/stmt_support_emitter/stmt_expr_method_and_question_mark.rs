@@ -13,6 +13,14 @@ macro_rules! stmt_expr_method_call {
             ..
         } = $expr
         {
+            if let Some(lowered) = $emitter.try_lower_python_raw_object_method(
+                object,
+                method,
+                args,
+                $expr.ty(),
+            ) {
+                return Ok(Some(lowered));
+            }
             if let Some(lowered) = $emitter.try_lower_dict_indexed_list_append_expr($expr) {
                 return Ok(Some(lowered));
             }

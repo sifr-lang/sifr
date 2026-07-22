@@ -116,32 +116,54 @@ Rules:
 - Reinitialization with the same config is allowed; conflicting config is rejected.
 - Every CPython API operation that needs the GIL acquires it.
 - Decref and resource release happen while holding the GIL.
-- `py.Object`, buffers, Arrow capsules, DLPack tensors, and callbacks are tracked for deterministic close/release diagnostics.
+- `py.Object`, buffers, Arrow capsules, DLPack tensors, and callbacks are tracked for deterministic ownership and release diagnostics.
 
 ## Calling Python
 
 The public surface is explicit:
 
 ```python
-from sifr.python import Object, PythonError, call_attr, from_str, import_module, to_str
+from sifr.python import Object, PythonError, from_value, import_module, kwarg, to_value
 
+@blocking_io
 def main() -> Result[None, PythonError]:
     try:
-        biip: Object = import_module("biip")
-        gs1: Object = from_str("01070327700360141524010110ABC123")
-        parsed: Object = call_attr(biip, "parse", [gs1], [])
-        print(to_str(parsed))
+        math: Object = import_module("math")
+        eighty_one: Object = from_value(81.0)
+        root: Object = math.call_method("sqrt", [eighty_one], [])
+        value: float = to_value(root)
+        print(value)
 
-        schwifty: Object = import_module("schwifty")
-        bic_code: Object = from_str("DEUTDEFF")
-        bic: Object = call_attr(schwifty, "BIC", [bic_code], [])
-        print(to_str(bic))
+        template: Object = from_value("{name}:{count}")
+        name_kwarg: tuple[str, Object] = kwarg("name", "sifr")
+        count_kwarg: tuple[str, Object] = kwarg("count", 3)
+        rendered: Object = template.call_method(
+            "format",
+            [],
+            [name_kwarg, count_kwarg],
+        )
+        text: str = to_value(rendered)
+        print(text)
         return None
     except PythonError as e:
         raise e
 ```
 
 Every Python boundary operation returns `Result`. Python exceptions are captured as structured `py.PythonError` values with exception type, message, traceback, operation context, and conversion/resource/zero-copy metadata where relevant. Python exceptions do not unwind through Sifr user code.
+
+`from_value[T]` and `to_value[T]` use the same closed conversion set as typed
+declarations: primitives, supported lists, tuples, `dict[str, T]`, closed
+records, options, opaque declarations, and the canonical sealed `Object`.
+`kwarg[T]` converts a typed value into the existing `(str, Object)` call
+shape. `Object.get_attr`, `get_item`, `call`, and `call_method` are checked
+method-style operations over that same sealed identity.
+
+Ordinary `Object` values release automatically when Sifr ownership ends,
+including return and error paths. Compatibility helpers such as `close` remain
+available when early deterministic release is semantically useful, but normal
+code does not need reverse-order close chains. Raw coroutines submitted with
+`run_coroutine_blocking` use the application-owned Python event loop; they do
+not create a per-call loop.
 
 ## Typed Declarations And Package Bridges
 
