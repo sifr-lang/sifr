@@ -2047,6 +2047,14 @@ closure documentation only, and independently rechecked every remediation and
 ledger claim. It found no blocker, major, or minor issue and returned
 **SATISFIED**. [Frozen closure pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-5-frozen.md)
 
+The fresh authoritative merge profile passes every blocking lane at the frozen
+M14 candidate in `4227.12s`: Python interop `24/24`, E2E `674/674` with
+signature `1f8b1cadc4f48ec8`, diagnostics `175/175`, runtime-platform `30`
+variants with zero failures, and `261` hardening variants with zero failures.
+The warm wall-time and group-skew notices are non-blocking advisories; the gate
+exited successfully and its report is
+`target/validation_lane_reports/merge.latest.json`.
+
 Tasks:
 
 - Add symbol-selective `sifr python bind` from explicit user overrides,
