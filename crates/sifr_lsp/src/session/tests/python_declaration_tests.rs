@@ -417,28 +417,6 @@ fn configured_environment_is_validated_without_python_declarations() {
 }
 
 #[test]
-fn locked_package_without_python_inputs_skips_environment_resolution() {
-    let source = "def main() -> int:\n    return 1\n";
-    let (mut session, temp, uri) = open_fixture(source);
-    std::fs::write(
-        temp.path().join("sifr.toml"),
-        "[package]\nname = \"lsp-pure\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n",
-    )
-    .expect("write pure Sifr manifest");
-    session.record_watcher_events(1);
-
-    let diagnostics = crate::diagnostics::document_diagnostics(&mut session, &uri)
-        .expect("pure package diagnostics");
-
-    assert!(
-        diagnostics.is_empty(),
-        "unexpected diagnostics: {diagnostics:?}"
-    );
-    assert!(temp.path().join("Cargo.lock").is_file());
-    assert_eq!(session.python_declarations.environment_probe_runs(), 0);
-}
-
-#[test]
 fn lockfile_less_package_without_python_inputs_has_no_editor_diagnostic() {
     let source = "def main() -> int:\n    return 1\n";
     let (mut session, temp, uri) = open_fixture(source);
@@ -558,6 +536,11 @@ fn live_bridge_sources_without_inventory_are_validated_and_fingerprinted() {
 fn workspace_member_python_requirements_are_validated() {
     let source = "def main() -> int:\n    return 1\n";
     let (mut session, temp, uri) = open_fixture(source);
+    std::fs::write(
+        temp.path().join("sifr.toml"),
+        "[package]\nname = \"lsp-pure-root\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n",
+    )
+    .expect("write pure root Sifr manifest");
     let cargo_manifest = std::fs::read_to_string(temp.path().join("Cargo.toml"))
         .expect("read root Cargo manifest")
         .replace("[workspace]\n", "[workspace]\nmembers = [\"member\"]\n");
@@ -590,6 +573,32 @@ fn workspace_member_python_requirements_are_validated() {
 
     assert!(diagnostics.iter().any(|diagnostic| {
         diagnostic.get("code").and_then(serde_json::Value::as_str) == Some("SIFR-PYTRUST-0005")
+    }));
+}
+
+#[test]
+fn misplaced_bridge_root_is_reported_for_an_otherwise_pure_package() {
+    let source = "def main() -> int:\n    return 1\n";
+    let (mut session, temp, uri) = open_fixture(source);
+    std::fs::write(
+        temp.path().join("sifr.toml"),
+        "[package]\nname = \"lsp-pure-root\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n",
+    )
+    .expect("write pure root Sifr manifest");
+    let misplaced_root = temp.path().join("python_bridges");
+    std::fs::create_dir_all(&misplaced_root).expect("create misplaced bridge root");
+    std::fs::write(
+        misplaced_root.join("util.py"),
+        "def value():\n    return 1\n",
+    )
+    .expect("write misplaced bridge source");
+    session.record_watcher_events(1);
+
+    let diagnostics = crate::diagnostics::document_diagnostics(&mut session, &uri)
+        .expect("misplaced bridge diagnostics");
+
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.get("code").and_then(serde_json::Value::as_str) == Some("SIFR-PYIMP-0002")
     }));
 }
 

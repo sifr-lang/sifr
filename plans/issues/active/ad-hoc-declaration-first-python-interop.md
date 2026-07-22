@@ -2295,17 +2295,23 @@ Frozen-ledger Fable High
 confirmed the exact pushed PR head remains code-identical to the satisfied
 candidate and returned **SATISFIED**.
 
-The subsequent M16 merge-profile gate exposed one inherited M15 performance
-regression that create-PR did not select: Python environment resolution ran for
-every locked package, including pure-Sifr packages with no declarations,
-bridges, Python manifest/trust configuration, bindings, or certifications. The
-representative LSP diagnostics benchmark therefore launched the canonical
-workspace/package resolver unnecessarily and reached `103.5 MiB` against its
-`80 MiB` budget. Environment resolution now has a cheap exact-input gate while
-configured environments with zero declarations remain validated. A locked
-pure-package regression proves zero environment probes; all Python declaration
-LSP tests pass `24/24`; the direct benchmark falls to `69.7 MiB`; and the full
-representative performance suite passes every budget.
+The subsequent M16 merge-profile gate exposed a benchmark-scope defect that
+create-PR did not select. The nominal local-document LSP diagnostics case used a
+source inside the repository but had no package boundary, so upward discovery
+silently attached it to the complete Sifr workspace; the case reached
+`103.5 MiB` against its `80 MiB` budget after M15 correctly made configured
+package environments validate even without declarations. An attempted
+source-local Python-input shortcut passed the budget but Fable High M16
+[pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-fable-high-review-pass-3.md)
+proved it anti-conservative for workspace-member requirements and misplaced
+bridge roots. The shortcut is fully removed. LSP benchmarks now declare
+`isolated` or `package` workspace mode: isolated cases execute in a minimal
+temporary locked Sifr/Cargo package, while workspace cases retain the checked-in
+package graph. Pure-root workspace-member and misplaced-bridge regressions pin
+`SIFR-PYTRUST-0005` and `SIFR-PYIMP-0002`; all Python declaration LSP tests pass
+`24/24`. The direct isolated-package diagnostics benchmark is `4.02 ms` median
+at `73.1 MiB`, preserving both timing and memory budgets without weakening the
+canonical package-resolution path.
 
 Tasks:
 
@@ -2368,11 +2374,13 @@ paragraph. Both are remediated with exact single-diagnostic checks and the M16
 architecture contract update. Fresh Fable High whole-diff review pass 2 is
 satisfied with no findings after independently rerunning the native package,
 runtime, demo, diagnostic, and guardrail evidence. The authoritative merge gate
-then found the inherited M15 pure-package LSP environment-resolution regression
-recorded above. Its root-cause fix passes the focused LSP, Clippy, formatting,
-file-size, maintainability, and full representative-performance checks. A fresh
-whole-diff review, authoritative merge-gate rerun, and PR merge remain before
-Wave 5 can close.
+then exposed the inherited benchmark-scope defect recorded above. Fable High
+pass 3 rejected the first shortcut remediation with two major false negatives;
+canonical resolution is restored, both findings have discriminating regressions,
+and benchmark workspace mode is now explicit. The full representative suite
+passes `8/8`; its LSP diagnostics case records a `4.009 ms` median, `4.134 ms`
+p95, and `71.5 MiB` peak RSS. Repeated whole-diff review, the authoritative
+merge-gate rerun, and PR merge remain before Wave 5 can close.
 
 Tasks:
 
