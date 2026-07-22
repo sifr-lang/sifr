@@ -2332,7 +2332,12 @@ performance `8/8`, runtime-platform `30` variants with three capability/tooling
 skips, E2E `674/674` with signature `1f8b1cadc4f48ec8`, and hardening `261`
 variants with zero failures. The cold E2E cache (`0/178`), aggregate warm
 wall-time, and group-skew notices are non-blocking advisories; every lane and
-blocking budget passes. M16 is closure-approved for PR merge.
+blocking budget passes. Frozen-ledger Fable High
+[pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-fable-high-review-pass-6.md)
+reconciled every count, timing, signature, skip, and advisory against the gate
+report, confirmed the post-gate diff is ledger-only, rechecked the complete
+implementation, and returned **SATISFIED** with no findings. M16 is
+closure-approved for PR merge.
 
 Tasks:
 
