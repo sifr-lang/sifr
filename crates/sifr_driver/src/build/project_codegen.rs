@@ -130,6 +130,20 @@ pub(super) fn apply_package_runtime_metadata(
                 metadata.arrow_certification_identity(),
             );
         }
+        if !metadata.dlpack_certification_identity().is_empty() {
+            push_cache_key_fragment(
+                &mut generated.cache_key_fragment,
+                "python-dlpack-certifications",
+                metadata.dlpack_certification_identity(),
+            );
+        }
+        if !metadata.binding_identity().is_empty() {
+            push_cache_key_fragment(
+                &mut generated.cache_key_fragment,
+                "python-bindings",
+                metadata.binding_identity(),
+            );
+        }
         generated.python_runtime = Some(metadata);
     }
     Ok(generated)
@@ -247,6 +261,24 @@ mod tests {
             .cache_key_fragment;
 
         assert_ne!(first, second);
+    }
+
+    #[test]
+    fn binding_artifact_changes_package_cache_identity() {
+        let mut first = PackagePythonRuntime::for_tests("/tmp/sifr-py/bin/python", "digest-a");
+        first.set_binding_identity("binding-a".to_string());
+        let mut second = PackagePythonRuntime::for_tests("/tmp/sifr-py/bin/python", "digest-a");
+        second.set_binding_identity("binding-b".to_string());
+
+        let first = apply_package_runtime_metadata(base_project(), Some(first))
+            .expect("first metadata should apply");
+        let second = apply_package_runtime_metadata(base_project(), Some(second))
+            .expect("second metadata should apply");
+        assert_ne!(first.cache_key_fragment, second.cache_key_fragment);
+        assert!(first
+            .cache_key_fragment
+            .as_deref()
+            .is_some_and(|value| value.contains("[python-bindings]\nbinding-a")));
     }
 
     #[test]

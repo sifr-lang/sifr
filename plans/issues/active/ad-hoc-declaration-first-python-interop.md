@@ -65,7 +65,10 @@ are non-blocking advisories. M13's shared read-only driver plan, `python check`
 and `python doctor` CLI surfaces, multi-app/final-app resolution, deferred
 library reporting, executable non-mutation/parity evidence, demo, and docs are
 implemented, locally validated, milestone-reviewed, and closed in
-[PR #2993](https://github.com/sifr-lang/sifr/pull/2993). M14 and later
+[PR #2993](https://github.com/sifr-lang/sifr/pull/2993). M14 binding and
+certification authoring delivery waves 1 through 4 are implemented with focused
+local validation, and the authoritative create-PR gate passes every blocking
+lane; repeated milestone review and merge are in progress. M15 and later
 milestones are not yet implemented.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
@@ -1942,6 +1945,45 @@ Validation:
 ### M14. Binding And Certification Authoring
 
 Depends on M11/M12 certification contracts and M13 shared check plan.
+
+Delivery waves:
+
+- [x] Wave 1 — define the versioned binding-source/fingerprint artifact and a
+  compiler-owned typed declaration scaffold query that rejects unresolved or
+  unsupported Python typing shapes instead of synthesizing raw handles.
+- [x] Wave 2 — implement symbol-selective `sifr python bind` across explicit
+  overrides, selected stub-only packages, `py.typed` inline sources,
+  configured external stubs, and safe target introspection in recorded
+  precedence; add deterministic checked-in source generation and read-only
+  `bind --check` drift reporting.
+- [x] Wave 3 — generalize `sifr python certify` to protocol evidence and
+  fingerprint drift, including Arrow and DLPack artifact creation and
+  within-run assertion rechecks.
+- [x] Wave 4 — add stub-only, inline, native-extension, overload, unresolved,
+  drift, certification, non-mutation, demo, public/internal documentation, and
+  delivery-profile evidence.
+- [ ] Wave 5 — authoritative validation, repeated full milestone review,
+  closure ledger, and merge.
+
+Focused evidence:
+
+- `cargo check --workspace`; complete `sifr_package`, `sifr_driver` Python,
+  `sifr_codegen`, and non-E2E `sifr` tests.
+- workspace clippy with warnings denied, formatting, HIR/driver maintainability,
+  file-size, Python syntax, and diff checks.
+- blocking `binding-authoring` verification for all five source kinds,
+  checked-in compilation, overload/`Any` rejection, ordinary/bind drift parity,
+  and non-mutation.
+- compiled PyTorch and TensorFlow DLPack examples with artifact creation,
+  read-only recheck, stable logical bridge identity, pointer equality, and
+  instrumented exact producer-deleter observation.
+- `demos/m14_python_authoring` generated-source check and compiled execution.
+
+Pre-review validation: the authoritative `create-pr` profile passes every
+blocking lane in `1352.80s`, including Python interop `17/17`, create-PR E2E
+`131/131` with signature `7c39b8c1dd4fec7c`, runtime platform `28/28`, and
+hardening `6/6`. The cold-cache warm wall-time notice is a non-blocking
+advisory; every per-step blocking budget passes.
 
 Tasks:
 

@@ -1,5 +1,13 @@
-use crate::cli_model_and_entrypoint::{package_diagnostic, DiagnosticFormat, EXIT_USER_DIAGNOSTIC};
-use crate::diagnostic_rendering_and_run::render_diagnostics;
+use crate::check_and_package_commands::{
+    declaration_python_requirements, load_package_graph_context,
+};
+use crate::cli_model_and_entrypoint::{
+    diagnostic_with_code, package_diagnostic, DiagnosticFormat, EXIT_USER_DIAGNOSTIC,
+};
+use crate::diagnostic_rendering_and_run::{
+    current_session_package_id, package_session_for_cwd, render_diagnostics,
+};
+use std::path::PathBuf;
 
 pub(super) fn package_python_runtime(
     graph: &sifr_package::SifrPackageGraph,
@@ -23,7 +31,8 @@ pub(super) fn package_python_runtime(
     let Some(resolved) = resolved else {
         return Ok(None);
     };
-    package_python_runtime_from_resolved(graph, package_id, resolved, diagnostic_format).map(Some)
+    package_python_runtime_from_resolved(graph, package_id, resolved, true, diagnostic_format)
+        .map(Some)
 }
 
 pub(super) struct PackagePythonCheckRuntime {
@@ -68,6 +77,7 @@ pub(super) fn package_python_runtime_for_check(
                 graph,
                 package_id,
                 resolved,
+                true,
                 diagnostic_format,
             )?;
             Ok(PackagePythonCheckRuntime {
@@ -82,6 +92,7 @@ fn package_python_runtime_from_resolved(
     graph: &sifr_package::SifrPackageGraph,
     package_id: &sifr_package::SifrPackageId,
     resolved: sifr_package::ResolvedPythonEnvironment,
+    load_certifications: bool,
     diagnostic_format: DiagnosticFormat,
 ) -> Result<sifr_driver::PackagePythonRuntime, i32> {
     let request = sifr_package::PythonEnvironmentProbeRequest::from(&resolved);
@@ -105,13 +116,157 @@ fn package_python_runtime_from_resolved(
         .packages
         .get(package_id)
         .map(|package| package.package_root.as_path());
-    if let Some(package_root) = package_root {
-        crate::package_python_certifications::load_into_runtime(
-            package_root,
-            &digest,
-            &mut runtime,
-            diagnostic_format,
-        )?;
+    if load_certifications {
+        if let Some(package_root) = package_root {
+            crate::package_python_certifications::load_into_runtime(
+                package_root,
+                &digest,
+                &mut runtime,
+                diagnostic_format,
+            )?;
+            let authoring_digest = runtime.authoring_environment_digest().to_string();
+            load_python_bindings_into_runtime(
+                package_root,
+                &authoring_digest,
+                &mut runtime,
+                diagnostic_format,
+            )?;
+        }
     }
     Ok(runtime)
+}
+
+fn load_python_bindings_into_runtime(
+    package_root: &std::path::Path,
+    environment_digest: &str,
+    runtime: &mut sifr_driver::PackagePythonRuntime,
+    diagnostic_format: DiagnosticFormat,
+) -> Result<(), i32> {
+    let artifact_path = package_root.join(sifr_package::PYTHON_BINDINGS_FILE);
+    if !artifact_path.is_file() {
+        return Ok(());
+    }
+    match sifr_package::load_python_bindings(package_root, environment_digest) {
+        Ok(artifact) => {
+            let identity = serde_json::to_string(&artifact.bindings).map_err(|error| {
+                render_diagnostics(
+                    &[binding_diagnostic(format!(
+                        "could not fingerprint Python bindings: {error}"
+                    ))],
+                    diagnostic_format,
+                );
+                EXIT_USER_DIAGNOSTIC
+            })?;
+            runtime.set_binding_identity(identity);
+            Ok(())
+        }
+        Err(reason) => {
+            render_diagnostics(
+                &[binding_diagnostic(format!(
+                    "invalid Python binding artifact: {reason}"
+                ))],
+                diagnostic_format,
+            );
+            Err(EXIT_USER_DIAGNOSTIC)
+        }
+    }
+}
+
+pub(super) struct PythonAuthoringContext {
+    pub package_root: PathBuf,
+    pub runtime: sifr_driver::PackagePythonRuntime,
+}
+
+pub(super) fn package_python_authoring_context(
+    lock_mode: sifr_package::CargoLockMode,
+    additional_import_roots: &[String],
+    diagnostic_format: DiagnosticFormat,
+) -> Result<PythonAuthoringContext, i32> {
+    let session = package_session_for_cwd(lock_mode).map_err(|error| {
+        render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
+        crate::cli_model_and_entrypoint::EXIT_USAGE_OR_CONFIG
+    })?;
+    if session.manifest_less_mode {
+        render_diagnostics(
+            &[binding_diagnostic(
+                "Python authoring commands require a Sifr package",
+            )],
+            diagnostic_format,
+        );
+        return Err(crate::cli_model_and_entrypoint::EXIT_USAGE_OR_CONFIG);
+    }
+    let graph_context = load_package_graph_context(&session, lock_mode, diagnostic_format)?
+        .ok_or(crate::cli_model_and_entrypoint::EXIT_USAGE_OR_CONFIG)?;
+    let package_id = current_session_package_id(&session, &graph_context.graph)
+        .ok_or(crate::cli_model_and_entrypoint::EXIT_USAGE_OR_CONFIG)?;
+    let package = graph_context
+        .graph
+        .packages
+        .get(&package_id)
+        .ok_or(crate::cli_model_and_entrypoint::EXIT_USAGE_OR_CONFIG)?;
+    let mut requirements = declaration_python_requirements(&graph_context.source_map, None);
+    requirements.extend(additional_import_roots.iter().map(|root| {
+        sifr_package::PythonRequirementContribution {
+            root: root.clone(),
+            package_id: package_id.clone(),
+            kind: sifr_package::PythonRequirementKind::Declaration,
+            source: "sifr python authoring request".to_string(),
+        }
+    }));
+    let bridge_graph = sifr_package::resolve_python_bridge_graph(&graph_context.graph, &package_id)
+        .map_err(|errors| {
+            render_diagnostics(
+                &errors
+                    .into_iter()
+                    .map(package_diagnostic)
+                    .collect::<Vec<_>>(),
+                diagnostic_format,
+            );
+            EXIT_USER_DIAGNOSTIC
+        })?;
+    requirements.extend(bridge_graph.requirements);
+    requirements.sort();
+    requirements.dedup();
+    let resolved = sifr_package::resolve_python_environment_with_requirements(
+        &graph_context.graph,
+        &package_id,
+        &requirements,
+    )
+    .map_err(|errors| {
+        render_diagnostics(
+            &errors
+                .into_iter()
+                .map(package_diagnostic)
+                .collect::<Vec<_>>(),
+            diagnostic_format,
+        );
+        EXIT_USER_DIAGNOSTIC
+    })?
+    .ok_or_else(|| {
+        render_diagnostics(
+            &[binding_diagnostic(
+                "Python authoring requires a selected package Python environment",
+            )],
+            diagnostic_format,
+        );
+        crate::cli_model_and_entrypoint::EXIT_USER_DIAGNOSTIC
+    })?;
+    let runtime = package_python_runtime_from_resolved(
+        &graph_context.graph,
+        &package_id,
+        resolved,
+        false,
+        diagnostic_format,
+    )?;
+    Ok(PythonAuthoringContext {
+        package_root: package.package_root.clone(),
+        runtime,
+    })
+}
+
+fn binding_diagnostic(message: impl Into<String>) -> sifr_diagnostics::RenderedDiagnostic {
+    diagnostic_with_code(
+        message,
+        sifr_diagnostics::DiagnosticCode::PYCONV_UNSUPPORTED_DECLARATION_TYPE,
+    )
 }

@@ -1,7 +1,7 @@
 use super::test_support::{request, valid_probe};
 use crate::{
-    digest_package_build_cache_inputs, digest_python_environment_probe, PackageBuildCacheInputs,
-    PythonDistributionProbe,
+    digest_package_build_cache_inputs, digest_python_authoring_environment_probe,
+    digest_python_environment_probe, PackageBuildCacheInputs, PythonDistributionProbe,
 };
 
 #[test]
@@ -16,6 +16,23 @@ fn python_probe_digest_includes_canonical_required_roots() {
         digest_python_environment_probe(&first, &probe),
         digest_python_environment_probe(&second, &probe),
         "derived canonical roots must participate in Python build cache identity"
+    );
+}
+
+#[test]
+fn authoring_environment_digest_ignores_entrypoint_import_selection() {
+    let mut first_request = request();
+    first_request.required_imports = vec!["numpy".to_string()];
+    let mut second_request = first_request.clone();
+    second_request.required_imports = vec!["pandas".to_string()];
+    let mut first_probe = valid_probe();
+    first_probe.imports[0].root = "numpy".to_string();
+    let mut second_probe = first_probe.clone();
+    second_probe.imports[0].root = "pandas".to_string();
+
+    assert_eq!(
+        digest_python_authoring_environment_probe(&first_request, &first_probe),
+        digest_python_authoring_environment_probe(&second_request, &second_probe),
     );
 }
 

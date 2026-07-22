@@ -17,7 +17,19 @@ pub(super) fn load_into_runtime(
     }
     match sifr_package::load_python_certifications(package_root, environment_digest) {
         Ok(artifact) => {
-            if let Err(reason) = validate_installed_distributions(runtime, &artifact.arrow) {
+            if let Err(reason) = validate_installed_distributions(
+                runtime,
+                artifact
+                    .arrow
+                    .iter()
+                    .flat_map(|certification| certification.distributions.iter())
+                    .chain(
+                        artifact
+                            .dlpack
+                            .iter()
+                            .flat_map(|certification| certification.distributions.iter()),
+                    ),
+            ) {
                 render_diagnostics(
                     &[diagnostic_with_code(
                         format!("invalid Python certification artifact: {reason}"),
@@ -28,6 +40,7 @@ pub(super) fn load_into_runtime(
                 return Err(EXIT_USER_DIAGNOSTIC);
             }
             runtime.set_arrow_certifications(artifact.arrow);
+            runtime.set_dlpack_certifications(artifact.dlpack);
             Ok(())
         }
         Err(reason) => {
@@ -43,13 +56,12 @@ pub(super) fn load_into_runtime(
     }
 }
 
-fn validate_installed_distributions(
+fn validate_installed_distributions<'a>(
     runtime: &sifr_driver::PackagePythonRuntime,
-    certifications: &[sifr_package::ArrowCertification],
+    distributions: impl IntoIterator<Item = &'a sifr_package::ArrowCertifiedDistribution>,
 ) -> Result<(), String> {
-    let expected = certifications
-        .iter()
-        .flat_map(|certification| certification.distributions.iter())
+    let expected = distributions
+        .into_iter()
         .collect::<std::collections::BTreeSet<_>>();
     validate_distribution_versions(expected, |distribution| {
         let output = Command::new(runtime.interpreter())

@@ -12,6 +12,7 @@ mod diagnostics;
 mod export_policy;
 mod frontend;
 mod project;
+mod python_binding;
 mod stdlib;
 mod test_runner;
 mod workspace;
@@ -32,6 +33,12 @@ pub use diagnostics::{
 };
 pub use frontend::{
     check, compile, compile_with_metadata, lower_source, parse_source, type_check_source,
+};
+pub use python_binding::{
+    render_python_binding_scaffold, PythonBindingDeclaration, PythonBindingDeclarationKind,
+    PythonBindingParameter, PythonBindingParameterKind, PythonBindingProbeError,
+    PythonBindingProbeReport, PythonBindingProbeSource, PythonBindingProbeSymbol,
+    PythonBindingScaffold,
 };
 pub use sifr_codegen::{InteropBuildPlan, LoweringStats};
 pub use stdlib::{

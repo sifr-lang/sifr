@@ -11,6 +11,7 @@ pub struct PackagePythonRuntime {
     sys_prefix: String,
     sys_base_prefix: String,
     probe_digest: String,
+    authoring_environment_digest: String,
     implementation_name: String,
     implementation_version: String,
     cpython_version_tuple: Vec<u64>,
@@ -24,6 +25,9 @@ pub struct PackagePythonRuntime {
     bridge_sources: Vec<EmbeddedPythonBridgeSource>,
     arrow_certifications: Vec<sifr_package::ArrowCertification>,
     arrow_certification_identity: String,
+    dlpack_certifications: Vec<sifr_package::DlpackCertification>,
+    dlpack_certification_identity: String,
+    binding_identity: String,
     start_async_loop: bool,
 }
 
@@ -46,6 +50,8 @@ impl PackagePythonRuntime {
         trusted_import_roots: Vec<String>,
         trusted_native_roots: Vec<String>,
     ) -> Self {
+        let authoring_environment_digest =
+            sifr_package::digest_python_authoring_environment_probe(request, probe).hex;
         Self {
             venv_root: request.venv_root.clone(),
             interpreter: request.interpreter.clone(),
@@ -53,6 +59,7 @@ impl PackagePythonRuntime {
             sys_prefix: probe.sys_prefix.clone(),
             sys_base_prefix: probe.sys_base_prefix.clone(),
             probe_digest,
+            authoring_environment_digest,
             implementation_name: probe.implementation_name.clone(),
             implementation_version: probe.implementation_version.clone(),
             cpython_version_tuple: probe.cpython_version_tuple.clone(),
@@ -66,6 +73,9 @@ impl PackagePythonRuntime {
             bridge_sources: Vec::new(),
             arrow_certifications: Vec::new(),
             arrow_certification_identity: String::new(),
+            dlpack_certifications: Vec::new(),
+            dlpack_certification_identity: String::new(),
+            binding_identity: String::new(),
             start_async_loop: false,
         }
     }
@@ -83,6 +93,11 @@ impl PackagePythonRuntime {
     #[must_use]
     pub fn environment_digest(&self) -> &str {
         &self.probe_digest
+    }
+
+    #[must_use]
+    pub fn authoring_environment_digest(&self) -> &str {
+        &self.authoring_environment_digest
     }
 
     pub fn set_arrow_certifications(
@@ -108,6 +123,38 @@ impl PackagePythonRuntime {
             .find(|certification| certification.target == target)
     }
 
+    pub fn set_dlpack_certifications(
+        &mut self,
+        certifications: Vec<sifr_package::DlpackCertification>,
+    ) {
+        self.dlpack_certification_identity =
+            serde_json::to_string(&certifications).unwrap_or_default();
+        self.dlpack_certifications = certifications;
+    }
+
+    #[must_use]
+    pub(super) fn dlpack_certification_identity(&self) -> &str {
+        &self.dlpack_certification_identity
+    }
+
+    pub fn set_binding_identity(&mut self, identity: String) {
+        self.binding_identity = identity;
+    }
+
+    #[must_use]
+    pub(super) fn binding_identity(&self) -> &str {
+        &self.binding_identity
+    }
+
+    pub(super) fn dlpack_certification(
+        &self,
+        target: &str,
+    ) -> Option<&sifr_package::DlpackCertification> {
+        self.dlpack_certifications
+            .iter()
+            .find(|certification| certification.target == target)
+    }
+
     #[must_use]
     pub(super) fn lowering_options(&self) -> LoweringOptions {
         LoweringOptions {
@@ -128,6 +175,7 @@ impl PackagePythonRuntime {
             sys_prefix: "/tmp/sifr-py".to_string(),
             sys_base_prefix: "/opt/python".to_string(),
             probe_digest: probe_digest.to_string(),
+            authoring_environment_digest: probe_digest.to_string(),
             implementation_name: "cpython".to_string(),
             implementation_version: "3.13.1".to_string(),
             cpython_version_tuple: vec![3, 13, 1],
@@ -141,6 +189,9 @@ impl PackagePythonRuntime {
             bridge_sources: Vec::new(),
             arrow_certifications: Vec::new(),
             arrow_certification_identity: String::new(),
+            dlpack_certifications: Vec::new(),
+            dlpack_certification_identity: String::new(),
+            binding_identity: String::new(),
             start_async_loop: false,
         }
     }

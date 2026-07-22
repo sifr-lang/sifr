@@ -1,11 +1,11 @@
 # Declaration-First Python Interop Architecture
 
-Status: production contract. Synchronous declarations, opaque lifecycle,
-synchronous contexts, package-local bridges, typed coroutine declarations,
-consuming async close and async contexts, typed callbacks, and typed zero-copy
-buffer declarations are active. Remaining zero-copy protocol sections stay the
-ordered target contract until their implementations activate. The
-embedded runtime contract is also documented in
+Status: implemented production contract through binding and certification
+authoring. Synchronous declarations, opaque lifecycle, synchronous and async
+contexts, package-local bridges, typed coroutines, callbacks, buffers, Arrow,
+DLPack, read-only inspection, symbol-selective binding generation, and
+executable Arrow/DLPack certification are active. The embedded runtime contract
+is also documented in
 [`python_interop_architecture.md`](./python_interop_architecture.md).
 
 ## Problem
@@ -568,8 +568,8 @@ sifr python bind --check
 ```
 
 Resolution follows an explicit source order recorded in the binding: user
-overrides, selected stub-only packages, `py.typed` packages, then an explicitly
-configured external stub distribution. Runtime
+overrides, selected stub-only packages, `py.typed` packages, explicitly
+configured external stubs, then safe runtime introspection. Runtime
 introspection may confirm target existence and callable shape where available,
 but it cannot be required because C extension callables may expose no
 signature.
@@ -579,10 +579,13 @@ Python `object`, `Callable[..., Any]`, unknown overloads, unsupported generics,
 dynamic attributes, or unsupported conversion types. It must never silently
 replace an unsupported type with `py.Object`.
 
-Generated declarations record a binding-source fingerprint containing SOABI,
-resolved distribution version, source-kind precedence, and hashes of consumed
-stub files. `sifr python bind --check` compares that fingerprint without
-rewriting declarations or the environment.
+Generated declarations and `sifr.python-bindings.json` are checked-in package
+inputs. Their binding-source fingerprint contains SOABI, resolved distribution
+version, source-kind precedence, and hashes of consumed typing files. Ordinary
+check/build validates checked-in output and package-local typing hashes and adds
+the artifact identity to the generated-build cache. `sifr python bind --check`
+also reruns every winning source and generated scaffold without rewriting
+declarations or the environment.
 
 ## Compiler And Build Model
 

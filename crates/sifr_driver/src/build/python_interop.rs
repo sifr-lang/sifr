@@ -101,62 +101,8 @@ fn apply_python_interop_metadata_with_policy(
         )]);
     };
 
-    let mut diagnostics = Vec::new();
-    for declaration in generated
-        .interop
-        .python
-        .declarations
-        .iter()
-        .filter(|declaration| {
-            declaration.declaration.kind == sifr_ir::PythonInteropDecoratorKind::Arrow
-        })
-    {
-        let Some(target) = declaration.declaration.target.as_ref() else {
-            continue;
-        };
-        let target = declaration
-            .certification_target
-            .clone()
-            .unwrap_or_else(|| target.dotted());
-        let Some(certification) = runtime.arrow_certification(&target) else {
-            diagnostics.push(diagnostic_with_code(
-                format!(
-                    "Arrow declaration target '{target}' has no exact executable no-copy certification for the selected Python environment"
-                ),
-                DiagnosticCode::PYZC_INVALID_DECLARATION,
-            ));
-            continue;
-        };
-        let requested = declaration.declaration.arrow.as_ref().is_some_and(|arrow| {
-            matches!(
-                arrow.schema,
-                sifr_ir::PythonArrowSchemaMode::Parameter { .. }
-            )
-        });
-        let certified_requested =
-            certification.schema_mode == sifr_package::ArrowCertifiedSchemaMode::Parameter;
-        if requested != certified_requested {
-            diagnostics.push(diagnostic_with_code(
-                format!(
-                    "Arrow declaration target '{target}' schema-request mode does not match its executable certification"
-                ),
-                DiagnosticCode::PYZC_INVALID_DECLARATION,
-            ));
-        }
-        if declaration
-            .declaration
-            .arrow
-            .as_ref()
-            .is_some_and(|arrow| !certified_kind_matches(certification.kind, arrow.kind))
-        {
-            diagnostics.push(diagnostic_with_code(
-                format!(
-                    "Arrow declaration target '{target}' return kind does not match its executable certification"
-                ),
-                DiagnosticCode::PYZC_INVALID_DECLARATION,
-            ));
-        }
-    }
+    let mut diagnostics =
+        super::python_certification::validate_protocol_certifications(&generated, runtime);
     for probe in &mut generated.interop.python.target_probes {
         if probe.target_path.starts_with("__sifr_bridge__.") {
             continue;
@@ -250,31 +196,6 @@ fn apply_python_interop_metadata_with_policy(
     } else {
         Err(diagnostics)
     }
-}
-
-const fn certified_kind_matches(
-    certified: sifr_package::ArrowCertifiedKind,
-    declared: sifr_type_system::PythonArrowKind,
-) -> bool {
-    matches!(
-        (certified, declared),
-        (
-            sifr_package::ArrowCertifiedKind::Array,
-            sifr_type_system::PythonArrowKind::Array
-        ) | (
-            sifr_package::ArrowCertifiedKind::Schema,
-            sifr_type_system::PythonArrowKind::Schema
-        ) | (
-            sifr_package::ArrowCertifiedKind::Stream,
-            sifr_type_system::PythonArrowKind::Stream
-        ) | (
-            sifr_package::ArrowCertifiedKind::DeviceArray,
-            sifr_type_system::PythonArrowKind::DeviceArray
-        ) | (
-            sifr_package::ArrowCertifiedKind::DeviceStream,
-            sifr_type_system::PythonArrowKind::DeviceStream
-        )
-    )
 }
 
 fn validate_signature(
@@ -592,31 +513,39 @@ mod tests {
     }
 
     #[test]
-    fn dlpack_target_uses_call_shape_probe_without_arrow_certification() {
+    fn dlpack_target_requires_exact_certification_and_call_shape() {
         let runtime = PackagePythonRuntime::for_tests(python(), "probe");
-        let mut compatible = project("math.sqrt");
-        let declaration = &mut compatible.interop.python.declarations[0].declaration;
-        declaration.kind = sifr_ir::PythonInteropDecoratorKind::Dlpack;
-        declaration.dlpack = Some(sifr_ir::PythonDlpackDeclaration {
-            device: sifr_ir::PythonDlpackDevice::Cpu,
-            stream: sifr_ir::PythonDlpackStreamMode::None,
-            element_type: Some(sifr_type_system::Type::Float),
-        });
-        apply_python_interop_metadata(compatible, Some(&runtime))
-            .expect("DLPack target should need no Arrow certification");
+        let Err(diagnostics) =
+            apply_python_interop_metadata(dlpack_project("math.sqrt"), Some(&runtime))
+        else {
+            panic!("DLPack target must require certification");
+        };
+        assert_eq!(diagnostics[0].code, "SIFR-PYZC-0001");
 
-        let mut incompatible = project("math.pow");
-        let declaration = &mut incompatible.interop.python.declarations[0].declaration;
-        declaration.kind = sifr_ir::PythonInteropDecoratorKind::Dlpack;
-        declaration.dlpack = Some(sifr_ir::PythonDlpackDeclaration {
-            device: sifr_ir::PythonDlpackDevice::Cpu,
-            stream: sifr_ir::PythonDlpackStreamMode::None,
-            element_type: Some(sifr_type_system::Type::Float),
-        });
-        let Err(diagnostics) = apply_python_interop_metadata(incompatible, Some(&runtime)) else {
+        let mut runtime = runtime;
+        runtime.set_dlpack_certifications(vec![dlpack_certification("math.sqrt")]);
+        apply_python_interop_metadata(dlpack_project("math.sqrt"), Some(&runtime))
+            .expect("matching DLPack certification should pass");
+
+        runtime.set_dlpack_certifications(vec![dlpack_certification("math.pow")]);
+        let Err(diagnostics) =
+            apply_python_interop_metadata(dlpack_project("math.pow"), Some(&runtime))
+        else {
             panic!("DLPack target with incompatible arity must fail");
         };
         assert_eq!(diagnostics[0].code, "SIFR-PYCALL-0001");
+    }
+
+    fn dlpack_project(target: &str) -> GeneratedBinaryProject {
+        let mut generated = project(target);
+        let declaration = &mut generated.interop.python.declarations[0].declaration;
+        declaration.kind = sifr_ir::PythonInteropDecoratorKind::Dlpack;
+        declaration.dlpack = Some(sifr_ir::PythonDlpackDeclaration {
+            device: sifr_ir::PythonDlpackDevice::Cpu,
+            stream: sifr_ir::PythonDlpackStreamMode::None,
+            element_type: Some(sifr_type_system::Type::Float),
+        });
+        generated
     }
 
     #[test]
@@ -781,6 +710,26 @@ mod tests {
             pointer_identity_verified: true,
             exact_release_count: 1,
             copy_performed: false,
+        }
+    }
+
+    fn dlpack_certification(target: &str) -> sifr_package::DlpackCertification {
+        sifr_package::DlpackCertification {
+            target: target.to_string(),
+            fixture: "fixtures/dlpack.py".to_string(),
+            fixture_digest: "digest".to_string(),
+            producer_module: "torch".to_string(),
+            producer_type: "Tensor".to_string(),
+            distributions: vec![sifr_package::ArrowCertifiedDistribution {
+                name: "torch".to_string(),
+                version: "1".to_string(),
+            }],
+            device: sifr_package::DlpackCertifiedDevice::Cpu,
+            stream_policy: sifr_package::DlpackCertifiedStreamPolicy::None,
+            pointer_identity_verified: true,
+            exact_deleter_count: 1,
+            copy_performed: false,
+            within_run_assertions: true,
         }
     }
 }

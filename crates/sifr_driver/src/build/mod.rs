@@ -5,6 +5,7 @@ mod entrypoint_stages;
 mod materialize;
 mod project_codegen;
 mod python_bridges;
+mod python_certification;
 mod python_check;
 mod python_interop;
 mod python_runtime;
