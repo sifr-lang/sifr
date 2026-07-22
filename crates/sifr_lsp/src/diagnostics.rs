@@ -31,7 +31,11 @@ impl DiagnosticsController {
             session.clear_diagnostic_jobs();
             return Ok(());
         }
-        let uris = session.document_uris();
+        let uris = session
+            .document_uris()
+            .into_iter()
+            .filter(|uri| session.can_publish_document_diagnostics(uri))
+            .collect::<Vec<_>>();
         let progress = session.begin_progress(ProgressKind::FullDiagnostics, uris.len());
         if let Some(handle) = &progress {
             publish_progress(

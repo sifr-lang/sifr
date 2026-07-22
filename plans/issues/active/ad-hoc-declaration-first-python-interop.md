@@ -2264,6 +2264,17 @@ and a warm `42/42` cache. Every per-step blocking budget passes; overall warm
 wall time is the only non-blocking advisory. Another frozen whole-diff review
 remains required.
 
+Whole-diff Fable High
+[pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-7.md)
+verified the pass-6 major closed but found one combined lifecycle minor: full
+publication still scheduled an analysis-excluded document, whose expected
+analysis error aborted the diagnostic drain before the eligible sibling's
+owner handoff. Full publication now schedules only documents that can provide
+analysis or load diagnostics, using the same publishability boundary as owner
+election. The close-owner regression includes an excluded document and pins
+the clear-plus-republish transition. Fresh authoritative validation and another
+frozen whole-diff review remain required.
+
 Tasks:
 
 - Add LSP completion, navigation, diagnostics, verified/runtime-checked status,

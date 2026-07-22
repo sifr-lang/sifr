@@ -4,7 +4,9 @@ use serde_json::{json, Value};
 
 #[test]
 fn closing_python_package_diagnostic_owner_republishes_on_remaining_document() {
-    let (mut session, _temp, owner_uri, remaining_uri) = open_two_document_python_package();
+    let (mut session, temp, owner_uri, remaining_uri) = open_two_document_python_package();
+    let excluded_uri = open_excluded_document(&mut session, &temp);
+    assert!(excluded_uri < owner_uri);
 
     let owner_diagnostics = crate::diagnostics::document_diagnostics(&mut session, &owner_uri)
         .expect("owner diagnostics");
@@ -54,6 +56,18 @@ fn closing_python_package_diagnostic_owner_republishes_on_remaining_document() {
 #[test]
 fn unanalyzable_document_cannot_own_python_package_diagnostics() {
     let (mut session, temp, owner_uri, _remaining_uri) = open_two_document_python_package();
+    let excluded_uri = open_excluded_document(&mut session, &temp);
+    assert!(excluded_uri < owner_uri);
+
+    let excluded_error = crate::diagnostics::document_diagnostics(&mut session, &excluded_uri)
+        .expect_err("excluded document must remain outside project analysis");
+    assert!(excluded_error.message().contains("analysis is unavailable"));
+    let owner_diagnostics = crate::diagnostics::document_diagnostics(&mut session, &owner_uri)
+        .expect("publishable owner diagnostics");
+    assert!(contains_code(&owner_diagnostics, "SIFR-PYZC-0001"));
+}
+
+fn open_excluded_document(session: &mut Session, temp: &tempfile::TempDir) -> String {
     let excluded_dir = temp.path().join("a");
     std::fs::create_dir(&excluded_dir).expect("create excluded module directory");
     let excluded_path = excluded_dir.join("aux.sifr");
@@ -62,7 +76,6 @@ fn unanalyzable_document_cannot_own_python_package_diagnostics() {
     let excluded_uri = url::Url::from_file_path(excluded_path)
         .expect("excluded URI")
         .to_string();
-    assert!(excluded_uri < owner_uri);
     session
         .open_document(
             excluded_uri.clone(),
@@ -71,13 +84,7 @@ fn unanalyzable_document_cannot_own_python_package_diagnostics() {
             excluded_source.to_string(),
         )
         .expect("open excluded document");
-
-    let excluded_error = crate::diagnostics::document_diagnostics(&mut session, &excluded_uri)
-        .expect_err("excluded document must remain outside project analysis");
-    assert!(excluded_error.message().contains("analysis is unavailable"));
-    let owner_diagnostics = crate::diagnostics::document_diagnostics(&mut session, &owner_uri)
-        .expect("publishable owner diagnostics");
-    assert!(contains_code(&owner_diagnostics, "SIFR-PYZC-0001"));
+    excluded_uri
 }
 
 fn contains_code(diagnostics: &[Value], code: &str) -> bool {

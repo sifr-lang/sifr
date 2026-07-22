@@ -163,6 +163,10 @@ impl Session {
             .is_ok_and(|document| self.analysis.can_analyze_document(document))
     }
 
+    pub(crate) fn can_publish_document_diagnostics(&self, uri: &str) -> bool {
+        !self.load_diagnostics(uri).is_empty() || self.can_analyze_document(uri)
+    }
+
     pub(crate) fn load_diagnostics(&self, uri: &str) -> &[RenderedDiagnostic] {
         self.analysis.load_diagnostics(uri)
     }
