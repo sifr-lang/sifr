@@ -417,6 +417,28 @@ fn configured_environment_is_validated_without_python_declarations() {
 }
 
 #[test]
+fn locked_package_without_python_inputs_skips_environment_resolution() {
+    let source = "def main() -> int:\n    return 1\n";
+    let (mut session, temp, uri) = open_fixture(source);
+    std::fs::write(
+        temp.path().join("sifr.toml"),
+        "[package]\nname = \"lsp-pure\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n",
+    )
+    .expect("write pure Sifr manifest");
+    session.record_watcher_events(1);
+
+    let diagnostics = crate::diagnostics::document_diagnostics(&mut session, &uri)
+        .expect("pure package diagnostics");
+
+    assert!(
+        diagnostics.is_empty(),
+        "unexpected diagnostics: {diagnostics:?}"
+    );
+    assert!(temp.path().join("Cargo.lock").is_file());
+    assert_eq!(session.python_declarations.environment_probe_runs(), 0);
+}
+
+#[test]
 fn lockfile_less_package_without_python_inputs_has_no_editor_diagnostic() {
     let source = "def main() -> int:\n    return 1\n";
     let (mut session, temp, uri) = open_fixture(source);

@@ -2295,6 +2295,18 @@ Frozen-ledger Fable High
 confirmed the exact pushed PR head remains code-identical to the satisfied
 candidate and returned **SATISFIED**.
 
+The subsequent M16 merge-profile gate exposed one inherited M15 performance
+regression that create-PR did not select: Python environment resolution ran for
+every locked package, including pure-Sifr packages with no declarations,
+bridges, Python manifest/trust configuration, bindings, or certifications. The
+representative LSP diagnostics benchmark therefore launched the canonical
+workspace/package resolver unnecessarily and reached `103.5 MiB` against its
+`80 MiB` budget. Environment resolution now has a cheap exact-input gate while
+configured environments with zero declarations remain validated. A locked
+pure-package regression proves zero environment probes; all Python declaration
+LSP tests pass `24/24`; the direct benchmark falls to `69.7 MiB`; and the full
+representative performance suite passes every budget.
+
 Tasks:
 
 - Add LSP completion, navigation, diagnostics, verified/runtime-checked status,
@@ -2356,7 +2368,11 @@ paragraph. Both are remediated with exact single-diagnostic checks and the M16
 architecture contract update. Fresh Fable High whole-diff review pass 2 is
 satisfied with no findings after independently rerunning the native package,
 runtime, demo, diagnostic, and guardrail evidence. The authoritative merge gate
-and PR merge remain before Wave 5 can close.
+then found the inherited M15 pure-package LSP environment-resolution regression
+recorded above. Its root-cause fix passes the focused LSP, Clippy, formatting,
+file-size, maintainability, and full representative-performance checks. A fresh
+whole-diff review, authoritative merge-gate rerun, and PR merge remain before
+Wave 5 can close.
 
 Tasks:
 

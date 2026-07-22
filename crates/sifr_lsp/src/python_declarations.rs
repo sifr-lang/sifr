@@ -169,7 +169,10 @@ impl Session {
 
         let mut plan = analysis_plan.plan;
         let mut diagnostics = Vec::new();
-        if let Some(root) = package_root.as_deref() {
+        if let Some(root) = package_root
+            .as_deref()
+            .filter(|root| package_has_python_inputs(root, &plan))
+        {
             let environment = self.package_python_environment(root, external_fingerprint, &plan);
             diagnostics.extend(environment.diagnostics.into_iter().map(|diagnostic| {
                 ScopedDiagnostic {
@@ -591,11 +594,14 @@ fn package_input_fingerprint(root: &Path) -> u64 {
         root.join(sifr_package::PYTHON_BINDINGS_FILE),
         root.join(sifr_package::PYTHON_CERTIFICATIONS_FILE),
     ];
-    let interpreter = python_environment_selection(root).map(|selection| {
-        paths.extend(selection.pyproject);
-        paths.extend(selection.lock);
-        selection.interpreter
-    });
+    let interpreter = package_has_static_python_inputs(root)
+        .then(|| python_environment_selection(root))
+        .flatten()
+        .map(|selection| {
+            paths.extend(selection.pyproject);
+            paths.extend(selection.lock);
+            selection.interpreter
+        });
     for path in paths {
         path.hash(&mut hasher);
         match std::fs::read(&path) {
@@ -615,6 +621,35 @@ fn package_input_fingerprint(root: &Path) -> u64 {
         }
     }
     hasher.finish()
+}
+
+fn package_has_python_inputs(root: &Path, plan: &PythonInteropPlan) -> bool {
+    !plan.declarations.is_empty()
+        || !plan.required_import_roots.is_empty()
+        || !plan.target_probes.is_empty()
+        || package_has_static_python_inputs(root)
+}
+
+fn package_has_static_python_inputs(root: &Path) -> bool {
+    if root.join(sifr_package::PYTHON_BINDINGS_FILE).is_file()
+        || root
+            .join(sifr_package::PYTHON_CERTIFICATIONS_FILE)
+            .is_file()
+        || root.join(sifr_package::PYTHON_BRIDGE_ROOT).is_dir()
+    {
+        return true;
+    }
+    let manifest_path = root.join("sifr.toml");
+    let package_id = sifr_package::CargoPackageId("lsp-python-input-probe".to_string());
+    match sifr_package::SifrManifest::load(&package_id, &manifest_path) {
+        Ok(manifest) => {
+            manifest.python != sifr_package::PythonConfig::default()
+                || !manifest.trust.python.is_empty()
+                || !manifest.trust.python_native.is_empty()
+        }
+        // Preserve the canonical package diagnostic path for invalid manifests.
+        Err(_) => true,
+    }
 }
 
 fn hash_python_bridge_inputs(root: &Path, hasher: &mut DefaultHasher) {
