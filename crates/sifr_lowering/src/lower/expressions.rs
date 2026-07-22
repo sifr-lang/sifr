@@ -83,6 +83,7 @@ mod call_shadowable_builtins;
 use call_shadowable_builtins::lower_shadowable_builtin_call;
 mod regular_calls;
 use regular_calls::lower_regular_call;
+mod method_call_arguments;
 mod methods_lambdas_and_comprehensions;
 pub(in crate::lower) use methods_lambdas_and_comprehensions::*;
 mod method_argument_ownership;
@@ -111,6 +112,7 @@ use python_arrow_methods::{
     consume_python_arrow_release_receiver, resolve_python_arrow_method_type,
 };
 mod python_dlpack_methods;
+mod python_raw_object_methods;
 use python_dlpack_methods::{
     consume_python_dlpack_release_receiver, resolve_python_dlpack_method_type,
 };

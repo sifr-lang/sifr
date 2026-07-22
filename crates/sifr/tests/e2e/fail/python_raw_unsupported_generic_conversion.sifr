@@ -1,0 +1,6 @@
+from sifr.python import Object, PythonError, from_value
+
+
+def convert(values: set[int]) -> Result[Object, PythonError]:
+    # expect-error: SIFR-PYCONV-0001
+    return from_value(values)

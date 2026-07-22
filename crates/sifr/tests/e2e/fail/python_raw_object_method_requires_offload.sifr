@@ -1,0 +1,7 @@
+from sifr.python import Object, PythonError
+
+
+async def read_name(value: Object) -> Result[Object, PythonError]:
+    await task.sleep(0.0)
+    # expect-error: SIFR-ASYNC-0003
+    return value.get_attr("name")

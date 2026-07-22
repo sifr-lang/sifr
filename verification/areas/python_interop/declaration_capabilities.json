@@ -203,12 +203,12 @@
       "target_state": "dynamic-only",
       "implementation_status": "active",
       "activation_owner": "raw-api",
-      "required_evidence": ["positive", "negative", "cleanup"],
+      "required_evidence": ["positive", "negative", "cleanup", "cancellation"],
       "evidence": [
-        {"kind": "positive", "status": "passing", "owner": "existing embedded interop raw-object suites"},
-        {"kind": "negative", "status": "passing", "owner": "existing conversion and resource diagnostics"},
-        {"kind": "cleanup", "status": "passing", "owner": "existing outstanding-object assertions"},
-        {"kind": "cancellation", "status": "not-applicable", "owner": "raw coroutine integration owner"},
+        {"kind": "positive", "status": "passing", "owner": "raw_typed_ergonomics.sifr and typed_raw_api_builds_runs_and_releases_ordinary_objects"},
+        {"kind": "negative", "status": "passing", "owner": "python_raw_unsupported_generic_conversion.sifr plus blocking-effect fixtures"},
+        {"kind": "cleanup", "status": "passing", "owner": "typed raw package live-object equality and recursive runtime drop assertions"},
+        {"kind": "cancellation", "status": "passing", "owner": "coroutine_ops and async_runtime exact-task cancellation/shutdown suites"},
         {"kind": "live", "status": "not-applicable", "owner": "inventory is not used as live certification"}
       ]
     },

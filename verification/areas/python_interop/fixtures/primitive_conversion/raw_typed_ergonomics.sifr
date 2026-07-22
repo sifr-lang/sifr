@@ -1,0 +1,65 @@
+from sifr.python import Object, PythonError, from_value, kwarg, resource_diagnostics, to_value
+from sifr.python_core import ResourceDiagnostics
+from sifr.test import assert_eq
+
+
+class Payload:
+    name: str
+    values: list[int]
+
+    def __init__(self, name: str, values: list[int]):
+        self.name = name
+        self.values = values
+
+
+def exercise_raw_objects() -> Result[str, PythonError]:
+    try:
+        payload_object: Object = from_value(Payload("sifr", [1, 2, 3]))
+        payload: Payload = to_value(payload_object)
+        assert_eq(payload.name, "sifr")
+        assert_eq(payload.values, [1, 2, 3])
+
+        item_object: Object = payload_object.get_item("name")
+        item: str = to_value(item_object)
+        assert_eq(item, "sifr")
+
+        template: Object = from_value("{name}:{count}")
+        name_kwarg: tuple[str, Object] = kwarg("name", "typed")
+        count_kwarg: tuple[str, Object] = kwarg("count", 3)
+        formatted_object: Object = template.call_method(
+            "format",
+            [],
+            [name_kwarg, count_kwarg],
+        )
+        formatted: str = to_value(formatted_object)
+        assert_eq(formatted, "typed:3")
+
+        upper_callable: Object = item_object.get_attr("upper")
+        upper_object: Object = upper_callable.call([], [])
+        upper: str = to_value(upper_object)
+        return upper
+    except PythonError as e:
+        raise e
+
+
+def exercise_checked_failure() -> Result[bool, PythonError]:
+    try:
+        text: Object = from_value("not an integer")
+        invalid: int = to_value(text)
+        return invalid == 0
+    except PythonError as e:
+        return e.kind == "conversion" and e.exception_type == "TypeError"
+
+
+def main() -> Result[None, PythonError]:
+    try:
+        before: ResourceDiagnostics = resource_diagnostics()
+        result: str = exercise_raw_objects()
+        assert_eq(result, "SIFR")
+        failed_safely: bool = exercise_checked_failure()
+        assert_eq(failed_safely, True)
+        after: ResourceDiagnostics = resource_diagnostics()
+        assert_eq(after.live_objects, before.live_objects)
+        return None
+    except PythonError as e:
+        raise e

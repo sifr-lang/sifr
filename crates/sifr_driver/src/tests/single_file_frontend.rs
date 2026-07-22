@@ -750,6 +750,40 @@ fn test_source_python_error_contract_with_interop_gets_runtime_bridge() {
 }
 
 #[test]
+fn test_raw_python_generic_conversion_and_object_methods_share_runtime_bridge() {
+    let source = r#"
+from sifr.python import Object, PythonError, from_value, kwarg, to_value
+
+def render() -> Result[str, PythonError]:
+    try:
+        template: Object = from_value("{name}")
+        name_arg: tuple[str, Object] = kwarg("name", "sifr")
+        rendered: Object = template.call_method("format", [], [name_arg])
+        value: str = to_value(rendered)
+        return value
+    except PythonError as error:
+        raise error
+"#;
+    let compiled = compile_with_metadata(source);
+    let CompileResultFull::Success {
+        rust_source,
+        required_features,
+        ..
+    } = &compiled
+    else {
+        let CompileResultFull::Errors { errors } = compiled else {
+            unreachable!();
+        };
+        panic!("typed raw Python API should compile: {errors:?}");
+    };
+
+    assert!(rust_source.contains("from_str"));
+    assert!(rust_source.contains("py_call_attr_keyed"));
+    assert!(rust_source.contains("__sifr_declaration_object_result"));
+    assert!(required_features.contains(&sifr_stdlib_manifest::StdlibFeature::PythonRuntime));
+}
+
+#[test]
 fn test_type_mismatch_error() {
     let source = r#"
 def main():

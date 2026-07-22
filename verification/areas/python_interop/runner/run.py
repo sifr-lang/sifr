@@ -131,6 +131,7 @@ REQUIRED_SOURCE_FIXTURES = (
     "async_blocking/unclassified_offload_rejected.sifr",
     "simple_import/biip_schwifty_full_example.sifr",
     "primitive_conversion/primitive_roundtrip.sifr",
+    "primitive_conversion/raw_typed_ergonomics.sifr",
     "numpy_buffer/py_buffer_readonly_failure.sifr",
     "numpy_buffer/py_buffer_memoryview.sifr",
     "numpy_buffer/numpy_full_example.sifr",

@@ -151,15 +151,23 @@ pub fn record_field(
     super::attach(|py| {
         let object = clone_handle(py, object)?;
         let object = object.bind(py);
-        let value = match object.getattr(field.as_str()) {
-            Ok(value) => value,
-            Err(error) if error.is_instance_of::<PyAttributeError>(py) => {
-                object.get_item(field.as_str()).map_err(|_| {
+        let value = if let Ok(dict) = object.cast::<PyDict>() {
+            dict.get_item(field.as_str())
+                .map_err(|error| PythonError::from_pyerr(py, error, "mapping", &path))?
+                .ok_or_else(|| {
                     conversion_error(format!("missing required record field '{field}'"), &path)
                 })?
-            }
-            Err(error) => {
-                return Err(PythonError::from_pyerr(py, error, "attribute", &path));
+        } else {
+            match object.getattr(field.as_str()) {
+                Ok(value) => value,
+                Err(error) if error.is_instance_of::<PyAttributeError>(py) => {
+                    object.get_item(field.as_str()).map_err(|_| {
+                        conversion_error(format!("missing required record field '{field}'"), &path)
+                    })?
+                }
+                Err(error) => {
+                    return Err(PythonError::from_pyerr(py, error, "attribute", &path));
+                }
             }
         };
         store_object(value.unbind()).map(|value| value.with_child_path(path))

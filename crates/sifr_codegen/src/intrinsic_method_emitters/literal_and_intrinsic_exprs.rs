@@ -82,7 +82,11 @@ impl RustEmitter {
         &mut self,
         intrinsic: CompilerIntrinsicId,
         args: &[HirExpr],
+        result_type: &sifr_type_system::Type,
     ) -> Option<crate::RustExpr> {
+        if let Some(lowered) = self.try_lower_python_raw_intrinsic(intrinsic, args, result_type) {
+            return Some(lowered);
+        }
         let mut ir_args = if let Some(lowered_args) = self.try_lower_registry_exprs_strict(args) {
             lowered_args
         } else {

@@ -2,15 +2,15 @@ use super::{
     callable_builtin_element_type, canonicalize_class_surface_type,
     consume_affine_collection_method_arguments, consume_owned_method_arguments,
     container_literal_diagnostics, invalidate_collection_flow_facts_for_method,
-    is_task_handle_type, lower_expr, lower_iterator_protocol_entry, lower_method_call_args,
-    lower_signature_call_args, lower_task_handle_method_call, method_function_type,
-    refine_defaultdict_binding_expr, refine_empty_list_binding_expr, refine_empty_set_binding_expr,
-    refine_generic_class_binding_expr, refine_nonempty_method_return_type,
-    reject_immutable_method_mut_borrow_arguments, reject_immutable_parameter_method_mutation,
-    resolve_annotation_expr, resolve_bigint_method_type, resolve_bytes_method_type,
-    resolve_class_method_on_type, resolve_decimal_method_type, resolve_dict_method_type,
-    resolve_enum_method_type, resolve_fixed_width_method_type, resolve_list_method_type,
-    resolve_newtype_method_type, resolve_protocol_method_type, resolve_python_arrow_method_type,
+    is_task_handle_type, lower_expr, lower_iterator_protocol_entry, lower_task_handle_method_call,
+    method_function_type, refine_defaultdict_binding_expr, refine_empty_list_binding_expr,
+    refine_empty_set_binding_expr, refine_generic_class_binding_expr,
+    refine_nonempty_method_return_type, reject_immutable_method_mut_borrow_arguments,
+    reject_immutable_parameter_method_mutation, resolve_annotation_expr,
+    resolve_bigint_method_type, resolve_bytes_method_type, resolve_class_method_on_type,
+    resolve_decimal_method_type, resolve_dict_method_type, resolve_enum_method_type,
+    resolve_fixed_width_method_type, resolve_list_method_type, resolve_newtype_method_type,
+    resolve_protocol_method_type, resolve_python_arrow_method_type,
     resolve_python_buffer_method_type, resolve_python_dlpack_method_type, resolve_set_method_type,
     resolve_str_method_type, resolve_tuple_method_type, str, try_lower_class_method_call,
     try_lower_super_method_call, tsc, DiagnosticCode, Expr, ExprAttribute, ExprCall, ExprDictComp,
@@ -18,6 +18,7 @@ use super::{
     ParamConvention, Ranged, TextRange, Type, DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS,
     DEFAULTDICT_SET_ALIAS,
 };
+use super::{method_call_arguments, python_raw_object_methods};
 use crate::lower::python_interop::callback_method_arg_ranges;
 use crate::lower::{
     nested_function_inference::collect_referenced_names_in_expr, ownership_diagnostics,
@@ -74,46 +75,29 @@ pub(in crate::lower) fn lower_method_call(
         }
     }
     let object_ty_for_args = canonicalize_class_surface_type(object.ty().resolve_alias());
+    let raw_python_method = python_raw_object_methods::for_call(
+        &object_ty_for_args,
+        &method_name,
+        attr.attr.range(),
+        ctx,
+    );
     super::workload_annotations::reject_async_direct_method_call(
         ctx,
         &object_ty_for_args,
         &method_name,
         attr.attr.range(),
     );
-    let method_type = method_function_type(&object_ty_for_args, &method_name);
-    let args = match &object_ty_for_args {
-        Type::Class { name, methods, .. } => {
-            if let Some((_, ft)) = methods
-                .iter()
-                .find(|(candidate, _)| candidate == &method_name)
-            {
-                let ft = ft.clone();
-                let defaults_key = format!("{name}.{method_name}");
-                let method_defaults = ctx.function_defaults.get(&defaults_key).cloned();
-                lower_signature_call_args(
-                    call,
-                    &format!("{name}.{method_name}"),
-                    &ft,
-                    method_defaults.as_deref(),
-                    ctx,
-                )?
-            } else {
-                lower_method_call_args(object.ty(), &method_name, call, ctx)?
-            }
-        }
-        Type::Protocol { name, methods, .. } => {
-            if let Some((_, ft)) = methods
-                .iter()
-                .find(|(candidate, _)| candidate == &method_name)
-            {
-                let ft = ft.clone();
-                lower_signature_call_args(call, &format!("{name}.{method_name}"), &ft, None, ctx)?
-            } else {
-                lower_method_call_args(object.ty(), &method_name, call, ctx)?
-            }
-        }
-        _ => lower_method_call_args(object.ty(), &method_name, call, ctx)?,
-    };
+    let method_type = raw_python_method
+        .clone()
+        .or_else(|| method_function_type(&object_ty_for_args, &method_name));
+    let args = method_call_arguments::lower(
+        object.ty(),
+        &object_ty_for_args,
+        &method_name,
+        call,
+        raw_python_method.as_ref(),
+        ctx,
+    )?;
 
     if matches!(method_name.as_str(), "append" | "insert" | "extend") {
         object = refine_empty_list_binding_expr(object, &method_name, &args, ctx);
@@ -294,6 +278,11 @@ pub(in crate::lower) fn resolve_method_type(
 ) -> Option<Type> {
     let canonical_object_ty = canonicalize_class_surface_type(object_ty);
     let object_ty = &canonical_object_ty;
+    if let Some(method_type) =
+        python_raw_object_methods::method_type(object_ty, method, method_range, ctx)
+    {
+        return Some(method_type.return_type.as_ref().clone());
+    }
     if let Type::Alias {
         name: alias_name,
         body,

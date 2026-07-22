@@ -15,6 +15,16 @@ reason = "Generated Python declaration glue combines the Python call outcome wit
 consumer_files = ["crates/sifr_codegen/src/python_dlpack_codegen.rs"]
 
 [[substrate]]
+adapter = "python.py_call_keyed"
+reason = "Generated typed raw Object.call glue accepts the public (str, Object) keyword shape over the canonical sealed Python identity."
+consumer_files = ["crates/sifr_codegen/src/python_raw_api_codegen.rs"]
+
+[[substrate]]
+adapter = "python.py_call_attr_keyed"
+reason = "Generated typed raw Object.call_method glue accepts the public (str, Object) keyword shape over the canonical sealed Python identity."
+consumer_files = ["crates/sifr_codegen/src/python_raw_api_codegen.rs"]
+
+[[substrate]]
 adapter = "process.process_child_close"
 reason = "Generated resource Drop glue closes process-child handles even when user code does not call an explicit close declaration."
 consumer_files = ["crates/sifr_codegen/src/class_emitter.rs"]

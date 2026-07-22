@@ -51,7 +51,14 @@ pub(in crate::lower) fn lower_return(
     }
 
     let value = if let Some(val) = &ret.value {
-        let Some(expr) = lower_expr(val, ctx) else {
+        let expected_expr_type = match func_type.return_type.resolve_alias() {
+            Type::Result(ok_type, _error_type) => ok_type.as_ref().clone(),
+            return_type => return_type.clone(),
+        };
+        ctx.push_contextual_expr_type(val.range(), expected_expr_type);
+        let lowered = lower_expr(val, ctx);
+        ctx.pop_contextual_expr_type();
+        let Some(expr) = lowered else {
             // Keep control-flow shape intact after expression diagnostics so
             // return-completeness analysis does not emit a cascade error.
             return HirStmt::Return {

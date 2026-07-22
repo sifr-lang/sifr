@@ -80,6 +80,15 @@ Frontend-query and local edit-loop benchmarks use stricter latency thresholds:
   workspace fixture, so workspace-shaped protocol costs are not measured only
   on the single-file smoke fixture.
 
+Every `lsp-query` manifest case must declare `workspace_mode` as either
+`isolated` or `package`; manifest validation cross-checks that choice against
+the source directory's sibling `sifr.toml`. Isolated warm/cold cases execute in
+a deterministic minimal temporary locked Sifr/Cargo package so upward package
+discovery cannot attach them to the repository workspace. Package cases run the
+checked-in `lsp_workspace` fixture in place. The didOpen diagnostics sync case
+retains its package-less temporary directory because its measured operation is
+document publication rather than package analysis.
+
 LSP query budgets use their own policy because they measure editor-observed
 JSON-RPC operations instead of in-process compiler queries:
 

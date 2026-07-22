@@ -20,6 +20,7 @@ mod stub_syntax;
 mod target;
 
 use direct_validation::validate_direct_parameters;
+pub(in crate::lower) use direct_validation::validate_raw_conversion_intrinsic;
 
 pub(in crate::lower) use callsite::{
     callback_call_policies, callback_method_arg_ranges, validate_callback_call_captures,
@@ -684,7 +685,7 @@ pub(in crate::lower) fn validate_python_interop_signature(
     validate_direct_parameters(declaration, params, ctx);
 }
 
-pub(super) fn is_direct_type(ty: &Type, allow_option: bool, ctx: &LowerCtx) -> bool {
+pub(in crate::lower) fn is_direct_type(ty: &Type, allow_option: bool, ctx: &LowerCtx) -> bool {
     match ty.resolve_alias() {
         Type::None | Type::Bool | Type::Int | Type::Float | Type::Str | Type::Bytes => true,
         object if object.is_python_object_contract() => true,

@@ -98,6 +98,23 @@ from sifr.python_core import (
 )
 
 
+@blocking_io
+@compiler_intrinsic(python_from_value)
+def from_value[T](value: T) -> Result[Object, PythonError]:
+    ...
+
+
+@blocking_io
+@compiler_intrinsic(python_to_value)
+def to_value[T](obj: Object) -> Result[T, PythonError]:
+    ...
+
+
+@blocking_io
+@compiler_intrinsic(python_kwarg)
+def kwarg[T](name: str, value: T) -> Result[tuple[str, Object], PythonError]:
+    ...
+
 
 class BufferView(NonSend):
     _identity: ResourceIdentity

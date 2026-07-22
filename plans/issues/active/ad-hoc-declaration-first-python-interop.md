@@ -85,8 +85,10 @@ per-environment and per-target caches, declaration-scoped diagnostics, and
 direct regression evidence. Repeated whole-diff review through pass 8 closed
 lockfile parity, live bridge/workspace aggregation, diagnostic-owner election,
 and excluded-document publication gaps and returned **SATISFIED**. The final
-authoritative create-PR gate passes every blocking lane. M16 and later
-milestones are not yet implemented.
+authoritative create-PR gate passes every blocking lane. M16 is implemented,
+authoritatively validated, repeatedly reviewed to satisfaction, and
+closure-approved on [PR #2996](https://github.com/sifr-lang/sifr/pull/2996).
+M17 is not yet implemented.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
@@ -225,8 +227,8 @@ Implementation progress:
 - [x] M12 DLPack one-shot tensor transfer ([PR #2992](https://github.com/sifr-lang/sifr/pull/2992))
 - [x] M13 read-only check and doctor ([PR #2993](https://github.com/sifr-lang/sifr/pull/2993))
 - [x] M14 binding and certification authoring ([PR #2994](https://github.com/sifr-lang/sifr/pull/2994))
-- [ ] M15 LSP declaration authoring
-- [ ] M16 raw API ergonomics on shared ownership
+- [x] M15 LSP declaration authoring ([PR #2995](https://github.com/sifr-lang/sifr/pull/2995))
+- [x] M16 raw API ergonomics on shared ownership ([PR #2996](https://github.com/sifr-lang/sifr/pull/2996))
 - [ ] M17 ecosystem migration and certification
 
 ### M0. Complete Contract Lock And Evidence Model
@@ -2295,6 +2297,48 @@ Frozen-ledger Fable High
 confirmed the exact pushed PR head remains code-identical to the satisfied
 candidate and returned **SATISFIED**.
 
+The subsequent M16 merge-profile gate exposed a benchmark-scope defect that
+create-PR did not select. The nominal local-document LSP diagnostics case used a
+source inside the repository but had no package boundary, so upward discovery
+silently attached it to the complete Sifr workspace; the case reached
+`103.5 MiB` against its `80 MiB` budget after M15 correctly made configured
+package environments validate even without declarations. An attempted
+source-local Python-input shortcut passed the budget but Fable High M16
+[pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-fable-high-review-pass-3.md)
+proved it anti-conservative for workspace-member requirements and misplaced
+bridge roots. The shortcut is fully removed. LSP benchmarks now declare
+`isolated` or `package` workspace mode: isolated cases execute in a minimal
+temporary locked Sifr/Cargo package, while workspace cases retain the checked-in
+package graph. Pure-root workspace-member and misplaced-bridge regressions pin
+`SIFR-PYTRUST-0005` and `SIFR-PYIMP-0002`; all Python declaration LSP tests pass
+`24/24`. The direct isolated-package diagnostics benchmark is `4.02 ms` median
+at `73.1 MiB`, preserving both timing and memory budgets without weakening the
+canonical package-resolution path. Isolated warm/cold cases use that locked
+package boundary; the didOpen diagnostics sync case deliberately retains its
+historical package-less temporary directory and no longer constructs an unused
+second package. Whole-diff Fable High
+[pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-fable-high-review-pass-4.md)
+confirmed the product shortcut was fully removed and the benchmark correction
+is deterministic with unchanged budgets, then requested the didOpen setup
+clarification and durable `workspace_mode` documentation now included in this
+merge unit. Frozen whole-diff Fable High
+[pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-fable-high-review-pass-5.md)
+re-verified every prior finding, the complete M16 feature body, and the final
+benchmark routing at the exact pushed head, then returned **SATISFIED** with no
+blocker, major, or minor findings. The fresh authoritative merge-profile gate
+passes every blocking lane in `4410.10s`: Python interop `25/25`, LSP `72/72`,
+package `139/139`, driver `383/383` plus `34/34` generated builds, representative
+performance `8/8`, runtime-platform `30` variants with three capability/tooling
+skips, E2E `674/674` with signature `1f8b1cadc4f48ec8`, and hardening `261`
+variants with zero failures. The cold E2E cache (`0/178`), aggregate warm
+wall-time, and group-skew notices are non-blocking advisories; every lane and
+blocking budget passes. Frozen-ledger Fable High
+[pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-fable-high-review-pass-6.md)
+reconciled every count, timing, signature, skip, and advisory against the gate
+report, confirmed the post-gate diff is ledger-only, rechecked the complete
+implementation, and returned **SATISFIED** with no findings. M16 is
+closure-approved for PR merge.
+
 Tasks:
 
 - Add LSP completion, navigation, diagnostics, verified/runtime-checked status,
@@ -2312,6 +2356,62 @@ Validation:
 ### M16. Raw API Ergonomics On Shared Ownership
 
 Depends on M1 shared identity, M7 owned loop, and M10-M12 affine resources.
+
+Delivery waves:
+
+- [x] Wave 1 — inventory the existing sealed-object runtime and lock one generic
+  conversion authority shared with declaration conversion.
+- [x] Wave 2 — add public typed `from_value`/`to_value` conversion and typed
+  keyword construction without exposing handles or parallel ownership state.
+- [x] Wave 3 — add method-style attribute, item, call, and call-method helpers on
+  the canonical `sifr.python.Object`, retaining checked `Result` errors.
+- [x] Wave 4 — prove ordinary automatic drop and raw/declaration cleanup
+  equivalence, and prove raw coroutine execution uses the application-owned
+  loop under success, failure, concurrency, cancellation, and shutdown.
+- [x] Wave 5 — add focused verification/demo/docs, run authoritative validation,
+  repeat whole-milestone review to satisfaction, close the ledger, and merge.
+
+Implementation candidate: the public generic intrinsics reuse the declaration
+input/output converters and canonical sealed `Object`; typed kwargs erase only
+after conversion into the existing `(str, Object)` shape. Compiler-known
+`Object.get_attr`, `get_item`, `call`, and `call_method` signatures retain
+checked `Result[Object, PythonError]` behavior without adding source-visible
+handle fields or a parallel ownership type. Native package evidence exercises
+closed-record and nested-list round trips, typed heterogeneous kwargs,
+attribute/item/call operations, conversion failure, and equality of live-object
+counts across success and handled-error exits. The owned-loop package test now
+uses generic conversion and automatic release rather than a manual close chain;
+the raw coroutine and exact-task runtime suites cover shared loop identity,
+Python failure, concurrency, cancellation, terminal drain, and shutdown.
+
+Focused validation passes: the typed raw package and owned-loop package build
+and execute against a probed local CPython runtime; the recursive mapping-field
+regression passes with the Python runtime feature; raw coroutine `4/4` and
+owned-loop terminal/cancellation `14/14` pass; all `537` E2E fail fixtures pass,
+including the new unsupported-conversion and async blocking-effect cases; and
+the Python interop scaffold accepts the new source fixture and capability
+owners. The authoritative create-PR gate also passes every blocking lane,
+including Python interop `19/19`, the core-language E2E suite `131/131`, and all
+crate, guardrail, diagnostics, tooling, runtime, and generated-code checks. Its
+only advisory is the aggregate warm wall-time target; every blocking per-step
+budget passes. Fable High whole-diff review pass 1 found two minor closure
+defects: polluted async-negative fixtures and a stale architecture status
+paragraph. Both are remediated with exact single-diagnostic checks and the M16
+architecture contract update. Fresh Fable High whole-diff review pass 2 is
+satisfied with no findings after independently rerunning the native package,
+runtime, demo, diagnostic, and guardrail evidence. The authoritative merge gate
+then exposed the inherited benchmark-scope defect recorded above. Fable High
+pass 3 rejected the first shortcut remediation with two major false negatives;
+canonical resolution is restored, both findings have discriminating regressions,
+and benchmark workspace mode is now explicit. The full representative suite
+passes `8/8`; its LSP diagnostics case records a `4.009 ms` median, `4.134 ms`
+p95, and `71.5 MiB` peak RSS. Whole-diff pass 5 is **SATISFIED** with no
+findings. The fresh authoritative merge profile passes every blocking lane in
+`4410.10s`, including Python interop `25/25`, representative performance `8/8`,
+driver `383/383` plus `34/34` generated builds, E2E `674/674` with signature
+`1f8b1cadc4f48ec8`, and hardening `261/261`. The cold-cache wall-time and group
+skew are non-blocking advisories. M16 is closure-approved for merge on
+[PR #2996](https://github.com/sifr-lang/sifr/pull/2996).
 
 Tasks:
 

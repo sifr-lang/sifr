@@ -595,7 +595,11 @@ macro_rules! stmt_expr_literals_and_calls {
             intrinsic, args, ..
         } = $expr
         {
-            return Ok($emitter.try_lower_registry_intrinsic_call_expr(*intrinsic, args));
+            return Ok($emitter.try_lower_registry_intrinsic_call_expr(
+                *intrinsic,
+                args,
+                $expr.ty(),
+            ));
         }
         if let Some((func, args)) = call_expr_parts($expr) {
             if let Some(lowered_builtin) =

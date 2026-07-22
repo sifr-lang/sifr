@@ -59,6 +59,9 @@ pub(crate) fn lower_intrinsic(
             task::lower_task_current_context(args),
             Some(StdlibFeature::Tokio),
         ),
+        CompilerIntrinsicId::PythonFromValue => (None, None),
+        CompilerIntrinsicId::PythonToValue => (None, None),
+        CompilerIntrinsicId::PythonKwarg => (None, None),
     };
 
     Some(LoweredIntrinsic {

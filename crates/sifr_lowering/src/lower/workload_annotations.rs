@@ -129,6 +129,26 @@ pub(in crate::lower) fn reject_async_direct_method_call(
     reject_async_direct_call(ctx, &qualified, range);
 }
 
+pub(in crate::lower) fn reject_async_direct_raw_python_method(
+    ctx: &mut LowerCtx,
+    method: &str,
+    range: TextRange,
+) {
+    if !ctx.current_function_is_async {
+        return;
+    }
+    let workload = WorkloadKind::BlockingIo;
+    ctx.error_with_code_at(
+        workload.direct_call_code(),
+        format!(
+            "{} function 'Object.{method}' called directly from async context; {}",
+            workload.label(),
+            workload.suggestion()
+        ),
+        range,
+    );
+}
+
 pub(in crate::lower) fn reject_unclassified_offload_target(
     ctx: &mut LowerCtx,
     target: &Expr,

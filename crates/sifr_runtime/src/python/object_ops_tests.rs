@@ -94,6 +94,15 @@ fn explicit_container_copy_conversions_preserve_nested_paths() {
     assert_eq!(fields[0].0, "answer");
     assert_eq!(to_int(&fields[0].1).expect("field should convert"), 2);
 
+    let values_record = from_record(&[("values", list.clone())]).expect("record should be stored");
+    let values = record_field(&values_record, "values").expect("mapping key wins over dict method");
+    assert_eq!(
+        list_items(&values)
+            .expect("values should remain a list")
+            .len(),
+        2
+    );
+
     let (_, field_value) = fields.remove(0);
     for handle in [
         first,
@@ -105,6 +114,8 @@ fn explicit_container_copy_conversions_preserve_nested_paths() {
         dict,
         record,
         field_value,
+        values_record,
+        values,
     ] {
         close_object(handle).expect("object should close");
     }

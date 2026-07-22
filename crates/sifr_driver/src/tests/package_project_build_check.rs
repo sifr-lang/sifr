@@ -310,6 +310,8 @@ fn local_python_runtime_with_roots(
 mod python_async_runtime_tests;
 #[path = "package_python_bridge_archive_tests.rs"]
 mod python_bridge_archive_tests;
+#[path = "package_python_raw_api_tests.rs"]
+mod python_raw_api_tests;
 
 #[test]
 fn test_check_package_project_resolves_public_namespace_reexports() {

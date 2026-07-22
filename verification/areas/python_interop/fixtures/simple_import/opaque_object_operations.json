@@ -7,7 +7,7 @@
       "name": "import_attr_item_call_kwargs",
       "imports": ["builtins", "math"],
       "operations": ["import_module", "get_attr", "call", "kwargs", "get_item"],
-      "expected": "opaque Object handles are returned and closed explicitly"
+      "expected": "opaque Object values use the canonical sealed identity and release automatically when ownership ends"
     }
   ],
   "negative_cases": [
