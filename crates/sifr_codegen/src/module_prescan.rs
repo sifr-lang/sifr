@@ -13,6 +13,14 @@ impl RustEmitter {
     pub(crate) fn collect_import_metadata(&mut self, module: &HirModule) {
         for import in &module.imports {
             if !import.module.starts_with("sifr.") && !import.module.starts_with("_sifr.") {
+                for name in &import.names {
+                    let local = import
+                        .aliases
+                        .iter()
+                        .find(|(source, _)| source == name)
+                        .map_or(name, |(_, alias)| alias);
+                    self.imported_project_functions.insert(local.clone());
+                }
                 continue;
             }
 

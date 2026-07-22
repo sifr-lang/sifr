@@ -1,6 +1,9 @@
 mod arrow_certification;
+mod binding_authoring;
+mod binding_validation;
 mod bridge_inventory;
 mod bridge_resolution;
+mod dlpack_certification;
 mod environment;
 mod probe_validation;
 mod requirements;
@@ -9,11 +12,23 @@ mod trust_policy;
 
 pub use arrow_certification::{
     fixture_digest as arrow_fixture_digest, load_python_certifications,
-    load_python_certifications_for_update, required_python_certification_archive_entries,
-    safe_fixture_path as arrow_fixture_path, validate_python_certifications,
-    write_python_certifications, ArrowCertification, ArrowCertifiedDistribution,
-    ArrowCertifiedIdentityMethod, ArrowCertifiedKind, ArrowCertifiedSchemaMode,
-    PythonCertificationArtifact, ARROW_CERTIFICATION_SCHEMA_VERSION, PYTHON_CERTIFICATIONS_FILE,
+    load_python_certifications_for_dlpack_update, load_python_certifications_for_update,
+    required_python_certification_archive_entries, safe_fixture_path as arrow_fixture_path,
+    validate_python_certifications, write_python_certifications, ArrowCertification,
+    ArrowCertifiedDistribution, ArrowCertifiedIdentityMethod, ArrowCertifiedKind,
+    ArrowCertifiedSchemaMode, DlpackCertification, DlpackCertifiedDevice,
+    DlpackCertifiedStreamPolicy, PythonCertificationArtifact, ARROW_CERTIFICATION_SCHEMA_VERSION,
+    PYTHON_CERTIFICATIONS_FILE, PYTHON_CERTIFICATION_SCHEMA_VERSION,
+};
+pub use binding_authoring::{
+    load_python_bindings, load_python_bindings_for_update, python_binding_generated_digest,
+    python_binding_source_fingerprint, required_python_binding_archive_entries,
+    safe_python_binding_output, write_python_bindings, PythonBinding, PythonBindingArtifact,
+    PythonBindingDistribution, PythonBindingSource, PythonBindingSourceKind, PYTHON_BINDINGS_FILE,
+    PYTHON_BINDING_SCHEMA_VERSION,
+};
+pub use binding_validation::{
+    validate_python_bindings, validate_python_bindings_with_generated_source,
 };
 pub use bridge_inventory::{
     discover_python_bridge_inventory, required_python_bridge_archive_entries,
@@ -40,6 +55,10 @@ pub use requirements::{
     PythonRequirementContribution, PythonRequirementKind,
 };
 
+#[cfg(test)]
+mod arrow_certification_tests;
+#[cfg(test)]
+mod binding_authoring_tests;
 #[cfg(all(test, unix))]
 mod bridge_inventory_symlink_tests;
 #[cfg(test)]

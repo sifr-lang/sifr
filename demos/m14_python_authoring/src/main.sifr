@@ -1,0 +1,13 @@
+from .math_python import sqrt
+from sifr.python import PythonError
+
+
+def main() -> Result[None, PythonError]:
+    try:
+        value: float = sqrt(144.0)
+        if value != 12.0:
+            raise PythonError("unexpected authored binding result")
+        print("Python binding authoring demo: generated declaration verified")
+        return None
+    except PythonError as error:
+        raise error

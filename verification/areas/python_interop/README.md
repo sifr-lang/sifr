@@ -11,6 +11,7 @@ The canonical entrypoint is:
 verification/areas/python_interop/run.sh --group scaffold
 verification/areas/python_interop/run.sh --group env
 python3 verification/areas/python_interop/runner.py --suite readonly-check-doctor
+python3 verification/areas/python_interop/runner.py --suite binding-authoring
 verification/areas/python_interop/run.sh --tier tier1
 verification/areas/python_interop/run.sh --tier tier4
 verification/areas/python_interop/run.sh --package pandas
@@ -39,6 +40,13 @@ discovered standalone-library environments resolve, doctor JSON and
 missing-authority patches are byte-deterministic, source-content snapshot
 digests change with source bytes, and no inspected package file or symlink
 changes on success or failure.
+
+The blocking `binding-authoring` suite creates a temporary package and proves
+the complete source precedence across explicit overrides, a selected stub-only
+distribution, `py.typed` inline source, configured external stubs, and safe
+introspection. It compiles the generated declarations, rejects overload and
+`Any` boundaries, checks ordinary-check and `bind --check` drift parity, and
+asserts that both success and failure rechecks leave package inputs unchanged.
 
 `declaration_capabilities.json` is the separate declaration/protocol capability
 ledger. Its `target_state` classifies the intended contract as
@@ -148,7 +156,8 @@ checks deterministic stdout markers.
 DLPack declaration examples are offline, compiled, and blocking in every
 delivery profile. The `dlpack-examples` suite runs real PyTorch and TensorFlow
 CPU transfers, verifies stable data pointers, exact device metadata, owned
-one-shot consumption, and zero residual resources. PyTorch exercises direct
+one-shot consumption, an instrumented exact producer-deleter call, and zero
+residual resources. PyTorch exercises direct
 import-root and `Self` acquisition. TensorFlow exercises an explicit
 package-local bridge that adapts its capsule API to the complete versioned
 `__dlpack__` call shape without copying.

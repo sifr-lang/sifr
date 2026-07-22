@@ -65,8 +65,16 @@ are non-blocking advisories. M13's shared read-only driver plan, `python check`
 and `python doctor` CLI surfaces, multi-app/final-app resolution, deferred
 library reporting, executable non-mutation/parity evidence, demo, and docs are
 implemented, locally validated, milestone-reviewed, and closed in
-[PR #2993](https://github.com/sifr-lang/sifr/pull/2993). M14 and later
-milestones are not yet implemented.
+[PR #2993](https://github.com/sifr-lang/sifr/pull/2993). M14 binding and
+certification authoring is implemented, locally validated, and
+closure-approved in [PR #2994](https://github.com/sifr-lang/sifr/pull/2994).
+Direct Fable High pass 1 drove delivery-profile, environment-freshness,
+mutation-ordering, positional-only, symlink-confinement, cross-module runtime,
+and schema-diagnostic remediation; pass 2 returned **SATISFIED**. Frozen pass
+3 found one additional direct-conversion grammar minor; the root remediation
+and expanded regression evidence passed the authoritative gate, and full pass
+4 returned **SATISFIED** with no blocker, major, or minor findings. M15 and
+later milestones are not yet implemented.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
@@ -204,7 +212,7 @@ Implementation progress:
 - [x] M11 Arrow C Data Interface ([PR #2991](https://github.com/sifr-lang/sifr/pull/2991))
 - [x] M12 DLPack one-shot tensor transfer ([PR #2992](https://github.com/sifr-lang/sifr/pull/2992))
 - [x] M13 read-only check and doctor ([PR #2993](https://github.com/sifr-lang/sifr/pull/2993))
-- [ ] M14 binding and certification authoring
+- [x] M14 binding and certification authoring ([PR #2994](https://github.com/sifr-lang/sifr/pull/2994))
 - [ ] M15 LSP declaration authoring
 - [ ] M16 raw API ergonomics on shared ownership
 - [ ] M17 ecosystem migration and certification
@@ -1942,6 +1950,110 @@ Validation:
 ### M14. Binding And Certification Authoring
 
 Depends on M11/M12 certification contracts and M13 shared check plan.
+
+Delivery waves:
+
+- [x] Wave 1 — define the versioned binding-source/fingerprint artifact and a
+  compiler-owned typed declaration scaffold query that rejects unresolved or
+  unsupported Python typing shapes instead of synthesizing raw handles.
+- [x] Wave 2 — implement symbol-selective `sifr python bind` across explicit
+  overrides, selected stub-only packages, `py.typed` inline sources,
+  configured external stubs, and safe target introspection in recorded
+  precedence; add deterministic checked-in source generation and read-only
+  `bind --check` drift reporting.
+- [x] Wave 3 — generalize `sifr python certify` to protocol evidence and
+  fingerprint drift, including Arrow and DLPack artifact creation and
+  within-run assertion rechecks.
+- [x] Wave 4 — add stub-only, inline, native-extension, overload, unresolved,
+  drift, certification, non-mutation, demo, public/internal documentation, and
+  delivery-profile evidence.
+- [x] Wave 5 — authoritative validation, repeated full milestone review,
+  closure ledger, and merge.
+
+Focused evidence:
+
+- `cargo check --workspace`; complete `sifr_package`, `sifr_driver` Python,
+  `sifr_codegen`, and non-E2E `sifr` tests.
+- workspace clippy with warnings denied, formatting, HIR/driver maintainability,
+  file-size, Python syntax, and diff checks.
+- blocking `binding-authoring` verification for all five source kinds,
+  checked-in compilation, overload/`Any` rejection, ordinary/bind drift parity,
+  and non-mutation.
+- compiled PyTorch and TensorFlow DLPack examples with artifact creation,
+  read-only recheck, stable logical bridge identity, pointer equality, and
+  instrumented exact producer-deleter observation.
+- `demos/m14_python_authoring` generated-source check and compiled execution.
+
+Pre-review validation: the authoritative `create-pr` profile passes every
+blocking lane in `1352.80s`, including Python interop `17/17`, create-PR E2E
+`131/131` with signature `7c39b8c1dd4fec7c`, runtime platform `28/28`, and
+hardening `6/6`. The cold-cache warm wall-time notice is a non-blocking
+advisory; every per-step blocking budget passes.
+
+Direct Fable High review pass 1 returned `NEEDS CHANGES`. It confirmed that the
+new blocking suite was missing from all delivery-profile selections, found two
+authoring-integrity majors (retained bindings could be relabeled after an
+environment change without re-probing, and output could be clobbered before
+artifact validation), and identified optional positional-only mismatch,
+symlinked typing/output acceptance, missing cross-module `PythonError` runtime
+coverage, and legacy certification schema diagnostics. The remediation adds
+the suite to create-PR/merge/nightly/release; re-probes every retained binding
+before environment adoption; validates the complete in-memory artifact before
+writes; rejects collisions, user-owned outputs, symlinks, and unsupported
+positional-only defaults; executes the generated binding across a project
+module at runtime; and parses the certification schema header before the full
+v3 payload. Focused package `61/61`, driver Python `52/52` plus seven expected
+integration ignores, codegen `887/887`, expanded blocking authoring,
+profile-readiness, package/file-size, Clippy, transfer-inventory, and diff
+checks pass after remediation. [Review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-1-direct.md)
+
+The fresh post-remediation authoritative `create-pr` profile passes every
+blocking lane in `839.93s`, including Python interop `18/18` with the newly
+selected binding-authoring suite, E2E `131/131` with signature
+`7c39b8c1dd4fec7c`, runtime platform `28/28`, and hardening `6/6`. Every
+per-step blocking budget passes; the warm wall-time notice is a non-blocking
+advisory. Direct Fable High pass 2 independently reran the authoring suite and
+focused package/driver checks, verified every pass-1 remediation, found no
+remaining blocker, major, or minor issue, and returned **SATISFIED**. Its four
+notes document non-blocking future hardening opportunities without weakening
+the M14 acceptance contract. [Review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-2.md)
+
+Frozen-candidate Fable High pass 3 revalidated the authoring suite, focused
+tests, confinement, freshness, certification, and non-mutation properties, but
+returned `NEEDS CHANGES` for one additional actionable minor: token-based
+scaffold validation allowed bare containers, `set[T]`, and non-`str` dict keys
+that ordinary compiler checking rejects. The remediation replaces that
+allowlist with the compiler's recursive direct-conversion grammar in both the
+probe and scaffold validator. Separate bare-list, set, and dict-key bind
+attempts now fail before mutation; driver Python `56/56` with seven expected
+integration ignores, workspace Clippy, formatting, maintainability,
+file-size, Python syntax, diff checks, and the expanded blocking
+binding-authoring suite all pass. [Review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-3-frozen.md)
+
+The fresh authoritative `create-pr` profile passes at the committed
+post-remediation candidate in `1205.40s`: Python interop `18/18`, including
+the expanded binding-authoring suite with three unsupported-type failures and
+zero mutations; E2E `131/131` with signature `7c39b8c1dd4fec7c`; runtime
+platform `28/28`; and hardening `6/6`. Every blocking step budget passes; the
+wall-time notice reflects a zero-hit E2E rebuild and is non-blocking. Direct
+Fable High pass 4 independently exercised supported recursive grammar and
+twelve adversarial rejection shapes, verified the pass-3 remediation in both
+the probe and scaffold validator, rechecked all earlier findings, found no
+blocker, major, or minor issue, and returned **SATISFIED**. [Review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-4.md)
+
+Final frozen-diff Fable High pass 5 reviewed commit `782f35d2e`, reran the
+blocking authoring suite and focused tests, confirmed the final delta was
+closure documentation only, and independently rechecked every remediation and
+ledger claim. It found no blocker, major, or minor issue and returned
+**SATISFIED**. [Frozen closure pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-5-frozen.md)
+
+The fresh authoritative merge profile passes every blocking lane at the frozen
+M14 candidate in `4227.12s`: Python interop `24/24`, E2E `674/674` with
+signature `1f8b1cadc4f48ec8`, diagnostics `175/175`, runtime-platform `30`
+variants with zero failures, and `261` hardening variants with zero failures.
+The warm wall-time and group-skew notices are non-blocking advisories; the gate
+exited successfully and its report is
+`target/validation_lane_reports/merge.latest.json`.
 
 Tasks:
 

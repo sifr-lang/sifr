@@ -173,6 +173,38 @@ the reserved loader before user `main`, and do not read or extract bridge files
 at runtime. Two dependencies can therefore own the same bridge module path
 without collision.
 
+### Authoring Typed Bindings
+
+`sifr python bind` creates symbol-selective, reviewable Sifr declarations from
+Python typing information. Whole-module generation is intentionally unsupported:
+
+```bash
+sifr python bind math --symbols sqrt \
+  --override typing/math.pyi
+sifr python bind redis.client --symbols Redis
+sifr python bind --check
+```
+
+Resolution is deterministic: repeatable package-local `--override` files win,
+then explicitly selected `--stub-package` distributions, installed `py.typed`
+inline sources, repeatable package-local `--external-stub` files, and finally
+safe runtime introspection. Every selected symbol records its winning source,
+source hash, distribution version, SOABI, environment identity, and generated
+source digest in `sifr.python-bindings.json`. Generated `.sifr` files, the
+artifact, and consumed package-local typing sources are package archive inputs.
+
+Generation fails closed on `Any`, bare `object`, unknown overloads, callable or
+generic shapes without a Sifr contract, missing annotations, unresolved types,
+and optional positional-only parameters that the declaration call plan cannot
+represent. It never substitutes a dynamic `Object` or overwrites an unrelated
+package file. If the selected environment identity changes while adding or
+replacing one module, every retained binding is re-probed before the artifact
+can adopt the new identity. `bind --check` is frozen and read-only: it reruns
+resolution and generation in memory and rejects typing, environment,
+distribution, source, or generated-file drift. Ordinary package check/build
+also validates checked-in outputs and consumed local typing hashes and includes
+binding identity in its build cache key.
+
 ## Blocking And Async
 
 Every public `sifr.python` operation is classified as `@blocking_io`. Direct Python calls in async Sifr code are rejected unless the work is explicitly offloaded through Sifr's blocking offload primitive.
@@ -451,6 +483,21 @@ The source capsule is immediately marked used. Passing `own
 python.DlpackTensor[T]` creates a fresh consumer capsule and commits the move
 even if the Python call later fails; an unconsumed capsule invokes its producer
 deleter exactly once.
+
+DLPack producer claims require the same package-authored executable evidence
+discipline as Arrow:
+
+```bash
+sifr python certify dlpack torch.Tensor \
+  --fixture python_certifications/dlpack_tensor.py
+sifr python certify --check
+```
+
+The fixture must prove pointer identity, no copy, the declared device and stream
+policy, exact distribution versions, and exactly one observed managed-tensor
+deleter call within the same run. `certify --check` reruns the fixture and is
+read-only. Bridge targets remain keyed by their stable `bridge.*` spelling even
+though compiled binaries embed them under isolated runtime namespaces.
 
 Lower-level dynamic zero-copy APIs remain available when a typed declaration is
 not appropriate:

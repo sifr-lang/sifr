@@ -64,6 +64,19 @@
       ]
     },
     {
+      "name": "binding-authoring",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "binding-authoring",
+          "entry": "verification/areas/python_interop/runner/binding_authoring.py",
+          "command": "python-interop-binding-authoring",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "tier1",
       "kind": "adapter",
       "cases": [

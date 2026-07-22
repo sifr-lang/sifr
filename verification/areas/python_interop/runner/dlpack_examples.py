@@ -16,6 +16,7 @@ DLPACK_EXAMPLE_CASES = {
             "one-shot=ok:resources=zero"
         ),
         import_roots=("torch",),
+        dlpack_certifications=(("torch.Tensor", "python_certifications/dlpack_evidence.py"),),
     ),
     "tensorflow-declaration": ExampleCase(
         case_id="tensorflow-declaration",
@@ -27,6 +28,10 @@ DLPACK_EXAMPLE_CASES = {
         import_roots=("ctypes", "tensorflow"),
         native_roots=("tensorflow",),
         bridge_files=("tensorflow_dlpack.py",),
+        dlpack_certifications=((
+            "bridge.tensorflow_dlpack.make",
+            "python_certifications/dlpack_evidence.py",
+        ),),
     ),
 }
 

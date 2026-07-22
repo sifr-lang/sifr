@@ -23,6 +23,7 @@ class ExampleCase:
     copy_bridges: bool = True
     bridge_files: tuple[str, ...] | None = None
     arrow_certifications: tuple[tuple[str, str], ...] = ()
+    dlpack_certifications: tuple[tuple[str, str], ...] = ()
     explicit_requirements: bool = True
 
 
@@ -118,6 +119,9 @@ def run_examples_self_tests(
         or any(not target or not fixture for target, fixture in case.arrow_certifications)
         or len({target for target, _fixture in case.arrow_certifications})
         != len(case.arrow_certifications)
+        or any(not target or not fixture for target, fixture in case.dlpack_certifications)
+        or len({target for target, _fixture in case.dlpack_certifications})
+        != len(case.dlpack_certifications)
     }
     if invalid_roots:
         raise SystemExit(
@@ -189,7 +193,9 @@ def validate_source_presence(
                 continue
         missing_certification_fixtures = [
             fixture
-            for _target, fixture in case.arrow_certifications
+            for _target, fixture in (
+                case.arrow_certifications + case.dlpack_certifications
+            )
             if not (source_path.parent / fixture).is_file()
         ]
         if missing_certification_fixtures:
@@ -199,7 +205,7 @@ def validate_source_presence(
                     "status": "fail",
                     "sifr_source": case.relative_source,
                     "reason": (
-                        "missing Arrow certification fixtures: "
+                        "missing protocol certification fixtures: "
                         f"{missing_certification_fixtures}"
                     ),
                 }
@@ -255,6 +261,11 @@ def prepare_example_package(paths: RunnerPaths, suite_name: str, case: ExampleCa
             for bridge_file in case.bridge_files:
                 shutil.copy2(bridge_source / bridge_file, bridge_target / bridge_file)
     for _target, fixture in case.arrow_certifications:
+        fixture_source = source_path.parent / fixture
+        fixture_target = package_root / fixture
+        fixture_target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(fixture_source, fixture_target)
+    for _target, fixture in case.dlpack_certifications:
         fixture_source = source_path.parent / fixture
         fixture_target = package_root / fixture
         fixture_target.parent.mkdir(parents=True, exist_ok=True)
@@ -331,19 +342,33 @@ def _run_case(paths: RunnerPaths, package_root: Path, case_config: ExampleCase) 
         ["python", "certify", "arrow", target, "--fixture", fixture]
         for target, fixture in case_config.arrow_certifications
     ]
+    certification_commands.extend(
+        ["python", "certify", "dlpack", target, "--fixture", fixture]
+        for target, fixture in case_config.dlpack_certifications
+    )
     if certification_commands:
         certification_commands.append(["python", "certify", "--check"])
     certification_results: list[dict[str, Any]] = []
     for arguments in certification_commands:
+        before_check = package_snapshot(package_root) if arguments[-1] == "--check" else None
         result = _run_sifr_command(paths, package_root, arguments)
         certification_results.append(result)
+        if before_check is not None and package_snapshot(package_root) != before_check:
+            return {
+                "id": case_config.case_id,
+                "status": "example-failed",
+                "sifr_source": case_config.relative_source,
+                "elapsed_ms": round((time.perf_counter() - started) * 1000.0),
+                "reason": "certification recheck mutated package inputs",
+                "certification_commands": certification_results,
+            }
         if result["exit_code"] != 0:
             return {
                 "id": case_config.case_id,
                 "status": "example-failed",
                 "sifr_source": case_config.relative_source,
                 "elapsed_ms": round((time.perf_counter() - started) * 1000.0),
-                "reason": "Arrow certification failed",
+                "reason": "protocol certification failed",
                 "certification_commands": certification_results,
             }
     try:
@@ -399,6 +424,20 @@ def _run_case(paths: RunnerPaths, package_root: Path, case_config: ExampleCase) 
         if proc.returncode == 0 and not marker_observed:
             case["reason"] = "missing stdout marker"
     return case
+
+
+def package_snapshot(root: Path) -> dict[str, tuple[str, bytes]]:
+    files: dict[str, tuple[str, bytes]] = {}
+    for path in sorted(root.rglob("*")):
+        relative_path = path.relative_to(root)
+        if "target" in relative_path.parts:
+            continue
+        relative = str(relative_path)
+        if path.is_symlink():
+            files[relative] = ("link", str(path.readlink()).encode())
+        elif path.is_file():
+            files[relative] = ("file", path.read_bytes())
+    return files
 
 
 def _run_sifr_command(

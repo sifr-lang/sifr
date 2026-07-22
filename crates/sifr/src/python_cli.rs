@@ -8,7 +8,9 @@ use super::cli_model_and_entrypoint::{
 use super::diagnostic_rendering_and_run::{
     current_session_package_id, package_session_for_cwd, render_diagnostics,
 };
-use super::python_runtime_context::package_python_runtime_for_check;
+use super::python_runtime_context::{
+    package_python_authoring_context, package_python_runtime_for_check,
+};
 use clap::{Args, Subcommand};
 use serde::{Deserialize, Serialize};
 use sifr_diagnostics::DiagnosticCode;
@@ -30,6 +32,8 @@ enum PythonCommands {
     Check(PythonInspectArgs),
     /// Diagnose Python interop and print non-applying patch suggestions
     Doctor(PythonInspectArgs),
+    /// Author checked-in typed declarations from selected Python symbols
+    Bind(super::python_binding_cli::PythonBindArgs),
     /// Create or recheck executable Python interop certifications
     Certify(PythonCertifyArgs),
 }
@@ -60,6 +64,14 @@ enum PythonCertifyCommands {
         #[arg(long)]
         fixture: PathBuf,
     },
+    /// Certify one `DLPack` producer
+    Dlpack {
+        /// Exact dotted declaration target
+        target: String,
+        /// Package-local executable Python fixture
+        #[arg(long)]
+        fixture: PathBuf,
+    },
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
@@ -77,16 +89,17 @@ struct ArrowFixtureEvidence {
     copy_performed: bool,
 }
 
-struct CertificationContext {
-    package_root: PathBuf,
-    interpreter: PathBuf,
-    environment_digest: String,
+pub(crate) struct CertificationContext {
+    pub package_root: PathBuf,
+    pub interpreter: PathBuf,
+    pub environment_digest: String,
 }
 
 pub(crate) fn cmd_python(args: PythonArgs, diagnostic_format: DiagnosticFormat) -> i32 {
     match args.command {
         PythonCommands::Check(args) => cmd_python_inspect(&args, false, diagnostic_format),
         PythonCommands::Doctor(args) => cmd_python_inspect(&args, true, diagnostic_format),
+        PythonCommands::Bind(args) => super::python_binding_cli::cmd_bind(&args, diagnostic_format),
         PythonCommands::Certify(args) => cmd_certify(args, diagnostic_format),
     }
 }
@@ -483,7 +496,7 @@ fn write_json(value: &impl Serialize) -> i32 {
 fn cmd_certify(args: PythonCertifyArgs, diagnostic_format: DiagnosticFormat) -> i32 {
     if args.check == args.command.is_some() {
         return fail(
-            "use either `sifr python certify --check` or `sifr python certify arrow TARGET --fixture PATH`",
+            "use either `sifr python certify --check` or one protocol command with TARGET and `--fixture PATH`",
             diagnostic_format,
             EXIT_USAGE_OR_CONFIG,
         );
@@ -495,79 +508,32 @@ fn cmd_certify(args: PythonCertifyArgs, diagnostic_format: DiagnosticFormat) -> 
     if args.check {
         return check_certifications(&context, diagnostic_format);
     }
-    let Some(PythonCertifyCommands::Arrow { target, fixture }) = args.command else {
-        return EXIT_USAGE_OR_CONFIG;
-    };
-    certify_arrow(&context, &target, &fixture, diagnostic_format)
+    match args.command {
+        Some(PythonCertifyCommands::Arrow { target, fixture }) => {
+            certify_arrow(&context, &target, &fixture, diagnostic_format)
+        }
+        Some(PythonCertifyCommands::Dlpack { target, fixture }) => {
+            super::python_dlpack_certification_cli::certify_dlpack(
+                &context,
+                &target,
+                &fixture,
+                diagnostic_format,
+            )
+        }
+        None => EXIT_USAGE_OR_CONFIG,
+    }
 }
 
 fn certification_context(diagnostic_format: DiagnosticFormat) -> Result<CertificationContext, i32> {
-    let session =
-        package_session_for_cwd(sifr_package::CargoLockMode::Normal).map_err(|error| {
-            render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
-            EXIT_USAGE_OR_CONFIG
-        })?;
-    if session.manifest_less_mode {
-        return Err(fail(
-            "Python certification requires a Sifr package",
-            diagnostic_format,
-            EXIT_USAGE_OR_CONFIG,
-        ));
-    }
-    let graph_context = load_package_graph_context(
-        &session,
+    let authoring = package_python_authoring_context(
         sifr_package::CargoLockMode::Normal,
+        &[],
         diagnostic_format,
-    )?
-    .ok_or(EXIT_USAGE_OR_CONFIG)?;
-    let package_id =
-        current_session_package_id(&session, &graph_context.graph).ok_or(EXIT_USAGE_OR_CONFIG)?;
-    let package = graph_context
-        .graph
-        .packages
-        .get(&package_id)
-        .ok_or(EXIT_USAGE_OR_CONFIG)?;
-    let mut derived = declaration_python_requirements(&graph_context.source_map, None);
-    let bridge_graph = sifr_package::resolve_python_bridge_graph(&graph_context.graph, &package_id)
-        .map_err(|errors| {
-            let diagnostics = errors
-                .into_iter()
-                .map(package_diagnostic)
-                .collect::<Vec<_>>();
-            render_diagnostics(&diagnostics, diagnostic_format);
-            EXIT_USER_DIAGNOSTIC
-        })?;
-    derived.extend(bridge_graph.requirements);
-    let resolved = sifr_package::resolve_python_environment_with_requirements(
-        &graph_context.graph,
-        &package_id,
-        &derived,
-    )
-    .map_err(|errors| {
-        let diagnostics = errors
-            .into_iter()
-            .map(package_diagnostic)
-            .collect::<Vec<_>>();
-        render_diagnostics(&diagnostics, diagnostic_format);
-        EXIT_USER_DIAGNOSTIC
-    })?
-    .ok_or_else(|| {
-        fail(
-            "Python certification requires a root-selected Python environment",
-            diagnostic_format,
-            EXIT_USER_DIAGNOSTIC,
-        )
-    })?;
-    let request = sifr_package::PythonEnvironmentProbeRequest::from(&resolved);
-    let probe = sifr_package::probe_python_environment(&request).map_err(|error| {
-        render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
-        EXIT_USER_DIAGNOSTIC
-    })?;
-    let environment_digest = sifr_package::digest_python_environment_probe(&request, &probe).hex;
+    )?;
     Ok(CertificationContext {
-        package_root: package.package_root.clone(),
-        interpreter: request.interpreter,
-        environment_digest,
+        package_root: authoring.package_root,
+        interpreter: authoring.runtime.interpreter().to_path_buf(),
+        environment_digest: authoring.runtime.environment_digest().to_string(),
     })
 }
 
@@ -623,6 +589,7 @@ fn certify_arrow(
             schema_version: sifr_package::ARROW_CERTIFICATION_SCHEMA_VERSION,
             environment_digest: context.environment_digest.clone(),
             arrow: Vec::new(),
+            dlpack: Vec::new(),
         }
     };
     artifact.arrow.retain(|existing| existing.target != target);
@@ -643,7 +610,7 @@ fn certify_arrow(
     }
 }
 
-fn validated_fixture(
+pub(crate) fn validated_fixture(
     context: &CertificationContext,
     fixture: &Path,
 ) -> Result<(PathBuf, PathBuf), String> {
@@ -730,10 +697,19 @@ fn check_certifications(
             );
         }
     }
+    for certification in &artifact.dlpack {
+        if let Err(reason) = super::python_dlpack_certification_cli::check_dlpack_certification(
+            context,
+            certification,
+        ) {
+            return fail(reason, diagnostic_format, EXIT_USER_DIAGNOSTIC);
+        }
+    }
     let _ = writeln!(
         io::stdout(),
-        "Python certifications: ok ({} Arrow target(s))",
-        artifact.arrow.len()
+        "Python certifications: ok ({} Arrow target(s), {} DLPack target(s))",
+        artifact.arrow.len(),
+        artifact.dlpack.len()
     );
     EXIT_SUCCESS
 }
@@ -799,7 +775,7 @@ fn validate_evidence(
     Ok(())
 }
 
-fn installed_distribution_version(
+pub(crate) fn installed_distribution_version(
     context: &CertificationContext,
     distribution: &str,
 ) -> Result<String, String> {

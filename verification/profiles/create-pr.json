@@ -115,6 +115,7 @@
         "scaffold",
         "env",
         "readonly-check-doctor",
+        "binding-authoring",
         "tier1",
         "callbacks",
         "callback-examples",

@@ -308,11 +308,60 @@ macro_rules! stmt_expr_question_mark {
                     let inner_err_ty_name =
                         crate::render_type(&crate::sifr_type_to_rust_type(inner_err_ty));
                     let error_ident = crate::RustExpr::Ident("__e".to_string());
-                    let converted_error = $emitter
+                    let target_error_info = $emitter
                         .try_closure_error_type_info
                         .last()
                         .and_then(Option::as_ref)
-                        .map(|target| {
+                        .cloned();
+                    let imported_project_call = matches!(
+                        inner.as_ref(),
+                        HirExpr::Call { func, .. } | HirExpr::PythonCall { func, .. }
+                            if $emitter.imported_project_functions.contains(func)
+                    );
+                    if imported_project_call
+                        && inner_err_ty.is_python_error_contract()
+                        && target_error_info
+                            .as_ref()
+                            .is_some_and(Type::is_python_error_contract)
+                    {
+                        let target_name = target_error_info
+                            .as_ref()
+                            .map(Type::rust_type)
+                            .unwrap_or_else(|| target_err_ty.clone());
+                        let field = |name: &str| crate::RustExpr::Field {
+                            expr: Box::new(error_ident.clone()),
+                            field: name.to_string(),
+                        };
+                        let converted = crate::RustExpr::StructInit {
+                            name: target_name,
+                            fields: vec![
+                                ("message".to_string(), field("message")),
+                                ("kind".to_string(), field("kind")),
+                                ("exception_type".to_string(), field("exception_type")),
+                                ("traceback".to_string(), field("traceback")),
+                                ("context".to_string(), field("context")),
+                                (
+                                    "__sifr_python_error".to_string(),
+                                    field("__sifr_python_error"),
+                                ),
+                            ],
+                        };
+                        return Ok(Some(crate::RustExpr::Try(Box::new(
+                            crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_inner))),
+                                method: "map_err".to_string(),
+                                args: vec![crate::RustExpr::Closure {
+                                    params: vec![crate::RustParam::Named {
+                                        name: "__e".to_string(),
+                                        ty: crate::RustType::Named("_".to_string()),
+                                    }],
+                                    body: Box::new(converted),
+                                    is_move: false,
+                                }],
+                            },
+                        ))));
+                    }
+                    let converted_error = target_error_info.as_ref().map(|target| {
                             $emitter.consuming_value_upcast_for_ir(
                                 target,
                                 inner_err_ty,

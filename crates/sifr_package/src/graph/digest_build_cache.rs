@@ -34,6 +34,24 @@ pub fn digest_python_environment_probe(
     digest_serializable(&canonical)
 }
 
+/// Stable identity for authoring artifacts that depend on the selected
+/// interpreter, ABI, and locked environment but not on the particular set of
+/// import roots currently reachable from one Sifr entrypoint.
+#[must_use]
+pub fn digest_python_authoring_environment_probe(
+    request: &PythonEnvironmentProbeRequest,
+    probe: &PythonEnvironmentProbe,
+) -> GraphDigest {
+    let mut request = request.clone();
+    request.required_imports.clear();
+    request.declared_imports.clear();
+    request.native_imports.clear();
+    let mut probe = probe.clone();
+    probe.imports.clear();
+    probe.native_imports.clear();
+    digest_python_environment_probe(&request, &probe)
+}
+
 #[derive(Serialize)]
 struct CanonicalPackageBuildCacheInputs<'a> {
     cargo_lock_digest: Option<&'a str>,

@@ -84,6 +84,8 @@ pub struct RustEmitter {
     pub(crate) generator_functions: HashSet<String>,
     /// Map of `module_name` -> set of imported names (for filtering preamble to only used functions)
     pub(crate) imported_stdlib_names: HashMap<String, HashSet<String>>,
+    /// Local names imported from first-party project modules.
+    pub(crate) imported_project_functions: HashSet<String>,
     /// Number of upcoming `self.field` reads that should suppress auto-clone.
     /// This avoids temporal coupling from a sticky bool flag.
     pub(crate) pending_self_field_clone_suppression: usize,
@@ -232,6 +234,7 @@ impl RustEmitter {
             mut_borrowed_params: HashSet::new(),
             generator_functions: HashSet::new(),
             imported_stdlib_names: HashMap::new(),
+            imported_project_functions: HashSet::new(),
             pending_self_field_clone_suppression: 0,
             emission_ctx: EmissionContext::default(),
             try_enum_counter: 0,

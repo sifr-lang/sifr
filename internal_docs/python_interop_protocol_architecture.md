@@ -6,7 +6,7 @@ This document defines the declaration-first Python interop contract. Typed
 coroutines, synchronous and asynchronous contexts, every callback dispatch
 mode, typed affine buffer declarations, and Arrow C Data Interface declarations
 are implemented. DLPack tensor/stream declarations and one-shot transfer are
-implemented under the same ownership and evidence contract.
+implemented under the same ownership and executable certification contract.
 
 The common rules in
 [`python_interop_declaration_architecture.md`](./python_interop_declaration_architecture.md)
@@ -693,6 +693,27 @@ ownership. Drop of an unconsumed tensor follows the same rule.
 No DLPack declaration copies or silently changes device. Explicit copied tensor
 conversion is a separate ordinary declaration or package bridge with a copied
 Sifr return type.
+
+Every DLPack declaration target requires a matching entry in the versioned
+package-root `sifr.python-certifications.json` artifact. Authors create or
+replace an entry with:
+
+```bash
+sifr python certify dlpack torch.Tensor \
+  --fixture python_certifications/dlpack_tensor.py
+sifr python certify --check
+```
+
+The package-local fixture executes with the selected interpreter and receives
+the exact logical target. It emits strict JSON binding the producer module/type,
+distribution versions, device, stream policy, pointer-identity and no-copy
+result, and an instrumented exact managed-tensor deleter count. The fixture must
+make and assert all claims within one process run; a recorded address or claimed
+counter is insufficient. `certify --check` reruns all Arrow and DLPack fixtures
+without writing and rejects environment, fixture, distribution, producer,
+policy, pointer, copy, release, or deleter drift. Package-local bridge targets
+use their stable `bridge.*` identity in evidence while lowering uses an isolated
+hashed runtime namespace.
 
 ## Raw API Relationship
 

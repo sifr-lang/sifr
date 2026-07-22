@@ -35,8 +35,9 @@ pub use crate::graph::derive::{
 };
 pub use crate::graph::digest::{
     digest_graph_inputs, digest_package_build_cache_inputs, digest_package_graph,
-    digest_package_source_map, digest_package_source_snapshot, digest_python_environment_probe,
-    GraphDigest, PackageBuildCacheInputs,
+    digest_package_source_map, digest_package_source_snapshot,
+    digest_python_authoring_environment_probe, digest_python_environment_probe, GraphDigest,
+    PackageBuildCacheInputs,
 };
 pub use crate::graph::filters::{
     apply_package_filters, parse_package_filter, PackageFilter, PackageFilterTerm,
@@ -72,21 +73,27 @@ pub use crate::projection::{
 };
 pub use crate::python::{
     arrow_fixture_digest, arrow_fixture_path, discover_python_bridge_inventory,
-    load_python_certifications, load_python_certifications_for_update, probe_python_environment,
-    required_python_certification_archive_entries, resolve_python_bridge_graph,
-    resolve_python_environment, resolve_python_environment_for_check,
+    load_python_bindings, load_python_bindings_for_update, load_python_certifications,
+    load_python_certifications_for_dlpack_update, load_python_certifications_for_update,
+    probe_python_environment, python_binding_generated_digest, python_binding_source_fingerprint,
+    required_python_binding_archive_entries, required_python_certification_archive_entries,
+    resolve_python_bridge_graph, resolve_python_environment, resolve_python_environment_for_check,
     resolve_python_environment_with_requirements, resolved_python_bridge_package_key,
-    resolved_python_bridge_runtime_package, validate_python_bridge_inventory_manifest,
-    validate_python_environment_probe, write_python_bridge_inventory, write_python_certifications,
-    ArrowCertification, ArrowCertifiedDistribution, ArrowCertifiedIdentityMethod,
-    ArrowCertifiedKind, ArrowCertifiedSchemaMode, DeferredPythonEnvironment, PythonBridgeImport,
-    PythonBridgeInventory, PythonBridgeModule, PythonCertificationArtifact,
-    PythonDistributionProbe, PythonEnvironmentProbe, PythonEnvironmentProbeRequest,
-    PythonEnvironmentResolution, PythonRequirementContribution, PythonRequirementKind,
-    ResolvedPythonBridgeGraph, ResolvedPythonBridgeImport, ResolvedPythonBridgeModule,
-    ResolvedPythonBridgePackage, ResolvedPythonEnvironment, ARROW_CERTIFICATION_SCHEMA_VERSION,
-    PYTHON_BRIDGE_INVENTORY, PYTHON_BRIDGE_ROOT, PYTHON_BRIDGE_RUNTIME_ROOT,
-    PYTHON_CERTIFICATIONS_FILE,
+    resolved_python_bridge_runtime_package, safe_python_binding_output, validate_python_bindings,
+    validate_python_bindings_with_generated_source, validate_python_bridge_inventory_manifest,
+    validate_python_environment_probe, write_python_bindings, write_python_bridge_inventory,
+    write_python_certifications, ArrowCertification, ArrowCertifiedDistribution,
+    ArrowCertifiedIdentityMethod, ArrowCertifiedKind, ArrowCertifiedSchemaMode,
+    DeferredPythonEnvironment, DlpackCertification, DlpackCertifiedDevice,
+    DlpackCertifiedStreamPolicy, PythonBinding, PythonBindingArtifact, PythonBindingDistribution,
+    PythonBindingSource, PythonBindingSourceKind, PythonBridgeImport, PythonBridgeInventory,
+    PythonBridgeModule, PythonCertificationArtifact, PythonDistributionProbe,
+    PythonEnvironmentProbe, PythonEnvironmentProbeRequest, PythonEnvironmentResolution,
+    PythonRequirementContribution, PythonRequirementKind, ResolvedPythonBridgeGraph,
+    ResolvedPythonBridgeImport, ResolvedPythonBridgeModule, ResolvedPythonBridgePackage,
+    ResolvedPythonEnvironment, ARROW_CERTIFICATION_SCHEMA_VERSION, PYTHON_BINDINGS_FILE,
+    PYTHON_BINDING_SCHEMA_VERSION, PYTHON_BRIDGE_INVENTORY, PYTHON_BRIDGE_ROOT,
+    PYTHON_BRIDGE_RUNTIME_ROOT, PYTHON_CERTIFICATIONS_FILE, PYTHON_CERTIFICATION_SCHEMA_VERSION,
 };
 pub use crate::source::layout::{validate_pure_marker_source, MarkerValidation};
 
