@@ -225,7 +225,7 @@ Implementation progress:
 - [x] M12 DLPack one-shot tensor transfer ([PR #2992](https://github.com/sifr-lang/sifr/pull/2992))
 - [x] M13 read-only check and doctor ([PR #2993](https://github.com/sifr-lang/sifr/pull/2993))
 - [x] M14 binding and certification authoring ([PR #2994](https://github.com/sifr-lang/sifr/pull/2994))
-- [ ] M15 LSP declaration authoring
+- [x] M15 LSP declaration authoring ([PR #2995](https://github.com/sifr-lang/sifr/pull/2995))
 - [ ] M16 raw API ergonomics on shared ownership
 - [ ] M17 ecosystem migration and certification
 
@@ -2353,8 +2353,10 @@ only advisory is the aggregate warm wall-time target; every blocking per-step
 budget passes. Fable High whole-diff review pass 1 found two minor closure
 defects: polluted async-negative fixtures and a stale architecture status
 paragraph. Both are remediated with exact single-diagnostic checks and the M16
-architecture contract update. A fresh frozen whole-diff review remains required
-before Wave 5 can close.
+architecture contract update. Fresh Fable High whole-diff review pass 2 is
+satisfied with no findings after independently rerunning the native package,
+runtime, demo, diagnostic, and guardrail evidence. The authoritative merge gate
+and PR merge remain before Wave 5 can close.
 
 Tasks:
 
