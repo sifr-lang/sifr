@@ -2196,7 +2196,13 @@ document closes, and mixed shared-target failures use kind-neutral
 wording with end-to-end attribution coverage. Cancellation documentation now
 states the sequential server's non-preemptive boundary, and alias identity is
 scoped to the implemented single-hop semantic definition mapping. Fresh
-validation and another whole-diff review remain required.
+authoritative create-PR validation passes every blocking lane on the exact
+post-pass-4 candidate in `795.90s`: Python interop `19/19`, LSP `69/69`,
+analysis `48/48`, package `139/139`, runtime-platform `28` variants with one
+capability-gated skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c`
+and a warm `42/42` cache. The live LSP protocol smoke passes, every per-step
+budget passes, and the overall warm wall-time notice is the only non-blocking
+advisory. Another frozen whole-diff review remains required.
 
 Tasks:
 
