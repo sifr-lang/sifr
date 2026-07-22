@@ -56,6 +56,10 @@ def convert_annotation(node):
             raise ValueError(f"untyped boundary {leaf!r} is forbidden")
         if leaf in {"Callable", "TypeVar", "Generic", "Protocol", "Self"}:
             raise ValueError(f"unsupported generic or callable annotation {name!r}")
+        if leaf in {"list", "List", "dict", "Dict", "tuple", "Tuple"}:
+            raise ValueError(f"bare container annotation {name!r} requires type arguments")
+        if leaf in {"set", "Set"}:
+            raise ValueError(f"unsupported direct-conversion container {name!r}")
         if identifier(leaf):
             return leaf
         raise ValueError(f"unsupported annotation {name!r}")
@@ -72,11 +76,15 @@ def convert_annotation(node):
         return f"{convert_annotation(elements[0])} | None"
     if leaf == "Union" and len(elements) >= 2:
         return " | ".join(convert_annotation(element) for element in elements)
-    if leaf in {"list", "List", "set", "Set"} and len(elements) == 1:
-        container = leaf.lower()
-        return f"{container}[{convert_annotation(elements[0])}]"
+    if leaf in {"list", "List"} and len(elements) == 1:
+        return f"list[{convert_annotation(elements[0])}]"
+    if leaf in {"set", "Set"}:
+        raise ValueError(f"unsupported direct-conversion container {base!r}")
     if leaf in {"dict", "Dict"} and len(elements) == 2:
-        return f"dict[{convert_annotation(elements[0])}, {convert_annotation(elements[1])}]"
+        key = convert_annotation(elements[0])
+        if key != "str":
+            raise ValueError("direct-conversion dict keys must use str")
+        return f"dict[str, {convert_annotation(elements[1])}]"
     if leaf in {"tuple", "Tuple"} and elements:
         if any(isinstance(element, ast.Constant) and element.value is Ellipsis for element in elements):
             raise ValueError("variadic tuple annotations are not supported")

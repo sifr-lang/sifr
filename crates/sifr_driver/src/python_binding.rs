@@ -225,19 +225,83 @@ fn validate_type(
     class_names: &BTreeSet<&str>,
     errors: &mut Vec<String>,
 ) {
-    let allowed = [
-        "None", "bool", "bytes", "dict", "float", "int", "list", "set", "str", "tuple",
-    ];
-    let identifiers = ty
-        .split(|character: char| !character.is_alphanumeric() && character != '_')
-        .filter(|part| !part.is_empty());
-    for identifier in identifiers {
-        if !allowed.contains(&identifier) && !class_names.contains(identifier) {
-            errors.push(format!(
-                "Python function '{declaration}' uses unresolved type '{identifier}'"
-            ));
+    if !is_supported_direct_type(ty, class_names, true) {
+        errors.push(format!(
+            "Python function '{declaration}' uses unresolved or unsupported direct-conversion type '{ty}'"
+        ));
+    }
+}
+
+fn is_supported_direct_type(ty: &str, class_names: &BTreeSet<&str>, allow_option: bool) -> bool {
+    let ty = ty.trim();
+    if matches!(ty, "None" | "bool" | "bytes" | "float" | "int" | "str") || class_names.contains(ty)
+    {
+        return true;
+    }
+
+    let Some(union_parts) = split_top_level(ty, '|') else {
+        return false;
+    };
+    if union_parts.len() > 1 {
+        return allow_option
+            && union_parts.len() == 2
+            && union_parts.iter().filter(|part| **part == "None").count() == 1
+            && union_parts
+                .iter()
+                .filter(|part| **part != "None")
+                .all(|part| is_supported_direct_type(part, class_names, false));
+    }
+
+    let Some(open) = ty.find('[') else {
+        return false;
+    };
+    if !ty.ends_with(']') {
+        return false;
+    }
+    let base = ty[..open].trim();
+    let Some(arguments) = split_top_level(&ty[open + 1..ty.len() - 1], ',') else {
+        return false;
+    };
+    match base {
+        "list" if arguments.len() == 1 => is_supported_direct_type(arguments[0], class_names, true),
+        "tuple" if !arguments.is_empty() => arguments
+            .iter()
+            .all(|argument| is_supported_direct_type(argument, class_names, true)),
+        "dict" if arguments.len() == 2 && arguments[0] == "str" => {
+            is_supported_direct_type(arguments[1], class_names, true)
+        }
+        _ => false,
+    }
+}
+
+fn split_top_level(value: &str, separator: char) -> Option<Vec<&str>> {
+    let mut depth = 0_u32;
+    let mut start = 0;
+    let mut parts = Vec::new();
+    for (index, character) in value.char_indices() {
+        match character {
+            '[' => depth = depth.checked_add(1)?,
+            ']' => depth = depth.checked_sub(1)?,
+            current if current == separator && depth == 0 => {
+                let part = value[start..index].trim();
+                if part.is_empty() {
+                    return None;
+                }
+                parts.push(part);
+                start = index + character.len_utf8();
+            }
+            _ => {}
         }
     }
+    if depth != 0 {
+        return None;
+    }
+    let part = value[start..].trim();
+    if part.is_empty() {
+        return None;
+    }
+    parts.push(part);
+    Some(parts)
 }
 
 fn render_declaration(output: &mut String, module: &str, declaration: &PythonBindingDeclaration) {
@@ -439,6 +503,44 @@ mod tests {
         assert!(errors
             .iter()
             .any(|error| { error.contains("optional positional-only parameter 'exponent'") }));
+    }
+
+    #[test]
+    fn rejects_bare_list_direct_conversion_type() {
+        assert_unsupported_type_rejected("list");
+    }
+
+    #[test]
+    fn rejects_set_direct_conversion_type() {
+        assert_unsupported_type_rejected("set[int]");
+    }
+
+    #[test]
+    fn rejects_non_string_dict_key_direct_conversion_type() {
+        assert_unsupported_type_rejected("dict[int, str]");
+    }
+
+    #[test]
+    fn accepts_the_recursive_direct_conversion_grammar() {
+        let classes = BTreeSet::from(["Client"]);
+        for ty in [
+            "None",
+            "int",
+            "Client",
+            "Client | None",
+            "list[tuple[int, str | None]]",
+            "dict[str, list[Client]]",
+        ] {
+            let mut errors = Vec::new();
+            validate_type("load", ty, &classes, &mut errors);
+            assert!(errors.is_empty(), "{ty}: {errors:?}");
+        }
+    }
+
+    fn assert_unsupported_type_rejected(ty: &str) {
+        let mut errors = Vec::new();
+        validate_type("load", ty, &BTreeSet::new(), &mut errors);
+        assert!(errors.iter().any(|error| error.contains(ty)), "{errors:?}");
     }
 
     fn symbol(

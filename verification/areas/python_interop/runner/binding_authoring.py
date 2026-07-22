@@ -193,6 +193,52 @@ def main() -> int:
     require(snapshot(package) == positional_snapshot,
             "failed positional-only authoring mutated package inputs")
 
+    container_snapshot = snapshot(package)
+    bare_container = run(
+        binary,
+        package,
+        "python",
+        "bind",
+        "math",
+        "--symbols",
+        "frexp",
+        "--override",
+        "typing/unsupported_containers.pyi",
+        expected=1,
+    )
+    require("bare container" in bare_container.stderr,
+            "bare container binding type did not fail closed")
+    unsupported_set = run(
+        binary,
+        package,
+        "python",
+        "bind",
+        "math",
+        "--symbols",
+        "ceil",
+        "--override",
+        "typing/unsupported_containers.pyi",
+        expected=1,
+    )
+    require("set" in unsupported_set.stderr,
+            "set binding type did not fail closed")
+    invalid_dict_key = run(
+        binary,
+        package,
+        "python",
+        "bind",
+        "math",
+        "--symbols",
+        "floor",
+        "--override",
+        "typing/unsupported_containers.pyi",
+        expected=1,
+    )
+    require("dict keys must use str" in invalid_dict_key.stderr,
+            "non-string dict key binding type did not fail closed")
+    require(snapshot(package) == container_snapshot,
+            "failed container authoring mutated package inputs")
+
     write_runtime_main(package)
     runtime = run(binary, package, "run", "src/main.sifr", "--frozen")
     require("binding runtime ok" in runtime.stdout,
@@ -241,7 +287,7 @@ def main() -> int:
 
     print(
         "python interop binding authoring ok: "
-        "sources=5 generated=4 untyped_failures=2 drift_checks=2 mutations=0"
+        "sources=5 generated=4 untyped_failures=3 drift_checks=2 mutations=0"
     )
     return 0
 
@@ -268,6 +314,12 @@ def create_package(root: Path) -> Path:
     )
     (root / "typing" / "positional_only.pyi").write_text(
         "def pow(x: float, y: float = 2.0, /) -> float: ...\n", encoding="utf-8"
+    )
+    (root / "typing" / "unsupported_containers.pyi").write_text(
+        "def frexp(value: float) -> list: ...\n"
+        "def ceil(values: set[int]) -> int: ...\n"
+        "def floor(value: float) -> dict[int, str]: ...\n",
+        encoding="utf-8",
     )
     (root / ".venv").symlink_to(AREA_ROOT / ".venv", target_is_directory=True)
     (root / "pyproject.toml").symlink_to(AREA_ROOT / "pyproject.toml")
