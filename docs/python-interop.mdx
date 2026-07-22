@@ -120,7 +120,20 @@ Rules:
 
 ## Calling Python
 
-The public surface is explicit:
+Use typed declarations for ordinary package calls. The Sifr signature is the
+conversion contract and every failure remains a checked `Result`:
+
+```python
+from sifr.python import PythonError
+
+@python(math.sqrt)
+def sqrt(value: float) -> Result[float, PythonError]: ...
+```
+
+### Dynamic Object Escape Hatch
+
+Use the sealed dynamic object API only when a boundary cannot be expressed as a
+typed declaration or isolated behind a package-local bridge:
 
 ```python
 from sifr.python import Object, PythonError, from_value, import_module, kwarg, to_value
@@ -245,20 +258,25 @@ binding identity in its build cache key.
 Every public `sifr.python` operation is classified as `@blocking_io`. Direct Python calls in async Sifr code are rejected unless the work is explicitly offloaded through Sifr's blocking offload primitive.
 
 ```python
-from sifr.python import Object, PythonError, call_attr, from_str, get_attr, import_module, to_str
+from sifr.python import PythonError
 
-async def fetch_status() -> Result[str, PythonError]:
+@python.opaque(type=httpx.Response, cleanup=drop)
+class Response:
+    @python.attr(Self.status_code)
+    def status_code(self) -> Result[int, PythonError]: ...
+
+@python(httpx.get)
+def get(url: str) -> Result[Response, PythonError]: ...
+
+async def fetch_status() -> Result[int, PythonError]:
     handle = task.spawn_blocking(fetch_status_sync)
     return await handle.join()
 
 @blocking_io
-def fetch_status_sync() -> Result[str, PythonError]:
+def fetch_status_sync() -> Result[int, PythonError]:
     try:
-        httpx: Object = import_module("httpx")
-        url_obj: Object = from_str("https://example.com")
-        response: Object = call_attr(httpx, "get", [url_obj], [])
-        status: Object = get_attr(response, "status_code")
-        return to_str(status)
+        response: Response = get("https://example.com")
+        return response.status_code()
     except PythonError as e:
         raise e
 ```
@@ -330,28 +348,34 @@ Exit runs exactly once on fallthrough, return, error, and cancellation paths.
 Python resources must be closed or released explicitly when correctness depends on cleanup:
 
 ```python
-from sifr.python import Object, PythonError, call_attr, from_str, import_module, to_str, with_context
+from sifr.python import ExitCause, ExitDecision, PythonError
 
-def consume_file(entered: Object) -> Result[None, PythonError]:
-    try:
-        text: Object = call_attr(entered, "read", [], [])
-        print(to_str(text))
-        return None
-    except PythonError as e:
-        raise e
+@python.opaque(type=sqlite3.Connection, cleanup=context)
+class Connection:
+    @python.context.enter(Self.__enter__)
+    def __enter__(self) -> Result[Connection, PythonError]: ...
 
-def read_with_context(path: str) -> Result[None, PythonError]:
+    @python.context.exit(Self.__exit__)
+    def __exit__(own self, cause: ExitCause) -> Result[ExitDecision, PythonError]: ...
+
+    @python.attr(Self.total_changes)
+    def total_changes(self) -> Result[int, PythonError]: ...
+
+@python(sqlite3.connect)
+def connect(database: str) -> Result[Connection, PythonError]: ...
+
+def use_transaction() -> Result[int, PythonError]:
     try:
-        builtins: Object = import_module("builtins")
-        path_obj: Object = from_str(path)
-        mode: Object = from_str("r")
-        handle: Object = call_attr(builtins, "open", [path_obj, mode], [])
-        return with_context(handle, consume_file)
+        with connect(":memory:") as connection:
+            return connection.total_changes()
     except PythonError as e:
         raise e
 ```
 
-Use `py.close`, `py.with_context`, callback `close`, buffer `release`, Arrow release helpers, and DLPack release helpers. Double close/release returns deterministic resource-state errors for resource types that are not intentionally idempotent.
+Typed context protocols, callback owners, buffers, Arrow resources, and DLPack
+tensors carry their cleanup obligations in the declaration contract. Double
+close/release returns deterministic resource-state errors for resource types
+that are not intentionally idempotent.
 
 ## Callbacks
 
@@ -565,125 +589,88 @@ Zero-copy APIs reject unsupported dtype, shape, stride, device, mutability, malf
 
 ## Package Examples
 
-These are representative patterns covered by verification fixtures or matrix contracts:
+Ordinary application code uses typed declarations. A package-local hermetic
+bridge is appropriate when a library workflow is dynamic internally; the Sifr
+boundary remains closed and typed.
 
-```python biip / schwifty validation
-from sifr.python import Object, PythonError, call_attr, from_str, import_module, to_str
+```python biip / schwifty declarations
+from sifr.python import PythonError
 
-def validate_identifiers(gtin: str, bic_text: str) -> Result[str, PythonError]:
-    try:
-        biip: Object = import_module("biip")
-        gtin_obj: Object = from_str(gtin)
-        parsed: Object = call_attr(biip, "parse", [gtin_obj], [])
+@python.opaque(type=biip.gtin.Gtin, cleanup=drop)
+class Gtin:
+    @python.attr(Self.value)
+    def value(self) -> Result[str, PythonError]: ...
 
-        schwifty: Object = import_module("schwifty")
-        bic_obj: Object = from_str(bic_text)
-        bic: Object = call_attr(schwifty, "BIC", [bic_obj], [])
-        parsed_text: str = to_str(parsed)
-        bic_text_value: str = to_str(bic)
-        return f"{parsed_text} / {bic_text_value}"
-    except PythonError as e:
-        raise e
+@python.opaque(type=biip._parser.ParseResult, cleanup=drop)
+class ParseResult:
+    @python.attr(Self.gtin)
+    def gtin(self) -> Result[Gtin, PythonError]: ...
+
+@python(biip.parse)
+def parse_identifier(text: str) -> Result[ParseResult, PythonError]: ...
+
+@python.opaque(type=schwifty.BIC, cleanup=drop)
+class Bic:
+    @python.attr(Self.country_code)
+    def country_code(self) -> Result[str, PythonError]: ...
+
+@python(schwifty.BIC)
+def bic(text: str) -> Result[Bic, PythonError]: ...
 ```
 
-```python FastAPI in-process import
-from sifr.python import Object, PythonError, call_attr, import_module
+```python Dynamic library workflow behind a typed bridge
+from sifr.python import PythonError
 
-def build_app() -> Result[Object, PythonError]:
-    try:
-        fastapi: Object = import_module("fastapi")
-        return call_attr(fastapi, "FastAPI", [], [])
-    except PythonError as e:
-        raise e
+class AppSummary:
+    status: int
+    framework: str
+
+@python(bridge.web_app.build_summary)
+def build_summary() -> Result[AppSummary, PythonError]: ...
 ```
 
-```python pandas / pyarrow / polars Arrow bridge
-from sifr.python import (
-    ArrowCapsule,
-    Object,
-    PythonError,
-    call_attr,
-    export_arrow_stream,
-    from_dict_str,
-    from_int,
-    from_list,
-    get_attr,
-    import_module,
-    zero_copy_arrow_stream,
-)
+```python pandas / Polars Arrow declarations
+from sifr.python import PythonError
 
-def arrow_contract() -> Result[ArrowCapsule, PythonError]:
-    try:
-        one: Object = from_int(1)
-        two: Object = from_int(2)
-        three: Object = from_int(3)
-        column: Object = from_list([one, two, three])
-        data: Object = from_dict_str([("x", column)])
+@python.arrow(pandas.DataFrame, schema=omitted)
+def pandas_frame(values: list[int]) -> Result[python.ArrowStream, PythonError]: ...
 
-        pandas: Object = import_module("pandas")
-        pdf: Object = call_attr(pandas, "DataFrame", [data], [])
-
-        polars: Object = import_module("polars")
-        df: Object = call_attr(polars, "from_pandas", [pdf], [])
-
-        pyarrow: Object = import_module("pyarrow")
-        table_class: Object = get_attr(pyarrow, "Table")
-        table: Object = call_attr(table_class, "from_pandas", [pdf], [])
-        exported: ArrowCapsule = export_arrow_stream(table)
-        return zero_copy_arrow_stream(df)
-    except PythonError as e:
-        raise e
+@python.arrow(polars.Series, schema=omitted)
+def polars_series(values: list[int]) -> Result[python.ArrowStream, PythonError]: ...
 ```
 
-```python torch / tensorflow DLPack
-from sifr.python import DlpackTensor, Object, PythonError, call_attr, from_float, from_list, import_module, zero_copy_dlpack_tensor
+```python PyTorch one-shot DLPack transfer
+from sifr.python import PythonError
 
-def tensor_contract() -> Result[DlpackTensor, PythonError]:
-    try:
-        torch: Object = import_module("torch")
-        one: Object = from_float(1.0)
-        two: Object = from_float(2.0)
-        three: Object = from_float(3.0)
-        values: Object = from_list([one, two, three])
-        tensor: Object = call_attr(torch, "tensor", [values], [])
-        torch_view: DlpackTensor = zero_copy_dlpack_tensor(tensor)
+@python.opaque(type=torch.Tensor, cleanup=drop)
+class TorchTensor(NonSend):
+    @python.dlpack(Self, device=cpu, stream=none)
+    def export(self) -> Result[python.DlpackTensor[int64], PythonError]: ...
 
-        tensorflow: Object = import_module("tensorflow")
-        tf_tensor: Object = call_attr(tensorflow, "constant", [values], [])
-        return zero_copy_dlpack_tensor(tf_tensor)
-    except PythonError as e:
-        raise e
+@python(torch.from_dlpack)
+def consume_tensor(own value: python.DlpackTensor[int64]) -> Result[TorchTensor, PythonError]: ...
 ```
 
-```python Kafka callback shape
-from sifr.python import Object, PythonError, call_attr, from_list, from_str, threadsafe_callback
+```python Foreign-thread Kafka callback
+from sifr.python import PythonError
 
-def handle_message(msg: Object) -> Result[Object, PythonError]:
-    return msg
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
+@python(bridge.kafka_consumer.poll)
+def poll(handler: Callable[[str], str]) -> Result[str, PythonError]: ...
 
-def register_callback(consumer: Object) -> Result[None, PythonError]:
-    try:
-        callback = threadsafe_callback(handle_message)
-        topic: Object = from_str("events")
-        topics: Object = from_list([topic])
-        result: Object = call_attr(consumer, "subscribe", [topics], [("on_assign", callback.callable)])
-        return None
-    except PythonError as e:
-        raise e
+def acknowledge(message: str) -> str:
+    return "ack:" + message
 ```
 
-```python Cloud and AI clients
-from sifr.python import Object, PythonError, call_attr, import_module
+```python Cloud client workflow behind a typed bridge
+from sifr.python import PythonError
 
-def import_cloud_clients() -> Result[tuple[Object, Object, Object], PythonError]:
-    try:
-        openai: Object = import_module("openai")
-        boto3: Object = import_module("boto3")
-        pubsub: Object = import_module("google.cloud.pubsub")
-        client: Object = call_attr(openai, "OpenAI", [], [])
-        return (client, boto3, pubsub)
-    except PythonError as e:
-        raise e
+class QueueResult:
+    message_id: str
+    body: str
+
+@python(bridge.cloud.send_and_receive)
+def send_and_receive(queue: str, body: str) -> Result[QueueResult, PythonError]: ...
 ```
 
 Credentialed or service-backed behavior belongs in the external Python interop gate. The default local gate uses import, stub, contract, and matrix evidence.
@@ -718,6 +705,16 @@ scripts/run_all_tests.sh --profile python-interop-live
 ```
 
 Matrix-only package evidence reports `matrix-passed`; live environment execution reports `passed`. Host-dependent packages include explicit skip reasons.
+
+The area result also contains `compiled_certification`. It binds the callback,
+offline async HTTP, buffer, Arrow, and DLPack capability rows to exact compiled
+case IDs, Sifr sources, stdout markers, trust roots, certification-command
+counts, and SHA-256 digests of reports created in that invocation. Reports are
+removed before their owning suite runs, so stale output cannot promote a
+capability. `complete` means all five owning suites ran and all seven capability
+rows passed; targeted runs report `partial` or `not-selected` without promotion.
+Arrow, DLPack, and NumPy buffer records additionally require an observed
+`resources=zero` marker.
 The `python-interop-live` profile is explicit opt-in container-runtime policy
 for service-backed examples; it is not part of offline `create-pr`, `merge`,
 `nightly`, or `release` validation. It first validates live policy, then builds

@@ -187,6 +187,19 @@ Report status values are intentional:
 - `policy-passed`: live container-runtime policy was validated without running service containers.
 - `live-passed`, `structured-skip`, `live-failed`: reserved for testcontainers-backed live examples.
 
+The declaration capability matrix is also an executable compiled-evidence
+ledger. Its schema-2 `compiled_evidence` entries bind callback dispatch,
+offline async HTTP, buffer, Arrow, and DLPack capability rows to exact suite
+reports, case IDs, source fixtures, markers, and certification-command floors.
+Before a suite starts, the outer area runner removes that suite's old target
+report. After the selected suites finish, it accepts only a current
+`examples-passed` report with zero failures/skips, one matching
+`compiled-sifr-declaration` case, an observed exact marker, declared trust
+roots, successful certification commands, and the checked-in Sifr source. The
+area result records the report SHA-256. Unselected suites remain visibly
+unpromoted; NumPy buffer, Arrow, and DLPack certification additionally require
+their `resources=zero` marker.
+
 Tier 4 and other host-dependent entries must include explicit `skip_reason` evidence. The full external gate is responsible for live service/host evidence.
 
 ## Example Evidence Map

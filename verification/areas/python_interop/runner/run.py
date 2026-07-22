@@ -6,6 +6,7 @@ from pathlib import Path
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from async_declaration_examples import (
     build_async_declaration_examples_report,
@@ -24,6 +25,7 @@ from buffer_examples import (
 )
 from buffer_evidence import BUFFER_MATRIX_SPECS
 from callback_examples import build_callback_examples_report, run_callback_examples_self_tests
+from certification_ledger import run_compiled_certification_self_tests
 from certification_matrix import build_certification_report, validate_certification_policy
 from cli_args import parse_args
 from dataframe_examples import build_dataframe_examples_report, run_dataframe_examples_self_tests
@@ -726,6 +728,8 @@ def run_self_tests(area_root: Path) -> None:
     validate_certification_policy(entries)
     repo_root = area_root.parents[2]
     run_declaration_capability_self_tests(area_root, repo_root)
+    capability_matrix = load_and_validate_capabilities(area_root, repo_root)
+    run_compiled_certification_self_tests(capability_matrix, repo_root)
     validate_fixture_files(area_root / "fixtures")
     evidence = json.loads(
         (area_root / "fixtures/sqlite_context/sync_context_evidence.json").read_text(

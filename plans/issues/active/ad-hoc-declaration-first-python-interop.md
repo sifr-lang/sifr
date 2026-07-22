@@ -2523,6 +2523,39 @@ diff and returned **SATISFIED** with no blocker, major, or actionable minor.
 Wave 2 is closure-approved in
 [PR #2998](https://github.com/sifr-lang/sifr/pull/2998).
 
+Wave 3 implementation upgrades the declaration capability matrix to schema 2
+and binds seven ecosystem-facing rows to ten exact compiled evidence records:
+current/foreign/asyncio callbacks, the offline async HTTP client, NumPy buffer,
+Arrow, and PyTorch/TensorFlow DLPack. The outer area runner removes each target
+report before its owning suite runs, then validates the current invocation's
+case ID, checked-in Sifr source, compiled execution model, marker, trust roots,
+certification-command floor, zero-failure/zero-skip summary, and report SHA-256.
+NumPy buffer, Arrow, and both DLPack records additionally require observed
+`resources=zero`; partial suite selections remain unpromoted. The runnable
+`demos/python_ecosystem_certification` proof passes all five suites and reports
+`status=complete:capabilities=7:evidence=10:resources-zero=4`. Public package,
+blocking, and resource examples now lead with declarations or typed bridges;
+only the explicitly labeled dynamic-object escape hatch retains raw `Object`.
+Focused validation passes the complete certification demo: callback examples
+in `53.89s`, buffer in `37.72s`, Arrow in `31.03s`, DLPack in `53.11s`, and
+offline async HTTP in `8.76s`, all with zero failures. Positive and adversarial
+ledger self-tests reject a Python-runner substitute, skipped evidence,
+duplicate cases, hidden markers, and failed certification commands. Python
+syntax, formatting, diff, verification taxonomy, HIR/driver maintainability,
+and the `2817`-file source-size guardrail pass.
+
+The first authoritative runner attempt exposed that direct `importlib`
+orchestration did not place the Python-interop area directory on `sys.path`;
+the runner entrypoints now establish that import root explicitly, and the exact
+orchestrator command is covered by the rerun. Authoritative `create-pr`
+validation then passes every blocking lane in `1136.38s`: Python interop
+`19/19`, create-PR E2E `131/131` with signature `7c39b8c1dd4fec7c`,
+runtime-platform `28` variants with zero failures and one declared capability
+skip, and hardening `6/6`. The generated current-run certification ledger is
+complete with seven passing capabilities, ten compiled evidence records, and
+four resource-zero records. Every per-step blocking budget passes; only the
+aggregate warm wall-time target is advisory.
+
 Tasks:
 
 - Migrate all runnable biip/schwifty, dataframe, ML, web, database, cloud,
