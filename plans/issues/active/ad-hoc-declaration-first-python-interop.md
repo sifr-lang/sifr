@@ -2255,8 +2255,14 @@ new major: a loader-excluded open document could sort first in package
 diagnostic ownership despite being unable to publish, suppressing package errors
 from every analyzable sibling. Owner election now filters through the analysis
 workspace's actual publishability predicate, and a nested excluded-document regression pins
-the anti-conservative failure shape. Fresh authoritative validation and another
-frozen whole-diff review remain required.
+the anti-conservative failure shape. Post-pass-6 authoritative create-PR
+validation passes every blocking lane in `784.12s`: Python interop `19/19`, LSP
+`71/71`, analysis `48/48`, package `139/139`, driver `382/382` plus `33`
+expected generated-build ignores, runtime-platform `28` variants with one
+capability-gated skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c`
+and a warm `42/42` cache. Every per-step blocking budget passes; overall warm
+wall time is the only non-blocking advisory. Another frozen whole-diff review
+remains required.
 
 Tasks:
 
