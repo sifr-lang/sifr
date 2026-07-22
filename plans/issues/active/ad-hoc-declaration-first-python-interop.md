@@ -2272,8 +2272,14 @@ analysis error aborted the diagnostic drain before the eligible sibling's
 owner handoff. Full publication now schedules only documents that can provide
 analysis or load diagnostics, using the same publishability boundary as owner
 election. The close-owner regression includes an excluded document and pins
-the clear-plus-republish transition. Fresh authoritative validation and another
-frozen whole-diff review remain required.
+the clear-plus-republish transition. Post-pass-7 authoritative create-PR
+validation passes every blocking lane in `780.26s`: Python interop `19/19`, LSP
+`71/71`, analysis `48/48`, package `139/139`, driver `382/382` plus `33`
+expected generated-build ignores, runtime-platform `28` variants with one
+capability-gated skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c`
+and a warm `42/42` cache. Every per-step blocking budget passes; overall warm
+wall time is the only non-blocking advisory. Another frozen whole-diff review
+remains required.
 
 Tasks:
 
