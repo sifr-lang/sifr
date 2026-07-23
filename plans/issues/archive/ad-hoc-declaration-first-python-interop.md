@@ -2,12 +2,12 @@
 
 ## Status
 
-Closure review and remediation are in progress on
+Completed and closure-approved on
 [PR #3000](https://github.com/sifr-lang/sifr/pull/3000). M0-M17 implementation
-is merged through PR #2999, while M17 Wave 4 remains open until the closure PR
-has a satisfied whole-phase review, passes the authoritative merge gate on its
-exact final tree, merges, and completes the status/index/archive bookkeeping
-listed below. The phase defines one complete end-state architecture and an
+is merged through PR #2999; repeated whole-phase Fable High review is satisfied,
+the authoritative merge gate passes on the closure candidate, and M17 Wave 4
+and the phase bookkeeping are complete. The phase defines one complete
+end-state architecture and an
 ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
@@ -94,7 +94,7 @@ authoritative create-PR gate passes every blocking lane. M16 is implemented,
 authoritatively validated, repeatedly reviewed to satisfaction, and
 closure-approved on [PR #2996](https://github.com/sifr-lang/sifr/pull/2996).
 M17 ecosystem migration and certification implementation is complete through
-PRs #2997-#2999:
+PRs #2997-#3000:
 ordinary examples use declarations or hermetic typed bridges, live services
 execute built Sifr binaries, and the current-run capability ledger binds seven
 capabilities to ten compiled evidence records with four resource-zero proofs.
@@ -2454,7 +2454,7 @@ Delivery waves:
 - [x] Wave 3 — consolidate compiled callback, async HTTP, Arrow, DLPack, and
   resource-zero evidence into the capability certification ledger; add the M17
   demo and finish public/internal documentation.
-- [ ] Wave 4 — run authoritative validation, repeat whole-milestone and
+- [x] Wave 4 — run authoritative validation, repeat whole-milestone and
   whole-phase review to satisfaction, merge, update phase/roadmap/architecture
   status, and archive the completed phase.
 
@@ -2680,8 +2680,8 @@ strict IR validation rejected `Point::origin`, `Temperature::from_fahrenheit`,
 and `MathUtils::add`. Plain-call targets now use one structured helper that
 emits `RustExpr::Path` for every namespaced target across registry, await, and
 structured task-call lowering. The focused IR helper test and the complete
-emitted-pass-fixture safety test pass after remediation. Fresh review and the
-exact-tree merge gate remain before closure bookkeeping.
+emitted-pass-fixture safety test pass after remediation. The fresh review and
+exact-tree merge gate that followed are recorded below.
 
 Whole-phase Fable High
 [review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-6.md)
@@ -2689,14 +2689,17 @@ exhaustively enumerated every reachable dynamic `RustExpr::Ident` construction,
 confirmed every plain and namespaced call target is now represented structurally,
 ran live synchronous, asynchronous, timeout, and structured-task probes, and
 rechecked the complete M0-M17 diff and every load-bearing pass-5 conclusion. It
-returned **SATISFIED** with no blocker, major, or actionable minor. The final
-authoritative merge-profile gate and closure bookkeeping remain.
+returned **SATISFIED** with no blocker, major, or actionable minor. The
+authoritative merge-profile gate then passed the exact committed closure
+candidate (`485749d91`) in `4316.43s`: Python interop `25/25`, codegen
+`890/890`, runtime-platform `30` variants with zero failures and three declared
+capability/tooling skips, E2E `674/674` with report signature
+`1f8b1cadc4f48ec8`, and hardening `261` variants with zero failures. Every
+blocking step passed; the warm-wall and batching notices are advisory.
 
-At merge, the closure unit must: record the final satisfied review artifacts
-and exact merge-gate evidence here; check M17 Wave 4; change this status to
-`completed`; update the PY-2 roadmap, phase index, and architecture summary to
-name PR #3000 and the final evidence; then move this file from `issues/active/`
-to `issues/archive/` before merging PR #3000.
+The closure unit records the satisfied whole-phase review and exact merge-gate
+evidence here, completes M17 Wave 4, updates the PY-2 roadmap, phase index, and
+architecture summary for PR #3000, and archives this phase record before merge.
 
 Tasks:
 
