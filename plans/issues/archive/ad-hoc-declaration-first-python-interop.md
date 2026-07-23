@@ -2,7 +2,7 @@
 
 ## Status
 
-In progress. The phase defines one complete end-state architecture and an
+Final closure in progress on 2026-07-22. The phase defines one complete end-state architecture and an
 ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
@@ -88,7 +88,10 @@ and excluded-document publication gaps and returned **SATISFIED**. The final
 authoritative create-PR gate passes every blocking lane. M16 is implemented,
 authoritatively validated, repeatedly reviewed to satisfaction, and
 closure-approved on [PR #2996](https://github.com/sifr-lang/sifr/pull/2996).
-M17 is not yet implemented.
+M17 ecosystem migration and certification is complete through PRs #2997-#2999:
+ordinary examples use declarations or hermetic typed bridges, live services
+execute built Sifr binaries, and the current-run capability ledger binds seven
+capabilities to ten compiled evidence records with four resource-zero proofs.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
@@ -229,7 +232,7 @@ Implementation progress:
 - [x] M14 binding and certification authoring ([PR #2994](https://github.com/sifr-lang/sifr/pull/2994))
 - [x] M15 LSP declaration authoring ([PR #2995](https://github.com/sifr-lang/sifr/pull/2995))
 - [x] M16 raw API ergonomics on shared ownership ([PR #2996](https://github.com/sifr-lang/sifr/pull/2996))
-- [ ] M17 ecosystem migration and certification
+- [x] M17 ecosystem migration and certification ([PR #2997](https://github.com/sifr-lang/sifr/pull/2997), [PR #2998](https://github.com/sifr-lang/sifr/pull/2998), [PR #2999](https://github.com/sifr-lang/sifr/pull/2999))
 
 ### M0. Complete Contract Lock And Evidence Model
 
@@ -2597,6 +2600,16 @@ declared capability skip, and hardening `6/6`. Only the aggregate warm
 wall-time target is advisory. Wave 3 is closure-approved in
 [PR #2999](https://github.com/sifr-lang/sifr/pull/2999).
 
+Wave 4 pre-review validation passes the authoritative merge profile end to end
+in `3914.17s`. Python interop passes `25/25`; the full E2E corpus passes
+`674/674` with report signature `1f8b1cadc4f48ec8`; runtime-platform reports
+`30` variants, zero failures, and three declared host/capability skips; and
+hardening passes `261` variants with zero failures. File-size, maintainability,
+taxonomy, formatting, Clippy, package, distribution, sysroot, generated-code,
+diagnostic, regression, and ecosystem checks all pass. The aggregate warm-time
+and group-skew notices are non-blocking advisories; the gate exits successfully.
+Whole-phase review and closure-PR merge remain before Wave 4 is complete.
+
 Tasks:
 
 - Migrate all runnable biip/schwifty, dataframe, ML, web, database, cloud,
@@ -2654,24 +2667,24 @@ Validation:
 
 ## Review Checklist
 
-- [ ] The architecture defines one complete language, not a reduced release.
-- [ ] The Sifr signature is the only conversion type declaration.
-- [ ] Targets are structured paths in a dedicated namespace.
-- [ ] Omission, defaults, positional arguments, kwargs, and variadics are exact.
-- [ ] All Python identity uses one sealed non-send runtime handle.
-- [ ] Automatic reference drop is distinct from semantic resource operations.
-- [ ] Sync context suppression and cleanup-error precedence are explicit.
-- [ ] One owned asyncio loop has bidirectional cancellation and terminal cleanup.
-- [ ] Async close and async context exit cannot be abandoned by cancellation.
-- [ ] Callback lifetime, owner, dispatch, concurrency, and shutdown are explicit.
-- [ ] Buffer borrow/access/layout and exact release are explicit.
-- [ ] Arrow and DLPack are affine, one-path, and never copy.
-- [ ] Bridges are hermetic embedded package inputs with static imports.
-- [ ] There is one requirement/trust authority and no allowlist coexistence.
-- [ ] Check, doctor, binding generation, and LSP reuse compiler plans.
-- [ ] No tool or compiler path creates an untyped boundary automatically.
-- [ ] Capability claims require executable negative and cleanup evidence.
-- [ ] Named live cases invoke compiled Sifr binaries.
+- [x] The architecture defines one complete language, not a reduced release.
+- [x] The Sifr signature is the only conversion type declaration.
+- [x] Targets are structured paths in a dedicated namespace.
+- [x] Omission, defaults, positional arguments, kwargs, and variadics are exact.
+- [x] All Python identity uses one sealed non-send runtime handle.
+- [x] Automatic reference drop is distinct from semantic resource operations.
+- [x] Sync context suppression and cleanup-error precedence are explicit.
+- [x] One owned asyncio loop has bidirectional cancellation and terminal cleanup.
+- [x] Async close and async context exit cannot be abandoned by cancellation.
+- [x] Callback lifetime, owner, dispatch, concurrency, and shutdown are explicit.
+- [x] Buffer borrow/access/layout and exact release are explicit.
+- [x] Arrow and DLPack are affine, one-path, and never copy.
+- [x] Bridges are hermetic embedded package inputs with static imports.
+- [x] There is one requirement/trust authority and no allowlist coexistence.
+- [x] Check, doctor, binding generation, and LSP reuse compiler plans.
+- [x] No tool or compiler path creates an untyped boundary automatically.
+- [x] Capability claims require executable negative and cleanup evidence.
+- [x] Named live cases invoke compiled Sifr binaries.
 
 ## Planning Review Evidence
 
