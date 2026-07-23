@@ -78,6 +78,10 @@ pub enum RustItem {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RustStmt {
+    /// A validated compiler-owned Rust fragment used only where the structured
+    /// IR cannot yet represent the generated control-flow form. Keeping this
+    /// distinct from `Ident` prevents raw syntax from masquerading as a name.
+    Verbatim(String),
     Let {
         mutable: bool,
         name: String,

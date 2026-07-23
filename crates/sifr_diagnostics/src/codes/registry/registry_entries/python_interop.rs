@@ -236,7 +236,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "PYCONV",
         "A Sifr type has no active declaration-first Python conversion.",
         Severity::Error,
-        "crates/sifr_lowering/src/lower/python_interop_tests.rs::unsupported_python_conversion_reports_pyconv_0001",
+        "crates/sifr_lowering/src/lower/python_interop_validation_tests.rs::unsupported_python_conversion_reports_pyconv_0001",
         "unsupported Python declaration conversion type: {reason}",
         "sifr_lowering",
         [arg!("reason")],
@@ -245,10 +245,10 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     active_entry!(
         "SIFR-PYRES-0002",
         "PYRES",
-        "Recognized declaration-first syntax has no active production lowering yet.",
+        "A Python resource declaration uses an unsupported ownership or target shape.",
         Severity::Error,
-        "crates/sifr_lowering/src/lower/python_interop_tests.rs::later_python_decorator_is_a_hard_error",
-        "Python declaration lowering is not active yet: {reason}",
+        "crates/sifr_lowering/src/lower/python_interop_validation_tests.rs::bridge_opaque_target_is_terminally_unsupported",
+        "unsupported Python resource declaration: {reason}",
         "sifr_lowering",
         [arg!("reason")],
         ["reason"]

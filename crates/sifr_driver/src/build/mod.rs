@@ -54,7 +54,8 @@ pub use cargo_manifest::{
 };
 pub use entrypoint::{CachedBinaryArtifact, PackageEntrypoint};
 pub use python_certification::{
-    validate_certification_distributions, validate_protocol_certifications_for_plan,
+    validate_binding_distributions, validate_certification_distributions,
+    validate_protocol_certifications_for_plan,
 };
 pub use python_interop::{
     apply_python_target_inspection, inspect_python_target, probe_python_interop_plan,

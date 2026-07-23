@@ -23,6 +23,7 @@ pub fn validate_certification_distributions(
         let output = Command::new(runtime.interpreter())
             .args([
                 "-I",
+                "-B",
                 "-c",
                 "import importlib.metadata,sys; print(importlib.metadata.version(sys.argv[1]))",
                 &distribution.name,
@@ -42,6 +43,47 @@ pub fn validate_certification_distributions(
         }
         Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
     })
+}
+
+pub fn validate_binding_distributions(
+    runtime: &PackagePythonRuntime,
+    artifact: &sifr_package::PythonBindingArtifact,
+) -> Result<(), String> {
+    for distribution in artifact
+        .bindings
+        .iter()
+        .filter_map(|binding| binding.distribution.as_ref())
+    {
+        let output = Command::new(runtime.interpreter())
+            .args([
+                "-I",
+                "-B",
+                "-c",
+                "import importlib.metadata,sys; print(importlib.metadata.version(sys.argv[1]))",
+                &distribution.name,
+            ])
+            .output()
+            .map_err(|error| {
+                format!(
+                    "could not inspect bound Python distribution '{}': {error}",
+                    distribution.name
+                )
+            })?;
+        if !output.status.success() {
+            return Err(format!(
+                "could not inspect bound Python distribution '{}'",
+                distribution.name
+            ));
+        }
+        let installed = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if installed != distribution.version {
+            return Err(format!(
+                "bound Python distribution '{}=={}' does not match the selected environment",
+                distribution.name, distribution.version
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn validate_distribution_versions<'a>(

@@ -604,6 +604,7 @@ impl RustEmitter {
         stmt: crate::RustStmt,
     ) -> crate::RustStmt {
         match stmt {
+            crate::RustStmt::Verbatim(_) => stmt,
             crate::RustStmt::Let {
                 mutable,
                 name,

@@ -1655,7 +1655,7 @@ Delivery waves:
   verified all blockers closed and requested the authoritative merge gate plus
   a separate issue for the pre-existing class-field mutating-receiver clone
   defect. That defect and adjacent fail-closed parity gaps are tracked in
-  [`ad-hoc-class-field-mutating-receiver-place-semantics.md`](ad-hoc-class-field-mutating-receiver-place-semantics.md).
+  [`ad-hoc-class-field-mutating-receiver-place-semantics.md`](../active/ad-hoc-class-field-mutating-receiver-place-semantics.md).
   Pass 8 is retained as an explicitly invalid timer-only artifact and is not
   treated as review evidence. Fresh Fable High
   [pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-9.md)
@@ -2610,6 +2610,23 @@ diagnostic, regression, and ecosystem checks all pass. The aggregate warm-time
 and group-skew notices are non-blocking advisories; the gate exits successfully.
 Whole-phase review and closure-PR merge remain before Wave 4 is complete.
 
+Whole-phase Fable High review pass 1 then exercised the complete M0-M17
+implementation and found one blocker plus seven major findings across stub-body
+validation, callback reentrancy, async error replay, cleanup-capable captures,
+diagnostic ownership, generated-Rust IR hygiene, DLPack rollback, binding
+authoring, LSP freshness, and certification evidence. Every actionable finding
+has been remediated with focused regression coverage. The first
+post-remediation `create-pr` attempt passed all `19/19` Python interop variants
+but exceeded the blocking interop step budget (`647.35s` against `600s`). A
+warm rerun then exposed and closed one stale diagnostic-precedence assertion;
+the complete 826-test lowering crate passes after preserving the dedicated
+context-borrow diagnostic. The final authoritative `create-pr` profile passes
+end to end in `1427.10s`: Python interop `19/19` in `476.48s`, E2E `131/131`
+with signature `7c39b8c1dd4fec7c`, runtime-platform `28` variants with zero
+failures and one declared capability skip, and hardening `6/6`. Every blocking
+step budget passes; only the aggregate warm-wall target is advisory. A fresh
+whole-phase satisfaction review remains required.
+
 Tasks:
 
 - Migrate all runnable biip/schwifty, dataframe, ML, web, database, cloud,
@@ -2663,7 +2680,9 @@ Validation:
 - Live evidence distinguishes compiled Sifr execution from Python-client or
   package-presence evidence.
 - Inventory remains discovery evidence and cannot certify a capability.
-- Every executable that creates Python state asserts zero outstanding resources.
+- Every executable that creates affine or resource-tracked Python state asserts zero outstanding
+  resources; callback and async fixtures instead assert their protocol-specific close, drain, and
+  reconciliation markers.
 
 ## Review Checklist
 

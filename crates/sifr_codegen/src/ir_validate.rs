@@ -6,6 +6,7 @@ pub(crate) enum IrValidationKind {
     DuplicateStructField,
     EmptyFunctionBody,
     ReturnOutsideFunction,
+    InvalidVerbatimStatement,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -102,6 +103,15 @@ fn validate_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
 
 fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_function: bool) {
     match stmt {
+        RustStmt::Verbatim(source) => {
+            let wrapper = format!("async fn __sifr_validate_verbatim() {{ {source} }}");
+            if let Err(error) = syn::parse_file(&wrapper) {
+                issues.push(IrValidationIssue {
+                    kind: IrValidationKind::InvalidVerbatimStatement,
+                    message: format!("compiler-owned verbatim Rust is invalid: {error}"),
+                });
+            }
+        }
         RustStmt::Let { ty, value, .. } => {
             if let Some(ty) = ty {
                 validate_type(ty, issues);

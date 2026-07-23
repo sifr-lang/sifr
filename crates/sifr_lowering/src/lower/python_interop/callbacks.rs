@@ -334,7 +334,6 @@ pub(super) fn validate_retained_owner_error_channels(
     classes: &[sifr_ir::HirClass],
     ctx: &mut LowerCtx,
 ) {
-    let mut invalid_owner_channel = false;
     let callbacks = functions
         .iter()
         .chain(classes.iter().flat_map(|class| class.methods.iter()))
@@ -366,7 +365,6 @@ pub(super) fn validate_retained_owner_error_channels(
                 continue;
             };
             if !error_channel_contains(error_channel.as_ref(), handler_error) {
-                invalid_owner_channel = true;
                 invalid(
                     ctx,
                     &format!(
@@ -379,10 +377,6 @@ pub(super) fn validate_retained_owner_error_channels(
                 );
             }
         }
-    }
-    if invalid_owner_channel {
-        ctx.errors
-            .retain(|error| error.code != Some(DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION));
     }
 }
 

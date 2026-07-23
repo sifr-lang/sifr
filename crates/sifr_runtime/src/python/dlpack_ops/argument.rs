@@ -55,7 +55,8 @@ pub fn prepare_dlpack_argument(handle: DlpackHandle) -> Result<PythonDlpackArgum
     }
     .ok_or_else(|| closed_error(handle.0))?;
     let (entry, object) = super::super::attach(move |py| {
-        let object = argument_capsule(py, entry._tensor.tensor)?;
+        let mut entry = entry;
+        let object = argument_capsule(py, &mut entry)?;
         Ok((entry, object))
     })
     .map_err(PythonError::runtime)??;
@@ -65,7 +66,8 @@ pub fn prepare_dlpack_argument(handle: DlpackHandle) -> Result<PythonDlpackArgum
     })
 }
 
-fn argument_capsule(py: Python<'_>, tensor: ManagedTensor) -> Result<ObjectHandle, PythonError> {
+fn argument_capsule(py: Python<'_>, entry: &mut DlpackEntry) -> Result<ObjectHandle, PythonError> {
+    let tensor = entry._tensor.tensor;
     let pointer = std::ptr::NonNull::new(tensor.pointer())
         .ok_or_else(|| dlpack_error("DLPack argument pointer is null"))?;
     let capsule = unsafe {
@@ -77,7 +79,18 @@ fn argument_capsule(py: Python<'_>, tensor: ManagedTensor) -> Result<ObjectHandl
         )
     }
     .map_err(|error| PythonError::from_pyerr(py, error, "zero-copy", "DLPack argument capsule"))?;
-    super::super::object_ops::store_object(capsule.into_any().unbind())
+    // Once the capsule exists, its destructor owns the tensor if handle
+    // attachment fails. Temporarily disarm the entry so that failure cannot
+    // invoke the deleter a second time; successful attachment restores the
+    // entry/capsule reconciliation protocol used by `finalize`.
+    entry._tensor.released = true;
+    match super::super::object_ops::store_object(capsule.into_any().unbind()) {
+        Ok(object) => {
+            entry._tensor.released = false;
+            Ok(object)
+        }
+        Err(error) => Err(error),
+    }
 }
 
 fn finalize(

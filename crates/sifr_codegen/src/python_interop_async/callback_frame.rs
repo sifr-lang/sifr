@@ -374,15 +374,47 @@ pub(super) fn append_submission(
         {
             body.push(RustStmt::If {
                 cond: RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident(
-                        "__sifr_retained_finalization".to_string(),
-                    )),
+                    receiver: Box::new(RustExpr::Ident("__sifr_retained_finalization".to_string())),
                     method: "is_err".to_string(),
                     args: Vec::new(),
                 },
-                then_body: vec![RustStmt::Expr(RustExpr::Ident(format!(
-                    "if let Some(__sifr_provisional_callback) = {provisional}.as_ref() {{ if let Err(__sifr_provisional_cleanup_error) = __sifr_provisional_callback.rollback_provisional().await {{ ::sifr_runtime::python::record_context_cleanup_evidence(\"receiver-callback-registration\", &__sifr_provisional_cleanup_error); }} }}"
-                )))],
+                then_body: vec![RustStmt::IfLet {
+                    pattern: "Some(__sifr_provisional_callback)".to_string(),
+                    expr: RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(provisional.clone())),
+                        method: "as_ref".to_string(),
+                        args: Vec::new(),
+                    },
+                    then_body: vec![RustStmt::IfLet {
+                        pattern: "Err(__sifr_provisional_cleanup_error)".to_string(),
+                        expr: RustExpr::Await(Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident(
+                                "__sifr_provisional_callback".to_string(),
+                            )),
+                            method: "rollback_provisional".to_string(),
+                            args: Vec::new(),
+                        })),
+                        then_body: vec![RustStmt::Expr(runtime_call(
+                            "record_context_cleanup_evidence",
+                            vec![
+                                RustExpr::Ref {
+                                    mutable: false,
+                                    expr: Box::new(RustExpr::Literal(crate::RustLiteral::Str(
+                                        "receiver-callback-registration".to_string(),
+                                    ))),
+                                },
+                                RustExpr::Ref {
+                                    mutable: false,
+                                    expr: Box::new(RustExpr::Ident(
+                                        "__sifr_provisional_cleanup_error".to_string(),
+                                    )),
+                                },
+                            ],
+                        ))],
+                        else_body: None,
+                    }],
+                    else_body: None,
+                }],
                 else_body: None,
             });
         }

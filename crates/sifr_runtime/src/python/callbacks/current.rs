@@ -175,16 +175,15 @@ where
                     .map_err(python_error)?;
                 let entry_sequence = invocation.entry_sequence();
                 let _guard = invocation.enter().map_err(python_error)?;
-                CURRENT_TARGETS.with(|targets| {
-                    targets.borrow().get(&token).map_or_else(
-                        || Err(python_error(errors::closed(shell_owner.owner_id()))),
-                        |target| {
-                            // SAFETY: registry membership is bounded by the
-                            // owning `CurrentCallback` as documented above.
-                            unsafe { (&*target.0)(entry_sequence, args.py(), args, kwargs) }
-                        },
-                    )
-                })
+                let target = CURRENT_TARGETS.with(|targets| targets.borrow().get(&token).copied());
+                let Some(target) = target else {
+                    return Err(python_error(errors::closed(shell_owner.owner_id())));
+                };
+                // The registry borrow must end before invoking user code: a
+                // handler may create or close another current-thread callback.
+                // SAFETY: registry membership is bounded by the owning
+                // `CurrentCallback` as documented above.
+                unsafe { (&*target.0)(entry_sequence, args.py(), args, kwargs) }
             },
         )
         .map_err(|error| PythonError::from_pyerr(py, error, "callback", "current callback"))?;

@@ -61,7 +61,7 @@ def convert_annotation(node):
         if leaf in {"set", "Set"}:
             raise ValueError(f"unsupported direct-conversion container {name!r}")
         if identifier(leaf):
-            return leaf
+            return name
         raise ValueError(f"unsupported annotation {name!r}")
     if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
         return f"{convert_annotation(node.left)} | {convert_annotation(node.right)}"

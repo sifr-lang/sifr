@@ -1,5 +1,6 @@
 use super::*;
 use std::fs;
+use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[test]
@@ -113,6 +114,16 @@ fn binding_artifact_rejects_symlinked_typing_sources_and_outputs() {
 
     fs::remove_dir_all(root).expect("remove fixture");
     fs::remove_dir_all(outside).expect("remove outside fixture");
+}
+
+#[test]
+fn binding_output_rejects_managed_metadata_files() {
+    let root = temp_root("reserved-output");
+    for reserved in [PYTHON_BINDINGS_FILE, super::PYTHON_CERTIFICATIONS_FILE] {
+        let error = safe_python_binding_output(&root, Path::new(reserved))
+            .expect_err("managed metadata output must be rejected");
+        assert!(error.contains("reserved for package metadata"), "{error}");
+    }
 }
 
 fn artifact(root: &std::path::Path) -> PythonBindingArtifact {

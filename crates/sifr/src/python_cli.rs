@@ -501,7 +501,12 @@ fn cmd_certify(args: PythonCertifyArgs, diagnostic_format: DiagnosticFormat) -> 
             EXIT_USAGE_OR_CONFIG,
         );
     }
-    let context = match certification_context(diagnostic_format) {
+    let lock_mode = if args.check {
+        sifr_package::CargoLockMode::Frozen
+    } else {
+        sifr_package::CargoLockMode::Normal
+    };
+    let context = match certification_context(lock_mode, diagnostic_format) {
         Ok(context) => context,
         Err(code) => return code,
     };
@@ -524,12 +529,11 @@ fn cmd_certify(args: PythonCertifyArgs, diagnostic_format: DiagnosticFormat) -> 
     }
 }
 
-fn certification_context(diagnostic_format: DiagnosticFormat) -> Result<CertificationContext, i32> {
-    let authoring = package_python_authoring_context(
-        sifr_package::CargoLockMode::Normal,
-        &[],
-        diagnostic_format,
-    )?;
+fn certification_context(
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+) -> Result<CertificationContext, i32> {
+    let authoring = package_python_authoring_context(lock_mode, &[], diagnostic_format)?;
     Ok(CertificationContext {
         package_root: authoring.package_root,
         interpreter: authoring.runtime.interpreter().to_path_buf(),
@@ -721,6 +725,7 @@ fn run_fixture(
 ) -> Result<ArrowFixtureEvidence, String> {
     let output = Command::new(&context.interpreter)
         .arg("-I")
+        .arg("-B")
         .arg(fixture)
         .arg(target)
         .current_dir(&context.package_root)
@@ -782,6 +787,7 @@ pub(crate) fn installed_distribution_version(
     let output = Command::new(&context.interpreter)
         .args([
             "-I",
+            "-B",
             "-c",
             "import importlib.metadata,sys; print(importlib.metadata.version(sys.argv[1]))",
             distribution,

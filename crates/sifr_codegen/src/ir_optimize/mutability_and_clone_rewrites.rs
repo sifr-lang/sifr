@@ -132,6 +132,7 @@ pub(super) fn remove_unneeded_mutability_in_block_with_tail_expr(
 
 pub(super) fn remove_nested_unneeded_mutability(stmt: &mut RustStmt) -> usize {
     match stmt {
+        RustStmt::Verbatim(_) => 0,
         RustStmt::Let { value, .. } | RustStmt::LetPattern { value, .. } => {
             remove_expr_unneeded_mutability(value)
         }
@@ -335,6 +336,7 @@ pub(super) fn stmts_mutate_name(stmts: &[RustStmt], name: &str) -> bool {
 
 pub(super) fn stmt_mutates_name(stmt: &RustStmt, name: &str) -> bool {
     match stmt {
+        RustStmt::Verbatim(_) => false,
         RustStmt::Assign { target, value } => {
             assignment_target_mutates_name(target, name) || expr_mutates_name(value, name)
         }
@@ -577,6 +579,7 @@ pub(super) fn is_self_assignment(stmt: &RustStmt) -> bool {
 
 pub(super) fn optimize_stmt(stmt: &mut RustStmt) -> usize {
     match stmt {
+        RustStmt::Verbatim(_) => 0,
         RustStmt::Let { value, .. } => optimize_expr(value),
         RustStmt::LetPattern { value, .. } => optimize_expr(value),
         RustStmt::LetElse {

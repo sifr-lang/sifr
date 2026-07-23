@@ -3,6 +3,8 @@ mod asyncio_entry;
 #[cfg(test)]
 mod asyncio_tests;
 mod current;
+#[cfg(test)]
+mod current_tests;
 mod errors;
 pub(crate) mod execution;
 mod foreign;

@@ -10,9 +10,16 @@ fn class_type(name: &str) -> Type {
         identity: None,
         type_args: Vec::new(),
         name: name.to_string(),
-        fields: vec![],
+        fields: if name == "PythonError" {
+            ["message", "kind", "exception_type", "traceback", "context"]
+                .into_iter()
+                .map(|field| (field.to_string(), Type::Str))
+                .collect()
+        } else {
+            Vec::new()
+        },
         methods: vec![],
-        parent_class: None,
+        parent_class: (name == "PythonError").then(|| "Error".to_string()),
     }
 }
 
@@ -37,6 +44,9 @@ fn emitter() -> RustEmitter {
     emitter
         .try_closure_error_type
         .push("PythonError".to_string());
+    emitter
+        .try_closure_error_type_info
+        .push(Some(class_type("PythonError")));
     emitter.python_opaque_classes.insert(
         "Entered".to_string(),
         PythonInteropDeclaration {
@@ -242,4 +252,21 @@ fn cause_classification_uses_canonical_resolved_types() {
         classify_cause_kind(Some(&class_type("CancellationError")), "Alias"),
         "Cancellation"
     );
+    let mut shadow = class_type("TimeoutError");
+    if let Type::Class { identity, .. } = &mut shadow {
+        *identity = Some("application.TimeoutError".to_string());
+    }
+    assert_eq!(
+        classify_cause_kind(Some(&shadow), "TimeoutError"),
+        "OrdinaryError"
+    );
+    let mut worker = class_type("WorkerRuntimeError");
+    if let Type::Class { identity, .. } = &mut worker {
+        *identity = Some("sifr.parallel.WorkerRuntimeError".to_string());
+    }
+    assert_eq!(
+        classify_cause_kind(Some(&worker), "WorkerRuntimeError"),
+        "RuntimeFault"
+    );
+    assert_eq!(classify_cause_kind(None, "PythonError"), "OrdinaryError");
 }

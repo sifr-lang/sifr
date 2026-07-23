@@ -199,6 +199,14 @@ pub fn required_python_binding_archive_entries(package_root: &Path) -> BTreeSet<
 
 pub fn safe_python_binding_output(package_root: &Path, output: &Path) -> Result<PathBuf, String> {
     let output = output.to_string_lossy();
+    if matches!(
+        output.as_ref(),
+        PYTHON_BINDINGS_FILE | super::PYTHON_CERTIFICATIONS_FILE
+    ) {
+        return Err(format!(
+            "Python binding output '{output}' is reserved for package metadata"
+        ));
+    }
     safe_package_path(package_root, &output, "binding output")
 }
 

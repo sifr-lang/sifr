@@ -38,7 +38,6 @@ pub(in crate::lower) fn classify_python_interop_stub_body(
     ctx: &mut LowerCtx,
 ) -> PythonInteropStubBody {
     let exact = matches!(body, [stmt] if is_ellipsis_stmt(stmt));
-    let contains = body.iter().any(is_ellipsis_stmt);
     if exact {
         if has_python_decorator {
             return PythonInteropStubBody::Bodyless;
@@ -50,10 +49,11 @@ pub(in crate::lower) fn classify_python_interop_stub_body(
         );
         return PythonInteropStubBody::Invalid;
     }
-    if contains && has_python_decorator {
+    if has_python_decorator {
         let span = body
             .iter()
             .find(|stmt| is_ellipsis_stmt(stmt))
+            .or_else(|| body.first())
             .map_or_else(TextRange::default, Ranged::range);
         invalid_shape(
             ctx,

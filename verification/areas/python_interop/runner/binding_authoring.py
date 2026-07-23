@@ -175,6 +175,48 @@ def main() -> int:
     require(snapshot(package) == user_snapshot,
             "failed user-owned output overwrite mutated package inputs")
 
+    pinned_snapshot = snapshot(package)
+    changed_output = run(
+        binary,
+        package,
+        "python",
+        "bind",
+        "math",
+        "--symbols",
+        "sqrt,ceil",
+        "--override",
+        "typing/math_override.pyi",
+        "--external-stub",
+        "typing/math_external.pyi",
+        "--output",
+        "src/math_relocated.sifr",
+        expected=1,
+    )
+    require("pinned" in changed_output.stderr,
+            "rebinding to a different output did not fail closed")
+    require(snapshot(package) == pinned_snapshot,
+            "failed output relocation mutated package inputs")
+
+    reserved_snapshot = snapshot(package)
+    reserved_output = run(
+        binary,
+        package,
+        "python",
+        "bind",
+        "math",
+        "--symbols",
+        "sqrt",
+        "--override",
+        "typing/math_override.pyi",
+        "--output",
+        "sifr.python-bindings.json",
+        expected=2,
+    )
+    require("reserved for package metadata" in reserved_output.stderr,
+            "binding artifact output did not fail closed")
+    require(snapshot(package) == reserved_snapshot,
+            "failed metadata output mutated package inputs")
+
     positional_snapshot = snapshot(package)
     positional_only = run(
         binary,
@@ -239,6 +281,24 @@ def main() -> int:
     require(snapshot(package) == container_snapshot,
             "failed container authoring mutated package inputs")
 
+    qualified_snapshot = snapshot(package)
+    qualified = run(
+        binary,
+        package,
+        "python",
+        "bind",
+        "math",
+        "--symbols",
+        "sqrt",
+        "--override",
+        "typing/qualified_custom.pyi",
+        expected=1,
+    )
+    require("other.Client" in qualified.stderr,
+            "qualified custom type was silently rebound to a local class")
+    require(snapshot(package) == qualified_snapshot,
+            "failed qualified-type authoring mutated package inputs")
+
     write_runtime_main(package)
     runtime = run(binary, package, "run", "src/main.sifr", "--frozen")
     require("binding runtime ok" in runtime.stdout,
@@ -248,6 +308,8 @@ def main() -> int:
     run(binary, package, "python", "bind", "--check")
     run(binary, package, "check", "src/main.sifr", "--frozen")
     require(snapshot(package) == before, "binding checks mutated package inputs")
+    require(not any(path.name == "__pycache__" for path in package.rglob("__pycache__")),
+            "Python authoring probes created bytecode cache state")
 
     overload = run(
         binary,
@@ -319,6 +381,11 @@ def create_package(root: Path) -> Path:
         "def frexp(value: float) -> list: ...\n"
         "def ceil(values: set[int]) -> int: ...\n"
         "def floor(value: float) -> dict[int, str]: ...\n",
+        encoding="utf-8",
+    )
+    (root / "typing" / "qualified_custom.pyi").write_text(
+        "class Client: ...\n"
+        "def sqrt(value: other.Client) -> Client: ...\n",
         encoding="utf-8",
     )
     (root / ".venv").symlink_to(AREA_ROOT / ".venv", target_is_directory=True)

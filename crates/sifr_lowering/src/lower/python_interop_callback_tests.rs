@@ -49,7 +49,7 @@ fn assert_callback_error(source: &str, message: &str) {
     );
     assert!(!errors
         .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION)));
+        .any(|error| error.code == Some(DiagnosticCode::PYRES_UNSUPPORTED_RESOURCE_DECLARATION)));
 }
 
 #[test]
@@ -172,7 +172,7 @@ def compute(
     }));
     assert!(!errors
         .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION)));
+        .any(|error| error.code == Some(DiagnosticCode::PYRES_UNSUPPORTED_RESOURCE_DECLARATION)));
 }
 
 #[test]
@@ -216,7 +216,7 @@ def compute(handler: Callable[[int], int]) -> Result[int, PythonError]: ...
     }));
     assert!(!invalid
         .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION)));
+        .any(|error| error.code == Some(DiagnosticCode::PYRES_UNSUPPORTED_RESOURCE_DECLARATION)));
 }
 
 #[test]
@@ -246,7 +246,7 @@ def compute(handler: Callable[[Client], int]) -> Result[int, PythonError]: ...
     }));
     assert!(!errors
         .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION)));
+        .any(|error| error.code == Some(DiagnosticCode::PYRES_UNSUPPORTED_RESOURCE_DECLARATION)));
 }
 
 #[test]
@@ -273,7 +273,7 @@ def value(handler: Callable[[int], int]) -> Result[int, PythonError]: ...
     }));
     assert!(!errors
         .iter()
-        .any(|error| error.code == Some(DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION)));
+        .any(|error| error.code == Some(DiagnosticCode::PYRES_UNSUPPORTED_RESOURCE_DECLARATION)));
 }
 
 #[test]

@@ -2,6 +2,12 @@
 
 > Status: complete. `milestone_py_0` through `milestone_py_12` are merged through PR #2677; `milestone_py_12` completed public/internal docs, diagnostic evidence, py12 Opus review, phase-level final implementation review, and local validation. Post-closeout verification hardening for runnable dependency examples is merged through PR #2691, PR #2694, and PR #2696 without changing the binding design decisions below.
 
+> Historical record: the current declaration-first architecture and root-only
+> requirement/trust authority supersede historical `allow-imports` descriptions
+> in this document. See
+> [`python_interop_declaration_architecture.md`](../../../internal_docs/python_interop_declaration_architecture.md)
+> for the active production contract.
+
 ## Execution Status
 
 - [x] `milestone_py_0`: Planning lock and verification scaffold.

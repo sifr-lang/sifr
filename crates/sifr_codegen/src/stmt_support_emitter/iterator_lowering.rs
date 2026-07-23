@@ -621,6 +621,7 @@ impl RustEmitter {
 
     pub(crate) fn rust_stmt_contains_await(stmt: &RustStmt) -> bool {
         match stmt {
+            RustStmt::Verbatim(_) => true,
             RustStmt::Let { value, .. }
             | RustStmt::LetPattern { value, .. }
             | RustStmt::Expr(value)

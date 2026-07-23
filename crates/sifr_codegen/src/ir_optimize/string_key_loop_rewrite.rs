@@ -71,6 +71,7 @@ fn block_uses_name_only_as_set_key(body: &[RustStmt], name: &str) -> bool {
 
 fn stmt_uses_name_only_as_set_key(stmt: &RustStmt, name: &str, found: &mut bool) -> bool {
     match stmt {
+        RustStmt::Verbatim(_) => false,
         RustStmt::Let { value, .. } | RustStmt::LetPattern { value, .. } => {
             expr_uses_name_only_as_set_key(value, name, false, found)
         }

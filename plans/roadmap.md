@@ -124,6 +124,6 @@ flowchart LR
 - Merge decisions are based on local gate evidence first, CI second.
 
 ## Completed Sequence-Independent Interop Work
-- [ad-hoc-embedded-python-interop.md](./issues/active/ad-hoc-embedded-python-interop.md) (complete for the sequence-independent embedded CPython/uv interop lane; py0-py12 are merged through PR #2677 with public/internal docs, diagnostic evidence, py12 and phase-level Opus reviews, and local validation)
+- [ad-hoc-embedded-python-interop.md](./issues/archive/ad-hoc-embedded-python-interop.md) (complete historical embedded CPython/uv lane; py0-py12 merged through PR #2677 and its authoring/trust contract is superseded by declaration-first interop)
 - [python-interop-verification-production.md](./issues/active/python-interop-verification-production.md) (complete follow-up: first-class area wiring, explicit live/container policy, testcontainers-backed Redis/Postgres/Kafka-compatible/LocalStack SNS-SQS examples, and final status evidence)
 - [ad-hoc-declaration-first-python-interop.md](./issues/archive/ad-hoc-declaration-first-python-interop.md) (final closure in progress; M0-M17 shipped declaration-first calls, opaque/context/async/callback protocols, affine buffer/Arrow/DLPack transfer, check/doctor/bind/certify/LSP authoring, shared raw ergonomics, typed ecosystem migrations, compiled live-service clients, and the current-run ecosystem certification ledger through PRs #2930-#2999; the merge gate passes and whole-phase review is pending)
