@@ -287,7 +287,7 @@ impl RustEmitter {
         }
 
         Some(crate::RustExpr::FnCall {
-            func: Box::new(crate::RustExpr::Ident(func.to_string())),
+            func: Box::new(crate::stmt_support_emitter::plain_call_target_for_ir(func)),
             args: lowered_args,
         })
     }

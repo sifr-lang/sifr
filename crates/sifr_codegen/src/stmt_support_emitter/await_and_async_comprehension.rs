@@ -1,4 +1,6 @@
-use super::{HirExpr, HirIteratorOp, RustEmitter, RustExpr, RustStmt, Type};
+use super::{
+    plain_call_target_for_ir, HirExpr, HirIteratorOp, RustEmitter, RustExpr, RustStmt, Type,
+};
 impl RustEmitter {
     pub(crate) fn lower_timeout_aware_await_future_for_ir(
         &mut self,
@@ -36,7 +38,7 @@ impl RustEmitter {
                     lowered.push(value);
                 }
                 return Ok(Some(crate::RustExpr::FnCall {
-                    func: Box::new(crate::RustExpr::Ident(func.clone())),
+                    func: Box::new(plain_call_target_for_ir(func)),
                     args: lowered,
                 }));
             }

@@ -394,7 +394,7 @@ pub(super) fn try_lower_simple_method_call_expr(
                         .map(try_lower_leaf_or_name_expr)
                         .collect::<Option<Vec<_>>>()?;
                     return Some(RustExpr::FnCall {
-                        func: Box::new(RustExpr::Ident(func.clone())),
+                        func: Box::new(crate::stmt_support_emitter::plain_call_target_for_ir(func)),
                         args: lowered_call_args,
                     });
                 }

@@ -11,6 +11,31 @@ pub(crate) fn canonical_plain_call_name_for_ir(func: &str) -> &str {
     func
 }
 
+pub(crate) fn plain_call_target_for_ir(func: &str) -> RustExpr {
+    if func.contains("::") {
+        RustExpr::Path(func.split("::").map(str::to_string).collect())
+    } else {
+        RustExpr::Ident(func.to_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn plain_call_targets_split_namespaced_functions_into_paths() {
+        assert!(matches!(
+            plain_call_target_for_ir("Point::origin"),
+            RustExpr::Path(parts) if parts == ["Point", "origin"]
+        ));
+        assert!(matches!(
+            plain_call_target_for_ir("compute"),
+            RustExpr::Ident(name) if name == "compute"
+        ));
+    }
+}
+
 pub(crate) fn supports_nonempty_pop_narrowing_type_for_ir(object_ty: &Type) -> bool {
     match crate::resolve_alias_type_for_plain_call(object_ty) {
         Type::List(_) => true,

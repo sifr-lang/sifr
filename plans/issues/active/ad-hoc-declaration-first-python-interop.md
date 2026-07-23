@@ -2674,7 +2674,14 @@ and indexed Python-rooted decorator rejection across module, method, class, and
 nested surfaces, confirmed canonical CPU-offload error identities and sync/async
 `RuntimeFault` shadow handling, and independently swept the complete M0-M17
 diff. It returned **SATISFIED** with no blocker, major, or actionable minor.
-Only the exact-tree merge gate and closure bookkeeping remain.
+The subsequent merge gate exposed three pre-existing namespaced class and
+static method targets still represented as raw `RustExpr::Ident` payloads;
+strict IR validation rejected `Point::origin`, `Temperature::from_fahrenheit`,
+and `MathUtils::add`. Plain-call targets now use one structured helper that
+emits `RustExpr::Path` for every namespaced target across registry, await, and
+structured task-call lowering. The focused IR helper test and the complete
+emitted-pass-fixture safety test pass after remediation. Fresh review and the
+exact-tree merge gate remain before closure bookkeeping.
 
 At merge, the closure unit must: record the final satisfied review artifacts
 and exact merge-gate evidence here; check M17 Wave 4; change this status to

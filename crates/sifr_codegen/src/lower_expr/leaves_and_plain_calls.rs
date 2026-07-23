@@ -442,7 +442,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                         .map(try_lower_leaf_or_name_expr)
                         .collect::<Option<Vec<_>>>()?;
                     RustExpr::FnCall {
-                        func: Box::new(RustExpr::Ident(func.clone())),
+                        func: Box::new(crate::stmt_support_emitter::plain_call_target_for_ir(func)),
                         args: lowered_args,
                     }
                 }
