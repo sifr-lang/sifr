@@ -2667,6 +2667,15 @@ with zero failures and one declared capability skip, hardening `6/6`, and E2E
 passes; only the aggregate warm-wall target is advisory. A complete fresh
 whole-phase satisfaction review remains required.
 
+Whole-phase Fable High
+[review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-5.md)
+verified every pass-2 and pass-3/pass-4 finding closed, live-reproduced wrapped
+and indexed Python-rooted decorator rejection across module, method, class, and
+nested surfaces, confirmed canonical CPU-offload error identities and sync/async
+`RuntimeFault` shadow handling, and independently swept the complete M0-M17
+diff. It returned **SATISFIED** with no blocker, major, or actionable minor.
+Only the exact-tree merge gate and closure bookkeeping remain.
+
 At merge, the closure unit must: record the final satisfied review artifacts
 and exact merge-gate evidence here; check M17 Wave 4; change this status to
 `completed`; update the PY-2 roadmap, phase index, and architecture summary to
