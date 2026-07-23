@@ -11,11 +11,6 @@ pub(super) fn cause_variant(error_type: &Type) -> &'static str {
             ..
         } if identity == "sifr.builtin.TimeoutError" => "Timeout",
         Type::Class {
-            identity: None,
-            name,
-            ..
-        } if name == "RuntimeFault" => "RuntimeFault",
-        Type::Class {
             identity: Some(identity),
             ..
         } if identity == "sifr.parallel.WorkerRuntimeError" => "RuntimeFault",

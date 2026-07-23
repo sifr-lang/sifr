@@ -288,5 +288,13 @@ fn cause_classification_uses_canonical_resolved_types() {
         ),
         "OrdinaryError"
     );
+    assert_eq!(
+        classify_cause_kind(Some(&class_type("RuntimeFault")), "RuntimeFault"),
+        "OrdinaryError"
+    );
+    assert_eq!(
+        super::outcome::cause_variant(&class_type("RuntimeFault")),
+        "OrdinaryError"
+    );
     assert_eq!(classify_cause_kind(None, "PythonError"), "OrdinaryError");
 }

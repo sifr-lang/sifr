@@ -38,7 +38,7 @@ pub(in crate::lower) use context::{
 };
 pub(in crate::lower) use stub_syntax::{
     classify_python_interop_stub_body, has_python_interop_decorator_syntax,
-    is_bodyless_python_coroutine,
+    is_bodyless_python_coroutine, is_python_rooted_decorator_expr,
 };
 
 pub(in crate::lower) fn validate_retained_callback_owner_errors(
@@ -822,7 +822,7 @@ fn classify_decorator<'a>(
     ctx: &mut LowerCtx,
 ) -> Option<(PythonInteropDecoratorKind, &'a ExprCall, TextRange)> {
     let Expr::Call(call) = expr else {
-        if decorator_path(expr).is_some_and(|path| path[0] == "python") {
+        if is_python_rooted_decorator_expr(expr) {
             invalid_shape(
                 ctx,
                 "Python interop decorators must be call expressions",
@@ -831,7 +831,16 @@ fn classify_decorator<'a>(
         }
         return None;
     };
-    let path = decorator_path(&call.func)?;
+    let Some(path) = decorator_path(&call.func) else {
+        if is_python_rooted_decorator_expr(&call.func) {
+            invalid_shape(
+                ctx,
+                "Python declaration decorators cannot be called, indexed, or accessed after the declaration call",
+                call.func.range(),
+            );
+        }
+        return None;
+    };
     if path.first().is_none_or(|root| root != "python") {
         return None;
     }

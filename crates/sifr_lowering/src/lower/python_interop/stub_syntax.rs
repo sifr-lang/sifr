@@ -18,10 +18,19 @@ impl PythonInteropStubBody {
 }
 
 pub(in crate::lower) fn has_python_interop_decorator_syntax(decorators: &[Decorator]) -> bool {
-    decorators.iter().any(|decorator| {
-        decorator_path(&decorator.expression).is_some_and(|path| path[0] == "python")
-            || matches!(&decorator.expression, Expr::Call(call) if decorator_path(&call.func).is_some_and(|path| path[0] == "python"))
-    })
+    decorators
+        .iter()
+        .any(|decorator| is_python_rooted_decorator_expr(&decorator.expression))
+}
+
+pub(in crate::lower) fn is_python_rooted_decorator_expr(expr: &Expr) -> bool {
+    match expr {
+        Expr::Name(name) => name.id.as_str() == "python",
+        Expr::Attribute(attribute) => is_python_rooted_decorator_expr(&attribute.value),
+        Expr::Call(call) => is_python_rooted_decorator_expr(&call.func),
+        Expr::Subscript(subscript) => is_python_rooted_decorator_expr(&subscript.value),
+        _ => false,
+    }
 }
 
 pub(in crate::lower) fn is_bodyless_python_coroutine(func: &StmtFunctionDef) -> bool {

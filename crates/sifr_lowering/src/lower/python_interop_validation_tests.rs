@@ -160,6 +160,26 @@ fn python_class_decorators_require_the_opaque_declaration_form() {
 }
 
 #[test]
+fn wrapped_python_rooted_decorators_are_rejected_on_every_declaration_surface() {
+    let cases = [
+        "@python(math.sqrt)()\ndef compute(value: float) -> float:\n    return value\n",
+        "@python(math.sqrt).extra\ndef compute(value: float) -> float: ...\n",
+        "@python.opaque(type=pkg.Client, cleanup=drop)()\nclass Client:\n    value: int\n",
+        "@python.opaque(type=pkg.Client, cleanup=drop)\nclass Client:\n    @python(Self.read)()\n    def read(self) -> int: ...\n",
+        "def outer() -> int:\n    @python(math.sqrt)()\n    def compute(value: float) -> float: ...\n    return 0\n",
+    ];
+    for source in cases {
+        let errors = lower_errors(source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::PYCALL_INVALID_SHAPE)),
+            "source passed without a Python declaration shape diagnostic:\n{source}\n{errors:?}"
+        );
+    }
+}
+
+#[test]
 fn cleanup_opaque_reusable_callable_captures_are_rejected() {
     const PREFIX: &str = r#"
 class PythonError(Error):

@@ -2649,6 +2649,24 @@ passes; only the aggregate warm-wall target is advisory. A fresh whole-phase
 review of the committed remediation and an exact-tree authoritative merge gate
 remain required.
 
+Whole-phase Fable High
+[review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-3.md)
+and its requested self-contained replacement
+[review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-4.md)
+both exited with incomplete interim reports and therefore are not satisfaction
+evidence. They independently confirmed two residuals: canonical worker-error
+identity was still missing from the structured-scope and join-set CPU-offload
+fallbacks, and wrapped Python-rooted decorators could still be discarded on
+module, method, class, and nested surfaces. Pass 4 additionally reproduced an
+entry-module `RuntimeFault` basename shadow. All three are now closed with
+focused lowering and codegen regression coverage. The authoritative
+`create-pr` profile passes this remediation tree end to end in `1086.53s`:
+Python interop `19/19`, the full crate matrix, runtime-platform `28` variants
+with zero failures and one declared capability skip, hardening `6/6`, and E2E
+`131/131` with signature `7c39b8c1dd4fec7c`. Every blocking step budget
+passes; only the aggregate warm-wall target is advisory. A complete fresh
+whole-phase satisfaction review remains required.
+
 At merge, the closure unit must: record the final satisfied review artifacts
 and exact merge-gate evidence here; check M17 Wave 4; change this status to
 `completed`; update the PY-2 roadmap, phase index, and architecture summary to

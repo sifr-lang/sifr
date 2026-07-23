@@ -740,11 +740,6 @@ pub(super) fn classify_cause_kind(error_type: Option<&Type>, _rendered: &str) ->
             ..
         }) if identity == "sifr.builtin.TimeoutError" => "Timeout",
         Some(Type::Class {
-            identity: None,
-            name,
-            ..
-        }) if name == "RuntimeFault" => "RuntimeFault",
-        Some(Type::Class {
             identity: Some(identity),
             ..
         }) if identity == "sifr.parallel.WorkerRuntimeError" => "RuntimeFault",
