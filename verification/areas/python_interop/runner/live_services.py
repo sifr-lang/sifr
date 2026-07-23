@@ -12,16 +12,20 @@ from live_packages import BuiltLiveBinary, execute_live_binary
 
 def run_live_cases(binaries: dict[str, BuiltLiveBinary]) -> list[dict[str, Any]]:
     return [
-        _timed_case("redis", lambda: _run_redis(binaries["redis"])),
-        _timed_case("postgres", lambda: _run_postgres(binaries["postgres"])),
-        _timed_case("kafka", lambda: _run_kafka(binaries["kafka"])),
-        _timed_case("pubsub", lambda: _run_localstack(binaries["pubsub"], ("sqs", "sns"))),
-        _timed_case("sns", lambda: _run_localstack(binaries["sns"], ("sqs", "sns"))),
-        _timed_case("sqs", lambda: _run_localstack(binaries["sqs"], ("sqs",))),
+        _timed_case("redis", "redis" in binaries, lambda: _run_redis(binaries["redis"])),
+        _timed_case("postgres", "postgres" in binaries, lambda: _run_postgres(binaries["postgres"])),
+        _timed_case("kafka", "kafka" in binaries, lambda: _run_kafka(binaries["kafka"])),
+        _timed_case("pubsub", "pubsub" in binaries, lambda: _run_localstack(binaries["pubsub"], ("sqs", "sns"))),
+        _timed_case("sns", "sns" in binaries, lambda: _run_localstack(binaries["sns"], ("sqs", "sns"))),
+        _timed_case("sqs", "sqs" in binaries, lambda: _run_localstack(binaries["sqs"], ("sqs",))),
     ]
 
 
-def _timed_case(case_id: str, callback: Callable[[], dict[str, Any]]) -> dict[str, Any]:
+def _timed_case(
+    case_id: str,
+    binary_built: bool,
+    callback: Callable[[], dict[str, Any]],
+) -> dict[str, Any]:
     started = time.perf_counter()
     try:
         payload = callback()
@@ -30,7 +34,7 @@ def _timed_case(case_id: str, callback: Callable[[], dict[str, Any]]) -> dict[st
         payload = {
             "status": "live-failed",
             "execution_model": "compiled-sifr-binary",
-            "binary_built": case_id in LIVE_CASES,
+            "binary_built": binary_built,
             "binary_executed": False,
             "error_type": type(error).__name__,
             "error": str(error),

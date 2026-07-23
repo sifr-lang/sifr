@@ -110,6 +110,7 @@ fn collect_item(item: &RustItem, needs: &mut IrImportNeeds) {
 
 fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
     match stmt {
+        RustStmt::Verbatim(_) => {}
         RustStmt::Let { ty, value, .. } => {
             if let Some(ty) = ty {
                 collect_type(ty, needs);
@@ -229,7 +230,7 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
 
 fn collect_expr(expr: &RustExpr, needs: &mut IrImportNeeds) {
     match expr {
-        RustExpr::Literal(_) => {}
+        RustExpr::Literal(_) | RustExpr::Verbatim(_) => {}
         RustExpr::Ident(name) => mark_symbol(name, needs),
         RustExpr::Path(segments) => {
             if let Some(first) = segments.first() {

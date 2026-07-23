@@ -11,6 +11,6 @@ A Sifr type has no active declaration-first Python conversion.
 | Severity | Error |
 | Owner | `sifr_lowering` |
 | Message template | `unsupported Python declaration conversion type: {reason}` |
-| Representative fixture | `crates/sifr_lowering/src/lower/python_interop_tests.rs::unsupported_python_conversion_reports_pyconv_0001` |
+| Representative fixture | `crates/sifr_lowering/src/lower/python_interop_validation_tests.rs::unsupported_python_conversion_reports_pyconv_0001` |
 | Declared args | `reason (message+json)` |
 | Dedupe args | `reason` |

@@ -313,7 +313,9 @@ Cancelling a Sifr task cancels its exact asyncio task and waits for Python
 `CancelledError` caused by that request is the active Sifr cancellation cause,
 not a catchable `PythonError`. If Python suppresses cancellation, its later
 return value or different exception wins normally. Runtime shutdown drains
-registered tasks and async cleanup before stopping and joining the loop thread.
+registered tasks, traverses a reserved async-cleanup ordering slot (there are
+currently no independent cleanup registrations), then stops and joins the loop
+thread.
 
 Typed Python async context managers use the same owned loop and declare both
 protocol methods explicitly:

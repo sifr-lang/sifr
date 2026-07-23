@@ -2507,7 +2507,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_lowering/src/lower/python_interop_tests.rs::unsupported_python_conversion_reports_pyconv_0001",
+      "representative_fixture": "crates/sifr_lowering/src/lower/python_interop_validation_tests.rs::unsupported_python_conversion_reports_pyconv_0001",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2530,7 +2530,7 @@
     },
     {
       "code": "SIFR-PYRES-0002",
-      "constant": "PYRES_UNIMPLEMENTED_DECLARATION",
+      "constant": "PYRES_UNSUPPORTED_RESOURCE_DECLARATION",
       "docs_link": "docs/errors/SIFR-PYRES-0002.md",
       "machine_applicable": false,
       "owner": "compiler/frontend",
@@ -2539,7 +2539,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_lowering/src/lower/python_interop_tests.rs::later_python_decorator_is_a_hard_error",
+      "representative_fixture": "crates/sifr_lowering/src/lower/python_interop_validation_tests.rs::bridge_opaque_target_is_terminally_unsupported",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"

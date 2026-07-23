@@ -451,6 +451,7 @@ mod tests {
     fn count_raw_in_expr(expr: &RustExpr) -> usize {
         match expr {
             RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => 0,
+            RustExpr::Verbatim(_) => 1,
             RustExpr::MethodCall { receiver, args, .. }
             | RustExpr::FnCall {
                 func: receiver,
@@ -520,6 +521,7 @@ mod tests {
 
     fn count_raw_in_stmt(stmt: &RustStmt) -> usize {
         match stmt {
+            RustStmt::Verbatim(_) => 1,
             RustStmt::Let { ty, value, .. } => {
                 ty.as_ref().map(count_raw_in_type).unwrap_or(0) + count_raw_in_expr(value)
             }

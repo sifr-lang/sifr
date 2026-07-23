@@ -4,8 +4,21 @@ use sifr_ir::PythonParameterKind;
 pub(crate) fn reference(name: &str) -> RustExpr {
     RustExpr::Ref {
         mutable: false,
-        expr: Box::new(RustExpr::Ident(name.to_string())),
+        expr: Box::new(value_place(name)),
     }
+}
+
+pub(crate) fn value_place(name: &str) -> RustExpr {
+    let mut segments = name.split('.');
+    let Some(root) = segments.next() else {
+        return RustExpr::Ident(String::new());
+    };
+    segments.fold(RustExpr::Ident(root.to_string()), |expr, field| {
+        RustExpr::Field {
+            expr: Box::new(expr),
+            field: field.to_string(),
+        }
+    })
 }
 
 pub(crate) fn vector_let(name: &str) -> RustStmt {

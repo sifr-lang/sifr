@@ -86,7 +86,7 @@ fn active_sync_method_decorator_reports_shape_not_reserved_on_async_def() {
     assert!(has_code(&errors, DiagnosticCode::PYCALL_INVALID_SHAPE));
     assert!(!has_code(
         &errors,
-        DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION
+        DiagnosticCode::PYRES_UNSUPPORTED_RESOURCE_DECLARATION
     ));
 }
 

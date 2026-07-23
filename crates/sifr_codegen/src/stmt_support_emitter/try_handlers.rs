@@ -122,7 +122,10 @@ impl RustEmitter {
                                 crate::render_type(&crate::sifr_type_to_rust_type(target));
                             if target_name == "Error" {
                                 return RustExpr::FnCall {
-                                    func: Box::new(RustExpr::Ident("Error::new".to_string())),
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "Error".to_string(),
+                                        "new".to_string(),
+                                    ])),
                                     args: vec![RustExpr::Field {
                                         expr: Box::new(cloned_error.clone()),
                                         field: "message".to_string(),
@@ -139,7 +142,10 @@ impl RustEmitter {
                             }
                             if super::can_construct_error_from_message_for_ir(&target_name) {
                                 RustExpr::FnCall {
-                                    func: Box::new(RustExpr::Ident(format!("{target_name}::new"))),
+                                    func: Box::new(RustExpr::Path(vec![
+                                        target_name,
+                                        "new".to_string(),
+                                    ])),
                                     args: vec![RustExpr::Field {
                                         expr: Box::new(cloned_error.clone()),
                                         field: "message".to_string(),

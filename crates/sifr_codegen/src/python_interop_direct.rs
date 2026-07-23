@@ -9,7 +9,9 @@ use crate::python_interop_callbacks::{
 use crate::python_interop_direct_helpers::{
     ok_return, push_for_shape, push_keyword_expr, push_named_keyword, push_positional,
 };
-pub(crate) use crate::python_interop_direct_helpers::{push_to, reference, vector_let};
+pub(crate) use crate::python_interop_direct_helpers::{
+    push_to, reference, value_place, vector_let,
+};
 pub(crate) use crate::python_interop_runtime_exprs::{mapped_let, mapped_try, runtime_call};
 use crate::python_zero_copy_arguments as zero_copy;
 use crate::{RustExpr, RustLiteral, RustStmt};

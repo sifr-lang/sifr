@@ -148,6 +148,15 @@ fn load_python_bindings_into_runtime(
     }
     match sifr_package::load_python_bindings(package_root, environment_digest) {
         Ok(artifact) => {
+            if let Err(reason) = sifr_driver::validate_binding_distributions(runtime, &artifact) {
+                render_diagnostics(
+                    &[binding_diagnostic(format!(
+                        "invalid Python binding artifact: {reason}"
+                    ))],
+                    diagnostic_format,
+                );
+                return Err(EXIT_USER_DIAGNOSTIC);
+            }
             let identity = serde_json::to_string(&artifact.bindings).map_err(|error| {
                 render_diagnostics(
                     &[binding_diagnostic(format!(

@@ -481,13 +481,16 @@ fn reject_affine_lambda_captures(lambda: &ExprLambda, ctx: &mut LowerCtx) -> boo
     let capture = referenced.into_iter().find_map(|name| {
         ctx.scope
             .lookup(&name)
-            .filter(|info| info.ty.contains_affine_resource())
+            .filter(|info| {
+                info.ty.contains_affine_resource()
+                    || ctx.must_use_obligation_for_type(&info.ty).is_some()
+            })
             .map(|info| (name, info.ty.clone()))
     });
     let Some((name, ty)) = capture else {
         return false;
     };
-    ownership_diagnostics::affine_reusable_callable_capture(
+    ownership_diagnostics::must_use_reusable_callable_capture(
         ctx,
         "lambda",
         &name,

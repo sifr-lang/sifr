@@ -16,5 +16,5 @@ E SIFR-PYCALL-0001 <unknown> invalid Python declaration call shape: synthetic in
 E SIFR-PYCB-0001 <unknown> invalid Python callback declaration: synthetic invalid callback policy
 E SIFR-PYCONV-0001 <unknown> unsupported Python declaration conversion type: synthetic unsupported type
 E SIFR-PYCTX-0001 <unknown> invalid Python context declaration: synthetic invalid context protocol
-E SIFR-PYRES-0002 <unknown> Python declaration lowering is not active yet: synthetic future decorator
+E SIFR-PYRES-0002 <unknown> unsupported Python resource declaration: synthetic future decorator
 E SIFR-PYTRUST-0004 <unknown> dynamic Python import requires @trust_python_dynamic

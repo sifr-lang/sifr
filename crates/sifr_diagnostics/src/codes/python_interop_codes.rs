@@ -20,7 +20,8 @@ impl DiagnosticCode {
     pub const PYCALL_INVALID_SHAPE: Self = Self::new("SIFR-PYCALL-0001", Severity::Error);
     pub const PYCONV_UNSUPPORTED_DECLARATION_TYPE: Self =
         Self::new("SIFR-PYCONV-0001", Severity::Error);
-    pub const PYRES_UNIMPLEMENTED_DECLARATION: Self = Self::new("SIFR-PYRES-0002", Severity::Error);
+    pub const PYRES_UNSUPPORTED_RESOURCE_DECLARATION: Self =
+        Self::new("SIFR-PYRES-0002", Severity::Error);
     pub const PYCTX_INVALID_DECLARATION: Self = Self::new("SIFR-PYCTX-0001", Severity::Error);
     pub const PYCB_INVALID_DECLARATION: Self = Self::new("SIFR-PYCB-0001", Severity::Error);
     pub const PYZC_INVALID_DECLARATION: Self = Self::new("SIFR-PYZC-0001", Severity::Error);

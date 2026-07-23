@@ -120,7 +120,7 @@ pub(super) fn try_lower_stmt_index_expr(expr: &HirExpr) -> Option<RustExpr> {
             let projection_method =
                 crate::helpers::option_projection_method_for_owned_type(value_ty.as_ref());
             let lowered_key = if let HirExpr::StringLiteral(value) = index.as_ref() {
-                RustExpr::Ident(format!("{value:?}"))
+                RustExpr::Verbatim(format!("{value:?}"))
             } else {
                 RustExpr::Ref {
                     mutable: false,
@@ -223,7 +223,7 @@ pub(super) fn try_lower_stmt_string_concat_expr(expr: &HirExpr) -> Option<RustEx
             if let (Some(ch), None) = (chars.next(), chars.next()) {
                 ("push", RustExpr::Literal(crate::RustLiteral::Char(ch)))
             } else {
-                ("push_str", RustExpr::Ident(format!("{value:?}")))
+                ("push_str", RustExpr::Verbatim(format!("{value:?}")))
             }
         } else {
             (
@@ -253,7 +253,7 @@ fn string_concat_capacity_expr(parts: &[&HirExpr]) -> RustExpr {
     let mut capacity_parts = Vec::with_capacity(parts.len());
     for part in parts {
         let len_expr = if let HirExpr::StringLiteral(value) = part {
-            RustExpr::Ident(format!("{}usize", value.len()))
+            RustExpr::Verbatim(format!("{}usize", value.len()))
         } else if let HirExpr::Name { name, .. } = part {
             RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Ident(name.clone())),
@@ -261,14 +261,14 @@ fn string_concat_capacity_expr(parts: &[&HirExpr]) -> RustExpr {
                 args: vec![],
             }
         } else {
-            RustExpr::Ident("0usize".to_string())
+            RustExpr::Verbatim("0usize".to_string())
         };
         capacity_parts.push(len_expr);
     }
     let mut iter = capacity_parts.into_iter();
     let mut capacity = iter
         .next()
-        .unwrap_or_else(|| RustExpr::Ident("0usize".to_string()));
+        .unwrap_or_else(|| RustExpr::Verbatim("0usize".to_string()));
     for part in iter {
         capacity = RustExpr::BinOp {
             left: Box::new(capacity),

@@ -204,6 +204,18 @@ fn generate_binding(
     ) {
         return fail(reason, diagnostic_format, EXIT_USER_DIAGNOSTIC);
     }
+    if let Some(previous) = replaced_binding.as_ref() {
+        if previous.output != output_relative {
+            return fail(
+                format!(
+                    "Python binding output for module '{module}' is pinned to '{}'; regenerate with the same `--output` path",
+                    previous.output
+                ),
+                diagnostic_format,
+                EXIT_USER_DIAGNOSTIC,
+            );
+        }
+    }
     if let Some(parent) = output.parent() {
         if let Err(error) = std::fs::create_dir_all(parent) {
             return fail(
@@ -405,7 +417,7 @@ fn run_probe(
     })
     .map_err(|error| format!("could not serialize Python binding probe request: {error}"))?;
     let output = Command::new(context.runtime.interpreter())
-        .args(["-I", "-c", BINDING_PROBE, &config])
+        .args(["-I", "-B", "-c", BINDING_PROBE, &config])
         .current_dir(&context.package_root)
         .output()
         .map_err(|error| format!("could not execute Python binding probe: {error}"))?;

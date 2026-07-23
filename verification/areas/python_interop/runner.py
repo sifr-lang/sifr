@@ -171,6 +171,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--suite", action="append", default=[], help="Suite filter; can repeat.")
     parser.add_argument("--bless", action="store_true", help="Accepted for area runner parity; unused.")
     parser.add_argument(
+        "--allow-partial-certification",
+        action="store_true",
+        help="Allow a filtered suite run to emit non-promotable partial certification.",
+    )
+    parser.add_argument(
         "--result-json",
         default=str(RESULT_JSON.relative_to(REPO_ROOT)),
         help="Path for machine-readable python interop result summary.",
@@ -203,6 +208,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     total_variants = sum(int(result["total_variants"]) for result in suite_results)
     total_failures = sum(int(result["total_failures"]) for result in suite_results)
+    partial_certification_rejected = (
+        compiled_certification["status"] == "partial"
+        and not args.allow_partial_certification
+    )
+    if partial_certification_rejected:
+        total_failures += 1
     payload = {
         "schema_version": 1,
         "area": "python_interop",
@@ -223,6 +234,13 @@ def main(argv: list[str] | None = None) -> int:
     print(f"result_json={result_path.relative_to(REPO_ROOT)}", flush=True)
 
     if total_failures:
+        if partial_certification_rejected:
+            print(
+                "filtered suite selection produced partial compiled certification; "
+                "pass --allow-partial-certification only for an explicitly non-promotable run",
+                file=sys.stderr,
+                flush=True,
+            )
         print(
             f"verification failed: variants={total_variants}, failures={total_failures}, "
             f"blocking_failures={total_failures}, non_blocking_failures=0",

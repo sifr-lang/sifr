@@ -394,7 +394,7 @@ pub(super) fn try_lower_simple_method_call_expr(
                         .map(try_lower_leaf_or_name_expr)
                         .collect::<Option<Vec<_>>>()?;
                     return Some(RustExpr::FnCall {
-                        func: Box::new(RustExpr::Ident(func.clone())),
+                        func: Box::new(crate::stmt_support_emitter::plain_call_target_for_ir(func)),
                         args: lowered_call_args,
                     });
                 }
@@ -470,7 +470,7 @@ pub(super) fn try_lower_simple_method_call_expr(
 
 pub(super) fn try_lower_dict_get_key_expr(index: &HirExpr) -> Option<RustExpr> {
     if let HirExpr::StringLiteral(value) = index {
-        return Some(RustExpr::Ident(format!("{value:?}")));
+        return Some(RustExpr::Verbatim(format!("{value:?}")));
     }
     Some(RustExpr::Ref {
         mutable: false,

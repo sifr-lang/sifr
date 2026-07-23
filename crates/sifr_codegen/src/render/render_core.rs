@@ -357,6 +357,9 @@ impl Renderer {
 
     pub(crate) fn render_stmt_with_tail(&mut self, stmt: &RustStmt, tail: bool) {
         match stmt {
+            RustStmt::Verbatim(source) => {
+                self.emit_line(&Self::render_compiler_path_string(source));
+            }
             RustStmt::Let {
                 mutable,
                 name,

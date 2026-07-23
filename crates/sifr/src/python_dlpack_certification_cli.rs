@@ -129,6 +129,7 @@ fn run_fixture(
 ) -> Result<DlpackFixtureEvidence, String> {
     let output = Command::new(&context.interpreter)
         .arg("-I")
+        .arg("-B")
         .arg(fixture)
         .arg(target)
         .current_dir(&context.package_root)

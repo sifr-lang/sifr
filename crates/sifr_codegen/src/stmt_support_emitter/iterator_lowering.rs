@@ -621,6 +621,7 @@ impl RustEmitter {
 
     pub(crate) fn rust_stmt_contains_await(stmt: &RustStmt) -> bool {
         match stmt {
+            RustStmt::Verbatim(_) => true,
             RustStmt::Let { value, .. }
             | RustStmt::LetPattern { value, .. }
             | RustStmt::Expr(value)
@@ -693,6 +694,7 @@ impl RustEmitter {
         match expr {
             crate::RustExpr::Await(_) | crate::RustExpr::TimeoutAwait { .. } => true,
             crate::RustExpr::Ident(value) => value.contains(".await"),
+            crate::RustExpr::Verbatim(source) => source.contains(".await"),
             crate::RustExpr::Literal(_) | crate::RustExpr::Path(_) => false,
             crate::RustExpr::MethodCall { receiver, args, .. } => {
                 Self::rust_expr_contains_await(receiver)

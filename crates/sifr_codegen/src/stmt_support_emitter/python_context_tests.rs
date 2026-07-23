@@ -10,9 +10,16 @@ fn class_type(name: &str) -> Type {
         identity: None,
         type_args: Vec::new(),
         name: name.to_string(),
-        fields: vec![],
+        fields: if name == "PythonError" {
+            ["message", "kind", "exception_type", "traceback", "context"]
+                .into_iter()
+                .map(|field| (field.to_string(), Type::Str))
+                .collect()
+        } else {
+            Vec::new()
+        },
         methods: vec![],
-        parent_class: None,
+        parent_class: (name == "PythonError").then(|| "Error".to_string()),
     }
 }
 
@@ -37,6 +44,9 @@ fn emitter() -> RustEmitter {
     emitter
         .try_closure_error_type
         .push("PythonError".to_string());
+    emitter
+        .try_closure_error_type_info
+        .push(Some(class_type("PythonError")));
     emitter.python_opaque_classes.insert(
         "Entered".to_string(),
         PythonInteropDeclaration {
@@ -230,16 +240,61 @@ fn sync_python_context_uses_async_closure_when_nested_body_awaits() {
 
 #[test]
 fn cause_classification_uses_canonical_resolved_types() {
-    assert_eq!(
-        classify_cause_kind(Some(&class_type("TimeoutError")), "Alias"),
-        "Timeout"
-    );
+    let mut timeout = class_type("TimeoutError");
+    if let Type::Class { identity, .. } = &mut timeout {
+        *identity = Some("sifr.builtin.TimeoutError".to_string());
+    }
+    assert_eq!(classify_cause_kind(Some(&timeout), "Alias"), "Timeout");
     assert_eq!(
         classify_cause_kind(Some(&class_type("CancelableTask")), "CancelableTask"),
         "OrdinaryError"
     );
+    let mut cancellation = class_type("CancellationError");
+    if let Type::Class { identity, .. } = &mut cancellation {
+        *identity = Some("sifr.builtin.CancellationError".to_string());
+    }
     assert_eq!(
-        classify_cause_kind(Some(&class_type("CancellationError")), "Alias"),
+        classify_cause_kind(Some(&cancellation), "Alias"),
         "Cancellation"
     );
+    assert_eq!(
+        classify_cause_kind(Some(&class_type("TimeoutError")), "TimeoutError"),
+        "OrdinaryError"
+    );
+    assert_eq!(
+        classify_cause_kind(Some(&class_type("CancellationError")), "CancellationError"),
+        "OrdinaryError"
+    );
+    let mut shadow = class_type("TimeoutError");
+    if let Type::Class { identity, .. } = &mut shadow {
+        *identity = Some("application.TimeoutError".to_string());
+    }
+    assert_eq!(
+        classify_cause_kind(Some(&shadow), "TimeoutError"),
+        "OrdinaryError"
+    );
+    let mut worker = class_type("WorkerRuntimeError");
+    if let Type::Class { identity, .. } = &mut worker {
+        *identity = Some("sifr.parallel.WorkerRuntimeError".to_string());
+    }
+    assert_eq!(
+        classify_cause_kind(Some(&worker), "WorkerRuntimeError"),
+        "RuntimeFault"
+    );
+    assert_eq!(
+        classify_cause_kind(
+            Some(&class_type("WorkerRuntimeError")),
+            "WorkerRuntimeError"
+        ),
+        "OrdinaryError"
+    );
+    assert_eq!(
+        classify_cause_kind(Some(&class_type("RuntimeFault")), "RuntimeFault"),
+        "OrdinaryError"
+    );
+    assert_eq!(
+        super::outcome::cause_variant(&class_type("RuntimeFault")),
+        "OrdinaryError"
+    );
+    assert_eq!(classify_cause_kind(None, "PythonError"), "OrdinaryError");
 }

@@ -255,6 +255,31 @@ fn consumed_argument_transfers_deleter_ownership_exactly_once() {
     close_object(exporter).expect("exporter should close");
 }
 
+#[test]
+fn attach_failure_leaves_the_deleter_with_the_capsule_owner() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    reset_releases();
+    initialize_runtime(test_config("dlpack-finalize-after-reset")).expect("init should succeed");
+
+    let exporter =
+        exporter(legacy_capsule(DEVICE_CPU, 0), DEVICE_CPU, 0).expect("exporter should exist");
+    let tensor = acquire_dlpack_tensor(&exporter, "cpu", None, Some("float64"))
+        .expect("tensor should acquire");
+    let argument =
+        prepare_dlpack_argument((tensor.handle, tensor.token)).expect("argument should prepare");
+
+    reset_runtime_state_for_tests();
+    assert_eq!(LEGACY_RELEASES.load(Ordering::SeqCst), 0);
+    let error = argument
+        .finish()
+        .expect_err("a stopped runtime must reject finalization");
+    assert!(error.message.contains("not been initialized"), "{error:?}");
+    // The producer-named capsule remains the sole owner. In particular, the
+    // rejected attach closure must not run the entry's parallel deleter.
+    assert_eq!(LEGACY_RELEASES.load(Ordering::SeqCst), 0);
+}
+
 fn reset_releases() {
     LEGACY_RELEASES.store(0, Ordering::SeqCst);
     VERSIONED_RELEASES.store(0, Ordering::SeqCst);

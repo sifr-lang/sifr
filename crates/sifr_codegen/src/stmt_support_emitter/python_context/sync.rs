@@ -103,8 +103,7 @@ impl RustEmitter {
             classify_cause_kind(active_error_type_info.as_ref(), &active_error_type);
         let active_is_python_error = active_error_type_info
             .as_ref()
-            .is_some_and(Type::is_python_error_contract)
-            || (active_error_type_info.is_none() && active_error_type == "PythonError");
+            .is_some_and(Type::is_python_error_contract);
         let Some(manager_value) = self.lower_rendered_expr_for_ir(&item.context)? else {
             return Err(crate::CodegenError::new(
                 "Python context manager expression could not be lowered",
@@ -730,15 +729,20 @@ fn is_error_return(expr: &RustExpr) -> bool {
     )
 }
 
-pub(super) fn classify_cause_kind(error_type: Option<&Type>, rendered: &str) -> &'static str {
-    let class_name = match error_type.map(Type::resolve_alias) {
-        Some(Type::Class { name, .. }) => name.as_str(),
-        _ => rendered,
-    };
-    match class_name {
-        "CancellationError" => "Cancellation",
-        "TimeoutError" => "Timeout",
-        "RuntimeFault" | "WorkerRuntimeError" => "RuntimeFault",
+pub(super) fn classify_cause_kind(error_type: Option<&Type>, _rendered: &str) -> &'static str {
+    match error_type.map(Type::resolve_alias) {
+        Some(Type::Class {
+            identity: Some(identity),
+            ..
+        }) if identity == "sifr.builtin.CancellationError" => "Cancellation",
+        Some(Type::Class {
+            identity: Some(identity),
+            ..
+        }) if identity == "sifr.builtin.TimeoutError" => "Timeout",
+        Some(Type::Class {
+            identity: Some(identity),
+            ..
+        }) if identity == "sifr.parallel.WorkerRuntimeError" => "RuntimeFault",
         _ => "OrdinaryError",
     }
 }

@@ -432,7 +432,7 @@ pub(super) fn shutdown() -> Result<(), PythonRuntimeError> {
     record_shutdown_phase(ShutdownPhase::AsyncCleanup);
     retain_first_error(
         &mut first_error,
-        super::shutdown_hooks::run_registered_async_cleanup(),
+        super::shutdown_hooks::run_reserved_async_cleanup_slot(),
     );
 
     let resources = {

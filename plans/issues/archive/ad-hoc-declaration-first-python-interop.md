@@ -2,7 +2,12 @@
 
 ## Status
 
-In progress. The phase defines one complete end-state architecture and an
+Completed and closure-approved on
+[PR #3000](https://github.com/sifr-lang/sifr/pull/3000). M0-M17 implementation
+is merged through PR #2999; repeated whole-phase Fable High review is satisfied,
+the authoritative merge gate passes on the closure candidate, and M17 Wave 4
+and the phase bookkeeping are complete. The phase defines one complete
+end-state architecture and an
 ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
@@ -88,7 +93,11 @@ and excluded-document publication gaps and returned **SATISFIED**. The final
 authoritative create-PR gate passes every blocking lane. M16 is implemented,
 authoritatively validated, repeatedly reviewed to satisfaction, and
 closure-approved on [PR #2996](https://github.com/sifr-lang/sifr/pull/2996).
-M17 is not yet implemented.
+M17 ecosystem migration and certification implementation is complete through
+PRs #2997-#3000:
+ordinary examples use declarations or hermetic typed bridges, live services
+execute built Sifr binaries, and the current-run capability ledger binds seven
+capabilities to ten compiled evidence records with four resource-zero proofs.
 Milestones sequence delivery; they do not create reduced language
 versions, temporary public contracts, dual authorities, or alternate lowering
 paths.
@@ -229,7 +238,7 @@ Implementation progress:
 - [x] M14 binding and certification authoring ([PR #2994](https://github.com/sifr-lang/sifr/pull/2994))
 - [x] M15 LSP declaration authoring ([PR #2995](https://github.com/sifr-lang/sifr/pull/2995))
 - [x] M16 raw API ergonomics on shared ownership ([PR #2996](https://github.com/sifr-lang/sifr/pull/2996))
-- [ ] M17 ecosystem migration and certification
+- [x] M17 ecosystem migration and certification ([PR #2997](https://github.com/sifr-lang/sifr/pull/2997), [PR #2998](https://github.com/sifr-lang/sifr/pull/2998), [PR #2999](https://github.com/sifr-lang/sifr/pull/2999))
 
 ### M0. Complete Contract Lock And Evidence Model
 
@@ -633,8 +642,9 @@ Implementation waves (one locally validated and reviewed PR per wave):
   - Add fail-fast sibling, race/select loser, join-set, cancellation suppression,
     and terminal-latch ordering tests before typed wrappers depend on them.
   - Define shutdown phases now: stop external admissions; invoke the M9 callback
-    shutdown hook (a no-op ordered slot until M9); run registered async cleanup
-    while the loop is live; cancel and terminally drain remaining submissions;
+    shutdown hook (a no-op ordered slot until M9); traverse the reserved async
+    cleanup ordering slot while the loop is live (no independent registration
+    API currently exists); cancel and terminally drain remaining submissions;
     stop the loop; join its thread.
 - [x] Generate typed async declaration wrappers behind the public gate —
   [PR #2964](https://github.com/sifr-lang/sifr/pull/2964):
@@ -1652,7 +1662,7 @@ Delivery waves:
   verified all blockers closed and requested the authoritative merge gate plus
   a separate issue for the pre-existing class-field mutating-receiver clone
   defect. That defect and adjacent fail-closed parity gaps are tracked in
-  [`ad-hoc-class-field-mutating-receiver-place-semantics.md`](ad-hoc-class-field-mutating-receiver-place-semantics.md).
+  [`ad-hoc-class-field-mutating-receiver-place-semantics.md`](../active/ad-hoc-class-field-mutating-receiver-place-semantics.md).
   Pass 8 is retained as an explicitly invalid timer-only artifact and is not
   treated as review evidence. Fresh Fable High
   [pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-9.md)
@@ -2444,7 +2454,7 @@ Delivery waves:
 - [x] Wave 3 — consolidate compiled callback, async HTTP, Arrow, DLPack, and
   resource-zero evidence into the capability certification ledger; add the M17
   demo and finish public/internal documentation.
-- [ ] Wave 4 — run authoritative validation, repeat whole-milestone and
+- [x] Wave 4 — run authoritative validation, repeat whole-milestone and
   whole-phase review to satisfaction, merge, update phase/roadmap/architecture
   status, and archive the completed phase.
 
@@ -2597,6 +2607,100 @@ declared capability skip, and hardening `6/6`. Only the aggregate warm
 wall-time target is advisory. Wave 3 is closure-approved in
 [PR #2999](https://github.com/sifr-lang/sifr/pull/2999).
 
+Wave 4 pre-review validation passes the authoritative merge profile end to end
+in `3914.17s`. Python interop passes `25/25`; the full E2E corpus passes
+`674/674` with report signature `1f8b1cadc4f48ec8`; runtime-platform reports
+`30` variants, zero failures, and three declared host/capability skips; and
+hardening passes `261` variants with zero failures. File-size, maintainability,
+taxonomy, formatting, Clippy, package, distribution, sysroot, generated-code,
+diagnostic, regression, and ecosystem checks all pass. The aggregate warm-time
+and group-skew notices are non-blocking advisories; the gate exits successfully.
+Whole-phase review and closure-PR merge remain before Wave 4 is complete.
+
+Whole-phase Fable High
+[review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-1.md)
+then exercised the complete M0-M17
+implementation and found one blocker plus seven major findings across stub-body
+validation, callback reentrancy, async error replay, cleanup-capable captures,
+diagnostic ownership, generated-Rust IR hygiene, DLPack rollback, binding
+authoring, LSP freshness, and certification evidence. Those pass-1 findings
+were remediated with focused regression coverage. The first
+post-remediation `create-pr` attempt passed all `19/19` Python interop variants
+but exceeded the blocking interop step budget (`647.35s` against `600s`). A
+warm rerun then exposed and closed one stale diagnostic-precedence assertion;
+the complete 826-test lowering crate passes after preserving the dedicated
+context-borrow diagnostic. The final authoritative `create-pr` profile passes
+end to end in `1427.10s`: Python interop `19/19` in `476.48s`, E2E `131/131`
+with signature `7c39b8c1dd4fec7c`, runtime-platform `28` variants with zero
+failures and one declared capability skip, and hardening `6/6`. Every blocking
+step budget passes; only the aggregate warm-wall target is advisory. A fresh
+whole-phase satisfaction review remains required.
+
+Whole-phase Fable High
+[review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-2.md)
+verified the pass-1 blocker and all seven major findings closed, then found one
+nested-declaration blocker, four new majors, and ten actionable minors. Their
+compiler, runtime, binding-authoring, diagnostic, evidence, and documentation
+remediations are implemented on PR #3000. The post-remediation authoritative
+`create-pr` gate passes in `981.84s`: Python interop `19/19`, the full crate
+matrix, runtime-platform `28/28` with one declared capability skip, hardening
+`6/6`, and the create-PR e2e corpus `131/131`. Every blocking step budget
+passes; only the aggregate warm-wall target is advisory. A fresh whole-phase
+review of the committed remediation and an exact-tree authoritative merge gate
+remain required.
+
+Whole-phase Fable High
+[review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-3.md)
+and its requested self-contained replacement
+[review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-4.md)
+both exited with incomplete interim reports and therefore are not satisfaction
+evidence. They independently confirmed two residuals: canonical worker-error
+identity was still missing from the structured-scope and join-set CPU-offload
+fallbacks, and wrapped Python-rooted decorators could still be discarded on
+module, method, class, and nested surfaces. Pass 4 additionally reproduced an
+entry-module `RuntimeFault` basename shadow. All three are now closed with
+focused lowering and codegen regression coverage. The authoritative
+`create-pr` profile passes this remediation tree end to end in `1086.53s`:
+Python interop `19/19`, the full crate matrix, runtime-platform `28` variants
+with zero failures and one declared capability skip, hardening `6/6`, and E2E
+`131/131` with signature `7c39b8c1dd4fec7c`. Every blocking step budget
+passes; only the aggregate warm-wall target is advisory. A complete fresh
+whole-phase satisfaction review remains required.
+
+Whole-phase Fable High
+[review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-5.md)
+verified every pass-2 and pass-3/pass-4 finding closed, live-reproduced wrapped
+and indexed Python-rooted decorator rejection across module, method, class, and
+nested surfaces, confirmed canonical CPU-offload error identities and sync/async
+`RuntimeFault` shadow handling, and independently swept the complete M0-M17
+diff. It returned **SATISFIED** with no blocker, major, or actionable minor.
+The subsequent merge gate exposed three pre-existing namespaced class and
+static method targets still represented as raw `RustExpr::Ident` payloads;
+strict IR validation rejected `Point::origin`, `Temperature::from_fahrenheit`,
+and `MathUtils::add`. Plain-call targets now use one structured helper that
+emits `RustExpr::Path` for every namespaced target across registry, await, and
+structured task-call lowering. The focused IR helper test and the complete
+emitted-pass-fixture safety test pass after remediation. The fresh review and
+exact-tree merge gate that followed are recorded below.
+
+Whole-phase Fable High
+[review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-6.md)
+exhaustively enumerated every reachable dynamic `RustExpr::Ident` construction,
+confirmed every plain and namespaced call target is now represented structurally,
+ran live synchronous, asynchronous, timeout, and structured-task probes, and
+rechecked the complete M0-M17 diff and every load-bearing pass-5 conclusion. It
+returned **SATISFIED** with no blocker, major, or actionable minor. The
+authoritative merge-profile gate then passed the exact committed closure
+candidate (`485749d91`) in `4316.43s`: Python interop `25/25`, codegen
+`890/890`, runtime-platform `30` variants with zero failures and three declared
+capability/tooling skips, E2E `674/674` with report signature
+`1f8b1cadc4f48ec8`, and hardening `261` variants with zero failures. Every
+blocking step passed; the warm-wall and batching notices are advisory.
+
+The closure unit records the satisfied whole-phase review and exact merge-gate
+evidence here, completes M17 Wave 4, updates the PY-2 roadmap, phase index, and
+architecture summary for PR #3000, and archives this phase record before merge.
+
 Tasks:
 
 - Migrate all runnable biip/schwifty, dataframe, ML, web, database, cloud,
@@ -2650,28 +2754,32 @@ Validation:
 - Live evidence distinguishes compiled Sifr execution from Python-client or
   package-presence evidence.
 - Inventory remains discovery evidence and cannot certify a capability.
-- Every executable that creates Python state asserts zero outstanding resources.
+- Every executable that creates affine or resource-tracked Python state asserts
+  zero outstanding resources. Callback and async certification reports combine
+  value-roundtrip fixtures with dedicated sibling cases that assert the
+  protocol-specific close, drain, cancellation, and reconciliation evidence;
+  the ledger records which cases own each cleanup claim.
 
 ## Review Checklist
 
-- [ ] The architecture defines one complete language, not a reduced release.
-- [ ] The Sifr signature is the only conversion type declaration.
-- [ ] Targets are structured paths in a dedicated namespace.
-- [ ] Omission, defaults, positional arguments, kwargs, and variadics are exact.
-- [ ] All Python identity uses one sealed non-send runtime handle.
-- [ ] Automatic reference drop is distinct from semantic resource operations.
-- [ ] Sync context suppression and cleanup-error precedence are explicit.
-- [ ] One owned asyncio loop has bidirectional cancellation and terminal cleanup.
-- [ ] Async close and async context exit cannot be abandoned by cancellation.
-- [ ] Callback lifetime, owner, dispatch, concurrency, and shutdown are explicit.
-- [ ] Buffer borrow/access/layout and exact release are explicit.
-- [ ] Arrow and DLPack are affine, one-path, and never copy.
-- [ ] Bridges are hermetic embedded package inputs with static imports.
-- [ ] There is one requirement/trust authority and no allowlist coexistence.
-- [ ] Check, doctor, binding generation, and LSP reuse compiler plans.
-- [ ] No tool or compiler path creates an untyped boundary automatically.
-- [ ] Capability claims require executable negative and cleanup evidence.
-- [ ] Named live cases invoke compiled Sifr binaries.
+- [x] The architecture defines one complete language, not a reduced release.
+- [x] The Sifr signature is the only conversion type declaration.
+- [x] Targets are structured paths in a dedicated namespace.
+- [x] Omission, defaults, positional arguments, kwargs, and variadics are exact.
+- [x] All Python identity uses one sealed non-send runtime handle.
+- [x] Automatic reference drop is distinct from semantic resource operations.
+- [x] Sync context suppression and cleanup-error precedence are explicit.
+- [x] One owned asyncio loop has bidirectional cancellation and terminal cleanup.
+- [x] Async close and async context exit cannot be abandoned by cancellation.
+- [x] Callback lifetime, owner, dispatch, concurrency, and shutdown are explicit.
+- [x] Buffer borrow/access/layout and exact release are explicit.
+- [x] Arrow and DLPack are affine, one-path, and never copy.
+- [x] Bridges are hermetic embedded package inputs with static imports.
+- [x] There is one requirement/trust authority and no allowlist coexistence.
+- [x] Check, doctor, binding generation, and LSP reuse compiler plans.
+- [x] No tool or compiler path creates an untyped boundary automatically.
+- [x] Capability claims require executable negative and cleanup evidence.
+- [x] Named live cases invoke compiled Sifr binaries.
 
 ## Planning Review Evidence
 

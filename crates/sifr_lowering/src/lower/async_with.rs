@@ -46,7 +46,7 @@ fn async_task_call_name(expr: &Expr) -> Option<(&str, &sifr_python_ast::ExprCall
 
 fn timeout_error_type() -> Type {
     Type::Class {
-        identity: None,
+        identity: Some("sifr.builtin.TimeoutError".to_string()),
         type_args: Vec::new(),
         name: "TimeoutError".to_string(),
         fields: vec![("message".to_string(), Type::Str)],

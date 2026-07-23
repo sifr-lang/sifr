@@ -249,7 +249,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PYIMP-0003`](SIFR-PYIMP-0003.md) | Error | The reserved embedded Python bridge namespace was already populated. |
 | [`SIFR-PYCALL-0001`](SIFR-PYCALL-0001.md) | Error | A Python declaration or call shape is unsupported or incompatible. |
 | [`SIFR-PYCONV-0001`](SIFR-PYCONV-0001.md) | Error | A Sifr type has no active declaration-first Python conversion. |
-| [`SIFR-PYRES-0002`](SIFR-PYRES-0002.md) | Error | Recognized declaration-first syntax has no active production lowering yet. |
+| [`SIFR-PYRES-0002`](SIFR-PYRES-0002.md) | Error | A Python resource declaration uses an unsupported ownership or target shape. |
 | [`SIFR-PYCTX-0001`](SIFR-PYCTX-0001.md) | Error | A Python context-manager entry, exit, or entered-value declaration is invalid. |
 | [`SIFR-PYCB-0001`](SIFR-PYCB-0001.md) | Error | A Python callback lifetime, dispatch, concurrency, or owner declaration is invalid. |
 | [`SIFR-PYZC-0001`](SIFR-PYZC-0001.md) | Error | An advanced-data ownership, buffer layout, or hidden-copy declaration is invalid. |

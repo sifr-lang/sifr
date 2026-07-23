@@ -6,6 +6,9 @@ pub(crate) enum IrValidationKind {
     DuplicateStructField,
     EmptyFunctionBody,
     ReturnOutsideFunction,
+    InvalidVerbatimStatement,
+    InvalidVerbatimExpression,
+    InvalidIdentifier,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -102,6 +105,17 @@ fn validate_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
 
 fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_function: bool) {
     match stmt {
+        RustStmt::Verbatim(source) => {
+            let wrapper = format!("async fn __sifr_validate_verbatim() {{ {source} }}");
+            if let Err(error) = syn::parse_file(&wrapper) {
+                issues.push(IrValidationIssue {
+                    kind: IrValidationKind::InvalidVerbatimStatement,
+                    message: format!(
+                        "compiler-owned verbatim Rust statement is invalid ({error}): {source}"
+                    ),
+                });
+            }
+        }
         RustStmt::Let { ty, value, .. } => {
             if let Some(ty) = ty {
                 validate_type(ty, issues);
@@ -231,7 +245,28 @@ fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_functi
 
 fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_function: bool) {
     match expr {
-        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => {}
+        RustExpr::Literal(_) | RustExpr::Path(_) => {}
+        RustExpr::Verbatim(source) => {
+            if let Err(error) = syn::parse_str::<syn::Expr>(source) {
+                issues.push(IrValidationIssue {
+                    kind: IrValidationKind::InvalidVerbatimExpression,
+                    message: format!("compiler-owned verbatim Rust expression is invalid: {error}"),
+                });
+            }
+        }
+        RustExpr::Ident(name) => {
+            let mut characters = name.chars();
+            let valid = characters
+                .next()
+                .is_some_and(|first| first == '_' || first.is_alphabetic())
+                && characters.all(|character| character == '_' || character.is_alphanumeric());
+            if !valid {
+                issues.push(IrValidationIssue {
+                    kind: IrValidationKind::InvalidIdentifier,
+                    message: format!("Rust identifier IR contains raw syntax: {name}"),
+                });
+            }
+        }
         RustExpr::MethodCall { receiver, args, .. } => {
             validate_expr(receiver, issues, in_function);
             for arg in args {
@@ -461,5 +496,42 @@ mod tests {
 
         let issues = validate_items(&items);
         assert!(issues.is_empty());
+    }
+
+    #[test]
+    fn rejects_raw_syntax_in_identifier_nodes() {
+        let items = vec![RustItem::Const {
+            name: "BROKEN".to_string(),
+            visibility: Visibility::Private,
+            ty: RustType::I64,
+            value: RustExpr::Ident("std::cmp::max(1, 2)".to_string()),
+        }];
+
+        let issues = validate_items(&items);
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IrValidationKind::InvalidIdentifier
+                && issue.message.contains("std::cmp::max(1, 2)")
+        }));
+    }
+
+    #[test]
+    fn validates_explicit_verbatim_expression_nodes() {
+        let valid = vec![RustItem::Const {
+            name: "VALUE".to_string(),
+            visibility: Visibility::Private,
+            ty: RustType::I64,
+            value: RustExpr::Verbatim("std::cmp::max(1, 2)".to_string()),
+        }];
+        assert!(validate_items(&valid).is_empty());
+
+        let invalid = vec![RustItem::Const {
+            name: "BROKEN".to_string(),
+            visibility: Visibility::Private,
+            ty: RustType::I64,
+            value: RustExpr::Verbatim("std::cmp::max(".to_string()),
+        }];
+        assert!(validate_items(&invalid)
+            .iter()
+            .any(|issue| issue.kind == IrValidationKind::InvalidVerbatimExpression));
     }
 }

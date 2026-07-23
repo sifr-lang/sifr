@@ -681,6 +681,17 @@ pub(in crate::lower) fn lower_stmt(
         }
         Stmt::FunctionDef(func) => {
             // Nested function definition (def inside def)
+            if let Some(decorator) = func.decorator_list.iter().find(|decorator| {
+                python_interop::has_python_interop_decorator_syntax(std::slice::from_ref(decorator))
+            }) {
+                ctx.error_with_code_at(
+                    DiagnosticCode::PYCALL_INVALID_SHAPE,
+                    "invalid Python declaration call shape: nested Python declarations are not supported; declare the Python boundary at module or class scope"
+                        .to_string(),
+                    decorator.range,
+                );
+                return None;
+            }
             // Extract the function type (params + return type)
             let ft = ctx
                 .functions

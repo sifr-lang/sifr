@@ -219,7 +219,7 @@ impl RustEmitter {
                                 };
                                 (as_str.clone(), as_str)
                             } else if let HirExpr::StringLiteral(val) = value {
-                                let literal = crate::RustExpr::Ident(format!("{val:?}"));
+                                let literal = crate::RustExpr::Verbatim(format!("{val:?}"));
                                 (literal.clone(), literal)
                             } else {
                                 let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {

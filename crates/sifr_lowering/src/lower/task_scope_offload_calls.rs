@@ -164,7 +164,7 @@ fn process_class_type(name: &str, ctx: &LowerCtx) -> Type {
         .get(name)
         .cloned()
         .unwrap_or_else(|| Type::Class {
-            identity: None,
+            identity: Some(format!("sifr.parallel.{name}")),
             type_args: Vec::new(),
             name: name.to_string(),
             fields: vec![("_handle".to_string(), Type::Int)],
@@ -288,7 +288,7 @@ fn worker_error_type(name: &str, ctx: &LowerCtx) -> Type {
         .get(name)
         .cloned()
         .unwrap_or_else(|| Type::Class {
-            identity: None,
+            identity: Some(format!("sifr.parallel.{name}")),
             type_args: Vec::new(),
             name: name.to_string(),
             fields: Vec::new(),
@@ -309,4 +309,21 @@ fn call_arity_range(call: &ExprCall) -> TextRange {
         .args
         .last()
         .map_or_else(|| call.func.range(), Ranged::range)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fallback_worker_errors_keep_canonical_parallel_identity() {
+        let ctx = LowerCtx::new();
+        for name in ["WorkerError", "WorkerRuntimeError"] {
+            assert!(matches!(
+                worker_error_type(name, &ctx),
+                Type::Class { identity: Some(identity), .. }
+                    if identity == format!("sifr.parallel.{name}")
+            ));
+        }
+    }
 }

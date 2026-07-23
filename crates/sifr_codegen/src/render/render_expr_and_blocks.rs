@@ -145,6 +145,7 @@ impl Renderer {
     pub(crate) fn render_expr_string(expr: &RustExpr) -> String {
         match expr {
             RustExpr::Literal(lit) => Self::render_literal(lit),
+            RustExpr::Verbatim(source) => Self::render_compiler_path_string(source),
             RustExpr::Ident(name) => Self::render_identifier_or_compiler_path(name),
             RustExpr::Path(parts) => Self::render_path_parts(parts),
             RustExpr::MethodCall {

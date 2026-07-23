@@ -18,7 +18,10 @@ pub(super) fn shutdown_registered_callbacks() -> Result<(), PythonRuntimeError> 
     super::callbacks::shutdown_registered_callback_owners()
 }
 
-pub(super) fn run_registered_async_cleanup() -> Result<(), PythonRuntimeError> {
+/// Preserve the shutdown-ordering slot for future runtime-owned asynchronous
+/// resources. No such registry exists today; current async-close/context
+/// resources are discharged by generated ownership paths before shutdown.
+pub(super) fn run_reserved_async_cleanup_slot() -> Result<(), PythonRuntimeError> {
     #[cfg(test)]
     if FORCE_ASYNC_CLEANUP_FAILURE.swap(false, Ordering::SeqCst) {
         return Err(PythonRuntimeError::AsyncRuntimeFailed(

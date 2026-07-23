@@ -80,9 +80,9 @@ impl RustEmitter {
             })?,
             0,
         );
-        rewritten.push(RustStmt::Expr(RustExpr::Ident(
-            "return Ok(Ok(None));".to_string(),
-        )));
+        rewritten.push(RustStmt::Return(Some(RustExpr::Verbatim(
+            "Ok(Ok(None))".to_string(),
+        ))));
         let body = crate::render_stmts(&rewritten);
 
         let internal_error = mapped_internal_error(active_error_type);
@@ -245,7 +245,7 @@ drop({scope});
             cleanup_error = names.cleanup_error,
             resume_parent_cancellation = resume_parent_cancellation,
         );
-        Ok(Some(RustStmt::Expr(RustExpr::Ident(rendered))))
+        Ok(Some(RustStmt::Verbatim(rendered)))
     }
 }
 
@@ -342,11 +342,16 @@ fn normal_exit(
     exit_error_type: &Type,
     owner_retained_errors: &[Type],
 ) -> String {
-    let exit = RustExpr::Await(Box::new(RustExpr::Ident(cleanup_scope_call(
+    let exit = RustExpr::Await(Box::new(cleanup_scope_call(
         &names.cleanup_carrier,
         &names.manager,
-        "::sifr_runtime::python::PythonAsyncExitCause::Normal",
-    ))));
+        RustExpr::Path(vec![
+            "sifr_runtime".to_string(),
+            "python".to_string(),
+            "PythonAsyncExitCause".to_string(),
+            "Normal".to_string(),
+        ]),
+    )));
     let mapped = crate::python_interop_direct::mapped_try(exit, exit_error_type);
     let reconciliation = if owner_retained_errors.is_empty() {
         String::new()
@@ -380,13 +385,13 @@ fn normal_exit(
 fn python_error_exit(names: &AsyncContextNames) -> String {
     format!(
         r#"let {cleanup_carrier} = ::sifr_runtime::cancellation::CancellationCarrier::new();
-let {cause} = match {body_error}.__sifr_python_error.as_ref() {{
-    Some(replay) => ::sifr_runtime::python::PythonAsyncExitCause::Python(replay.clone()),
-    None => ::sifr_runtime::python::PythonAsyncExitCause::Sifr(::sifr_runtime::python::SifrExitCause {{
+let ({cause}, {suppression_allowed}) = match {body_error}.__sifr_python_error.as_ref() {{
+    Some(replay) => (::sifr_runtime::python::PythonAsyncExitCause::Python(replay.clone()), true),
+    None => (::sifr_runtime::python::PythonAsyncExitCause::Sifr(::sifr_runtime::python::SifrExitCause {{
         kind: ::sifr_runtime::python::SifrExitCauseKind::OrdinaryError,
         sifr_type: "PythonError".to_string(),
         message: format!("{{}}", {body_error}),
-    }}),
+    }}), false),
 }};
 match __SIFR_TASK_CANCELLATION.scope(
     {cleanup_carrier}.clone(),
@@ -397,7 +402,11 @@ match __SIFR_TASK_CANCELLATION.scope(
         {manager}.__sifr_python_callbacks,
     ),
 ).await {{
-    Ok(::sifr_runtime::python::PythonExitDecision::Suppress) => {{}},
+    Ok(::sifr_runtime::python::PythonExitDecision::Suppress) if {suppression_allowed} => {{}},
+    Ok(::sifr_runtime::python::PythonExitDecision::Suppress) => {{
+        ::sifr_runtime::python::record_context_ignored_suppression("ordinary-error:PythonError");
+        return Err({body_error});
+    }},
     Ok(::sifr_runtime::python::PythonExitDecision::Propagate) => return Err({body_error}),
     Err({cleanup_error}) => {{
         if let Some(primary) = {body_error}.__sifr_python_error.as_mut() {{
@@ -411,6 +420,10 @@ match __SIFR_TASK_CANCELLATION.scope(
 }}"#,
         cleanup_carrier = names.cleanup_carrier,
         cause = format!("__sifr_python_async_context_cause_{}", names.manager),
+        suppression_allowed = format!(
+            "__sifr_python_async_context_suppression_allowed_{}",
+            names.manager
+        ),
         body_error = names.body_error,
         manager = names.manager,
         cleanup_error = names.cleanup_error,
@@ -472,11 +485,17 @@ fn mapped_internal_error(active_error_type: &Type) -> String {
             "without_replay".to_string(),
         ])),
         args: vec![
-            RustExpr::Ident("\"runtime\"".to_string()),
-            RustExpr::Ident("\"SifrPythonAsyncContextError\"".to_string()),
-            RustExpr::Ident("\"async context cancellation handoff failed\"".to_string()),
-            RustExpr::Ident("String::new()".to_string()),
-            RustExpr::Ident("\"async context\"".to_string()),
+            RustExpr::Verbatim("\"runtime\"".to_string()),
+            RustExpr::Verbatim("\"SifrPythonAsyncContextError\"".to_string()),
+            RustExpr::Verbatim("\"async context cancellation handoff failed\"".to_string()),
+            RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "String".to_string(),
+                    "new".to_string(),
+                ])),
+                args: Vec::new(),
+            },
+            RustExpr::Verbatim("\"async context\"".to_string()),
         ],
     };
     if matches!(

@@ -55,7 +55,7 @@ fn async_context_requires_async_protocol_methods() {
     assert!(has_code(&errors, DiagnosticCode::PYCTX_INVALID_DECLARATION));
     assert!(!has_code(
         &errors,
-        DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION
+        DiagnosticCode::PYRES_UNSUPPORTED_RESOURCE_DECLARATION
     ));
 }
 
@@ -72,7 +72,7 @@ fn async_context_rejects_sync_protocol_substitution() {
     assert!(has_code(&errors, DiagnosticCode::PYCTX_INVALID_DECLARATION));
     assert!(!has_code(
         &errors,
-        DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION
+        DiagnosticCode::PYRES_UNSUPPORTED_RESOURCE_DECLARATION
     ));
 }
 
@@ -83,7 +83,7 @@ fn async_context_validates_aexit_signature() {
     assert!(has_code(&errors, DiagnosticCode::PYCTX_INVALID_DECLARATION));
     assert!(!has_code(
         &errors,
-        DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION
+        DiagnosticCode::PYRES_UNSUPPORTED_RESOURCE_DECLARATION
     ));
 }
 
@@ -126,7 +126,7 @@ class Transaction:
     }));
     assert!(!has_code(
         &errors,
-        DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION
+        DiagnosticCode::PYRES_UNSUPPORTED_RESOURCE_DECLARATION
     ));
 }
 
@@ -142,7 +142,7 @@ fn async_context_obligation_is_reported_on_the_active_surface() {
     }));
     assert!(!has_code(
         &errors,
-        DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION
+        DiagnosticCode::PYRES_UNSUPPORTED_RESOURCE_DECLARATION
     ));
 }
 

@@ -1,4 +1,4 @@
-use super::{RustExpr, RustItem, RustParam, RustStmt, RustType, Visibility};
+use super::{RustItem, RustParam, RustStmt, RustType, Visibility};
 use std::collections::HashMap;
 
 pub fn build_task_scope_offload_items() -> Vec<RustItem> {
@@ -172,9 +172,9 @@ fn scoped_worker_params() -> Vec<RustParam> {
 }
 
 fn scoped_task_body(child_expr: &str) -> Vec<RustStmt> {
-    vec![RustStmt::Expr(RustExpr::Ident(format!(
+    vec![RustStmt::Verbatim(format!(
         "let (sender, receiver) = tokio::sync::oneshot::channel();\n        let observed = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));\n        let child_observed = std::sync::Arc::clone(&observed);\n        let child = {child_expr};\n        let cancellation_inner = ::sifr_runtime::cancellation::CancellationCarrier::new();\n        let cancellation = __SifrCancellationCarrier::new(cancellation_inner, child.abort_handle());\n        self.children.push(__SifrScopeChild {{ handle: child, cancellation: Some(cancellation.clone()), observed: child_observed, start_on_join: None, stop_on_fail_fast: None }});\n        return __SifrTask {{ receiver: Some(receiver), cancellation, observed, _error: std::marker::PhantomData }}"
-    )))]
+    ))]
 }
 
 fn scoped_process_body(
@@ -188,7 +188,7 @@ fn scoped_process_body(
         ("ProcessHandle".to_string(), process_handle_type.to_string()),
         ("ProcessError".to_string(), process_error_type.to_string()),
     ]);
-    vec![RustStmt::Expr(RustExpr::Ident(
+    vec![RustStmt::Verbatim(
         crate::stdlib_filter::rewrite_rust_identifiers(
             "if command.has_stdin_data {
             return Err(ProcessError { message: \"scoped process spawn does not consume Command.stdin_bytes; use stdin(Stdio(\\\"pipe\\\")) and ProcessHandle.stdin()\".to_string() });
@@ -255,5 +255,5 @@ fn scoped_process_body(
         return Ok(ProcessHandle::new(__handle));",
             &replacements,
         ),
-    ))]
+    )]
 }

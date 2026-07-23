@@ -38,7 +38,7 @@ pub(in crate::lower) use context::{
 };
 pub(in crate::lower) use stub_syntax::{
     classify_python_interop_stub_body, has_python_interop_decorator_syntax,
-    is_bodyless_python_coroutine,
+    is_bodyless_python_coroutine, is_python_rooted_decorator_expr,
 };
 
 pub(in crate::lower) fn validate_retained_callback_owner_errors(
@@ -130,7 +130,11 @@ pub(in crate::lower) fn collect_python_interop_declarations(
                 None
             }
             _ => {
-                reserved_declaration(ctx, kind, span);
+                invalid_shape(
+                    ctx,
+                    "this Python decorator is not valid on a function declaration",
+                    span,
+                );
                 None
             }
         };
@@ -332,7 +336,11 @@ pub(in crate::lower) fn collect_python_method_declarations(
                 None
             }
             _ => {
-                reserved_declaration(ctx, kind, span);
+                invalid_shape(
+                    ctx,
+                    "this Python decorator is not valid on an opaque method declaration",
+                    span,
+                );
                 None
             }
         };
@@ -456,9 +464,23 @@ pub(in crate::lower) fn collect_python_opaque_declaration(
     let mut result = None;
     for decorator in decorators {
         let Expr::Call(call) = &decorator.expression else {
+            if has_python_interop_decorator_syntax(std::slice::from_ref(decorator)) {
+                invalid_shape(
+                    ctx,
+                    "Python class declarations must use `@python.opaque(type=..., cleanup=...)`",
+                    decorator.range,
+                );
+            }
             continue;
         };
         if decorator_path(&call.func).is_none_or(|path| path.as_slice() != ["python", "opaque"]) {
+            if has_python_interop_decorator_syntax(std::slice::from_ref(decorator)) {
+                invalid_shape(
+                    ctx,
+                    "Python class declarations must use `@python.opaque(type=..., cleanup=...)`",
+                    decorator.range,
+                );
+            }
             continue;
         }
         if result.is_some() {
@@ -570,14 +592,17 @@ fn parse_opaque_class(call: &ExprCall, ctx: &mut LowerCtx) -> Option<PythonInter
         invalid_shape(ctx, "`@python.opaque` requires `cleanup=`", call.range);
         return None;
     };
-    if matches!(target.root(), Some("Self" | "bridge")) {
-        let code = if target.root() == Some("bridge") {
-            DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION
-        } else {
-            DiagnosticCode::PYIMP_INVALID_TARGET
-        };
+    if target.root() == Some("bridge") {
         ctx.error_with_code_at(
-            code,
+            DiagnosticCode::PYRES_UNSUPPORTED_RESOURCE_DECLARATION,
+            "unsupported Python resource declaration: package-local `bridge.*` opaque type targets are not supported; use an import-rooted external type and adapt package-local producers through function declarations".to_string(),
+            target.span,
+        );
+        return None;
+    }
+    if target.root() == Some("Self") {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYIMP_INVALID_TARGET,
             "invalid Python opaque type target: expected an import-rooted dotted path".to_string(),
             target.span,
         );
@@ -758,17 +783,6 @@ fn parse_function(
     })
 }
 
-fn reserved_declaration(ctx: &mut LowerCtx, kind: PythonInteropDecoratorKind, span: TextRange) {
-    ctx.error_with_code_at(
-        DiagnosticCode::PYRES_UNIMPLEMENTED_DECLARATION,
-        format!(
-            "Python declaration lowering is not active yet: `{}` belongs to a later phase",
-            decorator_label(kind)
-        ),
-        span,
-    );
-}
-
 pub(in crate::lower) fn method_consumes_receiver(
     decorators: &[Decorator],
     parameters: &Parameters,
@@ -808,7 +822,7 @@ fn classify_decorator<'a>(
     ctx: &mut LowerCtx,
 ) -> Option<(PythonInteropDecoratorKind, &'a ExprCall, TextRange)> {
     let Expr::Call(call) = expr else {
-        if decorator_path(expr).is_some_and(|path| path[0] == "python") {
+        if is_python_rooted_decorator_expr(expr) {
             invalid_shape(
                 ctx,
                 "Python interop decorators must be call expressions",
@@ -817,7 +831,16 @@ fn classify_decorator<'a>(
         }
         return None;
     };
-    let path = decorator_path(&call.func)?;
+    let Some(path) = decorator_path(&call.func) else {
+        if is_python_rooted_decorator_expr(&call.func) {
+            invalid_shape(
+                ctx,
+                "Python declaration decorators cannot be called, indexed, or accessed after the declaration call",
+                call.func.range(),
+            );
+        }
+        return None;
+    };
     if path.first().is_none_or(|root| root != "python") {
         return None;
     }
@@ -860,25 +883,6 @@ fn classify_decorator<'a>(
 
 fn is_ellipsis_stmt(stmt: &Stmt) -> bool {
     matches!(stmt, Stmt::Expr(expr) if matches!(expr.value.as_ref(), Expr::EllipsisLiteral(_)))
-}
-
-fn decorator_label(kind: PythonInteropDecoratorKind) -> &'static str {
-    match kind {
-        PythonInteropDecoratorKind::Function => "python",
-        PythonInteropDecoratorKind::Coroutine => "python.coroutine",
-        PythonInteropDecoratorKind::Opaque => "python.opaque",
-        PythonInteropDecoratorKind::Attribute => "python.attr",
-        PythonInteropDecoratorKind::Item => "python.item",
-        PythonInteropDecoratorKind::ContextEnter => "python.context.enter",
-        PythonInteropDecoratorKind::ContextExit => "python.context.exit",
-        PythonInteropDecoratorKind::ContextAsyncEnter => "python.context.aenter",
-        PythonInteropDecoratorKind::ContextAsyncExit => "python.context.aexit",
-        PythonInteropDecoratorKind::Callback => "python.callback",
-        PythonInteropDecoratorKind::Buffer => "python.buffer",
-        PythonInteropDecoratorKind::Arrow => "python.arrow",
-        PythonInteropDecoratorKind::Dlpack => "python.dlpack",
-        PythonInteropDecoratorKind::DlpackStream => "python.dlpack.stream",
-    }
 }
 
 pub(super) fn invalid_shape(ctx: &mut LowerCtx, reason: &str, span: TextRange) {

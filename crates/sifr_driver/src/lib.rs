@@ -23,11 +23,12 @@ pub use build::{
     build_single_file_report, check_package_project, check_package_python_interop, check_project,
     check_single_file, emit_project, generate_dependency_cargo_toml, inspect_python_target,
     probe_python_interop_plan, sysroot_cargo_config_args, try_generate_standalone_dependency_plan,
-    validate_certification_distributions, validate_protocol_certifications_for_plan,
-    BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport, BuildSysrootReport,
-    CachedBinaryArtifact, PackageEntrypoint, PackagePythonRuntime, PythonDeclarationCheck,
-    PythonEnvironmentCheck, PythonInteropCheckReport, PythonInteropPlanDiagnostic,
-    PythonTargetCheck, PythonTargetCheckStatus, PythonTargetInspection, PythonTargetParameter,
+    validate_binding_distributions, validate_certification_distributions,
+    validate_protocol_certifications_for_plan, BuildCompilationMode, BuildReport, BuildReportInput,
+    BuildStageReport, BuildSysrootReport, CachedBinaryArtifact, PackageEntrypoint,
+    PackagePythonRuntime, PythonDeclarationCheck, PythonEnvironmentCheck, PythonInteropCheckReport,
+    PythonInteropPlanDiagnostic, PythonTargetCheck, PythonTargetCheckStatus,
+    PythonTargetInspection, PythonTargetParameter,
 };
 pub use diagnostics::{
     apply_diagnostic_recovery_limits, diagnostic_label_for_code, diagnostic_label_for_code_str,

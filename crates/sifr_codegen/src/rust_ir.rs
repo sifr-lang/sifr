@@ -78,6 +78,10 @@ pub enum RustItem {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RustStmt {
+    /// A validated compiler-owned Rust fragment used only where the structured
+    /// IR cannot yet represent the generated control-flow form. Keeping this
+    /// distinct from `Ident` prevents raw syntax from masquerading as a name.
+    Verbatim(String),
     Let {
         mutable: bool,
         name: String,
@@ -166,6 +170,9 @@ pub struct RustWithItem {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RustExpr {
     Literal(RustLiteral),
+    /// A syntax-validated compiler-owned Rust expression for forms that the
+    /// structured IR does not yet model. Never use `Ident` for raw syntax.
+    Verbatim(String),
     Ident(String),
     Path(Vec<String>),
     MethodCall {

@@ -64,16 +64,8 @@ impl RustEmitter {
                 {
                     return Some(lowered);
                 }
-                if func.contains("::") {
-                    return Some(crate::RustExpr::FnCall {
-                        func: Box::new(crate::RustExpr::Path(
-                            func.split("::").map(str::to_string).collect(),
-                        )),
-                        args: self.try_lower_registry_exprs_strict(args)?,
-                    });
-                }
                 Some(crate::RustExpr::FnCall {
-                    func: Box::new(crate::RustExpr::Ident(func.clone())),
+                    func: Box::new(crate::stmt_support_emitter::plain_call_target_for_ir(func)),
                     args: self.try_lower_registry_exprs_strict(args)?,
                 })
             }

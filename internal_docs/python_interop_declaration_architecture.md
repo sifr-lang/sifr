@@ -1,11 +1,12 @@
 # Declaration-First Python Interop Architecture
 
-Status: implemented production contract through binding and certification
-authoring. Synchronous declarations, opaque lifecycle, synchronous and async
-contexts, package-local bridges, typed coroutines, callbacks, buffers, Arrow,
-DLPack, read-only inspection, symbol-selective binding generation, and
-executable Arrow/DLPack certification are active. The embedded runtime contract
-is also documented in
+Status: implemented production contract through ecosystem certification.
+Synchronous declarations, opaque lifecycle, synchronous and async contexts,
+package-local bridges, typed coroutines, callbacks, buffers, Arrow, DLPack,
+read-only inspection, symbol-selective binding generation, executable
+Arrow/DLPack certification, declaration-aware LSP support, shared-ownership raw
+API ergonomics, and compiled ecosystem evidence are active. The embedded
+runtime contract is also documented in
 [`python_interop_architecture.md`](./python_interop_architecture.md).
 
 ## Problem
@@ -690,7 +691,7 @@ The declaration contract reserves the first diagnostic codes with stable meaning
 | `SIFR-PYCALL-0001` | Unsupported or definitively incompatible callable/attribute/item shape. |
 | `SIFR-PYCONV-0001` | Unsupported Sifr/Python declaration conversion type. |
 | `SIFR-PYRES-0001` | Invalid opaque close or ownership policy. |
-| `SIFR-PYRES-0002` | Recognized declaration-first syntax whose sole production lowering is not active yet. |
+| `SIFR-PYRES-0002` | Unsupported Python resource ownership or target declaration shape. |
 | `SIFR-PYZC-0001` | Invalid advanced-data ownership or hidden-copy declaration. |
 | `SIFR-PYCB-0001` | Invalid callback lifetime, threading, or shutdown declaration. |
 | `SIFR-PYASYNC-0001` | Invalid Python awaitable, cancellation, or loop-ownership declaration. |
