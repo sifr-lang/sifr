@@ -45,7 +45,7 @@ fn is_already_borrowed_rendered_expr(arg: &RustExpr) -> bool {
 fn render_borrowed_arg_expr(arg: &RustExpr) -> RustExpr {
     match arg {
         RustExpr::Literal(RustLiteral::Str(value)) => {
-            RustExpr::Ident(format!("\"{}\"", value.escape_default()))
+            RustExpr::Verbatim(format!("\"{}\"", value.escape_default()))
         }
         RustExpr::Ref { .. } => arg.clone(),
         _ if is_already_borrowed_rendered_expr(arg) => arg.clone(),

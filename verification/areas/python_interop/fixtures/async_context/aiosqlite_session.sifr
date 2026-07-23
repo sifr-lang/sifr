@@ -103,6 +103,17 @@ async def unsuppressible_sifr_case() -> Result[bool, Error]:
         raise error
 
 
+async def unsuppressible_python_error_case() -> Result[bool, PythonError]:
+    try:
+        manager: DatabaseSession = await make_session("truthy-sifr")
+        async with manager as session:
+            _value: str = await session.fetch_value()
+            raise PythonError("Sifr-origin PythonError must not be suppressed")
+        return False
+    except PythonError as error:
+        raise error
+
+
 async def exit_failure_case() -> Result[None, PythonError]:
     try:
         manager: DatabaseSession = await make_session("exit-failure")
@@ -167,6 +178,12 @@ async def main() -> Result[None, Error]:
         _sifr_message: str = str(error)
 
     try:
+        unexpected_python_error_success: bool = await unsuppressible_python_error_case()
+        assert unexpected_python_error_success
+    except PythonError as error:
+        assert error.message == "Sifr-origin PythonError must not be suppressed"
+
+    try:
         _unexpected_exit_success: None = await exit_failure_case()
         assert False
     except PythonError as error:
@@ -190,9 +207,9 @@ async def main() -> Result[None, Error]:
 
     try:
         evidence: Stats = await stats()
-        assert evidence.enter_count == 7
-        assert evidence.exit_count == 7
-        assert evidence.close_count == 7
+        assert evidence.enter_count == 8
+        assert evidence.exit_count == 8
+        assert evidence.close_count == 8
         assert evidence.loop_identity != "drift"
         assert evidence.python_suppressed
         assert evidence.sifr_truthy_seen
@@ -208,7 +225,7 @@ async def main() -> Result[None, Error]:
             + str(evidence.exit_count)
             + ":close="
             + str(evidence.close_count)
-            + ":loop=shared:suppression=covered:sifr=unsuppressed:"
+            + ":loop=shared:suppression=covered:sifr=unsuppressed:python-error=unsuppressed:"
             + "cancellation=ordered:nested=lifo:exit-failure=covered"
         )
     except PythonError as error:

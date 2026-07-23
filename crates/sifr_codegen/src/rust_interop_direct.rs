@@ -138,7 +138,7 @@ fn is_python_object_callback_type(ty: &Type) -> bool {
 }
 
 fn python_object_callback_adapter_expr(handler: &str) -> RustExpr {
-    RustExpr::Ident(format!(
+    RustExpr::Verbatim(format!(
         r#"move |__sifr_callback_arg| {{
             match {handler}(&__sifr_callback_arg) {{
                 Ok(__sifr_callback_result) => Ok(__sifr_callback_result),

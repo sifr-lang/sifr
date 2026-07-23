@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use super::callback_frame::{append_submission, argument_frame};
 use crate::python_interop_callbacks::owner_outcome_with_evidence;
-use crate::python_interop_direct::{mapped_try, runtime_call};
+use crate::python_interop_direct::{mapped_try, runtime_call, value_place};
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
 pub(crate) fn async_python_function_body(
@@ -179,7 +179,7 @@ pub(super) fn async_input_conversion(
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
 ) -> Option<RustExpr> {
     if let Some(inner) = option_inner(ty) {
-        let receiver = RustExpr::Ident(name.to_string());
+        let receiver = value_place(name);
         let borrowed_inner = !matches!(
             inner.resolve_alias(),
             Type::None | Type::Bool | Type::Int | Type::Float
@@ -202,7 +202,7 @@ pub(super) fn async_input_conversion(
     if is_object(ty) {
         return Some(runtime_call(
             "__sifr_declaration_async_from_object",
-            vec![RustExpr::Ident(name.to_string())],
+            vec![value_place(name)],
         ));
     }
     if matches!(ty.resolve_alias(), Type::Class { name: class_name, .. } if opaque_classes.contains_key(class_name))
@@ -212,7 +212,7 @@ pub(super) fn async_input_conversion(
             vec![RustExpr::Ref {
                 mutable: false,
                 expr: Box::new(RustExpr::Field {
-                    expr: Box::new(RustExpr::Ident(name.to_string())),
+                    expr: Box::new(value_place(name)),
                     field: "__sifr_python_object".to_string(),
                 }),
             }],
@@ -221,7 +221,7 @@ pub(super) fn async_input_conversion(
     match ty.resolve_alias() {
         Type::List(item) => {
             let converted = mapped_results(
-                method(RustExpr::Ident(name.to_string()), "iter", Vec::new()),
+                method(value_place(name), "iter", Vec::new()),
                 "__sifr_python_item",
                 async_input_conversion_borrowed("__sifr_python_item", item, opaque_classes)?,
             );
@@ -247,7 +247,7 @@ pub(super) fn async_input_conversion(
             Some(runtime_call(
                 "async_from_dict_results",
                 vec![mapped_results(
-                    method(RustExpr::Ident(name.to_string()), "iter", Vec::new()),
+                    method(value_place(name), "iter", Vec::new()),
                     "(__sifr_python_key, __sifr_python_value)",
                     pair,
                 )],
@@ -276,18 +276,9 @@ pub(super) fn async_input_conversion(
             )],
         )),
         Type::None => Some(runtime_call("async_from_none", Vec::new())),
-        Type::Bool => Some(runtime_call(
-            "async_from_bool",
-            vec![RustExpr::Ident(name.to_string())],
-        )),
-        Type::Int => Some(runtime_call(
-            "async_from_int",
-            vec![RustExpr::Ident(name.to_string())],
-        )),
-        Type::Float => Some(runtime_call(
-            "async_from_float",
-            vec![RustExpr::Ident(name.to_string())],
-        )),
+        Type::Bool => Some(runtime_call("async_from_bool", vec![value_place(name)])),
+        Type::Int => Some(runtime_call("async_from_int", vec![value_place(name)])),
+        Type::Float => Some(runtime_call("async_from_float", vec![value_place(name)])),
         Type::Str => Some(runtime_call("async_from_str", vec![reference(name)])),
         Type::Bytes => Some(runtime_call("async_from_bytes", vec![reference(name)])),
         _ => None,
@@ -308,7 +299,7 @@ pub(super) fn async_input_conversion_borrowed(
         };
         return Some(runtime_call(
             function,
-            vec![RustExpr::Deref(Box::new(RustExpr::Ident(name.to_string())))],
+            vec![RustExpr::Deref(Box::new(value_place(name)))],
         ));
     }
     async_input_conversion(name, ty, opaque_classes)
@@ -750,7 +741,7 @@ fn push_to(vector: &str, value: &str) -> RustStmt {
 fn reference(name: &str) -> RustExpr {
     RustExpr::Ref {
         mutable: false,
-        expr: Box::new(RustExpr::Ident(name.to_string())),
+        expr: Box::new(value_place(name)),
     }
 }
 

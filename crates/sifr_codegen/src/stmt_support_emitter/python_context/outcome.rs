@@ -3,15 +3,13 @@ use crate::Type;
 pub(super) fn cause_variant(error_type: &Type) -> &'static str {
     match error_type.resolve_alias() {
         Type::Class {
-            identity: None,
-            name,
+            identity: Some(identity),
             ..
-        } if name == "CancellationError" => "Cancellation",
+        } if identity == "sifr.builtin.CancellationError" => "Cancellation",
         Type::Class {
-            identity: None,
-            name,
+            identity: Some(identity),
             ..
-        } if name == "TimeoutError" => "Timeout",
+        } if identity == "sifr.builtin.TimeoutError" => "Timeout",
         Type::Class {
             identity: None,
             name,

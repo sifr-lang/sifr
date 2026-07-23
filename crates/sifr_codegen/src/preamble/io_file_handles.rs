@@ -41,23 +41,7 @@ pub fn build_io_error_items() -> Vec<RustItem> {
                 mutable: false,
                 name: "kind".to_string(),
                 ty: None,
-                value: RustExpr::Ident(
-                    r#"{
-        let __sifr_io_kind = (&e as &dyn std::any::Any)
-            .downcast_ref::<std::io::Error>()
-            .map(std::io::Error::kind);
-        match __sifr_io_kind {
-            Some(std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
-            Some(std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
-            Some(std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
-            Some(std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
-            Some(std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
-            Some(std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
-            _ => "Other".to_string(),
-        }
-    }"#
-                    .to_string(),
-                ),
+                value: io_error_kind_expr(),
             },
             RustStmt::Return(Some(RustExpr::StructInit {
                 name: "IOError".to_string(),
@@ -71,6 +55,72 @@ pub fn build_io_error_items() -> Vec<RustItem> {
     });
 
     items
+}
+
+fn io_error_kind_expr() -> RustExpr {
+    let any_ref = RustExpr::Cast {
+        expr: Box::new(RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(RustExpr::Ident("e".to_string())),
+        }),
+        ty: RustType::Ref {
+            mutable: false,
+            inner: Box::new(RustType::DynTrait("std::any::Any".to_string())),
+        },
+    };
+    let error_kind = RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(any_ref),
+            method: "downcast_ref::<std::io::Error>".to_string(),
+            args: vec![],
+        }),
+        method: "map".to_string(),
+        args: vec![RustExpr::Path(vec![
+            "std".to_string(),
+            "io".to_string(),
+            "Error".to_string(),
+            "kind".to_string(),
+        ])],
+    };
+    let cases = [
+        ("NotFound", "FileNotFound"),
+        ("PermissionDenied", "PermissionDenied"),
+        ("AlreadyExists", "FileExists"),
+        ("IsADirectory", "IsADirectory"),
+        ("NotADirectory", "NotADirectory"),
+        ("DirectoryNotEmpty", "DirectoryNotEmpty"),
+    ];
+    let mut arms = cases
+        .into_iter()
+        .map(|(kind, label)| crate::RustMatchArm {
+            pattern: format!("Some(::std::io::ErrorKind::{kind})"),
+            bindings: vec![],
+            guard: None,
+            body: vec![RustStmt::TailExpr(RustExpr::Literal(
+                crate::RustLiteral::Str(label.to_string()),
+            ))],
+        })
+        .collect::<Vec<_>>();
+    arms.push(crate::RustMatchArm {
+        pattern: "_".to_string(),
+        bindings: vec![],
+        guard: None,
+        body: vec![RustStmt::TailExpr(RustExpr::Literal(
+            crate::RustLiteral::Str("Other".to_string()),
+        ))],
+    });
+    RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: "__sifr_io_kind".to_string(),
+            ty: None,
+            value: error_kind,
+        }],
+        expr: Some(Box::new(RustExpr::Match {
+            expr: Box::new(RustExpr::Ident("__sifr_io_kind".to_string())),
+            arms,
+        })),
+    }
 }
 
 pub fn build_file_handle_infra_items() -> Vec<RustItem> {

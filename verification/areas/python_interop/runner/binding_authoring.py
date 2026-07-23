@@ -21,6 +21,18 @@ def main() -> int:
     if root.exists():
         shutil.rmtree(root)
     package = create_package(root)
+    bytecode_before = bytecode_snapshot(package / ".venv")
+
+    lockfile = package / "Cargo.lock"
+    lockfile_bytes = lockfile.read_bytes()
+    lockfile.unlink()
+    lockless_snapshot = snapshot(package)
+    lockless_check = run(binary, package, "python", "certify", "--check", expected=1)
+    require("SIFR-PACKAGE-0101" in lockless_check.stderr,
+            "lockfile-less certify --check did not enforce frozen resolution")
+    require(snapshot(package) == lockless_snapshot,
+            "lockfile-less certify --check mutated package inputs")
+    lockfile.write_bytes(lockfile_bytes)
 
     run(
         binary,
@@ -216,6 +228,24 @@ def main() -> int:
             "binding artifact output did not fail closed")
     require(snapshot(package) == reserved_snapshot,
             "failed metadata output mutated package inputs")
+    uppercase_reserved = run(
+        binary,
+        package,
+        "python",
+        "bind",
+        "math",
+        "--symbols",
+        "sqrt",
+        "--override",
+        "typing/math_override.pyi",
+        "--output",
+        "SIFR.PYTHON-BINDINGS.JSON",
+        expected=2,
+    )
+    require("reserved for package metadata" in uppercase_reserved.stderr,
+            "case-variant binding artifact output did not fail closed")
+    require(snapshot(package) == reserved_snapshot,
+            "failed case-variant metadata output mutated package inputs")
 
     positional_snapshot = snapshot(package)
     positional_only = run(
@@ -299,6 +329,27 @@ def main() -> int:
     require(snapshot(package) == qualified_snapshot,
             "failed qualified-type authoring mutated package inputs")
 
+    for override, rejected in [
+        ("typing/foreign_scalar.pyi", "conf.int"),
+        ("typing/foreign_generic.pyi", "mymod.List"),
+    ]:
+        foreign = run(
+            binary,
+            package,
+            "python",
+            "bind",
+            "math",
+            "--symbols",
+            "sqrt",
+            "--override",
+            override,
+            expected=1,
+        )
+        require(rejected in foreign.stderr,
+                f"foreign annotation {rejected!r} was reduced to a builtin leaf")
+        require(snapshot(package) == qualified_snapshot,
+                f"failed foreign annotation {rejected!r} mutated package inputs")
+
     write_runtime_main(package)
     runtime = run(binary, package, "run", "src/main.sifr", "--frozen")
     require("binding runtime ok" in runtime.stdout,
@@ -308,8 +359,8 @@ def main() -> int:
     run(binary, package, "python", "bind", "--check")
     run(binary, package, "check", "src/main.sifr", "--frozen")
     require(snapshot(package) == before, "binding checks mutated package inputs")
-    require(not any(path.name == "__pycache__" for path in package.rglob("__pycache__")),
-            "Python authoring probes created bytecode cache state")
+    require(bytecode_snapshot(package / ".venv") == bytecode_before,
+            "Python authoring probes created bytecode cache state inside the venv")
 
     overload = run(
         binary,
@@ -387,6 +438,12 @@ def create_package(root: Path) -> Path:
         "class Client: ...\n"
         "def sqrt(value: other.Client) -> Client: ...\n",
         encoding="utf-8",
+    )
+    (root / "typing" / "foreign_scalar.pyi").write_text(
+        "def sqrt(value: conf.int) -> float: ...\n", encoding="utf-8"
+    )
+    (root / "typing" / "foreign_generic.pyi").write_text(
+        "def sqrt(value: mymod.List[int]) -> float: ...\n", encoding="utf-8"
     )
     (root / ".venv").symlink_to(AREA_ROOT / ".venv", target_is_directory=True)
     (root / "pyproject.toml").symlink_to(AREA_ROOT / "pyproject.toml")
@@ -507,6 +564,15 @@ def snapshot(root: Path) -> dict[str, tuple[str, bytes]]:
         elif path.is_file():
             files[relative] = ("file", path.read_bytes())
     return files
+
+
+def bytecode_snapshot(venv: Path) -> dict[str, bytes]:
+    resolved = venv.resolve(strict=True)
+    return {
+        str(path.relative_to(resolved)): path.read_bytes()
+        for path in sorted(resolved.rglob("*.pyc"))
+        if path.is_file()
+    }
 
 
 def require(condition: bool, message: str) -> None:

@@ -204,7 +204,7 @@ pub(super) fn sifr_int_parse_decimal_call(decimal_text: &str) -> RustExpr {
             "parse_decimal".to_string(),
         ])),
         args: vec![
-            RustExpr::Ident(format!("\"{}\"", decimal_text.escape_default())),
+            RustExpr::Verbatim(format!("\"{}\"", decimal_text.escape_default())),
             RustExpr::Path(vec![
                 "sifr_runtime".to_string(),
                 "DEFAULT_MAX_INTEGER_DIGITS".to_string(),

@@ -12,8 +12,9 @@ ASYNC_CONTEXT_CASES = {
         case_id="aiosqlite-session",
         relative_source="async_context/aiosqlite_session.sifr",
         stdout_marker=(
-            "sifr-python-interop:async-context:value=sqlite-ready:enter=7:exit=7:"
-            "close=7:loop=shared:suppression=covered:sifr=unsuppressed:"
+            "sifr-python-interop:async-context:value=sqlite-ready:enter=8:exit=8:"
+            "close=8:loop=shared:suppression=covered:sifr=unsuppressed:"
+            "python-error=unsuppressed:"
             "cancellation=ordered:nested=lifo:exit-failure=covered"
         ),
         import_roots=("aiosqlite", "asyncio", "contextlib", "sqlite3", "threading"),

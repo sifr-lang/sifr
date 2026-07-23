@@ -240,17 +240,30 @@ fn sync_python_context_uses_async_closure_when_nested_body_awaits() {
 
 #[test]
 fn cause_classification_uses_canonical_resolved_types() {
-    assert_eq!(
-        classify_cause_kind(Some(&class_type("TimeoutError")), "Alias"),
-        "Timeout"
-    );
+    let mut timeout = class_type("TimeoutError");
+    if let Type::Class { identity, .. } = &mut timeout {
+        *identity = Some("sifr.builtin.TimeoutError".to_string());
+    }
+    assert_eq!(classify_cause_kind(Some(&timeout), "Alias"), "Timeout");
     assert_eq!(
         classify_cause_kind(Some(&class_type("CancelableTask")), "CancelableTask"),
         "OrdinaryError"
     );
+    let mut cancellation = class_type("CancellationError");
+    if let Type::Class { identity, .. } = &mut cancellation {
+        *identity = Some("sifr.builtin.CancellationError".to_string());
+    }
     assert_eq!(
-        classify_cause_kind(Some(&class_type("CancellationError")), "Alias"),
+        classify_cause_kind(Some(&cancellation), "Alias"),
         "Cancellation"
+    );
+    assert_eq!(
+        classify_cause_kind(Some(&class_type("TimeoutError")), "TimeoutError"),
+        "OrdinaryError"
+    );
+    assert_eq!(
+        classify_cause_kind(Some(&class_type("CancellationError")), "CancellationError"),
+        "OrdinaryError"
     );
     let mut shadow = class_type("TimeoutError");
     if let Type::Class { identity, .. } = &mut shadow {
@@ -267,6 +280,13 @@ fn cause_classification_uses_canonical_resolved_types() {
     assert_eq!(
         classify_cause_kind(Some(&worker), "WorkerRuntimeError"),
         "RuntimeFault"
+    );
+    assert_eq!(
+        classify_cause_kind(
+            Some(&class_type("WorkerRuntimeError")),
+            "WorkerRuntimeError"
+        ),
+        "OrdinaryError"
     );
     assert_eq!(classify_cause_kind(None, "PythonError"), "OrdinaryError");
 }

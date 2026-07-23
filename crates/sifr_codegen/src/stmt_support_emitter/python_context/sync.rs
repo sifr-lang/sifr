@@ -732,15 +732,13 @@ fn is_error_return(expr: &RustExpr) -> bool {
 pub(super) fn classify_cause_kind(error_type: Option<&Type>, _rendered: &str) -> &'static str {
     match error_type.map(Type::resolve_alias) {
         Some(Type::Class {
-            identity: None,
-            name,
+            identity: Some(identity),
             ..
-        }) if name == "CancellationError" => "Cancellation",
+        }) if identity == "sifr.builtin.CancellationError" => "Cancellation",
         Some(Type::Class {
-            identity: None,
-            name,
+            identity: Some(identity),
             ..
-        }) if name == "TimeoutError" => "Timeout",
+        }) if identity == "sifr.builtin.TimeoutError" => "Timeout",
         Some(Type::Class {
             identity: None,
             name,

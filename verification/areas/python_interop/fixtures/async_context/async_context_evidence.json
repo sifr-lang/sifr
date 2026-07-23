@@ -9,10 +9,10 @@
   "negative": [
     "async/sync protocol substitution and invalid signature diagnostics",
     "unentered async-context obligation and invalid distinct entered-resource diagnostics",
-    "direct async exit call rejection and unsuppressible Sifr truthy-exit evidence"
+    "direct async exit call rejection plus ordinary Error and no-replay PythonError truthy-exit evidence"
   ],
   "cleanup": [
-    "exact-once enter, exit, and aiosqlite close counters across seven managers",
+    "exact-once enter, exit, and aiosqlite close counters across eight managers",
     "normal, Python suppression, Sifr error, exit failure, and secondary failure outcomes",
     "semantic close success and poison runtime matrices"
   ],
@@ -25,6 +25,6 @@
     "source": "aiosqlite_session.sifr",
     "bridge": "python_bridges/session.py",
     "network": "offline in-memory SQLite",
-    "stdout_marker": "sifr-python-interop:async-context:value=sqlite-ready:enter=7:exit=7:close=7:loop=shared:suppression=covered:sifr=unsuppressed:cancellation=ordered:nested=lifo:exit-failure=covered"
+    "stdout_marker": "sifr-python-interop:async-context:value=sqlite-ready:enter=8:exit=8:close=8:loop=shared:suppression=covered:sifr=unsuppressed:python-error=unsuppressed:cancellation=ordered:nested=lifo:exit-failure=covered"
   }
 }

@@ -60,7 +60,9 @@ forms below.
 A generated application containing any async Python declaration owns exactly one
 CPython asyncio loop on one dedicated OS thread. The loop starts after CPython
 initialization and bridge-loader installation, before user `main`, and stops
-after all registered Python async work and async cleanup have completed. Sifr
+after all registered Python async work has completed and the reserved
+async-cleanup ordering slot has been traversed. That slot currently has no
+independent registration API. Sifr
 does not use an ambient loop, call `asyncio.run` per operation, nest event loops,
 or run Python coroutines on a Sifr Tokio worker.
 

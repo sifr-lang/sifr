@@ -593,6 +593,7 @@ impl RustEmitter {
                 end: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*end)),
             },
             crate::RustExpr::Literal(lit) => crate::RustExpr::Literal(lit),
+            crate::RustExpr::Verbatim(source) => crate::RustExpr::Verbatim(source),
             crate::RustExpr::Path(path) => crate::RustExpr::Path(path),
         }
     }

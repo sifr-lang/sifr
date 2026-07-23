@@ -122,7 +122,12 @@ pub fn render_python_binding_scaffold(
         .map(|symbol| symbol.declaration.name.as_str())
         .collect::<BTreeSet<_>>();
     for symbol in &report.symbols {
-        validate_declaration(&symbol.declaration, &class_names, &mut errors);
+        validate_declaration(
+            &symbol.declaration,
+            &report.module,
+            &class_names,
+            &mut errors,
+        );
     }
     if !errors.is_empty() {
         return Err(errors);
@@ -153,7 +158,12 @@ pub fn render_python_binding_scaffold(
     declarations.sort_by(|left, right| left.declaration.name.cmp(&right.declaration.name));
     for symbol in declarations {
         source.push('\n');
-        render_declaration(&mut source, requested_module, &symbol.declaration);
+        render_declaration(
+            &mut source,
+            requested_module,
+            &class_names,
+            &symbol.declaration,
+        );
     }
     Ok(PythonBindingScaffold {
         source,
@@ -164,6 +174,7 @@ pub fn render_python_binding_scaffold(
 
 fn validate_declaration(
     declaration: &PythonBindingDeclaration,
+    module: &str,
     class_names: &BTreeSet<&str>,
     errors: &mut Vec<String>,
 ) {
@@ -208,10 +219,18 @@ fn validate_declaration(
             ));
         }
         previous_rank = rank;
-        validate_type(&declaration.name, &parameter.ty, class_names, errors);
+        validate_type(
+            &declaration.name,
+            &parameter.ty,
+            module,
+            class_names,
+            errors,
+        );
     }
     match declaration.return_type.as_deref() {
-        Some(return_type) => validate_type(&declaration.name, return_type, class_names, errors),
+        Some(return_type) => {
+            validate_type(&declaration.name, return_type, module, class_names, errors)
+        }
         None => errors.push(format!(
             "Python function '{}' has no resolved return type",
             declaration.name
@@ -222,55 +241,76 @@ fn validate_declaration(
 fn validate_type(
     declaration: &str,
     ty: &str,
+    module: &str,
     class_names: &BTreeSet<&str>,
     errors: &mut Vec<String>,
 ) {
-    if !is_supported_direct_type(ty, class_names, true) {
+    if normalize_direct_type(ty, module, class_names, true).is_none() {
         errors.push(format!(
             "Python function '{declaration}' uses unresolved or unsupported direct-conversion type '{ty}'"
         ));
     }
 }
 
-fn is_supported_direct_type(ty: &str, class_names: &BTreeSet<&str>, allow_option: bool) -> bool {
+fn normalize_direct_type(
+    ty: &str,
+    module: &str,
+    class_names: &BTreeSet<&str>,
+    allow_option: bool,
+) -> Option<String> {
     let ty = ty.trim();
-    if matches!(ty, "None" | "bool" | "bytes" | "float" | "int" | "str") || class_names.contains(ty)
-    {
-        return true;
+    if matches!(ty, "None" | "bool" | "bytes" | "float" | "int" | "str") {
+        return Some(ty.to_string());
+    }
+    if class_names.contains(ty) {
+        return Some(ty.to_string());
+    }
+    if let Some(local_name) = ty.strip_prefix(&format!("{module}.")) {
+        if class_names.contains(local_name) {
+            return Some(local_name.to_string());
+        }
     }
 
     let Some(union_parts) = split_top_level(ty, '|') else {
-        return false;
+        return None;
     };
     if union_parts.len() > 1 {
-        return allow_option
-            && union_parts.len() == 2
-            && union_parts.iter().filter(|part| **part == "None").count() == 1
-            && union_parts
-                .iter()
-                .filter(|part| **part != "None")
-                .all(|part| is_supported_direct_type(part, class_names, false));
+        if !allow_option
+            || union_parts.len() != 2
+            || union_parts.iter().filter(|part| **part == "None").count() != 1
+        {
+            return None;
+        }
+        let value = union_parts.iter().find(|part| **part != "None")?;
+        let normalized = normalize_direct_type(value, module, class_names, false)?;
+        return Some(format!("{normalized} | None"));
     }
 
     let Some(open) = ty.find('[') else {
-        return false;
+        return None;
     };
     if !ty.ends_with(']') {
-        return false;
+        return None;
     }
     let base = ty[..open].trim();
     let Some(arguments) = split_top_level(&ty[open + 1..ty.len() - 1], ',') else {
-        return false;
+        return None;
     };
     match base {
-        "list" if arguments.len() == 1 => is_supported_direct_type(arguments[0], class_names, true),
+        "list" if arguments.len() == 1 => {
+            normalize_direct_type(arguments[0], module, class_names, true)
+                .map(|argument| format!("list[{argument}]"))
+        }
         "tuple" if !arguments.is_empty() => arguments
             .iter()
-            .all(|argument| is_supported_direct_type(argument, class_names, true)),
+            .map(|argument| normalize_direct_type(argument, module, class_names, true))
+            .collect::<Option<Vec<_>>>()
+            .map(|arguments| format!("tuple[{}]", arguments.join(", "))),
         "dict" if arguments.len() == 2 && arguments[0] == "str" => {
-            is_supported_direct_type(arguments[1], class_names, true)
+            normalize_direct_type(arguments[1], module, class_names, true)
+                .map(|value| format!("dict[str, {value}]"))
         }
-        _ => false,
+        _ => None,
     }
 }
 
@@ -304,7 +344,12 @@ fn split_top_level(value: &str, separator: char) -> Option<Vec<&str>> {
     Some(parts)
 }
 
-fn render_declaration(output: &mut String, module: &str, declaration: &PythonBindingDeclaration) {
+fn render_declaration(
+    output: &mut String,
+    module: &str,
+    class_names: &BTreeSet<&str>,
+    declaration: &PythonBindingDeclaration,
+) {
     match declaration.kind {
         PythonBindingDeclarationKind::Class => {
             let _ = writeln!(
@@ -323,8 +368,10 @@ fn render_declaration(output: &mut String, module: &str, declaration: &PythonBin
             if declaration.is_async {
                 output.push_str("async ");
             }
-            let parameters = render_parameters(&declaration.parameters);
-            let return_type = declaration.return_type.as_deref().unwrap_or("None");
+            let parameters = render_parameters(&declaration.parameters, module, class_names);
+            let raw_return_type = declaration.return_type.as_deref().unwrap_or("None");
+            let return_type = normalize_direct_type(raw_return_type, module, class_names, true)
+                .unwrap_or_else(|| raw_return_type.to_string());
             let _ = writeln!(
                 output,
                 "def {}({parameters}) -> Result[{return_type}, PythonError]: ...",
@@ -334,7 +381,11 @@ fn render_declaration(output: &mut String, module: &str, declaration: &PythonBin
     }
 }
 
-fn render_parameters(parameters: &[PythonBindingParameter]) -> String {
+fn render_parameters(
+    parameters: &[PythonBindingParameter],
+    module: &str,
+    class_names: &BTreeSet<&str>,
+) -> String {
     let mut rendered = Vec::new();
     let has_vararg = parameters
         .iter()
@@ -358,10 +409,9 @@ fn render_parameters(parameters: &[PythonBindingParameter]) -> String {
         } else {
             ""
         };
-        rendered.push(format!(
-            "{prefix}{}: {}{default}",
-            parameter.name, parameter.ty
-        ));
+        let ty = normalize_direct_type(&parameter.ty, module, class_names, true)
+            .unwrap_or_else(|| parameter.ty.clone());
+        rendered.push(format!("{prefix}{}: {ty}{default}", parameter.name));
     }
     rendered.join(", ")
 }
@@ -506,6 +556,47 @@ mod tests {
     }
 
     #[test]
+    fn normalizes_same_module_qualified_class_annotations_in_scaffolds() {
+        let report = PythonBindingProbeReport {
+            module: "sample.api".to_string(),
+            soabi: "cpython-test".to_string(),
+            distribution: None,
+            symbols: vec![
+                symbol(
+                    "Client",
+                    PythonBindingDeclarationKind::Class,
+                    false,
+                    vec![],
+                    None,
+                ),
+                symbol(
+                    "use_client",
+                    PythonBindingDeclarationKind::Function,
+                    false,
+                    vec![parameter(
+                        "client",
+                        "sample.api.Client",
+                        PythonBindingParameterKind::PositionalOrKeyword,
+                        false,
+                    )],
+                    Some("list[sample.api.Client]"),
+                ),
+            ],
+            errors: vec![],
+        };
+
+        let scaffold = render_python_binding_scaffold(
+            "sample.api",
+            &["Client".to_string(), "use_client".to_string()],
+            &report,
+        )
+        .expect("same-module annotations should render");
+        assert!(scaffold
+            .source
+            .contains("def use_client(client: Client) -> Result[list[Client], PythonError]: ..."));
+    }
+
+    #[test]
     fn rejects_bare_list_direct_conversion_type() {
         assert_unsupported_type_rejected("list");
     }
@@ -527,19 +618,25 @@ mod tests {
             "None",
             "int",
             "Client",
+            "sample.Client",
             "Client | None",
             "list[tuple[int, str | None]]",
             "dict[str, list[Client]]",
         ] {
             let mut errors = Vec::new();
-            validate_type("load", ty, &classes, &mut errors);
+            validate_type("load", ty, "sample", &classes, &mut errors);
             assert!(errors.is_empty(), "{ty}: {errors:?}");
         }
+        assert_eq!(
+            normalize_direct_type("list[sample.Client]", "sample", &classes, true),
+            Some("list[Client]".to_string())
+        );
+        assert!(normalize_direct_type("other.Client", "sample", &classes, true).is_none());
     }
 
     fn assert_unsupported_type_rejected(ty: &str) {
         let mut errors = Vec::new();
-        validate_type("load", ty, &BTreeSet::new(), &mut errors);
+        validate_type("load", ty, "sample", &BTreeSet::new(), &mut errors);
         assert!(errors.iter().any(|error| error.contains(ty)), "{errors:?}");
     }
 

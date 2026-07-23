@@ -49,7 +49,10 @@ pub fn fixed_width_literal_expr_for_target(target_ty: &Type, value: &HirExpr) ->
         return None;
     };
     let literal = integer_literal_decimal(value)?;
-    Some(RustExpr::Ident(format!("{literal}{}", fixed.rust_name())))
+    Some(RustExpr::Verbatim(format!(
+        "{literal}{}",
+        fixed.rust_name()
+    )))
 }
 
 pub(super) fn integer_literal_decimal(value: &HirExpr) -> Option<String> {

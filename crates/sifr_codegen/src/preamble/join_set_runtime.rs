@@ -56,9 +56,9 @@ pub fn build_join_set_items() -> Vec<RustItem> {
                     },
                 ],
                 ret: Some(RustType::Named("std::fmt::Result".to_string())),
-                body: vec![RustStmt::Expr(RustExpr::Ident(
+                body: vec![RustStmt::Verbatim(
                     "return write!(f, \"{}\", self.value)".to_string(),
-                ))],
+                )],
                 is_async: false,
             }],
         },
@@ -139,10 +139,10 @@ pub fn build_join_set_items() -> Vec<RustItem> {
                     },
                 ],
                 ret: Some(RustType::Named("std::fmt::Result".to_string())),
-                body: vec![RustStmt::Expr(RustExpr::Ident(
+                body: vec![RustStmt::Verbatim(
                     "return write!(f, \"{}\", match self {\n            CancelOutcome::Cancelled => \"Cancelled\",\n            CancelOutcome::AlreadyCompleted => \"AlreadyCompleted\",\n            CancelOutcome::AlreadyFailed => \"AlreadyFailed\",\n            CancelOutcome::AlreadyStarted => \"AlreadyStarted\",\n            CancelOutcome::CouldNotCancel => \"CouldNotCancel\",\n            CancelOutcome::CancelFailed => \"CancelFailed\",\n            CancelOutcome::TimedOutDuringCancel => \"TimedOutDuringCancel\",\n        })"
                         .to_string(),
-                ))],
+                )],
                 is_async: false,
             }],
         },
@@ -250,10 +250,10 @@ pub fn build_join_set_items() -> Vec<RustItem> {
                         },
                     ],
                     ret: Some(RustType::Named("JoinItemId".to_string())),
-                    body: vec![RustStmt::Expr(RustExpr::Ident(
+                    body: vec![RustStmt::Verbatim(
                         "let id = self.__sifr_next_id();\n        let __SifrTask { receiver, cancellation, observed, _error } = task;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        let handle = tokio::spawn(async move {\n            let Some(receiver) = receiver else {\n                return __SifrTaskResult::cancelled();\n            };\n            return match receiver.await {\n                Ok(result) => result,\n                Err(_) => __SifrTaskResult::cancelled(),\n            };\n        });\n        self.entries.push(__SifrJoinEntry { id, handle, cancellation: Some(cancellation), blocking_abort: None });\n        return id"
                             .to_string(),
-                    ))],
+                    )],
                     is_async: false,
                 },
                 RustItem::Fn {
@@ -268,10 +268,10 @@ pub fn build_join_set_items() -> Vec<RustItem> {
                         },
                     ],
                     ret: Some(RustType::Named("JoinItemId".to_string())),
-                    body: vec![RustStmt::Expr(RustExpr::Ident(
+                    body: vec![RustStmt::Verbatim(
                         "let id = self.__sifr_next_id();\n        let __SifrBlockingTask { handle, observed, _error } = task;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        let abort_handle = handle.as_ref().map(tokio::task::JoinHandle::abort_handle);\n        let handle = tokio::spawn(async move {\n            let Some(handle) = handle else {\n                return __SifrTaskResult::cancelled();\n            };\n            return match handle.await {\n                Ok(result) => result,\n                Err(_) => __SifrTaskResult::cancelled(),\n            };\n        });\n        self.entries.push(__SifrJoinEntry { id, handle, cancellation: None, blocking_abort: abort_handle });\n        return id"
                             .to_string(),
-                    ))],
+                    )],
                     is_async: false,
                 },
                 RustItem::Fn {
@@ -295,10 +295,10 @@ pub fn build_join_set_items() -> Vec<RustItem> {
                         },
                     ],
                     ret: Some(RustType::Named("JoinItemId".to_string())),
-                    body: vec![RustStmt::Expr(RustExpr::Ident(
+                    body: vec![RustStmt::Verbatim(
                         "let id = self.__sifr_next_id();\n        let handle = tokio::task::spawn_blocking(move || {\n            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(work)) {\n                Ok(Ok(value)) => __SifrTaskResult::Ok(value),\n                Ok(Err(error)) => __SifrTaskResult::Err(__SifrFailure::new(error)),\n                Err(_) => __SifrTaskResult::cancelled(),\n            }\n        });\n        let abort_handle = Some(handle.abort_handle());\n        self.entries.push(__SifrJoinEntry { id, handle, cancellation: None, blocking_abort: abort_handle });\n        return id"
                             .to_string(),
-                    ))],
+                    )],
                     is_async: false,
                 },
                 RustItem::Fn {
@@ -307,10 +307,10 @@ pub fn build_join_set_items() -> Vec<RustItem> {
                     type_params: vec![],
                     params: vec![RustParam::SelfValue],
                     ret: Some(RustType::Named("Vec<__SifrTaskResult<T, E>>".to_string())),
-                    body: vec![RustStmt::Expr(RustExpr::Ident(
+                    body: vec![RustStmt::Verbatim(
                         "let mut results = Vec::with_capacity(self.entries.len());\n        for entry in self.entries {\n            match entry.handle.await {\n                Ok(result) => results.push(result),\n                Err(join_error) if join_error.is_cancelled() => results.push(__SifrTaskResult::cancelled()),\n                Err(_) => results.push(__SifrTaskResult::cancelled()),\n            }\n        }\n        return results"
                             .to_string(),
-                    ))],
+                    )],
                     is_async: true,
                 },
                 RustItem::Fn {
@@ -319,10 +319,10 @@ pub fn build_join_set_items() -> Vec<RustItem> {
                     type_params: vec![],
                     params: vec![RustParam::SelfValue],
                     ret: Some(RustType::Named("Vec<CancelOutcome>".to_string())),
-                    body: vec![RustStmt::Expr(RustExpr::Ident(
+                    body: vec![RustStmt::Verbatim(
                         "let mut outcomes = Vec::with_capacity(self.entries.len());\n        for entry in self.entries {\n            let was_finished = entry.handle.is_finished();\n            if let Some(cancellation) = entry.cancellation {\n                let _ = cancellation.request_cancel();\n            } else if let Some(abort_handle) = entry.blocking_abort {\n                abort_handle.abort();\n            } else {\n                entry.handle.abort();\n            }\n            match entry.handle.await {\n                Ok(__SifrTaskResult::Ok(_)) => outcomes.push(CancelOutcome::AlreadyCompleted),\n                Ok(__SifrTaskResult::Err(_)) => outcomes.push(CancelOutcome::AlreadyFailed),\n                Ok(__SifrTaskResult::Cancelled(_)) => outcomes.push(CancelOutcome::Cancelled),\n                Err(join_error) if join_error.is_cancelled() => outcomes.push(if was_finished { CancelOutcome::AlreadyStarted } else { CancelOutcome::Cancelled }),\n                Err(_) => outcomes.push(CancelOutcome::CancelFailed),\n            }\n        }\n        return outcomes"
                             .to_string(),
-                    ))],
+                    )],
                     is_async: true,
                 },
                 RustItem::Fn {
@@ -331,10 +331,10 @@ pub fn build_join_set_items() -> Vec<RustItem> {
                     type_params: vec![],
                     params: vec![RustParam::SelfParam { mutable: true }],
                     ret: Some(RustType::Named("JoinItemId".to_string())),
-                    body: vec![RustStmt::Expr(RustExpr::Ident(
+                    body: vec![RustStmt::Verbatim(
                         "let id = JoinItemId::new(self.next_id);\n        self.next_id = self.next_id.saturating_add(1);\n        return id"
                             .to_string(),
-                    ))],
+                    )],
                     is_async: false,
                 },
             ],
@@ -380,10 +380,10 @@ pub fn build_join_set_cpu_items() -> Vec<RustItem> {
                     },
                 ],
                 ret: Some(RustType::Named("JoinItemId".to_string())),
-                body: vec![RustStmt::Expr(RustExpr::Ident(
+                body: vec![RustStmt::Verbatim(
                     "let id = self.__sifr_next_id();\n        let handle = tokio::task::spawn_blocking(move || {\n            let workers = std::thread::available_parallelism().map_or(1usize, std::num::NonZeroUsize::get);\n            let pool = rayon::ThreadPoolBuilder::new().num_threads(workers).build();\n            match pool {\n                Ok(pool) => pool.install(|| {\n                    __sifr_with_silent_worker_panic_hook(|| {\n                        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(work)) {\n                            Ok(Ok(value)) => __SifrTaskResult::Ok(value),\n                            Ok(Err(error)) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(format!(\"{}\", error)))),\n                            Err(_) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(\"cpu worker panicked\".to_string()))),\n                        }\n                    })\n                }),\n                Err(error) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(format!(\"cpu worker pool could not start: {}\", error)))),\n            }\n        });\n        let abort_handle = Some(handle.abort_handle());\n        self.entries.push(__SifrJoinEntry { id, handle, cancellation: None, blocking_abort: abort_handle });\n        return id"
                         .to_string(),
-                ))],
+                )],
                 is_async: false,
             }],
         },

@@ -118,9 +118,10 @@ impl RustEmitter {
                         method: "__aexit__".to_string(),
                         args: vec![crate::RustExpr::Ref {
                             mutable: false,
-                            expr: Box::new(crate::RustExpr::Ident(
-                                "AsyncExitCause::Normal".to_string(),
-                            )),
+                            expr: Box::new(crate::RustExpr::Path(vec![
+                                "AsyncExitCause".to_string(),
+                                "Normal".to_string(),
+                            ])),
                         }],
                     })),
                 )));
@@ -159,9 +160,10 @@ impl RustEmitter {
                     method: "__aexit__".to_string(),
                     args: vec![crate::RustExpr::Ref {
                         mutable: false,
-                        expr: Box::new(crate::RustExpr::Ident(
-                            "AsyncExitCause::Normal".to_string(),
-                        )),
+                        expr: Box::new(crate::RustExpr::Path(vec![
+                            "AsyncExitCause".to_string(),
+                            "Normal".to_string(),
+                        ])),
                     }],
                 })),
             )));
@@ -249,7 +251,7 @@ impl RustEmitter {
             } else {
                 format!("let _ = {join_expr};")
             };
-            lowered_body.push(crate::RustStmt::Expr(crate::RustExpr::Ident(stmt)));
+            lowered_body.push(crate::RustStmt::Verbatim(stmt));
         }
         Ok(Some(RustStmt::Block(lowered_body)))
     }

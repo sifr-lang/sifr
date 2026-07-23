@@ -268,7 +268,13 @@ pub fn build_failure_type_items() -> Vec<RustItem> {
                             ),
                             (
                                 "secondary".to_string(),
-                                RustExpr::Ident("Vec::new()".to_string()),
+                                RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "Vec".to_string(),
+                                        "new".to_string(),
+                                    ])),
+                                    args: vec![],
+                                },
                             ),
                         ],
                     }))],
@@ -294,11 +300,11 @@ pub fn build_failure_type_items() -> Vec<RustItem> {
                         fields: vec![
                             (
                                 "primary".to_string(),
-                                RustExpr::Ident("f(self.primary)".to_string()),
+                                RustExpr::Verbatim("f(self.primary)".to_string()),
                             ),
                             (
                                 "secondary".to_string(),
-                                RustExpr::Ident("self.secondary".to_string()),
+                                RustExpr::Verbatim("self.secondary".to_string()),
                             ),
                         ],
                     }))],
@@ -316,9 +322,9 @@ pub fn build_failure_type_items() -> Vec<RustItem> {
                         },
                     ],
                     ret: Some(RustType::Unit),
-                    body: vec![RustStmt::Expr(RustExpr::Ident(
+                    body: vec![RustStmt::Verbatim(
                         "self.secondary.push(SecondaryError::new(message))".to_string(),
-                    ))],
+                    )],
                     is_async: false,
                 },
             ],

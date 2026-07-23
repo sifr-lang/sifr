@@ -2,7 +2,12 @@
 
 ## Status
 
-Final closure in progress on 2026-07-22. The phase defines one complete end-state architecture and an
+Closure review and remediation are in progress on
+[PR #3000](https://github.com/sifr-lang/sifr/pull/3000). M0-M17 implementation
+is merged through PR #2999, while M17 Wave 4 remains open until the closure PR
+has a satisfied whole-phase review, passes the authoritative merge gate on its
+exact final tree, merges, and completes the status/index/archive bookkeeping
+listed below. The phase defines one complete end-state architecture and an
 ordered implementation sequence. Opus High pass 5 approved the complete design;
 a final independent Fable High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
@@ -88,7 +93,8 @@ and excluded-document publication gaps and returned **SATISFIED**. The final
 authoritative create-PR gate passes every blocking lane. M16 is implemented,
 authoritatively validated, repeatedly reviewed to satisfaction, and
 closure-approved on [PR #2996](https://github.com/sifr-lang/sifr/pull/2996).
-M17 ecosystem migration and certification is complete through PRs #2997-#2999:
+M17 ecosystem migration and certification implementation is complete through
+PRs #2997-#2999:
 ordinary examples use declarations or hermetic typed bridges, live services
 execute built Sifr binaries, and the current-run capability ledger binds seven
 capabilities to ten compiled evidence records with four resource-zero proofs.
@@ -636,8 +642,9 @@ Implementation waves (one locally validated and reviewed PR per wave):
   - Add fail-fast sibling, race/select loser, join-set, cancellation suppression,
     and terminal-latch ordering tests before typed wrappers depend on them.
   - Define shutdown phases now: stop external admissions; invoke the M9 callback
-    shutdown hook (a no-op ordered slot until M9); run registered async cleanup
-    while the loop is live; cancel and terminally drain remaining submissions;
+    shutdown hook (a no-op ordered slot until M9); traverse the reserved async
+    cleanup ordering slot while the loop is live (no independent registration
+    API currently exists); cancel and terminally drain remaining submissions;
     stop the loop; join its thread.
 - [x] Generate typed async declaration wrappers behind the public gate —
   [PR #2964](https://github.com/sifr-lang/sifr/pull/2964):
@@ -2610,12 +2617,14 @@ diagnostic, regression, and ecosystem checks all pass. The aggregate warm-time
 and group-skew notices are non-blocking advisories; the gate exits successfully.
 Whole-phase review and closure-PR merge remain before Wave 4 is complete.
 
-Whole-phase Fable High review pass 1 then exercised the complete M0-M17
+Whole-phase Fable High
+[review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-1.md)
+then exercised the complete M0-M17
 implementation and found one blocker plus seven major findings across stub-body
 validation, callback reentrancy, async error replay, cleanup-capable captures,
 diagnostic ownership, generated-Rust IR hygiene, DLPack rollback, binding
-authoring, LSP freshness, and certification evidence. Every actionable finding
-has been remediated with focused regression coverage. The first
+authoring, LSP freshness, and certification evidence. Those pass-1 findings
+were remediated with focused regression coverage. The first
 post-remediation `create-pr` attempt passed all `19/19` Python interop variants
 but exceeded the blocking interop step budget (`647.35s` against `600s`). A
 warm rerun then exposed and closed one stale diagnostic-precedence assertion;
@@ -2626,6 +2635,25 @@ with signature `7c39b8c1dd4fec7c`, runtime-platform `28` variants with zero
 failures and one declared capability skip, and hardening `6/6`. Every blocking
 step budget passes; only the aggregate warm-wall target is advisory. A fresh
 whole-phase satisfaction review remains required.
+
+Whole-phase Fable High
+[review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-2.md)
+verified the pass-1 blocker and all seven major findings closed, then found one
+nested-declaration blocker, four new majors, and ten actionable minors. Their
+compiler, runtime, binding-authoring, diagnostic, evidence, and documentation
+remediations are implemented on PR #3000. The post-remediation authoritative
+`create-pr` gate passes in `981.84s`: Python interop `19/19`, the full crate
+matrix, runtime-platform `28/28` with one declared capability skip, hardening
+`6/6`, and the create-PR e2e corpus `131/131`. Every blocking step budget
+passes; only the aggregate warm-wall target is advisory. A fresh whole-phase
+review of the committed remediation and an exact-tree authoritative merge gate
+remain required.
+
+At merge, the closure unit must: record the final satisfied review artifacts
+and exact merge-gate evidence here; check M17 Wave 4; change this status to
+`completed`; update the PY-2 roadmap, phase index, and architecture summary to
+name PR #3000 and the final evidence; then move this file from `issues/active/`
+to `issues/archive/` before merging PR #3000.
 
 Tasks:
 
@@ -2680,9 +2708,11 @@ Validation:
 - Live evidence distinguishes compiled Sifr execution from Python-client or
   package-presence evidence.
 - Inventory remains discovery evidence and cannot certify a capability.
-- Every executable that creates affine or resource-tracked Python state asserts zero outstanding
-  resources; callback and async fixtures instead assert their protocol-specific close, drain, and
-  reconciliation markers.
+- Every executable that creates affine or resource-tracked Python state asserts
+  zero outstanding resources. Callback and async certification reports combine
+  value-roundtrip fixtures with dedicated sibling cases that assert the
+  protocol-specific close, drain, cancellation, and reconciliation evidence;
+  the ledger records which cases own each cleanup claim.
 
 ## Review Checklist
 

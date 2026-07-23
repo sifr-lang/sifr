@@ -31,7 +31,7 @@ impl RustEmitter {
             )
         {
             let push_arg = if let HirExpr::StringLiteral(val) = value {
-                crate::RustExpr::Ident(format!("{val:?}"))
+                crate::RustExpr::Verbatim(format!("{val:?}"))
             } else {
                 crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_value))),

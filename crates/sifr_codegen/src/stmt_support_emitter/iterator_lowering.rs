@@ -694,6 +694,7 @@ impl RustEmitter {
         match expr {
             crate::RustExpr::Await(_) | crate::RustExpr::TimeoutAwait { .. } => true,
             crate::RustExpr::Ident(value) => value.contains(".await"),
+            crate::RustExpr::Verbatim(source) => source.contains(".await"),
             crate::RustExpr::Literal(_) | crate::RustExpr::Path(_) => false,
             crate::RustExpr::MethodCall { receiver, args, .. } => {
                 Self::rust_expr_contains_await(receiver)

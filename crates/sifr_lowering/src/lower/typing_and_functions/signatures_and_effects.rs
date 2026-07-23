@@ -100,7 +100,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     for &error_name in &other_mid_level_errors {
         let fields = vec![("message".to_string(), Type::Str)];
         let class_ty = Type::Class {
-            identity: None,
+            identity: (error_name == "TimeoutError")
+                .then(|| "sifr.builtin.TimeoutError".to_string()),
             type_args: Vec::new(),
             name: error_name.to_string(),
             fields: fields.clone(),
@@ -117,7 +118,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
     }
     {
         let class_ty = Type::Class {
-            identity: None,
+            identity: Some("sifr.builtin.CancellationError".to_string()),
             type_args: Vec::new(),
             name: "CancellationError".to_string(),
             fields: vec![("message".to_string(), Type::Str)],

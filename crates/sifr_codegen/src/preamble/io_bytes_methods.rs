@@ -451,6 +451,7 @@ mod tests {
     fn count_raw_in_expr(expr: &RustExpr) -> usize {
         match expr {
             RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => 0,
+            RustExpr::Verbatim(_) => 1,
             RustExpr::MethodCall { receiver, args, .. }
             | RustExpr::FnCall {
                 func: receiver,

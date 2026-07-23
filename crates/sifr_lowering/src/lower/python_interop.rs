@@ -464,9 +464,23 @@ pub(in crate::lower) fn collect_python_opaque_declaration(
     let mut result = None;
     for decorator in decorators {
         let Expr::Call(call) = &decorator.expression else {
+            if has_python_interop_decorator_syntax(std::slice::from_ref(decorator)) {
+                invalid_shape(
+                    ctx,
+                    "Python class declarations must use `@python.opaque(type=..., cleanup=...)`",
+                    decorator.range,
+                );
+            }
             continue;
         };
         if decorator_path(&call.func).is_none_or(|path| path.as_slice() != ["python", "opaque"]) {
+            if has_python_interop_decorator_syntax(std::slice::from_ref(decorator)) {
+                invalid_shape(
+                    ctx,
+                    "Python class declarations must use `@python.opaque(type=..., cleanup=...)`",
+                    decorator.range,
+                );
+            }
             continue;
         }
         if result.is_some() {

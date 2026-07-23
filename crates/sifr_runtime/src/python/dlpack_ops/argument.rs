@@ -26,7 +26,7 @@ impl PythonDlpackArgument {
             .take()
             .ok_or_else(|| dlpack_error("Python DLPack argument is already finalized"))?;
         let object = self.object.take();
-        super::super::attach(move |py| finalize(py, entry, object)).map_err(PythonError::runtime)?
+        attach_finalize(entry, object).map_err(PythonError::runtime)?
     }
 }
 
@@ -36,8 +36,23 @@ impl Drop for PythonDlpackArgument {
             return;
         };
         let object = self.object.take();
-        let _ignored = super::super::attach(move |py| finalize(py, entry, object));
+        let _ignored = attach_finalize(entry, object);
     }
+}
+
+fn attach_finalize(
+    mut entry: DlpackEntry,
+    object: Option<ObjectHandle>,
+) -> Result<Result<(), PythonError>, super::super::PythonRuntimeError> {
+    // The producer-named capsule owns the deleter while finalization is queued.
+    // Disarm the parallel entry owner before attach so a stopped runtime cannot
+    // drop the closure and invoke the same deleter without the GIL. A successful
+    // attach restores entry ownership before the reconciliation protocol runs.
+    entry._tensor.released = true;
+    super::super::attach(move |py| {
+        entry._tensor.released = false;
+        finalize(py, entry, object)
+    })
 }
 
 pub fn prepare_dlpack_argument(handle: DlpackHandle) -> Result<PythonDlpackArgument, PythonError> {

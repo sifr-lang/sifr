@@ -1,4 +1,6 @@
-use crate::python_interop_direct::{mapped_try, push_to, reference, runtime_call, vector_let};
+use crate::python_interop_direct::{
+    mapped_try, push_to, reference, runtime_call, value_place, vector_let,
+};
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 use sifr_ir::PythonInteropDeclaration;
 use sifr_type_system::Type;
@@ -10,7 +12,7 @@ pub(crate) fn input_conversion(
     opaque_classes: &HashMap<String, PythonInteropDeclaration>,
 ) -> Option<RustExpr> {
     if let Some(inner) = option_inner(ty) {
-        let receiver = RustExpr::Ident(name.to_string());
+        let receiver = value_place(name);
         let borrowed_inner = !matches!(
             inner.resolve_alias(),
             Type::None | Type::Bool | Type::Int | Type::Float
@@ -45,7 +47,7 @@ pub(crate) fn input_conversion(
             vec![RustExpr::Ref {
                 mutable: false,
                 expr: Box::new(RustExpr::Field {
-                    expr: Box::new(RustExpr::Ident(name.to_string())),
+                    expr: Box::new(value_place(name)),
                     field: "__sifr_python_object".to_string(),
                 }),
             }],
@@ -54,7 +56,7 @@ pub(crate) fn input_conversion(
     match ty.resolve_alias() {
         Type::List(item) => {
             let iter = RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(name.to_string())),
+                receiver: Box::new(value_place(name)),
                 method: "iter".to_string(),
                 args: Vec::new(),
             };
@@ -80,7 +82,7 @@ pub(crate) fn input_conversion(
         }
         Type::Dict(key, value) if key.resolve_alias() == &Type::Str => {
             let iter = RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(name.to_string())),
+                receiver: Box::new(value_place(name)),
                 method: "iter".to_string(),
                 args: Vec::new(),
             };
@@ -113,7 +115,7 @@ pub(crate) fn input_conversion(
         }
         _ => {}
     }
-    let ident = RustExpr::Ident(name.to_string());
+    let ident = value_place(name);
     let (function, value) = match ty.resolve_alias() {
         Type::None => ("from_none", None),
         Type::Bool => ("from_bool", Some(ident)),
@@ -489,14 +491,12 @@ pub(crate) fn input_conversion_borrowed(
         return input_conversion(name, ty, opaque_classes);
     }
     let value = match ty.resolve_alias() {
-        Type::Bool | Type::Int | Type::Float => {
-            RustExpr::Deref(Box::new(RustExpr::Ident(name.to_string())))
-        }
-        Type::Str | Type::Bytes => RustExpr::Ident(name.to_string()),
+        Type::Bool | Type::Int | Type::Float => RustExpr::Deref(Box::new(value_place(name))),
+        Type::Str | Type::Bytes => value_place(name),
         _ if is_python_object(ty) => {
             return Some(runtime_call(
                 "__sifr_declaration_object_argument",
-                vec![RustExpr::Ident(name.to_string())],
+                vec![value_place(name)],
             ));
         }
         Type::Class {
@@ -507,7 +507,7 @@ pub(crate) fn input_conversion_borrowed(
                 vec![RustExpr::Ref {
                     mutable: false,
                     expr: Box::new(RustExpr::Field {
-                        expr: Box::new(RustExpr::Ident(name.to_string())),
+                        expr: Box::new(value_place(name)),
                         field: "__sifr_python_object".to_string(),
                     }),
                 }],

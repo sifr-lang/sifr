@@ -170,6 +170,9 @@ pub struct RustWithItem {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RustExpr {
     Literal(RustLiteral),
+    /// A syntax-validated compiler-owned Rust expression for forms that the
+    /// structured IR does not yet model. Never use `Ident` for raw syntax.
+    Verbatim(String),
     Ident(String),
     Path(Vec<String>),
     MethodCall {

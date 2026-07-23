@@ -307,7 +307,7 @@ pub(super) fn remove_expr_unneeded_mutability(expr: &mut RustExpr) -> usize {
             remove_expr_unneeded_mutability(start) + remove_expr_unneeded_mutability(end)
         }
         RustExpr::Closure { body, .. } => remove_expr_unneeded_mutability(body),
-        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => 0,
+        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) | RustExpr::Verbatim(_) => 0,
     }
 }
 
@@ -526,7 +526,9 @@ pub(super) fn expr_mutates_name(expr: &RustExpr, name: &str) -> bool {
         RustExpr::Range { start, end } => {
             expr_mutates_name(start, name) || expr_mutates_name(end, name)
         }
-        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => false,
+        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) | RustExpr::Verbatim(_) => {
+            false
+        }
     }
 }
 
@@ -685,7 +687,7 @@ pub(super) fn optimize_expr(expr: &mut RustExpr) -> usize {
             }
             removed
         }
-        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => 0,
+        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) | RustExpr::Verbatim(_) => 0,
         RustExpr::MethodCall {
             receiver,
             method,

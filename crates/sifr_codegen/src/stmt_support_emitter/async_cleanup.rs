@@ -100,7 +100,10 @@ pub(super) fn async_with_exit_call(receiver: RustExpr, cause_variant: &str) -> R
         method: "__aexit__".to_string(),
         args: vec![RustExpr::Ref {
             mutable: false,
-            expr: Box::new(RustExpr::Ident(format!("AsyncExitCause::{cause_variant}"))),
+            expr: Box::new(RustExpr::Path(vec![
+                "AsyncExitCause".to_string(),
+                cause_variant.to_string(),
+            ])),
         }],
     }))))
 }

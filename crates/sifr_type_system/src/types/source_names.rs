@@ -26,6 +26,9 @@ const CANONICAL_FILE_HANDLE_RUST_NAMES: &[(&str, &str)] = &[
 /// than their merged stdlib module. Exemptions are exact declaration
 /// identities: a same-basename class in another module remains distinct.
 pub const GLOBAL_RUST_NOMINAL_IDENTITIES: &[&str] = &[
+    // Built-in task errors are emitted by the compiler's global error prelude.
+    "sifr.builtin.CancellationError",
+    "sifr.builtin.TimeoutError",
     // These are emitted by the compiler's shared CPU-offload prelude and are
     // therefore global infrastructure even when surfaced through sifr.parallel.
     "sifr.parallel.WorkerRuntimeError",
@@ -125,6 +128,10 @@ mod tests {
         assert_eq!(
             class_rust_name(Some("sifr.io.FileHandle"), "FileHandle"),
             "__SifrIoFileHandle"
+        );
+        assert_eq!(
+            class_rust_name(Some("sifr.builtin.TimeoutError"), "TimeoutError"),
+            "TimeoutError"
         );
         assert_eq!(
             class_rust_name(Some("local.FileHandle"), "FileHandle"),

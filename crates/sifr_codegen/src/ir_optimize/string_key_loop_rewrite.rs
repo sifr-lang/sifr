@@ -278,5 +278,6 @@ fn expr_uses_name_only_as_set_key(
                 && expr_uses_name_only_as_set_key(error, name, false, found)
         }
         RustExpr::Literal(_) | RustExpr::Path(_) | RustExpr::Ident(_) => true,
+        RustExpr::Verbatim(_) => false,
     }
 }

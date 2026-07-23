@@ -19,6 +19,7 @@ EXPECTED_TESTS = {
     "python::dlpack_ops::abi::tests::metadata_rejects_invalid_dimensions_and_pointers",
     "python::dlpack_ops::abi::tests::metadata_rejects_shape_stride_dtype_and_offset_drift",
     "python::dlpack_ops::declaration_tests::acquisition_uses_full_signature_once_without_legacy_retry",
+    "python::dlpack_ops::declaration_tests::attach_failure_leaves_the_deleter_with_the_capsule_owner",
     "python::dlpack_ops::declaration_tests::capsule_device_mismatch_releases_the_acquired_tensor",
     "python::dlpack_ops::declaration_tests::consumed_argument_transfers_deleter_ownership_exactly_once",
     "python::dlpack_ops::declaration_tests::cuda_and_any_require_a_matching_explicit_stream",

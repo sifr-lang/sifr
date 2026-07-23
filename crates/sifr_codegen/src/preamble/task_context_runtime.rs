@@ -1,4 +1,5 @@
-use super::{RustExpr, RustItem, RustStmt, RustType, Visibility};
+use super::{RustExpr, RustItem, RustParam, RustStmt, RustType, Visibility};
+use crate::RustLiteral;
 
 pub fn task_context_label_field() -> (String, RustType) {
     (
@@ -12,7 +13,7 @@ pub fn task_context_label_capture_stmt() -> RustStmt {
         mutable: false,
         name: "child_context_label".to_string(),
         ty: None,
-        value: RustExpr::Ident("self.context_label.clone()".to_string()),
+        value: RustExpr::Verbatim("self.context_label.clone()".to_string()),
     }
 }
 
@@ -60,17 +61,40 @@ pub fn build_task_current_context_items(include_task_local: bool) -> Vec<RustIte
             "tokio::task_local! { static __SIFR_TASK_CONTEXT_LABEL: String; }".to_string(),
         ));
     }
+    let default_label = RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Literal(RustLiteral::Str("Context".to_string()))),
+        method: "to_string".to_string(),
+        args: Vec::new(),
+    };
+    let label = RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__SIFR_TASK_CONTEXT_LABEL".to_string())),
+            method: "try_with".to_string(),
+            args: vec![RustExpr::Path(vec![
+                "Clone".to_string(),
+                "clone".to_string(),
+            ])],
+        }),
+        method: "unwrap_or_else".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "_".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(default_label),
+            is_move: false,
+        }],
+    };
     items.push(RustItem::Fn {
         name: "__sifr_task_current_context".to_string(),
         visibility: Visibility::Private,
         type_params: vec![],
         params: vec![],
         ret: Some(RustType::Named(context_type.clone())),
-        body: vec![RustStmt::Return(Some(RustExpr::Ident(
-            format!(
-                r#"{context_type}::new(__SIFR_TASK_CONTEXT_LABEL.try_with(Clone::clone).unwrap_or_else(|_| "Context".to_string()))"#
-            ),
-        )))],
+        body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![context_type, "new".to_string()])),
+            args: vec![label],
+        }))],
         is_async: false,
     });
     items

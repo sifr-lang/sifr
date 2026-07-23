@@ -150,8 +150,8 @@ impl RustEmitter {
                 ancestor.replace('.', "::")
             };
             lowered = crate::RustExpr::FnCall {
-                func: Box::new(crate::RustExpr::Ident(format!(
-                    "std::convert::Into::<{rendered_target}>::into"
+                func: Box::new(crate::RustExpr::Verbatim(format!(
+                    "::std::convert::Into::<{rendered_target}>::into"
                 ))),
                 args: vec![lowered],
             };

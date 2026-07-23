@@ -377,7 +377,7 @@ impl RustEmitter {
 
     pub(crate) fn list_indexed_dict_lookup_key_arg(expr: &HirExpr, lowered: RustExpr) -> RustExpr {
         if let HirExpr::StringLiteral(value) = expr {
-            return RustExpr::Ident(format!("{value:?}"));
+            return RustExpr::Verbatim(format!("{value:?}"));
         }
         if matches!(
             expr,

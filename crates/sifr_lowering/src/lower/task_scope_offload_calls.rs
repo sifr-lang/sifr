@@ -164,7 +164,7 @@ fn process_class_type(name: &str, ctx: &LowerCtx) -> Type {
         .get(name)
         .cloned()
         .unwrap_or_else(|| Type::Class {
-            identity: None,
+            identity: Some(format!("sifr.parallel.{name}")),
             type_args: Vec::new(),
             name: name.to_string(),
             fields: vec![("_handle".to_string(), Type::Int)],

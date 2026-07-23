@@ -29,14 +29,14 @@ impl RustEmitter {
         let mut debug_expr = RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Ident("f".to_string())),
             method: "debug_struct".to_string(),
-            args: vec![RustExpr::Ident(format!("{:?}", class.name))],
+            args: vec![RustExpr::Verbatim(format!("{:?}", class.name))],
         };
         for (field_name, _) in &class.fields {
             debug_expr = RustExpr::MethodCall {
                 receiver: Box::new(debug_expr),
                 method: "field".to_string(),
                 args: vec![
-                    RustExpr::Ident(format!("{field_name:?}")),
+                    RustExpr::Verbatim(format!("{field_name:?}")),
                     RustExpr::Ref {
                         mutable: false,
                         expr: Box::new(RustExpr::Field {

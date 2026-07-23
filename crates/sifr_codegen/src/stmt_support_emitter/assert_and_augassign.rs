@@ -40,7 +40,7 @@ impl RustEmitter {
             match value_ty {
                 Type::Str => {
                     let arg_expr = if let HirExpr::StringLiteral(val) = value {
-                        crate::RustExpr::Ident(format!("{val:?}"))
+                        crate::RustExpr::Verbatim(format!("{val:?}"))
                     } else {
                         let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
                             return Ok(false);

@@ -116,14 +116,37 @@ pub(in crate::lower) fn must_use_reusable_callable_capture(
         );
         return;
     }
+    let captured_resource =
+        must_use_resource_type_name(ctx, ty).unwrap_or_else(|| ty.display_name());
     ctx.error_with_code_at(
         DiagnosticCode::PYZC_INVALID_DECLARATION,
         format!(
             "{callable_kind} cannot capture '{name}' of type '{}' because reusable callables cannot own or repeatedly expose an affine or must-use Python resource",
-            ty.display_name()
+            captured_resource
         ),
         range,
     );
+}
+
+fn must_use_resource_type_name(ctx: &LowerCtx, ty: &Type) -> Option<String> {
+    match ty.resolve_alias() {
+        Type::Class { name, .. }
+            if ctx
+                .python_opaque_classes
+                .get(name)
+                .and_then(|declaration| declaration.cleanup)
+                .is_some_and(|cleanup| cleanup != sifr_ir::PythonCleanupPolicy::Drop) =>
+        {
+            Some(ty.display_name())
+        }
+        Type::List(item) | Type::Result(item, _) => must_use_resource_type_name(ctx, item),
+        Type::Tuple(items) | Type::Union(items) => items
+            .iter()
+            .find_map(|item| must_use_resource_type_name(ctx, item)),
+        Type::Dict(key, value) => must_use_resource_type_name(ctx, key)
+            .or_else(|| must_use_resource_type_name(ctx, value)),
+        _ => None,
+    }
 }
 
 pub(in crate::lower) fn reject_affine_nested_function_capture(

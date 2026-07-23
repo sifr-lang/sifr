@@ -128,6 +128,38 @@ class Client:
 }
 
 #[test]
+fn nested_python_declarations_are_rejected_without_discarding_decorators() {
+    for body in ["return 123", "..."] {
+        let errors = lower_errors(&format!(
+            "def outer() -> int:\n    @python(math.sqrt)\n    def compute(value: float) -> Result[float, PythonError]:\n        {body}\n    return 0\n"
+        ));
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::PYCALL_INVALID_SHAPE)
+                    && error
+                        .message
+                        .contains("nested Python declarations are not supported")
+            }),
+            "{errors:?}"
+        );
+    }
+}
+
+#[test]
+fn python_class_decorators_require_the_opaque_declaration_form() {
+    for decorator in ["@python(pkg.Client)", "@python"] {
+        let errors = lower_errors(&format!("{decorator}\nclass Client:\n    value: int\n"));
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::PYCALL_INVALID_SHAPE)
+                    && error.message.contains("Python class declarations must use")
+            }),
+            "{errors:?}"
+        );
+    }
+}
+
+#[test]
 fn cleanup_opaque_reusable_callable_captures_are_rejected() {
     const PREFIX: &str = r#"
 class PythonError(Error):
@@ -158,6 +190,18 @@ def make_client() -> Result[Client, PythonError]: ...
             "{errors:?}"
         );
     }
+
+    let errors = lower_errors(&format!(
+        "{PREFIX}\ndef close_through_capture() -> Result[None, PythonError]:\n    try:\n        client = make_client()\n        def close_client() -> Result[None, PythonError]:\n            return client.close()\n        _first: None = close_client()\n        _second: None = close_client()\n        return None\n    except PythonError as error:\n        raise error\n"
+    ));
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                && error.message.contains("type 'Client'")
+                && !error.message.contains("Result[")
+        }),
+        "{errors:?}"
+    );
 }
 
 #[test]

@@ -532,8 +532,9 @@ def validate_async_context_evidence(payload: object) -> None:
             raise SystemExit(f"async context {matrix_name} rows require evidence owners")
     live = payload.get("live")
     expected = (
-        "sifr-python-interop:async-context:value=sqlite-ready:enter=7:exit=7:"
-        "close=7:loop=shared:suppression=covered:sifr=unsuppressed:"
+        "sifr-python-interop:async-context:value=sqlite-ready:enter=8:exit=8:"
+        "close=8:loop=shared:suppression=covered:sifr=unsuppressed:"
+        "python-error=unsuppressed:"
         "cancellation=ordered:nested=lifo:exit-failure=covered"
     )
     if not isinstance(live, dict) or live.get("stdout_marker") != expected:
