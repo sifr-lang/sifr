@@ -623,7 +623,7 @@ macro_rules! active_entry {
             family: $family,
             summary: $summary,
             state: $crate::codes::DiagnosticState::Active,
-            docs_path: concat!("docs/errors/", $id, ".md"),
+            docs_path: concat!("docs/errors/", $id, ".mdx"),
             representative_fixture_path: Some($fixture),
             message_template: Some($template),
             owner_module: Some($owner),

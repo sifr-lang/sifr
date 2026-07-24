@@ -59,210 +59,210 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 
 | Code | Severity | Summary |
 | --- | --- | --- |
-| [`SIFR-PARSE-0002`](SIFR-PARSE-0002.md) | Error | Expected token or generic parser recovery failure. |
-| [`SIFR-PARSE-0003`](SIFR-PARSE-0003.md) | Error | Lexical or interpolated string parser failure. |
-| [`SIFR-PARSE-0004`](SIFR-PARSE-0004.md) | Error | Indentation or same-line statement layout parser failure. |
-| [`SIFR-PARSE-0005`](SIFR-PARSE-0005.md) | Error | Invalid assignment, delete, starred, or named-expression target syntax. |
-| [`SIFR-PARSE-0006`](SIFR-PARSE-0006.md) | Error | Invalid call argument order or unpacking syntax. |
-| [`SIFR-PARSE-0007`](SIFR-PARSE-0007.md) | Error | Empty or malformed declaration list syntax. |
-| [`SIFR-PARSE-0008`](SIFR-PARSE-0008.md) | Error | Invalid match-pattern syntax. |
-| [`SIFR-PARSE-0009`](SIFR-PARSE-0009.md) | Error | Unsupported parser syntax or interactive-only syntax. |
-| [`SIFR-NAME-0001`](SIFR-NAME-0001.md) | Error | Undefined variable. |
-| [`SIFR-NAME-0002`](SIFR-NAME-0002.md) | Error | Undefined function or callable. |
-| [`SIFR-NAME-0003`](SIFR-NAME-0003.md) | Error | Unknown type or generic type name. |
-| [`SIFR-NAME-0004`](SIFR-NAME-0004.md) | Error | Missing module or class member. |
-| [`SIFR-NAME-0005`](SIFR-NAME-0005.md) | Error | Duplicate function definition in a module. |
-| [`SIFR-NAME-0006`](SIFR-NAME-0006.md) | Error | Variable declaration lacks a required initializer. |
-| [`SIFR-IMPORT-0001`](SIFR-IMPORT-0001.md) | Error | Forbidden private sysroot declaration import. |
-| [`SIFR-IMPORT-0002`](SIFR-IMPORT-0002.md) | Error | Unknown source module import target. |
-| [`SIFR-IMPORT-0003`](SIFR-IMPORT-0003.md) | Error | Unsupported import statement form. |
-| [`SIFR-IMPORT-0004`](SIFR-IMPORT-0004.md) | Error | Private module member import. |
-| [`SIFR-IMPORT-0005`](SIFR-IMPORT-0005.md) | Error | Ambiguous source module import target. |
-| [`SIFR-IMPORT-0006`](SIFR-IMPORT-0006.md) | Error | Source module namespace and file import collision. |
-| [`SIFR-IMPORT-0007`](SIFR-IMPORT-0007.md) | Error | Circular source module import graph. |
-| [`SIFR-IMPORT-0008`](SIFR-IMPORT-0008.md) | Error | Bare CPython-style stdlib import attempt. |
-| [`SIFR-IMPORT-0009`](SIFR-IMPORT-0009.md) | Error | Unsupported legacy Sifr stdlib module import. |
-| [`SIFR-TYPE-0002`](SIFR-TYPE-0002.md) | Error | Expected and actual types are incompatible. |
-| [`SIFR-TYPE-0003`](SIFR-TYPE-0003.md) | Error | If-expression or conditional branches have incompatible types. |
-| [`SIFR-TYPE-0004`](SIFR-TYPE-0004.md) | Error | A required type annotation is missing. |
-| [`SIFR-TYPE-0005`](SIFR-TYPE-0005.md) | Error | Unsupported operator or operand types. |
-| [`SIFR-TYPE-0006`](SIFR-TYPE-0006.md) | Error | Int and bigint are mixed without an explicit conversion. |
-| [`SIFR-TYPE-0007`](SIFR-TYPE-0007.md) | Error | Invalid type annotation shape. |
-| [`SIFR-TYPE-0008`](SIFR-TYPE-0008.md) | Error | Container literal elements, keys, or values have conflicting types. |
-| [`SIFR-TYPE-0009`](SIFR-TYPE-0009.md) | Error | Tuple or list unpacking shape mismatch. |
-| [`SIFR-TYPE-0010`](SIFR-TYPE-0010.md) | Error | TypeVar constraints are not satisfied by the inferred concrete type. |
-| [`SIFR-TYPE-0011`](SIFR-TYPE-0011.md) | Error | Unsupported default argument expression. |
-| [`SIFR-TYPE-0012`](SIFR-TYPE-0012.md) | Error | Unsupported expression form. |
-| [`SIFR-TYPE-0901`](SIFR-TYPE-0901.md) | Warning | Integer arithmetic may overflow at runtime. |
-| [`SIFR-TYPE-0902`](SIFR-TYPE-0902.md) | Note | Reveal the inferred static type of an expression. |
-| [`SIFR-ASYNC-0001`](SIFR-ASYNC-0001.md) | Error | Async function body has no real suspension effect. |
-| [`SIFR-ASYNC-0002`](SIFR-ASYNC-0002.md) | Error | Awaited same-task coroutine has no real suspension effect. |
-| [`SIFR-ASYNC-0003`](SIFR-ASYNC-0003.md) | Error | Blocking I/O function called directly from async context. |
-| [`SIFR-ASYNC-0004`](SIFR-ASYNC-0004.md) | Error | CPU-heavy function called directly from async context. |
-| [`SIFR-ASYNC-0005`](SIFR-ASYNC-0005.md) | Error | Blocking offload target is not classified as blocking I/O or CPU-heavy work. |
-| [`SIFR-ASYNC-0006`](SIFR-ASYNC-0006.md) | Error | Synchronous workload annotation applied to async function. |
-| [`SIFR-ASYNC-0007`](SIFR-ASYNC-0007.md) | Error | Shell execution function called directly from async context. |
-| [`SIFR-DECIMAL-0001`](SIFR-DECIMAL-0001.md) | Error | Invalid Decimal exact literal. |
-| [`SIFR-DECIMAL-0002`](SIFR-DECIMAL-0002.md) | Error | Invalid BigDecimal exact literal. |
-| [`SIFR-DECIMAL-0003`](SIFR-DECIMAL-0003.md) | Error | Float mixed with a decimal numeric type. |
-| [`SIFR-DECIMAL-0004`](SIFR-DECIMAL-0004.md) | Error | Decimal and BigDecimal mixed in one operation. |
-| [`SIFR-DECIMAL-0005`](SIFR-DECIMAL-0005.md) | Error | Decimal float construction or conversion is forbidden. |
-| [`SIFR-DECIMAL-0006`](SIFR-DECIMAL-0006.md) | Error | BigDecimal float construction or conversion is forbidden. |
-| [`SIFR-DECIMAL-0007`](SIFR-DECIMAL-0007.md) | Error | Decimal scale argument is invalid. |
-| [`SIFR-DECIMAL-0008`](SIFR-DECIMAL-0008.md) | Error | BigDecimal scale or context argument is invalid. |
-| [`SIFR-INT-0001`](SIFR-INT-0001.md) | Error | Fixed-width integer literal or const expression is out of range. |
-| [`SIFR-INT-0003`](SIFR-INT-0003.md) | Error | Reserved integer width name used before support lands. |
-| [`SIFR-INT-0004`](SIFR-INT-0004.md) | Error | Compile-time integer evaluation budget exceeded. |
-| [`SIFR-INT-0005`](SIFR-INT-0005.md) | Error | Integer division, modulo, or exponentiation requires handling a typed failure. |
-| [`SIFR-INT-0006`](SIFR-INT-0006.md) | Error | Exact integer to float conversion requires handling precision loss. |
-| [`SIFR-INT-0007`](SIFR-INT-0007.md) | Error | Bool and integer comparison requires explicit conversion. |
-| [`SIFR-INT-0011`](SIFR-INT-0011.md) | Warning | Temporary bigint transition alias used. |
-| [`SIFR-CALL-0001`](SIFR-CALL-0001.md) | Error | Wrong positional argument count. |
-| [`SIFR-CALL-0002`](SIFR-CALL-0002.md) | Error | Unexpected keyword argument. |
-| [`SIFR-CALL-0003`](SIFR-CALL-0003.md) | Error | Duplicate argument from positional and keyword overlap. |
-| [`SIFR-CALL-0004`](SIFR-CALL-0004.md) | Error | Missing required argument. |
-| [`SIFR-CALL-0005`](SIFR-CALL-0005.md) | Error | Callable arity failure or expression is not callable. |
-| [`SIFR-OWN-0001`](SIFR-OWN-0001.md) | Error | Use after move. |
-| [`SIFR-OWN-0002`](SIFR-OWN-0002.md) | Error | Same-call borrow conflict. |
-| [`SIFR-OWN-0003`](SIFR-OWN-0003.md) | Error | Borrowed parameter escapes by return or store. |
-| [`SIFR-OWN-0004`](SIFR-OWN-0004.md) | Error | Moved value is reused across loop iterations. |
-| [`SIFR-OWN-0005`](SIFR-OWN-0005.md) | Error | Immutable parameter is mutated. |
-| [`SIFR-OWN-0006`](SIFR-OWN-0006.md) | Error | Immutable parameter is reassigned. |
-| [`SIFR-OWN-0007`](SIFR-OWN-0007.md) | Error | Immutable bytes value is mutated. |
-| [`SIFR-OWN-0008`](SIFR-OWN-0008.md) | Error | Immutable bytes value is mutated by augmented assignment. |
-| [`SIFR-OWN-0009`](SIFR-OWN-0009.md) | Error | Mutable borrow remains live across an await point. |
-| [`SIFR-OWN-0010`](SIFR-OWN-0010.md) | Error | Non-sendable value crosses a spawned task boundary. |
-| [`SIFR-OWN-0011`](SIFR-OWN-0011.md) | Error | Non-sendable value is sent through a channel. |
-| [`SIFR-OWN-0012`](SIFR-OWN-0012.md) | Error | Non-share-safe value is wrapped in sync.Shared. |
-| [`SIFR-OWN-0013`](SIFR-OWN-0013.md) | Error | Non-IPC-serializable value is used as a typed IPC payload. |
-| [`SIFR-FLOW-0001`](SIFR-FLOW-0001.md) | Error | Break outside a loop. |
-| [`SIFR-FLOW-0002`](SIFR-FLOW-0002.md) | Error | Continue outside a loop. |
-| [`SIFR-FLOW-0003`](SIFR-FLOW-0003.md) | Error | Invalid nonlocal or nested-function flow. |
-| [`SIFR-FLOW-0004`](SIFR-FLOW-0004.md) | Error | Function may finish without returning a required value. |
-| [`SIFR-FLOW-0005`](SIFR-FLOW-0005.md) | Error | Control-flow condition has an unsupported type. |
-| [`SIFR-FLOW-0006`](SIFR-FLOW-0006.md) | Error | Statement form is unsupported by HIR lowering. |
-| [`SIFR-FLOW-0007`](SIFR-FLOW-0007.md) | Error | Assignment target form is unsupported by HIR lowering. |
-| [`SIFR-FLOW-0008`](SIFR-FLOW-0008.md) | Error | For-loop iteration form or source is invalid. |
-| [`SIFR-FLOW-0901`](SIFR-FLOW-0901.md) | Warning | Unreachable statement ignored during lowering. |
-| [`SIFR-MATCH-0001`](SIFR-MATCH-0001.md) | Error | Non-exhaustive match. |
-| [`SIFR-MATCH-0002`](SIFR-MATCH-0002.md) | Error | Match guard must be bool. |
-| [`SIFR-MATCH-0003`](SIFR-MATCH-0003.md) | Error | Invalid class pattern field. |
-| [`SIFR-MATCH-0004`](SIFR-MATCH-0004.md) | Error | Invalid or unsupported match pattern form. |
-| [`SIFR-PROTO-0001`](SIFR-PROTO-0001.md) | Error | Protocol bound or conformance failure. |
-| [`SIFR-PROTO-0002`](SIFR-PROTO-0002.md) | Error | Invalid iterator or reversible protocol signature. |
-| [`SIFR-PROTO-0003`](SIFR-PROTO-0003.md) | Error | Context-manager protocol is missing. |
-| [`SIFR-PROTO-0004`](SIFR-PROTO-0004.md) | Error | Hashable or comparable protocol is required. |
-| [`SIFR-CLASS-0001`](SIFR-CLASS-0001.md) | Error | Class fields require an initializer or super initializer. |
-| [`SIFR-CLASS-0002`](SIFR-CLASS-0002.md) | Error | Required field declared after a defaulted field. |
-| [`SIFR-CLASS-0003`](SIFR-CLASS-0003.md) | Error | Duplicate enum or class value, or invalid variant. |
-| [`SIFR-CLASS-0004`](SIFR-CLASS-0004.md) | Error | Missing class field. |
-| [`SIFR-CLASS-0005`](SIFR-CLASS-0005.md) | Error | Invalid class base. |
-| [`SIFR-CLASS-0006`](SIFR-CLASS-0006.md) | Error | Unsupported class declaration. |
-| [`SIFR-RESULT-0001`](SIFR-RESULT-0001.md) | Error | Unused Result value. |
-| [`SIFR-RESULT-0002`](SIFR-RESULT-0002.md) | Error | Invalid Result error type. |
-| [`SIFR-RESULT-0003`](SIFR-RESULT-0003.md) | Error | Invalid raise expression. |
-| [`SIFR-RESULT-0004`](SIFR-RESULT-0004.md) | Error | Except arm references an unknown error type. |
-| [`SIFR-RESULT-0005`](SIFR-RESULT-0005.md) | Error | Try body error types are not fully covered by except arms. |
-| [`SIFR-RESULT-0006`](SIFR-RESULT-0006.md) | Error | Except arm type expression has an unsupported form. |
-| [`SIFR-STDLIB-0001`](SIFR-STDLIB-0001.md) | Error | Unsupported standard-library constructor, method, or surface. |
-| [`SIFR-STDLIB-0003`](SIFR-STDLIB-0003.md) | Error | Embedded standard-library bootstrap failure. |
-| [`SIFR-STDLIB-0004`](SIFR-STDLIB-0004.md) | Error | Standard-library cache build or reuse failure. |
-| [`SIFR-IO-0801`](SIFR-IO-0801.md) | Error | Text-mode open requires an explicit encoding. |
-| [`SIFR-IO-0802`](SIFR-IO-0802.md) | Error | Open mode must be statically known. |
-| [`SIFR-ENCODING-0803`](SIFR-ENCODING-0803.md) | Error | Encoding error handler must be statically known. |
-| [`SIFR-WORKSPACE-0001`](SIFR-WORKSPACE-0001.md) | Error | Malformed workspace manifest. |
-| [`SIFR-WORKSPACE-0002`](SIFR-WORKSPACE-0002.md) | Error | Workspace source root escapes the workspace root. |
-| [`SIFR-WORKSPACE-0003`](SIFR-WORKSPACE-0003.md) | Error | Workspace source root is not a directory. |
-| [`SIFR-WORKSPACE-0004`](SIFR-WORKSPACE-0004.md) | Error | Workspace source root entry has an invalid shape or path. |
-| [`SIFR-WORKSPACE-0101`](SIFR-WORKSPACE-0101.md) | Error | Legacy workspace import target could not be resolved; source imports use [`SIFR-IMPORT-0002`](SIFR-IMPORT-0002.md). |
-| [`SIFR-WORKSPACE-0102`](SIFR-WORKSPACE-0102.md) | Error | Legacy workspace import target is ambiguous; source imports use [`SIFR-IMPORT-0005`](SIFR-IMPORT-0005.md). |
-| [`SIFR-WORKSPACE-0103`](SIFR-WORKSPACE-0103.md) | Error | Legacy workspace namespace package collision; source imports use [`SIFR-IMPORT-0006`](SIFR-IMPORT-0006.md). |
-| [`SIFR-WORKSPACE-0104`](SIFR-WORKSPACE-0104.md) | Error | Legacy workspace import graph cycle; source imports use [`SIFR-IMPORT-0007`](SIFR-IMPORT-0007.md). |
-| [`SIFR-BUILD-0002`](SIFR-BUILD-0002.md) | Error | Build file materialization failed. |
-| [`SIFR-BUILD-0003`](SIFR-BUILD-0003.md) | Error | Temporary build workspace creation failed. |
-| [`SIFR-BUILD-0004`](SIFR-BUILD-0004.md) | Error | Cargo manifest generation failed. |
-| [`SIFR-BUILD-0005`](SIFR-BUILD-0005.md) | Error | Rustc or Cargo execution failed. |
-| [`SIFR-BUILD-0006`](SIFR-BUILD-0006.md) | Error | Expected build artifact was not produced. |
-| [`SIFR-BUILD-0901`](SIFR-BUILD-0901.md) | Error | Standalone install receipt is missing or outside the self-update install rules. |
-| [`SIFR-INTERNAL-0001`](SIFR-INTERNAL-0001.md) | Error | Unclassified compiler panic after a panic boundary. |
-| [`SIFR-INTERNAL-0002`](SIFR-INTERNAL-0002.md) | Note | Structured recovery-cap omission summary. |
-| [`SIFR-FMT-0001`](SIFR-FMT-0001.md) | Error | Source formatting drift detected by sifr fmt --check. |
-| [`SIFR-LINT-0001`](SIFR-LINT-0001.md) | Warning | Suppression references an unknown policy rule id. |
-| [`SIFR-LINT-0002`](SIFR-LINT-0002.md) | Warning | Suppression did not suppress any diagnostic. |
-| [`SIFR-LINT-0003`](SIFR-LINT-0003.md) | Warning | Suppression must list explicit Sifr policy rule ids. |
-| [`SIFR-LINT-0004`](SIFR-LINT-0004.md) | Warning | Line ends with trailing horizontal whitespace. |
-| [`SIFR-LINT-0005`](SIFR-LINT-0005.md) | Warning | Comment contains a tracked TODO or FIXME marker. |
-| [`SIFR-LINT-0006`](SIFR-LINT-0006.md) | Warning | Call passes a boolean literal positionally. |
-| [`SIFR-LINT-0007`](SIFR-LINT-0007.md) | Warning | Function has more parameters than the policy limit. |
-| [`SIFR-LINT-0008`](SIFR-LINT-0008.md) | Warning | Import duplicates a module/name pair already imported in the same source file. |
-| [`SIFR-PACKAGE-0001`](SIFR-PACKAGE-0001.md) | Error | Missing or invalid Cargo Sifr discovery metadata. |
-| [`SIFR-PACKAGE-0002`](SIFR-PACKAGE-0002.md) | Error | Missing or invalid sifr.toml package manifest. |
-| [`SIFR-PACKAGE-0003`](SIFR-PACKAGE-0003.md) | Error | Unsupported Sifr compiler metadata appears in Cargo metadata. |
-| [`SIFR-PACKAGE-0103`](SIFR-PACKAGE-0103.md) | Error | Cargo metadata parsing or normalization failed. |
-| [`SIFR-PACKAGE-0101`](SIFR-PACKAGE-0101.md) | Error | Cargo command invocation failed; Sifr reports the redacted Cargo excerpt and safe Sifr-owned recovery context. |
-| [`SIFR-PACKAGE-0102`](SIFR-PACKAGE-0102.md) | Error | A selected Cargo package is Rust-only. |
-| [`SIFR-PACKAGE-0104`](SIFR-PACKAGE-0104.md) | Error | Package source is unavailable in offline or frozen mode. |
-| [`SIFR-PACKAGE-0106`](SIFR-PACKAGE-0106.md) | Error | Rust-only package depends directly on a Sifr source package. |
-| [`SIFR-PACKAGE-0201`](SIFR-PACKAGE-0201.md) | Error | Direct package import root resolves to multiple package instances. |
-| [`SIFR-PACKAGE-0202`](SIFR-PACKAGE-0202.md) | Error | Package imports a module outside its direct dependency scope. |
-| [`SIFR-PACKAGE-0203`](SIFR-PACKAGE-0203.md) | Error | Package imports a private module from another package. |
-| [`SIFR-PACKAGE-0204`](SIFR-PACKAGE-0204.md) | Error | Type identity crosses resolved package instances. |
-| [`SIFR-PACKAGE-0301`](SIFR-PACKAGE-0301.md) | Error | Backend Rust crate is not allowed by the Sifr trust policy. |
-| [`SIFR-PACKAGE-0305`](SIFR-PACKAGE-0305.md) | Error | Trust policy names a backend crate that is not a direct dependency. |
-| [`SIFR-PACKAGE-0401`](SIFR-PACKAGE-0401.md) | Error | Cargo package archive is missing required Sifr source. |
-| [`SIFR-PACKAGE-0402`](SIFR-PACKAGE-0402.md) | Error | Package publish or archive validation failed. |
-| [`SIFR-PACKAGE-0403`](SIFR-PACKAGE-0403.md) | Error | Cargo include/exclude rules omit required Sifr files. |
-| [`SIFR-PACKAGE-0404`](SIFR-PACKAGE-0404.md) | Error | Cargo package archive contains an unsafe path. |
-| [`SIFR-PACKAGE-0501`](SIFR-PACKAGE-0501.md) | Error | Pure Sifr Rust marker contains implementation. |
-| [`SIFR-PACKAGE-0601`](SIFR-PACKAGE-0601.md) | Error | Package selector is ambiguous or invalid. |
-| [`SIFR-PACKAGE-0602`](SIFR-PACKAGE-0602.md) | Error | Workspace selection contains duplicate import roots. |
-| [`SIFR-PACKAGE-0603`](SIFR-PACKAGE-0603.md) | Error | Changed file could not be mapped to a package. |
-| [`SIFR-PACKAGE-0604`](SIFR-PACKAGE-0604.md) | Error | Outdated query cannot inspect this Cargo source. |
-| [`SIFR-PACKAGE-0605`](SIFR-PACKAGE-0605.md) | Error | Runnable package target or script selection is missing or ambiguous. |
-| [`SIFR-PACKAGE-0606`](SIFR-PACKAGE-0606.md) | Error | Discovered app target name is invalid. |
-| [`SIFR-PACKAGE-0607`](SIFR-PACKAGE-0607.md) | Error | Selected workspace members use the same Sifr package name. |
-| [`SIFR-PACKAGE-0701`](SIFR-PACKAGE-0701.md) | Error | Production sifr.toml uses manifest-level exports. |
-| [`SIFR-PACKAGE-0703`](SIFR-PACKAGE-0703.md) | Error | Sifr-managed Cargo projection manifest pointer drift. |
-| [`SIFR-PACKAGE-0704`](SIFR-PACKAGE-0704.md) | Error | Sifr-managed Cargo projection include rules omit required package files. |
-| [`SIFR-PACKAGE-0709`](SIFR-PACKAGE-0709.md) | Error | Pure package marker is missing from Sifr-managed projection. |
-| [`SIFR-PACKAGE-0710`](SIFR-PACKAGE-0710.md) | Error | Explicit Sifr file target is outside the package source root. |
-| [`SIFR-PACKAGE-0711`](SIFR-PACKAGE-0711.md) | Error | Production sifr.toml uses manifest binary target tables. |
-| [`SIFR-PACKAGE-0713`](SIFR-PACKAGE-0713.md) | Error | Public API symbol is exported more than once. |
-| [`SIFR-PACKAGE-0714`](SIFR-PACKAGE-0714.md) | Error | Package script expansion attempted to invoke another script. |
-| [`SIFR-PYENV-0001`](SIFR-PYENV-0001.md) | Error | Python environment configuration is malformed. |
-| [`SIFR-PYENV-0002`](SIFR-PYENV-0002.md) | Error | Package graph selects more than one Python virtual environment. |
-| [`SIFR-PYENV-0003`](SIFR-PYENV-0003.md) | Error | A package graph requires Python but no root environment is selected. |
-| [`SIFR-PYENV-0004`](SIFR-PYENV-0004.md) | Error | Selected Python interpreter probe failed or returned invalid JSON. |
-| [`SIFR-PYENV-0005`](SIFR-PYENV-0005.md) | Error | Selected Python interpreter is not supported CPython. |
-| [`SIFR-PYENV-0006`](SIFR-PYENV-0006.md) | Error | Selected interpreter does not belong to the configured virtual environment. |
-| [`SIFR-PYENV-0007`](SIFR-PYENV-0007.md) | Error | Selected Python environment has no site-packages path. |
-| [`SIFR-PYENV-0008`](SIFR-PYENV-0008.md) | Error | Declared Python import root is missing from the selected environment. |
-| [`SIFR-PYENV-0009`](SIFR-PYENV-0009.md) | Error | Trusted native Python import root failed to load. |
-| [`SIFR-PYENV-0010`](SIFR-PYENV-0010.md) | Error | Free-threaded CPython is not supported for embedded interop. |
-| [`SIFR-PYENV-0011`](SIFR-PYENV-0011.md) | Error | Configured Python project or lockfile is missing or stale. |
-| [`SIFR-PYTRUST-0001`](SIFR-PYTRUST-0001.md) | Error | Dependency package declares a wildcard Python trust root. |
-| [`SIFR-PYTRUST-0003`](SIFR-PYTRUST-0003.md) | Error | Native Python import root is trusted but not required. |
-| [`SIFR-PYTRUST-0004`](SIFR-PYTRUST-0004.md) | Error | Dynamic Python import requires an explicit trust annotation. |
-| [`SIFR-PYTRUST-0005`](SIFR-PYTRUST-0005.md) | Error | Required Python import root is not authorized by the root application. |
-| [`SIFR-PYIMP-0001`](SIFR-PYIMP-0001.md) | Error | A declaration-first Python target path is invalid or unresolved. |
-| [`SIFR-PYIMP-0002`](SIFR-PYIMP-0002.md) | Error | A package-local Python bridge source or import inventory is invalid. |
-| [`SIFR-PYIMP-0003`](SIFR-PYIMP-0003.md) | Error | The reserved embedded Python bridge namespace was already populated. |
-| [`SIFR-PYCALL-0001`](SIFR-PYCALL-0001.md) | Error | A Python declaration or call shape is unsupported or incompatible. |
-| [`SIFR-PYCONV-0001`](SIFR-PYCONV-0001.md) | Error | A Sifr type has no active declaration-first Python conversion. |
-| [`SIFR-PYRES-0002`](SIFR-PYRES-0002.md) | Error | A Python resource declaration uses an unsupported ownership or target shape. |
-| [`SIFR-PYCTX-0001`](SIFR-PYCTX-0001.md) | Error | A Python context-manager entry, exit, or entered-value declaration is invalid. |
-| [`SIFR-PYCB-0001`](SIFR-PYCB-0001.md) | Error | A Python callback lifetime, dispatch, concurrency, or owner declaration is invalid. |
-| [`SIFR-PYZC-0001`](SIFR-PYZC-0001.md) | Error | An advanced-data ownership, buffer layout, or hidden-copy declaration is invalid. |
-| [`SIFR-RUST-CONFIG-0001`](SIFR-RUST-CONFIG-0001.md) | Error | Rust interop decorator syntax is malformed. |
-| [`SIFR-RUST-RESOLVE-0001`](SIFR-RUST-RESOLVE-0001.md) | Error | Rust interop target root cannot be resolved. |
-| [`SIFR-RUST-TRUST-0001`](SIFR-RUST-TRUST-0001.md) | Error | Rust interop trust declaration is missing. |
-| [`SIFR-RUST-TYPE-0001`](SIFR-RUST-TYPE-0001.md) | Error | Rust bridge probe failed type-contract validation. |
-| [`SIFR-RUST-HANDLE-0001`](SIFR-RUST-HANDLE-0001.md) | Error | Rust opaque handle contract is invalid. |
-| [`SIFR-RUST-ASYNC-0001`](SIFR-RUST-ASYNC-0001.md) | Error | Rust async interop contract is invalid. |
-| [`SIFR-RUST-ZC-0001`](SIFR-RUST-ZC-0001.md) | Error | Rust zero-copy or borrowed-view contract is invalid. |
-| [`SIFR-RUST-CB-0001`](SIFR-RUST-CB-0001.md) | Error | Rust callback lifetime, threading, or policy contract is invalid. |
-| [`SIFR-RUST-PANIC-0001`](SIFR-RUST-PANIC-0001.md) | Error | Rust panic boundary contract is invalid. |
-| [`SIFR-RUST-CARGO-0001`](SIFR-RUST-CARGO-0001.md) | Error | Rust interop Cargo metadata is unavailable or inconsistent. |
+| [`SIFR-PARSE-0002`](SIFR-PARSE-0002.mdx) | Error | Expected token or generic parser recovery failure. |
+| [`SIFR-PARSE-0003`](SIFR-PARSE-0003.mdx) | Error | Lexical or interpolated string parser failure. |
+| [`SIFR-PARSE-0004`](SIFR-PARSE-0004.mdx) | Error | Indentation or same-line statement layout parser failure. |
+| [`SIFR-PARSE-0005`](SIFR-PARSE-0005.mdx) | Error | Invalid assignment, delete, starred, or named-expression target syntax. |
+| [`SIFR-PARSE-0006`](SIFR-PARSE-0006.mdx) | Error | Invalid call argument order or unpacking syntax. |
+| [`SIFR-PARSE-0007`](SIFR-PARSE-0007.mdx) | Error | Empty or malformed declaration list syntax. |
+| [`SIFR-PARSE-0008`](SIFR-PARSE-0008.mdx) | Error | Invalid match-pattern syntax. |
+| [`SIFR-PARSE-0009`](SIFR-PARSE-0009.mdx) | Error | Unsupported parser syntax or interactive-only syntax. |
+| [`SIFR-NAME-0001`](SIFR-NAME-0001.mdx) | Error | Undefined variable. |
+| [`SIFR-NAME-0002`](SIFR-NAME-0002.mdx) | Error | Undefined function or callable. |
+| [`SIFR-NAME-0003`](SIFR-NAME-0003.mdx) | Error | Unknown type or generic type name. |
+| [`SIFR-NAME-0004`](SIFR-NAME-0004.mdx) | Error | Missing module or class member. |
+| [`SIFR-NAME-0005`](SIFR-NAME-0005.mdx) | Error | Duplicate function definition in a module. |
+| [`SIFR-NAME-0006`](SIFR-NAME-0006.mdx) | Error | Variable declaration lacks a required initializer. |
+| [`SIFR-IMPORT-0001`](SIFR-IMPORT-0001.mdx) | Error | Forbidden private sysroot declaration import. |
+| [`SIFR-IMPORT-0002`](SIFR-IMPORT-0002.mdx) | Error | Unknown source module import target. |
+| [`SIFR-IMPORT-0003`](SIFR-IMPORT-0003.mdx) | Error | Unsupported import statement form. |
+| [`SIFR-IMPORT-0004`](SIFR-IMPORT-0004.mdx) | Error | Private module member import. |
+| [`SIFR-IMPORT-0005`](SIFR-IMPORT-0005.mdx) | Error | Ambiguous source module import target. |
+| [`SIFR-IMPORT-0006`](SIFR-IMPORT-0006.mdx) | Error | Source module namespace and file import collision. |
+| [`SIFR-IMPORT-0007`](SIFR-IMPORT-0007.mdx) | Error | Circular source module import graph. |
+| [`SIFR-IMPORT-0008`](SIFR-IMPORT-0008.mdx) | Error | Bare CPython-style stdlib import attempt. |
+| [`SIFR-IMPORT-0009`](SIFR-IMPORT-0009.mdx) | Error | Unsupported legacy Sifr stdlib module import. |
+| [`SIFR-TYPE-0002`](SIFR-TYPE-0002.mdx) | Error | Expected and actual types are incompatible. |
+| [`SIFR-TYPE-0003`](SIFR-TYPE-0003.mdx) | Error | If-expression or conditional branches have incompatible types. |
+| [`SIFR-TYPE-0004`](SIFR-TYPE-0004.mdx) | Error | A required type annotation is missing. |
+| [`SIFR-TYPE-0005`](SIFR-TYPE-0005.mdx) | Error | Unsupported operator or operand types. |
+| [`SIFR-TYPE-0006`](SIFR-TYPE-0006.mdx) | Error | Int and bigint are mixed without an explicit conversion. |
+| [`SIFR-TYPE-0007`](SIFR-TYPE-0007.mdx) | Error | Invalid type annotation shape. |
+| [`SIFR-TYPE-0008`](SIFR-TYPE-0008.mdx) | Error | Container literal elements, keys, or values have conflicting types. |
+| [`SIFR-TYPE-0009`](SIFR-TYPE-0009.mdx) | Error | Tuple or list unpacking shape mismatch. |
+| [`SIFR-TYPE-0010`](SIFR-TYPE-0010.mdx) | Error | TypeVar constraints are not satisfied by the inferred concrete type. |
+| [`SIFR-TYPE-0011`](SIFR-TYPE-0011.mdx) | Error | Unsupported default argument expression. |
+| [`SIFR-TYPE-0012`](SIFR-TYPE-0012.mdx) | Error | Unsupported expression form. |
+| [`SIFR-TYPE-0901`](SIFR-TYPE-0901.mdx) | Warning | Integer arithmetic may overflow at runtime. |
+| [`SIFR-TYPE-0902`](SIFR-TYPE-0902.mdx) | Note | Reveal the inferred static type of an expression. |
+| [`SIFR-ASYNC-0001`](SIFR-ASYNC-0001.mdx) | Error | Async function body has no real suspension effect. |
+| [`SIFR-ASYNC-0002`](SIFR-ASYNC-0002.mdx) | Error | Awaited same-task coroutine has no real suspension effect. |
+| [`SIFR-ASYNC-0003`](SIFR-ASYNC-0003.mdx) | Error | Blocking I/O function called directly from async context. |
+| [`SIFR-ASYNC-0004`](SIFR-ASYNC-0004.mdx) | Error | CPU-heavy function called directly from async context. |
+| [`SIFR-ASYNC-0005`](SIFR-ASYNC-0005.mdx) | Error | Blocking offload target is not classified as blocking I/O or CPU-heavy work. |
+| [`SIFR-ASYNC-0006`](SIFR-ASYNC-0006.mdx) | Error | Synchronous workload annotation applied to async function. |
+| [`SIFR-ASYNC-0007`](SIFR-ASYNC-0007.mdx) | Error | Shell execution function called directly from async context. |
+| [`SIFR-DECIMAL-0001`](SIFR-DECIMAL-0001.mdx) | Error | Invalid Decimal exact literal. |
+| [`SIFR-DECIMAL-0002`](SIFR-DECIMAL-0002.mdx) | Error | Invalid BigDecimal exact literal. |
+| [`SIFR-DECIMAL-0003`](SIFR-DECIMAL-0003.mdx) | Error | Float mixed with a decimal numeric type. |
+| [`SIFR-DECIMAL-0004`](SIFR-DECIMAL-0004.mdx) | Error | Decimal and BigDecimal mixed in one operation. |
+| [`SIFR-DECIMAL-0005`](SIFR-DECIMAL-0005.mdx) | Error | Decimal float construction or conversion is forbidden. |
+| [`SIFR-DECIMAL-0006`](SIFR-DECIMAL-0006.mdx) | Error | BigDecimal float construction or conversion is forbidden. |
+| [`SIFR-DECIMAL-0007`](SIFR-DECIMAL-0007.mdx) | Error | Decimal scale argument is invalid. |
+| [`SIFR-DECIMAL-0008`](SIFR-DECIMAL-0008.mdx) | Error | BigDecimal scale or context argument is invalid. |
+| [`SIFR-INT-0001`](SIFR-INT-0001.mdx) | Error | Fixed-width integer literal or const expression is out of range. |
+| [`SIFR-INT-0003`](SIFR-INT-0003.mdx) | Error | Reserved integer width name used before support lands. |
+| [`SIFR-INT-0004`](SIFR-INT-0004.mdx) | Error | Compile-time integer evaluation budget exceeded. |
+| [`SIFR-INT-0005`](SIFR-INT-0005.mdx) | Error | Integer division, modulo, or exponentiation requires handling a typed failure. |
+| [`SIFR-INT-0006`](SIFR-INT-0006.mdx) | Error | Exact integer to float conversion requires handling precision loss. |
+| [`SIFR-INT-0007`](SIFR-INT-0007.mdx) | Error | Bool and integer comparison requires explicit conversion. |
+| [`SIFR-INT-0011`](SIFR-INT-0011.mdx) | Warning | Temporary bigint transition alias used. |
+| [`SIFR-CALL-0001`](SIFR-CALL-0001.mdx) | Error | Wrong positional argument count. |
+| [`SIFR-CALL-0002`](SIFR-CALL-0002.mdx) | Error | Unexpected keyword argument. |
+| [`SIFR-CALL-0003`](SIFR-CALL-0003.mdx) | Error | Duplicate argument from positional and keyword overlap. |
+| [`SIFR-CALL-0004`](SIFR-CALL-0004.mdx) | Error | Missing required argument. |
+| [`SIFR-CALL-0005`](SIFR-CALL-0005.mdx) | Error | Callable arity failure or expression is not callable. |
+| [`SIFR-OWN-0001`](SIFR-OWN-0001.mdx) | Error | Use after move. |
+| [`SIFR-OWN-0002`](SIFR-OWN-0002.mdx) | Error | Same-call borrow conflict. |
+| [`SIFR-OWN-0003`](SIFR-OWN-0003.mdx) | Error | Borrowed parameter escapes by return or store. |
+| [`SIFR-OWN-0004`](SIFR-OWN-0004.mdx) | Error | Moved value is reused across loop iterations. |
+| [`SIFR-OWN-0005`](SIFR-OWN-0005.mdx) | Error | Immutable parameter is mutated. |
+| [`SIFR-OWN-0006`](SIFR-OWN-0006.mdx) | Error | Immutable parameter is reassigned. |
+| [`SIFR-OWN-0007`](SIFR-OWN-0007.mdx) | Error | Immutable bytes value is mutated. |
+| [`SIFR-OWN-0008`](SIFR-OWN-0008.mdx) | Error | Immutable bytes value is mutated by augmented assignment. |
+| [`SIFR-OWN-0009`](SIFR-OWN-0009.mdx) | Error | Mutable borrow remains live across an await point. |
+| [`SIFR-OWN-0010`](SIFR-OWN-0010.mdx) | Error | Non-sendable value crosses a spawned task boundary. |
+| [`SIFR-OWN-0011`](SIFR-OWN-0011.mdx) | Error | Non-sendable value is sent through a channel. |
+| [`SIFR-OWN-0012`](SIFR-OWN-0012.mdx) | Error | Non-share-safe value is wrapped in sync.Shared. |
+| [`SIFR-OWN-0013`](SIFR-OWN-0013.mdx) | Error | Non-IPC-serializable value is used as a typed IPC payload. |
+| [`SIFR-FLOW-0001`](SIFR-FLOW-0001.mdx) | Error | Break outside a loop. |
+| [`SIFR-FLOW-0002`](SIFR-FLOW-0002.mdx) | Error | Continue outside a loop. |
+| [`SIFR-FLOW-0003`](SIFR-FLOW-0003.mdx) | Error | Invalid nonlocal or nested-function flow. |
+| [`SIFR-FLOW-0004`](SIFR-FLOW-0004.mdx) | Error | Function may finish without returning a required value. |
+| [`SIFR-FLOW-0005`](SIFR-FLOW-0005.mdx) | Error | Control-flow condition has an unsupported type. |
+| [`SIFR-FLOW-0006`](SIFR-FLOW-0006.mdx) | Error | Statement form is unsupported by HIR lowering. |
+| [`SIFR-FLOW-0007`](SIFR-FLOW-0007.mdx) | Error | Assignment target form is unsupported by HIR lowering. |
+| [`SIFR-FLOW-0008`](SIFR-FLOW-0008.mdx) | Error | For-loop iteration form or source is invalid. |
+| [`SIFR-FLOW-0901`](SIFR-FLOW-0901.mdx) | Warning | Unreachable statement ignored during lowering. |
+| [`SIFR-MATCH-0001`](SIFR-MATCH-0001.mdx) | Error | Non-exhaustive match. |
+| [`SIFR-MATCH-0002`](SIFR-MATCH-0002.mdx) | Error | Match guard must be bool. |
+| [`SIFR-MATCH-0003`](SIFR-MATCH-0003.mdx) | Error | Invalid class pattern field. |
+| [`SIFR-MATCH-0004`](SIFR-MATCH-0004.mdx) | Error | Invalid or unsupported match pattern form. |
+| [`SIFR-PROTO-0001`](SIFR-PROTO-0001.mdx) | Error | Protocol bound or conformance failure. |
+| [`SIFR-PROTO-0002`](SIFR-PROTO-0002.mdx) | Error | Invalid iterator or reversible protocol signature. |
+| [`SIFR-PROTO-0003`](SIFR-PROTO-0003.mdx) | Error | Context-manager protocol is missing. |
+| [`SIFR-PROTO-0004`](SIFR-PROTO-0004.mdx) | Error | Hashable or comparable protocol is required. |
+| [`SIFR-CLASS-0001`](SIFR-CLASS-0001.mdx) | Error | Class fields require an initializer or super initializer. |
+| [`SIFR-CLASS-0002`](SIFR-CLASS-0002.mdx) | Error | Required field declared after a defaulted field. |
+| [`SIFR-CLASS-0003`](SIFR-CLASS-0003.mdx) | Error | Duplicate enum or class value, or invalid variant. |
+| [`SIFR-CLASS-0004`](SIFR-CLASS-0004.mdx) | Error | Missing class field. |
+| [`SIFR-CLASS-0005`](SIFR-CLASS-0005.mdx) | Error | Invalid class base. |
+| [`SIFR-CLASS-0006`](SIFR-CLASS-0006.mdx) | Error | Unsupported class declaration. |
+| [`SIFR-RESULT-0001`](SIFR-RESULT-0001.mdx) | Error | Unused Result value. |
+| [`SIFR-RESULT-0002`](SIFR-RESULT-0002.mdx) | Error | Invalid Result error type. |
+| [`SIFR-RESULT-0003`](SIFR-RESULT-0003.mdx) | Error | Invalid raise expression. |
+| [`SIFR-RESULT-0004`](SIFR-RESULT-0004.mdx) | Error | Except arm references an unknown error type. |
+| [`SIFR-RESULT-0005`](SIFR-RESULT-0005.mdx) | Error | Try body error types are not fully covered by except arms. |
+| [`SIFR-RESULT-0006`](SIFR-RESULT-0006.mdx) | Error | Except arm type expression has an unsupported form. |
+| [`SIFR-STDLIB-0001`](SIFR-STDLIB-0001.mdx) | Error | Unsupported standard-library constructor, method, or surface. |
+| [`SIFR-STDLIB-0003`](SIFR-STDLIB-0003.mdx) | Error | Embedded standard-library bootstrap failure. |
+| [`SIFR-STDLIB-0004`](SIFR-STDLIB-0004.mdx) | Error | Standard-library cache build or reuse failure. |
+| [`SIFR-IO-0801`](SIFR-IO-0801.mdx) | Error | Text-mode open requires an explicit encoding. |
+| [`SIFR-IO-0802`](SIFR-IO-0802.mdx) | Error | Open mode must be statically known. |
+| [`SIFR-ENCODING-0803`](SIFR-ENCODING-0803.mdx) | Error | Encoding error handler must be statically known. |
+| [`SIFR-WORKSPACE-0001`](SIFR-WORKSPACE-0001.mdx) | Error | Malformed workspace manifest. |
+| [`SIFR-WORKSPACE-0002`](SIFR-WORKSPACE-0002.mdx) | Error | Workspace source root escapes the workspace root. |
+| [`SIFR-WORKSPACE-0003`](SIFR-WORKSPACE-0003.mdx) | Error | Workspace source root is not a directory. |
+| [`SIFR-WORKSPACE-0004`](SIFR-WORKSPACE-0004.mdx) | Error | Workspace source root entry has an invalid shape or path. |
+| [`SIFR-WORKSPACE-0101`](SIFR-WORKSPACE-0101.mdx) | Error | Legacy workspace import target could not be resolved; source imports use [`SIFR-IMPORT-0002`](SIFR-IMPORT-0002.mdx). |
+| [`SIFR-WORKSPACE-0102`](SIFR-WORKSPACE-0102.mdx) | Error | Legacy workspace import target is ambiguous; source imports use [`SIFR-IMPORT-0005`](SIFR-IMPORT-0005.mdx). |
+| [`SIFR-WORKSPACE-0103`](SIFR-WORKSPACE-0103.mdx) | Error | Legacy workspace namespace package collision; source imports use [`SIFR-IMPORT-0006`](SIFR-IMPORT-0006.mdx). |
+| [`SIFR-WORKSPACE-0104`](SIFR-WORKSPACE-0104.mdx) | Error | Legacy workspace import graph cycle; source imports use [`SIFR-IMPORT-0007`](SIFR-IMPORT-0007.mdx). |
+| [`SIFR-BUILD-0002`](SIFR-BUILD-0002.mdx) | Error | Build file materialization failed. |
+| [`SIFR-BUILD-0003`](SIFR-BUILD-0003.mdx) | Error | Temporary build workspace creation failed. |
+| [`SIFR-BUILD-0004`](SIFR-BUILD-0004.mdx) | Error | Cargo manifest generation failed. |
+| [`SIFR-BUILD-0005`](SIFR-BUILD-0005.mdx) | Error | Rustc or Cargo execution failed. |
+| [`SIFR-BUILD-0006`](SIFR-BUILD-0006.mdx) | Error | Expected build artifact was not produced. |
+| [`SIFR-BUILD-0901`](SIFR-BUILD-0901.mdx) | Error | Standalone install receipt is missing or outside the self-update install rules. |
+| [`SIFR-INTERNAL-0001`](SIFR-INTERNAL-0001.mdx) | Error | Unclassified compiler panic after a panic boundary. |
+| [`SIFR-INTERNAL-0002`](SIFR-INTERNAL-0002.mdx) | Note | Structured recovery-cap omission summary. |
+| [`SIFR-FMT-0001`](SIFR-FMT-0001.mdx) | Error | Source formatting drift detected by sifr fmt --check. |
+| [`SIFR-LINT-0001`](SIFR-LINT-0001.mdx) | Warning | Suppression references an unknown policy rule id. |
+| [`SIFR-LINT-0002`](SIFR-LINT-0002.mdx) | Warning | Suppression did not suppress any diagnostic. |
+| [`SIFR-LINT-0003`](SIFR-LINT-0003.mdx) | Warning | Suppression must list explicit Sifr policy rule ids. |
+| [`SIFR-LINT-0004`](SIFR-LINT-0004.mdx) | Warning | Line ends with trailing horizontal whitespace. |
+| [`SIFR-LINT-0005`](SIFR-LINT-0005.mdx) | Warning | Comment contains a tracked TODO or FIXME marker. |
+| [`SIFR-LINT-0006`](SIFR-LINT-0006.mdx) | Warning | Call passes a boolean literal positionally. |
+| [`SIFR-LINT-0007`](SIFR-LINT-0007.mdx) | Warning | Function has more parameters than the policy limit. |
+| [`SIFR-LINT-0008`](SIFR-LINT-0008.mdx) | Warning | Import duplicates a module/name pair already imported in the same source file. |
+| [`SIFR-PACKAGE-0001`](SIFR-PACKAGE-0001.mdx) | Error | Missing or invalid Cargo Sifr discovery metadata. |
+| [`SIFR-PACKAGE-0002`](SIFR-PACKAGE-0002.mdx) | Error | Missing or invalid sifr.toml package manifest. |
+| [`SIFR-PACKAGE-0003`](SIFR-PACKAGE-0003.mdx) | Error | Unsupported Sifr compiler metadata appears in Cargo metadata. |
+| [`SIFR-PACKAGE-0103`](SIFR-PACKAGE-0103.mdx) | Error | Cargo metadata parsing or normalization failed. |
+| [`SIFR-PACKAGE-0101`](SIFR-PACKAGE-0101.mdx) | Error | Cargo command invocation failed; Sifr reports the redacted Cargo excerpt and safe Sifr-owned recovery context. |
+| [`SIFR-PACKAGE-0102`](SIFR-PACKAGE-0102.mdx) | Error | A selected Cargo package is Rust-only. |
+| [`SIFR-PACKAGE-0104`](SIFR-PACKAGE-0104.mdx) | Error | Package source is unavailable in offline or frozen mode. |
+| [`SIFR-PACKAGE-0106`](SIFR-PACKAGE-0106.mdx) | Error | Rust-only package depends directly on a Sifr source package. |
+| [`SIFR-PACKAGE-0201`](SIFR-PACKAGE-0201.mdx) | Error | Direct package import root resolves to multiple package instances. |
+| [`SIFR-PACKAGE-0202`](SIFR-PACKAGE-0202.mdx) | Error | Package imports a module outside its direct dependency scope. |
+| [`SIFR-PACKAGE-0203`](SIFR-PACKAGE-0203.mdx) | Error | Package imports a private module from another package. |
+| [`SIFR-PACKAGE-0204`](SIFR-PACKAGE-0204.mdx) | Error | Type identity crosses resolved package instances. |
+| [`SIFR-PACKAGE-0301`](SIFR-PACKAGE-0301.mdx) | Error | Backend Rust crate is not allowed by the Sifr trust policy. |
+| [`SIFR-PACKAGE-0305`](SIFR-PACKAGE-0305.mdx) | Error | Trust policy names a backend crate that is not a direct dependency. |
+| [`SIFR-PACKAGE-0401`](SIFR-PACKAGE-0401.mdx) | Error | Cargo package archive is missing required Sifr source. |
+| [`SIFR-PACKAGE-0402`](SIFR-PACKAGE-0402.mdx) | Error | Package publish or archive validation failed. |
+| [`SIFR-PACKAGE-0403`](SIFR-PACKAGE-0403.mdx) | Error | Cargo include/exclude rules omit required Sifr files. |
+| [`SIFR-PACKAGE-0404`](SIFR-PACKAGE-0404.mdx) | Error | Cargo package archive contains an unsafe path. |
+| [`SIFR-PACKAGE-0501`](SIFR-PACKAGE-0501.mdx) | Error | Pure Sifr Rust marker contains implementation. |
+| [`SIFR-PACKAGE-0601`](SIFR-PACKAGE-0601.mdx) | Error | Package selector is ambiguous or invalid. |
+| [`SIFR-PACKAGE-0602`](SIFR-PACKAGE-0602.mdx) | Error | Workspace selection contains duplicate import roots. |
+| [`SIFR-PACKAGE-0603`](SIFR-PACKAGE-0603.mdx) | Error | Changed file could not be mapped to a package. |
+| [`SIFR-PACKAGE-0604`](SIFR-PACKAGE-0604.mdx) | Error | Outdated query cannot inspect this Cargo source. |
+| [`SIFR-PACKAGE-0605`](SIFR-PACKAGE-0605.mdx) | Error | Runnable package target or script selection is missing or ambiguous. |
+| [`SIFR-PACKAGE-0606`](SIFR-PACKAGE-0606.mdx) | Error | Discovered app target name is invalid. |
+| [`SIFR-PACKAGE-0607`](SIFR-PACKAGE-0607.mdx) | Error | Selected workspace members use the same Sifr package name. |
+| [`SIFR-PACKAGE-0701`](SIFR-PACKAGE-0701.mdx) | Error | Production sifr.toml uses manifest-level exports. |
+| [`SIFR-PACKAGE-0703`](SIFR-PACKAGE-0703.mdx) | Error | Sifr-managed Cargo projection manifest pointer drift. |
+| [`SIFR-PACKAGE-0704`](SIFR-PACKAGE-0704.mdx) | Error | Sifr-managed Cargo projection include rules omit required package files. |
+| [`SIFR-PACKAGE-0709`](SIFR-PACKAGE-0709.mdx) | Error | Pure package marker is missing from Sifr-managed projection. |
+| [`SIFR-PACKAGE-0710`](SIFR-PACKAGE-0710.mdx) | Error | Explicit Sifr file target is outside the package source root. |
+| [`SIFR-PACKAGE-0711`](SIFR-PACKAGE-0711.mdx) | Error | Production sifr.toml uses manifest binary target tables. |
+| [`SIFR-PACKAGE-0713`](SIFR-PACKAGE-0713.mdx) | Error | Public API symbol is exported more than once. |
+| [`SIFR-PACKAGE-0714`](SIFR-PACKAGE-0714.mdx) | Error | Package script expansion attempted to invoke another script. |
+| [`SIFR-PYENV-0001`](SIFR-PYENV-0001.mdx) | Error | Python environment configuration is malformed. |
+| [`SIFR-PYENV-0002`](SIFR-PYENV-0002.mdx) | Error | Package graph selects more than one Python virtual environment. |
+| [`SIFR-PYENV-0003`](SIFR-PYENV-0003.mdx) | Error | A package graph requires Python but no root environment is selected. |
+| [`SIFR-PYENV-0004`](SIFR-PYENV-0004.mdx) | Error | Selected Python interpreter probe failed or returned invalid JSON. |
+| [`SIFR-PYENV-0005`](SIFR-PYENV-0005.mdx) | Error | Selected Python interpreter is not supported CPython. |
+| [`SIFR-PYENV-0006`](SIFR-PYENV-0006.mdx) | Error | Selected interpreter does not belong to the configured virtual environment. |
+| [`SIFR-PYENV-0007`](SIFR-PYENV-0007.mdx) | Error | Selected Python environment has no site-packages path. |
+| [`SIFR-PYENV-0008`](SIFR-PYENV-0008.mdx) | Error | Declared Python import root is missing from the selected environment. |
+| [`SIFR-PYENV-0009`](SIFR-PYENV-0009.mdx) | Error | Trusted native Python import root failed to load. |
+| [`SIFR-PYENV-0010`](SIFR-PYENV-0010.mdx) | Error | Free-threaded CPython is not supported for embedded interop. |
+| [`SIFR-PYENV-0011`](SIFR-PYENV-0011.mdx) | Error | Configured Python project or lockfile is missing or stale. |
+| [`SIFR-PYTRUST-0001`](SIFR-PYTRUST-0001.mdx) | Error | Dependency package declares a wildcard Python trust root. |
+| [`SIFR-PYTRUST-0003`](SIFR-PYTRUST-0003.mdx) | Error | Native Python import root is trusted but not required. |
+| [`SIFR-PYTRUST-0004`](SIFR-PYTRUST-0004.mdx) | Error | Dynamic Python import requires an explicit trust annotation. |
+| [`SIFR-PYTRUST-0005`](SIFR-PYTRUST-0005.mdx) | Error | Required Python import root is not authorized by the root application. |
+| [`SIFR-PYIMP-0001`](SIFR-PYIMP-0001.mdx) | Error | A declaration-first Python target path is invalid or unresolved. |
+| [`SIFR-PYIMP-0002`](SIFR-PYIMP-0002.mdx) | Error | A package-local Python bridge source or import inventory is invalid. |
+| [`SIFR-PYIMP-0003`](SIFR-PYIMP-0003.mdx) | Error | The reserved embedded Python bridge namespace was already populated. |
+| [`SIFR-PYCALL-0001`](SIFR-PYCALL-0001.mdx) | Error | A Python declaration or call shape is unsupported or incompatible. |
+| [`SIFR-PYCONV-0001`](SIFR-PYCONV-0001.mdx) | Error | A Sifr type has no active declaration-first Python conversion. |
+| [`SIFR-PYRES-0002`](SIFR-PYRES-0002.mdx) | Error | A Python resource declaration uses an unsupported ownership or target shape. |
+| [`SIFR-PYCTX-0001`](SIFR-PYCTX-0001.mdx) | Error | A Python context-manager entry, exit, or entered-value declaration is invalid. |
+| [`SIFR-PYCB-0001`](SIFR-PYCB-0001.mdx) | Error | A Python callback lifetime, dispatch, concurrency, or owner declaration is invalid. |
+| [`SIFR-PYZC-0001`](SIFR-PYZC-0001.mdx) | Error | An advanced-data ownership, buffer layout, or hidden-copy declaration is invalid. |
+| [`SIFR-RUST-CONFIG-0001`](SIFR-RUST-CONFIG-0001.mdx) | Error | Rust interop decorator syntax is malformed. |
+| [`SIFR-RUST-RESOLVE-0001`](SIFR-RUST-RESOLVE-0001.mdx) | Error | Rust interop target root cannot be resolved. |
+| [`SIFR-RUST-TRUST-0001`](SIFR-RUST-TRUST-0001.mdx) | Error | Rust interop trust declaration is missing. |
+| [`SIFR-RUST-TYPE-0001`](SIFR-RUST-TYPE-0001.mdx) | Error | Rust bridge probe failed type-contract validation. |
+| [`SIFR-RUST-HANDLE-0001`](SIFR-RUST-HANDLE-0001.mdx) | Error | Rust opaque handle contract is invalid. |
+| [`SIFR-RUST-ASYNC-0001`](SIFR-RUST-ASYNC-0001.mdx) | Error | Rust async interop contract is invalid. |
+| [`SIFR-RUST-ZC-0001`](SIFR-RUST-ZC-0001.mdx) | Error | Rust zero-copy or borrowed-view contract is invalid. |
+| [`SIFR-RUST-CB-0001`](SIFR-RUST-CB-0001.mdx) | Error | Rust callback lifetime, threading, or policy contract is invalid. |
+| [`SIFR-RUST-PANIC-0001`](SIFR-RUST-PANIC-0001.mdx) | Error | Rust panic boundary contract is invalid. |
+| [`SIFR-RUST-CARGO-0001`](SIFR-RUST-CARGO-0001.mdx) | Error | Rust interop Cargo metadata is unavailable or inconsistent. |
 
 ## Reserved Codes
 
@@ -283,7 +283,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PYZC-0000`](diagnostic-codes.md) | `PYZC` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-PYCB-0000`](diagnostic-codes.md) | `PYCB` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-PYTRUST-0000`](diagnostic-codes.md) | `PYTRUST` | Reserved family base; not emitted as a diagnostic. |
-| [`SIFR-PYTRUST-0002`](diagnostic-codes.md) | `PYTRUST` | Retired: import requirements and root authorization now use [`SIFR-PYTRUST-0005`](SIFR-PYTRUST-0005.md). |
+| [`SIFR-PYTRUST-0002`](diagnostic-codes.md) | `PYTRUST` | Retired: import requirements and root authorization now use [`SIFR-PYTRUST-0005`](SIFR-PYTRUST-0005.mdx). |
 | [`SIFR-RUST-CONFIG-0000`](diagnostic-codes.md) | `RUST-CONFIG` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-RUST-RESOLVE-0000`](diagnostic-codes.md) | `RUST-RESOLVE` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-RUST-TRUST-0000`](diagnostic-codes.md) | `RUST-TRUST` | Reserved family base; not emitted as a diagnostic. |
@@ -317,7 +317,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-STDLIB-0000`](diagnostic-codes.md) | `STDLIB` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-WORKSPACE-0000`](diagnostic-codes.md) | `WORKSPACE` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-PACKAGE-0000`](diagnostic-codes.md) | `PACKAGE` | Reserved family base; not emitted as a diagnostic. |
-| [`SIFR-PACKAGE-0105`](diagnostic-codes.md) | `PACKAGE` | Retired: Cargo credential failures are wrapped by [`SIFR-PACKAGE-0101`](SIFR-PACKAGE-0101.md). |
+| [`SIFR-PACKAGE-0105`](diagnostic-codes.md) | `PACKAGE` | Retired: Cargo credential failures are wrapped by [`SIFR-PACKAGE-0101`](SIFR-PACKAGE-0101.mdx). |
 | [`SIFR-PACKAGE-0302`](diagnostic-codes.md) | `PACKAGE` | Reserved for future backend trust diagnostics. |
 | [`SIFR-PACKAGE-0306`](diagnostic-codes.md) | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |
 | [`SIFR-PACKAGE-0307`](diagnostic-codes.md) | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |

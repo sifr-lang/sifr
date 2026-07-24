@@ -26,7 +26,7 @@ SKIP_PATHS = {
 def active_error_pages() -> set[str]:
     pages: set[str] = set()
     errors_dir = DOCS_ROOT / "errors"
-    for path in errors_dir.glob("SIFR-*.md"):
+    for path in errors_dir.glob("SIFR-*.mdx"):
         pages.add(path.stem)
     return pages
 
