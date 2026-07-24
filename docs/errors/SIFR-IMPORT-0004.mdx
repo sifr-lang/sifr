@@ -24,7 +24,7 @@ from math import sqrt
 
 ## How To Fix It
 
-Use Sifr's explicit module namespace and import concrete symbols with `from sifr.<module> import <name>`.
+Use Sifr's explicit module namespace and import concrete symbols with `from sifr.&lt;module&gt; import &lt;name&gt;`.
 
 ## Fixed Code
 
@@ -41,9 +41,6 @@ from sifr.math import sqrt
 | Severity | Error |
 | Stability | stable |
 | Owner | `sifr_lowering::lower` |
-| Message template | `cannot import private name '{name}' from module '{module}'` |
 | Representative fixture | `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs` |
-| Declared args | `name (message+json)`, `module (message+json)` |
-| Dedupe args | `name`, `module` |
 
 See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

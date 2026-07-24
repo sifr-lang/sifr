@@ -24,7 +24,7 @@ from math import sqrt
 
 ## How To Fix It
 
-Use Sifr's explicit module namespace and import concrete symbols with `from sifr.<module> import <name>`.
+Use Sifr's explicit module namespace and import concrete symbols with `from sifr.&lt;module&gt; import &lt;name&gt;`.
 
 ## Fixed Code
 
@@ -41,9 +41,6 @@ from sifr.math import sqrt
 | Severity | Error |
 | Stability | stable |
 | Owner | `sifr_lowering::lower` |
-| Message template | `unknown import target: '{module}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/import_nonexistent_local.sifr` |
-| Declared args | `module (message+json)` |
-| Dedupe args | `module` |
 
 See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

@@ -50,9 +50,6 @@ user = User("Ada")
 | Severity | Error |
 | Stability | stable |
 | Owner | `sifr_lowering::lower::classes` |
-| Message template | `enum '{enum_name}' has duplicate value {value}: variants '{existing_variant}' and '{duplicate_variant}'` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/enum_duplicate_value.sifr` |
-| Declared args | `enum_name (message+json)`, `value (message+json)`, `existing_variant (message+json)`, `duplicate_variant (message+json)` |
-| Dedupe args | `enum_name`, `value`, `existing_variant`, `duplicate_variant` |
 
 See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.
