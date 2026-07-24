@@ -57,7 +57,7 @@ fn registry_skeleton_is_internally_consistent() {
                     entry.id
                 );
                 assert!(
-                    entry.docs_path == format!("docs/errors/{}.md", entry.id),
+                    entry.docs_path == format!("docs/errors/{}.mdx", entry.id),
                     "active diagnostic {} must use its canonical docs page",
                     entry.id
                 );
@@ -125,7 +125,7 @@ fn active_diagnostic_docs_pages_exist_with_exact_casing() {
         .collect::<BTreeSet<_>>();
 
     for entry in active_registry_entries() {
-        let expected_file = format!("{}.md", entry.id);
+        let expected_file = format!("{}.mdx", entry.id);
         assert!(
             directory_entries.contains(&expected_file),
             "active diagnostic {} is missing exact docs page {}",

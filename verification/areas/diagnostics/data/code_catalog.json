@@ -3,7 +3,7 @@
     {
       "code": "SIFR-ASYNC-0001",
       "constant": "ASYNC_NO_SUSPEND",
-      "docs_link": "docs/errors/SIFR-ASYNC-0001.md",
+      "docs_link": "docs/errors/SIFR-ASYNC-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -19,7 +19,7 @@
     {
       "code": "SIFR-ASYNC-0002",
       "constant": "ASYNC_AWAIT_NO_SUSPEND",
-      "docs_link": "docs/errors/SIFR-ASYNC-0002.md",
+      "docs_link": "docs/errors/SIFR-ASYNC-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -35,7 +35,7 @@
     {
       "code": "SIFR-ASYNC-0003",
       "constant": "ASYNC_DIRECT_BLOCKING_IO_CALL",
-      "docs_link": "docs/errors/SIFR-ASYNC-0003.md",
+      "docs_link": "docs/errors/SIFR-ASYNC-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -51,7 +51,7 @@
     {
       "code": "SIFR-ASYNC-0004",
       "constant": "ASYNC_DIRECT_CPU_HEAVY_CALL",
-      "docs_link": "docs/errors/SIFR-ASYNC-0004.md",
+      "docs_link": "docs/errors/SIFR-ASYNC-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -67,7 +67,7 @@
     {
       "code": "SIFR-ASYNC-0005",
       "constant": "ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET",
-      "docs_link": "docs/errors/SIFR-ASYNC-0005.md",
+      "docs_link": "docs/errors/SIFR-ASYNC-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -83,7 +83,7 @@
     {
       "code": "SIFR-ASYNC-0006",
       "constant": "ASYNC_WORKLOAD_ANNOTATION_ON_ASYNC_DEF",
-      "docs_link": "docs/errors/SIFR-ASYNC-0006.md",
+      "docs_link": "docs/errors/SIFR-ASYNC-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -99,7 +99,7 @@
     {
       "code": "SIFR-ASYNC-0007",
       "constant": "ASYNC_DIRECT_SHELL_EXEC_CALL",
-      "docs_link": "docs/errors/SIFR-ASYNC-0007.md",
+      "docs_link": "docs/errors/SIFR-ASYNC-0007.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -115,7 +115,7 @@
     {
       "code": "SIFR-BUILD-0002",
       "constant": "BUILD_MATERIALIZATION_FAILURE",
-      "docs_link": "docs/errors/SIFR-BUILD-0002.md",
+      "docs_link": "docs/errors/SIFR-BUILD-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -131,7 +131,7 @@
     {
       "code": "SIFR-BUILD-0003",
       "constant": "BUILD_TEMP_WORKSPACE_FAILURE",
-      "docs_link": "docs/errors/SIFR-BUILD-0003.md",
+      "docs_link": "docs/errors/SIFR-BUILD-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -147,7 +147,7 @@
     {
       "code": "SIFR-BUILD-0004",
       "constant": "BUILD_CARGO_MANIFEST_FAILURE",
-      "docs_link": "docs/errors/SIFR-BUILD-0004.md",
+      "docs_link": "docs/errors/SIFR-BUILD-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -163,7 +163,7 @@
     {
       "code": "SIFR-BUILD-0005",
       "constant": "BUILD_RUSTC_OR_CARGO_FAILURE",
-      "docs_link": "docs/errors/SIFR-BUILD-0005.md",
+      "docs_link": "docs/errors/SIFR-BUILD-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -179,7 +179,7 @@
     {
       "code": "SIFR-BUILD-0006",
       "constant": "BUILD_ARTIFACT_MISSING",
-      "docs_link": "docs/errors/SIFR-BUILD-0006.md",
+      "docs_link": "docs/errors/SIFR-BUILD-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -195,7 +195,7 @@
     {
       "code": "SIFR-BUILD-0901",
       "constant": "SELF_UPDATE_UNMANAGED_RECEIPT",
-      "docs_link": "docs/errors/SIFR-BUILD-0901.md",
+      "docs_link": "docs/errors/SIFR-BUILD-0901.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -211,7 +211,7 @@
     {
       "code": "SIFR-CALL-0001",
       "constant": "CALL_WRONG_POSITIONAL_COUNT",
-      "docs_link": "docs/errors/SIFR-CALL-0001.md",
+      "docs_link": "docs/errors/SIFR-CALL-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -227,7 +227,7 @@
     {
       "code": "SIFR-CALL-0002",
       "constant": "CALL_UNEXPECTED_KEYWORD",
-      "docs_link": "docs/errors/SIFR-CALL-0002.md",
+      "docs_link": "docs/errors/SIFR-CALL-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -243,7 +243,7 @@
     {
       "code": "SIFR-CALL-0003",
       "constant": "CALL_DUPLICATE_ARGUMENT",
-      "docs_link": "docs/errors/SIFR-CALL-0003.md",
+      "docs_link": "docs/errors/SIFR-CALL-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -259,7 +259,7 @@
     {
       "code": "SIFR-CALL-0004",
       "constant": "CALL_MISSING_REQUIRED_ARGUMENT",
-      "docs_link": "docs/errors/SIFR-CALL-0004.md",
+      "docs_link": "docs/errors/SIFR-CALL-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -275,7 +275,7 @@
     {
       "code": "SIFR-CALL-0005",
       "constant": "CALL_NOT_CALLABLE_OR_ARITY",
-      "docs_link": "docs/errors/SIFR-CALL-0005.md",
+      "docs_link": "docs/errors/SIFR-CALL-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -291,7 +291,7 @@
     {
       "code": "SIFR-CLASS-0001",
       "constant": "CLASS_MISSING_INITIALIZER",
-      "docs_link": "docs/errors/SIFR-CLASS-0001.md",
+      "docs_link": "docs/errors/SIFR-CLASS-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -307,7 +307,7 @@
     {
       "code": "SIFR-CLASS-0002",
       "constant": "CLASS_REQUIRED_FIELD_AFTER_DEFAULT",
-      "docs_link": "docs/errors/SIFR-CLASS-0002.md",
+      "docs_link": "docs/errors/SIFR-CLASS-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -323,7 +323,7 @@
     {
       "code": "SIFR-CLASS-0003",
       "constant": "CLASS_DUPLICATE_OR_INVALID_VALUE",
-      "docs_link": "docs/errors/SIFR-CLASS-0003.md",
+      "docs_link": "docs/errors/SIFR-CLASS-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -339,7 +339,7 @@
     {
       "code": "SIFR-CLASS-0004",
       "constant": "CLASS_MISSING_MEMBER",
-      "docs_link": "docs/errors/SIFR-CLASS-0004.md",
+      "docs_link": "docs/errors/SIFR-CLASS-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -355,7 +355,7 @@
     {
       "code": "SIFR-CLASS-0005",
       "constant": "CLASS_INVALID_BASE",
-      "docs_link": "docs/errors/SIFR-CLASS-0005.md",
+      "docs_link": "docs/errors/SIFR-CLASS-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -371,7 +371,7 @@
     {
       "code": "SIFR-CLASS-0006",
       "constant": "CLASS_UNSUPPORTED_DECLARATION",
-      "docs_link": "docs/errors/SIFR-CLASS-0006.md",
+      "docs_link": "docs/errors/SIFR-CLASS-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -387,7 +387,7 @@
     {
       "code": "SIFR-DECIMAL-0001",
       "constant": "DECIMAL_INVALID_LITERAL",
-      "docs_link": "docs/errors/SIFR-DECIMAL-0001.md",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -403,7 +403,7 @@
     {
       "code": "SIFR-DECIMAL-0002",
       "constant": "DECIMAL_BIGDECIMAL_INVALID_LITERAL",
-      "docs_link": "docs/errors/SIFR-DECIMAL-0002.md",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -419,7 +419,7 @@
     {
       "code": "SIFR-DECIMAL-0003",
       "constant": "DECIMAL_FLOAT_MIXED",
-      "docs_link": "docs/errors/SIFR-DECIMAL-0003.md",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -435,7 +435,7 @@
     {
       "code": "SIFR-DECIMAL-0004",
       "constant": "DECIMAL_MIXED_WITH_BIGDECIMAL",
-      "docs_link": "docs/errors/SIFR-DECIMAL-0004.md",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -451,7 +451,7 @@
     {
       "code": "SIFR-DECIMAL-0005",
       "constant": "DECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN",
-      "docs_link": "docs/errors/SIFR-DECIMAL-0005.md",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -467,7 +467,7 @@
     {
       "code": "SIFR-DECIMAL-0006",
       "constant": "DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN",
-      "docs_link": "docs/errors/SIFR-DECIMAL-0006.md",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -483,7 +483,7 @@
     {
       "code": "SIFR-DECIMAL-0007",
       "constant": "DECIMAL_SCALE_INVALID",
-      "docs_link": "docs/errors/SIFR-DECIMAL-0007.md",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0007.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -499,7 +499,7 @@
     {
       "code": "SIFR-DECIMAL-0008",
       "constant": "DECIMAL_BIGDECIMAL_SCALE_OR_CONTEXT_INVALID",
-      "docs_link": "docs/errors/SIFR-DECIMAL-0008.md",
+      "docs_link": "docs/errors/SIFR-DECIMAL-0008.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -515,7 +515,7 @@
     {
       "code": "SIFR-ENCODING-0803",
       "constant": "ENCODING_HANDLER_REQUIRES_STATIC_VALUE",
-      "docs_link": "docs/errors/SIFR-ENCODING-0803.md",
+      "docs_link": "docs/errors/SIFR-ENCODING-0803.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -531,7 +531,7 @@
     {
       "code": "SIFR-FLOW-0001",
       "constant": "FLOW_BREAK_OUTSIDE_LOOP",
-      "docs_link": "docs/errors/SIFR-FLOW-0001.md",
+      "docs_link": "docs/errors/SIFR-FLOW-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -547,7 +547,7 @@
     {
       "code": "SIFR-FLOW-0002",
       "constant": "FLOW_CONTINUE_OUTSIDE_LOOP",
-      "docs_link": "docs/errors/SIFR-FLOW-0002.md",
+      "docs_link": "docs/errors/SIFR-FLOW-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -563,7 +563,7 @@
     {
       "code": "SIFR-FLOW-0003",
       "constant": "FLOW_INVALID_NONLOCAL",
-      "docs_link": "docs/errors/SIFR-FLOW-0003.md",
+      "docs_link": "docs/errors/SIFR-FLOW-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -579,7 +579,7 @@
     {
       "code": "SIFR-FLOW-0004",
       "constant": "FLOW_MISSING_RETURN_VALUE",
-      "docs_link": "docs/errors/SIFR-FLOW-0004.md",
+      "docs_link": "docs/errors/SIFR-FLOW-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -595,7 +595,7 @@
     {
       "code": "SIFR-FLOW-0005",
       "constant": "FLOW_INVALID_CONDITION_TYPE",
-      "docs_link": "docs/errors/SIFR-FLOW-0005.md",
+      "docs_link": "docs/errors/SIFR-FLOW-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -611,7 +611,7 @@
     {
       "code": "SIFR-FLOW-0006",
       "constant": "FLOW_UNSUPPORTED_STATEMENT_FORM",
-      "docs_link": "docs/errors/SIFR-FLOW-0006.md",
+      "docs_link": "docs/errors/SIFR-FLOW-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -627,7 +627,7 @@
     {
       "code": "SIFR-FLOW-0007",
       "constant": "FLOW_INVALID_ASSIGNMENT_TARGET",
-      "docs_link": "docs/errors/SIFR-FLOW-0007.md",
+      "docs_link": "docs/errors/SIFR-FLOW-0007.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -643,7 +643,7 @@
     {
       "code": "SIFR-FLOW-0008",
       "constant": "FLOW_INVALID_ITERATION",
-      "docs_link": "docs/errors/SIFR-FLOW-0008.md",
+      "docs_link": "docs/errors/SIFR-FLOW-0008.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -659,7 +659,7 @@
     {
       "code": "SIFR-FLOW-0901",
       "constant": "FLOW_UNREACHABLE_STATEMENT",
-      "docs_link": "docs/errors/SIFR-FLOW-0901.md",
+      "docs_link": "docs/errors/SIFR-FLOW-0901.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -675,7 +675,7 @@
     {
       "code": "SIFR-FMT-0001",
       "constant": "FMT_FORMATTING_DRIFT",
-      "docs_link": "docs/errors/SIFR-FMT-0001.md",
+      "docs_link": "docs/errors/SIFR-FMT-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -691,7 +691,7 @@
     {
       "code": "SIFR-IMPORT-0001",
       "constant": "IMPORT_FORBIDDEN_INTRINSIC",
-      "docs_link": "docs/errors/SIFR-IMPORT-0001.md",
+      "docs_link": "docs/errors/SIFR-IMPORT-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -707,7 +707,7 @@
     {
       "code": "SIFR-IMPORT-0002",
       "constant": "IMPORT_UNKNOWN_SOURCE_MODULE",
-      "docs_link": "docs/errors/SIFR-IMPORT-0002.md",
+      "docs_link": "docs/errors/SIFR-IMPORT-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -723,7 +723,7 @@
     {
       "code": "SIFR-IMPORT-0003",
       "constant": "IMPORT_UNSUPPORTED_FORM",
-      "docs_link": "docs/errors/SIFR-IMPORT-0003.md",
+      "docs_link": "docs/errors/SIFR-IMPORT-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -739,7 +739,7 @@
     {
       "code": "SIFR-IMPORT-0004",
       "constant": "IMPORT_PRIVATE_MEMBER",
-      "docs_link": "docs/errors/SIFR-IMPORT-0004.md",
+      "docs_link": "docs/errors/SIFR-IMPORT-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -755,7 +755,7 @@
     {
       "code": "SIFR-IMPORT-0005",
       "constant": "IMPORT_AMBIGUOUS_SOURCE_MODULE",
-      "docs_link": "docs/errors/SIFR-IMPORT-0005.md",
+      "docs_link": "docs/errors/SIFR-IMPORT-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -771,7 +771,7 @@
     {
       "code": "SIFR-IMPORT-0006",
       "constant": "IMPORT_NAMESPACE_COLLISION",
-      "docs_link": "docs/errors/SIFR-IMPORT-0006.md",
+      "docs_link": "docs/errors/SIFR-IMPORT-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -787,7 +787,7 @@
     {
       "code": "SIFR-IMPORT-0007",
       "constant": "IMPORT_CYCLE",
-      "docs_link": "docs/errors/SIFR-IMPORT-0007.md",
+      "docs_link": "docs/errors/SIFR-IMPORT-0007.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -803,7 +803,7 @@
     {
       "code": "SIFR-IMPORT-0008",
       "constant": "IMPORT_BARE_STDLIB",
-      "docs_link": "docs/errors/SIFR-IMPORT-0008.md",
+      "docs_link": "docs/errors/SIFR-IMPORT-0008.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -819,7 +819,7 @@
     {
       "code": "SIFR-IMPORT-0009",
       "constant": "IMPORT_UNSUPPORTED_LEGACY_STDLIB",
-      "docs_link": "docs/errors/SIFR-IMPORT-0009.md",
+      "docs_link": "docs/errors/SIFR-IMPORT-0009.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -835,7 +835,7 @@
     {
       "code": "SIFR-INT-0001",
       "constant": "INT_FIXED_WIDTH_OUT_OF_RANGE",
-      "docs_link": "docs/errors/SIFR-INT-0001.md",
+      "docs_link": "docs/errors/SIFR-INT-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -851,7 +851,7 @@
     {
       "code": "SIFR-INT-0003",
       "constant": "INT_RESERVED_WIDTH_NAME",
-      "docs_link": "docs/errors/SIFR-INT-0003.md",
+      "docs_link": "docs/errors/SIFR-INT-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -867,7 +867,7 @@
     {
       "code": "SIFR-INT-0004",
       "constant": "INT_EVAL_BUDGET_EXCEEDED",
-      "docs_link": "docs/errors/SIFR-INT-0004.md",
+      "docs_link": "docs/errors/SIFR-INT-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -883,7 +883,7 @@
     {
       "code": "SIFR-INT-0005",
       "constant": "INT_EXACT_DIVISION_REQUIRES_HANDLING",
-      "docs_link": "docs/errors/SIFR-INT-0005.md",
+      "docs_link": "docs/errors/SIFR-INT-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -899,7 +899,7 @@
     {
       "code": "SIFR-INT-0006",
       "constant": "INT_EXACT_TO_FLOAT_REQUIRES_HANDLING",
-      "docs_link": "docs/errors/SIFR-INT-0006.md",
+      "docs_link": "docs/errors/SIFR-INT-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -915,7 +915,7 @@
     {
       "code": "SIFR-INT-0007",
       "constant": "INT_BOOL_INTEGER_COMPARISON",
-      "docs_link": "docs/errors/SIFR-INT-0007.md",
+      "docs_link": "docs/errors/SIFR-INT-0007.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -931,7 +931,7 @@
     {
       "code": "SIFR-INT-0011",
       "constant": "INT_BIGINT_TRANSITION_ALIAS",
-      "docs_link": "docs/errors/SIFR-INT-0011.md",
+      "docs_link": "docs/errors/SIFR-INT-0011.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -947,7 +947,7 @@
     {
       "code": "SIFR-INTERNAL-0001",
       "constant": "INTERNAL_COMPILER_PANIC",
-      "docs_link": "docs/errors/SIFR-INTERNAL-0001.md",
+      "docs_link": "docs/errors/SIFR-INTERNAL-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -963,7 +963,7 @@
     {
       "code": "SIFR-INTERNAL-0002",
       "constant": "INTERNAL_RECOVERY_OMISSION_SUMMARY",
-      "docs_link": "docs/errors/SIFR-INTERNAL-0002.md",
+      "docs_link": "docs/errors/SIFR-INTERNAL-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -979,7 +979,7 @@
     {
       "code": "SIFR-IO-0801",
       "constant": "IO_TEXT_OPEN_REQUIRES_ENCODING",
-      "docs_link": "docs/errors/SIFR-IO-0801.md",
+      "docs_link": "docs/errors/SIFR-IO-0801.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -995,7 +995,7 @@
     {
       "code": "SIFR-IO-0802",
       "constant": "IO_OPEN_MODE_REQUIRES_LITERAL",
-      "docs_link": "docs/errors/SIFR-IO-0802.md",
+      "docs_link": "docs/errors/SIFR-IO-0802.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1011,7 +1011,7 @@
     {
       "code": "SIFR-LINT-0001",
       "constant": "LINT_UNKNOWN_SUPPRESSION",
-      "docs_link": "docs/errors/SIFR-LINT-0001.md",
+      "docs_link": "docs/errors/SIFR-LINT-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -1027,7 +1027,7 @@
     {
       "code": "SIFR-LINT-0002",
       "constant": "LINT_UNUSED_SUPPRESSION",
-      "docs_link": "docs/errors/SIFR-LINT-0002.md",
+      "docs_link": "docs/errors/SIFR-LINT-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -1043,7 +1043,7 @@
     {
       "code": "SIFR-LINT-0003",
       "constant": "LINT_BLANKET_SUPPRESSION",
-      "docs_link": "docs/errors/SIFR-LINT-0003.md",
+      "docs_link": "docs/errors/SIFR-LINT-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -1059,7 +1059,7 @@
     {
       "code": "SIFR-LINT-0004",
       "constant": "LINT_TRAILING_WHITESPACE",
-      "docs_link": "docs/errors/SIFR-LINT-0004.md",
+      "docs_link": "docs/errors/SIFR-LINT-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -1075,7 +1075,7 @@
     {
       "code": "SIFR-LINT-0005",
       "constant": "LINT_TODO_COMMENT",
-      "docs_link": "docs/errors/SIFR-LINT-0005.md",
+      "docs_link": "docs/errors/SIFR-LINT-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -1091,7 +1091,7 @@
     {
       "code": "SIFR-LINT-0006",
       "constant": "LINT_BOOLEAN_POSITIONAL_ARGUMENT",
-      "docs_link": "docs/errors/SIFR-LINT-0006.md",
+      "docs_link": "docs/errors/SIFR-LINT-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -1107,7 +1107,7 @@
     {
       "code": "SIFR-LINT-0007",
       "constant": "LINT_LARGE_PARAMETER_LIST",
-      "docs_link": "docs/errors/SIFR-LINT-0007.md",
+      "docs_link": "docs/errors/SIFR-LINT-0007.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -1123,7 +1123,7 @@
     {
       "code": "SIFR-LINT-0008",
       "constant": "LINT_DUPLICATE_IMPORT",
-      "docs_link": "docs/errors/SIFR-LINT-0008.md",
+      "docs_link": "docs/errors/SIFR-LINT-0008.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -1139,7 +1139,7 @@
     {
       "code": "SIFR-MATCH-0001",
       "constant": "MATCH_NON_EXHAUSTIVE",
-      "docs_link": "docs/errors/SIFR-MATCH-0001.md",
+      "docs_link": "docs/errors/SIFR-MATCH-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1155,7 +1155,7 @@
     {
       "code": "SIFR-MATCH-0002",
       "constant": "MATCH_GUARD_NOT_BOOL",
-      "docs_link": "docs/errors/SIFR-MATCH-0002.md",
+      "docs_link": "docs/errors/SIFR-MATCH-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1171,7 +1171,7 @@
     {
       "code": "SIFR-MATCH-0003",
       "constant": "MATCH_INVALID_CLASS_PATTERN_FIELD",
-      "docs_link": "docs/errors/SIFR-MATCH-0003.md",
+      "docs_link": "docs/errors/SIFR-MATCH-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1187,7 +1187,7 @@
     {
       "code": "SIFR-MATCH-0004",
       "constant": "MATCH_INVALID_PATTERN_FORM",
-      "docs_link": "docs/errors/SIFR-MATCH-0004.md",
+      "docs_link": "docs/errors/SIFR-MATCH-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1203,7 +1203,7 @@
     {
       "code": "SIFR-NAME-0001",
       "constant": "NAME_UNDEFINED_VARIABLE",
-      "docs_link": "docs/errors/SIFR-NAME-0001.md",
+      "docs_link": "docs/errors/SIFR-NAME-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1219,7 +1219,7 @@
     {
       "code": "SIFR-NAME-0002",
       "constant": "NAME_UNDEFINED_CALLABLE",
-      "docs_link": "docs/errors/SIFR-NAME-0002.md",
+      "docs_link": "docs/errors/SIFR-NAME-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1235,7 +1235,7 @@
     {
       "code": "SIFR-NAME-0003",
       "constant": "NAME_UNKNOWN_TYPE",
-      "docs_link": "docs/errors/SIFR-NAME-0003.md",
+      "docs_link": "docs/errors/SIFR-NAME-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1251,7 +1251,7 @@
     {
       "code": "SIFR-NAME-0004",
       "constant": "NAME_MISSING_MODULE_MEMBER",
-      "docs_link": "docs/errors/SIFR-NAME-0004.md",
+      "docs_link": "docs/errors/SIFR-NAME-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1267,7 +1267,7 @@
     {
       "code": "SIFR-NAME-0005",
       "constant": "NAME_DUPLICATE_DEFINITION",
-      "docs_link": "docs/errors/SIFR-NAME-0005.md",
+      "docs_link": "docs/errors/SIFR-NAME-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1283,7 +1283,7 @@
     {
       "code": "SIFR-NAME-0006",
       "constant": "NAME_UNINITIALIZED_VARIABLE",
-      "docs_link": "docs/errors/SIFR-NAME-0006.md",
+      "docs_link": "docs/errors/SIFR-NAME-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1299,7 +1299,7 @@
     {
       "code": "SIFR-OWN-0001",
       "constant": "OWN_USE_AFTER_MOVE",
-      "docs_link": "docs/errors/SIFR-OWN-0001.md",
+      "docs_link": "docs/errors/SIFR-OWN-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1315,7 +1315,7 @@
     {
       "code": "SIFR-OWN-0002",
       "constant": "OWN_DOUBLE_MUTABLE_BORROW",
-      "docs_link": "docs/errors/SIFR-OWN-0002.md",
+      "docs_link": "docs/errors/SIFR-OWN-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1331,7 +1331,7 @@
     {
       "code": "SIFR-OWN-0003",
       "constant": "OWN_BORROWED_PARAMETER_ESCAPES",
-      "docs_link": "docs/errors/SIFR-OWN-0003.md",
+      "docs_link": "docs/errors/SIFR-OWN-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1347,7 +1347,7 @@
     {
       "code": "SIFR-OWN-0004",
       "constant": "OWN_MOVED_ACROSS_LOOP",
-      "docs_link": "docs/errors/SIFR-OWN-0004.md",
+      "docs_link": "docs/errors/SIFR-OWN-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1363,7 +1363,7 @@
     {
       "code": "SIFR-OWN-0005",
       "constant": "OWN_IMMUTABLE_PARAMETER_MUTATION",
-      "docs_link": "docs/errors/SIFR-OWN-0005.md",
+      "docs_link": "docs/errors/SIFR-OWN-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1379,7 +1379,7 @@
     {
       "code": "SIFR-OWN-0006",
       "constant": "OWN_IMMUTABLE_PARAMETER_REASSIGNMENT",
-      "docs_link": "docs/errors/SIFR-OWN-0006.md",
+      "docs_link": "docs/errors/SIFR-OWN-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1395,7 +1395,7 @@
     {
       "code": "SIFR-OWN-0007",
       "constant": "OWN_IMMUTABLE_BYTES_ASSIGNMENT",
-      "docs_link": "docs/errors/SIFR-OWN-0007.md",
+      "docs_link": "docs/errors/SIFR-OWN-0007.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1411,7 +1411,7 @@
     {
       "code": "SIFR-OWN-0008",
       "constant": "OWN_IMMUTABLE_BYTES_AUGMENTED_ASSIGNMENT",
-      "docs_link": "docs/errors/SIFR-OWN-0008.md",
+      "docs_link": "docs/errors/SIFR-OWN-0008.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1427,7 +1427,7 @@
     {
       "code": "SIFR-OWN-0009",
       "constant": "OWN_BORROW_ACROSS_AWAIT",
-      "docs_link": "docs/errors/SIFR-OWN-0009.md",
+      "docs_link": "docs/errors/SIFR-OWN-0009.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1443,7 +1443,7 @@
     {
       "code": "SIFR-OWN-0010",
       "constant": "OWN_NON_SEND_TASK_CAPTURE",
-      "docs_link": "docs/errors/SIFR-OWN-0010.md",
+      "docs_link": "docs/errors/SIFR-OWN-0010.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1459,7 +1459,7 @@
     {
       "code": "SIFR-OWN-0011",
       "constant": "OWN_NON_SEND_CHANNEL_ELEMENT",
-      "docs_link": "docs/errors/SIFR-OWN-0011.md",
+      "docs_link": "docs/errors/SIFR-OWN-0011.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1475,7 +1475,7 @@
     {
       "code": "SIFR-OWN-0012",
       "constant": "OWN_NON_SHARE_SAFE_SHARED_VALUE",
-      "docs_link": "docs/errors/SIFR-OWN-0012.md",
+      "docs_link": "docs/errors/SIFR-OWN-0012.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1491,7 +1491,7 @@
     {
       "code": "SIFR-OWN-0013",
       "constant": "OWN_NON_IPC_SERIALIZABLE_PAYLOAD",
-      "docs_link": "docs/errors/SIFR-OWN-0013.md",
+      "docs_link": "docs/errors/SIFR-OWN-0013.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -1507,7 +1507,7 @@
     {
       "code": "SIFR-PACKAGE-0001",
       "constant": "PACKAGE_MISSING_OR_INVALID_CARGO_METADATA",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0001.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1523,7 +1523,7 @@
     {
       "code": "SIFR-PACKAGE-0002",
       "constant": "PACKAGE_MISSING_OR_INVALID_SIFR_MANIFEST",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0002.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1539,7 +1539,7 @@
     {
       "code": "SIFR-PACKAGE-0003",
       "constant": "PACKAGE_UNSUPPORTED_CARGO_SIFR_METADATA",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0003.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1555,7 +1555,7 @@
     {
       "code": "SIFR-PACKAGE-0101",
       "constant": "PACKAGE_CARGO_COMMAND_FAILED",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0101.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0101.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1571,7 +1571,7 @@
     {
       "code": "SIFR-PACKAGE-0102",
       "constant": "PACKAGE_SELECTED_RUST_ONLY",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0102.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0102.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1587,7 +1587,7 @@
     {
       "code": "SIFR-PACKAGE-0103",
       "constant": "PACKAGE_METADATA_PARSE",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0103.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0103.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1603,7 +1603,7 @@
     {
       "code": "SIFR-PACKAGE-0104",
       "constant": "PACKAGE_SOURCE_UNAVAILABLE_OFFLINE",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0104.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0104.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1619,7 +1619,7 @@
     {
       "code": "SIFR-PACKAGE-0106",
       "constant": "PACKAGE_RUST_ONLY_DEPENDS_ON_SIFR",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0106.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0106.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1635,7 +1635,7 @@
     {
       "code": "SIFR-PACKAGE-0201",
       "constant": "PACKAGE_AMBIGUOUS_IMPORT_ROOT",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0201.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0201.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1651,7 +1651,7 @@
     {
       "code": "SIFR-PACKAGE-0202",
       "constant": "PACKAGE_UNDECLARED_DIRECT_IMPORT",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0202.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0202.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1667,7 +1667,7 @@
     {
       "code": "SIFR-PACKAGE-0203",
       "constant": "PACKAGE_PRIVATE_MODULE_ACCESS",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0203.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0203.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1683,7 +1683,7 @@
     {
       "code": "SIFR-PACKAGE-0204",
       "constant": "PACKAGE_TYPE_IDENTITY_MISMATCH",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0204.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0204.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1699,7 +1699,7 @@
     {
       "code": "SIFR-PACKAGE-0301",
       "constant": "PACKAGE_BACKEND_TRUST_VIOLATION",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0301.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0301.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1715,7 +1715,7 @@
     {
       "code": "SIFR-PACKAGE-0305",
       "constant": "PACKAGE_TRUST_NON_DIRECT_DEPENDENCY",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0305.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0305.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1731,7 +1731,7 @@
     {
       "code": "SIFR-PACKAGE-0401",
       "constant": "PACKAGE_ARCHIVE_MISSING_SIFR_SOURCE",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0401.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0401.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1747,7 +1747,7 @@
     {
       "code": "SIFR-PACKAGE-0402",
       "constant": "PACKAGE_PUBLISH_VALIDATION_FAILED",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0402.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0402.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1763,7 +1763,7 @@
     {
       "code": "SIFR-PACKAGE-0403",
       "constant": "PACKAGE_INCLUDE_EXCLUDE_OMITS_SOURCE",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0403.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0403.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1779,7 +1779,7 @@
     {
       "code": "SIFR-PACKAGE-0404",
       "constant": "PACKAGE_ARCHIVE_TRAVERSAL",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0404.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0404.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1795,7 +1795,7 @@
     {
       "code": "SIFR-PACKAGE-0501",
       "constant": "PACKAGE_NON_TRIVIAL_PURE_MARKER",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0501.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0501.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1811,7 +1811,7 @@
     {
       "code": "SIFR-PACKAGE-0601",
       "constant": "PACKAGE_SELECTOR_AMBIGUOUS",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0601.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0601.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1827,7 +1827,7 @@
     {
       "code": "SIFR-PACKAGE-0602",
       "constant": "PACKAGE_DUPLICATE_WORKSPACE_IMPORT_ROOT",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0602.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0602.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1843,7 +1843,7 @@
     {
       "code": "SIFR-PACKAGE-0603",
       "constant": "PACKAGE_CHANGED_FILE_MAPPING_FAILED",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0603.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0603.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1859,7 +1859,7 @@
     {
       "code": "SIFR-PACKAGE-0604",
       "constant": "PACKAGE_OUTDATED_QUERY_UNSUPPORTED",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0604.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0604.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1875,7 +1875,7 @@
     {
       "code": "SIFR-PACKAGE-0605",
       "constant": "PACKAGE_RUN_TARGET_AMBIGUOUS",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0605.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0605.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1891,7 +1891,7 @@
     {
       "code": "SIFR-PACKAGE-0606",
       "constant": "PACKAGE_INVALID_APP_TARGET_NAME",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0606.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0606.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1907,7 +1907,7 @@
     {
       "code": "SIFR-PACKAGE-0607",
       "constant": "PACKAGE_DUPLICATE_WORKSPACE_SIFR_NAME",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0607.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0607.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1923,7 +1923,7 @@
     {
       "code": "SIFR-PACKAGE-0701",
       "constant": "PACKAGE_MANIFEST_EXPORTS_NOT_PRODUCTION",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0701.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0701.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1939,7 +1939,7 @@
     {
       "code": "SIFR-PACKAGE-0703",
       "constant": "PACKAGE_PROJECTION_MANIFEST_POINTER_DRIFT",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0703.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0703.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1955,7 +1955,7 @@
     {
       "code": "SIFR-PACKAGE-0704",
       "constant": "PACKAGE_PROJECTION_INCLUDE_DRIFT",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0704.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0704.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1971,7 +1971,7 @@
     {
       "code": "SIFR-PACKAGE-0709",
       "constant": "PACKAGE_PROJECTION_PURE_MARKER_MISSING",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0709.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0709.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -1987,7 +1987,7 @@
     {
       "code": "SIFR-PACKAGE-0710",
       "constant": "PACKAGE_EXPLICIT_FILE_OUTSIDE_SOURCE_ROOT",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0710.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0710.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2003,7 +2003,7 @@
     {
       "code": "SIFR-PACKAGE-0711",
       "constant": "PACKAGE_MANIFEST_BIN_TABLES_NOT_PRODUCTION",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0711.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0711.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2019,7 +2019,7 @@
     {
       "code": "SIFR-PACKAGE-0713",
       "constant": "PACKAGE_DUPLICATE_PUBLIC_API_SYMBOL",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0713.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0713.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2035,7 +2035,7 @@
     {
       "code": "SIFR-PACKAGE-0714",
       "constant": "PACKAGE_SCRIPT_RECURSION",
-      "docs_link": "docs/errors/SIFR-PACKAGE-0714.md",
+      "docs_link": "docs/errors/SIFR-PACKAGE-0714.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2051,7 +2051,7 @@
     {
       "code": "SIFR-PARSE-0002",
       "constant": "PARSE_EXPECTED_TOKEN_OR_RECOVERY",
-      "docs_link": "docs/errors/SIFR-PARSE-0002.md",
+      "docs_link": "docs/errors/SIFR-PARSE-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -2067,7 +2067,7 @@
     {
       "code": "SIFR-PARSE-0003",
       "constant": "PARSE_LEXICAL_OR_STRING",
-      "docs_link": "docs/errors/SIFR-PARSE-0003.md",
+      "docs_link": "docs/errors/SIFR-PARSE-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -2083,7 +2083,7 @@
     {
       "code": "SIFR-PARSE-0004",
       "constant": "PARSE_LAYOUT",
-      "docs_link": "docs/errors/SIFR-PARSE-0004.md",
+      "docs_link": "docs/errors/SIFR-PARSE-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -2099,7 +2099,7 @@
     {
       "code": "SIFR-PARSE-0005",
       "constant": "PARSE_INVALID_TARGET",
-      "docs_link": "docs/errors/SIFR-PARSE-0005.md",
+      "docs_link": "docs/errors/SIFR-PARSE-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -2115,7 +2115,7 @@
     {
       "code": "SIFR-PARSE-0006",
       "constant": "PARSE_INVALID_CALL_ARGUMENTS",
-      "docs_link": "docs/errors/SIFR-PARSE-0006.md",
+      "docs_link": "docs/errors/SIFR-PARSE-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -2131,7 +2131,7 @@
     {
       "code": "SIFR-PARSE-0007",
       "constant": "PARSE_MALFORMED_DECLARATION_LIST",
-      "docs_link": "docs/errors/SIFR-PARSE-0007.md",
+      "docs_link": "docs/errors/SIFR-PARSE-0007.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -2147,7 +2147,7 @@
     {
       "code": "SIFR-PARSE-0008",
       "constant": "PARSE_INVALID_PATTERN",
-      "docs_link": "docs/errors/SIFR-PARSE-0008.md",
+      "docs_link": "docs/errors/SIFR-PARSE-0008.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -2163,7 +2163,7 @@
     {
       "code": "SIFR-PARSE-0009",
       "constant": "PARSE_UNSUPPORTED_SYNTAX",
-      "docs_link": "docs/errors/SIFR-PARSE-0009.md",
+      "docs_link": "docs/errors/SIFR-PARSE-0009.mdx",
       "machine_applicable": false,
       "owner": "compiler/diagnostics",
       "renderer_support": [
@@ -2179,7 +2179,7 @@
     {
       "code": "SIFR-PROTO-0001",
       "constant": "PROTO_BOUND_NOT_SATISFIED",
-      "docs_link": "docs/errors/SIFR-PROTO-0001.md",
+      "docs_link": "docs/errors/SIFR-PROTO-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2195,7 +2195,7 @@
     {
       "code": "SIFR-PROTO-0002",
       "constant": "PROTO_INVALID_ITERATOR_SIGNATURE",
-      "docs_link": "docs/errors/SIFR-PROTO-0002.md",
+      "docs_link": "docs/errors/SIFR-PROTO-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2211,7 +2211,7 @@
     {
       "code": "SIFR-PROTO-0003",
       "constant": "PROTO_CONTEXT_MANAGER_MISSING",
-      "docs_link": "docs/errors/SIFR-PROTO-0003.md",
+      "docs_link": "docs/errors/SIFR-PROTO-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2227,7 +2227,7 @@
     {
       "code": "SIFR-PROTO-0004",
       "constant": "PROTO_HASHABLE_OR_COMPARABLE_REQUIRED",
-      "docs_link": "docs/errors/SIFR-PROTO-0004.md",
+      "docs_link": "docs/errors/SIFR-PROTO-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2243,7 +2243,7 @@
     {
       "code": "SIFR-PYENV-0001",
       "constant": "PYENV_INVALID_CONFIG",
-      "docs_link": "docs/errors/SIFR-PYENV-0001.md",
+      "docs_link": "docs/errors/SIFR-PYENV-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2259,7 +2259,7 @@
     {
       "code": "SIFR-PYENV-0002",
       "constant": "PYENV_MULTIPLE_SELECTIONS",
-      "docs_link": "docs/errors/SIFR-PYENV-0002.md",
+      "docs_link": "docs/errors/SIFR-PYENV-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2275,7 +2275,7 @@
     {
       "code": "SIFR-PYENV-0003",
       "constant": "PYENV_MISSING_SELECTION",
-      "docs_link": "docs/errors/SIFR-PYENV-0003.md",
+      "docs_link": "docs/errors/SIFR-PYENV-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2291,7 +2291,7 @@
     {
       "code": "SIFR-PYENV-0004",
       "constant": "PYENV_PROBE_FAILED",
-      "docs_link": "docs/errors/SIFR-PYENV-0004.md",
+      "docs_link": "docs/errors/SIFR-PYENV-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2307,7 +2307,7 @@
     {
       "code": "SIFR-PYENV-0005",
       "constant": "PYENV_UNSUPPORTED_INTERPRETER",
-      "docs_link": "docs/errors/SIFR-PYENV-0005.md",
+      "docs_link": "docs/errors/SIFR-PYENV-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2323,7 +2323,7 @@
     {
       "code": "SIFR-PYENV-0006",
       "constant": "PYENV_VENV_PREFIX_MISMATCH",
-      "docs_link": "docs/errors/SIFR-PYENV-0006.md",
+      "docs_link": "docs/errors/SIFR-PYENV-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2339,7 +2339,7 @@
     {
       "code": "SIFR-PYENV-0007",
       "constant": "PYENV_SITE_PACKAGES_MISSING",
-      "docs_link": "docs/errors/SIFR-PYENV-0007.md",
+      "docs_link": "docs/errors/SIFR-PYENV-0007.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2355,7 +2355,7 @@
     {
       "code": "SIFR-PYENV-0008",
       "constant": "PYENV_DECLARED_IMPORT_MISSING",
-      "docs_link": "docs/errors/SIFR-PYENV-0008.md",
+      "docs_link": "docs/errors/SIFR-PYENV-0008.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2371,7 +2371,7 @@
     {
       "code": "SIFR-PYENV-0009",
       "constant": "PYENV_NATIVE_IMPORT_FAILED",
-      "docs_link": "docs/errors/SIFR-PYENV-0009.md",
+      "docs_link": "docs/errors/SIFR-PYENV-0009.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2387,7 +2387,7 @@
     {
       "code": "SIFR-PYENV-0010",
       "constant": "PYENV_FREE_THREADED_UNSUPPORTED",
-      "docs_link": "docs/errors/SIFR-PYENV-0010.md",
+      "docs_link": "docs/errors/SIFR-PYENV-0010.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2403,7 +2403,7 @@
     {
       "code": "SIFR-PYENV-0011",
       "constant": "PYENV_LOCK_OR_PROJECT_STALE",
-      "docs_link": "docs/errors/SIFR-PYENV-0011.md",
+      "docs_link": "docs/errors/SIFR-PYENV-0011.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2419,7 +2419,7 @@
     {
       "code": "SIFR-PYIMP-0001",
       "constant": "PYIMP_INVALID_TARGET",
-      "docs_link": "docs/errors/SIFR-PYIMP-0001.md",
+      "docs_link": "docs/errors/SIFR-PYIMP-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2435,7 +2435,7 @@
     {
       "code": "SIFR-PYIMP-0002",
       "constant": "PYIMP_INVALID_BRIDGE_SOURCE",
-      "docs_link": "docs/errors/SIFR-PYIMP-0002.md",
+      "docs_link": "docs/errors/SIFR-PYIMP-0002.mdx",
       "machine_applicable": false,
       "owner": "sifr_package::python",
       "renderer_support": [
@@ -2451,7 +2451,7 @@
     {
       "code": "SIFR-PYIMP-0003",
       "constant": "PYIMP_RESERVED_BRIDGE_COLLISION",
-      "docs_link": "docs/errors/SIFR-PYIMP-0003.md",
+      "docs_link": "docs/errors/SIFR-PYIMP-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/runtime",
       "renderer_support": [
@@ -2467,7 +2467,7 @@
     {
       "code": "SIFR-PYCALL-0001",
       "constant": "PYCALL_INVALID_SHAPE",
-      "docs_link": "docs/errors/SIFR-PYCALL-0001.md",
+      "docs_link": "docs/errors/SIFR-PYCALL-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2483,7 +2483,7 @@
     {
       "code": "SIFR-PYCB-0001",
       "constant": "PYCB_INVALID_DECLARATION",
-      "docs_link": "docs/errors/SIFR-PYCB-0001.md",
+      "docs_link": "docs/errors/SIFR-PYCB-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2499,7 +2499,7 @@
     {
       "code": "SIFR-PYCONV-0001",
       "constant": "PYCONV_UNSUPPORTED_DECLARATION_TYPE",
-      "docs_link": "docs/errors/SIFR-PYCONV-0001.md",
+      "docs_link": "docs/errors/SIFR-PYCONV-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2515,7 +2515,7 @@
     {
       "code": "SIFR-PYCTX-0001",
       "constant": "PYCTX_INVALID_DECLARATION",
-      "docs_link": "docs/errors/SIFR-PYCTX-0001.md",
+      "docs_link": "docs/errors/SIFR-PYCTX-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2531,7 +2531,7 @@
     {
       "code": "SIFR-PYRES-0002",
       "constant": "PYRES_UNSUPPORTED_RESOURCE_DECLARATION",
-      "docs_link": "docs/errors/SIFR-PYRES-0002.md",
+      "docs_link": "docs/errors/SIFR-PYRES-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2547,7 +2547,7 @@
     {
       "code": "SIFR-PYTRUST-0001",
       "constant": "PYTRUST_WILDCARD_REJECTED",
-      "docs_link": "docs/errors/SIFR-PYTRUST-0001.md",
+      "docs_link": "docs/errors/SIFR-PYTRUST-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2563,7 +2563,7 @@
     {
       "code": "SIFR-PYTRUST-0003",
       "constant": "PYTRUST_UNTRUSTED_NATIVE_IMPORT",
-      "docs_link": "docs/errors/SIFR-PYTRUST-0003.md",
+      "docs_link": "docs/errors/SIFR-PYTRUST-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2579,7 +2579,7 @@
     {
       "code": "SIFR-PYTRUST-0004",
       "constant": "PYTRUST_DYNAMIC_IMPORT_REQUIRES_TRUST",
-      "docs_link": "docs/errors/SIFR-PYTRUST-0004.md",
+      "docs_link": "docs/errors/SIFR-PYTRUST-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2595,7 +2595,7 @@
     {
       "code": "SIFR-PYTRUST-0005",
       "constant": "PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED",
-      "docs_link": "docs/errors/SIFR-PYTRUST-0005.md",
+      "docs_link": "docs/errors/SIFR-PYTRUST-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2611,7 +2611,7 @@
     {
       "code": "SIFR-PYZC-0001",
       "constant": "PYZC_INVALID_DECLARATION",
-      "docs_link": "docs/errors/SIFR-PYZC-0001.md",
+      "docs_link": "docs/errors/SIFR-PYZC-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -2627,7 +2627,7 @@
     {
       "code": "SIFR-RUST-CONFIG-0001",
       "constant": "RUST_CONFIG_MALFORMED_DECORATOR",
-      "docs_link": "docs/errors/SIFR-RUST-CONFIG-0001.md",
+      "docs_link": "docs/errors/SIFR-RUST-CONFIG-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/package-management",
       "renderer_support": [
@@ -2643,7 +2643,7 @@
     {
       "code": "SIFR-RUST-RESOLVE-0001",
       "constant": "RUST_RESOLVE_TARGET_ROOT",
-      "docs_link": "docs/errors/SIFR-RUST-RESOLVE-0001.md",
+      "docs_link": "docs/errors/SIFR-RUST-RESOLVE-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/package-management",
       "renderer_support": [
@@ -2659,7 +2659,7 @@
     {
       "code": "SIFR-RUST-TRUST-0001",
       "constant": "RUST_TRUST_MISSING",
-      "docs_link": "docs/errors/SIFR-RUST-TRUST-0001.md",
+      "docs_link": "docs/errors/SIFR-RUST-TRUST-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/package-management",
       "renderer_support": [
@@ -2675,7 +2675,7 @@
     {
       "code": "SIFR-RUST-TYPE-0001",
       "constant": "RUST_TYPE_PROBE_FAILURE",
-      "docs_link": "docs/errors/SIFR-RUST-TYPE-0001.md",
+      "docs_link": "docs/errors/SIFR-RUST-TYPE-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/package-management",
       "renderer_support": [
@@ -2691,7 +2691,7 @@
     {
       "code": "SIFR-RUST-HANDLE-0001",
       "constant": "RUST_HANDLE_CONTRACT",
-      "docs_link": "docs/errors/SIFR-RUST-HANDLE-0001.md",
+      "docs_link": "docs/errors/SIFR-RUST-HANDLE-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/package-management",
       "renderer_support": [
@@ -2707,7 +2707,7 @@
     {
       "code": "SIFR-RUST-ASYNC-0001",
       "constant": "RUST_ASYNC_CONTRACT",
-      "docs_link": "docs/errors/SIFR-RUST-ASYNC-0001.md",
+      "docs_link": "docs/errors/SIFR-RUST-ASYNC-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/package-management",
       "renderer_support": [
@@ -2723,7 +2723,7 @@
     {
       "code": "SIFR-RUST-ZC-0001",
       "constant": "RUST_ZERO_COPY_CONTRACT",
-      "docs_link": "docs/errors/SIFR-RUST-ZC-0001.md",
+      "docs_link": "docs/errors/SIFR-RUST-ZC-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/package-management",
       "renderer_support": [
@@ -2739,7 +2739,7 @@
     {
       "code": "SIFR-RUST-CB-0001",
       "constant": "RUST_CALLBACK_CONTRACT",
-      "docs_link": "docs/errors/SIFR-RUST-CB-0001.md",
+      "docs_link": "docs/errors/SIFR-RUST-CB-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/package-management",
       "renderer_support": [
@@ -2755,7 +2755,7 @@
     {
       "code": "SIFR-RUST-PANIC-0001",
       "constant": "RUST_PANIC_CONTRACT",
-      "docs_link": "docs/errors/SIFR-RUST-PANIC-0001.md",
+      "docs_link": "docs/errors/SIFR-RUST-PANIC-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/package-management",
       "renderer_support": [
@@ -2771,7 +2771,7 @@
     {
       "code": "SIFR-RUST-CARGO-0001",
       "constant": "RUST_CARGO_METADATA",
-      "docs_link": "docs/errors/SIFR-RUST-CARGO-0001.md",
+      "docs_link": "docs/errors/SIFR-RUST-CARGO-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/package-management",
       "renderer_support": [
@@ -2787,7 +2787,7 @@
     {
       "code": "SIFR-RESULT-0001",
       "constant": "RESULT_UNUSED_VALUE",
-      "docs_link": "docs/errors/SIFR-RESULT-0001.md",
+      "docs_link": "docs/errors/SIFR-RESULT-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2803,7 +2803,7 @@
     {
       "code": "SIFR-RESULT-0002",
       "constant": "RESULT_INVALID_ERROR_TYPE",
-      "docs_link": "docs/errors/SIFR-RESULT-0002.md",
+      "docs_link": "docs/errors/SIFR-RESULT-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2819,7 +2819,7 @@
     {
       "code": "SIFR-RESULT-0003",
       "constant": "RESULT_INVALID_RAISE",
-      "docs_link": "docs/errors/SIFR-RESULT-0003.md",
+      "docs_link": "docs/errors/SIFR-RESULT-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2835,7 +2835,7 @@
     {
       "code": "SIFR-RESULT-0004",
       "constant": "RESULT_UNKNOWN_EXCEPT_TYPE",
-      "docs_link": "docs/errors/SIFR-RESULT-0004.md",
+      "docs_link": "docs/errors/SIFR-RESULT-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2851,7 +2851,7 @@
     {
       "code": "SIFR-RESULT-0005",
       "constant": "RESULT_UNCOVERED_TRY_ERRORS",
-      "docs_link": "docs/errors/SIFR-RESULT-0005.md",
+      "docs_link": "docs/errors/SIFR-RESULT-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2867,7 +2867,7 @@
     {
       "code": "SIFR-RESULT-0006",
       "constant": "RESULT_INVALID_EXCEPT_TYPE",
-      "docs_link": "docs/errors/SIFR-RESULT-0006.md",
+      "docs_link": "docs/errors/SIFR-RESULT-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2883,7 +2883,7 @@
     {
       "code": "SIFR-STDLIB-0001",
       "constant": "STDLIB_UNSUPPORTED_SURFACE",
-      "docs_link": "docs/errors/SIFR-STDLIB-0001.md",
+      "docs_link": "docs/errors/SIFR-STDLIB-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2899,7 +2899,7 @@
     {
       "code": "SIFR-STDLIB-0003",
       "constant": "STDLIB_BOOTSTRAP_FAILURE",
-      "docs_link": "docs/errors/SIFR-STDLIB-0003.md",
+      "docs_link": "docs/errors/SIFR-STDLIB-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2915,7 +2915,7 @@
     {
       "code": "SIFR-STDLIB-0004",
       "constant": "STDLIB_CACHE_FAILURE",
-      "docs_link": "docs/errors/SIFR-STDLIB-0004.md",
+      "docs_link": "docs/errors/SIFR-STDLIB-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2931,7 +2931,7 @@
     {
       "code": "SIFR-TYPE-0002",
       "constant": "TYPE_MISMATCH",
-      "docs_link": "docs/errors/SIFR-TYPE-0002.md",
+      "docs_link": "docs/errors/SIFR-TYPE-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2947,7 +2947,7 @@
     {
       "code": "SIFR-TYPE-0003",
       "constant": "TYPE_IF_BRANCH_MISMATCH",
-      "docs_link": "docs/errors/SIFR-TYPE-0003.md",
+      "docs_link": "docs/errors/SIFR-TYPE-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2963,7 +2963,7 @@
     {
       "code": "SIFR-TYPE-0004",
       "constant": "TYPE_MISSING_ANNOTATION",
-      "docs_link": "docs/errors/SIFR-TYPE-0004.md",
+      "docs_link": "docs/errors/SIFR-TYPE-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2979,7 +2979,7 @@
     {
       "code": "SIFR-TYPE-0005",
       "constant": "TYPE_UNSUPPORTED_OPERATOR",
-      "docs_link": "docs/errors/SIFR-TYPE-0005.md",
+      "docs_link": "docs/errors/SIFR-TYPE-0005.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -2995,7 +2995,7 @@
     {
       "code": "SIFR-TYPE-0006",
       "constant": "TYPE_INT_BIGINT_MIXED",
-      "docs_link": "docs/errors/SIFR-TYPE-0006.md",
+      "docs_link": "docs/errors/SIFR-TYPE-0006.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -3011,7 +3011,7 @@
     {
       "code": "SIFR-TYPE-0007",
       "constant": "TYPE_INVALID_ANNOTATION",
-      "docs_link": "docs/errors/SIFR-TYPE-0007.md",
+      "docs_link": "docs/errors/SIFR-TYPE-0007.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -3027,7 +3027,7 @@
     {
       "code": "SIFR-TYPE-0008",
       "constant": "TYPE_CONTAINER_ELEMENT_CONFLICT",
-      "docs_link": "docs/errors/SIFR-TYPE-0008.md",
+      "docs_link": "docs/errors/SIFR-TYPE-0008.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -3043,7 +3043,7 @@
     {
       "code": "SIFR-TYPE-0009",
       "constant": "TYPE_UNPACK_SHAPE_MISMATCH",
-      "docs_link": "docs/errors/SIFR-TYPE-0009.md",
+      "docs_link": "docs/errors/SIFR-TYPE-0009.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -3059,7 +3059,7 @@
     {
       "code": "SIFR-TYPE-0010",
       "constant": "TYPE_TYPEVAR_CONSTRAINT_NOT_SATISFIED",
-      "docs_link": "docs/errors/SIFR-TYPE-0010.md",
+      "docs_link": "docs/errors/SIFR-TYPE-0010.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -3075,7 +3075,7 @@
     {
       "code": "SIFR-TYPE-0011",
       "constant": "TYPE_UNSUPPORTED_DEFAULT_ARGUMENT",
-      "docs_link": "docs/errors/SIFR-TYPE-0011.md",
+      "docs_link": "docs/errors/SIFR-TYPE-0011.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -3091,7 +3091,7 @@
     {
       "code": "SIFR-TYPE-0012",
       "constant": "TYPE_UNSUPPORTED_EXPRESSION_FORM",
-      "docs_link": "docs/errors/SIFR-TYPE-0012.md",
+      "docs_link": "docs/errors/SIFR-TYPE-0012.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -3107,7 +3107,7 @@
     {
       "code": "SIFR-TYPE-0901",
       "constant": "TYPE_ARITHMETIC_OVERFLOW_RISK",
-      "docs_link": "docs/errors/SIFR-TYPE-0901.md",
+      "docs_link": "docs/errors/SIFR-TYPE-0901.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -3123,7 +3123,7 @@
     {
       "code": "SIFR-TYPE-0902",
       "constant": "TYPE_REVEAL_TYPE",
-      "docs_link": "docs/errors/SIFR-TYPE-0902.md",
+      "docs_link": "docs/errors/SIFR-TYPE-0902.mdx",
       "machine_applicable": false,
       "owner": "compiler/core-language",
       "renderer_support": [
@@ -3139,7 +3139,7 @@
     {
       "code": "SIFR-WORKSPACE-0001",
       "constant": "WORKSPACE_MALFORMED_MANIFEST",
-      "docs_link": "docs/errors/SIFR-WORKSPACE-0001.md",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0001.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -3155,7 +3155,7 @@
     {
       "code": "SIFR-WORKSPACE-0002",
       "constant": "WORKSPACE_SOURCE_ROOT_ESCAPES",
-      "docs_link": "docs/errors/SIFR-WORKSPACE-0002.md",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0002.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -3171,7 +3171,7 @@
     {
       "code": "SIFR-WORKSPACE-0003",
       "constant": "WORKSPACE_SOURCE_ROOT_NOT_DIRECTORY",
-      "docs_link": "docs/errors/SIFR-WORKSPACE-0003.md",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0003.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -3187,7 +3187,7 @@
     {
       "code": "SIFR-WORKSPACE-0004",
       "constant": "WORKSPACE_INVALID_SOURCE_ROOT",
-      "docs_link": "docs/errors/SIFR-WORKSPACE-0004.md",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0004.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -3203,7 +3203,7 @@
     {
       "code": "SIFR-WORKSPACE-0101",
       "constant": "WORKSPACE_UNRESOLVED_IMPORT",
-      "docs_link": "docs/errors/SIFR-WORKSPACE-0101.md",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0101.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -3219,7 +3219,7 @@
     {
       "code": "SIFR-WORKSPACE-0102",
       "constant": "WORKSPACE_AMBIGUOUS_IMPORT",
-      "docs_link": "docs/errors/SIFR-WORKSPACE-0102.md",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0102.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -3235,7 +3235,7 @@
     {
       "code": "SIFR-WORKSPACE-0103",
       "constant": "WORKSPACE_NAMESPACE_COLLISION",
-      "docs_link": "docs/errors/SIFR-WORKSPACE-0103.md",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0103.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [
@@ -3251,7 +3251,7 @@
     {
       "code": "SIFR-WORKSPACE-0104",
       "constant": "WORKSPACE_IMPORT_CYCLE",
-      "docs_link": "docs/errors/SIFR-WORKSPACE-0104.md",
+      "docs_link": "docs/errors/SIFR-WORKSPACE-0104.mdx",
       "machine_applicable": false,
       "owner": "compiler/frontend",
       "renderer_support": [

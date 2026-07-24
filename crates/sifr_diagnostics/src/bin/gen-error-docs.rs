@@ -1,10 +1,14 @@
 #![allow(clippy::format_push_string)]
 
+#[path = "gen_error_docs/family_docs.rs"]
+mod family_docs;
+
 use std::env;
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
+use family_docs::family_docs;
 use serde_json::{Map, Value};
 use sifr_diagnostics::codes::{
     active_registry_entries, DiagnosticRegistryEntry, DiagnosticState, DIAGNOSTIC_FAMILIES,
@@ -12,20 +16,21 @@ use sifr_diagnostics::codes::{
 };
 
 struct GeneratedDocument {
-    path: &'static str,
+    path: String,
     contents: String,
 }
 
 fn main() -> io::Result<()> {
     let check = env::args().skip(1).any(|arg| arg == "--check");
     let repo_root = repo_root()?;
-    let documents = generated_documents();
+    let documents = generated_documents(&repo_root);
 
     if check {
         check_documents(&repo_root, &documents)?;
         check_docs_json_reference_nav(&repo_root)?;
     } else {
         write_documents(&repo_root, &documents);
+        remove_obsolete_markdown_stubs(&repo_root);
         sync_docs_json_reference_nav(&repo_root)?;
     }
 
@@ -45,35 +50,53 @@ fn repo_root() -> io::Result<PathBuf> {
         })
 }
 
-fn generated_documents() -> Vec<GeneratedDocument> {
+fn generated_documents(repo_root: &Path) -> Vec<GeneratedDocument> {
     let mut documents = vec![
         GeneratedDocument {
-            path: "docs/errors/diagnostic-codes.md",
+            path: "docs/errors/diagnostic-codes.md".to_owned(),
             contents: public_index(PublicIndexLinkStyle::RelativeMarkdown),
         },
         GeneratedDocument {
-            path: "docs/errors/diagnostic-codes.mdx",
+            path: "docs/errors/diagnostic-codes.mdx".to_owned(),
             contents: public_index_mdx(),
         },
         GeneratedDocument {
-            path: "internal_docs/diagnostic_codes.md",
+            path: "internal_docs/diagnostic_codes.md".to_owned(),
             contents: internal_reference(),
         },
     ];
 
     for entry in active_registry_entries() {
+        let example = read_example_fragment(repo_root, entry.id);
         documents.push(GeneratedDocument {
-            path: entry.docs_path,
-            contents: active_code_page(entry),
+            path: entry.docs_path.to_owned(),
+            contents: active_code_page(entry, example.as_deref()),
         });
     }
 
     documents
 }
 
+fn read_example_fragment(repo_root: &Path, code: &str) -> Option<String> {
+    let path = repo_root.join(format!(
+        "crates/sifr_diagnostics/error_page_examples/{code}.md"
+    ));
+    match fs::read_to_string(&path) {
+        Ok(contents) => {
+            let trimmed = contents.trim_end().to_owned();
+            if trimmed.is_empty() {
+                None
+            } else {
+                Some(trimmed)
+            }
+        }
+        Err(_) => None,
+    }
+}
+
 fn write_documents(repo_root: &Path, documents: &[GeneratedDocument]) {
     for document in documents {
-        let path = repo_root.join(document.path);
+        let path = repo_root.join(&document.path);
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)
                 .unwrap_or_else(|err| panic!("failed to create {}: {err}", parent.display()));
@@ -83,10 +106,25 @@ fn write_documents(repo_root: &Path, documents: &[GeneratedDocument]) {
     }
 }
 
+fn remove_obsolete_markdown_stubs(repo_root: &Path) {
+    let errors_dir = repo_root.join("docs/errors");
+    let Ok(entries) = fs::read_dir(&errors_dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if !(name.starts_with("SIFR-") && name.ends_with(".md")) {
+            continue;
+        }
+        let _ = fs::remove_file(entry.path());
+    }
+}
+
 fn check_documents(repo_root: &Path, documents: &[GeneratedDocument]) -> io::Result<()> {
     let mut drift = Vec::new();
     for document in documents {
-        let path = repo_root.join(document.path);
+        let path = repo_root.join(&document.path);
         match fs::read_to_string(&path) {
             Ok(existing) if existing == document.contents => {}
             Ok(_) => drift.push(format!("{} is out of date", document.path)),
@@ -127,20 +165,29 @@ fn check_active_doc_casing(repo_root: &Path, drift: &mut Vec<String>) {
         "diagnostic-codes.mdx".to_owned(),
     ]);
     for entry in active_registry_entries() {
-        let expected = format!("{}.md", entry.id);
+        let expected = format!("{}.mdx", entry.id);
         expected_names.insert(expected.clone());
         if !actual_names.contains(&expected) {
             drift.push(format!(
                 "docs/errors is missing exact active-code page casing for {expected}"
             ));
         }
+        let obsolete_md = format!("{}.md", entry.id);
+        if actual_names.contains(&obsolete_md) {
+            drift.push(format!(
+                "docs/errors contains obsolete markdown stub {obsolete_md}; run gen-error-docs"
+            ));
+        }
     }
     for actual_name in actual_names {
-        if Path::new(&actual_name)
+        let path = Path::new(&actual_name);
+        let is_mdx = path
             .extension()
-            .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
-            && !expected_names.contains(&actual_name)
-        {
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("mdx"));
+        let is_active_mdx = is_mdx
+            && actual_name.starts_with("SIFR-")
+            && !expected_names.contains(&actual_name);
+        if is_active_mdx {
             drift.push(format!(
                 "docs/errors contains orphan generated diagnostic page {actual_name}"
             ));
@@ -221,15 +268,15 @@ fn public_index_mdx() -> String {
 
 fn public_index_code_href(code: &str, link_style: PublicIndexLinkStyle) -> String {
     match link_style {
-        PublicIndexLinkStyle::RelativeMarkdown => format!("{code}.md"),
+        PublicIndexLinkStyle::RelativeMarkdown => format!("{code}.mdx"),
         PublicIndexLinkStyle::MintlifyRoute => format!("/errors/{code}"),
     }
 }
 
 fn diagnostic_code_href(code: &str, link_style: PublicIndexLinkStyle) -> String {
-    let is_active = DIAGNOSTIC_REGISTRY.iter().any(|entry| {
-        entry.id == code && entry.state == DiagnosticState::Active
-    });
+    let is_active = DIAGNOSTIC_REGISTRY
+        .iter()
+        .any(|entry| entry.id == code && entry.state == DiagnosticState::Active);
     if is_active {
         public_index_code_href(code, link_style)
     } else {
@@ -249,10 +296,7 @@ fn linkify_diagnostic_codes(text: &str, link_style: PublicIndexLinkStyle) -> Str
 
     let mut linked = text.to_owned();
     for code in codes {
-        let replacement = format!(
-            "[`{code}`]({})",
-            diagnostic_code_href(code, link_style)
-        );
+        let replacement = format!("[`{code}`]({})", diagnostic_code_href(code, link_style));
         linked = replace_unlinked_diagnostic_code(&linked, code, &replacement);
     }
     linked
@@ -340,17 +384,44 @@ fn internal_reference() -> String {
     out
 }
 
-fn active_code_page(entry: &DiagnosticRegistryEntry) -> String {
-    let mut out = generated_header(entry.id);
+fn active_code_page(entry: &DiagnosticRegistryEntry, example: Option<&str>) -> String {
+    let docs = family_docs(entry.family);
+    let summary = entry.summary.trim();
+    let means = lowercase_sentence_start(summary);
+    let title = format!("{}: {summary}", entry.id);
+    let mut out = String::new();
+    out.push_str("---\n");
+    out.push_str(&format!("title: \"{}\"\n", escape_yaml(title.as_str())));
+    out.push_str(&format!("sidebarTitle: \"{}\"\n", escape_yaml(entry.id)));
+    out.push_str(&format!("description: \"{}\"\n", escape_yaml(summary)));
+    out.push_str("---\n\n");
+    out.push_str("<!-- Generated by cargo run -p sifr_diagnostics --bin gen-error-docs. Do not edit by hand. -->\n\n");
+    let means_linked = linkify_diagnostic_codes(&means, PublicIndexLinkStyle::MintlifyRoute);
+    let means_clause = means_linked.trim_end_matches('.').to_owned();
     out.push_str(&format!(
-        "{}\n\n",
-        linkify_diagnostic_codes(entry.summary, PublicIndexLinkStyle::MintlifyRoute)
+        "`{}` belongs to the **{}** diagnostic family. It means: {means_clause}.\n\n",
+        entry.id, docs.display_name
     ));
+    out.push_str("## Why It Happens\n\n");
+    out.push_str(docs.why_it_happens);
+    out.push_str("\n\n");
+    out.push_str("<Info>\n");
+    out.push_str(&format!(
+        "Use `sifr --explain {}` locally to see the renderer's exact message template and any machine-applicable suggestions for the compiler version you are running.\n",
+        entry.id
+    ));
+    out.push_str("</Info>\n\n");
+    if let Some(example) = example {
+        out.push_str(example);
+        out.push_str("\n\n");
+    }
+    out.push_str("## Details\n\n");
     out.push_str("| Field | Value |\n");
     out.push_str("| --- | --- |\n");
     out.push_str(&format!("| Code | `{}` |\n", entry.id));
     out.push_str(&format!("| Family | `{}` |\n", entry.family));
     out.push_str(&format!("| Severity | {} |\n", severity(entry)));
+    out.push_str("| Stability | stable |\n");
     out.push_str(&format!(
         "| Owner | {} |\n",
         optional_code(entry.owner_module)
@@ -368,7 +439,22 @@ fn active_code_page(entry: &DiagnosticRegistryEntry) -> String {
         "| Dedupe args | {} |\n",
         string_list(entry.dedupe_args)
     ));
+    out.push_str(
+        "\nSee the [Error Codes index](/diagnostics/error-codes) for the complete catalog.\n",
+    );
     out
+}
+
+fn lowercase_sentence_start(text: &str) -> String {
+    let mut chars = text.chars();
+    match chars.next() {
+        Some(first) => first.to_lowercase().collect::<String>() + chars.as_str(),
+        None => String::new(),
+    }
+}
+
+fn escape_yaml(value: &str) -> String {
+    value.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
 fn generated_header(title: &str) -> String {
@@ -429,10 +515,7 @@ fn reference_error_nav_pages() -> Value {
             continue;
         }
         pages.push(Value::Object(Map::from_iter([
-            (
-                "group".to_owned(),
-                Value::String(family.name.to_owned()),
-            ),
+            ("group".to_owned(), Value::String(family.name.to_owned())),
             ("pages".to_owned(), Value::Array(family_pages)),
         ])));
     }
@@ -474,14 +557,12 @@ fn check_docs_json_reference_nav(repo_root: &Path) -> io::Result<()> {
     })?;
 
     let error_codes_group = reference_error_codes_group(&mut root)?;
-    let actual_pages = error_codes_group
-        .get("pages")
-        .ok_or_else(|| {
-            io::Error::new(
-                io::ErrorKind::InvalidData,
-                "Reference > Error Codes group is missing pages",
-            )
-        })?;
+    let actual_pages = error_codes_group.get("pages").ok_or_else(|| {
+        io::Error::new(
+            io::ErrorKind::InvalidData,
+            "Reference > Error Codes group is missing pages",
+        )
+    })?;
     let expected_pages = reference_error_nav_pages();
     if actual_pages == &expected_pages {
         return Ok(());
@@ -503,7 +584,10 @@ fn reference_error_codes_group(root: &mut Value) -> io::Result<&mut Map<String, 
         .and_then(|navigation| navigation.get_mut("tabs"))
         .and_then(Value::as_array_mut)
         .ok_or_else(|| {
-            io::Error::new(io::ErrorKind::InvalidData, "docs.json missing navigation.tabs")
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "docs.json missing navigation.tabs",
+            )
         })?;
 
     let reference_tab = tabs

@@ -169,8 +169,8 @@ def validate_catalog(errors: list[str], active: dict[str, dict[str, str]]) -> di
             errors.append(f"{code}: invalid stability {entry.get('stability')!r}")
         if not entry.get("owner"):
             errors.append(f"{code}: missing owner")
-        if entry.get("docs_link") != f"docs/errors/{code}.md":
-            errors.append(f"{code}: docs_link must be docs/errors/{code}.md")
+        if entry.get("docs_link") != f"docs/errors/{code}.mdx":
+            errors.append(f"{code}: docs_link must be docs/errors/{code}.mdx")
         renderers = set(entry.get("renderer_support", []))
         if not renderers or not renderers.issubset(ALLOWED_RENDERERS):
             errors.append(f"{code}: invalid renderer_support {sorted(renderers)}")
