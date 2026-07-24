@@ -106,7 +106,7 @@ Both `sifr check` and `sifr emit` respect the global `--diagnostic-format` flag.
     ```
 
     ```text
-    error[SIFR-TYPE-0042]: expected `int`, found `str`
+    error[SIFR-TYPE-0002]: expected `int`, found `str`
       --> main.sifr:4:18
        |
      4 |     count: int = "three"
@@ -124,7 +124,7 @@ Both `sifr check` and `sifr emit` respect the global `--diagnostic-format` flag.
 
     ```text
     1 error, 0 warnings, 0 notes
-    E SIFR-TYPE-0042 main.sifr:4:18 expected `int`, found `str`
+    E SIFR-TYPE-0002 main.sifr:4:18 expected `int`, found `str`
     ```
   </Tab>
   <Tab title="json">
@@ -140,16 +140,16 @@ Both `sifr check` and `sifr emit` respect the global `--diagnostic-format` flag.
 
 ## Explaining a diagnostic code
 
-When you see a diagnostic code such as `SIFR-TYPE-0042`, pass it to `--explain` to get a human-readable description without re-running the compiler:
+When you see a diagnostic code such as [`SIFR-TYPE-0002`](/errors/SIFR-TYPE-0002), pass it to `--explain` to get a human-readable description without re-running the compiler:
 
 ```bash
-sifr --explain SIFR-TYPE-0042
+sifr --explain SIFR-TYPE-0002
 ```
 
 Request JSON output for programmatic consumption:
 
 ```bash
-sifr --diagnostic-format json --explain SIFR-TYPE-0042
+sifr --diagnostic-format json --explain SIFR-TYPE-0002
 ```
 
 `--explain` works for any diagnostic code the compiler knows about and exits with code `0` on success or `2` if the code is unknown.

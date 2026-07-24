@@ -57,7 +57,7 @@ Text-heavy behavior remains provider-gated:
 
 ## HTTP Transport Boundary
 
-This substrate validates HTTP/1.1 and HTTP/2 transport through verification-owned Rust fixture `verification/areas/runtime_platform/fixtures/http_transport_loopback.rs`. `sifr.http_transport` is not a public module and ordinary user imports fail with `SIFR-IMPORT-0009`. Public server routing, middleware, request extractors, JSON/form helpers, cookies, redirects, retries, auth, proxies, compression, WebSockets, CONNECT, and HTTP/3 are intentionally outside this substrate.
+This substrate validates HTTP/1.1 and HTTP/2 transport through verification-owned Rust fixture `verification/areas/runtime_platform/fixtures/http_transport_loopback.rs`. `sifr.http_transport` is not a public module and ordinary user imports fail with [`SIFR-IMPORT-0009`](/errors/SIFR-IMPORT-0009). Public server routing, middleware, request extractors, JSON/form helpers, cookies, redirects, retries, auth, proxies, compression, WebSockets, CONNECT, and HTTP/3 are intentionally outside this substrate.
 
 Representative runnable examples:
 

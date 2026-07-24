@@ -55,7 +55,7 @@ The `IMPORT` family covers errors that occur when resolving `import` and `from â
 | [`SIFR-IMPORT-0009`](/errors/SIFR-IMPORT-0009) | Error | Unsupported legacy Sifr stdlib module import. |
 
 <Note>
-`SIFR-IMPORT-0008` fires when you write `from math import floor` instead of `from sifr.math import floor`. Sifr's standard library lives under the `sifr.*` namespace.
+[`SIFR-IMPORT-0008`](/errors/SIFR-IMPORT-0008) fires when you write `from math import floor` instead of `from sifr.math import floor`. Sifr's standard library lives under the `sifr.*` namespace.
 </Note>
 
 </Accordion>
@@ -271,7 +271,7 @@ The `FMT` family covers formatting enforcement. It fires when `sifr fmt --check`
 | [`SIFR-FMT-0001`](/errors/SIFR-FMT-0001) | Error | Source formatting drift detected by `sifr fmt --check`. |
 
 <Tip>
-Run `sifr fmt` (without `--check`) to automatically rewrite all files to canonical formatting and resolve `SIFR-FMT-0001`.
+Run `sifr fmt` (without `--check`) to automatically rewrite all files to canonical formatting and resolve [`SIFR-FMT-0001`](/errors/SIFR-FMT-0001).
 </Tip>
 
 </Accordion>
@@ -348,7 +348,7 @@ The `RESULT` family covers Sifr's checked error-handling model. Sifr requires th
 | [`SIFR-RESULT-0006`](/errors/SIFR-RESULT-0006) | Error | `except` arm type expression has an unsupported form. |
 
 <Note>
-`SIFR-RESULT-0001` fires whenever you call a function that returns `Result` and discard the return value without handling it. Use `match`, `unwrap()`, or propagate the result with `?` syntax to resolve it.
+[`SIFR-RESULT-0001`](/errors/SIFR-RESULT-0001) fires whenever you call a function that returns `Result` and discard the return value without handling it. Use `match`, `unwrap()`, or propagate the result with `?` syntax to resolve it.
 </Note>
 
 </Accordion>
@@ -460,7 +460,7 @@ The `INTERNAL` family covers compiler-internal failures that escape the panic bo
 | [`SIFR-INTERNAL-0002`](/errors/SIFR-INTERNAL-0002) | Note | Structured recovery-cap omission summary. |
 
 <Warning>
-`SIFR-INTERNAL-0001` always indicates a compiler bug. If you encounter it, please file a report with the Sifr issue tracker and include a minimal reproduction of the failing source file.
+[`SIFR-INTERNAL-0001`](/errors/SIFR-INTERNAL-0001) always indicates a compiler bug. If you encounter it, please file a report with the Sifr issue tracker and include a minimal reproduction of the failing source file.
 </Warning>
 
 </Accordion>

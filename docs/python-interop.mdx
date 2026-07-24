@@ -576,10 +576,10 @@ Compiler diagnostics use stable URLs and structured JSON fields:
 
 | Family | Covers |
 | --- | --- |
-| `SIFR-PYENV-0001..0011` | Environment selection, probing, interpreter, ABI, import, native-load, and metadata. |
-| `SIFR-PYTRUST-0001`, `0003..0005` | Dependency wildcard rejection, stale native trust, dynamic-import annotation, and unauthorized required roots. `SIFR-PYTRUST-0002` is retired. |
-| `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES` | Declaration, target, conversion, resource, and sequenced activation. |
-| `SIFR-PYCB` | Callback lifetime, dispatch, conversion, and shutdown. |
-| `SIFR-PYZC` | Buffer, Arrow, and DLPack declaration, ownership, layout or stream policy, certification, capsule validation, transfer, and hidden-copy. |
+| [`SIFR-PYENV-0001`](/errors/SIFR-PYENV-0001)–[`SIFR-PYENV-0011`](/errors/SIFR-PYENV-0011) | Environment selection, probing, interpreter, ABI, import, native-load, and metadata. |
+| [`SIFR-PYTRUST-0001`](/errors/SIFR-PYTRUST-0001), [`SIFR-PYTRUST-0003`](/errors/SIFR-PYTRUST-0003)–[`SIFR-PYTRUST-0005`](/errors/SIFR-PYTRUST-0005) | Dependency wildcard rejection, stale native trust, dynamic-import annotation, and unauthorized required roots. [`SIFR-PYTRUST-0002`](/errors/diagnostic-codes) is retired. |
+| [`SIFR-PYIMP-*`](/diagnostics/error-codes), [`SIFR-PYCALL-*`](/diagnostics/error-codes), [`SIFR-PYCONV-*`](/diagnostics/error-codes), [`SIFR-PYRES-*`](/diagnostics/error-codes) | Declaration, target, conversion, resource, and sequenced activation. |
+| [`SIFR-PYCB-*`](/diagnostics/error-codes) | Callback lifetime, dispatch, conversion, and shutdown. |
+| [`SIFR-PYZC-*`](/diagnostics/error-codes) | Buffer, Arrow, and DLPack declaration, ownership, layout or stream policy, certification, capsule validation, transfer, and hidden-copy. |
 
-See [error codes](/diagnostics/error-codes) for the full catalog. Run `sifr --explain SIFR-PYCALL-0001` for a stable explanation of any active code.
+See [error codes](/diagnostics/error-codes) for the full catalog. Run `sifr --explain SIFR-PYCALL-0001` for a stable explanation of [`SIFR-PYCALL-0001`](/errors/SIFR-PYCALL-0001).

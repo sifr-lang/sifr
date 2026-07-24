@@ -187,7 +187,7 @@ fn public_index(link_style: PublicIndexLinkStyle) -> String {
                 entry.id,
                 public_index_code_href(entry.id, link_style),
                 severity(entry),
-                entry.summary
+                linkify_diagnostic_codes(entry.summary, link_style)
             ));
         }
     }
@@ -200,8 +200,11 @@ fn public_index(link_style: PublicIndexLinkStyle) -> String {
         .filter(|entry| entry.state == DiagnosticState::Reserved)
     {
         out.push_str(&format!(
-            "| `{}` | `{}` | {} |\n",
-            entry.id, entry.family, entry.summary
+            "| [`{}`]({}) | `{}` | {} |\n",
+            entry.id,
+            diagnostic_code_href(entry.id, link_style),
+            entry.family,
+            linkify_diagnostic_codes(entry.summary, link_style)
         ));
     }
 
@@ -221,6 +224,74 @@ fn public_index_code_href(code: &str, link_style: PublicIndexLinkStyle) -> Strin
         PublicIndexLinkStyle::RelativeMarkdown => format!("{code}.md"),
         PublicIndexLinkStyle::MintlifyRoute => format!("/errors/{code}"),
     }
+}
+
+fn diagnostic_code_href(code: &str, link_style: PublicIndexLinkStyle) -> String {
+    let is_active = DIAGNOSTIC_REGISTRY.iter().any(|entry| {
+        entry.id == code && entry.state == DiagnosticState::Active
+    });
+    if is_active {
+        public_index_code_href(code, link_style)
+    } else {
+        match link_style {
+            PublicIndexLinkStyle::RelativeMarkdown => "diagnostic-codes.md".to_owned(),
+            PublicIndexLinkStyle::MintlifyRoute => "/errors/diagnostic-codes".to_owned(),
+        }
+    }
+}
+
+fn linkify_diagnostic_codes(text: &str, link_style: PublicIndexLinkStyle) -> String {
+    let mut codes = DIAGNOSTIC_REGISTRY
+        .iter()
+        .map(|entry| entry.id)
+        .collect::<Vec<_>>();
+    codes.sort_by_key(|code| std::cmp::Reverse(code.len()));
+
+    let mut linked = text.to_owned();
+    for code in codes {
+        let replacement = format!(
+            "[`{code}`]({})",
+            diagnostic_code_href(code, link_style)
+        );
+        linked = replace_unlinked_diagnostic_code(&linked, code, &replacement);
+    }
+    linked
+}
+
+fn replace_unlinked_diagnostic_code(text: &str, code: &str, link: &str) -> String {
+    let mut out = String::new();
+    let mut rest = text;
+    while let Some(index) = rest.find(code) {
+        let (before, after_start) = rest.split_at(index);
+        let after = &after_start[code.len()..];
+        if is_linked_diagnostic_reference(before, after) {
+            out.push_str(before);
+            out.push_str(code);
+            rest = after;
+            continue;
+        }
+        if before.ends_with('`') && after.starts_with('`') {
+            out.push_str(&before[..before.len() - 1]);
+            out.push_str(link);
+            rest = &after[1..];
+            continue;
+        }
+        out.push_str(before);
+        out.push_str(link);
+        rest = after;
+    }
+    out.push_str(rest);
+    out
+}
+
+fn is_linked_diagnostic_reference(before: &str, after: &str) -> bool {
+    if before.ends_with("[`") && after.starts_with("`](") {
+        return true;
+    }
+    if let Some(open) = before.rfind("](") {
+        return !before[open..].contains(')');
+    }
+    false
 }
 
 fn internal_reference() -> String {
@@ -271,7 +342,10 @@ fn internal_reference() -> String {
 
 fn active_code_page(entry: &DiagnosticRegistryEntry) -> String {
     let mut out = generated_header(entry.id);
-    out.push_str(&format!("{}\n\n", entry.summary));
+    out.push_str(&format!(
+        "{}\n\n",
+        linkify_diagnostic_codes(entry.summary, PublicIndexLinkStyle::MintlifyRoute)
+    ));
     out.push_str("| Field | Value |\n");
     out.push_str("| --- | --- |\n");
     out.push_str(&format!("| Code | `{}` |\n", entry.id));

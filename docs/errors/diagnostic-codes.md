@@ -174,10 +174,10 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-WORKSPACE-0002`](SIFR-WORKSPACE-0002.md) | Error | Workspace source root escapes the workspace root. |
 | [`SIFR-WORKSPACE-0003`](SIFR-WORKSPACE-0003.md) | Error | Workspace source root is not a directory. |
 | [`SIFR-WORKSPACE-0004`](SIFR-WORKSPACE-0004.md) | Error | Workspace source root entry has an invalid shape or path. |
-| [`SIFR-WORKSPACE-0101`](SIFR-WORKSPACE-0101.md) | Error | Legacy workspace import target could not be resolved; source imports use SIFR-IMPORT-0002. |
-| [`SIFR-WORKSPACE-0102`](SIFR-WORKSPACE-0102.md) | Error | Legacy workspace import target is ambiguous; source imports use SIFR-IMPORT-0005. |
-| [`SIFR-WORKSPACE-0103`](SIFR-WORKSPACE-0103.md) | Error | Legacy workspace namespace package collision; source imports use SIFR-IMPORT-0006. |
-| [`SIFR-WORKSPACE-0104`](SIFR-WORKSPACE-0104.md) | Error | Legacy workspace import graph cycle; source imports use SIFR-IMPORT-0007. |
+| [`SIFR-WORKSPACE-0101`](SIFR-WORKSPACE-0101.md) | Error | Legacy workspace import target could not be resolved; source imports use [`SIFR-IMPORT-0002`](SIFR-IMPORT-0002.md). |
+| [`SIFR-WORKSPACE-0102`](SIFR-WORKSPACE-0102.md) | Error | Legacy workspace import target is ambiguous; source imports use [`SIFR-IMPORT-0005`](SIFR-IMPORT-0005.md). |
+| [`SIFR-WORKSPACE-0103`](SIFR-WORKSPACE-0103.md) | Error | Legacy workspace namespace package collision; source imports use [`SIFR-IMPORT-0006`](SIFR-IMPORT-0006.md). |
+| [`SIFR-WORKSPACE-0104`](SIFR-WORKSPACE-0104.md) | Error | Legacy workspace import graph cycle; source imports use [`SIFR-IMPORT-0007`](SIFR-IMPORT-0007.md). |
 | [`SIFR-BUILD-0002`](SIFR-BUILD-0002.md) | Error | Build file materialization failed. |
 | [`SIFR-BUILD-0003`](SIFR-BUILD-0003.md) | Error | Temporary build workspace creation failed. |
 | [`SIFR-BUILD-0004`](SIFR-BUILD-0004.md) | Error | Cargo manifest generation failed. |
@@ -268,61 +268,61 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 
 | Code | Family | Summary |
 | --- | --- | --- |
-| `SIFR-PARSE-0000` | `PARSE` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-NAME-0000` | `NAME` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-IMPORT-0000` | `IMPORT` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-TYPE-0000` | `TYPE` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-ASYNC-0000` | `ASYNC` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PYENV-0000` | `PYENV` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PYIMP-0000` | `PYIMP` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PYCALL-0000` | `PYCALL` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PYCONV-0000` | `PYCONV` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PYRES-0000` | `PYRES` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PYASYNC-0000` | `PYASYNC` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PYCTX-0000` | `PYCTX` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PYZC-0000` | `PYZC` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PYCB-0000` | `PYCB` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PYTRUST-0000` | `PYTRUST` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PYTRUST-0002` | `PYTRUST` | Retired: import requirements and root authorization now use SIFR-PYTRUST-0005. |
-| `SIFR-RUST-CONFIG-0000` | `RUST-CONFIG` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-RUST-RESOLVE-0000` | `RUST-RESOLVE` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-RUST-TRUST-0000` | `RUST-TRUST` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-RUST-TYPE-0000` | `RUST-TYPE` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-RUST-HANDLE-0000` | `RUST-HANDLE` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-RUST-ASYNC-0000` | `RUST-ASYNC` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-RUST-ZC-0000` | `RUST-ZC` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-RUST-CB-0000` | `RUST-CB` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-RUST-PANIC-0000` | `RUST-PANIC` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-RUST-CARGO-0000` | `RUST-CARGO` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-DECIMAL-0000` | `DECIMAL` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-INT-0000` | `INT` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-IO-0000` | `IO` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-ENCODING-0000` | `ENCODING` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PYRES-0001` | `PYRES` | Reserved for an invalid Python opaque cleanup or ownership policy. |
-| `SIFR-PYASYNC-0001` | `PYASYNC` | Reserved for an invalid Python awaitable, cancellation, or loop-ownership declaration. |
-| `SIFR-INT-0002` | `INT` | Reserved for implicit narrowing from exact or fixed-width integer sources to narrower fixed-width targets. |
-| `SIFR-INT-0008` | `INT` | Reserved for fixed-width array, tensor, or dataframe arithmetic without an explicit overflow policy. |
-| `SIFR-INT-0009` | `INT` | Reserved for JSON or web-safe integer serialization policy failures. |
-| `SIFR-INT-0010` | `INT` | Reserved for bytes or bytearray construction and mutation values that do not fit uint8. |
-| `SIFR-TYPE-0903` | `TYPE` | Retired: direct annotated workload calls from async code are now ASYNC-family errors. |
-| `SIFR-CALL-0000` | `CALL` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-OWN-0000` | `OWN` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-FLOW-0000` | `FLOW` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-FMT-0000` | `FMT` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-LINT-0000` | `LINT` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-MATCH-0000` | `MATCH` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PROTO-0000` | `PROTO` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-CLASS-0000` | `CLASS` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-RESULT-0000` | `RESULT` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-STDLIB-0000` | `STDLIB` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-WORKSPACE-0000` | `WORKSPACE` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PACKAGE-0000` | `PACKAGE` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-PACKAGE-0105` | `PACKAGE` | Retired: Cargo credential failures are wrapped by SIFR-PACKAGE-0101. |
-| `SIFR-PACKAGE-0302` | `PACKAGE` | Reserved for future backend trust diagnostics. |
-| `SIFR-PACKAGE-0306` | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |
-| `SIFR-PACKAGE-0307` | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |
-| `SIFR-PACKAGE-0308` | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |
-| `SIFR-PACKAGE-0309` | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |
-| `SIFR-CODEGEN-0000` | `CODEGEN` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-BUILD-0000` | `BUILD` | Reserved family base; not emitted as a diagnostic. |
-| `SIFR-INTERNAL-0000` | `INTERNAL` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PARSE-0000`](diagnostic-codes.md) | `PARSE` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-NAME-0000`](diagnostic-codes.md) | `NAME` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-IMPORT-0000`](diagnostic-codes.md) | `IMPORT` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-TYPE-0000`](diagnostic-codes.md) | `TYPE` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-ASYNC-0000`](diagnostic-codes.md) | `ASYNC` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PYENV-0000`](diagnostic-codes.md) | `PYENV` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PYIMP-0000`](diagnostic-codes.md) | `PYIMP` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PYCALL-0000`](diagnostic-codes.md) | `PYCALL` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PYCONV-0000`](diagnostic-codes.md) | `PYCONV` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PYRES-0000`](diagnostic-codes.md) | `PYRES` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PYASYNC-0000`](diagnostic-codes.md) | `PYASYNC` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PYCTX-0000`](diagnostic-codes.md) | `PYCTX` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PYZC-0000`](diagnostic-codes.md) | `PYZC` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PYCB-0000`](diagnostic-codes.md) | `PYCB` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PYTRUST-0000`](diagnostic-codes.md) | `PYTRUST` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PYTRUST-0002`](diagnostic-codes.md) | `PYTRUST` | Retired: import requirements and root authorization now use [`SIFR-PYTRUST-0005`](SIFR-PYTRUST-0005.md). |
+| [`SIFR-RUST-CONFIG-0000`](diagnostic-codes.md) | `RUST-CONFIG` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-RUST-RESOLVE-0000`](diagnostic-codes.md) | `RUST-RESOLVE` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-RUST-TRUST-0000`](diagnostic-codes.md) | `RUST-TRUST` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-RUST-TYPE-0000`](diagnostic-codes.md) | `RUST-TYPE` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-RUST-HANDLE-0000`](diagnostic-codes.md) | `RUST-HANDLE` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-RUST-ASYNC-0000`](diagnostic-codes.md) | `RUST-ASYNC` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-RUST-ZC-0000`](diagnostic-codes.md) | `RUST-ZC` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-RUST-CB-0000`](diagnostic-codes.md) | `RUST-CB` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-RUST-PANIC-0000`](diagnostic-codes.md) | `RUST-PANIC` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-RUST-CARGO-0000`](diagnostic-codes.md) | `RUST-CARGO` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-DECIMAL-0000`](diagnostic-codes.md) | `DECIMAL` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-INT-0000`](diagnostic-codes.md) | `INT` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-IO-0000`](diagnostic-codes.md) | `IO` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-ENCODING-0000`](diagnostic-codes.md) | `ENCODING` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PYRES-0001`](diagnostic-codes.md) | `PYRES` | Reserved for an invalid Python opaque cleanup or ownership policy. |
+| [`SIFR-PYASYNC-0001`](diagnostic-codes.md) | `PYASYNC` | Reserved for an invalid Python awaitable, cancellation, or loop-ownership declaration. |
+| [`SIFR-INT-0002`](diagnostic-codes.md) | `INT` | Reserved for implicit narrowing from exact or fixed-width integer sources to narrower fixed-width targets. |
+| [`SIFR-INT-0008`](diagnostic-codes.md) | `INT` | Reserved for fixed-width array, tensor, or dataframe arithmetic without an explicit overflow policy. |
+| [`SIFR-INT-0009`](diagnostic-codes.md) | `INT` | Reserved for JSON or web-safe integer serialization policy failures. |
+| [`SIFR-INT-0010`](diagnostic-codes.md) | `INT` | Reserved for bytes or bytearray construction and mutation values that do not fit uint8. |
+| [`SIFR-TYPE-0903`](diagnostic-codes.md) | `TYPE` | Retired: direct annotated workload calls from async code are now ASYNC-family errors. |
+| [`SIFR-CALL-0000`](diagnostic-codes.md) | `CALL` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-OWN-0000`](diagnostic-codes.md) | `OWN` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-FLOW-0000`](diagnostic-codes.md) | `FLOW` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-FMT-0000`](diagnostic-codes.md) | `FMT` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-LINT-0000`](diagnostic-codes.md) | `LINT` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-MATCH-0000`](diagnostic-codes.md) | `MATCH` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PROTO-0000`](diagnostic-codes.md) | `PROTO` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-CLASS-0000`](diagnostic-codes.md) | `CLASS` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-RESULT-0000`](diagnostic-codes.md) | `RESULT` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-STDLIB-0000`](diagnostic-codes.md) | `STDLIB` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-WORKSPACE-0000`](diagnostic-codes.md) | `WORKSPACE` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PACKAGE-0000`](diagnostic-codes.md) | `PACKAGE` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-PACKAGE-0105`](diagnostic-codes.md) | `PACKAGE` | Retired: Cargo credential failures are wrapped by [`SIFR-PACKAGE-0101`](SIFR-PACKAGE-0101.md). |
+| [`SIFR-PACKAGE-0302`](diagnostic-codes.md) | `PACKAGE` | Reserved for future backend trust diagnostics. |
+| [`SIFR-PACKAGE-0306`](diagnostic-codes.md) | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |
+| [`SIFR-PACKAGE-0307`](diagnostic-codes.md) | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |
+| [`SIFR-PACKAGE-0308`](diagnostic-codes.md) | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |
+| [`SIFR-PACKAGE-0309`](diagnostic-codes.md) | `PACKAGE` | Reserved for future backend trust and feature diagnostics. |
+| [`SIFR-CODEGEN-0000`](diagnostic-codes.md) | `CODEGEN` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-BUILD-0000`](diagnostic-codes.md) | `BUILD` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-INTERNAL-0000`](diagnostic-codes.md) | `INTERNAL` | Reserved family base; not emitted as a diagnostic. |
