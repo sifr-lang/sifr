@@ -118,7 +118,7 @@ The `DiagnosticEnvelope` wraps a versioned array of `RenderedDiagnostic` objects
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `code` | `string` | Stable diagnostic code, e.g. `SIFR-TYPE-0002`. |
+| `code` | `string` | Stable diagnostic code, e.g. [`SIFR-TYPE-0002`](/errors/SIFR-TYPE-0002). |
 | `severity` | `"Error" \| "Warning" \| "Note"` | Diagnostic severity level. |
 | `message` | `string` | Fully rendered human-readable message with arguments interpolated. |
 | `message_template` | `string` | Raw template before argument substitution. |
@@ -164,7 +164,7 @@ Sifr commands use consistent exit codes across all subcommands.
 | `3` | Internal panic — an unrecoverable compiler-internal failure occurred after the panic boundary. |
 
 <Warning>
-Exit code `3` indicates a compiler bug, not a user error. If you encounter it, please report the `SIFR-INTERNAL-0001` diagnostic output along with a minimal reproduction to the Sifr issue tracker.
+Exit code `3` indicates a compiler bug, not a user error. If you encounter it, please report the [`SIFR-INTERNAL-0001`](/errors/SIFR-INTERNAL-0001) diagnostic output along with a minimal reproduction to the Sifr issue tracker.
 </Warning>
 
 ## Looking Up Error Details
@@ -177,7 +177,7 @@ sifr explain SIFR-OWN-0001
 sifr --explain SIFR-RESULT-0001
 ```
 
-Both forms print the diagnostic description, message template, severity, and any relevant guidance without performing a build or package operation. This works even for retired codes — for example, `sifr --explain SIFR-PACKAGE-0105` redirects you to the replacement code `SIFR-PACKAGE-0101`.
+Both forms print the diagnostic description, message template, severity, and any relevant guidance without performing a build or package operation. This works even for retired codes — for example, `sifr --explain SIFR-PACKAGE-0105` redirects you to the replacement code [`SIFR-PACKAGE-0101`](/errors/SIFR-PACKAGE-0101).
 
 ## Suppressing Lint Diagnostics
 
@@ -190,7 +190,7 @@ value = legacy_call()  # sifr: ignore[rule-id]
 Replace `rule-id` with the exact Sifr rule identifier such as `todo-comment`, `trailing-whitespace`, or `boolean-positional-argument`.
 
 <Warning>
-Blanket suppressions — comments that do not name at least one explicit rule ID — are **rejected** by the compiler. Sifr will emit `SIFR-LINT-0003` and will not apply the suppression.
+Blanket suppressions — comments that do not name at least one explicit rule ID — are **rejected** by the compiler. Sifr will emit [`SIFR-LINT-0003`](/errors/SIFR-LINT-0003) and will not apply the suppression.
 </Warning>
 
 <Note>
@@ -199,7 +199,7 @@ Suppressions apply only to **policy diagnostics** from `sifr lint`. Hard compile
 
 Sifr also reports two additional lint-related warnings to keep suppression hygiene clean:
 
-- **`SIFR-LINT-0001`** — the rule ID in a suppression comment does not match any known policy rule.
-- **`SIFR-LINT-0002`** — the suppression comment is present but did not actually suppress any diagnostic on that line.
+- **[`SIFR-LINT-0001`](/errors/SIFR-LINT-0001)** — the rule ID in a suppression comment does not match any known policy rule.
+- **[`SIFR-LINT-0002`](/errors/SIFR-LINT-0002)** — the suppression comment is present but did not actually suppress any diagnostic on that line.
 
 To audit all suppressions without applying them, run `sifr lint --ignore-suppressions`. This flag does not affect per-file ignores or hard compiler diagnostics.

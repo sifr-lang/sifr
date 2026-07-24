@@ -194,6 +194,6 @@ Rust interop diagnostics are grouped by contract family:
 | [`SIFR-RUST-PANIC-*`](/diagnostics/error-codes) | Panic policy, panic strategy, and poisoned handle contract violations. |
 | [`SIFR-RUST-CARGO-*`](/diagnostics/error-codes) | Missing Cargo context, metadata, lock, profile, and feature consistency failures. |
 
-Run `sifr --explain SIFR-RUST-CB-0001` for a stable explanation of any active code.
+Run `sifr --explain SIFR-RUST-CB-0001` for a stable explanation of [`SIFR-RUST-CB-0001`](/errors/SIFR-RUST-CB-0001).
 
 Rust interop never falls back from zero-copy to copying, never creates a hidden Tokio runtime, and never lets a Rust panic unwind through Sifr user code in recoverable builds.

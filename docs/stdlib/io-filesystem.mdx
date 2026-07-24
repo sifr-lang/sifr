@@ -33,7 +33,7 @@ except IOError as e:
 ```
 
 <Warning>
-`open(path)` and text-mode `open(path, "r")` without `encoding=` are intentionally unsupported and raise `SIFR-IO-0801` at compile time. Sifr never falls back to a locale-derived default encoding. Always pass an explicit codec descriptor.
+`open(path)` and text-mode `open(path, "r")` without `encoding=` are intentionally unsupported and raise [`SIFR-IO-0801`](/errors/SIFR-IO-0801) at compile time. Sifr never falls back to a locale-derived default encoding. Always pass an explicit codec descriptor.
 </Warning>
 
 ### Supported Encodings

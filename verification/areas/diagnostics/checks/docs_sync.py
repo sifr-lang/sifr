@@ -12,6 +12,18 @@ ROOT = pathlib.Path(__file__).resolve().parents[4]
 
 
 def main() -> int:
+    link_check = subprocess.run(
+        [sys.executable, "scripts/check_docs_error_code_links.py"],
+        cwd=ROOT,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if link_check.returncode != 0:
+        sys.stderr.write(link_check.stderr)
+        return link_check.returncode
+
     checked = subprocess.run(
         [
             "cargo",

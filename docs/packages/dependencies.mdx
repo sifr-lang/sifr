@@ -96,7 +96,7 @@ Packages that exceed their declared trust boundary are rejected with `SIFR-RUST-
 See [Rust Interop](/rust-interop) for direct bindings, local bridges, shared bridge crates, opaque handles, async, zero-copy, callbacks, and trust examples.
 
 <Warning>
-Sifr wraps Cargo process failures in diagnostic code `SIFR-PACKAGE-0101`. If a dependency fetch, tree command, or other Cargo-delegated operation fails, run `sifr --explain SIFR-PACKAGE-0101` for structured diagnostic help. The explainer does not perform any package operations — it is safe to run at any time.
+Sifr wraps Cargo process failures in diagnostic code [`SIFR-PACKAGE-0101`](/errors/SIFR-PACKAGE-0101). If a dependency fetch, tree command, or other Cargo-delegated operation fails, run `sifr --explain SIFR-PACKAGE-0101` for structured diagnostic help on [`SIFR-PACKAGE-0101`](/errors/SIFR-PACKAGE-0101). The explainer does not perform any package operations — it is safe to run at any time.
 </Warning>
 
 ## Python package requirements

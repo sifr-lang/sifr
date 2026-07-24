@@ -23,7 +23,7 @@ from sifr.net import connect_tcp
 ```
 
 <Warning>
-**Bare CPython module names are not supported.** Importing `math`, `json`, `os`, `collections`, `codecs`, `unicodedata`, `locale`, or any other CPython stdlib name directly triggers error `SIFR-IMPORT-0008` and the compiler suggests the correct `sifr.*` replacement.
+**Bare CPython module names are not supported.** Importing `math`, `json`, `os`, `collections`, `codecs`, `unicodedata`, `locale`, or any other CPython stdlib name directly triggers error [`SIFR-IMPORT-0008`](/errors/SIFR-IMPORT-0008) and the compiler suggests the correct `sifr.*` replacement.
 
 ```python
 # ❌ Rejected — raises SIFR-IMPORT-0008
@@ -40,7 +40,7 @@ from sifr.json import loads
 `import sifr.math` (module-object form) is also unsupported in the current release. Always import the specific symbols you need using `from sifr.<module> import <symbol>`.
 </Note>
 
-If a real user-defined or third-party top-level module named `math`, `json`, or similar exists in your project, the normal top-level resolution imports it without a diagnostic. The `SIFR-IMPORT-0008` error only fires when no real top-level module matches the bare name.
+If a real user-defined or third-party top-level module named `math`, `json`, or similar exists in your project, the normal top-level resolution imports it without a diagnostic. The [`SIFR-IMPORT-0008`](/errors/SIFR-IMPORT-0008) error only fires when no real top-level module matches the bare name.
 
 ## Available Modules
 
@@ -70,7 +70,7 @@ If a real user-defined or third-party top-level module named `math`, `json`, or 
 
 | Module | Description |
 |---|---|
-| `sifr.io` | `open_text` for text files with a required explicit encoding, and binary file I/O. Text-mode `open()` without `encoding=` is unsupported (`SIFR-IO-0801`). |
+| `sifr.io` | `open_text` for text files with a required explicit encoding, and binary file I/O. Text-mode `open()` without `encoding=` is unsupported ([`SIFR-IO-0801`](/errors/SIFR-IO-0801)). |
 | `sifr.pathlib` | `Path` construction, joining, extension manipulation, existence checks, and directory traversal. |
 | `sifr.os` | File and directory operations: `remove_file`, `rename`, `mkdir`, `listdir`, and stat helpers. |
 | `sifr.env` | Read and write process environment variables as explicit typed values. |

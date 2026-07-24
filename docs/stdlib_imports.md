@@ -13,7 +13,7 @@ from sifr.i18n import LocaleId
 
 Bare CPython stdlib module names such as `math`, `json`, `os`, `heapq`, `collections`, `codecs`, `encodings`, `unicodedata`, `locale`, and `gettext` are not aliases for Sifr stdlib modules. Sifr uses Python syntax and follows CPython behavior where that fits the safety model, but Sifr source is not Python-source-compatible.
 
-If a real user or package module named `math`, `json`, or similar exists, normal top-level resolution can import it. If no real top-level module exists, a bare stdlib import is rejected with `SIFR-IMPORT-0008` and a `sifr.*` suggestion.
+If a real user or package module named `math`, `json`, or similar exists, normal top-level resolution can import it. If no real top-level module exists, a bare stdlib import is rejected with [`SIFR-IMPORT-0008`](/errors/SIFR-IMPORT-0008) and a `sifr.*` suggestion.
 
 Unsupported:
 

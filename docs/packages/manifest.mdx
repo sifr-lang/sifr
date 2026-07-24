@@ -114,10 +114,10 @@ sifr run --script check-all --locked
 ```
 
 <Warning>
-Scripts do not execute shell strings or external programs. A script may only expand a single Sifr command. Nested script expansion — calling one script from another — is rejected with `SIFR-PACKAGE-0714`.
+Scripts do not execute shell strings or external programs. A script may only expand a single Sifr command. Nested script expansion — calling one script from another — is rejected with [`SIFR-PACKAGE-0714`](/errors/SIFR-PACKAGE-0714).
 </Warning>
 
-If an app target and a script share the same name, Sifr reports `SIFR-PACKAGE-0605` and requires you to disambiguate with `--bin` or `--script`.
+If an app target and a script share the same name, Sifr reports [`SIFR-PACKAGE-0605`](/errors/SIFR-PACKAGE-0605) and requires you to disambiguate with `--bin` or `--script`.
 
 ## What goes in Cargo.toml vs sifr.toml
 
