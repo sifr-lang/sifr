@@ -96,6 +96,9 @@ Existing Sifr contracts: [`rust_interop_architecture.md`](../../../internal_docs
 [`integer_model.md`](../../../internal_docs/integer_model.md), and
 [`architecture.md`](../../../internal_docs/architecture.md).
 
+The compiler substrate also depends on the core rows tracked by
+[`rust-interop-runtime-ecosystem-certification.md`](rust-interop-runtime-ecosystem-certification.md).
+
 ## End-State Decisions
 
 1. `pydantic-sifr` is a separate repository in the `sifr-lang` organization.
@@ -114,28 +117,31 @@ Existing Sifr contracts: [`rust_interop_architecture.md`](../../../internal_docs
 8. `pydantic_sifr_core` owns Core Schema verification, plan execution, input
    adapters, aggregate errors, and performance-sensitive algorithms.
 9. Derived static schemas become immutable schema programs during build.
-   Runtime compilation exists only for genuinely dynamic adapters.
+   There is no runtime schema-compilation path.
 10. Core Schema is the sole authority for validation, serialization, and
     description. Serde, Schemars, and another validator are not parallel
     authorities.
-11. Native decoding returns a validated value arena, not a Python-like
-    universal object or copied bridge-record tree.
-12. Compiler-specialized structural construction moves validated arena values
-    into the requested Sifr type.
-13. Compiler-specialized structural projection exposes typed values to the core
-    serializer without rebuilding a generic tree.
-14. `jiter`, without its Python feature, is the canonical JSON parser.
-15. `speedate` is the temporal parser where its behavior matches the selected
-    Sifr contract.
-16. Serde and `serde_json` may provide format/writer mechanisms but do not
+11. Rust bridge version 2 adds one general, trait-bounded structural call
+    contract. It does not add Pydantic-specific bridge types or container
+    exceptions.
+12. Native decoding returns a validated value arena. The JSON parse tree and
+    normalized arena are expected; no third copied bridge-object tree exists.
+13. Compiler-generated structural traits materialize a validated source into
+    the requested Sifr type and project typed Sifr values to native consumers.
+14. `pydantic_sifr_core` invokes those traits through one monomorphized native
+    call. It never imports package-generated bridge types.
+15. `jiter`, without its Python feature, is the canonical JSON parser.
+16. `speedate` is a temporal parsing mechanism where its behavior matches the
+    selected Sifr contract; it is not a public temporal representation.
+17. Serde and `serde_json` may provide format/writer mechanisms but do not
     define validation, coercion, errors, or schemas.
-17. Focused Rust crates are reused for regex, URL, UUID, Base64, IDNA, and
+18. Focused Rust crates are reused for regex, URL, UUID, Base64, IDNA, and
     arbitrary-precision numeric mechanisms.
-18. Pydantic and Pydantic Core are development oracles and provenance sources,
+19. Pydantic and Pydantic Core are development oracles and provenance sources,
     never dependencies of published artifacts.
-19. Compatibility means equivalent behavior where Python and Sifr correspond,
+20. Compatibility means equivalent behavior where Python and Sifr correspond,
     with every divergence documented.
-20. Delivery is sequential: implement, validate, review, merge, and release a
+21. Delivery is sequential: implement, validate, review, merge, and release a
     milestone before starting the next.
 
 ## Repository Ownership
@@ -255,6 +261,106 @@ exclude Python-only behavior.
 
 ## Compiler Substrate
 
+### Compiler prerequisites
+
+Milestones `ps_1` through `ps_3` create new compiler subsystems; they are not
+small extensions of the current generics or Rust bridge implementation. Their
+gated prerequisites are:
+
+- compile-time specialization of package generics for a concrete `T`,
+- deterministic compile-time evaluation sufficient to derive and emit static
+  data,
+- first-class field required/defaulted metadata rather than reconstruction from
+  an `__init__` signature,
+- payload-bearing enum support, or completion of that language capability
+  before shapes may expose enum payloads,
+- exact recursive nominal identity, and
+- the bridge-version 2 structural call contract described below.
+
+Until payload-bearing enums ship, C-like enums remain supported and tagged
+payload sums use ordinary unions of records. That is an implementation
+dependency, not a second permanent schema representation.
+
+### Rust bridge version 2: structural calls
+
+The existing bridge-compatible value table remains closed. Bridge version 2
+does not make tuple, set, arbitrary mapping, payload enum, or specialized
+scalar values directly cross the boundary as ad hoc bridge types.
+
+Instead, the compiler generates implementations of two stable,
+language-general traits owned by `sifr_runtime`:
+
+```text
+StructuralSource
+    shape_identity() -> ShapeIdentity
+    root() -> NodeId
+    take/read nodes through a sealed stable interface
+
+StructuralConstruct
+    construct[S: StructuralSource](source: own S) -> Result[Self, ContractError]
+
+StructuralProject
+    expose(self: &Self) -> StructuralView
+```
+
+The names above are conceptual; the accepted bridge-version 2 design fixes the
+actual Rust/Sifr surface. The essential contract is:
+
+- a native backend may call a generic function bounded by these compiler-owned
+  traits,
+- the call is monomorphized in the generated package crate for the concrete
+  Sifr `T`,
+- the backend crate depends only on the stable traits and its own stable opaque
+  resources,
+- package-local generated glue implements the traits for generated Sifr types,
+- the backend crate never imports `crate::__sifr_bridge` types,
+- construction consumes a sealed `StructuralSource` carrying a declared
+  structural-shape identity,
+- projection borrows the current typed value and exposes a call-scoped view,
+  and
+- the existing bridge rejects all unsupported ordinary direct crossings as
+  before.
+
+`StructuralSource` is language-neutral. Pydantic-Sifr's validated arena
+implements it, but an RPC decoder or database row mapper can implement the same
+trait for its own native resource and use the same construction path. Core
+Schema identity is checked by Pydantic-Sifr before construction; it is not part
+of the compiler trait contract.
+
+Decoding uses one native generic call:
+
+```text
+pydantic_sifr_core::validate_and_construct[T: StructuralConstruct](...)
+    -> Result[T, ValidationError]
+```
+
+The core owns an opaque `ValidatedArena` implementing `StructuralSource`;
+package-local generated glue consumes its stable nodes while constructing `T`.
+Strings, bytes, exact integers, and specialized scalar components move out
+where ownership permits. Containers are constructed recursively inside the
+monomorphized package crate rather than crossing the public bridge wholesale.
+
+Serialization also uses one native generic call. The core serializer pulls
+from `T: StructuralProject` through the call-scoped view and remains the sole
+driver of alias, exclusion, representation, and writer policy. This avoids
+per-field Sifr/Rust bridge calls and avoids a second generic output tree.
+
+Bridge version 2 must specify:
+
+- trait and opaque-resource ownership,
+- generated implementation placement,
+- lifetime and call-scoped view rules,
+- generic signature probing and monomorphization,
+- move-out and partial-failure cleanup,
+- recursion and callback interaction,
+- panic containment,
+- cache/build identity, and
+- installed/source package certification.
+
+The contract is incomplete until it is merged into
+`internal_docs/rust_interop_architecture.md` and its core certification rows
+pass. Pydantic-Sifr cannot privately invent an alternate structural bridge.
+
 ### Structural shape
 
 Package code must be able to inspect a statically known `T` during
@@ -306,9 +412,10 @@ components without:
 - using reflection at runtime, or
 - cloning every field.
 
-Construction succeeds only after the core reports a valid arena root for the
-same schema identity. Compiler-generated code moves owned values from the arena
-where possible and rejects schema/type mismatches as internal contract errors.
+Construction succeeds only from a sealed `StructuralSource` whose declared
+structural-shape identity matches `T`. Compiler-generated code moves owned
+values where possible and rejects source/type mismatches as internal contract
+errors. It has no knowledge of Core Schema or Pydantic.
 
 ### Structural projection
 
@@ -322,9 +429,10 @@ serialization as a structural reader:
 - optional/union discrimination, and
 - profile-controlled field presence.
 
-Projection must not first allocate a second generic tree. The facility is
-general structural visitation; Pydantic-specific alias and serialization
-policy remains in the schema program.
+Projection is pulled by the native consumer during one monomorphized call and
+does not first allocate a second generic tree. The facility is general
+structural visitation; Pydantic-specific alias and serialization policy remains
+in the schema program.
 
 ### Typed callbacks
 
@@ -344,12 +452,18 @@ There is no universal untyped callback receiving an arbitrary runtime object.
 ### Static schema emission
 
 For derived and otherwise statically declared schemas, specialization produces
-a deterministic immutable schema program during check/build. The program
-contains stable node arrays, string tables, references, constraints, policies,
-and typed callback slots.
+a schema graph during check/build. A build-time
+`pydantic_sifr_core` compiler canonicalizes and verifies that graph and emits
+the deterministic immutable schema program embedded in the generated binary.
+The program contains stable node arrays, string tables, references,
+constraints, policies, and typed callback slots.
 
 The same schema program must have the same identity across `check`, `build`,
 `run`, tests, cache keys, and editor analysis.
+
+At runtime the core borrows the embedded program directly. Header/version/hash
+verification is allowed; graph parsing, schema compilation, validator
+construction, and cache population per process or per call are not.
 
 ## Public Package Model
 
@@ -445,23 +559,27 @@ Core Schema verification rejects:
 - defaults that do not validate under their declared policy, and
 - unknown schema versions or node kinds.
 
-Static verification failures are package/compiler diagnostics. Dynamic adapter
-construction returns a typed schema-build error.
+Verification failures are package/compiler diagnostics. All public adapters
+are specialized for a statically known `T`; no runtime schema builder or
+alternate validator path exists.
 
 ### Versioning
 
 The schema program begins with:
 
-- schema ABI version,
-- minimum core version,
+- schema-program format version,
 - compiler structural-contract version,
-- callback ABI version, and
-- feature bitmap.
+- Rust bridge structural-call version,
+- callback ABI version,
+- feature bitmap, and
+- payload identity hash.
 
-`pydantic-sifr` and `pydantic_sifr_core` normally use matching releases.
-Backward compatibility is supported only for explicitly declared schema ABI
-versions. Unknown or unsupported versions fail before user data is processed;
-there is no fallback interpretation.
+`pydantic-sifr` and `pydantic_sifr_core` release together and require an exact
+supported contract tuple. Core Schema is an internal build artifact, not a
+cross-release wire protocol. A contract change increments the relevant version
+and rebuilds dependents; the core does not carry backward interpreters.
+Unknown or mismatched contracts fail during build before user data is
+processed.
 
 ## Native Core
 
@@ -469,8 +587,8 @@ there is no fallback interpretation.
 
 `pydantic_sifr_core` owns:
 
-- schema program parsing and verification,
-- immutable validator and serializer plan construction,
+- build-time schema graph verification and immutable program emission,
+- runtime validation and serializer program execution without recompilation,
 - JSON and structural input adapters,
 - strict/lax scalar conversion,
 - constraint execution,
@@ -505,7 +623,10 @@ provide:
 JSON validation uses a `jiter::JsonValue` document. The value-tree form is the
 canonical path because aggregate errors, aliases, recursive records, and union
 candidate evaluation require replay and random access. A second streaming
-semantic engine is not maintained.
+semantic engine is not maintained. The JSON document and normalized validated
+arena are two intentional representations with different jobs; the rejected
+representation is an additional copied bridge-object tree between the arena
+and `T`.
 
 Native Sifr structural inputs use a compiler-generated structural projection
 rather than converting through JSON.
@@ -546,6 +667,21 @@ The arena:
 The Sifr bridge exposes the arena as a sealed opaque resource. Package code
 cannot forge nodes or reinterpret one schema's output as another type.
 
+`SpecializedScalar` payloads are crate-neutral normalized components, never
+public `speedate`, `chrono`, `uuid`, `url`, `rust_decimal`, or `bigdecimal`
+values. Examples include calendar/time components plus offset and precision,
+UUID bytes, normalized URL text/components, and exact decimal coefficient and
+scale. `StructuralConstruct` reconstructs the existing canonical Sifr stdlib
+type:
+
+- `datetime`, `date`, `time`, and duration use the stdlib's chrono-backed
+  representation,
+- UUID and URL use the existing stdlib-backed types, and
+- decimal values use Sifr's selected exact decimal representation.
+
+`jiter`, `speedate`, and focused crates parse or normalize these components;
+they do not define the Sifr-facing type or schema contract.
+
 ### Validation state
 
 One validation state carries:
@@ -553,32 +689,40 @@ One validation state carries:
 - strict/lax mode,
 - current error path,
 - recursion stack,
-- exactness score,
-- fields-set count,
+- exactness class,
+- internal successfully-validated-field count,
 - partial error accumulator,
 - input source kind,
 - context values,
 - resource limits, and
 - callback state.
 
-Union selection uses a single documented ranking rule. The initial rule follows
-the proven Pydantic pattern where applicable:
+Tagged and untagged unions are separate schema nodes and algorithms.
 
-1. explicit discriminators select exactly one branch,
-2. an exact untagged match wins immediately when unambiguous,
-3. record-like candidates compare valid fields-set count,
-4. exactness breaks equal-count ties,
-5. declaration order is the final deterministic tie break, and
-6. total failure reports candidate errors in stable declaration order.
+A tagged union uses its discriminator map to select exactly one branch or
+return a discriminator error. An untagged smart union follows the pinned
+Pydantic Core algorithm where applicable:
+
+1. an exact successful candidate short-circuits,
+2. otherwise record-like candidates rank first by the internal count of
+   successfully validated declared fields,
+3. exactness class breaks equal-count ties,
+4. declaration order is the final deterministic tie break, and
+5. total failure reports candidate errors in stable declaration order.
+
+The internal field count is ephemeral validation state used only for ranking.
+It is not a public `__pydantic_fields_set__` attribute and is not retained on
+the constructed Sifr model.
 
 Any intentional difference from the pinned Pydantic behavior is recorded in
 the compatibility manifest.
 
 ### Serialization
 
-The serializer plan consumes a compiler-generated structural view of `T`. It
-does not read private generated-Rust fields by layout assumption and does not
-rely on a Sifr equivalent of Python `__dict__`.
+The serializer plan drives one monomorphized native call over
+`T: StructuralProject`. It pulls from the compiler-generated call-scoped view;
+it does not read private generated-Rust fields by layout assumption, issue
+per-field Sifr/Rust calls, or rely on a Sifr equivalent of Python `__dict__`.
 
 The plan owns:
 
@@ -623,10 +767,11 @@ Locations support:
 - validator stages, and
 - root/model positions.
 
-Syntax errors, validation errors, schema-build errors, serialization errors,
-callback errors, resource-limit errors, and contained Rust panics remain
-distinct typed errors. Raw Rust errors, PyO3 errors, and `serde_json::Error`
-values do not leak into the public Sifr API.
+Syntax errors, validation errors, serialization errors, callback errors,
+resource-limit errors, and contained Rust panics remain distinct typed errors.
+Static schema verification failures are compiler/package diagnostics. Raw Rust
+errors, PyO3 errors, and `serde_json::Error` values do not leak into the public
+Sifr API.
 
 Error collection is bounded by an explicit policy to prevent adversarial inputs
 from allocating unbounded error lists. Reaching the limit produces a stable
@@ -639,7 +784,7 @@ truncation fact rather than panicking or silently claiming complete coverage.
 | Component | Decision | Boundary |
 | --- | --- | --- |
 | `jiter` | Reuse directly | JSON parsing, exact/lossless numbers and locations; Python feature disabled |
-| `speedate` | Reuse directly | Temporal parsing mechanism under Sifr-owned policy |
+| `speedate` | Reuse directly | Temporal parsing into crate-neutral components reconstructed as canonical Sifr stdlib types |
 | `serde` | Reuse selectively | Format interoperability and writer mechanisms, never schema authority |
 | `serde_json` | Reuse selectively | JSON escaping/formatting or adapters, never canonical validation semantics |
 | `regex` | Reuse directly | Pattern compilation/matching with bounded policy |
@@ -659,7 +804,7 @@ semantics are selected:
 - boolean and numeric conversion tables,
 - integer-string normalization,
 - exactness scoring,
-- fields-set union scoring,
+- internal successfully-validated-field union scoring,
 - alias-path lookup,
 - recursion detection,
 - constraint ordering,
@@ -681,7 +826,7 @@ revision and license provenance.
 | Schemars as schema authority | Reject | Creates a second schema model and unstable output ownership |
 | Garde/`validator` as core | Reject | Post-construction Rust validation duplicates schema and cannot own decoding |
 | Per-model compiler validation lowering | Reject | Makes package behavior a compiler special case |
-| Per-node copied bridge records | Reject | Adds allocation, cloning and an unnecessary dynamic tree |
+| Copied arena-to-model bridge tree | Reject | JSON already has a parse tree and normalized arena; a third recursive bridge-object tree adds no semantic value |
 | Parallel streaming and tree validators | Reject | Duplicates semantics and substantially increases maintenance |
 
 ## Pydantic Compatibility and Test Reuse
@@ -720,6 +865,11 @@ Port extensively:
 - malformed/adversarial JSON,
 - fuzz seeds, and
 - portable benchmarks.
+
+Fixed-width integer schemas have no Python/Pydantic oracle because Python
+integers are arbitrary precision. Their range, overflow, strict/lax, error, and
+serialization behavior is specified and tested as a Sifr-native contract rather
+than classified as Pydantic parity.
 
 Do not port as Sifr behavior:
 
@@ -781,6 +931,12 @@ Permanent Sifr-safe differences include:
 - ownership and mutation effects remain visible,
 - arbitrary runtime class monkey-patching is unsupported,
 - Python object identity and attribute probing are unsupported,
+- `extra='allow'` is adapted: it is available only when the model declares a
+  typed extra-field mapping destination; otherwise extra fields are ignored or
+  rejected according to the static model policy,
+- `from_attributes`, ORM-style arbitrary attribute probing,
+  `revalidate_instances`, and `arbitrary_types_allowed` are not applicable to
+  fixed-layout Sifr values,
 - unsupported dynamic behavior fails explicitly rather than falling back, and
 - error codes are Sifr-owned even when initially mapped from a Pydantic case.
 
@@ -831,6 +987,7 @@ The native core must:
 - Reusing Pydantic's Python-specific Core Schema nodes.
 - Making arbitrary Sifr values dynamically introspectable at runtime.
 - Making Core Schema the normal beginner-facing API.
+- Runtime model/schema construction or a runtime schema compiler.
 - Adding JSON-specific rules to the Sifr compiler.
 - Replacing Sifr's ordinary type checker with validation schemas.
 - Implementing Pydantic Settings, web-framework integration, ORM behavior or
@@ -838,6 +995,24 @@ The native core must:
   separate packages consuming the completed public contract.
 - Supporting a temporary reduced public architecture that later requires a
   second validation engine or compatibility fallback.
+
+## Prerequisites and Dependency Order
+
+The following Sifr capabilities must be merged and certified before the
+companion repository depends on them:
+
+| Required by | Prerequisite |
+| --- | --- |
+| `ps_1` | compile-time specialization, deterministic const evaluation, field required/default metadata, recursive nominal shape identity, and payload-bearing enums |
+| `ps_2` | bridge-version 2 structural traits plus `opaque_resource_core`, the required `callbacks_call_scoped_core` split, and `panic_boundary_wrapper_emission` |
+| `ps_3` | the complete bridge-version 2 design in `internal_docs/rust_interop_architecture.md`, installed/source parity, generic signature probes, cleanup and cache identity |
+| `ps_4` and later | released Sifr compiler/sysroot containing the certified `ps_1` through `ps_3` contracts |
+
+The certification work is tracked by
+[`rust-interop-runtime-ecosystem-certification.md`](rust-interop-runtime-ecosystem-certification.md).
+Callback invocation, cleanup, and panic mapping are blocking prerequisites, not
+assumed capabilities. No Pydantic-Sifr milestone privately implements or
+bypasses an uncertified bridge row.
 
 ## Ordered Milestones
 
@@ -866,6 +1041,9 @@ semantic-authority, bridge, safety, or sequencing ambiguity.
 
 ### milestone_ps_1: Compile-Time Shape and Metadata
 
+- Implement the prerequisite compile-time specialization and deterministic
+  const-evaluation subsystems.
+- Complete field required/default metadata and payload-bearing enum support.
 - Implement general compile-time structural shape inspection.
 - Implement typed declaration metadata.
 - Cover fields, defaults, generics, unions, enums, newtypes/refinements and
@@ -878,6 +1056,10 @@ description of representative types without compiler-known package names.
 
 ### milestone_ps_2: Construction, Projection and Typed Callbacks
 
+- Complete the required opaque-resource, call-scoped-callback, and panic
+  boundary core certification rows.
+- Implement and document bridge version 2's monomorphized structural call
+  contract.
 - Implement safe structural `Construct[T]`.
 - Implement allocation-free structural projection/visitation.
 - Implement typed callback adapter generation.
@@ -892,18 +1074,23 @@ untyped callbacks.
 
 - Implement deterministic static schema-program emission support.
 - Implement sealed arena/document opaque resources and compact node indices.
-- Add bridge/version/cache-key contracts.
+- Merge bridge version 2 into `internal_docs/rust_interop_architecture.md`.
+- Add generic signature probes, installed/source parity, cleanup,
+  bridge-version, and cache-key contracts.
 - Prove exact integer, bytes, collection and error crossings.
 - Update Rust interop architecture and verification.
 
-Exit gate: a synthetic schema executor returns a validated arena that
-constructs a typed Sifr value and accepts a structural view for output.
+Exit gate: the merged and certified bridge-version 2 contract lets a synthetic
+schema executor return a validated arena, construct a typed Sifr value, and
+pull a structural view for output through one monomorphized call.
 
 ### milestone_ps_4: Companion Repository and Core Foundation
 
+- Require the released Sifr compiler/sysroot containing certified `ps_1`
+  through `ps_3` contracts.
 - Create `sifr-lang/pydantic-sifr`.
 - Establish Sifr package and Rust backend layouts.
-- Define Core Schema ABI version 1 and verifier.
+- Define Core Schema/program format version 1 and its build-time verifier.
 - Add error, input, arena and plan foundations.
 - Integrate Python-free `jiter`.
 - Establish licenses, provenance, fuzzing and benchmark harnesses.
@@ -927,12 +1114,13 @@ intentional differences are recorded, and resource limits are enforced.
 - Implement model/record schemas.
 - Implement required/defaulted/nullable distinctions.
 - Implement field metadata, aliases and alias paths.
-- Implement extra-field policies and fields-set tracking.
+- Implement extra-field policies and ephemeral validated-field-count tracking.
 - Implement typed construction into ordinary Sifr classes.
 - Expose the first complete `BaseModel` validation API.
 
 Exit gate: nested models validate JSON and native structural inputs into typed
-Sifr values with aggregate stable errors and no intermediate copied tree.
+Sifr values with aggregate stable errors and no third arena-to-model bridge
+tree.
 
 ### milestone_ps_7: Unions, Recursion and Custom Validation
 
@@ -1007,7 +1195,9 @@ upstream repositories.
 - Validation, serialization and JSON Schema generation consume one Core Schema
   authority.
 - Static schemas are verified and emitted during build.
-- Dynamic schema compilation is explicit and fallible.
+- There is no runtime schema compiler or alternate dynamic adapter path.
+- Bridge version 2 is a merged, certified general structural contract with a
+  non-Pydantic conformance consumer.
 
 ### Native execution
 
@@ -1017,6 +1207,8 @@ upstream repositories.
 - Exact Sifr integers survive parse, validation, construction and serialization.
 - Successful validation constructs the requested native Sifr type.
 - Serialization observes the current typed value after mutation.
+- Construction and serialization each use one monomorphized structural native
+  call; the core never imports generated package bridge types.
 - User-controlled data and callbacks cannot produce an uncaught Rust panic.
 
 ### Behavior
@@ -1034,7 +1226,7 @@ upstream repositories.
 - No permanent fork of Pydantic or Pydantic Core exists.
 - Mature focused Rust dependencies are reused at their natural boundary.
 - No schema behavior is implemented independently in both Sifr and Rust.
-- No per-node copied bridge tree or per-call schema rebuild exists.
+- No third arena-to-model bridge tree or per-call schema rebuild exists.
 - Dependency features, licenses and provenance are audited.
 - Fuzzing covers schema verification, JSON input, validation plans and writers.
 - Benchmarks and regression gates cover each execution stage.

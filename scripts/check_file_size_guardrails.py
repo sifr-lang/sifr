@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Enforce first-party source file-size limits; Markdown documentation is exempt."""
+"""Enforce repository-wide first-party source file-size limits."""
 
 from __future__ import annotations
 
@@ -11,7 +11,6 @@ from typing import Iterable, Sequence
 
 
 MAX_SOURCE_LINES = 900
-EXCLUDED_DOCUMENTATION_SUFFIXES = frozenset({".md", ".mdx"})
 
 LEGACY_HIR_GUARDRAIL_PATHS = (
     "crates/sifr_lowering/src/lower/mod.rs",
@@ -96,8 +95,6 @@ def has_any_prefix(rel_path: Path, prefixes: Sequence[str]) -> bool:
 def is_excluded_source_path(rel_path: Path) -> bool:
     parts = path_parts(rel_path)
     name = rel_path.name
-    if rel_path.suffix.lower() in EXCLUDED_DOCUMENTATION_SUFFIXES:
-        return True
     if has_any_part(rel_path, {".venv", "target", "third_party", "snapshots"}):
         return True
     if has_any_prefix(rel_path, EXTERNAL_CORPUS_PREFIXES):
@@ -247,24 +244,9 @@ def assert_paths_are_included(paths: Sequence[str]) -> None:
         raise AssertionError(f"guardrail patterns do not include legacy paths:\n{formatted}")
 
 
-def assert_paths_are_excluded(paths: Sequence[str]) -> None:
-    included = [path for path in paths if not is_excluded_source_path(Path(path))]
-    if included:
-        formatted = "\n".join(f"- {path}" for path in included)
-        raise AssertionError(f"guardrail patterns do not exclude paths:\n{formatted}")
-
-
 def run_self_test() -> None:
     assert_paths_are_included(LEGACY_HIR_GUARDRAIL_PATHS)
     assert_paths_are_included(LEGACY_DRIVER_GUARDRAIL_PATHS)
-    assert_paths_are_excluded(
-        (
-            "plans/issues/active/oversized.md",
-            "docs/reference/oversized.mdx",
-            "scripts/README.MD",
-            "verification/README.MDX",
-        )
-    )
 
     with tempfile.TemporaryDirectory(prefix="sifr-file-size-guardrail-") as temp_dir:
         repo_root = Path(temp_dir)
