@@ -1,0 +1,77 @@
+---
+title: "Parallel Work"
+sidebarTitle: "Parallel Work"
+description: "Use sifr.parallel for CPU-heavy maps and worker pools when async concurrency is not enough."
+---
+
+Async tasks overlap waiting work. CPU-heavy work needs real parallelism. Use `sifr.parallel` when a map over owned data would otherwise block the async runtime.
+
+## When to Use Parallel Work
+
+| Kind of work | Prefer |
+| --- | --- |
+| Network, timers, waiting on I/O | Async tasks with `await` and scopes |
+| CPU-heavy transform over a collection | `sifr.parallel.map` or a `Pool` |
+| Blocking library call inside async code | Move it out of the async path, or offload with parallel helpers |
+
+Sifr rejects blocking or CPU-heavy calls that sit directly inside async code, because they prevent other tasks from making progress.
+
+## Parallel Map
+
+`map` preserves output order. Inputs and outputs must be owned and sendable across the worker boundary.
+
+```python
+from sifr.parallel import map as parallel_map
+
+def heavy(value: int) -> int:
+    return value * value
+
+def run_cpu_work(values: list[int]) -> list[int]:
+    return parallel_map(values, heavy)
+```
+
+Use `try_map` when each item can fail independently and you want typed per-item outcomes:
+
+```python
+from sifr.parallel import try_map, WorkerError
+
+outcomes: list[Result[int, WorkerError]] = try_map(
+    [1, 0, 3],
+    lambda x: 10 // x,
+)
+```
+
+## Worker Pools
+
+For repeated parallel work in a long-lived process, configure a `Pool` explicitly:
+
+```python
+from sifr.parallel import Pool, PoolConfig
+
+config: PoolConfig = PoolConfig(workers=4)
+pool: Pool = Pool(config)
+
+results: list[str] = pool.map(["a", "b", "c"], str.upper)
+pool.close()
+```
+
+<Note>
+  Lock guards, task handles, and borrowed values cannot cross the worker boundary. Pass owned data in, and receive owned results back.
+</Note>
+
+## Async Concurrency vs Parallelism
+
+- Use [Structured Tasks](/concurrency/structured-tasks) to run many async operations together.
+- Use `sifr.parallel` to speed up CPU-bound transforms.
+- Keep mutable borrows and lock guards out of both paths; see [Ownership Across Tasks](/concurrency/ownership-across-tasks).
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Concurrency API" icon="library" href="/concurrency/api">
+    Full `sifr.parallel`, `sifr.task`, and `sifr.sync` reference.
+  </Card>
+  <Card title="Async and Await" icon="timer" href="/concurrency/async-and-await">
+    Review suspension points and why blocking work is rejected.
+  </Card>
+</CardGroup>

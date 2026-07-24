@@ -4,7 +4,7 @@ sidebarTitle: "Structured Tasks"
 description: "Use task scopes, spawned handles, gather, select, and TaskGroup in Sifr."
 ---
 
-Spawned tasks live inside a scope. The scope owns the children and waits for them before the block exits.
+Spawned tasks live inside a scope. The scope owns the children and waits for them before the block exits. Start from [Async and Await](/concurrency/async-and-await) if you still need the suspension model.
 
 ## Scoped Spawn
 
@@ -74,9 +74,9 @@ async with task.TaskGroup() as group:
 
 <CardGroup cols={2}>
   <Card title="Cancellation and Timeouts" icon="clock-alert" href="/concurrency/cancellation-and-timeouts">
-    Bound the lifetime of async work.
+    Bound the lifetime of async work and handle cancellation evidence.
   </Card>
-  <Card title="Concurrency API" icon="library" href="/stdlib/concurrency">
-    See the full `sifr.task` API reference.
+  <Card title="Ownership Across Tasks" icon="shield-check" href="/concurrency/ownership-across-tasks">
+    Learn what can cross a spawn boundary.
   </Card>
 </CardGroup>

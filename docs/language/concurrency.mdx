@@ -1,14 +1,14 @@
 ---
 title: "Concurrency Overview"
 sidebarTitle: "Overview"
-description: "Understand Sifr's structured concurrency model: scoped tasks, explicit cancellation, ownership at task boundaries, and no global event loop."
+description: "Understand Sifr's structured concurrency model: async await, scoped tasks, cancellation, ownership at task boundaries, and parallel CPU work."
 ---
 
 Sifr's concurrency model is structured: every task belongs to an explicit scope, and the scope cannot exit until its children have finished or been cancelled. There are no fire-and-forget tasks, no global event-loop object, and no hidden task registry.
 
 The compiler applies the same safety model at concurrency boundaries that it applies everywhere else. Values crossing task, thread, or process boundaries must be owned and sendable. Mutable borrows and lock guards stay scoped.
 
-## The Mental Model
+## Read This Section In Order
 
 <CardGroup cols={2}>
   <Card title="Async and Await" icon="timer" href="/concurrency/async-and-await">
@@ -23,6 +23,12 @@ The compiler applies the same safety model at concurrency boundaries that it app
   <Card title="Ownership Across Tasks" icon="shield-check" href="/concurrency/ownership-across-tasks">
     Learn what can cross task boundaries and why borrowed values cannot escape.
   </Card>
+  <Card title="Parallel Work" icon="microchip" href="/concurrency/parallel-work">
+    Offload CPU-heavy maps and worker pools with `sifr.parallel`.
+  </Card>
+  <Card title="Concurrency API" icon="library" href="/concurrency/api">
+    Reference for `sifr.task`, `sifr.sync`, `sifr.parallel`, process helpers, signals, and cleanup.
+  </Card>
 </CardGroup>
 
 ## What Is Different From Python
@@ -35,10 +41,7 @@ Python `asyncio` exposes event loops, detached tasks, and ambient task registrie
 | Reach for a global event loop | Use `async def`, `await`, and `sifr.task` scopes |
 | Share mutable objects between tasks | Move owned values, use channels, or use explicit sync primitives |
 | Treat cancellation as ambient | Observe typed cancellation or timeout evidence |
-
-## Where APIs Live
-
-This section explains the concepts. The API reference for `sifr.task`, `sifr.sync`, `sifr.parallel`, process helpers, signals, runtime diagnostics, and cleanup helpers lives in [Concurrency API](/stdlib/concurrency).
+| Run CPU work on the event loop | Use `sifr.parallel` for owned, sendable data |
 
 ## Related Pages
 

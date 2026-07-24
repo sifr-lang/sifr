@@ -68,13 +68,13 @@ async def main() -> Result[None, ScopeFailure]:
   Lock guards, borrowed references, and mutable borrows cannot cross task or await boundaries. Move owned values, clone when copying is intended, or use `sifr.sync` primitives.
 </Warning>
 
-## Related
+## Next Steps
 
 <CardGroup cols={2}>
+  <Card title="Parallel Work" icon="microchip" href="/concurrency/parallel-work">
+    Apply the same ownership rules to CPU worker boundaries.
+  </Card>
   <Card title="Ownership and Mutability" icon="refresh-cw" href="/language/ownership">
     Review `mut`, `own`, `own mut`, and borrowed-value escape rules.
-  </Card>
-  <Card title="Concurrency API" icon="library" href="/stdlib/concurrency">
-    Browse channels, locks, shared values, and task APIs.
   </Card>
 </CardGroup>

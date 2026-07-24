@@ -1,12 +1,12 @@
 ---
-title: "Concurrency Primitives: Tasks, Channels, and Parallelism"
+title: "Concurrency API"
 sidebarTitle: "Concurrency API"
-description: "Concurrency API reference for Sifr: structured tasks, typed channels, CPU parallelism, subprocesses, runtime diagnostics, and cleanup helpers."
+description: "API reference for Sifr concurrency: structured tasks, typed channels, CPU parallelism, subprocesses, runtime diagnostics, and cleanup helpers."
 ---
 
-Sifr's concurrency modules are a native structured-concurrency substrate that compiles to Rust's async runtime. Unlike CPython's `asyncio`, there is no exposed event-loop object, no global task registry, and no fire-and-forget detachment. Every task belongs to a scope, every value that crosses a task boundary must be owned and sendable, and every error is a typed value you handle explicitly.
+This page is the API reference for Sifr's concurrency modules. Read the concept pages first if you are new to the model: [Async and Await](/concurrency/async-and-await), [Structured Tasks](/concurrency/structured-tasks), [Cancellation and Timeouts](/concurrency/cancellation-and-timeouts), [Ownership Across Tasks](/concurrency/ownership-across-tasks), and [Parallel Work](/concurrency/parallel-work).
 
-This page is the stdlib reference for concurrency. For the concepts behind scopes, task-boundary ownership, cancellation, and Python `asyncio` differences, start with [Concurrency Overview](/language/concurrency).
+Every task belongs to a scope. Values that cross task, thread, or process boundaries must be owned and sendable. Errors are typed values you handle explicitly. There is no exposed event-loop object, no global task registry, and no fire-and-forget detachment.
 
 ## `sifr.task` — Structured Tasks
 
@@ -414,3 +414,14 @@ Language-level cleanup under task cancellation is part of Sifr's structured runt
 <Note>
 `ExitStack`, `AsyncExitStack`, `closing`, and `aclosing` are unsupported. Cleanup helpers do not provide a dynamic stack of arbitrary callbacks; all resource lifetimes are visible in the ownership graph.
 </Note>
+
+## Related Concept Pages
+
+<CardGroup cols={2}>
+  <Card title="Concurrency Overview" icon="workflow" href="/language/concurrency">
+    Start here for the structured concurrency mental model.
+  </Card>
+  <Card title="Parallel Work" icon="microchip" href="/concurrency/parallel-work">
+    When to use `sifr.parallel` instead of async tasks.
+  </Card>
+</CardGroup>
