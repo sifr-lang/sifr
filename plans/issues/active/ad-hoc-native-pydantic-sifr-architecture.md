@@ -110,7 +110,11 @@ The compiler substrate also depends on the core rows tracked by
 
 ## End-State Decisions
 
-1. `pydantic-sifr` is a separate repository in the `sifr-lang` organization.
+1. `pydantic-sifr` is an external Sifr package in a standalone public GitHub
+   repository owned by the `sifr-lang` organization, with the planned location
+   [`sifr-lang/pydantic-sifr`](https://github.com/sifr-lang/pydantic-sifr). It is
+   not a directory, workspace member, vendored subtree, or submodule of
+   `sifr-lang/sifr`.
 2. The Sifr package and `pydantic_sifr_core` are separate components in that
    repository and normally release together.
 3. The design reuses Pydantic's high-level architecture:
@@ -155,6 +159,20 @@ The compiler substrate also depends on the core rows tracked by
 
 ## Repository Ownership
 
+This repository boundary is part of the architecture, not merely source-tree
+organization. `sifr-lang/sifr` supplies and releases the general compiler,
+sysroot, package, and native-interop capabilities first. The resulting
+`pydantic` Sifr package is then developed, tested, reviewed, released, and
+consumed as an external package from its own
+[`sifr-lang/pydantic-sifr`](https://github.com/sifr-lang/pydantic-sifr) GitHub
+repository.
+
+After `milestone_ps_3`, production implementation work for the package and
+native core is tracked and merged in that external repository. This planning
+issue records cross-repository dependencies and links the resulting external
+issues, pull requests, and releases; it does not move their source into the
+Sifr compiler repository.
+
 ### `sifr-lang/sifr`
 
 Owns only general language and package substrate:
@@ -174,7 +192,7 @@ The compiler must be able to explain these features without mentioning
 Pydantic. Database mappers, RPC systems, command-line parsers, encoders,
 decoders, and other packages must be able to consume the same substrate.
 
-### `sifr-lang/pydantic-sifr`
+### External package repository: `sifr-lang/pydantic-sifr`
 
 Owns:
 
@@ -1100,8 +1118,12 @@ pull a structural view for output through one monomorphized call.
 
 - Require the released Sifr compiler/sysroot containing certified `ps_1`
   through `ps_3` contracts.
-- Create `sifr-lang/pydantic-sifr`.
-- Establish Sifr package and Rust backend layouts.
+- Create the standalone public GitHub repository
+  [`sifr-lang/pydantic-sifr`](https://github.com/sifr-lang/pydantic-sifr) under
+  the `sifr-lang` organization.
+- Establish the external Sifr package and Rust backend layouts there.
+- Track, review, merge, and release all package/core implementation from that
+  repository from this milestone onward.
 - Define Core Schema/program format version 1 and its build-time verifier.
 - Add error, input, arena and plan foundations.
 - Integrate Python-free `jiter`.
@@ -1202,8 +1224,13 @@ upstream repositories.
 
 - `sifr-lang/sifr` contains no Pydantic-specific compiler branch, type, schema
   node, decorator name or JSON validation policy.
-- `sifr-lang/pydantic-sifr` contains the Sifr package and native core as
-  separately owned components with one versioned schema contract.
+- The external
+  [`sifr-lang/pydantic-sifr`](https://github.com/sifr-lang/pydantic-sifr)
+  repository contains the Sifr package and native core as separately owned
+  components with one versioned schema contract.
+- `sifr-lang/sifr` contains no production `pydantic` package or
+  `pydantic_sifr_core` source as a workspace member, vendored subtree, or
+  submodule.
 - Validation, serialization and JSON Schema generation consume one Core Schema
   authority.
 - Static schemas are verified and emitted during build.
