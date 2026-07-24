@@ -287,8 +287,10 @@ The existing bridge-compatible value table remains closed. Bridge version 2
 does not make tuple, set, arbitrary mapping, payload enum, or specialized
 scalar values directly cross the boundary as ad hoc bridge types.
 
-Instead, the compiler generates implementations of two stable,
-language-general traits owned by `sifr_runtime`:
+Instead, `sifr_runtime` owns three stable, language-general traits. Native
+producers implement `StructuralSource`; the compiler generates
+`StructuralConstruct` and `StructuralProject` implementations for concrete Sifr
+types:
 
 ```text
 StructuralSource
@@ -1004,8 +1006,8 @@ companion repository depends on them:
 | Required by | Prerequisite |
 | --- | --- |
 | `ps_1` | compile-time specialization, deterministic const evaluation, field required/default metadata, recursive nominal shape identity, and payload-bearing enums |
-| `ps_2` | bridge-version 2 structural traits plus `opaque_resource_core`, the required `callbacks_call_scoped_core` split, and `panic_boundary_wrapper_emission` |
-| `ps_3` | the complete bridge-version 2 design in `internal_docs/rust_interop_architecture.md`, installed/source parity, generic signature probes, cleanup and cache identity |
+| `ps_2` | the approved bridge-version 2 design in this issue plus `opaque_resource_core`, certification-owned `callbacks_call_scoped`, and `panic_boundary_wrapper_emission` |
+| `ps_3` | the implemented bridge-version 2 structural traits and merged durable design, followed by installed/source parity, generic signature probes, cleanup and cache identity |
 | `ps_4` and later | released Sifr compiler/sysroot containing the certified `ps_1` through `ps_3` contracts |
 
 The certification work is tracked by
@@ -1056,10 +1058,12 @@ description of representative types without compiler-known package names.
 
 ### milestone_ps_2: Construction, Projection and Typed Callbacks
 
-- Complete the required opaque-resource, call-scoped-callback, and panic
-  boundary core certification rows.
-- Implement and document bridge version 2's monomorphized structural call
-  contract.
+- Specify and merge bridge version 2's monomorphized structural call contract
+  into `internal_docs/rust_interop_architecture.md` before implementation.
+- Complete `opaque_resource_core`, certification-owned
+  `callbacks_call_scoped` including callback-invocation panic mapping, and
+  `panic_boundary_wrapper_emission`.
+- Implement the accepted bridge version 2 contract.
 - Implement safe structural `Construct[T]`.
 - Implement allocation-free structural projection/visitation.
 - Implement typed callback adapter generation.
@@ -1074,7 +1078,6 @@ untyped callbacks.
 
 - Implement deterministic static schema-program emission support.
 - Implement sealed arena/document opaque resources and compact node indices.
-- Merge bridge version 2 into `internal_docs/rust_interop_architecture.md`.
 - Add generic signature probes, installed/source parity, cleanup,
   bridge-version, and cache-key contracts.
 - Prove exact integer, bytes, collection and error crossings.
