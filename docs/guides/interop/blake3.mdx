@@ -1,0 +1,92 @@
+---
+title: "Hash bytes with blake3"
+sidebarTitle: "blake3"
+description: "Use a direct @rust binding to hash bytes with the blake3 crate, with an explicit panic policy."
+---
+
+This guide uses [blake3](https://crates.io/crates/blake3) to hash bytes from Sifr. blake3 is a good first Rust interop example because `blake3::hash` already has a bridge-compatible shape: bytes in, digest bytes out.
+
+<Info>
+blake3 produces a BLAKE3 digest, not SHA-1 or SHA-256. If you need those algorithms, bind a crate such as `sha1` or `sha2` the same way.
+</Info>
+
+## Why this shape
+
+Rust interop is source-level Cargo integration. Sifr does not `dlopen` a Rust crate or invent a C ABI. You declare a Sifr function whose target is a Rust item, and the compiler checks that the Rust signature matches before codegen.
+
+Three rules drive the blake3 declaration:
+
+1. **Compatible signatures can bind directly.** Prefer `@rust(blake3.hash, ...)` when the public Rust function already maps to Sifr types.
+2. **Panic policy is part of the contract.** Recoverable builds must not let a Rust panic unwind through Sifr user code. Choose `trusted_no_panic` only with trust evidence, or `map_error(...)` to convert panics into a declared error.
+3. **Stub bodies are intentional.** Package-authored declarations use `...`. Behavior comes from validated Rust interop metadata, not from a Sifr function body.
+
+If the crate API needed lifetimes, generics, borrowed returns, or trait objects, you would write a local bridge under `src/bridges` instead. blake3's one-shot hash does not need that.
+
+## Package setup
+
+Add the crate and declare Rust interop policy:
+
+```toml Cargo.toml
+[dependencies]
+blake3 = "1"
+```
+
+```toml sifr.toml
+[rust]
+bridge-version = 1
+bridges = ["src/bridges"]
+
+[trust]
+rust-build-scripts = []
+rust-proc-macros = []
+native-links = []
+unsafe-rust-bridges = []
+rust-no-panic = []
+rust-panic-abort = []
+```
+
+Use `sifr bridge check` so decorator parsing, target resolution, and panic policy match ordinary `sifr check`.
+
+## Declare and call
+
+```sifr
+class HashError(Error):
+    message: str
+
+@rust(blake3.hash, panic=map_error(bridge.hash.map_panic))
+def blake3_hash(data: bytes) -> Result[bytes, HashError | RustPanicError]: ...
+
+def digest_message(message: bytes) -> Result[bytes, HashError | RustPanicError]:
+    return blake3_hash(message)
+```
+
+The dotted target `blake3.hash` resolves through Cargo metadata to the `blake3` dependency. The return type keeps failure visible: either digest bytes or a checked error channel that includes panic mapping.
+
+If you have audited evidence that the target cannot panic, you can instead declare `panic=trusted_no_panic` and list `blake3.hash` under `[trust].rust-no-panic`. Prefer `map_error` until that evidence exists.
+
+## When to switch to a bridge
+
+Stay on a direct binding for one-shot hashing. Move to a bridge when you need output shaping, such as hex encoding:
+
+```rust src/bridges/hash.rs
+pub fn hash_hex(input: &[u8]) -> Result<String, HashErrorBridge> {
+    Ok(format!("{}", blake3::hash(input).to_hex()))
+}
+
+pub fn map_panic(message: &str) -> HashErrorBridge {
+    HashErrorBridge {
+        message: message.to_owned(),
+    }
+}
+```
+
+```sifr
+@rust(bridge.hash.hash_hex, panic=map_error(bridge.hash.map_panic))
+def blake3_hex(data: bytes) -> Result[str, HashError | RustPanicError]: ...
+```
+
+## Next steps
+
+- Full contract catalog: [Rust Interop](/rust-interop)
+- Async HTTP with a bridge: [reqwest](/guides/interop/reqwest)
+- Trust and Cargo policy: [Package Manifest](/packages/manifest)

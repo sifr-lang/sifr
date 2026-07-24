@@ -1,0 +1,61 @@
+---
+title: Interop guides
+sidebarTitle: Overview
+description: Library-first walkthroughs for Rust and Python interop in Sifr.
+contextual: false
+mode: center
+---
+
+These guides teach interop by walking through one well-known library at a time. Each page starts with the concepts that force Sifr's declaration style, then shows a minimal working path.
+
+Use the [Rust Interop](/rust-interop) and [Embedded Python Interop](/python-interop) references when you need the full contract catalog.
+
+## Rust crates
+
+<CardGroup cols={2}>
+  <Card
+    icon="fingerprint"
+    title="blake3"
+    href="/guides/interop/blake3"
+    cta="Hash bytes"
+  >
+    Direct `@rust` binding for a compatible hashing function, plus panic policy.
+  </Card>
+  <Card
+    icon="globe"
+    title="reqwest"
+    href="/guides/interop/reqwest"
+    cta="Send a request"
+  >
+    Async HTTP through a local bridge that shapes responses into Sifr types.
+  </Card>
+</CardGroup>
+
+## Python packages
+
+<CardGroup cols={2}>
+  <Card
+    icon="landmark"
+    title="schwifty"
+    href="/guides/interop/schwifty"
+    cta="Validate an IBAN"
+  >
+    Typed opaque Python objects for IBAN validation with checked `Result` errors.
+  </Card>
+  <Card
+    icon="grid-3x3"
+    title="numpy"
+    href="/guides/interop/numpy"
+    cta="Multiply matrices"
+  >
+    Native-trusted NumPy work behind a typed bridge, with buffer notes for views.
+  </Card>
+  <Card
+    icon="radio"
+    title="kafka-python"
+    href="/guides/interop/kafka"
+    cta="Handle a callback"
+  >
+    Foreign-thread Kafka callbacks with explicit lifetime and concurrency policy.
+  </Card>
+</CardGroup>

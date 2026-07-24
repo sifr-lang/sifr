@@ -1,0 +1,111 @@
+---
+title: "Send an HTTP request with reqwest"
+sidebarTitle: "reqwest"
+description: "Call reqwest through an async Sifr declaration and a local bridge that returns checked Result values."
+---
+
+This guide uses [reqwest](https://crates.io/crates/reqwest) to send an HTTP GET from Sifr. reqwest is a good async Rust interop example because real HTTP work usually needs a bridge: response shaping, error normalization, and an explicit async contract.
+
+## Why this shape
+
+A raw `reqwest::Client` API is richer than a Sifr declaration should expose. Status codes, body bytes, header maps, and error variants all need a stable Sifr-facing shape. That adaptation belongs in a local bridge under `src/bridges`.
+
+Four rules drive the reqwest path:
+
+1. **Async Rust targets need `async def`.** Sifr rejects hiding a future behind a sync declaration.
+2. **Futures are `Send` by default.** Current-thread-only futures need an explicit `@rust.async(thread_affinity=tokio_current_thread)` contract.
+3. **Bridges adapt; declarations stay typed.** Convert Rust types into Sifr records or `Result` channels in the bridge, then bind the bridge function with `@rust(...)`.
+4. **No hidden runtimes or blocking.** Sifr does not invent a Tokio runtime for you, and it rejects hiding `block_on` inside an async path.
+
+Direct `@rust(reqwest....)` bindings are only for Rust items whose signatures already match Sifr. Prefer a bridge for HTTP.
+
+## Package setup
+
+```toml Cargo.toml
+[dependencies]
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+```
+
+```toml sifr.toml
+[rust]
+bridge-version = 1
+bridges = ["src/bridges"]
+
+[trust]
+rust-build-scripts = []
+rust-proc-macros = []
+native-links = []
+unsafe-rust-bridges = []
+rust-no-panic = []
+rust-panic-abort = []
+```
+
+Run `sifr bridge check` before you rely on the declaration in ordinary builds.
+
+## Write the bridge
+
+```rust src/bridges/http.rs
+pub struct HttpErrorBridge {
+    pub message: String,
+}
+
+pub async fn fetch_text(url: String) -> Result<String, HttpErrorBridge> {
+    let response = reqwest::get(url)
+        .await
+        .map_err(|error| HttpErrorBridge {
+            message: error.to_string(),
+        })?;
+    response
+        .text()
+        .await
+        .map_err(|error| HttpErrorBridge {
+            message: error.to_string(),
+        })
+}
+
+pub fn map_panic(message: &str) -> HttpErrorBridge {
+    HttpErrorBridge {
+        message: message.to_owned(),
+    }
+}
+```
+
+The bridge owns reqwest details. The Sifr side only sees `str` in and `Result[str, ...]` out.
+
+## Declare and call
+
+```sifr
+class HttpError(Error):
+    message: str
+
+@rust(bridge.http.fetch_text, panic=map_error(bridge.http.map_panic))
+async def fetch_text(url: str) -> Result[str, HttpError | RustPanicError]: ...
+
+async def load_health() -> Result[str, HttpError | RustPanicError]:
+    return await fetch_text("https://example.com/health")
+```
+
+`bridge.http.fetch_text` resolves to your package-local module under `src/bridges`. Panic mapping keeps Rust panics inside the declared error union.
+
+If you need status and body together, return a Sifr record from the bridge instead of a bare string:
+
+```sifr
+class HttpResponse:
+    status: uint32
+    body: str
+
+@rust(bridge.http.fetch, panic=map_error(bridge.http.map_panic))
+async def fetch(url: str) -> Result[HttpResponse, HttpError | RustPanicError]: ...
+```
+
+## What not to do
+
+- Do not call blocking reqwest APIs from async Sifr without an explicit blocking offload annotation and workflow.
+- Do not store borrowed response views across `await` points.
+- Do not expect Sifr to start Tokio for you outside the package's normal async runtime setup.
+
+## Next steps
+
+- Full async, opaque-handle, and panic contracts: [Rust Interop](/rust-interop)
+- Simpler direct binding: [blake3](/guides/interop/blake3)
+- Structured async in Sifr: [Async and Await](/concurrency/async-and-await)
