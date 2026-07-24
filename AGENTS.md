@@ -46,7 +46,7 @@ CI mirrors these exact scripts — no CI-only behavior. Do not wait on CI; valid
 
 ## File-size guardrail
 
-Hand-maintained first-party source files must stay under **900 lines**. Generated files, lockfiles, snapshots, baselines, `target/**`, and `third_party/**` are excluded.
+Hand-maintained first-party source files must stay under **900 lines**. Markdown and MDX documentation (`*.md`, `*.mdx`), generated files, lockfiles, snapshots, baselines, `target/**`, and `third_party/**` are excluded.
 
 Run the file-size guardrail before considering work complete. If a touched file exceeds the cap, refactor it by responsibility rather than adding more code to an oversized module.
 
