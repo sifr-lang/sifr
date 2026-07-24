@@ -120,7 +120,6 @@
               "stdlib/collections",
               "stdlib/io-filesystem",
               "stdlib/networking",
-              "stdlib/concurrency",
               "stdlib/text-encoding"
             ]
           },
@@ -132,7 +131,9 @@
               "concurrency/async-and-await",
               "concurrency/structured-tasks",
               "concurrency/cancellation-and-timeouts",
-              "concurrency/ownership-across-tasks"
+              "concurrency/ownership-across-tasks",
+              "concurrency/parallel-work",
+              "concurrency/api"
             ]
           },
           {

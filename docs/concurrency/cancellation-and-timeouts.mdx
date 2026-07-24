@@ -61,13 +61,13 @@ The handle still has one owner and one observation path.
   Do not use task cancellation as a hidden control-flow side channel. Treat timeout and cancellation as typed evidence that the caller must handle.
 </Warning>
 
-## Related
+## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Structured Tasks" icon="workflow" href="/concurrency/structured-tasks">
-    Learn how child task scopes own and clean up spawned work.
+  <Card title="Ownership Across Tasks" icon="shield-check" href="/concurrency/ownership-across-tasks">
+    See what values can cross spawn and await boundaries.
   </Card>
-  <Card title="Error Handling" icon="triangle-alert" href="/language/error-handling">
-    Review how typed errors flow through Sifr programs.
+  <Card title="Structured Tasks" icon="workflow" href="/concurrency/structured-tasks">
+    Review how scopes own and clean up spawned work.
   </Card>
 </CardGroup>

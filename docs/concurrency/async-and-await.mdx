@@ -64,18 +64,15 @@ Sifr has no exposed event-loop object. You do not call `get_event_loop`, mutate 
 
 Do not run blocking I/O or CPU-heavy functions directly inside async code. Sifr reports this as an async diagnostic because blocking the runtime would prevent other tasks from making progress.
 
-Use async APIs for I/O, and use `sifr.parallel` for CPU-heavy maps over owned data.
+Use async APIs for I/O. For CPU-heavy maps over owned data, continue with [Parallel Work](/concurrency/parallel-work).
 
-```python
-from sifr.parallel import map as parallel_map
+## Next Steps
 
-def heavy(value: int) -> int:
-    return value * value
-
-def run_cpu_work(values: list[int]) -> list[int]:
-    return parallel_map(values, heavy)
-```
-
-<Tip>
-  If the next thing you want is "run two things at once", continue with [Structured Tasks](/concurrency/structured-tasks).
-</Tip>
+<CardGroup cols={2}>
+  <Card title="Structured Tasks" icon="workflow" href="/concurrency/structured-tasks">
+    Run two or more async operations together inside a scope.
+  </Card>
+  <Card title="Cancellation and Timeouts" icon="clock-alert" href="/concurrency/cancellation-and-timeouts">
+    Bound the lifetime of awaited work.
+  </Card>
+</CardGroup>
