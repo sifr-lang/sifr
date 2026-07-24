@@ -1,0 +1,126 @@
+---
+title: "Handle a Kafka callback with kafka-python"
+sidebarTitle: "kafka-python"
+description: "Register a Sifr callback for kafka-python with explicit foreign-thread dispatch, lifetime, and concurrency policy."
+---
+
+This guide uses [kafka-python](https://kafka-python.readthedocs.io/) to acknowledge a consumed message from a Sifr callback. Kafka is a good callback example because broker clients often invoke handlers from worker threads that Sifr did not create.
+
+## Why this shape
+
+Crossing into Kafka means more than importing a client. The important contract is what happens when Python calls back into Sifr from another thread.
+
+Five rules drive the Kafka path:
+
+1. **Callbacks need an attached policy.** `@python.callback(...)` names the parameter that becomes the Python callable and states lifetime, dispatch, and concurrency.
+2. **Foreign threads are explicit.** `dispatch=foreign` means Python-created threads may enter the handler. Captures must be sendable and thread-safe.
+3. **Lifetime drains accepted work.** `lifetime=call` keeps the callable only until the declaration returns, then drains it. Longer lifetimes need an opaque owner with deterministic cleanup.
+4. **Bridge the broker workflow.** Producer/consumer setup, polling, and thread handoff belong in `src/python_bridges/`. The Sifr declaration stays a typed boundary.
+5. **Trust the import root.** Authorize `kafka` under `[trust].python`. Add `[trust].python-native` only if the chosen client loads native extensions in-process.
+
+Sifr rejects callback contracts that hide storage, omit shutdown behavior, or capture values that cannot cross the declared thread boundary.
+
+## Package setup
+
+Install `kafka-python` in the root uv project:
+
+```toml sifr.toml
+[trust]
+python = ["kafka"]
+```
+
+```bash
+sifr python check
+sifr python doctor
+```
+
+## Bridge the poll-and-callback workflow
+
+```python src/python_bridges/kafka_consumer.py
+import threading
+
+from kafka import KafkaConsumer
+
+
+def poll(handler, endpoint: str, topic: str) -> str:
+    consumer = KafkaConsumer(
+        topic,
+        bootstrap_servers=endpoint,
+        auto_offset_reset="earliest",
+        enable_auto_commit=False,
+        consumer_timeout_ms=30_000,
+    )
+    try:
+        for message in consumer:
+            payload = message.value.decode("utf-8")
+            return _invoke_foreign(handler, payload)
+    finally:
+        consumer.close()
+    raise RuntimeError("Kafka poll returned no message")
+
+
+def _invoke_foreign(handler, value: str) -> str:
+    results = []
+    errors = []
+
+    def invoke() -> None:
+        try:
+            results.append(handler(value))
+        except BaseException as error:  # rethrow on the declaration thread
+            errors.append(error)
+
+    worker = threading.Thread(target=invoke, name="sifr-kafka-callback")
+    worker.start()
+    worker.join(timeout=30)
+    if worker.is_alive():
+        raise RuntimeError("Kafka Sifr callback did not finish")
+    if errors:
+        raise errors[0]
+    if len(results) != 1:
+        raise RuntimeError("Kafka Sifr callback produced no result")
+    return results[0]
+```
+
+The bridge owns Kafka client lifetime. The foreign thread is intentional, so the Sifr declaration must use `dispatch=foreign`.
+
+## Declare the callback boundary
+
+```sifr
+from sifr.python import PythonError
+
+@python.callback(handler, lifetime=call, dispatch=foreign, concurrency=serial)
+@python(bridge.kafka_consumer.poll)
+def poll(
+    handler: Callable[[str], str],
+    endpoint: str,
+    topic: str,
+) -> Result[str, PythonError]: ...
+
+def acknowledge(message: str) -> str:
+    return "ack:" + message
+
+@blocking_io
+def consume_once(endpoint: str, topic: str) -> Result[str, PythonError]:
+    try:
+        return poll(acknowledge, endpoint, topic)
+    except PythonError as error:
+        raise error
+```
+
+| Policy | Why it is required here |
+| --- | --- |
+| `lifetime=call` | Drain the handler before `poll` returns. |
+| `dispatch=foreign` | kafka-python may enter from a worker thread. |
+| `concurrency=serial` | Reject overlapping handler entry instead of deadlocking on recursive waits. |
+
+Handler failures cross Python as `SifrCallbackError` and still return through the declared `Result` channel. If Python also fails, the Python error stays primary.
+
+## Retention and cleanup
+
+This example uses call-scoped callbacks. If the consumer must retain a handler across many polls, switch to `lifetime=result` or `lifetime=Self` on an opaque owner with `close`, `async_close`, `context`, or `async_context` cleanup. Owner shutdown must unregister first, reject new entries, drain accepted invocations, and release captures exactly once.
+
+## Next steps
+
+- Full callback and resource contracts: [Embedded Python Interop](/python-interop#callbacks)
+- Typed package objects without callbacks: [schwifty](/guides/interop/schwifty)
+- Native numerical work: [numpy](/guides/interop/numpy)

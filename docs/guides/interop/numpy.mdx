@@ -1,0 +1,92 @@
+---
+title: "Multiply matrices with numpy"
+sidebarTitle: "numpy"
+description: "Call NumPy matrix multiplication through a typed Python bridge, with native trust and notes on buffer views."
+---
+
+This guide uses [NumPy](https://numpy.org/) to multiply matrices from Sifr. NumPy is a good Python interop example because most useful work is a small workflow, not a single primitive conversion, and the package loads a native extension.
+
+## Why this shape
+
+NumPy is both a Python import root and a native extension. Sifr treats those as separate trust decisions. Matrix multiplication also tends to involve temporary arrays, dtype choices, and result shaping. That adaptation belongs in a package-local Python bridge under `src/python_bridges/`.
+
+Five rules drive the NumPy path:
+
+1. **Authorize Python and native roots separately.** `[trust].python` allows execution; `[trust].python-native` allows loading the native extension in-process.
+2. **Keep the Sifr boundary typed.** Expose `multiply_matrices(...) -> Result[...]` from a bridge instead of leaking `ndarray` details into every caller.
+3. **Opaque Python values are non-send by default.** Do not assume a NumPy object can move across threads without an explicit contract.
+4. **Public Python calls are blocking.** Call NumPy from `@blocking_io` code, or offload from async Sifr.
+5. **Zero-copy is opt-in and fail-closed.** Buffer and DLPack declarations never silently copy. Use them only when you need a view, not for ordinary multiply-and-return workflows.
+
+## Package setup
+
+Install NumPy in the root uv project, then declare trust:
+
+```toml sifr.toml
+[trust]
+python = ["numpy"]
+python-native = ["numpy"]
+```
+
+```bash
+sifr python check
+sifr python doctor
+```
+
+Native trust is required because NumPy loads extension modules. That is the explicit exception to Sifr-attributable no-panic guarantees for the native root.
+
+## Bridge the multiply workflow
+
+Put adaptation code in the owning package's `src/python_bridges/`:
+
+```python src/python_bridges/linalg.py
+import numpy as np
+
+
+def multiply(left: list[list[float]], right: list[list[float]]) -> list[list[float]]:
+    product = np.matmul(np.asarray(left, dtype="float64"), np.asarray(right, dtype="float64"))
+    return product.tolist()
+```
+
+Ordinary static imports are inventoried. The bridge converts Sifr-friendly lists into NumPy arrays, multiplies, and returns plain nested lists again.
+
+## Declare and call
+
+```sifr
+from sifr.python import PythonError
+
+@python(bridge.linalg.multiply)
+def multiply_matrices(
+    left: list[list[float]],
+    right: list[list[float]],
+) -> Result[list[list[float]], PythonError]: ...
+
+@blocking_io
+def area_scale() -> Result[list[list[float]], PythonError]:
+    try:
+        return multiply_matrices(
+            [[1.0, 2.0], [3.0, 4.0]],
+            [[5.0, 6.0], [7.0, 8.0]],
+        )
+    except PythonError as error:
+        raise error
+```
+
+`bridge.linalg.multiply` resolves only against this package's inventoried bridge modules. Generated binaries embed that bridge under an isolated runtime namespace; they do not read the `.py` file from disk at runtime.
+
+## When to use buffers instead
+
+Use `@python.buffer` when Sifr code must read or write array memory without copying the whole payload into nested lists:
+
+```sifr
+@python.buffer(bridge.numpy_buffer.make_range, access=write, layout=c_contiguous)
+def numpy_range(stop: int) -> Result[python.Buffer[int64], PythonError]: ...
+```
+
+Buffer values are affine and non-send. Release them explicitly or let ownership drop exactly once. Do not use buffer declarations for ordinary multiply-and-return helpers; keep those on the typed bridge path above.
+
+## Next steps
+
+- Buffer, Arrow, and DLPack contracts: [Embedded Python Interop](/python-interop#zero-copy-interop)
+- Simpler typed package call: [schwifty](/guides/interop/schwifty)
+- Callback-heavy brokers: [kafka-python](/guides/interop/kafka)

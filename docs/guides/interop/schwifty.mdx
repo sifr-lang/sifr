@@ -1,0 +1,87 @@
+---
+title: "Validate an IBAN with schwifty"
+sidebarTitle: "schwifty"
+description: "Embed CPython and call schwifty through typed opaque declarations to validate an IBAN."
+---
+
+This guide uses [schwifty](https://pypi.org/project/schwifty/) to validate an IBAN from Sifr. schwifty is a good first Python interop example because construction and attribute reads map cleanly onto typed opaque declarations.
+
+## Why this shape
+
+Embedded Python interop is not "write Python inside Sifr." Sifr embeds one uv-created CPython environment and calls installed packages through checked declarations.
+
+Four rules drive the schwifty path:
+
+1. **The root app owns the environment.** Sifr verifies a uv project (`.venv`, lock, interpreter). It does not run `uv sync` or invent a host-global Python.
+2. **Import roots need trust.** Declaring `@python(schwifty.IBAN)` creates a requirement; the root `[trust].python` list authorizes execution.
+3. **Python objects stay opaque.** An `IBAN` instance is not a Sifr record. Expose only the attributes and methods you need through `@python.opaque` and `@python.attr`.
+4. **Failures stay in `Result`.** Invalid IBANs and other Python exceptions become structured `PythonError` values. They do not unwind through Sifr user code.
+
+Prefer typed declarations for ordinary package calls. Use dynamic `Object` only when a boundary cannot be declared.
+
+## Package setup
+
+Install schwifty in the root uv project, then authorize the import root:
+
+```toml sifr.toml
+[trust]
+python = ["schwifty"]
+```
+
+Inspect the plan before building:
+
+```bash
+sifr python check
+sifr python doctor
+```
+
+## Declare the IBAN surface
+
+```sifr
+from sifr.python import PythonError
+
+@python.opaque(type=schwifty.IBAN, cleanup=drop)
+class Iban:
+    @python.attr(Self.country_code)
+    def country_code(self) -> Result[str, PythonError]: ...
+
+    @python.attr(Self.bank_code)
+    def bank_code(self) -> Result[str, PythonError]: ...
+
+    @python.attr(Self.account_code)
+    def account_code(self) -> Result[str, PythonError]: ...
+
+@python(schwifty.IBAN)
+def parse_iban(text: str) -> Result[Iban, PythonError]: ...
+```
+
+`@python(schwifty.IBAN)` binds the constructor. Invalid input fails through `PythonError` instead of raising across the Sifr boundary. `cleanup=drop` is enough here because IBAN values do not need deterministic close semantics beyond ordinary Python object lifetime.
+
+## Validate in application code
+
+Every public `sifr.python` call is `@blocking_io`. Keep the call on a blocking path, or offload it from async code:
+
+```sifr
+@blocking_io
+def validate_iban(text: str) -> Result[str, PythonError]:
+    try:
+        iban: Iban = parse_iban(text)
+        country: str = iban.country_code()
+        bank: str = iban.bank_code()
+        account: str = iban.account_code()
+        return country + ":" + bank + ":" + account
+    except PythonError as error:
+        raise error
+```
+
+Example input: `"DE89 3704 0044 0532 0130 00"`. On success you get the country, bank, and account components after schwifty's validation. On failure you get a checked `PythonError` with message, kind, exception type, traceback, and context.
+
+## Why not import schwifty like ordinary Python
+
+Sifr application code does not execute `import schwifty` as host Python would. The declaration is the import plan: Sifr inventories the root, probes the selected interpreter, and embeds the verified environment into the binary. That keeps environment ownership, trust, and conversion contracts compile-time visible.
+
+## Next steps
+
+- Full environment, trust, and binding reference: [Embedded Python Interop](/python-interop)
+- Native arrays next: [numpy](/guides/interop/numpy)
+- Foreign-thread callbacks: [kafka-python](/guides/interop/kafka)

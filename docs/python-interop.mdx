@@ -8,6 +8,8 @@ Sifr can embed one uv-created CPython environment in a compiled application. Use
 
 This is not Python source compatibility and not a generic `dlopen` layer. Prefer `sifr.*` for Sifr code; use `sifr.python` only when you intentionally cross into Python packages.
 
+For library-first walkthroughs, start with [schwifty](/guides/interop/schwifty), [NumPy](/guides/interop/numpy), or [kafka-python](/guides/interop/kafka).
+
 ## Package Setup
 
 The root application owns the Python environment. Sifr verifies and consumes it; it does not run `uv sync`, install packages, or fall back to host-global Python.

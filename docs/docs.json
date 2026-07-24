@@ -172,6 +172,18 @@
               "guides/rust-developers/index",
               "guides/rust-developers/rust-concepts"
             ]
+          },
+          {
+            "group": "Interop",
+            "icon": "plug-zap",
+            "pages": [
+              "guides/interop/index",
+              "guides/interop/blake3",
+              "guides/interop/reqwest",
+              "guides/interop/schwifty",
+              "guides/interop/numpy",
+              "guides/interop/kafka"
+            ]
           }
         ]
       },
