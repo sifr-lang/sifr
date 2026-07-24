@@ -2,8 +2,17 @@
 
 ## Status
 
-Proposed architecture and implementation issue. Research and design are
-complete; implementation has not started.
+Architecture lock approved on draft PR
+[#3014](https://github.com/sifr-lang/sifr/pull/3014); implementation has not
+started. Opus 5 pass 1 returned `NEEDS REVISION`, pass 2 returned `SATISFIED`,
+and final closure pass 3 returned `SATISFIED` with no blocker, major, or
+edit-worthy minor. The `milestone_ps_0` exit gate is met.
+
+Review artifacts:
+
+- [`native-pydantic-sifr-architecture-opus5-review-pass-1.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-1.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-2.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-2.md)
+- [`native-pydantic-sifr-architecture-opus5-review-pass-3.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-3.md)
 
 This document is the single planning source of truth for:
 
