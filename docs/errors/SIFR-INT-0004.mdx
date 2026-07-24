@@ -42,9 +42,6 @@ wide: int = 200
 | Severity | Error |
 | Stability | stable |
 | Owner | `sifr_lowering::lower::integer_literal_diagnostics` |
-| Message template | `integer literal exceeds compile-time evaluation budget: {digits} decimal digits (max {max_digits})` |
 | Representative fixture | `crates/sifr_lowering/src/lower/expressions_tests.rs::test_large_integer_literal_over_budget_has_int_code` |
-| Declared args | `digits (message+json)`, `max_digits (message+json)` |
-| Dedupe args | `digits`, `max_digits` |
 
 See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

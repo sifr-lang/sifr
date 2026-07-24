@@ -50,9 +50,6 @@ user = User("Ada")
 | Severity | Error |
 | Stability | stable |
 | Owner | `sifr_lowering::lower::classes` |
-| Message template | `class '{class_name}' has fields but no __init__; parent fields will not be initialized. Define an explicit __init__ with super().__init__(...)` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/auto_init_inheritance_missing_super.sifr` |
-| Declared args | `class_name (message+json)` |
-| Dedupe args | `class_name` |
 
 See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

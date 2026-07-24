@@ -42,9 +42,6 @@ wide: int = 200
 | Severity | Error |
 | Stability | stable |
 | Owner | `sifr_lowering::lower::fixed_width_fitting` |
-| Message template | `integer value {value} does not fit target type {target_type}; valid range is {min_value}..={max_value}` |
 | Representative fixture | `crates/sifr_lowering/src/lower/expressions_tests.rs::test_fixed_width_literal_assignment_out_of_range_has_int_code` |
-| Declared args | `value (message+json)`, `target_type (message+json)`, `min_value (message+json)`, `max_value (message+json)` |
-| Dedupe args | `value`, `target_type`, `min_value`, `max_value` |
 
 See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

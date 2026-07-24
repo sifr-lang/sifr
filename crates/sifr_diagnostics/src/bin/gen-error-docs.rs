@@ -412,7 +412,7 @@ fn active_code_page(entry: &DiagnosticRegistryEntry, example: Option<&str>) -> S
     ));
     out.push_str("</Info>\n\n");
     if let Some(example) = example {
-        out.push_str(example);
+        out.push_str(&escape_mdx_outside_code_fences(example));
         out.push_str("\n\n");
     }
     out.push_str("## Details\n\n");
@@ -424,25 +424,52 @@ fn active_code_page(entry: &DiagnosticRegistryEntry, example: Option<&str>) -> S
     out.push_str("| Stability | stable |\n");
     out.push_str(&format!(
         "| Owner | {} |\n",
-        optional_code(entry.owner_module)
-    ));
-    out.push_str(&format!(
-        "| Message template | {} |\n",
-        optional_code(entry.message_template)
+        optional_code_mdx(entry.owner_module)
     ));
     out.push_str(&format!(
         "| Representative fixture | {} |\n",
-        optional_code(entry.representative_fixture_path)
-    ));
-    out.push_str(&format!("| Declared args | {} |\n", declared_args(entry)));
-    out.push_str(&format!(
-        "| Dedupe args | {} |\n",
-        string_list(entry.dedupe_args)
+        optional_code_mdx(entry.representative_fixture_path)
     ));
     out.push_str(
         "\nSee the [Error Codes index](/diagnostics/error-codes) for the complete catalog.\n",
     );
     out
+}
+
+/// Escape MDX-significant characters in prose while leaving fenced code blocks untouched.
+fn escape_mdx_outside_code_fences(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut in_fence = false;
+    for line in text.split_inclusive('\n') {
+        let trimmed = line.trim_start();
+        if trimmed.starts_with("```") {
+            in_fence = !in_fence;
+            out.push_str(line);
+            continue;
+        }
+        if in_fence {
+            out.push_str(line);
+        } else {
+            out.push_str(&escape_mdx_text(line));
+        }
+    }
+    out
+}
+
+fn escape_mdx_text(value: &str) -> String {
+    value
+        .replace('&', "&amp;")
+        .replace('{', "&#123;")
+        .replace('}', "&#125;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}
+
+fn optional_code_mdx(value: Option<&str>) -> String {
+    value.map_or_else(
+        || "n/a".to_owned(),
+        |value| format!("`{}`", escape_mdx_text(&escape_table(value))),
+    )
 }
 
 fn lowercase_sentence_start(text: &str) -> String {

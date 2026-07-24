@@ -24,7 +24,7 @@ from math import sqrt
 
 ## How To Fix It
 
-Use Sifr's explicit module namespace and import concrete symbols with `from sifr.<module> import <name>`.
+Use Sifr's explicit module namespace and import concrete symbols with `from sifr.&lt;module&gt; import &lt;name&gt;`.
 
 ## Fixed Code
 
@@ -41,9 +41,6 @@ from sifr.math import sqrt
 | Severity | Error |
 | Stability | stable |
 | Owner | `sifr_driver::project::discovery` |
-| Message template | `import target '{module}' collides with a namespace package` |
 | Representative fixture | `verification/areas/project_workspace/fixtures/project/workspace_namespace_collision_canonical` |
-| Declared args | `module (message+json)`, `resolved_path (json-only)`, `parent_path (json-only)` |
-| Dedupe args | `module`, `resolved_path`, `parent_path` |
 
 See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.

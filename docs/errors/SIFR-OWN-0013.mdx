@@ -51,9 +51,6 @@ taken: int = consume(items)
 | Severity | Error |
 | Stability | stable |
 | Owner | `sifr_lowering::lower::ipc_payload_calls` |
-| Message template | `typed IPC payload cannot transfer {value} of type {type_name}` |
 | Representative fixture | `crates/sifr/tests/e2e/fail/ipc_payload_process_resource_rejected.sifr` |
-| Declared args | `value (message+json)`, `type_name (message+json)`, `reason (json-only)` |
-| Dedupe args | `value`, `type_name`, `reason` |
 
 See the [Error Codes index](/diagnostics/error-codes) for the complete catalog.
