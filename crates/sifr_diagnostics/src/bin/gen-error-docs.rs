@@ -5,6 +5,7 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
+use serde_json::{Map, Value};
 use sifr_diagnostics::codes::{
     active_registry_entries, DiagnosticRegistryEntry, DiagnosticState, DIAGNOSTIC_FAMILIES,
     DIAGNOSTIC_REGISTRY,
@@ -22,8 +23,10 @@ fn main() -> io::Result<()> {
 
     if check {
         check_documents(&repo_root, &documents)?;
+        check_docs_json_reference_nav(&repo_root)?;
     } else {
         write_documents(&repo_root, &documents);
+        sync_docs_json_reference_nav(&repo_root)?;
     }
 
     Ok(())
@@ -46,7 +49,11 @@ fn generated_documents() -> Vec<GeneratedDocument> {
     let mut documents = vec![
         GeneratedDocument {
             path: "docs/errors/diagnostic-codes.md",
-            contents: public_index(),
+            contents: public_index(PublicIndexLinkStyle::RelativeMarkdown),
+        },
+        GeneratedDocument {
+            path: "docs/errors/diagnostic-codes.mdx",
+            contents: public_index_mdx(),
         },
         GeneratedDocument {
             path: "internal_docs/diagnostic_codes.md",
@@ -115,7 +122,10 @@ fn check_active_doc_casing(repo_root: &Path, drift: &mut Vec<String>) {
         }
     }
 
-    let mut expected_names = std::collections::BTreeSet::from(["diagnostic-codes.md".to_owned()]);
+    let mut expected_names = std::collections::BTreeSet::from([
+        "diagnostic-codes.md".to_owned(),
+        "diagnostic-codes.mdx".to_owned(),
+    ]);
     for entry in active_registry_entries() {
         let expected = format!("{}.md", entry.id);
         expected_names.insert(expected.clone());
@@ -138,8 +148,17 @@ fn check_active_doc_casing(repo_root: &Path, drift: &mut Vec<String>) {
     }
 }
 
-fn public_index() -> String {
-    let mut out = generated_header("Diagnostic Codes");
+#[derive(Copy, Clone)]
+enum PublicIndexLinkStyle {
+    RelativeMarkdown,
+    MintlifyRoute,
+}
+
+fn public_index(link_style: PublicIndexLinkStyle) -> String {
+    let mut out = match link_style {
+        PublicIndexLinkStyle::RelativeMarkdown => generated_header("Diagnostic Codes"),
+        PublicIndexLinkStyle::MintlifyRoute => String::new(),
+    };
     out.push_str(
         "Sifr diagnostic codes use `SIFR-<FAMILY>-dddd`, with local numbers scoped to each family. Some interop families use hyphenated names such as `RUST-CONFIG`.\n\n",
     );
@@ -164,9 +183,9 @@ fn public_index() -> String {
         out.push_str("| --- | --- | --- |\n");
         for entry in active_entries {
             out.push_str(&format!(
-                "| [`{}`]({}.md) | {} | {} |\n",
+                "| [`{}`]({}) | {} | {} |\n",
                 entry.id,
-                entry.id,
+                public_index_code_href(entry.id, link_style),
                 severity(entry),
                 entry.summary
             ));
@@ -187,6 +206,21 @@ fn public_index() -> String {
     }
 
     out
+}
+
+fn public_index_mdx() -> String {
+    let mut out = String::from(
+        "---\ntitle: \"Diagnostic Codes\"\nsidebarTitle: \"Error Codes\"\ndescription: \"Complete list of active and reserved Sifr diagnostic codes with links to per-code reference pages.\"\n---\n\n",
+    );
+    out.push_str(&public_index(PublicIndexLinkStyle::MintlifyRoute));
+    out
+}
+
+fn public_index_code_href(code: &str, link_style: PublicIndexLinkStyle) -> String {
+    match link_style {
+        PublicIndexLinkStyle::RelativeMarkdown => format!("{code}.md"),
+        PublicIndexLinkStyle::MintlifyRoute => format!("/errors/{code}"),
+    }
 }
 
 fn internal_reference() -> String {
@@ -307,4 +341,122 @@ fn string_list(values: &[&str]) -> String {
 
 fn escape_table(value: &str) -> String {
     value.replace('|', "\\|")
+}
+
+fn reference_error_nav_pages() -> Value {
+    let mut pages = vec![Value::String("errors/diagnostic-codes".to_owned())];
+
+    for family in DIAGNOSTIC_FAMILIES {
+        let family_pages = active_registry_entries()
+            .filter(|entry| entry.family == family.name)
+            .map(|entry| Value::String(format!("errors/{}", entry.id)))
+            .collect::<Vec<_>>();
+        if family_pages.is_empty() {
+            continue;
+        }
+        pages.push(Value::Object(Map::from_iter([
+            (
+                "group".to_owned(),
+                Value::String(family.name.to_owned()),
+            ),
+            ("pages".to_owned(), Value::Array(family_pages)),
+        ])));
+    }
+
+    Value::Array(pages)
+}
+
+fn sync_docs_json_reference_nav(repo_root: &Path) -> io::Result<()> {
+    let docs_json_path = repo_root.join("docs/docs.json");
+    let contents = fs::read_to_string(&docs_json_path)?;
+    let mut root: Value = serde_json::from_str(&contents).map_err(|err| {
+        io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("failed to parse {}: {err}", docs_json_path.display()),
+        )
+    })?;
+
+    let error_codes_group = reference_error_codes_group(&mut root)?;
+    error_codes_group.insert("pages".to_owned(), reference_error_nav_pages());
+
+    let updated = serde_json::to_string_pretty(&root).map_err(|err| {
+        io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("failed to serialize {}: {err}", docs_json_path.display()),
+        )
+    })?;
+    fs::write(&docs_json_path, format!("{updated}\n"))?;
+    Ok(())
+}
+
+fn check_docs_json_reference_nav(repo_root: &Path) -> io::Result<()> {
+    let docs_json_path = repo_root.join("docs/docs.json");
+    let contents = fs::read_to_string(&docs_json_path)?;
+    let mut root: Value = serde_json::from_str(&contents).map_err(|err| {
+        io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("failed to parse {}: {err}", docs_json_path.display()),
+        )
+    })?;
+
+    let error_codes_group = reference_error_codes_group(&mut root)?;
+    let actual_pages = error_codes_group
+        .get("pages")
+        .ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Reference > Error Codes group is missing pages",
+            )
+        })?;
+    let expected_pages = reference_error_nav_pages();
+    if actual_pages == &expected_pages {
+        return Ok(());
+    }
+
+    Err(io::Error::new(
+        io::ErrorKind::InvalidData,
+        format!(
+            "{} Reference > Error Codes navigation is out of date; run cargo run -p sifr_diagnostics --bin gen-error-docs",
+            docs_json_path.display()
+        ),
+    ))
+}
+
+fn reference_error_codes_group(root: &mut Value) -> io::Result<&mut Map<String, Value>> {
+    let tabs = root
+        .get_mut("navigation")
+        .and_then(Value::as_object_mut)
+        .and_then(|navigation| navigation.get_mut("tabs"))
+        .and_then(Value::as_array_mut)
+        .ok_or_else(|| {
+            io::Error::new(io::ErrorKind::InvalidData, "docs.json missing navigation.tabs")
+        })?;
+
+    let reference_tab = tabs
+        .iter_mut()
+        .find(|tab| tab.get("tab").and_then(Value::as_str) == Some("Reference"))
+        .ok_or_else(|| {
+            io::Error::new(io::ErrorKind::InvalidData, "docs.json missing Reference tab")
+        })?;
+
+    let groups = reference_tab
+        .get_mut("groups")
+        .and_then(Value::as_array_mut)
+        .ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "docs.json missing Reference tab groups",
+            )
+        })?;
+
+    groups
+        .iter_mut()
+        .find(|group| group.get("group").and_then(Value::as_str) == Some("Error Codes"))
+        .and_then(Value::as_object_mut)
+        .ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "docs.json missing Reference > Error Codes group",
+            )
+        })
 }
