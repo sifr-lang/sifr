@@ -4,13 +4,13 @@ sidebarTitle: "Python Interop"
 description: "Configure and use embedded CPython from Sifr with explicit environment ownership, trust, blocking, resource, and zero-copy semantics."
 ---
 
-Sifr can embed one uv-created CPython environment in a compiled Sifr application. This is for calling Python ecosystem packages from Sifr while preserving Sifr's normal contracts: fallible operations return `Result`, Python objects are opaque and non-send by default, native Python extensions are explicitly trusted, and zero-copy APIs never silently copy.
+Sifr can embed one uv-created CPython environment in a compiled application. Use it to call installed Python packages while keeping Sifr contracts: fallible work returns `Result`, Python objects are opaque and non-send by default, native extensions need explicit trust, and zero-copy APIs never silently copy.
 
-This is not Python source compatibility and it is not a generic `dlopen` layer. Use Sifr's native `sifr.*` standard library for Sifr code, and use `sifr.python` only when you intentionally cross into installed Python packages.
+This is not Python source compatibility and not a generic `dlopen` layer. Prefer `sifr.*` for Sifr code; use `sifr.python` only when you intentionally cross into Python packages.
 
-## Package Configuration
+## Package Setup
 
-The root application owns the Python environment. Sifr verifies and consumes that environment; it does not run `uv sync`, install packages, or fall back to host-global Python.
+The root application owns the Python environment. Sifr verifies and consumes it; it does not run `uv sync`, install packages, or fall back to host-global Python.
 
 ```toml
 [trust]
@@ -18,29 +18,18 @@ python = ["pandas", "pyarrow", "torch", "httpx"]
 python-native = ["numpy", "pyarrow", "torch"]
 ```
 
-For a normal uv project, Sifr discovers the nearest ancestor containing both
-`pyproject.toml` and `uv.lock`, then uses its `.venv` and platform-standard
-interpreter. Non-standard layouts can override `venv`, `pyproject`, `lock`, or
-`interpreter` in the root `[python]` table. Sifr runs read-only
-`uv lock --check --offline` validation and probes the live interpreter; it
-never creates, synchronizes, or mutates the environment.
+For a normal uv project, Sifr finds the nearest ancestor with both `pyproject.toml` and `uv.lock`, then uses its `.venv` and platform interpreter. Non-standard layouts can override `venv`, `pyproject`, `lock`, or `interpreter` in the root `[python]` table. Sifr runs read-only `uv lock --check --offline` and probes the live interpreter; it never creates or mutates the environment.
 
-Library packages may declare the import roots they require, but they do not choose the interpreter or virtual environment:
+Libraries may declare required import roots, but they do not choose the interpreter or venv:
 
 ```toml
 [python]
 requires-imports = ["polars"]
 ```
 
-`requires-imports` is only for raw or dynamic library imports whose roots cannot
-be derived from static declarations or package-local bridge imports. Sifr
-normalizes all requirement contributions into one per-root set while retaining
-every source for diagnostics.
+`requires-imports` is only for raw or dynamic imports whose roots cannot be derived from static declarations or package-local bridge imports. Sifr normalizes all contributions into one per-root set and keeps every source for diagnostics.
 
-Sifr rejects package graphs whose uv environment is missing, dependency
-packages that attempt to select or authorize an environment, non-CPython
-interpreters, free-threaded CPython, stale or missing project metadata, missing
-required imports, and trusted native roots that fail to load.
+Sifr rejects missing uv environments, dependency packages that select or authorize an environment, non-CPython interpreters, free-threaded CPython, stale or missing project metadata, missing required imports, and trusted native roots that fail to load.
 
 ## Trust Boundary
 
@@ -48,20 +37,17 @@ Python import roots and native extension roots are separate trust decisions.
 
 | Key | Meaning |
 | --- | --- |
-| `[python].requires-imports` | Underivable raw/dynamic roots a package requires the final app to provide. |
+| `[python].requires-imports` | Underivable raw/dynamic roots the final app must provide. |
 | `[trust].python` | Root-owned authorization to execute required Python roots. |
 | `[trust].python-native` | Roots allowed to load native Python extension modules in process. |
 
-Native Python extensions can abort the process, create threads, release the GIL, or call back into Python/Sifr. That is the explicit trust boundary exception to Sifr-attributable no-panic guarantees.
+Native extensions can abort the process, create threads, release the GIL, or call back into Python/Sifr. That is the explicit exception to Sifr-attributable no-panic guarantees.
 
-Root applications may use wildcard Python trust during local control.
-Dependency packages may publish requirements, but cannot select an environment
-or authorize Python or native-extension execution. Native trust for a root that
-is not required is rejected as stale policy.
+Root apps may use wildcard Python trust during local control. Dependencies may publish requirements, but cannot select an environment or authorize execution. Native trust for a root that is not required is rejected as stale policy.
 
-## Read-Only Check And Doctor
+## Check And Doctor
 
-Inspect the complete declaration-first Python plan before building:
+Inspect the declaration-first Python plan before building:
 
 ```bash
 sifr python check
@@ -69,45 +55,29 @@ sifr python check --json
 sifr python doctor
 ```
 
-Both commands use frozen package resolution and the same driver plan as normal
-check/build for declarations, bridge packages, protocols, target probes,
-environment selection, lock freshness, and trust. The report includes graph
-and source-content snapshot digests so results identify the inputs that were
-actually checked. Target states are `verified` for import-root targets proven
-in the selected interpreter, `runtime-checked` for hermetic embedded bridge
-targets, and `deferred` when a library is still missing environment or trust
-authority that its final application must provide.
+Both commands use frozen package resolution and the same driver plan as normal check/build. Reports include graph and source-content snapshot digests for the inputs that were checked.
 
-A library-only package without complete root environment/trust authority is
-valid to inspect before a final application exists. Its unresolved obligations
-and target probes are reported as deferred to that final application, and
-ordinary `sifr check` uses the same deferral decision. A standalone library
-with authorized imports and either explicit `[python]` paths or a conventional
-discoverable uv project resolves immediately, as does any package containing
-one or more runnable applications. Failures match ordinary `sifr check`
-diagnostics for the same snapshot.
+| Target state | Meaning |
+| --- | --- |
+| `verified` | Import-root target proven in the selected interpreter. |
+| `runtime-checked` | Hermetic embedded bridge target. |
+| `deferred` | Library still missing environment or trust that the final app must provide. |
 
-The language server uses the compiler's lowered declaration plan and the same
-driver target probe. Completion and hover show the structured Python target,
-its `verified`, `runtime-checked`, or `deferred` status, and protocol-specific
-ownership or cancellation guidance. Go-to-definition continues to navigate to
-the checked Sifr declaration. Invalid, unsupported, or untyped declarations
-are never shown as verified.
+Resolution rules:
 
-Editor results are cached by the compiler graph/source revision and selected
-package inputs. Changes to `sifr.toml`, custom pyproject or lock paths,
-`sifr.python-bindings.json`, `sifr.python-certifications.json`, or the selected
-interpreter invalidate the cached status; watched-file notifications trigger
-the same refresh.
+- A library without complete root authority is valid to inspect; unresolved obligations stay deferred.
+- Ordinary `sifr check` uses the same deferral decision.
+- A library with authorized imports and either explicit `[python]` paths or a discoverable uv project resolves immediately.
+- Any package with runnable applications resolves immediately.
+- Failures match ordinary `sifr check` diagnostics for the same snapshot.
 
-`sifr python doctor` adds deterministic patch-like suggestions containing only
-the root `[python]` and/or `[trust]` entries a library consumer must provide. The
-patches are output only: neither command writes a manifest or lockfile, grants
-trust, creates a virtual environment, installs packages, or runs `uv sync`.
+The language server uses the same lowered plan and driver probe. Completion and hover show target, status, and protocol guidance; go-to-definition navigates to the checked Sifr declaration. Invalid, unsupported, or untyped declarations are never shown as verified. Cache invalidates on `sifr.toml`, custom pyproject/lock paths, `sifr.python-bindings.json`, `sifr.python-certifications.json`, or interpreter changes.
+
+`sifr python doctor` emits deterministic patch-like suggestions for the root `[python]` and/or `[trust]` entries a consumer must provide. Neither command writes a manifest, grants trust, creates a venv, installs packages, or runs `uv sync`.
 
 ## Runtime Semantics
 
-The generated binary initializes CPython once before user `main` when Python interop is used. Initialization uses the validated probe metadata: executable, venv prefix, site-packages, `sys.path`, CPython version, SOABI, extension suffixes, platform, pointer width, and `libpython` when discoverable.
+When Python interop is used, the generated binary initializes CPython once before user `main`, using validated probe metadata: executable, venv prefix, site-packages, `sys.path`, CPython version, SOABI, extension suffixes, platform, pointer width, and `libpython` when discoverable.
 
 Rules:
 
@@ -116,12 +86,11 @@ Rules:
 - Reinitialization with the same config is allowed; conflicting config is rejected.
 - Every CPython API operation that needs the GIL acquires it.
 - Decref and resource release happen while holding the GIL.
-- `py.Object`, buffers, Arrow capsules, DLPack tensors, and callbacks are tracked for deterministic ownership and release diagnostics.
+- `py.Object`, buffers, Arrow capsules, DLPack tensors, and callbacks are tracked for ownership and release diagnostics.
 
-## Calling Python
+## Typed Declarations
 
-Use typed declarations for ordinary package calls. The Sifr signature is the
-conversion contract and every failure remains a checked `Result`:
+Use typed declarations for ordinary package calls. The Sifr signature is the conversion contract; every failure remains a checked `Result`:
 
 ```python
 from sifr.python import PythonError
@@ -130,10 +99,29 @@ from sifr.python import PythonError
 def sqrt(value: float) -> Result[float, PythonError]: ...
 ```
 
-### Dynamic Object Escape Hatch
+Every declaration error channel must use the canonical `PythonError` contract: exactly the string fields `message`, `kind`, `exception_type`, `traceback`, and `context`. Importing `PythonError` from `sifr.python` supplies that contract for ordinary, coroutine, callback, context, and zero-copy declarations.
 
-Use the sealed dynamic object API only when a boundary cannot be expressed as a
-typed declaration or isolated behind a package-local bridge:
+Adaptation code belongs under the owning package's `src/python_bridges/`. A source target such as `bridge.identifiers.parse_gtin` resolves only against that package's inventoried bridge modules:
+
+```python
+@python(bridge.identifiers.parse_gtin)
+def parse_gtin(text: str) -> Result[GtinInfo, PythonError]: ...
+```
+
+Bridge rules:
+
+- Ordinary static imports are inventoried; dynamic imports are rejected.
+- Third-party roots enter the requirement set and need root `[trust].python`.
+- Bridge sources and inventory are package archive inputs.
+- Generated binaries embed the selected graph under isolated `__sifr_bridge__.p_*` namespaces.
+- The reserved loader installs before user `main`; binaries do not read bridge files at runtime.
+- Two dependencies can own the same bridge module path without collision.
+
+The dynamic `Object` handle is the sealed identity from `sifr.python`. A local record named `Object` keeps ordinary record-conversion semantics when it has supported fields; it cannot impersonate the sealed Python handle.
+
+## Dynamic Object Escape Hatch
+
+Use the sealed dynamic object API only when a boundary cannot be a typed declaration or package-local bridge:
 
 ```python
 from sifr.python import Object, PythonError, from_value, import_module, kwarg, to_value
@@ -162,69 +150,19 @@ def main() -> Result[None, PythonError]:
         raise e
 ```
 
-Every Python boundary operation returns `Result`. Python exceptions are captured as structured `py.PythonError` values with exception type, message, traceback, operation context, and conversion/resource/zero-copy metadata where relevant. Python exceptions do not unwind through Sifr user code.
+Every Python boundary operation returns `Result`. Python exceptions become structured `py.PythonError` values (type, message, traceback, operation context, and conversion/resource/zero-copy metadata where relevant). They do not unwind through Sifr user code.
 
-`from_value[T]` and `to_value[T]` use the same closed conversion set as typed
-declarations: primitives, supported lists, tuples, `dict[str, T]`, closed
-records, options, opaque declarations, and the canonical sealed `Object`.
-`kwarg[T]` converts a typed value into the existing `(str, Object)` call
-shape. `Object.get_attr`, `get_item`, `call`, and `call_method` are checked
-method-style operations over that same sealed identity.
+Conversion helpers:
 
-Ordinary `Object` values release automatically when Sifr ownership ends,
-including return and error paths. Compatibility helpers such as `close` remain
-available when early deterministic release is semantically useful, but normal
-code does not need reverse-order close chains. Raw coroutines submitted with
-`run_coroutine_blocking` use the application-owned Python event loop; they do
-not create a per-call loop.
+- `from_value[T]` / `to_value[T]` use the same closed set as typed declarations: primitives, supported lists, tuples, `dict[str, T]`, closed records, options, opaque declarations, and sealed `Object`.
+- `kwarg[T]` converts into the `(str, Object)` call shape.
+- `Object.get_attr`, `get_item`, `call`, and `call_method` are checked method-style operations over that identity.
 
-## Typed Declarations And Package Bridges
+Ordinary `Object` values release when Sifr ownership ends, including return and error paths. Compatibility helpers such as `close` remain available for early release, but normal code does not need reverse-order close chains. Raw coroutines submitted with `run_coroutine_blocking` use the application-owned Python event loop; they do not create a per-call loop.
 
-Package authors can expose Python libraries as ordinary typed Sifr functions.
-The Sifr signature is the conversion contract, the target is a structured path,
-and the declaration body is exactly `...`:
+## Authoring Typed Bindings
 
-```python
-from sifr.python import PythonError
-
-@python(json.dumps)
-def dumps(value: dict[str, int]) -> Result[str, PythonError]: ...
-```
-
-Every declaration error channel must contain the canonical `PythonError`
-contract: exactly the string fields `message`, `kind`, `exception_type`,
-`traceback`, and `context`, with no duplicate or additional fields. Importing
-`PythonError` from `sifr.python` supplies that contract. This rule applies to
-ordinary, coroutine, callback, context, and zero-copy declarations.
-
-The dynamic `Object` handle is likewise the sealed identity exported by
-`sifr.python`, not a class selected by basename. A local record named `Object`
-keeps ordinary record-conversion semantics when it has supported fields; it
-cannot impersonate the sealed Python handle.
-
-Adaptation code belongs under the owning package's canonical
-`src/python_bridges/` directory. A source target such as
-`bridge.identifiers.parse_gtin` resolves only against that package's inventoried
-bridge modules:
-
-```python
-@python(bridge.identifiers.parse_gtin)
-def parse_gtin(text: str) -> Result[GtinInfo, PythonError]: ...
-```
-
-Sifr inventories ordinary static imports, rejects dynamic imports, includes
-third-party roots in the canonical requirement set, and requires the root
-application to authorize them with `[trust].python`. Bridge sources and their
-generated inventory are package archive inputs. Generated binaries embed the
-selected package graph under isolated `__sifr_bridge__.p_*` namespaces, install
-the reserved loader before user `main`, and do not read or extract bridge files
-at runtime. Two dependencies can therefore own the same bridge module path
-without collision.
-
-### Authoring Typed Bindings
-
-`sifr python bind` creates symbol-selective, reviewable Sifr declarations from
-Python typing information. Whole-module generation is intentionally unsupported:
+`sifr python bind` creates symbol-selective, reviewable Sifr declarations from Python typing information. Whole-module generation is unsupported:
 
 ```bash
 sifr python bind math --symbols sqrt \
@@ -233,29 +171,23 @@ sifr python bind redis.client --symbols Redis
 sifr python bind --check
 ```
 
-Resolution is deterministic: repeatable package-local `--override` files win,
-then explicitly selected `--stub-package` distributions, installed `py.typed`
-inline sources, repeatable package-local `--external-stub` files, and finally
-safe runtime introspection. Every selected symbol records its winning source,
-source hash, distribution version, SOABI, environment identity, and generated
-source digest in `sifr.python-bindings.json`. Generated `.sifr` files, the
-artifact, and consumed package-local typing sources are package archive inputs.
+Resolution order:
 
-Generation fails closed on `Any`, bare `object`, unknown overloads, callable or
-generic shapes without a Sifr contract, missing annotations, unresolved types,
-and optional positional-only parameters that the declaration call plan cannot
-represent. It never substitutes a dynamic `Object` or overwrites an unrelated
-package file. If the selected environment identity changes while adding or
-replacing one module, every retained binding is re-probed before the artifact
-can adopt the new identity. `bind --check` is frozen and read-only: it reruns
-resolution and generation in memory and rejects typing, environment,
-distribution, source, or generated-file drift. Ordinary package check/build
-also validates checked-in outputs and consumed local typing hashes and includes
-binding identity in its build cache key.
+1. Package-local `--override` files
+2. Selected `--stub-package` distributions
+3. Installed `py.typed` inline sources
+4. Package-local `--external-stub` files
+5. Safe runtime introspection
+
+Every selected symbol records its winning source, source hash, distribution version, SOABI, environment identity, and generated source digest in `sifr.python-bindings.json`. Generated `.sifr` files, the artifact, and consumed package-local typing sources are package archive inputs.
+
+Generation fails closed on `Any`, bare `object`, unknown overloads, callable or generic shapes without a Sifr contract, missing annotations, unresolved types, and optional positional-only parameters the call plan cannot represent. It never substitutes dynamic `Object` or overwrites an unrelated package file. If the environment identity changes while adding or replacing one module, every retained binding is re-probed before the artifact adopts the new identity.
+
+`bind --check` is frozen and read-only: it reruns resolution and generation in memory and rejects typing, environment, distribution, source, or generated-file drift. Ordinary package check/build also validates checked-in outputs and local typing hashes, and includes binding identity in its build cache key.
 
 ## Blocking And Async
 
-Every public `sifr.python` operation is classified as `@blocking_io`. Direct Python calls in async Sifr code are rejected unless the work is explicitly offloaded through Sifr's blocking offload primitive.
+Every public `sifr.python` operation is `@blocking_io`. Direct Python calls in async Sifr code are rejected unless offloaded through Sifr's blocking offload primitive.
 
 ```python
 from sifr.python import PythonError
@@ -281,10 +213,7 @@ def fetch_status_sync() -> Result[int, PythonError]:
         raise e
 ```
 
-Libraries with genuine coroutine APIs use typed async declarations instead of
-blocking offload. The generated application owns one asyncio loop on one
-dedicated thread; declaration calls submit to that loop without blocking a Sifr
-executor thread:
+Libraries with genuine coroutine APIs use typed async declarations. The generated application owns one asyncio loop on one dedicated thread; declaration calls submit to that loop without blocking a Sifr executor thread:
 
 ```python
 from sifr.python import PythonError
@@ -301,24 +230,22 @@ async def make_client() -> Result[AsyncClient, PythonError]: ...
 async def get_status(client: AsyncClient, path: str) -> Result[int, PythonError]: ...
 ```
 
-`@python.coroutine` is valid only on `async def`; synchronous declarations do
-not silently become asynchronous. Inputs and outputs use the same recursive
-typed conversion contract as synchronous declarations, and opaque values stay
-non-send. A class using `cleanup=async_close` must declare exactly one
-consuming `aclose(own self)` coroutine and the value cannot be abandoned,
-closed twice, or reused after close.
+Async declaration rules:
 
-Cancelling a Sifr task cancels its exact asyncio task and waits for Python
-`finally` cleanup before native task cancellation completes. A terminal
-`CancelledError` caused by that request is the active Sifr cancellation cause,
-not a catchable `PythonError`. If Python suppresses cancellation, its later
-return value or different exception wins normally. Runtime shutdown drains
-registered tasks, traverses a reserved async-cleanup ordering slot (there are
-currently no independent cleanup registrations), then stops and joins the loop
-thread.
+- `@python.coroutine` is valid only on `async def`.
+- Inputs and outputs use the same recursive typed conversion contract as sync declarations.
+- Opaque values stay non-send.
+- `cleanup=async_close` requires exactly one consuming `aclose(own self)` coroutine.
+- The value cannot be abandoned, closed twice, or reused after close.
 
-Typed Python async context managers use the same owned loop and declare both
-protocol methods explicitly:
+Cancellation:
+
+- Cancelling a Sifr task cancels its exact asyncio task and waits for Python `finally` cleanup first.
+- A terminal `CancelledError` caused by that request is the Sifr cancellation cause, not a catchable `PythonError`.
+- If Python suppresses cancellation, its later return or different exception wins.
+- Runtime shutdown drains registered tasks, traverses a reserved async-cleanup ordering slot, then stops and joins the loop thread.
+
+Typed Python async context managers use the same owned loop and declare both protocol methods:
 
 ```python
 from sifr.python import ExitCause, ExitDecision, PythonError
@@ -335,13 +262,14 @@ class DatabaseSession:
     ) -> Result[ExitDecision, PythonError]: ...
 ```
 
-A value with `cleanup=async_context` must be consumed by `async with`; it cannot
-be abandoned, entered twice, or reused after exit. Enter and exit execute on the
-application-owned Python loop. An originating Python exception may be
-suppressed by a truthy `__aexit__`, while ordinary Sifr errors, timeout,
-cancellation, and runtime faults remain primary. Cancellation waits for Python
-`finally` and the masked async exit to reach a terminal state before resuming.
-Exit runs exactly once on fallthrough, return, error, and cancellation paths.
+`cleanup=async_context` rules:
+
+- Must be consumed by `async with`.
+- Enter and exit run on the application-owned Python loop.
+- A truthy `__aexit__` may suppress an originating Python exception.
+- Ordinary Sifr errors, timeout, cancellation, and runtime faults remain primary.
+- Cancellation waits for Python `finally` and masked async exit to finish.
+- Exit runs exactly once on fallthrough, return, error, and cancellation paths.
 
 `py.run_coroutine_blocking` is also `@blocking_io`. It is for Python-owned coroutine objects and returns only after Python finishes.
 
@@ -374,15 +302,11 @@ def use_transaction() -> Result[int, PythonError]:
         raise e
 ```
 
-Typed context protocols, callback owners, buffers, Arrow resources, and DLPack
-tensors carry their cleanup obligations in the declaration contract. Double
-close/release returns deterministic resource-state errors for resource types
-that are not intentionally idempotent.
+Typed context protocols, callback owners, buffers, Arrow resources, and DLPack tensors carry cleanup in the declaration contract. Double close/release returns deterministic resource-state errors for types that are not intentionally idempotent.
 
 ## Callbacks
 
-Package authors attach a callback contract to the parameter that becomes the
-Python callable. The ordinary Sifr signature remains the conversion contract:
+Attach a callback contract to the parameter that becomes the Python callable. The ordinary Sifr signature remains the conversion contract:
 
 ```python
 @python.callback(handler, lifetime=call, dispatch=current)
@@ -400,31 +324,28 @@ async def apply_async(
 ) -> Result[int, PythonError]: ...
 ```
 
-`lifetime=call` drains the callable before the declaration returns.
-`lifetime=result` retains it in the returned opaque owner, and `lifetime=Self`
-retains it in the receiver. Retained owners must have deterministic `close`,
-`async_close`, `context`, or `async_context` cleanup. Owner shutdown unregisters
-first, rejects new entries, drains accepted invocations, and releases captures
-exactly once.
+| Policy | Meaning |
+| --- | --- |
+| `lifetime=call` | Drain the callable before the declaration returns. |
+| `lifetime=result` | Retain it in the returned opaque owner. |
+| `lifetime=Self` | Retain it in the receiver. |
+| `dispatch=current` | Non-send call-scoped captures allowed. |
+| `dispatch=foreign` | Accepts Python-created threads; requires sendable, thread-safe captures. |
+| `dispatch=asyncio` | `AsyncCallable` on the app-owned loop; cancellation propagates to the Sifr handler. |
 
-`dispatch=current` allows non-send call-scoped captures. `dispatch=foreign`
-accepts calls from Python-created threads and requires sendable, thread-safe
-captures. `dispatch=asyncio` exposes an `AsyncCallable` on the application-owned
-loop and propagates cancellation to the exact Sifr handler. Foreign and asyncio
-callbacks require `concurrency=serial | parallel`; serial recursion fails with
-a stable callback error instead of blocking on its own lock or queue.
+Retained owners must have deterministic `close`, `async_close`, `context`, or `async_context` cleanup. Owner shutdown unregisters first, rejects new entries, drains accepted invocations, and releases captures exactly once.
 
-Handler errors cross Python as `SifrCallbackError` and return through the
-declared `Result` channel even if Python catches the exception. If Python also
-fails, the Python error remains primary and the first handler failure is
-retained as secondary evidence. The lower-level `py.local_callback` and
-`py.threadsafe_callback` helpers remain available for explicit dynamic object
-code.
+Foreign and asyncio callbacks require `concurrency=serial | parallel`. Serial recursion fails with a stable callback error instead of blocking on its own lock or queue.
+
+Handler errors cross Python as `SifrCallbackError` and return through the declared `Result` channel even if Python catches the exception. If Python also fails, the Python error stays primary and the first handler failure is secondary evidence. Lower-level `py.local_callback` and `py.threadsafe_callback` remain available for explicit dynamic object code.
 
 ## Zero-Copy Interop
 
-Typed buffer declarations are active for objects that implement Python's buffer
-protocol:
+Zero-copy APIs reject unsupported dtype, shape, stride, device, mutability, malformed capsule, double-consumption, and copy-required paths. Explicit copy APIs are separate and never claim view semantics.
+
+### Buffers
+
+Typed buffer declarations cover objects that implement Python's buffer protocol:
 
 ```python
 from sifr.python import PythonError
@@ -442,32 +363,19 @@ def update(mut view: python.Buffer[int64]) -> Result[list[int64], PythonError]:
         raise error
 ```
 
-The decorator target can be an import-root callable, a package-local `bridge`
-callable, or `Self` on an opaque receiver. `Self` acquisition is read-only;
-writable declarations must use a producer callable that returns a fresh or
-ownership-transferred exporter because a shared opaque receiver cannot be
-exclusively frozen while the view exists. Any writable-producer parameter that
-can carry an existing `python.Object` or opaque Python identity must use `own`,
-so no Sifr alias remains usable while the view is live. `access=read | write`
-for producers and
-`layout=any | c_contiguous | f_contiguous` are validated during acquisition
-along with element format, item size, dimensions, shape, strides, and
-suboffsets. Supported element types are fixed-width and pointer-width signed
-and unsigned integers plus `float`.
+Decorator targets may be import-root callables, package-local `bridge` callables, or `Self` on an opaque receiver.
 
-The general declaration error-channel contract above applies unchanged to
-buffer producers and buffer methods.
+- `Self` acquisition is read-only.
+- Writable declarations must use a producer that returns a fresh or ownership-transferred exporter.
+- Writable-producer parameters that can carry an existing `python.Object` or opaque Python identity must use `own`.
+- `access=read | write` and `layout=any | c_contiguous | f_contiguous` are validated during acquisition with element format, item size, dimensions, shape, strides, and suboffsets.
+- Supported element types are fixed-width and pointer-width signed and unsigned integers plus `float`.
 
-`python.Buffer[T]` is affine and non-send. It retains its exporter and performs
-exactly one `PyBuffer_Release` on explicit `release()` or automatic drop.
-Writable access requires an exclusive `mut` receiver. `read` and `write` are
-bounds checked; `copy_slice` is an explicit copy. No borrowed Rust or Sifr slice
-can outlive the buffer.
+`python.Buffer[T]` is affine and non-send. It retains its exporter and performs exactly one `PyBuffer_Release` on explicit `release()` or automatic drop. Writable access requires an exclusive `mut` receiver. `read` and `write` are bounds checked; `copy_slice` is an explicit copy. No borrowed Rust or Sifr slice can outlive the buffer.
 
-Typed Arrow declarations use one of five affine, non-send return resources:
-`python.ArrowArray`, `python.ArrowSchema`, `python.ArrowStream`,
-`python.ArrowDeviceArray`, or `python.ArrowDeviceStream`. The return type selects
-the Arrow protocol and capsule shape:
+### Arrow
+
+Typed Arrow declarations return one of five affine, non-send resources: `python.ArrowArray`, `python.ArrowSchema`, `python.ArrowStream`, `python.ArrowDeviceArray`, or `python.ArrowDeviceStream`. The return type selects the protocol and capsule shape:
 
 ```python
 from sifr.python import PythonError
@@ -484,17 +392,15 @@ def use_array(values: list[int]) -> Result[None, PythonError]:
         raise error
 ```
 
-`schema=parameter(name)` instead names a required keyword-only `own`
-`python.ArrowSchema` parameter. Sifr transfers that exact schema capsule to the
-Arrow protocol, but never forwards it to the producer call. Arrays own their
-schema/data capsule pair; device arrays own the corresponding schema/device-data
-pair. Owned Arrow values can cross another Python declaration only through an
-`own` parameter, which commits the move before the call and reconciles full,
-partial, or absent capsule consumption afterward.
+Arrow ownership:
 
-Arrow declarations require package-authored executable no-copy certification
-for the exact target, selected environment, distribution versions, schema mode,
-and runtime producer module/type:
+- `schema=parameter(name)` names a required keyword-only `own` `python.ArrowSchema` parameter.
+- Sifr transfers that exact schema capsule to the Arrow protocol, but never forwards it to the producer call.
+- Arrays own their schema/data capsule pair; device arrays own the schema/device-data pair.
+- Owned Arrow values can cross another Python declaration only through an `own` parameter.
+- That `own` parameter commits the move before the call and reconciles full, partial, or absent capsule consumption afterward.
+
+Arrow declarations require package-authored executable no-copy certification for the exact target, environment, distribution versions, schema mode, and runtime producer module/type:
 
 ```bash
 sifr python certify arrow pyarrow.array \
@@ -502,12 +408,9 @@ sifr python certify arrow pyarrow.array \
 sifr python certify --check
 ```
 
-The first command writes or updates the package-root
-`sifr.python-certifications.json`. The second is read-only and reruns every
-recorded fixture, rejecting environment, fixture, producer, distribution,
-schema, pointer-identity, release-count, or copy-result drift. The artifact and
-its package-local fixtures are included in package archives and generated-build
-cache identity. There is no Arrow copy switch or uncertain-producer fallback.
+The first command writes or updates package-root `sifr.python-certifications.json`. The second is read-only and reruns every recorded fixture, rejecting environment, fixture, producer, distribution, schema, pointer-identity, release-count, or copy-result drift. The artifact and package-local fixtures are archive and build-cache inputs. There is no Arrow copy switch or uncertain-producer fallback.
+
+### DLPack
 
 Typed DLPack declarations return affine `python.DlpackTensor[T]` resources:
 
@@ -524,29 +427,27 @@ def consume(own tensor: python.DlpackTensor[int64]) -> Result[TorchTensor, Pytho
 ```
 
 Producer targets may be import-root callables, package-local bridges, or `Self`.
-`device=cpu | cuda | any` never requests a device change. CPU may use
-`stream=none`; CUDA and `any` require `stream=parameter(name)`, where `name` is
-a required keyword-only borrowed `python.DlpackStream` from an explicit
-`@python.dlpack.stream` declaration. Runtime acquisition validates the stream
-family/id before the one permitted `__dlpack__` call. A CPU producer always
-receives `stream=None`, including when `device=any` validated matching CPU
-stream metadata.
 
-Sifr passes `copy=False` and `max_version=(1, 0)` without an old-signature retry,
-accepts legacy or compatible 1.x versioned capsules, and validates copy flags,
-dtype/lanes, device, dimensions, shape, strides, byte offset, and deleter state.
-Declaration element types are the closed Sifr scalar set: fixed-width integers,
-`float` (DLPack float64), and `bool`; producers with other dtypes fail closed.
-Sifr transfers the producer's managed tensor without reading or mutating its
-payload, so a versioned capsule's `READ_ONLY` flag is preserved unchanged for
-the eventual consumer.
-The source capsule is immediately marked used. Passing `own
-python.DlpackTensor[T]` creates a fresh consumer capsule and commits the move
-even if the Python call later fails; an unconsumed capsule invokes its producer
-deleter exactly once.
+Device and stream:
 
-DLPack producer claims require the same package-authored executable evidence
-discipline as Arrow:
+- `device=cpu | cuda | any` never requests a device change.
+- CPU may use `stream=none`.
+- CUDA and `any` require `stream=parameter(name)` — a required keyword-only borrowed `python.DlpackStream` from `@python.dlpack.stream`.
+- Runtime acquisition validates the stream family/id before the one permitted `__dlpack__` call.
+- A CPU producer always receives `stream=None`, including when `device=any` validated matching CPU stream metadata.
+
+Transfer rules:
+
+- Sifr passes `copy=False` and `max_version=(1, 0)` without an old-signature retry.
+- Legacy or compatible 1.x capsules are accepted.
+- Acquisition validates copy flags, dtype/lanes, device, dimensions, shape, strides, byte offset, and deleter state.
+- Element types are the closed Sifr scalar set: fixed-width integers, `float` (DLPack float64), and `bool`.
+- Sifr transfers the producer's managed tensor without reading or mutating its payload, so `READ_ONLY` is preserved for the consumer.
+- The source capsule is immediately marked used.
+- Passing `own python.DlpackTensor[T]` creates a fresh consumer capsule and commits the move even if the Python call later fails.
+- An unconsumed capsule invokes its producer deleter exactly once.
+
+DLPack producer claims use the same certification discipline as Arrow:
 
 ```bash
 sifr python certify dlpack torch.Tensor \
@@ -554,14 +455,11 @@ sifr python certify dlpack torch.Tensor \
 sifr python certify --check
 ```
 
-The fixture must prove pointer identity, no copy, the declared device and stream
-policy, exact distribution versions, and exactly one observed managed-tensor
-deleter call within the same run. `certify --check` reruns the fixture and is
-read-only. Bridge targets remain keyed by their stable `bridge.*` spelling even
-though compiled binaries embed them under isolated runtime namespaces.
+The fixture must prove pointer identity, no copy, declared device and stream policy, exact distribution versions, and exactly one observed managed-tensor deleter call in the same run. Bridge targets stay keyed by their stable `bridge.*` spelling even though compiled binaries embed them under isolated runtime namespaces.
 
-Lower-level dynamic zero-copy APIs remain available when a typed declaration is
-not appropriate:
+### Dynamic Zero-Copy Helpers
+
+Lower-level dynamic APIs remain available when a typed declaration is not appropriate:
 
 ```python
 from sifr.python import ArrowCapsule, DlpackTensor, Object, PythonError, zero_copy_arrow_stream, zero_copy_dlpack_tensor
@@ -582,18 +480,13 @@ def torch_tensor_to_dlpack(tensor: Object) -> Result[DlpackTensor, PythonError]:
 Supported surfaces:
 
 - `Py_buffer` for bytes-like objects, memoryview, NumPy, and other buffer protocol producers.
-- Arrow PyCapsules for array, schema, stream, device-array, and device-stream
-  protocol methods.
+- Arrow PyCapsules for array, schema, stream, device-array, and device-stream protocol methods.
 - DLPack capsules for NumPy, torch, and TensorFlow CPU tensor paths.
 - Array-interface protocols with owner retention and metadata validation.
 
-Zero-copy APIs reject unsupported dtype, shape, stride, device, mutability, malformed capsule, double-consumption, and copy-required paths. Explicit copy APIs are separate and never claim view semantics.
-
 ## Package Examples
 
-Ordinary application code uses typed declarations. A package-local hermetic
-bridge is appropriate when a library workflow is dynamic internally; the Sifr
-boundary remains closed and typed.
+Ordinary application code uses typed declarations. A package-local hermetic bridge is appropriate when a library workflow is dynamic internally; the Sifr boundary stays closed and typed.
 
 ```python biip / schwifty declarations
 from sifr.python import PythonError
@@ -677,54 +570,16 @@ def send_and_receive(queue: str, body: str) -> Result[QueueResult, PythonError]:
 
 Credentialed or service-backed behavior belongs in the external Python interop gate. The default local gate uses import, stub, contract, and matrix evidence.
 
-## Diagnostics And Reports
+## Diagnostics
 
 Compiler diagnostics use stable URLs and structured JSON fields:
 
-- `SIFR-PYENV-0001..0011`: environment selection, probing, interpreter, ABI, import, native-load, and metadata diagnostics.
-- `SIFR-PYTRUST-0001`, `0003..0005`: dependency wildcard rejection,
-  stale native trust, dynamic-import annotation, and unauthorized required-root
-  diagnostics. `SIFR-PYTRUST-0002` is retired.
-- `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, and `SIFR-PYRES`: active declaration, target, conversion, resource, and sequenced activation diagnostics.
-- `SIFR-PYCB`: active callback lifetime, dispatch, conversion, and shutdown diagnostics.
-- `SIFR-PYZC`: active buffer, Arrow, and DLPack declaration, ownership, layout
-  or stream policy, certification where required, capsule-validation,
-  transfer, and hidden-copy diagnostics.
+| Family | Covers |
+| --- | --- |
+| `SIFR-PYENV-0001..0011` | Environment selection, probing, interpreter, ABI, import, native-load, and metadata. |
+| `SIFR-PYTRUST-0001`, `0003..0005` | Dependency wildcard rejection, stale native trust, dynamic-import annotation, and unauthorized required roots. `SIFR-PYTRUST-0002` is retired. |
+| `SIFR-PYIMP`, `SIFR-PYCALL`, `SIFR-PYCONV`, `SIFR-PYRES` | Declaration, target, conversion, resource, and sequenced activation. |
+| `SIFR-PYCB` | Callback lifetime, dispatch, conversion, and shutdown. |
+| `SIFR-PYZC` | Buffer, Arrow, and DLPack declaration, ownership, layout or stream policy, certification, capsule validation, transfer, and hidden-copy. |
 
-Verification lives under `verification/areas/python_interop/`:
-
-```bash
-verification/areas/python_interop/run.sh --group env
-verification/areas/python_interop/run.sh --tier tier1
-verification/areas/python_interop/run.sh --group callbacks
-verification/areas/python_interop/run.sh --group dataframes
-uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --async-declaration-examples
-uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --arrow-examples
-uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --callback-examples
-uv run --project verification/areas/python_interop --locked python verification/areas/python_interop/runner/run.py --buffer-examples
-verification/areas/python_interop/run.sh --self-test
-scripts/run_all_tests.sh --profile python-interop-live
-```
-
-Matrix-only package evidence reports `matrix-passed`; live environment execution reports `passed`. Host-dependent packages include explicit skip reasons.
-
-The area result also contains `compiled_certification`. It binds the callback,
-offline async HTTP, buffer, Arrow, and DLPack capability rows to exact compiled
-case IDs, Sifr sources, stdout markers, trust roots, certification-command
-counts, and SHA-256 digests of reports created in that invocation. Reports are
-removed before their owning suite runs, so stale output cannot promote a
-capability. `complete` means all five owning suites ran and all seven capability
-rows passed; targeted runs report `partial` or `not-selected` without promotion.
-Arrow, DLPack, and NumPy buffer records additionally require an observed
-`resources=zero` marker.
-The `python-interop-live` profile is explicit opt-in container-runtime policy
-for service-backed examples; it is not part of offline `create-pr`, `merge`,
-`nightly`, or `release` validation. It first validates live policy, then builds
-native Sifr binaries for Redis, Postgres, a Kafka-compatible broker,
-Pub/Sub-style LocalStack fanout, SNS-to-SQS delivery, and direct SQS delivery.
-Testcontainers owns container lifecycle and endpoint discovery only; each
-binary's hermetic declaration bridge owns the real service-client operations.
-Kafka and cloud-message deliveries cross a foreign-thread typed Sifr callback
-and require its acknowledgement. If Docker is not running locally, all binaries
-must still build before the service cases report `structured-skip`; with Docker
-running every binary must execute and report `live-passed`.
+See [error codes](/diagnostics/error-codes) for the full catalog. Run `sifr --explain SIFR-PYCALL-0001` for a stable explanation of any active code.
