@@ -14,7 +14,7 @@ If you know Python, start by keeping the surface model and changing the failure 
 | --- | --- | --- |
 | Type hints | Type annotations | Enforced by the compiler, not optional metadata |
 | Exceptions | `Result[T, E]` plus `try`/`except` | Recoverable errors are values, not stack unwinds |
-| Missing values | `T | None` | You must check `None` before using the inner value |
+| Missing values | `T \| None` | You must check `None` before using the inner value |
 | Imports | `sifr.*` modules and packages | Bare CPython stdlib names are not aliases |
 | Integers | Exact `int` plus explicit fixed-width types | Ordinary arithmetic stays simple; representation-sensitive widths are explicit |
 | Bytes | First-class `bytes` | Encode and decode at typed boundaries; do not rely on platform-default text behavior |
