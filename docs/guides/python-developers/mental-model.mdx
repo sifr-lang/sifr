@@ -27,7 +27,7 @@ def describe(value: int | str) -> str:
 | --- | --- |
 | Type hints document intent | Type annotations are checked |
 | Exceptions carry recoverable failure | `Result[T, E]` carries recoverable failure |
-| Missing keys raise later | Missing lookups return `T | None` |
+| Missing keys raise later | Missing lookups return `T \| None` |
 | Imports mirror CPython names | Standard-library imports use `sifr.*` |
 | Any parameter can be mutated locally | Parameter mutation needs `mut` |
 | Background async tasks can detach | Tasks live in structured scopes |

@@ -16,7 +16,7 @@ Use Rust as the safety model, not as the syntax model.
 | Mutable borrow | `mut items: list[int]` |
 | Move ownership | `own items: list[int]` |
 | Owned mutable value | `own mut items: list[int]` |
-| `Option<T>` | `T | None` |
+| `Option<T>` | `T \| None` |
 | `Result<T, E>` | `Result[T, E]` plus `raise` and `try`/`except` |
 | `async` tasks | Structured `sifr.task` scopes and handles |
 | Cargo-backed binary | `sifr build` native executable |
