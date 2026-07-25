@@ -20,7 +20,7 @@ mkdir -p "${PWD_NOW}/plans/reviews/active"
 TARGET_FILE="${PWD_NOW}/plans/reviews/active/<conversation-file-name>.md"
 LOG_FILE="${TARGET_FILE%.md}.claude.log"
 
-nohup claude --dangerously-skip-permissions --setting-sources project --model claude-opus-4-7 --effort xhigh -p "$(cat <<PROMPT
+nohup claude --dangerously-skip-permissions --setting-sources project --model claude-opus-5 --effort medium -p "$(cat <<PROMPT
 ${TOPIC_NAME}
 PROMPT
 )" >"${TARGET_FILE}" 2>"${LOG_FILE}" &
@@ -34,6 +34,8 @@ fi
 ```
 
 - Replace `<conversation-file-name>.md` with a concrete file name for the active topic.
+- Keep `--model claude-opus-5` and `--effort medium` as the default review
+  model and effort.
 - If the target file already exists, use a new filename with the same prefix and an incremented suffix.
 - Keep the `wait "${CLAUDE_PID}"` in the same shell invocation; detached `nohup ... &` can leave empty artifacts in Codex exec sessions.
 - Keep using the target file as the handoff artifact.
