@@ -110,8 +110,10 @@ macOS/Linux ABI or OS floor established by the release builders.
 
 ### Canonical governed release index
 
-Phase 40 replaces the preview-only `channels.json` contract with
-`schema_version: 2`. The exact JSON Schema is checked in under
+Phase 40 replaces the preview-only `channels.json` contract with the single
+GA governance epoch, `schema_version: 2`. Every machine-readable contract
+owned by Phase 40 uses that same schema version. The exact JSON Schemas are
+checked in under
 `verification/areas/distribution_release/schemas/`.
 
 The schema contains only data, never executable URLs:
@@ -158,39 +160,50 @@ Invariants:
   that never-activated generation remains as attempt evidence and a retry uses
   the next generation; it never deletes or overwrites the orphaned snapshot.
 
-### Schema ownership
+### Single schema epoch and ownership
 
-- `channels.json` uses the new canonical `schema_version: 2`.
-- Official install receipts remain `schema_version: 2`; their preview-only
-  version pattern and channel enum are replaced by the canonical
-  alpha/beta/stable set. `rc` is removed, not retained while stable is added.
-- `sifr self version --format json` remains `schema_version: 1`; its allowed
-  channel set is replaced by alpha/beta/stable without changing its field set.
-- The self-update plan JSON remains `schema_version: 1`; its accepted version
-  classes and channel values are replaced by alpha/beta/stable without changing
-  its field set.
-- `stable-site-release-facts.json` uses a checked-in `schema_version: 1`
-  contract generated during publication from the governed index and approved
-  plan. It binds the realized generation, active stable version,
-  withdrawal/incident facts, source plan digest, and dispatcher digests
-  consumed by `sifr-lang/sifr-blog-website`; it is not a second release
-  authority. Its realized payload and digest are post-approval evidence
-  recorded in sign-off, not candidate-plan inputs.
-- `stable-incident-request.json` uses a checked-in `schema_version: 1` contract
-  for `rollback` and `incident-roll-forward`. It binds the incident id, trigger,
+`schema_version: 2` identifies the canonical Phase 40 release-governance
+epoch, not a compatibility option. Every checked-in Phase 40 JSON Schema
+requires that exact value with no default. Every producer emits it, and every
+consumer or validator rejects a missing, non-integer, or non-`2` value before
+using any other field.
+
+- `channels.json`, `stable-release-plan.json`,
+  `stable-release-signoff.json`, official install receipts,
+  `sifr self version --format json`, self-update plan JSON,
+  `qualification-artifact-index.json`, `stable-site-release-facts.json`,
+  `stable-incident-request.json`, `stable-incident-signoff.json`, and
+  `release-profile-report.json` all use `schema_version: 2`.
+- Receipt, CLI-version, and self-update-plan producers and consumers are
+  replaced atomically with the canonical alpha/beta/stable field and enum
+  definitions. `rc` is deleted rather than retained beside stable.
+- `stable-site-release-facts.json` is generated during publication from the
+  governed index and approved plan. It binds the realized generation, active
+  stable version, withdrawal/incident facts, source plan digest, and dispatcher
+  digests consumed by `sifr-lang/sifr-blog-website`; it is not a second release
+  authority. Its realized payload and digest are post-approval evidence recorded
+  in sign-off, not candidate-plan inputs.
+- `stable-incident-request.json` defines `rollback` and
+  `incident-roll-forward`. It binds the incident id, trigger,
   affected active version and approved plan digest, requested operation,
   withdrawal reason/evidence, and—when rolling back—the active target version
   and approved plan digest.
-- `stable-incident-signoff.json` uses a checked-in `schema_version: 1` contract.
-  It references the immutable incident-request digest and records the protected
+- `stable-incident-signoff.json` references the immutable incident-request
+  digest and records the protected
   attempts/approvers, realized index mutation and generation, site
   reconciliation, validation, communication, and closure.
-- `release-profile-report.json` uses a checked-in `schema_version: 1` contract.
-  It records a stable report identifier, clean source commit and recursive
+- `release-profile-report.json` records a stable report identifier, clean
+  source commit and recursive
   submodules, resolved profile-manifest digest, command/toolchain, overall
   pass/fail status, every required lane step/suite result, and result-artifact
   digests. Canonical JSON bytes are SHA-256-bound externally by the release
   plan; the report contains no self-referential digest.
+
+Schema v1 is discarded preview state. Phase 40 deletes v1 fixtures, readers,
+writers, validators, and documentation in the same cutover. There is no
+version negotiation, schema autodetection, migration, dual read/write,
+compatibility adapter, or fallback. Phase 40-only contracts start at version 2
+so every governed payload belongs unambiguously to the same GA epoch.
 
 The known release-profile digest is the SHA-256 of canonical JSON bytes from
 `verification/profiles/release.json` at the report's source commit after schema
@@ -347,8 +360,8 @@ verification inventory before mutation-capable work begins.
 
 **Scope:**
 
-- Check in the release-index and stable-release-plan schemas.
-- Check in the stable-release-signoff schema.
+- Check in the release-index, stable-release-plan,
+  stable-release-signoff, and qualification-artifact-index schemas.
 - Check in the derived `stable-site-release-facts.json` schema and generator.
 - Check in the stable-incident-request and stable-incident-signoff schemas,
   generators, and validators.
@@ -358,6 +371,18 @@ verification inventory before mutation-capable work begins.
   checkout, fails if the output exists, and includes source/profile identity
   plus an overall verdict. The existing overwriteable
   `<profile>.latest.*` developer reports are never valid release evidence.
+- Perform the one atomic schema cutover: require `schema_version: 2` in every
+  Phase 40 schema, fixture, generated artifact, CLI JSON response, and
+  validation entrypoint. This milestone replaces the existing install-receipt,
+  `sifr self version --format json`, and self-update-plan schemas, producers,
+  consumers, fixtures, and tests alongside the governance contracts above.
+  Delete every v1 fixture and code path in the same change; do not retain
+  conversion tests or transitional readers.
+- The v2 schemas define the final alpha/beta/stable enum during this cutover,
+  but schema acceptance does not activate stable behavior. Stable resolution,
+  and installation remain unavailable until `milestone_40_2`; the non-mutating
+  dry-run stable planner arrives in `milestone_40_1`; and no publication
+  workflow accepts stable until `milestone_40_5`.
 - Extend `scripts/run_all_tests.sh` to pass that explicit report-output option
   through to the profile runner without changing ordinary profile behavior.
 - Add repository checks for the evidence-only candidate/incident directories:
@@ -372,12 +397,15 @@ verification inventory before mutation-capable work begins.
   manifest owner in `verification/owners.json`. Its initial `structure` suite
   validates the docs inventory, check registration, and mutation-test harness
   without requiring GA wording before `milestone_40_4`.
-- Extend the fixed legacy facade in
+- Extend the existing release-profile facade configured under the internal
+  `legacy_facade` manifest key in
   `verification/runner/sifr_verify/profile_runner.py` with an executable
-  `documentation_checks` step. Add self-tests that fail when a selected
-  documentation suite is omitted or emits no result. Preserve the 900-line
-  source cap; split profile-step execution by responsibility before adding the
-  inherited Rust and documentation steps if the combined file approaches it.
+  `documentation_checks` step. That key names existing runner plumbing; it is
+  not a product compatibility surface, and Phase 40 must not add a second
+  facade. Add self-tests that fail when a selected documentation suite is
+  omitted or emits no result. Preserve the 900-line source cap; split
+  profile-step execution by responsibility before adding the inherited Rust
+  and documentation steps if the combined file approaches it.
 - Confirm that the durable release profile's existing
   `legacy_facade.tooling_suites=["full"]` expands to and executes
   `editor-release`; do not add a duplicate `editor-release` selection.
@@ -412,6 +440,10 @@ verification inventory before mutation-capable work begins.
   withdraw the named affected version while activating its successor, site
   facts that disagree with the governed index, or release/incident sign-off
   attempts missing run, mode, approver, status, or mutation evidence.
+- Every validator rejects an absent schema version and every value other than
+  integer `2`; repository search checks fail if a Phase 40 schema, fixture,
+  producer, or consumer still names schema v1 or implements version
+  negotiation.
 - The report validator rejects a dirty/unresolved source, source/submodule
   mismatch, unknown profile digest, missing required step/suite, non-pass
   overall status, noncanonical JSON, or result-artifact digest mismatch.
@@ -430,7 +462,8 @@ verification inventory before mutation-capable work begins.
 
 **Positive validation:**
 
-- Valid schema-v2 alpha/beta/stable metadata and a complete release plan pass.
+- Valid schema-v2 alpha/beta/stable metadata and every other governed
+  schema-v2 artifact pass.
 
 **Negative validation:**
 
@@ -538,15 +571,18 @@ release index and immutable installer.
 
 **Scope:**
 
-- Update every metadata producer and consumer to schema version 2.
+- Add stable channel and version behavior only to the already-canonical
+  schema-v2 producers and consumers cut over in `milestone_40_0`; this milestone
+  does not introduce another schema transition or retain an earlier format.
 - Add stable version parsing and total ordering to dispatchers, installers,
   receipts, and Rust self-update.
-- Remove `rc` atomically from
-  `self_update_install_receipt.schema.json`, installer `APP_CHANNEL`
-  derivation, dispatcher exact-pin parsing, `preview-release.yml` inputs, Rust
-  self-update fixtures, and every related producer, validator, test, and doc.
-  The preview workflow accepts only alpha and beta; stable is accepted only by
-  the protected stable path introduced in `milestone_40_5`.
+- Remove `rc` from the remaining non-JSON runtime and workflow surfaces:
+  installer `APP_CHANNEL` derivation, dispatcher exact-pin parsing, and
+  `preview-release.yml` inputs, plus their tests and docs. The schema, receipt,
+  CLI, self-update-plan, and fixture removals already occurred in the atomic
+  `milestone_40_0` cutover. The preview workflow accepts only alpha and beta;
+  stable is accepted only by the protected stable path introduced in
+  `milestone_40_5`.
 - Generate `/install`, `/install/stable`, `/install/alpha`, and `/install/beta`
   from one dispatcher generator; `/install` defaults to stable.
 - Require installer SHA-256 verification before executing a downloaded
@@ -609,6 +645,8 @@ release index and immutable installer.
   digests, mismatched receipts, stale metadata generations, and `rc` requests
   fail before installer execution.
 - Alpha and beta pass the same schema-v2 integrity rules.
+- Every v1, version-less, version-negotiated, or dual-format payload is rejected
+  before resolution, installer execution, evidence acceptance, or mutation.
 - Repository checks prove that no receipt/workflow/installer/dispatcher/self-
   update surface accepts `rc`, no local command can publish, and no version
   asset upload uses `--clobber`.
