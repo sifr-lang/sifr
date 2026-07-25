@@ -1,7 +1,8 @@
 # Phase Index
 
-This index is generated from the flat phase files in `plans/phases/`.
-Phase status remains authoritative in each phase file header and is mirrored here for navigation.
+This is a maintained navigation index, not generated output. Status remains
+authoritative in each phase file or its explicitly named canonical ad hoc
+successor and is summarized here.
 
 | Phase | Title | Status | File |
 | --- | --- | --- | --- |
@@ -47,9 +48,10 @@ Phase status remains authoritative in each phase file header and is mirrored her
 | 38 | Phase 38: Docs and Documentation | unspecified | [38_docs_and_documentation.md](./38_docs_and_documentation.md) |
 | 39 | Phase 39: Rust Interop | completed, audited (2026-06-22, PRs #2702-#2729) | [39_rust_interop.md](./39_rust_interop.md) |
 | 40 | Phase 40: Stable Channel GA Promotion and Release Governance | unspecified | [40_stable_channel_ga_promotion_and_release_governance.md](./40_stable_channel_ga_promotion_and_release_governance.md) |
-| 41 | Phase 41: Typed Data Model and Validation (Pydantic-Parity Track) | unspecified | [41_typed_data_model_and_validation.md](./41_typed_data_model_and_validation.md) |
+| 41 | Phase 41: Native Pydantic-Sifr | superseded by canonical ad hoc design | [41_typed_data_model_and_validation.md](./41_typed_data_model_and_validation.md) |
 | 42 | Phase 42: Web Framework and Platform Expansion | unspecified | [42_web_framework_and_platform_expansion.md](./42_web_framework_and_platform_expansion.md) |
 | 43 | Phase 43: Data Science and ML | unspecified | [43_data_science_ml.md](./43_data_science_ml.md) |
+| PS-1 | Native Pydantic-Sifr canonical ad hoc architecture | architecture approved; implementation not started | [../issues/active/ad-hoc-native-pydantic-sifr-architecture.md](../issues/active/ad-hoc-native-pydantic-sifr-architecture.md) |
 | PY-1 | Ad Hoc Embedded Python Interop | complete (py0-py12 merged through PR #2677; historical contract superseded by declaration-first interop) | [../issues/archive/ad-hoc-embedded-python-interop.md](../issues/archive/ad-hoc-embedded-python-interop.md) |
 | PY-1V | Python Interop Verification Productionization | complete (area migration PR #2680, live policy PR #2681, testcontainers examples PR #2682, closeout-progress PR #2683, final status evidence complete) | [../issues/active/python-interop-verification-production.md](../issues/active/python-interop-verification-production.md) |
 | PY-2 | Complete Declaration-First Python Interop | complete through PR #3000 (M0-M17; repeated Fable High whole-phase review satisfied; authoritative closure gate passed Python interop 25/25, E2E 674/674, and 261 hardening variants with zero failures) | [../issues/archive/ad-hoc-declaration-first-python-interop.md](../issues/archive/ad-hoc-declaration-first-python-interop.md) |

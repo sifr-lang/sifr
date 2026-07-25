@@ -57,7 +57,11 @@ The following are not Phase 32 v1 exit criteria:
 - async generator expressions
 - nested async comprehensions and awaited comprehension filters
 
-`ProcessPoolExecutor`, multiprocessing, and hard interruption of CPU-bound work are blocked on the future Phase 41 typed data/IPC contract.
+`ProcessPoolExecutor`, multiprocessing, and hard interruption of CPU-bound work
+remain explicit non-goals. A future public process-worker-pool proposal must
+open its own tracked phase/issue and reuse the released `sifr.ipc` contract;
+Native Pydantic-Sifr does not own process transport, and Phase 32 has no active
+serialization dependency.
 
 Subprocess and signal integration require a later model amendment. Older Phase 32 notes that listed subprocess or signal delivery as exit criteria are superseded by the model contract.
 
@@ -89,7 +93,9 @@ These are implementation constraints, not suggestions:
 12. Spawned tasks require owned, sendable, static task boundaries in v1. Local non-Send task sets and scoped borrowed spawn are deferred.
 13. `sifr.asyncio` ships only as a compatibility veneer after the canonical model is complete.
 14. Public selectors, contextvars, multiprocessing, process pools, raw event loops, and transport/protocol APIs are deferred.
-15. `ProcessPoolExecutor` is blocked on the future typed IPC/serialization contract.
+15. `ProcessPoolExecutor` remains deferred. Any future public worker-pool
+    proposal reuses released `sifr.ipc` and is not owned by Native
+    Pydantic-Sifr.
 16. `@blocking_io` and `@cpu_heavy` are declaration-site diagnostic annotations; they classify workload class for compiler diagnostics and never trigger implicit scheduling. The stdlib ships with a pre-annotated database of known stdlib functions.
 17. Subprocess and signal APIs are out of scope for Phase 32 v1 and require a later model amendment.
 18. Cancellation suppression, shielding, cancellation counters, and graceful shutdown tokens are deferred; v1 graceful shutdown uses structured scope cancellation and explicit channels.
@@ -738,7 +744,8 @@ status: completed
   - already-running blocking work may continue to completion,
   - `spawn_blocking` requires owned, sendable, `'static` captures in v1,
   - scoped borrowed captures are rejected for `spawn_blocking` because already-running OS work may outlive the async scope after cancellation,
-  - hard interruption requires future process isolation/typed IPC.
+  - hard interruption requires a future public process-isolation/worker API
+    built on released `sifr.ipc`.
   - `BlockingTask` handles are affine. `join()` and `cancel_and_join()` consume them. Dropping a `BlockingTask` handle abandons observation but does not stop already-running OS work. Blocking work requires owned/sendable/static captures precisely because it may outlive the async scope after abandonment. Scope exit requests cancellation/abandonment for unresolved blocking work created inside the scope but does not guarantee OS-thread interruption.
 - Ensure blocking work cannot occupy cooperative async workers where Sifr controls the path.
 - Document when users should choose async tasks, channels, locks, or blocking offload.
@@ -1044,7 +1051,9 @@ Implementation notes:
   - `Queue`
 - Add `sifr.concurrent.Future` as a compatibility wrapper over canonical task/blocking-work observation semantics, not a second runtime primitive.
 - Keep raw event loops, loop policies, transports/protocols, public selectors, contextvars, multiprocessing, and process pools deferred.
-- Treat `ProcessPoolExecutor` as blocked on Phase 41 typed IPC/serialization.
+- Keep `ProcessPoolExecutor` out of Phase 32. A future public worker-pool
+  proposal must create its own tracked scope and reuse released `sifr.ipc`;
+  it is not a Phase 41 or Pydantic-Sifr dependency.
 - Add CPython-derived compatibility tests for the supported subset.
 - Add CPython-derived negative/waiver tests for unsupported APIs.
 - Document intentional divergences.

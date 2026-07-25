@@ -6,7 +6,7 @@
 Deliver the web framework with typed extractors and production platform hooks on top of the existing HTTP/runtime substrate.
 
 ## Depends on
-- Phase 41
+- Phase 41 Native Pydantic-Sifr through certified release `milestone_ps_11`
 - Phase 32
 - Ad Hoc Production Network and HTTP Platform Substrate for `sifr.net`/`sifr.tls`/`sifr.url`/`sifr.http` protocol substrate, as summarized in [`network_http_architecture.md`](../../internal_docs/network_http_architecture.md). Multi-core serving throughput remains owned by the substrate phase's serving-scale follow-up.
 
@@ -22,7 +22,8 @@ Deliver the web framework with typed extractors and production platform hooks on
 ### milestone_42_2: Typed Extractors and Request Validation
 - Scope:
   - `Json`/`Path`/`Query`/`Form` extractor behavior.
-  - Validation and error mapping via Phase 41 model contract.
+  - Validation and error mapping via the released Phase 41
+    `pydantic-sifr` model/error contract.
   - Multipart/form parsing remains outside the network substrate and must be accepted here or in the HTTP client phase before use.
 - Definition of done:
   - Extractors enforce typed validation with consistent error responses.
@@ -34,7 +35,8 @@ Deliver the web framework with typed extractors and production platform hooks on
   - Web stack production baseline is documented and smoke-covered.
 
 ## Quality Contract
-- Entry criteria: Phase 41 is completed and typed data model contracts are stable.
+- Entry criteria: Phase 41 `milestone_ps_11` is released and its typed model,
+  serialization, validation, and error contracts are stable.
 - Phase 27 non-regression baseline is required at phase start and must remain green through completion.
 - Phase 27 non-regression invariants that must hold in this phase include: no user-triggerable panic paths; no data-dependent emitted `.unwrap()` / `.expect()` / `panic!` in user runtime paths; stable diagnostic contract (codes, severity, spans, URLs, suggestions, schema); canonical/lossless `json` diagnostics with `human` and `compact` as renderer views only; enforced recovery limits with deterministic ordering; and enforced exit-code and CLI stability contracts (`0/1/2/3`, and unknown `--diagnostic-format` exits `2` before semantic work).
 - Any milestone that regresses these invariants is incomplete, even if its local scope passes.
@@ -48,7 +50,7 @@ Deliver the web framework with typed extractors and production platform hooks on
   - Validation evidence for every milestone must include at least one positive-path case and one negative-path case mapped to the milestone validation planning goals.
 - Validation planning goals:
   - `milestone_42_1` (Web Framework Core): validation goals cover: Routing, middleware, lifecycle/shutdown, and base request/response pipeline. Include negative-path goals that catch regressions against these guarantees.
-  - `milestone_42_2` (Typed Extractors and Request Validation): validation goals cover: `Json`/`Path`/`Query`/`Form` extractor behavior; Validation and error mapping via Phase 41 model contract. Include negative-path goals that catch regressions against these guarantees.
+  - `milestone_42_2` (Typed Extractors and Request Validation): validation goals cover: `Json`/`Path`/`Query`/`Form` extractor behavior; validation and error mapping via the released Phase 41 `pydantic-sifr` contract. Include negative-path goals that catch regressions against these guarantees.
   - `milestone_42_3` (Production Web Baseline): validation goals cover: Logging/tracing, config, and operational hooks for production readiness. Include negative-path goals that catch regressions against these guarantees.
   - Exit-gate evidence explicitly demonstrates: Web framework and platform expansion paths are delivered without violating reliability/stability contracts.
 
