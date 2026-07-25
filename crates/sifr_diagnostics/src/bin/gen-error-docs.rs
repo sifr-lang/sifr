@@ -184,9 +184,8 @@ fn check_active_doc_casing(repo_root: &Path, drift: &mut Vec<String>) {
         let is_mdx = path
             .extension()
             .is_some_and(|extension| extension.eq_ignore_ascii_case("mdx"));
-        let is_active_mdx = is_mdx
-            && actual_name.starts_with("SIFR-")
-            && !expected_names.contains(&actual_name);
+        let is_active_mdx =
+            is_mdx && actual_name.starts_with("SIFR-") && !expected_names.contains(&actual_name);
         if is_active_mdx {
             drift.push(format!(
                 "docs/errors contains orphan generated diagnostic page {actual_name}"
@@ -622,7 +621,10 @@ fn reference_error_codes_group(root: &mut Value) -> io::Result<&mut Map<String, 
         .iter_mut()
         .find(|tab| tab.get("tab").and_then(Value::as_str) == Some("Reference"))
         .ok_or_else(|| {
-            io::Error::new(io::ErrorKind::InvalidData, "docs.json missing Reference tab")
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "docs.json missing Reference tab",
+            )
         })?;
 
     let groups = reference_tab

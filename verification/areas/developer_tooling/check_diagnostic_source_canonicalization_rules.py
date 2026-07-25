@@ -144,7 +144,7 @@ def check_registry_and_docs(root: Path) -> None:
         )
         require(f'"{code}"' in entries, f"{code} missing active registry entry")
         require(
-            (root / f"docs/errors/{code}.md").is_file(),
+            (root / f"docs/errors/{code}.mdx").is_file(),
             f"{code} docs page missing",
         )
         require(f"[`{code}`]" in docs_index, f"{code} missing from diagnostic docs index")
@@ -152,7 +152,7 @@ def check_registry_and_docs(root: Path) -> None:
 
 def check_legacy_code_docs(root: Path) -> None:
     for legacy, replacement in LEGACY_WORKSPACE_IMPORT_CODES.items():
-        text = read_text(root, f"docs/errors/{legacy}.md")
+        text = read_text(root, f"docs/errors/{legacy}.mdx")
         require(
             replacement in text and "legacy" in text.lower(),
             f"{legacy} docs must name legacy replacement {replacement}",
@@ -481,10 +481,28 @@ def seed_minimal_repo(root: Path) -> None:
     )
     index_lines = []
     for code in NEW_IMPORT_CODES:
-        write(root / f"docs/errors/{code}.md", f"# {code}\n")
-        index_lines.append(f"| [`{code}`]({code}.md) | Error | seeded. |")
+        write(
+            root / f"docs/errors/{code}.mdx",
+            (
+                "---\n"
+                f'title: "{code}: seeded."\n'
+                f'sidebarTitle: "{code}"\n'
+                'description: "seeded."\n'
+                "---\n"
+            ),
+        )
+        index_lines.append(f"| [`{code}`]({code}.mdx) | Error | seeded. |")
     for legacy, replacement in LEGACY_WORKSPACE_IMPORT_CODES.items():
-        write(root / f"docs/errors/{legacy}.md", f"# {legacy}\nLegacy alias for {replacement}.\n")
+        write(
+            root / f"docs/errors/{legacy}.mdx",
+            (
+                "---\n"
+                f'title: "{legacy}: Legacy alias for {replacement}."\n'
+                f'sidebarTitle: "{legacy}"\n'
+                f'description: "Legacy alias for {replacement}."\n'
+                "---\n"
+            ),
+        )
     write(root / "docs/errors/diagnostic-codes.md", "\n".join(index_lines))
     for fixture in PARSER_FIXTURES:
         write(
@@ -567,7 +585,7 @@ def run_self_tests() -> None:
     expect_self_test_failure(
         "missing legacy migration docs",
         "docs must name legacy replacement",
-        lambda root: write(root / "docs/errors/SIFR-WORKSPACE-0104.md", "# legacy\n"),
+        lambda root: write(root / "docs/errors/SIFR-WORKSPACE-0104.mdx", "# legacy\n"),
     )
 
     spanless = CommandResult(

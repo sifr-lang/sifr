@@ -171,7 +171,7 @@ def main() -> int:
             errors.append(f"{code} is active in the registry but missing from ACTIVE_DIAGNOSTIC_CODES")
         if not fixture_file_exists(fixture):
             errors.append(f"{code} representative fixture does not exist: {fixture}")
-        docs_page = ROOT / "docs" / "errors" / f"{code}.md"
+        docs_page = ROOT / "docs" / "errors" / f"{code}.mdx"
         if not docs_page.exists():
             errors.append(f"{code} active docs page is missing: {docs_page.relative_to(ROOT)}")
 

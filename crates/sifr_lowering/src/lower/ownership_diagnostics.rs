@@ -121,8 +121,7 @@ pub(in crate::lower) fn must_use_reusable_callable_capture(
     ctx.error_with_code_at(
         DiagnosticCode::PYZC_INVALID_DECLARATION,
         format!(
-            "{callable_kind} cannot capture '{name}' of type '{}' because reusable callables cannot own or repeatedly expose an affine or must-use Python resource",
-            captured_resource
+            "{callable_kind} cannot capture '{name}' of type '{captured_resource}' because reusable callables cannot own or repeatedly expose an affine or must-use Python resource"
         ),
         range,
     );

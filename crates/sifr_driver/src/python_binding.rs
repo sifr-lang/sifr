@@ -229,7 +229,7 @@ fn validate_declaration(
     }
     match declaration.return_type.as_deref() {
         Some(return_type) => {
-            validate_type(&declaration.name, return_type, module, class_names, errors)
+            validate_type(&declaration.name, return_type, module, class_names, errors);
         }
         None => errors.push(format!(
             "Python function '{}' has no resolved return type",
@@ -271,9 +271,7 @@ fn normalize_direct_type(
         }
     }
 
-    let Some(union_parts) = split_top_level(ty, '|') else {
-        return None;
-    };
+    let union_parts = split_top_level(ty, '|')?;
     if union_parts.len() > 1 {
         if !allow_option
             || union_parts.len() != 2
@@ -286,16 +284,12 @@ fn normalize_direct_type(
         return Some(format!("{normalized} | None"));
     }
 
-    let Some(open) = ty.find('[') else {
-        return None;
-    };
+    let open = ty.find('[')?;
     if !ty.ends_with(']') {
         return None;
     }
     let base = ty[..open].trim();
-    let Some(arguments) = split_top_level(&ty[open + 1..ty.len() - 1], ',') else {
-        return None;
-    };
+    let arguments = split_top_level(&ty[open + 1..ty.len() - 1], ',')?;
     match base {
         "list" if arguments.len() == 1 => {
             normalize_direct_type(arguments[0], module, class_names, true)
