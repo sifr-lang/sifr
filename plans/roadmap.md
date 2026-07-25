@@ -29,7 +29,10 @@ This roadmap is the authoritative execution plan for the current hardening and e
 - No user-triggerable compiler panics.
 - No data-dependent emitted `.unwrap()`/`.expect()` in generated user runtime paths.
 - Scoped fix-back (`N+1` discovering defect in `N`) is allowed only if minimal, documented, regression-tested, and revalidated.
-- Phase entry/exit gates, milestone quality checks, and mandatory local validation commands are embedded in each phase file (`15`-`43`) under `## Quality Contract`.
+- Phase entry/exit gates, milestone quality checks, and mandatory local
+  validation commands are embedded in each phase file (`15`-`43`) or its
+  explicitly linked canonical ad hoc successor; `## Quality Contract` names
+  and binds the applicable gates even when entry/exit headings are separate.
 
 ## Reliability and Architecture Track (Phase 15-31)
 
@@ -80,7 +83,7 @@ This roadmap is the authoritative execution plan for the current hardening and e
 | 39.1 | Ad Hoc Sifr Sysroot and Stdlib Toolchain | completed, audited | [plans/issues/archive/ad-hoc-sifr-sysroot-stdlib-toolchain.md](issues/archive/ad-hoc-sifr-sysroot-stdlib-toolchain.md), [sifr_sysroot_and_stdlib_architecture.md](../internal_docs/sifr_sysroot_and_stdlib_architecture.md) | Versioned sysroot-backed toolchain migration, generated-program `sifr_stdlib` crate split, sysroot-vendored Sifr-owned dependencies, CLI/LSP sysroot source unification, and Rust interop-backed stdlib native migration completed through M0-M13. Closeout merged in [PR #2810](https://github.com/sifr-lang/sifr/pull/2810) after final Opus satisfaction, local `create-pr` validation, and full merge-gate validation with `hardening=variants=261 failures=0 blocking_failures=0`; private stdlib declaration syntax cleanup is tracked by [ad-hoc-sysroot-stdlib-interop-declaration-cleanup.md](issues/active/ad-hoc-sysroot-stdlib-interop-declaration-cleanup.md) with final closeout in [PR #2818](https://github.com/sifr-lang/sifr/pull/2818). |
 | 39.2 | Ad Hoc Stdlib and Compiler Boundary Rearchitecture | Completed and audited | [ad-hoc-stdlib-compiler-boundary-rearchitecture.md](issues/active/ad-hoc-stdlib-compiler-boundary-rearchitecture.md) | Merged six milestones in PRs #2921-#2927 and recorded closure in #2928. The final boundary has 17 typed compiler intrinsics and 403 classified native adapters; six closeout/corrective reviews were satisfied, and the unchanged-budget full gate passed source/installed equivalence, 650/650 E2E fixtures, and all 261 hardening variants. |
 | 40 | Stable Channel GA Promotion and Release Governance | planned | [40_stable_channel_ga_promotion_and_release_governance.md](./phases/40_stable_channel_ga_promotion_and_release_governance.md) | Governed stable release promotion and rollback policy |
-| 41 | Typed Data Model and Validation (Pydantic-Parity Track) | planned | [41_typed_data_model_and_validation.md](./phases/41_typed_data_model_and_validation.md) | Typed model/validation layer with stable error contracts |
+| 41 | Native Pydantic-Sifr | architecture approved; implementation not started | [ad-hoc-native-pydantic-sifr-architecture.md](./issues/active/ad-hoc-native-pydantic-sifr-architecture.md), [superseded phase note](./phases/41_typed_data_model_and_validation.md) | General compiler/sysroot prerequisites in `sifr-lang/sifr`; Pydantic-specific package/core, conformance corpus, docs, demo, and releases in external `sifr-lang/pydantic-sifr` |
 | 42 | Web Framework and Platform Expansion | planned | [42_web_framework_and_platform_expansion.md](./phases/42_web_framework_and_platform_expansion.md) | Web stack with typed extractors and platform expansion baseline |
 | 43 | Data Science and ML | planned | [43_data_science_ml.md](./phases/43_data_science_ml.md) | DataFrame, tensor, and ML inference workflows |
 
@@ -113,7 +116,7 @@ flowchart LR
     p37 --> p38["Phase 38\nDocs and Documentation"]
     p38 --> p39["Phase 39\nRust Interop"]
     p39 --> p40["Phase 40\nStable GA Governance"]
-    p40 --> p41["Phase 41\nTyped Data Model + Validation"]
+    p40 --> p41["Phase 41\nNative Pydantic-Sifr"]
     p41 --> p42["Phase 42\nWeb + Platform Expansion"]
     p42 --> p43["Phase 43\nData Science + ML"]
 ```

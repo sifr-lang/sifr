@@ -968,11 +968,14 @@ verification/areas/rust_interop/
     same_workspace_crate/         # contract-only workspace dependency behavior
     shared_bridge_crate/          # contract-only shared bridge crate boundary
     opaque_handle_tokenizer/
+    opaque_resource_core/         # stdlib-owned opaque-resource lifecycle
     opaque_resource_matrix/       # reqwest::Client, rusqlite, tokio-postgres, redis
     close_after_use/
     bridge_version_mismatch/
     panic_boundary/               # contract-only panic-to-error behavior
+    panic_boundary_wrapper_emission/
     panic_abort_profile/          # contract-only abort-profile rejection
+    async_runtime_core/
     async_runtime_reqwest/
     async_ecosystem_matrix/       # futures, tower, http, http-body
     blocking_diagnostics/

@@ -211,7 +211,7 @@ not handed off wholesale. The stdlib native boundary phase splits and owns only
 the narrow stdlib-blocking core rows it proves, such as
 `opaque_resource_core`, `async_runtime_core`, `callback_subscription_core`, and
 possibly `callbacks_call_scoped_core`. The ecosystem portions, such as
-`opaque_resource_ecosystem`, `async_runtime_reqwest`, and
+`opaque_resource_matrix`, `async_runtime_reqwest`, and
 `callback_subscription_ecosystem`, remain with the separate runtime ecosystem
 certification issue. `panic_boundary_wrapper_emission` also remains package
 interop certification unless stdlib-native boundary work needs generated

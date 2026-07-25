@@ -7,6 +7,12 @@ and generated serde implementations must satisfy. Runtime JSON profile helpers
 live in `sifr_runtime::json`; framework layers may wrap that API, but must not
 reimplement or weaken the policy.
 
+The planned external `sifr-lang/pydantic-sifr` package is a consumer of this
+contract, not a second integer-schema authority. Its compile-time Core Schema
+must provide a general compiler-owned `JsonIntegerBoundaryDescriptor`; the
+compiler validates the descriptor and owns `SIFR-INT-0009`, while the package
+and native core route execution through `sifr_runtime::json`.
+
 ## JSON Profiles
 
 All JSON serializers that can see Sifr `int` values must choose exactly one

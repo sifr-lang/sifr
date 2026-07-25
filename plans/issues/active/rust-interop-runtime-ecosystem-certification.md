@@ -16,6 +16,8 @@ unsupported-by-design decision before any stable release claims that surface.
   `bytes`, and `indexmap`.
 - Resource-shaped opaque handles for `reqwest`, `rusqlite`, `tokio-postgres`,
   and `redis`.
+- A reusable sealed opaque-resource substrate for external Rust-backed Sifr
+  packages, to be certified by planned row `opaque_resource_package_core`.
 - Generated panic wrapper emission and mapper-panic fallback behavior.
 - Loopback `reqwest` async runtime behavior.
 - Call-scoped callbacks and subscription callbacks over `tokio-tungstenite`,
@@ -35,7 +37,10 @@ stdlib-blocking certification mechanics it proves. It must split broad matrix
 rows rather than reassigning ecosystem rows wholesale:
 
 - `opaque_resource_matrix` splits into stdlib-owned `opaque_resource_core` and
-  certification-owned `opaque_resource_ecosystem`.
+  the retained service-specific ecosystem matrix. The separate
+  planned `opaque_resource_package_core` row owns the reusable external-package
+  resource substrate without pulling service loopbacks into package
+  certification.
 - `async_runtime_reqwest` split in M6 into stdlib-owned `async_runtime_core`
   and the certification-owned `async_runtime_reqwest` ecosystem loopback row.
   The core row covers async declaration contracts, async-close lifecycle
@@ -57,12 +62,45 @@ rows rather than reassigning ecosystem rows wholesale:
   emission and mapper-panic fallback evidence here.
 
 When one of those milestones starts, its PR updates the compatibility matrix,
-executable evidence, and milestone evidence table in
-`plans/issues/active/ad-hoc-stdlib-native-boundary-completion.md`. This issue
-continues to own the ecosystem portions of split rows plus backend, database,
-messaging, CLI, native-link, proc-macro, locked/offline Cargo, and
-package-ecosystem certification rows that are not direct stdlib migration
-blockers.
+executable evidence, and the currently owning active plan. This issue continues
+to own the ecosystem portions of split rows plus backend, database, messaging,
+CLI, native-link, proc-macro, locked/offline Cargo, and package-ecosystem
+certification rows that are not direct stdlib migration blockers.
+
+## Handoff to Native Pydantic-Sifr
+
+The Native Pydantic-Sifr architecture consumes two existing
+certification-owned rows and one planned row only after this issue lands their
+passing evidence:
+
+- `opaque_resource_package_core` for a synthetic external package's sealed
+  construct/use/close lifecycle and alias/use-after-close rejection;
+- `callbacks_call_scoped` for callback lifetime and storage rejection; and
+- `panic_boundary_wrapper_emission` for generated panic mapping and
+  mapper-signature rejection.
+
+These rows remain owned here. Pydantic-Sifr milestones may not privately
+implement them or claim the service-specific `opaque_resource_matrix`; they
+block until the matrix and fixtures are merged through this issue.
+
+### certification_pkg_resource_core
+
+This sequential certification item begins only after Native Pydantic-Sifr
+`milestone_ps_2` releases the general package-resource substrate. Its one PR:
+
+- creates the `opaque_resource_package_core` tier-2 fixture and compatibility
+  rows (the row is intentionally not pre-created as README-only evidence);
+- executes positive construct/use/close and negative alias/use-after-close
+  packages through the real compiler/runtime;
+- adds the `rust_interop` area to the authoritative legacy profile-runner path
+  used by create-PR, merge, nightly, and release profiles, rather than adding
+  ignored `selected_areas` data; and
+- updates the durable Rust-interop fixture inventory and current matrix counts.
+
+Exit gate: the fixture itself executes, every Rust-interop schema/compatibility
+check and the full area runner pass, and
+`scripts/run_all_tests.sh --profile create-pr` reports the Rust-interop area as
+executed. Only then may `milestone_ps_3` begin.
 
 ## Required Evidence
 
