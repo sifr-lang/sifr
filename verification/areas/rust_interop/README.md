@@ -48,6 +48,33 @@ checks. Runtime-observed fixtures that need services such as Redis or
 PostgreSQL must use explicit local service configuration recorded in the
 fixture evidence; they must not silently degrade to compile-only coverage.
 
+## Tier And Execution Semantics
+
+Tier records subject breadth; `execution_kind` records evidence strength. The
+only valid combinations are:
+
+| Tier | Allowed execution kinds |
+| --- | --- |
+| 0 | `compiler-diagnostic` |
+| 1 | `cargo-probe` |
+| 2 | `contract-only`, `cargo-probe`, `runtime-observed` |
+| 3 | `cargo-probe` |
+| 4 | `contract-only`, `cargo-probe`, `runtime-observed` |
+
+`contract-only` certifies only the compiler or metadata contract named by the
+row. `cargo-probe` exercises the real Cargo package graph: positive directions
+build generated/package Rust code, while negative directions may observe a
+required compiler rejection before Cargo execution. `runtime-observed` executes
+the lifecycle or runtime behavior named by the row. Neither a contract-only row
+nor a compiler-diagnostic row satisfies a build or runtime claim.
+
+Tier-0 rows may list crates only to identify the API shapes used by diagnostic
+examples. Such rows must repeat an identical
+`diagnostic_crate_rationale` object in the fixture matrix, compatibility row,
+and fixture manifest. Its `linked` and `executed` fields are both `false`;
+package-example metadata on those rows is illustrative and is not compiled
+evidence.
+
 ## Suites
 
 - `matrix`: verifies the fixture matrix, required fixture directories, crate

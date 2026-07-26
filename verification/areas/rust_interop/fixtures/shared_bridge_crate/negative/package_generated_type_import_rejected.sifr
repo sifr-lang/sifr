@@ -1,10 +1,10 @@
 # fixture: shared_bridge_crate
 # evidence: negative/package_generated_type_import_rejected
 # evidence-status: passing
-# execution-kind: contract-only
+# execution-kind: cargo-probe
 # expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-RESOLVE-0001
-@rust(shared_bridge.generated_private_type, panic=trusted_no_panic)
+@rust(sifr_shared_hash_bridge.generated_private_type, panic=trusted_no_panic)
 def imports_package_generated_type(input: bytes) -> bytes: ...
 
 def verify_package_generated_type_import_rejected() -> bytes:

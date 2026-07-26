@@ -3,7 +3,7 @@
 
 This scenario models a reusable shared Rust bridge crate. The Sifr package calls
 `sifr_shared_hash_bridge.digest` and exchanges only stable runtime bridge types:
-`bytes`, `str`, and the public `SharedDigest` record.
+`bytes` and `str`.
 
 `Cargo.toml` owns the shared crate path dependency. `sifr.toml` owns the
 bridge-version, direct-binding enablement, and no-panic trust assertions.

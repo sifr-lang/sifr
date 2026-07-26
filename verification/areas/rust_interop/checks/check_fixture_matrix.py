@@ -116,6 +116,19 @@ REQUIRED_CRATES = {
 }
 
 VALID_EVIDENCE_STATUS = {"planned", "probe-only", "runtime-observed", "passing", "failing"}
+EXECUTION_KINDS = {
+    "compiler-diagnostic",
+    "contract-only",
+    "cargo-probe",
+    "runtime-observed",
+}
+ALLOWED_EXECUTION_KINDS = {
+    0: {"compiler-diagnostic"},
+    1: {"cargo-probe"},
+    2: {"contract-only", "cargo-probe", "runtime-observed"},
+    3: {"cargo-probe"},
+    4: {"contract-only", "cargo-probe", "runtime-observed"},
+}
 
 EXPECTED_FEATURE_POLICIES = {
     "candle": {"backend": "cpu-only"},
@@ -133,7 +146,14 @@ EXPECTED_FEATURE_POLICIES = {
     "tracing-subscriber": {"features": ["env-filter"]},
 }
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    args = sys.argv[1:] if argv is None else argv
+    if args == ["--self-test"]:
+        return _run_self_test()
+    if args:
+        print(f"usage: {Path(__file__).name} [--self-test]", file=sys.stderr)
+        return 2
+
     matrix = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
     failures: list[str] = []
 
@@ -188,8 +208,7 @@ def main() -> int:
             failures.append(f"{fixture_id}: tier must be 0..4")
         if not fixture.get("capability"):
             failures.append(f"{fixture_id}: capability is required")
-        if fixture.get("execution_kind") not in {"compiler-diagnostic", "contract-only", "cargo-probe", "runtime-observed"}:
-            failures.append(f"{fixture_id}: invalid execution_kind")
+        _validate_execution_semantics(failures, fixture)
         crates = fixture.get("required_crates", [])
         if not isinstance(crates, list):
             failures.append(f"{fixture_id}: required_crates must be a list")
@@ -214,6 +233,208 @@ def main() -> int:
         f"crates={len(covered_crates)} package_examples={package_example_count} "
         f"scenario_examples={scenario_example_count}"
     )
+    return 0
+
+
+def _validate_execution_semantics(
+    failures: list[str],
+    fixture: dict[str, Any],
+) -> None:
+    fixture_id = str(fixture.get("id"))
+    tier = fixture.get("tier")
+    execution_kind = fixture.get("execution_kind")
+    if execution_kind not in EXECUTION_KINDS:
+        failures.append(f"{fixture_id}: invalid execution_kind")
+    elif tier in ALLOWED_EXECUTION_KINDS and execution_kind not in ALLOWED_EXECUTION_KINDS[tier]:
+        allowed = ", ".join(sorted(ALLOWED_EXECUTION_KINDS[tier]))
+        failures.append(
+            f"{fixture_id}: tier {tier} does not allow execution_kind {execution_kind}; "
+            f"allowed: {allowed}"
+        )
+
+    crates = fixture.get("required_crates")
+    has_crates = isinstance(crates, list) and bool(crates)
+    rationale = fixture.get("diagnostic_crate_rationale")
+    if execution_kind != "compiler-diagnostic":
+        if rationale is not None:
+            failures.append(
+                f"{fixture_id}: diagnostic_crate_rationale is allowed only for compiler-diagnostic rows"
+            )
+        return
+    if rationale is not None:
+        _validate_diagnostic_crate_rationale(failures, fixture_id, rationale)
+    elif has_crates:
+        failures.append(
+            f"{fixture_id}: compiler-diagnostic rows with required_crates need "
+            "diagnostic_crate_rationale"
+        )
+
+
+def _validate_diagnostic_crate_rationale(
+    failures: list[str],
+    fixture_id: str,
+    rationale: Any,
+) -> None:
+    if not isinstance(rationale, dict) or not rationale:
+        failures.append(
+            f"{fixture_id}: compiler-diagnostic rows with required_crates need "
+            "diagnostic_crate_rationale"
+        )
+        return
+    if set(rationale) != {"purpose", "linked", "executed"}:
+        failures.append(
+            f"{fixture_id}: diagnostic_crate_rationale must contain exactly "
+            "purpose, linked, and executed"
+        )
+    purpose = rationale.get("purpose")
+    if not isinstance(purpose, str) or not purpose.strip():
+        failures.append(f"{fixture_id}: diagnostic_crate_rationale.purpose must be non-empty")
+    if rationale.get("linked") is not False:
+        failures.append(f"{fixture_id}: diagnostic_crate_rationale.linked must be false")
+    if rationale.get("executed") is not False:
+        failures.append(f"{fixture_id}: diagnostic_crate_rationale.executed must be false")
+
+
+def _run_self_test() -> int:
+    allowed_pairs = {
+        (tier, execution_kind)
+        for tier, execution_kinds in ALLOWED_EXECUTION_KINDS.items()
+        for execution_kind in execution_kinds
+    }
+    cases = 0
+    for tier in range(5):
+        for execution_kind in sorted(EXECUTION_KINDS):
+            fixture = {
+                "id": f"tier_{tier}_{execution_kind}",
+                "tier": tier,
+                "execution_kind": execution_kind,
+                "required_crates": [],
+            }
+            failures: list[str] = []
+            _validate_execution_semantics(failures, fixture)
+            is_allowed = (tier, execution_kind) in allowed_pairs
+            has_pair_failure = any("does not allow execution_kind" in item for item in failures)
+            if is_allowed == has_pair_failure:
+                print(
+                    "rust interop fixture matrix self-test error: "
+                    f"tier {tier}/{execution_kind} allowed={is_allowed} failures={failures}",
+                    file=sys.stderr,
+                )
+                return 1
+            cases += 1
+
+    rationale = {
+        "purpose": "crate API supplies a rejected diagnostic shape only",
+        "linked": False,
+        "executed": False,
+    }
+    mutation_cases = (
+        (
+            "missing diagnostic rationale",
+            {
+                "id": "diagnostic_missing",
+                "tier": 0,
+                "execution_kind": "compiler-diagnostic",
+                "required_crates": ["example"],
+            },
+            "need diagnostic_crate_rationale",
+        ),
+        (
+            "malformed diagnostic rationale",
+            {
+                "id": "diagnostic_malformed",
+                "tier": 0,
+                "execution_kind": "compiler-diagnostic",
+                "required_crates": ["example"],
+                "diagnostic_crate_rationale": {"purpose": ""},
+            },
+            "must contain exactly",
+        ),
+        (
+            "rationale on cargo probe",
+            {
+                "id": "cargo_probe_rationale",
+                "tier": 1,
+                "execution_kind": "cargo-probe",
+                "required_crates": [],
+                "diagnostic_crate_rationale": rationale,
+            },
+            "allowed only for compiler-diagnostic",
+        ),
+        (
+            "malformed rationale without crates",
+            {
+                "id": "diagnostic_empty_crates_malformed",
+                "tier": 0,
+                "execution_kind": "compiler-diagnostic",
+                "required_crates": [],
+                "diagnostic_crate_rationale": {"junk": 1},
+            },
+            "must contain exactly",
+        ),
+        (
+            "tier one downgrade",
+            {
+                "id": "tier_one_contract",
+                "tier": 1,
+                "execution_kind": "contract-only",
+                "required_crates": [],
+            },
+            "does not allow execution_kind contract-only",
+        ),
+    )
+    for name, fixture, expected in mutation_cases:
+        failures = []
+        _validate_execution_semantics(failures, fixture)
+        if not any(expected in failure for failure in failures):
+            print(
+                f"rust interop fixture matrix self-test error: {name} did not report {expected!r}",
+                file=sys.stderr,
+            )
+            return 1
+        cases += 1
+
+    alignment_failures: list[str] = []
+    _validate_manifest_alignment(
+        alignment_failures,
+        "diagnostic_mismatch",
+        {"diagnostic_crate_rationale": rationale},
+        {
+            "diagnostic_crate_rationale": {
+                **rationale,
+                "purpose": "different rationale",
+            }
+        },
+    )
+    if not any("diagnostic_crate_rationale must match" in item for item in alignment_failures):
+        print(
+            "rust interop fixture matrix self-test error: mismatched manifest rationale passed",
+            file=sys.stderr,
+        )
+        return 1
+    cases += 1
+
+    diagnostic_failures: list[str] = []
+    _validate_diagnostic_family_alignment(
+        diagnostic_failures,
+        "diagnostic_family_mismatch",
+        {"diagnostic_family": "SIFR-RUST-CARGO-0001"},
+        {
+            "negative": {
+                "expected_result": "diagnostic",
+                "expected_diagnostic": "SIFR-RUST-RESOLVE-0001",
+            }
+        },
+    )
+    if not any("diagnostic_family must match" in item for item in diagnostic_failures):
+        print(
+            "rust interop fixture matrix self-test error: diagnostic family drift passed",
+            file=sys.stderr,
+        )
+        return 1
+    cases += 1
+
+    print(f"rust interop fixture matrix self-test ok: cases={cases}")
     return 0
 
 
@@ -267,9 +488,7 @@ def _validate_fixture_files(failures: list[str], fixture: dict[str, Any], crates
         failures.append(f"{fixture_id}: fixture.json must be an object")
         return 0, 0
 
-    for field in ("id", "capability", "tier", "execution_kind", "required_crates"):
-        if manifest.get(field) != fixture.get(field):
-            failures.append(f"{fixture_id}: fixture.json {field} must match fixture matrix")
+    _validate_manifest_alignment(failures, fixture_id, fixture, manifest)
     if manifest.get("features", {}) != fixture.get("features", {}):
         failures.append(f"{fixture_id}: fixture.json features must match fixture matrix")
     if manifest.get("schema_version") != 1:
@@ -281,6 +500,7 @@ def _validate_fixture_files(failures: list[str], fixture: dict[str, Any], crates
     if not isinstance(evidence, dict):
         failures.append(f"{fixture_id}: fixture.json evidence must be an object")
         return 0, 0
+    _validate_diagnostic_family_alignment(failures, fixture_id, manifest, evidence)
     _validate_fixture_evidence_file(
         failures,
         fixture_id,
@@ -314,6 +534,44 @@ def _validate_fixture_files(failures: list[str], fixture: dict[str, Any], crates
         manifest.get("scenario_examples"),
     )
     return package_count, scenario_count
+
+
+def _validate_manifest_alignment(
+    failures: list[str],
+    fixture_id: str,
+    fixture: dict[str, Any],
+    manifest: dict[str, Any],
+) -> None:
+    fields = (
+        "id",
+        "capability",
+        "tier",
+        "execution_kind",
+        "required_crates",
+        "diagnostic_crate_rationale",
+    )
+    for field in fields:
+        if manifest.get(field) != fixture.get(field):
+            failures.append(f"{fixture_id}: fixture.json {field} must match fixture matrix")
+
+
+def _validate_diagnostic_family_alignment(
+    failures: list[str],
+    fixture_id: str,
+    manifest: dict[str, Any],
+    evidence: dict[str, Any],
+) -> None:
+    negative = evidence.get("negative")
+    if not isinstance(negative, dict):
+        return
+    if negative.get("expected_result") not in {"diagnostic", "future-owned-diagnostic"}:
+        return
+    expected_diagnostic = negative.get("expected_diagnostic")
+    if manifest.get("diagnostic_family") != expected_diagnostic:
+        failures.append(
+            f"{fixture_id}: fixture.json diagnostic_family must match the negative "
+            f"expected_diagnostic {expected_diagnostic}"
+        )
 
 
 def _validate_package_examples(

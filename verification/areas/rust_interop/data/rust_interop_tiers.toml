@@ -1,6 +1,6 @@
 [tier0]
 name = "parser-lowering-metadata-diagnostics"
-description = "Parser, lowering, metadata, and diagnostics without Cargo build."
+description = "Compiler-diagnostic evidence for parser, lowering, metadata, and diagnostics; no Cargo build claim."
 fixtures = [
   "dotted_path_resolution",
   "direct_crate_negative_type",
@@ -10,7 +10,7 @@ fixtures = [
 
 [tier1]
 name = "direct-and-local-bridge-build"
-description = "Direct crate and local bridge build fixtures."
+description = "Cargo-probe evidence from generated direct, local, same-workspace, and shared-bridge package builds."
 fixtures = [
   "direct_crate_crc32",
   "direct_crate_matrix",
@@ -22,7 +22,7 @@ fixtures = [
 
 [tier2]
 name = "runtime-safety-and-core-views"
-description = "Opaque handles, panic boundary, async/blocking, callbacks, and zero-copy."
+description = "Contract-only, cargo-probe, or runtime-observed evidence for opaque handles, panic boundaries, async/blocking, callbacks, and zero-copy; each row names its scope."
 fixtures = [
   "opaque_handle_tokenizer",
   "opaque_resource_core",
@@ -44,7 +44,7 @@ fixtures = [
 
 [tier3]
 name = "cargo-trust-native-locked"
-description = "Build scripts, proc macros, native linking, and offline/locked Cargo behavior."
+description = "Cargo-probe evidence for build scripts, proc macros, native linking, trust, and offline/locked Cargo behavior."
 fixtures = [
   "native_build_script",
   "proc_macro_trust",
@@ -53,7 +53,7 @@ fixtures = [
 
 [tier4]
 name = "production-ecosystem-certification"
-description = "Production examples and compatibility matrix for selected Rust ecosystems."
+description = "Contract-only, cargo-probe, or runtime-observed production ecosystem evidence, explicitly scoped by each row."
 fixtures = [
   "arrow_record_batch",
   "tensor_dlpack_bridge",

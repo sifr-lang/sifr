@@ -1,0 +1,16 @@
+# fixture: same_workspace_crate
+# evidence: negative/undeclared_workspace_crate_rejected
+
+[workspace]
+members = [
+  "rust/workspace_hash",
+]
+resolver = "2"
+
+[package]
+name = "workspace-hash-consumer"
+version = "0.1.0"
+edition = "2021"
+
+[package.metadata.sifr]
+manifest = "sifr.toml"

@@ -965,8 +965,8 @@ verification/areas/rust_interop/
     dotted_path_resolution/
     bridge_type_matrix/           # serde, serde_json, thiserror, bytes, indexmap
     local_bridge_blake3/
-    same_workspace_crate/         # contract-only workspace dependency behavior
-    shared_bridge_crate/          # contract-only shared bridge crate boundary
+    same_workspace_crate/         # cargo-probed workspace dependency behavior
+    shared_bridge_crate/          # cargo-probed shared bridge crate boundary
     opaque_handle_tokenizer/
     opaque_resource_core/         # stdlib-owned opaque-resource lifecycle
     opaque_resource_matrix/       # reqwest::Client, rusqlite, tokio-postgres, redis
@@ -1003,11 +1003,23 @@ verification/areas/rust_interop/
 
 Verification tiers:
 
-- Tier 0: parser, lowering, metadata, and diagnostics without Cargo build.
-- Tier 1: local bridge and direct crate build fixtures.
-- Tier 2: opaque handles, panic boundary, async/blocking, callbacks, and zero-copy.
-- Tier 3: package ecosystem fixtures for build scripts, proc macros, native linking, and offline/locked Cargo behavior.
-- Tier 4: production examples and compatibility matrix for selected Rust ecosystems.
+- Tier 0 allows only `compiler-diagnostic`: parser, lowering, metadata, and
+  diagnostics without a Cargo build claim.
+- Tier 1 allows only `cargo-probe`: generated direct, local, same-workspace,
+  and shared-bridge package builds.
+- Tier 2 allows `contract-only`, `cargo-probe`, or `runtime-observed` evidence
+  for opaque handles, panic boundaries, async/blocking, callbacks, and
+  zero-copy; each row names its exact scope.
+- Tier 3 allows only `cargo-probe` for build scripts, proc macros, native
+  linking, trust, and offline/locked Cargo behavior.
+- Tier 4 allows `contract-only`, `cargo-probe`, or `runtime-observed`
+  production ecosystem evidence, explicitly scoped by each row.
+
+Tier is breadth and ownership; `execution_kind` is evidence strength.
+`contract-only` cannot satisfy a build or runtime claim. Compiler-diagnostic
+rows that name crates carry a structured `diagnostic_crate_rationale` with
+`linked = false` and `executed = false`; those crate examples supply diagnostic
+API shapes only.
 
 The Crate Verification Matrix must cover representative crates, not just synthetic fixtures.
 

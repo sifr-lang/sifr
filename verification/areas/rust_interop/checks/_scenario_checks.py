@@ -43,7 +43,7 @@ REQUIRED_SCENARIO_EXAMPLES = {
     },
     "shared_bridge_crate": {
         "shared_hash_bridge": {
-            "tokens": ("sifr_shared_hash_bridge", "SharedDigest", "crate::__sifr_bridge"),
+            "tokens": ("sifr_shared_hash_bridge", "digest_hex", "crate::__sifr_bridge"),
         },
     },
     "native_build_script": {
@@ -113,6 +113,7 @@ def validate_scenario_examples(
             tuple(str(token) for token in expected[example].get("tokens", ())),
         )
         valid_examples += 1
+    _validate_negative_overlays(failures, fixture_id, fixture_dir)
     return valid_examples
 
 
@@ -299,6 +300,119 @@ def _validate_scenario_manifests(
             _require_path_dependency(failures, fixture_id, raw_path, dependencies, dependency, f"rust/{dependency}")
         _require_path_dependency(failures, fixture_id, raw_path, dependencies, "tracing-subscriber", "rust/tracing_subscriber")
         _require_dependency_features(failures, fixture_id, raw_path, dependencies, "tracing-subscriber", ["env-filter"])
+
+
+def _validate_negative_overlays(
+    failures: list[str],
+    fixture_id: str,
+    fixture_dir: Path,
+) -> None:
+    if fixture_id == "same_workspace_crate":
+        _validate_same_workspace_negative_overlay(failures, fixture_id, fixture_dir)
+    elif fixture_id == "shared_bridge_crate":
+        _validate_shared_bridge_negative_overlay(failures, fixture_id, fixture_dir)
+
+
+def _validate_same_workspace_negative_overlay(
+    failures: list[str],
+    fixture_id: str,
+    fixture_dir: Path,
+) -> None:
+    canonical_root = fixture_dir / "examples/workspace_hash_crate"
+    negative_root = fixture_dir / "negative"
+    canonical = _read_toml(
+        failures,
+        fixture_id,
+        "examples/workspace_hash_crate",
+        canonical_root / "Cargo.toml",
+    )
+    negative = _read_toml(
+        failures,
+        fixture_id,
+        "negative",
+        negative_root / "Cargo.toml",
+    )
+    if isinstance(canonical, dict) and isinstance(negative, dict):
+        for section in ("workspace", "package"):
+            if negative.get(section) != canonical.get(section):
+                failures.append(
+                    f"{fixture_id}: negative/Cargo.toml {section} must match "
+                    "the canonical scenario"
+                )
+        if negative.get("dependencies") not in ({}, None):
+            failures.append(
+                f"{fixture_id}: negative/Cargo.toml must omit the workspace_hash dependency"
+            )
+
+    canonical_lock = _read_toml(
+        failures,
+        fixture_id,
+        "examples/workspace_hash_crate",
+        canonical_root / "Cargo.lock",
+    )
+    negative_lock = _read_toml(
+        failures,
+        fixture_id,
+        "negative",
+        negative_root / "Cargo.lock",
+    )
+    if isinstance(canonical_lock, dict) and isinstance(negative_lock, dict):
+        canonical_names = {
+            package.get("name")
+            for package in canonical_lock.get("package", [])
+            if isinstance(package, dict)
+        }
+        negative_names = {
+            package.get("name")
+            for package in negative_lock.get("package", [])
+            if isinstance(package, dict)
+        }
+        if negative_names != canonical_names:
+            failures.append(
+                f"{fixture_id}: negative/Cargo.lock package set must match "
+                "the canonical scenario"
+            )
+
+
+def _validate_shared_bridge_negative_overlay(
+    failures: list[str],
+    fixture_id: str,
+    fixture_dir: Path,
+) -> None:
+    canonical = _read_toml(
+        failures,
+        fixture_id,
+        "examples/shared_hash_bridge",
+        fixture_dir / "examples/shared_hash_bridge/sifr.toml",
+    )
+    negative = _read_toml(
+        failures,
+        fixture_id,
+        "negative",
+        fixture_dir / "negative/sifr.toml",
+    )
+    if isinstance(canonical, dict) and isinstance(negative, dict):
+        for section in ("package", "source", "rust"):
+            if negative.get(section) != canonical.get(section):
+                failures.append(
+                    f"{fixture_id}: negative/sifr.toml {section} must match "
+                    "the canonical scenario"
+                )
+        expected_trust = ["sifr_shared_hash_bridge.generated_private_type"]
+        if negative.get("trust", {}).get("rust-no-panic") != expected_trust:
+            failures.append(
+                f"{fixture_id}: negative/sifr.toml must trust only "
+                "sifr_shared_hash_bridge.generated_private_type"
+            )
+
+    negative_rust = fixture_dir / "negative/shared_bridge_lib.rs"
+    if not negative_rust.is_file():
+        failures.append(f"{fixture_id}: negative/shared_bridge_lib.rs is required")
+    elif "use crate::__sifr_bridge::" not in negative_rust.read_text(encoding="utf-8"):
+        failures.append(
+            f"{fixture_id}: negative/shared_bridge_lib.rs must exercise "
+            "the package-generated import rejection"
+        )
 
 
 def _read_toml(failures: list[str], fixture_id: str, raw_path: str, path: Path) -> dict[str, Any] | None:

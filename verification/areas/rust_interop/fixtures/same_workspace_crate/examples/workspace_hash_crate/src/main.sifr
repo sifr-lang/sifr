@@ -1,6 +1,6 @@
 # fixture: same_workspace_crate
 # scenario-example: workspace_hash_crate
-# execution-kind: contract-only
+# execution-kind: cargo-probe
 # expected-result: scenario-example
 
 @rust(workspace_hash.hash, panic=trusted_no_panic)
@@ -12,5 +12,8 @@ def workspace_hash_pair(left: bytes, right: bytes) -> uint64: ...
 def verify_workspace_hash_crate() -> uint64:
     first_hash: uint64 = workspace_hash(b"sifr")
     combined_hash: uint64 = workspace_hash_pair(b"rust", b"interop")
-    verified_hash: uint64 = first_hash + combined_hash
-    return verified_hash
+    assert first_hash != combined_hash
+    return first_hash
+
+def main() -> None:
+    print(verify_workspace_hash_crate())

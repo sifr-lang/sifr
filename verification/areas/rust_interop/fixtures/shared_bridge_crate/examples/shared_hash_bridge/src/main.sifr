@@ -1,20 +1,20 @@
 # fixture: shared_bridge_crate
 # scenario-example: shared_hash_bridge
-# execution-kind: contract-only
+# execution-kind: cargo-probe
 # expected-result: scenario-example
 
-class SharedDigest:
-    algorithm: str
-    bytes: bytes
-
 @rust(sifr_shared_hash_bridge.digest, panic=trusted_no_panic)
-def digest(input: bytes) -> SharedDigest: ...
+def digest(input: bytes) -> bytes: ...
 
 @rust(sifr_shared_hash_bridge.digest_hex, panic=trusted_no_panic)
 def digest_hex(input: bytes) -> str: ...
 
-def verify_shared_hash_bridge() -> SharedDigest:
-    digest_result: SharedDigest = digest(b"sifr-rust-interop")
+def verify_shared_hash_bridge() -> bytes:
+    digest_result: bytes = digest(b"sifr")
     hex_result: str = digest_hex(b"sifr-rust-interop")
-    checked_digest: SharedDigest = SharedDigest(algorithm=hex_result, bytes=digest_result.bytes)
-    return checked_digest
+    assert hex_result == "142632b86444e09a"
+    return digest_result
+
+def main() -> None:
+    assert len(verify_shared_hash_bridge()) == 8
+    print(digest_hex(b"sifr"))

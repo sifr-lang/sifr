@@ -1,9 +1,9 @@
 {
   "capability": "same-workspace crate as ordinary Cargo dependency",
-  "diagnostic_family": "SIFR-RUST-CARGO-0001",
+  "diagnostic_family": "SIFR-RUST-RESOLVE-0001",
   "evidence": {
     "negative": {
-      "expected_diagnostic": "SIFR-RUST-CARGO-0001",
+      "expected_diagnostic": "SIFR-RUST-RESOLVE-0001",
       "expected_result": "diagnostic",
       "id": "undeclared_workspace_crate_rejected",
       "path": "negative/undeclared_workspace_crate_rejected.sifr",
@@ -16,7 +16,7 @@
       "status": "passing"
     }
   },
-  "execution_kind": "contract-only",
+  "execution_kind": "cargo-probe",
   "features": {},
   "id": "same_workspace_crate",
   "required_crates": [],

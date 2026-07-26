@@ -1,10 +1,10 @@
 # fixture: same_workspace_crate
 # evidence: negative/undeclared_workspace_crate_rejected
 # evidence-status: passing
-# execution-kind: contract-only
+# execution-kind: cargo-probe
 # expected-result: diagnostic
-# expected-diagnostic: SIFR-RUST-CARGO-0001
-@rust(undeclared_workspace_hash.hash, panic=trusted_no_panic)
+# expected-diagnostic: SIFR-RUST-RESOLVE-0001
+@rust(workspace_hash.hash, panic=trusted_no_panic)
 def undeclared(input: bytes) -> uint64: ...
 
 def verify_undeclared_workspace_crate_rejected() -> uint64:

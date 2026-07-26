@@ -18,6 +18,11 @@
     }
   },
   "execution_kind": "compiler-diagnostic",
+  "diagnostic_crate_rationale": {
+    "purpose": "regex supplies the rejected unsupported direct-signature shape used only to exercise SIFR-RUST-TYPE diagnostics",
+    "linked": false,
+    "executed": false
+  },
   "features": {},
   "id": "direct_crate_negative_type",
   "package_examples": {

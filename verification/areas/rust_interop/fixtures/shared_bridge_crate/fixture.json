@@ -16,7 +16,7 @@
       "status": "passing"
     }
   },
-  "execution_kind": "contract-only",
+  "execution_kind": "cargo-probe",
   "features": {},
   "id": "shared_bridge_crate",
   "required_crates": [],
