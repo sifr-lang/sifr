@@ -820,8 +820,9 @@ and `tokio-tungstenite`/`redis`/`notify` ecosystem certification are
 future-owned by
 [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md)
 through the `callbacks_call_scoped` and `callback_subscription_ecosystem`
-compatibility rows. Signal-style stdlib subscription handles are tracked
-separately by the supported `callback_subscription_core` row.
+compatibility rows. The supported `callback_subscription_core` row is limited
+to the signal-style declaration and policy contract; it does not claim
+subscription lifecycle execution.
 
 ## Trust Policy
 

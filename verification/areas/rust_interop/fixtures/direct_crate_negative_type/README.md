@@ -11,3 +11,11 @@ Sifr-facing Rust bridge type contracts.
 - Negative silent-compile coverage: the same test fails before direct Cargo
   probing or final generated binary materialization, so unsupported containers do
   not fall through to raw Rust build failures.
+
+## Canonical validation provenance
+
+The structured `fixture.json` record is authoritative. These names repeat its
+exact executable Rust-test bindings for readers:
+
+- Positive `unsupported_type_rejected` runs `direct_negative_type_reports_stable_unsupported_container_diagnostic` in `crates/sifr_driver/src/build/rust_interop_evidence_contract_tests.rs` through the blocking `sifr_driver_lib` suite at the `create-pr` profile.
+- Negative `unsupported_type_cannot_compile_silently` runs `direct_negative_type_stops_before_cargo_probe_execution` in `crates/sifr_driver/src/build/rust_interop_evidence_contract_tests.rs` through the blocking `sifr_driver_lib` suite at the `create-pr` profile.

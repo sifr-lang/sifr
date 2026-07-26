@@ -16,3 +16,4 @@ direct-crate-bindings = true
 
 [trust]
 unsafe-rust-bridges = ["src/bridges/blake3.rs"]
+rust-no-panic = ["bridge.blake3.hash_bytes", "bridge.blake3.hash_hex"]

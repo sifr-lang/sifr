@@ -23,6 +23,6 @@
   "scenario_examples": {
     "locked_offline_cache": "examples/locked_offline_cache"
   },
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 3
 }

@@ -1,7 +1,7 @@
 # fixture: callback_subscription_core
 # evidence: negative/invalid_subscription_callback_policy_rejected
 # evidence-status: passing
-# execution-kind: runtime-observed
+# execution-kind: contract-only
 # expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-CB-0001
 class SignalEvent:

@@ -8,14 +8,28 @@
       "id": "implicit_dlpack_ownership_rejected",
       "path": "negative/implicit_dlpack_ownership_rejected.sifr",
       "scope": "contract-only",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_advanced_data_contract_tests.rs",
+        "test_name": "package_rust_interop_rejects_implicit_dlpack_ownership"
+      }
     },
     "positive": {
       "expected_result": "pass",
       "id": "explicit_tensor_ownership",
       "path": "positive/explicit_tensor_ownership.sifr",
       "scope": "contract-only",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_advanced_data_contract_tests.rs",
+        "test_name": "package_rust_interop_accepts_explicit_dlpack_transfer_contract"
+      }
     }
   },
   "execution_kind": "contract-only",
@@ -27,6 +41,6 @@
   "required_crates": [
     "ndarray"
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 4
 }

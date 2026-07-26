@@ -7,13 +7,27 @@
       "expected_result": "diagnostic",
       "id": "classified_async_declarations_rejected",
       "path": "negative/classified_async_declarations_rejected.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_lowering",
+        "test_file": "crates/sifr_lowering/src/lower/rust_interop_tests.rs",
+        "test_name": "rust_interop_rejects_blocking_classification_on_async_function"
+      }
     },
     "positive": {
       "expected_result": "pass",
       "id": "classified_sync_rust_effects",
       "path": "positive/classified_sync_rust_effects.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_lowering",
+        "test_file": "crates/sifr_lowering/src/lower/rust_interop_tests.rs",
+        "test_name": "rust_interop_lowers_blocking_io_effect_for_sync_rust_function"
+      }
     }
   },
   "execution_kind": "compiler-diagnostic",
@@ -46,6 +60,6 @@
     "rayon",
     "flate2"
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 0
 }

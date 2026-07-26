@@ -227,12 +227,12 @@
       "fixture": "async_runtime_core",
       "category": "supported",
       "tier": 2,
-      "capability": "stdlib-owned async runtime and async resource lifecycle core",
-      "execution_kind": "runtime-observed",
+      "capability": "stdlib-owned async declaration and resource lifecycle contracts",
+      "execution_kind": "contract-only",
       "required_crates": [],
       "positive_evidence": {"id": "stdlib_async_resource_lifecycle", "status": "passing"},
       "negative_evidence": {"id": "stdlib_async_hidden_blocking_rejected", "status": "passing"},
-      "notes": "Stdlib-owned async resources may use async declarations, async-close lifecycle contracts, current-thread affinity, and hidden-blocking rejection; runtime task cancellation/drop coverage is kept in executable Rust tests, and reqwest loopback runtime evidence remains future-owned."
+      "notes": "Stdlib-owned async declarations have checked async-close, current-thread affinity, and hidden-blocking contracts. This row does not claim runtime execution; runtime cancellation/drop and reqwest loopback evidence remain future-owned."
     },
     {
       "id": "async_ecosystem_matrix",
@@ -293,12 +293,12 @@
       "fixture": "callback_subscription_core",
       "category": "supported",
       "tier": 2,
-      "capability": "stdlib-owned signal callback subscriptions and shutdown",
-      "execution_kind": "runtime-observed",
+      "capability": "stdlib-owned signal callback subscription policy contract",
+      "execution_kind": "contract-only",
       "required_crates": [],
       "positive_evidence": {"id": "signal_subscription_cancel_shutdown", "status": "passing"},
       "negative_evidence": {"id": "invalid_subscription_callback_policy_rejected", "status": "passing"},
-      "notes": "Signal-style stdlib subscriptions have checked callback policy, async-close cancellation, and shutdown contract evidence without claiming ecosystem subscription crates."
+      "notes": "Signal-style stdlib subscription declarations have checked backpressure, overflow, shutdown, and async-close contracts. Runtime subscription lifecycle and ecosystem behavior remain future-owned."
     },
     {
       "id": "callback_subscription_ecosystem",

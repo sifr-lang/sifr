@@ -7,14 +7,28 @@
       "expected_result": "diagnostic",
       "id": "unsupported_type_cannot_compile_silently",
       "path": "negative/unsupported_type_cannot_compile_silently.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_evidence_contract_tests.rs",
+        "test_name": "direct_negative_type_stops_before_cargo_probe_execution"
+      }
     },
     "positive": {
       "expected_diagnostic": "SIFR-RUST-TYPE-0001",
       "expected_result": "diagnostic",
       "id": "unsupported_type_rejected",
       "path": "positive/unsupported_type_rejected.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_evidence_contract_tests.rs",
+        "test_name": "direct_negative_type_reports_stable_unsupported_container_diagnostic"
+      }
     }
   },
   "execution_kind": "compiler-diagnostic",
@@ -31,6 +45,6 @@
   "required_crates": [
     "regex"
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 0
 }

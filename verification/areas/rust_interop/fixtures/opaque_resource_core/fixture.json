@@ -3,23 +3,37 @@
   "diagnostic_family": "SIFR-RUST-HANDLE-0001",
   "evidence": {
     "negative": {
-      "expected_diagnostic": "SIFR-RUST-HANDLE-0001",
-      "expected_result": "diagnostic",
+      "expected_result": "runtime-error-state",
+      "expected_runtime_state": "poisoned",
       "id": "stdlib_handle_double_close_poisoned_access",
       "path": "negative/stdlib_handle_double_close_poisoned_access.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_runtime",
+        "test_file": "crates/sifr_runtime/src/interop.rs",
+        "test_name": "poisoned_state_wins_over_closed_state"
+      }
     },
     "positive": {
       "expected_result": "pass",
       "id": "stdlib_handle_close_poison_lifecycle",
       "path": "positive/stdlib_handle_close_poison_lifecycle.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_runtime",
+        "test_file": "crates/sifr_runtime/src/interop.rs",
+        "test_name": "handle_poison_guard_can_be_disarmed_after_successful_call"
+      }
     }
   },
   "execution_kind": "runtime-observed",
   "features": {},
   "id": "opaque_resource_core",
   "required_crates": [],
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 2
 }

@@ -1,7 +1,7 @@
 # fixture: async_runtime_core
 # evidence: positive/stdlib_async_resource_lifecycle
 # evidence-status: passing
-# execution-kind: runtime-observed
+# execution-kind: contract-only
 # expected-result: pass
 class AsyncResourceError(Error):
     message: str

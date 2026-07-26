@@ -1,5 +1,6 @@
 use super::rust_interop_digest::fnv1a64_hex;
 use super::rust_interop_probe_cache::{mark_probe_cache_hit, probe_cache_file, probe_cache_key};
+use super::rust_interop_probe_manifest::{probe_cargo_toml, toml_quote_string};
 use super::workspace::artifact_cache_root;
 use sifr_codegen::{
     RustBridgeParamConvention, RustBridgeSignatureContract, RustInteropPlanDeclaration,
@@ -9,7 +10,6 @@ use sifr_ir::{RustInteropDecoratorKind, RustInteropValue, RustTargetPath};
 use sifr_package::BackendCrateMetadata;
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsString;
-use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -30,6 +30,7 @@ pub(super) struct PendingRustBridgeProbe {
     pub(super) declaration: RustInteropPlanDeclaration,
     pub(super) path: RustTargetPath,
     pub(super) backend: BackendCrateMetadata,
+    pub(super) source_prefix: Option<String>,
     pub(super) signature: Option<RustBridgeSignatureContract>,
     pub(super) async_thread_affinity: AsyncThreadAffinity,
     pub(super) sysroot_runtime_crate: PathBuf,
@@ -56,6 +57,7 @@ pub(super) fn execute_direct_cargo_probe(
         dependency_features(&probe.backend.dependency_name, backend_root, &probe.path);
     let probe_manifest = probe_cargo_toml(
         &probe.backend.dependency_name,
+        &probe.backend.cargo_package_name,
         backend_root,
         &probe.sysroot_runtime_crate,
         &dependency_features,
@@ -141,51 +143,6 @@ pub(super) fn execute_direct_cargo_probe(
     })
 }
 
-fn probe_cargo_toml(
-    dependency_name: &str,
-    backend_root: &Path,
-    sysroot_runtime_crate: &Path,
-    dependency_features: &[String],
-) -> String {
-    let mut cargo_toml =
-        "[package]\nname = \"sifr-rust-probe\"\nversion = \"0.0.0\"\nedition = \"2024\"\n\n[dependencies]\n"
-            .to_string();
-    cargo_toml.push_str(&dependency_line(
-        dependency_name,
-        backend_root,
-        dependency_features,
-    ));
-    if dependency_name != "sifr_runtime" {
-        let path = toml_quote_path(sysroot_runtime_crate);
-        let _ = writeln!(cargo_toml, "sifr_runtime = {{ path = {path} }}");
-    }
-    cargo_toml
-}
-
-fn dependency_line(dependency_name: &str, backend_root: &Path, features: &[String]) -> String {
-    let backend_root = toml_quote_path(backend_root);
-    let default_features = if dependency_name == "sifr_stdlib" {
-        ", default-features = false"
-    } else {
-        ""
-    };
-    if features.is_empty() {
-        return format!("{dependency_name} = {{ path = {backend_root}{default_features} }}\n");
-    }
-    let features = features
-        .iter()
-        .map(|feature| toml_quote_string(feature))
-        .collect::<Vec<_>>()
-        .join(", ");
-    format!(
-        "{dependency_name} = {{ path = {backend_root}{default_features}, features = [{features}] }}\n"
-    )
-}
-
-fn toml_quote_path(path: &Path) -> String {
-    toml_quote_string(&path.display().to_string())
-}
-
 fn dependency_features(
     _dependency_name: &str,
     backend_root: &Path,
@@ -254,23 +211,6 @@ pub(super) fn normalize_cargo_target_dir(invocation_cwd: &Path, target_dir: Path
     }
 }
 
-fn toml_quote_string(value: &str) -> String {
-    let mut quoted = String::with_capacity(value.len() + 2);
-    quoted.push('"');
-    for ch in value.chars() {
-        match ch {
-            '\\' => quoted.push_str("\\\\"),
-            '"' => quoted.push_str("\\\""),
-            '\n' => quoted.push_str("\\n"),
-            '\r' => quoted.push_str("\\r"),
-            '\t' => quoted.push_str("\\t"),
-            ch => quoted.push(ch),
-        }
-    }
-    quoted.push('"');
-    quoted
-}
-
 fn unique_probe_nonce() -> String {
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -281,7 +221,7 @@ fn unique_probe_nonce() -> String {
 
 fn probe_source(probe: &PendingRustBridgeProbe) -> String {
     let rust_path = probe.path.segments.join("::");
-    match probe.declaration.declaration.kind {
+    let body = match probe.declaration.declaration.kind {
         RustInteropDecoratorKind::Opaque => opaque_probe_source(probe, &rust_path),
         RustInteropDecoratorKind::Callback => {
             unreachable!("callback metadata is targetless and never enters probe planning")
@@ -296,7 +236,16 @@ fn probe_source(probe: &PendingRustBridgeProbe) -> String {
                 format!("#![allow(dead_code)]\nfn __sifr_probe() {{ let _ = {rust_path}; }}\n")
             }
         }
-    }
+    };
+    let Some(prefix) = &probe.source_prefix else {
+        return body;
+    };
+    prefixed_probe_source(prefix, &body)
+}
+
+fn prefixed_probe_source(prefix: &str, body: &str) -> String {
+    let body = body.strip_prefix("#![allow(dead_code)]\n").unwrap_or(body);
+    format!("#![allow(dead_code)]\n{prefix}\n{body}")
 }
 
 fn opaque_probe_source(probe: &PendingRustBridgeProbe, rust_path: &str) -> String {
@@ -646,8 +595,8 @@ fn canonical_sifr_target_path(declaration: &RustInteropPlanDeclaration) -> Strin
 mod tests {
     use super::{
         artifact_cache_root, cargo_vendor_args, dependency_features, generated_bridge_type_stubs,
-        normalize_cargo_target_dir, probe_cargo_target_dir_with_env, probe_cargo_toml,
-        python_raw_callback_probe_source, signature_return_probe_type,
+        normalize_cargo_target_dir, prefixed_probe_source, probe_cargo_target_dir_with_env,
+        probe_cargo_toml, python_raw_callback_probe_source, signature_return_probe_type,
         RUST_BRIDGE_PROBE_TARGET_DIR,
     };
     use ruff_text_size::TextRange;
@@ -658,8 +607,22 @@ mod tests {
     use std::path::Path;
 
     #[test]
+    fn prefixed_probe_keeps_inner_attributes_before_bridge_imports() {
+        let source = prefixed_probe_source(
+            "use bridge_backend::bridges as bridge;",
+            "#![allow(dead_code)]\nfn __sifr_probe() {}\n",
+        );
+
+        assert_eq!(
+            source,
+            "#![allow(dead_code)]\nuse bridge_backend::bridges as bridge;\nfn __sifr_probe() {}\n"
+        );
+    }
+
+    #[test]
     fn sysroot_probe_manifest_uses_sysroot_runtime_crate() {
         let manifest = probe_cargo_toml(
+            "sifr_stdlib",
             "sifr_stdlib",
             Path::new("/opt/sifr/crates/sifr_stdlib"),
             Path::new("/opt/sifr/crates/sifr_runtime"),
@@ -676,6 +639,7 @@ mod tests {
     fn sysroot_runtime_probe_manifest_does_not_duplicate_runtime_dependency() {
         let manifest = probe_cargo_toml(
             "sifr_runtime",
+            "sifr_runtime",
             Path::new("/opt/sifr/crates/sifr_runtime"),
             Path::new("/opt/sifr/crates/sifr_runtime"),
             &[],
@@ -687,6 +651,7 @@ mod tests {
     #[test]
     fn sysroot_probe_manifest_enables_declared_stdlib_features() {
         let manifest = probe_cargo_toml(
+            "sifr_stdlib",
             "sifr_stdlib",
             Path::new("/opt/sifr/crates/sifr_stdlib"),
             Path::new("/opt/sifr/crates/sifr_runtime"),

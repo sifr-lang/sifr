@@ -210,7 +210,9 @@ its required Rust interop compatibility matrix rows. Broad ecosystem rows are
 not handed off wholesale. The stdlib native boundary phase splits and owns only
 the narrow stdlib-blocking core rows it proves, such as
 `opaque_resource_core`, `async_runtime_core`, `callback_subscription_core`, and
-possibly `callbacks_call_scoped_core`. The ecosystem portions, such as
+possibly `callbacks_call_scoped_core`. The async and callback core rows certify
+only their declared compile-time contracts; runtime cancellation and shutdown
+remain in the downstream rows. The ecosystem portions, such as
 `opaque_resource_matrix`, `async_runtime_reqwest`, and
 `callback_subscription_ecosystem`, remain with the separate runtime ecosystem
 certification issue. `panic_boundary_wrapper_emission` also remains package

@@ -3,23 +3,37 @@
   "diagnostic_family": "SIFR-RUST-HANDLE-0001",
   "evidence": {
     "negative": {
-      "expected_diagnostic": "SIFR-RUST-HANDLE-0001",
-      "expected_result": "diagnostic",
+      "expected_result": "runtime-error-state",
+      "expected_runtime_state": "closed",
       "id": "double_close_and_poisoned_access",
       "path": "negative/double_close_and_poisoned_access.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_runtime",
+        "test_file": "crates/sifr_runtime/src/interop.rs",
+        "test_name": "double_close_keeps_stable_closed_state"
+      }
     },
     "positive": {
       "expected_result": "pass",
       "id": "closed_handle_error_surface",
       "path": "positive/closed_handle_error_surface.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_runtime",
+        "test_file": "crates/sifr_runtime/src/interop.rs",
+        "test_name": "handle_reports_closed_and_poisoned_states_without_panicking"
+      }
     }
   },
   "execution_kind": "runtime-observed",
   "features": {},
   "id": "close_after_use",
   "required_crates": [],
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 2
 }

@@ -16,3 +16,11 @@ package-local bridge module.
   printed `3421780262` for `b"123456789"` with explicit
   `rust-build-scripts = ["crc32fast"]` and
   `rust-no-panic = ["crc32fast.hash"]` trust entries.
+
+## Canonical validation provenance
+
+The structured `fixture.json` record is authoritative. These names repeat its
+exact executable Rust-test bindings for readers:
+
+- Positive `crc32fast_hash_uint32` runs `test_build_cached_package_project_links_direct_rust_interop_dependency` in `crates/sifr_driver/src/tests/package_project_build_check.rs` through the blocking `sifr_driver_generated_builds` suite at the `merge` profile.
+- Negative `crc32fast_missing_panic_policy` runs `package_rust_interop_direct_non_result_requires_panic_policy` in `crates/sifr_driver/src/build/rust_interop_contract_tests.rs` through the blocking `sifr_driver_lib` suite at the `create-pr` profile.

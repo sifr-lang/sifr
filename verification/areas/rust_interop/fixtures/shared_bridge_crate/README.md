@@ -23,3 +23,11 @@ Reproduce either side with:
 cargo test -p sifr_driver --lib test_build_shared_bridge_crate_positive_cargo_probe -- --ignored --test-threads=1
 cargo test -p sifr_driver --lib test_check_shared_bridge_crate_negative_cargo_probe -- --ignored --test-threads=1
 ```
+
+## Canonical validation provenance
+
+The structured `fixture.json` record is authoritative. These names repeat its
+exact executable Rust-test bindings for readers:
+
+- Positive `stable_runtime_types_only` runs `test_build_shared_bridge_crate_positive_cargo_probe` in `crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs` through the blocking `sifr_driver_generated_builds` suite at the `merge` profile.
+- Negative `package_generated_type_import_rejected` runs `test_check_shared_bridge_crate_negative_cargo_probe` in `crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs` through the blocking `sifr_driver_generated_builds` suite at the `merge` profile.

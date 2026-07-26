@@ -1,25 +1,39 @@
 {
   "capability": "opaque Rust handle basics",
-  "diagnostic_family": "SIFR-RUST-HANDLE-0001",
+  "diagnostic_family": "SIFR-RUST-TYPE-0001",
   "evidence": {
     "negative": {
-      "expected_diagnostic": "SIFR-RUST-HANDLE-0001",
+      "expected_diagnostic": "SIFR-RUST-TYPE-0001",
       "expected_result": "diagnostic",
       "id": "unsatisfied_send_or_copy_rejected",
       "path": "negative/unsatisfied_send_or_copy_rejected.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_contract_tests.rs",
+        "test_name": "package_rust_interop_opaque_probe_rejects_unsatisfied_send_obligation"
+      }
     },
     "positive": {
       "expected_result": "pass",
       "id": "declared_send_sync_copy_handle",
       "path": "positive/declared_send_sync_copy_handle.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_contract_tests.rs",
+        "test_name": "package_rust_interop_opaque_probe_accepts_declared_send_sync_copy"
+      }
     }
   },
   "execution_kind": "cargo-probe",
   "features": {},
   "id": "opaque_handle_tokenizer",
   "required_crates": [],
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 2
 }

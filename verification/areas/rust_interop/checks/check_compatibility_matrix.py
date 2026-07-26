@@ -4,11 +4,17 @@ from __future__ import annotations
 
 import json
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
+from _provenance_checks import load_fixture_manifests
+from _provenance_checks import load_profiles
+from _provenance_checks import validate_evidence_provenance
+
 REPO_ROOT = Path(__file__).resolve().parents[4]
 AREA_ROOT = REPO_ROOT / "verification" / "areas" / "rust_interop"
+FIXTURES_ROOT = AREA_ROOT / "fixtures"
 FIXTURE_MATRIX_PATH = AREA_ROOT / "data" / "rust_interop_fixture_matrix.json"
 COMPATIBILITY_MATRIX_PATH = AREA_ROOT / "data" / "rust_interop_compatibility_matrix.json"
 
@@ -33,6 +39,8 @@ def main(argv: list[str] | None = None) -> int:
     fixture_matrix = json.loads(FIXTURE_MATRIX_PATH.read_text(encoding="utf-8"))
     compatibility_matrix = json.loads(COMPATIBILITY_MATRIX_PATH.read_text(encoding="utf-8"))
     failures: list[str] = []
+    fixture_manifests = load_fixture_manifests(FIXTURES_ROOT, failures)
+    profiles = load_profiles(REPO_ROOT)
 
     if compatibility_matrix.get("schema_version") != 1:
         failures.append("compatibility matrix schema_version must be 1")
@@ -64,11 +72,23 @@ def main(argv: list[str] | None = None) -> int:
     seen_rows: set[str] = set()
     fixture_rows: set[str] = set()
     seen_categories: set[str] = set()
+    used_evidence_tests: dict[tuple[str, str], str] = {}
     for row in rows:
         if not isinstance(row, dict):
             failures.append("compatibility matrix rows must be objects")
             continue
-        _validate_row(failures, row, fixtures, seen_rows, fixture_rows, seen_categories)
+        _validate_row(
+            failures,
+            row,
+            fixtures,
+            fixture_manifests,
+            profiles,
+            REPO_ROOT,
+            used_evidence_tests,
+            seen_rows,
+            fixture_rows,
+            seen_categories,
+        )
 
     failures.extend(f"missing compatibility row for fixture: {item}" for item in sorted(set(fixtures) - fixture_rows))
     failures.extend(f"compatibility category is unused: {item}" for item in sorted(VALID_CATEGORIES - seen_categories))
@@ -88,6 +108,10 @@ def _validate_row(
     failures: list[str],
     row: dict[str, Any],
     fixtures: dict[str, dict[str, Any]],
+    fixture_manifests: dict[str, dict[str, Any]],
+    profiles: dict[str, dict[str, Any]],
+    repo_root: Path,
+    used_evidence_tests: dict[tuple[str, str], str],
     seen_rows: set[str],
     fixture_rows: set[str],
     seen_categories: set[str],
@@ -132,6 +156,17 @@ def _validate_row(
         failures.append(
             f"{row_id}: {category} rows require passing positive and negative fixture evidence"
         )
+    if category in CLAIMED_SUPPORT_CATEGORIES:
+        _validate_claimed_provenance(
+            failures,
+            row_id,
+            fixture_id,
+            fixture,
+            fixture_manifests.get(fixture_id),
+            profiles,
+            repo_root,
+            used_evidence_tests,
+        )
     if category == "future-owned-by-separate-phase":
         if (positive_status, negative_status) == ("passing", "passing"):
             failures.append(f"{row_id}: future-owned row already has passing positive and negative evidence")
@@ -146,6 +181,56 @@ def _validate_row(
             failures.append(f"{row_id}: future_owner does not exist: {future_owner}")
     if not row.get("notes"):
         failures.append(f"{row_id}: notes are required")
+
+
+def _validate_claimed_provenance(
+    failures: list[str],
+    row_id: str,
+    fixture_id: str,
+    fixture: dict[str, Any],
+    manifest: Any,
+    profiles: dict[str, dict[str, Any]],
+    repo_root: Path,
+    used_evidence_tests: dict[tuple[str, str], str],
+) -> None:
+    if not isinstance(manifest, dict):
+        failures.append(f"{row_id}: claimed fixture has no fixture.json manifest")
+        return
+    if manifest.get("schema_version") != 2:
+        failures.append(f"{row_id}: claimed fixture manifest schema_version must be 2")
+    if manifest.get("id") != fixture_id:
+        failures.append(f"{row_id}: claimed fixture manifest id must match fixture")
+    evidence = manifest.get("evidence")
+    if not isinstance(evidence, dict):
+        failures.append(f"{row_id}: claimed fixture manifest evidence must be an object")
+        return
+    for side, matrix_field in (
+        ("positive", "positive_evidence"),
+        ("negative", "negative_evidence"),
+    ):
+        manifest_record = evidence.get(side)
+        matrix_record = fixture.get(matrix_field)
+        if not isinstance(manifest_record, dict):
+            failures.append(f"{row_id}: claimed fixture manifest evidence.{side} is required")
+            continue
+        if not isinstance(matrix_record, dict):
+            continue
+        for field in ("id", "status"):
+            if manifest_record.get(field) != matrix_record.get(field):
+                failures.append(
+                    f"{row_id}: claimed fixture manifest evidence.{side}.{field} "
+                    "must match fixture matrix"
+                )
+        validate_evidence_provenance(
+            failures,
+            repo_root=repo_root,
+            profiles=profiles,
+            fixture_id=fixture_id,
+            side=side,
+            evidence=manifest_record,
+            execution_kind=str(fixture.get("execution_kind")),
+            used_tests=used_evidence_tests,
+        )
 
 
 def _expect_equal(
@@ -188,58 +273,139 @@ def _run_self_test() -> int:
         "category": "unsupported-by-design",
         "notes": "diagnostic behavior is supported",
     }
-    control_failures: list[str] = []
-    _validate_row(
-        control_failures,
-        base_row,
-        {"diagnostic_fixture": fixture},
-        set(),
-        set(),
-        set(),
-    )
-    if control_failures:
-        print(
-            "rust interop compatibility matrix self-test error: "
-            f"valid rationale was rejected: {control_failures}",
-            file=sys.stderr,
+    with tempfile.TemporaryDirectory(prefix="sifr-rust-interop-compat-") as raw_root:
+        repo_root = Path(raw_root)
+        test_path = repo_root / "crates" / "sifr_driver" / "src" / "evidence.rs"
+        test_path.parent.mkdir(parents=True)
+        test_path.write_text(
+            "#[test]\nfn positive_test() {}\n#[test]\nfn negative_test() {}\n",
+            encoding="utf-8",
         )
-        return 1
-
-    cases = (
-        (
-            "missing rationale",
-            {key: value for key, value in base_row.items() if key != "diagnostic_crate_rationale"},
-        ),
-        (
-            "mismatched rationale",
-            {
-                **base_row,
-                "diagnostic_crate_rationale": {
-                    **rationale,
-                    "purpose": "mismatched rationale",
-                },
-            },
-        ),
-    )
-    expected = "diagnostic_fixture: diagnostic_crate_rationale must match fixture matrix"
-    for name, row in cases:
-        failures: list[str] = []
+        profiles = _self_test_profiles()
+        manifest = _self_test_manifest()
+        control_failures: list[str] = []
         _validate_row(
-            failures,
-            row,
+            control_failures,
+            base_row,
             {"diagnostic_fixture": fixture},
+            {"diagnostic_fixture": manifest},
+            profiles,
+            repo_root,
+            {},
             set(),
             set(),
             set(),
         )
-        if expected not in failures:
+        if control_failures:
             print(
-                f"rust interop compatibility matrix self-test error: {name} passed",
+                "rust interop compatibility matrix self-test error: "
+                f"valid rationale was rejected: {control_failures}",
                 file=sys.stderr,
             )
             return 1
+
+        cases = (
+            (
+                "missing rationale",
+                {key: value for key, value in base_row.items() if key != "diagnostic_crate_rationale"},
+                manifest,
+                "diagnostic_fixture: diagnostic_crate_rationale must match fixture matrix",
+            ),
+            (
+                "mismatched rationale",
+                {
+                    **base_row,
+                    "diagnostic_crate_rationale": {
+                        **rationale,
+                        "purpose": "mismatched rationale",
+                    },
+                },
+                manifest,
+                "diagnostic_fixture: diagnostic_crate_rationale must match fixture matrix",
+            ),
+            (
+                "claimed row missing provenance",
+                base_row,
+                {
+                    **manifest,
+                    "evidence": {
+                        **manifest["evidence"],
+                        "negative": {
+                            key: value
+                            for key, value in manifest["evidence"]["negative"].items()
+                            if key != "validation"
+                        },
+                    },
+                },
+                "evidence.negative.validation is required",
+            ),
+        )
+        for name, row, case_manifest, expected in cases:
+            failures: list[str] = []
+            _validate_row(
+                failures,
+                row,
+                {"diagnostic_fixture": fixture},
+                {"diagnostic_fixture": case_manifest},
+                profiles,
+                repo_root,
+                {},
+                set(),
+                set(),
+                set(),
+            )
+            if not any(expected in failure for failure in failures):
+                print(
+                    f"rust interop compatibility matrix self-test error: {name} passed",
+                    file=sys.stderr,
+                )
+                return 1
     print(f"rust interop compatibility matrix self-test ok: cases={len(cases) + 1}")
     return 0
+
+
+def _self_test_profiles() -> dict[str, dict[str, Any]]:
+    profiles: dict[str, dict[str, Any]] = {}
+    for name in ("create-pr", "merge", "nightly", "release"):
+        profiles[name] = {
+            "legacy_facade": {"crate_tests": "smoke" if name == "create-pr" else "full"},
+            "crate_test_membership": {
+                "suites": [
+                    {
+                        "id": "driver",
+                        "package": "sifr_driver",
+                        "command": ["test", "-p", "sifr_driver", "--lib"],
+                        "modes": ["smoke", "full"],
+                        "status": "blocking",
+                    }
+                ]
+            },
+        }
+    return profiles
+
+
+def _self_test_manifest() -> dict[str, Any]:
+    def record(side: str) -> dict[str, Any]:
+        return {
+            "id": side,
+            "status": "passing",
+            "validation": {
+                "profile": "create-pr",
+                "step": "crate_tests",
+                "suite_id": "driver",
+                "test_file": "crates/sifr_driver/src/evidence.rs",
+                "test_name": f"{side}_test",
+            },
+        }
+
+    return {
+        "schema_version": 2,
+        "id": "diagnostic_fixture",
+        "evidence": {
+            "positive": record("positive"),
+            "negative": record("negative"),
+        },
+    }
 
 
 if __name__ == "__main__":

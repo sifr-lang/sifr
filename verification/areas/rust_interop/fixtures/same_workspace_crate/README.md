@@ -22,3 +22,11 @@ Reproduce either side with:
 cargo test -p sifr_driver --lib test_build_same_workspace_crate_positive_cargo_probe -- --ignored --test-threads=1
 cargo test -p sifr_driver --lib test_check_same_workspace_crate_negative_cargo_probe -- --ignored --test-threads=1
 ```
+
+## Canonical validation provenance
+
+The structured `fixture.json` record is authoritative. These names repeat its
+exact executable Rust-test bindings for readers:
+
+- Positive `declared_path_dependency_resolves` runs `test_build_same_workspace_crate_positive_cargo_probe` in `crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs` through the blocking `sifr_driver_generated_builds` suite at the `merge` profile.
+- Negative `undeclared_workspace_crate_rejected` runs `test_check_same_workspace_crate_negative_cargo_probe` in `crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs` through the blocking `sifr_driver_generated_builds` suite at the `merge` profile.

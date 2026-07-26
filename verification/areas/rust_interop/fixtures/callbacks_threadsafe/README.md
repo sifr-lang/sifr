@@ -15,3 +15,11 @@ Current passing evidence:
 Signal-style stdlib subscriptions are tracked by `callback_subscription_core`.
 Runtime-observed ecosystem subscription, cancellation, shutdown, and
 cross-thread capture cases remain in `callback_subscription_ecosystem`.
+
+## Canonical validation provenance
+
+The structured `fixture.json` record is authoritative. These names repeat its
+exact executable Rust-test bindings for readers:
+
+- Positive `bounded_callback_policy` runs `package_rust_interop_accepts_direct_callback_backpressure` in `crates/sifr_driver/src/build/rust_interop_callback_contract_tests.rs` through the blocking `sifr_driver_lib` suite at the `create-pr` profile.
+- Negative `missing_backpressure_rejected` runs `package_rust_interop_rejects_callback_missing_backpressure` in `crates/sifr_driver/src/build/rust_interop_callback_contract_tests.rs` through the blocking `sifr_driver_lib` suite at the `create-pr` profile.

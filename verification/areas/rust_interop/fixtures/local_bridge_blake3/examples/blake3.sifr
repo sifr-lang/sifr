@@ -3,12 +3,9 @@
 # required-crate: blake3
 # execution-kind: cargo-probe
 # expected-result: package-example
-class PackageExampleError(Error):
-    message: str
+@rust(blake3.hash, panic=trusted_no_panic)
+def blake3_hash(input: bytes) -> bytes: ...
 
-@rust(blake3.hash, panic=map_error(bridge.blake3.map_panic))
-def blake3_hash(input: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
-
-def verify_blake3_package() -> Result[bytes, PackageExampleError | RustPanicError]:
-    sample_result: Result[bytes, PackageExampleError | RustPanicError] = blake3_hash(b"sifr-rust-interop")
+def verify_blake3_package() -> bytes:
+    sample_result: bytes = blake3_hash(b"sifr-rust-interop")
     return sample_result
