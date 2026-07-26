@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import tempfile
 from pathlib import Path
 
@@ -13,8 +14,14 @@ from .profiles import (
     legacy_facade,
     load_all_profiles,
     selected_resource_classes,
+    required_rust_interop_suites,
     validate_crate_test_membership,
     validate_selected_area_suites,
+)
+from .profile_runner import (
+    ProfileRunnerError,
+    legacy_facade_step_names,
+    validate_rust_interop_result,
 )
 from .results import build_result
 from .schemas import load_schema, validate_all_committed_schemas, validate_data, validate_schema_requirement
@@ -25,6 +32,7 @@ def run_all() -> list[str]:
         ("schema self-tests", _schema_self_test),
         ("profile schema self-test", _profile_schema_self_test),
         ("crate membership self-test", _crate_membership_self_test),
+        ("Rust interop profile execution self-test", _rust_interop_profile_self_test),
         ("e2e profile self-test", _e2e_profile_self_test),
         ("runner discovery self-test", _discovery_self_test),
         ("resource class selection self-test", _resource_class_self_test),
@@ -87,6 +95,7 @@ def _profile_schema_self_test() -> None:
     create_pr_step_budgets = profiles["create-pr"].get("step_budgets", {})
     required_blocking_steps = {
         "generated_code_quality_checks",
+        "rust_interop_checks",
         "crate_tests",
         "runtime_platform_suites",
         "e2e_pass_suite",
@@ -266,6 +275,112 @@ def _crate_membership_self_test() -> None:
             raise
     else:
         raise AssertionError("incomplete Python interop certification profile was accepted")
+
+
+def _rust_interop_profile_self_test() -> None:
+    profiles = load_all_profiles()
+    required_suites = required_rust_interop_suites()
+    for profile_name in ("create-pr", "merge", "nightly", "release"):
+        profile = profiles[profile_name]
+        selected = {
+            str(suite)
+            for selection in profile["selected_areas"]
+            if selection.get("area") == "rust_interop"
+            for suite in selection.get("suites", [])
+        }
+        if selected != required_suites:
+            raise AssertionError(
+                f"{profile_name} Rust interop plan mismatch: "
+                f"expected={sorted(required_suites)} actual={sorted(selected)}"
+            )
+        step_names = legacy_facade_step_names(profile)
+        if "rust_interop_checks" not in step_names:
+            raise AssertionError(f"{profile_name} omits the executable Rust interop step")
+
+    incomplete_profile = {
+        "name": "self-test",
+        "selected_areas": [
+            {
+                "area": "rust_interop",
+                "suites": ["matrix", "tiers", "compatibility-matrix"],
+            }
+        ],
+    }
+    try:
+        validate_selected_area_suites(incomplete_profile)
+    except ProfileError as exc:
+        if "omits required Rust interop verification suites: stale-drafts" not in str(exc):
+            raise
+    else:
+        raise AssertionError("incomplete Rust interop profile was accepted")
+
+    missing_area_profile = {
+        "name": "self-test",
+        "selected_areas": [],
+    }
+    try:
+        validate_selected_area_suites(missing_area_profile)
+    except ProfileError as exc:
+        if "omits the required Rust interop area" not in str(exc):
+            raise
+    else:
+        raise AssertionError("legacy profile without the Rust interop area was accepted")
+
+    with tempfile.TemporaryDirectory(prefix="sifr-rust-interop-result-self-test-") as temp_dir:
+        result_path = Path(temp_dir) / "result.json"
+        try:
+            validate_rust_interop_result(result_path, sorted(required_suites))
+        except ProfileRunnerError as exc:
+            if "emitted no result JSON" not in str(exc):
+                raise
+        else:
+            raise AssertionError("missing Rust interop result JSON was accepted")
+
+        valid_payload = {
+            "area": "rust_interop",
+            "suites": [
+                {
+                    "name": suite,
+                    "blocking": True,
+                    "total_variants": 1,
+                    "total_failures": 0,
+                }
+                for suite in sorted(required_suites)
+            ],
+            "summary": {
+                "blocking_failures": 0,
+                "total_variants": len(required_suites),
+            },
+        }
+        result_path.write_text(json.dumps(valid_payload), encoding="utf-8")
+        validate_rust_interop_result(result_path, sorted(required_suites))
+
+        invalid_payloads = [
+            {**valid_payload, "area": "python_interop"},
+            {**valid_payload, "suites": valid_payload["suites"][:-1]},
+            {**valid_payload, "suites": "not-a-list"},
+            {
+                **valid_payload,
+                "summary": {"blocking_failures": 1, "total_variants": len(required_suites)},
+            },
+        ]
+        for index, payload in enumerate(invalid_payloads):
+            result_path.write_text(json.dumps(payload), encoding="utf-8")
+            try:
+                validate_rust_interop_result(result_path, sorted(required_suites))
+            except ProfileRunnerError:
+                pass
+            else:
+                raise AssertionError(
+                    f"invalid Rust interop result JSON mutation {index} was accepted"
+                )
+        result_path.write_text("{not-json", encoding="utf-8")
+        try:
+            validate_rust_interop_result(result_path, sorted(required_suites))
+        except ProfileRunnerError:
+            pass
+        else:
+            raise AssertionError("malformed Rust interop result JSON was accepted")
 
 
 def _e2e_profile_self_test() -> None:

@@ -27,6 +27,7 @@ PROFILE_STEP_NAMES = {
     "diagnostic_rules",
     "cpython_differential",
     "python_interop",
+    "rust_interop_checks",
     "frontend_syntax_guardrails",
     "developer_tooling_checks",
     "performance_budget_checks",
@@ -45,6 +46,9 @@ PROFILE_STEP_NAMES = {
 }
 PYTHON_INTEROP_CAPABILITY_MATRIX = (
     REPO_ROOT / "verification" / "areas" / "python_interop" / "declaration_capabilities.json"
+)
+RUST_INTEROP_MANIFEST = (
+    REPO_ROOT / "verification" / "areas" / "rust_interop" / "manifest.json"
 )
 
 
@@ -164,6 +168,39 @@ def validate_selected_area_suites(profile: dict[str, Any]) -> None:
                     f"profile {profile.get('name')} omits required Python interop "
                     f"certification suites: {', '.join(missing)}"
                 )
+        if area == "rust_interop" and profile.get("execution_mode") != "selected-areas-only":
+            required_suites = required_rust_interop_suites()
+            missing = sorted(required_suites.difference(selected_suites))
+            if missing:
+                raise ProfileError(
+                    f"profile {profile.get('name')} omits required Rust interop "
+                    f"verification suites: {', '.join(missing)}"
+                )
+    if profile.get("execution_mode") != "selected-areas-only":
+        selected_area_names = {
+            selection.get("area")
+            for selection in profile.get("selected_areas", [])
+            if isinstance(selection, dict)
+        }
+        if "rust_interop" not in selected_area_names:
+            raise ProfileError(
+                f"profile {profile.get('name')} omits the required Rust interop area"
+            )
+
+
+def required_rust_interop_suites() -> set[str]:
+    manifest = load_json(RUST_INTEROP_MANIFEST)
+    suites = manifest.get("suites") if isinstance(manifest, dict) else None
+    if not isinstance(suites, list) or not suites:
+        raise ProfileError("Rust interop area manifest has no suites")
+    names = {
+        str(suite["name"])
+        for suite in suites
+        if isinstance(suite, dict) and isinstance(suite.get("name"), str)
+    }
+    if len(names) != len(suites):
+        raise ProfileError("Rust interop area manifest has invalid or duplicate suites")
+    return names
 
 
 def _compiled_evidence_suites() -> set[str]:

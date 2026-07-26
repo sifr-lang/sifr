@@ -72,6 +72,18 @@
   },
   "selected_areas": [
     {
+      "area": "rust_interop",
+      "suites": [
+        "matrix",
+        "tiers",
+        "compatibility-matrix",
+        "stale-drafts"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
       "area": "coverage_matrix",
       "suites": [
         "readiness"

@@ -60,6 +60,26 @@ fixture evidence; they must not silently degrade to compile-only coverage.
 - `stale-drafts`: scans active planning and documentation paths for accepted
   examples of abandoned Rust interop syntax.
 
+Run the complete area directly with:
+
+```bash
+uv run --project verification --locked python -m sifr_verify areas run --area rust_interop
+```
+
+The authoritative create-PR, merge, nightly, and release profiles select all
+four suites and execute them through the `rust_interop_checks` legacy-facade
+step. Execute the create-PR profile with:
+
+```bash
+scripts/run_all_tests.sh --profile create-pr
+```
+
+Inspect the same profile's plan without executing it:
+
+```bash
+scripts/run_all_tests.sh --profile create-pr --emit-plan
+```
+
 ## Compatibility Categories
 
 - `supported`: positive and negative fixture evidence both pass for the stated

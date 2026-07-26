@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import json
 import os
 import resource
 import shutil
@@ -58,6 +59,94 @@ class Tee:
     def flush(self) -> None:
         for stream in self._streams:
             stream.flush()
+
+
+LEGACY_FACADE_STEPS_BEFORE_GENERATED = (
+    ("coverage_matrix_checks", "run_coverage_matrix_checks"),
+    ("core_guardrails", "run_core_guardrails"),
+    ("diagnostic_rules", "run_diagnostic_rules"),
+    ("cpython_differential", "run_cpython_differential_suites"),
+    ("python_interop", "run_python_interop_suites"),
+    ("rust_interop_checks", "run_rust_interop_checks"),
+    ("frontend_syntax_guardrails", "run_frontend_syntax_guardrails"),
+    ("developer_tooling_checks", "run_developer_tooling_checks"),
+    ("performance_budget_checks", "run_performance_budget_checks"),
+    ("verification_hardening_self_tests", "run_verification_hardening_self_tests"),
+    ("verification_runner_foundation", "run_verification_runner_foundation_checks"),
+    ("fuzz_property_checks", "run_fuzz_property_suites"),
+    ("algorithmic_compatibility_checks", "run_algorithmic_compatibility_suites"),
+    ("distribution_validation", "run_distribution_checks"),
+    ("sysroot_release_certification", "run_sysroot_release_checks"),
+)
+GENERATED_CODE_QUALITY_STEP = (
+    "generated_code_quality_checks",
+    "run_generated_code_quality_checks",
+)
+LEGACY_FACADE_STEPS_AFTER_GENERATED = (
+    ("crate_tests", "run_crate_tests"),
+    ("validation_suite_matrix", "run_validation_suites"),
+    ("runtime_platform_suites", "run_runtime_platform_suites"),
+    ("e2e_pass_suite", "run_e2e_pass_suite"),
+    ("verification_hardening_suites", "run_hardening_suites"),
+    ("extra_e2e_checks", "run_extra_e2e_checks"),
+)
+
+
+def legacy_facade_step_methods(profile: dict[str, Any]) -> list[tuple[str, str]]:
+    steps = list(LEGACY_FACADE_STEPS_BEFORE_GENERATED)
+    if legacy_facade(profile)["generated_code_quality"] != "none":
+        steps.append(GENERATED_CODE_QUALITY_STEP)
+    steps.extend(LEGACY_FACADE_STEPS_AFTER_GENERATED)
+    return steps
+
+
+def legacy_facade_step_names(profile: dict[str, Any]) -> set[str]:
+    return {name for name, _method_name in legacy_facade_step_methods(profile)}
+
+
+def validate_rust_interop_result(result_path: Path, expected_suites: list[str]) -> None:
+    if not result_path.is_file():
+        raise ProfileRunnerError(f"Rust interop area emitted no result JSON: {result_path}")
+    try:
+        payload = json.loads(result_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ProfileRunnerError(f"Rust interop area emitted invalid result JSON: {result_path}") from exc
+    if not isinstance(payload, dict) or payload.get("area") != "rust_interop":
+        raise ProfileRunnerError(f"Rust interop area emitted an invalid result document: {result_path}")
+    raw_suites = payload.get("suites")
+    if not isinstance(raw_suites, list):
+        raise ProfileRunnerError(f"Rust interop result JSON has no suite results: {result_path}")
+    for suite in raw_suites:
+        if (
+            not isinstance(suite, dict)
+            or suite.get("blocking") is not True
+            or not isinstance(suite.get("total_variants"), int)
+            or int(suite["total_variants"]) <= 0
+            or suite.get("total_failures") != 0
+        ):
+            raise ProfileRunnerError(
+                f"Rust interop result JSON contains invalid suite evidence: {result_path}"
+            )
+    actual_suites = {
+        str(suite.get("name"))
+        for suite in raw_suites
+        if isinstance(suite, dict) and isinstance(suite.get("name"), str)
+    }
+    if actual_suites != set(expected_suites):
+        raise ProfileRunnerError(
+            "Rust interop result JSON suite mismatch: "
+            f"expected={sorted(expected_suites)} actual={sorted(actual_suites)}"
+        )
+    summary = payload.get("summary")
+    if (
+        not isinstance(summary, dict)
+        or summary.get("blocking_failures") != 0
+        or not isinstance(summary.get("total_variants"), int)
+        or int(summary["total_variants"]) <= 0
+    ):
+        raise ProfileRunnerError(
+            f"Rust interop result JSON contains invalid blocking summary: {result_path}"
+        )
 
 
 def run_command(command: list[str], *, env: dict[str, str] | None = None) -> None:
@@ -157,34 +246,7 @@ class ProfileRunner:
         if self.execution_mode == "selected-areas-only":
             return self.run_selected_areas_only()
 
-        steps: list[tuple[str, Callable[[], None]]] = [
-            ("coverage_matrix_checks", self.run_coverage_matrix_checks),
-            ("core_guardrails", self.run_core_guardrails),
-            ("diagnostic_rules", self.run_diagnostic_rules),
-            ("cpython_differential", self.run_cpython_differential_suites),
-            ("python_interop", self.run_python_interop_suites),
-            ("frontend_syntax_guardrails", self.run_frontend_syntax_guardrails),
-            ("developer_tooling_checks", self.run_developer_tooling_checks),
-            ("performance_budget_checks", self.run_performance_budget_checks),
-            ("verification_hardening_self_tests", self.run_verification_hardening_self_tests),
-            ("verification_runner_foundation", self.run_verification_runner_foundation_checks),
-            ("fuzz_property_checks", self.run_fuzz_property_suites),
-            ("algorithmic_compatibility_checks", self.run_algorithmic_compatibility_suites),
-            ("distribution_validation", self.run_distribution_checks),
-            ("sysroot_release_certification", self.run_sysroot_release_checks),
-        ]
-        if self.generated_code_quality_mode != "none":
-            steps.append(("generated_code_quality_checks", self.run_generated_code_quality_checks))
-        steps.extend(
-            [
-                ("crate_tests", self.run_crate_tests),
-                ("validation_suite_matrix", self.run_validation_suites),
-                ("runtime_platform_suites", self.run_runtime_platform_suites),
-                ("e2e_pass_suite", self.run_e2e_pass_suite),
-                ("verification_hardening_suites", self.run_hardening_suites),
-                ("extra_e2e_checks", self.run_extra_e2e_checks),
-            ]
-        )
+        steps = self.legacy_facade_steps()
 
         for name, callback in steps:
             result = timed_step(name, callback)
@@ -194,6 +256,12 @@ class ProfileRunner:
             if budget_status != 0:
                 return budget_status
         return 0
+
+    def legacy_facade_steps(self) -> list[tuple[str, Callable[[], None]]]:
+        return [
+            (name, getattr(self, method_name))
+            for name, method_name in legacy_facade_step_methods(self.profile)
+        ]
 
     @property
     def execution_mode(self) -> str:
@@ -430,6 +498,27 @@ class ProfileRunner:
         for suite in suites:
             args.extend(["--suite", suite])
         run_command(uv_area_command(*args))
+
+    def run_rust_interop_checks(self) -> None:
+        suites = self.selected_suites_for_area("rust_interop")
+        if not suites:
+            print(f"Skipping Rust interop checks for lane {self.profile_name}")
+            return
+        print("Running Rust interop checks")
+        result_path = (
+            REPO_ROOT
+            / "target"
+            / "verification"
+            / "areas"
+            / f"rust-interop-{self.profile_name}-results.json"
+        )
+        result_path.unlink(missing_ok=True)
+        args = ["--area", "rust_interop"]
+        for suite in suites:
+            args.extend(["--suite", suite])
+        args.extend(["--result-json", str(result_path.relative_to(REPO_ROOT))])
+        run_command(uv_area_command(*args))
+        validate_rust_interop_result(result_path, suites)
 
     def run_frontend_syntax_guardrails(self) -> None:
         print("Running frontend and syntax guardrails")
