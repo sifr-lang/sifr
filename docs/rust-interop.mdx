@@ -6,7 +6,7 @@ description: "Expose Rust crates and bridge modules as checked Sifr declarations
 
 Rust interop lets a Sifr package expose Rust-backed declarations while keeping the same compile-time contracts as ordinary Sifr code. Sifr resolves targets through Cargo metadata, validates bridge-compatible signatures before final build, and reports Rust interop failures as `SIFR-RUST-*` diagnostics.
 
-Rust interop is source-level Cargo integration. It is not Rust ABI loading, `dlopen`, or a C FFI layer.
+Rust interop is source-level Cargo integration. It is not Rust ABI loading, `dlopen`, or a C FFI layer. {/* rust-interop-rejected */}
 
 For library-first walkthroughs, start with [blake3](/guides/interop/blake3) or [reqwest](/guides/interop/reqwest).
 
@@ -45,6 +45,17 @@ sifr repair
 ```
 
 `sifr repair --check` reports drift in Sifr-managed Cargo projection files. `sifr repair` regenerates only Sifr-owned projection metadata and does not overwrite user-authored bridge files under `src/bridges`.
+
+## Documenting Rejected Syntax
+
+Documentation must distinguish accepted Sifr from deliberately rejected
+historical syntax structurally. Open a rejected block with exactly
+`` ```sifr-rejected ``. For a stale spelling mentioned inline, place
+`{/* rust-interop-rejected */}` on that same physical line in MDX. Markdown
+files use `<!-- rust-interop-rejected -->` instead. Headings,
+surrounding prose, and words such as “no”, “stale”, or “rejected” do not mark an
+example as rejected. Accepted examples use `sifr` fences, and Sifr Rust
+decorators must never appear in `python` fences.
 
 ## Compatibility Evidence
 

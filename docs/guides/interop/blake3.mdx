@@ -12,7 +12,7 @@ blake3 produces a BLAKE3 digest, not SHA-1 or SHA-256. If you need those algorit
 
 ## Why this shape
 
-Rust interop is source-level Cargo integration. Sifr does not `dlopen` a Rust crate or invent a C ABI. You declare a Sifr function whose target is a Rust item, and the compiler checks that the Rust signature matches before codegen.
+Rust interop is source-level Cargo integration. Sifr does not `dlopen` a Rust crate or invent a C ABI. You declare a Sifr function whose target is a Rust item, and the compiler checks that the Rust signature matches before codegen. {/* rust-interop-rejected */}
 
 Three rules drive the blake3 declaration:
 

@@ -36,8 +36,8 @@ Phase 39 owns the full Rust interop implementation:
 - Python interop.
 - Raw C ABI interop.
 - Rust dynamic ABI loading.
-- Rejected `extern rust` syntax.
-- Rejected runtime `dlopen` of Rust functions.
+- Rejected `extern rust` syntax. <!-- rust-interop-rejected -->
+- Rejected runtime `dlopen` of Rust functions. <!-- rust-interop-rejected -->
 - Compatibility shims for earlier draft interop syntax.
 - Silent copy fallback for zero-copy APIs.
 - Hidden Tokio runtimes, generated `block_on`, or implicit offload.
@@ -74,11 +74,11 @@ remain future-owned.
   - Create `verification/areas/rust_interop`.
   - Add fixture matrix, tier definitions, README, and runner skeletons.
   - Add diagnostic family inventory and documentation placeholders for `SIFR-RUST-*`.
-  - Search active docs for stale Rust interop drafts and update or remove `extern rust`, `from rust import`, `native = [`, panic examples without `RustPanicError` or explicit panic policy, `@rust(crate=..., path=...)`, and Python code fences for Sifr interop examples.
+  - Search active docs for stale Rust interop drafts and update or remove `extern rust`, `from rust import`, `native = [`, panic examples without `RustPanicError` or explicit panic policy, `@rust(crate=..., path=...)`, and Python code fences for Sifr interop examples. <!-- rust-interop-rejected -->
 - Definition of done:
   - The verification area exists and names every fixture required by the design.
   - The architecture document and phase file agree on supported capabilities and rejected designs.
-  - No old `extern rust`, Rust `dlopen`, or fallback syntax remains in active planning docs.
+  - No old `extern rust`, Rust `dlopen`, or fallback syntax remains in active planning docs. <!-- rust-interop-rejected -->
 
 ### milestone_39_1: Declaration Syntax, Lowering, and Build Plan Metadata
 

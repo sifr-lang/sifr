@@ -6,7 +6,7 @@ description: "Configure and use embedded CPython from Sifr with explicit environ
 
 Sifr can embed one uv-created CPython environment in a compiled application. Use it to call installed Python packages while keeping Sifr contracts: fallible work returns `Result`, Python objects are opaque and non-send by default, native extensions need explicit trust, and zero-copy APIs never silently copy.
 
-This is not Python source compatibility and not a generic `dlopen` layer. Prefer `sifr.*` for Sifr code; use `sifr.python` only when you intentionally cross into Python packages.
+This is not Python source compatibility and not a generic `dlopen` layer. Prefer `sifr.*` for Sifr code; use `sifr.python` only when you intentionally cross into Python packages. {/* rust-interop-rejected */}
 
 For library-first walkthroughs, start with [schwifty](/guides/interop/schwifty), [NumPy](/guides/interop/numpy), or [kafka-python](/guides/interop/kafka).
 

@@ -27,11 +27,11 @@ Sifr user code
   -> Rust implementation crate
 ```
 
-Sifr does not use Rust's private ABI, `dlopen` Rust functions, or call arbitrary symbols. Rust interop is source-level integration through Cargo.
+Sifr does not use Rust's private ABI, `dlopen` Rust functions, or call arbitrary symbols. Rust interop is source-level integration through Cargo. <!-- rust-interop-rejected -->
 
 ## Non-Goals
 
-- No `extern rust` language lane.
+- No `extern rust` language lane. <!-- rust-interop-rejected -->
 - No Deno-style runtime dynamic-library layer for Rust.
 - No Rust native ABI dynamic linking.
 - No raw pointers, arbitrary Rust lifetimes, trait objects, unconstrained generics, closures, or `unsafe fn` in the public Sifr-facing bridge contract.
@@ -41,6 +41,15 @@ Sifr does not use Rust's private ABI, `dlopen` Rust functions, or call arbitrary
 - No fallback behavior when bridge checking fails; the diagnostic must name the rejected contract and the required declaration or bridge fix.
 
 Raw C ABI interop is a separate unsafe lane. Python interop is a separate embedded CPython lane. Rust crates that call C internally remain normal Rust backend crates from Sifr's perspective.
+
+Rejected historical syntax in active documentation is explicit rather than
+inferred from nearby prose. Block examples open with exactly
+`` ```sifr-rejected ``. Inline mentions carry
+`<!-- rust-interop-rejected -->` on the same
+physical line in Markdown and `{/* rust-interop-rejected */}` in MDX; the
+suffix-specific forms keep both renderers valid. Accepted `sifr` examples never
+inherit rejection state from a heading or paragraph, and `python` fences
+cannot contain Sifr Rust decorators.
 
 ## User Model
 
