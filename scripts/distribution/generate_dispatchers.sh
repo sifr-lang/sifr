@@ -122,6 +122,18 @@ channel_version_from_metadata() {
   sed -n 's/.*"'\${channel}'"[[:space:]]*:[[:space:]]*"\\([^"]*\\)".*/\\1/p' "\${metadata_file}" | head -n 1
 }
 
+validate_preview_release_index() {
+  metadata_file="\$1"
+  grep -Eq '"schema_version"[[:space:]]*:[[:space:]]*2([,}]|[[:space:]]*$)' "\${metadata_file}" ||
+    fail "channel metadata schema_version must be integer 2"
+  grep -Eq '"generation"[[:space:]]*:[[:space:]]*[1-9][0-9]*' "\${metadata_file}" ||
+    fail "channel metadata generation must be positive"
+  grep -Eq '"ga_status"[[:space:]]*:[[:space:]]*"preview"' "\${metadata_file}" ||
+    fail "stable channel installs are disabled until GA activation"
+  grep -Eq '"releases"[[:space:]]*:' "\${metadata_file}" ||
+    fail "channel metadata releases are missing"
+}
+
 env_channel="\${SIFR_CHANNEL:-}"
 arg_channel=""
 version_pin=""
@@ -186,6 +198,7 @@ else
   if ! download "\${metadata_url}" "\${metadata_path}"; then
     fail "channel metadata unavailable: \${metadata_url}"
   fi
+  validate_preview_release_index "\${metadata_path}"
   resolved_version="\$(channel_version_from_metadata "\${resolved_channel}" "\${metadata_path}")"
   [ -n "\${resolved_version}" ] || fail "channel \${resolved_channel} missing from metadata"
   configured_version_channel="\$(preview_channel_for_version "\${resolved_version}")"

@@ -24,11 +24,11 @@
     "name": { "const": "sifr" },
     "version": {
       "type": "string",
-      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+-(alpha|beta|rc)\\.[0-9]+$"
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-(?:alpha|beta)\\.[0-9]+)?$"
     },
     "channel": {
       "type": "string",
-      "enum": ["alpha", "beta", "rc"]
+      "enum": ["alpha", "beta", "stable"]
     },
     "target": { "type": "string", "minLength": 1 },
     "install_dir": { "type": "string", "minLength": 1 },
@@ -37,7 +37,7 @@
     "sysroot_schema_version": { "const": 1 },
     "sysroot_sifr_version": {
       "type": "string",
-      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+-(alpha|beta|rc)\\.[0-9]+$"
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-(?:alpha|beta)\\.[0-9]+)?$"
     },
     "sysroot_target_triple": { "type": "string", "minLength": 1 },
     "sysroot_content_sha256": {

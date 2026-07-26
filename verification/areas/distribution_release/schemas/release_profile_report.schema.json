@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sifr.sh/schemas/release-profile-report-v2.json",
+  "title": "Sifr canonical release profile report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "report_id",
+    "source",
+    "profile",
+    "command",
+    "toolchain",
+    "overall_status",
+    "steps",
+    "result_artifacts"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "report_id": {"type": "string", "minLength": 1},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit", "clean", "unresolved", "submodules"],
+      "properties": {
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "clean": {"const": true},
+        "unresolved": {"const": false},
+        "submodules": {
+          "type": "object",
+          "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+        }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "manifest_sha256", "expanded_selected_areas"],
+      "properties": {
+        "name": {"const": "release"},
+        "manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "expanded_selected_areas": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["area", "suites"],
+            "properties": {
+              "area": {"type": "string", "minLength": 1},
+              "suites": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+            }
+          }
+        }
+      }
+    },
+    "command": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rustc", "cargo", "uv", "python"],
+      "properties": {
+        "rustc": {"type": "string", "minLength": 1},
+        "cargo": {"type": "string", "minLength": 1},
+        "uv": {"type": "string", "minLength": 1},
+        "python": {"type": "string", "minLength": 1}
+      }
+    },
+    "overall_status": {"const": "pass"},
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "status", "elapsed_ms", "suite_results"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "status": {"const": "pass"},
+          "elapsed_ms": {"type": "integer", "minimum": 0},
+          "suite_results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["area", "suite", "status", "case_ids", "result_artifact_sha256"],
+              "properties": {
+                "area": {"type": "string", "minLength": 1},
+                "suite": {"type": "string", "minLength": 1},
+                "status": {"const": "pass"},
+                "case_ids": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {"type": "string", "minLength": 1}
+                },
+                "result_artifact_sha256": {"$ref": "#/$defs/sha256"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "result_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"$ref": "#/$defs/sha256"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}
+    }
+  }
+}

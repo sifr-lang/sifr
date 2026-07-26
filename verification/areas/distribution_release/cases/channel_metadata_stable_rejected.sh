@@ -13,10 +13,7 @@ trap cleanup EXIT HUP INT TERM
 install_root="${tmp_dir}/install"
 channels_file="${tmp_dir}/channels.json"
 make_self_update_install_root_fixture "${install_root}" "0.1.0-alpha.4" "0.1.0-beta.7"
-"${REPO_ROOT}/scripts/distribution/generate_channel_metadata.sh" \
-  --out "${channels_file}" \
-  --alpha-version "0.1.0-alpha.4" \
-  --beta-version "0.1.0-beta.7" >/dev/null
+generate_channel_metadata_fixture "${channels_file}" "0.1.0-alpha.4" "0.1.0-beta.7"
 
 python3 - "${channels_file}" <<'PY'
 import json
@@ -30,7 +27,7 @@ path.write_text(json.dumps(metadata, indent=2) + "\n")
 PY
 
 require_failure_contains \
-  "stable channel metadata is disabled until stable channels are supported" \
+  "$.channels: unknown field(s): stable" \
   "${REPO_ROOT}/verification/areas/distribution_release/tools/validate_self_update_metadata.sh" \
     --install-root "${install_root}" \
     --channels-file "${channels_file}"

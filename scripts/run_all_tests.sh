@@ -21,6 +21,7 @@ Profiles:
 
 Options:
   --profile <name>                            Validation profile (default: merge)
+  --release-report-out <path>                 Write immutable release evidence (release only)
   --emit-plan                                 Print the selected profile execution plan and exit
   --help                                      Show this help
 
@@ -31,10 +32,12 @@ EOF
 PROFILE="${SIFR_TEST_PROFILE:-merge}"
 EMIT_PLAN=0
 FORWARD_ARGS=()
+RELEASE_REPORT_OUT=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --profile)
+      [[ $# -ge 2 && -n "${2:-}" ]] || { echo "error: --profile requires a value" >&2; exit 2; }
       PROFILE="${2:-}"
       shift 2
       ;;
@@ -45,6 +48,11 @@ while [[ $# -gt 0 ]]; do
     --emit-plan)
       EMIT_PLAN=1
       shift
+      ;;
+    --release-report-out)
+      [[ $# -ge 2 && -n "${2:-}" ]] || { echo "error: --release-report-out requires a path" >&2; exit 2; }
+      RELEASE_REPORT_OUT="${2:-}"
+      shift 2
       ;;
     *)
       FORWARD_ARGS+=("$1")
@@ -101,8 +109,18 @@ if [[ "${EMIT_PLAN}" -eq 1 ]]; then
 fi
 
 if [[ "${#FORWARD_ARGS[@]}" -gt 0 ]]; then
+  profile_args=(profiles run --profile "${PROFILE}")
+  if [[ -n "${RELEASE_REPORT_OUT}" ]]; then
+    profile_args+=(--release-report-out "${RELEASE_REPORT_OUT}")
+  fi
   exec uv run --project "${SCRIPT_DIR}/../verification" --locked \
-    python -m sifr_verify profiles run --profile "${PROFILE}" -- "${FORWARD_ARGS[@]}"
+    python -m sifr_verify "${profile_args[@]}" -- "${FORWARD_ARGS[@]}"
+fi
+
+if [[ -n "${RELEASE_REPORT_OUT}" ]]; then
+  exec uv run --project "${SCRIPT_DIR}/../verification" --locked \
+    python -m sifr_verify profiles run --profile "${PROFILE}" \
+    --release-report-out "${RELEASE_REPORT_OUT}"
 fi
 
 exec uv run --project "${SCRIPT_DIR}/../verification" --locked \

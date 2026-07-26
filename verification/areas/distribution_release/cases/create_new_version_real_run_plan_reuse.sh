@@ -14,7 +14,7 @@ site_repo="${tmp_dir}/site"
 binary="${tmp_dir}/sifr"
 sysroot_root="${tmp_dir}/mock-sysroot"
 work_dir="${tmp_dir}/work"
-version="0.1.0-beta.3"
+version="0.1.0-beta.9"
 make_site_repo_fixture "${site_repo}"
 make_mock_binary "${binary}" "create new version real run"
 make_mock_sysroot_root "${sysroot_root}"
@@ -34,6 +34,7 @@ real_output="$("${REPO_ROOT}/scripts/distribution/create_new_version.sh" \
   --real-run \
   --site-repo "${site_repo}" \
   --work-dir "${work_dir}" \
+  --release-index "${site_repo}/apps/sifr-site/public/install/channels.json" \
   --binary "${binary}" \
   --sysroot-root "${sysroot_root}" \
   --mutation-mode local)"
@@ -46,7 +47,15 @@ real_sha="$(printf '%s\n' "${real_output}" | sed -n 's/^plan_sha256=//p')"
   exit 1
 }
 
-grep -q "\"beta\": \"${version}\"" "${work_dir}/channels.json"
+python3 - "${work_dir}/channels.json" "${version}" <<'PY'
+import json
+import pathlib
+import sys
+
+metadata = json.loads(pathlib.Path(sys.argv[1]).read_text())
+if metadata["channels"]["beta"] != sys.argv[2]:
+    raise SystemExit("beta channel did not advance")
+PY
 test ! -e "${site_repo}/apps/sifr-site/public/install/metadata/channels.json"
 grep -q "APP_VERSION=\"${version}\"" "${work_dir}/sifr-installer-${version}"
 grep -q 'CHANNEL_METADATA_URL="https://github.com/sifr-lang/sifr/releases/download/channels/channels.json"' \

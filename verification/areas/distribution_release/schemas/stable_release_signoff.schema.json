@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sifr.sh/schemas/stable-release-signoff-v2.json",
+  "title": "Sifr protected stable release sign-off",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "version",
+    "plan_sha256",
+    "attempts",
+    "published_assets",
+    "marketplace",
+    "channel_generation",
+    "site_facts_sha256",
+    "post_publication_smoke"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "plan_sha256": {"$ref": "#/$defs/sha256"},
+    "attempts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/attempt"}
+    },
+    "published_assets": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/sha256"}
+    },
+    "marketplace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["publisher", "extension", "version", "vsix_sha256"],
+      "properties": {
+        "publisher": {"type": "string"},
+        "extension": {"type": "string"},
+        "version": {"type": "string"},
+        "vsix_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "channel_generation": {"type": "integer", "minimum": 1},
+    "site_facts_sha256": {"$ref": "#/$defs/sha256"},
+    "post_publication_smoke": {
+      "type": "array",
+      "minItems": 4,
+      "items": {"$ref": "#/$defs/evidence"}
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}},
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "sha256"],
+      "properties": {
+        "id": {"type": "string"},
+        "status": {"const": "pass"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "mode", "approver", "status", "mutations"],
+      "properties": {
+        "run_id": {"type": "integer", "minimum": 1},
+        "mode": {"enum": ["initial", "resume"]},
+        "approver": {"type": "string", "minLength": 1},
+        "status": {"enum": ["started", "failed", "completed"]},
+        "mutations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "identity", "sha256"],
+            "properties": {
+              "kind": {"type": "string"},
+              "identity": {"type": "string"},
+              "sha256": {"$ref": "#/$defs/sha256"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

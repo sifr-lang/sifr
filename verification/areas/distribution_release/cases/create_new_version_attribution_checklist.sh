@@ -14,7 +14,7 @@ site_repo="${tmp_dir}/site"
 binary="${tmp_dir}/sifr"
 sysroot_root="${tmp_dir}/mock-sysroot"
 work_dir="${tmp_dir}/work"
-version="0.1.0-beta.4"
+version="0.1.0-beta.8"
 make_site_repo_fixture "${site_repo}"
 make_mock_binary "${binary}" "attribution fixture"
 make_mock_sysroot_root "${sysroot_root}"
@@ -25,6 +25,7 @@ make_mock_sysroot_root "${sysroot_root}"
   --real-run \
   --site-repo "${site_repo}" \
   --work-dir "${work_dir}" \
+  --release-index "${site_repo}/apps/sifr-site/public/install/channels.json" \
   --binary "${binary}" \
   --sysroot-root "${sysroot_root}" \
   --mutation-mode local >/dev/null

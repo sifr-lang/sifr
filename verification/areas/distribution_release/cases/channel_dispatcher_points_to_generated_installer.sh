@@ -24,10 +24,10 @@ build_mock_preview_artifacts "${version}" "${artifact_dir}" "${binary}"
   --artifact-dir "${artifact_dir}" \
   --out "${release_root}/${version}/sifr-installer-${version}" \
   --artifact-base-url "file://${artifact_dir}" >/dev/null
-"${REPO_ROOT}/scripts/distribution/generate_channel_metadata.sh" \
-  --out "${tmp_dir}/channels.json" \
-  --alpha-version "0.1.0-alpha.1" \
-  --beta-version "${version}" >/dev/null
+generate_channel_metadata_fixture \
+  "${tmp_dir}/channels.json" \
+  "0.1.0-alpha.1" \
+  "${version}"
 "${REPO_ROOT}/scripts/distribution/generate_dispatchers.sh" \
   --install-root "${install_root}" \
   --channel-metadata-url "file://${tmp_dir}/channels.json" \

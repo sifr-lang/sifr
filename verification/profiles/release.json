@@ -212,7 +212,17 @@
     {
       "area": "distribution_release",
       "suites": [
-        "full"
+        "full",
+        "evidence-custody"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
+      "area": "documentation",
+      "suites": [
+        "structure"
       ],
       "resource_classes": [
         "default-local"

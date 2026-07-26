@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sifr.sh/schemas/self-update-plan-v2.json",
+  "title": "Sifr self-update plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "current_version",
+    "target_version",
+    "receipt_channel",
+    "requested_channel",
+    "resolved_channel",
+    "install_dir",
+    "binary_path",
+    "sysroot_path",
+    "installer_url",
+    "action",
+    "force",
+    "would_run_installer",
+    "warnings"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "current_version": {"$ref": "#/$defs/version"},
+    "target_version": {"$ref": "#/$defs/version"},
+    "receipt_channel": {"$ref": "#/$defs/channel"},
+    "requested_channel": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/channel"}
+      ]
+    },
+    "resolved_channel": {"$ref": "#/$defs/channel"},
+    "install_dir": {"type": "string", "minLength": 1},
+    "binary_path": {"type": "string", "minLength": 1},
+    "sysroot_path": {"type": "string", "minLength": 1},
+    "installer_url": {"type": "string", "minLength": 1},
+    "action": {"enum": ["no_op", "update", "reinstall", "downgrade", "channel_switch"]},
+    "force": {"type": "boolean"},
+    "would_run_installer": {"type": "boolean"},
+    "warnings": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "channel": {"enum": ["alpha", "beta", "stable"]},
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-(?:alpha|beta)\\.[0-9]+)?$"
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sifr.sh/schemas/stable-site-release-facts-v2.json",
+  "title": "Derived Sifr stable site release facts",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generation",
+    "stable_version",
+    "stable_status",
+    "source_plan_sha256",
+    "release_index_sha256",
+    "dispatchers",
+    "withdrawals"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "generation": {"type": "integer", "minimum": 1},
+    "stable_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "stable_status": {"const": "active"},
+    "source_plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}},
+    "release_index_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}},
+    "dispatchers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "stable", "alpha", "beta"],
+      "properties": {
+        "index": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}},
+        "stable": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}},
+        "alpha": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}},
+        "beta": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}}
+      }
+    },
+    "withdrawals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["version", "incident_id"],
+        "properties": {
+          "version": {"type": "string"},
+          "incident_id": {"type": "string"}
+        }
+      }
+    }
+  }
+}

@@ -30,6 +30,7 @@ PROFILE_STEP_NAMES = {
     "rust_interop_checks",
     "frontend_syntax_guardrails",
     "developer_tooling_checks",
+    "documentation_checks",
     "performance_budget_checks",
     "verification_hardening_self_tests",
     "verification_runner_foundation",
@@ -134,6 +135,17 @@ def legacy_facade(profile: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(legacy, dict):
         raise ProfileError(f"profile {profile.get('name')} is missing legacy_facade")
     return legacy
+
+
+def selected_suites_for_area(profile: dict[str, Any], area_name: str) -> list[str]:
+    suites: list[str] = []
+    for selection in profile.get("selected_areas", []):
+        if not isinstance(selection, dict) or selection.get("area") != area_name:
+            continue
+        raw_suites = selection.get("suites", [])
+        if isinstance(raw_suites, list):
+            suites.extend(str(suite) for suite in raw_suites)
+    return suites
 
 
 def validate_selected_area_suites(profile: dict[str, Any]) -> None:
@@ -359,6 +371,7 @@ def shell_exports(profile: dict[str, Any]) -> dict[str, Any]:
     matrix_suites = legacy["matrix_suites"]
     hardening_suites = legacy["hardening_suites"]
     tooling_suites = legacy["tooling_suites"]
+    documentation_suites = selected_suites_for_area(profile, "documentation")
     extra_checks = legacy["extra_checks"]
     fixture_manifest = resolve_fixture_manifest(str(e2e.get("fixture_manifest", "")))
     return {
@@ -371,6 +384,7 @@ def shell_exports(profile: dict[str, Any]) -> dict[str, Any]:
         "MEMORY_POLICY": legacy["memory_policy"],
         "VALIDATION_SUITES": ",".join(matrix_suites),
         "TOOLING_SUITES": ",".join(tooling_suites),
+        "DOCUMENTATION_SUITES": ",".join(documentation_suites),
         "DISTRIBUTION_MODE": legacy["distribution"],
         "GENERATED_CODE_QUALITY_MODE": legacy["generated_code_quality"],
         "PERFORMANCE_BUDGET_MODE": legacy["performance_budget"],
@@ -426,6 +440,14 @@ def print_summary(requested_profile: str) -> None:
         + (", ".join(legacy["hardening_suites"]) if legacy["hardening_suites"] else "none")
     )
     print("  tooling_suites=" + (", ".join(legacy["tooling_suites"]) if legacy["tooling_suites"] else "none"))
+    print(
+        "  documentation_suites="
+        + (
+            ", ".join(selected_suites_for_area(profile, "documentation"))
+            if selected_suites_for_area(profile, "documentation")
+            else "none"
+        )
+    )
     print(f"  distribution={legacy['distribution']}")
     print(f"  generated_code_quality={legacy['generated_code_quality']}")
     print(f"  performance_budget={legacy['performance_budget']}")
@@ -466,6 +488,7 @@ def build_profile_plan(profile_name: str) -> dict[str, Any]:
         "legacy_facade": {
             "matrix_suites": list(legacy["matrix_suites"]),
             "tooling_suites": list(legacy["tooling_suites"]),
+            "documentation_suites": selected_suites_for_area(profile, "documentation"),
             "distribution": legacy["distribution"],
             "generated_code_quality": legacy["generated_code_quality"],
             "performance_budget": legacy["performance_budget"],
@@ -544,7 +567,11 @@ def run_command(argv: list[str]) -> int:
     if command == "run":
         from .profile_runner import run_profile
 
-        return run_profile(profile_name, _forward_args(argv[1:]))
+        return run_profile(
+            profile_name,
+            _forward_args(argv[1:]),
+            release_report_out=_optional_arg(argv[1:], "--release-report-out"),
+        )
     print(f"unsupported profiles command: {command}", file=sys.stderr)
     return 2
 
@@ -568,3 +595,14 @@ def _path_arg(argv: list[str], flag: str) -> str:
         if value == flag and index + 1 < len(argv):
             return argv[index + 1]
     raise ProfileError(f"{flag} is required")
+
+
+def _optional_arg(argv: list[str], flag: str) -> str | None:
+    values = [
+        argv[index + 1]
+        for index, value in enumerate(argv)
+        if value == flag and index + 1 < len(argv)
+    ]
+    if len(values) > 1:
+        raise ProfileError(f"{flag} may be provided only once")
+    return values[0] if values else None

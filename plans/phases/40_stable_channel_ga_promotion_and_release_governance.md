@@ -1,6 +1,6 @@
 # Phase 40: Stable Channel GA Promotion and Release Governance
 
-status: implementation-ready
+status: in-progress
 
 ## Objective
 
