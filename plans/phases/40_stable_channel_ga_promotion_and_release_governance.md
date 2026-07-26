@@ -50,15 +50,22 @@ Phase 40 consumes these completed or canonical upstream contracts:
   and its distinction between `supported`, `supported-through-bridge`,
   `unsupported-by-design`, and `future-owned-by-separate-phase`.
 - The release-facing prerequisites in
-  `plans/issues/active/rust-interop-verification-matrix-hardening.md`
+  `plans/issues/archive/rust-interop-verification-matrix-hardening.md`
   (`hardening_1` through `hardening_4`) and
   `plans/issues/active/rust-interop-runtime-ecosystem-certification.md`
   (`certification_0`). Before `milestone_40_0` begins, those items must have
   wired Rust-interop checks into all authoritative profiles and created
   `verification/areas/rust_interop/data/stable_support_claims.json` plus its
   stable-candidate validator. Phase 40 consumes those artifacts and owns
-  registering the validator as the `rust_interop` `stable-candidate` suite; it
-  does not substitute prose checks for them.
+  registering the validator as the `rust_interop` `stable-candidate` suite and
+  selecting that suite in create-PR, merge, nightly, and release. The
+  Rust-interop profile contract requires every registered suite in every
+  authoritative profile; Phase 40 must not make `stable-candidate`
+  release-only or substitute prose checks for it. The four hardening
+  implementation items are merged through
+  [PR #3023](https://github.com/sifr-lang/sifr/pull/3023);
+  `certification_0` remains the unmerged prerequisite that must create and
+  validate the stable-claim artifacts.
 
 Phase 40 does not complete deferred Rust ecosystem certification. It may
 advertise only the exact Rust interop surfaces whose current compatibility
@@ -410,9 +417,12 @@ verification inventory before mutation-capable work begins.
   `legacy_facade.tooling_suites=["full"]` expands to and executes
   `editor-release`; do not add a duplicate `editor-release` selection.
 - Add `rust_interop` `stable-candidate` to the inherited executable
-  Rust-interop release-profile step. Confirm, rather than re-add, the existing
-  `distribution_release` `full` execution and the four structural Rust-interop
-  suites. Do not create a Phase-40-only profile.
+  Rust-interop step in create-PR, merge, nightly, and release. Confirm, rather
+  than re-add, the existing `distribution_release` `full` execution and the
+  four structural Rust-interop suites. The governed release report remains the
+  stable-candidate authority for a concrete release, but suite registration
+  must preserve the all-profiles Rust-interop contract. Do not create a
+  Phase-40-only profile.
 - Inventory every current stable gate in workflows, distribution scripts,
   dispatchers, Rust self-update code, receipt validation, docs, and tests.
 - Record the canonical owner and target disposition for every gate.
@@ -451,8 +461,9 @@ verification inventory before mutation-capable work begins.
   evidence, contains more than one candidate/incident request, uses an invalid
   path, or differs from any recorded artifact digest.
 - The stable-gate inventory has no unowned entry.
-- The `release` profile visibly executes the Rust-interop step and all four
-  structural suites plus `stable-candidate`.
+- Create-PR, merge, nightly, and release visibly execute the Rust-interop step
+  with all four structural suites plus `stable-candidate`; the governed
+  `release` report records the concrete stable-candidate verdict.
 - The release report contains passing `full/editor-release:*` case evidence
   exactly once. A runner self-test selects `documentation` `structure` and
   proves that

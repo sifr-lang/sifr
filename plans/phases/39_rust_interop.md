@@ -2,7 +2,7 @@
 
 status: completed, audited
 
-> Phase 39 closed on 2026-06-22 through PRs #2702-#2728 and closeout [PR #2729](https://github.com/sifr-lang/sifr/pull/2729). Runtime/ecosystem certification beyond the supported matrix remains tracked by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md), and non-blocking verifier hardening is tracked by [`plans/issues/active/rust-interop-verification-matrix-hardening.md`](../issues/active/rust-interop-verification-matrix-hardening.md).
+> Phase 39 closed on 2026-06-22 through PRs #2702-#2728 and closeout [PR #2729](https://github.com/sifr-lang/sifr/pull/2729). Runtime/ecosystem certification beyond the supported matrix remains tracked by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md). Verification-matrix hardening completed through [PR #3018](https://github.com/sifr-lang/sifr/pull/3018), [#3019](https://github.com/sifr-lang/sifr/pull/3019), [#3020](https://github.com/sifr-lang/sifr/pull/3020), [#3022](https://github.com/sifr-lang/sifr/pull/3022), and [#3023](https://github.com/sifr-lang/sifr/pull/3023), with its final review and validation recorded in the [archived closeout](../issues/archive/rust-interop-verification-matrix-hardening.md).
 
 ## Objective
 Deliver production-grade Rust interop as declaration-level Cargo integration.
@@ -272,7 +272,7 @@ Status: merged in [PR #2726](https://github.com/sifr-lang/sifr/pull/2726); focus
 
 ### milestone_39_13: Ecosystem Certification and Closeout
 
-Status: merged in [PR #2728](https://github.com/sifr-lang/sifr/pull/2728); local `create-pr` validation passed with only the warm wall-time advisory, focused post-review validation passed for taxonomy, Rust interop matrix checks, and completion-quality helpers, and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-13-review-round5.md`. Non-blocking verification-matrix hardening follow-ups are tracked by [`plans/issues/active/rust-interop-verification-matrix-hardening.md`](../issues/active/rust-interop-verification-matrix-hardening.md).
+Status: merged in [PR #2728](https://github.com/sifr-lang/sifr/pull/2728); local `create-pr` validation passed with only the warm wall-time advisory, focused post-review validation passed for taxonomy, Rust interop matrix checks, and completion-quality helpers, and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-13-review-round5.md`. The verification-matrix hardening follow-up completed through [PR #3018](https://github.com/sifr-lang/sifr/pull/3018), [#3019](https://github.com/sifr-lang/sifr/pull/3019), [#3020](https://github.com/sifr-lang/sifr/pull/3020), [#3022](https://github.com/sifr-lang/sifr/pull/3022), and [#3023](https://github.com/sifr-lang/sifr/pull/3023); its final review and validation are recorded in the [archived closeout](../issues/archive/rust-interop-verification-matrix-hardening.md).
 
 - Scope:
   - Certify representative packages across direct binding, local bridge, shared bridge, opaque handle, zero-copy, async, callbacks, build script, proc macro, native link, and locked/offline Cargo behavior.

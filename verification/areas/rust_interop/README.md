@@ -120,6 +120,12 @@ Inspect the same profile's plan without executing it:
 scripts/run_all_tests.sh --profile create-pr --emit-plan
 ```
 
+The create-PR profile's `rust_interop_checks` step has a blocking 5,000 ms
+budget. Post-`hardening_4` authoritative measurements were 3,244 ms in the
+create-PR gate and 3,479 ms in the merge gate for all eight cases. Changes to
+the selected suites require a complete-area measurement and a same-change
+budget adjustment when the current headroom is insufficient.
+
 ## Compatibility Categories
 
 - `supported`: positive and negative fixture evidence both pass for the stated

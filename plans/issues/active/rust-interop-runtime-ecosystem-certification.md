@@ -4,6 +4,16 @@
 
 Active follow-up created by Phase 39 closeout.
 
+The verification-hardening dependency is complete through
+[`hardening_4`](../archive/rust-interop-verification-matrix-hardening.md#hardening_4-replace-lexical-rejection-context):
+[PRs #3018](https://github.com/sifr-lang/sifr/pull/3018),
+[#3019](https://github.com/sifr-lang/sifr/pull/3019),
+[#3020](https://github.com/sifr-lang/sifr/pull/3020),
+[#3022](https://github.com/sifr-lang/sifr/pull/3022), and
+[#3023](https://github.com/sifr-lang/sifr/pull/3023) are merged.
+`certification_0` may start. The row implementation sequence remains blocked
+until `certification_0` completes the remaining pre-row entry criteria below.
+
 This issue has two tracks:
 
 - Track A certifies every currently deferred runtime/ecosystem surface needed
@@ -39,11 +49,13 @@ fallback.
 ## Entry Criteria
 
 Track A implementation starts only after
-[`rust-interop-verification-matrix-hardening.md`](rust-interop-verification-matrix-hardening.md)
+[`rust-interop-verification-matrix-hardening.md`](../archive/rust-interop-verification-matrix-hardening.md)
 items `hardening_1` through `hardening_4` have merged. Those items make the
 Rust-interop area authoritative, define tier/execution-kind rules, bind
 support claims to executable local-lane evidence, and replace ambiguous
-stale-syntax exemptions.
+stale-syntax exemptions. This dependency is satisfied; the current baseline
+is 34 fixture rows, 34 compatibility rows, 34 schema-v2 fixture manifests, 47
+passing evidence directions, and 21 planned directions.
 
 Before the first Track A row PR:
 
@@ -134,9 +146,9 @@ normative and must not be broadened.
 This PR lands after hardening items `hardening_1` through `hardening_4` and
 before any row implementation.
 
-- Phase 40 `milestone_40_1` is downstream of both `hardening_1` and this item:
-  `hardening_1` makes its required release-profile Rust-interop suites execute,
-  and this item supplies the stable-candidate claim check.
+- Phase 40 `milestone_40_0` is downstream of both `hardening_1` and this item:
+  `hardening_1` makes its inherited Rust-interop suites execute, and this item
+  supplies the stable-candidate claim check that milestone registers.
 - Add `zero_copy_runtime_matrix` and `advanced_data_runtime_matrix` to both
   matrices, tier metadata, fixture directories, validator inventories, and
   architecture/public docs with both evidence directions `planned`.
@@ -152,11 +164,16 @@ before any row implementation.
   Phase 40 digests into its canonical `stable-release-plan.json`; it is not a
   second release-plan authority. The governed Phase 40 release plan remains
   authoritative for a concrete stable candidate.
+- Phase 40 must register the eventual `stable-candidate` suite in create-PR,
+  merge, nightly, and release together. Rust-interop profile validation
+  requires every registered area suite in every authoritative profile; a
+  release-only selection would make all four profiles invalid.
 - Add a stable-candidate mode that fails when public stable docs advertise a
   row absent from the claims file or advertise runtime support through a
   contract-only row.
-- Update Phase 40 `milestone_40_1`, its promotion checklist, and
-  `milestone_40_4` activation gate to execute the stable-candidate check. Do
+- Confirm Phase 40 `milestone_40_0` registers the stable-candidate suite in all
+  four authoritative profiles, `milestone_40_1` consumes its result during
+  qualification, and the `milestone_40_4` documentation gate executes it. Do
   not make all development builds fail merely because honest future-owned rows
   remain unadvertised.
 
