@@ -13,8 +13,8 @@ from .profiles import (
     failure_reproduction_command,
     legacy_facade,
     load_all_profiles,
-    selected_resource_classes,
     required_rust_interop_suites,
+    selected_resource_classes,
     validate_crate_test_membership,
     validate_selected_area_suites,
 )
@@ -337,7 +337,9 @@ def _rust_interop_profile_self_test() -> None:
             raise AssertionError("missing Rust interop result JSON was accepted")
 
         valid_payload = {
+            "schema_version": 1,
             "area": "rust_interop",
+            "bless": False,
             "suites": [
                 {
                     "name": suite,
@@ -356,12 +358,50 @@ def _rust_interop_profile_self_test() -> None:
         validate_rust_interop_result(result_path, sorted(required_suites))
 
         invalid_payloads = [
+            {**valid_payload, "schema_version": 2},
             {**valid_payload, "area": "python_interop"},
+            {**valid_payload, "bless": True},
             {**valid_payload, "suites": valid_payload["suites"][:-1]},
             {**valid_payload, "suites": "not-a-list"},
             {
                 **valid_payload,
                 "summary": {"blocking_failures": 1, "total_variants": len(required_suites)},
+            },
+            {
+                **valid_payload,
+                "suites": [
+                    {**valid_payload["suites"][0], "blocking": False},
+                    *valid_payload["suites"][1:],
+                ],
+            },
+            {
+                **valid_payload,
+                "suites": [
+                    {**valid_payload["suites"][0], "total_failures": 1},
+                    *valid_payload["suites"][1:],
+                ],
+            },
+            {
+                **valid_payload,
+                "suites": [
+                    {**valid_payload["suites"][0], "total_variants": 0},
+                    *valid_payload["suites"][1:],
+                ],
+            },
+            {
+                **valid_payload,
+                "suites": [
+                    {**valid_payload["suites"][0], "total_variants": True},
+                    *valid_payload["suites"][1:],
+                ],
+            },
+            {
+                **valid_payload,
+                "summary": {"blocking_failures": 0, "total_variants": 0},
+            },
+            {
+                **valid_payload,
+                "summary": {"blocking_failures": 0, "total_variants": True},
             },
         ]
         for index, payload in enumerate(invalid_payloads):

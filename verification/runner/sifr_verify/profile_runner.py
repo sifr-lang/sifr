@@ -104,6 +104,14 @@ def legacy_facade_step_names(profile: dict[str, Any]) -> set[str]:
     return {name for name, _method_name in legacy_facade_step_methods(profile)}
 
 
+def _is_positive_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value > 0
+
+
+def _is_zero_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value == 0
+
+
 def validate_rust_interop_result(result_path: Path, expected_suites: list[str]) -> None:
     if not result_path.is_file():
         raise ProfileRunnerError(f"Rust interop area emitted no result JSON: {result_path}")
@@ -111,7 +119,12 @@ def validate_rust_interop_result(result_path: Path, expected_suites: list[str]) 
         payload = json.loads(result_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ProfileRunnerError(f"Rust interop area emitted invalid result JSON: {result_path}") from exc
-    if not isinstance(payload, dict) or payload.get("area") != "rust_interop":
+    if (
+        not isinstance(payload, dict)
+        or payload.get("schema_version") != 1
+        or payload.get("area") != "rust_interop"
+        or payload.get("bless") is not False
+    ):
         raise ProfileRunnerError(f"Rust interop area emitted an invalid result document: {result_path}")
     raw_suites = payload.get("suites")
     if not isinstance(raw_suites, list):
@@ -120,9 +133,8 @@ def validate_rust_interop_result(result_path: Path, expected_suites: list[str]) 
         if (
             not isinstance(suite, dict)
             or suite.get("blocking") is not True
-            or not isinstance(suite.get("total_variants"), int)
-            or int(suite["total_variants"]) <= 0
-            or suite.get("total_failures") != 0
+            or not _is_positive_int(suite.get("total_variants"))
+            or not _is_zero_int(suite.get("total_failures"))
         ):
             raise ProfileRunnerError(
                 f"Rust interop result JSON contains invalid suite evidence: {result_path}"
@@ -140,9 +152,8 @@ def validate_rust_interop_result(result_path: Path, expected_suites: list[str]) 
     summary = payload.get("summary")
     if (
         not isinstance(summary, dict)
-        or summary.get("blocking_failures") != 0
-        or not isinstance(summary.get("total_variants"), int)
-        or int(summary["total_variants"]) <= 0
+        or not _is_zero_int(summary.get("blocking_failures"))
+        or not _is_positive_int(summary.get("total_variants"))
     ):
         raise ProfileRunnerError(
             f"Rust interop result JSON contains invalid blocking summary: {result_path}"
@@ -502,8 +513,9 @@ class ProfileRunner:
     def run_rust_interop_checks(self) -> None:
         suites = self.selected_suites_for_area("rust_interop")
         if not suites:
-            print(f"Skipping Rust interop checks for lane {self.profile_name}")
-            return
+            raise ProfileRunnerError(
+                f"profile {self.profile_name} has no Rust interop suites to execute"
+            )
         print("Running Rust interop checks")
         result_path = (
             REPO_ROOT

@@ -27,6 +27,7 @@ build/
 **/Cargo.lock
 !/Cargo.lock
 !/vendor/*/Cargo.lock
+!/verification/areas/rust_interop/fixtures/**/Cargo.lock
 !/vendor/*/build/
 !/vendor/*/build/**
 !/vendor/*/.vscode/
