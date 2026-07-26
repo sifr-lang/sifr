@@ -1,3 +1,9 @@
+> **Post-rebase status:** This round records the historical pre-rebase working
+> tree. PR #3017 subsequently landed the diagnostics MDX and Ruff revalidation
+> repairs on `main`; they are not part of the final `hardening_1` diff. The
+> fixture `Cargo.lock` is tracked in the milestone commit. See round 4 and the
+> later approval round for the authoritative post-rebase scope and verdict.
+
 **Not approved** — 7 actionable findings, one of them a confirmed user-visible regression.
 
 ## What holds up

@@ -1,5 +1,11 @@
 # Review Round 2 — Wave 0 `hardening_1`
 
+> **Post-rebase status:** This round records the historical pre-rebase working
+> tree. PR #3017 subsequently landed the diagnostics MDX and Ruff revalidation
+> repairs on `main`; they are not part of the final `hardening_1` diff. The
+> fixture `Cargo.lock` is tracked and the create-PR lane passes on the rebased
+> commit. See round 4 and the later approval round for the authoritative scope.
+
 **No actionable code findings remain.** All seven round-1 findings are resolved; I verified each independently rather than taking the fix list at face value.
 
 ## Round-1 findings — recheck

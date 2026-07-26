@@ -1,5 +1,15 @@
 # Review Round 3 — `hardening_1`: Execute the Rust-Interop Area in Authoritative Profiles
 
+> **Authoritative post-rebase disposition:** This review describes the
+> historical pre-rebase working tree. The milestone commit was later rebased
+> onto `origin/main` at `44d8f7160` (PR #3017). The implementation diff reviewed
+> in round 4 had 15 files, before later process-only review artifacts, and
+> contains none of the diagnostics MDX, Ruff revalidation, or
+> token-fixture paths discussed in §§8–10; those repairs are upstream and must
+> not be claimed in this PR's description. The fixture `Cargo.lock` is tracked,
+> so §12.1 is complete, and §12.2 is superseded. Round 4 verifies the rebased
+> scope and lane; the later approval round is the authoritative final verdict.
+
 **Scope reviewed:** the complete uncommitted diff in this worktree (19 modified files
 + 1 untracked fixture lockfile) against
 `plans/issues/active/rust-interop-verification-matrix-hardening.md` → `hardening_1`,
