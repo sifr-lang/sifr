@@ -426,6 +426,20 @@ def build_release_report(
         "submodules": submodules,
     }
     report["profile"]["manifest_sha256"] = profile_digest
+    source_profile = json.loads(
+        (source_root / "verification" / "profiles" / "release.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    expanded: dict[str, set[str]] = {}
+    for selection in source_profile["selected_areas"]:
+        expanded.setdefault(selection["area"], set()).update(selection["suites"])
+    if "full" in expanded.get("developer_tooling", set()):
+        expanded["developer_tooling"].add("editor-release")
+    report["profile"]["expanded_selected_areas"] = [
+        {"area": area, "suites": sorted(suites)}
+        for area, suites in sorted(expanded.items())
+    ]
     report["toolchain"]["rustc"] = command_output(source_root, "rustc", "--version")
     report["toolchain"]["cargo"] = command_output(source_root, "cargo", "--version")
     digests = {area: sha256_file(path) for area, path in result_paths.items()}
