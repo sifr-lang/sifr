@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import io
 import json
 import tempfile
+from contextlib import redirect_stdout
 from pathlib import Path
+from typing import Callable
 
 from .areas import discover_areas
+from .cargo_setup import cargo_setup_command
 from .profiles import (
     ProfileError,
     crate_test_suites_for_mode,
@@ -19,8 +23,11 @@ from .profiles import (
     validate_selected_area_suites,
 )
 from .profile_runner import (
+    ProfileRunner,
     ProfileRunnerError,
+    StepResult,
     legacy_facade_step_names,
+    timed_step,
     validate_rust_interop_result,
 )
 from .results import build_result
@@ -92,6 +99,24 @@ def _profile_schema_self_test() -> None:
         raise AssertionError(f"unexpected profiles: {sorted(profiles)}")
     if profiles["python-interop-live"].get("execution_mode") != "selected-areas-only":
         raise AssertionError("python-interop-live must use selected-areas-only execution")
+    if cargo_setup_command(profiles["python-interop-live"]) != [
+        "cargo",
+        "fetch",
+        "--locked",
+    ]:
+        raise AssertionError("python-interop-live has a noncanonical Cargo setup command")
+    for profile_name in sorted(expected):
+        setup_budget = profiles[profile_name].get("step_budgets", {}).get(
+            "cargo_cache_setup"
+        )
+        if setup_budget != {
+            "budget_ms": 300_000,
+            "enforcement": "advisory",
+        }:
+            raise AssertionError(
+                f"{profile_name} has a noncanonical Cargo setup budget: "
+                f"{setup_budget}"
+            )
     create_pr_step_budgets = profiles["create-pr"].get("step_budgets", {})
     required_blocking_steps = {
         "generated_code_quality_checks",
@@ -131,6 +156,8 @@ def _crate_membership_self_test() -> None:
 
     for profile_name in ("create-pr", "merge", "nightly", "release"):
         profile = profiles[profile_name]
+        if cargo_setup_command(profile) != ["cargo", "fetch", "--locked"]:
+            raise AssertionError(f"{profile_name} has a noncanonical Cargo setup command")
         profile_full_suites = crate_test_suites_for_mode(profile, "full")
         profile_smoke_suites = crate_test_suites_for_mode(profile, "smoke")
         profile_by_id = {str(suite.get("id")): suite for suite in profile_full_suites}
@@ -297,6 +324,73 @@ def _rust_interop_profile_self_test() -> None:
         if "rust_interop_checks" not in step_names:
             raise AssertionError(f"{profile_name} omits the executable Rust interop step")
 
+    class RecordingProfileRunner(ProfileRunner):
+        def __init__(self) -> None:
+            self.profile = {
+                "execution_mode": "selected-areas-only",
+                "cargo_policy": {"offline": True},
+            }
+            self.events: list[str] = []
+
+        def print_header(self) -> None:
+            self.events.append("header")
+
+        def prepare_cargo_cache(self) -> None:
+            self.events.append("cargo-cache-setup")
+
+        def run_timed_step(self, name: str, callback: Callable[[], None]) -> StepResult:
+            self.events.append(f"timed:{name}")
+            callback()
+            return StepResult(status=0, elapsed_ms=0)
+
+        def enable_offline_cargo(self) -> None:
+            self.events.append("offline")
+
+        def run_selected_areas_only(self) -> int:
+            self.events.append("selected-areas")
+            return 0
+
+    recording_runner = RecordingProfileRunner()
+    if recording_runner.run() != 0:
+        raise AssertionError("recording profile runner failed")
+    expected_events = [
+        "header",
+        "timed:cargo_cache_setup",
+        "cargo-cache-setup",
+        "offline",
+        "selected-areas",
+    ]
+    if recording_runner.events != expected_events:
+        raise AssertionError(
+            "profile runner did not execute cache setup before offline steps: "
+            f"{recording_runner.events}"
+        )
+    timing_output = io.StringIO()
+    with redirect_stdout(timing_output):
+        timing_result = timed_step("cargo_cache_setup", lambda: None)
+    if timing_result.status != 0 or (
+        "[sifr-lane-step] name=cargo_cache_setup" not in timing_output.getvalue()
+    ):
+        raise AssertionError(
+            "cache setup timing seam did not emit its lane-step report: "
+            f"{timing_output.getvalue()!r}"
+        )
+
+    invalid_setup_profile = {
+        "cargo_policy": {
+            "locked": True,
+            "offline": True,
+            "setup_command": "cargo fetch",
+        }
+    }
+    try:
+        cargo_setup_command(invalid_setup_profile)
+    except ValueError as exc:
+        if "must be 'cargo fetch --locked'" not in str(exc):
+            raise
+    else:
+        raise AssertionError("noncanonical Cargo setup command was accepted")
+
     incomplete_profile = {
         "name": "self-test",
         "selected_areas": [
@@ -309,7 +403,13 @@ def _rust_interop_profile_self_test() -> None:
     try:
         validate_selected_area_suites(incomplete_profile)
     except ProfileError as exc:
-        if "omits required Rust interop verification suites: stale-drafts" not in str(exc):
+        selected = {"matrix", "tiers", "compatibility-matrix"}
+        expected_missing = ", ".join(sorted(required_suites - selected))
+        expected_message = (
+            "omits required Rust interop verification suites: "
+            f"{expected_missing}"
+        )
+        if expected_message not in str(exc):
             raise
     else:
         raise AssertionError("incomplete Rust interop profile was accepted")

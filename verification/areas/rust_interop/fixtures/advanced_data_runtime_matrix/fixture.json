@@ -1,0 +1,43 @@
+{
+  "capability": "crate-backed Arrow and tensor runtime exchange",
+  "diagnostic_family": "SIFR-RUST-ZC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-ZC-0001",
+      "expected_result": "future-owned-diagnostic",
+      "id": "schema_shape_device_mismatch_rejected",
+      "path": "negative/schema_shape_device_mismatch_rejected.sifr",
+      "status": "planned"
+    },
+    "positive": {
+      "expected_result": "future-owned",
+      "id": "crate_backed_arrow_tensor_roundtrips",
+      "path": "positive/crate_backed_arrow_tensor_roundtrips.sifr",
+      "status": "planned"
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {
+    "candle": {
+      "backend": "cpu-only",
+      "default_features": false
+    }
+  },
+  "id": "advanced_data_runtime_matrix",
+  "package_examples": {
+    "arrow": "examples/arrow.sifr",
+    "candle": "examples/candle.sifr",
+    "datafusion": "examples/datafusion.sifr",
+    "ndarray": "examples/ndarray.sifr",
+    "polars": "examples/polars.sifr"
+  },
+  "required_crates": [
+    "arrow",
+    "datafusion",
+    "polars",
+    "ndarray",
+    "candle"
+  ],
+  "schema_version": 2,
+  "tier": 4
+}

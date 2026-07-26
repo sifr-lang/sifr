@@ -1,0 +1,12 @@
+# fixture: advanced_data_runtime_matrix
+# evidence: negative/schema_shape_device_mismatch_rejected
+# evidence-status: planned
+# execution-kind: runtime-observed
+# expected-result: future-owned-diagnostic
+# expected-diagnostic: SIFR-RUST-ZC-0001
+@rust(bridge.data.invalid_runtime_metadata, panic=trusted_no_panic)
+def invalid_runtime_metadata(shape: list[int64], device: str) -> bytes: ...
+
+def verify_schema_shape_device_mismatch_rejected() -> bytes:
+    observed: bytes = invalid_runtime_metadata([2, 3], "cuda:0")
+    return observed

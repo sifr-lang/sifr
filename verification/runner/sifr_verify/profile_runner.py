@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Callable, TextIO
 
 from . import reports
+from .cargo_setup import cargo_setup_command
 from .errors import VerificationError
 from .paths import REPO_ROOT
 from .profiles import crate_test_suites_for_mode, legacy_facade, load_profile, resolve_fixture_manifest
@@ -248,25 +249,53 @@ class ProfileRunner:
         probe_cache_root = REPO_ROOT / "target" / "sifr_rust_bridge_probe_cache" / self.profile_name
         self.env["SIFR_RUST_BRIDGE_PROBE_CACHE_DIR"] = str(probe_cache_root)
         os.environ["SIFR_RUST_BRIDGE_PROBE_CACHE_DIR"] = str(probe_cache_root)
-        if self.profile.get("cargo_policy", {}).get("offline") is True:
-            self.env["CARGO_NET_OFFLINE"] = "true"
-            os.environ["CARGO_NET_OFFLINE"] = "true"
 
     def run(self) -> int:
         self.print_header()
+        setup_result = self.run_timed_step("cargo_cache_setup", self.prepare_cargo_cache)
+        if setup_result.status != 0:
+            return setup_result.status
+        setup_budget_status = self.enforce_step_budget(
+            "cargo_cache_setup",
+            setup_result.elapsed_ms,
+        )
+        if setup_budget_status != 0:
+            return setup_budget_status
+        if self.profile.get("cargo_policy", {}).get("offline") is True:
+            self.enable_offline_cargo()
         if self.execution_mode == "selected-areas-only":
             return self.run_selected_areas_only()
 
         steps = self.legacy_facade_steps()
 
         for name, callback in steps:
-            result = timed_step(name, callback)
+            result = self.run_timed_step(name, callback)
             if result.status != 0:
                 return result.status
             budget_status = self.enforce_step_budget(name, result.elapsed_ms)
             if budget_status != 0:
                 return budget_status
         return 0
+
+    def prepare_cargo_cache(self) -> None:
+        """Populate the exact lock graph before profile execution becomes offline."""
+        try:
+            command = cargo_setup_command(self.profile)
+        except ValueError as exc:
+            raise ProfileRunnerError(str(exc)) from exc
+        setup_env = self.env.copy()
+        setup_env.pop("CARGO_NET_OFFLINE", None)
+        print(f"[sifr-profile-setup] command={' '.join(command)}")
+        run_command(command, env=setup_env)
+
+    def run_timed_step(self, name: str, callback: Callable[[], None]) -> StepResult:
+        """Execute and report one profile step."""
+        return timed_step(name, callback)
+
+    def enable_offline_cargo(self) -> None:
+        """Force every executable profile step to use the prepared offline cache."""
+        self.env["CARGO_NET_OFFLINE"] = "true"
+        os.environ["CARGO_NET_OFFLINE"] = "true"
 
     def legacy_facade_steps(self) -> list[tuple[str, Callable[[], None]]]:
         return [

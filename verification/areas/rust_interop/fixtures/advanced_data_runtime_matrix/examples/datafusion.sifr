@@ -1,0 +1,14 @@
+# fixture: advanced_data_runtime_matrix
+# package-example: datafusion
+# required-crate: datafusion
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(datafusion.execution.context.SessionContext.new, panic=map_error(bridge.datafusion.map_panic))
+def datafusion_runtime_query(query: str) -> Result[uint64, PackageExampleError | RustPanicError]: ...
+
+def verify_datafusion_package() -> Result[uint64, PackageExampleError | RustPanicError]:
+    observed: Result[uint64, PackageExampleError | RustPanicError] = datafusion_runtime_query("select 1")
+    return observed

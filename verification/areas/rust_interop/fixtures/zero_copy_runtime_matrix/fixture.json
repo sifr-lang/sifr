@@ -1,0 +1,36 @@
+{
+  "capability": "crate-backed zero-copy view lifecycle",
+  "diagnostic_family": "SIFR-RUST-ZC-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-ZC-0001",
+      "expected_result": "future-owned-diagnostic",
+      "id": "borrow_escape_and_invalid_mutability_rejected",
+      "path": "negative/borrow_escape_and_invalid_mutability_rejected.sifr",
+      "status": "planned"
+    },
+    "positive": {
+      "expected_result": "future-owned",
+      "id": "crate_backed_view_lifecycle",
+      "path": "positive/crate_backed_view_lifecycle.sifr",
+      "status": "planned"
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {},
+  "id": "zero_copy_runtime_matrix",
+  "package_examples": {
+    "bytemuck": "examples/bytemuck.sifr",
+    "bytes": "examples/bytes.sifr",
+    "memmap2": "examples/memmap2.sifr",
+    "zerocopy": "examples/zerocopy.sifr"
+  },
+  "required_crates": [
+    "bytes",
+    "memmap2",
+    "bytemuck",
+    "zerocopy"
+  ],
+  "schema_version": 2,
+  "tier": 2
+}

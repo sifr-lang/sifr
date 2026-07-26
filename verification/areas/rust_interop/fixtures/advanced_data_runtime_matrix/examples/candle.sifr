@@ -1,0 +1,14 @@
+# fixture: advanced_data_runtime_matrix
+# package-example: candle
+# required-crate: candle
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(candle.Tensor.dims, panic=map_error(bridge.candle.map_panic))
+def candle_runtime_dims(data: bytes) -> Result[list[uint64], PackageExampleError | RustPanicError]: ...
+
+def verify_candle_package() -> Result[list[uint64], PackageExampleError | RustPanicError]:
+    observed: Result[list[uint64], PackageExampleError | RustPanicError] = candle_runtime_dims(b"sifr")
+    return observed

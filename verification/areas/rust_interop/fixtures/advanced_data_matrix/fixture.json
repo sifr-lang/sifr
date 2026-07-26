@@ -35,7 +35,8 @@
   "execution_kind": "contract-only",
   "features": {
     "candle": {
-      "backend": "cpu-only"
+      "backend": "cpu-only",
+      "default_features": false
     }
   },
   "id": "advanced_data_matrix",

@@ -56,9 +56,10 @@ Phase 40 consumes these completed or canonical upstream contracts:
   (`certification_0`). Before `milestone_40_0` begins, those items must have
   wired Rust-interop checks into all authoritative profiles and created
   `verification/areas/rust_interop/data/stable_support_claims.json` plus its
-  stable-candidate validator. Phase 40 consumes those artifacts and owns
-  registering the validator as the `rust_interop` `stable-candidate` suite and
-  selecting that suite in create-PR, merge, nightly, and release. The
+  stable-candidate validator. `certification_0` also registers that validator
+  as the `rust_interop` `stable-candidate` suite and selects it in create-PR,
+  merge, nightly, and release. Phase 40 consumes the registered suite and its
+  result. The
   Rust-interop profile contract requires every registered suite in every
   authoritative profile; Phase 40 must not make `stable-candidate`
   release-only or substitute prose checks for it. The four hardening
@@ -398,8 +399,8 @@ verification inventory before mutation-capable work begins.
   evidence.
 - Register those checks as the `distribution_release` `evidence-custody` suite
   and add it to the durable release profile.
-- Register the upstream stable-candidate validator in the Rust-interop manifest
-  as the `stable-candidate` suite.
+- Confirm the upstream stable-candidate validator is registered in the
+  Rust-interop manifest as the `stable-candidate` suite.
 - Create `verification/areas/documentation/manifest.json` and register its
   manifest owner in `verification/owners.json`. Its initial `structure` suite
   validates the docs inventory, check registration, and mutation-test harness
@@ -416,13 +417,13 @@ verification inventory before mutation-capable work begins.
 - Confirm that the durable release profile's existing
   `legacy_facade.tooling_suites=["full"]` expands to and executes
   `editor-release`; do not add a duplicate `editor-release` selection.
-- Add `rust_interop` `stable-candidate` to the inherited executable
-  Rust-interop step in create-PR, merge, nightly, and release. Confirm, rather
-  than re-add, the existing `distribution_release` `full` execution and the
-  four structural Rust-interop suites. The governed release report remains the
-  stable-candidate authority for a concrete release, but suite registration
-  must preserve the all-profiles Rust-interop contract. Do not create a
-  Phase-40-only profile.
+- Confirm `rust_interop` `stable-candidate` is present in the inherited
+  executable Rust-interop step in create-PR, merge, nightly, and release.
+  Confirm, rather than re-add, the existing `distribution_release` `full`
+  execution and the four structural Rust-interop suites. The governed release
+  report remains the stable-candidate authority for a concrete release, but
+  suite registration must preserve the all-profiles Rust-interop contract. Do
+  not create a Phase-40-only profile.
 - Inventory every current stable gate in workflows, distribution scripts,
   dispatchers, Rust self-update code, receipt validation, docs, and tests.
 - Record the canonical owner and target disposition for every gate.
@@ -527,8 +528,9 @@ local qualification and drift-free provenance.
   installer digest, target, and release-plan agreement.
 - Wire stable qualification into `distribution_release`.
 - Verify that the inherited Rust interop `matrix`, `tiers`,
-  `compatibility-matrix`, and `stale-drafts` suites run through the release
-  profile.
+  `compatibility-matrix`, `stale-drafts`, and `stable-candidate` suites run
+  through the release profile, and consume the stable-candidate result in the
+  qualification record.
 - Run the stable-candidate validator against
   `stable_support_claims.json`; it fails if a stable public claim is absent
   from the claims file, disagrees with its matrix execution scope, is

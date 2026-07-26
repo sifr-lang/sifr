@@ -21,6 +21,7 @@ members = [
     "crates/sifr_codegen",
     "crates/sifr_driver",
     "crates/sifr",
+    "crates/sifr_rust_interop_catalog",
 ]
 exclude = ["tmp", "sifr_output", "third_party/ruff"]
 resolver = "2"

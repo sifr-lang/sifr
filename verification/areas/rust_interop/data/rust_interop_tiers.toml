@@ -40,6 +40,7 @@ fixtures = [
   "callback_subscription_ecosystem",
   "zero_copy_bytes",
   "zero_copy_view_matrix",
+  "zero_copy_runtime_matrix",
 ]
 
 [tier3]
@@ -58,6 +59,7 @@ fixtures = [
   "arrow_record_batch",
   "tensor_dlpack_bridge",
   "advanced_data_matrix",
+  "advanced_data_runtime_matrix",
   "ecosystem_backend_certification",
   "ecosystem_cli_certification",
 ]

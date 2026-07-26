@@ -1,0 +1,14 @@
+# fixture: zero_copy_runtime_matrix
+# package-example: memmap2
+# required-crate: memmap2
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(memmap2.MmapOptions.new, panic=map_error(bridge.memmap2.map_panic))
+def memmap2_runtime_view(path: str) -> Result[bytes, PackageExampleError | RustPanicError]: ...
+
+def verify_memmap2_package() -> Result[bytes, PackageExampleError | RustPanicError]:
+    observed: Result[bytes, PackageExampleError | RustPanicError] = memmap2_runtime_view("/tmp/sifr-rust-interop.bin")
+    return observed

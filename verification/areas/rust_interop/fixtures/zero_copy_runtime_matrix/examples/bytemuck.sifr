@@ -1,0 +1,14 @@
+# fixture: zero_copy_runtime_matrix
+# package-example: bytemuck
+# required-crate: bytemuck
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(bytemuck.cast_slice, panic=map_error(bridge.bytemuck.map_panic))
+def bytemuck_runtime_view(data: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
+
+def verify_bytemuck_package() -> Result[bytes, PackageExampleError | RustPanicError]:
+    observed: Result[bytes, PackageExampleError | RustPanicError] = bytemuck_runtime_view(b"sifr")
+    return observed

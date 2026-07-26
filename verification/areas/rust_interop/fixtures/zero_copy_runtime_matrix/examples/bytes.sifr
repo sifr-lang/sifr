@@ -1,0 +1,14 @@
+# fixture: zero_copy_runtime_matrix
+# package-example: bytes
+# required-crate: bytes
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(bytes.Bytes.copy_from_slice, panic=map_error(bridge.bytes.map_panic))
+def bytes_runtime_view(data: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
+
+def verify_bytes_package() -> Result[bytes, PackageExampleError | RustPanicError]:
+    observed: Result[bytes, PackageExampleError | RustPanicError] = bytes_runtime_view(b"sifr")
+    return observed

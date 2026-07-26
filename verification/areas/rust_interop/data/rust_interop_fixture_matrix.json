@@ -270,6 +270,15 @@
       "negative_evidence": {"id": "mutable_alias_rejected", "status": "passing"}
     },
     {
+      "id": "zero_copy_runtime_matrix",
+      "tier": 2,
+      "capability": "crate-backed zero-copy view lifecycle",
+      "required_crates": ["bytes", "memmap2", "bytemuck", "zerocopy"],
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "crate_backed_view_lifecycle", "status": "planned"},
+      "negative_evidence": {"id": "borrow_escape_and_invalid_mutability_rejected", "status": "planned"}
+    },
+    {
       "id": "arrow_record_batch",
       "tier": 4,
       "capability": "Arrow record batch exchange",
@@ -292,10 +301,20 @@
       "tier": 4,
       "capability": "advanced data and tensor ecosystems",
       "required_crates": ["datafusion", "polars", "ndarray", "candle"],
-      "features": {"candle": {"backend": "cpu-only"}},
+      "features": {"candle": {"backend": "cpu-only", "default_features": false}},
       "execution_kind": "contract-only",
       "positive_evidence": {"id": "advanced_data_metadata", "status": "passing", "scope": "contract-only"},
       "negative_evidence": {"id": "dtype_shape_mismatch", "status": "passing", "scope": "contract-only"}
+    },
+    {
+      "id": "advanced_data_runtime_matrix",
+      "tier": 4,
+      "capability": "crate-backed Arrow and tensor runtime exchange",
+      "required_crates": ["arrow", "datafusion", "polars", "ndarray", "candle"],
+      "features": {"candle": {"backend": "cpu-only", "default_features": false}},
+      "execution_kind": "runtime-observed",
+      "positive_evidence": {"id": "crate_backed_arrow_tensor_roundtrips", "status": "planned"},
+      "negative_evidence": {"id": "schema_shape_device_mismatch_rejected", "status": "planned"}
     },
     {
       "id": "ecosystem_backend_certification",

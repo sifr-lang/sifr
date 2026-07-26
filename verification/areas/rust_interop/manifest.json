@@ -91,6 +91,26 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "stable-candidate",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "rust-interop-stable-candidate",
+          "entry": "verification/areas/rust_interop/checks/check_stable_support_claims.py",
+          "command": "area-check",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "rust-interop-stable-candidate-self-test",
+          "entry": "verification/areas/rust_interop/checks/check_stable_support_claims.py",
+          "command": "area-check-self-test",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ],
   "network_mode": "offline",

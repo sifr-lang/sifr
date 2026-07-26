@@ -1,0 +1,12 @@
+# fixture: zero_copy_runtime_matrix
+# evidence: negative/borrow_escape_and_invalid_mutability_rejected
+# evidence-status: planned
+# execution-kind: runtime-observed
+# expected-result: future-owned-diagnostic
+# expected-diagnostic: SIFR-RUST-ZC-0001
+@rust(bridge.zero_copy.invalid_mutable_escape, panic=trusted_no_panic)
+def invalid_mutable_escape(data: bytes) -> bytes: ...
+
+def verify_borrow_escape_and_invalid_mutability_rejected() -> bytes:
+    escaped_view: bytes = invalid_mutable_escape(b"sifr")
+    return escaped_view

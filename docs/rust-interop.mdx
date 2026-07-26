@@ -72,6 +72,48 @@ Tier 1 and tier 3 require `cargo-probe`; tier 0 requires
 contract-only, cargo-probed, or runtime-observed. A contract-only row never
 satisfies a runtime claim.
 
+### Stable Support Claims
+
+The following table is validated against
+`verification/areas/rust_interop/data/stable_support_claims.json` and is the
+only public stable-claim inventory. Its execution scope is part of every claim.
+In particular, `zero_copy_bytes`, `zero_copy_view_matrix`,
+`arrow_record_batch`, `tensor_dlpack_bridge`, and `advanced_data_matrix` are
+contract-only. The runtime-observed deferrals
+`advanced_data_runtime_matrix`, `async_runtime_reqwest`,
+`callback_subscription_ecosystem`, `callbacks_call_scoped`,
+`opaque_resource_matrix`, `panic_boundary_wrapper_emission`, and
+`zero_copy_runtime_matrix` are future-owned, planned, and unadvertised until
+their runtime evidence passes.
+
+<!-- rust-interop-stable-claims:start -->
+| Compatibility row | Category | Execution scope |
+| --- | --- | --- |
+| `direct_crate_crc32` | `supported` | `cargo-probe` |
+| `direct_crate_matrix` | `supported` | `cargo-probe` |
+| `direct_crate_negative_type` | `unsupported-by-design` | `compiler-diagnostic` |
+| `dotted_path_resolution` | `supported` | `compiler-diagnostic` |
+| `local_bridge_blake3` | `supported-through-bridge` | `cargo-probe` |
+| `same_workspace_crate` | `supported` | `cargo-probe` |
+| `shared_bridge_crate` | `supported-through-bridge` | `cargo-probe` |
+| `opaque_handle_tokenizer` | `supported` | `cargo-probe` |
+| `opaque_resource_core` | `supported` | `runtime-observed` |
+| `close_after_use` | `supported` | `runtime-observed` |
+| `bridge_version_mismatch` | `supported` | `compiler-diagnostic` |
+| `panic_boundary` | `supported` | `contract-only` |
+| `panic_abort_profile` | `supported` | `contract-only` |
+| `async_runtime_core` | `supported` | `contract-only` |
+| `async_ecosystem_matrix` | `supported` | `cargo-probe` |
+| `blocking_diagnostics` | `supported` | `compiler-diagnostic` |
+| `callbacks_threadsafe` | `supported` | `contract-only` |
+| `callback_subscription_core` | `supported` | `contract-only` |
+| `zero_copy_bytes` | `supported` | `contract-only` |
+| `zero_copy_view_matrix` | `supported` | `contract-only` |
+| `arrow_record_batch` | `supported-through-bridge` | `contract-only` |
+| `tensor_dlpack_bridge` | `supported-through-bridge` | `contract-only` |
+| `advanced_data_matrix` | `supported-through-bridge` | `contract-only` |
+<!-- rust-interop-stable-claims:end -->
+
 ## Direct Bindings
 
 Use `@rust(...)` when a public Rust function has a bridge-compatible signature. The target is a dotted path, not a string.
@@ -148,6 +190,9 @@ Blocking or CPU-heavy Rust calls are never hidden inside async scheduler paths. 
 ## Zero-Copy And Views
 
 Zero-copy declarations must make owner, lifetime, mutability, and view metadata explicit. Sifr rejects silent copy fallback.
+The following Arrow and DLPack examples demonstrate accepted contract-only
+declaration metadata. They do not claim that the named ecosystem crates have
+passed runtime-observed exchange or lifecycle certification.
 
 ```sifr
 @rust.zero_copy(owner=input, view=sifr_arrow_bridge.record_batch.RecordBatchView)

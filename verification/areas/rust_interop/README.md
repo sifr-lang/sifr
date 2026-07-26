@@ -53,6 +53,18 @@ checks. Runtime-observed fixtures that need services such as Redis or
 PostgreSQL must use explicit local service configuration recorded in the
 fixture evidence; they must not silently degrade to compile-only coverage.
 
+`crates/sifr_rust_interop_catalog` pins all 44 matrix crate aliases at exact
+versions as optional dependencies. This keeps the complete deferred graph in
+the root `Cargo.lock`. Before a profile forces subsequent commands offline,
+its canonical setup executes `cargo fetch --locked`; ordinary compiler lanes
+still do not compile the optional deferred graph.
+
+The matrix check verifies exact catalog membership, feature policies, package
+aliases, lockfile presence, and a successful `cargo fetch --locked --offline`.
+This proves workspace cache readiness for later package-mode probes. Each row
+PR remains responsible for exact generated-package pins and executable
+locked/offline evidence; the catalog does not claim sysroot-vendor coverage.
+
 ## Tier And Execution Semantics
 
 Tier records subject breadth; `execution_kind` records evidence strength. The
@@ -100,6 +112,17 @@ evidence.
   supplies rejection context, accepted examples remain in `sifr` fences, and
   Sifr Rust decorators in `python` fences are always errors.
 
+- `stable-candidate`: validates the compatibility-derived
+  `data/stable_support_claims.json` inventory and public stable-claim scope
+  across `docs/`. Every advertised claim must name a non-future compatibility
+  row with the same category, capability, and execution scope, and
+  contract-only evidence cannot be advertised as runtime support. Stable
+  release qualification consumes this registered suite and its profile result.
+  The canonical claims table is checked exhaustively; the additional
+  docs-wide prose sweep is a defense-in-depth keyword and Markdown-structure
+  tripwire, so claim authority must remain in the canonical table rather than
+  free-form prose.
+
 Run the complete area directly with:
 
 ```bash
@@ -107,8 +130,8 @@ uv run --project verification --locked python -m sifr_verify areas run --area ru
 ```
 
 The authoritative create-PR, merge, nightly, and release profiles select all
-four suites and execute them through the `rust_interop_checks` legacy-facade
-step. Execute the create-PR profile with:
+five registered suites and execute them through the
+`rust_interop_checks` legacy-facade step. Execute the create-PR profile with:
 
 ```bash
 scripts/run_all_tests.sh --profile create-pr
@@ -120,11 +143,17 @@ Inspect the same profile's plan without executing it:
 scripts/run_all_tests.sh --profile create-pr --emit-plan
 ```
 
-The create-PR profile's `rust_interop_checks` step has a blocking 5,000 ms
-budget. Post-`hardening_4` authoritative measurements were 3,244 ms in the
-create-PR gate and 3,479 ms in the merge gate for all eight cases. Changes to
-the selected suites require a complete-area measurement and a same-change
-budget adjustment when the current headroom is insufficient.
+The create-PR profile's `rust_interop_checks` step has a blocking 10,000 ms
+budget. The final `certification_0` create-PR gate measured 4,732 ms on
+2026-07-27, leaving 5,268 ms of enforced headroom; its reported locked Cargo
+cache-setup prelude measured 578 ms against the 300,000 ms advisory budget.
+The same merge profile measured 4,394 ms with a single 658 ms cache-setup
+prelude. Exact-state nightly and release runs measured 4,161 ms and 3,880 ms
+respectively before both profiles later stopped on the same unrelated
+pre-existing algorithmic full-corpus failures. These are complete-area
+lane-step measurements; per-case elapsed-time sums are not substituted for any
+value. Changes to the selected suites require a complete-area measurement and
+a same-change budget adjustment when the current headroom is insufficient.
 
 ## Compatibility Categories
 

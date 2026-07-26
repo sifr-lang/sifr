@@ -7,12 +7,13 @@
     "cold_wall_time_minutes": 15
   },
   "step_budgets": {
+    "cargo_cache_setup": {"budget_ms": 300000, "enforcement": "advisory"},
     "coverage_matrix_checks": {"budget_ms": 45000, "enforcement": "blocking"},
     "core_guardrails": {"budget_ms": 360000, "enforcement": "blocking"},
     "diagnostic_rules": {"budget_ms": 90000, "enforcement": "blocking"},
     "cpython_differential": {"budget_ms": 30000, "enforcement": "blocking"},
     "python_interop": {"budget_ms": 600000, "enforcement": "blocking"},
-    "rust_interop_checks": {"budget_ms": 5000, "enforcement": "blocking"},
+    "rust_interop_checks": {"budget_ms": 10000, "enforcement": "blocking"},
     "frontend_syntax_guardrails": {"budget_ms": 60000, "enforcement": "blocking"},
     "developer_tooling_checks": {"budget_ms": 180000, "enforcement": "blocking"},
     "performance_budget_checks": {"budget_ms": 120000, "enforcement": "blocking"},
@@ -47,7 +48,7 @@
   "reference_host": {
     "os": "darwin-or-linux",
     "arch": "aarch64-or-x86_64",
-    "notes": "Create-pr uses bounded local defaults and must not depend on external network during profile execution."
+    "notes": "Create-pr permits only the reported locked Cargo cache-setup prelude to contact the configured registry; every validation step after that boundary is offline."
   },
   "execution_sandbox": {
     "tempdir_only": true,
@@ -97,7 +98,8 @@
         "matrix",
         "tiers",
         "compatibility-matrix",
-        "stale-drafts"
+        "stale-drafts",
+        "stable-candidate"
       ],
       "resource_classes": [
         "default-local"
