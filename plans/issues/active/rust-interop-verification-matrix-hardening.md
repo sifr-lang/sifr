@@ -249,7 +249,7 @@ One documentation/review PR after `hardening_1` through `hardening_4`:
 Every item runs its focused self-test and the common local gates:
 
 ```bash
-uv run --project verification --locked python -m sifr_verify --area rust_interop
+uv run --project verification --locked python -m sifr_verify areas run --area rust_interop
 python3 verification/areas/rust_interop/checks/check_fixture_matrix.py --self-test
 python3 verification/areas/rust_interop/checks/check_compatibility_matrix.py --self-test
 python3 verification/areas/rust_interop/checks/check_tiers.py --self-test

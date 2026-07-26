@@ -309,7 +309,7 @@ Focused commands vary by row and must be written into the item checklist before
 implementation. The minimum common gate is:
 
 ```bash
-uv run --project verification --locked python -m sifr_verify --area rust_interop
+uv run --project verification --locked python -m sifr_verify areas run --area rust_interop
 python3 verification/areas/rust_interop/checks/check_fixture_matrix.py --self-test
 python3 verification/areas/rust_interop/checks/check_compatibility_matrix.py --self-test
 python3 verification/areas/rust_interop/checks/check_tiers.py --self-test

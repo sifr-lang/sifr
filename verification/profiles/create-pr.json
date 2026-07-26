@@ -12,6 +12,7 @@
     "diagnostic_rules": {"budget_ms": 90000, "enforcement": "blocking"},
     "cpython_differential": {"budget_ms": 30000, "enforcement": "blocking"},
     "python_interop": {"budget_ms": 600000, "enforcement": "blocking"},
+    "rust_interop_checks": {"budget_ms": 5000, "enforcement": "blocking"},
     "frontend_syntax_guardrails": {"budget_ms": 60000, "enforcement": "blocking"},
     "developer_tooling_checks": {"budget_ms": 180000, "enforcement": "blocking"},
     "performance_budget_checks": {"budget_ms": 120000, "enforcement": "blocking"},
@@ -90,6 +91,18 @@
     ]
   },
   "selected_areas": [
+    {
+      "area": "rust_interop",
+      "suites": [
+        "matrix",
+        "tiers",
+        "compatibility-matrix",
+        "stale-drafts"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
     {
       "area": "coverage_matrix",
       "suites": [
