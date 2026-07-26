@@ -61,22 +61,48 @@ fn source_tree_diagnostic_explanation(code: &str) -> Option<String> {
         .parent()?
         .parent()?
         .to_path_buf();
-    let path = repo_root.join("docs/errors").join(format!("{code}.md"));
+    let path = repo_root.join("docs/errors").join(format!("{code}.mdx"));
     let text = DiskSourceProvider::new().read_file(&path).ok()?;
-    let mut lines = text
-        .as_str()
-        .lines()
-        .filter(|line| !line.starts_with("<!--") && !line.starts_with('|'));
-    let title = lines.find(|line| line.starts_with("# "))?;
-    let summary = lines.find(|line| !line.trim().is_empty()).unwrap_or("");
+    let title = mdx_frontmatter_value(text.as_str(), "sidebarTitle: ")?;
+    let summary = mdx_frontmatter_value(text.as_str(), "description: ")?;
     Some(format!(
-        "{}\n\n{}\n\nDocs: https://docs.sifr.sh/errors/{code}",
-        title.trim_start_matches("# "),
-        summary,
+        "{title}\n\n{summary}\n\nDocs: https://docs.sifr.sh/errors/{code}"
     ))
+}
+
+#[cfg(debug_assertions)]
+fn mdx_frontmatter_value<'a>(text: &'a str, key: &str) -> Option<&'a str> {
+    let mut lines = text.lines();
+    if lines.next()? != "---" {
+        return None;
+    }
+    for line in lines {
+        if line == "---" {
+            return None;
+        }
+        if let Some(value) = line.strip_prefix(key) {
+            return Some(value.trim().trim_matches('"')).filter(|value| !value.is_empty());
+        }
+    }
+    None
 }
 
 #[cfg(not(debug_assertions))]
 fn source_tree_diagnostic_explanation(_code: &str) -> Option<String> {
     None
+}
+
+#[cfg(all(test, debug_assertions))]
+mod tests {
+    use super::source_tree_diagnostic_explanation;
+
+    #[test]
+    fn debug_explanation_reads_generated_mdx_frontmatter() {
+        let explanation = source_tree_diagnostic_explanation("SIFR-IMPORT-0001")
+            .expect("generated diagnostic MDX should be readable");
+        assert_eq!(
+            explanation,
+            "SIFR-IMPORT-0001\n\nForbidden private sysroot declaration import.\n\nDocs: https://docs.sifr.sh/errors/SIFR-IMPORT-0001"
+        );
+    }
 }
