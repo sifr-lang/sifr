@@ -207,6 +207,8 @@ mutation tests pass, the full Rust-interop area passes through the
 One PR:
 
 - implements the `sifr-rejected` fence and same-line HTML marker contract;
+- gives `check_stale_drafts.py --self-test` a real isolated temporary-tree
+  entrypoint instead of falling through to the ordinary checked-in-data scan;
 - migrates all current stale-syntax mentions in scan scope;
 - removes `_is_rejection_context` and its broad lexical markers;
 - adds isolated temporary-tree tests for accepted, rejected, malformed,

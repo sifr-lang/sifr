@@ -41,6 +41,8 @@ BASELINE_COMMANDS = {
     "self-version",
 }
 VALIDATION_SUITE_COMMAND = "validation-suite"
+AREA_CHECK_COMMAND = "area-check"
+AREA_CHECK_SELF_TEST_COMMAND = "area-check-self-test"
 
 
 @dataclass(frozen=True)
@@ -176,8 +178,10 @@ def run_case(
     options: AreaRunOptions,
 ) -> tuple[dict[str, Any], bool, int]:
     command = str(case["command"])
-    if command == "area-check":
-        return run_area_check_case(config, suite_name, case)
+    if command == AREA_CHECK_COMMAND:
+        return run_area_check_case(config, suite_name, case, self_test=False)
+    if command == AREA_CHECK_SELF_TEST_COMMAND:
+        return run_area_check_case(config, suite_name, case, self_test=True)
     if command == VALIDATION_SUITE_COMMAND:
         return run_validation_suite_case(config, suite_name, case)
     return run_baseline_case(config, suite_name, case, options)
@@ -187,13 +191,19 @@ def run_area_check_case(
     config: AreaAdapterConfig,
     suite_name: str,
     case: dict[str, Any],
+    *,
+    self_test: bool,
 ) -> tuple[dict[str, Any], bool, int]:
     case_id = str(case["id"])
     entry = case_entry_path(config, suite_name, case_id, case)
     expected_exit = int(case["expect_exit_code"])
+    command = AREA_CHECK_SELF_TEST_COMMAND if self_test else AREA_CHECK_COMMAND
+    argv = [sys.executable, str(entry)]
+    if self_test:
+        argv.append("--self-test")
     started = time.perf_counter()
     proc = subprocess.run(
-        [sys.executable, str(entry)],
+        argv,
         cwd=REPO_ROOT,
         text=True,
         capture_output=True,
@@ -208,17 +218,17 @@ def run_area_check_case(
     if proc.returncode != expected_exit:
         mismatches.append("unexpected-exit")
     status = "pass" if not mismatches else "fail"
-    emit_case_timing(config.area, suite_name, case_id, "area-check", elapsed_ms, status)
+    emit_case_timing(config.area, suite_name, case_id, command, elapsed_ms, status)
     return (
         {
             "id": case_id,
             "entry": format_repo_relative_path(entry),
-            "command": "area-check",
+            "command": command,
             "variants": [
                 {
-                    "label": "area-check",
+                    "label": command,
                     "diagnostic_format": None,
-                    "argv": [sys.executable, str(entry)],
+                    "argv": argv,
                     "status": status,
                     "mismatches": mismatches,
                     "expected_exit_code": expected_exit,
@@ -435,7 +445,11 @@ def validate_unique_baseline_artifact_paths(
         if not isinstance(case, dict):
             continue
         command = str(case.get("command"))
-        if command in {"area-check", VALIDATION_SUITE_COMMAND}:
+        if command in {
+            AREA_CHECK_COMMAND,
+            AREA_CHECK_SELF_TEST_COMMAND,
+            VALIDATION_SUITE_COMMAND,
+        }:
             continue
         case_id, entry, command_name, formats = baseline_case_metadata(config, suite_name, case)
         for diagnostic_format in formats:

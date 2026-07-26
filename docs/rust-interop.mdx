@@ -46,6 +46,21 @@ sifr repair
 
 `sifr repair --check` reports drift in Sifr-managed Cargo projection files. `sifr repair` regenerates only Sifr-owned projection metadata and does not overwrite user-authored bridge files under `src/bridges`.
 
+## Compatibility Evidence
+
+Published Rust-interop compatibility rows state how they were verified:
+
+- `compiler-diagnostic` observes parser, lowering, metadata, or diagnostic behavior and makes no Cargo build claim.
+- `contract-only` verifies the named compiler or safety contract, but does not certify a package build or runtime behavior.
+- `cargo-probe` exercises the real Cargo package graph. Positive directions build generated/package Rust code; negative directions may instead observe a required compiler rejection before Cargo execution.
+- `runtime-observed` executes the lifecycle or runtime behavior named by the row.
+
+Verification tiers describe the breadth of the subject, not stronger evidence.
+Tier 1 and tier 3 require `cargo-probe`; tier 0 requires
+`compiler-diagnostic`; tier 2 and tier 4 explicitly name whether each row is
+contract-only, cargo-probed, or runtime-observed. A contract-only row never
+satisfies a runtime claim.
+
 ## Direct Bindings
 
 Use `@rust(...)` when a public Rust function has a bridge-compatible signature. The target is a dotted path, not a string.

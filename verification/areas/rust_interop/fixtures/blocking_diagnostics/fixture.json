@@ -17,6 +17,11 @@
     }
   },
   "execution_kind": "compiler-diagnostic",
+  "diagnostic_crate_rationale": {
+    "purpose": "rusqlite, rayon, and flate2 supply blocking-I/O and CPU-heavy classification examples used only to exercise SIFR-RUST-ASYNC diagnostics",
+    "linked": false,
+    "executed": false
+  },
   "features": {
     "flate2": {
       "default_features": false,

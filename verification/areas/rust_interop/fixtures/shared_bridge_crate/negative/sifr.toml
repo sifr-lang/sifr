@@ -1,5 +1,5 @@
 # fixture: shared_bridge_crate
-# scenario-example: shared_hash_bridge
+# evidence: negative/package_generated_type_import_rejected
 
 [package]
 name = "shared-hash-consumer"
@@ -14,7 +14,4 @@ bridge-version = 1
 direct-crate-bindings = true
 
 [trust]
-rust-no-panic = [
-  "sifr_shared_hash_bridge.digest",
-  "sifr_shared_hash_bridge.digest_hex",
-]
+rust-no-panic = ["sifr_shared_hash_bridge.generated_private_type"]

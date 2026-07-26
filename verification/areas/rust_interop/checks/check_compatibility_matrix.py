@@ -22,7 +22,14 @@ CLAIMED_SUPPORT_CATEGORIES = {"supported", "supported-through-bridge", "unsuppor
 FUTURE_OWNER_PREFIXES = ("plans/issues/active/", "plans/phases/")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    args = sys.argv[1:] if argv is None else argv
+    if args == ["--self-test"]:
+        return _run_self_test()
+    if args:
+        print(f"usage: {Path(__file__).name} [--self-test]", file=sys.stderr)
+        return 2
+
     fixture_matrix = json.loads(FIXTURE_MATRIX_PATH.read_text(encoding="utf-8"))
     compatibility_matrix = json.loads(COMPATIBILITY_MATRIX_PATH.read_text(encoding="utf-8"))
     failures: list[str] = []
@@ -115,6 +122,7 @@ def _validate_row(
     _expect_equal(failures, row_id, row, fixture, "capability")
     _expect_equal(failures, row_id, row, fixture, "execution_kind")
     _expect_equal(failures, row_id, row, fixture, "required_crates")
+    _expect_equal(failures, row_id, row, fixture, "diagnostic_crate_rationale")
     _expect_equal(failures, row_id, row, fixture, "positive_evidence")
     _expect_equal(failures, row_id, row, fixture, "negative_evidence")
 
@@ -156,6 +164,82 @@ def _evidence_status(fixture: dict[str, Any], field: str) -> str:
     if not isinstance(evidence, dict):
         return ""
     return str(evidence.get("status", ""))
+
+
+def _run_self_test() -> int:
+    rationale = {
+        "purpose": "crate APIs supply diagnostic shapes only",
+        "linked": False,
+        "executed": False,
+    }
+    fixture = {
+        "id": "diagnostic_fixture",
+        "tier": 0,
+        "capability": "diagnostic contract",
+        "execution_kind": "compiler-diagnostic",
+        "required_crates": ["example"],
+        "diagnostic_crate_rationale": rationale,
+        "positive_evidence": {"id": "positive", "status": "passing"},
+        "negative_evidence": {"id": "negative", "status": "passing"},
+    }
+    base_row = {
+        **fixture,
+        "fixture": "diagnostic_fixture",
+        "category": "unsupported-by-design",
+        "notes": "diagnostic behavior is supported",
+    }
+    control_failures: list[str] = []
+    _validate_row(
+        control_failures,
+        base_row,
+        {"diagnostic_fixture": fixture},
+        set(),
+        set(),
+        set(),
+    )
+    if control_failures:
+        print(
+            "rust interop compatibility matrix self-test error: "
+            f"valid rationale was rejected: {control_failures}",
+            file=sys.stderr,
+        )
+        return 1
+
+    cases = (
+        (
+            "missing rationale",
+            {key: value for key, value in base_row.items() if key != "diagnostic_crate_rationale"},
+        ),
+        (
+            "mismatched rationale",
+            {
+                **base_row,
+                "diagnostic_crate_rationale": {
+                    **rationale,
+                    "purpose": "mismatched rationale",
+                },
+            },
+        ),
+    )
+    expected = "diagnostic_fixture: diagnostic_crate_rationale must match fixture matrix"
+    for name, row in cases:
+        failures: list[str] = []
+        _validate_row(
+            failures,
+            row,
+            {"diagnostic_fixture": fixture},
+            set(),
+            set(),
+            set(),
+        )
+        if expected not in failures:
+            print(
+                f"rust interop compatibility matrix self-test error: {name} passed",
+                file=sys.stderr,
+            )
+            return 1
+    print(f"rust interop compatibility matrix self-test ok: cases={len(cases) + 1}")
+    return 0
 
 
 if __name__ == "__main__":

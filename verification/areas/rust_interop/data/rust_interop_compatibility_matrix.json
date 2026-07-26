@@ -41,6 +41,11 @@
       "capability": "invalid direct bridge type diagnostics",
       "execution_kind": "compiler-diagnostic",
       "required_crates": ["regex"],
+      "diagnostic_crate_rationale": {
+        "purpose": "regex supplies the rejected unsupported direct-signature shape used only to exercise SIFR-RUST-TYPE diagnostics",
+        "linked": false,
+        "executed": false
+      },
       "positive_evidence": {"id": "unsupported_type_rejected", "status": "passing"},
       "negative_evidence": {"id": "unsupported_type_cannot_compile_silently", "status": "passing"},
       "notes": "Unsupported Rust signature shapes are rejected instead of adapted implicitly."
@@ -88,11 +93,11 @@
       "category": "supported",
       "tier": 1,
       "capability": "same-workspace crate as ordinary Cargo dependency",
-      "execution_kind": "contract-only",
+      "execution_kind": "cargo-probe",
       "required_crates": [],
       "positive_evidence": {"id": "declared_path_dependency_resolves", "status": "passing"},
       "negative_evidence": {"id": "undeclared_workspace_crate_rejected", "status": "passing"},
-      "notes": "Same-workspace crates are supported only through explicit Cargo dependency declarations."
+      "notes": "A generated package build and run proves same-workspace crates are supported only through explicit Cargo dependency declarations; the undeclared-root diagnostic is observed separately."
     },
     {
       "id": "shared_bridge_crate",
@@ -100,11 +105,11 @@
       "category": "supported-through-bridge",
       "tier": 1,
       "capability": "shared bridge crate boundary",
-      "execution_kind": "contract-only",
+      "execution_kind": "cargo-probe",
       "required_crates": [],
       "positive_evidence": {"id": "stable_runtime_types_only", "status": "passing"},
       "negative_evidence": {"id": "package_generated_type_import_rejected", "status": "passing"},
-      "notes": "Shared bridge crates are supported when they expose stable runtime types and do not import package-specific generated modules."
+      "notes": "A generated package build and run proves shared bridge crates can expose stable runtime types; a separate observed diagnostic rejects package-specific generated-module imports."
     },
     {
       "id": "opaque_handle_tokenizer",
@@ -249,6 +254,11 @@
       "capability": "blocking I/O and CPU-heavy classification",
       "execution_kind": "compiler-diagnostic",
       "required_crates": ["rusqlite", "rayon", "flate2"],
+      "diagnostic_crate_rationale": {
+        "purpose": "rusqlite, rayon, and flate2 supply blocking-I/O and CPU-heavy classification examples used only to exercise SIFR-RUST-ASYNC diagnostics",
+        "linked": false,
+        "executed": false
+      },
       "positive_evidence": {"id": "classified_sync_rust_effects", "status": "passing"},
       "negative_evidence": {"id": "classified_async_declarations_rejected", "status": "passing"},
       "notes": "Blocking I/O and CPU-heavy Rust calls must be explicit and are rejected on async declarations."
