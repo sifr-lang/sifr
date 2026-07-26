@@ -232,7 +232,7 @@ fn render_dry_run_text(plan: &UpdatePlan, discovered: &DiscoveredReceipt) -> Str
 fn render_dry_run_json(plan: &UpdatePlan, discovered: &DiscoveredReceipt) -> String {
     let requested_channel = json_optional_channel(plan.requested_channel);
     format!(
-        "{{\n  \"schema_version\": 1,\n  \"current_version\": {},\n  \"target_version\": {},\n  \"receipt_channel\": {},\n  \"requested_channel\": {},\n  \"resolved_channel\": {},\n  \"install_dir\": {},\n  \"binary_path\": {},\n  \"sysroot_path\": {},\n  \"installer_url\": {},\n  \"action\": {},\n  \"force\": {},\n  \"would_run_installer\": {},\n  \"warnings\": []\n}}",
+        "{{\n  \"schema_version\": 2,\n  \"current_version\": {},\n  \"target_version\": {},\n  \"receipt_channel\": {},\n  \"requested_channel\": {},\n  \"resolved_channel\": {},\n  \"install_dir\": {},\n  \"binary_path\": {},\n  \"sysroot_path\": {},\n  \"installer_url\": {},\n  \"action\": {},\n  \"force\": {},\n  \"would_run_installer\": {},\n  \"warnings\": []\n}}",
         json_string(&plan.current_version.text),
         json_string(&plan.target_version.text),
         json_string(plan.receipt_channel.as_str()),
@@ -290,7 +290,7 @@ fn render_version_text(discovered: &DiscoveredReceipt) -> String {
 
 fn render_version_json(discovered: &DiscoveredReceipt) -> String {
     format!(
-        "{{\n  \"schema_version\": 1,\n  \"current_executable\": {},\n  \"current_version\": {},\n  \"receipt_version\": {},\n  \"install_dir\": {},\n  \"binary_path\": {},\n  \"sysroot_path\": {},\n  \"sysroot_schema_version\": {},\n  \"sysroot_sifr_version\": {},\n  \"sysroot_target_triple\": {},\n  \"channel\": {},\n  \"target\": {},\n  \"matches_receipt\": {},\n  \"warnings\": []\n}}",
+        "{{\n  \"schema_version\": 2,\n  \"current_executable\": {},\n  \"current_version\": {},\n  \"receipt_version\": {},\n  \"install_dir\": {},\n  \"binary_path\": {},\n  \"sysroot_path\": {},\n  \"sysroot_schema_version\": {},\n  \"sysroot_sifr_version\": {},\n  \"sysroot_target_triple\": {},\n  \"channel\": {},\n  \"target\": {},\n  \"matches_receipt\": {},\n  \"warnings\": []\n}}",
         json_string(&discovered.current_executable.display().to_string()),
         json_string(SIFR_BUILD_VERSION),
         json_string(&discovered.receipt.version),
@@ -428,7 +428,7 @@ mod tests {
         assert_eq!(
             output,
             r#"{
-  "schema_version": 1,
+  "schema_version": 2,
   "current_version": "0.1.0-beta.1",
   "target_version": "0.1.0-beta.2",
   "receipt_channel": "beta",
@@ -480,7 +480,7 @@ mod tests {
     #[test]
     fn self_version_json_is_deterministic() {
         let output = render_version_json(&discovered());
-        assert!(output.starts_with("{\n  \"schema_version\": 1,"));
+        assert!(output.starts_with("{\n  \"schema_version\": 2,"));
         assert!(output.contains("  \"receipt_version\": \"0.1.0-beta.1\","));
         assert!(output.ends_with("  \"warnings\": []\n}"));
     }

@@ -59,6 +59,51 @@ make_dispatcher_fixture() {
     --install-root "${target_root}" >/dev/null
 }
 
+generate_channel_metadata_fixture() {
+  local out="$1"
+  local alpha_version="$2"
+  local beta_version="$3"
+  local record_dir
+  record_dir="$(mktemp -d "${TMPDIR:-/tmp}/sifr-release-records.XXXXXX")"
+  python3 - "${record_dir}" "${alpha_version}" "${beta_version}" <<'PY'
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+targets = (
+    "aarch64-apple-darwin",
+    "x86_64-apple-darwin",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-unknown-linux-gnu",
+)
+for channel, version in (("alpha", sys.argv[2]), ("beta", sys.argv[3])):
+    release = {
+        "channel": channel,
+        "status": "active",
+        "source_commit": "e" * 40,
+        "installer_sha256": "a" * 64,
+        "targets": {
+            target: {
+                "artifact_sha256": "b" * 64,
+                "sysroot_content_sha256": "c" * 64,
+            }
+            for target in targets
+        },
+    }
+    (root / f"{channel}.json").write_text(
+        json.dumps({"version": version, "release": release}),
+        encoding="utf-8",
+    )
+PY
+  "${REPO_ROOT}/scripts/distribution/generate_channel_metadata.sh" \
+    --out "${out}" \
+    --generation 1 \
+    --alpha-release "${record_dir}/alpha.json" \
+    --beta-release "${record_dir}/beta.json" >/dev/null
+  rm -rf "${record_dir}"
+}
+
 make_mock_version_installers() {
   local target_root="$1"
   mkdir -p "${target_root}/github-releases/0.1.0-alpha.1" "${target_root}/github-releases/0.1.0-beta.1"
@@ -75,10 +120,10 @@ EOF
   chmod 755 \
     "${target_root}/github-releases/0.1.0-alpha.1/sifr-installer-0.1.0-alpha.1" \
     "${target_root}/github-releases/0.1.0-beta.1/sifr-installer-0.1.0-beta.1"
-  "${REPO_ROOT}/scripts/distribution/generate_channel_metadata.sh" \
-    --out "${target_root}/channels.json" \
-    --alpha-version "0.1.0-alpha.1" \
-    --beta-version "0.1.0-beta.1" >/dev/null
+  generate_channel_metadata_fixture \
+    "${target_root}/channels.json" \
+    "0.1.0-alpha.1" \
+    "0.1.0-beta.1"
 }
 
 use_mock_dispatcher_fixture() {
@@ -222,10 +267,10 @@ make_self_update_install_root_fixture() {
   local beta_version="${3:-0.1.0-beta.7}"
   "${REPO_ROOT}/scripts/distribution/generate_dispatchers.sh" \
     --install-root "${install_root}" >/dev/null
-  "${REPO_ROOT}/scripts/distribution/generate_channel_metadata.sh" \
-    --out "${install_root}/channels.json" \
-    --alpha-version "${alpha_version}" \
-    --beta-version "${beta_version}" >/dev/null
+  generate_channel_metadata_fixture \
+    "${install_root}/channels.json" \
+    "${alpha_version}" \
+    "${beta_version}"
 }
 
 make_site_repo_fixture() {

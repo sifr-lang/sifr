@@ -62,6 +62,11 @@
       "display_name": "Developer Tooling"
     },
     {
+      "id": "documentation",
+      "kind": "team",
+      "display_name": "Documentation"
+    },
+    {
       "id": "release/distribution",
       "kind": "team",
       "display_name": "Release Distribution"

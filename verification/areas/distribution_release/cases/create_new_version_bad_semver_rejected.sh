@@ -14,7 +14,7 @@ site_repo="${tmp_dir}/site"
 make_site_repo_fixture "${site_repo}"
 
 require_failure_contains \
-  "version must be a semver prerelease" \
+  "version must be a semver prerelease using -alpha.N, -beta.N, or -rc.N" \
   "${REPO_ROOT}/scripts/distribution/create_new_version.sh" \
     --channel beta \
     --version 0.1.0-gamma.1 \

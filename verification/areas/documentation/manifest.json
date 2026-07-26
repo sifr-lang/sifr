@@ -1,0 +1,40 @@
+{
+  "schema_version": 2,
+  "name": "documentation",
+  "owner": "documentation",
+  "description": "Documentation inventory, release-claim, and mutation-harness validation.",
+  "parallel_safe": true,
+  "resource_classes": [
+    "default-local"
+  ],
+  "timeout_seconds": 300,
+  "suites": [
+    {
+      "name": "structure",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "documentation-structure",
+          "entry": "verification/areas/documentation/docs_inventory.json",
+          "command": "documentation-structure",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ],
+  "network_mode": "offline",
+  "pinned_corpus": {
+    "required": false,
+    "revision": "not-applicable",
+    "checksum": "not-applicable"
+  },
+  "skip_policy": {
+    "allowed": false,
+    "requires_reason": true
+  },
+  "baseline_metadata_rules": {
+    "required": false,
+    "source": "not-applicable"
+  }
+}

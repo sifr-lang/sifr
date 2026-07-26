@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sifr.sh/schemas/self-version-v2.json",
+  "title": "Sifr self version response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "current_executable",
+    "current_version",
+    "receipt_version",
+    "install_dir",
+    "binary_path",
+    "sysroot_path",
+    "sysroot_schema_version",
+    "sysroot_sifr_version",
+    "sysroot_target_triple",
+    "channel",
+    "target",
+    "matches_receipt",
+    "warnings"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "current_executable": {"type": "string", "minLength": 1},
+    "current_version": {"$ref": "#/$defs/version"},
+    "receipt_version": {"$ref": "#/$defs/version"},
+    "install_dir": {"type": "string", "minLength": 1},
+    "binary_path": {"type": "string", "minLength": 1},
+    "sysroot_path": {"type": "string", "minLength": 1},
+    "sysroot_schema_version": {"const": 1},
+    "sysroot_sifr_version": {"$ref": "#/$defs/version"},
+    "sysroot_target_triple": {"type": "string", "minLength": 1},
+    "channel": {"enum": ["alpha", "beta", "stable"]},
+    "target": {"type": "string", "minLength": 1},
+    "matches_receipt": {"type": "boolean"},
+    "warnings": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-(?:alpha|beta)\\.[0-9]+)?$"
+    }
+  }
+}

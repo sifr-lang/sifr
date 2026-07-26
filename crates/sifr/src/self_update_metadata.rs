@@ -14,6 +14,7 @@ const CHANNEL_METADATA_URL: &str =
 pub(crate) enum PreviewChannel {
     Alpha,
     Beta,
+    Stable,
 }
 
 impl PreviewChannel {
@@ -21,9 +22,16 @@ impl PreviewChannel {
         match self {
             Self::Alpha => "alpha",
             Self::Beta => "beta",
+            Self::Stable => "stable",
         }
     }
 }
+
+const RELEASE_CHANNELS: [PreviewChannel; 3] = [
+    PreviewChannel::Alpha,
+    PreviewChannel::Beta,
+    PreviewChannel::Stable,
+];
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct PreviewVersion {
@@ -37,11 +45,6 @@ pub(crate) struct PreviewVersion {
 
 impl PreviewVersion {
     pub(crate) fn parse(input: &str) -> Result<Self, Box<RenderedDiagnostic>> {
-        if input.contains("-rc.") {
-            return Err(self_update_diagnostic(format!(
-                "release-candidate version pins are disabled while stable release channels are disabled: {input}; use --channel alpha|beta or a supported preview version"
-            )));
-        }
         if is_stable_version(input) {
             return Err(self_update_diagnostic(format!(
                 "stable-looking versions are disabled while stable release channels are disabled: {input}; use --channel alpha|beta or --version <preview>"
@@ -65,11 +68,6 @@ impl PreviewVersion {
         let channel = match label {
             "alpha" => PreviewChannel::Alpha,
             "beta" => PreviewChannel::Beta,
-            "rc" => {
-                return Err(self_update_diagnostic(format!(
-                    "release-candidate version pins are disabled while stable release channels are disabled: {input}; use --channel alpha|beta or a supported preview version"
-                )));
-            }
             _ => return Err(invalid_preview_version(input)),
         };
         let prerelease_number = number
@@ -168,17 +166,34 @@ impl ChannelMetadata {
         let object = value.as_object().ok_or_else(|| {
             self_update_diagnostic("self-update channel metadata must be a JSON object")
         })?;
-        if object.len() != 2
+        if object.len() != 5
             || !object.contains_key("schema_version")
+            || !object.contains_key("generation")
+            || !object.contains_key("ga_status")
             || !object.contains_key("channels")
+            || !object.contains_key("releases")
         {
             return Err(self_update_diagnostic(
                 "self-update channel metadata contains unsupported fields",
             ));
         }
-        if object.get("schema_version").and_then(Value::as_u64) != Some(1) {
+        if object.get("schema_version").and_then(Value::as_u64) != Some(2) {
             return Err(self_update_diagnostic(
-                "self-update channel metadata schema_version must be 1",
+                "self-update channel metadata schema_version must be integer 2",
+            ));
+        }
+        if object
+            .get("generation")
+            .and_then(Value::as_u64)
+            .is_none_or(|value| value == 0)
+        {
+            return Err(self_update_diagnostic(
+                "self-update channel metadata generation must be a positive integer",
+            ));
+        }
+        if object.get("ga_status").and_then(Value::as_str) != Some("preview") {
+            return Err(self_update_diagnostic(
+                "stable channel self-update is disabled until GA activation",
             ));
         }
         let channels = object
@@ -192,12 +207,10 @@ impl ChannelMetadata {
                     "stable channel metadata is disabled while stable release channels are disabled",
                 ));
             }
-            if name == "rc" {
-                return Err(self_update_diagnostic(
-                    "release-candidate channel metadata is disabled while stable release channels are disabled",
-                ));
-            }
-            if name != "alpha" && name != "beta" {
+            if !RELEASE_CHANNELS
+                .iter()
+                .any(|channel| channel.as_str() == name)
+            {
                 return Err(self_update_diagnostic(format!(
                     "unknown self-update channel in metadata: {name}"
                 )));
@@ -219,6 +232,38 @@ impl ChannelMetadata {
                 "self-update metadata must contain alpha and beta channels",
             ));
         }
+        let releases = object
+            .get("releases")
+            .and_then(Value::as_object)
+            .ok_or_else(|| self_update_diagnostic("self-update releases must be an object"))?;
+        if releases.len() < 2 {
+            return Err(self_update_diagnostic(
+                "self-update metadata must contain alpha and beta release records",
+            ));
+        }
+        for (version, release) in releases {
+            validate_release_record(version, release)?;
+        }
+        for (channel, version) in channels {
+            let version = version.as_str().ok_or_else(|| {
+                self_update_diagnostic(format!("metadata channel {channel} must map to a version"))
+            })?;
+            let release = releases
+                .get(version)
+                .and_then(Value::as_object)
+                .ok_or_else(|| {
+                    self_update_diagnostic(format!(
+                        "metadata channel {channel} points at missing release {version}"
+                    ))
+                })?;
+            if release.get("channel").and_then(Value::as_str) != Some(channel)
+                || release.get("status").and_then(Value::as_str) != Some("active")
+            {
+                return Err(self_update_diagnostic(format!(
+                    "metadata channel {channel} must point at an active matching release"
+                )));
+            }
+        }
         Ok(Self { channels: parsed })
     }
 
@@ -239,9 +284,6 @@ pub(crate) fn parse_channel(input: &str) -> Result<PreviewChannel, Box<RenderedD
         "beta" => Ok(PreviewChannel::Beta),
         "stable" => Err(self_update_diagnostic(
             "stable channel self-update is disabled while stable release channels are disabled; use --channel alpha|beta",
-        )),
-        "rc" => Err(self_update_diagnostic(
-            "release-candidate channel self-update is disabled while stable release channels are disabled; use --channel alpha|beta",
         )),
         other => Err(self_update_diagnostic(format!(
             "unknown self-update channel: {other}; use --channel alpha|beta"
@@ -382,7 +424,132 @@ fn channel_rank(channel: PreviewChannel) -> u8 {
     match channel {
         PreviewChannel::Alpha => 1,
         PreviewChannel::Beta => 2,
+        PreviewChannel::Stable => 3,
     }
+}
+
+fn validate_release_record(version: &str, value: &Value) -> Result<(), Box<RenderedDiagnostic>> {
+    let release = value.as_object().ok_or_else(|| {
+        self_update_diagnostic(format!("release record {version} must be an object"))
+    })?;
+    let status = release.get("status").and_then(Value::as_str);
+    let expected_len = if status == Some("withdrawn") { 6 } else { 5 };
+    let required = [
+        "channel",
+        "status",
+        "source_commit",
+        "installer_sha256",
+        "targets",
+    ];
+    if release.len() != expected_len || required.iter().any(|field| !release.contains_key(*field)) {
+        return Err(self_update_diagnostic(format!(
+            "release record {version} contains unsupported fields"
+        )));
+    }
+    let parsed = PreviewVersion::parse(version)?;
+    if release.get("channel").and_then(Value::as_str) != Some(parsed.channel.as_str()) {
+        return Err(self_update_diagnostic(format!(
+            "release record {version} channel does not match its version"
+        )));
+    }
+    if status != Some("active") && status != Some("withdrawn") {
+        return Err(self_update_diagnostic(format!(
+            "release record {version} has an invalid status"
+        )));
+    }
+    if status == Some("withdrawn") {
+        if release
+            .get("incident_id")
+            .and_then(Value::as_str)
+            .is_none_or(str::is_empty)
+        {
+            return Err(self_update_diagnostic(format!(
+                "withdrawn release {version} must name an incident"
+            )));
+        }
+    } else if release.contains_key("incident_id") {
+        return Err(self_update_diagnostic(format!(
+            "active release {version} must not name an incident"
+        )));
+    }
+    validate_hex(
+        release.get("source_commit"),
+        40,
+        &format!("release {version} source commit"),
+    )?;
+    validate_hex(
+        release.get("installer_sha256"),
+        64,
+        &format!("release {version} installer digest"),
+    )?;
+    let targets = release
+        .get("targets")
+        .and_then(Value::as_object)
+        .ok_or_else(|| {
+            self_update_diagnostic(format!("release {version} targets must be an object"))
+        })?;
+    let required_targets = [
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
+        "x86_64-unknown-linux-gnu",
+    ];
+    if targets.len() != required_targets.len()
+        || required_targets
+            .iter()
+            .any(|target| !targets.contains_key(*target))
+    {
+        return Err(self_update_diagnostic(format!(
+            "release {version} must contain exactly the four supported targets"
+        )));
+    }
+    for (target, evidence) in targets {
+        let evidence = evidence.as_object().ok_or_else(|| {
+            self_update_diagnostic(format!(
+                "release {version} target {target} must be an object"
+            ))
+        })?;
+        if evidence.len() != 2
+            || !evidence.contains_key("artifact_sha256")
+            || !evidence.contains_key("sysroot_content_sha256")
+        {
+            return Err(self_update_diagnostic(format!(
+                "release {version} target {target} contains unsupported fields"
+            )));
+        }
+        validate_hex(
+            evidence.get("artifact_sha256"),
+            64,
+            &format!("release {version} target {target} artifact digest"),
+        )?;
+        validate_hex(
+            evidence.get("sysroot_content_sha256"),
+            64,
+            &format!("release {version} target {target} sysroot digest"),
+        )?;
+    }
+    Ok(())
+}
+
+fn validate_hex(
+    value: Option<&Value>,
+    length: usize,
+    label: &str,
+) -> Result<(), Box<RenderedDiagnostic>> {
+    let text = value.and_then(Value::as_str).ok_or_else(|| {
+        self_update_diagnostic(format!("{label} must be a lowercase hexadecimal string"))
+    })?;
+    if text.len() != length
+        || text
+            .chars()
+            .any(|character| !character.is_ascii_hexdigit() || character.is_ascii_uppercase())
+        || text.chars().all(|character| character == '0')
+    {
+        return Err(self_update_diagnostic(format!(
+            "{label} must be a nonzero lowercase hexadecimal string"
+        )));
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -391,18 +558,51 @@ mod tests {
         parse_channel, resolve_update_plan, ChannelMetadata, PreviewChannel, PreviewVersion,
         TargetRequest, UpdateAction,
     };
+    use serde_json::{json, Value};
+
+    fn metadata_payload() -> Value {
+        let targets = json!({
+            "aarch64-apple-darwin": digest_evidence(),
+            "x86_64-apple-darwin": digest_evidence(),
+            "aarch64-unknown-linux-gnu": digest_evidence(),
+            "x86_64-unknown-linux-gnu": digest_evidence()
+        });
+        json!({
+            "schema_version": 2,
+            "generation": 1,
+            "ga_status": "preview",
+            "channels": {
+                "alpha": "0.1.0-alpha.2",
+                "beta": "0.1.0-beta.2"
+            },
+            "releases": {
+                "0.1.0-alpha.2": release("alpha", targets.clone()),
+                "0.1.0-beta.2": release("beta", targets)
+            }
+        })
+    }
 
     fn metadata() -> ChannelMetadata {
-        ChannelMetadata::parse(
-            r#"{
-  "schema_version": 1,
-  "channels": {
-    "alpha": "0.1.0-alpha.2",
-    "beta": "0.1.0-beta.2"
-  }
-}"#,
-        )
-        .expect("metadata parses")
+        let payload = metadata_payload();
+        ChannelMetadata::parse(&serde_json::to_string(&payload).expect("serialize metadata"))
+            .expect("metadata parses")
+    }
+
+    fn digest_evidence() -> Value {
+        json!({
+            "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "sysroot_content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        })
+    }
+
+    fn release(channel: &str, targets: Value) -> Value {
+        json!({
+            "channel": channel,
+            "status": "active",
+            "source_commit": "cccccccccccccccccccccccccccccccccccccccc",
+            "installer_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+            "targets": targets
+        })
     }
 
     #[test]
@@ -514,23 +714,28 @@ mod tests {
     }
 
     #[test]
-    fn rejects_rc_channel_without_stable_release_channel() {
-        let error = parse_channel("rc").expect_err("rc channel is gated");
-        assert!(error.message.contains("release-candidate"));
+    fn rejects_rc_channel() {
+        let error = parse_channel("rc").expect_err("rc channel is unsupported");
+        assert!(error.message.contains("unknown self-update channel"));
     }
 
     #[test]
     fn rejects_stable_metadata() {
-        assert!(ChannelMetadata::parse(
-            r#"{"schema_version":1,"channels":{"alpha":"0.1.0-alpha.1","beta":"0.1.0-beta.1","stable":"1.0.0"}}"#,
+        let mut payload = metadata_payload();
+        payload["channels"]["stable"] = json!("1.0.0");
+        let error = ChannelMetadata::parse(
+            &serde_json::to_string(&payload).expect("serialize invalid metadata"),
         )
-        .is_err());
+        .expect_err("preview metadata must reject a stable channel key");
+        assert!(error
+            .message
+            .contains("stable channel metadata is disabled"));
     }
 
     #[test]
     fn rejects_unknown_metadata_channel() {
         assert!(ChannelMetadata::parse(
-            r#"{"schema_version":1,"channels":{"alpha":"0.1.0-alpha.1","beta":"0.1.0-beta.1","nightly":"0.1.0-alpha.2"}}"#,
+            r#"{"schema_version":2,"generation":1,"ga_status":"preview","channels":{"alpha":"0.1.0-alpha.1","beta":"0.1.0-beta.1","nightly":"0.1.0-alpha.2"},"releases":{}}"#,
         )
         .is_err());
     }

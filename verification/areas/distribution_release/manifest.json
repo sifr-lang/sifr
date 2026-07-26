@@ -35,6 +35,19 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "evidence-custody",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "evidence-custody",
+          "entry": "verification/areas/distribution_release/governance/evidence_custody.py",
+          "command": "distribution-evidence-custody",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ],
   "network_mode": "offline",

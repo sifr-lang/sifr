@@ -1,0 +1,134 @@
+{
+  "schema_version": 2,
+  "owner": "release/distribution",
+  "gates": [
+    {
+      "id": "preview-workflow-channel-input",
+      "location": ".github/workflows/preview-release.yml",
+      "owner": "release/distribution",
+      "current_behavior": "accepts alpha and beta only",
+      "activation_boundary": "protected-publication",
+      "disposition": "preview publication delegates index mutation to the protected canonical workflow"
+    },
+    {
+      "id": "preview-trigger-channel-input",
+      "location": "scripts/distribution/trigger_preview_release.sh",
+      "owner": "release/distribution",
+      "current_behavior": "accepts alpha and beta only",
+      "activation_boundary": "protected-publication",
+      "disposition": "remains a preview-only dispatcher"
+    },
+    {
+      "id": "local-preview-planner",
+      "location": "scripts/distribution/create_new_version.sh",
+      "owner": "release/distribution",
+      "current_behavior": "rejects stable and has no GitHub mutation mode",
+      "activation_boundary": "stable-planning",
+      "disposition": "remains preview-only; stable uses the canonical non-mutating planner"
+    },
+    {
+      "id": "preview-artifact-builder",
+      "location": "scripts/distribution/build_preview_artifacts.sh",
+      "owner": "release/distribution",
+      "current_behavior": "accepts alpha and beta versions only",
+      "activation_boundary": "stable-qualification",
+      "disposition": "shared target packaging moves behind stable qualification without enabling publication"
+    },
+    {
+      "id": "immutable-installer-generator",
+      "location": "scripts/distribution/generate_version_installer.sh",
+      "owner": "release/distribution",
+      "current_behavior": "accepts alpha and beta versions only",
+      "activation_boundary": "stable-installation",
+      "disposition": "accepts exact stable versions and derives APP_CHANNEL=stable"
+    },
+    {
+      "id": "site-default-channel",
+      "location": "scripts/distribution/generate_dispatchers.sh",
+      "owner": "release/distribution",
+      "current_behavior": "index defaults to beta and stable is rejected",
+      "activation_boundary": "stable-installation",
+      "disposition": "index and stable entrypoint resolve stable; alpha and beta remain explicit"
+    },
+    {
+      "id": "site-version-pin",
+      "location": "scripts/distribution/generate_dispatchers.sh",
+      "owner": "release/distribution",
+      "current_behavior": "stable version pins are rejected",
+      "activation_boundary": "stable-installation",
+      "disposition": "exact active stable pins resolve; withdrawn or absent pins fail"
+    },
+    {
+      "id": "site-release-index-preview-state",
+      "location": "verification/areas/distribution_release/tools/validate_self_update_metadata.sh",
+      "owner": "release/distribution",
+      "current_behavior": "requires schema-v2 preview state without stable",
+      "activation_boundary": "stable-installation",
+      "disposition": "shared validator accepts active GA state and verifies stable dispatcher agreement"
+    },
+    {
+      "id": "self-update-index-state",
+      "location": "crates/sifr/src/self_update_metadata.rs",
+      "owner": "release/distribution",
+      "current_behavior": "requires schema-v2 preview state and rejects active GA",
+      "activation_boundary": "stable-installation",
+      "disposition": "accepts active GA and resolves stable only from an active release record"
+    },
+    {
+      "id": "self-update-channel-selection",
+      "location": "crates/sifr/src/self_update_metadata.rs",
+      "owner": "release/distribution",
+      "current_behavior": "stable channel and exact stable versions are rejected",
+      "activation_boundary": "stable-installation",
+      "disposition": "stable channel and exact active stable pins use the governed release index"
+    },
+    {
+      "id": "install-receipt-channel",
+      "location": "crates/sifr/src/self_update_receipt.rs",
+      "owner": "release/distribution",
+      "current_behavior": "runtime accepts alpha and beta receipts only",
+      "activation_boundary": "stable-installation",
+      "disposition": "runtime accepts alpha, beta, and stable schema-v2 receipts; rc remains invalid"
+    },
+    {
+      "id": "public-installation-docs",
+      "location": "docs/installation.mdx",
+      "owner": "documentation",
+      "current_behavior": "documents preview standalone installation and update",
+      "activation_boundary": "ga-documentation",
+      "disposition": "documents stable default, explicit previews, target and ABI floors, and recovery"
+    },
+    {
+      "id": "self-update-contract-docs",
+      "location": "docs/self_update.md",
+      "owner": "documentation",
+      "current_behavior": "documents stable as gated",
+      "activation_boundary": "ga-documentation",
+      "disposition": "documents active stable resolution, checksum enforcement, and withdrawn-version failures"
+    },
+    {
+      "id": "distribution-architecture-docs",
+      "location": "internal_docs/distribution_pipeline.md",
+      "owner": "release/distribution",
+      "current_behavior": "documents preview publication and gated stable behavior",
+      "activation_boundary": "protected-publication",
+      "disposition": "documents the canonical protected publication and incident path"
+    },
+    {
+      "id": "stable-negative-fixtures",
+      "location": "verification/areas/distribution_release/cases",
+      "owner": "release/distribution",
+      "current_behavior": "proves stable resolution and publication remain unavailable",
+      "activation_boundary": "stable-installation",
+      "disposition": "replaced by positive stable resolution plus withdrawn, checksum, and mismatch negatives"
+    },
+    {
+      "id": "release-profile-stable-gates",
+      "location": "verification/profiles/release.json",
+      "owner": "compiler/verification",
+      "current_behavior": "executes distribution, tooling, documentation, and Rust release gates",
+      "activation_boundary": "architecture-lock",
+      "disposition": "durably executes evidence-custody, editor-release expansion, and stable-candidate"
+    }
+  ]
+}

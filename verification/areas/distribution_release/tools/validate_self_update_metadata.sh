@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
+
 usage() {
   cat <<'EOF'
 Usage: verification/areas/distribution_release/tools/validate_self_update_metadata.sh --install-root <dir> --channels-file <file>
@@ -48,6 +51,13 @@ fail() {
 
 metadata_path="${CHANNELS_FILE}"
 
+governance_output="$(
+  python3 "${REPO_ROOT}/scripts/distribution/release_governance.py" \
+    validate \
+    --kind release-index \
+    --input "${metadata_path}" 2>&1
+)" || fail "${governance_output}"
+
 metadata_values="$(
   python3 - "${metadata_path}" 2>&1 <<'PY'
 import json
@@ -63,17 +73,11 @@ except json.JSONDecodeError as error:
 
 if not isinstance(metadata, dict):
     raise SystemExit("channel metadata must be a JSON object")
-if set(metadata) != {"schema_version", "channels"}:
-    raise SystemExit("channel metadata contains unsupported fields")
-schema_version = metadata.get("schema_version")
-if type(schema_version) is not int or schema_version != 1:
-    raise SystemExit("channel metadata schema_version must be 1")
-
 channels = metadata.get("channels")
 if not isinstance(channels, dict):
     raise SystemExit("channel metadata channels must be an object")
-if "stable" in channels:
-    raise SystemExit("stable channel metadata is disabled until stable channels are supported")
+if metadata.get("ga_status") != "preview" or "stable" in channels:
+    raise SystemExit("stable channel metadata is disabled until GA activation")
 if set(channels) != {"alpha", "beta"}:
     unknown = sorted(set(channels) - {"alpha", "beta"})
     if unknown:
@@ -88,6 +92,9 @@ for channel in ("alpha", "beta"):
         raise SystemExit(f"metadata channel {channel} must map to a version")
     if not re.fullmatch(rf"[0-9]+\.[0-9]+\.[0-9]+-{channel}\.[0-9]+", version):
         raise SystemExit(f"metadata channel {channel} points at {version}")
+    release = metadata["releases"].get(version)
+    if not isinstance(release, dict) or release.get("status") != "active":
+        raise SystemExit(f"metadata channel {channel} does not point at an active release")
     print(f"{channel}={version}")
 PY
 )" || fail "${metadata_values}"

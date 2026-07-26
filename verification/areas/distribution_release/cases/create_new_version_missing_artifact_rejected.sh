@@ -19,9 +19,10 @@ require_failure_contains \
   "missing artifact" \
   "${REPO_ROOT}/scripts/distribution/create_new_version.sh" \
     --channel beta \
-    --version 0.1.0-beta.5 \
+    --version 0.1.0-beta.10 \
     --real-run \
     --site-repo "${site_repo}" \
     --work-dir "${tmp_dir}/work" \
+    --release-index "${site_repo}/apps/sifr-site/public/install/channels.json" \
     --artifact-dir "${artifact_dir}" \
     --mutation-mode local

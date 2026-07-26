@@ -28,6 +28,7 @@ Options:
   --binary <path>            Existing binary packaged for all targets in local validation
   --sysroot-root <dir>       Source sysroot root for local binary packaging
   --work-dir <dir>           Work/evidence directory (default: target/preview-release/<version>)
+  --release-index <file>     Canonical schema-v2 baseline required by --real-run
   --mutation-mode <mode>     local only; GitHub publication is handled by preview-release.yml
   --help                     Show this help
 EOF
@@ -42,6 +43,7 @@ ARTIFACT_DIR=""
 BINARY=""
 SYSROOT_ROOT=""
 WORK_DIR=""
+RELEASE_INDEX=""
 MUTATION_MODE="local"
 
 while [[ $# -gt 0 ]]; do
@@ -88,6 +90,10 @@ while [[ $# -gt 0 ]]; do
       WORK_DIR="${2:-}"
       shift 2
       ;;
+    --release-index)
+      RELEASE_INDEX="${2:-}"
+      shift 2
+      ;;
     --mutation-mode)
       MUTATION_MODE="${2:-}"
       shift 2
@@ -129,6 +135,15 @@ sha256_text() {
   fi
 }
 
+sha256_file() {
+  local path="$1"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "${path}" | awk '{print $1}'
+  else
+    shasum -a 256 "${path}" | awk '{print $1}'
+  fi
+}
+
 extract_var() {
   local file="$1"
   local name="$2"
@@ -136,17 +151,24 @@ extract_var() {
 }
 
 read_current_channel_versions() {
-  local metadata_file="${INSTALL_ROOT}/channels.json"
+  local metadata_file="${RELEASE_INDEX}"
   local temp_file=""
 
-  if [[ ! -f "${metadata_file}" ]]; then
-    temp_file="$(mktemp "${TMPDIR:-/tmp}/sifr-current-channels.XXXXXX")"
-    metadata_file="${temp_file}"
-    curl -fsSL \
-      "https://github.com/sifr-lang/sifr/releases/download/channels/channels.json" \
-      -o "${metadata_file}" || fail "could not fetch current GitHub channel metadata"
+  if [[ -z "${metadata_file}" ]]; then
+    metadata_file="${INSTALL_ROOT}/channels.json"
+    if [[ ! -f "${metadata_file}" ]]; then
+      temp_file="$(mktemp "${TMPDIR:-/tmp}/sifr-current-channels.XXXXXX")"
+      metadata_file="${temp_file}"
+      curl -fsSL \
+        "https://github.com/sifr-lang/sifr/releases/download/channels/channels.json" \
+        -o "${metadata_file}" || fail "could not fetch current GitHub channel metadata"
+    fi
   fi
 
+  "${SCRIPT_DIR}/release_governance.py" validate \
+    --kind release-index \
+    --input "${metadata_file}" \
+    --require-canonical >/dev/null
   read -r CURRENT_ALPHA CURRENT_BETA < <("${SCRIPT_DIR}/read_channel_versions.py" "${metadata_file}")
   [[ -n "${CURRENT_ALPHA}" && -n "${CURRENT_BETA}" ]] || fail "current channel metadata is missing alpha or beta"
 
@@ -166,6 +188,10 @@ validate_inputs() {
   [[ "${version_channel}" == "${CHANNEL}" ]] || fail "version ${VERSION} belongs to ${version_channel}, not ${CHANNEL}"
   [[ -d "${SITE_REPO}" ]] || fail "site repo not found: ${SITE_REPO}"
   [[ -d "${INSTALL_ROOT}" ]] || fail "site install root not found: ${INSTALL_ROOT}"
+  if [[ "${MODE}" == "real-run" ]]; then
+    [[ -n "${RELEASE_INDEX}" ]] || fail "--release-index is required with --real-run"
+    [[ -f "${RELEASE_INDEX}" ]] || fail "release index not found: ${RELEASE_INDEX}"
+  fi
 }
 
 validate_site_dispatchers() {
@@ -347,10 +373,28 @@ real_run() {
   "${SCRIPT_DIR}/generate_dispatchers.sh" \
     --install-root "${INSTALL_ROOT}" >/dev/null
 
-  "${SCRIPT_DIR}/generate_channel_metadata.sh" \
+  current_index="${RELEASE_INDEX}"
+  "${SCRIPT_DIR}/release_governance.py" validate \
+    --kind release-index \
+    --input "${current_index}" \
+    --require-canonical >/dev/null
+  expected_generation="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["generation"])' "${current_index}")"
+  expected_sha256="$(sha256_file "${current_index}")"
+  release_record="${WORK_DIR}/new-release-record.json"
+  "${SCRIPT_DIR}/release_governance.py" build-release-record \
+    --version "${VERSION}" \
+    --channel "${CHANNEL}" \
+    --source-commit "${BASE_SHA}" \
+    --installer "${INSTALLER_ASSET_FILE}" \
+    --artifact-dir "${ARTIFACT_DIR}" \
+    --out "${release_record}" >/dev/null
+  "${SCRIPT_DIR}/release_governance.py" update-preview-index \
+    --current "${current_index}" \
     --out "${CHANNEL_METADATA_FILE}" \
-    --alpha-version "${NEW_ALPHA}" \
-    --beta-version "${NEW_BETA}" >/dev/null
+    --channel "${CHANNEL}" \
+    --release "${release_record}" \
+    --expected-generation "${expected_generation}" \
+    --expected-sha256 "${expected_sha256}" >/dev/null
 
   "${REPO_ROOT}/verification/areas/distribution_release/tools/validate_self_update_metadata.sh" \
     --install-root "${INSTALL_ROOT}" \

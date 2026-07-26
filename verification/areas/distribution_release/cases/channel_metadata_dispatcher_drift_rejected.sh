@@ -15,10 +15,7 @@ channels_file="${tmp_dir}/channels.json"
 make_self_update_install_root_fixture "${install_root}" "0.1.0-alpha.4" "0.1.0-beta.7"
 sed -i.bak 's#https://github.com/sifr-lang/sifr/releases/download/channels/channels.json#https://sifr.sh/install/metadata/channels.json#' \
   "${install_root}/index"
-"${REPO_ROOT}/scripts/distribution/generate_channel_metadata.sh" \
-  --out "${channels_file}" \
-  --alpha-version "0.1.0-alpha.4" \
-  --beta-version "0.1.0-beta.7" >/dev/null
+generate_channel_metadata_fixture "${channels_file}" "0.1.0-alpha.4" "0.1.0-beta.7"
 
 require_failure_contains \
   "dispatcher does not resolve channels from GitHub: index" \
