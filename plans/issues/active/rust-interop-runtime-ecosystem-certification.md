@@ -139,6 +139,27 @@ normative and must not be broadened.
 | `certification_12` | `ecosystem_cli_certification` / 4 / `cargo-probe` | `cli_tooling_probe_coverage` | `unsupported_anyhow_surface` | `supported-through-bridge`; build and run `clap`, `tracing`, `tracing-subscriber[env-filter]`, and bridge-safe `anyhow` adapters; reject direct unsupported `anyhow` crossings |
 | `certification_13` | `ecosystem_backend_certification` / 4 / `cargo-probe` | `backend_probe_coverage` | `sqlx_without_offline_artifacts` | `supported-through-bridge`; build and execute hermetic `axum`/`tower-http` loopback plus `sqlx` offline metadata paths; reject missing/stale SQLx offline artifacts before network |
 
+## Implementation Progress
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| `certification_0` | in progress | runtime-deferral rows, stable claims, and locked/offline crate inventory |
+| `certification_1` | blocked | starts after `certification_0` merges |
+| `certification_2` | blocked | starts after `certification_1` merges |
+| `certification_3` | blocked | starts after `certification_2` merges |
+| `certification_4` | blocked | starts after `certification_3` merges |
+| `certification_5` | blocked | starts after `certification_4` merges |
+| `certification_6` | blocked | starts after `certification_5` merges |
+| `certification_7` | blocked | starts after `certification_6` merges |
+| `certification_8` | blocked | starts after `certification_7` merges |
+| `certification_9` | blocked | starts after `certification_8` merges |
+| `certification_10` | blocked | starts after `certification_9` merges |
+| `certification_11` | blocked | starts after `certification_10` merges |
+| `certification_12` | blocked | starts after `certification_11` merges |
+| `certification_13` | blocked | starts after `certification_12` merges |
+| `certification_14` | blocked | starts after `certification_13` merges |
+| `certification_pkg_resource_core` | dormant | starts only after Native Pydantic-Sifr `milestone_ps_2` releases bridge version 2 |
+
 ## Ordered Track A Items
 
 ### certification_0: Model Runtime Deferrals and Stable Claims
@@ -146,9 +167,66 @@ normative and must not be broadened.
 This PR lands after hardening items `hardening_1` through `hardening_4` and
 before any row implementation.
 
-- Phase 40 `milestone_40_1` consumes this item after `hardening_1` makes its
-  inherited Rust-interop suites execute; this item supplies the
-  stable-candidate claim check that milestone registers before qualification.
+Implementation checklist:
+
+- [x] Add the two future-owned runtime rows to both matrices, tier metadata,
+  fixture manifests/sources/examples, validator inventories, and docs without
+  weakening the five existing contract-only claims.
+- [x] Add structured stable claims and a validator whose self-tests reject
+  unknown/future-owned claims, execution-scope drift, public-doc omissions,
+  and contract-only runtime overclaims.
+- [x] Pin every declared ecosystem crate and frozen feature policy in the root
+  workspace lock, prove the inventory resolves with locked/offline Cargo, and
+  add mutation coverage for lock/inventory drift.
+- [x] Recompute and record the post-item row, manifest, evidence, category,
+  execution-kind, and locked-crate counts.
+- [x] Run the focused provenance/checker gates, create-PR profile, full merge
+  profile, Clippy, rustfmt, maintainability, file-size, and diff-hygiene gates.
+- [ ] Run Opus review rounds to satisfaction, merge the PR, and unblock only
+  `certification_1`.
+
+Post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 47 passing and 25 planned evidence directions;
+- categories: 17 `supported`, 5 `supported-through-bridge`, 1
+  `unsupported-by-design`, and 13 `future-owned-by-separate-phase`;
+- execution kinds: 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required crate aliases, each exact-pinned at the catalog dependency
+  boundary and present in the checked-in root lockfile; transitive family
+  crates remain selected by that exact locked graph;
+- 23 structured stable claims; and
+- 5 registered area suites with 10 cases, including `stable-candidate` in
+  create-PR, merge, nightly, and release.
+
+Validation evidence on 2026-07-26 and 2026-07-27:
+
+- the final create-PR profile passed all 23 steps; its complete Rust-interop
+  step measured 4,732 ms after one 578 ms locked-cache setup;
+- the merge profile passed all 23 lane steps, including all 10 Rust-interop
+  variants, performance, full E2E, sanitizers, release-smoke/equivalence,
+  diagnostics, and ecosystem hardening; its Rust-interop step measured 4,394
+  ms after one 658 ms locked-cache setup;
+- exact-state nightly and release runs passed their complete Rust-interop and
+  stable-candidate coverage in 4,161 ms and 3,880 ms respectively; and
+- both extended profiles later exposed the same 20 pre-existing algorithmic
+  full-corpus failures among 412 variants. All failures are algorithmic-corpus
+  cases, no algorithmic fixture or compiler behavior is changed here, and the
+  owning issue lands separately; they do not block this item or Phase 40.
+
+The catalog's reachable graph necessarily advances ten versions already used
+elsewhere in the workspace: `hashbrown` 0.17.0 to 0.17.1, `rand` 0.10.1 to
+0.10.2, `js-sys` 0.3.95 to 0.3.103, `wasm-bindgen` 0.2.118 to 0.2.126 and its
+three macro/support crates, plus `futures-core`, `futures-channel`, and
+`futures-sink` 0.3.32 to 0.3.33. Each advance is forced by an exact catalog
+dependency family; the minimal lock update removes no existing package and
+adds no package unreachable from `sifr_rust_interop_catalog`.
+
+- Phase 40 `milestone_40_0` consumed the hardening work while this item was in
+  flight. `milestone_40_1` consumes this item's registered stable-candidate
+  claim check before qualification.
 - Add `zero_copy_runtime_matrix` and `advanced_data_runtime_matrix` to both
   matrices, tier metadata, fixture directories, validator inventories, and
   architecture/public docs with both evidence directions `planned`.
@@ -164,18 +242,19 @@ before any row implementation.
   Phase 40 digests into its canonical `stable-release-plan.json`; it is not a
   second release-plan authority. The governed Phase 40 release plan remains
   authoritative for a concrete stable candidate.
-- Phase 40 must register the eventual `stable-candidate` suite in create-PR,
-  merge, nightly, and release together. Rust-interop profile validation
-  requires every registered area suite in every authoritative profile; a
-  release-only selection would make all four profiles invalid.
+- This item registers `stable-candidate` in create-PR, merge, nightly, and
+  release together. Phase 40 confirms and consumes that registered suite.
+  Rust-interop profile validation requires every registered area suite in
+  every authoritative profile; a release-only selection would make all four
+  profiles invalid.
 - Add a stable-candidate mode that fails when public stable docs advertise a
   row absent from the claims file or advertise runtime support through a
   contract-only row.
-- Confirm Phase 40 `milestone_40_1` registers the stable-candidate suite in all
-  four authoritative profiles and consumes its result during qualification,
-  and the `milestone_40_4` documentation gate executes it. Do not make all
-  development builds fail merely because honest future-owned rows remain
-  unadvertised.
+- Confirm Phase 40 `milestone_40_1` preserves the stable-candidate registration
+  in all four authoritative profiles and consumes its result during
+  qualification, and the `milestone_40_4` documentation gate executes it. Do
+  not make all development builds fail merely because honest future-owned rows
+  remain unadvertised.
 
 Exit gate:
 

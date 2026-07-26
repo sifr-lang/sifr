@@ -182,7 +182,7 @@
       "required_crates": [],
       "positive_evidence": {"id": "result_declares_rust_panic_error_or_map_error", "status": "passing"},
       "negative_evidence": {"id": "panic_payload_not_exposed", "status": "passing"},
-      "notes": "Panic policy declarations and redacted panic error surfaces are supported at the contract level."
+      "notes": "Contract-only panic policy declarations and redacted panic error surfaces are supported."
     },
     {
       "id": "panic_boundary_wrapper_emission",
@@ -207,7 +207,7 @@
       "required_crates": [],
       "positive_evidence": {"id": "explicit_abort_trust_and_strategy_declared", "status": "passing"},
       "negative_evidence": {"id": "recoverable_abort_profile_rejected", "status": "passing"},
-      "notes": "Abort profiles are supported only with explicit trust and matching Cargo panic strategy."
+      "notes": "Contract-only abort profiles are supported only with explicit trust and matching Cargo panic strategy."
     },
     {
       "id": "async_runtime_reqwest",
@@ -232,7 +232,7 @@
       "required_crates": [],
       "positive_evidence": {"id": "stdlib_async_resource_lifecycle", "status": "passing"},
       "negative_evidence": {"id": "stdlib_async_hidden_blocking_rejected", "status": "passing"},
-      "notes": "Stdlib-owned async declarations have checked async-close, current-thread affinity, and hidden-blocking contracts. This row does not claim runtime execution; runtime cancellation/drop and reqwest loopback evidence remain future-owned."
+      "notes": "Contract-only stdlib async declarations have checked async-close, current-thread affinity, and hidden-blocking contracts. This row does not claim runtime execution; runtime cancellation/drop and reqwest loopback evidence remain future-owned."
     },
     {
       "id": "async_ecosystem_matrix",
@@ -286,7 +286,7 @@
       "required_crates": [],
       "positive_evidence": {"id": "bounded_callback_policy", "status": "passing", "scope": "contract-only"},
       "negative_evidence": {"id": "missing_backpressure_rejected", "status": "passing", "scope": "contract-only"},
-      "notes": "Thread-safe callback policy declarations are supported at the contract level."
+      "notes": "Contract-only thread-safe callback policy declarations are supported."
     },
     {
       "id": "callback_subscription_core",
@@ -298,7 +298,7 @@
       "required_crates": [],
       "positive_evidence": {"id": "signal_subscription_cancel_shutdown", "status": "passing"},
       "negative_evidence": {"id": "invalid_subscription_callback_policy_rejected", "status": "passing"},
-      "notes": "Signal-style stdlib subscription declarations have checked backpressure, overflow, shutdown, and async-close contracts. Runtime subscription lifecycle and ecosystem behavior remain future-owned."
+      "notes": "Contract-only stdlib subscription declarations have checked backpressure, overflow, shutdown, and async-close contracts. Runtime subscription lifecycle and ecosystem behavior remain future-owned."
     },
     {
       "id": "callback_subscription_ecosystem",
@@ -323,7 +323,7 @@
       "required_crates": ["bytes"],
       "positive_evidence": {"id": "borrowed_bytes_view", "status": "passing"},
       "negative_evidence": {"id": "copy_fallback_rejected", "status": "passing"},
-      "notes": "Zero-copy bytes view contracts are supported; copy fallback is rejected."
+      "notes": "Contract-only zero-copy bytes view declarations are supported; this row does not certify crate-backed runtime behavior."
     },
     {
       "id": "zero_copy_view_matrix",
@@ -335,7 +335,20 @@
       "required_crates": ["memmap2", "bytemuck", "zerocopy"],
       "positive_evidence": {"id": "owner_lifetime_views", "status": "passing"},
       "negative_evidence": {"id": "mutable_alias_rejected", "status": "passing"},
-      "notes": "Core view lifetime, owner, mutability, Send, and Sync contracts are supported."
+      "notes": "Contract-only view lifetime, owner, mutability, Send, and Sync declarations are supported; this row does not certify crate-backed runtime behavior."
+    },
+    {
+      "id": "zero_copy_runtime_matrix",
+      "fixture": "zero_copy_runtime_matrix",
+      "category": "future-owned-by-separate-phase",
+      "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
+      "tier": 2,
+      "capability": "crate-backed zero-copy view lifecycle",
+      "execution_kind": "runtime-observed",
+      "required_crates": ["bytes", "memmap2", "bytemuck", "zerocopy"],
+      "positive_evidence": {"id": "crate_backed_view_lifecycle", "status": "planned"},
+      "negative_evidence": {"id": "borrow_escape_and_invalid_mutability_rejected", "status": "planned"},
+      "notes": "Crate-backed alias preservation, owner lifetime, mutation exclusivity, release, thread obligations, and suspension rejection remain future-owned pending runtime evidence."
     },
     {
       "id": "arrow_record_batch",
@@ -347,7 +360,7 @@
       "required_crates": ["arrow"],
       "positive_evidence": {"id": "arrow_schema_identity", "status": "passing", "scope": "contract-only"},
       "negative_evidence": {"id": "invalid_arrow_metadata", "status": "passing", "scope": "contract-only"},
-      "notes": "Arrow record batch metadata is supported through explicit shared bridge contracts."
+      "notes": "Contract-only Arrow record batch metadata is supported through explicit shared bridge declarations; this row does not certify crate-backed runtime exchange."
     },
     {
       "id": "tensor_dlpack_bridge",
@@ -359,7 +372,7 @@
       "required_crates": ["ndarray"],
       "positive_evidence": {"id": "explicit_tensor_ownership", "status": "passing", "scope": "contract-only"},
       "negative_evidence": {"id": "implicit_dlpack_ownership_rejected", "status": "passing", "scope": "contract-only"},
-      "notes": "Tensor and DLPack metadata is supported through explicit bridge ownership contracts."
+      "notes": "Contract-only tensor and DLPack metadata is supported through explicit bridge ownership declarations; this row does not certify runtime handoff."
     },
     {
       "id": "advanced_data_matrix",
@@ -371,7 +384,20 @@
       "required_crates": ["datafusion", "polars", "ndarray", "candle"],
       "positive_evidence": {"id": "advanced_data_metadata", "status": "passing", "scope": "contract-only"},
       "negative_evidence": {"id": "dtype_shape_mismatch", "status": "passing", "scope": "contract-only"},
-      "notes": "Advanced data and tensor metadata contracts are supported through shared bridge declarations."
+      "notes": "Contract-only advanced data and tensor metadata is supported through shared bridge declarations; this row does not certify crate-backed runtime exchange."
+    },
+    {
+      "id": "advanced_data_runtime_matrix",
+      "fixture": "advanced_data_runtime_matrix",
+      "category": "future-owned-by-separate-phase",
+      "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
+      "tier": 4,
+      "capability": "crate-backed Arrow and tensor runtime exchange",
+      "execution_kind": "runtime-observed",
+      "required_crates": ["arrow", "datafusion", "polars", "ndarray", "candle"],
+      "positive_evidence": {"id": "crate_backed_arrow_tensor_roundtrips", "status": "planned"},
+      "negative_evidence": {"id": "schema_shape_device_mismatch_rejected", "status": "planned"},
+      "notes": "Crate-backed schema, dtype, rank, shape, layout, stride, device, DLPack ownership, cleanup, and no-copy behavior remain future-owned pending runtime evidence."
     },
     {
       "id": "ecosystem_backend_certification",

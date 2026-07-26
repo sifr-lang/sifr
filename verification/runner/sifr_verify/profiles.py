@@ -22,6 +22,7 @@ class ProfileError(VerificationError):
 _WORKSPACE_PACKAGE_NAMES: set[str] | None = None
 E2E_PASS_FIXTURE_DIR = REPO_ROOT / "crates" / "sifr" / "tests" / "e2e" / "pass"
 PROFILE_STEP_NAMES = {
+    "cargo_cache_setup",
     "coverage_matrix_checks",
     "core_guardrails",
     "diagnostic_rules",

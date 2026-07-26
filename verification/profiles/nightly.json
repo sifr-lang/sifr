@@ -6,6 +6,12 @@
     "warm_wall_time_minutes": 30,
     "cold_wall_time_minutes": 45
   },
+  "step_budgets": {
+    "cargo_cache_setup": {
+      "budget_ms": 300000,
+      "enforcement": "advisory"
+    }
+  },
   "resource_policy": {
     "classes": [
       "default-local",
@@ -77,7 +83,8 @@
         "matrix",
         "tiers",
         "compatibility-matrix",
-        "stale-drafts"
+        "stale-drafts",
+        "stable-candidate"
       ],
       "resource_classes": [
         "default-local"

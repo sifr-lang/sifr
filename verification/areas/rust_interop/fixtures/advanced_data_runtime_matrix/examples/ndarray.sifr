@@ -1,0 +1,14 @@
+# fixture: advanced_data_runtime_matrix
+# package-example: ndarray
+# required-crate: ndarray
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(ndarray.ArrayBase.len, panic=map_error(bridge.ndarray.map_panic))
+def ndarray_runtime_len(data: bytes) -> Result[uint64, PackageExampleError | RustPanicError]: ...
+
+def verify_ndarray_package() -> Result[uint64, PackageExampleError | RustPanicError]:
+    observed: Result[uint64, PackageExampleError | RustPanicError] = ndarray_runtime_len(b"sifr")
+    return observed

@@ -17,6 +17,10 @@ from pathlib import Path
 from typing import Any, Callable, TextIO
 
 from . import reports
+from .cargo_setup import (
+    enable_offline_cargo as enable_profile_offline_cargo,
+    prepare_cargo_cache as prepare_profile_cargo_cache,
+)
 from .errors import VerificationError
 from .paths import REPO_ROOT
 from .profile_area_steps import AreaResultError, run_selected_area, validate_area_result
@@ -211,25 +215,46 @@ class ProfileRunner:
         probe_cache_root = REPO_ROOT / "target" / "sifr_rust_bridge_probe_cache" / self.profile_name
         self.env["SIFR_RUST_BRIDGE_PROBE_CACHE_DIR"] = str(probe_cache_root)
         os.environ["SIFR_RUST_BRIDGE_PROBE_CACHE_DIR"] = str(probe_cache_root)
-        if self.profile.get("cargo_policy", {}).get("offline") is True:
-            self.env["CARGO_NET_OFFLINE"] = "true"
-            os.environ["CARGO_NET_OFFLINE"] = "true"
 
     def run(self) -> int:
         self.print_header()
+        setup_result = self.run_timed_step("cargo_cache_setup", self.prepare_cargo_cache)
+        if setup_result.status != 0:
+            return setup_result.status
+        setup_budget_status = self.enforce_step_budget(
+            "cargo_cache_setup",
+            setup_result.elapsed_ms,
+        )
+        if setup_budget_status != 0:
+            return setup_budget_status
+        if self.profile.get("cargo_policy", {}).get("offline") is True:
+            self.enable_offline_cargo()
         if self.execution_mode == "selected-areas-only":
             return self.run_selected_areas_only()
 
         steps = self.legacy_facade_steps()
 
         for name, callback in steps:
-            result = timed_step(name, callback)
+            result = self.run_timed_step(name, callback)
             if result.status != 0:
                 return result.status
             budget_status = self.enforce_step_budget(name, result.elapsed_ms)
             if budget_status != 0:
                 return budget_status
         return 0
+
+    def prepare_cargo_cache(self) -> None:
+        try:
+            prepare_profile_cargo_cache(self.profile, self.env, run_command)
+        except ValueError as exc:
+            raise ProfileRunnerError(str(exc)) from exc
+
+    def run_timed_step(self, name: str, callback: Callable[[], None]) -> StepResult:
+        """Execute and report one profile step."""
+        return timed_step(name, callback)
+
+    def enable_offline_cargo(self) -> None:
+        enable_profile_offline_cargo(self.env)
 
     def legacy_facade_steps(self) -> list[tuple[str, Callable[[], None]]]:
         return [

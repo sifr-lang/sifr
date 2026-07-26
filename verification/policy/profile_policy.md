@@ -17,9 +17,15 @@ the public validation entrypoint.
 
 Profiles at schema version 2 carry local-first execution policy:
 
-- `network_policy.mode=offline` for create-pr and merge.
-- Cargo profile execution is locked and offline; `cargo fetch --locked` is setup,
-  not part of profile execution.
+- `network_policy.mode=offline` for create-pr and merge governs the validation
+  workload after the cache-setup prelude. The profile runner executes the
+  canonical `cargo fetch --locked` prelude before forcing offline Cargo
+  execution. That prelude is the only registry-network opportunity; a failed
+  fetch aborts the profile instead of allowing later steps to self-heal
+  online. It is reported as the `cargo_cache_setup` lane step, while every
+  subsequent step runs locked and offline. The execution sandbox's external
+  network rule applies to validation commands, generated binaries, and fixture
+  subprocesses after this prelude.
 - `crate_test_membership.suites` is the source of truth for profile-owned crate
   tests. Each suite has a stable id, workspace package, exact `cargo test`
   command, profile modes, status, and merge-execution marker. The runner rejects
@@ -29,8 +35,9 @@ Profiles at schema version 2 carry local-first execution policy:
   rules: tempdir-only writes, no external network, declared loopback-only
   networking, subprocess cleanup, and bounded captured output.
 - `profile_plan.emit_command` is the local source of truth for CI parity checks.
-- `uv run --project verification --locked python -m sifr_verify doctor` is the
-  setup boundary for local prerequisites before profile execution.
+- `uv run --project verification --locked python -m sifr_verify doctor`
+  diagnoses local prerequisites. Cargo cache population is owned by the
+  profile runner's reported setup prelude.
 
 The `coverage_matrix` area is selected by create-pr, merge, nightly, and release
 through the blocking `readiness` suite. The suite runs strict mode with
@@ -103,4 +110,10 @@ Use the broader profile or targeted family command when touching these surfaces:
 
 ## Timing Evidence
 
-`scripts/run_all_tests.sh` emits `[sifr-lane-step]` records for every top-level bucket. Slow sub-tools emit `[sifr-case-timing]` records. `uv run --project verification --locked python -m sifr_verify reports summarize` writes `target/validation_lane_reports/<profile>.latest.json` with wall time, step timings, slowest cases, e2e cache/group stats, generated artifact cache hits, and advisories.
+`scripts/run_all_tests.sh` emits `[sifr-lane-step]` records for the Cargo cache
+setup prelude and every top-level validation bucket. Slow sub-tools emit
+`[sifr-case-timing]` records. `uv run --project verification --locked python -m
+sifr_verify reports summarize` writes
+`target/validation_lane_reports/<profile>.latest.json` with wall time, step
+timings, slowest cases, e2e cache/group stats, generated artifact cache hits,
+and advisories.

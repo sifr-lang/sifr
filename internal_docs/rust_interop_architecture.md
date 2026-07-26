@@ -748,6 +748,12 @@ Rules:
 
 The initial compile-time zero-copy contract surface enforces explicit `owner=` and `view=` on `@rust.zero_copy(...)`, explicit `owner=`, `lifetime=`, `mutability=`, `send=`, and `sync=` on `@rust.view(...)`, paired view contracts for zero-copy borrowed returns, returned-view rejection for `lifetime=call`, mutable-view rejection for non-exclusive owners, copy-fallback rejection, async borrowed-view suspension rejection, and view Send/Sync probe metadata. View probes now derive Send/Sync obligations from the explicit `@rust.view(...)` contract rather than implicit ABI flags, so contract authors must declare the thread behavior that generated probes certify. Runtime-observed generated wrapper behavior and crate-backed certification for `bytes`, `memmap2`, `bytemuck`, and `zerocopy` are future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md).
 
+That deferral is modeled independently as `zero_copy_runtime_matrix`, a
+tier-2 `runtime-observed` compatibility row with both evidence directions
+planned. This preserves the narrower contract-only claims in
+`zero_copy_bytes` and `zero_copy_view_matrix`; neither row may be used as
+crate-backed runtime evidence.
+
 Data-oriented bridges must support explicit contracts for:
 
 - Python/Rust-independent buffers,
@@ -768,6 +774,11 @@ certification for `arrow`, `datafusion`, `polars`, `ndarray`, and `candle` is
 future-owned by
 [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md)
 until both evidence directions pass.
+
+The runtime deferral is modeled independently as
+`advanced_data_runtime_matrix`, a tier-4 `runtime-observed` row. The
+`arrow_record_batch`, `tensor_dlpack_bridge`, and `advanced_data_matrix` rows
+remain contract-only and cannot satisfy a crate-backed runtime exchange claim.
 
 ## Callbacks
 
@@ -889,6 +900,15 @@ Package-local bridges compile with `#![deny(unsafe_code)]` by default. Files lis
 
 Cargo remains the source of truth for Rust dependency resolution. Sifr must preserve Cargo flags such as `--locked`, `--offline`, and `--frozen`.
 
+The workspace member `sifr_rust_interop_catalog` pins the 44 canonical matrix
+crate aliases as exact optional dependencies. This keeps the certification
+graph in the checked-in root lockfile and makes it available to
+`cargo fetch --locked` without compiling deferred ecosystems in ordinary
+workspace lanes. Its metadata freezes the CPU-only Candle backend and
+deterministic `prost-build` policy; the matrix checker mutation-tests catalog
+membership, exact versions, lock binding, aliases, and feature-policy drift,
+then proves the graph is present in the local cache with offline Cargo.
+
 The interop build cache key includes:
 
 - Sifr source digests,
@@ -968,6 +988,7 @@ verification/areas/rust_interop/
     rust_interop_fixture_matrix.json
     rust_interop_compatibility_matrix.json
     rust_interop_tiers.toml
+    stable_support_claims.json
   fixtures/
     direct_crate_crc32/
     direct_crate_matrix/          # sha2, uuid, regex
@@ -995,9 +1016,11 @@ verification/areas/rust_interop/
     callback_subscription_ecosystem/ # tokio-tungstenite, redis pub/sub, notify
     zero_copy_bytes/
     zero_copy_view_matrix/        # memmap2, bytemuck, zerocopy
+    zero_copy_runtime_matrix/     # future crate-backed runtime lifecycle
     arrow_record_batch/
     tensor_dlpack_bridge/         # contract-only DLPack ownership handoff
     advanced_data_matrix/         # datafusion, polars, ndarray, candle
+    advanced_data_runtime_matrix/ # future Arrow/tensor runtime exchange
     ecosystem_backend_certification/ # axum, tower-http, sqlx
     ecosystem_cli_certification/  # clap, tracing, tracing-subscriber, anyhow
     native_build_script/

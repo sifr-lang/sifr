@@ -179,8 +179,11 @@ def _validate_row(
             )
         elif not (REPO_ROOT / future_owner).is_file():
             failures.append(f"{row_id}: future_owner does not exist: {future_owner}")
-    if not row.get("notes"):
+    notes = row.get("notes")
+    if not isinstance(notes, str) or not notes.strip():
         failures.append(f"{row_id}: notes are required")
+    elif row.get("execution_kind") == "contract-only" and "contract-only" not in notes.lower():
+        failures.append(f"{row_id}: contract-only row notes must say contract-only")
 
 
 def _validate_claimed_provenance(
@@ -360,7 +363,33 @@ def _run_self_test() -> int:
                     file=sys.stderr,
                 )
                 return 1
-    print(f"rust interop compatibility matrix self-test ok: cases={len(cases) + 1}")
+        compile_fixture = {**fixture, "execution_kind": "contract-only"}
+        compile_row = {
+            **base_row,
+            "execution_kind": "contract-only",
+            "notes": "compile-time behavior is supported",
+        }
+        scope_failures: list[str] = []
+        _validate_row(
+            scope_failures,
+            compile_row,
+            {"diagnostic_fixture": compile_fixture},
+            {"diagnostic_fixture": manifest},
+            profiles,
+            repo_root,
+            {},
+            set(),
+            set(),
+            set(),
+        )
+        if not any("contract-only row notes must say contract-only" in failure for failure in scope_failures):
+            print(
+                "rust interop compatibility matrix self-test error: "
+                "contract-only note overclaim passed",
+                file=sys.stderr,
+            )
+            return 1
+    print(f"rust interop compatibility matrix self-test ok: cases={len(cases) + 2}")
     return 0
 
 

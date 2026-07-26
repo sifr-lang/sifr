@@ -1,0 +1,14 @@
+# fixture: advanced_data_runtime_matrix
+# package-example: polars
+# required-crate: polars
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(polars.frame.DataFrame.height, panic=map_error(bridge.polars.map_panic))
+def polars_runtime_height(data: bytes) -> Result[uint64, PackageExampleError | RustPanicError]: ...
+
+def verify_polars_package() -> Result[uint64, PackageExampleError | RustPanicError]:
+    observed: Result[uint64, PackageExampleError | RustPanicError] = polars_runtime_height(b"sifr")
+    return observed

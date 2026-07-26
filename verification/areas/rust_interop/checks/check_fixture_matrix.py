@@ -11,8 +11,17 @@ from _binding_helpers import contains_empty_pass_body as _contains_empty_pass_bo
 from _binding_helpers import decorated_function_name as _decorated_function_name
 from _binding_helpers import rust_bound_declarations as _rust_bound_declarations
 from _binding_helpers import verifier_binds_call as _verifier_binds_call
+from _crate_catalog import validate_crate_catalog
+from _crate_catalog import run_self_test as run_catalog_self_test
 from _evidence_expectations import run_self_test as run_expectation_self_test
 from _evidence_expectations import validate_evidence_expectation
+from _matrix_inventory import ALLOWED_EXECUTION_KINDS
+from _matrix_inventory import EXECUTION_KINDS
+from _matrix_inventory import EXPECTED_FEATURE_POLICIES
+from _matrix_inventory import REQUIRED_CRATES
+from _matrix_inventory import REQUIRED_DIAGNOSTICS
+from _matrix_inventory import REQUIRED_FIXTURES
+from _matrix_inventory import VALID_EVIDENCE_STATUS
 from _provenance_checks import load_profiles
 from _provenance_checks import run_self_test as run_provenance_self_test
 from _provenance_checks import validate_evidence_provenance
@@ -23,133 +32,6 @@ AREA_ROOT = REPO_ROOT / "verification" / "areas" / "rust_interop"
 MATRIX_PATH = AREA_ROOT / "data" / "rust_interop_fixture_matrix.json"
 FIXTURES_ROOT = AREA_ROOT / "fixtures"
 
-REQUIRED_FIXTURES = {
-    "advanced_data_matrix",
-    "arrow_record_batch",
-    "async_ecosystem_matrix",
-    "async_runtime_core",
-    "async_runtime_reqwest",
-    "blocking_diagnostics",
-    "bridge_type_matrix",
-    "bridge_version_mismatch",
-    "callback_subscription_core",
-    "callback_subscription_ecosystem",
-    "callbacks_call_scoped",
-    "callbacks_threadsafe",
-    "cargo_locked_offline",
-    "close_after_use",
-    "direct_crate_crc32",
-    "direct_crate_matrix",
-    "direct_crate_negative_type",
-    "dotted_path_resolution",
-    "ecosystem_backend_certification",
-    "ecosystem_cli_certification",
-    "local_bridge_blake3",
-    "native_build_script",
-    "opaque_handle_tokenizer",
-    "opaque_resource_core",
-    "opaque_resource_matrix",
-    "panic_abort_profile",
-    "panic_boundary",
-    "panic_boundary_wrapper_emission",
-    "proc_macro_trust",
-    "same_workspace_crate",
-    "shared_bridge_crate",
-    "tensor_dlpack_bridge",
-    "zero_copy_bytes",
-    "zero_copy_view_matrix",
-}
-
-REQUIRED_DIAGNOSTICS = {
-    "SIFR-RUST-ASYNC-0001",
-    "SIFR-RUST-CARGO-0001",
-    "SIFR-RUST-CB-0001",
-    "SIFR-RUST-CONFIG-0001",
-    "SIFR-RUST-HANDLE-0001",
-    "SIFR-RUST-PANIC-0001",
-    "SIFR-RUST-RESOLVE-0001",
-    "SIFR-RUST-TRUST-0001",
-    "SIFR-RUST-TYPE-0001",
-    "SIFR-RUST-ZC-0001",
-}
-
-REQUIRED_CRATES = {
-    "anyhow",
-    "arrow",
-    "axum",
-    "bindgen",
-    "blake3",
-    "bytemuck",
-    "bytes",
-    "candle",
-    "cc",
-    "clap",
-    "crc32fast",
-    "cxx",
-    "datafusion",
-    "flate2",
-    "futures",
-    "http",
-    "http-body",
-    "indexmap",
-    "memmap2",
-    "ndarray",
-    "notify",
-    "polars",
-    "prost-build",
-    "rayon",
-    "redis",
-    "regex",
-    "reqwest",
-    "rusqlite",
-    "serde",
-    "serde_derive",
-    "serde_json",
-    "sha2",
-    "sqlx",
-    "thiserror",
-    "tokio",
-    "tokio-postgres",
-    "tokio-tungstenite",
-    "tower",
-    "tower-http",
-    "tracing",
-    "tracing-subscriber",
-    "uuid",
-    "zerocopy",
-    "zstd",
-}
-
-VALID_EVIDENCE_STATUS = {"planned", "probe-only", "runtime-observed", "passing", "failing"}
-EXECUTION_KINDS = {
-    "compiler-diagnostic",
-    "contract-only",
-    "cargo-probe",
-    "runtime-observed",
-}
-ALLOWED_EXECUTION_KINDS = {
-    0: {"compiler-diagnostic"},
-    1: {"cargo-probe"},
-    2: {"contract-only", "cargo-probe", "runtime-observed"},
-    3: {"cargo-probe"},
-    4: {"contract-only", "cargo-probe", "runtime-observed"},
-}
-
-EXPECTED_FEATURE_POLICIES = {
-    "candle": {"backend": "cpu-only"},
-    "flate2": {"default_features": False, "features": ["rust_backend"]},
-    "prost-build": {"generated_output": "deterministic"},
-    "redis": {"default_features": False, "features": ["tokio-comp"]},
-    "reqwest": {"default_features": False, "features": ["rustls-tls", "json"]},
-    "rusqlite": {"features": ["bundled"]},
-    "sqlx": {
-        "default_features": False,
-        "features": ["runtime-tokio-rustls", "postgres", "macros"],
-    },
-    "tokio-postgres": {"default_features": False, "features": ["runtime"]},
-    "tokio-tungstenite": {"default_features": False},
-    "tracing-subscriber": {"features": ["env-filter"]},
-}
 
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
@@ -235,6 +117,12 @@ def main(argv: list[str] | None = None) -> int:
         scenario_example_count += scenario_count
 
     failures.extend(f"required crate lacks fixture coverage: {crate}" for crate in sorted(REQUIRED_CRATES - covered_crates))
+    validate_crate_catalog(
+        failures,
+        REPO_ROOT,
+        REQUIRED_CRATES,
+        EXPECTED_FEATURE_POLICIES,
+    )
 
     if failures:
         for failure in failures:
@@ -466,6 +354,15 @@ def _run_self_test() -> int:
         )
         return 1
     cases += expectation_cases
+
+    catalog_cases, catalog_error = run_catalog_self_test()
+    if catalog_error is not None:
+        print(
+            f"rust interop fixture matrix self-test error: {catalog_error}",
+            file=sys.stderr,
+        )
+        return 1
+    cases += catalog_cases
 
     print(f"rust interop fixture matrix self-test ok: cases={cases}")
     return 0

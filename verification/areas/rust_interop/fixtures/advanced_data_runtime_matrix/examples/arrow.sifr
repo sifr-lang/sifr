@@ -1,0 +1,14 @@
+# fixture: advanced_data_runtime_matrix
+# package-example: arrow
+# required-crate: arrow
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(arrow.record_batch.RecordBatch.num_rows, panic=map_error(bridge.arrow.map_panic))
+def arrow_runtime_rows(data: bytes) -> Result[uint64, PackageExampleError | RustPanicError]: ...
+
+def verify_arrow_package() -> Result[uint64, PackageExampleError | RustPanicError]:
+    observed: Result[uint64, PackageExampleError | RustPanicError] = arrow_runtime_rows(b"sifr")
+    return observed

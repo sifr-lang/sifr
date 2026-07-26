@@ -1,0 +1,14 @@
+# fixture: zero_copy_runtime_matrix
+# package-example: zerocopy
+# required-crate: zerocopy
+# execution-kind: runtime-observed
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+
+@rust(zerocopy.FromBytes.read_from_bytes, panic=map_error(bridge.zerocopy.map_panic))
+def zerocopy_runtime_view(data: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
+
+def verify_zerocopy_package() -> Result[bytes, PackageExampleError | RustPanicError]:
+    observed: Result[bytes, PackageExampleError | RustPanicError] = zerocopy_runtime_view(b"sifr")
+    return observed
