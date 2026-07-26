@@ -82,6 +82,13 @@
           "command": "area-check",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "rust-interop-stale-drafts-self-test",
+          "entry": "verification/areas/rust_interop/checks/check_stale_drafts.py",
+          "command": "area-check-self-test",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     }

@@ -118,8 +118,10 @@ mutated matrix/fixture/profile data and do not edit checked-in files.
 
 - A fenced rejected example uses exactly ```` ```sifr-rejected ````.
 - An inline prose/code occurrence of a stale spelling is allowed only when the
-  same physical line contains
-  `<!-- rust-interop-rejected -->`.
+  same physical line contains the suffix-appropriate structural marker:
+  `<!-- rust-interop-rejected -->` in Markdown or
+  `{/* rust-interop-rejected */}` in MDX. The MDX form is required because
+  HTML comments are not valid MDX.
 - Accepted Sifr examples use ```` ```sifr ```` and never inherit rejection
   state from surrounding paragraphs or headings.
 - `python` fences containing Sifr Rust decorators remain errors.
@@ -128,7 +130,8 @@ mutated matrix/fixture/profile data and do not edit checked-in files.
 The migration updates every accepted rejection example under `docs/`,
 `internal_docs/`, and non-archived/non-review `plans/`. Tests must prove that
 nearby words such as "no", "stale", or "rejected" no longer suppress a stale
-example, while both explicit marker forms work.
+example, while the rejected fence and both suffix-specific inline markers
+work.
 
 ## Ordered Items
 
@@ -206,7 +209,8 @@ mutation tests pass, the full Rust-interop area passes through the
 
 One PR:
 
-- implements the `sifr-rejected` fence and same-line HTML marker contract;
+- implements the `sifr-rejected` fence and suffix-appropriate same-line
+  Markdown/MDX marker contract;
 - gives `check_stale_drafts.py --self-test` a real isolated temporary-tree
   entrypoint instead of falling through to the ordinary checked-in-data scan;
 - migrates all current stale-syntax mentions in scan scope;
@@ -235,8 +239,8 @@ One documentation/review PR after `hardening_1` through `hardening_4`:
 | --- | --- | --- |
 | `hardening_1` | merged | [PR #3018](https://github.com/sifr-lang/sifr/pull/3018), with the profile-evidence correction in [PR #3019](https://github.com/sifr-lang/sifr/pull/3019) |
 | `hardening_2` | merged | [PR #3020](https://github.com/sifr-lang/sifr/pull/3020); final Opus review approved in round 7 |
-| `hardening_3` | review approved; PR pending | all 34 fixture manifests are schema v2; all 47 passing evidence directions have distinct structured Rust-test provenance; Opus round 6 satisfied; create-PR lane passed |
-| `hardening_4` | pending | starts only after `hardening_3` merges |
+| `hardening_3` | merged | [PR #3022](https://github.com/sifr-lang/sifr/pull/3022); all 34 fixture manifests are schema v2; all 47 passing evidence directions have distinct structured Rust-test provenance; Opus round 8 satisfied; merge lane passed |
+| `hardening_4` | in progress | structural rejection markers, isolated self-tests, and documentation migration |
 | `hardening_5` | pending | starts only after `hardening_4` merges |
 
 ## Acceptance Criteria

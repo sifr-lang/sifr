@@ -92,7 +92,13 @@ evidence.
   compatibility rows match fixture evidence, requires two distinct valid test
   bindings for claimed-support rows, and ensures no fixture family is omitted.
 - `stale-drafts`: scans active planning and documentation paths for accepted
-  examples of abandoned Rust interop syntax.
+  examples of abandoned Rust interop syntax and runs the isolated scanner
+  mutation self-test in every authoritative profile. Rejected block examples
+  open with exactly `` ```sifr-rejected ``; inline mentions require the exact
+  `<!-- rust-interop-rejected -->` marker on the same physical line in
+  Markdown, or `{/* rust-interop-rejected */}` in MDX. Nearby prose never
+  supplies rejection context, accepted examples remain in `sifr` fences, and
+  Sifr Rust decorators in `python` fences are always errors.
 
 Run the complete area directly with:
 
