@@ -1,6 +1,6 @@
-# Sifr Preview Distribution Pipeline
+# Sifr Distribution Pipeline
 
-Status: preview-release pipeline implementation requirement.
+Status: canonical release-governance epoch; stable behavior remains gated.
 
 ## Installer Model
 
@@ -55,60 +55,47 @@ Generate self-update channel metadata with:
 ```bash
 scripts/distribution/generate_channel_metadata.sh \
   --out <work-dir>/channels.json \
-  --alpha-version 0.1.0-alpha.1 \
-  --beta-version 0.1.0-beta.1
+  --generation <next-generation> \
+  --alpha-release <work-dir>/alpha-release-record.json \
+  --beta-release <work-dir>/beta-release-record.json
 ```
 
 The generated `channels.json` shape is:
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "generation": 1,
+  "ga_status": "preview",
   "channels": {
     "alpha": "0.1.0-alpha.1",
     "beta": "0.1.0-beta.1"
+  },
+  "releases": {
+    "0.1.0-alpha.1": {
+      "channel": "alpha",
+      "status": "active",
+      "source_commit": "<40-character-commit>",
+      "installer_sha256": "<sha256>",
+      "targets": "<the exact four governed target digest records>"
+    },
+    "0.1.0-beta.1": {
+      "channel": "beta",
+      "status": "active",
+      "source_commit": "<40-character-commit>",
+      "installer_sha256": "<sha256>",
+      "targets": "<the exact four governed target digest records>"
+    }
   }
 }
 ```
 
-The metadata file is resolution metadata only. It records channel-to-version mappings and must not contain executable URLs. The Rust CLI derives immutable installer URLs from the trusted GitHub release download base URL and the resolved version string. Stable metadata remains absent until stable-channel release architecture changes the stable-channel rules.
-
-First-time GitHub setup for a repository without a `channels` release can be bootstrapped from existing public prereleases:
-
-```bash
-for version in <current-alpha-version> <current-beta-version>; do
-  scripts/distribution/generate_version_installer.sh \
-    --version "${version}" \
-    --artifact-dir "target/preview-artifacts/${version}" \
-    --out "target/preview-artifacts/${version}/sifr-installer-${version}"
-  gh release upload "${version}" \
-    "target/preview-artifacts/${version}/sifr-installer-${version}" \
-    --repo sifr-lang/sifr \
-    --clobber
-done
-
-gh release list --repo sifr-lang/sifr --limit 100 --json tagName,isDraft,isPrerelease > current-releases.json
-scripts/distribution/bootstrap_channel_metadata.py \
-  --releases-json current-releases.json \
-  --channel beta \
-  --version <current-beta-version> \
-  --out channels.json
-gh release create channels \
-  --repo sifr-lang/sifr \
-  --latest=false \
-  --title "Sifr self-update channels" \
-  --notes "Machine-readable Sifr self-update channel metadata."
-gh release upload channels channels.json --repo sifr-lang/sifr --clobber
-```
-
-The installer-asset backfill is a one-time migration prerequisite when the
-current channel releases were created before GitHub-hosted self-update
-metadata. The preview-release workflow verifies that both channel versions in
-`channels.json` already have `sifr-installer-<version>` assets before it
-publishes or updates the shared `channels` release asset.
-
-The bootstrap helper fills the current channel from the release being published and requires an existing public prerelease for the other channel so schema-version 1 metadata always contains both `alpha` and `beta`.
-It refuses to move the current channel backward relative to public prereleases unless a future reviewed release-governance change adds an explicit downgrade flow.
+The governed index contains data only and never executable URLs. Trusted
+dispatchers and the Rust CLI derive immutable GitHub URLs from repository
+constants after validating the selected active release record. Schema v1 is
+discarded state: there is no bootstrap converter, fallback reader, migration,
+or dual publication. Preview publication requires an existing canonical v2
+index and advances it only with the expected generation and digest.
 
 ## Preview metadata validation Validation
 
@@ -337,6 +324,8 @@ scripts/distribution/create_new_version.sh \
   --channel beta \
   --version 0.1.0-beta.2 \
   --real-run \
+  --site-repo <sifr-blog-website-checkout> \
+  --release-index <canonical-channels-v2.json> \
   --artifact-dir target/preview-artifacts/0.1.0-beta.2 \
   --mutation-mode local
 ```
@@ -345,7 +334,9 @@ Dry-run validates inputs, resolves the base commit, computes every target artifa
 
 Real-run reuses the same plan SHA-256, verifies or builds all target artifacts, generates the immutable GitHub installer asset, regenerates GitHub-backed website bootstrap scripts and evidence-only GitHub channel metadata from one plan, validates metadata/dispatcher agreement, writes a release checklist, and writes a recovery note. It does not publish GitHub assets; `preview-release.yml` is the only authoritative GitHub-publish path for version releases and the shared `channels` release asset.
 
-The GitHub Actions preview-release workflow serializes runs with the `preview-release-channels` concurrency group because channel publication is a read-modify-write operation over the shared `channels` release asset.
+The GitHub Actions preview-release workflow serializes runs with the
+`sifr-release-index` concurrency group because every channel publication is a
+read-modify-write operation over the shared governed index.
 Do not run workstation GitHub publication while `preview-release.yml` is publishing. Use `scripts/distribution/trigger_preview_release.sh` to dispatch GitHub releases.
 The workflow publishes the version release before updating `channels.json`; if
 the final channel update fails, retry the workflow after correcting the failed

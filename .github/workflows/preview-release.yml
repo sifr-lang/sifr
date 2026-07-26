@@ -25,7 +25,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: preview-release-channels
+  group: sifr-release-index
   cancel-in-progress: false
 
 jobs:
@@ -36,15 +36,26 @@ jobs:
       version: ${{ steps.validate.outputs.version }}
       channel: ${{ steps.validate.outputs.channel }}
       base_ref: ${{ steps.validate.outputs.base_ref }}
+      source_sha: ${{ steps.validate.outputs.source_sha }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.base_ref || 'main' }}
+          fetch-depth: 0
+          submodules: recursive
+
       - name: Validate channel and version
         id: validate
         shell: bash
+        env:
+          INPUT_CHANNEL: ${{ inputs.channel }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_BASE_REF: ${{ inputs.base_ref }}
         run: |
           set -euo pipefail
-          channel="${{ inputs.channel }}"
-          version="${{ inputs.version }}"
-          base_ref="${{ inputs.base_ref }}"
+          channel="${INPUT_CHANNEL}"
+          version="${INPUT_VERSION}"
+          base_ref="${INPUT_BASE_REF}"
 
           case "${channel}" in
             alpha|beta) ;;
@@ -56,8 +67,8 @@ jobs:
             exit 2
           fi
 
-          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$ ]]; then
-            echo "::error::version must be a semver prerelease using -alpha.N, -beta.N, or -rc.N"
+          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta)\.[0-9]+$ ]]; then
+            echo "::error::version must be a semver prerelease using -alpha.N or -beta.N"
             exit 2
           fi
 
@@ -70,6 +81,7 @@ jobs:
           echo "version=${version}" >>"${GITHUB_OUTPUT}"
           echo "channel=${channel}" >>"${GITHUB_OUTPUT}"
           echo "base_ref=${base_ref:-main}" >>"${GITHUB_OUTPUT}"
+          echo "source_sha=$(git rev-parse HEAD)" >>"${GITHUB_OUTPUT}"
 
   build-artifacts:
     name: build ${{ matrix.target }}
@@ -90,7 +102,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.validate.outputs.base_ref }}
+          ref: ${{ needs.validate.outputs.source_sha }}
           submodules: recursive
 
       - uses: dtolnay/rust-toolchain@stable
@@ -131,10 +143,11 @@ jobs:
       VERSION: ${{ needs.validate.outputs.version }}
       CHANNEL: ${{ needs.validate.outputs.channel }}
       BASE_REF: ${{ needs.validate.outputs.base_ref }}
+      SOURCE_SHA: ${{ needs.validate.outputs.source_sha }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ env.BASE_REF }}
+          ref: ${{ env.SOURCE_SHA }}
           submodules: recursive
 
       - uses: actions/download-artifact@v4
@@ -187,33 +200,35 @@ jobs:
           if ! curl -fsSL \
             "https://github.com/${GITHUB_REPOSITORY}/releases/download/channels/channels.json" \
             -o "${current_metadata}"; then
-            echo "::warning::channels release asset fetch failed; bootstrapping metadata from public GitHub prereleases"
-            gh release list \
-              --repo "${GITHUB_REPOSITORY}" \
-              --limit 100 \
-              --json tagName,isDraft,isPrerelease \
-              > current-releases.json
-            scripts/distribution/bootstrap_channel_metadata.py \
-              --releases-json current-releases.json \
-              --channel "${CHANNEL}" \
-              --version "${VERSION}" \
-              --out "${current_metadata}"
+            echo "::error::canonical schema-v2 release index is unavailable"
+            exit 2
           fi
 
-          read -r current_alpha current_beta < <(scripts/distribution/read_channel_versions.py "${current_metadata}")
+          python3 scripts/distribution/release_governance.py validate \
+            --kind release-index \
+            --input "${current_metadata}" \
+            --require-canonical
+          expected_generation="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["generation"])' "${current_metadata}")"
+          expected_sha256="$(sha256sum "${current_metadata}" | awk '{print $1}')"
+          scripts/distribution/release_governance.py build-release-record \
+            --version "${VERSION}" \
+            --channel "${CHANNEL}" \
+            --source-commit "${SOURCE_SHA}" \
+            --installer "release-assets/sifr-installer-${VERSION}" \
+            --artifact-dir release-assets \
+            --out new-release.json
 
-          new_alpha="${current_alpha}"
-          new_beta="${current_beta}"
-          case "${CHANNEL}" in
-            alpha) new_alpha="${VERSION}" ;;
-            beta) new_beta="${VERSION}" ;;
-            *) echo "::error::unexpected channel ${CHANNEL}"; exit 2 ;;
-          esac
-
-          scripts/distribution/generate_channel_metadata.sh \
+          scripts/distribution/release_governance.py update-preview-index \
+            --current "${current_metadata}" \
             --out channel-metadata/channels.json \
-            --alpha-version "${new_alpha}" \
-            --beta-version "${new_beta}"
+            --channel "${CHANNEL}" \
+            --release new-release.json \
+            --expected-generation "${expected_generation}" \
+            --expected-sha256 "${expected_sha256}"
+          {
+            echo "EXPECTED_INDEX_GENERATION=${expected_generation}"
+            echo "EXPECTED_INDEX_SHA256=${expected_sha256}"
+          } >>"${GITHUB_ENV}"
 
       - name: Verify immutable installer asset
         shell: bash
@@ -288,6 +303,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          live_metadata="$(mktemp)"
+          curl -fsSL \
+            "https://github.com/${GITHUB_REPOSITORY}/releases/download/channels/channels.json" \
+            -o "${live_metadata}"
+          python3 scripts/distribution/release_governance.py validate \
+            --kind release-index \
+            --input "${live_metadata}" \
+            --require-canonical
+          live_generation="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["generation"])' "${live_metadata}")"
+          live_sha256="$(sha256sum "${live_metadata}" | awk '{print $1}')"
+          if [[ "${live_generation}" != "${EXPECTED_INDEX_GENERATION}" ||
+                "${live_sha256}" != "${EXPECTED_INDEX_SHA256}" ]]; then
+            echo "::error::release index changed after proposal generation; refusing stale mutation"
+            exit 2
+          fi
+
           if gh release view channels --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
             gh release edit channels \
               --repo "${GITHUB_REPOSITORY}" \

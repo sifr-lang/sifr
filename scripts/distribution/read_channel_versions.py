@@ -4,8 +4,14 @@
 from __future__ import annotations
 
 import argparse
-import json
+import sys
 from pathlib import Path
+
+AREA_ROOT = Path(__file__).resolve().parents[2] / "verification" / "areas" / "distribution_release"
+sys.path.insert(0, str(AREA_ROOT))
+
+from governance.common import load_json_strict  # noqa: E402
+from governance.release_index import validate_release_index  # noqa: E402
 
 
 def main() -> int:
@@ -13,7 +19,7 @@ def main() -> int:
     parser.add_argument("channels_json")
     args = parser.parse_args()
 
-    metadata = json.loads(Path(args.channels_json).read_text(encoding="utf-8"))
+    metadata = validate_release_index(load_json_strict(Path(args.channels_json)))
     channels = metadata.get("channels", {})
     alpha = channels.get("alpha")
     beta = channels.get("beta")

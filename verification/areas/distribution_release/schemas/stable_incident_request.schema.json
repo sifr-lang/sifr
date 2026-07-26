@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sifr.sh/schemas/stable-incident-request-v2.json",
+  "title": "Sifr stable incident request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "incident_id",
+    "operation",
+    "trigger",
+    "affected_release",
+    "withdrawal"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "incident_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+    "operation": {"enum": ["rollback", "incident-roll-forward"]},
+    "trigger": {"type": "string", "minLength": 1},
+    "affected_release": {"$ref": "#/$defs/release_ref"},
+    "withdrawal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason", "evidence_sha256"],
+      "properties": {
+        "reason": {"type": "string", "minLength": 1},
+        "evidence_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "rollback_target": {"$ref": "#/$defs/release_ref"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"operation": {"const": "rollback"}}},
+      "then": {"required": ["rollback_target"]},
+      "else": {"not": {"required": ["rollback_target"]}}
+    }
+  ],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}},
+    "release_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "plan_sha256"],
+      "properties": {
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "plan_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

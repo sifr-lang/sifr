@@ -99,7 +99,18 @@ def select_suites(manifest: dict[str, Any], requested: set[str]) -> list[dict[st
 def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
     suite_name = str(suite["name"])
     case = validate_suite_case(suite)
-    variants = [run_distribution_case(script) for script in distribution_case_scripts()]
+    if suite_name == "evidence-custody":
+        variants = [
+            run_python_module(
+                "governance.evidence_custody",
+                "evidence-custody",
+            )
+        ]
+    else:
+        variants = [run_distribution_case(script) for script in distribution_case_scripts()]
+        if suite_name == "full":
+            variants.append(run_python_module("governance.selftest", "governance-contracts"))
+            variants.append(run_python_module("governance.schema_epoch", "schema-epoch"))
     failures = sum(1 for variant in variants if variant["status"] == "fail")
     return {
         "name": suite_name,
@@ -122,16 +133,26 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
 
 def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
     suite_name = str(suite["name"])
-    if suite_name not in {"representative", "full"}:
+    if suite_name not in {"representative", "full", "evidence-custody"}:
         raise SystemExit(f"unsupported distribution_release suite: {suite_name}")
     cases = suite.get("cases", [])
     if not isinstance(cases, list) or len(cases) != 1:
         raise SystemExit(f"distribution_release suite '{suite_name}' must contain exactly one case directory")
     case = cases[0]
-    if str(case.get("command")) != "distribution-case-directory":
-        raise SystemExit(f"distribution_release suite '{suite_name}' must use distribution-case-directory")
+    expected_command = (
+        "distribution-evidence-custody"
+        if suite_name == "evidence-custody"
+        else "distribution-case-directory"
+    )
+    if str(case.get("command")) != expected_command:
+        raise SystemExit(f"distribution_release suite '{suite_name}' must use {expected_command}")
     entry = REPO_ROOT / str(case.get("entry"))
-    if entry != CASES_ROOT or not entry.is_dir():
+    expected_entry = (
+        AREA_ROOT / "governance" / "evidence_custody.py"
+        if suite_name == "evidence-custody"
+        else CASES_ROOT
+    )
+    if entry != expected_entry or not entry.exists():
         raise SystemExit(f"distribution_release suite '{suite_name}' entry does not exist: {entry}")
     return case
 
@@ -154,6 +175,29 @@ def run_distribution_case(script: Path) -> dict[str, Any]:
     return {
         "label": label,
         "argv": [str(script.relative_to(REPO_ROOT))],
+        "status": status,
+        "mismatches": [] if status == "pass" else [f"exit={result.returncode} expected=0"],
+        "expected_exit_code": 0,
+        "actual_exit_code": result.returncode,
+        "duration_ms": round(elapsed_ms, 3),
+    }
+
+
+def run_python_module(module: str, label: str) -> dict[str, Any]:
+    print(f"Running distribution governance module {module}", flush=True)
+    started = time.perf_counter()
+    qualified_module = f"verification.areas.distribution_release.{module}"
+    result = subprocess.run(
+        [sys.executable, "-m", qualified_module],
+        cwd=REPO_ROOT,
+        check=False,
+    )
+    elapsed_ms = (time.perf_counter() - started) * 1000.0
+    status = "pass" if result.returncode == 0 else "fail"
+    print_case_timing(label, elapsed_ms, status)
+    return {
+        "label": label,
+        "argv": [sys.executable, "-m", qualified_module],
         "status": status,
         "mismatches": [] if status == "pass" else [f"exit={result.returncode} expected=0"],
         "expected_exit_code": 0,

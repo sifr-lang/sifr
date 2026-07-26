@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sifr.sh/schemas/stable-release-plan-v2.json",
+  "title": "Sifr stable release plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan_id",
+    "version",
+    "transition",
+    "source_commit",
+    "submodules",
+    "cargo_lock_sha256",
+    "toolchain",
+    "expected_stable_predecessor",
+    "desired_release",
+    "rollback_target",
+    "targets",
+    "installer_sha256",
+    "release_profile_report",
+    "qualification_artifact_index",
+    "rust_interop",
+    "documentation_report",
+    "site",
+    "vscode",
+    "release_notes_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "plan_id": {"type": "string", "pattern": "^stable-[0-9]+\\.[0-9]+\\.[0-9]+-[0-9a-f]{12}$"},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "transition": {"enum": ["ga-activation", "normal", "incident-roll-forward"]},
+    "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "submodules": {
+      "type": "object",
+      "propertyNames": {"pattern": "^[A-Za-z0-9_./-]+$"},
+      "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+    },
+    "cargo_lock_sha256": {"$ref": "#/$defs/sha256"},
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rustc", "cargo", "profile_manifest_sha256"],
+      "properties": {
+        "rustc": {"type": "string", "minLength": 1},
+        "cargo": {"type": "string", "minLength": 1},
+        "profile_manifest_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "expected_stable_predecessor": {
+      "oneOf": [
+        {"const": "none"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "status", "plan_sha256"],
+          "properties": {
+            "version": {"type": "string"},
+            "status": {"const": "active"},
+            "plan_sha256": {"$ref": "#/$defs/sha256"}
+          }
+        }
+      ]
+    },
+    "desired_release": {"$ref": "release_index.schema.json#/$defs/release"},
+    "rollback_target": {
+      "oneOf": [
+        {"const": "none"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "plan_sha256"],
+          "properties": {
+            "version": {"type": "string"},
+            "plan_sha256": {"$ref": "#/$defs/sha256"}
+          }
+        }
+      ]
+    },
+    "incident_request_sha256": {"$ref": "#/$defs/sha256"},
+    "targets": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/target"}
+    },
+    "installer_sha256": {"$ref": "#/$defs/sha256"},
+    "release_profile_report": {"$ref": "#/$defs/report_ref"},
+    "qualification_artifact_index": {"$ref": "#/$defs/report_ref"},
+    "rust_interop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "compatibility_matrix_sha256",
+        "stable_support_claims_sha256",
+        "advertised_claim_ids",
+        "validation_report_sha256"
+      ],
+      "properties": {
+        "compatibility_matrix_sha256": {"$ref": "#/$defs/sha256"},
+        "stable_support_claims_sha256": {"$ref": "#/$defs/sha256"},
+        "advertised_claim_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string"}
+        },
+        "validation_report_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "documentation_report": {"$ref": "#/$defs/report_ref"},
+    "site": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "base_commit",
+        "dispatcher_sha256",
+        "facts_schema_sha256",
+        "facts_generator_sha256"
+      ],
+      "properties": {
+        "repository": {"const": "sifr-lang/sifr-blog-website"},
+        "base_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "dispatcher_sha256": {
+          "type": "object",
+          "minProperties": 4,
+          "additionalProperties": {"$ref": "#/$defs/sha256"}
+        },
+        "facts_schema_sha256": {"$ref": "#/$defs/sha256"},
+        "facts_generator_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "vscode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "submodule_path",
+        "package_path",
+        "version",
+        "vsix_sha256",
+        "compiler_compatibility",
+        "validation_report_sha256"
+      ],
+      "properties": {
+        "submodule_path": {"const": "editor_integrations"},
+        "package_path": {"const": "editor_integrations/vscode"},
+        "version": {"type": "string"},
+        "vsix_sha256": {"$ref": "#/$defs/sha256"},
+        "compiler_compatibility": {"type": "string"},
+        "validation_report_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "release_notes_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"transition": {"const": "incident-roll-forward"}}},
+      "then": {"required": ["incident_request_sha256"]},
+      "else": {"not": {"required": ["incident_request_sha256"]}}
+    }
+  ],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}},
+    "report_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sha256"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "triple",
+        "builder",
+        "binary_sha256",
+        "sysroot_sha256",
+        "archive_sha256",
+        "checksum_sha256",
+        "sifr_version",
+        "installer_version",
+        "receipt_channel",
+        "sysroot_version",
+        "sysroot_target"
+      ],
+      "properties": {
+        "triple": {
+          "enum": [
+            "aarch64-apple-darwin",
+            "x86_64-apple-darwin",
+            "aarch64-unknown-linux-gnu",
+            "x86_64-unknown-linux-gnu"
+          ]
+        },
+        "builder": {"enum": ["macos-15", "macos-15-intel", "ubuntu-24.04", "ubuntu-24.04-arm"]},
+        "binary_sha256": {"$ref": "#/$defs/sha256"},
+        "sysroot_sha256": {"$ref": "#/$defs/sha256"},
+        "archive_sha256": {"$ref": "#/$defs/sha256"},
+        "checksum_sha256": {"$ref": "#/$defs/sha256"},
+        "sifr_version": {"type": "string"},
+        "installer_version": {"type": "string"},
+        "receipt_channel": {"const": "stable"},
+        "sysroot_version": {"type": "string"},
+        "sysroot_target": {"type": "string"}
+      }
+    }
+  }
+}

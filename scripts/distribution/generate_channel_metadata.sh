@@ -4,73 +4,75 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: scripts/distribution/generate_channel_metadata.sh --out <file> --alpha-version <version> --beta-version <version>
+Usage: scripts/distribution/generate_channel_metadata.sh [options]
 
-Generate the Sifr self-update channel metadata JSON.
+Generate the canonical schema-v2 governed release index.
+
+Required:
+  --out <file>
+  --generation <positive-integer>
+  --alpha-release <file>    JSON object with exactly {version, release}
+  --beta-release <file>     JSON object with exactly {version, release}
+
+Optional:
+  --stable-release <file>   Required only with --ga-status active
+  --ga-status preview|active
 EOF
 }
 
 OUT=""
-ALPHA_VERSION=""
-BETA_VERSION=""
+GENERATION=""
+GA_STATUS="preview"
+ALPHA_RELEASE=""
+BETA_RELEASE=""
+STABLE_RELEASE=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --out)
-      OUT="${2:-}"
-      shift 2
-      ;;
-    --alpha-version)
-      ALPHA_VERSION="${2:-}"
-      shift 2
-      ;;
-    --beta-version)
-      BETA_VERSION="${2:-}"
-      shift 2
-      ;;
-    --help)
-      usage
-      exit 0
-      ;;
-    *)
-      echo "unknown argument: $1" >&2
-      usage >&2
-      exit 2
-      ;;
+    --out) OUT="${2:-}"; shift 2 ;;
+    --generation) GENERATION="${2:-}"; shift 2 ;;
+    --ga-status) GA_STATUS="${2:-}"; shift 2 ;;
+    --alpha-release) ALPHA_RELEASE="${2:-}"; shift 2 ;;
+    --beta-release) BETA_RELEASE="${2:-}"; shift 2 ;;
+    --stable-release) STABLE_RELEASE="${2:-}"; shift 2 ;;
+    --help) usage; exit 0 ;;
+    *) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
 done
 
-if [[ -z "${OUT}" || -z "${ALPHA_VERSION}" || -z "${BETA_VERSION}" ]]; then
-  echo "--out, --alpha-version, and --beta-version are required" >&2
-  usage >&2
+if [[ -z "${OUT}" || -z "${GENERATION}" || -z "${ALPHA_RELEASE}" || -z "${BETA_RELEASE}" ]]; then
+  echo "--out, --generation, --alpha-release, and --beta-release are required" >&2
+  exit 2
+fi
+if [[ "${GA_STATUS}" != "preview" && "${GA_STATUS}" != "active" ]]; then
+  echo "--ga-status must be preview or active" >&2
+  exit 2
+fi
+if [[ "${GA_STATUS}" == "active" && -z "${STABLE_RELEASE}" ]]; then
+  echo "--stable-release is required for active GA metadata" >&2
+  exit 2
+fi
+if [[ "${GA_STATUS}" == "preview" && -n "${STABLE_RELEASE}" ]]; then
+  echo "--stable-release is forbidden for preview metadata" >&2
   exit 2
 fi
 
-preview_version_channel() {
-  local version="$1"
-  if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta)\.[0-9]+$ ]]; then
-    return 1
-  fi
-  printf '%s\n' "${BASH_REMATCH[1]}"
-}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+args=(
+  generate-release-index
+  --out "${OUT}"
+  --generation "${GENERATION}"
+  --ga-status "${GA_STATUS}"
+  --release "${ALPHA_RELEASE}"
+  --release "${BETA_RELEASE}"
+)
 
-if [[ "$(preview_version_channel "${ALPHA_VERSION}")" != "alpha" ]]; then
-  echo "alpha version must use an -alpha.N prerelease label: ${ALPHA_VERSION}" >&2
-  exit 2
+alpha_version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "${ALPHA_RELEASE}")"
+beta_version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "${BETA_RELEASE}")"
+args+=(--channel "alpha=${alpha_version}" --channel "beta=${beta_version}")
+if [[ -n "${STABLE_RELEASE}" ]]; then
+  stable_version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "${STABLE_RELEASE}")"
+  args+=(--release "${STABLE_RELEASE}" --channel "stable=${stable_version}")
 fi
 
-if [[ "$(preview_version_channel "${BETA_VERSION}")" != "beta" ]]; then
-  echo "beta version must use a -beta.N prerelease label: ${BETA_VERSION}" >&2
-  exit 2
-fi
-
-mkdir -p "$(dirname "${OUT}")"
-cat >"${OUT}" <<EOF
-{
-  "schema_version": 1,
-  "channels": {
-    "alpha": "${ALPHA_VERSION}",
-    "beta": "${BETA_VERSION}"
-  }
-}
-EOF
+python3 "${SCRIPT_DIR}/release_governance.py" "${args[@]}"

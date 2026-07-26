@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import io
 import json
 import tempfile
@@ -30,8 +31,17 @@ from .profile_runner import (
     timed_step,
     validate_rust_interop_result,
 )
+from .profile_area_steps import run_selected_area
+from .profile_results import AreaResultError, validate_area_result
+from .release_evidence import (
+    CRITICAL_RESULTS,
+    build_release_profile_payload,
+    prepare_release_report_output,
+    validate_release_profile_report,
+)
 from .results import build_result
 from .schemas import load_schema, validate_all_committed_schemas, validate_data, validate_schema_requirement
+from verification.json_schema_202012 import lint_schema
 
 
 def run_all() -> list[str]:
@@ -40,6 +50,9 @@ def run_all() -> list[str]:
         ("profile schema self-test", _profile_schema_self_test),
         ("crate membership self-test", _crate_membership_self_test),
         ("Rust interop profile execution self-test", _rust_interop_profile_self_test),
+        ("documentation profile execution self-test", _documentation_profile_self_test),
+        ("release report precondition self-test", _release_report_precondition_self_test),
+        ("release report production self-test", _release_report_production_self_test),
         ("e2e profile self-test", _e2e_profile_self_test),
         ("runner discovery self-test", _discovery_self_test),
         ("resource class selection self-test", _resource_class_self_test),
@@ -65,6 +78,16 @@ def _schema_self_test() -> None:
     missing = required - set(committed)
     if missing:
         raise AssertionError(f"missing schema self-test coverage: {sorted(missing)}")
+    governance_schemas = (
+        Path(__file__).resolve().parents[3]
+        / "verification"
+        / "areas"
+        / "distribution_release"
+        / "schemas"
+    )
+    governed = [lint_schema(path) for path in sorted(governance_schemas.glob("*.schema.json"))]
+    if len(governed) != 11:
+        raise AssertionError("release-governance schema lint registration drifted")
     try:
         validate_schema_requirement({"type": "object", "oneOf": []}, Path("bad.schema.json"))
     except Exception as exc:
@@ -521,6 +544,209 @@ def _rust_interop_profile_self_test() -> None:
             pass
         else:
             raise AssertionError("malformed Rust interop result JSON was accepted")
+
+
+def _documentation_profile_self_test() -> None:
+    profiles = load_all_profiles()
+    release = profiles["release"]
+    selected = [
+        selection
+        for selection in release["selected_areas"]
+        if selection.get("area") == "documentation"
+    ]
+    if len(selected) != 1 or selected[0].get("suites") != ["structure"]:
+        raise AssertionError("release profile must select documentation:structure exactly once")
+    if "documentation_suites" in legacy_facade(release):
+        raise AssertionError("documentation suites must have selected_areas as their sole authority")
+    if "documentation_checks" not in legacy_facade_step_names(release):
+        raise AssertionError("release profile omitted executable documentation_checks step")
+
+    result_path = (
+        Path(__file__).resolve().parents[3]
+        / "target"
+        / "verification"
+        / "areas"
+        / "documentation-documentation-self-test-results.json"
+    )
+
+    def write_documentation_result(command: list[str]) -> None:
+        if command[-2] != "--result-json":
+            raise AssertionError(f"documentation result path was not requested: {command}")
+        result_path.parent.mkdir(parents=True, exist_ok=True)
+        result_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "area": "documentation",
+                    "bless": False,
+                    "suites": [
+                        {
+                            "name": "structure",
+                            "blocking": True,
+                            "total_variants": 1,
+                            "total_failures": 0,
+                        }
+                    ],
+                    "summary": {"blocking_failures": 0, "total_variants": 1},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+    output = io.StringIO()
+    with contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+        result = timed_step(
+            "documentation_checks",
+            lambda: run_selected_area(
+                area="documentation",
+                suites=["structure"],
+                profile_name="documentation-self-test",
+                result_slug="documentation",
+                command_builder=lambda *args: list(args),
+                command_runner=write_documentation_result,
+            ),
+        )
+    if result.status != 0:
+        raise AssertionError(f"documentation step failed:\n{output.getvalue()}")
+    if "[sifr-lane-step] name=documentation_checks" not in output.getvalue() or "status=pass" not in output.getvalue():
+        raise AssertionError("documentation step did not emit visible passing lane evidence")
+
+    validate_area_result(
+        result_path,
+        area="documentation",
+        expected_suites=["structure"],
+    )
+    result_path.unlink(missing_ok=True)
+    with tempfile.TemporaryDirectory(prefix="sifr-doc-result-self-test-") as temp_dir:
+        missing = Path(temp_dir) / "selected-but-unrun.json"
+        try:
+            validate_area_result(
+                missing,
+                area="documentation",
+                expected_suites=["structure"],
+            )
+        except AreaResultError:
+            pass
+        else:
+            raise AssertionError("selected-but-unrun documentation suite was accepted")
+
+
+def _release_report_precondition_self_test() -> None:
+    with tempfile.TemporaryDirectory(prefix="sifr-release-report-self-test-") as directory:
+        existing = Path(directory) / "release-profile-report.json"
+        existing.write_text("occupied", encoding="utf-8")
+        cases = [
+            (existing, "release", "already exists"),
+            (Path(directory) / "non-release.json", "merge", "accepted only for the release"),
+            (
+                Path(__file__).resolve().parents[3]
+                / "target"
+                / "release-profile-report.json",
+                "release",
+                "outside the repository checkout",
+            ),
+        ]
+        for path, profile, expected in cases:
+            try:
+                prepare_release_report_output(str(path), profile_name=profile)
+            except ValueError as exc:
+                if expected not in str(exc):
+                    raise AssertionError(f"unexpected release report rejection: {exc}") from exc
+            else:
+                raise AssertionError(f"release report precondition mutation passed: {path}")
+
+
+def _release_report_production_self_test() -> None:
+    selected = {
+        "rust_interop": [
+            "matrix",
+            "tiers",
+            "compatibility-matrix",
+            "stale-drafts",
+            "stable-candidate",
+        ],
+        "developer_tooling": ["full"],
+        "documentation": ["structure"],
+        "distribution_release": ["full", "evidence-custody"],
+    }
+    with tempfile.TemporaryDirectory(prefix="sifr-release-report-production-") as directory:
+        root = Path(directory)
+        result_root = root / "target" / "verification" / "areas"
+        result_root.mkdir(parents=True)
+        for area, filename in CRITICAL_RESULTS.items():
+            suites = []
+            for suite_name in selected[area]:
+                labels = [f"{suite_name}:case"]
+                if area == "developer_tooling":
+                    labels.append("editor-release:package")
+                suites.append(
+                    {
+                        "name": suite_name,
+                        "cases": [
+                            {
+                                "variants": [
+                                    {"label": label}
+                                    for label in labels
+                                ]
+                            }
+                        ],
+                    }
+                )
+            (result_root / filename).write_text(
+                json.dumps({"area": area, "suites": suites}),
+                encoding="utf-8",
+            )
+        log_path = root / "release.log"
+        log_path.write_text(
+            "".join(
+                f"[sifr-lane-step] name={name} elapsed_ms=1 status=pass\n"
+                for name in (
+                    "rust_interop_checks",
+                    "developer_tooling_checks",
+                    "documentation_checks",
+                    "distribution_validation",
+                )
+            ),
+            encoding="utf-8",
+        )
+        output_path = root / "release-profile-report.json"
+        payload = build_release_profile_payload(
+            output_path=output_path,
+            log_path=log_path,
+            profile={
+                "selected_areas": [
+                    {"area": area, "suites": suites}
+                    for area, suites in selected.items()
+                ]
+            },
+            profile_digest="a" * 64,
+            commit="e" * 40,
+            submodules={},
+            toolchain={
+                "rustc": "rustc fixture",
+                "cargo": "cargo fixture",
+                "uv": "uv fixture",
+                "python": "python fixture",
+            },
+            result_root=result_root,
+            artifact_root=root,
+        )
+        canonical = (
+            json.dumps(
+                payload,
+                ensure_ascii=False,
+                allow_nan=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            + "\n"
+        ).encode()
+        output_path.write_bytes(canonical)
+        validate_release_profile_report(
+            json.loads(output_path.read_text(encoding="utf-8")),
+            canonical_bytes=output_path.read_bytes(),
+            expected_profile_sha256="a" * 64,
+        )
 
 
 def _e2e_profile_self_test() -> None:

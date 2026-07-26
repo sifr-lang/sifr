@@ -1,6 +1,6 @@
 # Phase 40: Stable Channel GA Promotion and Release Governance
 
-status: implementation-ready
+status: in-progress
 
 ## Objective
 
@@ -53,8 +53,9 @@ Phase 40 consumes these completed or canonical upstream contracts:
   `plans/issues/archive/rust-interop-verification-matrix-hardening.md`
   (`hardening_1` through `hardening_4`) and
   `plans/issues/active/rust-interop-runtime-ecosystem-certification.md`
-  (`certification_0`). Before `milestone_40_0` begins, those items must have
-  wired Rust-interop checks into all authoritative profiles and created
+  (`certification_0`). The hardening items are consumed by
+  `milestone_40_0`. Before stable qualification in `milestone_40_1`,
+  `certification_0` must have created
   `verification/areas/rust_interop/data/stable_support_claims.json` plus its
   stable-candidate validator. `certification_0` also registers that validator
   as the `rust_interop` `stable-candidate` suite and selects it in create-PR,
@@ -65,8 +66,8 @@ Phase 40 consumes these completed or canonical upstream contracts:
   release-only or substitute prose checks for it. The four hardening
   implementation items are merged through
   [PR #3023](https://github.com/sifr-lang/sifr/pull/3023);
-  `certification_0` remains the unmerged prerequisite that must create and
-  validate the stable-claim artifacts.
+  `certification_0` must create and validate the stable-claim artifacts before
+  qualification, but does not block the architecture-and-gate-lock milestone.
 
 Phase 40 does not complete deferred Rust ecosystem certification. It may
 advertise only the exact Rust interop surfaces whose current compatibility
@@ -429,9 +430,9 @@ verification inventory before mutation-capable work begins.
 - Record the canonical owner and target disposition for every gate.
 - Define the exact GA version, supported OS/ABI floors, release owner, incident
   owner, and protected-environment reviewer policy in the execution issue.
-- Confirm the Rust-interop hardening prerequisites have merged and validate the
-  initial `stable_support_claims.json` against the Phase 39 compatibility
-  matrix.
+- Confirm the Rust-interop hardening prerequisites have merged. Validate the
+  separately delivered initial `stable_support_claims.json` against the
+  Phase 39 compatibility matrix before `milestone_40_1` qualification.
 - Add the Phase 40 execution checklist issue and map every later validation
   artifact to a milestone and exit-gate requirement.
 
@@ -463,8 +464,9 @@ verification inventory before mutation-capable work begins.
   path, or differs from any recorded artifact digest.
 - The stable-gate inventory has no unowned entry.
 - Create-PR, merge, nightly, and release visibly execute the Rust-interop step
-  with all four structural suites plus `stable-candidate`; the governed
-  `release` report records the concrete stable-candidate verdict.
+  with all four structural suites. `milestone_40_1` adds `stable-candidate`
+  before qualification, and the governed `release` report then records the
+  concrete stable-candidate verdict.
 - The release report contains passing `full/editor-release:*` case evidence
   exactly once. A runner self-test selects `documentation` `structure` and
   proves that
@@ -536,6 +538,9 @@ local qualification and drift-free provenance.
   from the claims file, disagrees with its matrix execution scope, is
   `future-owned-by-separate-phase`, or promotes contract-only evidence to a
   runtime-support claim.
+- Register the separately delivered stable-candidate validator in the
+  Rust-interop manifest and add it to the inherited executable Rust-interop
+  step in create-PR, merge, nightly, and release before qualification.
 - Make the planner require a passing
   `scripts/run_all_tests.sh --profile release` report for the same source
   commit represented by its inputs. The run uses `--release-report-out` to
@@ -1035,10 +1040,11 @@ evidence are complete.
   expired/missing qualification artifacts, or a digest different from the
   reviewer-visible summary.
 
-**Demo:** The phase demo records a real GA dry run, protected approval evidence,
-the public stable install/update flow, VS Code Marketplace installation, the
-non-production rollback drill, and
-`workflow_dispatch operation=incident-roll-forward`.
+**Demo:** The stable release governance demo records a real GA dry run,
+protected approval evidence, the public stable install/update flow, VS Code
+Marketplace installation, the non-production rollback drill, and
+`workflow_dispatch operation=incident-roll-forward`. Its filename is
+capability-based and does not include a phase or milestone identifier.
 
 ## Validation Contract
 
@@ -1049,8 +1055,15 @@ Every milestone PR must pass the normal create-PR gate and the available Phase
 scripts/run_all_tests.sh --profile create-pr
 uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite full --suite evidence-custody
 uv run --project verification --locked python -m sifr_verify areas run --area developer_tooling --suite editor-release
-uv run --project verification --locked python -m sifr_verify areas run --area rust_interop --suite matrix --suite tiers --suite compatibility-matrix --suite stale-drafts --suite stable-candidate
+uv run --project verification --locked python -m sifr_verify areas run --area rust_interop --suite matrix --suite tiers --suite compatibility-matrix --suite stale-drafts
 uv run --project verification --locked python -m sifr_verify areas run --area documentation --suite structure
+```
+
+Starting with `milestone_40_1`, every PR also runs the separately delivered
+stable-claim validator:
+
+```bash
+uv run --project verification --locked python -m sifr_verify areas run --area rust_interop --suite stable-candidate
 ```
 
 Before each milestone closes:

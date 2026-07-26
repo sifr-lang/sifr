@@ -33,6 +33,10 @@ SIFR_TARGET="${target}" \
 receipt_path="${install_root}/install.json"
 schema_path="${REPO_ROOT}/verification/areas/distribution_release/schemas/self_update_install_receipt.schema.json"
 
+python3 "${REPO_ROOT}/scripts/distribution/release_governance.py" validate \
+  --kind install-receipt \
+  --input "${receipt_path}" >/dev/null
+
 python3 - "${receipt_path}" "${schema_path}" "${install_dir}" "${install_root}" "${version}" "${target}" <<'PY'
 import json
 import pathlib

@@ -224,10 +224,9 @@ three macro/support crates, plus `futures-core`, `futures-channel`, and
 dependency family; the minimal lock update removes no existing package and
 adds no package unreachable from `sifr_rust_interop_catalog`.
 
-- Phase 40 `milestone_40_0` is downstream of both `hardening_1` and this item:
-  `hardening_1` makes its inherited Rust-interop suites execute, and this item
-  registers the stable-candidate claim check that milestone preserves and
-  consumes.
+- Phase 40 `milestone_40_0` consumed the hardening work while this item was in
+  flight. `milestone_40_1` consumes this item's registered stable-candidate
+  claim check before qualification.
 - Add `zero_copy_runtime_matrix` and `advanced_data_runtime_matrix` to both
   matrices, tier metadata, fixture directories, validator inventories, and
   architecture/public docs with both evidence directions `planned`.
@@ -251,11 +250,11 @@ adds no package unreachable from `sifr_rust_interop_catalog`.
 - Add a stable-candidate mode that fails when public stable docs advertise a
   row absent from the claims file or advertise runtime support through a
   contract-only row.
-- Confirm Phase 40 `milestone_40_0` preserves the stable-candidate registration
-  in all four authoritative profiles, `milestone_40_1` consumes its result
-  during qualification, and the `milestone_40_4` documentation gate executes
-  it. Do not make all development builds fail merely because honest
-  future-owned rows remain unadvertised.
+- Confirm Phase 40 `milestone_40_1` preserves the stable-candidate registration
+  in all four authoritative profiles and consumes its result during
+  qualification, and the `milestone_40_4` documentation gate executes it. Do
+  not make all development builds fail merely because honest future-owned rows
+  remain unadvertised.
 
 Exit gate:
 

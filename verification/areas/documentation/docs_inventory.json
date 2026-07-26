@@ -1,0 +1,41 @@
+{
+  "schema_version": 2,
+  "owner": "documentation",
+  "roots": [
+    "docs",
+    "internal_docs"
+  ],
+  "checks": [
+    {
+      "id": "structure",
+      "suite": "structure",
+      "command": [
+        "python3",
+        "verification/areas/documentation/check_structure.py"
+      ],
+      "mutation_cases": [
+        "missing-inventory-field",
+        "duplicate-check",
+        "missing-mutation-harness",
+        "missing-active-suite"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "ga-release",
+      "suite": "ga-release",
+      "command": [
+        "python3",
+        "verification/areas/documentation/check_ga_release_docs.py"
+      ],
+      "mutation_cases": [
+        "missing-stable-entrypoint",
+        "unsupported-target-claim",
+        "unsupported-rust-claim",
+        "signing-claim",
+        "notarization-claim"
+      ],
+      "status": "reserved"
+    }
+  ]
+}

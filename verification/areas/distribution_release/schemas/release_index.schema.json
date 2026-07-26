@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sifr.sh/schemas/release-index-v2.json",
+  "title": "Sifr governed release index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generation", "ga_status", "channels", "releases"],
+  "properties": {
+    "schema_version": {"const": 2},
+    "generation": {"type": "integer", "minimum": 1},
+    "ga_status": {"enum": ["preview", "active"]},
+    "channels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["alpha", "beta"],
+      "properties": {
+        "alpha": {"type": "string"},
+        "beta": {"type": "string"},
+        "stable": {"type": "string"}
+      }
+    },
+    "releases": {
+      "type": "object",
+      "minProperties": 2,
+      "propertyNames": {"pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-(?:alpha|beta)\\.[0-9]+)?$"},
+      "additionalProperties": {"$ref": "#/$defs/release"}
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"ga_status": {"const": "preview"}}},
+      "then": {"properties": {"channels": {"not": {"required": ["stable"]}}}}
+    },
+    {
+      "if": {"properties": {"ga_status": {"const": "active"}}},
+      "then": {"properties": {"channels": {"required": ["stable"]}}}
+    }
+  ],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}},
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_sha256", "sysroot_content_sha256"],
+      "properties": {
+        "artifact_sha256": {"$ref": "#/$defs/sha256"},
+        "sysroot_content_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
+        "x86_64-unknown-linux-gnu"
+      ],
+      "properties": {
+        "aarch64-apple-darwin": {"$ref": "#/$defs/target"},
+        "x86_64-apple-darwin": {"$ref": "#/$defs/target"},
+        "aarch64-unknown-linux-gnu": {"$ref": "#/$defs/target"},
+        "x86_64-unknown-linux-gnu": {"$ref": "#/$defs/target"}
+      }
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "channel",
+        "status",
+        "source_commit",
+        "installer_sha256",
+        "targets"
+      ],
+      "properties": {
+        "channel": {"enum": ["alpha", "beta", "stable"]},
+        "status": {"enum": ["active", "withdrawn"]},
+        "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "installer_sha256": {"$ref": "#/$defs/sha256"},
+        "targets": {"$ref": "#/$defs/targets"},
+        "incident_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "withdrawn"}}},
+          "then": {"required": ["incident_id"]},
+          "else": {"not": {"required": ["incident_id"]}}
+        }
+      ]
+    }
+  }
+}

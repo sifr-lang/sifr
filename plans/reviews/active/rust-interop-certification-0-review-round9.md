@@ -1,5 +1,12 @@
 # Round-9 final PR-boundary audit — `certification_0`
 
+> Editor's provenance note (2026-07-26): the sentence below describes the
+> audit-time state. The reviewer emitted its report out of tree; a concurrent
+> coordinator later captured that output in this file and committed it while a
+> separate final audit was still running. This note makes that capture sequence
+> explicit and resolves the apparent self-reference without changing the
+> reviewer's findings or verdict.
+
 Read-only. I modified nothing in the repository; every command above was a check, a report read, or a diff. `plans/reviews/active/rust-interop-certification-0-review-round9.md` does not exist during this audit (only the out-of-tree `.claude.log` companion), so no writer race is possible.
 
 ## Evidence-integrity re-check (rounds 1–8): coherent

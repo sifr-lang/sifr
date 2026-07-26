@@ -17,10 +17,20 @@ from pathlib import Path
 from typing import Any, Callable, TextIO
 
 from . import reports
-from .cargo_setup import cargo_setup_command
+from .cargo_setup import (
+    enable_offline_cargo as enable_profile_offline_cargo,
+    prepare_cargo_cache as prepare_profile_cargo_cache,
+)
 from .errors import VerificationError
 from .paths import REPO_ROOT
-from .profiles import crate_test_suites_for_mode, legacy_facade, load_profile, resolve_fixture_manifest
+from .profile_area_steps import AreaResultError, run_selected_area, validate_area_result
+from .profiles import (
+    crate_test_suites_for_mode,
+    legacy_facade,
+    load_profile,
+    resolve_fixture_manifest,
+    selected_suites_for_area,
+)
 
 sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
 
@@ -71,6 +81,7 @@ LEGACY_FACADE_STEPS_BEFORE_GENERATED = (
     ("rust_interop_checks", "run_rust_interop_checks"),
     ("frontend_syntax_guardrails", "run_frontend_syntax_guardrails"),
     ("developer_tooling_checks", "run_developer_tooling_checks"),
+    ("documentation_checks", "run_documentation_checks"),
     ("performance_budget_checks", "run_performance_budget_checks"),
     ("verification_hardening_self_tests", "run_verification_hardening_self_tests"),
     ("verification_runner_foundation", "run_verification_runner_foundation_checks"),
@@ -105,60 +116,15 @@ def legacy_facade_step_names(profile: dict[str, Any]) -> set[str]:
     return {name for name, _method_name in legacy_facade_step_methods(profile)}
 
 
-def _is_positive_int(value: object) -> bool:
-    return isinstance(value, int) and not isinstance(value, bool) and value > 0
-
-
-def _is_zero_int(value: object) -> bool:
-    return isinstance(value, int) and not isinstance(value, bool) and value == 0
-
-
 def validate_rust_interop_result(result_path: Path, expected_suites: list[str]) -> None:
-    if not result_path.is_file():
-        raise ProfileRunnerError(f"Rust interop area emitted no result JSON: {result_path}")
     try:
-        payload = json.loads(result_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise ProfileRunnerError(f"Rust interop area emitted invalid result JSON: {result_path}") from exc
-    if (
-        not isinstance(payload, dict)
-        or payload.get("schema_version") != 1
-        or payload.get("area") != "rust_interop"
-        or payload.get("bless") is not False
-    ):
-        raise ProfileRunnerError(f"Rust interop area emitted an invalid result document: {result_path}")
-    raw_suites = payload.get("suites")
-    if not isinstance(raw_suites, list):
-        raise ProfileRunnerError(f"Rust interop result JSON has no suite results: {result_path}")
-    for suite in raw_suites:
-        if (
-            not isinstance(suite, dict)
-            or suite.get("blocking") is not True
-            or not _is_positive_int(suite.get("total_variants"))
-            or not _is_zero_int(suite.get("total_failures"))
-        ):
-            raise ProfileRunnerError(
-                f"Rust interop result JSON contains invalid suite evidence: {result_path}"
-            )
-    actual_suites = {
-        str(suite.get("name"))
-        for suite in raw_suites
-        if isinstance(suite, dict) and isinstance(suite.get("name"), str)
-    }
-    if actual_suites != set(expected_suites):
-        raise ProfileRunnerError(
-            "Rust interop result JSON suite mismatch: "
-            f"expected={sorted(expected_suites)} actual={sorted(actual_suites)}"
+        validate_area_result(
+            result_path,
+            area="rust_interop",
+            expected_suites=expected_suites,
         )
-    summary = payload.get("summary")
-    if (
-        not isinstance(summary, dict)
-        or not _is_zero_int(summary.get("blocking_failures"))
-        or not _is_positive_int(summary.get("total_variants"))
-    ):
-        raise ProfileRunnerError(
-            f"Rust interop result JSON contains invalid blocking summary: {result_path}"
-        )
+    except AreaResultError as exc:
+        raise ProfileRunnerError(str(exc)) from exc
 
 
 def run_command(command: list[str], *, env: dict[str, str] | None = None) -> None:
@@ -278,24 +244,17 @@ class ProfileRunner:
         return 0
 
     def prepare_cargo_cache(self) -> None:
-        """Populate the exact lock graph before profile execution becomes offline."""
         try:
-            command = cargo_setup_command(self.profile)
+            prepare_profile_cargo_cache(self.profile, self.env, run_command)
         except ValueError as exc:
             raise ProfileRunnerError(str(exc)) from exc
-        setup_env = self.env.copy()
-        setup_env.pop("CARGO_NET_OFFLINE", None)
-        print(f"[sifr-profile-setup] command={' '.join(command)}")
-        run_command(command, env=setup_env)
 
     def run_timed_step(self, name: str, callback: Callable[[], None]) -> StepResult:
         """Execute and report one profile step."""
         return timed_step(name, callback)
 
     def enable_offline_cargo(self) -> None:
-        """Force every executable profile step to use the prepared offline cache."""
-        self.env["CARGO_NET_OFFLINE"] = "true"
-        os.environ["CARGO_NET_OFFLINE"] = "true"
+        enable_profile_offline_cargo(self.env)
 
     def legacy_facade_steps(self) -> list[tuple[str, Callable[[], None]]]:
         return [
@@ -323,6 +282,10 @@ class ProfileRunner:
     @property
     def tooling_suites(self) -> list[str]:
         return list(self.legacy["tooling_suites"])
+
+    @property
+    def documentation_suites(self) -> list[str]:
+        return selected_suites_for_area(self.profile, "documentation")
 
     @property
     def hardening_suites(self) -> list[str]:
@@ -546,20 +509,17 @@ class ProfileRunner:
                 f"profile {self.profile_name} has no Rust interop suites to execute"
             )
         print("Running Rust interop checks")
-        result_path = (
-            REPO_ROOT
-            / "target"
-            / "verification"
-            / "areas"
-            / f"rust-interop-{self.profile_name}-results.json"
-        )
-        result_path.unlink(missing_ok=True)
-        args = ["--area", "rust_interop"]
-        for suite in suites:
-            args.extend(["--suite", suite])
-        args.extend(["--result-json", str(result_path.relative_to(REPO_ROOT))])
-        run_command(uv_area_command(*args))
-        validate_rust_interop_result(result_path, suites)
+        try:
+            run_selected_area(
+                area="rust_interop",
+                suites=suites,
+                profile_name=self.profile_name,
+                result_slug="rust-interop",
+                command_builder=uv_area_command,
+                command_runner=run_command,
+            )
+        except AreaResultError as exc:
+            raise ProfileRunnerError(str(exc)) from exc
 
     def run_frontend_syntax_guardrails(self) -> None:
         print("Running frontend and syntax guardrails")
@@ -569,10 +529,35 @@ class ProfileRunner:
         print("Running Developer Tooling Checks")
         print("  suites=" + (",".join(self.tooling_suites) if self.tooling_suites else "none"))
         if self.tooling_suites:
-            args = ["--area", "developer_tooling"]
-            for suite in self.tooling_suites:
-                args.extend(["--suite", suite])
-            run_command(uv_area_command(*args))
+            try:
+                run_selected_area(
+                    area="developer_tooling",
+                    suites=self.tooling_suites,
+                    profile_name=self.profile_name,
+                    result_slug="developer-tooling",
+                    command_builder=uv_area_command,
+                    command_runner=run_command,
+                )
+            except AreaResultError as exc:
+                raise ProfileRunnerError(str(exc)) from exc
+
+    def run_documentation_checks(self) -> None:
+        if not self.documentation_suites:
+            print(f"Skipping documentation checks for lane {self.profile_name}")
+            return
+        print("Running Documentation Checks")
+        print("  suites=" + ",".join(self.documentation_suites))
+        try:
+            run_selected_area(
+                area="documentation",
+                suites=self.documentation_suites,
+                profile_name=self.profile_name,
+                result_slug="documentation",
+                command_builder=uv_area_command,
+                command_runner=run_command,
+            )
+        except AreaResultError as exc:
+            raise ProfileRunnerError(str(exc)) from exc
 
     def run_performance_budget_checks(self) -> None:
         print("Running Performance Budget Checks")
@@ -628,7 +613,23 @@ class ProfileRunner:
         print(f"  mode={self.distribution_mode}")
         if self.distribution_mode not in {"representative", "full"}:
             raise ProfileRunnerError(f"unknown distribution validation mode: {self.distribution_mode}")
-        run_command(uv_area_command("--area", "distribution_release", "--suite", self.distribution_mode))
+        suites = self.selected_suites_for_area("distribution_release")
+        if self.distribution_mode not in suites:
+            raise ProfileRunnerError(
+                f"profile {self.profile_name} does not select distribution mode "
+                f"{self.distribution_mode}"
+            )
+        try:
+            run_selected_area(
+                area="distribution_release",
+                suites=suites,
+                profile_name=self.profile_name,
+                result_slug="distribution-release",
+                command_builder=uv_area_command,
+                command_runner=run_command,
+            )
+        except AreaResultError as exc:
+            raise ProfileRunnerError(str(exc)) from exc
 
     def run_sysroot_release_checks(self) -> None:
         suites = self.selected_suites_for_area("sysroot_release")
@@ -829,7 +830,24 @@ def temporary_report_path(report_dir: Path, prefix: str) -> Path:
         return Path(temp_file.name)
 
 
-def run_profile(profile_name: str, forward_args: list[str]) -> int:
+def run_profile(
+    profile_name: str,
+    forward_args: list[str],
+    *,
+    release_report_out: str | None = None,
+) -> int:
+    release_output = None
+    if release_report_out is not None:
+        from .release_evidence import prepare_release_report_output
+
+        try:
+            release_output = prepare_release_report_output(
+                release_report_out,
+                profile_name=profile_name,
+            )
+        except ValueError as exc:
+            print(f"sifr_verify: {exc}", file=sys.stderr)
+            return 2
     report_dir = REPO_ROOT / "target" / "validation_lane_reports"
     report_dir.mkdir(parents=True, exist_ok=True)
     temp_log = temporary_report_path(report_dir, f"lane.{profile_name}.log.")
@@ -864,6 +882,18 @@ def run_profile(profile_name: str, forward_args: list[str]) -> int:
         )
     except Exception as exc:  # Preserve validation status while surfacing report regressions.
         print(f"warning: lane report summarization failed: {exc}", file=sys.stderr)
+    if release_output is not None and status == 0:
+        from .release_evidence import write_release_profile_report
+
+        try:
+            write_release_profile_report(
+                release_output,
+                log_path=latest_log,
+                status=status,
+            )
+        except ValueError as exc:
+            print(f"sifr_verify: {exc}", file=sys.stderr)
+            status = 2
     temp_log.unlink(missing_ok=True)
     temp_time.unlink(missing_ok=True)
     return status
