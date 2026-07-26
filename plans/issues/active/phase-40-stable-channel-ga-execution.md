@@ -51,8 +51,8 @@ validated, merged PR.
   selection.
 - [x] Add documentation area ownership, structure suite, profile step, and
   selected-but-unrun/result self-tests.
-- [ ] Consume the separately merged Rust-interop stable-candidate suite and
-  claims artifact without implementing that prerequisite here.
+- [x] Reserve Phase 40 ownership of the separately delivered Rust-interop
+  stable-candidate registration without making it a milestone-40.0 blocker.
 - [x] Check in and validate the owned stable-gate inventory.
 - [ ] Record positive/negative evidence, commands, review rounds, PR, and merge.
 
@@ -69,12 +69,14 @@ Artifacts mapped to the Phase 40 exit gate:
 | incident request/sign-off | 40.0, 40.3, 40.5 | Withdrawal, rollback, roll-forward, and closure |
 | install receipt / CLI version / update plan | 40.0, 40.2 | Stable installer and self-update agreement |
 | documentation suite reports | 40.0, 40.4 | Stable public claims and support floors |
-| Rust stable-candidate report | prerequisite, 40.0, 40.1 | Advertised Rust-interop claim boundary |
+| Rust stable-candidate report | certification_0, 40.1 | Advertised Rust-interop claim boundary |
 | VSIX qualification report | 40.4 | Qualified editor artifact consumed without rebuild |
 
 ### milestone_40_1: Canonical Release Plan and Qualification
 
 - [ ] Implement the non-mutating stable planner and canonical digest binding.
+- [ ] Consume and register the separately delivered Rust-interop
+  stable-candidate suite and claims artifact before qualification.
 - [ ] Qualify all compiler, sysroot, installer, documentation, Rust-claim, site,
   and VSIX artifacts.
 - [ ] Validate first-GA and normal predecessor/rollback semantics.
@@ -125,9 +127,10 @@ Artifacts mapped to the Phase 40 exit gate:
 
 ### milestone_40_0
 
-Status: local implementation complete; blocked only on the separately owned
-Rust-interop `stable-candidate` prerequisite and its
-`stable_support_claims.json` artifact before PR creation.
+Status: local implementation complete. Rust-interop `stable-candidate`
+registration and `stable_support_claims.json` consumption occur at
+milestone 40.1 before qualification and do not block this architecture/gate
+lock PR.
 
 - Review pass 1:
   `plans/reviews/active/phase-40-milestone-40-0-claude-opus-review-pass-1.md`
@@ -162,14 +165,26 @@ Rust-interop `stable-candidate` prerequisite and its
 - Review pass 7:
   `plans/reviews/active/phase-40-milestone-40-0-claude-opus-review-pass-7.md`
   found no local defects after broadened raw-exception and
-  schema/validator-differential sweeps. Milestone 40.0 is locally approved and
-  waits only for the separately owned Rust `stable-candidate` prerequisite.
+  schema/validator-differential sweeps. Milestone 40.0 was locally approved
+  before its final upstream rebase and capability-based demo rename.
+- Review pass 8:
+  `plans/reviews/active/phase-40-milestone-40-0-claude-opus-review-pass-8.md`
+  independently re-ran 17,682 adversarial schema/validator cases with no unsafe
+  divergence, then requested two naming/ownership consistency corrections.
+- Review pass 9:
+  `plans/reviews/active/phase-40-milestone-40-0-claude-opus-review-pass-9.md`
+  verified both corrections, the capability-based demo convention, and the
+  fail-closed 40.1 qualification boundary, then returned `APPROVED`.
 - Passing local evidence:
+  - `demos/stable_release_governance_demo.sh`
   - `scripts/run_all_tests.sh --profile create-pr`
   - `uv run --project verification --locked python -m sifr_verify areas run
     --area distribution_release --suite full --suite evidence-custody`
   - `uv run --project verification --locked python -m sifr_verify areas run
     --area developer_tooling --suite editor-release`
+  - `uv run --project verification --locked python -m sifr_verify areas run
+    --area rust_interop --suite matrix --suite tiers
+    --suite compatibility-matrix --suite stale-drafts`
   - `uv run --project verification --locked python -m sifr_verify areas run
     --area documentation --suite structure`
   - governance/schema/runner self-tests, Rust self-update unit tests, Clippy,

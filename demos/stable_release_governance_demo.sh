@@ -3,7 +3,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DEMO_DIR="$(mktemp -d "${TMPDIR:-/tmp}/sifr-milestone-40-0.XXXXXX")"
+DEMO_DIR="$(mktemp -d "${TMPDIR:-/tmp}/sifr-stable-release-governance.XXXXXX")"
 cleanup() {
   rm -rf "${DEMO_DIR}"
 }
@@ -33,5 +33,5 @@ python3 "${REPO_ROOT}/scripts/distribution/release_governance.py" \
   --input "${DEMO_DIR}/stable-release-plan.json" \
   --require-canonical
 
-echo "Canonical, non-mutating milestone-40.0 release plan:"
+echo "Canonical, non-mutating stable release governance plan:"
 python3 -m json.tool "${DEMO_DIR}/stable-release-plan.json"

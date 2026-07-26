@@ -17,7 +17,7 @@ case "${target}" in
   *) echo "unsupported parity-test host: ${target}" >&2; exit 2 ;;
 esac
 
-build_root="${REPO_ROOT}/target/phase40-self-json-parity"
+build_root="${REPO_ROOT}/target/self-update-json-parity"
 SIFR_RELEASE_VERSION="${version}" \
   CARGO_TARGET_DIR="${build_root}" \
   cargo build -q --locked -p sifr --bin sifr

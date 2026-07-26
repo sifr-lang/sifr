@@ -146,9 +146,9 @@ normative and must not be broadened.
 This PR lands after hardening items `hardening_1` through `hardening_4` and
 before any row implementation.
 
-- Phase 40 `milestone_40_0` is downstream of both `hardening_1` and this item:
-  `hardening_1` makes its inherited Rust-interop suites execute, and this item
-  supplies the stable-candidate claim check that milestone registers.
+- Phase 40 `milestone_40_1` consumes this item after `hardening_1` makes its
+  inherited Rust-interop suites execute; this item supplies the
+  stable-candidate claim check that milestone registers before qualification.
 - Add `zero_copy_runtime_matrix` and `advanced_data_runtime_matrix` to both
   matrices, tier metadata, fixture directories, validator inventories, and
   architecture/public docs with both evidence directions `planned`.
@@ -171,11 +171,11 @@ before any row implementation.
 - Add a stable-candidate mode that fails when public stable docs advertise a
   row absent from the claims file or advertise runtime support through a
   contract-only row.
-- Confirm Phase 40 `milestone_40_0` registers the stable-candidate suite in all
-  four authoritative profiles, `milestone_40_1` consumes its result during
-  qualification, and the `milestone_40_4` documentation gate executes it. Do
-  not make all development builds fail merely because honest future-owned rows
-  remain unadvertised.
+- Confirm Phase 40 `milestone_40_1` registers the stable-candidate suite in all
+  four authoritative profiles and consumes its result during qualification,
+  and the `milestone_40_4` documentation gate executes it. Do not make all
+  development builds fail merely because honest future-owned rows remain
+  unadvertised.
 
 Exit gate:
 
