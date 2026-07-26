@@ -295,7 +295,8 @@ The authoritative field enumeration lives at `verification/areas/distribution_re
 `channel` is derived from the installer version: exact stable SemVer records
 `stable`, while prereleases use their label. Read-only receipt discovery and
 `sifr self version` accept stable candidate receipts for qualification; stable
-resolution and update remain gated until the stable distribution milestone.
+resolution and update remain gated until protected stable installation is
+enabled.
 `modify_path` records the actual installer request, including
 `SIFR_NO_MODIFY_PATH=1` and `--no-modify-path`. `binary_path` and
 `sysroot_path` record canonical installed paths when the platform can resolve
