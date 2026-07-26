@@ -24,6 +24,12 @@ const SHARED_BRIDGE_NEGATIVE_MANIFEST: &str = include_str!(
 const SHARED_BRIDGE_NEGATIVE_RUST: &str = include_str!(
     "../../../../verification/areas/rust_interop/fixtures/shared_bridge_crate/negative/shared_bridge_lib.rs"
 );
+const LOCAL_BRIDGE_EVIDENCE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/local_bridge_blake3/positive/local_bridge_hash_bytes.sifr"
+);
+const LOCAL_BRIDGE_NEGATIVE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/local_bridge_blake3/negative/missing_local_bridge_export.sifr"
+);
 
 fn fixture_scenario_root(fixture_id: &str, scenario_id: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -110,6 +116,71 @@ fn run_built_package(entrypoint: &PackageEntrypoint) -> String {
         String::from_utf8_lossy(&output.stderr)
     );
     String::from_utf8_lossy(&output.stdout).trim().to_string()
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+fn test_build_local_bridge_blake3_positive_cargo_probe() {
+    let package_root = copied_scenario(
+        "local_bridge_blake3",
+        "local_blake3_bridge",
+        "rust_interop_local_bridge_positive",
+    );
+    let pristine_entrypoint =
+        package_entrypoint_from_cargo_layout(&package_root, "local-blake3-bridge");
+    assert!(
+        check_package_project(&pristine_entrypoint).is_empty(),
+        "checked-in local bridge scenario should pass package checking"
+    );
+    install_evidence_source(
+        &package_root,
+        &format!(
+            "{LOCAL_BRIDGE_EVIDENCE}\n\ndef main() -> None:\n    result: bytes = verify_local_bridge_hash_bytes()\n    print(result.to_ints())\n"
+        ),
+    );
+    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "local-blake3-bridge");
+
+    assert_eq!(
+        run_built_package(&entrypoint),
+        "[20, 38, 50, 184, 100, 68, 224, 154]"
+    );
+    let _ = std::fs::remove_dir_all(package_root);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+fn test_check_local_bridge_blake3_missing_export_cargo_probe() {
+    let package_root = copied_scenario(
+        "local_bridge_blake3",
+        "local_blake3_bridge",
+        "rust_interop_local_bridge_negative",
+    );
+    install_evidence_source(&package_root, LOCAL_BRIDGE_NEGATIVE);
+    let manifest_path = package_root.join("sifr.toml");
+    let manifest = std::fs::read_to_string(&manifest_path)
+        .expect("local bridge Sifr manifest should be readable");
+    let expanded_manifest = manifest.replace(
+        "rust-no-panic = [\"bridge.blake3.hash_bytes\", \"bridge.blake3.hash_hex\"]",
+        "rust-no-panic = [\"bridge.blake3.hash_bytes\", \"bridge.blake3.hash_hex\", \"bridge.blake3.missing_export\"]",
+    );
+    assert_ne!(
+        expanded_manifest, manifest,
+        "negative local bridge trust mutation must match the checked-in manifest"
+    );
+    std::fs::write(&manifest_path, expanded_manifest)
+        .expect("negative local bridge trust should be installed");
+    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "local-blake3-bridge");
+
+    let errors = check_package_project(&entrypoint);
+
+    assert!(
+        errors.iter().any(|error| {
+            error.code == DiagnosticCode::RUST_RESOLVE_TARGET_ROOT.code()
+                && error.message.contains("missing_export")
+        }),
+        "missing local bridge export must be a stable resolution diagnostic: {errors:#?}"
+    );
+    let _ = std::fs::remove_dir_all(package_root);
 }
 
 #[test]

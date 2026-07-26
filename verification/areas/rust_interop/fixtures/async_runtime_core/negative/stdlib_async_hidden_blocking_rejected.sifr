@@ -1,7 +1,7 @@
 # fixture: async_runtime_core
 # evidence: negative/stdlib_async_hidden_blocking_rejected
 # evidence-status: passing
-# execution-kind: runtime-observed
+# execution-kind: contract-only
 # expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-ASYNC-0001
 class AsyncResourceError(Error):

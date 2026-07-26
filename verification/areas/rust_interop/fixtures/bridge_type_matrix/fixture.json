@@ -7,7 +7,14 @@
       "expected_result": "diagnostic",
       "id": "unsupported_container_rejections",
       "path": "negative/unsupported_container_rejections.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_contract_tests.rs",
+        "test_name": "package_rust_interop_rejects_unsupported_bridge_type_contract"
+      }
     },
     "positive": {
       "expected_result": "future-owned",
@@ -33,6 +40,6 @@
     "bytes",
     "indexmap"
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 1
 }

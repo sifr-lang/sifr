@@ -53,7 +53,7 @@ mod target_resolution;
 #[path = "rust_interop/zero_copy_validation.rs"]
 mod zero_copy_validation;
 
-use bridge_aliases::{inject_package_bridge_aliases, package_bridge_dependency_name};
+use bridge_aliases::inject_package_bridge_aliases;
 use target_resolution::{
     backend_for_root, canonical_sifr_target_path, canonical_trust_target_path, declaration_paths,
     trust_kind_name, uses_bridge_root,
@@ -300,7 +300,17 @@ impl<'a> RustInteropResolver<'a> {
         let resolved_root = match root.as_str() {
             "bridge" => RustInteropResolvedRoot::PackageBridge {
                 package_id: package_id.0.clone(),
-                dependency_name: package_bridge_dependency_name(package),
+                dependency_name: {
+                    let Some(dependency_name) = self.plan_package_bridge_probe(
+                        declaration,
+                        path,
+                        package,
+                        sysroot_trust.as_ref(),
+                    ) else {
+                        return;
+                    };
+                    dependency_name
+                },
                 cargo_package_name: package.cargo_package_name.clone(),
                 cargo_manifest_path: package
                     .package_root
@@ -409,6 +419,7 @@ impl<'a> RustInteropResolver<'a> {
                     declaration: declaration.clone(),
                     path: path.clone(),
                     backend: backend.clone(),
+                    source_prefix: None,
                     signature,
                     async_thread_affinity,
                     sysroot_runtime_crate,

@@ -8,20 +8,34 @@
       "id": "missing_backpressure_rejected",
       "path": "negative/missing_backpressure_rejected.sifr",
       "scope": "contract-only",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_callback_contract_tests.rs",
+        "test_name": "package_rust_interop_rejects_callback_missing_backpressure"
+      }
     },
     "positive": {
       "expected_result": "pass",
       "id": "bounded_callback_policy",
       "path": "positive/bounded_callback_policy.sifr",
       "scope": "contract-only",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_callback_contract_tests.rs",
+        "test_name": "package_rust_interop_accepts_direct_callback_backpressure"
+      }
     }
   },
   "execution_kind": "contract-only",
   "features": {},
   "id": "callbacks_threadsafe",
   "required_crates": [],
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 2
 }

@@ -254,9 +254,11 @@ def digest(input: bytes) -> int:
 ",
     );
 
-    assert!(errors
-        .iter()
-        .any(|error| error.code == Some(DiagnosticCode::RUST_ASYNC_CONTRACT)));
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::RUST_ASYNC_CONTRACT)
+            && error.message
+                == "invalid Rust async contract: `@rust.async(...)` requires `async def`"
+    }));
 }
 
 #[test]
@@ -327,6 +329,24 @@ async def query() -> int:
     assert!(errors
         .iter()
         .any(|error| error.code == Some(DiagnosticCode::RUST_ASYNC_CONTRACT)));
+}
+
+#[test]
+fn rust_interop_hidden_blocking_async_resource_evidence_is_rejected() {
+    let errors = lower_errors(
+        r"
+@blocking_io
+@rust(sifr_stdlib.async_core.hidden_blocking_wait, panic=trusted_no_panic)
+async def hidden_blocking_wait() -> None:
+    return None
+",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::RUST_ASYNC_CONTRACT)
+            && error.message
+                == "invalid Rust async contract: Rust async interop cannot be combined with blocking or CPU-heavy classification"
+    }));
 }
 
 #[test]

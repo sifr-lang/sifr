@@ -7,19 +7,33 @@
       "expected_result": "diagnostic",
       "id": "string_and_reserved_root_rejection",
       "path": "negative/string_and_reserved_root_rejection.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_lowering",
+        "test_file": "crates/sifr_lowering/src/lower/rust_interop_tests.rs",
+        "test_name": "rust_interop_rejects_string_target"
+      }
     },
     "positive": {
       "expected_result": "pass",
       "id": "valid_structured_paths",
       "path": "positive/valid_structured_paths.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_lowering",
+        "test_file": "crates/sifr_lowering/src/lower/rust_interop_tests.rs",
+        "test_name": "rust_interop_lowers_function_decorators_into_hir"
+      }
     }
   },
   "execution_kind": "compiler-diagnostic",
   "features": {},
   "id": "dotted_path_resolution",
   "required_crates": [],
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 0
 }

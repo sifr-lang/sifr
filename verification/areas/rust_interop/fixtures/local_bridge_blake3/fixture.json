@@ -7,13 +7,27 @@
       "expected_result": "diagnostic",
       "id": "missing_local_bridge_export",
       "path": "negative/missing_local_bridge_export.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs",
+        "test_name": "test_check_local_bridge_blake3_missing_export_cargo_probe"
+      }
     },
     "positive": {
       "expected_result": "pass",
       "id": "local_bridge_hash_bytes",
       "path": "positive/local_bridge_hash_bytes.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs",
+        "test_name": "test_build_local_bridge_blake3_positive_cargo_probe"
+      }
     }
   },
   "execution_kind": "cargo-probe",
@@ -28,6 +42,6 @@
   "scenario_examples": {
     "local_blake3_bridge": "examples/local_blake3_bridge"
   },
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 1
 }

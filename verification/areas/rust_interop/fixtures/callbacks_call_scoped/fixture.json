@@ -20,6 +20,6 @@
   "features": {},
   "id": "callbacks_call_scoped",
   "required_crates": [],
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 2
 }

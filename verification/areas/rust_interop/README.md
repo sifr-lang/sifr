@@ -16,12 +16,14 @@ must be categorized as `future-owned-by-separate-phase`.
 
 ## Fixture Layout
 
-Each directory under `fixtures/` is required to contain:
+Each directory under `fixtures/` contains:
 
-- `README.md`: human evidence notes and links to the owning implementation
-  checks.
-- `fixture.json`: machine-readable fixture metadata mirroring the fixture
-  matrix row.
+- `README.md`: explanatory evidence notes that repeat canonical test names for
+  readers. README prose is not validator input.
+- `fixture.json`: schema-v2 machine-readable fixture metadata mirroring the
+  fixture matrix row. Every passing evidence side binds one exact Rust test
+  through `validation.profile`, `step`, `suite_id`, `test_file`, and
+  `test_name`; non-passing evidence has no validation binding.
 - `positive/<positive_evidence.id>.sifr`: the positive evidence source.
 - `negative/<negative_evidence.id>.sifr`: the negative evidence source.
 - `examples/<crate>.sifr`: one full package example for each crate listed in
@@ -31,8 +33,11 @@ Each directory under `fixtures/` is required to contain:
   list.
 
 The `matrix` suite validates this layout, verifies that fixture metadata
-matches `data/rust_interop_fixture_matrix.json`, and rejects empty README-only
-fixture directories. Positive and negative evidence files must include a
+matches `data/rust_interop_fixture_matrix.json`, and rejects passing claims
+backed only by README prose. It resolves every structured test binding to the
+weakest blocking profile that executes it, checks suite/package/file
+ownership, and reserves each Rust test for one evidence side. Positive and
+negative evidence files must include a
 `verify_<evidence-id>` function that calls every Rust-decorated binding in the
 file, including opaque-handle methods. Package examples must be referenced from
 `fixture.json.package_examples`, must use the exact `examples/<crate>.sifr`
@@ -78,12 +83,14 @@ evidence.
 ## Suites
 
 - `matrix`: verifies the fixture matrix, required fixture directories, crate
-  coverage, evidence objects, fixture READMEs, fixture source files, package
-  examples for every required Rust crate, scenario examples for package-layout
-  fixture families, and diagnostic family inventory.
+  coverage, schema-v2 evidence and exact executable-test provenance, fixture
+  source files, package examples for every required Rust crate, scenario
+  examples for package-layout fixture families, and diagnostic family
+  inventory.
 - `tiers`: verifies tier definitions and fixture tier assignments.
-- `compatibility-matrix`: verifies that public compatibility rows match fixture
-  evidence and that no fixture family is omitted.
+- `compatibility-matrix`: loads fixture manifests, verifies that public
+  compatibility rows match fixture evidence, requires two distinct valid test
+  bindings for claimed-support rows, and ensures no fixture family is omitted.
 - `stale-drafts`: scans active planning and documentation paths for accepted
   examples of abandoned Rust interop syntax.
 

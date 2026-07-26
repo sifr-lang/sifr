@@ -7,13 +7,27 @@
       "expected_result": "diagnostic",
       "id": "non_send_future_without_affinity",
       "path": "negative/non_send_future_without_affinity.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_async_contract_tests.rs",
+        "test_name": "package_rust_interop_async_requires_send_future_by_default"
+      }
     },
     "positive": {
       "expected_result": "pass",
       "id": "current_thread_non_send_future",
       "path": "positive/current_thread_non_send_future.sifr",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_async_contract_tests.rs",
+        "test_name": "package_rust_interop_async_probe_current_thread_allows_non_send_future"
+      }
     }
   },
   "execution_kind": "cargo-probe",
@@ -31,6 +45,6 @@
     "http",
     "http-body"
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 2
 }

@@ -41,6 +41,6 @@
   "scenario_examples": {
     "backend_feature_package": "examples/backend_feature_package"
   },
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 4
 }

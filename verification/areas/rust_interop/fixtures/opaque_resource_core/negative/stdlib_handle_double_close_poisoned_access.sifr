@@ -2,8 +2,8 @@
 # evidence: negative/stdlib_handle_double_close_poisoned_access
 # evidence-status: passing
 # execution-kind: runtime-observed
-# expected-result: diagnostic
-# expected-diagnostic: SIFR-RUST-HANDLE-0001
+# expected-result: runtime-error-state
+# expected-runtime-state: poisoned
 @rust.opaque(type=sifr_stdlib.fs.FileHandle, send=False, sync=False, clone=none, close=close)
 class StdlibFileHandle:
     @rust(sifr_stdlib.fs.file_close, panic=trusted_no_panic)

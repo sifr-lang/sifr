@@ -96,6 +96,7 @@ fn package_rust_interop_direct_probe_checks_signature_shape() {
 }
 
 #[test]
+#[doc = "sifr-evidence: executes-cargo-probe"]
 fn package_rust_interop_direct_probe_accepts_bridge_signature() {
     let backend_root = temp_package_root("rust_interop_signature_probe_ok");
     std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
@@ -257,6 +258,7 @@ fn package_rust_interop_direct_probe_accepts_mutable_borrow_signature() {
 }
 
 #[test]
+#[doc = "sifr-evidence: executes-cargo-probe"]
 fn package_rust_interop_opaque_probe_accepts_declared_send_sync_copy() {
     let backend_root = temp_package_root("rust_interop_opaque_send_sync_copy");
     std::fs::create_dir_all(backend_root.join("src")).expect("create backend src");
@@ -578,7 +580,7 @@ pub(super) fn none_contract() -> RustBridgeTypeContract {
     }
 }
 
-fn unsupported_contract(sifr_type: &str, reason: &str) -> RustBridgeTypeContract {
+pub(super) fn unsupported_contract(sifr_type: &str, reason: &str) -> RustBridgeTypeContract {
     RustBridgeTypeContract {
         sifr_type: sifr_type.to_string(),
         rust_borrowed_type: None,

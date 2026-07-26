@@ -8,14 +8,28 @@
       "id": "invalid_arrow_metadata",
       "path": "negative/invalid_arrow_metadata.sifr",
       "scope": "contract-only",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_advanced_data_contract_tests.rs",
+        "test_name": "package_rust_interop_rejects_arrow_view_without_schema"
+      }
     },
     "positive": {
       "expected_result": "pass",
       "id": "arrow_schema_identity",
       "path": "positive/arrow_schema_identity.sifr",
       "scope": "contract-only",
-      "status": "passing"
+      "status": "passing",
+      "validation": {
+        "profile": "create-pr",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_lib",
+        "test_file": "crates/sifr_driver/src/build/rust_interop_advanced_data_contract_tests.rs",
+        "test_name": "package_rust_interop_accepts_arrow_record_batch_metadata_contract"
+      }
     }
   },
   "execution_kind": "contract-only",
@@ -27,6 +41,6 @@
   "required_crates": [
     "arrow"
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "tier": 4
 }

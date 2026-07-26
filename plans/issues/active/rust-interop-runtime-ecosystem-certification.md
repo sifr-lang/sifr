@@ -245,11 +245,13 @@ rather than claiming them wholesale:
 
 - `opaque_resource_matrix` was split into supported stdlib
   `opaque_resource_core` plus the retained ecosystem resource row.
-- `async_runtime_reqwest` was split into supported `async_runtime_core` plus
-  the retained reqwest loopback row.
-- the former subscription matrix was split into supported
-  `callback_subscription_core` plus
-  `callback_subscription_ecosystem`.
+- `async_runtime_reqwest` was split into the supported contract-only
+  `async_runtime_core` row plus the retained reqwest loopback row. Runtime task
+  cancellation/drop remains part of the downstream row's certification.
+- the former subscription matrix was split into the supported contract-only
+  `callback_subscription_core` row plus
+  `callback_subscription_ecosystem`; subscription cancellation/shutdown
+  execution remains downstream.
 - `callbacks_call_scoped` and `panic_boundary_wrapper_emission` were not
   claimed by stdlib migration and remain owned here.
 

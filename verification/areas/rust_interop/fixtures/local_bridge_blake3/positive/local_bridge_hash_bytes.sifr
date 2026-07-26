@@ -3,12 +3,9 @@
 # evidence-status: passing
 # execution-kind: cargo-probe
 # expected-result: pass
-class HashError(Error):
-    message: str
+@rust(bridge.blake3.hash_bytes, panic=trusted_no_panic)
+def hash_bytes(input: bytes) -> bytes: ...
 
-@rust(bridge.blake3.hash_bytes, panic=map_error(bridge.blake3.map_panic))
-def hash_bytes(input: bytes) -> Result[bytes, HashError | RustPanicError]: ...
-
-def verify_local_bridge_hash_bytes() -> Result[bytes, HashError | RustPanicError]:
-    hash_bytes_result: Result[bytes, HashError | RustPanicError] = hash_bytes(b"sifr-rust-interop")
+def verify_local_bridge_hash_bytes() -> bytes:
+    hash_bytes_result: bytes = hash_bytes(b"sifr-rust-interop")
     return hash_bytes_result

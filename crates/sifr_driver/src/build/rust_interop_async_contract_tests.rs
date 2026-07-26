@@ -101,7 +101,8 @@ fn package_rust_interop_async_requires_send_future_by_default() {
 }
 
 #[test]
-fn package_rust_interop_async_current_thread_allows_non_send_future() {
+#[doc = "sifr-evidence: executes-cargo-probe"]
+fn package_rust_interop_async_probe_current_thread_allows_non_send_future() {
     let backend_root = async_backend_root(
         "rust_interop_async_non_send_current_thread",
         non_send_future_backend(),

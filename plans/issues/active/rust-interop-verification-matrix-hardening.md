@@ -229,6 +229,16 @@ One documentation/review PR after `hardening_1` through `hardening_4`:
 - runs a final Opus implementation-readiness review to satisfaction; and
 - archives this issue only after all gates below pass.
 
+## Implementation Progress
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| `hardening_1` | merged | [PR #3018](https://github.com/sifr-lang/sifr/pull/3018), with the profile-evidence correction in [PR #3019](https://github.com/sifr-lang/sifr/pull/3019) |
+| `hardening_2` | merged | [PR #3020](https://github.com/sifr-lang/sifr/pull/3020); final Opus review approved in round 7 |
+| `hardening_3` | review approved; PR pending | all 34 fixture manifests are schema v2; all 47 passing evidence directions have distinct structured Rust-test provenance; Opus round 6 satisfied; create-PR lane passed |
+| `hardening_4` | pending | starts only after `hardening_3` merges |
+| `hardening_5` | pending | starts only after `hardening_4` merges |
+
 ## Acceptance Criteria
 
 - Invalid tier/execution-kind pairs are rejected exactly per the frozen table.

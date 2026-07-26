@@ -11,6 +11,11 @@ from _binding_helpers import contains_empty_pass_body as _contains_empty_pass_bo
 from _binding_helpers import decorated_function_name as _decorated_function_name
 from _binding_helpers import rust_bound_declarations as _rust_bound_declarations
 from _binding_helpers import verifier_binds_call as _verifier_binds_call
+from _evidence_expectations import run_self_test as run_expectation_self_test
+from _evidence_expectations import validate_evidence_expectation
+from _provenance_checks import load_profiles
+from _provenance_checks import run_self_test as run_provenance_self_test
+from _provenance_checks import validate_evidence_provenance
 from _scenario_checks import validate_scenario_examples
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -198,6 +203,8 @@ def main(argv: list[str] | None = None) -> int:
     covered_crates: set[str] = set()
     package_example_count = 0
     scenario_example_count = 0
+    profiles = load_profiles(REPO_ROOT)
+    used_evidence_tests: dict[tuple[str, str], str] = {}
     for fixture in fixtures:
         if not isinstance(fixture, dict):
             failures.append("fixture entries must be objects")
@@ -217,7 +224,13 @@ def main(argv: list[str] | None = None) -> int:
         _validate_feature_policies(failures, fixture_id, fixture.get("features"), crates)
         _validate_evidence(failures, fixture_id, fixture.get("positive_evidence"), "positive_evidence")
         _validate_evidence(failures, fixture_id, fixture.get("negative_evidence"), "negative_evidence")
-        package_count, scenario_count = _validate_fixture_files(failures, fixture, crates)
+        package_count, scenario_count = _validate_fixture_files(
+            failures,
+            fixture,
+            crates,
+            profiles,
+            used_evidence_tests,
+        )
         package_example_count += package_count
         scenario_example_count += scenario_count
 
@@ -434,6 +447,26 @@ def _run_self_test() -> int:
         return 1
     cases += 1
 
+    provenance_cases, provenance_error = run_provenance_self_test()
+    if provenance_error is not None:
+        print(
+            f"rust interop fixture matrix self-test error: {provenance_error}",
+            file=sys.stderr,
+        )
+        return 1
+    cases += provenance_cases
+
+    expectation_cases, expectation_error = run_expectation_self_test(
+        REQUIRED_DIAGNOSTICS
+    )
+    if expectation_error is not None:
+        print(
+            f"rust interop fixture matrix self-test error: {expectation_error}",
+            file=sys.stderr,
+        )
+        return 1
+    cases += expectation_cases
+
     print(f"rust interop fixture matrix self-test ok: cases={cases}")
     return 0
 
@@ -473,7 +506,13 @@ def _validate_feature_policies(
             )
 
 
-def _validate_fixture_files(failures: list[str], fixture: dict[str, Any], crates: list[Any]) -> tuple[int, int]:
+def _validate_fixture_files(
+    failures: list[str],
+    fixture: dict[str, Any],
+    crates: list[Any],
+    profiles: dict[str, dict[str, Any]],
+    used_evidence_tests: dict[tuple[str, str], str],
+) -> tuple[int, int]:
     fixture_id = str(fixture.get("id"))
     fixture_dir = FIXTURES_ROOT / fixture_id
     manifest_path = fixture_dir / "fixture.json"
@@ -491,8 +530,8 @@ def _validate_fixture_files(failures: list[str], fixture: dict[str, Any], crates
     _validate_manifest_alignment(failures, fixture_id, fixture, manifest)
     if manifest.get("features", {}) != fixture.get("features", {}):
         failures.append(f"{fixture_id}: fixture.json features must match fixture matrix")
-    if manifest.get("schema_version") != 1:
-        failures.append(f"{fixture_id}: fixture.json schema_version must be 1")
+    if manifest.get("schema_version") != 2:
+        failures.append(f"{fixture_id}: fixture.json schema_version must be 2")
     if manifest.get("diagnostic_family") not in REQUIRED_DIAGNOSTICS:
         failures.append(f"{fixture_id}: fixture.json diagnostic_family must be a reserved SIFR-RUST code")
 
@@ -510,6 +549,16 @@ def _validate_fixture_files(failures: list[str], fixture: dict[str, Any], crates
         fixture.get("execution_kind"),
         "positive",
     )
+    validate_evidence_provenance(
+        failures,
+        repo_root=REPO_ROOT,
+        profiles=profiles,
+        fixture_id=fixture_id,
+        side="positive",
+        evidence=evidence.get("positive"),
+        execution_kind=str(fixture.get("execution_kind")),
+        used_tests=used_evidence_tests,
+    )
     _validate_fixture_evidence_file(
         failures,
         fixture_id,
@@ -518,6 +567,16 @@ def _validate_fixture_files(failures: list[str], fixture: dict[str, Any], crates
         fixture.get("negative_evidence"),
         fixture.get("execution_kind"),
         "negative",
+    )
+    validate_evidence_provenance(
+        failures,
+        repo_root=REPO_ROOT,
+        profiles=profiles,
+        fixture_id=fixture_id,
+        side="negative",
+        evidence=evidence.get("negative"),
+        execution_kind=str(fixture.get("execution_kind")),
+        used_tests=used_evidence_tests,
     )
     package_count = _validate_package_examples(
         failures,
@@ -751,30 +810,19 @@ def _validate_fixture_evidence_file(
         failures.append(f"{fixture_id}: {raw_path} must exercise a Rust interop declaration")
     _validate_evidence_example_text(failures, fixture_id, raw_path, text, str(matrix_evidence.get("id")))
 
-    expected_result = manifest_evidence.get("expected_result")
-    if not isinstance(expected_result, str) or not expected_result:
-        failures.append(f"{fixture_id}: evidence.{side}.expected_result is required")
-        return
-    expected_headers = (
-        f"# execution-kind: {execution_kind}",
-        f"# expected-result: {expected_result}",
-    )
-    if expected_headers[0] not in text:
+    if f"# execution-kind: {execution_kind}" not in text:
         failures.append(f"{fixture_id}: {raw_path} missing execution-kind header")
-    if expected_headers[1] not in text:
-        failures.append(f"{fixture_id}: {raw_path} missing expected-result header")
-    status = matrix_evidence.get("status")
-    if expected_result.startswith("future-owned") and status == "passing":
-        failures.append(f"{fixture_id}: passing {side} evidence cannot be marked future-owned")
-    if status != "passing" and not expected_result.startswith("future-owned"):
-        failures.append(f"{fixture_id}: non-passing {side} evidence must be marked future-owned")
-
-    expected_diagnostic = manifest_evidence.get("expected_diagnostic")
-    if expected_result in {"diagnostic", "future-owned-diagnostic"}:
-        if expected_diagnostic not in REQUIRED_DIAGNOSTICS:
-            failures.append(f"{fixture_id}: evidence.{side}.expected_diagnostic must be a reserved SIFR-RUST code")
-        elif f"# expected-diagnostic: {expected_diagnostic}" not in text:
-            failures.append(f"{fixture_id}: {raw_path} missing expected diagnostic marker {expected_diagnostic}")
+    validate_evidence_expectation(
+        failures,
+        fixture_id=fixture_id,
+        side=side,
+        raw_path=raw_path,
+        text=text,
+        evidence=manifest_evidence,
+        status=matrix_evidence.get("status"),
+        execution_kind=execution_kind,
+        required_diagnostics=REQUIRED_DIAGNOSTICS,
+    )
 
 
 def _validate_evidence_example_text(

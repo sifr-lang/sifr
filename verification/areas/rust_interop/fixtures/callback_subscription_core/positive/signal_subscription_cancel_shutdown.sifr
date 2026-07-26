@@ -1,7 +1,7 @@
 # fixture: callback_subscription_core
 # evidence: positive/signal_subscription_cancel_shutdown
 # evidence-status: passing
-# execution-kind: runtime-observed
+# execution-kind: contract-only
 # expected-result: pass
 class SignalSubscriptionError(Error):
     message: str

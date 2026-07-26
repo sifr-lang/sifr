@@ -3,7 +3,7 @@
 # evidence-status: passing
 # execution-kind: cargo-probe
 # expected-result: diagnostic
-# expected-diagnostic: SIFR-RUST-HANDLE-0001
+# expected-diagnostic: SIFR-RUST-TYPE-0001
 @rust.opaque(type=bridge.tokenizer.Tokenizer, send=True, sync=True, clone=copy, close=close)
 class Tokenizer:
     @rust(Self.encode, panic=trusted_no_panic)
