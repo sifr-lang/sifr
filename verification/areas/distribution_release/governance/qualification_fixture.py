@@ -33,8 +33,7 @@ def create_fixture_source(root: Path, *, variant: str = "baseline") -> Path:
     git(submodule_root, "init")
     configure_git(submodule_root)
     (submodule_root / "package.json").write_text(
-        json.dumps({"name": "sifr-vscode", "variant": variant})
-        + "\n",
+        json.dumps({"name": "sifr-vscode", "variant": variant}) + "\n",
         encoding="utf-8",
     )
     git(submodule_root, "add", "package.json")
@@ -120,6 +119,7 @@ def build_evidence_bundle(
     evidence_root: Path,
     result_root: Path,
     variant: str = "baseline",
+    transition: str = "ga-activation",
     host_archive: Path | None = None,
     host_qualification_dir: Path | None = None,
 ) -> dict[str, Any]:
@@ -246,7 +246,7 @@ def build_evidence_bundle(
     release_notes_path = evidence_root / "release-notes.md"
     release_notes_path.write_text("# Stable fixture notes\n", encoding="utf-8")
     active_index_path = evidence_root / "active-index.json"
-    write_canonical_json(active_index_path, preview_index())
+    write_canonical_json(active_index_path, live_index(transition=transition))
 
     plan = build_plan(
         source_root=source_root,
@@ -262,6 +262,7 @@ def build_evidence_bundle(
         release_notes_path=release_notes_path,
         editor_report_path=editor / "qualification-editor.json",
         vsix=vsix,
+        transition=transition,
     )
     plan_spec_path = evidence_root / "plan-spec.json"
     write_canonical_json(plan_spec_path, plan)
@@ -288,12 +289,18 @@ def write_synthetic_target(
     variant: str,
 ) -> dict[str, Any]:
     archive = container / f"sifr-{VERSION}-{target}.tar.gz"
-    archive_marker = "changed" if variant == "target-artifact" and target == TARGETS[0] else "baseline"
+    archive_marker = (
+        "changed"
+        if variant == "target-artifact" and target == TARGETS[0]
+        else "baseline"
+    )
     archive.write_bytes(f"archive:{target}:{archive_marker}\n".encode())
     checksum = Path(f"{archive}.sha256")
     checksum.write_text(sha256_file(archive) + "\n", encoding="utf-8")
     sysroot = container / f"sifr-{VERSION}-{target}-sysroot.tar.gz"
-    sysroot_marker = "changed" if variant == "sysroot" and target == TARGETS[0] else "baseline"
+    sysroot_marker = (
+        "changed" if variant == "sysroot" and target == TARGETS[0] else "baseline"
+    )
     sysroot.write_bytes(f"sysroot:{target}:{sysroot_marker}\n".encode())
     report = {
         "schema_version": 2,
@@ -349,7 +356,9 @@ def detect_host_target(qualification_dir: Path | None) -> str | None:
         if (qualification_dir / f"qualification-{target}.json").is_file()
     ]
     if len(matches) != 1:
-        raise ValueError("host qualification directory must contain exactly one target report")
+        raise ValueError(
+            "host qualification directory must contain exactly one target report"
+        )
     return matches[0]
 
 
@@ -396,14 +405,17 @@ def write_release_results(
         "rust_interop": result_root / "rust-interop-release-results.json",
         "developer_tooling": result_root / "developer-tooling-release-results.json",
         "documentation": result_root / "documentation-release-results.json",
-        "distribution_release": result_root / "distribution-release-release-results.json",
+        "distribution_release": result_root
+        / "distribution-release-release-results.json",
     }
     write_canonical_json(paths["rust_interop"], rust_result)
     for area in ("developer_tooling", "documentation", "distribution_release"):
         write_canonical_json(paths[area], {"area": area, "status": "pass"})
     for path in paths.values():
         if not path.resolve().is_relative_to(source_root.resolve()):
-            raise ValueError("release result fixtures must remain inside the source checkout")
+            raise ValueError(
+                "release result fixtures must remain inside the source checkout"
+            )
     return paths
 
 
@@ -478,9 +490,11 @@ def build_plan(
     release_notes_path: Path,
     editor_report_path: Path,
     vsix: Path,
+    transition: str,
 ) -> dict[str, Any]:
     plan = release_plan()
     plan["plan_id"] = f"stable-{VERSION}-{source_commit[:12]}"
+    plan["transition"] = transition
     plan["source_commit"] = source_commit
     plan["submodules"] = submodules
     plan["cargo_lock_sha256"] = sha256_file(source_root / "Cargo.lock")
@@ -492,6 +506,17 @@ def build_plan(
         ),
     }
     plan["installer_sha256"] = sha256_file(installer)
+    if transition == "normal":
+        predecessor = {
+            "version": "0.0.9",
+            "status": "active",
+            "plan_sha256": "9" * 64,
+        }
+        plan["expected_stable_predecessor"] = predecessor
+        plan["rollback_target"] = {
+            "version": predecessor["version"],
+            "plan_sha256": predecessor["plan_sha256"],
+        }
     plan["desired_release"]["source_commit"] = source_commit
     plan["desired_release"]["installer_sha256"] = plan["installer_sha256"]
     target_rows = []
@@ -532,8 +557,7 @@ def build_plan(
     }
     plan["rust_interop"] = {
         "compatibility_matrix_sha256": sha256_file(
-            source_root
-            / "verification/areas/rust_interop/data/"
+            source_root / "verification/areas/rust_interop/data/"
             "rust_interop_compatibility_matrix.json"
         ),
         "stable_support_claims_sha256": sha256_file(claims_path),
@@ -548,8 +572,7 @@ def build_plan(
     }
     plan["release_notes_sha256"] = sha256_file(release_notes_path)
     plan["site"]["facts_schema_sha256"] = sha256_file(
-        source_root
-        / "verification/areas/distribution_release/schemas/"
+        source_root / "verification/areas/distribution_release/schemas/"
         "stable_site_release_facts.schema.json"
     )
     plan["site"]["facts_generator_sha256"] = sha256_file(
@@ -566,6 +589,25 @@ def build_plan(
         }
     )
     return plan
+
+
+def live_index(*, transition: str) -> dict[str, Any]:
+    index = preview_index()
+    if transition == "ga-activation":
+        return index
+    if transition != "normal":
+        raise ValueError(f"unsupported qualification fixture transition: {transition}")
+    predecessor = copy_release_record(index["releases"]["0.1.0-beta.2"])
+    predecessor["channel"] = "stable"
+    index["generation"] = 8
+    index["ga_status"] = "active"
+    index["channels"]["stable"] = "0.0.9"
+    index["releases"]["0.0.9"] = predecessor
+    return index
+
+
+def copy_release_record(record: dict[str, Any]) -> dict[str, Any]:
+    return json.loads(json.dumps(record))
 
 
 def stable_claims(*, variant: str) -> dict[str, Any]:
@@ -656,7 +698,9 @@ def rust_candidate_result() -> dict[str, Any]:
 
 def load_collector() -> Any:
     path = REPO_ROOT / "scripts" / "distribution" / "collect_qualification_artifacts.py"
-    spec = importlib.util.spec_from_file_location("qualification_collector_fixture", path)
+    spec = importlib.util.spec_from_file_location(
+        "qualification_collector_fixture", path
+    )
     if spec is None or spec.loader is None:
         raise RuntimeError("could not load qualification artifact collector")
     module = importlib.util.module_from_spec(spec)

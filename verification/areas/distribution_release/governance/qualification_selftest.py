@@ -103,14 +103,14 @@ def create_fixture(root: Path) -> tuple[Path, Path, Path, Path]:
         )
     )
     submodules_path = root / "submodules.json"
-    submodules_path.write_bytes(
-        canonical_json_bytes({"editor_integrations": "f" * 40})
-    )
+    submodules_path.write_bytes(canonical_json_bytes({"editor_integrations": "f" * 40}))
     return artifact_root, metadata_path, run_metadata_path, submodules_path
 
 
 def collect_fixture(root: Path) -> dict[str, Any]:
-    artifact_root, metadata_path, run_metadata_path, submodules_path = create_fixture(root)
+    artifact_root, metadata_path, run_metadata_path, submodules_path = create_fixture(
+        root
+    )
     return load_collector().collect_index(
         version=VERSION,
         source_commit=COMMIT,
@@ -124,11 +124,15 @@ def collect_fixture(root: Path) -> dict[str, Any]:
 
 
 def test_artifact_collector() -> None:
-    with tempfile.TemporaryDirectory(prefix="sifr-qualification-collector-") as directory:
+    with tempfile.TemporaryDirectory(
+        prefix="sifr-qualification-collector-"
+    ) as directory:
         root = Path(directory)
         first = collect_fixture(root)
         if len(first["artifacts"]) != 20:
-            raise AssertionError("collector did not emit the complete qualification artifact set")
+            raise AssertionError(
+                "collector did not emit the complete qualification artifact set"
+            )
         second = load_collector().collect_index(
             version=VERSION,
             source_commit=COMMIT,
@@ -146,8 +150,15 @@ def test_artifact_collector() -> None:
 def test_artifact_collector_rejects_drift() -> None:
     with tempfile.TemporaryDirectory(prefix="sifr-qualification-drift-") as directory:
         root = Path(directory)
-        artifact_root, metadata_path, run_metadata_path, submodules_path = create_fixture(root)
-        target_dir = artifact_root / f"sifr-stable-candidate-{VERSION}-{COMMIT}-{TARGETS[0]}"
+        (
+            artifact_root,
+            metadata_path,
+            run_metadata_path,
+            submodules_path,
+        ) = create_fixture(root)
+        target_dir = (
+            artifact_root / f"sifr-stable-candidate-{VERSION}-{COMMIT}-{TARGETS[0]}"
+        )
         (target_dir / f"sifr-{VERSION}-{TARGETS[0]}.tar.gz.sha256").unlink()
         try:
             load_collector().collect_index(
@@ -363,9 +374,28 @@ def test_materialized_planner_contract() -> None:
         first = run_planner(bundle, root / "first-plan.json")
         second = run_planner(bundle, root / "second-plan.json")
         if first != second:
-            raise AssertionError("identical planner inputs did not produce identical bytes")
+            raise AssertionError(
+                "identical planner inputs did not produce identical bytes"
+            )
         if json.loads(first)["source_commit"] != bundle["source_ref"]:
-            raise AssertionError("planner output did not bind the resolved fixture source")
+            raise AssertionError(
+                "planner output did not bind the resolved fixture source"
+            )
+        normal_bundle = build_evidence_bundle(
+            source_root=source_root,
+            evidence_root=root / "normal-evidence",
+            result_root=source_root / "target" / "verification" / "normal-results",
+            transition="normal",
+        )
+        normal = json.loads(run_planner(normal_bundle, root / "normal-plan.json"))
+        if (
+            normal["transition"] != "normal"
+            or normal["expected_stable_predecessor"]["version"] != "0.0.9"
+            or normal["rollback_target"]["version"] != "0.0.9"
+        ):
+            raise AssertionError(
+                "normal planner did not bind predecessor rollback semantics"
+            )
 
         missing_artifact = (
             bundle["artifact_root"]
@@ -382,7 +412,9 @@ def test_materialized_planner_contract() -> None:
         inside_output.unlink(missing_ok=True)
         expect_planner_rejected(bundle, inside_output)
         if inside_output.exists():
-            raise AssertionError("planner wrote evidence inside the repository checkout")
+            raise AssertionError(
+                "planner wrote evidence inside the repository checkout"
+            )
 
 
 def test_planner_rejects_drift_cases() -> None:
@@ -405,7 +437,9 @@ def test_planner_rejects_drift_cases() -> None:
                 ),
             )
             if case == "stale-report":
-                report = json.loads(bundle["release_report"].read_text(encoding="utf-8"))
+                report = json.loads(
+                    bundle["release_report"].read_text(encoding="utf-8")
+                )
                 report["source"]["commit"] = "f" * 40
                 rewrite_canonical(bundle["release_report"], report)
                 refresh_plan_reference(

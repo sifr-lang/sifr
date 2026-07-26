@@ -205,14 +205,27 @@ scripts/distribution/build_release_artifacts.sh \
   --cargo-build
 ```
 
-The production path runs `cargo build --release -p sifr --target <target>` for
-every governed release target and fails if any target cannot be built. It
+The production path runs
+`cargo build --locked --release -p sifr --target <target>` for every governed
+release target and fails if any target cannot be built. It
 accepts stable SemVer for qualification without creating a separate builder
 and does not fall back to another binary or target.
 Production builds remap repository, sysroot, Cargo-home, and rustup-home path
 prefixes before packaging so release binaries do not embed local checkout,
 Cargo registry, or rustup source paths. Archive verification is required before
 checksums are written.
+
+Run the capability demo from a clean checkout:
+
+```bash
+demos/stable_candidate_qualification_demo.sh
+```
+
+It builds and qualifies the real host artifact, installs it in isolation, runs
+`sifr --version`, `sifr check`, and `sifr self version`, combines that evidence
+with fixture-backed remote-target, documentation, Rust-claim, site, and VSIX
+inputs, and materializes a schema-complete unapproved plan outside the source
+checkout.
 
 Installed-toolchain certification lives in `verification/areas/sysroot_release`.
 The merge-safe suite checks a real packaged archive from outside the repository,

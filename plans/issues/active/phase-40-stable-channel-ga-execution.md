@@ -74,12 +74,12 @@ Artifacts mapped to the Phase 40 exit gate:
 
 ### milestone_40_1: Canonical Release Plan and Qualification
 
-- [ ] Implement the non-mutating stable planner and canonical digest binding.
-- [ ] Consume and register the separately delivered Rust-interop
+- [x] Implement the non-mutating stable planner and canonical digest binding.
+- [x] Consume and register the separately delivered Rust-interop
   stable-candidate suite and claims artifact before qualification.
 - [ ] Qualify all compiler, sysroot, installer, documentation, Rust-claim, site,
   and VSIX artifacts.
-- [ ] Validate first-GA and normal predecessor/rollback semantics.
+- [x] Validate first-GA and normal predecessor/rollback semantics.
 - [ ] Record review rounds, PR, validation, and merge.
 
 ### milestone_40_2: Stable Distribution and Self-Update
@@ -196,3 +196,32 @@ architecture/gate lock PR.
   performs its preview-only structural checks with text matching. Its mandatory
   strict schema-v2 active/preview parser and stable behavior remain assigned to
   `milestone_40_2`; 40.0 keeps stable resolution unavailable.
+
+### milestone_40_1
+
+Status: implementation and local qualification in progress. The separately
+owned Rust certification input merged through
+[PR #3026](https://github.com/sifr-lang/sifr/pull/3026) and is consumed without
+modifying its Rust-interop implementation.
+
+- Review pass 1:
+  `plans/reviews/active/phase-40-milestone-40-1-claude-opus-review-pass-1.md`
+  requested exact artifact-id and path custody, end-to-end planner
+  materialization and drift tests, immutable-installer identity binding,
+  deterministic VSIX evidence, the governed locked build path, verified
+  workflow repository identity, exact Rust-claim consumption, and the missing
+  capability demo. Those findings are remediated and await the next review
+  pass.
+- Passing evidence so far:
+  - `demos/stable_candidate_qualification_demo.sh` with a real
+    `aarch64-apple-darwin` host artifact, isolated install, `sifr --version`,
+    `sifr check`, `sifr self version`, and canonical planner output
+  - fixture-backed repeated materialization plus source, submodule, lockfile,
+    target artifact, sysroot, installer, Rust-claim, and VSIX digest sensitivity
+  - negative missing-artifact, expired-artifact, cross-target, stale-report,
+    source/version drift, floating-ref, and in-checkout output cases
+  - Rust-interop `matrix`, `tiers`, `compatibility-matrix`, `stale-drafts`, and
+    `stable-candidate` suites, including the stable-claim adversarial self-test
+  - qualification workflow contract, stable artifact generation, governance
+    contracts, schema epoch, runner self-tests, formatting, HIR, and file-size
+    guardrails

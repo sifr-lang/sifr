@@ -59,7 +59,9 @@ def materialize_stable_plan(
         active_index=load_json_strict(active_index_path, require_canonical=True),
     )
     resolved_commit = resolve_source_once(source_root, source_ref)
-    validate_source_identity(plan, source_root=source_root, resolved_commit=resolved_commit)
+    validate_source_identity(
+        plan, source_root=source_root, resolved_commit=resolved_commit
+    )
 
     profile_path = source_root / RELEASE_PROFILE
     profile_digest = canonical_profile_digest(profile_path)
@@ -110,7 +112,10 @@ def materialize_stable_plan(
         or qualification["source_commit"] != resolved_commit
         or qualification["submodules"] != plan["submodules"]
     ):
-        fail("$.qualification_artifact_index", "candidate provenance does not match the plan")
+        fail(
+            "$.qualification_artifact_index",
+            "candidate provenance does not match the plan",
+        )
     artifact_paths = verify_transported_artifacts(qualification, artifact_root)
     bind_target_reports(plan, qualification, artifact_paths)
     bind_aggregate_artifacts(plan, qualification, artifact_paths)
@@ -188,7 +193,9 @@ def resolve_source_once(source_root: Path, source_ref: str) -> str:
         stderr=subprocess.PIPE,
     )
     if result.returncode != 0:
-        raise GovernanceError(f"could not resolve source ref exactly once: {source_ref}")
+        raise GovernanceError(
+            f"could not resolve source ref exactly once: {source_ref}"
+        )
     return require_commit(result.stdout.strip(), "--source-ref")
 
 
@@ -229,17 +236,21 @@ def verify_transported_artifacts(
 ) -> dict[str, Path]:
     result: dict[str, Path] = {}
     for artifact in qualification["artifacts"]:
-        path = (
-            artifact_root
-            / artifact["workflow_artifact_name"]
-            / artifact["name"]
-        )
+        path = artifact_root / artifact["workflow_artifact_name"] / artifact["name"]
         if not path.is_file() or path.is_symlink():
-            fail(f"$.artifacts.{artifact['id']}", "transported file is missing or unsafe")
+            fail(
+                f"$.artifacts.{artifact['id']}", "transported file is missing or unsafe"
+            )
         if path.stat().st_size != artifact["size_bytes"]:
-            fail(f"$.artifacts.{artifact['id']}.size_bytes", "does not match transported file")
+            fail(
+                f"$.artifacts.{artifact['id']}.size_bytes",
+                "does not match transported file",
+            )
         if sha256_file(path) != artifact["sha256"]:
-            fail(f"$.artifacts.{artifact['id']}.sha256", "does not match transported file")
+            fail(
+                f"$.artifacts.{artifact['id']}.sha256",
+                "does not match transported file",
+            )
         result[artifact["id"]] = path
     return result
 
@@ -273,7 +284,9 @@ def bind_target_reports(
             "sysroot_target",
         ):
             if plan_target[field] != report[field]:
-                fail(f"$.targets.{target}.{field}", "does not match qualification report")
+                fail(
+                    f"$.targets.{target}.{field}", "does not match qualification report"
+                )
         for artifact_id, report_field in (
             (f"binary-archive-{target}", "archive_sha256"),
             (f"checksum-{target}", "checksum_sha256"),
@@ -352,7 +365,9 @@ def validate_aggregate_checksums(
     for line in checksums_path.read_text(encoding="utf-8").splitlines():
         parts = line.split()
         if len(parts) != 2 or parts[1] in observed:
-            fail("$.artifacts.checksums", "contains malformed or duplicate checksum rows")
+            fail(
+                "$.artifacts.checksums", "contains malformed or duplicate checksum rows"
+            )
         observed[parts[1]] = parts[0]
     if observed != expected:
         fail("$.artifacts.checksums", "does not bind the complete target artifact set")
@@ -387,7 +402,10 @@ def validate_target_report(
         "self_version_sha256",
     }
     if set(report) != required:
-        fail(f"qualification-report-{target}", "fields do not match the target report contract")
+        fail(
+            f"qualification-report-{target}",
+            "fields do not match the target report contract",
+        )
     if (
         report["schema_version"] != 2
         or report["kind"] != "stable-target-qualification"
@@ -427,7 +445,9 @@ def stable_claim_ids(payload: Any) -> list[str]:
         != "verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json"
         or claims.get("public_document") != "docs/rust-interop.mdx"
     ):
-        fail("stable_support_claims.json", "does not match the certified claims contract")
+        fail(
+            "stable_support_claims.json", "does not match the certified claims contract"
+        )
     deferrals = require_array(
         claims["runtime_deferrals"],
         "stable_support_claims.json runtime_deferrals",
@@ -464,8 +484,7 @@ def validate_rust_candidate_result(
     result = require_object(payload, "rust stable-candidate result")
     if (
         result.get("area") != "rust_interop"
-        or result.get("manifest")
-        != "verification/areas/rust_interop/manifest.json"
+        or result.get("manifest") != "verification/areas/rust_interop/manifest.json"
         or result.get("bless") is not False
     ):
         fail(
@@ -482,7 +501,9 @@ def validate_rust_candidate_result(
     }
     by_name: dict[str, dict[str, Any]] = {}
     for position, value in enumerate(suites):
-        suite = require_object(value, f"rust stable-candidate result suites[{position}]")
+        suite = require_object(
+            value, f"rust stable-candidate result suites[{position}]"
+        )
         name = require_nonempty_string(
             suite.get("name"),
             f"rust stable-candidate result suites[{position}].name",
@@ -523,7 +544,9 @@ def validate_rust_candidate_result(
             "$.rust_interop.validation_report_sha256",
             "stable-candidate result omitted its validator or adversarial self-test",
         )
-    summary = require_object(result.get("summary"), "rust stable-candidate result summary")
+    summary = require_object(
+        result.get("summary"), "rust stable-candidate result summary"
+    )
     if (
         summary.get("blocking_failures") != 0
         or summary.get("non_blocking_failures") != 0
@@ -559,7 +582,9 @@ def validate_passing_cases(payload: Any, *, suite_name: str) -> None:
             f"Rust-interop suite {suite_name} has no cases",
         )
     for case_position, value in enumerate(cases):
-        case = require_object(value, f"Rust-interop suite {suite_name} case[{case_position}]")
+        case = require_object(
+            value, f"Rust-interop suite {suite_name} case[{case_position}]"
+        )
         variants = require_array(
             case.get("variants"),
             f"Rust-interop suite {suite_name} case[{case_position}].variants",

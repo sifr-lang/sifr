@@ -113,7 +113,9 @@ def collect_index(
         item = require_object(value, f"{metadata_path}:artifacts[{position}]")
         name = require_nonempty_string(item.get("name"), f"artifacts[{position}].name")
         if name in by_name:
-            raise GovernanceError(f"{metadata_path}: duplicate workflow artifact name: {name}")
+            raise GovernanceError(
+                f"{metadata_path}: duplicate workflow artifact name: {name}"
+            )
         by_name[name] = item
     if set(by_name) != expected_names:
         missing = sorted(expected_names.difference(by_name))
@@ -192,12 +194,16 @@ def collect_container_rows(
     source_commit: str,
 ) -> list[dict[str, Any]]:
     if not directory.is_dir():
-        raise GovernanceError(f"{workflow_name}: downloaded artifact directory is missing")
+        raise GovernanceError(
+            f"{workflow_name}: downloaded artifact directory is missing"
+        )
     files = sorted(path for path in directory.iterdir() if path.is_file())
     if any(path.is_symlink() for path in directory.iterdir()):
         raise GovernanceError(f"{workflow_name}: symlinks are not allowed")
     if any(path.is_dir() for path in directory.iterdir()):
-        raise GovernanceError(f"{workflow_name}: nested artifact directories are not allowed")
+        raise GovernanceError(
+            f"{workflow_name}: nested artifact directories are not allowed"
+        )
     suffix = workflow_name.removeprefix(
         f"sifr-stable-candidate-{version}-{source_commit}-"
     )
@@ -260,7 +266,9 @@ def expected_file_specs(
     if suffix == "editor":
         vsix_names = [path.name for path in files if path.suffix == ".vsix"]
         if len(vsix_names) != 1:
-            raise GovernanceError("editor qualification must transport exactly one VSIX")
+            raise GovernanceError(
+                "editor qualification must transport exactly one VSIX"
+            )
         return [
             ("report", "qualification-editor.json", None),
             ("vsix", vsix_names[0], None),
