@@ -66,6 +66,7 @@ required = (
     "scripts/distribution/qualify_stable_target.py",
     "scripts/distribution/generate_version_installer.sh",
     "scripts/distribution/collect_qualification_artifacts.py",
+    "Verify immutable qualification workflow contract",
     "--run-id \"${GITHUB_RUN_ID}\"",
     "--run-metadata run-metadata.json",
     "Artifact ID: \\`${ARTIFACT_ID}\\`",

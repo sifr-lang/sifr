@@ -33,7 +33,13 @@ def create_fixture_source(root: Path, *, variant: str = "baseline") -> Path:
     git(submodule_root, "init")
     configure_git(submodule_root)
     (submodule_root / "package.json").write_text(
-        json.dumps({"name": "sifr-vscode", "variant": variant}) + "\n",
+        json.dumps(
+            {
+                "name": "sifr-vscode",
+                "variant": "changed" if variant == "submodule" else "baseline",
+            }
+        )
+        + "\n",
         encoding="utf-8",
     )
     git(submodule_root, "add", "package.json")
@@ -386,6 +392,7 @@ def write_workflow_metadata(
                 "id": artifact_id,
                 "name": f"{prefix}{suffix}",
                 "expired": False,
+                "created_at": "2098-12-02T00:00:00Z",
                 "expires_at": "2099-01-01T00:00:00Z",
                 "workflow_run": {"id": 42},
             }

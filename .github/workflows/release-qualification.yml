@@ -62,6 +62,10 @@ jobs:
             exit 2
           fi
 
+      - name: Verify immutable qualification workflow contract
+        shell: bash
+        run: verification/areas/distribution_release/cases/release_qualification_workflow_contract.sh
+
   build:
     name: qualify ${{ matrix.target }}
     needs: validate

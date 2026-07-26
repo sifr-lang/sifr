@@ -235,8 +235,16 @@ def verify_transported_artifacts(
     artifact_root: Path,
 ) -> dict[str, Path]:
     result: dict[str, Path] = {}
+    resolved_root = artifact_root.resolve()
     for artifact in qualification["artifacts"]:
-        path = artifact_root / artifact["workflow_artifact_name"] / artifact["name"]
+        container = artifact_root / artifact["workflow_artifact_name"]
+        path = container / artifact["name"]
+        resolved_path = path.resolve()
+        if container.is_symlink() or not resolved_path.is_relative_to(resolved_root):
+            fail(
+                f"$.artifacts.{artifact['id']}",
+                "transported path escapes the artifact custody root",
+            )
         if not path.is_file() or path.is_symlink():
             fail(
                 f"$.artifacts.{artifact['id']}", "transported file is missing or unsafe"

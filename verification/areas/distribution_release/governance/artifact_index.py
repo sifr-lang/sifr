@@ -100,7 +100,9 @@ def validate_qualification_artifact_index(
         fail("$.workflow.retention_days", "must be exactly 30")
     if workflow["overwrite"] is not False:
         fail("$.workflow.overwrite", "must be false")
-    expires_at = require_nonempty_string(workflow["expires_at"], "$.workflow.expires_at")
+    expires_at = require_nonempty_string(
+        workflow["expires_at"], "$.workflow.expires_at"
+    )
     try:
         parsed_expiry = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
     except ValueError:
@@ -190,6 +192,26 @@ def validate_qualification_artifact_index(
                 f"{location}.workflow_artifact_name",
                 "must bind the candidate version and exact source commit",
             )
+        (
+            expected_kind,
+            expected_target,
+            expected_suffix,
+            expected_name,
+        ) = artifact_contract(
+            artifact_id,
+            version=index["candidate_version"],
+        )
+        if artifact_kind != expected_kind:
+            fail(f"{location}.kind", f"must be {expected_kind} for {artifact_id}")
+        if workflow_name != f"{expected_prefix}{expected_suffix}":
+            fail(
+                f"{location}.workflow_artifact_name",
+                f"must use the governed {expected_suffix} upload",
+            )
+        if expected_name is not None and name != expected_name:
+            fail(f"{location}.name", f"must be {expected_name}")
+        if artifact_id == "vsix" and not name.endswith(".vsix"):
+            fail(f"{location}.name", "must be the transported VSIX")
         target = artifact.get("target")
         if target is not None and target not in TARGETS:
             fail(f"{location}.target", "is not a supported target")
@@ -197,6 +219,8 @@ def validate_qualification_artifact_index(
             fail(location, f"{artifact_kind} must name its target")
         if artifact_kind not in TARGET_KINDS and target is not None:
             fail(location, f"{artifact_kind} must not name a target")
+        if target != expected_target:
+            fail(f"{location}.target", f"does not match artifact id {artifact_id}")
         if target is not None:
             if not workflow_name.endswith(f"-{target}"):
                 fail(
@@ -232,3 +256,54 @@ def validate_qualification_artifact_index(
             "must contain exactly one report for every target plus editor qualification evidence",
         )
     return index
+
+
+def artifact_contract(
+    artifact_id: str,
+    *,
+    version: str,
+) -> tuple[str, str | None, str, str | None]:
+    for target in TARGETS:
+        archive = f"sifr-{version}-{target}.tar.gz"
+        contracts = {
+            f"binary-archive-{target}": (
+                "binary-archive",
+                target,
+                target,
+                archive,
+            ),
+            f"checksum-{target}": (
+                "checksum",
+                target,
+                target,
+                f"{archive}.sha256",
+            ),
+            f"sysroot-{target}": (
+                "sysroot",
+                target,
+                target,
+                f"sifr-{version}-{target}-sysroot.tar.gz",
+            ),
+            f"qualification-report-{target}": (
+                "report",
+                None,
+                target,
+                f"qualification-{target}.json",
+            ),
+        }
+        if artifact_id in contracts:
+            return contracts[artifact_id]
+    singleton_contracts = {
+        "installer": ("installer", None, "assemble", f"sifr-installer-{version}"),
+        "checksums": ("checksums", None, "assemble", "checksums.txt"),
+        "vsix": ("vsix", None, "editor", None),
+        "editor-qualification-report": (
+            "report",
+            None,
+            "editor",
+            "qualification-editor.json",
+        ),
+    }
+    if artifact_id in singleton_contracts:
+        return singleton_contracts[artifact_id]
+    fail("$.artifacts", f"unsupported qualification artifact id: {artifact_id}")

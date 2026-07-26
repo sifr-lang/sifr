@@ -6,6 +6,7 @@ import copy
 import hashlib
 import importlib.util
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -84,6 +85,7 @@ def create_fixture(root: Path) -> tuple[Path, Path, Path, Path]:
                 "id": artifact_id,
                 "name": workflow_name,
                 "expired": False,
+                "created_at": "2098-12-02T00:00:00Z",
                 "expires_at": "2099-01-01T00:00:00Z",
                 "workflow_run": {"id": 42, "head_sha": COMMIT},
             }
@@ -156,6 +158,26 @@ def test_artifact_collector_rejects_drift() -> None:
             run_metadata_path,
             submodules_path,
         ) = create_fixture(root)
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata["artifacts"][0]["created_at"] = "2098-12-01T00:00:00Z"
+        rewrite_canonical(metadata_path, metadata)
+        try:
+            load_collector().collect_index(
+                version=VERSION,
+                source_commit=COMMIT,
+                submodules_path=submodules_path,
+                run_id=42,
+                run_attempt=1,
+                run_metadata_path=run_metadata_path,
+                metadata_path=metadata_path,
+                artifact_root=artifact_root,
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("collector accepted non-governed artifact retention")
+        metadata["artifacts"][0]["created_at"] = "2098-12-02T00:00:00Z"
+        rewrite_canonical(metadata_path, metadata)
         target_dir = (
             artifact_root / f"sifr-stable-candidate-{VERSION}-{COMMIT}-{TARGETS[0]}"
         )
@@ -194,6 +216,36 @@ def test_artifact_index_exact_custody() -> None:
     extra_report["id"] = "extra-report"
     extra["artifacts"].append(extra_report)
     mutations.append(extra)
+    swapped_target = copy.deepcopy(index)
+    binary = next(
+        row
+        for row in swapped_target["artifacts"]
+        if row["id"] == f"binary-archive-{TARGETS[0]}"
+    )
+    binary["target"] = TARGETS[1]
+    binary["workflow_artifact_name"] = binary["workflow_artifact_name"].replace(
+        TARGETS[0],
+        TARGETS[1],
+    )
+    mutations.append(swapped_target)
+    report_container = copy.deepcopy(index)
+    report = next(
+        row
+        for row in report_container["artifacts"]
+        if row["id"] == f"qualification-report-{TARGETS[0]}"
+    )
+    report[
+        "workflow_artifact_name"
+    ] = f"sifr-stable-candidate-{VERSION}-{COMMIT}-assemble"
+    mutations.append(report_container)
+    installer_container = copy.deepcopy(index)
+    installer = next(
+        row for row in installer_container["artifacts"] if row["id"] == "installer"
+    )
+    installer[
+        "workflow_artifact_name"
+    ] = f"sifr-stable-candidate-{VERSION}-{COMMIT}-{TARGETS[0]}"
+    mutations.append(installer_container)
     for mutation in mutations:
         try:
             validate_qualification_artifact_index(mutation)
@@ -397,6 +449,14 @@ def test_materialized_planner_contract() -> None:
                 "normal planner did not bind predecessor rollback semantics"
             )
 
+        inside_output = REPO_ROOT / "target" / "qualification-plan-must-not-exist.json"
+        inside_output.unlink(missing_ok=True)
+        expect_planner_rejected(bundle, inside_output)
+        if inside_output.exists():
+            raise AssertionError(
+                "planner wrote evidence inside the repository checkout"
+            )
+
         missing_artifact = (
             bundle["artifact_root"]
             / (
@@ -407,14 +467,6 @@ def test_materialized_planner_contract() -> None:
         )
         missing_artifact.unlink()
         expect_planner_rejected(bundle, root / "missing-artifact-plan.json")
-
-        inside_output = REPO_ROOT / "target" / "qualification-plan-must-not-exist.json"
-        inside_output.unlink(missing_ok=True)
-        expect_planner_rejected(bundle, inside_output)
-        if inside_output.exists():
-            raise AssertionError(
-                "planner wrote evidence inside the repository checkout"
-            )
 
 
 def test_planner_rejects_drift_cases() -> None:
@@ -427,6 +479,7 @@ def test_planner_rejects_drift_cases() -> None:
             "stale-report",
             "other-source",
             "version-drift",
+            "symlink-container",
         ):
             case_root = root / case
             bundle = build_evidence_bundle(
@@ -478,12 +531,21 @@ def test_planner_rejects_drift_cases() -> None:
                     qualification["source_commit"] = "f" * 40
                 elif case == "version-drift":
                     qualification["candidate_version"] = "0.1.1"
-                rewrite_canonical(bundle["qualification_index"], qualification)
-                refresh_plan_reference(
-                    bundle,
-                    "qualification_artifact_index",
-                    bundle["qualification_index"],
-                )
+                elif case == "symlink-container":
+                    editor_name = (
+                        f"sifr-stable-candidate-{VERSION}-{bundle['source_ref']}-editor"
+                    )
+                    container = bundle["artifact_root"] / editor_name
+                    outside = case_root / "outside-editor"
+                    container.rename(outside)
+                    container.symlink_to(outside, target_is_directory=True)
+                if case != "symlink-container":
+                    rewrite_canonical(bundle["qualification_index"], qualification)
+                    refresh_plan_reference(
+                        bundle,
+                        "qualification_artifact_index",
+                        bundle["qualification_index"],
+                    )
             expect_planner_rejected(bundle, case_root / "rejected-plan.json")
 
 
@@ -570,23 +632,39 @@ def test_plan_digest_sensitivity() -> None:
         root = Path(directory)
         baseline_root = root / "baseline"
         source_root = create_fixture_source(baseline_root)
+        result_root = source_root / "target" / "verification" / "sensitivity-results"
         bundle = build_evidence_bundle(
             source_root=source_root,
             evidence_root=baseline_root / "evidence",
-            result_root=source_root / "target" / "verification" / "fixture-results",
+            result_root=result_root,
         )
         baseline = run_planner(bundle, baseline_root / "plan.json")
         baseline_digest = hashlib.sha256(baseline).hexdigest()
         for variant in (
-            "source",
-            "submodule",
-            "lock",
+            "nochange",
             "target-artifact",
             "sysroot",
             "installer",
             "rust-claims",
             "vsix",
         ):
+            variant_root = root / variant
+            shutil.rmtree(result_root, ignore_errors=True)
+            variant_bundle = build_evidence_bundle(
+                source_root=source_root,
+                evidence_root=variant_root / "evidence",
+                result_root=result_root,
+                variant=variant,
+            )
+            changed = run_planner(variant_bundle, variant_root / "plan.json")
+            changed_digest = hashlib.sha256(changed).hexdigest()
+            if variant == "nochange" and changed_digest != baseline_digest:
+                raise AssertionError("no-op planner inputs changed the plan digest")
+            if variant != "nochange" and changed_digest == baseline_digest:
+                raise AssertionError(
+                    f"planner input variant {variant} did not change the plan digest"
+                )
+        for variant in ("source", "submodule", "lock"):
             variant_root = root / variant
             variant_source = create_fixture_source(variant_root, variant=variant)
             variant_bundle = build_evidence_bundle(

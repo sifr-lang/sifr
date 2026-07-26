@@ -212,6 +212,16 @@ modifying its Rust-interop implementation.
   workflow repository identity, exact Rust-claim consumption, and the missing
   capability demo. Those findings are remediated and await the next review
   pass.
+- Review pass 2:
+  `plans/reviews/active/phase-40-milestone-40-1-claude-opus-review-pass-2.md`
+  verified all pass-1 product-path corrections, then found a confounded
+  digest-sensitivity fixture, a symlinked-container custody escape, incomplete
+  artifact-id-to-target/container binding, and a test-order flaw in the
+  outside-checkout assertion. Remediation now uses a same-source no-op control,
+  rejects container symlinks and resolved paths outside the artifact root,
+  binds every governed artifact id to its exact kind/target/upload/name,
+  exercises the output guard with valid evidence, and derives the 30-day
+  retention interval from API timestamps. A third review pass is required.
 - Passing evidence so far:
   - `demos/stable_candidate_qualification_demo.sh` with a real
     `aarch64-apple-darwin` host artifact, isolated install, `sifr --version`,

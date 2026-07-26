@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -139,14 +139,25 @@ def collect_index(
             metadata_item.get("expires_at"),
             f"{workflow_name}.expires_at",
         )
+        created_at = require_nonempty_string(
+            metadata_item.get("created_at"),
+            f"{workflow_name}.created_at",
+        )
         try:
             parsed_expiry = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            parsed_creation = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
         except ValueError as exc:
             raise GovernanceError(
-                f"{workflow_name}: invalid artifact expiry: {expires_at}"
+                f"{workflow_name}: invalid artifact custody timestamps"
             ) from exc
-        if parsed_expiry.tzinfo is None:
-            raise GovernanceError(f"{workflow_name}: artifact expiry has no timezone")
+        if parsed_expiry.tzinfo is None or parsed_creation.tzinfo is None:
+            raise GovernanceError(
+                f"{workflow_name}: artifact timestamps need timezones"
+            )
+        if parsed_expiry - parsed_creation != timedelta(days=30):
+            raise GovernanceError(
+                f"{workflow_name}: artifact retention is not exactly 30 days"
+            )
         expiries.append((parsed_expiry, expires_at))
         workflow_run = require_object(
             metadata_item.get("workflow_run"),
