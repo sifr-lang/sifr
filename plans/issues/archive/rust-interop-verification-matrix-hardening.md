@@ -2,18 +2,18 @@
 
 ## Status
 
-Active follow-up created by Phase 39 final closeout review.
+Completed and archived on 2026-07-26 after final Opus review and all local
+closure gates passed.
 
 This issue is an entry prerequisite for
-[`rust-interop-runtime-ecosystem-certification.md`](rust-interop-runtime-ecosystem-certification.md).
+[`rust-interop-runtime-ecosystem-certification.md`](../active/rust-interop-runtime-ecosystem-certification.md).
 Each ordered item below is one PR and must be reviewed and merged before the
 next item starts.
 
-Phase 40 `milestone_40_1` may not claim its required release-profile
-Rust-interop suite execution until `hardening_1` has merged. Its stable-claim
-gate additionally depends on the certification issue's `certification_0`;
-`hardening_1` owns execution wiring, while `certification_0` owns claim
-derivation and stable-candidate validation.
+Phase 40 `milestone_40_0` may not register its stable-candidate Rust-interop
+suite until `hardening_1` and the certification issue's `certification_0` have
+merged. `hardening_1` owns the inherited Rust-interop execution wiring, while
+`certification_0` owns claim derivation and stable-candidate validation.
 
 ## Objective
 
@@ -240,8 +240,36 @@ One documentation/review PR after `hardening_1` through `hardening_4`:
 | `hardening_1` | merged | [PR #3018](https://github.com/sifr-lang/sifr/pull/3018), with the profile-evidence correction in [PR #3019](https://github.com/sifr-lang/sifr/pull/3019) |
 | `hardening_2` | merged | [PR #3020](https://github.com/sifr-lang/sifr/pull/3020); final Opus review approved in round 7 |
 | `hardening_3` | merged | [PR #3022](https://github.com/sifr-lang/sifr/pull/3022); all 34 fixture manifests are schema v2; all 47 passing evidence directions have distinct structured Rust-test provenance; Opus round 8 satisfied; merge lane passed |
-| `hardening_4` | in progress | structural rejection markers, isolated self-tests, and documentation migration |
-| `hardening_5` | pending | starts only after `hardening_4` merges |
+| `hardening_4` | merged | [PR #3023](https://github.com/sifr-lang/sifr/pull/3023); exact rejected fences and suffix-specific inline markers replaced lexical inference; all 20 scanner self-tests, the create-PR lane, and the merge lane passed; Opus pass 3 satisfied |
+| `hardening_5` | complete | closeout inventory and successor-entry audit complete; final implementation-readiness Opus review satisfied in round 2; create-PR and merge lanes passed; clippy, rustfmt, HIR maintainability, file-size, and diff-hygiene gates passed; issue archived |
+
+## Closeout Inventory
+
+The post-`hardening_4` inventory is:
+
+- 34 fixture-matrix rows and 34 compatibility-matrix rows;
+- 34 checked-in fixture manifests, all at `schema_version: 2`;
+- 47 passing evidence directions, each bound to a distinct executable Rust
+  test, and 21 planned directions that carry no passing provenance;
+- 17 `supported`, 5 `supported-through-bridge`, 1
+  `unsupported-by-design`, and 11 `future-owned-by-separate-phase`
+  compatibility rows; and
+- 13 `cargo-probe`, 4 `compiler-diagnostic`, 10 `contract-only`, and 7
+  `runtime-observed` fixture rows.
+
+The hardening dependency for
+[`rust-interop-runtime-ecosystem-certification.md`](../active/rust-interop-runtime-ecosystem-certification.md)
+is unblocked: `hardening_1` through `hardening_4` are merged, all four
+authoritative profiles execute the Rust-interop area, and claimed support is
+bound to structured evidence. `certification_0` remains responsible for the
+two explicit runtime-deferral rows, structured stable-claim gate, locked/offline
+crate inventory, and the remaining pre-row entry criteria.
+
+The closeout create-PR lane passed all 22 steps with the Rust-interop step at
+3,317 ms under its 5,000 ms blocking budget. The merge lane passed Rust
+interop 8/8, Python interop 25/25, E2E 674/674, and all 261 hardening variants
+with zero failures. Warm-time, cache-hit-rate, and group-skew advisories did
+not conceal a failed or skipped blocking gate.
 
 ## Acceptance Criteria
 
