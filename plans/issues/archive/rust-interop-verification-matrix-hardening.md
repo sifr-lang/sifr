@@ -241,7 +241,7 @@ One documentation/review PR after `hardening_1` through `hardening_4`:
 | `hardening_2` | merged | [PR #3020](https://github.com/sifr-lang/sifr/pull/3020); final Opus review approved in round 7 |
 | `hardening_3` | merged | [PR #3022](https://github.com/sifr-lang/sifr/pull/3022); all 34 fixture manifests are schema v2; all 47 passing evidence directions have distinct structured Rust-test provenance; Opus round 8 satisfied; merge lane passed |
 | `hardening_4` | merged | [PR #3023](https://github.com/sifr-lang/sifr/pull/3023); exact rejected fences and suffix-specific inline markers replaced lexical inference; all 20 scanner self-tests, the create-PR lane, and the merge lane passed; Opus pass 3 satisfied |
-| `hardening_5` | complete | closeout inventory and successor-entry audit complete; final implementation-readiness Opus review satisfied in round 2; create-PR and merge lanes passed; clippy, rustfmt, HIR maintainability, file-size, and diff-hygiene gates passed; issue archived |
+| `hardening_5` | complete | [PR #3024](https://github.com/sifr-lang/sifr/pull/3024); closeout inventory and successor-entry audit complete; final implementation-readiness Opus review satisfied in round 2 and post-archive round 3; create-PR and merge lanes passed; clippy, rustfmt, HIR maintainability, file-size, and diff-hygiene gates passed; issue archived |
 
 ## Closeout Inventory
 
