@@ -13,7 +13,7 @@ echo "sifr preview demo"
 EOF
 chmod 755 "${tmp_dir}/sifr"
 
-scripts/distribution/build_preview_artifacts.sh \
+scripts/distribution/build_release_artifacts.sh \
   --version 0.1.0-beta.1 \
   --output-dir "${tmp_dir}/artifacts" \
   --binary "${tmp_dir}/sifr"

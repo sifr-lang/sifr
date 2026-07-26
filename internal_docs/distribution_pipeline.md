@@ -1,6 +1,7 @@
 # Sifr Distribution Pipeline
 
-Status: canonical release-governance epoch; stable behavior remains gated.
+Status: canonical release-governance epoch; stable qualification is active
+while public stable resolution and publication remain gated.
 
 ## Installer Model
 
@@ -152,12 +153,44 @@ The preview-release pipeline target set is:
 - `x86_64-unknown-linux-gnu`
 - `aarch64-unknown-linux-gnu`
 
+## Stable Candidate Qualification
+
+`.github/workflows/release-qualification.yml` is the build/upload-only stable
+candidate workflow. It accepts only an exact lowercase 40-hex source commit and
+an exact stable SemVer, checks out that commit plus recursive submodules, and
+uses only `contents: read` and `actions: read`. It has no release, package,
+Marketplace, site, protected-environment, or metadata-mutation authority.
+
+The workflow uses the governed four-runner matrix, builds with locked
+dependencies, packages through the same release artifact builder, installs and
+smokes each matching-host toolchain, and packages the recorded
+`editor_integrations/vscode` checkout without publishing it. Every upload uses
+the name
+`sifr-stable-candidate-<version>-<source-sha>-<target-or-kind>`,
+`overwrite: false`, and a 30-day retention period.
+
+The final collector reads the current workflow run's artifact API, verifies
+source/run attribution, and writes canonical
+`qualification-artifact-index.json`. The index binds recursive submodules,
+every workflow artifact id and upload name, exact per-artifact expiry, file
+name, size, SHA-256, complete target coverage, aggregate installer/checksums,
+and VSIX evidence.
+
+The local `plan-stable-release` command in
+`scripts/distribution/release_governance.py` is non-mutating. It requires a
+clean checkout at the exact source SHA, an unexpired qualification index, the
+canonical release-profile report for that same checkout, transported files,
+Rust stable-claim evidence, documentation evidence, release notes, and the
+current preview or active governed index. Its output must be a fresh path
+outside the checkout. It hashes and cross-checks those exact bytes before
+writing one canonical `stable-release-plan.json`.
+
 ## Artifact Packaging
 
 Package artifacts with an existing binary fixture:
 
 ```bash
-scripts/distribution/build_preview_artifacts.sh \
+scripts/distribution/build_release_artifacts.sh \
   --version 0.1.0-beta.1 \
   --output-dir target/preview-artifacts/0.1.0-beta.1 \
   --binary target/release/sifr
@@ -166,13 +199,16 @@ scripts/distribution/build_preview_artifacts.sh \
 For production target builds, use:
 
 ```bash
-scripts/distribution/build_preview_artifacts.sh \
+scripts/distribution/build_release_artifacts.sh \
   --version 0.1.0-beta.1 \
   --output-dir target/preview-artifacts/0.1.0-beta.1 \
   --cargo-build
 ```
 
-The production path runs `cargo build --release -p sifr --target <target>` for every preview-release pipeline target and fails if any target cannot be built. It does not fall back to another binary or another target.
+The production path runs `cargo build --release -p sifr --target <target>` for
+every governed release target and fails if any target cannot be built. It
+accepts stable SemVer for qualification without creating a separate builder
+and does not fall back to another binary or target.
 Production builds remap repository, sysroot, Cargo-home, and rustup-home path
 prefixes before packaging so release binaries do not embed local checkout,
 Cargo registry, or rustup source paths. Archive verification is required before
@@ -243,7 +279,17 @@ Official standalone installers write a schema-versioned `install.json` receipt:
 
 The authoritative field enumeration lives at `verification/areas/distribution_release/schemas/self_update_install_receipt.schema.json`. Receipts must use `schema_version: 2`, include every listed field, and reject unknown fields. Pre-schema, partial, malformed, or mismatched receipts are treated as unmanaged installs by `sifr self update`; the diagnostic tells users to re-run `curl -LsSf https://sifr.sh/install | sh` if they want standalone self-update management.
 
-`channel` is derived from the installer version prerelease label. `modify_path` records the actual installer request, including `SIFR_NO_MODIFY_PATH=1` and `--no-modify-path`. `binary_path` and `sysroot_path` record canonical installed paths when the platform can resolve them. `sifr self update` validates that `binary_path` is paired with either `sysroot_path/bin/sifr` for toolchain-root installs or `sysroot_path/sifr` for legacy flat custom installs, and delegates to the immutable installer with both paths under the same install lock.
+`channel` is derived from the installer version: exact stable SemVer records
+`stable`, while prereleases use their label. Read-only receipt discovery and
+`sifr self version` accept stable candidate receipts for qualification; stable
+resolution and update remain gated until the stable distribution milestone.
+`modify_path` records the actual installer request, including
+`SIFR_NO_MODIFY_PATH=1` and `--no-modify-path`. `binary_path` and
+`sysroot_path` record canonical installed paths when the platform can resolve
+them. `sifr self update` validates that `binary_path` is paired with either
+`sysroot_path/bin/sifr` for toolchain-root installs or `sysroot_path/sifr` for
+legacy flat custom installs, and delegates to the immutable installer with both
+paths under the same install lock.
 
 ## Self-Update TLS And Delegation Policy
 

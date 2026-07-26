@@ -18,7 +18,7 @@ version="0.1.0-beta.7"
 
 make_mock_binary "${binary}" "sifr all-target fixture"
 make_mock_sysroot_root "${sysroot_root}"
-"${REPO_ROOT}/scripts/distribution/build_preview_artifacts.sh" \
+"${REPO_ROOT}/scripts/distribution/build_release_artifacts.sh" \
   --version "${version}" \
   --output-dir "${artifact_dir}" \
   --binary "${binary}" \

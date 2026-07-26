@@ -667,7 +667,7 @@ def _release_report_production_self_test() -> None:
         ],
         "developer_tooling": ["full"],
         "documentation": ["structure"],
-        "distribution_release": ["full", "evidence-custody"],
+        "distribution_release": ["full", "qualification", "evidence-custody"],
     }
     with tempfile.TemporaryDirectory(prefix="sifr-release-report-production-") as directory:
         root = Path(directory)

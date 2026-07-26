@@ -137,9 +137,9 @@ fn validate_receipt_eligibility(
             receipt.target
         )));
     }
-    if receipt.channel != "alpha" && receipt.channel != "beta" {
+    if !matches!(receipt.channel.as_str(), "alpha" | "beta" | "stable") {
         return Err(unmanaged_receipt_diagnostic(format!(
-            "standalone install receipt channel {} is not supported while stable release channels are disabled; use alpha or beta",
+            "standalone install receipt channel {} is not supported; use alpha, beta, or stable",
             receipt.channel
         )));
     }
@@ -636,6 +636,29 @@ mod tests {
         assert!(discovered
             .receipt_path
             .ends_with(Path::new("manifest/install.json")));
+    }
+
+    #[test]
+    fn accepts_stable_receipt_for_read_only_version_evidence() {
+        let tmp = TestDir::new("stable-read-only");
+        let binary = tmp.path().join("bin/sifr");
+        touch(&binary);
+        write_receipt(
+            &tmp.path().join("manifest/install.json"),
+            "0.1.0",
+            "stable",
+            &binary,
+        );
+
+        let discovered = discover_install_receipt(&ReceiptDiscoveryEnv {
+            current_executable: binary,
+            manifest_dir: Some(tmp.path().join("manifest")),
+            home_dir: None,
+        })
+        .expect("stable receipt discovers for read-only qualification");
+
+        assert_eq!(discovered.receipt.version, "0.1.0");
+        assert_eq!(discovered.receipt.channel, "stable");
     }
 
     #[test]

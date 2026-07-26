@@ -241,7 +241,8 @@
     {
       "area": "distribution_release",
       "suites": [
-        "representative"
+        "representative",
+        "qualification"
       ],
       "resource_classes": [
         "default-local"

@@ -90,27 +90,99 @@ def preview_index() -> dict[str, Any]:
 
 
 def qualification_index() -> dict[str, Any]:
+    version = "0.1.0"
+    prefix = f"sifr-stable-candidate-{version}-{COMMIT}-"
+    artifacts: list[dict[str, Any]] = []
+    for workflow_artifact_id, target in enumerate(TARGETS, start=1):
+        workflow_artifact_name = f"{prefix}{target}"
+        for kind, name in (
+            ("binary-archive", f"sifr-{version}-{target}.tar.gz"),
+            ("checksum", f"sifr-{version}-{target}.tar.gz.sha256"),
+            ("sysroot", f"sifr-{version}-{target}-sysroot.tar.gz"),
+        ):
+            artifacts.append(
+                {
+                    "id": f"{kind}-{target}",
+                    "kind": kind,
+                    "name": name,
+                    "sha256": SHA_A,
+                    "size_bytes": 1,
+                    "workflow_artifact_id": workflow_artifact_id,
+                    "workflow_artifact_name": workflow_artifact_name,
+                    "expires_at": "2026-08-20T00:00:00Z",
+                    "target": target,
+                }
+            )
+        artifacts.append(
+            {
+                "id": f"qualification-report-{target}",
+                "kind": "report",
+                "name": f"qualification-{target}.json",
+                "sha256": SHA_B,
+                "size_bytes": 1,
+                "workflow_artifact_id": workflow_artifact_id,
+                "workflow_artifact_name": workflow_artifact_name,
+                "expires_at": "2026-08-20T00:00:00Z",
+            }
+        )
+    artifacts.extend(
+        [
+            {
+                "id": "installer",
+                "kind": "installer",
+                "name": f"sifr-installer-{version}",
+                "sha256": SHA_A,
+                "size_bytes": 1,
+                "workflow_artifact_id": 10,
+                "workflow_artifact_name": f"{prefix}assemble",
+                "expires_at": "2026-08-20T00:00:00Z",
+            },
+            {
+                "id": "checksums",
+                "kind": "checksums",
+                "name": "checksums.txt",
+                "sha256": SHA_B,
+                "size_bytes": 1,
+                "workflow_artifact_id": 10,
+                "workflow_artifact_name": f"{prefix}assemble",
+                "expires_at": "2026-08-20T00:00:00Z",
+            },
+            {
+                "id": "vsix",
+                "kind": "vsix",
+                "name": "sifr-vscode-0.1.0.vsix",
+                "sha256": SHA_C,
+                "size_bytes": 1,
+                "workflow_artifact_id": 11,
+                "workflow_artifact_name": f"{prefix}editor",
+                "expires_at": "2026-08-20T00:00:00Z",
+            },
+            {
+                "id": "editor-qualification-report",
+                "kind": "report",
+                "name": "qualification-editor.json",
+                "sha256": SHA_D,
+                "size_bytes": 1,
+                "workflow_artifact_id": 11,
+                "workflow_artifact_name": f"{prefix}editor",
+                "expires_at": "2026-08-20T00:00:00Z",
+            },
+        ]
+    )
     return {
         "schema_version": 2,
-        "candidate_version": "0.1.0",
+        "candidate_version": version,
         "source_commit": COMMIT,
+        "submodules": {"editor_integrations": "f" * 40},
         "workflow": {
             "repository": "sifr-lang/sifr",
             "run_id": 1,
             "run_attempt": 1,
+            "retention_days": 30,
+            "overwrite": False,
             "expires_at": "2026-08-20T00:00:00Z",
         },
-        "artifacts": [
-            {
-                "id": "compiler-aarch64-macos",
-                "kind": "binary-archive",
-                "name": "sifr-0.1.0-aarch64-apple-darwin.tar.gz",
-                "sha256": SHA_A,
-                "size_bytes": 1,
-                "workflow_artifact_id": 1,
-                "target": "aarch64-apple-darwin",
-            }
-        ],
+        "artifacts": artifacts,
     }
 
 
@@ -138,7 +210,7 @@ def release_plan() -> dict[str, Any]:
     ]
     return {
         "schema_version": 2,
-        "plan_id": "stable-0.1.0-aaaaaaaaaaaa",
+        "plan_id": "stable-0.1.0-eeeeeeeeeeee",
         "version": "0.1.0",
         "transition": "ga-activation",
         "source_commit": COMMIT,
@@ -206,6 +278,7 @@ def release_report() -> dict[str, Any]:
         "documentation_checks": [("documentation", "structure")],
         "distribution_validation": [
             ("distribution_release", "full"),
+            ("distribution_release", "qualification"),
             ("distribution_release", "evidence-custody"),
         ],
     }
@@ -239,7 +312,10 @@ def release_report() -> dict[str, Any]:
                     ),
                     ("developer_tooling", ["full", "editor-release"]),
                     ("documentation", ["structure"]),
-                    ("distribution_release", ["full", "evidence-custody"]),
+                    (
+                        "distribution_release",
+                        ["full", "qualification", "evidence-custody"],
+                    ),
                 )
             ],
         },

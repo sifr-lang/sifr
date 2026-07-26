@@ -554,7 +554,7 @@ def build_artifact(host: str, artifact_dir: Path) -> None:
     env["SIFR_RELEASE_VERSION"] = RELEASE_VERSION
     run_checked(
         [
-            "scripts/distribution/build_preview_artifacts.sh",
+            "scripts/distribution/build_release_artifacts.sh",
             "--version",
             RELEASE_VERSION,
             "--output-dir",

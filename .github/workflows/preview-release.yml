@@ -120,7 +120,7 @@ jobs:
           set -euo pipefail
           version="${{ needs.validate.outputs.version }}"
           target="${{ matrix.target }}"
-          scripts/distribution/build_preview_artifacts.sh \
+          scripts/distribution/build_release_artifacts.sh \
             --version "${version}" \
             --output-dir dist \
             --binary "target/${target}/release/sifr" \

@@ -3,6 +3,7 @@
 from .common import GovernanceError
 from .artifact_index import validate_qualification_artifact_index
 from .incident import validate_incident_request, validate_incident_signoff
+from .planner import materialize_stable_plan
 from .release_index import validate_release_index, validate_release_index_transition
 from .release_plan import (
     generate_site_release_facts,
@@ -20,6 +21,7 @@ from .surface_contracts import (
 __all__ = [
     "GovernanceError",
     "generate_site_release_facts",
+    "materialize_stable_plan",
     "validate_incident_request",
     "validate_incident_signoff",
     "validate_qualification_artifact_index",

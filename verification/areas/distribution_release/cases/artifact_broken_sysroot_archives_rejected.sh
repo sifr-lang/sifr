@@ -24,7 +24,7 @@ make_broken_archive() {
   mkdir -p "${archive_dir}" "${root}"
   make_mock_binary "${binary}" "broken ${label}"
   make_mock_sysroot_root "${root}"
-  "${REPO_ROOT}/scripts/distribution/build_preview_artifacts.sh" \
+  "${REPO_ROOT}/scripts/distribution/build_release_artifacts.sh" \
     --version "${version}" \
     --output-dir "${archive_dir}" \
     --binary "${binary}" \
@@ -56,7 +56,7 @@ make_bad_digest_archive() {
   mkdir -p "${archive_dir}" "${root}"
   make_mock_binary "${binary}" "broken ${label}"
   make_mock_sysroot_root "${root}"
-  "${REPO_ROOT}/scripts/distribution/build_preview_artifacts.sh" \
+  "${REPO_ROOT}/scripts/distribution/build_release_artifacts.sh" \
     --version "${version}" \
     --output-dir "${archive_dir}" \
     --binary "${binary}" \

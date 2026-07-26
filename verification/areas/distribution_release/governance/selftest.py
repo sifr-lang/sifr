@@ -36,7 +36,7 @@ from .release_plan import (
     validate_site_release_facts,
 )
 from .release_report import validate_release_profile_report
-from .schema_contracts import validate_schema_contracts
+from .schema_contracts import qualification_index, validate_schema_contracts
 from .surface_contracts import (
     validate_install_receipt,
     validate_self_update_plan,
@@ -144,7 +144,7 @@ def valid_plan(*, transition: str = "ga-activation") -> dict[str, Any]:
         )
     plan: dict[str, Any] = {
         "schema_version": 2,
-        "plan_id": "stable-0.1.0-aaaaaaaaaaaa",
+        "plan_id": "stable-0.1.0-eeeeeeeeeeee",
         "version": "0.1.0",
         "transition": transition,
         "source_commit": COMMIT,
@@ -235,6 +235,7 @@ def valid_report() -> dict[str, Any]:
         "documentation_checks": [("documentation", "structure")],
         "distribution_validation": [
             ("distribution_release", "full"),
+            ("distribution_release", "qualification"),
             ("distribution_release", "evidence-custody"),
         ],
     }
@@ -285,7 +286,10 @@ def valid_report() -> dict[str, Any]:
                     ),
                     ("developer_tooling", {"full", "editor-release"}),
                     ("documentation", {"structure"}),
-                    ("distribution_release", {"full", "evidence-custody"}),
+                    (
+                        "distribution_release",
+                        {"full", "qualification", "evidence-custody"},
+                    ),
                 )
             ],
         },
@@ -637,28 +641,7 @@ def test_site_facts_mutations() -> None:
 
 
 def test_artifact_index_mutations() -> None:
-    payload = {
-        "schema_version": 2,
-        "candidate_version": "0.1.0",
-        "source_commit": COMMIT,
-        "workflow": {
-            "run_id": 1,
-            "run_attempt": 1,
-            "repository": "sifr-lang/sifr",
-            "expires_at": "2026-08-01T00:00:00Z",
-        },
-        "artifacts": [
-            {
-                "id": "archive-aarch64-macos",
-                "kind": "binary-archive",
-                "name": "sifr-0.1.0-aarch64-apple-darwin.tar.gz",
-                "sha256": SHA_A,
-                "size_bytes": 1,
-                "workflow_artifact_id": 1,
-                "target": "aarch64-apple-darwin",
-            }
-        ],
-    }
+    payload = qualification_index()
     validate_qualification_artifact_index(payload)
     expect_rejected(
         validate_qualification_artifact_index,
@@ -684,6 +667,35 @@ def test_artifact_index_mutations() -> None:
     expect_rejected(
         validate_qualification_artifact_index,
         mutate(payload, lambda item: item["artifacts"][0].update({"id": " " })),
+    )
+    expect_rejected(
+        validate_qualification_artifact_index,
+        mutate(
+            payload,
+            lambda item: item["artifacts"].__setitem__(
+                slice(None),
+                [
+                    artifact
+                    for artifact in item["artifacts"]
+                    if not (
+                        artifact["kind"] == "binary-archive"
+                        and artifact.get("target") == TARGETS[0]
+                    )
+                ],
+            ),
+        ),
+    )
+    expect_rejected(
+        lambda value: validate_qualification_artifact_index(
+            value,
+            require_unexpired=True,
+        ),
+        mutate(
+            payload,
+            lambda item: item["workflow"].update(
+                {"expires_at": "2000-01-01T00:00:00Z"}
+            ),
+        ),
     )
 
 
@@ -815,27 +827,7 @@ def test_evidence_custody_mutations() -> None:
         candidate_dir.mkdir()
         report = valid_report()
         report_bytes = canonical_json_bytes(report)
-        qualification = {
-            "schema_version": 2,
-            "candidate_version": "0.1.0",
-            "source_commit": COMMIT,
-            "workflow": {
-                "run_id": 1,
-                "run_attempt": 1,
-                "repository": "sifr-lang/sifr",
-                "expires_at": "2026-08-01T00:00:00Z",
-            },
-            "artifacts": [
-                {
-                    "id": "candidate-report",
-                    "kind": "report",
-                    "name": "release-profile-report.json",
-                    "sha256": SHA_A,
-                    "size_bytes": 1,
-                    "workflow_artifact_id": 1,
-                }
-            ],
-        }
+        qualification = qualification_index()
         qualification_bytes = canonical_json_bytes(qualification)
         plan = valid_plan()
         plan["release_profile_report"]["sha256"] = sha256_bytes(report_bytes)

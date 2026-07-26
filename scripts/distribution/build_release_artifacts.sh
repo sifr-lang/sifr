@@ -13,16 +13,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/distribution/build_preview_artifacts.sh --version <preview> --output-dir <dir> [options]
+Usage: scripts/distribution/build_release_artifacts.sh --version <version> --output-dir <dir> [options]
 
-Build or package preview toolchain artifacts for every preview release target.
+Build or package toolchain artifacts for every governed release target.
 
 Options:
-  --version <preview>       Semver prerelease version, for example 0.1.0-beta.1
+  --version <version>       Stable or prerelease SemVer, for example 0.1.0 or 0.1.0-beta.1
   --output-dir <dir>        Directory where archives and .sha256 files are written
   --binary <path>           Existing sifr binary to package for all targets; intended for local validation fixtures
   --sysroot-root <dir>      Source sysroot root to package (default: current repository)
-  --target <triple>         Package only one preview target; can repeat
+  --target <triple>         Package only one release target; can repeat
   --cargo-build             Build target binaries with cargo instead of using --binary
   --help                    Show this help
 EOF
@@ -79,8 +79,9 @@ if [[ -z "${VERSION}" || -z "${OUTPUT_DIR}" ]]; then
   exit 2
 fi
 
-if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$ ]]; then
-  echo "version must be a semver prerelease using -alpha.N, -beta.N, or -rc.N: ${VERSION}" >&2
+if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ &&
+      ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$ ]]; then
+  echo "version must be stable SemVer or a prerelease using -alpha.N, -beta.N, or -rc.N: ${VERSION}" >&2
   exit 2
 fi
 
@@ -117,7 +118,7 @@ for selected_target in "${SELECTED_TARGETS[@]}"; do
     fi
   done
   if [[ "${found}" -ne 1 ]]; then
-    echo "unsupported preview target: ${selected_target}" >&2
+    echo "unsupported release target: ${selected_target}" >&2
     exit 2
   fi
 done
@@ -279,7 +280,7 @@ mkdir -p "${OUTPUT_DIR}"
 
 for target in "${SELECTED_TARGETS[@]}"; do
   if [[ "${CARGO_BUILD}" -eq 1 ]]; then
-    RUSTFLAGS="$(release_rustflags)" SIFR_RELEASE_VERSION="${VERSION}" cargo build --release -p sifr --target "${target}"
+    RUSTFLAGS="$(release_rustflags)" SIFR_RELEASE_VERSION="${VERSION}" cargo build --locked --release -p sifr --target "${target}"
     binary_path="${CARGO_TARGET_DIR:-target}/${target}/release/sifr"
   else
     binary_path="${BINARY}"

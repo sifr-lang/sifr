@@ -228,7 +228,7 @@ make_target_specific_artifacts() {
     local tmp_dir
     tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/sifr-target-artifact.XXXXXX")"
     make_mock_binary "${tmp_dir}/sifr" "target=${target}"
-    "${REPO_ROOT}/scripts/distribution/build_preview_artifacts.sh" \
+    "${REPO_ROOT}/scripts/distribution/build_release_artifacts.sh" \
       --version "${version}" \
       --output-dir "${artifact_dir}" \
       --binary "${tmp_dir}/sifr" \
@@ -252,7 +252,7 @@ build_mock_preview_artifacts() {
     args+=("$1")
     shift
   done
-  "${REPO_ROOT}/scripts/distribution/build_preview_artifacts.sh" \
+  "${REPO_ROOT}/scripts/distribution/build_release_artifacts.sh" \
     --version "${version}" \
     --output-dir "${artifact_dir}" \
     --binary "${binary}" \

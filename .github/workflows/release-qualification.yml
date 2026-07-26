@@ -1,0 +1,382 @@
+name: release-qualification
+run-name: Qualify stable candidate ${{ inputs.version }} at ${{ inputs.source_commit }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Exact lowercase 40-hex source commit
+        required: true
+        type: string
+      version:
+        description: Exact stable SemVer
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  validate:
+    name: validate immutable candidate identity
+    runs-on: ubuntu-24.04
+    outputs:
+      source_commit: ${{ steps.identity.outputs.source_commit }}
+      version: ${{ steps.identity.outputs.version }}
+    steps:
+      - name: Validate exact inputs
+        id: identity
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          [[ "${SOURCE_COMMIT}" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "::error::source_commit must be an exact lowercase 40-hex commit"
+            exit 2
+          }
+          [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "::error::version must be exact stable SemVer"
+            exit 2
+          }
+          echo "source_commit=${SOURCE_COMMIT}" >>"${GITHUB_OUTPUT}"
+          echo "version=${VERSION}" >>"${GITHUB_OUTPUT}"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.identity.outputs.source_commit }}
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Verify checkout identity
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ steps.identity.outputs.source_commit }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${SOURCE_COMMIT}"
+          if git submodule status --recursive | grep -E '^[+-U]'; then
+            echo "::error::recursive submodule checkout is unresolved"
+            exit 2
+          fi
+
+  build:
+    name: qualify ${{ matrix.target }}
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            runner: macos-15
+          - target: x86_64-apple-darwin
+            runner: macos-15-intel
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-24.04
+          - target: aarch64-unknown-linux-gnu
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.source_commit }}
+          fetch-depth: 1
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build, package, and smoke target bundle
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
+          VERSION: ${{ needs.validate.outputs.version }}
+          TARGET: ${{ matrix.target }}
+          BUILDER: ${{ matrix.runner }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${SOURCE_COMMIT}"
+          mkdir -p dist qualification
+          scripts/distribution/build_release_artifacts.sh \
+            --version "${VERSION}" \
+            --output-dir dist \
+            --cargo-build \
+            --target "${TARGET}"
+          archive="dist/sifr-${VERSION}-${TARGET}.tar.gz"
+          scripts/distribution/qualify_stable_target.py \
+            --archive "${archive}" \
+            --version "${VERSION}" \
+            --target "${TARGET}" \
+            --builder "${BUILDER}" \
+            --source-commit "${SOURCE_COMMIT}" \
+            --out-dir qualification
+          cp "${archive}" "${archive}.sha256" qualification/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sifr-stable-candidate-${{ needs.validate.outputs.version }}-${{ needs.validate.outputs.source_commit }}-${{ matrix.target }}
+          path: qualification/*
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: false
+
+  editor:
+    name: qualify VS Code package
+    needs: validate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.source_commit }}
+          fetch-depth: 1
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: editor_integrations/vscode/package-lock.json
+
+      - name: Build, test, and package VSIX
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${SOURCE_COMMIT}"
+          npm ci --prefix editor_integrations/vscode
+          for script in lint typecheck test test:extension package; do
+            npm run --prefix editor_integrations/vscode "${script}"
+          done
+          mkdir -p qualification-editor
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import shutil
+          import subprocess
+          from pathlib import Path
+
+          package = json.loads(Path("editor_integrations/vscode/package.json").read_text())
+          compatibility = package.get("sifrCompilerCompatibility")
+          if not isinstance(compatibility, str) or not compatibility.strip():
+              raise SystemExit("package.json must declare sifrCompilerCompatibility")
+          built = sorted(Path("editor_integrations/vscode/dist").glob("*.vsix"))
+          if len(built) != 1:
+              raise SystemExit(f"expected exactly one built VSIX, found {len(built)}")
+          vsix = Path("qualification-editor") / built[0].name
+          shutil.copy2(built[0], vsix)
+          submodule_commit = subprocess.run(
+              ["git", "-C", "editor_integrations", "rev-parse", "HEAD"],
+              check=True,
+              text=True,
+              stdout=subprocess.PIPE,
+          ).stdout.strip()
+          payload = {
+              "schema_version": 2,
+              "kind": "stable-editor-qualification",
+              "source_commit": os.environ["SOURCE_COMMIT"],
+              "submodule_commit": submodule_commit,
+              "package_path": "editor_integrations/vscode",
+              "package_version": package["version"],
+              "compiler_compatibility": compatibility,
+              "vsix_sha256": hashlib.sha256(vsix.read_bytes()).hexdigest(),
+              "status": "pass",
+          }
+          Path("qualification-editor/qualification-editor.json").write_text(
+              json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n"
+          )
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sifr-stable-candidate-${{ needs.validate.outputs.version }}-${{ needs.validate.outputs.source_commit }}-editor
+          path: qualification-editor/*
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: false
+
+  assemble:
+    name: assemble installer and checksums
+    needs:
+      - validate
+      - build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.source_commit }}
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Download aarch64 macOS candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: sifr-stable-candidate-${{ needs.validate.outputs.version }}-${{ needs.validate.outputs.source_commit }}-aarch64-apple-darwin
+          path: target-artifacts
+
+      - name: Download x86_64 macOS candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: sifr-stable-candidate-${{ needs.validate.outputs.version }}-${{ needs.validate.outputs.source_commit }}-x86_64-apple-darwin
+          path: target-artifacts
+
+      - name: Download aarch64 Linux candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: sifr-stable-candidate-${{ needs.validate.outputs.version }}-${{ needs.validate.outputs.source_commit }}-aarch64-unknown-linux-gnu
+          path: target-artifacts
+
+      - name: Download x86_64 Linux candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: sifr-stable-candidate-${{ needs.validate.outputs.version }}-${{ needs.validate.outputs.source_commit }}-x86_64-unknown-linux-gnu
+          path: target-artifacts
+
+      - name: Verify matrix and assemble aggregate assets
+        shell: bash
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${SOURCE_COMMIT}"
+          mkdir -p qualification-assemble
+          for target in \
+            aarch64-apple-darwin \
+            x86_64-apple-darwin \
+            x86_64-unknown-linux-gnu \
+            aarch64-unknown-linux-gnu
+          do
+            archive="target-artifacts/sifr-${VERSION}-${target}.tar.gz"
+            test -f "${archive}"
+            test -f "${archive}.sha256"
+            test -f "target-artifacts/qualification-${target}.json"
+            scripts/distribution/verify_release_archive.py \
+              "${archive}" \
+              --version "${VERSION}" \
+              --target "${target}"
+          done
+          scripts/distribution/generate_version_installer.sh \
+            --version "${VERSION}" \
+            --artifact-dir target-artifacts \
+            --out "qualification-assemble/sifr-installer-${VERSION}"
+          (
+            cd target-artifacts
+            for path in *.tar.gz *.tar.gz.sha256; do
+              if command -v sha256sum >/dev/null 2>&1; then
+                sha256sum "${path}"
+              else
+                shasum -a 256 "${path}"
+              fi
+            done
+          ) | LC_ALL=C sort >qualification-assemble/checksums.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sifr-stable-candidate-${{ needs.validate.outputs.version }}-${{ needs.validate.outputs.source_commit }}-assemble
+          path: qualification-assemble/*
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: false
+
+  collect:
+    name: collect immutable qualification index
+    needs:
+      - validate
+      - build
+      - editor
+      - assemble
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.source_commit }}
+          fetch-depth: 1
+          submodules: recursive
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: sifr-stable-candidate-${{ needs.validate.outputs.version }}-${{ needs.validate.outputs.source_commit }}-*
+          path: collected
+          merge-multiple: false
+
+      - name: Collect run metadata and recursive submodules
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${SOURCE_COMMIT}"
+          gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100" \
+            >run-artifacts.json
+          gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            >run-metadata.json
+          python3 - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+
+          output = subprocess.run(
+              ["git", "submodule", "status", "--recursive"],
+              check=True,
+              text=True,
+              stdout=subprocess.PIPE,
+          ).stdout
+          submodules = {}
+          for line in output.splitlines():
+              if not line or line[0] in "-+U":
+                  raise SystemExit(f"unresolved submodule state: {line}")
+              commit, path, *_ = line[1:].split()
+              submodules[path] = commit
+          Path("submodules.json").write_text(
+              json.dumps(submodules, sort_keys=True, separators=(",", ":")) + "\n"
+          )
+          PY
+
+      - name: Build canonical qualification artifact index
+        shell: bash
+        env:
+          SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
+          VERSION: ${{ needs.validate.outputs.version }}
+        run: |
+          set -euo pipefail
+          scripts/distribution/collect_qualification_artifacts.py \
+            --version "${VERSION}" \
+            --source-commit "${SOURCE_COMMIT}" \
+            --submodules submodules.json \
+            --run-id "${GITHUB_RUN_ID}" \
+            --run-attempt "${GITHUB_RUN_ATTEMPT}" \
+            --run-metadata run-metadata.json \
+            --run-artifacts run-artifacts.json \
+            --artifact-root collected \
+            --out qualification-artifact-index.json
+
+      - name: Upload qualification artifact index
+        id: upload-index
+        uses: actions/upload-artifact@v4
+        with:
+          name: sifr-stable-candidate-${{ needs.validate.outputs.version }}-${{ needs.validate.outputs.source_commit }}-index
+          path: qualification-artifact-index.json
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: false
+
+      - name: Record collector identity
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload-index.outputs.artifact-id }}
+        run: |
+          {
+            echo "### Stable qualification artifact index"
+            echo
+            echo "Artifact ID: \`${ARTIFACT_ID}\`"
+            echo "Source commit: \`${{ needs.validate.outputs.source_commit }}\`"
+            echo "Version: \`${{ needs.validate.outputs.version }}\`"
+          } >>"${GITHUB_STEP_SUMMARY}"

@@ -2,7 +2,7 @@
   "schema_version": 2,
   "name": "distribution_release",
   "owner": "release/distribution",
-  "description": "Preview release, installer, self-update, dispatcher, and artifact validation.",
+  "description": "Governed release qualification, installer, self-update, dispatcher, and artifact validation.",
   "parallel_safe": false,
   "resource_classes": [
     "default-local",
@@ -31,6 +31,19 @@
           "id": "distribution-cases",
           "entry": "verification/areas/distribution_release/cases",
           "command": "distribution-case-directory",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "qualification",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "stable-qualification",
+          "entry": "verification/areas/distribution_release/governance/qualification_selftest.py",
+          "command": "distribution-stable-qualification",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }
