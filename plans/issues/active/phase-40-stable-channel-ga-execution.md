@@ -486,3 +486,11 @@ updating or deleting that exact tag with no bypass actors.
   documentation finding is remediated by making the adjacent release-evidence
   README require the digest-bound `withdrawal-evidence.txt` beside every
   incident request.
+- Claude Opus review pass 4 is approved with no actionable findings and is
+  archived at
+  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-4.md`.
+  It re-ran the nine incident scenarios, combined 55-variant distribution
+  selection, coverage/profile assignment, runner self-tests, the capability
+  demo, file-size guardrails, custody-layout reproduction, stale-path sweep,
+  and a fresh full definition-of-done review against exact implementation head
+  `cc87f1e79a2d11c2f2cd1fba8b99d470741c82da`.
