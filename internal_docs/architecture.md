@@ -1429,6 +1429,7 @@ cargo test                                    # Run all tests (layers 1-3)
 ./scripts/run_all_tests.sh --profile release # Highest-confidence local qualification profile
 ./scripts/run_all_tests.sh --profile python-interop-live # Explicit opt-in container-runtime Python interop profile
 uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite full     # Preview installer/artifact/release automation checks
+uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite incident-governance # Offline rollback/roll-forward generation, retention, and recovery
 ./verification/runner/e2e/check_report_determinism.sh --profile release # Stable e2e report signature across reruns
 uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke
 cargo test --manifest-path third_party/ruff/Cargo.toml -p ruff_python_parser # Parser snapshots
@@ -1442,6 +1443,15 @@ cargo bench                                   # Run benchmarks (layer 6, generic
 ```
 
 Validation profile policy is defined in `verification/profiles/{create-pr,merge,nightly,release,python-interop-live}.json` and executed by `verification/runner/sifr_verify/profile_runner.py` through `uv run --project verification python -m sifr_verify profiles run --profile <profile>`. `scripts/run_all_tests.sh` is only the stable public facade over that runner. Verification areas are owned by schema-version-2 `verification/areas/*/manifest.json` files and executed through `uv run --project verification python -m sifr_verify areas run`. Stable-surface manifests declare owner, resource classes, pinned-corpus policy, skip policy, and baseline metadata policy. Representative `create-pr` and full-corpus `merge` e2e coverage are selected through profile data rather than hard-coded shell assumptions. The `python-interop-live` profile is selected-areas-only and explicitly opts into `container-runtime`/live-network policy for testcontainers-backed Python interop evidence; offline profiles must not select those live suites. Its live examples build native Sifr binaries for Redis, Postgres, Kafka-compatible Redpanda, and LocalStack Pub/Sub-style SNS fanout, SNS-to-SQS delivery, and direct SQS delivery. Testcontainers owns container lifecycle and endpoint discovery only; the compiled binary's hermetic declaration bridge owns every service-client operation, and broker/cloud deliveries cross a foreign-thread typed Sifr callback. Docker absence is recorded as a structured service-execution skip only after every native binary builds. When a mostly offline area has a live subset, the area can keep top-level `network_mode: offline` while the live suite declares suite-level `network_mode: live` and its resource classes. Declarative validation-suite coverage lives in area-owned validation suite manifests under `verification/areas/{core_language,project_workspace}/data/validation_suites/`; profiles select the individual suite names, and the area adapter invokes the Rust-native `tests/validation_suites.rs` harness with that exact suite filter. Fixed bug locks and unresolved crash sentinels live under `verification/areas/regression/`.
+
+Stable incident recovery is a pure extension of the governed release-index
+state machine. Canonical request and approved plan digests authorize exactly
+one rollback or incident roll-forward generation; all prior releases and
+snapshots remain immutable. The production adapter is deliberately absent
+until protected publication. The offline fixture core owns generation burning,
+exact resume, site reconciliation, range eligibility, downgrade consent, and
+incident sign-off evidence, as specified in
+`internal_docs/stable_incident_response.md`.
 
 The readiness coverage matrix is the executable registry for shipped guarantees, compiler surfaces, owners, profile assignments, and Cargo package/target/feature classification. `coverage_matrix:readiness` is selected by create-pr, merge, nightly, and release. It runs strict mode, rejects temporary statuses such as `expected-missing`, `tests:none`, and `red-blocker`, validates local-first profile policy, checks profile assignments against `profile_assignment_matrix.json`, and runs negative self-tests for the readiness enforcement claims. CI may run broader profiles, but local-vs-CI plan equivalence is checked by comparing emitted profile plans with `sifr_verify profiles compare-plans`.
 

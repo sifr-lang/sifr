@@ -30,6 +30,7 @@ REQUEST_REQUIRED = {
 SIGNOFF_REQUIRED = {
     "schema_version",
     "incident_id",
+    "operation",
     "request_sha256",
     "attempts",
     "index_mutation",
@@ -110,13 +111,30 @@ def validate_incident_request(
     return request
 
 
-def validate_incident_signoff(payload: Any) -> dict[str, Any]:
+def validate_incident_signoff(
+    payload: Any,
+    *,
+    incident_request: Any | None = None,
+) -> dict[str, Any]:
     signoff = require_object(payload, "$")
     require_exact_keys(signoff, required=SIGNOFF_REQUIRED, location="$")
     require_schema_v2(signoff)
     require_incident_id(signoff["incident_id"], "$.incident_id")
+    operation = require_enum(
+        signoff["operation"],
+        {"rollback", "incident-roll-forward"},
+        "$.operation",
+    )
     require_sha256(signoff["request_sha256"], "$.request_sha256")
     validate_attempts(signoff["attempts"], "$.attempts")
+    attempts = signoff["attempts"]
+    run_ids = [attempt["run_id"] for attempt in attempts]
+    if run_ids != sorted(set(run_ids)):
+        fail("$.attempts", "run_id values must be unique and strictly increasing")
+    if any(attempt["status"] == "started" for attempt in attempts):
+        fail("$.attempts", "completed sign-off cannot contain a pending attempt")
+    if attempts[-1]["status"] != "completed":
+        fail("$.attempts", "final attempt must be completed")
 
     mutation = require_object(signoff["index_mutation"], "$.index_mutation")
     require_exact_keys(
@@ -150,6 +168,12 @@ def validate_incident_signoff(payload: Any) -> dict[str, Any]:
         if evidence["status"] != "pass":
             fail(f"$.{name}.status", "must be pass")
         require_sha256(evidence["evidence_sha256"], f"$.{name}.evidence_sha256")
+    if incident_request is not None:
+        request = validate_incident_request(incident_request)
+        if request["incident_id"] != signoff["incident_id"]:
+            fail("$.incident_id", "does not match the incident request")
+        if request["operation"] != operation:
+            fail("$.operation", "does not match the incident request")
     return signoff
 
 

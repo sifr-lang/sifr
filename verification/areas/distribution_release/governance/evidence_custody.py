@@ -198,7 +198,10 @@ def validate_incident_directory(directory: Path) -> None:
         raise GovernanceError(f"{directory}: incident id does not match directory")
     signoff_path = directory / "stable-incident-signoff.json"
     if signoff_path.is_file():
-        signoff = validate_incident_signoff(load_json_strict(signoff_path, require_canonical=True))
+        signoff = validate_incident_signoff(
+            load_json_strict(signoff_path, require_canonical=True),
+            incident_request=request,
+        )
         if signoff["incident_id"] != directory.name:
             raise GovernanceError(f"{directory}: incident sign-off identity mismatch")
         if signoff["request_sha256"] != sha256_bytes(request_path.read_bytes()):

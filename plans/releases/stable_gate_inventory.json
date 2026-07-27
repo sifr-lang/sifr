@@ -30,7 +30,7 @@
       "id": "preview-artifact-builder",
       "location": "scripts/distribution/build_release_artifacts.sh",
       "owner": "release/distribution",
-      "current_behavior": "packages alpha, beta, rc, or stable candidates without publication",
+      "current_behavior": "packages alpha, beta, or stable candidates without publication and rejects rc",
       "activation_boundary": "stable-qualification",
       "disposition": "shared target packaging moves behind stable qualification without enabling publication; milestone 40.2 removes rc acceptance from the shared public release surface"
     },
@@ -38,7 +38,7 @@
       "id": "immutable-installer-generator",
       "location": "scripts/distribution/generate_version_installer.sh",
       "owner": "release/distribution",
-      "current_behavior": "generates immutable alpha, beta, rc, or stable candidate installers without publication",
+      "current_behavior": "generates immutable alpha, beta, or stable candidate installers without publication and rejects rc",
       "activation_boundary": "stable-installation",
       "disposition": "accepts exact stable versions and derives APP_CHANNEL=stable; milestone 40.2 removes rc acceptance"
     },
@@ -46,7 +46,7 @@
       "id": "site-default-channel",
       "location": "scripts/distribution/generate_dispatchers.sh",
       "owner": "release/distribution",
-      "current_behavior": "index defaults to beta and stable is rejected",
+      "current_behavior": "index is beta-default for preview and stable-default for active GA; all four entrypoints share schema-v2 metadata",
       "activation_boundary": "stable-installation",
       "disposition": "index and stable entrypoint resolve stable; alpha and beta remain explicit"
     },
@@ -54,7 +54,7 @@
       "id": "site-version-pin",
       "location": "scripts/distribution/generate_dispatchers.sh",
       "owner": "release/distribution",
-      "current_behavior": "stable version pins are rejected",
+      "current_behavior": "exact active stable pins resolve and withdrawn or absent versions fail",
       "activation_boundary": "stable-installation",
       "disposition": "exact active stable pins resolve; withdrawn or absent pins fail"
     },
@@ -62,7 +62,7 @@
       "id": "site-release-index-preview-state",
       "location": "verification/areas/distribution_release/tools/validate_self_update_metadata.sh",
       "owner": "release/distribution",
-      "current_behavior": "requires schema-v2 preview state without stable",
+      "current_behavior": "validates preview and active schema-v2 states with GA-aware dispatcher defaults",
       "activation_boundary": "stable-installation",
       "disposition": "shared validator accepts active GA state and verifies stable dispatcher agreement"
     },
@@ -70,7 +70,7 @@
       "id": "self-update-index-state",
       "location": "crates/sifr/src/self_update_metadata.rs",
       "owner": "release/distribution",
-      "current_behavior": "requires schema-v2 preview state and rejects active GA",
+      "current_behavior": "accepts preview or active GA and resolves only active governed release records",
       "activation_boundary": "stable-installation",
       "disposition": "accepts active GA and resolves stable only from an active release record"
     },
@@ -78,7 +78,7 @@
       "id": "self-update-channel-selection",
       "location": "crates/sifr/src/self_update_metadata.rs",
       "owner": "release/distribution",
-      "current_behavior": "stable channel and exact stable versions are rejected",
+      "current_behavior": "stable channel and exact active stable versions resolve with checksum-bound installer delegation",
       "activation_boundary": "stable-installation",
       "disposition": "stable channel and exact active stable pins use the governed release index"
     },
@@ -145,6 +145,38 @@
       "current_behavior": "proves stable resolution and publication remain unavailable",
       "activation_boundary": "stable-installation",
       "disposition": "replaced by positive stable resolution plus withdrawn, checksum, and mismatch negatives"
+    },
+    {
+      "id": "stable-incident-index-planner",
+      "location": "verification/areas/distribution_release/governance/incident_planner.py",
+      "owner": "release/distribution",
+      "current_behavior": "purely validates canonical incident requests, approved plans, expected index identity, and one rollback or roll-forward generation",
+      "activation_boundary": "incident-governance",
+      "disposition": "is consumed unchanged by the protected publication adapter"
+    },
+    {
+      "id": "stable-incident-fixture-harness",
+      "location": "scripts/distribution/run_incident_fixture.py",
+      "owner": "release/distribution",
+      "current_behavior": "runs credential-free filesystem rollback, roll-forward, generation-burn, exact-resume, site-reconciliation, and recovery drills",
+      "activation_boundary": "incident-governance",
+      "disposition": "remains local-only and cannot select a production adapter"
+    },
+    {
+      "id": "stable-incident-evidence-commit",
+      "location": "verification/areas/distribution_release/governance/incident_evidence.py",
+      "owner": "release/distribution",
+      "current_behavior": "accepts only one canonical request plus its digest-bound withdrawal evidence in an additive incident commit range",
+      "activation_boundary": "incident-governance",
+      "disposition": "gates evidence-only incident PRs before protected publication"
+    },
+    {
+      "id": "stable-incident-runbook",
+      "location": "internal_docs/stable_incident_response.md",
+      "owner": "release/distribution",
+      "current_behavior": "defines trigger, ownership, 30-minute acknowledgement, approval, communication, retry, retention, and recovery policy",
+      "activation_boundary": "incident-governance",
+      "disposition": "provides the operator contract consumed by GA documentation and protected publication"
     },
     {
       "id": "release-profile-stable-gates",

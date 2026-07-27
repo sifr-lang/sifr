@@ -496,6 +496,7 @@ def test_release_index_transitions() -> None:
     validate_incident_index_mutation(
         active_index(),
         incident,
+        operation="incident-roll-forward",
         incident_id="inc-2026-001",
         affected_version="0.1.0",
         successor_version="0.1.1",
@@ -506,13 +507,13 @@ def test_release_index_transitions() -> None:
         lambda value: validate_incident_index_mutation(
             active_index(),
             value,
+            operation="incident-roll-forward",
             incident_id="inc-2026-001",
             affected_version="0.1.0",
             successor_version="0.1.1",
         ),
         invalid,
     )
-
 
 def test_release_plan_mutations() -> None:
     ga = valid_plan()
@@ -558,7 +559,6 @@ def test_release_plan_mutations() -> None:
         lambda value: validate_release_plan(value, incident_request_sha256=SHA_B),
         incident,
     )
-
 
 def test_incident_mutations() -> None:
     request = valid_incident_request()
@@ -639,6 +639,7 @@ def test_signoff_mutations() -> None:
     incident_signoff = {
         "schema_version": 2,
         "incident_id": "inc-2026-001",
+        "operation": "rollback",
         "request_sha256": SHA_A,
         "attempts": [valid_attempt()],
         "index_mutation": {

@@ -422,6 +422,7 @@ def incident_signoff() -> dict[str, Any]:
     return {
         "schema_version": 2,
         "incident_id": "inc-2026-001",
+        "operation": "rollback",
         "request_sha256": SHA_A,
         "attempts": [attempt()],
         "index_mutation": {

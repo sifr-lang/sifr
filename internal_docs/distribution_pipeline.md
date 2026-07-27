@@ -480,3 +480,67 @@ It performs a forced beta-to-stable handoff and an ordinary
 stable-to-stable update through immutable mock installers, proves receipt and
 sysroot version movement together, shows the stable no-op plan, and verifies
 that the public preview workflow still has no stable mutation input.
+
+## Stable Incident Recovery
+
+Rollback and incident roll-forward planning extend the canonical schema-v2
+release index; they do not introduce a second publication workflow.
+`plan-incident-index` in `scripts/distribution/release_governance.py` consumes
+canonical request, affected-plan, successor/target-plan, and live-index bytes,
+plus the expected generation/digest and a fresh generation number. Rollback is
+accepted only when the affected `normal` plan names that exact retained active
+predecessor and plan digest. Incident roll-forward requires a qualified
+successor plan that binds the request and affected-plan digests and records
+`rollback_target: none`. Both operations withdraw the affected stable and move
+the stable channel atomically in one validated generation.
+
+Incident requests are prepared outside the repository with exact affected
+plan, withdrawal-evidence, and—for rollback—target-plan digests. The
+evidence-commit validator permits exactly
+`plans/incidents/<incident-id>/stable-incident-request.json` and
+`withdrawal-evidence.txt` as added files. It rejects source edits, renames,
+deletions, unrelated files, noncanonical request bytes, directory/id drift, and
+evidence-digest drift.
+
+The credential-free local harness is:
+
+```bash
+scripts/distribution/run_incident_fixture.py run \
+  --fixture-root <dedicated-system-temp-directory> \
+  --live-index <temporary-channels.json> \
+  --governance-release <temporary-governance-assets> \
+  --release-assets <temporary-immutable-assets> \
+  --marketplace-stub <temporary-marketplace.json> \
+  --extension-metadata <temporary-extension-metadata.json> \
+  --site-repo <temporary-non-deploying-site-repository> \
+  --request <fixture-request> \
+  --affected-plan <fixture-affected-plan> \
+  --successor-plan <fixture-target-or-successor-plan> \
+  --mode initial \
+  --approver <fixture-reviewer>
+```
+
+It accepts only explicit temporary filesystem fixtures, rejects production
+credentials, contains no network or production adapter, and shares one
+filesystem metadata lease with preview/stable submission preflight. It
+publishes write-once request and generation evidence, burns a generation after
+reservation failure, atomically replaces only the local index, reconciles a
+non-deploying site fixture, verifies the extension/Marketplace range for
+rollback, and emits a schema-v2 incident sign-off. Resume either allocates
+after every retained snapshot or verifies the already-realized
+generation/digest and retries site reconciliation without another index
+mutation.
+
+The canonical ownership, acknowledgement, communication, retry, retention, and
+closure policy is in
+[`stable_incident_response.md`](./stable_incident_response.md). Production
+workflow inputs, write permissions, Marketplace calls, and site dispatch remain
+absent until protected publication wiring.
+
+Run the incident-specific suite and capability demo with:
+
+```bash
+uv run --project verification --locked python -m sifr_verify areas run \
+  --area distribution_release --suite incident-governance
+demos/stable_incident_recovery_demo.sh
+```

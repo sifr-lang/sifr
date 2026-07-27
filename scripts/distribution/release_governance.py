@@ -37,9 +37,12 @@ from governance.common import (  # noqa: E402
     load_json_strict,
     require_sha256,
     sha256_bytes,
+    sha256_file,
     write_canonical_json,
 )
+from governance.incident_evidence import validate_incident_evidence_commit  # noqa: E402
 from governance.release_index import propose_preview_release, validate_release_record  # noqa: E402
+from governance.incident_planner import materialize_incident_mutation  # noqa: E402
 from governance.planner import materialize_stable_plan  # noqa: E402
 
 
@@ -137,6 +140,24 @@ def parse_args() -> argparse.Namespace:
         command.add_argument("--out", required=True)
         if command_name == "generate-incident-request":
             command.add_argument("--live-index", required=True)
+            command.add_argument("--withdrawal-evidence", required=True)
+            command.add_argument("--affected-plan", required=True)
+            command.add_argument("--rollback-plan")
+    incident_index = commands.add_parser("plan-incident-index")
+    incident_index.add_argument("--request", required=True)
+    incident_index.add_argument("--live-index", required=True)
+    incident_index.add_argument("--affected-plan", required=True)
+    incident_index.add_argument("--successor-plan", required=True)
+    incident_index.add_argument("--expected-generation", required=True, type=int)
+    incident_index.add_argument("--expected-sha256", required=True)
+    incident_index.add_argument("--proposed-generation", required=True, type=int)
+    incident_index.add_argument("--out", required=True)
+    evidence_commit = commands.add_parser("validate-incident-evidence-commit")
+    evidence_commit.add_argument("--repository", default=str(REPO_ROOT))
+    evidence_commit.add_argument("--base", required=True)
+    evidence_commit.add_argument("--head", required=True)
+    evidence_commit.add_argument("--request-path", required=True)
+    evidence_commit.add_argument("--evidence-path", required=True)
     return parser.parse_args()
 
 
@@ -161,6 +182,10 @@ def main() -> int:
             generate_incident(args)
         elif args.command == "generate-incident-signoff":
             generate_incident_signoff(args)
+        elif args.command == "plan-incident-index":
+            plan_incident_index(args)
+        elif args.command == "validate-incident-evidence-commit":
+            validate_incident_evidence(args)
         else:
             raise AssertionError(args.command)
     except GovernanceError as exc:
@@ -333,15 +358,102 @@ def build_release_record(args: argparse.Namespace) -> None:
 
 
 def generate_incident(args: argparse.Namespace) -> None:
-    payload = load_json_strict(Path(args.spec))
-    validate_incident_request(payload, live_index=load_json_strict(Path(args.live_index)))
-    write_canonical_json(Path(args.out), payload, refuse_existing=True)
+    spec_path = Path(args.spec).resolve()
+    evidence_path = Path(args.withdrawal_evidence).resolve()
+    output = Path(args.out).resolve()
+    _require_clean_external_incident_directory(
+        output=output,
+        spec_path=spec_path,
+        evidence_path=evidence_path,
+    )
+    payload = validate_incident_request(
+        load_json_strict(spec_path, require_canonical=True)
+    )
+    affected_plan_path = Path(args.affected_plan)
+    affected_plan = validate_release_plan(
+        load_json_strict(affected_plan_path, require_canonical=True)
+    )
+    approved = {affected_plan["version"]: sha256_file(affected_plan_path)}
+    if payload.get("affected_release") != {
+        "version": affected_plan["version"],
+        "plan_sha256": approved[affected_plan["version"]],
+    }:
+        raise GovernanceError("incident request does not bind the exact affected plan")
+    if payload.get("withdrawal", {}).get("evidence_sha256") != sha256_file(evidence_path):
+        raise GovernanceError("incident request does not bind the withdrawal evidence bytes")
+    if payload.get("operation") == "rollback":
+        if not args.rollback_plan:
+            raise GovernanceError("rollback request generation requires --rollback-plan")
+        rollback_plan_path = Path(args.rollback_plan)
+        rollback_plan = validate_release_plan(
+            load_json_strict(rollback_plan_path, require_canonical=True)
+        )
+        approved[rollback_plan["version"]] = sha256_file(rollback_plan_path)
+    elif args.rollback_plan:
+        raise GovernanceError("incident-roll-forward request must not supply --rollback-plan")
+    validate_incident_request(
+        payload,
+        live_index=load_json_strict(Path(args.live_index), require_canonical=True),
+        approved_plan_digests=approved,
+    )
+    write_canonical_json(output, payload, refuse_existing=True)
 
 
 def generate_incident_signoff(args: argparse.Namespace) -> None:
     payload = load_json_strict(Path(args.spec))
     validate_incident_signoff(payload)
     write_canonical_json(Path(args.out), payload, refuse_existing=True)
+
+
+def plan_incident_index(args: argparse.Namespace) -> None:
+    mutation = materialize_incident_mutation(
+        request_path=Path(args.request),
+        live_index_path=Path(args.live_index),
+        affected_plan_path=Path(args.affected_plan),
+        successor_plan_path=Path(args.successor_plan),
+        expected_generation=args.expected_generation,
+        expected_sha256=args.expected_sha256,
+        proposed_generation=args.proposed_generation,
+    )
+    write_canonical_json(Path(args.out), mutation.proposed_index, refuse_existing=True)
+
+
+def validate_incident_evidence(args: argparse.Namespace) -> None:
+    request = validate_incident_evidence_commit(
+        repository=Path(args.repository),
+        base=args.base,
+        head=args.head,
+        request_path=args.request_path,
+        evidence_path=args.evidence_path,
+    )
+    print(
+        "release-governance incident evidence ok: "
+        f"incident_id={request['incident_id']} operation={request['operation']}"
+    )
+
+
+def _require_clean_external_incident_directory(
+    *,
+    output: Path,
+    spec_path: Path,
+    evidence_path: Path,
+) -> None:
+    try:
+        output.relative_to(REPO_ROOT.resolve())
+    except ValueError:
+        pass
+    else:
+        raise GovernanceError("incident request generation output must be outside the repository")
+    if not output.parent.is_dir():
+        raise GovernanceError("incident request work directory must already exist")
+    if spec_path.parent != output.parent or evidence_path.parent != output.parent:
+        raise GovernanceError("incident request spec and withdrawal evidence must be in the work directory")
+    allowed = {spec_path, evidence_path}
+    unexpected = sorted(path.name for path in output.parent.iterdir() if path.resolve() not in allowed)
+    if unexpected:
+        raise GovernanceError(
+            "incident request work directory is not clean: " + ", ".join(unexpected)
+        )
 
 
 def load_release(path: Path) -> tuple[str, dict[str, Any]]:

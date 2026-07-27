@@ -94,10 +94,10 @@ Artifacts mapped to the Phase 40 exit gate:
 
 ### milestone_40_3: Rollback and Incident Governance
 
-- [ ] Implement local fail-closed incident planning, rollback, withdrawal,
+- [x] Implement local fail-closed incident planning, rollback, withdrawal,
   roll-forward, generation burning, and recovery evidence.
-- [ ] Keep production mutation adapters disabled.
-- [ ] Validate first-GA and later incident recovery.
+- [x] Keep production mutation adapters disabled.
+- [x] Validate first-GA and later incident recovery.
 - [ ] Record review rounds, PR, validation, and merge.
 
 ### milestone_40_4: Stable Documentation and VS Code Release
@@ -417,3 +417,40 @@ updating or deleting that exact tag with no bypass actors.
   exact remote head `939e69083`.
 - Main-repository [PR #3030](https://github.com/sifr-lang/sifr/pull/3030)
   merged as `db80dd35e056b9dcc9a2ac64475a198f5c36bfaa`.
+
+### milestone_40_3
+
+- Pure incident planning in
+  `verification/areas/distribution_release/governance/incident_planner.py`
+  binds canonical request, affected/target/successor plan, and expected live
+  generation/digest bytes. Rollback requires the affected `normal` plan's exact
+  active predecessor; incident roll-forward requires a request-bound qualified
+  successor with `rollback_target: none`.
+- The release-index core now preserves every unaffected channel and retained
+  release byte, withdraws only the affected stable, and either reuses exactly
+  one active retained rollback target or adds exactly one qualified successor.
+- The credential-free fixture harness takes explicit temporary index,
+  governance-asset, immutable-asset, Marketplace-stub, extension-metadata, and
+  non-deploying-site paths. It refuses production credentials and site
+  repositories without the local-only marker and has no network, GitHub
+  release, Marketplace publication, or repository-dispatch adapter.
+- Local mutation order is request retention, write-once proposed-generation
+  snapshot, atomic index replacement, exact generation/digest site recheck,
+  bounded 20-minute attempt model, site reconciliation, and schema-v2 incident
+  sign-off. Reservation failure burns the generation; post-index timeout
+  records cancellation and resumes site work without a second index mutation.
+- Fresh install, working-client self-update, and broken-client out-of-band
+  recovery all resolve the active stable and delegate to its digest-verified
+  immutable installer. Downgrades refuse without explicit `--force`.
+- Evidence-only commit validation accepts exactly the canonical incident
+  request and digest-bound withdrawal evidence under
+  `plans/incidents/<incident-id>/`; source changes or unrelated evidence fail.
+- The stable incident runbook records owner, non-initiating approval authority,
+  30-minute acknowledgement target, triggers, communication locations, retry
+  matrix, retention, first-GA roll-forward, and closure requirements.
+- Focused evidence:
+  `uv run --project verification --locked python -m sifr_verify areas run
+  --area distribution_release --suite incident-governance` passes the
+  eight-scenario recovery module; `demos/stable_incident_recovery_demo.sh`
+  demonstrates burned-generation resume, forced rollback recovery through both
+  client paths, immutable-installer execution, and first-GA roll-forward.
