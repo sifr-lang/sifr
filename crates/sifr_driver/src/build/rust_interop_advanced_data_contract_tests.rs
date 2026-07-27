@@ -25,7 +25,7 @@ class ArrowRecordBatch:
 @rust.zero_copy(owner=columns, view=sifr_arrow_bridge.record_batch.RecordBatchView)
 @rust.view(owner=columns, lifetime=owner, mutability=immutable, send=True, sync=True, data=arrow_record_batch, schema=sifr_arrow_bridge.schema.RecordBatch, ownership=borrowed)
 @rust(sifr_arrow_bridge.record_batch_from_columns, panic=map_error(sifr_arrow_bridge.panic.map))
-def record_batch(columns: bytes) -> Result[ArrowRecordBatch, ArrowError]:
+def record_batch(columns: bytes) -> Result[ArrowRecordBatch, ArrowError | RustPanicError]:
     return ArrowRecordBatch(ptr=0)
 "#;
 
@@ -39,7 +39,7 @@ class TensorView:
 @rust.zero_copy(owner=input, view=sifr_tensor_bridge.tensor.TensorView)
 @rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=tensor, dtype=f32, rank=2, shape=[2, 3], layout=strided, strides=[3, 1], device=cpu, ownership=borrowed)
 @rust(sifr_tensor_bridge.tensor_from_bytes, panic=map_error(sifr_tensor_bridge.panic.map))
-def tensor(input: bytes) -> Result[TensorView, TensorError]:
+def tensor(input: bytes) -> Result[TensorView, TensorError | RustPanicError]:
     return TensorView(ptr=0)
 "#;
 
@@ -53,7 +53,7 @@ class TensorView:
 @rust.zero_copy(owner=input, view=sifr_tensor_bridge.dlpack.DlpackView)
 @rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=dlpack, dtype=f32, rank=2, shape=[2, 3], layout=strided, strides=[3, 1], device=cpu, ownership=transfer, protocol=sifr_tensor_bridge.dlpack.Capsule)
 @rust(sifr_tensor_bridge.dlpack_from_bytes, panic=map_error(sifr_tensor_bridge.panic.map))
-def dlpack(input: bytes) -> Result[TensorView, TensorError]:
+def dlpack(input: bytes) -> Result[TensorView, TensorError | RustPanicError]:
     return TensorView(ptr=0)
 "#;
 
@@ -489,6 +489,7 @@ impl SignatureTarget for RustBridgeSignatureContract {
         self.owner = RustInteropOwner::Function {
             name: name.to_string(),
         };
+        self.panic_error = sifr_codegen::RustBridgePanicErrorContract::OrdinaryAndWrapper;
         self
     }
 }

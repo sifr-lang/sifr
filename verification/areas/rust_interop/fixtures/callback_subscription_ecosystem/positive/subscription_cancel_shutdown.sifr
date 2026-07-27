@@ -8,7 +8,7 @@ class SubscriptionError(Error):
 
 @rust.opaque(type=bridge.events.Subscription, send=True, sync=False, clone=none, close=async_close)
 class Subscription:
-    @rust(bridge.events.cancel, panic=map_error(bridge.events.map_panic))
+    @rust(bridge.events.cancel)
     async def aclose(own self) -> Result[None, SubscriptionError | RustPanicError]: ...
 
 @rust.callback(backpressure=bounded(256), overflow=error, shutdown=drain)

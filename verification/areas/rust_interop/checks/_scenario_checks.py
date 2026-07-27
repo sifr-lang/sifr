@@ -45,6 +45,17 @@ REQUIRED_SCENARIO_EXAMPLES = {
             "tokens": ("rust-panic-abort", "panic = \"abort\"", "legacy_backend"),
         },
     },
+    "panic_boundary_wrapper_emission": {
+        "panic_wrapper_runtime": {
+            "tokens": (
+                "RustPanicErrorBridge",
+                "mapper_panics",
+                "--locked",
+                "--offline",
+                "--frozen",
+            ),
+        },
+    },
     "proc_macro_trust": {
         "proc_macro_trust_package": {
             "tokens": ("rust-proc-macros", "rust-build-scripts", "serde_derive", "prost-build"),
@@ -222,6 +233,57 @@ def run_self_test() -> tuple[int, str | None]:
         if not any("Cargo.lock is required" in failure for failure in lock_failures):
             return cases, f"missing lockfile was accepted: {lock_failures}"
         cases += 1
+
+    source = AREA_ROOT / "fixtures/panic_boundary_wrapper_emission"
+    raw_examples = {"panic_wrapper_runtime": "examples/panic_wrapper_runtime"}
+    with tempfile.TemporaryDirectory(prefix="sifr-rust-panic-scenario-self-test-") as raw_temp:
+        fixture_dir = Path(raw_temp) / "panic_boundary_wrapper_emission"
+        shutil.copytree(source, fixture_dir)
+
+        baseline_failures = []
+        validate_scenario_examples(
+            baseline_failures,
+            "panic_boundary_wrapper_emission",
+            fixture_dir,
+            raw_examples,
+        )
+        if baseline_failures:
+            return cases, f"panic wrapper baseline failed: {baseline_failures}"
+        cases += 1
+
+        mutation_cases = (
+            (
+                "panic wrapper unnecessary trust",
+                "examples/panic_wrapper_runtime/sifr.toml",
+                'bridges = ["src/bridges"]',
+                'bridges = ["src/bridges"]\n\n[trust]\nunsafe-rust-bridges = ["src/bridges/wrapper.rs"]',
+                "must not grant unsafe-rust-bridges",
+            ),
+            (
+                "panic wrapper runtime path drift",
+                "examples/panic_wrapper_runtime/Cargo.toml",
+                'path = "../../../../../../../crates/sifr_runtime"',
+                'path = "../missing-runtime"',
+                "must declare sifr_runtime path",
+            ),
+        )
+        for name, relative_path, before, after, expected in mutation_cases:
+            path = fixture_dir / relative_path
+            original = path.read_text(encoding="utf-8")
+            if before not in original:
+                return cases, f"{name} self-test setup token is missing"
+            path.write_text(original.replace(before, after, 1), encoding="utf-8")
+            failures = []
+            validate_scenario_examples(
+                failures,
+                "panic_boundary_wrapper_emission",
+                fixture_dir,
+                raw_examples,
+            )
+            path.write_text(original, encoding="utf-8")
+            if not any(expected in failure for failure in failures):
+                return cases, f"{name} did not report {expected!r}: {failures}"
+            cases += 1
 
     return cases, None
 
@@ -419,6 +481,26 @@ def _validate_scenario_manifests(
             "unsafe-rust-bridges",
             ["src/bridges/types.rs"],
         )
+    elif fixture_id == "panic_boundary_wrapper_emission":
+        if rust.get("bridges") != ["src/bridges"]:
+            failures.append(
+                f"{fixture_id}: {raw_path}/sifr.toml must declare "
+                '[rust] bridges = ["src/bridges"]'
+            )
+        _require_path_dependency(
+            failures,
+            fixture_id,
+            raw_path,
+            dependencies,
+            "sifr_runtime",
+            "../../../../../../../crates/sifr_runtime",
+        )
+        unsafe_bridges = trust.get("unsafe-rust-bridges", []) if isinstance(trust, dict) else []
+        if unsafe_bridges:
+            failures.append(
+                f"{fixture_id}: {raw_path}/sifr.toml must not grant "
+                "unsafe-rust-bridges for the safe wrapper scenario"
+            )
     elif fixture_id == "same_workspace_crate":
         _require_path_dependency(failures, fixture_id, raw_path, dependencies, "workspace_hash", "rust/workspace_hash")
         _require_member(failures, fixture_id, raw_path, workspace_members, "rust/workspace_hash")

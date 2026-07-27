@@ -144,8 +144,8 @@ normative and must not be broadened.
 | Item | Status | Evidence |
 | --- | --- | --- |
 | `certification_0` | merged | [PR #3026](https://github.com/sifr-lang/sifr/pull/3026) |
-| `certification_1` | review | [PR #3027](https://github.com/sifr-lang/sifr/pull/3027); executable recursive bridge-type roundtrips |
-| `certification_2` | blocked | starts after `certification_1` merges |
+| `certification_1` | merged | [PR #3027](https://github.com/sifr-lang/sifr/pull/3027); executable recursive bridge-type roundtrips |
+| `certification_2` | in progress | generated panic wrapper emission and mapper fallback |
 | `certification_3` | blocked | starts after `certification_2` merges |
 | `certification_4` | blocked | starts after `certification_3` merges |
 | `certification_5` | blocked | starts after `certification_4` merges |
@@ -287,7 +287,7 @@ Implementation checklist:
   retain the existing unsupported-container diagnostic evidence.
 - [x] Promote only `bridge_type_matrix` in both matrices, structured stable
   claims, public docs, architecture docs, fixture provenance, and counts.
-- [ ] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, Opus review rounds to
   satisfaction, merge the PR, and unblock only `certification_2`.
 
 Post-item inventory:
@@ -314,8 +314,97 @@ Review and gate evidence:
 - The authoritative `create-pr` profile passed on the warm rerun, including
   Rust interop `10/10` and E2E `131/131`; the first attempt was functionally
   green but exceeded the Python-interop step budget.
-- Draft [PR #3027](https://github.com/sifr-lang/sifr/pull/3027) is the
-  certification PR; `certification_2` remains blocked until it merges.
+- The authoritative `merge` profile passed all 24 lane steps, including the
+  unchanged performance budgets, Rust interop `10/10`, generated-build
+  evidence, E2E, and 261 hardening variants with zero failures; only the two
+  governed ASan capability skips remained.
+- Final exact-head
+  [round 6](../../reviews/active/rust-interop-certification-1-review-round6.md)
+  is `SATISFIED`.
+- [PR #3027](https://github.com/sifr-lang/sifr/pull/3027) merged as
+  `53fa84b708`; its final full merge profile passed every lane step, including
+  Rust interop `10/10`, the mandatory 41-test generated-build suite, E2E
+  `674/674`, and 261 hardening variants.
+
+#### certification_2: Panic Boundary Wrapper Emission
+
+Implementation checklist:
+
+- [x] Extend Result bridge contracts so `E | RustPanicError` keeps `E` as the
+  Rust target error representation while reserving `RustPanicError` for
+  generated wrapper failures.
+- [x] Emit sync generated wrappers that catch Rust target panics, redact panic
+  payloads, map ordinary bridge errors, and place the original panic in the
+  declared Sifr error union.
+- [x] Implement `panic=map_error(path)` through a second protected mapper call;
+  mapper panics must fall back to the original redacted `RustPanicError`.
+- [x] Reject mapper signatures that are not
+  `fn(RustPanicErrorBridge) -> E` with `E: Display`, and reject declarations
+  whose error channel cannot represent the mapper-panic fallback.
+- [x] Add a locked/offline runtime package scenario plus direct negative
+  evidence for invalid mapper signatures and unrepresentable fallback
+  declarations.
+- [x] Bind both evidence directions to mandatory merge-lane tests, promote only
+  `panic_boundary_wrapper_emission`, and update structured claims, public and
+  architecture docs, provenance, and inventory counts.
+- [ ] Run focused and authoritative local gates, Opus review rounds to
+  satisfaction, merge the PR, and unblock only `certification_3`.
+
+Post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 50 passing and 22 planned evidence directions;
+- categories: 18 `supported`, 6 `supported-through-bridge`, 1
+  `unsupported-by-design`, and 11 `future-owned-by-separate-phase`;
+- execution kinds remain 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+  and
+- 25 structured stable claims.
+
+Focused implementation evidence:
+
+- the locked `panic_wrapper_runtime` package executes success, ordinary-error,
+  mapped-panic, mapper-panic fallback, and directly declared
+  `RustPanicError` paths through generated release code;
+- the paired generated-build negative test rejects an invalid
+  `RustPanicErrorBridge` mapper signature, while the same mandatory driver
+  suite directly rejects an error channel without a representable fallback
+  using `SIFR-RUST-PANIC-0001`; and
+- the complete Rust-interop area passes all 10 variants, with matrix self-test
+  coverage increased to 95 mutation cases.
+
+Review and gate evidence:
+
+- Opus review rounds
+  [1](../../reviews/active/rust-interop-certification-2-review-round1.md),
+  [2](../../reviews/active/rust-interop-certification-2-review-round2.md),
+  [3](../../reviews/active/rust-interop-certification-2-review-round3.md),
+  [4](../../reviews/active/rust-interop-certification-2-review-round4.md),
+  [5](../../reviews/active/rust-interop-certification-2-review-round5.md), and
+  [6](../../reviews/active/rust-interop-certification-2-review-round6.md)
+  requested revisions that were closed in sequence.
+- Exact working-tree
+  [round 7](../../reviews/active/rust-interop-certification-2-review-round7.md)
+  is `SATISFIED` with no milestone blockers.
+- Exact committed PR-head
+  [round 8](../../reviews/active/rust-interop-certification-2-review-round8.md)
+  is `SATISFIED` with no PR blockers.
+- Final merge-readiness
+  [round 9](../../reviews/active/rust-interop-certification-2-review-round9.md)
+  is `SATISFIED`. The merge lane passed every functional step and stopped only
+  at three unchanged `check`-mode performance medians under sustained unrelated
+  host load. The same five-sample runner reproduced all three misses with a
+  retained compiler binary that predates both `certification_1` merge and all
+  `certification_2` commits; that control was slower than the PR head on the
+  arithmetic case. Opus independently verified that the fixtures contain no
+  Rust interop, terminate before codegen/bridge planning, and demonstrate
+  environmental timing drift rather than a PR-attributable regression.
+- `scripts/run_all_tests.sh --profile create-pr` passes every blocking lane:
+  Rust interop `10/10`, Python interop `19/19`, runtime platform 28 variants,
+  all crate smoke suites, generated-code quality `5/5`, and create-PR E2E
+  `131/131`.
 
 `certification_3` may use bridge-version 1 call-scoped callbacks. Any callback
 behavior that truly requires the bridge-version 2 structural call contract

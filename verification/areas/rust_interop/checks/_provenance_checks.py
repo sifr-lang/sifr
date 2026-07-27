@@ -163,6 +163,8 @@ def validate_evidence_provenance(
         test_name,
         suite_id,
         test_definition.executes_cargo_probe,
+        test_definition.executes_runtime_observed,
+        evidence.get("expected_result"),
     )
 
     weakest = _weakest_executing_profile(profiles, suite_id, test_ignored)
@@ -390,13 +392,16 @@ def _validate_execution_kind_source(
     test_name: str,
     suite_id: str,
     executes_cargo_probe: bool,
+    executes_runtime_observed: bool,
+    expected_result: Any,
 ) -> None:
     is_runtime_test = test_file.startswith("crates/sifr_runtime/")
     if execution_kind == "runtime-observed":
-        if not is_runtime_test:
+        is_negative_diagnostic = side == "negative" and expected_result == "diagnostic"
+        if not is_runtime_test and not executes_runtime_observed and not is_negative_diagnostic:
             failures.append(
                 f"{label}.validation runtime-observed evidence must execute a "
-                "runtime test"
+                "runtime test or carry the generated-runtime execution marker"
             )
         return
     if is_runtime_test:
@@ -451,7 +456,9 @@ def run_self_test() -> tuple[int, str | None]:
             "#[cfg(all(\n    feature = \"special\",\n    unix,\n))]\n"
             "#[test]\nfn multiline_feature_test() {}\n"
             "#[doc = \"sifr-evidence: executes-cargo-probe\"]\n"
-            "#[test]\nfn cargo_probe_test() {}\n",
+            "#[test]\nfn cargo_probe_test() {}\n"
+            "#[doc = \"sifr-evidence: executes-runtime-observed\"]\n"
+            "#[test]\nfn generated_runtime_test() {}\n",
             encoding="utf-8",
         )
         (test_file.parents[1] / "Cargo.toml").write_text(
@@ -740,6 +747,26 @@ def run_self_test() -> tuple[int, str | None]:
         ):
             return len(cases) + 2, "weak runtime-observed source was accepted"
 
+        generated_runtime = copy.deepcopy(base)
+        generated_runtime["validation"]["test_name"] = "generated_runtime_test"
+        generated_runtime_failures: list[str] = []
+        validate_evidence_provenance(
+            generated_runtime_failures,
+            repo_root=repo_root,
+            profiles=profiles,
+            fixture_id="generated_runtime_source",
+            side="positive",
+            evidence=generated_runtime,
+            execution_kind="runtime-observed",
+            used_tests={},
+        )
+        if generated_runtime_failures:
+            return (
+                len(cases) + 3,
+                "generated runtime marker was rejected: "
+                f"{generated_runtime_failures}",
+            )
+
         nonruntime_kind_failures: list[str] = []
         _validate_execution_kind_source(
             nonruntime_kind_failures,
@@ -750,12 +777,14 @@ def run_self_test() -> tuple[int, str | None]:
             "runtime_test",
             "sifr_runtime",
             False,
+            False,
+            "runtime-error-state",
         )
         if not any(
             "contract-only evidence cannot use a runtime test" in failure
             for failure in nonruntime_kind_failures
         ):
-            return len(cases) + 3, "runtime test was accepted as contract-only evidence"
+            return len(cases) + 4, "runtime test was accepted as contract-only evidence"
 
         cargo_negative_runtime_failures: list[str] = []
         _validate_execution_kind_source(
@@ -767,12 +796,14 @@ def run_self_test() -> tuple[int, str | None]:
             "runtime_test",
             "sifr_runtime",
             False,
+            False,
+            "diagnostic",
         )
         if not any(
             "cargo-probe evidence cannot use a runtime test" in failure
             for failure in cargo_negative_runtime_failures
         ):
-            return len(cases) + 4, "runtime test was accepted as negative cargo evidence"
+            return len(cases) + 5, "runtime test was accepted as negative cargo evidence"
 
         cargo_strength_failures: list[str] = []
         validate_evidence_provenance(
@@ -786,7 +817,7 @@ def run_self_test() -> tuple[int, str | None]:
             used_tests={},
         )
         if not any("explicit probe test" in failure for failure in cargo_strength_failures):
-            return len(cases) + 5, "weak positive cargo-probe source was accepted"
+            return len(cases) + 6, "weak positive cargo-probe source was accepted"
 
         cargo_probe_control = copy.deepcopy(base)
         cargo_probe_control["validation"]["test_name"] = "cargo_probe_test"
@@ -803,7 +834,7 @@ def run_self_test() -> tuple[int, str | None]:
         )
         if cargo_probe_control_failures:
             return (
-                len(cases) + 6,
+                len(cases) + 7,
                 f"explicit cargo-probe marker was rejected: {cargo_probe_control_failures}",
             )
 
@@ -823,11 +854,11 @@ def run_self_test() -> tuple[int, str | None]:
             used_tests={},
         )
         if ignored_failures:
-            return len(cases) + 7, f"valid ignored provenance was rejected: {ignored_failures}"
+            return len(cases) + 8, f"valid ignored provenance was rejected: {ignored_failures}"
         outcome_cases, outcome_error = run_outcome_self_test()
         if outcome_error is not None:
-            return len(cases) + 8, outcome_error
-        return len(cases) + 8 + outcome_cases, None
+            return len(cases) + 9, outcome_error
+        return len(cases) + 9 + outcome_cases, None
 
 
 def _self_test_profiles() -> dict[str, dict[str, Any]]:

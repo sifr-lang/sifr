@@ -1,0 +1,15 @@
+# fixture: panic_boundary_wrapper_emission
+# scenario-example: panic_wrapper_runtime
+
+[package]
+name = "panic-wrapper-runtime"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[rust]
+bridge-version = 1
+bridges = ["src/bridges"]
+direct-crate-bindings = true

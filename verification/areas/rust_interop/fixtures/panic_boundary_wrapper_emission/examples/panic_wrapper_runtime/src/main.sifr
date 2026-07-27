@@ -1,0 +1,87 @@
+# fixture: panic_boundary_wrapper_emission
+# scenario-example: panic_wrapper_runtime
+# execution-kind: runtime-observed
+# expected-result: mapped-and-redacted-fallback
+
+class PanicMapped(Error):
+    message: str
+
+type PanicSurface = PanicMapped | RustPanicError
+
+@rust(bridge.wrapper.may_panic, panic=map_error(bridge.wrapper.map_panic))
+def mapped_call(input: str) -> Result[str, PanicMapped | RustPanicError]: ...
+
+@rust(bridge.wrapper.may_panic, panic=map_error(bridge.wrapper.mapper_panics))
+def fallback_call(input: str) -> Result[str, PanicMapped | RustPanicError]: ...
+
+@rust(bridge.wrapper.may_panic)
+def declared_fallback_call(input: str) -> Result[str, PanicMapped | RustPanicError]: ...
+
+@rust(bridge.wrapper.may_panic, panic=map_error(bridge.wrapper.map_panic))
+def alias_mapped_call(input: str) -> Result[str, PanicSurface]: ...
+
+def verify_panic_wrapper_runtime() -> str:
+    success: str = ""
+    try:
+        success_value: str = mapped_call("safe")
+        success = success_value
+    except PanicMapped as error:
+        success = "unexpected mapped error: " + error.message
+    except RustPanicError as error:
+        success = "unexpected panic error: " + error.message
+    assert success == "ok:safe"
+
+    ordinary_error: str = ""
+    try:
+        unexpected_ordinary: str = mapped_call("error")
+        ordinary_error = unexpected_ordinary
+    except PanicMapped as error:
+        ordinary_error = error.message
+    except RustPanicError as error:
+        ordinary_error = "unexpected panic error: " + error.message
+    assert ordinary_error == "ordinary bridge error"
+
+    mapped_panic: str = ""
+    try:
+        unexpected_mapped: str = mapped_call("panic")
+        mapped_panic = unexpected_mapped
+    except PanicMapped as error:
+        mapped_panic = error.message
+    except RustPanicError as error:
+        mapped_panic = "unexpected panic fallback: " + error.message
+    assert mapped_panic == "mapped: Rust bridge panicked"
+
+    fallback_panic: str = ""
+    try:
+        unexpected_fallback: str = fallback_call("panic")
+        fallback_panic = unexpected_fallback
+    except RustPanicError as error:
+        fallback_panic = error.message
+    except PanicMapped as error:
+        fallback_panic = "unexpected mapped panic: " + error.message
+    assert fallback_panic == "Rust bridge panicked"
+
+    declared_fallback: str = ""
+    try:
+        unexpected_declared: str = declared_fallback_call("panic")
+        declared_fallback = unexpected_declared
+    except RustPanicError as error:
+        declared_fallback = error.message
+    except PanicMapped as error:
+        declared_fallback = "unexpected ordinary error: " + error.message
+    assert declared_fallback == "Rust bridge panicked"
+
+    alias_mapped: str = ""
+    try:
+        unexpected_alias: str = alias_mapped_call("panic")
+        alias_mapped = unexpected_alias
+    except PanicMapped as error:
+        alias_mapped = error.message
+    except RustPanicError as error:
+        alias_mapped = "unexpected alias fallback: " + error.message
+    assert alias_mapped == "mapped: Rust bridge panicked"
+
+    return success + "|" + ordinary_error + "|" + mapped_panic + "|" + fallback_panic + "|" + declared_fallback + "|" + alias_mapped
+
+def main() -> None:
+    print(verify_panic_wrapper_runtime())

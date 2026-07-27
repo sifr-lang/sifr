@@ -159,8 +159,8 @@
       "capability": "generated panic wrapper emission, mapper signature validation, and mapper-panic fallback behavior",
       "required_crates": [],
       "execution_kind": "runtime-observed",
-      "positive_evidence": {"id": "generated_wrapper_maps_panic_to_declared_error", "status": "planned"},
-      "negative_evidence": {"id": "invalid_map_error_signature_rejected", "status": "planned"}
+      "positive_evidence": {"id": "generated_wrapper_maps_panic_to_declared_error", "status": "passing"},
+      "negative_evidence": {"id": "invalid_map_error_signature_rejected", "status": "passing"}
     },
     {
       "id": "panic_abort_profile",

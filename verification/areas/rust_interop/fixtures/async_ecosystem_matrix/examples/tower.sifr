@@ -6,7 +6,7 @@
 class PackageExampleError(Error):
     message: str
 
-@rust(tower.Service.call, panic=map_error(bridge.tower.map_panic))
+@rust(tower.Service.call)
 async def tower_service_call(request: bytes) -> Result[bytes, PackageExampleError | RustPanicError]: ...
 
 async def verify_tower_package() -> Result[bytes, PackageExampleError | RustPanicError]:

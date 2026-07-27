@@ -82,14 +82,26 @@ In particular, `zero_copy_bytes`, `zero_copy_view_matrix`,
 contract-only. The runtime-observed deferrals
 `advanced_data_runtime_matrix`, `async_runtime_reqwest`,
 `callback_subscription_ecosystem`, `callbacks_call_scoped`,
-`opaque_resource_matrix`, `panic_boundary_wrapper_emission`, and
-`zero_copy_runtime_matrix` are future-owned, planned, and unadvertised until
+`opaque_resource_matrix`, and `zero_copy_runtime_matrix` are future-owned,
+planned, and unadvertised until
 their runtime evidence passes.
 
 `bridge_type_matrix` is cargo-probed through generated package glue. Its
 certified bridge covers nested Serde/JSON values, display-mapped `thiserror`
 errors, byte buffers, and recursively nested dictionary/list values. Sifr
 `dict` iteration order remains unspecified across this bridge.
+
+`panic_boundary_wrapper_emission` executes synchronous generated package glue.
+Target panics are caught and redacted, `panic=map_error(path)` Rust adapters are
+signature-probed as `fn(RustPanicErrorBridge) -> E` with `E: Display`, mapper
+calls run behind a second protected boundary, and a mapper panic returns the
+original redacted `RustPanicError`. The compiler rejects mapper signatures that
+do not consume `RustPanicErrorBridge` and Result error channels that cannot
+represent both the mapped error and fallback. Panic recognition is nominal,
+including through aliases; similarly named errors and wrapper-only
+`Result[T, RustPanicError]` channels are rejected. Async
+`panic=map_error(path)` remains rejected until async panic-boundary emission is
+certified by its own runtime row.
 
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |
@@ -107,6 +119,7 @@ errors, byte buffers, and recursively nested dictionary/list values. Sifr
 | `close_after_use` | `supported` | `runtime-observed` |
 | `bridge_version_mismatch` | `supported` | `compiler-diagnostic` |
 | `panic_boundary` | `supported` | `contract-only` |
+| `panic_boundary_wrapper_emission` | `supported` | `runtime-observed` |
 | `panic_abort_profile` | `supported` | `contract-only` |
 | `async_runtime_core` | `supported` | `contract-only` |
 | `async_ecosystem_matrix` | `supported` | `cargo-probe` |
@@ -187,9 +200,15 @@ Async Rust interop must be declared on an `async def`. By default, returned futu
 class HttpError(Error):
     message: str
 
-@rust(bridge.http.fetch_text, panic=map_error(bridge.http.map_panic))
+@rust(bridge.http.fetch_text)
 async def fetch_text(url: str) -> Result[str, HttpError | RustPanicError]: ...
 ```
+
+The union member reserves the declared error surface, but current async
+code generation does not catch panics while polling the returned Rust future.
+Only synchronous generated panic containment is certified.
+`panic=map_error(path)` is therefore rejected on `async def` until generated
+async panic wrappers receive runtime certification.
 
 Blocking or CPU-heavy Rust calls are never hidden inside async scheduler paths. Declare them explicitly with the existing Sifr blocking or CPU-heavy annotations and call them through the appropriate offload workflow.
 

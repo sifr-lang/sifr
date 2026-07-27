@@ -215,10 +215,11 @@ only their declared compile-time contracts; runtime cancellation and shutdown
 remain in the downstream rows. The ecosystem portions, such as
 `opaque_resource_matrix`, `async_runtime_reqwest`, and
 `callback_subscription_ecosystem`, remain with the separate runtime ecosystem
-certification issue. `panic_boundary_wrapper_emission` also remains package
-interop certification unless stdlib-native boundary work needs generated
-panic-wrapper evidence; trusted sysroot declarations may instead keep panic
-handling as stdlib-owned poisoning or error-conversion evidence.
+certification issue. The package-owned `panic_boundary_wrapper_emission` row
+now certifies synchronous generated wrappers, including protected mapper
+fallback. Trusted sysroot declarations may still keep panic handling as
+stdlib-owned poisoning or error-conversion evidence; async package wrappers
+remain behind their runtime rows.
 
 Retained compiler-native stdlib glue is guarded separately by
 `internal_docs/stdlib_retained_compiler_intrinsics.toml` and

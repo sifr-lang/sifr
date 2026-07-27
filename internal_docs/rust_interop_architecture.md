@@ -103,7 +103,13 @@ def crc32(data: bytes) -> uint32: ...
 
 `crc32fast.hash` resolves to a direct Cargo dependency root named `crc32fast` and Rust path `crc32fast::hash`.
 
-Direct binding is allowed only when the target signature is bridge-compatible without adaptation. If the Rust crate exposes a non-compatible API, the package author must write a package-local bridge. Non-`Result` direct bindings require an explicit panic policy such as `panic=trusted_no_panic`; otherwise they must expose `Result[..., RustPanicError]`.
+Direct binding is allowed only when the target signature is bridge-compatible
+without adaptation. If the Rust crate exposes a non-compatible API, the
+package author must write a package-local bridge. Non-`Result` direct bindings
+require an explicit panic policy such as `panic=trusted_no_panic`. Fallible
+direct bindings must declare distinct ordinary-error and panic members, such
+as `Result[T, E | RustPanicError]`; a wrapper-only
+`Result[T, RustPanicError]` is rejected.
 
 The body of a Rust interop declaration is an ellipsis-only stub body: exactly
 one ellipsis statement. The compiler derives generated behavior from the
@@ -331,7 +337,7 @@ They are targeted through normal dotted paths:
 
 ```sifr
 @rust(tokenizer_backend.encode, panic=map_error(bridge.tokenizer.map_panic))
-def encode(text: str) -> Result[Tokenized, TokenizeError]: ...
+def encode(text: str) -> Result[Tokenized, TokenizeError | RustPanicError]: ...
 ```
 
 ## Compiler Model
@@ -594,39 +600,75 @@ Every fallible Rust call exposed to Sifr returns `Result`. Panics are not user e
 Every package-authored `@rust` declaration declares its panic surface in the
 Sifr source.
 
-Result-returning functions convert caught Rust panics to `RustPanicError`, and that error must enter the declared Sifr error channel through one of:
+Generated synchronous Result-returning functions convert caught Rust panics to
+`RustPanicError`.
+Their declared Sifr error channel must have distinct ordinary-error and panic
+members, such as `Result[T, E | RustPanicError]`. A wrapper-only
+`Result[T, RustPanicError]` is rejected because ordinary Rust `Err` values
+cannot be represented honestly.
 
-- a declared union/member error type such as `Result[T, E | RustPanicError]`,
-- a declared `panic=map_error` adapter that maps `RustPanicError` into the public error type.
-
-`panic=map_error` names a Sifr or bridge adapter resolved through the same dotted-path rules as `@rust` targets:
+For synchronous declarations, `panic=map_error` may additionally map the
+redacted panic into `E`. It does not replace the `RustPanicError` member:
+generated glue must retain that member as the fallback if the mapper itself
+panics. The mapper names a Rust bridge adapter resolved through the same
+dotted-path rules as `@rust` targets:
 
 ```sifr
 @rust(bridge.tokenizer.encode, panic=map_error(bridge.tokenizer.map_panic))
-def encode(text: str) -> Result[Tokenized, TokenizeError]: ...
+def encode(text: str) -> Result[Tokenized, TokenizeError | RustPanicError]: ...
 ```
 
-The adapter must be non-async, non-blocking, and shape-checked:
+The Rust adapter must be non-async and shape-checked as
+`fn map_panic(error: RustPanicErrorBridge) -> E`, where `E: Display`.
+Sifr-authored mapper adapters are not part of the currently certified
+surface.
 
-- Rust bridge adapter: `fn map_panic(error: RustPanicErrorBridge) -> EBridge`
-- Sifr adapter: `def map_panic(error: RustPanicError) -> E`
+If the mapper panics, generated glue ignores the failed mapper and surfaces
+the original `RustPanicError` through a stable `SIFR-RUST-PANIC-*` path. If
+the public error channel cannot represent that original panic after mapper
+failure, the declaration is rejected. Async `panic=map_error(path)` is
+rejected until an async catch-and-map wrapper has its own runtime-observed
+certification.
 
-If the mapper panics, generated glue ignores the failed mapper and surfaces the original `RustPanicError` through a stable `SIFR-RUST-PANIC-*` path. If the public error channel cannot represent that original panic after mapper failure, the declaration is rejected.
-
-The initial compile-time panic contract validates the public panic surface and `panic=map_error(path)` shape. Full generated wrapper emission, mapper signature validation, and mapper-panic fallback behavior are future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md) through the `panic_boundary_wrapper_emission` compatibility row.
+The `panic_boundary_wrapper_emission` certification executes synchronous
+generated package wrappers. The compiler catches target panics through
+`sifr_runtime::interop::catch_rust_panic`, exposes only the redacted
+`RustPanicErrorBridge` to a Rust `panic=map_error(path)` adapter, probes the
+adapter as `fn(RustPanicErrorBridge) -> E` with `E: Display`, and catches mapper
+panics behind a second boundary. If mapping fails, generated glue converts the
+original redacted panic into the declared `RustPanicError` union member.
+Declarations whose public error channel cannot represent that fallback are
+rejected. Panic-channel recognition is nominal and resolves aliases; similarly
+named classes do not satisfy it. A wrapper-only `Result[T, RustPanicError]`
+channel is rejected because it has no distinct representation for an ordinary
+Rust `Err`. This certification is synchronous; async `panic=map_error(path)`
+is rejected until async wrapper execution lands through its runtime row.
 
 Non-`Result` functions cannot return a recoverable panic without changing their public type. Package-authored declarations are rejected unless they declare `panic=trusted_no_panic` or `panic=abort` and satisfy the corresponding trust policy. `panic=trusted_no_panic` is a package trust assertion, not a compiler proof, and requires `[trust].rust-no-panic`. `panic=abort` opts into process-aborting behavior through `[trust].rust-panic-abort` and does not preserve recoverable interop semantics.
 
-Generated wrappers catch panics at the boundary:
+Generated synchronous wrappers catch both the target and mapper through
+`sifr_runtime::interop::catch_rust_panic`. While one or more recoverable
+boundaries are active, the runtime installs one forwarding hook and suppresses
+output only on protected threads. It restores the exact prior hook after the
+last boundary exits; a thread-local nesting depth and a short-lived hook-state
+lock make nested and concurrent boundaries reentrant without serializing user
+code. Generated Rayon fan-out shares one `SilentPanicBoundary` across the
+operation, so per-item catches only update worker-local depth and never acquire
+the global hook-state lock. CPU-offload workers use the same boundary, so they
+cannot replace or race the interop hook.
+Conceptually:
 
 ```rust
-pub fn call_encode(text: &str) -> Result<Tokenized, NativeErrorOr<TokenizeError>> {
-    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        tokenizer_backend::encode(text)
-    })) {
+pub fn call_encode(
+    text: &str,
+) -> Result<Tokenized, TokenizeErrorOrRustPanicError> {
+    match sifr_runtime::interop::catch_rust_panic(|| tokenizer_backend::encode(text)) {
         Ok(Ok(value)) => Ok(value),
-        Ok(Err(error)) => Err(NativeErrorOr::User(error)),
-        Err(payload) => Err(NativeErrorOr::RustPanic(RustPanicError::from_payload(payload))),
+        Ok(Err(error)) => Err(TokenizeErrorOrRustPanicError::TokenizeError(error)),
+        Err(panic) => match sifr_runtime::interop::catch_rust_panic(|| map_panic(panic.clone())) {
+            Ok(mapped) => Err(TokenizeErrorOrRustPanicError::TokenizeError(mapped)),
+            Err(_) => Err(TokenizeErrorOrRustPanicError::RustPanicError(panic)),
+        },
     }
 }
 ```
@@ -635,7 +677,15 @@ pub fn call_encode(text: &str) -> Result<Tokenized, NativeErrorOr<TokenizeError>
 
 Generated wrappers use `AssertUnwindSafe` at the boundary because opaque handles and mutable bridge state are commonly not `UnwindSafe`. The generated wrapper marks the opaque receiver plus any mutable or owned opaque handles passed to the Rust call as poisoned automatically when `catch_unwind` returns `Err`; bridge authors do not implement poisoning manually and must not depend on additional bridge code running after a panic. Re-entering a poisoned handle returns a stable `SIFR-RUST-PANIC-*` error instead of calling Rust again.
 
-The initial panic-boundary contract surface enforces that package-authored Result-returning Rust interop declarations either expose `RustPanicError`, declare `panic=map_error(path)`, or use an explicit trusted/abort panic policy. Package-authored non-`Result` declarations require `panic=trusted_no_panic` or `panic=abort`; `panic=abort` requires both `[trust].rust-panic-abort` evidence and a selected Cargo profile whose panic strategy is `abort`. Runtime bridge helpers redact panic payloads when converting caught panics into `RustPanicErrorBridge`.
+The initial panic-boundary contract surface enforces that package-authored
+Result-returning Rust interop declarations expose a distinct
+`RustPanicError` member alongside their ordinary error type. Synchronous
+declarations may also declare `panic=map_error(path)` while retaining that
+fallback. Package-authored non-`Result` declarations require
+`panic=trusted_no_panic` or `panic=abort`; `panic=abort` requires both
+`[trust].rust-panic-abort` evidence and a selected Cargo profile whose panic
+strategy is `abort`. Runtime bridge helpers redact panic payloads when
+converting caught panics into `RustPanicErrorBridge`.
 
 Private sysroot stdlib declarations are compiled in a synthetic compiler-owned
 package context. A private `_sifr.*` declaration that targets a direct

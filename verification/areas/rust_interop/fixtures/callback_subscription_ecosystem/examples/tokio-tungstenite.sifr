@@ -10,7 +10,7 @@ class WebSocket:
     url: str
     protocol: str
 
-@rust(tokio_tungstenite.connect_async, panic=map_error(bridge.tokio_tungstenite.map_panic))
+@rust(tokio_tungstenite.connect_async)
 async def tokio_tungstenite_connect(url: str) -> Result[WebSocket, PackageExampleError | RustPanicError]: ...
 
 async def verify_tokio_tungstenite_package() -> Result[WebSocket, PackageExampleError | RustPanicError]:

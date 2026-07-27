@@ -18,8 +18,8 @@ const ASYNC_HASH_SOURCE: &str = r#"
 class RustError(Error):
     message: str
 
-@rust(native.hash, panic=map_error(bridge.hash.map_panic))
-async def hash(input: str) -> Result[str, RustError]:
+@rust(native.hash)
+async def hash(input: str) -> Result[str, RustError | RustPanicError]:
     await task.sleep(0.0)
     return "ok"
 "#;
@@ -29,8 +29,8 @@ class RustError(Error):
     message: str
 
 @rust.async(thread_affinity=tokio_current_thread)
-@rust(native.hash, panic=map_error(bridge.hash.map_panic))
-async def hash(input: str) -> Result[str, RustError]:
+@rust(native.hash)
+async def hash(input: str) -> Result[str, RustError | RustPanicError]:
     await task.sleep(0.0)
     return "ok"
 "#;
@@ -130,8 +130,8 @@ class RustError(Error):
     message: str
 
 @rust.async(thread_affinity=current_os_thread)
-@rust(native.hash, panic=map_error(bridge.hash.map_panic))
-async def hash(input: str) -> Result[str, RustError]:
+@rust(native.hash)
+async def hash(input: str) -> Result[str, RustError | RustPanicError]:
     await task.sleep(0.0)
     return "ok"
 "#;
@@ -164,8 +164,8 @@ class RustError(Error):
 
 @rust.opaque(type=bridge.Client, thread_affinity=tokio_current_thread)
 class Client:
-    @rust(Self.hash, panic=map_error(bridge.hash.map_panic))
-    async def hash(self, input: str) -> Result[str, RustError]:
+    @rust(Self.hash)
+    async def hash(self, input: str) -> Result[str, RustError | RustPanicError]:
         return "ok"
 "#;
     let mut generated = generated_from_source(source, vec![client_hash_signature_contract()]);
@@ -236,14 +236,18 @@ fn async_backend_root(name: &str, lib_rs: &str) -> PathBuf {
 }
 
 fn hash_signature_contract() -> RustBridgeSignatureContract {
-    signature_contract(
+    let mut error = string_contract();
+    error.sifr_type = "RustError | RustPanicError".to_string();
+    let mut signature = signature_contract(
         vec![param_contract(
             "input",
             RustBridgeParamConvention::Own,
             string_contract(),
         )],
-        result_contract(string_contract(), string_contract()),
-    )
+        result_contract(string_contract(), error),
+    );
+    signature.panic_error = sifr_codegen::RustBridgePanicErrorContract::OrdinaryAndWrapper;
+    signature
 }
 
 fn client_hash_signature_contract() -> RustBridgeSignatureContract {

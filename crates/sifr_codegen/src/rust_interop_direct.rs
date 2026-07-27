@@ -4,9 +4,10 @@ use sifr_ir::{
 use sifr_type_system::Type;
 
 use crate::rust_interop_direct_collections::{
-    bridge_composite_to_sifr_expr, sifr_composite_to_bridge_expr,
+    argument_composite_conversion_required, bridge_composite_to_sifr_expr,
+    composite_conversion_required, sifr_composite_to_bridge_expr,
 };
-use crate::rust_interop_error_mapping::bridge_error_expr;
+use crate::rust_interop_panic::{bridge_declared_error_expr, recoverable_sync_panic_result_expr};
 use crate::{RustExpr, RustParam, RustStmt, RustType};
 
 const BRIDGE_ROOT: &str = "bridge";
@@ -30,12 +31,18 @@ pub(crate) fn rust_interop_function_body(func: &HirFunction) -> Option<Vec<RustS
             .map(|param| direct_rust_arg_expr(param, target))
             .collect(),
     };
-    let value = if direct_rust_function_is_async(func, declaration) {
+    let is_async = direct_rust_function_is_async(func, declaration);
+    let value = if is_async {
         RustExpr::Await(Box::new(call))
     } else {
         call
     };
-    Some(return_stmt_for_type(value, &func.return_type))
+    Some(return_stmt_for_type(
+        value,
+        &func.return_type,
+        declaration,
+        is_async,
+    ))
 }
 
 #[cfg(test)]
@@ -118,20 +125,6 @@ fn is_optional_int(ty: &Type) -> bool {
     optional_inner_type(ty).is_some_and(|inner| inner.resolve_alias() == &Type::Int)
 }
 
-fn argument_composite_conversion_required(ty: &Type) -> bool {
-    optional_inner_type(ty).is_some() || composite_conversion_required(ty)
-}
-
-fn composite_conversion_required(ty: &Type) -> bool {
-    match ty.resolve_alias() {
-        Type::Int => true,
-        Type::List(inner) => composite_conversion_required(inner),
-        Type::Dict(key, _) => key.resolve_alias() == &Type::Str,
-        Type::Union(_) => optional_inner_type(ty).is_some_and(composite_conversion_required),
-        _ => false,
-    }
-}
-
 fn is_python_callback_constructor_target(target: &RustTargetPath) -> bool {
     matches!(
         target.segments.as_slice(),
@@ -201,12 +194,18 @@ pub(crate) fn rust_interop_method_body(func: &HirFunction) -> Option<Vec<RustStm
                 .collect(),
         }
     };
-    let value = if direct_rust_function_is_async(func, declaration) {
+    let is_async = direct_rust_function_is_async(func, declaration);
+    let value = if is_async {
         RustExpr::Await(Box::new(value))
     } else {
         value
     };
-    Some(return_stmt_for_type(value, &func.return_type))
+    Some(return_stmt_for_type(
+        value,
+        &func.return_type,
+        declaration,
+        is_async,
+    ))
 }
 
 fn self_method_call(
@@ -229,14 +228,31 @@ fn self_method_call(
     })
 }
 
-fn return_stmt_for_type(value: RustExpr, return_type: &Type) -> Vec<RustStmt> {
+fn return_stmt_for_type(
+    value: RustExpr,
+    return_type: &Type,
+    declaration: &RustInteropDeclaration,
+    is_async: bool,
+) -> Vec<RustStmt> {
     if return_type == &sifr_type_system::Type::None {
         vec![RustStmt::Expr(value)]
     } else {
-        vec![RustStmt::Return(Some(direct_rust_return_expr(
-            value,
-            return_type,
-        )))]
+        let converted = if is_async {
+            direct_rust_return_expr(value, return_type)
+        } else if let Type::Result(ok, err) = return_type.resolve_alias() {
+            let successful_call =
+                bridge_result_expr(RustExpr::Ident("__sifr_bridge_result".to_string()), ok, err);
+            recoverable_sync_panic_result_expr(
+                value.clone(),
+                return_type,
+                declaration,
+                successful_call,
+            )
+            .unwrap_or_else(|| direct_rust_return_expr(value, return_type))
+        } else {
+            direct_rust_return_expr(value, return_type)
+        };
+        vec![RustStmt::Return(Some(converted))]
     }
 }
 
@@ -266,7 +282,7 @@ fn bridge_result_expr(value: RustExpr, ok_type: &Type, err_type: &Type) -> RustE
                 name: err.to_string(),
                 ty: RustType::Named("_".to_string()),
             }],
-            body: Box::new(bridge_error_expr(
+            body: Box::new(bridge_declared_error_expr(
                 RustExpr::Ident(err.to_string()),
                 err_type,
             )),

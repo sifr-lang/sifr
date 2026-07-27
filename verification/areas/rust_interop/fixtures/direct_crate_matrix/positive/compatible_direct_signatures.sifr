@@ -9,8 +9,11 @@ def blake3_digest(data: bytes) -> bytes: ...
 @rust(sha2.Sha256.digest, panic=trusted_no_panic)
 def sha256_digest(data: bytes) -> bytes: ...
 
+class UuidError(Error):
+    message: str
+
 @rust(uuid.Uuid.parse_str)
-def parse_uuid(text: str) -> Result[str, RustPanicError]: ...
+def parse_uuid(text: str) -> Result[str, UuidError | RustPanicError]: ...
 
 @rust(regex.Regex.is_match, panic=trusted_no_panic)
 def is_match(pattern: str, text: str) -> bool: ...
@@ -18,6 +21,6 @@ def is_match(pattern: str, text: str) -> bool: ...
 def verify_compatible_direct_signatures() -> bytes:
     blake3_digest_result: bytes = blake3_digest(b"sifr-rust-interop")
     sha256_digest_result: bytes = sha256_digest(b"sifr-rust-interop")
-    parse_uuid_result: Result[str, RustPanicError] = parse_uuid("sifr-rust")
+    parse_uuid_result: Result[str, UuidError | RustPanicError] = parse_uuid("sifr-rust")
     is_match_result: bool = is_match("^sifr", "sifr-rust")
     return blake3_digest_result

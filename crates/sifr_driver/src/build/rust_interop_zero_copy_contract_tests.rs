@@ -24,7 +24,7 @@ class BytesView:
 @rust.zero_copy(owner=input, view=bridge.bytes.BytesView)
 @rust.view(owner=input, lifetime=owner, mutability=immutable, send=False, sync=False)
 @rust(bridge.bytes.view, panic=map_error(bridge.bytes.map_panic))
-def hash(input: bytes) -> Result[BytesView, RustError]:
+def hash(input: bytes) -> Result[BytesView, RustError | RustPanicError]:
     return BytesView(ptr=0)
 "#;
 
@@ -75,6 +75,7 @@ fn package_rust_interop_view_send_sync_metadata_reaches_probe_plan() {
 fn package_rust_interop_accepts_async_static_lifetime_view() {
     let source = VALID_ZERO_COPY_SOURCE
         .replace("lifetime=owner", "lifetime=static")
+        .replace(", panic=map_error(bridge.bytes.map_panic)", "")
         .replace("def hash", "async def hash")
         .replace(
             "return BytesView(ptr=0)",
@@ -257,14 +258,16 @@ fn context_with_source(source: &str) -> PackageRustInteropContext {
 }
 
 fn hash_signature_contract() -> RustBridgeSignatureContract {
-    signature_contract(
+    let mut signature = signature_contract(
         vec![param_contract(
             "input",
             RustBridgeParamConvention::Borrow,
             bytes_contract(),
         )],
         result_contract(view_type_contract(), error_type_contract()),
-    )
+    );
+    signature.panic_error = sifr_codegen::RustBridgePanicErrorContract::OrdinaryAndWrapper;
+    signature
 }
 
 fn bytes_contract() -> RustBridgeTypeContract {

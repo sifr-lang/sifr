@@ -126,11 +126,11 @@ fn __sifr_parallel_map<T: Send, U: Send, F: Fn(T) -> U + Send + Sync>(
     use rayon::prelude::{IntoParallelIterator, ParallelIterator};
     let pool = __sifr_default_parallel_pool()?;
     return pool.install(|| {
-        __sifr_with_silent_worker_panic_hook(|| {
+        __sifr_with_silent_worker_panic_hook(|__sifr_panic_boundary| {
             items
                 .into_par_iter()
                 .map(|item| {
-                    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| worker(item)))
+                    __sifr_panic_boundary.catch_unwind(|| worker(item))
                         .map_err(|_| WorkerRuntimeError::new("parallel worker panicked".to_string()))
                 })
                 .collect()
@@ -148,11 +148,11 @@ where
     use rayon::prelude::{IntoParallelIterator, ParallelIterator};
     let pool = __sifr_default_parallel_pool().map_err(__sifr_worker_error_from_runtime)?;
     return pool.install(|| {
-        __sifr_with_silent_worker_panic_hook(|| {
+        __sifr_with_silent_worker_panic_hook(|__sifr_panic_boundary| {
             items
                 .into_par_iter()
                 .map(|item| {
-                    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| worker(item))) {
+                    match __sifr_panic_boundary.catch_unwind(|| worker(item)) {
                         Ok(Ok(value)) => Ok(value),
                         Ok(Err(error)) => Err(WorkerError::new(format!("{}", error))),
                         Err(_) => Err(WorkerError::new("parallel worker panicked".to_string())),
@@ -180,11 +180,11 @@ fn __sifr_pool_map<T: Send, U: Send, F: Fn(T) -> U + Send + Sync>(
         }
     };
     return worker_pool.install(|| {
-        __sifr_with_silent_worker_panic_hook(|| {
+        __sifr_with_silent_worker_panic_hook(|__sifr_panic_boundary| {
             items
                 .into_par_iter()
                 .map(|item| {
-                    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| worker(item)))
+                    __sifr_panic_boundary.catch_unwind(|| worker(item))
                         .map_err(|_| WorkerRuntimeError::new("parallel worker panicked".to_string()))
                 })
                 .collect()
@@ -212,11 +212,11 @@ where
         }
     };
     return worker_pool.install(|| {
-        __sifr_with_silent_worker_panic_hook(|| {
+        __sifr_with_silent_worker_panic_hook(|__sifr_panic_boundary| {
             items
                 .into_par_iter()
                 .map(|item| {
-                    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| worker(item))) {
+                    match __sifr_panic_boundary.catch_unwind(|| worker(item)) {
                         Ok(Ok(value)) => Ok(value),
                         Ok(Err(error)) => Err(WorkerError::new(format!("{}", error))),
                         Err(_) => Err(WorkerError::new("parallel worker panicked".to_string())),
@@ -231,4 +231,24 @@ fn __sifr_worker_error_from_runtime(error: WorkerRuntimeError) -> WorkerError {
     return WorkerError::new(error.message);
 }
 "#
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parallel_runtime_rust_code;
+
+    #[test]
+    fn rayon_items_enter_the_shared_silent_panic_boundary() {
+        let runtime = parallel_runtime_rust_code();
+
+        assert_eq!(
+            runtime
+                .matches("__sifr_panic_boundary.catch_unwind(|| worker(item))")
+                .count(),
+            4
+        );
+        assert!(!runtime.contains("sifr_runtime::interop::catch_unwind_silently(|| worker(item))"));
+        assert!(!runtime
+            .contains("std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| worker(item)))"));
+    }
 }

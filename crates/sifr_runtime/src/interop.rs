@@ -2,14 +2,119 @@
 
 use crate::{IntegerParseError, IntegerRangeError, SifrInt};
 use std::any::Any;
+use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
 use std::rc::Rc;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
-// `catch_unwind` still invokes the process-wide panic hook, so bridge panic
-// redaction serializes hook swaps while the recoverable boundary is active.
-static RUST_INTEROP_PANIC_HOOK_LOCK: Mutex<()> = Mutex::new(());
+type PanicHook = Box<dyn Fn(&std::panic::PanicHookInfo<'_>) + Send + Sync + 'static>;
+type SharedPanicHook = Arc<Mutex<Option<PanicHook>>>;
+
+struct RustInteropPanicHookState {
+    active_boundaries: usize,
+    previous_hook: Option<SharedPanicHook>,
+}
+
+// Hook installation/removal is serialized, but the mutex is never held while
+// user code executes. Concurrent and nested boundaries share one active hook.
+static RUST_INTEROP_PANIC_HOOK_STATE: Mutex<RustInteropPanicHookState> =
+    Mutex::new(RustInteropPanicHookState {
+        active_boundaries: 0,
+        previous_hook: None,
+    });
+
+thread_local! {
+    static RUST_INTEROP_PANIC_CATCH_DEPTH: Cell<usize> = const { Cell::new(0) };
+}
+
+#[doc(hidden)]
+pub struct SilentPanicBoundary {
+    _private: (),
+}
+
+impl SilentPanicBoundary {
+    #[doc(hidden)]
+    pub fn enter() -> Self {
+        let mut state = panic_hook_state();
+        if state.active_boundaries == 0 {
+            let previous_hook = Arc::new(Mutex::new(Some(std::panic::take_hook())));
+            let forwarded_hook = Arc::clone(&previous_hook);
+            std::panic::set_hook(Box::new(move |info| {
+                let suppress = RUST_INTEROP_PANIC_CATCH_DEPTH
+                    .try_with(|depth| depth.get() > 0)
+                    .unwrap_or(false);
+                if !suppress {
+                    let hook = match forwarded_hook.lock() {
+                        Ok(hook) => hook,
+                        Err(poisoned) => poisoned.into_inner(),
+                    };
+                    if let Some(hook) = hook.as_ref() {
+                        hook(info);
+                    }
+                }
+            }));
+            state.previous_hook = Some(previous_hook);
+        }
+        state.active_boundaries = state.active_boundaries.saturating_add(1);
+        Self { _private: () }
+    }
+
+    #[doc(hidden)]
+    pub fn catch_unwind<T, F>(&self, f: F) -> std::thread::Result<T>
+    where
+        F: FnOnce() -> T,
+    {
+        let _thread_guard = SilentPanicThreadGuard::enter();
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(f))
+    }
+}
+
+struct SilentPanicThreadGuard;
+
+impl SilentPanicThreadGuard {
+    fn enter() -> Self {
+        RUST_INTEROP_PANIC_CATCH_DEPTH.with(|depth| {
+            depth.set(depth.get().saturating_add(1));
+        });
+        Self
+    }
+}
+
+impl Drop for SilentPanicThreadGuard {
+    fn drop(&mut self) {
+        RUST_INTEROP_PANIC_CATCH_DEPTH.with(|depth| {
+            depth.set(depth.get().saturating_sub(1));
+        });
+    }
+}
+
+impl Drop for SilentPanicBoundary {
+    fn drop(&mut self) {
+        let mut state = panic_hook_state();
+        state.active_boundaries = state.active_boundaries.saturating_sub(1);
+        if state.active_boundaries != 0 {
+            return;
+        }
+        let _installed_hook = std::panic::take_hook();
+        if let Some(previous_hook) = state.previous_hook.take() {
+            let mut previous_hook = match previous_hook.lock() {
+                Ok(hook) => hook,
+                Err(poisoned) => poisoned.into_inner(),
+            };
+            if let Some(previous_hook) = previous_hook.take() {
+                std::panic::set_hook(previous_hook);
+            }
+        }
+    }
+}
+
+fn panic_hook_state() -> std::sync::MutexGuard<'static, RustInteropPanicHookState> {
+    match RUST_INTEROP_PANIC_HOOK_STATE.lock() {
+        Ok(state) => state,
+        Err(poisoned) => poisoned.into_inner(),
+    }
+}
 
 pub use indexmap::IndexMap;
 
@@ -194,15 +299,17 @@ pub fn catch_rust_panic<T, F>(f: F) -> Result<T, RustPanicErrorBridge>
 where
     F: FnOnce() -> T,
 {
-    let _hook_guard = match RUST_INTEROP_PANIC_HOOK_LOCK.lock() {
-        Ok(guard) => guard,
-        Err(poisoned) => poisoned.into_inner(),
-    };
-    let previous_hook = std::panic::take_hook();
-    std::panic::set_hook(Box::new(|_| {}));
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(f));
-    std::panic::set_hook(previous_hook);
-    result.map_err(|payload| RustPanicErrorBridge::from_panic_payload(payload.as_ref()))
+    catch_unwind_silently(f)
+        .map_err(|payload| RustPanicErrorBridge::from_panic_payload(payload.as_ref()))
+}
+
+#[doc(hidden)]
+pub fn catch_unwind_silently<T, F>(f: F) -> std::thread::Result<T>
+where
+    F: FnOnce() -> T,
+{
+    let boundary = SilentPanicBoundary::enter();
+    boundary.catch_unwind(f)
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -352,6 +459,15 @@ mod tests {
     };
     use crate::SifrInt;
 
+    static PANIC_HOOK_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    fn panic_hook_test_guard() -> std::sync::MutexGuard<'static, ()> {
+        match PANIC_HOOK_TEST_LOCK.lock() {
+            Ok(guard) => guard,
+            Err(poisoned) => poisoned.into_inner(),
+        }
+    }
+
     #[test]
     fn exact_integer_bridge_preserves_exact_value_and_fixed_width_errors() {
         let bridge = SifrIntBridge::from(SifrInt::from_i128(i128::from(i64::MAX) + 1));
@@ -423,6 +539,7 @@ mod tests {
 
     #[test]
     fn handle_poison_guard_marks_open_handle_when_rust_call_unwinds() {
+        let _test_guard = panic_hook_test_guard();
         let mut handle = Handle::new(1_i64);
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             let _guard = PoisonOnPanic::new(&mut handle, super::__generated_glue::token());
@@ -464,6 +581,7 @@ mod tests {
 
     #[test]
     fn catch_rust_panic_redacts_payload_details() {
+        let _test_guard = panic_hook_test_guard();
         let error =
             super::catch_rust_panic(|| panic!("secret backend token")).expect_err("panic maps");
 
@@ -473,7 +591,97 @@ mod tests {
 
     #[test]
     fn catch_rust_panic_preserves_successful_values() {
+        let _test_guard = panic_hook_test_guard();
         assert_eq!(super::catch_rust_panic(|| 42_i64), Ok(42));
+    }
+
+    #[test]
+    fn catch_rust_panic_is_reentrant_for_nested_bridge_calls() {
+        let _test_guard = panic_hook_test_guard();
+        let outer = super::catch_rust_panic(|| {
+            let nested = super::catch_rust_panic(|| panic!("nested private payload"))
+                .expect_err("nested panic maps");
+            assert_eq!(nested.message(), "Rust bridge panicked");
+            42_i64
+        });
+
+        assert_eq!(outer, Ok(42));
+    }
+
+    #[test]
+    fn silent_unwind_and_bridge_catch_share_the_reentrant_hook() {
+        let _test_guard = panic_hook_test_guard();
+        let worker = super::catch_unwind_silently(|| {
+            let nested = super::catch_rust_panic(|| panic!("nested bridge payload"))
+                .expect_err("nested bridge panic maps");
+            assert_eq!(nested.message(), "Rust bridge panicked");
+            panic!("worker payload")
+        });
+
+        assert!(worker.is_err());
+        assert_eq!(super::catch_rust_panic(|| 42_i64), Ok(42));
+    }
+
+    #[test]
+    fn catch_rust_panic_allows_overlapping_threads() {
+        let _test_guard = panic_hook_test_guard();
+        let barrier = std::sync::Arc::new(std::sync::Barrier::new(2));
+        let successful_barrier = std::sync::Arc::clone(&barrier);
+        let successful = std::thread::spawn(move || {
+            super::catch_rust_panic(|| {
+                successful_barrier.wait();
+                42_i64
+            })
+        });
+        let panicking = std::thread::spawn(move || {
+            super::catch_rust_panic(|| {
+                barrier.wait();
+                panic!("concurrent private payload")
+            })
+        });
+
+        assert_eq!(successful.join().expect("successful thread joins"), Ok(42));
+        let panic_error = panicking
+            .join()
+            .expect("panicking thread is contained")
+            .expect_err("panic maps");
+        assert_eq!(panic_error.message(), "Rust bridge panicked");
+    }
+
+    #[test]
+    fn silent_boundaries_suppress_hooks_on_every_worker_thread() {
+        let _test_guard = panic_hook_test_guard();
+        let observed = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let observed_by_hook = std::sync::Arc::clone(&observed);
+        let previous_hook = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |_| {
+            observed_by_hook.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        }));
+
+        let boundary = std::sync::Arc::new(super::SilentPanicBoundary::enter());
+        let workers = (0..8)
+            .map(|worker_id| {
+                let boundary = std::sync::Arc::clone(&boundary);
+                std::thread::spawn(move || {
+                    boundary
+                        .catch_unwind(|| panic!("private worker payload {worker_id}"))
+                        .is_err()
+                })
+            })
+            .collect::<Vec<_>>();
+        let worker_results = workers
+            .into_iter()
+            .map(|worker| worker.join().unwrap_or(false))
+            .collect::<Vec<_>>();
+        drop(boundary);
+        let unprotected = std::panic::catch_unwind(|| panic!("unprotected test panic"));
+        let observed_hooks = observed.load(std::sync::atomic::Ordering::SeqCst);
+        let _test_hook = std::panic::take_hook();
+        std::panic::set_hook(previous_hook);
+
+        assert!(worker_results.into_iter().all(|result| result));
+        assert!(unprotected.is_err());
+        assert_eq!(observed_hooks, 1);
     }
 
     #[test]

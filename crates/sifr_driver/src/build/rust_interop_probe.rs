@@ -1,4 +1,5 @@
 use super::rust_interop_digest::fnv1a64_hex;
+use super::rust_interop_panic_probe::{panic_mapper_probe, stderr_reports_invalid_panic_mapper};
 use super::rust_interop_probe_cache::{mark_probe_cache_hit, probe_cache_file, probe_cache_key};
 use super::rust_interop_probe_manifest::{probe_cargo_toml, toml_quote_string};
 use super::workspace::artifact_cache_root;
@@ -116,6 +117,16 @@ pub(super) fn execute_direct_cargo_probe(
             "Rust bridge probe failed for `{target}`",
             vec![("target", canonical_sifr_target_path(&probe.declaration))],
         )
+    } else if stderr_reports_invalid_panic_mapper(&stderr) {
+        (
+            DiagnosticCode::RUST_PANIC_CONTRACT,
+            "invalid Rust panic contract: {reason}",
+            vec![(
+                "reason",
+                "panic error mapper must accept one `RustPanicErrorBridge` and return a Display error"
+                    .to_string(),
+            )],
+        )
     } else if async_future_requires_send(probe) && stderr_reports_non_send_future(&stderr) {
         (
             DiagnosticCode::RUST_ASYNC_CONTRACT,
@@ -232,6 +243,8 @@ fn probe_source(probe: &PendingRustBridgeProbe) -> String {
         | RustInteropDecoratorKind::View => {
             if let Some(signature) = &probe.signature {
                 signature_probe_source(probe, signature, &rust_path)
+            } else if let Some(mapper) = panic_mapper_probe(&probe.declaration, &probe.path) {
+                panic_mapper_probe_source(&mapper)
             } else {
                 format!("#![allow(dead_code)]\nfn __sifr_probe() {{ let _ = {rust_path}; }}\n")
             }
@@ -241,6 +254,13 @@ fn probe_source(probe: &PendingRustBridgeProbe) -> String {
         return body;
     };
     prefixed_probe_source(prefix, &body)
+}
+
+fn panic_mapper_probe_source(mapper: &super::rust_interop_panic_probe::PanicMapperProbe) -> String {
+    format!(
+        "#![allow(dead_code)]\n{}\nfn __sifr_probe() {{\n    {}\n}}\n",
+        mapper.assertion, mapper.invocation
+    )
 }
 
 fn prefixed_probe_source(prefix: &str, body: &str) -> String {
@@ -310,9 +330,9 @@ fn signature_probe_source(
         if return_type.display_error_generic {
             out.push_str(",\n    __SifrBridgeError: std::fmt::Display");
         }
-        out.push_str(",\n{}\nfn __sifr_probe() { __sifr_assert_async_signature(");
+        out.push_str(",\n{}\nfn __sifr_probe() {\n    __sifr_assert_async_signature(");
         out.push_str(rust_path);
-        out.push_str("); }\n");
+        out.push_str(");\n");
     } else {
         out.push_str("fn __sifr_assert_signature");
         if return_type.display_error_generic {
@@ -322,10 +342,11 @@ fn signature_probe_source(
         out.push_str(&params);
         out.push_str(") -> ");
         out.push_str(&return_type.ty);
-        out.push_str(") {}\nfn __sifr_probe() { __sifr_assert_signature(");
+        out.push_str(") {}\nfn __sifr_probe() {\n    __sifr_assert_signature(");
         out.push_str(rust_path);
-        out.push_str("); }\n");
+        out.push_str(");\n");
     }
+    out.push_str("}\n");
     out
 }
 
@@ -682,6 +703,7 @@ mod tests {
                 kind: RustBridgeTypeKind::Result,
                 unsupported_reason: None,
             },
+            panic_error: sifr_codegen::RustBridgePanicErrorContract::None,
             span: TextRange::default(),
         };
 
@@ -768,6 +790,7 @@ mod tests {
                 kind: RustBridgeTypeKind::GeneratedRecord,
                 unsupported_reason: None,
             },
+            panic_error: sifr_codegen::RustBridgePanicErrorContract::None,
             span: TextRange::default(),
         };
         let source = generated_bridge_type_stubs(&signature);

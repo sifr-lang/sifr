@@ -8,10 +8,10 @@ class AsyncResourceError(Error):
 
 @rust.opaque(type=sifr_stdlib.async_core.Resource, send=True, sync=False, clone=none, close=async_close, thread_affinity=tokio_current_thread)
 class AsyncResource:
-    @rust(Self.aclose, panic=map_error(sifr_stdlib.async_core.map_panic))
+    @rust(Self.aclose)
     async def aclose(self) -> Result[None, AsyncResourceError | RustPanicError]: ...
 
-    @rust(Self.observe, panic=map_error(sifr_stdlib.async_core.map_panic))
+    @rust(Self.observe)
     async def observe(self) -> Result[int, AsyncResourceError | RustPanicError]: ...
 
 async def verify_stdlib_async_resource_lifecycle(resource: AsyncResource) -> Result[int, AsyncResourceError | RustPanicError]:

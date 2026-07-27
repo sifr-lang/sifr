@@ -25,6 +25,7 @@ RUST_CFG_FEATURE = re.compile(r'feature\s*=\s*"([^"]+)"')
 RUST_PATH_ATTRIBUTE = re.compile(r'#\[\s*path\s*=\s*"([^"]+)"\s*\]')
 RUST_PATH_HINT = re.compile(r"#\s*\[\s*path\b")
 EXECUTES_CARGO_PROBE_MARKER = "sifr-evidence: executes-cargo-probe"
+EXECUTES_RUNTIME_OBSERVED_MARKER = "sifr-evidence: executes-runtime-observed"
 
 
 @dataclass(frozen=True)
@@ -34,6 +35,7 @@ class RustTestDefinition:
     ignored: bool
     required_features: frozenset[str]
     executes_cargo_probe: bool
+    executes_runtime_observed: bool
     inline_modules: tuple[str, ...]
 
 
@@ -99,6 +101,10 @@ def rust_test_definitions(
                         ),
                         executes_cargo_probe=any(
                             EXECUTES_CARGO_PROBE_MARKER in attribute
+                            for attribute in attributes
+                        ),
+                        executes_runtime_observed=any(
+                            EXECUTES_RUNTIME_OBSERVED_MARKER in attribute
                             for attribute in attributes
                         ),
                         inline_modules=tuple(scope.name for scope in module_scopes),

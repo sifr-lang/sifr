@@ -1,8 +1,8 @@
 # fixture: panic_boundary_wrapper_emission
 # evidence: negative/invalid_map_error_signature_rejected
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: runtime-observed
-# expected-result: future-owned-diagnostic
+# expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-PANIC-0001
 class PanicMapped(Error):
     message: str

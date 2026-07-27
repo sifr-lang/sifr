@@ -10,7 +10,7 @@ class PgClient:
     url: str
     connection_id: uint64
 
-@rust(tokio_postgres.connect, panic=map_error(bridge.tokio_postgres.map_panic))
+@rust(tokio_postgres.connect)
 async def tokio_postgres_connect(url: str) -> Result[PgClient, PackageExampleError | RustPanicError]: ...
 
 async def verify_tokio_postgres_package() -> Result[PgClient, PackageExampleError | RustPanicError]:

@@ -6,7 +6,7 @@
 class HttpError(Error):
     message: str
 
-@rust(bridge.http.fetch_text, panic=map_error(bridge.http.map_panic))
+@rust(bridge.http.fetch_text)
 async def fetch_text(url: str) -> Result[str, HttpError | RustPanicError]: ...
 
 async def verify_async_reqwest_loopback() -> Result[str, HttpError | RustPanicError]:

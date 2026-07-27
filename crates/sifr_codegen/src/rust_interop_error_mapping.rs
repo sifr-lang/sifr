@@ -3,6 +3,18 @@ use sifr_type_system::Type;
 use crate::{RustExpr, RustType};
 
 pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
+    bridge_error_expr_with_contract(value, err_type, false)
+}
+
+pub(crate) fn bridge_error_contract_expr(value: RustExpr, err_type: &Type) -> RustExpr {
+    bridge_error_expr_with_contract(value, err_type, true)
+}
+
+fn bridge_error_expr_with_contract(
+    value: RustExpr,
+    err_type: &Type,
+    declared_error_contract: bool,
+) -> RustExpr {
     if let Type::Alias { name, body, .. } = err_type {
         if matches!(
             body.resolve_alias(),
@@ -24,7 +36,11 @@ pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
                     err_type.resolve_alias().union_enum_name(),
                     python_error.union_variant_name(),
                 ])),
-                args: vec![bridge_error_expr(value, python_error)],
+                args: vec![bridge_error_expr_with_contract(
+                    value,
+                    python_error,
+                    declared_error_contract,
+                )],
             }),
         class @ Type::Class {
             name,
@@ -83,7 +99,7 @@ pub(crate) fn bridge_error_expr(value: RustExpr, err_type: &Type) -> RustExpr {
             fields,
             parent_class,
             ..
-        } if parent_class.as_deref() == Some("Error") => {
+        } if declared_error_contract || parent_class.as_deref() == Some("Error") => {
             if let Some(error_fields) = message_error_fields(fields) {
                 RustExpr::StructInit {
                     name: class.rust_type(),
@@ -263,7 +279,7 @@ fn to_string_expr(expr: RustExpr) -> RustExpr {
 
 #[cfg(test)]
 mod tests {
-    use super::bridge_error_expr;
+    use super::{bridge_error_contract_expr, bridge_error_expr};
     use crate::{render_expr, RustExpr};
     use sifr_type_system::Type;
 
@@ -326,6 +342,99 @@ mod tests {
             RustExpr::Ident("__sifr_bridge_error".to_string()),
             &declared,
         );
+
+        assert_eq!(
+            render_expr(&mapped),
+            format!(
+                "{} {{ message: __sifr_bridge_error.to_string() }}",
+                declared.rust_type()
+            )
+        );
+    }
+
+    #[test]
+    fn multi_field_errors_initialize_every_declared_string_field() {
+        let declared = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "DetailedError".to_string(),
+            fields: vec![
+                ("message".to_string(), Type::Str),
+                ("context".to_string(), Type::Str),
+            ],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+
+        let mapped = bridge_error_expr(
+            RustExpr::Ident("__sifr_bridge_error".to_string()),
+            &declared,
+        );
+
+        assert_eq!(
+            render_expr(&mapped),
+            "DetailedError { message: __sifr_bridge_error.to_string(), context: __sifr_bridge_error.to_string() }"
+        );
+    }
+
+    #[test]
+    fn ordinary_message_records_are_not_rewritten_as_errors() {
+        let record = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "MessageRecord".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: None,
+        };
+
+        let mapped = bridge_error_expr(RustExpr::Ident("__sifr_bridge_value".to_string()), &record);
+
+        assert_eq!(render_expr(&mapped), "__sifr_bridge_value");
+    }
+
+    #[test]
+    fn declared_error_contract_maps_when_parent_metadata_is_erased() {
+        let declared = Type::Class {
+            identity: Some("app.PanicMapped".to_string()),
+            type_args: Vec::new(),
+            name: "PanicMapped".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: None,
+        };
+
+        let mapped = bridge_error_contract_expr(
+            RustExpr::Ident("__sifr_bridge_error".to_string()),
+            &declared,
+        );
+
+        assert_eq!(
+            render_expr(&mapped),
+            format!(
+                "{} {{ message: __sifr_bridge_error.to_string() }}",
+                declared.rust_type()
+            )
+        );
+    }
+
+    #[test]
+    fn ordinary_error_aliases_construct_the_resolved_nominal_type() {
+        let declared = Type::Class {
+            identity: Some("app.PayloadError".to_string()),
+            type_args: Vec::new(),
+            name: "PayloadError".to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+        let alias = Type::Alias {
+            name: "PayloadAlias".to_string(),
+            type_args: Vec::new(),
+            body: Box::new(declared.clone()),
+        };
+
+        let mapped = bridge_error_expr(RustExpr::Ident("__sifr_bridge_error".to_string()), &alias);
 
         assert_eq!(
             render_expr(&mapped),

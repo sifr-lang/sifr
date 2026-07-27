@@ -42,9 +42,13 @@ def validate_evidence_expectation(
     expected_diagnostic = evidence.get("expected_diagnostic")
     expected_runtime_state = evidence.get("expected_runtime_state")
     if expected_result in {"diagnostic", "future-owned-diagnostic"}:
-        if execution_kind == "runtime-observed" and expected_result == "diagnostic":
+        if (
+            execution_kind == "runtime-observed"
+            and expected_result == "diagnostic"
+            and side != "negative"
+        ):
             failures.append(
-                f"{label} runtime-observed evidence cannot claim a compiler diagnostic"
+                f"{label} positive runtime-observed evidence cannot claim a compiler diagnostic"
             )
         if expected_diagnostic not in required_diagnostics:
             failures.append(
@@ -104,6 +108,28 @@ def run_self_test(required_diagnostics: set[str]) -> tuple[int, str | None]:
         return 0, f"valid runtime error expectation was rejected: {control}"
 
     diagnostic = sorted(required_diagnostics)[0]
+    negative_diagnostic = {
+        "expected_result": "diagnostic",
+        "expected_diagnostic": diagnostic,
+    }
+    negative_diagnostic_failures: list[str] = []
+    validate_evidence_expectation(
+        negative_diagnostic_failures,
+        fixture_id="negative runtime-row diagnostic",
+        side="negative",
+        raw_path="negative/diagnostic.sifr",
+        text=f"# expected-result: diagnostic\n# expected-diagnostic: {diagnostic}\n",
+        evidence=negative_diagnostic,
+        status="passing",
+        execution_kind="runtime-observed",
+        required_diagnostics=required_diagnostics,
+    )
+    if negative_diagnostic_failures:
+        return 1, (
+            "valid negative diagnostic for a runtime-observed row was rejected: "
+            f"{negative_diagnostic_failures}"
+        )
+
     cases = (
         (
             "runtime diagnostic",
@@ -114,7 +140,7 @@ def run_self_test(required_diagnostics: set[str]) -> tuple[int, str | None]:
             f"# expected-result: diagnostic\n# expected-diagnostic: {diagnostic}\n",
             "passing",
             "runtime-observed",
-            "cannot claim a compiler diagnostic",
+            "positive runtime-observed evidence cannot claim a compiler diagnostic",
         ),
         (
             "non-runtime error state",
@@ -168,7 +194,7 @@ def run_self_test(required_diagnostics: set[str]) -> tuple[int, str | None]:
         validate_evidence_expectation(
             failures,
             fixture_id=name,
-            side="negative",
+            side="positive" if name == "runtime diagnostic" else "negative",
             raw_path="negative/mutation.sifr",
             text=text,
             evidence=evidence,
@@ -178,4 +204,4 @@ def run_self_test(required_diagnostics: set[str]) -> tuple[int, str | None]:
         )
         if not any(expected in failure for failure in failures):
             return len(cases), f"{name} did not report {expected!r}: {failures}"
-    return len(cases) + 1, None
+    return len(cases) + 2, None

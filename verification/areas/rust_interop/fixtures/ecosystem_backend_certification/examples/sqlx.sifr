@@ -10,7 +10,7 @@ class SqlRows:
     columns: list[str]
     row_count: uint64
 
-@rust(sqlx.query, panic=map_error(bridge.sqlx.map_panic))
+@rust(sqlx.query)
 async def sqlx_query(sql: str) -> Result[SqlRows, PackageExampleError | RustPanicError]: ...
 
 async def verify_sqlx_package() -> Result[SqlRows, PackageExampleError | RustPanicError]:
