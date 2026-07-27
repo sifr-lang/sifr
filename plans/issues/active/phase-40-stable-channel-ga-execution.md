@@ -196,6 +196,11 @@ Review and upstream coordination ledger:
   six-container replay, then requested an explicit over-retention mutation.
   The repair now rejects both a 61-second shortfall and one second beyond 30
   days; its error also records the observed timestamps and interval.
+- Claude Opus collector-repair review pass 2 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-collector-repair-claude-opus-review-pass-2.md`.
+  It independently reproduced the live API semantics and 509 MB artifact
+  replay, mutation-tested both retention bounds and the workflow-path binding,
+  found no remaining actionable issue, and approved the repair.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 
