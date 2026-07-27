@@ -199,8 +199,9 @@ architecture/gate lock PR.
 
 ### milestone_40_1
 
-Status: implementation and local qualification in progress. The separately
-owned Rust certification input merged through
+Status: implementation, local qualification, and independent review complete;
+PR preparation in progress. The separately owned Rust certification input
+merged through
 [PR #3026](https://github.com/sifr-lang/sifr/pull/3026) and is consumed without
 modifying its Rust-interop implementation.
 
@@ -285,3 +286,7 @@ modifying its Rust-interop implementation.
   - qualification workflow contract, stable artifact generation, governance
     contracts, schema epoch, runner self-tests, formatting, HIR, and file-size
     guardrails
+  - authoritative `scripts/run_all_tests.sh --profile create-pr`: pass,
+    including 131/131 E2E fixtures and zero blocking failures; the cold-cache
+    21.8-minute wall time exceeded only the advisory warm target, with 1.5 GiB
+    peak RSS and no swap
