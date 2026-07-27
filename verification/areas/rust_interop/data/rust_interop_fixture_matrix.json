@@ -63,7 +63,7 @@
       "capability": "bridge type generation and conversion",
       "required_crates": ["serde", "serde_json", "thiserror", "bytes", "indexmap"],
       "execution_kind": "cargo-probe",
-      "positive_evidence": {"id": "supported_type_roundtrips", "status": "planned"},
+      "positive_evidence": {"id": "supported_type_roundtrips", "status": "passing"},
       "negative_evidence": {"id": "unsupported_container_rejections", "status": "passing"}
     },
     {

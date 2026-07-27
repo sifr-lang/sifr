@@ -125,6 +125,7 @@ mod render;
 pub use render::*;
 mod rust_interop_bridge_contract;
 mod rust_interop_direct;
+mod rust_interop_direct_collections;
 #[cfg(test)]
 mod rust_interop_direct_tests;
 mod rust_interop_plan;

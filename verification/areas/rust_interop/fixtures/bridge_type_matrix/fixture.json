@@ -17,10 +17,17 @@
       }
     },
     "positive": {
-      "expected_result": "future-owned",
+      "expected_result": "pass",
       "id": "supported_type_roundtrips",
       "path": "positive/supported_type_roundtrips.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs",
+        "test_name": "test_build_bridge_type_matrix_positive_cargo_probe"
+      }
     }
   },
   "execution_kind": "cargo-probe",
@@ -40,6 +47,9 @@
     "bytes",
     "indexmap"
   ],
+  "scenario_examples": {
+    "bridge_type_roundtrip": "examples/bridge_type_roundtrip"
+  },
   "schema_version": 2,
   "tier": 1
 }

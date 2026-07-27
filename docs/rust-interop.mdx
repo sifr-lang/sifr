@@ -86,6 +86,11 @@ contract-only. The runtime-observed deferrals
 `zero_copy_runtime_matrix` are future-owned, planned, and unadvertised until
 their runtime evidence passes.
 
+`bridge_type_matrix` is cargo-probed through generated package glue. Its
+certified bridge covers nested Serde/JSON values, display-mapped `thiserror`
+errors, byte buffers, and recursively nested dictionary/list values. Sifr
+`dict` iteration order remains unspecified across this bridge.
+
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |
 | --- | --- | --- |
@@ -93,6 +98,7 @@ their runtime evidence passes.
 | `direct_crate_matrix` | `supported` | `cargo-probe` |
 | `direct_crate_negative_type` | `unsupported-by-design` | `compiler-diagnostic` |
 | `dotted_path_resolution` | `supported` | `compiler-diagnostic` |
+| `bridge_type_matrix` | `supported-through-bridge` | `cargo-probe` |
 | `local_bridge_blake3` | `supported-through-bridge` | `cargo-probe` |
 | `same_workspace_crate` | `supported` | `cargo-probe` |
 | `shared_bridge_crate` | `supported-through-bridge` | `cargo-probe` |

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import shutil
+import tempfile
 import tomllib
 from pathlib import Path
 from typing import Any
@@ -11,6 +13,18 @@ from _binding_helpers import rust_bound_declarations as _rust_bound_declarations
 from _binding_helpers import verifier_binds_call as _verifier_binds_call
 
 REQUIRED_SCENARIO_EXAMPLES = {
+    "bridge_type_matrix": {
+        "bridge_type_roundtrip": {
+            "tokens": (
+                "serde_json_roundtrip",
+                "bytes_roundtrip",
+                "indexmap_roundtrip",
+                "nested_indexmap_roundtrip",
+                "indexmap_list_roundtrip",
+                "thiserror",
+            ),
+        },
+    },
     "bridge_version_mismatch": {
         "bridge_version_package": {
             "tokens": ("bridge-version = 1", "version_bridge"),
@@ -62,6 +76,9 @@ REQUIRED_SCENARIO_EXAMPLES = {
         },
     },
 }
+
+AREA_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = AREA_ROOT.parents[2]
 
 
 def validate_scenario_examples(
@@ -115,6 +132,98 @@ def validate_scenario_examples(
         valid_examples += 1
     _validate_negative_overlays(failures, fixture_id, fixture_dir)
     return valid_examples
+
+
+def run_self_test() -> tuple[int, str | None]:
+    source = AREA_ROOT / "fixtures/bridge_type_matrix"
+    raw_examples = {"bridge_type_roundtrip": "examples/bridge_type_roundtrip"}
+    cases = 0
+    with tempfile.TemporaryDirectory(prefix="sifr-rust-interop-scenario-self-test-") as raw_temp:
+        fixture_dir = Path(raw_temp) / "bridge_type_matrix"
+        shutil.copytree(source, fixture_dir)
+
+        baseline_failures: list[str] = []
+        validate_scenario_examples(
+            baseline_failures,
+            "bridge_type_matrix",
+            fixture_dir,
+            raw_examples,
+        )
+        if baseline_failures:
+            return cases, f"bridge_type_matrix baseline failed: {baseline_failures}"
+        cases += 1
+
+        mutation_cases = (
+            (
+                "dependency pin drift",
+                "examples/bridge_type_roundtrip/Cargo.toml",
+                '=1.11.1"',
+                '1.11.1"',
+                "must pin =1.11.1",
+            ),
+            (
+                "serde feature drift",
+                "examples/bridge_type_roundtrip/Cargo.toml",
+                'features = ["derive"]',
+                "features = []",
+                "dependency serde features",
+            ),
+            (
+                "bridge path drift",
+                "examples/bridge_type_roundtrip/sifr.toml",
+                'bridges = ["src/bridges"]',
+                "bridges = []",
+                '[rust] bridges = ["src/bridges"]',
+            ),
+            (
+                "bridge trust drift",
+                "examples/bridge_type_roundtrip/sifr.toml",
+                'unsafe-rust-bridges = ["src/bridges/types.rs"]',
+                "unsafe-rust-bridges = []",
+                "[trust].unsafe-rust-bridges missing src/bridges/types.rs",
+            ),
+            (
+                "root lock drift",
+                "examples/bridge_type_roundtrip/Cargo.lock",
+                'version = "2.8.0"',
+                'version = "2.8.3"',
+                "not present in root Cargo.lock",
+            ),
+        )
+        for name, relative_path, before, after, expected in mutation_cases:
+            path = fixture_dir / relative_path
+            original = path.read_text(encoding="utf-8")
+            if before not in original:
+                return cases, f"{name} self-test setup token is missing"
+            path.write_text(original.replace(before, after, 1), encoding="utf-8")
+            failures: list[str] = []
+            validate_scenario_examples(
+                failures,
+                "bridge_type_matrix",
+                fixture_dir,
+                raw_examples,
+            )
+            path.write_text(original, encoding="utf-8")
+            if not any(expected in failure for failure in failures):
+                return cases, f"{name} did not report {expected!r}: {failures}"
+            cases += 1
+
+        lock_path = fixture_dir / "examples/bridge_type_roundtrip/Cargo.lock"
+        lock_contents = lock_path.read_bytes()
+        lock_path.unlink()
+        lock_failures: list[str] = []
+        validate_scenario_examples(
+            lock_failures,
+            "bridge_type_matrix",
+            fixture_dir,
+            raw_examples,
+        )
+        lock_path.write_bytes(lock_contents)
+        if not any("Cargo.lock is required" in failure for failure in lock_failures):
+            return cases, f"missing lockfile was accepted: {lock_failures}"
+        cases += 1
+
+    return cases, None
 
 
 def _validate_scenario_example_dir(
@@ -250,7 +359,67 @@ def _validate_scenario_manifests(
 
     dependencies = cargo.get("dependencies", {})
     workspace_members = cargo.get("workspace", {}).get("members", [])
-    if fixture_id == "same_workspace_crate":
+    scenario_lock_path = example_dir / "Cargo.lock"
+    if not scenario_lock_path.is_file():
+        failures.append(f"{fixture_id}: {raw_path}/Cargo.lock is required")
+    scenario_lock = _read_toml(
+        failures,
+        fixture_id,
+        raw_path,
+        scenario_lock_path,
+    )
+    root_lock = _read_toml(
+        failures,
+        fixture_id,
+        "repository root",
+        REPO_ROOT / "Cargo.lock",
+    )
+    if isinstance(scenario_lock, dict) and isinstance(root_lock, dict):
+        _require_root_lock_subset(
+            failures,
+            fixture_id,
+            raw_path,
+            scenario_lock,
+            root_lock,
+        )
+    if fixture_id == "bridge_type_matrix":
+        if rust.get("bridges") != ["src/bridges"]:
+            failures.append(
+                f"{fixture_id}: {raw_path}/sifr.toml must declare "
+                '[rust] bridges = ["src/bridges"]'
+            )
+        for dependency, version in (
+            ("bytes", "=1.11.1"),
+            ("indexmap", "=2.14.0"),
+            ("serde", "=1.0.228"),
+            ("serde_json", "=1.0.149"),
+            ("thiserror", "=2.0.18"),
+        ):
+            _require_exact_dependency(
+                failures,
+                fixture_id,
+                raw_path,
+                dependencies,
+                dependency,
+                version,
+            )
+        _require_dependency_features(
+            failures,
+            fixture_id,
+            raw_path,
+            dependencies,
+            "serde",
+            ["derive"],
+        )
+        _require_trust_targets(
+            failures,
+            fixture_id,
+            raw_path,
+            trust,
+            "unsafe-rust-bridges",
+            ["src/bridges/types.rs"],
+        )
+    elif fixture_id == "same_workspace_crate":
         _require_path_dependency(failures, fixture_id, raw_path, dependencies, "workspace_hash", "rust/workspace_hash")
         _require_member(failures, fixture_id, raw_path, workspace_members, "rust/workspace_hash")
         _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-no-panic", ["workspace_hash.hash", "workspace_hash.hash_pair"])
@@ -436,6 +605,46 @@ def _require_path_dependency(
     actual = dependencies.get(dependency) if isinstance(dependencies, dict) else None
     if not isinstance(actual, dict) or actual.get("path") != expected_path:
         failures.append(f"{fixture_id}: {raw_path}/Cargo.toml must declare {dependency} path {expected_path}")
+
+
+def _require_exact_dependency(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    dependencies: Any,
+    dependency: str,
+    expected_version: str,
+) -> None:
+    actual = dependencies.get(dependency) if isinstance(dependencies, dict) else None
+    version = actual.get("version") if isinstance(actual, dict) else actual
+    if version != expected_version:
+        failures.append(
+            f"{fixture_id}: {raw_path}/Cargo.toml dependency {dependency} "
+            f"must pin {expected_version}"
+        )
+
+
+def _require_root_lock_subset(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    scenario_lock: dict[str, Any],
+    root_lock: dict[str, Any],
+) -> None:
+    root_packages = {
+        (str(package.get("name")), str(package.get("version")))
+        for package in root_lock.get("package", [])
+        if isinstance(package, dict) and package.get("source")
+    }
+    for package in scenario_lock.get("package", []):
+        if not isinstance(package, dict) or not package.get("source"):
+            continue
+        identity = (str(package.get("name")), str(package.get("version")))
+        if identity not in root_packages:
+            failures.append(
+                f"{fixture_id}: {raw_path}/Cargo.lock package "
+                f"{identity[0]} {identity[1]} is not present in root Cargo.lock"
+            )
 
 
 def _require_member(

@@ -143,8 +143,8 @@ normative and must not be broadened.
 
 | Item | Status | Evidence |
 | --- | --- | --- |
-| `certification_0` | in progress | runtime-deferral rows, stable claims, and locked/offline crate inventory |
-| `certification_1` | blocked | starts after `certification_0` merges |
+| `certification_0` | merged | [PR #3026](https://github.com/sifr-lang/sifr/pull/3026) |
+| `certification_1` | in progress | executable bridge-type roundtrips and nested dict conversion |
 | `certification_2` | blocked | starts after `certification_1` merges |
 | `certification_3` | blocked | starts after `certification_2` merges |
 | `certification_4` | blocked | starts after `certification_3` merges |
@@ -182,7 +182,7 @@ Implementation checklist:
   execution-kind, and locked-crate counts.
 - [x] Run the focused provenance/checker gates, create-PR profile, full merge
   profile, Clippy, rustfmt, maintainability, file-size, and diff-hygiene gates.
-- [ ] Run Opus review rounds to satisfaction, merge the PR, and unblock only
+- [x] Run Opus review rounds to satisfaction, merge the PR, and unblock only
   `certification_1`.
 
 Post-item inventory:
@@ -270,6 +270,38 @@ Implement `certification_1`, `certification_2`, then `certification_3` as
 separate PRs. `certification_2` and `certification_3` are prerequisites for
 Native Pydantic-Sifr `milestone_ps_3`; their merged status must be recorded in
 both active issues.
+
+#### certification_1: Bridge Type Roundtrips
+
+Implementation checklist:
+
+- [x] Add a locked, offline package scenario using exact-pinned `serde`,
+  `serde_json`, `thiserror`, `bytes`, and `indexmap`.
+- [x] Build and execute generated Sifr package glue over nested values, the
+  mapped error path, bytes, and nested dictionaries without claiming key
+  iteration order.
+- [x] Fix generated recursive `list`, `dict`, exact-`int`, and `Option`
+  lowering in both directions, including escaped user identifiers, so runtime
+  values match the probed bridge types without raw Rust build failures.
+- [x] Bind positive evidence to the mandatory ignored generated-build suite and
+  retain the existing unsupported-container diagnostic evidence.
+- [x] Promote only `bridge_type_matrix` in both matrices, structured stable
+  claims, public docs, architecture docs, fixture provenance, and counts.
+- [ ] Run focused and authoritative local gates, Opus review rounds to
+  satisfaction, merge the PR, and unblock only `certification_2`.
+
+Post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 48 passing and 24 planned evidence directions;
+- categories: 17 `supported`, 6 `supported-through-bridge`, 1
+  `unsupported-by-design`, and 12 `future-owned-by-separate-phase`;
+- execution kinds: 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+  and
+- 24 structured stable claims.
 
 `certification_3` may use bridge-version 1 call-scoped callbacks. Any callback
 behavior that truly requires the bridge-version 2 structural call contract

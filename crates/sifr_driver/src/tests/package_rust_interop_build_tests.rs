@@ -30,6 +30,9 @@ const LOCAL_BRIDGE_EVIDENCE: &str = include_str!(
 const LOCAL_BRIDGE_NEGATIVE: &str = include_str!(
     "../../../../verification/areas/rust_interop/fixtures/local_bridge_blake3/negative/missing_local_bridge_export.sifr"
 );
+const BRIDGE_TYPE_ROUNDTRIP_EVIDENCE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/bridge_type_matrix/positive/supported_type_roundtrips.sifr"
+);
 
 fn fixture_scenario_root(fixture_id: &str, scenario_id: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -179,6 +182,31 @@ fn test_check_local_bridge_blake3_missing_export_cargo_probe() {
                 && error.message.contains("missing_export")
         }),
         "missing local bridge export must be a stable resolution diagnostic: {errors:#?}"
+    );
+    let _ = std::fs::remove_dir_all(package_root);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+#[doc = "sifr-evidence: executes-cargo-probe"]
+fn test_build_bridge_type_matrix_positive_cargo_probe() {
+    let package_root = copied_scenario(
+        "bridge_type_matrix",
+        "bridge_type_roundtrip",
+        "rust_interop_bridge_type_roundtrip",
+    );
+    let pristine_entrypoint =
+        package_entrypoint_from_cargo_layout(&package_root, "bridge-type-roundtrip");
+    assert!(
+        check_package_project(&pristine_entrypoint).is_empty(),
+        "checked-in bridge type scenario should pass package checking"
+    );
+    install_evidence_source(&package_root, BRIDGE_TYPE_ROUNDTRIP_EVIDENCE);
+    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "bridge-type-roundtrip");
+
+    assert_eq!(
+        run_built_package(&entrypoint),
+        "serde:nested|bytes:6|invalid nested payload"
     );
     let _ = std::fs::remove_dir_all(package_root);
 }
