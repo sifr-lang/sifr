@@ -179,6 +179,17 @@ Review and upstream coordination ledger:
   gates all passed. Exact create-PR evidence is appended to
   `plans/phases/adhoc_performance_budget_host_variance.md` and is not a Phase
   40 prerequisite. No timeout or validation waiver was added.
+- Post-merge qualification run
+  [#30270476093](https://github.com/sifr-lang/sifr/actions/runs/30270476093)
+  bound source `3ebe27bc4095134137a5b47df7ea372aff936011` and passed all
+  four governed targets, editor qualification, and aggregate assembly. Its
+  collector exposed two real GitHub API semantics missing from the fixtures:
+  `name` contains the dynamic `run-name`, while `path` identifies the workflow;
+  and `created_at` can trail the expiry anchor by several upload seconds. The
+  repair binds the exact workflow path and permits at most 60 seconds of
+  one-sided timestamp skew while the workflow contract still requires
+  `retention-days: 30`; the real six-container replay produces and validates
+  the complete canonical 20-row index.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 

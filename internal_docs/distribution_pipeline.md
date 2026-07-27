@@ -220,6 +220,14 @@ every workflow artifact id and upload name, exact per-artifact expiry, file
 name, size, SHA-256, complete target coverage, aggregate installer/checksums,
 and VSIX evidence.
 
+Run identity is bound to the exact
+`.github/workflows/release-qualification.yml` API `path`; the API `name` is
+dynamic because the workflow uses `run-name`. The workflow contract still
+requires `retention-days: 30`. GitHub anchors expiry when upload begins but
+records `created_at` after upload completes, so the collector accepts only an
+observed API interval from 30 days minus 60 seconds through exactly 30 days.
+Longer retention or a shortfall greater than 60 seconds fails closed.
+
 The local `plan-stable-release` command in
 `scripts/distribution/release_governance.py` is non-mutating. It requires a
 clean checkout at the exact source SHA, an unexpired qualification index, the

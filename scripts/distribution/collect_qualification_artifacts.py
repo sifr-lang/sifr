@@ -26,6 +26,9 @@ from governance.common import (  # noqa: E402
     write_canonical_json,
 )
 
+ARTIFACT_RETENTION = timedelta(days=30)
+ARTIFACT_TIMESTAMP_SKEW = timedelta(seconds=60)
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -95,7 +98,7 @@ def collect_index(
         or run_metadata.get("run_attempt") != run_attempt
         or run_metadata.get("head_sha") != source_commit
         or run_metadata.get("event") != "workflow_dispatch"
-        or run_metadata.get("name") != "release-qualification"
+        or run_metadata.get("path") != ".github/workflows/release-qualification.yml"
         or repository.get("full_name") != "sifr-lang/sifr"
     ):
         raise GovernanceError(
@@ -155,9 +158,15 @@ def collect_index(
             raise GovernanceError(
                 f"{workflow_name}: artifact timestamps need timezones"
             )
-        if parsed_expiry - parsed_creation != timedelta(days=30):
+        observed_retention = parsed_expiry - parsed_creation
+        if not (
+            ARTIFACT_RETENTION - ARTIFACT_TIMESTAMP_SKEW
+            <= observed_retention
+            <= ARTIFACT_RETENTION
+        ):
             raise GovernanceError(
-                f"{workflow_name}: artifact retention is not exactly 30 days"
+                f"{workflow_name}: artifact retention is outside the governed "
+                "30-day API timestamp bound"
             )
         expiries.append((parsed_expiry, expires_at))
         workflow_run = require_object(

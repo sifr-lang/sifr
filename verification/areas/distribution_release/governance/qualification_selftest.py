@@ -91,7 +91,7 @@ def create_fixture(root: Path) -> tuple[Path, Path, Path, Path]:
                 "id": artifact_id,
                 "name": workflow_name,
                 "expired": False,
-                "created_at": "2098-12-02T00:00:00Z",
+                "created_at": "2098-12-02T00:00:05Z",
                 "expires_at": "2099-01-01T00:00:00Z",
                 "workflow_run": {"id": 42, "head_sha": COMMIT},
             }
@@ -106,7 +106,8 @@ def create_fixture(root: Path) -> tuple[Path, Path, Path, Path]:
                 "run_attempt": 1,
                 "head_sha": COMMIT,
                 "event": "workflow_dispatch",
-                "name": "release-qualification",
+                "name": f"Qualify stable candidate {VERSION} at {COMMIT}",
+                "path": ".github/workflows/release-qualification.yml",
                 "repository": {"full_name": "sifr-lang/sifr"},
             }
         )
@@ -186,9 +187,27 @@ def test_artifact_collector_rejects_drift() -> None:
                 "collector accepted another workflow definition commit"
             )
         run_metadata["head_sha"] = COMMIT
+        run_metadata["path"] = ".github/workflows/not-release-qualification.yml"
+        rewrite_canonical(run_metadata_path, run_metadata)
+        try:
+            load_collector().collect_index(
+                version=VERSION,
+                source_commit=COMMIT,
+                submodules_path=submodules_path,
+                run_id=42,
+                run_attempt=1,
+                run_metadata_path=run_metadata_path,
+                metadata_path=metadata_path,
+                artifact_root=artifact_root,
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("collector accepted another workflow path")
+        run_metadata["path"] = ".github/workflows/release-qualification.yml"
         rewrite_canonical(run_metadata_path, run_metadata)
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-        metadata["artifacts"][0]["created_at"] = "2098-12-01T00:00:00Z"
+        metadata["artifacts"][0]["created_at"] = "2098-12-02T00:01:01Z"
         rewrite_canonical(metadata_path, metadata)
         try:
             load_collector().collect_index(
@@ -205,7 +224,7 @@ def test_artifact_collector_rejects_drift() -> None:
             pass
         else:
             raise AssertionError("collector accepted non-governed artifact retention")
-        metadata["artifacts"][0]["created_at"] = "2098-12-02T00:00:00Z"
+        metadata["artifacts"][0]["created_at"] = "2098-12-02T00:00:05Z"
         rewrite_canonical(metadata_path, metadata)
         target_dir = (
             artifact_root / f"sifr-stable-candidate-{VERSION}-{COMMIT}-{TARGETS[0]}"
