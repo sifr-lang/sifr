@@ -98,7 +98,7 @@ Artifacts mapped to the Phase 40 exit gate:
   roll-forward, generation burning, and recovery evidence.
 - [x] Keep production mutation adapters disabled.
 - [x] Validate first-GA and later incident recovery.
-- [ ] Record review rounds, PR, validation, and merge.
+- [x] Record review rounds, PR, validation, and merge.
 
 ### milestone_40_4: Stable Documentation and VS Code Release
 
@@ -494,3 +494,11 @@ updating or deleting that exact tag with no bypass actors.
   demo, file-size guardrails, custody-layout reproduction, stale-path sweep,
   and a fresh full definition-of-done review against exact implementation head
   `cc87f1e79a2d11c2f2cd1fba8b99d470741c82da`.
+- Exact PR-head Claude Opus review pass 5 is approved with no actionable
+  findings and is archived at
+  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-5-pr-head.md`.
+  It reverified the complete merge candidate and the pass-4 tracking-only
+  delta at exact remote head
+  `e42bb9a3d4fb48ae3ba50fc9209aa2e8cd5c10d7`.
+- Main-repository [PR #3032](https://github.com/sifr-lang/sifr/pull/3032)
+  merged as `97df4acb4656ee55754ec87d4c2d982b13df740e`.
