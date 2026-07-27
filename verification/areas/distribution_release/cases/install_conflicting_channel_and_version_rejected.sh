@@ -12,6 +12,4 @@ require_failure_contains \
 require_failure_contains \
   "SIFR_CHANNEL=alpha conflicts with --channel beta" \
   env SIFR_CHANNEL=alpha \
-    SIFR_INSTALLER_RELEASE_BASE_URL="${DISPATCH_RELEASE_BASE_URL}" \
-    SIFR_CHANNEL_METADATA_URL="${DISPATCH_CHANNEL_METADATA_URL}" \
     sh "${SITE_INSTALL_ROOT}/index" --channel beta

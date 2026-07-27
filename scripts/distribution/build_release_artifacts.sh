@@ -80,8 +80,8 @@ if [[ -z "${VERSION}" || -z "${OUTPUT_DIR}" ]]; then
 fi
 
 if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ &&
-      ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$ ]]; then
-  echo "version must be stable SemVer or a prerelease using -alpha.N, -beta.N, or -rc.N: ${VERSION}" >&2
+      ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta)\.[0-9]+$ ]]; then
+  echo "version must be stable SemVer or a prerelease using -alpha.N or -beta.N: ${VERSION}" >&2
   exit 2
 fi
 

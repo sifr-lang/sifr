@@ -1,7 +1,8 @@
 # Sifr Distribution Pipeline
 
-Status: canonical release-governance epoch; stable qualification is active
-while public stable resolution and publication remain gated.
+Status: canonical release-governance epoch; stable qualification, fresh
+installation, and self-update behavior are implemented. Public stable
+activation remains gated by protected GA publication.
 
 ## Installer Model
 
@@ -18,11 +19,18 @@ The filesystem layout is:
 ```text
 public/install/
   index
+  stable
   alpha
   beta
 ```
 
-`index` is the default beta bootstrap. The deployment must serve it at `https://sifr.sh/install`; `alpha` and `beta` are served at `https://sifr.sh/install/alpha` and `https://sifr.sh/install/beta`. These scripts are stable website entrypoints only: they fetch GitHub `channels.json`, resolve the requested channel or version pin, and download `sifr-installer-<version>` from the resolved version's GitHub release.
+`index` is generated with stable as its canonical default and is served at
+`https://sifr.sh/install`; the other files are served at the matching nested
+paths. Before GA activation, the paired preview deployment explicitly retains
+beta as the live `index` default so stable is never exposed before the governed
+index becomes active. All four scripts fetch GitHub `channels.json`, resolve
+the requested channel or exact active version, and download the immutable
+`sifr-installer-<version>` from the matching GitHub release.
 
 Channel resolution is not served from the website install tree. It is published as the `channels.json` asset on the `sifr-lang/sifr` GitHub release tag `channels`; both the website bootstrap scripts and `sifr self update` use that metadata and download immutable installer assets from version releases.
 
@@ -41,13 +49,22 @@ scripts/distribution/generate_dispatchers.sh \
 
 Dispatcher behavior:
 
-- `/install` defaults to the beta channel from GitHub `channels.json`.
-- `/install/alpha` and `/install/beta` select the corresponding preview channel.
-- `--channel alpha|beta` and `SIFR_CHANNEL=alpha|beta` select a moving preview channel.
-- `--version <semver-prerelease>` selects the matching GitHub release installer directly.
-- `stable` and stable-looking versions such as `1.0.0` or `0.1.0` are rejected before download.
+- `/install` defaults to stable in the canonical generated dispatcher.
+- `/install/stable`, `/install/alpha`, and `/install/beta` select the matching
+  governed channel.
+- `--channel alpha|beta|stable` and `SIFR_CHANNEL=alpha|beta|stable` select a
+  moving channel.
+- `--version` accepts stable SemVer or an alpha/beta prerelease only when the
+  exact version is an active governed release.
+- Stable resolution requires `ga_status: active`; preview metadata contains
+  exactly alpha and beta.
+- `rc`, legacy metadata, version-negotiated metadata, dual-format metadata,
+  and withdrawn or unlisted versions fail before installer execution.
 - Conflicting `SIFR_CHANNEL`, `--channel`, and `--version` inputs are rejected.
-- The dispatcher downloads exactly one immutable GitHub installer asset and preserves its exit status.
+- Metadata and installer URLs are generator-owned constants, not runtime
+  environment overrides.
+- The dispatcher verifies the governed installer SHA-256 before execution and
+  preserves the delegated installer's exit status.
 
 The dispatcher never resolves artifacts itself and never compiles from source.
 
@@ -98,20 +115,23 @@ discarded state: there is no bootstrap converter, fallback reader, migration,
 or dual publication. Preview publication requires an existing canonical v2
 index and advances it only with the expected generation and digest.
 
-## Preview metadata validation Validation
-
-Preview metadata validation uses mocked immutable generated installers until installer artifact validation adds checksum-verified artifact installers.
+## Release-index and dispatcher validation
 
 Run dispatcher validation with:
 
 ```bash
-verification/areas/distribution_release/cases/install_default_beta_dispatcher.sh
+verification/areas/distribution_release/cases/install_default_stable_dispatcher.sh
 verification/areas/distribution_release/cases/install_alpha_dispatcher.sh
 verification/areas/distribution_release/cases/install_version_pin_dispatcher.sh
-verification/areas/distribution_release/cases/install_stable_channel_gated.sh
+verification/areas/distribution_release/cases/install_stable_channel.sh
 verification/areas/distribution_release/cases/install_invalid_channel_rejected.sh
 verification/areas/distribution_release/cases/install_conflicting_channel_and_version_rejected.sh
-verification/areas/distribution_release/cases/install_stable_version_pin_rejected.sh
+verification/areas/distribution_release/cases/install_stable_version_pin.sh
+verification/areas/distribution_release/cases/install_stable_requires_active_metadata.sh
+verification/areas/distribution_release/cases/install_withdrawn_stable_rejected.sh
+verification/areas/distribution_release/cases/install_installer_checksum_mismatch_rejected.sh
+verification/areas/distribution_release/cases/install_metadata_url_injection_ignored.sh
+verification/areas/distribution_release/cases/install_legacy_metadata_shapes_rejected.sh
 verification/areas/distribution_release/cases/install_missing_generated_installer_rejected.sh
 verification/areas/distribution_release/cases/install_dispatcher_malformed_config_rejected.sh
 ```
@@ -299,10 +319,8 @@ Official standalone installers write a schema-versioned `install.json` receipt:
 The authoritative field enumeration lives at `verification/areas/distribution_release/schemas/self_update_install_receipt.schema.json`. Receipts must use `schema_version: 2`, include every listed field, and reject unknown fields. Pre-schema, partial, malformed, or mismatched receipts are treated as unmanaged installs by `sifr self update`; the diagnostic tells users to re-run `curl -LsSf https://sifr.sh/install | sh` if they want standalone self-update management.
 
 `channel` is derived from the installer version: exact stable SemVer records
-`stable`, while prereleases use their label. Read-only receipt discovery and
-`sifr self version` accept stable candidate receipts for qualification; stable
-resolution and update remain gated until protected stable installation is
-enabled.
+`stable`, while prereleases use their label. Read-only receipt discovery,
+`sifr self version`, and self-update resolution accept stable receipts.
 `modify_path` records the actual installer request, including
 `SIFR_NO_MODIFY_PATH=1` and `--no-modify-path`. `binary_path` and
 `sysroot_path` record canonical installed paths when the platform can resolve
@@ -319,13 +337,16 @@ The public command surface is:
 
 ```bash
 sifr self version [--short] [--format text|json]
-sifr self update [--channel alpha|beta] [--version <preview-version>] [--dry-run] [--format text|json] [--force]
+sifr self update [--channel alpha|beta|stable] [--version <release-version>] [--dry-run] [--format text|json] [--force]
 ```
 
-The default update channel is the receipt channel. `--dry-run` performs no
+The default update channel is the receipt channel. Receipt eligibility is
+validated before network access. Every channel and exact-version request then
+resolves through canonical schema-v2 metadata, and the downloaded installer
+must match its governed SHA-256 before execution. `--dry-run` performs no
 mutation and does not acquire the install lock. Reinstalls, downgrades, and
-channel switches require `--force`; ordinary newer-version updates on the same
-channel do not.
+alpha/beta/stable channel switches require `--force`; ordinary newer-version
+updates on the receipt channel do not.
 
 Production installer downloads use normal TLS certificate verification. Test-only install-base overrides may be compiled or configured for fixtures; production runtime environment variables must not replace the trusted installer URL base.
 
@@ -349,7 +370,7 @@ verification/areas/distribution_release/cases/channel_dispatcher_points_to_gener
 verification/areas/distribution_release/cases/artifact_missing_target_rejected.sh
 verification/areas/distribution_release/cases/artifact_checksum_mismatch_rejected.sh
 verification/areas/distribution_release/cases/artifact_target_mismatch_rejected.sh
-verification/areas/distribution_release/cases/stable_entrypoints_unchanged_by_preview_release.sh
+verification/areas/distribution_release/cases/stable_entrypoints_generated.sh
 ```
 
 The self-update metadata drift checks validate that the GitHub-bound `channels.json` is well formed and that website dispatchers are GitHub-backed bootstrap scripts without website-hosted metadata or version installers:
@@ -361,10 +382,11 @@ verification/areas/distribution_release/tools/validate_self_update_metadata.sh \
 verification/areas/distribution_release/cases/channel_metadata_installer_agreement.sh
 verification/areas/distribution_release/cases/channel_metadata_dispatcher_drift_rejected.sh
 verification/areas/distribution_release/cases/channel_metadata_installer_drift_rejected.sh
-verification/areas/distribution_release/cases/channel_metadata_stable_rejected.sh
+verification/areas/distribution_release/cases/channel_metadata_stable_active.sh
 ```
 
-Run the validator after every `create_new_version.sh --real-run` and before pushing/deploying the site repository. The real-run command invokes it automatically before GitHub publication.
+Run the validator against publication fixtures and generated site dispatchers.
+Local tooling has no real-run or mutation mode.
 
 ## Preview Release Command
 
@@ -380,34 +402,38 @@ Dry-run example:
 scripts/distribution/create_new_version.sh \
   --channel beta \
   --version 0.1.0-beta.2 \
-  --dry-run
+  --dry-run \
+  --site-repo <clean-sifr-website-checkout> \
+  --release-index <canonical-channels-v2.json>
 ```
 
-Real-run example:
+The planner validates the exact Sifr commit, clean exact website base commit,
+production dispatcher URLs/defaults, absence of website metadata shadow state,
+and current canonical index identity. It prints the proposed channel mutation
+and write-once/replace-only policies without writing files. Artifact, real-run,
+work-directory, and mutation options are rejected.
 
-```bash
-scripts/distribution/create_new_version.sh \
-  --channel beta \
-  --version 0.1.0-beta.2 \
-  --real-run \
-  --site-repo <sifr-blog-website-checkout> \
-  --release-index <canonical-channels-v2.json> \
-  --artifact-dir target/preview-artifacts/0.1.0-beta.2 \
-  --mutation-mode local
-```
+`.github/workflows/preview-release.yml` is a build-only caller.
+`.github/workflows/release-publication.yml` is the sole reusable mutation
+authority and holds the `sifr-release-index` concurrency lease. It accepts only
+alpha and beta until protected GA activation. It rejects any existing version
+release, uploads immutable version assets without `--clobber`, downloads and
+byte-verifies them, allocates one greater than the maximum current/snapshot
+generation, uploads `channels-generation-<N>.json` write-once, and uses
+`--clobber` only for the canonical `channels.json` asset.
 
-Dry-run validates inputs, resolves the base commit, computes every target artifact name, detects site dispatcher drift, confirms stable entrypoints remain absent, and prints the exact GitHub Release, channel metadata, and site mutations.
-
-Real-run reuses the same plan SHA-256, verifies or builds all target artifacts, generates the immutable GitHub installer asset, regenerates GitHub-backed website bootstrap scripts and evidence-only GitHub channel metadata from one plan, validates metadata/dispatcher agreement, writes a release checklist, and writes a recovery note. It does not publish GitHub assets; `preview-release.yml` is the only authoritative GitHub-publish path for version releases and the shared `channels` release asset.
-
-The GitHub Actions preview-release workflow serializes runs with the
-`sifr-release-index` concurrency group because every channel publication is a
-read-modify-write operation over the shared governed index.
-Do not run workstation GitHub publication while `preview-release.yml` is publishing. Use `scripts/distribution/trigger_preview_release.sh` to dispatch GitHub releases.
-The workflow publishes the version release before updating `channels.json`; if
-the final channel update fails, retry the workflow after correcting the failed
-verification. Version-pinned installs may see the already-published release
-asset before the moving channel pointer advances.
+After index replacement, the same leased workflow dispatches the pinned
+`sifr-lang/sifr-website` `release-site.yml` at an exact protected-main commit.
+The milestone-40.2 caller pins the site workflow merged through
+[sifr-website PR #14](https://github.com/sifr-lang/sifr-website/pull/14) at
+`721bceca795a79a03af74ccb707d117a6f031f38`.
+The protected cross-repository token is limited to that repository's Actions
+operations. The site run checks exact Sifr/site commits, regenerates the four
+dispatchers, validates dispatcher and canonical publication-facts digests,
+re-fetches the exact governed generation immediately before deploy, deploys
+through Wrangler, and verifies the public bytes. The main workflow polls the
+exact attempt/head/title for at most 20 minutes and requests cancellation on
+timeout. The site workflow never writes release metadata.
 
 The Cursor command wrapper lives at `.cursor/commands/create-new-version.md`.
 
@@ -418,11 +444,25 @@ The preview lifecycle-specific checks are:
 ```bash
 verification/areas/distribution_release/cases/create_new_version_alpha_dry_run.sh
 verification/areas/distribution_release/cases/create_new_version_beta_dry_run.sh
-verification/areas/distribution_release/cases/create_new_version_real_run_plan_reuse.sh
-verification/areas/distribution_release/cases/create_new_version_release_checklist.sh
-verification/areas/distribution_release/cases/create_new_version_attribution_checklist.sh
+verification/areas/distribution_release/cases/create_new_version_plan_is_read_only.sh
+verification/areas/distribution_release/cases/create_new_version_local_mutation_rejected.sh
+verification/areas/distribution_release/cases/create_new_version_artifact_mode_rejected.sh
+verification/areas/distribution_release/cases/create_new_version_dirty_site_rejected.sh
 verification/areas/distribution_release/cases/create_new_version_stable_rejected.sh
 verification/areas/distribution_release/cases/create_new_version_bad_semver_rejected.sh
-verification/areas/distribution_release/cases/create_new_version_missing_artifact_rejected.sh
 verification/areas/distribution_release/cases/create_new_version_site_dispatcher_drift_rejected.sh
+verification/areas/distribution_release/cases/preview_release_workflow_yaml_parses.sh
+verification/areas/distribution_release/cases/site_publication_facts_generated.sh
+verification/areas/distribution_release/cases/site_release_workflow_contract.sh
 ```
+
+Run the capability demo with:
+
+```bash
+demos/stable_self_update_demo.sh
+```
+
+It performs a forced beta-to-stable handoff and an ordinary
+stable-to-stable update through immutable mock installers, proves receipt and
+sysroot version movement together, shows the stable no-op plan, and verifies
+that the public preview workflow still has no stable mutation input.

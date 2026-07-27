@@ -5,15 +5,10 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 DEFAULT_SITE_INSTALL_ROOT="${REPO_ROOT}/target/distribution_release/default-site-install"
 SITE_INSTALL_ROOT="${SIFR_SITE_INSTALL_ROOT:-${DEFAULT_SITE_INSTALL_ROOT}}"
-DISPATCH_RELEASE_BASE_URL="${SIFR_INSTALLER_RELEASE_BASE_URL:-file://${SITE_INSTALL_ROOT}/github-releases}"
-DISPATCH_CHANNEL_METADATA_URL="${SIFR_CHANNEL_METADATA_URL:-file://${SITE_INSTALL_ROOT}/channels.json}"
-
 run_dispatcher() {
   local dispatcher="$1"
   shift
-  SIFR_INSTALLER_RELEASE_BASE_URL="${DISPATCH_RELEASE_BASE_URL}" \
-    SIFR_CHANNEL_METADATA_URL="${DISPATCH_CHANNEL_METADATA_URL}" \
-    SIFR_DISPATCH_TRACE=1 \
+  SIFR_DISPATCH_TRACE=1 \
     sh "${SITE_INSTALL_ROOT}/${dispatcher}" "$@"
 }
 
@@ -56,33 +51,47 @@ make_dispatcher_fixture() {
   local target_root="$1"
   mkdir -p "${target_root}"
   "${REPO_ROOT}/scripts/distribution/generate_dispatchers.sh" \
-    --install-root "${target_root}" >/dev/null
+    --install-root "${target_root}" \
+    --installer-release-base-url "file://${target_root}/github-releases" \
+    --channel-metadata-url "file://${target_root}/channels.json" >/dev/null
 }
 
 generate_channel_metadata_fixture() {
   local out="$1"
   local alpha_version="$2"
   local beta_version="$3"
+  local stable_version="${4:-}"
   local record_dir
   record_dir="$(mktemp -d "${TMPDIR:-/tmp}/sifr-release-records.XXXXXX")"
-  python3 - "${record_dir}" "${alpha_version}" "${beta_version}" <<'PY'
+  python3 - "${record_dir}" "${alpha_version}" "${beta_version}" "$(dirname "${out}")" "${stable_version}" <<'PY'
+import hashlib
 import json
 import pathlib
 import sys
 
 root = pathlib.Path(sys.argv[1])
+fixture_root = pathlib.Path(sys.argv[4])
 targets = (
     "aarch64-apple-darwin",
     "x86_64-apple-darwin",
     "aarch64-unknown-linux-gnu",
     "x86_64-unknown-linux-gnu",
 )
-for channel, version in (("alpha", sys.argv[2]), ("beta", sys.argv[3])):
+versions = [("alpha", sys.argv[2]), ("beta", sys.argv[3])]
+if sys.argv[5]:
+    versions.append(("stable", sys.argv[5]))
+for channel, version in versions:
+    installer = fixture_root / "github-releases" / version / f"sifr-installer-{version}"
+    installer_sha256 = (
+        hashlib.sha256(installer.read_bytes()).hexdigest()
+        if installer.is_file()
+        else "d" * 64
+    )
     release = {
         "channel": channel,
         "status": "active",
         "source_commit": "e" * 40,
-        "installer_sha256": "a" * 64,
+        "installer_sha256": installer_sha256,
         "targets": {
             target: {
                 "artifact_sha256": "b" * 64,
@@ -96,17 +105,35 @@ for channel, version in (("alpha", sys.argv[2]), ("beta", sys.argv[3])):
         encoding="utf-8",
     )
 PY
-  "${REPO_ROOT}/scripts/distribution/generate_channel_metadata.sh" \
+  local metadata_args=(
     --out "${out}" \
     --generation 1 \
+    --ga-status "$([[ -n "${stable_version}" ]] && echo active || echo preview)" \
     --alpha-release "${record_dir}/alpha.json" \
-    --beta-release "${record_dir}/beta.json" >/dev/null
+    --beta-release "${record_dir}/beta.json"
+  )
+  if [[ -n "${stable_version}" ]]; then
+    metadata_args+=(--stable-release "${record_dir}/stable.json")
+  fi
+  "${REPO_ROOT}/scripts/distribution/generate_channel_metadata.sh" \
+    "${metadata_args[@]}" >/dev/null
   rm -rf "${record_dir}"
+}
+
+make_release_index_fixture() {
+  local out="$1"
+  generate_channel_metadata_fixture \
+    "${out}" \
+    "0.1.0-alpha.1" \
+    "0.1.0-beta.1"
 }
 
 make_mock_version_installers() {
   local target_root="$1"
-  mkdir -p "${target_root}/github-releases/0.1.0-alpha.1" "${target_root}/github-releases/0.1.0-beta.1"
+  mkdir -p \
+    "${target_root}/github-releases/0.1.0-alpha.1" \
+    "${target_root}/github-releases/0.1.0-beta.1" \
+    "${target_root}/github-releases/0.1.0"
   cat >"${target_root}/github-releases/0.1.0-alpha.1/sifr-installer-0.1.0-alpha.1" <<'EOF'
 #!/usr/bin/env sh
 set -eu
@@ -117,13 +144,20 @@ EOF
 set -eu
 echo "sifr mock generated installer version=0.1.0-beta.1"
 EOF
+  cat >"${target_root}/github-releases/0.1.0/sifr-installer-0.1.0" <<'EOF'
+#!/usr/bin/env sh
+set -eu
+echo "sifr mock generated installer version=0.1.0"
+EOF
   chmod 755 \
     "${target_root}/github-releases/0.1.0-alpha.1/sifr-installer-0.1.0-alpha.1" \
-    "${target_root}/github-releases/0.1.0-beta.1/sifr-installer-0.1.0-beta.1"
+    "${target_root}/github-releases/0.1.0-beta.1/sifr-installer-0.1.0-beta.1" \
+    "${target_root}/github-releases/0.1.0/sifr-installer-0.1.0"
   generate_channel_metadata_fixture \
     "${target_root}/channels.json" \
     "0.1.0-alpha.1" \
-    "0.1.0-beta.1"
+    "0.1.0-beta.1" \
+    "0.1.0"
 }
 
 use_mock_dispatcher_fixture() {
@@ -135,8 +169,6 @@ use_mock_dispatcher_fixture() {
   make_dispatcher_fixture "${MOCK_DISPATCHER_TMP_DIR}"
   make_mock_version_installers "${MOCK_DISPATCHER_TMP_DIR}"
   SITE_INSTALL_ROOT="${MOCK_DISPATCHER_TMP_DIR}"
-  DISPATCH_RELEASE_BASE_URL="file://${MOCK_DISPATCHER_TMP_DIR}/github-releases"
-  DISPATCH_CHANNEL_METADATA_URL="file://${MOCK_DISPATCHER_TMP_DIR}/channels.json"
 }
 
 sha256_fixture_file() {
@@ -281,6 +313,12 @@ make_site_repo_fixture() {
   fi
   mkdir -p "${target_repo}/apps/sifr-site/public"
   cp -R "${SITE_INSTALL_ROOT}" "${target_repo}/apps/sifr-site/public/install"
+  rm -f "${target_repo}/apps/sifr-site/public/install/channels.json"
   rm -f "${target_repo}/apps/sifr-site/public/install/metadata/channels.json"
   rmdir "${target_repo}/apps/sifr-site/public/install/metadata" 2>/dev/null || true
+  git -C "${target_repo}" init -q
+  git -C "${target_repo}" config user.name "Sifr Test"
+  git -C "${target_repo}" config user.email "test@sifr.invalid"
+  git -C "${target_repo}" add apps/sifr-site/public/install
+  git -C "${target_repo}" commit -qm "fixture: add production dispatchers"
 }

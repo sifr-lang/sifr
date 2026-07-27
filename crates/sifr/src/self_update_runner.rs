@@ -1,6 +1,7 @@
 use crate::cli_model_and_entrypoint::{diagnostic_with_code, EXIT_USER_DIAGNOSTIC};
 use crate::self_update_metadata::{UpdateAction, UpdatePlan};
 use crate::self_update_receipt::DiscoveredReceipt;
+use sha2::{Digest as _, Sha256};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use std::fs;
 use std::io::{self, BufRead as _};
@@ -42,7 +43,7 @@ impl SelfUpdateRunner {
 
         let temp_dir = TempWorkDir::create("sifr-self-update")?;
         let installer_path = self.download_installer(plan, temp_dir.path())?;
-        validate_installer(&installer_path)?;
+        validate_installer(&installer_path, &plan.installer_sha256)?;
         make_executable(&installer_path)?;
 
         let install_dir = Path::new(&discovered.receipt.install_dir);
@@ -170,7 +171,7 @@ impl SelfUpdateRunner {
     }
 }
 
-fn validate_installer(path: &Path) -> Result<(), RunnerError> {
+fn validate_installer(path: &Path, expected_sha256: &str) -> Result<(), RunnerError> {
     let metadata = fs::metadata(path).map_err(|error| {
         runner_error(format!(
             "could not inspect downloaded self-update installer {}: {error}",
@@ -182,6 +183,19 @@ fn validate_installer(path: &Path) -> Result<(), RunnerError> {
             "downloaded self-update installer {} is too small: {} bytes",
             path.display(),
             metadata.len()
+        )));
+    }
+
+    let bytes = fs::read(path).map_err(|error| {
+        runner_error(format!(
+            "could not hash downloaded self-update installer {}: {error}",
+            path.display()
+        ))
+    })?;
+    let actual_sha256 = format!("{:x}", Sha256::digest(bytes));
+    if actual_sha256 != expected_sha256 {
+        return Err(runner_error(format!(
+            "downloaded self-update installer SHA-256 mismatch: expected {expected_sha256}, got {actual_sha256}"
         )));
     }
 
@@ -350,6 +364,7 @@ mod tests {
     use super::SelfUpdateRunner;
     use crate::self_update_metadata::{PreviewChannel, PreviewVersion, UpdateAction, UpdatePlan};
     use crate::self_update_receipt::{DiscoveredReceipt, InstallReceipt};
+    use sha2::{Digest as _, Sha256};
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::thread;
@@ -398,7 +413,17 @@ mod tests {
             resolved_channel: PreviewChannel::Beta,
             action: UpdateAction::Update,
             force,
+            installer_sha256: "d".repeat(64),
         }
+    }
+
+    fn plan_for_installer(force: bool, installer: &Path) -> UpdatePlan {
+        let mut plan = plan(force);
+        plan.installer_sha256 = format!(
+            "{:x}",
+            Sha256::digest(fs::read(installer).expect("read installer fixture"))
+        );
+        plan
     }
 
     fn discovered(root: &Path, modify_path: bool, default_manifest: bool) -> DiscoveredReceipt {
@@ -500,7 +525,7 @@ cp "{}" "$out"
         let discovered = discovered(root.path(), false, false);
 
         let exit = runner(root.path(), &curl)
-            .run(&plan(true), &discovered)
+            .run(&plan_for_installer(true, &installer), &discovered)
             .expect("runner succeeds");
 
         assert_eq!(exit, 0);
@@ -534,7 +559,7 @@ cp "{}" "$out"
         let discovered = discovered(root.path(), true, true);
 
         runner(root.path(), &curl)
-            .run(&plan(false), &discovered)
+            .run(&plan_for_installer(false, &installer), &discovered)
             .expect("runner succeeds");
 
         let output = fs::read_to_string(record).expect("read record");
@@ -548,7 +573,10 @@ cp "{}" "$out"
         fs::write(&tiny, "#!/bin/sh\n").expect("write tiny installer");
         let curl = write_fake_curl(root.path(), &tiny);
         let error = runner(root.path(), &curl)
-            .run(&plan(false), &discovered(root.path(), true, true))
+            .run(
+                &plan_for_installer(false, &tiny),
+                &discovered(root.path(), true, true),
+            )
             .expect_err("tiny downloads are rejected");
         assert!(error.diagnostic.message.contains("too small"));
     }
@@ -560,9 +588,28 @@ cp "{}" "$out"
         fs::write(&bad, format!("{}\n", "x".repeat(1100))).expect("write bad installer");
         let curl = write_fake_curl(root.path(), &bad);
         let error = runner(root.path(), &curl)
-            .run(&plan(false), &discovered(root.path(), true, true))
+            .run(
+                &plan_for_installer(false, &bad),
+                &discovered(root.path(), true, true),
+            )
             .expect_err("non-shell downloads are rejected");
         assert!(error.diagnostic.message.contains("shebang"));
+    }
+
+    #[test]
+    fn rejects_installer_digest_mismatch_before_execution() {
+        let root = TestDir::new("digest");
+        let record = root.path().join("executed.txt");
+        let installer = write_installer(
+            root.path(),
+            &format!("printf executed > \"{}\"", record.display()),
+        );
+        let curl = write_fake_curl(root.path(), &installer);
+        let error = runner(root.path(), &curl)
+            .run(&plan(false), &discovered(root.path(), true, true))
+            .expect_err("digest mismatch is rejected");
+        assert!(error.diagnostic.message.contains("SHA-256 mismatch"));
+        assert!(!record.exists());
     }
 
     #[test]
@@ -571,7 +618,10 @@ cp "{}" "$out"
         let installer = write_installer(root.path(), "exit 7");
         let curl = write_fake_curl(root.path(), &installer);
         let error = runner(root.path(), &curl)
-            .run(&plan(false), &discovered(root.path(), true, true))
+            .run(
+                &plan_for_installer(false, &installer),
+                &discovered(root.path(), true, true),
+            )
             .expect_err("installer failure is mapped");
         assert_eq!(error.exit_code, 7);
         assert!(error.diagnostic.message.contains("installer exited"));
@@ -597,9 +647,11 @@ printf '%s\n' "$SIFR_INSTALL_DIR" >> "{}"
         let first_discovered = discovered.clone();
         let second_discovered = discovered.clone();
 
-        let first = thread::spawn(move || first_runner.run(&plan(false), &first_discovered));
+        let first_plan = plan_for_installer(false, &installer);
+        let second_plan = first_plan.clone();
+        let first = thread::spawn(move || first_runner.run(&first_plan, &first_discovered));
         thread::sleep(Duration::from_millis(150));
-        let second = thread::spawn(move || second_runner.run(&plan(false), &second_discovered));
+        let second = thread::spawn(move || second_runner.run(&second_plan, &second_discovered));
 
         first.join().expect("first thread").expect("first update");
         second

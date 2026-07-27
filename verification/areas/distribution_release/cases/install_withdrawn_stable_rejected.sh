@@ -12,9 +12,9 @@ import sys
 
 path = pathlib.Path(sys.argv[1])
 payload = json.loads(path.read_text(encoding="utf-8"))
-release = payload["releases"].pop("0.1.0-alpha.1")
-payload["releases"]["0.1.0-alpha.404"] = release
-payload["channels"]["alpha"] = "0.1.0-alpha.404"
+release = payload["releases"]["0.1.0"]
+release["status"] = "withdrawn"
+release["incident_id"] = "incident-fixture"
 path.write_text(
     json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n",
     encoding="utf-8",
@@ -22,5 +22,6 @@ path.write_text(
 PY
 
 require_failure_contains \
-  "GitHub installer unavailable" \
-  run_dispatcher index --version 0.1.0-alpha.404
+  "version 0.1.0 is not an active governed release" \
+  run_dispatcher index
+

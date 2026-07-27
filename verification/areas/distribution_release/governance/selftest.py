@@ -443,6 +443,24 @@ def test_release_index_transitions() -> None:
         release_value=release_record("beta"),
     )
     assert forward["channels"]["beta"] == "0.1.0-beta.3"
+    reserved_generation = propose_preview_release(
+        preview_index(),
+        channel="beta",
+        version="0.1.0-beta.3",
+        release_value=release_record("beta"),
+        proposed_generation=12,
+    )
+    assert reserved_generation["generation"] == 12
+    expect_rejected(
+        lambda value: propose_preview_release(
+            value,
+            channel="beta",
+            version="0.1.0-beta.3",
+            release_value=release_record("beta"),
+            proposed_generation=value["generation"],
+        ),
+        preview_index(),
+    )
     expect_rejected(
         lambda value: propose_preview_release(
             value,

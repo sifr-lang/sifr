@@ -86,25 +86,18 @@ fn cmd_update(args: &SelfUpdateArgs, diagnostic_format: DiagnosticFormat) -> i32
         Ok(discovered) => discovered,
         Err(exit_code) => return exit_code,
     };
-    let metadata = if matches!(
-        &request,
-        TargetRequest::ReceiptChannel | TargetRequest::Channel(_)
-    ) {
-        match fetch_channel_metadata() {
-            Ok(metadata) => Some(metadata),
-            Err(diagnostic) => {
-                return render_user_error(diagnostic, diagnostic_format);
-            }
+    let metadata = match fetch_channel_metadata() {
+        Ok(metadata) => metadata,
+        Err(diagnostic) => {
+            return render_user_error(diagnostic, diagnostic_format);
         }
-    } else {
-        None
     };
     let plan = match resolve_update_plan(
         &discovered.receipt.version,
         &discovered.receipt.channel,
         request,
         args.force,
-        metadata.as_ref(),
+        Some(&metadata),
     ) {
         Ok(plan) => plan,
         Err(diagnostic) => return render_user_error(diagnostic, diagnostic_format),
@@ -399,6 +392,7 @@ mod tests {
             resolved_channel: PreviewChannel::Beta,
             action: UpdateAction::Update,
             force: false,
+            installer_sha256: "d".repeat(64),
         }
     }
 
@@ -419,6 +413,7 @@ mod tests {
             resolved_channel,
             action,
             force: action != UpdateAction::NoOp,
+            installer_sha256: "d".repeat(64),
         }
     }
 

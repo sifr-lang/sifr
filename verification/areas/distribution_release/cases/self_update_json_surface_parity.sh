@@ -66,6 +66,20 @@ python3 "${REPO_ROOT}/scripts/distribution/release_governance.py" validate \
   --kind self-version \
   --input "${tmp_dir}/self-version.json" >/dev/null
 
+generate_channel_metadata_fixture \
+  "${tmp_dir}/channels.json" \
+  "0.1.0-alpha.1" \
+  "0.1.0-beta.13"
+mkdir -p "${tmp_dir}/fake-bin"
+cat >"${tmp_dir}/fake-bin/curl" <<'EOF'
+#!/bin/sh
+set -eu
+cat "${SIFR_TEST_CHANNELS_FILE}"
+EOF
+chmod 755 "${tmp_dir}/fake-bin/curl"
+
+PATH="${tmp_dir}/fake-bin:${PATH}" \
+SIFR_TEST_CHANNELS_FILE="${tmp_dir}/channels.json" \
 SIFR_INSTALL_MANIFEST_DIR="${install_root}" \
   "${binary_path}" self update \
     --version 0.1.0-beta.13 \

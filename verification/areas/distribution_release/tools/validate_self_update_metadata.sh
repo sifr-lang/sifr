@@ -76,21 +76,35 @@ if not isinstance(metadata, dict):
 channels = metadata.get("channels")
 if not isinstance(channels, dict):
     raise SystemExit("channel metadata channels must be an object")
-if metadata.get("ga_status") != "preview" or "stable" in channels:
-    raise SystemExit("stable channel metadata is disabled until GA activation")
-if set(channels) != {"alpha", "beta"}:
-    unknown = sorted(set(channels) - {"alpha", "beta"})
+ga_status = metadata.get("ga_status")
+expected_channels = (
+    {"alpha", "beta"} if ga_status == "preview"
+    else {"alpha", "beta", "stable"} if ga_status == "active"
+    else None
+)
+if expected_channels is None:
+    raise SystemExit("channel metadata ga_status must be preview or active")
+if set(channels) != expected_channels:
+    unknown = sorted(set(channels) - {"alpha", "beta", "stable"})
     if unknown:
         raise SystemExit(f"unknown self-update channel in metadata: {unknown[0]}")
-    raise SystemExit("channel metadata must contain alpha and beta channels")
-if list(channels) != ["alpha", "beta"]:
+    raise SystemExit(
+        f"{ga_status} channel metadata must contain exactly "
+        + ", ".join(sorted(expected_channels))
+    )
+if list(channels) != sorted(expected_channels):
     raise SystemExit("channel metadata ordering drifted")
 
-for channel in ("alpha", "beta"):
+for channel in sorted(expected_channels):
     version = channels[channel]
     if not isinstance(version, str):
         raise SystemExit(f"metadata channel {channel} must map to a version")
-    if not re.fullmatch(rf"[0-9]+\.[0-9]+\.[0-9]+-{channel}\.[0-9]+", version):
+    pattern = (
+        r"[0-9]+\.[0-9]+\.[0-9]+"
+        if channel == "stable"
+        else rf"[0-9]+\.[0-9]+\.[0-9]+-{channel}\.[0-9]+"
+    )
+    if not re.fullmatch(pattern, version):
         raise SystemExit(f"metadata channel {channel} points at {version}")
     release = metadata["releases"].get(version)
     if not isinstance(release, dict) or release.get("status") != "active":
@@ -101,6 +115,7 @@ PY
 
 metadata_alpha=""
 metadata_beta=""
+metadata_stable=""
 while IFS='=' read -r key value; do
   case "${key}" in
     alpha)
@@ -109,12 +124,15 @@ while IFS='=' read -r key value; do
     beta)
       metadata_beta="${value}"
       ;;
+    stable)
+      metadata_stable="${value}"
+      ;;
   esac
 done <<<"${metadata_values}"
 
 [[ -n "${metadata_alpha}" && -n "${metadata_beta}" ]] || fail "metadata versions could not be extracted"
 
-for dispatcher in index alpha beta; do
+for dispatcher in index stable alpha beta; do
   [[ -f "${INSTALL_ROOT}/${dispatcher}" ]] || fail "dispatcher missing: ${INSTALL_ROOT}/${dispatcher}"
   grep -q 'CHANNEL_METADATA_URL="https://github.com/sifr-lang/sifr/releases/download/channels/channels.json"' \
     "${INSTALL_ROOT}/${dispatcher}" || fail "dispatcher does not resolve channels from GitHub: ${dispatcher}"
@@ -124,7 +142,8 @@ for dispatcher in index alpha beta; do
     "${INSTALL_ROOT}/${dispatcher}" || fail "dispatcher does not use GitHub installer assets: ${dispatcher}"
 done
 
-grep -q 'DEFAULT_CHANNEL="beta"' "${INSTALL_ROOT}/index" || fail "index dispatcher must default to beta"
+grep -q 'DEFAULT_CHANNEL="stable"' "${INSTALL_ROOT}/index" || fail "index dispatcher must default to stable"
+grep -q 'DEFAULT_CHANNEL="stable"' "${INSTALL_ROOT}/stable" || fail "stable dispatcher must default to stable"
 grep -q 'DEFAULT_CHANNEL="alpha"' "${INSTALL_ROOT}/alpha" || fail "alpha dispatcher must default to alpha"
 grep -q 'DEFAULT_CHANNEL="beta"' "${INSTALL_ROOT}/beta" || fail "beta dispatcher must default to beta"
 

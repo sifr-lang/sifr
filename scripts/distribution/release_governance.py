@@ -93,6 +93,7 @@ def parse_args() -> argparse.Namespace:
     update.add_argument("--release", required=True, help="Path to {version, release} JSON.")
     update.add_argument("--expected-generation", required=True, type=int)
     update.add_argument("--expected-sha256", required=True)
+    update.add_argument("--proposed-generation", required=True, type=int)
 
     plan = commands.add_parser("generate-release-plan")
     plan.add_argument("--spec", required=True)
@@ -230,6 +231,7 @@ def update_preview_index(args: argparse.Namespace) -> None:
         channel=args.channel,
         version=version,
         release_value=release,
+        proposed_generation=args.proposed_generation,
     )
     write_canonical_json(Path(args.out), proposed, refuse_existing=True)
 

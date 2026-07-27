@@ -24,7 +24,8 @@ validated, merged PR.
 - Builder-derived minimum floors:
   - macOS 15.0, from the `macos-15` and `macos-15-intel` release builders.
   - glibc 2.39 on Linux, from the Ubuntu 24.04 release builders.
-- Canonical site repository: `sifr-lang/sifr-blog-website`.
+- Canonical site repository: `sifr-lang/sifr-website` (the former
+  `sifr-lang/sifr-blog-website` remote redirects here).
 - Canonical release-index governance tag: `channels`.
 - Canonical schema epoch: integer `2` only. No v1 reader, writer, fixture,
   migration, negotiation, or fallback survives the milestone-40.0 cutover.
@@ -304,3 +305,32 @@ modifying its Rust-interop implementation.
     suite also failed on immediate parent `082988df1f`; the unrelated
     host/budget-stability work is deferred to
     `plans/phases/adhoc_performance_budget_host_variance.md`
+
+### milestone_40_2
+
+Status: in progress. The required site workflow landed first through
+[sifr-website PR #14](https://github.com/sifr-lang/sifr-website/pull/14), merged
+as `721bceca795a79a03af74ccb707d117a6f031f38`. The main-repository caller pins
+that exact protected-main commit.
+
+- Site review passes 1–5 found and closed immutable-action pinning, credential
+  persistence, metadata-shadow output, deployed-byte custody, stale-CDN index
+  checks, site-base attribution, terminal failure recording, protected-main
+  ancestry, mutation-boundary parsing, live-byte verification, bounded retry,
+  Cloudflare attribution, and PR-time CI gaps.
+- Site review pass 6 returned `APPROVED` with no actionable findings after the
+  paired Sifr generator contract, unique deployment tag, ignored-env boundary,
+  attempt length, and routing-asset checks were added.
+- Exact site PR-head review pass 7 independently verified clean/pushed head
+  `85de564`, the complete six-file diff, green `build website` check, all prior
+  closures, local build/routing/workflow validation, and returned `APPROVED`
+  ready to merge.
+- Main implementation enables schema-v2 active stable fresh install, exact
+  stable pins, forced preview-to-stable and ordinary stable-to-stable
+  self-update, installer SHA-256 verification, `rc` removal, canonical
+  max-generation snapshots, write-once version assets, the sole reusable
+  mutation workflow, read-only local planning, and the pinned paired site
+  handoff.
+- Capability demo: `demos/stable_self_update_demo.sh`.
+- Cross-repository fixture:
+  `verification/areas/distribution_release/fixtures/site_release_contract.json`.

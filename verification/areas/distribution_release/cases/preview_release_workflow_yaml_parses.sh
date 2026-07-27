@@ -4,53 +4,62 @@ set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
 
-ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0))' \
-  "${REPO_ROOT}/.github/workflows/preview-release.yml" >/dev/null
+preview="${REPO_ROOT}/.github/workflows/preview-release.yml"
+publication="${REPO_ROOT}/.github/workflows/release-publication.yml"
+ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0))' "${preview}" >/dev/null
+ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0))' "${publication}" >/dev/null
 
-ruby - "${REPO_ROOT}/.github/workflows/preview-release.yml" <<'RUBY'
-require "yaml"
-
-workflow = YAML.load_file(ARGV.fetch(0))
-jobs = workflow.fetch("jobs")
-validate_run = jobs.fetch("validate").fetch("steps").find {
-  |step| step["name"] == "Validate channel and version"
-}.fetch("run")
-unless validate_run.include?("alpha|beta") &&
-       validate_run.include?("stable-looking versions are disabled")
-  abort "preview workflow no longer rejects stable publication input"
-end
-publish_run = jobs.fetch("publish-release").fetch("steps").find {
-  |step| step["name"] == "Publish channel metadata"
-}.fetch("run")
-recheck = publish_run.index("live_metadata=")
-replacement = publish_run.index("gh release upload channels")
-unless recheck && replacement && recheck < replacement
-  abort "live index identity must be checked before channels.json replacement"
-end
-RUBY
-
-python3 - "${REPO_ROOT}/.github/workflows/preview-release.yml" <<'PY'
+python3 - "${preview}" "${publication}" <<'PY'
 import pathlib
 import sys
 
-text = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
-required = (
-    "source_sha: ${{ steps.validate.outputs.source_sha }}",
-    "echo \"source_sha=$(git rev-parse HEAD)\"",
-    "ref: ${{ needs.validate.outputs.source_sha }}",
-    "ref: ${{ env.SOURCE_SHA }}",
-    "EXPECTED_INDEX_GENERATION=",
-    "EXPECTED_INDEX_SHA256=",
-    "release index changed after proposal generation; refusing stale mutation",
+preview = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+publication = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8")
+
+preview_required = (
+    "options:\n          - alpha\n          - beta",
+    "version must be a semver prerelease using -alpha.N or -beta.N",
+    "SITE_BASE_COMMIT: 721bceca795a79a03af74ccb707d117a6f031f38",
+    "preview release must pin an exact merged website commit",
+    "cargo build --release --locked",
+    "uses: ./.github/workflows/release-publication.yml",
 )
-for fragment in required:
-    if fragment not in text:
-        raise SystemExit(f"preview workflow omitted governed publication fragment: {fragment}")
-if text.count("ref: ${{ needs.validate.outputs.source_sha }}") != 1:
-    raise SystemExit("build jobs must check out the resolved source SHA")
-if text.count("ref: ${{ env.SOURCE_SHA }}") != 1:
-    raise SystemExit("publish job must check out the resolved source SHA")
-metadata_url = "releases/download/channels/channels.json"
-if text.count(metadata_url) < 2:
-    raise SystemExit("preview workflow must re-fetch the live release index before replacement")
+for fragment in preview_required:
+    if fragment not in preview:
+        raise SystemExit(f"preview workflow omitted governed caller fragment: {fragment}")
+if "contents: write" in preview:
+    raise SystemExit("preview caller must not own release mutation permissions")
+for forbidden in ("-rc.", "alpha|beta|rc", "stable\n          -"):
+    if forbidden in preview:
+        raise SystemExit(f"preview workflow retained forbidden release input: {forbidden}")
+
+publication_required = (
+    "group: sifr-release-index",
+    "release-publication accepts only alpha or beta",
+    "version release already exists; preview assets are write-once",
+    "channels-generation-${PROPOSED_GENERATION}.json",
+    "gh release upload channels \"${snapshot}\"",
+    "Replace only canonical channels.json",
+    "--clobber",
+    "site_base_commit must be an exact commit",
+    "repos/${SITE_REPOSITORY}/actions/workflows/${SITE_WORKFLOW}/dispatches",
+    "select(.head_sha == $sha)",
+    "select(.created_at >= $since)",
+    "seq 1 120",
+    "actions/runs/${site_run_id}/cancel",
+)
+for fragment in publication_required:
+    if fragment not in publication:
+        raise SystemExit(f"publication workflow omitted governed fragment: {fragment}")
+if publication.count("--clobber") != 1:
+    raise SystemExit("channels.json must be the sole clobbered release asset")
+if "gh release upload \"${VERSION}\"" in publication:
+    raise SystemExit("version assets must not use a mutable upload path")
+if "stable|alpha|beta" in publication or "choices=(\"stable\"" in publication:
+    raise SystemExit("stable mutation must remain absent from milestone 40.2")
+snapshot = publication.index('gh release upload channels "${snapshot}"')
+replacement = publication.index("Replace only canonical channels.json")
+dispatch = publication.index("Dispatch exact site workflow")
+if not snapshot < replacement < dispatch:
+    raise SystemExit("snapshot, index replacement, and site dispatch are misordered")
 PY

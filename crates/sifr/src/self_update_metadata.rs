@@ -45,16 +45,9 @@ pub(crate) struct PreviewVersion {
 
 impl PreviewVersion {
     pub(crate) fn parse(input: &str) -> Result<Self, Box<RenderedDiagnostic>> {
-        if is_stable_version(input) {
-            return Err(self_update_diagnostic(format!(
-                "stable-looking versions are disabled while stable release channels are disabled: {input}; use --channel alpha|beta or --version <preview>"
-            )));
-        }
-        let (core, prerelease) = input.split_once('-').ok_or_else(|| {
-            self_update_diagnostic(format!(
-                "version must be an alpha or beta semver prerelease: {input}"
-            ))
-        })?;
+        let (core, prerelease) = input
+            .split_once('-')
+            .map_or((input, None), |(core, prerelease)| (core, Some(prerelease)));
         let mut core_parts = core.split('.');
         let major = parse_number(core_parts.next(), input)?;
         let minor = parse_number(core_parts.next(), input)?;
@@ -62,6 +55,19 @@ impl PreviewVersion {
         if core_parts.next().is_some() {
             return Err(invalid_preview_version(input));
         }
+        if prerelease.is_none() {
+            return Ok(Self {
+                text: input.to_owned(),
+                channel: PreviewChannel::Stable,
+                major,
+                minor,
+                patch,
+                prerelease_number: 0,
+            });
+        }
+        let Some(prerelease) = prerelease else {
+            return Err(invalid_preview_version(input));
+        };
         let (label, number) = prerelease
             .split_once('.')
             .ok_or_else(|| invalid_preview_version(input))?;
@@ -142,6 +148,7 @@ pub(crate) struct UpdatePlan {
     pub(crate) resolved_channel: PreviewChannel,
     pub(crate) action: UpdateAction,
     pub(crate) force: bool,
+    pub(crate) installer_sha256: String,
 }
 
 #[derive(Clone, Debug)]
@@ -154,6 +161,7 @@ pub(crate) enum TargetRequest {
 #[derive(Debug, Clone)]
 pub(crate) struct ChannelMetadata {
     channels: BTreeMap<String, PreviewVersion>,
+    active_installers: BTreeMap<String, String>,
 }
 
 impl ChannelMetadata {
@@ -191,9 +199,13 @@ impl ChannelMetadata {
                 "self-update channel metadata generation must be a positive integer",
             ));
         }
-        if object.get("ga_status").and_then(Value::as_str) != Some("preview") {
+        let ga_status = object
+            .get("ga_status")
+            .and_then(Value::as_str)
+            .ok_or_else(|| self_update_diagnostic("self-update ga_status must be a string"))?;
+        if ga_status != "preview" && ga_status != "active" {
             return Err(self_update_diagnostic(
-                "stable channel self-update is disabled until GA activation",
+                "self-update ga_status must be preview or active",
             ));
         }
         let channels = object
@@ -202,11 +214,6 @@ impl ChannelMetadata {
             .ok_or_else(|| self_update_diagnostic("self-update channels must be an object"))?;
         let mut parsed = BTreeMap::new();
         for (name, version_value) in channels {
-            if name == "stable" {
-                return Err(self_update_diagnostic(
-                    "stable channel metadata is disabled while stable release channels are disabled",
-                ));
-            }
             if !RELEASE_CHANNELS
                 .iter()
                 .any(|channel| channel.as_str() == name)
@@ -232,6 +239,16 @@ impl ChannelMetadata {
                 "self-update metadata must contain alpha and beta channels",
             ));
         }
+        if ga_status == "preview" && (parsed.len() != 2 || parsed.contains_key("stable")) {
+            return Err(self_update_diagnostic(
+                "preview self-update metadata must contain exactly alpha and beta channels",
+            ));
+        }
+        if ga_status == "active" && (parsed.len() != 3 || !parsed.contains_key("stable")) {
+            return Err(self_update_diagnostic(
+                "active self-update metadata must contain alpha, beta, and stable channels",
+            ));
+        }
         let releases = object
             .get("releases")
             .and_then(Value::as_object)
@@ -241,8 +258,23 @@ impl ChannelMetadata {
                 "self-update metadata must contain alpha and beta release records",
             ));
         }
+        let mut active_installers = BTreeMap::new();
         for (version, release) in releases {
             validate_release_record(version, release)?;
+            let release = release.as_object().ok_or_else(|| {
+                self_update_diagnostic(format!("release record {version} must be an object"))
+            })?;
+            if release.get("status").and_then(Value::as_str) == Some("active") {
+                let installer_sha256 = release
+                    .get("installer_sha256")
+                    .and_then(Value::as_str)
+                    .ok_or_else(|| {
+                        self_update_diagnostic(format!(
+                            "release {version} installer digest must be a string"
+                        ))
+                    })?;
+                active_installers.insert(version.clone(), installer_sha256.to_owned());
+            }
         }
         for (channel, version) in channels {
             let version = version.as_str().ok_or_else(|| {
@@ -264,7 +296,10 @@ impl ChannelMetadata {
                 )));
             }
         }
-        Ok(Self { channels: parsed })
+        Ok(Self {
+            channels: parsed,
+            active_installers,
+        })
     }
 
     pub(crate) fn resolve_channel(
@@ -276,17 +311,37 @@ impl ChannelMetadata {
             .cloned()
             .ok_or_else(|| self_update_diagnostic("requested channel is missing from metadata"))
     }
+
+    pub(crate) fn resolve_exact(
+        &self,
+        version: &PreviewVersion,
+    ) -> Result<String, Box<RenderedDiagnostic>> {
+        self.active_installers
+            .get(&version.text)
+            .cloned()
+            .ok_or_else(|| {
+                self_update_diagnostic(format!(
+                    "requested exact version {} is not an active governed release",
+                    version.text
+                ))
+            })
+    }
+
+    fn installer_sha256(
+        &self,
+        version: &PreviewVersion,
+    ) -> Result<String, Box<RenderedDiagnostic>> {
+        self.resolve_exact(version)
+    }
 }
 
 pub(crate) fn parse_channel(input: &str) -> Result<PreviewChannel, Box<RenderedDiagnostic>> {
     match input {
         "alpha" => Ok(PreviewChannel::Alpha),
         "beta" => Ok(PreviewChannel::Beta),
-        "stable" => Err(self_update_diagnostic(
-            "stable channel self-update is disabled while stable release channels are disabled; use --channel alpha|beta",
-        )),
+        "stable" => Ok(PreviewChannel::Stable),
         other => Err(self_update_diagnostic(format!(
-            "unknown self-update channel: {other}; use --channel alpha|beta"
+            "unknown self-update channel: {other}; use --channel alpha|beta|stable"
         ))),
     }
 }
@@ -300,30 +355,25 @@ pub(crate) fn resolve_update_plan(
 ) -> Result<UpdatePlan, Box<RenderedDiagnostic>> {
     let current_version = PreviewVersion::parse(current_version)?;
     let receipt_channel = parse_channel(receipt_channel)?;
+    let metadata = metadata.ok_or_else(|| {
+        self_update_diagnostic("self-update channel metadata is required for resolution")
+    })?;
     let (target_version, requested_channel, resolved_channel) = match request {
         TargetRequest::ReceiptChannel => {
-            let metadata = metadata.ok_or_else(|| {
-                self_update_diagnostic(
-                    "self-update channel metadata is required for latest resolution",
-                )
-            })?;
             let target_version = metadata.resolve_channel(receipt_channel)?;
             (target_version, None, receipt_channel)
         }
         TargetRequest::Channel(channel) => {
-            let metadata = metadata.ok_or_else(|| {
-                self_update_diagnostic(
-                    "self-update channel metadata is required for channel resolution",
-                )
-            })?;
             let target_version = metadata.resolve_channel(channel)?;
             (target_version, Some(channel), channel)
         }
         TargetRequest::Version(version) => {
+            metadata.resolve_exact(&version)?;
             let resolved_channel = version.channel;
             (version, None, resolved_channel)
         }
     };
+    let installer_sha256 = metadata.installer_sha256(&target_version)?;
 
     if let Some(requested_channel) = requested_channel {
         if requested_channel != receipt_channel && !force {
@@ -360,6 +410,7 @@ pub(crate) fn resolve_update_plan(
         resolved_channel,
         action,
         force,
+        installer_sha256,
     })
 }
 
@@ -399,25 +450,8 @@ fn parse_number(value: Option<&str>, original: &str) -> Result<u64, Box<Rendered
 
 fn invalid_preview_version(input: &str) -> Box<RenderedDiagnostic> {
     self_update_diagnostic(format!(
-        "version must be an alpha or beta semver prerelease: {input}"
+        "version must be stable SemVer or an alpha/beta prerelease: {input}"
     ))
-}
-
-fn is_stable_version(input: &str) -> bool {
-    let mut parts = input.split('.');
-    let Some(major) = parts.next() else {
-        return false;
-    };
-    let Some(minor) = parts.next() else {
-        return false;
-    };
-    let Some(patch) = parts.next() else {
-        return false;
-    };
-    parts.next().is_none()
-        && major.chars().all(|ch| ch.is_ascii_digit())
-        && minor.chars().all(|ch| ch.is_ascii_digit())
-        && patch.chars().all(|ch| ch.is_ascii_digit())
 }
 
 fn channel_rank(channel: PreviewChannel) -> u8 {
@@ -577,9 +611,43 @@ mod tests {
             },
             "releases": {
                 "0.1.0-alpha.2": release("alpha", targets.clone()),
+                "0.1.0-beta.1": release("beta", targets.clone()),
                 "0.1.0-beta.2": release("beta", targets)
             }
         })
+    }
+
+    fn active_metadata() -> ChannelMetadata {
+        let mut payload = metadata_payload();
+        payload["ga_status"] = json!("active");
+        payload["channels"]["stable"] = json!("0.1.0");
+        payload["releases"]["0.1.0"] = release(
+            "stable",
+            json!({
+                "aarch64-apple-darwin": digest_evidence(),
+                "x86_64-apple-darwin": digest_evidence(),
+                "aarch64-unknown-linux-gnu": digest_evidence(),
+                "x86_64-unknown-linux-gnu": digest_evidence()
+            }),
+        );
+        ChannelMetadata::parse(&serde_json::to_string(&payload).expect("serialize metadata"))
+            .expect("active metadata parses")
+    }
+
+    fn active_metadata_with_stable_successor() -> ChannelMetadata {
+        let mut payload = metadata_payload();
+        let targets = json!({
+            "aarch64-apple-darwin": digest_evidence(),
+            "x86_64-apple-darwin": digest_evidence(),
+            "aarch64-unknown-linux-gnu": digest_evidence(),
+            "x86_64-unknown-linux-gnu": digest_evidence()
+        });
+        payload["ga_status"] = json!("active");
+        payload["channels"]["stable"] = json!("0.1.1");
+        payload["releases"]["0.1.0"] = release("stable", targets.clone());
+        payload["releases"]["0.1.1"] = release("stable", targets);
+        ChannelMetadata::parse(&serde_json::to_string(&payload).expect("serialize metadata"))
+            .expect("active successor metadata parses")
     }
 
     fn metadata() -> ChannelMetadata {
@@ -641,7 +709,7 @@ mod tests {
             "beta",
             TargetRequest::Version(PreviewVersion::parse("0.1.0-beta.2").expect("version")),
             false,
-            None,
+            Some(&metadata()),
         )
         .expect("same-version plan is allowed as a no-op");
         assert_eq!(plan.action, UpdateAction::NoOp);
@@ -655,7 +723,7 @@ mod tests {
             "beta",
             TargetRequest::Version(PreviewVersion::parse("0.1.0-beta.2").expect("version")),
             true,
-            None,
+            Some(&metadata()),
         )
         .expect("forced same-version plan is a reinstall");
         assert_eq!(plan.action, UpdateAction::Reinstall);
@@ -668,7 +736,7 @@ mod tests {
             "beta",
             TargetRequest::Version(PreviewVersion::parse("0.1.0-beta.1").expect("version")),
             false,
-            None,
+            Some(&metadata()),
         )
         .expect_err("downgrade requires force");
         assert!(error.message.contains("requires --force"));
@@ -678,7 +746,7 @@ mod tests {
             "beta",
             TargetRequest::Version(PreviewVersion::parse("0.1.0-beta.1").expect("version")),
             true,
-            None,
+            Some(&metadata()),
         )
         .expect("forced downgrade is allowed");
         assert_eq!(plan.action, UpdateAction::Downgrade);
@@ -708,8 +776,9 @@ mod tests {
     }
 
     #[test]
-    fn rejects_stable_and_rc_versions() {
-        assert!(PreviewVersion::parse("0.1.0").is_err());
+    fn accepts_stable_and_rejects_rc_versions() {
+        let stable = PreviewVersion::parse("0.1.0").expect("stable version");
+        assert_eq!(stable.channel, PreviewChannel::Stable);
         assert!(PreviewVersion::parse("0.1.0-rc.1").is_err());
     }
 
@@ -720,16 +789,88 @@ mod tests {
     }
 
     #[test]
-    fn rejects_stable_metadata() {
+    fn preview_metadata_rejects_stable_channel() {
         let mut payload = metadata_payload();
         payload["channels"]["stable"] = json!("1.0.0");
         let error = ChannelMetadata::parse(
             &serde_json::to_string(&payload).expect("serialize invalid metadata"),
         )
         .expect_err("preview metadata must reject a stable channel key");
-        assert!(error
-            .message
-            .contains("stable channel metadata is disabled"));
+        assert!(error.message.contains("exactly alpha and beta"));
+    }
+
+    #[test]
+    fn active_metadata_resolves_stable_and_forced_switch() {
+        let metadata = active_metadata();
+        let stable = metadata
+            .resolve_channel(PreviewChannel::Stable)
+            .expect("stable resolves");
+        assert_eq!(stable.text, "0.1.0");
+
+        let error = resolve_update_plan(
+            "0.1.0-beta.2",
+            "beta",
+            TargetRequest::Channel(PreviewChannel::Stable),
+            false,
+            Some(&metadata),
+        )
+        .expect_err("preview-to-stable switch requires force");
+        assert!(error.message.contains("requires --force"));
+
+        let plan = resolve_update_plan(
+            "0.1.0-beta.2",
+            "beta",
+            TargetRequest::Channel(PreviewChannel::Stable),
+            true,
+            Some(&metadata),
+        )
+        .expect("forced preview-to-stable switch");
+        assert_eq!(plan.action, UpdateAction::ChannelSwitch);
+        assert_eq!(plan.resolved_channel, PreviewChannel::Stable);
+        assert_eq!(plan.installer_sha256, "d".repeat(64));
+    }
+
+    #[test]
+    fn exact_versions_must_be_active_governed_releases() {
+        let error = resolve_update_plan(
+            "0.1.0-beta.2",
+            "beta",
+            TargetRequest::Version(PreviewVersion::parse("9.9.9").expect("stable version")),
+            true,
+            Some(&active_metadata()),
+        )
+        .expect_err("unlisted exact version is rejected");
+        assert!(error.message.contains("not an active governed release"));
+    }
+
+    #[test]
+    fn stable_receipt_updates_within_stable_without_force() {
+        let plan = resolve_update_plan(
+            "0.1.0",
+            "stable",
+            TargetRequest::ReceiptChannel,
+            false,
+            Some(&active_metadata_with_stable_successor()),
+        )
+        .expect("stable successor resolves without force");
+        assert_eq!(plan.target_version.text, "0.1.1");
+        assert_eq!(plan.resolved_channel, PreviewChannel::Stable);
+        assert_eq!(plan.action, UpdateAction::Update);
+    }
+
+    #[test]
+    fn current_stable_channel_is_a_no_op() {
+        let plan = resolve_update_plan(
+            "0.1.1",
+            "stable",
+            TargetRequest::ReceiptChannel,
+            false,
+            Some(&active_metadata_with_stable_successor()),
+        )
+        .expect("current stable channel resolves as no-op");
+        assert_eq!(plan.target_version.text, "0.1.1");
+        assert_eq!(plan.action, UpdateAction::NoOp);
+        assert!(!plan.action.would_run_installer());
     }
 
     #[test]

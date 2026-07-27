@@ -128,6 +128,7 @@ def propose_preview_release(
     channel: str,
     version: str,
     release_value: Any,
+    proposed_generation: int | None = None,
 ) -> dict[str, Any]:
     current = validate_release_index(current_value)
     if current["ga_status"] != "preview":
@@ -149,9 +150,16 @@ def propose_preview_release(
         )
     if version in current["releases"]:
         fail("$.releases", f"release record already exists: {version}")
+    generation = current["generation"] + 1
+    if proposed_generation is not None:
+        if not isinstance(proposed_generation, int) or isinstance(proposed_generation, bool):
+            fail("proposed_generation", "must be an integer")
+        if proposed_generation <= current["generation"]:
+            fail("proposed_generation", "must exceed the current generation")
+        generation = proposed_generation
     proposed = {
         **current,
-        "generation": current["generation"] + 1,
+        "generation": generation,
         "channels": {**current["channels"], channel: version},
         "releases": {**current["releases"], version: release},
     }
