@@ -285,7 +285,7 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
         raise EditorQualificationError(f"VSIX cannot be installed: {exc}") from exc
 
     environment = dict(os.environ)
-    environment["SIFR_LSP_COMMAND"] = str(candidate_binary)
+    environment["SIFR_LSP_COMMAND"] = f"{candidate_binary} lsp --stdio"
     smoke = subprocess.run(
         [
             sys.executable,
