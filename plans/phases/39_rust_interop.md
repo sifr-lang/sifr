@@ -178,14 +178,14 @@ Status: implemented in [PR #2709](https://github.com/sifr-lang/sifr/pull/2709); 
 
 ### milestone_39_7: Async, Blocking, and Tokio Integration
 
-Status: implemented in [PR #2711](https://github.com/sifr-lang/sifr/pull/2711); local `create-pr` validation passed and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-7-review-round3.md`. Focused validation covers `@rust.async(...)` lowering on `async def`, rejection on sync declarations, default `Send` future probe obligations, `thread_affinity=tokio_current_thread` non-`Send` opt-out, invalid async affinity diagnostics, and rejection of blocking/CPU-heavy classifications on async Rust declarations. Full runtime cancellation/shutdown fixtures and borrowed-input wrapper-future ownership are future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md) through the `async_runtime_reqwest` compatibility row.
+Status: implemented in [PR #2711](https://github.com/sifr-lang/sifr/pull/2711); local `create-pr` validation passed and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-7-review-round3.md`. Focused validation covers `@rust.async(...)` lowering on `async def`, rejection on sync declarations, default `Send` future probe obligations, `thread_affinity=tokio_current_thread` non-`Send` opt-out, invalid async affinity diagnostics, and rejection of blocking/CPU-heavy classifications on async Rust declarations. The follow-on `async_runtime_reqwest` certification executes borrowed-input reqwest futures on the generated current-thread runtime, observes runtime reuse and cancellation cleanup against an ephemeral loopback server, and rejects package-local nested runtime construction or `block_on`.
 
 - Scope:
   - Support async Rust bridge functions using Sifr's existing Tokio runtime model.
   - Reject hidden runtime creation, generated `block_on`, and assumptions that `rt-multi-thread` is available.
   - Enforce explicit `@blocking_io` and `@cpu_heavy` annotations for blocking or CPU-heavy Rust calls.
   - Reject `@blocking_io` and `@cpu_heavy` on `async def` Rust interop declarations.
-  - Defer owning converted borrowed inputs inside generated async wrapper futures to [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md) through `async_runtime_reqwest`; do not claim borrowed-input wrapper support in the M39.7 contract surface.
+  - Certify borrowed inputs inside generated async wrapper futures through the runtime-observed `async_runtime_reqwest` follow-on row; the original M39.7 compile-time contract alone does not carry that runtime claim.
   - Require explicit Sifr offload APIs when classified calls are used from async Sifr code.
   - Allow non-`Send` futures only when explicitly pinned to the current Sifr Tokio runtime through `thread_affinity=tokio_current_thread`; reject non-`Send` futures that may leave that runtime.
   - Map cancellation and shutdown behavior to stable Sifr errors.

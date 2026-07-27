@@ -50,6 +50,8 @@ mod panic_validation;
 mod probe_planning;
 #[path = "rust_interop/target_resolution.rs"]
 mod target_resolution;
+#[path = "rust_interop/trust_validation.rs"]
+mod trust_validation;
 #[path = "rust_interop/zero_copy_validation.rs"]
 mod zero_copy_validation;
 
@@ -117,6 +119,8 @@ struct RustInteropResolver<'a> {
     signature_contracts: HashMap<String, RustBridgeSignatureContract>,
     opaque_contracts: HashMap<String, OpaqueContract>,
     async_contracts: HashMap<String, AsyncThreadAffinity>,
+    async_runtime_policy_violations:
+        HashMap<SifrPackageId, Vec<super::rust_interop_bridge_audit::AsyncRuntimeBridgeViolation>>,
 }
 
 impl<'a> RustInteropResolver<'a> {
@@ -133,6 +137,7 @@ impl<'a> RustInteropResolver<'a> {
             signature_contracts: HashMap::new(),
             opaque_contracts: HashMap::new(),
             async_contracts: HashMap::new(),
+            async_runtime_policy_violations: HashMap::new(),
         }
     }
 
@@ -252,6 +257,9 @@ impl<'a> RustInteropResolver<'a> {
             return;
         }
         if !self.validate_async_declaration(declaration) {
+            return;
+        }
+        if !self.validate_async_bridge_runtime_policy(declaration, package) {
             return;
         }
         if declaration.declaration.kind == RustInteropDecoratorKind::Callback {
@@ -636,27 +644,7 @@ impl<'a> RustInteropResolver<'a> {
             | EffectivePanicPolicy::Invalid
             | EffectivePanicPolicy::InvalidSysrootImplicitTarget => {}
         }
-    }
-
-    fn validate_unsafe_bridge_files(
-        &mut self,
-        declaration: &sifr_codegen::RustInteropPlanDeclaration,
-        package: &sifr_package::SifrPackageMetadata,
-    ) {
-        if !uses_bridge_root(&declaration.declaration) {
-            return;
-        }
-        for bridge_file in unsafe_bridge_files(package) {
-            self.require_trust(
-                declaration,
-                &canonical_sifr_target_path(declaration),
-                RustInteropTrustRequirementKind::UnsafeBridge,
-                &package.manifest.trust.unsafe_rust_bridges,
-                &bridge_file,
-                format!("unsafe package-local Rust bridge file `{bridge_file}`"),
-                is_trusted_sysroot_package(self.context, &package.package_id),
-            );
-        }
+        self.record_declared_bridge_native_links(declaration, package);
     }
 
     #[allow(clippy::too_many_arguments)]

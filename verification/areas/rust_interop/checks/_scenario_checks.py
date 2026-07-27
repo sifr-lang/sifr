@@ -11,8 +11,25 @@ from typing import Any
 from _binding_helpers import contains_empty_pass_body as _contains_empty_pass_body
 from _binding_helpers import rust_bound_declarations as _rust_bound_declarations
 from _binding_helpers import verifier_binds_call as _verifier_binds_call
+from _scenario_async_reqwest import (
+    run_async_reqwest_self_test,
+    validate_async_reqwest_scenario,
+)
 
 REQUIRED_SCENARIO_EXAMPLES = {
+    "async_runtime_reqwest": {
+        "reqwest_loopback_runtime": {
+            "tokens": (
+                "reqwest::Client",
+                ".no_proxy()",
+                "127.0.0.1",
+                "task.timeout",
+                "runtime_reused",
+                "handle.id()",
+                "ring_core_0_17_14_",
+            ),
+        },
+    },
     "bridge_type_matrix": {
         "bridge_type_roundtrip": {
             "tokens": (
@@ -294,6 +311,13 @@ def run_self_test() -> tuple[int, str | None]:
                 return cases, f"{name} did not report {expected!r}: {failures}"
             cases += 1
 
+    async_cases, async_error = run_async_reqwest_self_test(
+        AREA_ROOT, validate_scenario_examples
+    )
+    cases += async_cases
+    if async_error is not None:
+        return cases, async_error
+
     return cases, None
 
 
@@ -510,6 +534,10 @@ def _validate_scenario_manifests(
                 f"{fixture_id}: {raw_path}/sifr.toml must not grant "
                 "unsafe-rust-bridges for the safe wrapper scenario"
             )
+    elif fixture_id == "async_runtime_reqwest":
+        validate_async_reqwest_scenario(
+            failures, fixture_id, raw_path, rust, dependencies, trust
+        )
     elif fixture_id == "same_workspace_crate":
         _require_path_dependency(failures, fixture_id, raw_path, dependencies, "workspace_hash", "rust/workspace_hash")
         _require_member(failures, fixture_id, raw_path, workspace_members, "rust/workspace_hash")

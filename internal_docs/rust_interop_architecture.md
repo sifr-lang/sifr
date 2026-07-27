@@ -390,19 +390,21 @@ const _: () = {
 
 Probe failures map rustc diagnostics back to the original `@rust(...)` span as `SIFR-RUST-RESOLVE-*` or `SIFR-RUST-TYPE-*` diagnostics. The final generated binary is not built until probe diagnostics are clean. This is the precise meaning of "checked before build": incompatibility is detected in a Sifr-controlled probe/check step rather than surfacing as raw application build noise.
 
-Async probes assert the callable and future output shape:
+Async probes assert the future produced by a typed, non-executed call site.
+They do not constrain the function to one concrete `Fn(&str) -> Fut` type,
+because an `async fn` that borrows an argument returns a lifetime-indexed
+future family:
 
 ```rust
-fn assert_async_signature<F, Fut>(f: F)
+fn assert_async_future<Fut>(future: Fut)
 where
-    F: Fn(&str) -> Fut,
     Fut: std::future::Future<Output = Result<ResponseBridge, HttpErrorBridge>>,
 {
 }
 
-const _: () = {
-    assert_async_signature(http_client::fetch);
-};
+fn probe<'call>(url: &'call str) {
+    assert_async_future(http_client::fetch(url));
+}
 ```
 
 Method probes assert receiver mode explicitly:
@@ -773,7 +775,30 @@ Default async bridge requirements:
 - cancellation is cooperative and must map to stable Sifr cancellation errors,
 - runtime shutdown must drain or cancel registered Rust interop tasks deterministically.
 
-The initial compile-time async contract surface enforces that `@rust.async(...)` is valid only on `async def`, async Rust probes require returned futures to be `Send` by default, `thread_affinity=tokio_current_thread` is the only function-level non-`Send` opt-out, and blocking/CPU-heavy classifications are rejected on async Rust declarations with `SIFR-RUST-ASYNC-0001`.
+The compile-time async contract surface enforces that `@rust.async(...)` is
+valid only on `async def`, async Rust probes require returned futures to be
+`Send` by default, `thread_affinity=tokio_current_thread` is the only
+function-level non-`Send` opt-out, and blocking/CPU-heavy classifications are
+rejected on async Rust declarations with `SIFR-RUST-ASYNC-0001`. For
+packages with local async bridges, the driver also parses ordinary Rust source
+under `src/` and every manifest-declared bridge root before Cargo probing. It
+rejects Tokio `Runtime`/`Builder` constructors including type, module, and
+crate aliases resolvable within the same parsed source file, syntactically
+named `block_on` calls, imported blocking executor calls, and
+`tokio::task::block_in_place`, while Rust comments and literals remain AST data
+rather than executable calls. Cross-file re-exports reached only through an
+unresolved glob, macro-expanded operations, and attribute-macro-generated
+runtime construction are outside this source-policy claim, are not detected
+by Cargo probing, and are governed only by the declared package trust contract.
+
+The `async_runtime_reqwest` runtime certification executes generated package
+glue on the current-thread runtime against an ephemeral in-process HTTP
+server. Two calls prove that borrowed inputs remain valid through the returned
+reqwest futures and that the generated runtime thread is reused. A third,
+delayed call is cancelled through a Sifr timeout; request and server drop
+guards must leave zero active work after bounded cleanup. This certification
+does not add a nested runtime, implicit blocking adapter, external service
+dependency, or async panic-mapper support.
 
 For async Rust targets that borrow converted inputs, generated glue owns the converted values inside the wrapper future. The raw Rust future may borrow those owned wrapper values, but any Sifr-exposed future must satisfy Sifr async lifetime and spawn rules after wrapping. This allows ordinary Rust APIs such as `async fn fetch(url: &str) -> Result<_, _>` without exposing borrowed futures that outlive their generated wrapper state.
 

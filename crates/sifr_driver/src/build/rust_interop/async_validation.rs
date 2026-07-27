@@ -1,8 +1,12 @@
 use super::RustInteropResolver;
-use super::{canonical_sifr_target_path, opaque_contract::OpaqueThreadAffinity, RustInteropOwner};
+use super::{
+    canonical_sifr_target_path, opaque_contract::OpaqueThreadAffinity, uses_bridge_root,
+    RustInteropOwner,
+};
 use crate::build::rust_interop_probe::AsyncThreadAffinity;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropEffect, RustInteropValue};
+use sifr_package::SifrPackageMetadata;
 
 impl RustInteropResolver<'_> {
     pub(super) fn collect_async_contracts(
@@ -89,6 +93,47 @@ impl RustInteropResolver<'_> {
         }
         self.opaque_owner_thread_affinity(declaration)
             .unwrap_or_default()
+    }
+
+    pub(super) fn validate_async_bridge_runtime_policy(
+        &mut self,
+        declaration: &sifr_codegen::RustInteropPlanDeclaration,
+        package: &SifrPackageMetadata,
+    ) -> bool {
+        if !declaration.declaration.abi_requirements.async_boundary
+            || !uses_bridge_root(&declaration.declaration)
+        {
+            return true;
+        }
+        let violations = self
+            .async_runtime_policy_violations
+            .entry(package.package_id.clone())
+            .or_insert_with(|| {
+                super::super::rust_interop_bridge_audit::async_runtime_bridge_violations(package)
+            })
+            .clone();
+        if violations.is_empty() {
+            return true;
+        }
+        let reasons = violations
+            .iter()
+            .map(|violation| format!("{} in {}", violation.construct, violation.file))
+            .collect::<Vec<_>>()
+            .join(", ");
+        self.push_diagnostic(
+            declaration,
+            declaration.declaration.span,
+            DiagnosticCode::RUST_ASYNC_CONTRACT,
+            "invalid Rust async contract: {reason}",
+            vec![(
+                "reason",
+                "packages with local async Rust bridges must reuse the generated Tokio runtime and cannot construct or block a nested runtime"
+                    .to_string(),
+            )],
+            vec![format!("forbidden bridge runtime operations: {reasons}")],
+            None,
+        );
+        false
     }
 
     fn opaque_owner_thread_affinity(

@@ -178,8 +178,8 @@
       "required_crates": ["tokio", "reqwest"],
       "features": {"reqwest": {"default_features": false, "features": ["rustls-tls", "json"]}},
       "execution_kind": "runtime-observed",
-      "positive_evidence": {"id": "async_reqwest_loopback", "status": "planned"},
-      "negative_evidence": {"id": "hidden_block_on_rejected", "status": "planned"}
+      "positive_evidence": {"id": "async_reqwest_loopback", "status": "passing"},
+      "negative_evidence": {"id": "hidden_block_on_rejected", "status": "passing"}
     },
     {
       "id": "async_runtime_core",

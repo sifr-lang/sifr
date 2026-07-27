@@ -146,8 +146,8 @@ normative and must not be broadened.
 | `certification_0` | merged | [PR #3026](https://github.com/sifr-lang/sifr/pull/3026) |
 | `certification_1` | merged | [PR #3027](https://github.com/sifr-lang/sifr/pull/3027); executable recursive bridge-type roundtrips |
 | `certification_2` | merged | [PR #3031](https://github.com/sifr-lang/sifr/pull/3031); generated panic wrapper emission and mapper fallback |
-| `certification_3` | in progress | generated call-scoped callback invocation and lifetime rejection |
-| `certification_4` | blocked | starts after `certification_3` merges |
+| `certification_3` | merged | [PR #3033](https://github.com/sifr-lang/sifr/pull/3033); generated call-scoped callback invocation and lifetime rejection |
+| `certification_4` | in progress | async reqwest loopback, runtime reuse, cancellation/drop, timeout cleanup, and hidden blocking rejection |
 | `certification_5` | blocked | starts after `certification_4` merges |
 | `certification_6` | blocked | starts after `certification_5` merges |
 | `certification_7` | blocked | starts after `certification_6` merges |
@@ -428,7 +428,7 @@ Implementation checklist:
   redacted callback panic mapping, and storage/return/thread escape rejection.
 - [x] Promote only `callbacks_call_scoped` in both matrices, structured stable
   claims, public and architecture docs, fixture provenance, and counts.
-- [ ] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, Opus review rounds to
   satisfaction, merge the PR, record the Native Pydantic-Sifr prerequisite,
   and unblock only `certification_4`.
 
@@ -478,6 +478,64 @@ Implement the rows in numeric order as separate PRs. Shared loopback harness
 code may be introduced by `certification_4` in a focused verification helper
 module and reused afterward; service-specific behavior and evidence remain in
 the owning row.
+
+#### certification_4: Async Reqwest Runtime
+
+Implementation checklist:
+
+- [x] Make async signature probes invoke the target with typed, non-executed
+  arguments so futures borrowing bridge inputs can be checked without erasing
+  their lifetime family.
+- [x] Reject package-local async bridge source that calls `block_on` or
+  constructs a Tokio runtime, while ignoring comments and literals and keeping
+  the rejection on `SIFR-RUST-ASYNC-0001`.
+- [x] Add a locked/offline `reqwest_loopback_runtime` package that binds an
+  ephemeral in-process HTTP server before spawning it, bounds accept/read/write
+  and client operations, and never uses external DNS or services.
+- [x] Execute borrowed-input request/response behavior twice on the generated
+  Tokio runtime and prove current-thread runtime reuse.
+- [x] Cancel a delayed reqwest future through a Sifr timeout and observe
+  request/server guard drop plus zero active work after bounded cleanup.
+- [x] Bind both evidence directions to mandatory generated-build tests, promote
+  only `async_runtime_reqwest`, update structured claims/docs/provenance/counts,
+  and preserve all later future-owned rows.
+- [ ] Run focused and authoritative local gates, Opus review rounds to
+  satisfaction, merge the PR, and unblock only `certification_5`.
+
+Post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 54 passing and 18 planned evidence directions;
+- categories: 18 `supported`, 8 `supported-through-bridge`, 1
+  `unsupported-by-design`, and 9 `future-owned-by-separate-phase`;
+- execution kinds remain 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+- 60 package examples and 14 scenario examples; and
+- 27 structured stable claims.
+
+Focused implementation evidence:
+
+- the locked runtime package executes two borrowed-input reqwest calls on one
+  generated current-thread Tokio runtime, cancels a third delayed call, and
+  observes `completed=2`, `cancelled=1`, `runtime_calls=3`,
+  `runtime_reused=true`, and zero active request/server work;
+- package-local ordinary Rust source is audited before Cargo probing for
+  nested Tokio runtime construction and blocking operations, while documented
+  cross-file-glob and macro-expanded gaps remain governed by the package trust
+  contract;
+- a transitive native link is accepted only when declared by the bridge
+  manifest, and the paired generated-build test rejects the undeclared link;
+- all three generated-build tests, focused Rust interop tests, Clippy,
+  formatting, matrix self-tests, maintainability guardrails, and file-size
+  guardrails pass; working-tree Opus review
+  [round 13](../../reviews/active/rust-interop-certification-4-review-round13.md)
+  reports `SATISFIED`;
+- the Rust interop area facade's only two failures are caused by the preserved
+  parallel-worktree `opaque_resource_matrix` promotion while that row's
+  evidence remains planned; shadow-copy checks excluding that one unrelated
+  hunk pass, and this PR excludes it.
 
 All harnesses must:
 

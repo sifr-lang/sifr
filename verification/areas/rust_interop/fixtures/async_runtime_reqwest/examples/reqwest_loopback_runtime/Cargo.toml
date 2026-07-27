@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+
+[package]
+name = "reqwest-loopback-runtime"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+reqwest = { version = "=0.12.28", default-features = false, features = ["rustls-tls", "json"] }
+sifr_runtime = { path = "../../../../../../../crates/sifr_runtime" }
+tokio = { version = "=1.52.3", features = ["io-util", "net", "rt", "sync", "time"] }
+
+[package.metadata.sifr]
+manifest = "sifr.toml"

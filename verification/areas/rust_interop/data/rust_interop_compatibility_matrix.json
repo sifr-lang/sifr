@@ -210,15 +210,14 @@
     {
       "id": "async_runtime_reqwest",
       "fixture": "async_runtime_reqwest",
-      "category": "future-owned-by-separate-phase",
-      "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
+      "category": "supported-through-bridge",
       "tier": 2,
       "capability": "async Rust bridge on Sifr Tokio runtime",
       "execution_kind": "runtime-observed",
       "required_crates": ["tokio", "reqwest"],
-      "positive_evidence": {"id": "async_reqwest_loopback", "status": "planned"},
-      "negative_evidence": {"id": "hidden_block_on_rejected", "status": "planned"},
-      "notes": "Async contract validation is implemented, but loopback reqwest runtime behavior is pending."
+      "positive_evidence": {"id": "async_reqwest_loopback", "status": "passing"},
+      "negative_evidence": {"id": "hidden_block_on_rejected", "status": "passing"},
+      "notes": "Generated async bridge glue executes borrowed reqwest inputs on the existing current-thread Tokio runtime, reuses that runtime, and cleans up a cancelled loopback request; package-local async bridges reject nested runtime construction and block_on before Cargo execution."
     },
     {
       "id": "async_runtime_core",

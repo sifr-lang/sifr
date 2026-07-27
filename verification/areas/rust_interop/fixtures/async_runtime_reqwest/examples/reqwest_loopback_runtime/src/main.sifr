@@ -1,8 +1,8 @@
 # fixture: async_runtime_reqwest
-# evidence: positive/async_reqwest_loopback
-# evidence-status: passing
+# scenario-example: reqwest_loopback_runtime
 # execution-kind: runtime-observed
-# expected-result: pass
+# expected-result: loopback-reused-and-cleaned
+
 class HttpError(Error):
     message: str
 
@@ -14,7 +14,7 @@ async def request_roundtrip(payload: str, mode: str) -> Result[str, HttpError]:
 @rust(bridge.http.runtime_snapshot, panic=trusted_no_panic)
 def runtime_snapshot() -> str: ...
 
-async def verify_async_reqwest_loopback() -> Result[str, TimeoutError]:
+async def verify_reqwest_loopback_runtime() -> Result[str, TimeoutError]:
     first: str = ""
     second: str = ""
     try:
@@ -42,3 +42,11 @@ async def verify_async_reqwest_loopback() -> Result[str, TimeoutError]:
     assert timed_out
     assert snapshot == "active_requests=0;active_servers=0;completed=2;cancelled=1;runtime_calls=3;runtime_reused=true"
     return first + "|" + second + "|timeout-clean|" + snapshot
+
+async def main() -> Result[None, TimeoutError]:
+    try:
+        verified: str = await verify_reqwest_loopback_runtime()
+        print(verified)
+    except TimeoutError:
+        print("unexpected outer timeout")
+    return None

@@ -154,9 +154,9 @@ only. Remaining compiler-native stdlib glue is explicitly allowlisted in
 Rust interop runtime certification is not fully complete for resource-shaped
 surfaces. The active matrix
 `verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json`
-currently has 18 supported rows, 7 bridge-supported rows, 1
-unsupported-by-design row, and 10 rows owned by separate certification work. The
-separately owned rows are `opaque_resource_matrix`, `async_runtime_reqwest`,
+currently has 18 supported rows, 8 bridge-supported rows, 1
+unsupported-by-design row, and 9 rows owned by separate certification work. The
+separately owned rows are `opaque_resource_matrix`,
 `callback_subscription_ecosystem`, `zero_copy_runtime_matrix`,
 `advanced_data_runtime_matrix`,
 `ecosystem_backend_certification`, `ecosystem_cli_certification`,
@@ -201,7 +201,7 @@ fingerprints even though the source declaration remains a pure declaration
 stub. This rule is package-keyed to the synthetic sysroot package context and
 does not extend to user packages or non-stdlib Rust targets.
 
-Resource, async, callback, and runtime-state surfaces stay behind the active
+Resource, subscription callback, and runtime-state surfaces stay behind the active
 Rust interop runtime certification gate until their lifecycle behavior is
 executable evidence, not just adapter code.
 `scripts/check_sysroot_stdlib_resource_certification_gate.py` enforces this
@@ -214,10 +214,12 @@ possibly `callbacks_call_scoped_core`. Call-scoped callback runtime behavior is
 certified separately by the package-owned `callbacks_call_scoped` row. The async
 and subscription callback core rows certify only their declared compile-time
 contracts; runtime cancellation and shutdown remain in the downstream rows.
-The ecosystem portions, such as
-`opaque_resource_matrix`, `async_runtime_reqwest`, and
-`callback_subscription_ecosystem`, remain with the separate runtime ecosystem
-certification issue. The package-owned `panic_boundary_wrapper_emission` row
+The ecosystem portions such as `opaque_resource_matrix` and
+`callback_subscription_ecosystem` remain with the separate runtime ecosystem
+certification issue. The issue's package-owned `async_runtime_reqwest` row now
+certifies borrowed-input reqwest execution, current-thread runtime reuse, and
+bounded cancellation cleanup. The package-owned
+`panic_boundary_wrapper_emission` row
 now certifies synchronous generated wrappers, including protected mapper
 fallback. Trusted sysroot declarations may still keep panic handling as
 stdlib-owned poisoning or error-conversion evidence; async package wrappers

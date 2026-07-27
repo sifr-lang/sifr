@@ -57,6 +57,15 @@ const CALL_SCOPED_CALLBACK_RETURN_ESCAPE_BRIDGE: &str = include_str!(
 const CALL_SCOPED_CALLBACK_SIGNATURE_MISMATCH_BRIDGE: &str = include_str!(
     "../../../../verification/areas/rust_interop/fixtures/callbacks_call_scoped/examples/call_scoped_callback_runtime/negative_signature_bridge.rs"
 );
+const ASYNC_REQWEST_EVIDENCE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/async_runtime_reqwest/positive/async_reqwest_loopback.sifr"
+);
+const ASYNC_REQWEST_NEGATIVE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/async_runtime_reqwest/negative/hidden_block_on_rejected.sifr"
+);
+const ASYNC_REQWEST_NEGATIVE_BRIDGE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/async_runtime_reqwest/examples/reqwest_loopback_runtime/negative_bridge.rs"
+);
 
 fn fixture_scenario_root(fixture_id: &str, scenario_id: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -72,6 +81,9 @@ fn copy_fixture_tree(source: &Path, destination: &Path) {
         let entry = entry.expect("fixture entry should be readable");
         let source_path = entry.path();
         let destination_path = destination.join(entry.file_name());
+        if entry.file_name() == "target" {
+            continue;
+        }
         if source_path.is_dir() {
             copy_fixture_tree(&source_path, &destination_path);
         } else {
@@ -438,6 +450,138 @@ fn test_check_call_scoped_callback_storage_rejected() {
             .iter()
             .all(|error| error.code != DiagnosticCode::RUST_CALLBACK_CONTRACT.code()),
         "ordinary signature mismatches must not be mislabeled callback escape: {errors:#?}"
+    );
+    let _ = std::fs::remove_dir_all(package_root);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+#[doc = "sifr-evidence: executes-runtime-observed"]
+fn test_build_async_reqwest_loopback_runtime() {
+    let package_root = copied_scenario(
+        "async_runtime_reqwest",
+        "reqwest_loopback_runtime",
+        "rust_interop_async_reqwest_loopback_runtime",
+    );
+    rebase_sifr_runtime_dependency(&package_root);
+    let pristine_entrypoint =
+        package_entrypoint_from_cargo_layout(&package_root, "reqwest-loopback-runtime");
+    let pristine_errors = check_package_project(&pristine_entrypoint);
+    assert!(
+        pristine_errors.is_empty(),
+        "checked-in reqwest loopback scenario should pass package checking: {pristine_errors:#?}"
+    );
+    install_evidence_source(
+        &package_root,
+        &format!(
+            "{ASYNC_REQWEST_EVIDENCE}\n\nasync def main() -> Result[None, TimeoutError]:\n    try:\n        verified: str = await verify_async_reqwest_loopback()\n        print(verified)\n    except TimeoutError:\n        print(\"unexpected outer timeout\")\n    return None\n"
+        ),
+    );
+    let entrypoint =
+        package_entrypoint_from_cargo_layout(&package_root, "reqwest-loopback-runtime");
+
+    let output = built_package_output(&entrypoint);
+
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout).trim(),
+        "echo:alpha|echo:beta|timeout-clean|active_requests=0;active_servers=0;completed=2;cancelled=1;runtime_calls=3;runtime_reused=true"
+    );
+    assert!(
+        output.stderr.is_empty(),
+        "loopback runtime scenario must not emit stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let _ = std::fs::remove_dir_all(package_root);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+fn test_build_async_reqwest_rejects_undeclared_native_link() {
+    let package_root = copied_scenario(
+        "async_runtime_reqwest",
+        "reqwest_loopback_runtime",
+        "rust_interop_async_reqwest_untrusted_native_link",
+    );
+    rebase_sifr_runtime_dependency(&package_root);
+    install_evidence_source(
+        &package_root,
+        &format!(
+            "{ASYNC_REQWEST_EVIDENCE}\n\nasync def main() -> Result[None, TimeoutError]:\n    try:\n        verified: str = await verify_async_reqwest_loopback()\n        print(verified)\n    except TimeoutError:\n        print(\"unexpected outer timeout\")\n    return None\n"
+        ),
+    );
+    let manifest_path = package_root.join("sifr.toml");
+    let manifest =
+        std::fs::read_to_string(&manifest_path).expect("scenario manifest should be readable");
+    let untrusted = manifest.replace(
+        "native-links = [\"ring_core_0_17_14_\", \"ring_core_0_17_14__test\"]",
+        "native-links = []",
+    );
+    assert_ne!(
+        untrusted, manifest,
+        "scenario must declare exact transitive native-link trust"
+    );
+    std::fs::write(&manifest_path, untrusted)
+        .expect("untrusted scenario manifest should be written");
+    let entrypoint =
+        package_entrypoint_from_cargo_layout(&package_root, "reqwest-loopback-runtime");
+
+    let errors = match build_cached_package_project(&entrypoint) {
+        Ok(_) => panic!("undeclared transitive native link must fail the generated package build"),
+        Err(errors) => errors,
+    };
+
+    assert!(
+        errors.iter().any(|error| {
+            error.code == DiagnosticCode::RUST_TRUST_MISSING.code()
+                && error.message.contains("untrusted native link evidence")
+                && error.message.contains("ring_core_0_17_14_")
+        }),
+        "undeclared transitive native link must be rejected: {errors:#?}"
+    );
+    let _ = std::fs::remove_dir_all(package_root);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+#[doc = "sifr-evidence: executes-compiler-diagnostic"]
+fn test_check_async_reqwest_hidden_blocking_rejected() {
+    let package_root = copied_scenario(
+        "async_runtime_reqwest",
+        "reqwest_loopback_runtime",
+        "rust_interop_async_reqwest_hidden_blocking",
+    );
+    rebase_sifr_runtime_dependency(&package_root);
+    install_evidence_source(&package_root, ASYNC_REQWEST_NEGATIVE);
+    std::fs::write(
+        package_root.join("src/bridges/http.rs"),
+        ASYNC_REQWEST_NEGATIVE_BRIDGE,
+    )
+    .expect("negative async bridge should be installed");
+    let entrypoint =
+        package_entrypoint_from_cargo_layout(&package_root, "reqwest-loopback-runtime");
+
+    let errors = check_package_project(&entrypoint);
+
+    assert_eq!(
+        errors.len(),
+        1,
+        "hidden runtime policy must stop before Cargo probing: {errors:#?}"
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == DiagnosticCode::RUST_ASYNC_CONTRACT.code()
+                && error.message.contains("reuse the generated Tokio runtime")
+                && error.children.iter().any(|child| {
+                    child.message.contains("block_on")
+                        && child.message.contains("Tokio runtime construction")
+                        && child.message.contains("src/bridges/http.rs")
+                })
+        }),
+        "hidden nested runtime operations must fail with the async contract diagnostic: {errors:#?}"
+    );
+    assert!(
+        !errors[0].message.contains("Rust bridge probe failed"),
+        "hidden runtime policy must reject before Cargo probing: {errors:#?}"
     );
     let _ = std::fs::remove_dir_all(package_root);
 }
