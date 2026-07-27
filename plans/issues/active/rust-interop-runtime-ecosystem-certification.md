@@ -314,7 +314,14 @@ Review and gate evidence:
 - The authoritative `create-pr` profile passed on the warm rerun, including
   Rust interop `10/10` and E2E `131/131`; the first attempt was functionally
   green but exceeded the Python-interop step budget.
-- Draft [PR #3027](https://github.com/sifr-lang/sifr/pull/3027) is the
+- The authoritative `merge` profile passed all 24 lane steps, including the
+  unchanged performance budgets, Rust interop `10/10`, generated-build
+  evidence, E2E, and 261 hardening variants with zero failures; only the two
+  governed ASan capability skips remained.
+- Final exact-head
+  [round 6](../../reviews/active/rust-interop-certification-1-review-round6.md)
+  is `SATISFIED`.
+- [PR #3027](https://github.com/sifr-lang/sifr/pull/3027) is the
   certification PR; `certification_2` remains blocked until it merges.
 
 `certification_3` may use bridge-version 1 call-scoped callbacks. Any callback
