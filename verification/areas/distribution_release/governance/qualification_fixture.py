@@ -541,7 +541,8 @@ def write_workflow_metadata(
             "run_attempt": 1,
             "head_sha": source_commit,
             "event": "workflow_dispatch",
-            "name": "release-qualification",
+            "name": f"Qualify stable candidate 0.1.0 at {source_commit}",
+            "path": ".github/workflows/release-qualification.yml",
             "repository": {"full_name": "sifr-lang/sifr"},
         },
     )
@@ -552,7 +553,7 @@ def write_workflow_metadata(
                 "id": artifact_id,
                 "name": f"{prefix}{suffix}",
                 "expired": False,
-                "created_at": "2098-12-02T00:00:00Z",
+                "created_at": "2098-12-02T00:00:05Z",
                 "expires_at": "2099-01-01T00:00:00Z",
                 "workflow_run": {"id": 42},
             }
