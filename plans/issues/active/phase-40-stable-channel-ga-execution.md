@@ -290,6 +290,16 @@ Review and upstream coordination ledger:
   isolation, wording, command, artifact, metric-count, and digest-custody gaps.
   Pass 4 recomputed every preserved digest and measurement, found no remaining
   actionable issue, and returned `VERDICT: SATISFIED`.
+- Exact pushed-head review pass 5 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-evidence-closure-review-pass-5-final-pr-head.md`.
+  It verified PR head `b09845a86`, re-ran the 20-file custody replay, found no
+  actionable issue, and returned `VERDICT: SATISFIED`. The evidence slice
+  merged through [PR #3038](https://github.com/sifr-lang/sifr/pull/3038) as
+  `21bd64d7c4cd83a45da274519ed0fdd3ac8d63f7`.
+- The exact-head create-PR profile passed every selected case except the
+  already indexed `readonly-check-doctor` 120-second host timeout. All later
+  Python-interop cases passed, including the CPython 3.11 buffer, Arrow, and
+  DLPack suites; no Phase 40 source change was present in that evidence PR.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 
@@ -298,6 +308,44 @@ Review and upstream coordination ledger:
   or fallback path.
 - [ ] Isolate installed-sysroot self-update qualification from mutable public
   network state while retaining separate protected public-endpoint smoke.
+- Qualification-isolation wave validation passed the complete installed
+  release smoke from a schema-v2 fixture, including self-update dry run,
+  doctor, emit, LSP, and path-leakage checks. Claude Opus review pass 1 is
+  archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-1.md`.
+  Its findings are remediated before pass 2: the override is dry-run-only,
+  direct runner execution is restored, the release trust boundary is
+  inventoried, symlinks and malformed fixture inputs fail closed, and this
+  wave is tracked.
+  Review pass 2 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-2.md`;
+  it reproduced the release-binary dry-run and real-update rejection, found no
+  remaining actionable issue, and returned `VERDICT: SATISFIED`.
+- Exact pushed-head review pass 3 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-3-final-pr-head.md`.
+  It re-ran the installed release smoke, full self-update unit surface,
+  workspace clippy, and fail-closed fixture matrix at exact remote head
+  `d78cfb756`, and returned `VERDICT: SATISFIED`. That approval was superseded
+  when the later authoritative create-PR profile found the inventory omission
+  described below.
+- The first authoritative create-PR profile found that the new regular-file
+  probe and fixture read were absent from the existing TypeScript-Go
+  direct-read/probe inventory. The source-provider guardrail now classifies
+  both sites as a non-semantic, dry-run-only release-qualification command
+  surface; the compiler source-provider boundary is unchanged.
+- Review pass 4 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-4.md`.
+  It independently reproduced the guardrail mutation, 53 self-update tests,
+  workspace clippy, formatting, file-size and inventory checks, and a
+  nine-case release-binary fail-closed matrix. Its sole bookkeeping finding,
+  the missing pass-3 artifact and ledger link, is remediated above.
+- Review pass 5 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-5.md`.
+  Its full authoritative create-PR profile passed 131 E2E fixtures and every
+  blocking lane on the remediated working tree. Its remaining findings were
+  to commit and push that remediation and refresh PR #3039's review summary;
+  both are release-mechanics requirements completed before the final exact-head
+  round.
 - [ ] Add the single protected publication workflow and production site adapter.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
