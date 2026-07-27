@@ -167,6 +167,10 @@ Review and upstream coordination ledger:
   self-update help names `alpha|beta|stable` plus an immutable governed
   version. The target detector also covers non-`aarch64`/`x86_64`
   architectures.
+- Main-repository Claude Opus review pass 5 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-5.md`.
+  It re-ran the milestone gates, verified every finding from passes 1–4, found
+  no remaining actionable issue, and approved the implementation.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 
