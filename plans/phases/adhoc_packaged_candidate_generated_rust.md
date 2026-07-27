@@ -1,17 +1,18 @@
-# Ad Hoc Phase: Packaged Candidate LSP Generated-Rust Preview
+# Ad Hoc Phase: Packaged Candidate Generated Rust
 
 Status: deferred follow-up; not a prerequisite for Phase 40.
 
 ## Problem
 
 The exact packaged Sifr `0.1.0` candidate starts `sifr lsp --stdio`, completes
-initialization, publishes diagnostics, and serves formatting requests, but the
-`sifr.server.showGeneratedRust` request does not return within the deterministic
-90-second protocol timeout.
+initialization, publishes diagnostics, and serves formatting requests, but
+generated-Rust production does not complete through either `sifr emit` or the
+`sifr.server.showGeneratedRust` request. The LSP request exceeds the
+deterministic 90-second protocol timeout; the capability demo also required
+bounded termination of the CLI command after the same interval.
 
-Phase 40 must not advertise that editor action until the packaged-candidate path
-passes. The compiler's separate `sifr emit` command remains qualified and is
-not affected.
+Phase 40 must not advertise generated Rust for the packaged candidate until
+both paths pass.
 
 ## Evidence
 
@@ -27,12 +28,16 @@ source commit `67a40febc`, installed its bundled sysroot in isolation, packaged
   bounded process cleanup.
 - Repeating the request after the broad protocol query sequence produced the
   same timeout, so the failure is not caused by earlier requests.
+- After successful packaged-candidate `check`, format, format-check, and lint
+  commands, `sifr emit` also failed to return within 90 seconds and required
+  bounded cleanup.
 
 ## Scope
 
-- Reproduce the hang against an installed release artifact on every supported
+- Reproduce both hangs against an installed release artifact on every supported
   host target.
-- Isolate the deadlock or unbounded operation in generated-Rust preview.
+- Isolate the shared deadlock or unbounded operation in generated-Rust
+  production.
 - Preserve request cancellation and deterministic shutdown behavior.
 - Add a packaged-candidate regression test that executes the preview request.
 - Restore the editor action to stable documentation only after the exact
@@ -40,8 +45,8 @@ source commit `67a40febc`, installed its bundled sysroot in isolation, packaged
 
 ## Definition of Done
 
-- Generated-Rust preview returns within the governed LSP timeout for an
-  installed release artifact on all supported targets.
+- `sifr emit` and generated-Rust preview return within their governed timeouts
+  for an installed release artifact on all supported targets.
 - Timeout and cancellation tests prove the server exits without forced cleanup.
 - The full LSP protocol suite and packaged-candidate editor qualification pass.
 - Stable documentation and release notes may then advertise the editor action.

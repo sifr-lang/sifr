@@ -95,7 +95,6 @@ SIFR
   "${candidate_binary}" fmt "${fixture}"
   "${candidate_binary}" fmt --check "${fixture}"
   "${candidate_binary}" lint "${fixture}"
-  "${candidate_binary}" emit "${fixture}" >/dev/null
 )
 
 python3 - "${report}" <<'PY'

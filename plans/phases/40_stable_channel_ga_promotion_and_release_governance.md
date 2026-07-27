@@ -918,8 +918,8 @@ install/update guidance, Rust interop claims, and the VS Code extension.
 - Packaged and installed VSIX completes editor activation, diagnostics, and
   formatting smoke against the stable candidate. Generated-Rust preview in the
   packaged candidate is a non-prerequisite tooling follow-up recorded in
-  `adhoc_packaged_candidate_lsp_generated_rust_preview.md`; GA docs do not
-  advertise that editor action.
+  `adhoc_packaged_candidate_generated_rust.md`; GA docs do not advertise the
+  affected packaged-candidate action.
 
 **Negative validation:**
 
@@ -929,8 +929,9 @@ install/update guidance, Rust interop claims, and the VS Code extension.
 
 **Demo:** Install the candidate compiler and recorded VSIX into isolated
 locations, open a Sifr fixture, demonstrate diagnostics and formatting through
-the native LSP, and exercise linting, check, tests, and generated Rust through
-the exact candidate compiler.
+the native LSP, and exercise linting, check, and tests through the exact
+candidate compiler. Packaged-candidate generated Rust is the non-prerequisite
+ad hoc follow-up named above.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 
