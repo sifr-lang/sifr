@@ -428,8 +428,9 @@ After index replacement, the same leased workflow dispatches the pinned
 protected-main commit pinned in the payload. Active site repository ruleset
 `19790146` forbids updating or deleting that exact tag and grants no bypass;
 the caller verifies the ruleset's active exact-name update/deletion guards and
-the tag target before release mutation and again immediately before dispatch.
-The milestone-40.2 caller pins the governed
+the attested no-bypass ruleset revision, plus the tag target, before release
+mutation and again immediately before dispatch. The milestone-40.2 caller pins
+the governed
 workflow introduced by
 [sifr-website PR #14](https://github.com/sifr-lang/sifr-website/pull/14) and its
 GA-aware default-channel binding from

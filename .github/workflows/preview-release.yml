@@ -144,4 +144,5 @@ jobs:
       base_ref: ${{ needs.validate.outputs.base_ref }}
       source_commit: ${{ needs.validate.outputs.source_sha }}
       site_base_commit: ${{ needs.validate.outputs.site_base_commit }}
-    secrets: inherit
+    secrets:
+      SIFR_WEBSITE_ACTIONS_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}

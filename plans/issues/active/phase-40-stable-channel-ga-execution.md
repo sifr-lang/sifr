@@ -349,3 +349,9 @@ actors.
   follow-ups now under remediation: stale preview-lifecycle demo prose,
   canonical site-repository schema parity, redundant exact-pin lookup, and
   explicit release-tag source targeting.
+- Full main implementation review pass 4 verified all pass-3 closures and the
+  live site tag/ruleset/workflow identities. Its remaining findings are now
+  remediated by pinning the attested no-bypass ruleset revision, enforcing a
+  wall-clock site deadline with cancellation headroom, rejecting exact stable
+  pins under preview metadata in Rust, explicitly passing only the site
+  Actions secret, and removing an early-exit snapshot-name pipeline.

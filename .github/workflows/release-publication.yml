@@ -40,7 +40,7 @@ jobs:
   publish:
     name: mutate governed preview release
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 60
     env:
       GH_TOKEN: ${{ github.token }}
       CHANNEL: ${{ inputs.channel }}
@@ -53,6 +53,7 @@ jobs:
       SITE_WORKFLOW: release-site.yml
       SITE_WORKFLOW_REF: sifr-release-site-m40-2
       SITE_WORKFLOW_RULESET_ID: "19790146"
+      SITE_WORKFLOW_RULESET_UPDATED_AT: "2026-07-27T04:17:06.204Z"
       SITE_WORKFLOW_SHA256: 7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -102,12 +103,16 @@ jobs:
           )"
           if ! jq -e \
             --arg ref "refs/tags/${SITE_WORKFLOW_REF}" \
+            --arg updated_at "${SITE_WORKFLOW_RULESET_UPDATED_AT}" \
             --argjson id "${SITE_WORKFLOW_RULESET_ID}" \
             '.id == $id
              and .target == "tag"
              and .enforcement == "active"
+             and .updated_at == $updated_at
              and .conditions.ref_name.include == [$ref]
              and .conditions.ref_name.exclude == []
+             and (.bypass_actors // []) == []
+             and (.current_user_can_bypass // "never") == "never"
              and ([.rules[].type] | sort) == ["deletion", "update"]' \
             <<<"${site_ruleset}" >/dev/null
           then
@@ -433,10 +438,13 @@ jobs:
           fi
           snapshot="publication/channels-generation-${PROPOSED_GENERATION}.json"
           cp publication/channels.json "${snapshot}"
-          if gh release view channels \
-            --repo "${GITHUB_REPOSITORY}" \
-            --json assets \
-            --jq '.assets[].name' | grep -Fxq "$(basename "${snapshot}")"; then
+          snapshot_names="$(
+            gh release view channels \
+              --repo "${GITHUB_REPOSITORY}" \
+              --json assets \
+              --jq '.assets[].name'
+          )"
+          if grep -Fxq "$(basename "${snapshot}")" <<<"${snapshot_names}"; then
             echo "::error::generation snapshot already exists"
             exit 2
           fi
@@ -515,12 +523,16 @@ jobs:
           )"
           if ! jq -e \
             --arg ref "refs/tags/${SITE_WORKFLOW_REF}" \
+            --arg updated_at "${SITE_WORKFLOW_RULESET_UPDATED_AT}" \
             --argjson id "${SITE_WORKFLOW_RULESET_ID}" \
             '.id == $id
              and .target == "tag"
              and .enforcement == "active"
+             and .updated_at == $updated_at
              and .conditions.ref_name.include == [$ref]
              and .conditions.ref_name.exclude == []
+             and (.bypass_actors // []) == []
+             and (.current_user_can_bypass // "never") == "never"
              and ([.rules[].type] | sort) == ["deletion", "update"]' \
             <<<"${site_ruleset}" >/dev/null
           then
@@ -582,9 +594,16 @@ jobs:
           set -euo pipefail
           expected_title="Sifr site release ${PUBLICATION_ATTEMPT}"
           site_run_id=""
-          for _ in $(seq 1 120); do
+          poll_error=""
+          poll_deadline=$((SECONDS + 1200))
+          while (( SECONDS < poll_deadline )); do
+            remaining_seconds=$((poll_deadline - SECONDS))
+            if (( remaining_seconds <= 0 )); then
+              break
+            fi
+            set +e
             runs="$(
-              GH_TOKEN="${SITE_TOKEN}" gh api \
+              GH_TOKEN="${SITE_TOKEN}" timeout --foreground "${remaining_seconds}s" gh api \
                 --method GET \
                 --paginate \
                 --slurp \
@@ -593,18 +612,29 @@ jobs:
                 -f created="${DISPATCHED_AT}..*" \
                 -f per_page=100
             )"
+            poll_status=$?
+            set -e
+            if [[ ${poll_status} -eq 124 ]]; then
+              break
+            fi
+            if [[ ${poll_status} -ne 0 ]]; then
+              poll_error="could not query the correlated site run"
+              break
+            fi
             matched="$(
               jq -r \
                 --arg title "${expected_title}" \
                 --arg sha "${SITE_BASE_COMMIT}" \
                 --arg since "${DISPATCHED_AT}" \
-                '.[].workflow_runs[]
-                 | select(.display_title == $title)
-                 | select(.head_sha == $sha)
-                 | select(.event == "workflow_dispatch")
-                 | select(.created_at >= $since)
-                 | [.id, .status, (.conclusion // "")]
-                 | @tsv' <<<"${runs}" | head -n 1
+                'first(
+                   .[].workflow_runs[]
+                   | select(.display_title == $title)
+                   | select(.head_sha == $sha)
+                   | select(.event == "workflow_dispatch")
+                   | select(.created_at >= $since)
+                   | [.id, .status, (.conclusion // "")]
+                   | @tsv
+                 ) // empty' <<<"${runs}"
             )"
             if [[ -n "${matched}" ]]; then
               IFS=$'\t' read -r site_run_id status conclusion <<<"${matched}"
@@ -617,12 +647,23 @@ jobs:
                 exit 2
               fi
             fi
-            sleep 10
+            remaining_seconds=$((poll_deadline - SECONDS))
+            if (( remaining_seconds > 0 )); then
+              sleep_seconds=10
+              if (( remaining_seconds < sleep_seconds )); then
+                sleep_seconds="${remaining_seconds}"
+              fi
+              sleep "${sleep_seconds}"
+            fi
           done
           if [[ -n "${site_run_id}" ]]; then
             GH_TOKEN="${SITE_TOKEN}" gh api \
               --method POST \
               "repos/${SITE_REPOSITORY}/actions/runs/${site_run_id}/cancel" || true
+          fi
+          if [[ -n "${poll_error}" ]]; then
+            echo "::error::${poll_error}"
+            exit 2
           fi
           echo "::error::correlated site deployment exceeded the 20-minute deadline"
           exit 2

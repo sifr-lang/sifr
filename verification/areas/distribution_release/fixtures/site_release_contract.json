@@ -8,6 +8,7 @@
     "bypass_actors": [],
     "enforcement": "active",
     "id": 19790146,
+    "updated_at": "2026-07-27T04:17:06.204Z",
     "rules": [
       "deletion",
       "update"

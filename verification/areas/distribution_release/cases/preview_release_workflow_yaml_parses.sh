@@ -24,12 +24,15 @@ preview_required = (
     "cargo build --release --locked",
     "uses: ./.github/workflows/release-publication.yml",
     "permissions:\n      actions: read\n      contents: write",
+    "SIFR_WEBSITE_ACTIONS_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}",
 )
 for fragment in preview_required:
     if fragment not in preview:
         raise SystemExit(f"preview workflow omitted governed caller fragment: {fragment}")
 if preview.count("contents: write") != 2:
     raise SystemExit("caller and reusable publish job must grant the required write ceiling exactly")
+if "secrets: inherit" in preview:
+    raise SystemExit("preview caller must pass only the site Actions credential")
 for job in ("validate preview inputs", "build ${{ matrix.target }}"):
     if job not in preview:
         raise SystemExit(f"missing read-only caller job: {job}")
@@ -52,7 +55,9 @@ publication_required = (
     "repos/${SITE_REPOSITORY}/actions/workflows/${SITE_WORKFLOW}/dispatches",
     "select(.head_sha == $sha)",
     "select(.created_at >= $since)",
-    "seq 1 120",
+    "timeout-minutes: 60",
+    "poll_deadline=$((SECONDS + 1200))",
+    'timeout --foreground "${remaining_seconds}s" gh api',
     "actions/runs/${site_run_id}/cancel",
 )
 for fragment in publication_required:

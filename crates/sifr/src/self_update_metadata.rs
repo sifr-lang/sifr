@@ -157,6 +157,7 @@ pub(crate) enum TargetRequest {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ChannelMetadata {
+    ga_active: bool,
     channels: BTreeMap<String, PreviewVersion>,
     active_installers: BTreeMap<String, String>,
 }
@@ -294,6 +295,7 @@ impl ChannelMetadata {
             }
         }
         Ok(Self {
+            ga_active: ga_status == "active",
             channels: parsed,
             active_installers,
         })
@@ -313,6 +315,11 @@ impl ChannelMetadata {
         &self,
         version: &PreviewVersion,
     ) -> Result<String, Box<RenderedDiagnostic>> {
+        if version.channel == PreviewChannel::Stable && !self.ga_active {
+            return Err(self_update_diagnostic(
+                "stable exact versions require active GA metadata",
+            ));
+        }
         self.active_installers
             .get(&version.text)
             .cloned()
@@ -582,7 +589,7 @@ mod tests {
     };
     use serde_json::{json, Value};
 
-    fn metadata_payload() -> Value {
+    pub(super) fn metadata_payload() -> Value {
         let targets = json!({
             "aarch64-apple-darwin": digest_evidence(),
             "x86_64-apple-darwin": digest_evidence(),
@@ -644,14 +651,14 @@ mod tests {
             .expect("metadata parses")
     }
 
-    fn digest_evidence() -> Value {
+    pub(super) fn digest_evidence() -> Value {
         json!({
             "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             "sysroot_content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         })
     }
 
-    fn release(channel: &str, targets: Value) -> Value {
+    pub(super) fn release(channel: &str, targets: Value) -> Value {
         json!({
             "channel": channel,
             "status": "active",
