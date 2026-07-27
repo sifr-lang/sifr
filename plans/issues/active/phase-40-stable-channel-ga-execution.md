@@ -250,9 +250,54 @@ Review and upstream coordination ledger:
   both checkers, owns the PAM under-declaration mutation. The underlying
   readiness gate remains fail-closed because both checks are blocking; the
   archived pass-5 table and conclusion now state that division accurately.
+- Final PR-head Claude Opus review pass 7 is archived at
+  `plans/reviews/archive/phase-40-algorithm-scope-claude-opus-review-pass-7-final-pr-head.md`.
+  It independently reproduced the corrected checker attribution, re-ran the
+  mutation matrix, found no remaining actionable issue, and approved exact PR
+  head `95d5e2bbb`.
+- The governed algorithm-scope correction merged through
+  [PR #3037](https://github.com/sifr-lang/sifr/pull/3037) as
+  `7242e4737b1ee89f9f02a3b4793d5cdb13d372ea`.
+- Exact-source qualification run
+  [#30297288986](https://github.com/sifr-lang/sifr/actions/runs/30297288986)
+  passed all four governed targets, aggregate installer/checksum assembly,
+  VS Code package qualification, and immutable-index collection. External
+  replay verified all 20 indexed files (533,743,470 bytes) by exact size and
+  SHA-256; the workflow and every transported artifact remain unexpired.
+- Documentation qualification on the same source passed as
+  `docs-7242e4737b1e-038b0eabc1c1` in a local canonical report. Canonical
+  release-profile report attempts passed every preceding gate but reproduced
+  the indexed `PERF-HOST` condition; the same-host old-source control timed
+  out, while the unchanged standalone full suite passed after disposable cache
+  cleanup. No performance baseline, threshold, waiver, or release-profile
+  selection changed. Commands, result paths, digests, and replay totals are
+  archived in
+  `plans/reviews/archive/phase-40-milestone-40-4-exact-source-evidence.md`.
+- A later unchanged canonical run passed all eight performance variants and all
+  earlier release lanes. It then failed only the installed sysroot smoke because
+  the public governance release still serves schema-v1 `channels.json`; the
+  exact schema-v2 candidate correctly rejected that preview state because the
+  required `generation`, `ga_status`, and `releases` fields are absent. This is
+  the truthful one-time GA epoch-bootstrap boundary for `milestone_40_5`, not a
+  compiler, sysroot, or performance failure. The installed heavy-stdlib sysroot
+  variant passed on the same run. Milestone 40.5 also owns the missing
+  test-only endpoint override so installed-sysroot qualification uses an
+  isolated schema-v2 fixture instead of mutable public network state.
+- Milestone evidence-closure Claude Opus review passes 1 through 4 are archived
+  at
+  `plans/reviews/archive/phase-40-milestone-40-4-evidence-closure-review-pass-{1,2,3,4}.md`.
+  The first three rounds found and closed bootstrap ownership, public-network
+  isolation, wording, command, artifact, metric-count, and digest-custody gaps.
+  Pass 4 recomputed every preserved digest and measurement, found no remaining
+  actionable issue, and returned `VERDICT: SATISFIED`.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 
+- [ ] Publish a protected, truthful one-time schema-v2 preview epoch with fresh
+  qualified alpha/beta records and no stable mapping; retain no v1 migration
+  or fallback path.
+- [ ] Isolate installed-sysroot self-update qualification from mutable public
+  network state while retaining separate protected public-endpoint smoke.
 - [ ] Add the single protected publication workflow and production site adapter.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
