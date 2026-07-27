@@ -249,6 +249,13 @@ modifying its Rust-interop implementation.
   regenerates the installer with the pinned governed producer and requires
   byte-for-byte equality instead of parsing shell, and exercises a two-claim
   fixture plus an order-reversal negative. A sixth review pass is required.
+- Review pass 6:
+  `plans/reviews/active/phase-40-milestone-40-1-claude-opus-review-pass-6.md`
+  independently closed every pass-5 correctness finding and found one durable
+  architecture-documentation omission. Remediation now documents the pinned
+  governed-producer regeneration and byte-equality binding, and the workflow
+  contract pins the exact production invocation that must remain identical to
+  planner regeneration. A seventh review pass is required.
 - Passing evidence so far:
   - `demos/stable_candidate_qualification_demo.sh` with a real
     `aarch64-apple-darwin` host artifact, isolated install, `sifr --version`,

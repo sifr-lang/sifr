@@ -75,6 +75,14 @@ required = (
 for fragment in required:
     if fragment not in text:
         raise SystemExit(f"release qualification omitted governed fragment: {fragment}")
+installer_invocation = """scripts/distribution/generate_version_installer.sh \\
+            --version "${VERSION}" \\
+            --artifact-dir target-artifacts \\
+            --out "qualification-assemble/sifr-installer-${VERSION}"""
+if installer_invocation not in text:
+    raise SystemExit(
+        "release qualification installer invocation must match planner regeneration"
+    )
 for forbidden in (
     "contents: write",
     "packages: write",

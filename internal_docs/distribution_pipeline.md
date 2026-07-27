@@ -183,7 +183,13 @@ canonical release-profile report for that same checkout, transported files,
 Rust stable-claim evidence, documentation evidence, release notes, and the
 current preview or active governed index. Its output must be a fresh path
 outside the checkout. It hashes and cross-checks those exact bytes before
-writing one canonical `stable-release-plan.json`.
+writing one canonical `stable-release-plan.json`. The planner also regenerates
+the immutable installer with
+`scripts/distribution/generate_version_installer.sh` from the pinned
+`source_commit` and the transported per-target archives and checksums, then
+requires byte-for-byte equality with the transported installer. The installer
+digest is therefore bound to the governed producer rather than to textual
+self-attestation inside the shell script.
 
 ## Artifact Packaging
 
