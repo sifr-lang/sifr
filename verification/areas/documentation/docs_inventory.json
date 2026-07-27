@@ -41,7 +41,10 @@
         "unsupported-rust-claim",
         "signing-claim",
         "notarization-claim",
-        "global-preview-claim"
+        "global-preview-claim",
+        "extension-setting-drift",
+        "extension-metadata-drift",
+        "cli-help-preview-drift"
       ],
       "status": "active"
     }

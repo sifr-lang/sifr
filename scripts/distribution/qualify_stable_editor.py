@@ -29,6 +29,19 @@ class EditorQualificationError(ValueError):
     """Stable editor qualification failed."""
 
 
+def canonical_json_text(value: Any) -> str:
+    return (
+        json.dumps(
+            value,
+            ensure_ascii=False,
+            allow_nan=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    )
+
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -208,9 +221,7 @@ def validate_target_report(
         raise EditorQualificationError(
             "candidate binary does not match target qualification evidence"
         )
-    canonical = (
-        json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n"
-    ).encode()
+    canonical = canonical_json_text(payload).encode()
     if raw != canonical:
         raise EditorQualificationError(
             "target qualification report is not canonical JSON"
@@ -354,7 +365,7 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
     }
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
-        json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n",
+        canonical_json_text(payload),
         encoding="utf-8",
     )
     return payload
@@ -414,7 +425,7 @@ def run_self_test() -> None:
             "self_version_sha256": "f" * 64,
         }
         report_path.write_text(
-            json.dumps(report, sort_keys=True, separators=(",", ":")) + "\n",
+            canonical_json_text(report),
             encoding="utf-8",
         )
         validate_target_report(
@@ -425,7 +436,7 @@ def run_self_test() -> None:
         )
         report["binary_sha256"] = "1" * 64
         report_path.write_text(
-            json.dumps(report, sort_keys=True, separators=(",", ":")) + "\n",
+            canonical_json_text(report),
             encoding="utf-8",
         )
         try:

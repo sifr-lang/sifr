@@ -65,23 +65,23 @@ Editor integrations must not call `sifr fmt` as their primary document-formattin
 
 ### VS Code
 
-Install the qualified `sifr-vscode-0.2.0.vsix` supplied with the governed
-`0.1.0` release:
+The protected stable activation publishes and verifies the exact qualified
+`sifr.sifr-vscode` version `0.2.0` in the VS Code Marketplace without rebuilding
+it. After activation, install that governed package by its Marketplace
+identifier:
 
 ```bash
-code --install-extension sifr-vscode-0.2.0.vsix
+code --install-extension sifr.sifr-vscode
 ```
 
-The Marketplace becomes an installation source only after the protected stable
-activation verifies the exact same VSIX. The extension automatically locates
-`sifr` on your `PATH` and launches `sifr lsp --stdio` when you open a `.sifr`
-file.
+The extension automatically locates `sifr` on your `PATH` and launches
+`sifr lsp --stdio` when you open a `.sifr` file.
 
 To point the extension at a custom binary:
 
 ```json
 {
-  "sifr.serverPath": "/path/to/sifr"
+  "sifr.lsp.path": "/path/to/sifr"
 }
 ```
 
@@ -172,7 +172,9 @@ which sifr
 sifr --version
 ```
 
-If your editor cannot find `sifr`, configure the full binary path explicitly in your editor settings using the `serverPath` or `binary.path` option shown in the examples above.
+If your editor cannot find `sifr`, configure the full binary path explicitly
+with `sifr.lsp.path` in VS Code or the command/path option shown in the other
+editor examples above.
 
 <Tip>
 Run `sifr lsp --stdio` manually in a terminal and confirm it starts without error before troubleshooting editor connectivity. A clean startup means the binary is working; the issue is likely a path or editor configuration problem.

@@ -159,6 +159,14 @@ Review and upstream coordination ledger:
   review observations are also closed with positive target allowlisting,
   an operator command for documentation qualification, truthful VSIX package
   smoke naming, and governance self-test headroom.
+- Main-repository Claude Opus review pass 4 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-4.md`.
+  Its three cross-surface findings are remediated before pass 5: the LSP guide
+  uses the contributed `sifr.lsp.path` setting and the protected Marketplace
+  acquisition path; the GA docs contract binds those exact facts; and
+  self-update help names `alpha|beta|stable` plus an immutable governed
+  version. The target detector also covers non-`aarch64`/`x86_64`
+  architectures.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 
