@@ -236,7 +236,7 @@ def release_plan() -> dict[str, Any]:
         },
         "documentation_report": {"id": "docs-a", "sha256": SHA_D},
         "site": {
-            "repository": "sifr-lang/sifr-blog-website",
+            "repository": "sifr-lang/sifr-website",
             "base_commit": "1" * 40,
             "dispatcher_sha256": {
                 "index": SHA_A,

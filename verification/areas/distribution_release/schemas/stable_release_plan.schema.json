@@ -122,7 +122,7 @@
         "facts_generator_sha256"
       ],
       "properties": {
-        "repository": {"const": "sifr-lang/sifr-blog-website"},
+        "repository": {"const": "sifr-lang/sifr-website"},
         "base_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
         "dispatcher_sha256": {
           "type": "object",

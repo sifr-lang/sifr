@@ -644,7 +644,9 @@ release index and immutable installer.
 - Dispatch the reviewed workflow through an immutable tag because GitHub's
   workflow-dispatch API accepts only a branch or tag ref. Resolve that tag to
   the exact reviewed protected-main commit both before any release mutation and
-  again immediately before dispatch.
+  again immediately before dispatch. Require an active exact-name repository
+  ruleset with no bypass actors to prohibit updates and deletion of the tag,
+  and revalidate that ruleset at both boundaries.
 - Immediately before site commit/deploy, the downstream workflow re-fetches the
   governed index and requires its generation and digest to match the dispatched
   payload. A timed-out or superseded run therefore cannot deploy after a

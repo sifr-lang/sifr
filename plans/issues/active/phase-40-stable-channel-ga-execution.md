@@ -78,7 +78,7 @@ Artifacts mapped to the Phase 40 exit gate:
 - [x] Implement the non-mutating stable planner and canonical digest binding.
 - [x] Consume and register the separately delivered Rust-interop
   stable-candidate suite and claims artifact before qualification.
-- [ ] Qualify all compiler, sysroot, installer, documentation, Rust-claim, site,
+- [x] Qualify all compiler, sysroot, installer, documentation, Rust-claim, site,
   and VSIX artifacts.
 - [x] Validate first-GA and normal predecessor/rollback semantics.
 - [x] Record review rounds, PR, validation, and merge.
@@ -310,8 +310,13 @@ modifying its Rust-interop implementation.
 
 Status: in progress. The required site workflow landed first through
 [sifr-website PR #14](https://github.com/sifr-lang/sifr-website/pull/14), merged
-as `721bceca795a79a03af74ccb707d117a6f031f38`. The main-repository caller pins
-that exact protected-main commit.
+as `721bceca795a79a03af74ccb707d117a6f031f38`. Its GA-aware default-channel
+binding landed through
+[sifr-website PR #15](https://github.com/sifr-lang/sifr-website/pull/15), merged
+as `07d88cc3c24707e386c5ad73fb0875c06ffd598f`. The main-repository caller pins
+that exact protected-main commit through `sifr-release-site-m40-2`; active
+ruleset `19790146` prohibits updating or deleting that exact tag with no bypass
+actors.
 
 - Site review passes 1–5 found and closed immutable-action pinning, credential
   persistence, metadata-shadow output, deployed-byte custody, stale-CDN index
@@ -325,6 +330,10 @@ that exact protected-main commit.
   `85de564`, the complete six-file diff, green `build website` check, all prior
   closures, local build/routing/workflow validation, and returned `APPROVED`
   ready to merge.
+- GA-aware site review pass 1 found and closed contradictory operator
+  documentation, a missing input inventory item, and a vacuous beta-only
+  dispatcher distinctness check. Pass 2 verified all closures at exact head
+  `b33c8e7` and returned `APPROVED`.
 - Main implementation enables schema-v2 active stable fresh install, exact
   stable pins, forced preview-to-stable and ordinary stable-to-stable
   self-update, installer SHA-256 verification, `rc` removal, canonical
@@ -334,3 +343,9 @@ that exact protected-main commit.
 - Capability demo: `demos/stable_self_update_demo.sh`.
 - Cross-repository fixture:
   `verification/areas/distribution_release/fixtures/site_release_contract.json`.
+- Full main implementation review pass 3 verified every earlier main/site
+  closure and independently passed 102 distribution variants, 48 self-update
+  tests, Clippy, formatting, guardrails, and the capability demo. It found four
+  follow-ups now under remediation: stale preview-lifecycle demo prose,
+  canonical site-repository schema parity, redundant exact-pin lookup, and
+  explicit release-tag source targeting.

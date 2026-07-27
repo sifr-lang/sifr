@@ -4,6 +4,15 @@
   "workflow": ".github/workflows/release-site.yml",
   "workflow_commit": "07d88cc3c24707e386c5ad73fb0875c06ffd598f",
   "workflow_ref": "sifr-release-site-m40-2",
+  "workflow_ref_ruleset": {
+    "bypass_actors": [],
+    "enforcement": "active",
+    "id": 19790146,
+    "rules": [
+      "deletion",
+      "update"
+    ]
+  },
   "workflow_sha256": "7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958",
   "workflow_pr": "https://github.com/sifr-lang/sifr-website/pull/15",
   "dispatcher_generation": {

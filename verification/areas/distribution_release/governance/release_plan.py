@@ -276,8 +276,8 @@ def validate_site(payload: Any) -> None:
         },
         location="$.site",
     )
-    if site["repository"] != "sifr-lang/sifr-blog-website":
-        fail("$.site.repository", "must be sifr-lang/sifr-blog-website")
+    if site["repository"] != "sifr-lang/sifr-website":
+        fail("$.site.repository", "must be sifr-lang/sifr-website")
     require_commit(site["base_commit"], "$.site.base_commit")
     dispatchers = require_object(site["dispatcher_sha256"], "$.site.dispatcher_sha256")
     require_exact_keys(

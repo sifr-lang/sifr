@@ -27,6 +27,12 @@ assert fixture == {
     "workflow": ".github/workflows/release-site.yml",
     "workflow_commit": "07d88cc3c24707e386c5ad73fb0875c06ffd598f",
     "workflow_ref": "sifr-release-site-m40-2",
+    "workflow_ref_ruleset": {
+        "bypass_actors": [],
+        "enforcement": "active",
+        "id": 19790146,
+        "rules": ["deletion", "update"],
+    },
     "workflow_sha256": "7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958",
     "workflow_pr": "https://github.com/sifr-lang/sifr-website/pull/15",
     "dispatcher_generation": {
@@ -62,7 +68,10 @@ assert workflow_ref.fullmatch(fixture["workflow_ref"])
 assert sha.fullmatch(fixture["workflow_sha256"])
 for fragment in (
     "SITE_WORKFLOW_REF: sifr-release-site-m40-2",
+    'SITE_WORKFLOW_RULESET_ID: "19790146"',
     "SITE_WORKFLOW_SHA256: 7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958",
+    "site workflow tag immutability ruleset is not active and exact",
+    "site workflow tag lost immutable protection before dispatch",
     "protected site workflow tag does not resolve to site_base_commit",
     "protected site workflow tag moved before dispatch",
     "pinned site workflow bytes do not match the reviewed contract",

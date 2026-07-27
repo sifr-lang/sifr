@@ -425,8 +425,12 @@ generation, uploads `channels-generation-<N>.json` write-once, and uses
 After index replacement, the same leased workflow dispatches the pinned
 `sifr-lang/sifr-website` `release-site.yml` through the immutable
 `sifr-release-site-m40-2` dispatch tag, which must resolve to the exact
-protected-main commit pinned in the payload. The milestone-40.2 caller pins the
-governed workflow introduced by
+protected-main commit pinned in the payload. Active site repository ruleset
+`19790146` forbids updating or deleting that exact tag and grants no bypass;
+the caller verifies the ruleset's active exact-name update/deletion guards and
+the tag target before release mutation and again immediately before dispatch.
+The milestone-40.2 caller pins the governed
+workflow introduced by
 [sifr-website PR #14](https://github.com/sifr-lang/sifr-website/pull/14) and its
 GA-aware default-channel binding from
 [sifr-website PR #15](https://github.com/sifr-lang/sifr-website/pull/15), merged

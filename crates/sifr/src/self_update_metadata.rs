@@ -55,7 +55,7 @@ impl PreviewVersion {
         if core_parts.next().is_some() {
             return Err(invalid_preview_version(input));
         }
-        if prerelease.is_none() {
+        let Some(prerelease) = prerelease else {
             return Ok(Self {
                 text: input.to_owned(),
                 channel: PreviewChannel::Stable,
@@ -64,9 +64,6 @@ impl PreviewVersion {
                 patch,
                 prerelease_number: 0,
             });
-        }
-        let Some(prerelease) = prerelease else {
-            return Err(invalid_preview_version(input));
         };
         let (label, number) = prerelease
             .split_once('.')
@@ -326,13 +323,6 @@ impl ChannelMetadata {
                 ))
             })
     }
-
-    fn installer_sha256(
-        &self,
-        version: &PreviewVersion,
-    ) -> Result<String, Box<RenderedDiagnostic>> {
-        self.resolve_exact(version)
-    }
 }
 
 pub(crate) fn parse_channel(input: &str) -> Result<PreviewChannel, Box<RenderedDiagnostic>> {
@@ -368,12 +358,11 @@ pub(crate) fn resolve_update_plan(
             (target_version, Some(channel), channel)
         }
         TargetRequest::Version(version) => {
-            metadata.resolve_exact(&version)?;
             let resolved_channel = version.channel;
             (version, None, resolved_channel)
         }
     };
-    let installer_sha256 = metadata.installer_sha256(&target_version)?;
+    let installer_sha256 = metadata.resolve_exact(&target_version)?;
 
     let switches_channel = resolved_channel != receipt_channel;
     if switches_channel && !force {

@@ -1,73 +1,40 @@
 # Preview Release Lifecycle Demo
 
-This demo captures the local .3 release lifecycle using the same planner as production and `--mutation-mode local` to avoid publishing GitHub assets.
+This demo exercises the read-only preview release planner against isolated
+schema-v2 release-index and website fixtures. Public mutation belongs only to
+the governed GitHub workflow.
 
-## Dry Run
-
-```bash
-scripts/distribution/create_new_version.sh \
-  --channel beta \
-  --version 0.1.0-beta.2 \
-  --dry-run
-```
-
-The dry-run prints:
-
-- resolved base commit,
-- all four artifact names and checksum names,
-- GitHub Release target,
-- immutable installer path,
-- site dispatcher mutation,
-- stable entrypoint status,
-- `plan_sha256`,
-- `dry_run_side_effects=none`.
-
-## Mocked Real Run
+## Preview plans
 
 ```bash
-tmp_dir="$(mktemp -d)"
-cat >"${tmp_dir}/sifr" <<'EOF'
-#!/usr/bin/env sh
-set -eu
-echo "sifr release lifecycle demo"
-EOF
-chmod 755 "${tmp_dir}/sifr"
-
-scripts/distribution/create_new_version.sh \
-  --channel beta \
-  --version 0.1.0-beta.2 \
-  --real-run \
-  --binary "${tmp_dir}/sifr" \
-  --mutation-mode local
+verification/areas/distribution_release/cases/create_new_version_alpha_dry_run.sh
+verification/areas/distribution_release/cases/create_new_version_beta_dry_run.sh
 ```
 
-The real-run writes:
+Each case creates a clean temporary website repository and governed release
+index, then renders the proposed source/site commits, index identity, next
+channel version, and write-once/replace-only policies. Both fixture inputs
+remain byte-for-byte unchanged.
 
-- `target/preview-release/0.1.0-beta.2/plan.txt`,
-- `target/preview-release/0.1.0-beta.2/release-checklist.md`,
-- `target/preview-release/0.1.0-beta.2/recovery-note.md`,
-- `apps/sifr-site/public/install/versions/0.1.0-beta.2` in the site repo,
-- regenerated channel dispatchers pointing beta at `0.1.0-beta.2`.
-
-## Stable Gate
+## Read-only and mutation boundaries
 
 ```bash
-scripts/distribution/create_new_version.sh \
-  --channel beta \
-  --version 1.0.0 \
-  --dry-run
+verification/areas/distribution_release/cases/create_new_version_plan_is_read_only.sh
+verification/areas/distribution_release/cases/create_new_version_local_mutation_rejected.sh
+verification/areas/distribution_release/cases/create_new_version_artifact_mode_rejected.sh
 ```
 
-The command exits non-zero before artifact, installer, release, or site mutations.
+The first case proves planning changes neither fixture. The negative cases prove
+that removed workstation mutation and artifact modes fail closed.
 
-## Attribution Evidence
+## Stable boundary
 
-The generated release checklist records:
+```bash
+verification/areas/distribution_release/cases/create_new_version_stable_rejected.sh
+```
 
-- `uv-derived code used: no`,
-- `Copied/adapted uv files: none`,
-- `MIT license retention required: not applicable`,
-- `Pinned uv source URL/reference required: not applicable`.
+Stable publication is unavailable from the preview planner and fails before
+artifact, release-index, or website mutation.
 
 The automated lifecycle checks are in
 `verification/areas/distribution_release/cases/create_new_version_*.sh`.

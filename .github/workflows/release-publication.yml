@@ -52,6 +52,7 @@ jobs:
       SITE_REPOSITORY: sifr-lang/sifr-website
       SITE_WORKFLOW: release-site.yml
       SITE_WORKFLOW_REF: sifr-release-site-m40-2
+      SITE_WORKFLOW_RULESET_ID: "19790146"
       SITE_WORKFLOW_SHA256: 7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -95,6 +96,24 @@ jobs:
             echo "::error::site_base_commit must be an exact commit"
             exit 2
           fi
+          site_ruleset="$(
+            GH_TOKEN="${SITE_TOKEN}" gh api \
+              "repos/${SITE_REPOSITORY}/rulesets/${SITE_WORKFLOW_RULESET_ID}"
+          )"
+          if ! jq -e \
+            --arg ref "refs/tags/${SITE_WORKFLOW_REF}" \
+            --argjson id "${SITE_WORKFLOW_RULESET_ID}" \
+            '.id == $id
+             and .target == "tag"
+             and .enforcement == "active"
+             and .conditions.ref_name.include == [$ref]
+             and .conditions.ref_name.exclude == []
+             and ([.rules[].type] | sort) == ["deletion", "update"]' \
+            <<<"${site_ruleset}" >/dev/null
+          then
+            echo "::error::site workflow tag immutability ruleset is not active and exact"
+            exit 2
+          fi
           site_dispatch_sha="$(
             GH_TOKEN="${SITE_TOKEN}" gh api \
               "repos/${SITE_REPOSITORY}/git/ref/tags/${SITE_WORKFLOW_REF}" \
@@ -104,8 +123,28 @@ jobs:
             echo "::error::protected site workflow tag does not resolve to site_base_commit"
             exit 2
           fi
-          if gh release view "${VERSION}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+          existing_release_count="$(
+            gh api \
+              --method GET \
+              --paginate \
+              --slurp \
+              "repos/${GITHUB_REPOSITORY}/releases" \
+              -f per_page=100 |
+              jq --arg version "${VERSION}" \
+                '[.[][] | select(.tag_name == $version)] | length'
+          )"
+          if [[ "${existing_release_count}" != "0" ]]; then
             echo "::error::version release already exists; preview assets are write-once"
+            exit 2
+          fi
+          existing_tag_count="$(
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/${VERSION}" |
+              jq --arg ref "refs/tags/${VERSION}" \
+                '[.[] | select(.ref == $ref)] | length'
+          )"
+          if [[ "${existing_tag_count}" != "0" ]]; then
+            echo "::error::version tag already exists; release source identity is write-once"
             exit 2
           fi
           site_workflow="$(mktemp)"
@@ -328,10 +367,19 @@ jobs:
           } >"${notes_file}"
           gh release create "${VERSION}" release-assets/* \
             --repo "${GITHUB_REPOSITORY}" \
+            --target "${SOURCE_COMMIT}" \
             --prerelease \
             --latest=false \
             --title "Sifr ${VERSION}" \
             --notes-file "${notes_file}"
+          published_tag_sha="$(
+            gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${VERSION}" \
+              --jq '.object.sha'
+          )"
+          if [[ "${published_tag_sha}" != "${SOURCE_COMMIT}" ]]; then
+            echo "::error::published version tag does not resolve to source_commit"
+            exit 2
+          fi
           gh release view "${VERSION}" \
             --repo "${GITHUB_REPOSITORY}" \
             --json assets >publication/version-release.json
@@ -461,6 +509,24 @@ jobs:
         run: |
           set -euo pipefail
           dispatched_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          site_ruleset="$(
+            GH_TOKEN="${SITE_TOKEN}" gh api \
+              "repos/${SITE_REPOSITORY}/rulesets/${SITE_WORKFLOW_RULESET_ID}"
+          )"
+          if ! jq -e \
+            --arg ref "refs/tags/${SITE_WORKFLOW_REF}" \
+            --argjson id "${SITE_WORKFLOW_RULESET_ID}" \
+            '.id == $id
+             and .target == "tag"
+             and .enforcement == "active"
+             and .conditions.ref_name.include == [$ref]
+             and .conditions.ref_name.exclude == []
+             and ([.rules[].type] | sort) == ["deletion", "update"]' \
+            <<<"${site_ruleset}" >/dev/null
+          then
+            echo "::error::site workflow tag lost immutable protection before dispatch"
+            exit 2
+          fi
           site_dispatch_sha="$(
             GH_TOKEN="${SITE_TOKEN}" gh api \
               "repos/${SITE_REPOSITORY}/git/ref/tags/${SITE_WORKFLOW_REF}" \
