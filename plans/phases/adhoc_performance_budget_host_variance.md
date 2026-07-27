@@ -58,11 +58,47 @@ Python-interop implementation or verification, so this remains follow-up
 evidence rather than a stable-release-governance prerequisite or a reason to
 weaken the timeout.
 
+During final candidate qualification on exact source
+`7242e4737b1ee89f9f02a3b4793d5cdb13d372ea`, the canonical release profile
+passed coverage, core, diagnostics, CPython differential, all 25 selected
+Python-interop variants, the consumed Rust-interop gate, frontend guardrails,
+all 48 developer-tooling variants, and documentation before three
+check/diagnostic medians exceeded their budgets. An immediate standalone full
+performance retry failed on a different four-benchmark, five-metric set.
+
+A same-host control at the previously passing source
+`c17f3c7d1ea1ed97ca125eb7a43344b30cf9413b` then timed out after 120 seconds
+on its first benchmark build even though that source had previously passed the
+complete full suite. After removing disposable build cache from a separate
+completed worktree, the unchanged full performance suite at `7242e4737b1e`
+passed all eight variants. Its key check/diagnostic samples clustered around
+1.27–1.31 seconds, while the pressure-affected runs spiked as high as 3.88
+seconds. A later end-to-end report attempt again saw mid-run spikes despite the
+preceding standalone pass. No threshold, baseline, waiver, source file, or
+profile selection changed across these observations. The exact commands,
+result paths, digests, and representative measurements are archived in
+`plans/reviews/archive/phase-40-milestone-40-4-exact-source-evidence.md`.
+
+After the unrelated competing reviewer task was stopped and archived, another
+unchanged canonical release-profile invocation passed all eight full
+performance variants. That invocation continued through all 56
+distribution-release variants and failed later only when installed sysroot
+self-update encountered the live schema-v1 preview index. This independently
+separates `PERF-HOST` from the Phase 40 schema-epoch bootstrap and confirms that
+the performance lane can pass without a release waiver.
+
+The timed-out control also showed that `full/budget-subset` can read the prior
+`full.budget.latest.json` after `full/benchmark-subset` fails before replacing
+it. The lane remains failed, so this does not create a false pass, but the stale
+secondary diagnostics should be corrected by this follow-up.
+
 ## Scope
 
 - Reproduce representative measurements across controlled warm and cold runs.
 - Record host thermal state, load, CPU frequency behavior, and cache state.
 - Determine why command medians and LSP samples are bimodal.
+- Prevent a failed benchmark producer from feeding stale prior-run results to
+  the same invocation's budget-subset diagnostic.
 - Determine why cold Python-interop fixtures can exceed the aggregate
   create-PR step budget while all functional variants pass.
 - Make sampling, warm-up, isolation, or threshold derivation robust enough that

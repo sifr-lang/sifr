@@ -944,6 +944,21 @@ evidence are complete.
 
 **Scope:**
 
+- Before stable activation, perform the one-time protected schema-epoch
+  bootstrap in the same publication workflow. Publish fresh, qualified
+  alpha/beta releases whose immutable assets and sysroot identities can
+  truthfully populate schema-v2 release records, then replace the public
+  schema-v1 preview index with a canonical schema-v2 `preview` generation.
+  Bootstrap cannot add `stable`, cannot activate GA, and cannot retain or add a
+  schema-v1 reader, migration producer, fallback, or synthesized digest for an
+  old binary-only preview release. Its prepare summary, protected approval,
+  immutable snapshot, exact asset digests, and public smoke are retained as
+  publication evidence.
+- Make installed-sysroot self-update qualification consume an isolated
+  schema-v2 fixture through an explicit test-only endpoint override. Keep the
+  protected post-publication public smoke as the separate proof against the
+  real channel endpoint, so the authoritative local release profile is not
+  coupled to mutable public network state.
 - Enable the `ga-activation`, `normal`, `rollback`, and
   `incident-roll-forward` operations in the existing
   `.github/workflows/release-publication.yml`. Route every stable-changing
@@ -1020,6 +1035,11 @@ evidence are complete.
 
 **Definition of done:**
 
+- The public governance asset belongs to schema epoch 2 before GA activation,
+  contains truthful fresh alpha/beta release records, remains in
+  `ga_status: preview`, and has no stable mapping. The isolated installed
+  sysroot qualification reproduces that contract without public network
+  access.
 - No stable mutation occurs without protected approval and a fully passing
   release plan.
 - Every approval is attributable to one read-only prepare summary and exact
