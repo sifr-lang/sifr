@@ -388,6 +388,9 @@ Review and gate evidence:
 - Exact working-tree
   [round 7](../../reviews/active/rust-interop-certification-2-review-round7.md)
   is `SATISFIED` with no milestone blockers.
+- Exact committed PR-head
+  [round 8](../../reviews/active/rust-interop-certification-2-review-round8.md)
+  is `SATISFIED` with no PR blockers.
 - `scripts/run_all_tests.sh --profile create-pr` passes every blocking lane:
   Rust interop `10/10`, Python interop `19/19`, runtime platform 28 variants,
   all crate smoke suites, generated-code quality `5/5`, and create-PR E2E
