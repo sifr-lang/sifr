@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import re
+import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -119,7 +120,12 @@ def materialize_stable_plan(
         )
     artifact_paths = verify_transported_artifacts(qualification, artifact_root)
     bind_target_reports(plan, qualification, artifact_paths)
-    bind_aggregate_artifacts(plan, qualification, artifact_paths)
+    bind_aggregate_artifacts(
+        plan,
+        qualification,
+        artifact_paths,
+        source_root=source_root,
+    )
 
     compatibility_path = source_root / COMPATIBILITY_MATRIX
     require_digest(
@@ -303,13 +309,17 @@ def bind_aggregate_artifacts(
     plan: dict[str, Any],
     qualification: dict[str, Any],
     artifact_paths: dict[str, Path],
+    *,
+    source_root: Path,
 ) -> None:
     artifacts = {artifact["id"]: artifact for artifact in qualification["artifacts"]}
     if artifacts["installer"]["sha256"] != plan["installer_sha256"]:
         fail("$.installer_sha256", "does not match the transported aggregate installer")
-    validate_installer_identity(
-        artifact_paths["installer"],
+    validate_installer_bytes(
+        artifact_paths=artifact_paths,
+        transported_installer=artifact_paths["installer"],
         version=plan["version"],
+        source_root=source_root,
     )
     validate_aggregate_checksums(
         artifact_paths["checksums"],
@@ -335,28 +345,58 @@ def bind_aggregate_artifacts(
         fail("$.vscode", "does not match editor qualification evidence")
 
 
-def validate_installer_identity(installer_path: Path, *, version: str) -> None:
-    assignments: dict[str, list[str]] = {
-        "APP_VERSION": [],
-        "APP_CHANNEL": [],
-    }
-    assignment = re.compile(r"^\s*(?:export\s+)?(APP_VERSION|APP_CHANNEL)\s*=")
-    for line in read_evidence_text(
-        installer_path,
-        location="$.installer_sha256",
-    ).splitlines():
-        match = assignment.match(line)
-        if match is not None:
-            assignments[match.group(1)].append(line)
-    expected = {
-        "APP_VERSION": [f'APP_VERSION="{version}"'],
-        "APP_CHANNEL": ['APP_CHANNEL="stable"'],
-    }
-    if assignments != expected:
-        fail(
-            "$.installer_sha256",
-            "installer must contain exactly one canonical candidate version and channel assignment",
+def validate_installer_bytes(
+    *,
+    artifact_paths: dict[str, Path],
+    transported_installer: Path,
+    version: str,
+    source_root: Path,
+) -> None:
+    generator = (
+        source_root / "scripts" / "distribution" / "generate_version_installer.sh"
+    )
+    if not generator.is_file() or generator.is_symlink():
+        fail("$.installer_sha256", "governed installer generator is missing or unsafe")
+    with tempfile.TemporaryDirectory(
+        prefix="sifr-installer-regeneration-"
+    ) as directory:
+        root = Path(directory)
+        artifact_dir = root / "artifacts"
+        artifact_dir.mkdir()
+        for target in TARGETS:
+            for artifact_id in (
+                f"binary-archive-{target}",
+                f"checksum-{target}",
+            ):
+                source = artifact_paths[artifact_id]
+                shutil.copyfile(source, artifact_dir / source.name)
+        regenerated = root / f"sifr-installer-{version}"
+        result = subprocess.run(
+            [
+                str(generator),
+                "--version",
+                version,
+                "--artifact-dir",
+                str(artifact_dir),
+                "--out",
+                str(regenerated),
+            ],
+            cwd=source_root,
+            check=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
+        if result.returncode != 0:
+            fail(
+                "$.installer_sha256",
+                f"governed installer regeneration failed: {result.stderr.strip()}",
+            )
+        if regenerated.read_bytes() != transported_installer.read_bytes():
+            fail(
+                "$.installer_sha256",
+                "transported installer bytes do not match the governed generator",
+            )
 
 
 def validate_aggregate_checksums(

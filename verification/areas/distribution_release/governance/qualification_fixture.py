@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import gzip
 import hashlib
 import importlib.util
+import io
 import json
 import os
 import shutil
 import subprocess
+import tarfile
 from pathlib import Path
 from typing import Any
 
@@ -126,6 +129,15 @@ def write_source_contracts(source_root: Path) -> None:
         path = source_root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(content)
+    for relative in (
+        "scripts/distribution/generate_version_installer.sh",
+        "scripts/distribution/verify_release_archive.py",
+    ):
+        source = REPO_ROOT / relative
+        destination = source_root / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(source.read_bytes())
+    (source_root / "scripts/distribution/generate_version_installer.sh").chmod(0o755)
 
 
 def build_evidence_bundle(
@@ -177,14 +189,36 @@ def build_evidence_bundle(
     assemble = artifact_root / f"{prefix}assemble"
     assemble.mkdir()
     installer = assemble / f"sifr-installer-{VERSION}"
-    installer_variant = "changed" if variant == "installer" else "baseline"
-    installer.write_text(
-        "#!/bin/sh\n"
-        f'APP_VERSION="{VERSION}"\n'
-        'APP_CHANNEL="stable"\n'
-        f"# {installer_variant}\n",
-        encoding="utf-8",
+    installer_inputs = evidence_root / "installer-inputs"
+    installer_inputs.mkdir()
+    for target in TARGETS:
+        target_container = artifact_root / f"{prefix}{target}"
+        for name in (
+            f"sifr-{VERSION}-{target}.tar.gz",
+            f"sifr-{VERSION}-{target}.tar.gz.sha256",
+        ):
+            shutil.copyfile(target_container / name, installer_inputs / name)
+    subprocess.run(
+        [
+            str(
+                source_root
+                / "scripts"
+                / "distribution"
+                / "generate_version_installer.sh"
+            ),
+            "--version",
+            VERSION,
+            "--artifact-dir",
+            str(installer_inputs),
+            "--out",
+            str(installer),
+        ],
+        cwd=source_root,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
+    shutil.rmtree(installer_inputs)
     checksums = assemble / "checksums.txt"
     checksum_rows = []
     for target in TARGETS:
@@ -313,16 +347,43 @@ def write_synthetic_target(
     archive = container / f"sifr-{VERSION}-{target}.tar.gz"
     archive_marker = (
         "changed"
-        if variant == "target-artifact" and target == TARGETS[0]
+        if (variant == "target-artifact" and target == TARGETS[0])
         else "baseline"
     )
-    archive.write_bytes(f"archive:{target}:{archive_marker}\n".encode())
+    sysroot_marker = (
+        "changed" if (variant == "sysroot" and target == TARGETS[0]) else "baseline"
+    )
+    binary_bytes = f"fixture-binary:{target}:{archive_marker}\n".encode()
+    sysroot_files = {
+        "Cargo.toml": b"[workspace]\nmembers = []\n",
+        "Cargo.lock": b"# fixture lock\n",
+        ".cargo/config.toml": b"[net]\noffline = true\n",
+        "crates/sifr_runtime/Cargo.toml": b'[package]\nname = "sifr_runtime"\n',
+        "crates/sifr_stdlib/Cargo.toml": b'[package]\nname = "sifr_stdlib"\n',
+        "lib/sifr/stdlib/sifr/fixture.sifr": b"def fixture() -> int:\n    return 1\n",
+        "lib/sifr/stdlib/_sifr/fixture.sifr": b"def fixture() -> int:\n    return 1\n",
+        "vendor/fixture.txt": f"vendor:{sysroot_marker}\n".encode(),
+    }
+    sysroot_content_sha = sysroot_digest(sysroot_files)
+    manifest = (
+        f'"schema-version" = 1\n'
+        f'"sifr-version" = "{VERSION}"\n'
+        f'"target-triple" = "{target}"\n'
+        f'"built-by-compiler-commit" = "fixture"\n'
+        f'"sysroot-content-sha256" = "{sysroot_content_sha}"\n'
+        f'"cargo-lock-sha256" = "{hashlib.sha256(sysroot_files["Cargo.lock"]).hexdigest()}"\n'
+    ).encode()
+    write_deterministic_archive(
+        archive,
+        {
+            "bin/sifr": binary_bytes,
+            "sysroot.toml": manifest,
+            **sysroot_files,
+        },
+    )
     checksum = Path(f"{archive}.sha256")
     checksum.write_text(sha256_file(archive) + "\n", encoding="utf-8")
     sysroot = container / f"sifr-{VERSION}-{target}-sysroot.tar.gz"
-    sysroot_marker = (
-        "changed" if variant == "sysroot" and target == TARGETS[0] else "baseline"
-    )
     sysroot.write_bytes(f"sysroot:{target}:{sysroot_marker}\n".encode())
     report = {
         "schema_version": 2,
@@ -331,8 +392,8 @@ def write_synthetic_target(
         "source_commit": source_commit,
         "target": target,
         "builder": BUILDERS[target],
-        "binary_sha256": digest_text(f"binary:{target}"),
-        "sysroot_sha256": digest_text(f"sysroot-content:{target}:{sysroot_marker}"),
+        "binary_sha256": hashlib.sha256(binary_bytes).hexdigest(),
+        "sysroot_sha256": sysroot_content_sha,
         "archive_sha256": sha256_file(archive),
         "checksum_sha256": sha256_file(checksum),
         "sysroot_bundle_sha256": sha256_file(sysroot),
@@ -346,6 +407,28 @@ def write_synthetic_target(
     }
     write_canonical_json(container / f"qualification-{target}.json", report)
     return report
+
+
+def sysroot_digest(files: dict[str, bytes]) -> str:
+    digest = hashlib.sha256()
+    for name in sorted(files):
+        digest.update(name.encode())
+        digest.update(b"\n")
+        digest.update(hashlib.sha256(files[name]).hexdigest().encode())
+        digest.update(b"\n")
+    return digest.hexdigest()
+
+
+def write_deterministic_archive(path: Path, files: dict[str, bytes]) -> None:
+    with path.open("wb") as raw:
+        with gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as compressed:
+            with tarfile.open(fileobj=compressed, mode="w") as archive:
+                for name, content in sorted(files.items()):
+                    info = tarfile.TarInfo(name)
+                    info.size = len(content)
+                    info.mtime = 0
+                    info.mode = 0o755 if name == "bin/sifr" else 0o644
+                    archive.addfile(info, io.BytesIO(content))
 
 
 def copy_host_evidence(
@@ -642,15 +725,21 @@ def stable_claims(*, variant: str) -> dict[str, Any]:
             "category": "supported",
             "execution_kind": "cargo-probe",
             "capability": "fixture direct crate",
-        }
+        },
+        {
+            "id": "bridge_fixture",
+            "category": "supported-through-bridge",
+            "execution_kind": "contract-only",
+            "capability": "fixture bridge",
+        },
     ]
     if variant == "rust-claims":
         claims.append(
             {
-                "id": "bridge_fixture",
-                "category": "supported-through-bridge",
-                "execution_kind": "contract-only",
-                "capability": "fixture bridge",
+                "id": "diagnostic_fixture",
+                "category": "unsupported-by-design",
+                "execution_kind": "compiler-diagnostic",
+                "capability": "fixture diagnostic",
             }
         )
     return {

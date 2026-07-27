@@ -531,6 +531,7 @@ def test_planner_rejects_drift_cases() -> None:
             "installer-indented-channel",
             "bad-editor-shape",
             "bad-doc-shape",
+            "rust-claim-order",
             "mismatched-ref",
             "binary-release-profile",
         ):
@@ -564,6 +565,10 @@ def test_planner_rejects_drift_cases() -> None:
                     "documentation_report",
                     bundle["documentation_report"],
                 )
+            elif case == "rust-claim-order":
+                plan = json.loads(bundle["plan_spec"].read_text(encoding="utf-8"))
+                plan["rust_interop"]["advertised_claim_ids"].reverse()
+                rewrite_canonical(bundle["plan_spec"], plan)
             elif case == "mismatched-ref":
                 marker = source_root / "mismatched-ref.txt"
                 marker.write_text("new head\n", encoding="utf-8")
@@ -843,7 +848,6 @@ def test_plan_digest_sensitivity() -> None:
             "nochange",
             "target-artifact",
             "sysroot",
-            "installer",
             "rust-claims",
             "vsix",
         ):
