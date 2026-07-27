@@ -200,8 +200,8 @@ architecture/gate lock PR.
 ### milestone_40_1
 
 Status: implementation, local qualification, and independent review complete;
-PR preparation in progress. The separately owned Rust certification input
-merged through
+ready [PR #3028](https://github.com/sifr-lang/sifr/pull/3028) is open. The
+separately owned Rust certification input merged through
 [PR #3026](https://github.com/sifr-lang/sifr/pull/3026) and is consumed without
 modifying its Rust-interop implementation.
 
