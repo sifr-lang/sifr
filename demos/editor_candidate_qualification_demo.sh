@@ -89,10 +89,13 @@ def main() -> None:
     print(add(20, 22))
 SIFR
 
-"${candidate_binary}" check "${fixture}"
-"${candidate_binary}" fmt --check "${fixture}"
-"${candidate_binary}" lint "${fixture}"
-"${candidate_binary}" emit "${fixture}" >/dev/null
+(
+  cd "${work_root}"
+  "${candidate_binary}" check "${fixture}"
+  "${candidate_binary}" fmt --check "${fixture}"
+  "${candidate_binary}" lint "${fixture}"
+  "${candidate_binary}" emit "${fixture}" >/dev/null
+)
 
 python3 - "${report}" <<'PY'
 import json
