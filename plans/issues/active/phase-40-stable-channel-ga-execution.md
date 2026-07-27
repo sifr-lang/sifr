@@ -452,7 +452,7 @@ updating or deleting that exact tag with no bypass actors.
 - Focused evidence:
   `uv run --project verification --locked python -m sifr_verify areas run
   --area distribution_release --suite incident-governance` passes the
-  eight-scenario recovery module; `demos/stable_incident_recovery_demo.sh`
+  nine-scenario recovery module; `demos/stable_incident_recovery_demo.sh`
   demonstrates burned-generation resume, forced rollback recovery through both
   client paths, immutable-installer execution, and first-GA roll-forward.
 - Claude Opus review pass 1 was not approved and is archived at
@@ -472,3 +472,11 @@ updating or deleting that exact tag with no bypass actors.
   unrelated host variance is recorded in
   `plans/phases/adhoc_performance_budget_host_variance.md` and is not a Phase
   40 prerequisite; no baseline or waiver changed.
+- Claude Opus review pass 2 was not approved and is archived at
+  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-2.md`.
+  Its three findings are remediated: a focused incident-index mutation module
+  now directly tests atomic withdrawal, channel isolation, rollback/roll-forward
+  version sets, and retained-release byte preservation; the shared self-test's
+  top-level separator is restored; and custody explicitly allows the release
+  README only for candidate evidence while incident evidence remains an exact
+  request-plus-withdrawal-evidence commit.

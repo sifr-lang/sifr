@@ -22,6 +22,7 @@ from .common import (
 from .evidence_custody import validate_changed_path_set, validate_incident_directory
 from .incident import validate_incident_signoff
 from .incident_evidence import validate_incident_evidence_commit
+from .incident_index_selftest import test_incident_index_mutation_contract
 from .incident_fixture import (
     FORBIDDEN_CREDENTIALS,
     check_release_submission_allowed,
@@ -46,6 +47,7 @@ def run_self_tests() -> int:
         test_rollback_burns_generation_and_resumes,
         test_site_timeout_resumes_without_second_index_mutation,
         test_first_ga_incident_roll_forward,
+        test_incident_index_mutation_contract,
         test_fail_closed_preconditions,
         test_concurrency_and_credential_boundaries,
         test_evidence_only_commit_validator,
@@ -351,6 +353,16 @@ def test_evidence_only_commit_validator() -> None:
         )
         validate_changed_path_set({request_relative, evidence_relative})
         validate_incident_directory(incident_root)
+        expect_rejected(
+            lambda: validate_changed_path_set(
+                {
+                    request_relative,
+                    evidence_relative,
+                    "plans/releases/README.md",
+                }
+            ),
+            "cannot mix",
+        )
         expect_rejected(
             lambda: validate_changed_path_set(
                 {request_relative, evidence_relative, "crates/sifr/src/main.rs"}

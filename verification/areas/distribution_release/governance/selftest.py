@@ -494,6 +494,7 @@ def test_release_index_transitions() -> None:
         preview_index(),
     )
 
+
 def test_release_plan_mutations() -> None:
     ga = valid_plan()
     validate_release_plan(ga, active_index=preview_index())
@@ -827,6 +828,7 @@ def test_evidence_custody_mutations() -> None:
     )
     candidate = "plans/releases/candidates/0.1.0/stable-release-plan.json"
     validate_changed_path_set({candidate})
+    validate_changed_path_set({candidate, "plans/releases/README.md"})
     path_mutations = [
         {candidate, "crates/sifr/src/main.rs"},
         {candidate, "plans/releases/candidates/0.1.1/stable-release-plan.json"},

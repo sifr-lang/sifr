@@ -60,10 +60,14 @@ def validate_changed_path_set(changed: set[str]) -> None:
     ]
     if invalid:
         raise GovernanceError(f"invalid evidence path(s): {', '.join(sorted(invalid))}")
+    readme_allowed = all(
+        CANDIDATE_PATH_RE.fullmatch(path) is not None for path in evidence_paths
+    )
     non_evidence = [
         path
         for path in changed
-        if path not in evidence_paths and path != "plans/releases/README.md"
+        if path not in evidence_paths
+        and not (readme_allowed and path == "plans/releases/README.md")
     ]
     if non_evidence:
         raise GovernanceError(
