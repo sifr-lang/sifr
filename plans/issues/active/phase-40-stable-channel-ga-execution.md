@@ -171,6 +171,12 @@ Review and upstream coordination ledger:
   `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-5.md`.
   It re-ran the milestone gates, verified every finding from passes 1–4, found
   no remaining actionable issue, and approved the implementation.
+- The rebased create-PR lane passed its Phase 40-relevant coverage, core,
+  diagnostics, documentation, editor, and distribution gates. Its sole
+  failure was the repeated 120-second `readonly-check-doctor` host timeout;
+  exact evidence is appended to
+  `plans/phases/adhoc_performance_budget_host_variance.md` and is not a Phase
+  40 prerequisite. No timeout or validation waiver was added.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 

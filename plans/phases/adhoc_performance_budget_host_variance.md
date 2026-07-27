@@ -46,6 +46,18 @@ seconds). The lane exited only on the elapsed-time budget after reporting every
 case as passing; the incident-governance diff does not change Python-interop or
 compiler implementation files.
 
+During stable documentation/editor qualification on source head `147296fb0`,
+the create-PR profile passed coverage, core, diagnostics, and 18 of 19 selected
+Python-interop variants. `readonly-check-doctor` alone exceeded its internal
+120-second timeout while running `sifr python check --json`; an immediate
+isolated retry reproduced the timeout at 124.62 seconds. All later selected
+Python-interop cases in the full lane passed, including binding authoring,
+callbacks, buffer, Arrow, DLPack, async, and CPython 3.11 compatibility. The
+lane took 855.07 seconds with no swaps. The qualifying change does not modify
+Python-interop implementation or verification, so this remains follow-up
+evidence rather than a stable-release-governance prerequisite or a reason to
+weaken the timeout.
+
 ## Scope
 
 - Reproduce representative measurements across controlled warm and cold runs.
