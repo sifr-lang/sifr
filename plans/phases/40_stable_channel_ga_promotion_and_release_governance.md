@@ -29,8 +29,9 @@ Phase 40 consumes these completed or canonical upstream contracts:
 
 - Phase 30 reliability and stdlib parity evidence.
 - Phase 33 preview distribution's site layout at
-  `apps/sifr-site/public/install/`. Phase 40 establishes the verified current
-  remote identity as `sifr-lang/sifr-blog-website`.
+  `apps/sifr-site/public/install/`. The former
+  `sifr-lang/sifr-blog-website` remote now resolves to the verified canonical
+  identity `sifr-lang/sifr-website`.
 - Phase 34 generated-code quality and production-readiness gates.
 - Phase 35 performance budgets and waiver policy.
 - Phase 36 production developer tooling, especially the `editor_integrations`
@@ -183,17 +184,22 @@ using any other field.
   `stable-release-signoff.json`, official install receipts,
   `sifr self version --format json`, self-update plan JSON,
   `qualification-artifact-index.json`, `stable-site-release-facts.json`,
-  `stable-incident-request.json`, `stable-incident-signoff.json`, and
-  `release-profile-report.json` all use `schema_version: 2`.
+  `site-publication-facts.json`, `stable-incident-request.json`,
+  `stable-incident-signoff.json`, and `release-profile-report.json` all use
+  `schema_version: 2`.
 - Receipt, CLI-version, and self-update-plan producers and consumers are
   replaced atomically with the canonical alpha/beta/stable field and enum
   definitions. `rc` is deleted rather than retained beside stable.
 - `stable-site-release-facts.json` is generated during publication from the
   governed index and approved plan. It binds the realized generation, active
   stable version, withdrawal/incident facts, source plan digest, and dispatcher
-  digests consumed by `sifr-lang/sifr-blog-website`; it is not a second release
+  digests consumed by `sifr-lang/sifr-website`; it is not a second release
   authority. Its realized payload and digest are post-approval evidence recorded
   in sign-off, not candidate-plan inputs.
+- `site-publication-facts.json` is the schema-v2 cross-repository binding for
+  each preview publication attempt. It binds exact source/site commits, plan
+  and release-index identity, the GA-aware site default, and all four generated
+  dispatcher digests before the paired site workflow is dispatched.
 - `stable-incident-request.json` defines `rollback` and
   `incident-roll-forward`. It binds the incident id, trigger,
   affected active version and approved plan digest, requested operation,
@@ -261,7 +267,7 @@ version-release assets. The plan binds:
   `stable_support_claims.json` digest, exact advertised claim identifiers, and
   stable-candidate validation report,
 - the `documentation` `ga-release` suite report,
-- the exact `sifr-lang/sifr-blog-website` base commit, generated dispatcher
+- the exact `sifr-lang/sifr-website` base commit, generated dispatcher
   digests, and site-release-facts schema/generator source digests; the plan does
   not bind the generation-dependent realized facts payload,
 - the `vscode/` package path within the already-recorded recursive
@@ -619,7 +625,7 @@ release index and immutable installer.
   max-generation allocator and publishes the write-once generation snapshot
   before replacing `channels.json`; snapshot history is not deferred to the
   rollback milestone.
-- Add a paired deployment workflow in `sifr-lang/sifr-blog-website`. The main
+- Add a paired deployment workflow in `sifr-lang/sifr-website`. The main
   publication workflow dispatches it with the exact Sifr source commit, release
   plan digest, publication-attempt identifier, release-index generation, site
   base commit, and generated dispatcher/release-fact digests. The site workflow
@@ -627,11 +633,11 @@ release index and immutable installer.
   `apps/sifr-site/public/install/`, verifies the digests, deploys through the
   existing `sifr.sh` deployment, and exposes a correlated terminal run result
   that the main workflow polls and verifies.
-- Land the `sifr-lang/sifr-blog-website` workflow PR before the main-repository
+- Land the `sifr-lang/sifr-website` workflow PR before the main-repository
   M40.2 PR that pins and dispatches it; record both PRs in the execution issue.
 - Authenticate that cross-repository dispatch with a protected GitHub App or
   fine-grained token scoped only to the required Actions/contents operations on
-  `sifr-lang/sifr-blog-website`; no workstation credential is a release
+  `sifr-lang/sifr-website`; no workstation credential is a release
   mechanism.
 - Order site deployment strictly after successful `channels.json` replacement.
   The main workflow retains the `sifr-release-index` concurrency lease while it
@@ -640,6 +646,12 @@ release index and immutable installer.
   records a terminal failed attempt, exits, and releases the lease. The
   downstream site workflow is not a second release-index writer and never
   uploads channel metadata.
+- Dispatch the reviewed workflow through an immutable tag because GitHub's
+  workflow-dispatch API accepts only a branch or tag ref. Resolve that tag to
+  the exact reviewed protected-main commit both before any release mutation and
+  again immediately before dispatch. Require an active exact-name repository
+  ruleset with no bypass actors to prohibit updates and deletion of the tag,
+  and revalidate that ruleset at both boundaries.
 - Immediately before site commit/deploy, the downstream workflow re-fetches the
   governed index and requires its generation and digest to match the dispatched
   payload. A timed-out or superseded run therefore cannot deploy after a
@@ -981,7 +993,7 @@ evidence are complete.
   Marketplace version; a mismatch fails. No submodule workflow or local command
   may publish to the Marketplace.
 - Publish the next governed release-index generation, then dispatch the pinned
-  `sifr-lang/sifr-blog-website` workflow to deploy the generated stable-default
+  `sifr-lang/sifr-website` workflow to deploy the generated stable-default
   dispatcher and release facts. Wait for terminal success and verify
   `https://sifr.sh/install` plus `/install/stable`; never deploy the
   stable-default dispatcher before the stable index entry exists.
@@ -1017,7 +1029,7 @@ evidence are complete.
   playbook uses `incident-roll-forward` and remains roll-forward-only until a
   later normal stable release establishes an eligible rollback target; neither
   drill can mutate live version tags/assets, the Marketplace listing,
-  `sifr-lang/sifr-blog-website`, `sifr.sh`, or the live GA index.
+  `sifr-lang/sifr-website`, `sifr.sh`, or the live GA index.
 
 **Positive validation:**
 

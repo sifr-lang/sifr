@@ -52,11 +52,31 @@ def schema_fixtures() -> dict[str, Any]:
         "self_update_install_receipt.schema.json": install_receipt(),
         "self_update_plan.schema.json": self_update_plan(),
         "self_version.schema.json": self_version(),
+        "site_publication_facts.schema.json": site_publication_facts(),
         "stable_incident_request.schema.json": incident_request(),
         "stable_incident_signoff.schema.json": incident_signoff(),
         "stable_release_plan.schema.json": release_plan(),
         "stable_release_signoff.schema.json": release_signoff(),
         "stable_site_release_facts.schema.json": site_facts(),
+    }
+
+
+def site_publication_facts() -> dict[str, Any]:
+    return {
+        "schema_version": 2,
+        "contract": "sifr-site-publication-binding-v2",
+        "publication_attempt": "run-42-1",
+        "source_commit": COMMIT,
+        "site_base_commit": "1" * 40,
+        "release_plan_sha256": SHA_A,
+        "release_index": {"generation": 9, "sha256": SHA_B},
+        "dispatcher_default_channel": "beta",
+        "dispatchers": {
+            "index": SHA_A,
+            "stable": SHA_B,
+            "alpha": SHA_C,
+            "beta": SHA_D,
+        },
     }
 
 
@@ -236,7 +256,7 @@ def release_plan() -> dict[str, Any]:
         },
         "documentation_report": {"id": "docs-a", "sha256": SHA_D},
         "site": {
-            "repository": "sifr-lang/sifr-blog-website",
+            "repository": "sifr-lang/sifr-website",
             "base_commit": "1" * 40,
             "dispatcher_sha256": {
                 "index": SHA_A,

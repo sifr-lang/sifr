@@ -20,12 +20,10 @@ import sys
 path = pathlib.Path(sys.argv[1])
 metadata = json.loads(path.read_text())
 metadata["channels"]["beta"] = "0.1.0-alpha.1"
-path.write_text(json.dumps(metadata, indent=2) + "\n")
+path.write_text(json.dumps(metadata, sort_keys=True, separators=(",", ":")) + "\n")
 PY
 
 SITE_INSTALL_ROOT="${tmp_dir}"
-DISPATCH_RELEASE_BASE_URL="file://${tmp_dir}/github-releases"
-DISPATCH_CHANNEL_METADATA_URL="file://${tmp_dir}/channels.json"
 require_failure_contains \
   "malformed channel metadata: beta points at 0.1.0-alpha.1" \
-  run_dispatcher index
+  run_dispatcher beta

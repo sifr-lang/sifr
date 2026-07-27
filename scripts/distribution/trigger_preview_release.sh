@@ -90,7 +90,7 @@ fail() {
 
 preview_channel_for_version() {
   local version="$1"
-  if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$ ]]; then
+  if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta)\.[0-9]+$ ]]; then
     return 1
   fi
   printf '%s\n' "${BASH_REMATCH[1]}"
@@ -156,7 +156,7 @@ if [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 
 version_channel="$(preview_channel_for_version "${VERSION}")" || \
-  fail "version must be a semver prerelease using -alpha.N, -beta.N, or -rc.N: ${VERSION}"
+  fail "version must be a semver prerelease using -alpha.N or -beta.N: ${VERSION}"
 [[ "${version_channel}" == "${CHANNEL}" ]] || fail "version ${VERSION} belongs to ${version_channel}, not ${CHANNEL}"
 
 command -v gh >/dev/null 2>&1 || fail "gh is required"

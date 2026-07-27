@@ -170,7 +170,7 @@ def valid_plan(*, transition: str = "ga-activation") -> dict[str, Any]:
         },
         "documentation_report": {"id": "docs-a", "sha256": SHA_D},
         "site": {
-            "repository": "sifr-lang/sifr-blog-website",
+            "repository": "sifr-lang/sifr-website",
             "base_commit": "1" * 40,
             "dispatcher_sha256": {
                 "index": SHA_A,
@@ -330,13 +330,22 @@ def mutate(payload: dict[str, Any], callback: Callable[[dict[str, Any]], None]) 
 
 
 def test_schemas_use_epoch_two() -> None:
+    def contains_default_keyword(value: Any) -> bool:
+        if isinstance(value, dict):
+            return "default" in value or any(
+                contains_default_keyword(item) for item in value.values()
+            )
+        return isinstance(value, list) and any(
+            contains_default_keyword(item) for item in value
+        )
+
     schema_paths = sorted((AREA_ROOT / "schemas").glob("*.schema.json"))
     assert schema_paths
     for path in schema_paths:
         schema = json.loads(path.read_text(encoding="utf-8"))
         assert "schema_version" in schema["required"], path
         assert schema["properties"]["schema_version"] == {"const": 2}, path
-        assert "default" not in path.read_text(encoding="utf-8"), path
+        assert not contains_default_keyword(schema), path
         assert '"rc"' not in path.read_text(encoding="utf-8"), path
     validate_schema_contracts()
 
@@ -443,6 +452,33 @@ def test_release_index_transitions() -> None:
         release_value=release_record("beta"),
     )
     assert forward["channels"]["beta"] == "0.1.0-beta.3"
+    active_forward = propose_preview_release(
+        active_index(),
+        channel="alpha",
+        version="0.1.0-alpha.3",
+        release_value=release_record("alpha"),
+    )
+    assert active_forward["ga_status"] == "active"
+    assert active_forward["channels"]["stable"] == "0.1.0"
+    assert active_forward["channels"]["alpha"] == "0.1.0-alpha.3"
+    reserved_generation = propose_preview_release(
+        preview_index(),
+        channel="beta",
+        version="0.1.0-beta.3",
+        release_value=release_record("beta"),
+        proposed_generation=12,
+    )
+    assert reserved_generation["generation"] == 12
+    expect_rejected(
+        lambda value: propose_preview_release(
+            value,
+            channel="beta",
+            version="0.1.0-beta.3",
+            release_value=release_record("beta"),
+            proposed_generation=value["generation"],
+        ),
+        preview_index(),
+    )
     expect_rejected(
         lambda value: propose_preview_release(
             value,

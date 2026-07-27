@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sifr.sh/schemas/site-publication-facts-v2.json",
+  "title": "Sifr site publication binding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract",
+    "publication_attempt",
+    "source_commit",
+    "site_base_commit",
+    "release_plan_sha256",
+    "release_index",
+    "dispatcher_default_channel",
+    "dispatchers"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "contract": {"const": "sifr-site-publication-binding-v2"},
+    "publication_attempt": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{1,128}$"
+    },
+    "source_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "not": {"const": "0000000000000000000000000000000000000000"}
+    },
+    "site_base_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "not": {"const": "0000000000000000000000000000000000000000"}
+    },
+    "release_plan_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}
+    },
+    "release_index": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generation", "sha256"],
+      "properties": {
+        "generation": {"type": "integer", "minimum": 1},
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}
+        }
+      }
+    },
+    "dispatcher_default_channel": {"enum": ["beta", "stable"]},
+    "dispatchers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "stable", "alpha", "beta"],
+      "properties": {
+        "index": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}
+        },
+        "stable": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}
+        },
+        "alpha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}
+        },
+        "beta": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}
+        }
+      }
+    }
+  }
+}

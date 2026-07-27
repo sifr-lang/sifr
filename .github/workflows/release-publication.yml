@@ -1,0 +1,689 @@
+name: release-publication
+
+on:
+  workflow_call:
+    inputs:
+      channel:
+        description: Preview channel mutation
+        required: true
+        type: string
+      version:
+        description: Immutable preview version
+        required: true
+        type: string
+      base_ref:
+        description: Human-readable source ref attribution
+        required: true
+        type: string
+      source_commit:
+        description: Exact Sifr source commit
+        required: true
+        type: string
+      site_base_commit:
+        description: Exact sifr-website workflow and deployment base
+        required: true
+        type: string
+    secrets:
+      SIFR_WEBSITE_ACTIONS_TOKEN:
+        description: Fine-grained token limited to sifr-website Actions
+        required: true
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: sifr-release-index
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: mutate governed preview release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CHANNEL: ${{ inputs.channel }}
+      VERSION: ${{ inputs.version }}
+      BASE_REF: ${{ inputs.base_ref }}
+      SOURCE_COMMIT: ${{ inputs.source_commit }}
+      SITE_BASE_COMMIT: ${{ inputs.site_base_commit }}
+      PUBLICATION_ATTEMPT: ${{ github.run_id }}-${{ github.run_attempt }}
+      SITE_REPOSITORY: sifr-lang/sifr-website
+      SITE_WORKFLOW: release-site.yml
+      SITE_WORKFLOW_REF: sifr-release-site-stable-distribution
+      SITE_WORKFLOW_RULESET_ID: "19791667"
+      SITE_WORKFLOW_RULESET_UPDATED_AT: "2026-07-27T05:06:21.354Z"
+      SITE_WORKFLOW_SHA256: 7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.source_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Validate protected publication inputs
+        shell: bash
+        env:
+          SITE_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}
+        run: |
+          set -euo pipefail
+          case "${CHANNEL}" in
+            alpha|beta) ;;
+            *) echo "::error::release-publication accepts only alpha or beta"; exit 2 ;;
+          esac
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta)\.[0-9]+$ ||
+                "${BASH_REMATCH[1]}" != "${CHANNEL}" ]]; then
+            echo "::error::version and preview channel disagree"
+            exit 2
+          fi
+          if [[ ! "${SOURCE_COMMIT}" =~ ^[0-9a-f]{40}$ ||
+                "$(git rev-parse HEAD)" != "${SOURCE_COMMIT}" ]]; then
+            echo "::error::source_commit must identify the exact checked-out commit"
+            exit 2
+          fi
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          git merge-base --is-ancestor \
+            "${SOURCE_COMMIT}" refs/remotes/origin/main || {
+            echo "::error::public release source must be reachable from protected main"
+            exit 2
+          }
+          if [[ ! "${SITE_BASE_COMMIT}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::site_base_commit must be an exact commit"
+            exit 2
+          fi
+          site_ruleset="$(
+            GH_TOKEN="${SITE_TOKEN}" gh api \
+              -H "Time-Zone: UTC" \
+              "repos/${SITE_REPOSITORY}/rulesets/${SITE_WORKFLOW_RULESET_ID}"
+          )"
+          if ! jq -e \
+            --arg ref "refs/tags/${SITE_WORKFLOW_REF}" \
+            --arg updated_at "${SITE_WORKFLOW_RULESET_UPDATED_AT}" \
+            --argjson id "${SITE_WORKFLOW_RULESET_ID}" \
+            '.id == $id
+             and .target == "tag"
+             and .enforcement == "active"
+             and .updated_at == $updated_at
+             and .conditions.ref_name.include == [$ref]
+             and .conditions.ref_name.exclude == []
+             and (.bypass_actors // []) == []
+             and (.current_user_can_bypass // "never") == "never"
+             and ([.rules[].type] | sort) == ["deletion", "update"]' \
+            <<<"${site_ruleset}" >/dev/null
+          then
+            echo "::error::site workflow tag immutability ruleset is not active and exact"
+            exit 2
+          fi
+          site_dispatch_sha="$(
+            GH_TOKEN="${SITE_TOKEN}" gh api \
+              "repos/${SITE_REPOSITORY}/git/ref/tags/${SITE_WORKFLOW_REF}" \
+              --jq '.object.sha'
+          )"
+          if [[ "${site_dispatch_sha}" != "${SITE_BASE_COMMIT}" ]]; then
+            echo "::error::protected site workflow tag does not resolve to site_base_commit"
+            exit 2
+          fi
+          existing_release_count="$(
+            gh api \
+              --method GET \
+              --paginate \
+              --slurp \
+              "repos/${GITHUB_REPOSITORY}/releases" \
+              -f per_page=100 |
+              jq --arg version "${VERSION}" \
+                '[.[][] | select(.tag_name == $version)] | length'
+          )"
+          if [[ "${existing_release_count}" != "0" ]]; then
+            echo "::error::version release already exists; preview assets are write-once"
+            exit 2
+          fi
+          existing_tag_count="$(
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/${VERSION}" |
+              jq --arg ref "refs/tags/${VERSION}" \
+                '[.[] | select(.ref == $ref)] | length'
+          )"
+          if [[ "${existing_tag_count}" != "0" ]]; then
+            echo "::error::version tag already exists; release source identity is write-once"
+            exit 2
+          fi
+          site_workflow="$(mktemp)"
+          GH_TOKEN="${SITE_TOKEN}" gh api \
+            -H "Accept: application/vnd.github.raw+json" \
+            "repos/${SITE_REPOSITORY}/contents/.github/workflows/${SITE_WORKFLOW}?ref=${SITE_BASE_COMMIT}" \
+            >"${site_workflow}"
+          actual_site_workflow_sha256="$(sha256sum "${site_workflow}" | awk '{print $1}')"
+          if [[ "${actual_site_workflow_sha256}" != "${SITE_WORKFLOW_SHA256}" ]]; then
+            echo "::error::pinned site workflow bytes do not match the reviewed contract"
+            exit 2
+          fi
+
+      - name: Verify complete immutable asset set
+        shell: bash
+        run: |
+          set -euo pipefail
+          for target in \
+            aarch64-apple-darwin \
+            x86_64-apple-darwin \
+            x86_64-unknown-linux-gnu \
+            aarch64-unknown-linux-gnu
+          do
+            archive="release-assets/sifr-${VERSION}-${target}.tar.gz"
+            checksum="${archive}.sha256"
+            test -f "${archive}" || { echo "::error::missing ${archive}"; exit 2; }
+            test -f "${checksum}" || { echo "::error::missing ${checksum}"; exit 2; }
+            expected="$(tr -d '[:space:]' <"${checksum}")"
+            actual="$(sha256sum "${archive}" | awk '{print $1}')"
+            test "${expected}" = "${actual}" || {
+              echo "::error::checksum mismatch for ${archive}"
+              exit 2
+            }
+            scripts/distribution/verify_release_archive.py \
+              "${archive}" \
+              --version "${VERSION}" \
+              --target "${target}"
+          done
+          scripts/distribution/generate_version_installer.sh \
+            --version "${VERSION}" \
+            --artifact-dir release-assets \
+            --out "release-assets/sifr-installer-${VERSION}"
+          expected_names="$(
+            {
+              for target in \
+                aarch64-apple-darwin \
+                x86_64-apple-darwin \
+                x86_64-unknown-linux-gnu \
+                aarch64-unknown-linux-gnu
+              do
+                echo "sifr-${VERSION}-${target}.tar.gz"
+                echo "sifr-${VERSION}-${target}.tar.gz.sha256"
+              done
+              echo "sifr-installer-${VERSION}"
+            } | LC_ALL=C sort
+          )"
+          actual_names="$(
+            find release-assets -mindepth 1 -maxdepth 1 -type f -exec basename {} \; |
+              LC_ALL=C sort
+          )"
+          if [[ "${actual_names}" != "${expected_names}" ]]; then
+            echo "::error::release asset set contains missing or unexpected files"
+            diff -u <(printf '%s\n' "${expected_names}") <(printf '%s\n' "${actual_names}") || true
+            exit 2
+          fi
+
+      - name: Fetch governed index and allocate max generation
+        id: index
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p publication history dispatchers
+          gh release download channels \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern channels.json \
+            --dir publication
+          mv publication/channels.json publication/current-channels.json
+          scripts/distribution/release_governance.py validate \
+            --kind release-index \
+            --input publication/current-channels.json \
+            --require-canonical
+          current_generation="$(
+            python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["generation"])' \
+              publication/current-channels.json
+          )"
+          current_sha256="$(sha256sum publication/current-channels.json | awk '{print $1}')"
+          max_generation="${current_generation}"
+          while IFS= read -r snapshot; do
+            [[ -n "${snapshot}" ]] || continue
+            gh release download channels \
+              --repo "${GITHUB_REPOSITORY}" \
+              --pattern "${snapshot}" \
+              --dir history
+            scripts/distribution/release_governance.py validate \
+              --kind release-index \
+              --input "history/${snapshot}" \
+              --require-canonical
+            snapshot_generation="${snapshot#channels-generation-}"
+            snapshot_generation="${snapshot_generation%.json}"
+            payload_generation="$(
+              python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["generation"])' \
+                "history/${snapshot}"
+            )"
+            test "${snapshot_generation}" = "${payload_generation}" || {
+              echo "::error::snapshot name and payload generation disagree: ${snapshot}"
+              exit 2
+            }
+            if (( payload_generation > max_generation )); then
+              max_generation="${payload_generation}"
+            fi
+          done < <(
+            gh release view channels \
+              --repo "${GITHUB_REPOSITORY}" \
+              --json assets \
+              --jq '.assets[].name | select(test("^channels-generation-[1-9][0-9]*[.]json$"))'
+          )
+          proposed_generation="$((max_generation + 1))"
+          {
+            echo "current_generation=${current_generation}"
+            echo "current_sha256=${current_sha256}"
+            echo "proposed_generation=${proposed_generation}"
+          } >>"${GITHUB_OUTPUT}"
+
+      - name: Build exact release record, index, dispatchers, and plan
+        id: proposal
+        shell: bash
+        env:
+          CURRENT_GENERATION: ${{ steps.index.outputs.current_generation }}
+          CURRENT_SHA256: ${{ steps.index.outputs.current_sha256 }}
+          PROPOSED_GENERATION: ${{ steps.index.outputs.proposed_generation }}
+        run: |
+          set -euo pipefail
+          scripts/distribution/release_governance.py build-release-record \
+            --version "${VERSION}" \
+            --channel "${CHANNEL}" \
+            --source-commit "${SOURCE_COMMIT}" \
+            --installer "release-assets/sifr-installer-${VERSION}" \
+            --artifact-dir release-assets \
+            --out publication/new-release.json
+          scripts/distribution/release_governance.py update-preview-index \
+            --current publication/current-channels.json \
+            --out publication/channels.json \
+            --channel "${CHANNEL}" \
+            --release publication/new-release.json \
+            --expected-generation "${CURRENT_GENERATION}" \
+            --expected-sha256 "${CURRENT_SHA256}" \
+            --proposed-generation "${PROPOSED_GENERATION}"
+          ga_status="$(
+            python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["ga_status"])' \
+              publication/channels.json
+          )"
+          case "${ga_status}" in
+            preview) site_default_channel="beta" ;;
+            active) site_default_channel="stable" ;;
+            *) echo "::error::unsupported governed ga_status: ${ga_status}"; exit 2 ;;
+          esac
+          scripts/distribution/generate_dispatchers.sh \
+            --install-root dispatchers \
+            --default-channel "${site_default_channel}"
+          python3 - \
+            publication/publication-plan.json \
+            "${CHANNEL}" \
+            "${VERSION}" \
+            "${SOURCE_COMMIT}" \
+            "${SITE_BASE_COMMIT}" \
+            "${CURRENT_GENERATION}" \
+            "${CURRENT_SHA256}" \
+            "${PROPOSED_GENERATION}" \
+            "${PUBLICATION_ATTEMPT}" \
+            "${site_default_channel}" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          out, channel, version, source, site, current_gen, current_sha, proposed_gen, attempt, site_default = sys.argv[1:]
+          value = {
+              "schema_version": 2,
+              "operation": "preview-publication",
+              "channel": channel,
+              "version": version,
+              "source_commit": source,
+              "site_base_commit": site,
+              "current_index": {"generation": int(current_gen), "sha256": current_sha},
+              "proposed_generation": int(proposed_gen),
+              "publication_attempt": attempt,
+              "site_default_channel": site_default,
+          }
+          pathlib.Path(out).write_text(
+              json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n",
+              encoding="utf-8",
+          )
+          PY
+          release_plan_sha256="$(
+            sha256sum publication/publication-plan.json | awk '{print $1}'
+          )"
+          release_index_sha256="$(sha256sum publication/channels.json | awk '{print $1}')"
+          for dispatcher in index stable alpha beta; do
+            digest="$(sha256sum "dispatchers/${dispatcher}" | awk '{print $1}')"
+            echo "dispatcher_${dispatcher}_sha256=${digest}" >>"${GITHUB_OUTPUT}"
+          done
+          {
+            echo "release_plan_sha256=${release_plan_sha256}"
+            echo "release_index_sha256=${release_index_sha256}"
+            echo "site_default_channel=${site_default_channel}"
+          } >>"${GITHUB_OUTPUT}"
+
+      - name: Publish write-once version release and verify assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          notes_file="$(mktemp)"
+          {
+            echo "# Sifr ${VERSION}"
+            echo
+            echo "Preview channel: ${CHANNEL}"
+            echo "Base ref: ${BASE_REF}"
+            echo "Source commit: ${SOURCE_COMMIT}"
+            echo
+            echo "This is a public preview release. Stable publication is unavailable here."
+          } >"${notes_file}"
+          gh release create "${VERSION}" release-assets/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --target "${SOURCE_COMMIT}" \
+            --prerelease \
+            --latest=false \
+            --title "Sifr ${VERSION}" \
+            --notes-file "${notes_file}"
+          published_tag_sha="$(
+            gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${VERSION}" \
+              --jq '.object.sha'
+          )"
+          if [[ "${published_tag_sha}" != "${SOURCE_COMMIT}" ]]; then
+            echo "::error::published version tag does not resolve to source_commit"
+            exit 2
+          fi
+          gh release view "${VERSION}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --json assets >publication/version-release.json
+          scripts/distribution/verify_release_installer_asset.py \
+            publication/version-release.json \
+            "sifr-installer-${VERSION}"
+          mkdir publication/published-assets
+          gh release download "${VERSION}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --dir publication/published-assets
+          while IFS= read -r local_asset; do
+            name="$(basename "${local_asset}")"
+            published_asset="publication/published-assets/${name}"
+            test -f "${published_asset}" || {
+              echo "::error::published release omitted ${name}"
+              exit 2
+            }
+            cmp "${local_asset}" "${published_asset}" || {
+              echo "::error::published release bytes differ for ${name}"
+              exit 2
+            }
+          done < <(find release-assets -mindepth 1 -maxdepth 1 -type f | LC_ALL=C sort)
+
+      - name: Revalidate lease and publish write-once generation snapshot
+        shell: bash
+        env:
+          EXPECTED_GENERATION: ${{ steps.index.outputs.current_generation }}
+          EXPECTED_SHA256: ${{ steps.index.outputs.current_sha256 }}
+          PROPOSED_GENERATION: ${{ steps.index.outputs.proposed_generation }}
+        run: |
+          set -euo pipefail
+          live_dir="$(mktemp -d)"
+          gh release download channels \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern channels.json \
+            --dir "${live_dir}"
+          live_index="${live_dir}/channels.json"
+          scripts/distribution/release_governance.py validate \
+            --kind release-index \
+            --input "${live_index}" \
+            --require-canonical
+          live_generation="$(
+            python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["generation"])' \
+              "${live_index}"
+          )"
+          live_sha256="$(sha256sum "${live_index}" | awk '{print $1}')"
+          if [[ "${live_generation}" != "${EXPECTED_GENERATION}" ||
+                "${live_sha256}" != "${EXPECTED_SHA256}" ]]; then
+            echo "::error::release index changed after proposal generation"
+            exit 2
+          fi
+          snapshot="publication/channels-generation-${PROPOSED_GENERATION}.json"
+          cp publication/channels.json "${snapshot}"
+          snapshot_names="$(
+            gh release view channels \
+              --repo "${GITHUB_REPOSITORY}" \
+              --json assets \
+              --jq '.assets[].name'
+          )"
+          if grep -Fxq "$(basename "${snapshot}")" <<<"${snapshot_names}"; then
+            echo "::error::generation snapshot already exists"
+            exit 2
+          fi
+          gh release upload channels "${snapshot}" --repo "${GITHUB_REPOSITORY}"
+
+      - name: Replace only canonical channels.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release upload channels publication/channels.json \
+            --repo "${GITHUB_REPOSITORY}" \
+            --clobber
+          activated_dir="$(mktemp -d)"
+          gh release download channels \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern channels.json \
+            --dir "${activated_dir}"
+          activated="${activated_dir}/channels.json"
+          test "$(sha256sum "${activated}" | awk '{print $1}')" = \
+            "${{ steps.proposal.outputs.release_index_sha256 }}" || {
+              echo "::error::activated index digest does not match the proposed bytes"
+              exit 2
+            }
+
+      - name: Build correlated site publication facts
+        id: site
+        shell: bash
+        env:
+          RELEASE_PLAN_SHA256: ${{ steps.proposal.outputs.release_plan_sha256 }}
+          RELEASE_INDEX_SHA256: ${{ steps.proposal.outputs.release_index_sha256 }}
+          PROPOSED_GENERATION: ${{ steps.index.outputs.proposed_generation }}
+          DISPATCHER_INDEX_SHA256: ${{ steps.proposal.outputs.dispatcher_index_sha256 }}
+          DISPATCHER_STABLE_SHA256: ${{ steps.proposal.outputs.dispatcher_stable_sha256 }}
+          DISPATCHER_ALPHA_SHA256: ${{ steps.proposal.outputs.dispatcher_alpha_sha256 }}
+          DISPATCHER_BETA_SHA256: ${{ steps.proposal.outputs.dispatcher_beta_sha256 }}
+          SITE_DEFAULT_CHANNEL: ${{ steps.proposal.outputs.site_default_channel }}
+        run: |
+          set -euo pipefail
+          scripts/distribution/generate_site_publication_facts.py \
+            --out publication/site-publication-facts.json \
+            --source-commit "${SOURCE_COMMIT}" \
+            --site-base-commit "${SITE_BASE_COMMIT}" \
+            --release-plan-sha256 "${RELEASE_PLAN_SHA256}" \
+            --publication-attempt "${PUBLICATION_ATTEMPT}" \
+            --release-index-generation "${PROPOSED_GENERATION}" \
+            --release-index-sha256 "${RELEASE_INDEX_SHA256}" \
+            --dispatcher-default-channel "${SITE_DEFAULT_CHANNEL}" \
+            --dispatcher-index-sha256 "${DISPATCHER_INDEX_SHA256}" \
+            --dispatcher-stable-sha256 "${DISPATCHER_STABLE_SHA256}" \
+            --dispatcher-alpha-sha256 "${DISPATCHER_ALPHA_SHA256}" \
+            --dispatcher-beta-sha256 "${DISPATCHER_BETA_SHA256}"
+          scripts/distribution/release_governance.py validate \
+            --kind site-publication-facts \
+            --input publication/site-publication-facts.json \
+            --require-canonical
+          echo "publication_facts_sha256=$(
+            sha256sum publication/site-publication-facts.json | awk '{print $1}'
+          )" >>"${GITHUB_OUTPUT}"
+
+      - name: Dispatch exact site workflow
+        id: dispatch
+        shell: bash
+        env:
+          SITE_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}
+          RELEASE_PLAN_SHA256: ${{ steps.proposal.outputs.release_plan_sha256 }}
+          RELEASE_INDEX_SHA256: ${{ steps.proposal.outputs.release_index_sha256 }}
+          PROPOSED_GENERATION: ${{ steps.index.outputs.proposed_generation }}
+          DISPATCHER_INDEX_SHA256: ${{ steps.proposal.outputs.dispatcher_index_sha256 }}
+          DISPATCHER_STABLE_SHA256: ${{ steps.proposal.outputs.dispatcher_stable_sha256 }}
+          DISPATCHER_ALPHA_SHA256: ${{ steps.proposal.outputs.dispatcher_alpha_sha256 }}
+          DISPATCHER_BETA_SHA256: ${{ steps.proposal.outputs.dispatcher_beta_sha256 }}
+          PUBLICATION_FACTS_SHA256: ${{ steps.site.outputs.publication_facts_sha256 }}
+          SITE_DEFAULT_CHANNEL: ${{ steps.proposal.outputs.site_default_channel }}
+        run: |
+          set -euo pipefail
+          dispatched_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          site_ruleset="$(
+            GH_TOKEN="${SITE_TOKEN}" gh api \
+              -H "Time-Zone: UTC" \
+              "repos/${SITE_REPOSITORY}/rulesets/${SITE_WORKFLOW_RULESET_ID}"
+          )"
+          if ! jq -e \
+            --arg ref "refs/tags/${SITE_WORKFLOW_REF}" \
+            --arg updated_at "${SITE_WORKFLOW_RULESET_UPDATED_AT}" \
+            --argjson id "${SITE_WORKFLOW_RULESET_ID}" \
+            '.id == $id
+             and .target == "tag"
+             and .enforcement == "active"
+             and .updated_at == $updated_at
+             and .conditions.ref_name.include == [$ref]
+             and .conditions.ref_name.exclude == []
+             and (.bypass_actors // []) == []
+             and (.current_user_can_bypass // "never") == "never"
+             and ([.rules[].type] | sort) == ["deletion", "update"]' \
+            <<<"${site_ruleset}" >/dev/null
+          then
+            echo "::error::site workflow tag lost immutable protection before dispatch"
+            exit 2
+          fi
+          site_dispatch_sha="$(
+            GH_TOKEN="${SITE_TOKEN}" gh api \
+              "repos/${SITE_REPOSITORY}/git/ref/tags/${SITE_WORKFLOW_REF}" \
+              --jq '.object.sha'
+          )"
+          if [[ "${site_dispatch_sha}" != "${SITE_BASE_COMMIT}" ]]; then
+            echo "::error::protected site workflow tag moved before dispatch"
+            exit 2
+          fi
+          jq -n \
+            --arg ref "${SITE_WORKFLOW_REF}" \
+            --arg source "${SOURCE_COMMIT}" \
+            --arg plan "${RELEASE_PLAN_SHA256}" \
+            --arg attempt "${PUBLICATION_ATTEMPT}" \
+            --arg generation "${PROPOSED_GENERATION}" \
+            --arg index "${RELEASE_INDEX_SHA256}" \
+            --arg site "${SITE_BASE_COMMIT}" \
+            --arg dispatcher_index "${DISPATCHER_INDEX_SHA256}" \
+            --arg dispatcher_stable "${DISPATCHER_STABLE_SHA256}" \
+            --arg dispatcher_alpha "${DISPATCHER_ALPHA_SHA256}" \
+            --arg dispatcher_beta "${DISPATCHER_BETA_SHA256}" \
+            --arg facts "${PUBLICATION_FACTS_SHA256}" \
+            --arg dispatcher_default "${SITE_DEFAULT_CHANNEL}" \
+            '{
+              ref: $ref,
+              inputs: {
+                sifr_source_commit: $source,
+                release_plan_sha256: $plan,
+                publication_attempt: $attempt,
+                release_index_generation: $generation,
+                release_index_sha256: $index,
+                site_base_commit: $site,
+                dispatcher_index_sha256: $dispatcher_index,
+                dispatcher_stable_sha256: $dispatcher_stable,
+                dispatcher_alpha_sha256: $dispatcher_alpha,
+                dispatcher_beta_sha256: $dispatcher_beta,
+                dispatcher_default_channel: $dispatcher_default,
+                publication_facts_sha256: $facts
+              }
+            }' |
+            GH_TOKEN="${SITE_TOKEN}" gh api \
+              --method POST \
+              "repos/${SITE_REPOSITORY}/actions/workflows/${SITE_WORKFLOW}/dispatches" \
+              --input -
+          echo "dispatched_at=${dispatched_at}" >>"${GITHUB_OUTPUT}"
+
+      - name: Poll exact site run with 20-minute deadline
+        shell: bash
+        env:
+          SITE_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}
+          DISPATCHED_AT: ${{ steps.dispatch.outputs.dispatched_at }}
+        run: |
+          set -euo pipefail
+          expected_title="Sifr site release ${PUBLICATION_ATTEMPT}"
+          site_run_id=""
+          poll_error=""
+          poll_query_failures=0
+          poll_deadline=$((SECONDS + 1200))
+          while (( SECONDS < poll_deadline )); do
+            remaining_seconds=$((poll_deadline - SECONDS))
+            if (( remaining_seconds <= 0 )); then
+              break
+            fi
+            set +e
+            runs="$(
+              GH_TOKEN="${SITE_TOKEN}" timeout --foreground "${remaining_seconds}s" gh api \
+                --method GET \
+                --paginate \
+                --slurp \
+                "repos/${SITE_REPOSITORY}/actions/workflows/${SITE_WORKFLOW}/runs" \
+                -f event=workflow_dispatch \
+                -f created="${DISPATCHED_AT}..*" \
+                -f per_page=100
+            )"
+            poll_status=$?
+            set -e
+            if [[ ${poll_status} -eq 124 ]]; then
+              break
+            fi
+            if [[ ${poll_status} -ne 0 ]]; then
+              poll_query_failures=$((poll_query_failures + 1))
+              if (( poll_query_failures >= 3 )); then
+                poll_error="could not query the correlated site run after three attempts"
+                break
+              fi
+              remaining_seconds=$((poll_deadline - SECONDS))
+              if (( remaining_seconds > 0 )); then
+                sleep_seconds=10
+                if (( remaining_seconds < sleep_seconds )); then
+                  sleep_seconds="${remaining_seconds}"
+                fi
+                sleep "${sleep_seconds}"
+              fi
+              continue
+            fi
+            poll_query_failures=0
+            matched="$(
+              jq -r \
+                --arg title "${expected_title}" \
+                --arg sha "${SITE_BASE_COMMIT}" \
+                --arg since "${DISPATCHED_AT}" \
+                'first(
+                   .[].workflow_runs[]
+                   | select(.display_title == $title)
+                   | select(.head_sha == $sha)
+                   | select(.event == "workflow_dispatch")
+                   | select(.created_at >= $since)
+                   | [.id, .status, (.conclusion // "")]
+                   | @tsv
+                 ) // empty' <<<"${runs}"
+            )"
+            if [[ -n "${matched}" ]]; then
+              IFS=$'\t' read -r site_run_id status conclusion <<<"${matched}"
+              if [[ "${status}" == "completed" ]]; then
+                if [[ "${conclusion}" == "success" ]]; then
+                  echo "Correlated site run ${site_run_id} completed successfully"
+                  exit 0
+                fi
+                echo "::error::correlated site run ${site_run_id} concluded ${conclusion}"
+                exit 2
+              fi
+            fi
+            remaining_seconds=$((poll_deadline - SECONDS))
+            if (( remaining_seconds > 0 )); then
+              sleep_seconds=10
+              if (( remaining_seconds < sleep_seconds )); then
+                sleep_seconds="${remaining_seconds}"
+              fi
+              sleep "${sleep_seconds}"
+            fi
+          done
+          if [[ -n "${site_run_id}" ]]; then
+            GH_TOKEN="${SITE_TOKEN}" gh api \
+              --method POST \
+              "repos/${SITE_REPOSITORY}/actions/runs/${site_run_id}/cancel" || true
+          fi
+          if [[ -n "${poll_error}" ]]; then
+            echo "::error::${poll_error}"
+            exit 2
+          fi
+          echo "::error::correlated site deployment exceeded the 20-minute deadline"
+          exit 2

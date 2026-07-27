@@ -22,66 +22,62 @@ on:
         type: string
 
 permissions:
+  actions: read
   contents: write
-
-concurrency:
-  group: sifr-release-index
-  cancel-in-progress: false
 
 jobs:
   validate:
     name: validate preview inputs
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.validate.outputs.version }}
       channel: ${{ steps.validate.outputs.channel }}
       base_ref: ${{ steps.validate.outputs.base_ref }}
       source_sha: ${{ steps.validate.outputs.source_sha }}
+      site_base_commit: ${{ steps.validate.outputs.site_base_commit }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ inputs.base_ref || 'main' }}
           fetch-depth: 0
           submodules: recursive
+          persist-credentials: false
 
-      - name: Validate channel and version
+      - name: Validate channel, version, and immutable site base
         id: validate
         shell: bash
         env:
           INPUT_CHANNEL: ${{ inputs.channel }}
           INPUT_VERSION: ${{ inputs.version }}
           INPUT_BASE_REF: ${{ inputs.base_ref }}
+          SITE_BASE_COMMIT: 07d88cc3c24707e386c5ad73fb0875c06ffd598f
         run: |
           set -euo pipefail
-          channel="${INPUT_CHANNEL}"
-          version="${INPUT_VERSION}"
-          base_ref="${INPUT_BASE_REF}"
-
-          case "${channel}" in
+          case "${INPUT_CHANNEL}" in
             alpha|beta) ;;
             *) echo "::error::channel must be alpha or beta"; exit 2 ;;
           esac
-
-          if [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::stable-looking versions are disabled until a stable channel is supported: ${version}"
-            exit 2
-          fi
-
-          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta)\.[0-9]+$ ]]; then
+          if [[ ! "${INPUT_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta)\.[0-9]+$ ]]; then
             echo "::error::version must be a semver prerelease using -alpha.N or -beta.N"
             exit 2
           fi
-
-          version_channel="${BASH_REMATCH[1]}"
-          if [[ "${version_channel}" != "${channel}" ]]; then
-            echo "::error::version ${version} belongs to ${version_channel}, not ${channel}"
+          if [[ "${BASH_REMATCH[1]}" != "${INPUT_CHANNEL}" ]]; then
+            echo "::error::version ${INPUT_VERSION} belongs to ${BASH_REMATCH[1]}, not ${INPUT_CHANNEL}"
             exit 2
           fi
-
-          echo "version=${version}" >>"${GITHUB_OUTPUT}"
-          echo "channel=${channel}" >>"${GITHUB_OUTPUT}"
-          echo "base_ref=${base_ref:-main}" >>"${GITHUB_OUTPUT}"
-          echo "source_sha=$(git rev-parse HEAD)" >>"${GITHUB_OUTPUT}"
+          if [[ ! "${SITE_BASE_COMMIT}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::preview release must pin an exact merged website commit"
+            exit 2
+          fi
+          {
+            echo "version=${INPUT_VERSION}"
+            echo "channel=${INPUT_CHANNEL}"
+            echo "base_ref=${INPUT_BASE_REF:-main}"
+            echo "source_sha=$(git rev-parse HEAD)"
+            echo "site_base_commit=${SITE_BASE_COMMIT}"
+          } >>"${GITHUB_OUTPUT}"
 
   build-artifacts:
     name: build ${{ matrix.target }}
@@ -99,242 +95,54 @@ jobs:
           - target: aarch64-unknown-linux-gnu
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ needs.validate.outputs.source_sha }}
           submodules: recursive
+          persist-credentials: false
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
         with:
           targets: ${{ matrix.target }}
 
       - name: Build target binary
         env:
           SIFR_RELEASE_VERSION: ${{ needs.validate.outputs.version }}
-        run: cargo build --release -p sifr --target "${{ matrix.target }}"
+        run: cargo build --release --locked -p sifr --target "${{ matrix.target }}"
 
-      - name: Package artifact
+      - name: Package immutable target artifact
         shell: bash
         run: |
           set -euo pipefail
-          version="${{ needs.validate.outputs.version }}"
-          target="${{ matrix.target }}"
           scripts/distribution/build_release_artifacts.sh \
-            --version "${version}" \
+            --version "${{ needs.validate.outputs.version }}" \
             --output-dir dist \
-            --binary "target/${target}/release/sifr" \
-            --target "${target}"
+            --binary "target/${{ matrix.target }}/release/sifr" \
+            --target "${{ matrix.target }}"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: sifr-${{ needs.validate.outputs.version }}-${{ matrix.target }}
           path: dist/*
           if-no-files-found: error
 
-  publish-release:
-    name: publish preview release
+  publish:
+    name: governed preview publication
     needs:
       - validate
       - build-artifacts
-    runs-on: ubuntu-24.04
-    env:
-      GH_TOKEN: ${{ github.token }}
-      VERSION: ${{ needs.validate.outputs.version }}
-      CHANNEL: ${{ needs.validate.outputs.channel }}
-      BASE_REF: ${{ needs.validate.outputs.base_ref }}
-      SOURCE_SHA: ${{ needs.validate.outputs.source_sha }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ env.SOURCE_SHA }}
-          submodules: recursive
-
-      - uses: actions/download-artifact@v4
-        with:
-          path: release-assets
-          merge-multiple: true
-
-      - name: Verify complete asset set
-        shell: bash
-        run: |
-          set -euo pipefail
-          expected_targets=(
-            aarch64-apple-darwin
-            x86_64-apple-darwin
-            x86_64-unknown-linux-gnu
-            aarch64-unknown-linux-gnu
-          )
-          for target in "${expected_targets[@]}"; do
-            archive="release-assets/sifr-${VERSION}-${target}.tar.gz"
-            checksum="${archive}.sha256"
-            test -f "${archive}" || { echo "::error::missing ${archive}"; exit 2; }
-            test -f "${checksum}" || { echo "::error::missing ${checksum}"; exit 2; }
-            expected="$(tr -d '[:space:]' <"${checksum}")"
-            actual="$(sha256sum "${archive}" | awk '{print $1}')"
-            if [[ "${expected}" != "${actual}" ]]; then
-              echo "::error::checksum mismatch for ${archive}"
-              exit 2
-            fi
-            scripts/distribution/verify_release_archive.py \
-              "${archive}" \
-              --version "${VERSION}" \
-              --target "${target}"
-          done
-
-      - name: Generate immutable installer asset
-        shell: bash
-        run: |
-          set -euo pipefail
-          scripts/distribution/generate_version_installer.sh \
-            --version "${VERSION}" \
-            --artifact-dir release-assets \
-            --out "release-assets/sifr-installer-${VERSION}"
-
-      - name: Generate channel metadata asset
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p channel-metadata
-          current_metadata="$(mktemp)"
-          if ! curl -fsSL \
-            "https://github.com/${GITHUB_REPOSITORY}/releases/download/channels/channels.json" \
-            -o "${current_metadata}"; then
-            echo "::error::canonical schema-v2 release index is unavailable"
-            exit 2
-          fi
-
-          python3 scripts/distribution/release_governance.py validate \
-            --kind release-index \
-            --input "${current_metadata}" \
-            --require-canonical
-          expected_generation="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["generation"])' "${current_metadata}")"
-          expected_sha256="$(sha256sum "${current_metadata}" | awk '{print $1}')"
-          scripts/distribution/release_governance.py build-release-record \
-            --version "${VERSION}" \
-            --channel "${CHANNEL}" \
-            --source-commit "${SOURCE_SHA}" \
-            --installer "release-assets/sifr-installer-${VERSION}" \
-            --artifact-dir release-assets \
-            --out new-release.json
-
-          scripts/distribution/release_governance.py update-preview-index \
-            --current "${current_metadata}" \
-            --out channel-metadata/channels.json \
-            --channel "${CHANNEL}" \
-            --release new-release.json \
-            --expected-generation "${expected_generation}" \
-            --expected-sha256 "${expected_sha256}"
-          {
-            echo "EXPECTED_INDEX_GENERATION=${expected_generation}"
-            echo "EXPECTED_INDEX_SHA256=${expected_sha256}"
-          } >>"${GITHUB_ENV}"
-
-      - name: Verify immutable installer asset
-        shell: bash
-        run: |
-          set -euo pipefail
-          installer="release-assets/sifr-installer-${VERSION}"
-          test -f "${installer}" || { echo "::error::missing ${installer}"; exit 2; }
-          size="$(wc -c <"${installer}" | tr -d '[:space:]')"
-          if [[ "${size}" -lt 1024 ]]; then
-            echo "::error::installer asset too small: ${size} bytes"
-            exit 2
-          fi
-          head -n 1 "${installer}" | grep -q '^#!' || {
-            echo "::error::installer asset must start with a shebang"
-            exit 2
-          }
-
-      - name: Publish GitHub prerelease
-        shell: bash
-        run: |
-          set -euo pipefail
-          notes_file="$(mktemp)"
-          {
-            echo "# Sifr ${VERSION}"
-            echo
-            echo "Preview channel: ${CHANNEL}"
-            echo "Base ref: ${BASE_REF}"
-            echo
-            echo "This is a public preview release. Stable GA promotion remains disabled until a stable channel is supported."
-            echo
-            echo "Assets are .tar.gz archives plus SHA-256 checksum files for the preview release target set."
-          } >"${notes_file}"
-
-          if gh release view "${VERSION}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
-            gh release edit "${VERSION}" \
-              --repo "${GITHUB_REPOSITORY}" \
-              --prerelease \
-              --draft=false \
-              --latest=false \
-              --title "Sifr ${VERSION}" \
-              --notes-file "${notes_file}"
-          else
-            gh release create "${VERSION}" \
-              --repo "${GITHUB_REPOSITORY}" \
-              --prerelease \
-              --latest=false \
-              --title "Sifr ${VERSION}" \
-              --notes-file "${notes_file}"
-          fi
-
-          gh release upload "${VERSION}" release-assets/* \
-            --repo "${GITHUB_REPOSITORY}" \
-            --clobber
-
-      - name: Verify published release assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          scripts/distribution/list_channel_versions.py channel-metadata/channels.json > channel-versions.txt
-
-          while IFS= read -r channel_version; do
-            gh release view "${channel_version}" \
-              --repo "${GITHUB_REPOSITORY}" \
-              --json assets \
-              > "release-view-${channel_version}.json"
-            scripts/distribution/verify_release_installer_asset.py \
-              "release-view-${channel_version}.json" \
-              "sifr-installer-${channel_version}"
-          done < channel-versions.txt
-
-      - name: Publish channel metadata
-        shell: bash
-        run: |
-          set -euo pipefail
-          live_metadata="$(mktemp)"
-          curl -fsSL \
-            "https://github.com/${GITHUB_REPOSITORY}/releases/download/channels/channels.json" \
-            -o "${live_metadata}"
-          python3 scripts/distribution/release_governance.py validate \
-            --kind release-index \
-            --input "${live_metadata}" \
-            --require-canonical
-          live_generation="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["generation"])' "${live_metadata}")"
-          live_sha256="$(sha256sum "${live_metadata}" | awk '{print $1}')"
-          if [[ "${live_generation}" != "${EXPECTED_INDEX_GENERATION}" ||
-                "${live_sha256}" != "${EXPECTED_INDEX_SHA256}" ]]; then
-            echo "::error::release index changed after proposal generation; refusing stale mutation"
-            exit 2
-          fi
-
-          if gh release view channels --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
-            gh release edit channels \
-              --repo "${GITHUB_REPOSITORY}" \
-              --draft=false \
-              --latest=false \
-              --title "Sifr self-update channels" \
-              --notes "Machine-readable Sifr self-update channel metadata."
-          else
-            gh release create channels \
-              --repo "${GITHUB_REPOSITORY}" \
-              --draft=false \
-              --latest=false \
-              --title "Sifr self-update channels" \
-              --notes "Machine-readable Sifr self-update channel metadata."
-          fi
-
-          gh release upload channels channel-metadata/channels.json \
-            --repo "${GITHUB_REPOSITORY}" \
-            --clobber
+    uses: ./.github/workflows/release-publication.yml
+    permissions:
+      actions: read
+      contents: write
+    with:
+      channel: ${{ needs.validate.outputs.channel }}
+      version: ${{ needs.validate.outputs.version }}
+      base_ref: ${{ needs.validate.outputs.base_ref }}
+      source_commit: ${{ needs.validate.outputs.source_sha }}
+      site_base_commit: ${{ needs.validate.outputs.site_base_commit }}
+    secrets:
+      SIFR_WEBSITE_ACTIONS_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}

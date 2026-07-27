@@ -1,0 +1,56 @@
+{
+  "schema_version": 2,
+  "repository": "sifr-lang/sifr-website",
+  "workflow": ".github/workflows/release-site.yml",
+  "workflow_commit": "07d88cc3c24707e386c5ad73fb0875c06ffd598f",
+  "workflow_ref": "sifr-release-site-stable-distribution",
+  "workflow_ref_ruleset": {
+    "bypass_actors": [],
+    "enforcement": "active",
+    "id": 19791667,
+    "updated_at": "2026-07-27T05:06:21.354Z",
+    "rules": [
+      "deletion",
+      "update"
+    ]
+  },
+  "workflow_sha256": "7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958",
+  "workflow_pr": "https://github.com/sifr-lang/sifr-website/pull/15",
+  "dispatcher_generation": {
+    "script": "scripts/distribution/generate_dispatchers.sh",
+    "default_channel_by_ga_status": {
+      "active": "stable",
+      "preview": "beta"
+    },
+    "entrypoints": [
+      "index",
+      "stable",
+      "alpha",
+      "beta"
+    ]
+  },
+  "permissions": {
+    "contents": "read",
+    "release_metadata_write": false
+  },
+  "required_inputs": [
+    "sifr_source_commit",
+    "release_plan_sha256",
+    "publication_attempt",
+    "release_index_generation",
+    "release_index_sha256",
+    "site_base_commit",
+    "dispatcher_index_sha256",
+    "dispatcher_stable_sha256",
+    "dispatcher_alpha_sha256",
+    "dispatcher_beta_sha256",
+    "dispatcher_default_channel",
+    "publication_facts_sha256"
+  ],
+  "terminal_run": {
+    "event": "workflow_dispatch",
+    "title_prefix": "Sifr site release ",
+    "head_sha": "workflow_commit",
+    "deadline_minutes": 20
+  }
+}

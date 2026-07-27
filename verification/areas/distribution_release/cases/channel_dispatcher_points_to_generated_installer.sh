@@ -39,7 +39,7 @@ SIFR_INSTALLER_RELEASE_BASE_URL="file://${release_root}" \
   SIFR_ARTIFACT_BASE_URL="file://${artifact_dir}" \
   SIFR_TARGET="x86_64-unknown-linux-gnu" \
   SIFR_INSTALL_DIR="${install_dir}" \
-  sh "${install_root}/index" >/dev/null
+  sh "${install_root}/beta" >/dev/null
 
 if ! grep -F 'dispatcher generated installer fixture' "${install_dir}/sifr" >/dev/null; then
   echo "dispatcher did not delegate to generated installer payload" >&2

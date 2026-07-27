@@ -24,7 +24,8 @@ validated, merged PR.
 - Builder-derived minimum floors:
   - macOS 15.0, from the `macos-15` and `macos-15-intel` release builders.
   - glibc 2.39 on Linux, from the Ubuntu 24.04 release builders.
-- Canonical site repository: `sifr-lang/sifr-blog-website`.
+- Canonical site repository: `sifr-lang/sifr-website` (the former
+  `sifr-lang/sifr-blog-website` remote redirects here).
 - Canonical release-index governance tag: `channels`.
 - Canonical schema epoch: integer `2` only. No v1 reader, writer, fixture,
   migration, negotiation, or fallback survives the milestone-40.0 cutover.
@@ -65,6 +66,7 @@ Artifacts mapped to the Phase 40 exit gate:
 | `stable-release-plan.json` | 40.0, 40.1, 40.4 | Immutable candidate provenance and artifact binding |
 | `qualification-artifact-index.json` | 40.0, 40.1 | Workflow transport and expiry binding |
 | `stable-site-release-facts.json` | 40.0, 40.5 | Derived pinned site deployment facts |
+| `site-publication-facts.json` | 40.2 | Schema-v2 preview publication/site-dispatch binding |
 | `stable-release-signoff.json` | 40.0, 40.5 | Protected attempts, mutations, Marketplace, and smoke |
 | incident request/sign-off | 40.0, 40.3, 40.5 | Withdrawal, rollback, roll-forward, and closure |
 | install receipt / CLI version / update plan | 40.0, 40.2 | Stable installer and self-update agreement |
@@ -77,17 +79,17 @@ Artifacts mapped to the Phase 40 exit gate:
 - [x] Implement the non-mutating stable planner and canonical digest binding.
 - [x] Consume and register the separately delivered Rust-interop
   stable-candidate suite and claims artifact before qualification.
-- [ ] Qualify all compiler, sysroot, installer, documentation, Rust-claim, site,
+- [x] Qualify all compiler, sysroot, installer, documentation, Rust-claim, site,
   and VSIX artifacts.
 - [x] Validate first-GA and normal predecessor/rollback semantics.
-- [ ] Record review rounds, PR, validation, and merge.
+- [x] Record review rounds, PR, validation, and merge.
 
 ### milestone_40_2: Stable Distribution and Self-Update
 
-- [ ] Enable stable resolution in dispatchers, immutable installer, exact pins,
+- [x] Enable stable resolution in dispatchers, immutable installer, exact pins,
   receipts, and `sifr self update`.
-- [ ] Keep publication mutation disabled.
-- [ ] Validate all four targets and negative checksum/withdrawal/channel cases.
+- [x] Keep stable-changing publication mutation disabled.
+- [x] Validate all four targets and negative checksum/withdrawal/channel cases.
 - [ ] Record review rounds, PR, validation, and merge.
 
 ### milestone_40_3: Rollback and Incident Governance
@@ -199,9 +201,9 @@ architecture/gate lock PR.
 
 ### milestone_40_1
 
-Status: implementation, local qualification, and independent review complete;
-ready [PR #3028](https://github.com/sifr-lang/sifr/pull/3028) is open. The
-separately owned Rust certification input merged through
+Status: complete. [PR #3028](https://github.com/sifr-lang/sifr/pull/3028)
+merged as `56f8c41eec`. The separately owned Rust certification input merged
+through
 [PR #3026](https://github.com/sifr-lang/sifr/pull/3026) and is consumed without
 modifying its Rust-interop implementation.
 
@@ -296,3 +298,114 @@ modifying its Rust-interop implementation.
     including 131/131 E2E fixtures and zero blocking failures; the cold-cache
     21.8-minute wall time exceeded only the advisory warm target, with 1.5 GiB
     peak RSS and no swap
+  - post-merge `scripts/run_all_tests.sh`: every completed merge-only area
+    passed, including CPython differential, 25 Python-interop variants, all
+    Rust-interop suites, and 32 developer-tooling variants; representative
+    performance then stopped on small median-budget variance
+  - the representative retry failed a changed benchmark set, and the identical
+    suite also failed on immediate parent `082988df1f`; the unrelated
+    host/budget-stability work is deferred to
+    `plans/phases/adhoc_performance_budget_host_variance.md`
+
+### milestone_40_2
+
+Status: in progress. The required site workflow landed first through
+[sifr-website PR #14](https://github.com/sifr-lang/sifr-website/pull/14), merged
+as `721bceca795a79a03af74ccb707d117a6f031f38`. Its GA-aware default-channel
+binding landed through
+[sifr-website PR #15](https://github.com/sifr-lang/sifr-website/pull/15), merged
+as `07d88cc3c24707e386c5ad73fb0875c06ffd598f`. The main-repository caller pins
+that exact protected-main commit through
+`sifr-release-site-stable-distribution`; active ruleset `19791667` prohibits
+updating or deleting that exact tag with no bypass actors.
+
+- Site review passes 1–5 found and closed immutable-action pinning, credential
+  persistence, metadata-shadow output, deployed-byte custody, stale-CDN index
+  checks, site-base attribution, terminal failure recording, protected-main
+  ancestry, mutation-boundary parsing, live-byte verification, bounded retry,
+  Cloudflare attribution, and PR-time CI gaps.
+- Site review pass 6 returned `APPROVED` with no actionable findings after the
+  paired Sifr generator contract, unique deployment tag, ignored-env boundary,
+  attempt length, and routing-asset checks were added.
+- Exact site PR-head review pass 7 independently verified clean/pushed head
+  `85de564`, the complete six-file diff, green `build website` check, all prior
+  closures, local build/routing/workflow validation, and returned `APPROVED`
+  ready to merge.
+- GA-aware site review pass 1 found and closed contradictory operator
+  documentation, a missing input inventory item, and a vacuous beta-only
+  dispatcher distinctness check. Pass 2 verified all closures at exact head
+  `b33c8e7` and returned `APPROVED`.
+- Main implementation enables schema-v2 active stable fresh install, exact
+  stable pins, forced preview-to-stable and ordinary stable-to-stable
+  self-update, installer SHA-256 verification, `rc` removal, canonical
+  max-generation snapshots, write-once version assets, the sole reusable
+  mutation workflow, read-only local planning, and the pinned paired site
+  handoff.
+- Capability demo: `demos/stable_self_update_demo.sh`.
+- Cross-repository fixture:
+  `verification/areas/distribution_release/fixtures/site_release_contract.json`.
+- Full main implementation review pass 3 verified every earlier main/site
+  closure and independently passed 102 distribution variants, 48 self-update
+  tests, Clippy, formatting, guardrails, and the capability demo. It found four
+  follow-ups now under remediation: stale preview-lifecycle demo prose,
+  canonical site-repository schema parity, redundant exact-pin lookup, and
+  explicit release-tag source targeting.
+- Full main implementation review pass 4 verified all pass-3 closures and the
+  live site tag/ruleset/workflow identities. Its remaining findings are now
+  remediated by pinning the attested no-bypass ruleset revision, enforcing a
+  wall-clock site deadline with cancellation headroom, rejecting exact stable
+  pins under preview metadata in Rust, explicitly passing only the site
+  Actions secret, and removing an early-exit snapshot-name pipeline.
+- Full main implementation review pass 5 verified every substantive pass-4
+  closure, all earlier findings, the live ruleset/tag/workflow identities, and
+  102 distribution variants with zero failures. Its sole actionable finding
+  was two trailing blank lines at EOF; those are removed. The informational
+  polling note is also hardened with three bounded query attempts.
+- Full main implementation review pass 6 rechecked the complete 71-file
+  milestone diff, all earlier closures, 49 self-update tests, and 27 targeted
+  distribution cases at exact head `f28b9d8fa`; it returned `APPROVED` with no
+  actionable findings.
+- Main-repository [PR #3030](https://github.com/sifr-lang/sifr/pull/3030)
+  opened at exact head `2c282f1c7`. The authoritative
+  `scripts/run_all_tests.sh --profile create-pr` gate passed at that head,
+  including all blocking lanes and 131/131 E2E fixtures. A prior cold,
+  contended Python doctor timeout passed in isolation and then passed inside
+  the complete authoritative rerun.
+- Exact PR-head review pass 7 found six issues: preview-era site planner and
+  validator defaults, an unschematized publication binding, zero-digest
+  acceptance, missing current evidence, and phase-index/EOF drift. The
+  remediation makes preview/active site source validation GA-aware, registers
+  canonical `site-publication-facts.json` schema-v2 producer/schema/validator
+  coverage with zero-digest rejection, records current PR evidence, and repairs
+  the ad hoc phase index and whitespace. The complete distribution area passes
+  52/52 variants after remediation; another exact-head review is required.
+- The authoritative remediation gate
+  `scripts/run_all_tests.sh --profile create-pr` passed at exact implementation
+  head `e29722dfe46bc4f091eb66e7be47744a4c14b24b`, including the registered
+  12-schema runner-foundation inventory, every blocking lane, and 131/131 E2E
+  fixtures (`report_signature=7c39b8c1dd4fec7c`). The reported warm-wall-time
+  advisory is non-blocking and covered by the indexed `PERF-HOST` follow-up.
+  PR #3030 now requires an independent full-diff review at its pushed
+  documentation-inclusive head.
+- Exact PR-head review pass 8:
+  `plans/reviews/archive/phase-40-milestone-40-2-claude-opus-review-pass-8.md`
+  independently reproduced the preview planner against the real pinned site
+  checkout, reverified the live protected tag/ruleset/workflow identities,
+  closed all six pass-7 findings, ran the focused milestone checks, and
+  returned `APPROVED` at pushed head `28fe8527f` with no actionable finding.
+  The archived review and this ledger entry are the only subsequent
+  documentation changes; a final exact-head review follows their push.
+- The required merge-profile run at documentation-inclusive head `27d2cea83`
+  passed every executed lane through developer tooling, including CPython
+  differential, 25/25 Python-interop variants, 10/10 consumed Rust-interop
+  variants, and all core/diagnostic/frontend/tooling checks. It stopped only at
+  the representative performance budget on two host-sensitive medians. An
+  immediate isolated retry reduced the overruns to 0.55% and 0.69% but
+  reproduced the same variance. This is the independently parent-reproduced
+  condition recorded in indexed, non-prerequisite follow-up `PERF-HOST`; no
+  baseline or waiver was changed.
+- The milestone-specific closure commands then passed independently:
+  distribution `full` plus `evidence-custody` 53/53, developer-tooling
+  `editor-release` 6/6, consumed Rust-interop matrix/tiers/compatibility/stale
+  drafts 8/8, Rust stable-candidate 2/2, and documentation structure 1/1.
+  These commands made no tracked-file changes.
