@@ -22,7 +22,7 @@ for field in \
   candidate_target \
   candidate_binary_sha256 \
   target_report_sha256 \
-  vsix_install_smoke \
+  vsix_package_smoke \
   lsp_smoke \
   marketplace_publish_plan
 do

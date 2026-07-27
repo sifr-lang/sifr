@@ -41,6 +41,7 @@ from .surface_contracts import (
     validate_self_update_plan,
     validate_self_version,
 )
+from .stable_gate_inventory_selftest import test_stable_gate_inventory
 
 AREA_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = AREA_ROOT.parents[2]
@@ -356,37 +357,6 @@ def test_schemas_use_epoch_two() -> None:
         assert not contains_default_keyword(schema), path
         assert '"rc"' not in path.read_text(encoding="utf-8"), path
     validate_schema_contracts()
-
-
-def test_stable_gate_inventory() -> None:
-    path = REPO_ROOT / "plans" / "releases" / "stable_gate_inventory.json"
-    inventory = json.loads(path.read_text(encoding="utf-8"))
-    if set(inventory) != {"schema_version", "owner", "gates"}:
-        raise AssertionError("stable gate inventory fields drifted")
-    if inventory["schema_version"] != 2 or inventory["owner"] != "release/distribution":
-        raise AssertionError("stable gate inventory epoch/owner drifted")
-    gates = inventory["gates"]
-    if not isinstance(gates, list) or not gates:
-        raise AssertionError("stable gate inventory is empty")
-    ids: set[str] = set()
-    required = {
-        "id",
-        "location",
-        "owner",
-        "current_behavior",
-        "activation_boundary",
-        "disposition",
-    }
-    for gate in gates:
-        if not isinstance(gate, dict) or set(gate) != required:
-            raise AssertionError(f"stable gate has invalid fields: {gate}")
-        if not all(isinstance(gate[field], str) and gate[field] for field in required):
-            raise AssertionError(f"stable gate has an empty owned field: {gate}")
-        if gate["id"] in ids:
-            raise AssertionError(f"duplicate stable gate: {gate['id']}")
-        ids.add(gate["id"])
-        if not (REPO_ROOT / gate["location"]).exists():
-            raise AssertionError(f"stable gate location does not exist: {gate['location']}")
 
 
 def test_release_tooling_expansion() -> None:

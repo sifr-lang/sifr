@@ -44,6 +44,9 @@ CANONICAL_DOCUMENTS = {
     "rust-interop": REPO_ROOT / "docs" / "rust-interop.mdx",
 }
 PUBLIC_DOC_SUFFIXES = {".md", ".mdx"}
+TARGET_TRIPLE_RE = re.compile(
+    r"\b(?:aarch64|x86_64)-[a-z0-9_]+-[a-z0-9_]+(?:-[a-z0-9_]+)?\b"
+)
 TARGETS = (
     "aarch64-apple-darwin",
     "x86_64-apple-darwin",
@@ -143,6 +146,7 @@ FORBIDDEN_CLAIM_PATTERNS = (
     re.compile(r"\b\d+\.\d+\.\d+-preview\.\d+\b", re.I),
     re.compile(r"\bone immutable preview (?:release|version)\b", re.I),
     re.compile(r"\b(?:aarch64|x86_64)-pc-windows-msvc\b", re.I),
+    re.compile(r"\binstall\b[^\n]{0,80}\bfrom the (?:VS Code )?Marketplace\b", re.I),
 )
 MUTATION_CASES = (
     "missing-stable-entrypoint",
@@ -275,6 +279,11 @@ def validate_documents(
             raise DocumentationError(
                 f"forbidden or stale GA claim pattern: {pattern.pattern}"
             )
+    unexpected_targets = sorted(set(TARGET_TRIPLE_RE.findall(combined)) - set(TARGETS))
+    if unexpected_targets:
+        raise DocumentationError(
+            f"unsupported standalone target claim: {unexpected_targets}"
+        )
     for page in NAVIGATION_PAGES:
         if f'"{page}"' not in docs_config:
             raise DocumentationError(f"docs navigation is missing {page}")

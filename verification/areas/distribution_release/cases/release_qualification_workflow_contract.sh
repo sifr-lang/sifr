@@ -38,6 +38,14 @@ abort "release qualification target/runner matrix drifted" unless actual == expe
 unless jobs.fetch("editor").fetch("needs").sort == ["build", "validate"]
   abort "editor qualification must consume the exact built candidate"
 end
+editor_step = jobs.fetch("editor").fetch("steps").find {
+  |step| step["name"] == "Build, test, and package VSIX"
+}
+abort "editor qualification step is missing" unless editor_step
+editor_env = editor_step.fetch("env")
+unless editor_env["ROLLBACK_VERSION"] == "${{ needs.validate.outputs.rollback_version }}"
+  abort "editor qualification must bind the governed rollback_version output"
+end
 
 uploads = jobs.values.flat_map { |job| job.fetch("steps", []) }.select {
   |step| step["uses"] == "actions/upload-artifact@v4"

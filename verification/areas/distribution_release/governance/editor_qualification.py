@@ -41,7 +41,7 @@ def validate_editor_report(
         "candidate_binary_sha256",
         "target_report_sha256",
         "vsix_sha256",
-        "vsix_install_smoke",
+        "vsix_package_smoke",
         "lsp_smoke",
         "marketplace_publish_plan",
         "status",
@@ -57,7 +57,7 @@ def validate_editor_report(
         or report["candidate_version"] != candidate_version
         or report["rollback_version"] != rollback_version
         or report["candidate_target"] not in TARGETS
-        or report["vsix_install_smoke"] != "pass"
+        or report["vsix_package_smoke"] != "pass"
         or report["lsp_smoke"] != "pass"
     ):
         fail("$.vscode.validation_report_sha256", "editor report identity did not pass")

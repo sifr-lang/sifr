@@ -150,6 +150,15 @@ Review and upstream coordination ledger:
   It verified the substantive pass-1 closures and withheld approval only for
   fixture headroom, semantic preview-claim patterns, import ordering, and this
   review ledger. All four observations are remediated before pass 3.
+- Main-repository Claude Opus review pass 3 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-3.md`.
+  Its three findings are remediated before pass 4: the rollback input is bound
+  to the editor workflow step and protected by a structural contract; the LSP
+  guide installs the qualified VSIX until protected Marketplace activation;
+  and the capability demo runs the candidate compiler's test command. The
+  review observations are also closed with positive target allowlisting,
+  an operator command for documentation qualification, truthful VSIX package
+  smoke naming, and governance self-test headroom.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 

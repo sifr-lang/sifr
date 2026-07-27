@@ -280,7 +280,7 @@ def build_evidence_bundle(
         "candidate_binary_sha256": reports[candidate_target]["binary_sha256"],
         "target_report_sha256": sha256_file(candidate_report_path),
         "vsix_sha256": sha256_file(vsix),
-        "vsix_install_smoke": "pass",
+        "vsix_package_smoke": "pass",
         "lsp_smoke": "pass",
         "marketplace_publish_plan": {
             "publisher": "sifr",

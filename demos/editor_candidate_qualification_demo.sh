@@ -9,6 +9,8 @@ trap 'rm -rf "${work_root}"' EXIT
 source_commit="$(git -C "${repo_root}" rev-parse HEAD)"
 report="${work_root}/qualification-editor.json"
 fixture="${work_root}/editor_fixture.sifr"
+test_dir="${work_root}/candidate_tests"
+test_fixture="${test_dir}/test_editor_candidate.sifr"
 
 if [[ -n "$(git -C "${repo_root}" status --porcelain --untracked-files=all)" ]]; then
   echo "stable editor release demo requires a clean source checkout" >&2
@@ -88,6 +90,12 @@ def add(left: int, right: int) -> int:
 def main() -> None:
     print(add(20, 22))
 SIFR
+mkdir -p "${test_dir}"
+cat >"${test_fixture}" <<'SIFR'
+@test
+def test_addition() -> None:
+    assert 20 + 22 == 42
+SIFR
 
 (
   cd "${work_root}"
@@ -95,6 +103,7 @@ SIFR
   "${candidate_binary}" fmt "${fixture}"
   "${candidate_binary}" fmt --check "${fixture}"
   "${candidate_binary}" lint "${fixture}"
+  "${candidate_binary}" test "${test_dir}"
 )
 
 python3 - "${report}" <<'PY'
@@ -106,7 +115,7 @@ report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert report["candidate_version"] == "0.1.0"
 assert report["package_version"] == "0.2.0"
 assert report["compiler_compatibility"] == ">=0.1.0,<0.2.0"
-assert report["vsix_install_smoke"] == "pass"
+assert report["vsix_package_smoke"] == "pass"
 assert report["lsp_smoke"] == "pass"
 assert report["marketplace_publish_plan"]["rebuild"] is False
 assert report["marketplace_publish_plan"]["status"] == "planned"

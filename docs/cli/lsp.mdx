@@ -65,7 +65,17 @@ Editor integrations must not call `sifr fmt` as their primary document-formattin
 
 ### VS Code
 
-Install the Sifr extension from the VS Code Marketplace. The extension automatically locates `sifr` on your `PATH` and launches `sifr lsp --stdio` when you open a `.sifr` file. No manual configuration is needed for a standard installation.
+Install the qualified `sifr-vscode-0.2.0.vsix` supplied with the governed
+`0.1.0` release:
+
+```bash
+code --install-extension sifr-vscode-0.2.0.vsix
+```
+
+The Marketplace becomes an installation source only after the protected stable
+activation verifies the exact same VSIX. The extension automatically locates
+`sifr` on your `PATH` and launches `sifr lsp --stdio` when you open a `.sifr`
+file.
 
 To point the extension at a custom binary:
 

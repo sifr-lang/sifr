@@ -201,6 +201,18 @@ Editor qualification records a `marketplace_publish_plan` with status
 protected stable-publication workflow introduced at activation consumes that
 exact VSIX and realizes the dry-run/publication evidence without rebuilding.
 
+Before invoking `plan-stable-release`, qualify documentation for the same clean
+source commit into the external release work directory:
+
+```bash
+python3 scripts/distribution/qualify_stable_documentation.py \
+  --source-root <clean-source-checkout> \
+  --source-commit <source-sha> \
+  --out <release-work-dir>/qualification-documentation.json
+```
+
+Pass that exact report to the planner's `--documentation-report` argument.
+
 The final collector reads the current workflow run's artifact API, verifies
 source/run attribution, and writes canonical
 `qualification-artifact-index.json`. The index binds recursive submodules,

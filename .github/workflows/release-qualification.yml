@@ -116,7 +116,6 @@ jobs:
         env:
           SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
           VERSION: ${{ needs.validate.outputs.version }}
-          ROLLBACK_VERSION: ${{ needs.validate.outputs.rollback_version }}
           TARGET: ${{ matrix.target }}
           BUILDER: ${{ matrix.runner }}
         run: |
@@ -176,6 +175,7 @@ jobs:
         env:
           SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
           VERSION: ${{ needs.validate.outputs.version }}
+          ROLLBACK_VERSION: ${{ needs.validate.outputs.rollback_version }}
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "${SOURCE_COMMIT}"

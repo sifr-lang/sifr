@@ -330,7 +330,7 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
         "candidate_binary_sha256": sha256_file(candidate_binary),
         "target_report_sha256": target_report_sha256,
         "vsix_sha256": sha256_file(vsix),
-        "vsix_install_smoke": "pass",
+        "vsix_package_smoke": "pass",
         "lsp_smoke": "pass",
         "marketplace_publish_plan": {
             "publisher": package["publisher"],
