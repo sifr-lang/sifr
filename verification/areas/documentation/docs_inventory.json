@@ -30,12 +30,23 @@
       ],
       "mutation_cases": [
         "missing-stable-entrypoint",
+        "preview-only-docs",
         "unsupported-target-claim",
+        "platform-floor-drift",
+        "stable-version-drift",
+        "schema-reference-drift",
+        "release-facts-drift",
+        "extension-range-drift",
+        "missing-support-section",
         "unsupported-rust-claim",
         "signing-claim",
-        "notarization-claim"
+        "notarization-claim",
+        "global-preview-claim",
+        "extension-setting-drift",
+        "extension-metadata-drift",
+        "cli-help-preview-drift"
       ],
-      "status": "reserved"
+      "status": "active"
     }
   ]
 }

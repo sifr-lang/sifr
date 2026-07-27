@@ -1,0 +1,71 @@
+---
+title: "Sifr stable releases"
+sidebarTitle: "Stable releases"
+description: "Install and operate the governed Sifr stable channel."
+---
+
+Sifr stable releases are qualified compiler, sysroot, installer, documentation,
+and editor artifacts published through one governed release index. The index
+uses `schema_version: 2`. It is the authority for active and withdrawn
+releases.
+
+## Current stable release
+
+<!-- stable-release-facts:start -->
+Active stable version: `0.1.0`
+
+Withdrawn stable versions: none.
+<!-- stable-release-facts:end -->
+
+These facts are rendered from `stable-site-release-facts.json`, which is
+derived from the governed release index during protected publication. A
+withdrawn version remains in release history but cannot be selected for a
+fresh install or exact version pin.
+
+## Install stable
+
+The default and explicit stable entrypoints resolve the same active release:
+
+```bash
+curl -fsSL https://sifr.sh/install | sh
+curl -fsSL https://sifr.sh/install/stable | sh
+```
+
+Pin the current release when you need reproducible setup:
+
+```bash
+curl -fsSL https://sifr.sh/install | sh -s -- --version 0.1.0
+```
+
+The dispatcher verifies the immutable installer SHA-256 from the governed
+index. The installer then verifies the target archive and sysroot before
+replacing an existing toolchain.
+
+## Update stable
+
+Official standalone installs record their channel in an install receipt.
+
+```bash
+sifr self update --dry-run
+sifr self update
+sifr self update --channel stable
+```
+
+Use `--force` only for an intentional same-version reinstall, channel switch,
+or approved rollback. Stable-looking versions that are absent or withdrawn in
+the governed index are rejected.
+
+## Release governance
+
+Stable publication requires a locally passing release profile, an immutable
+candidate plan, exact artifact digests, and protected approval by a reviewer
+other than the workflow initiator. Publication verifies the same candidate
+bytes before changing the index. `rc` is not a public channel.
+
+If a release is withdrawn, fresh installs and exact pins fail closed. Sifr can
+roll back only to an active predecessor already named by the approved release
+plan. The first stable release has no rollback predecessor, so recovery is an
+incident roll-forward.
+
+See [compatibility](/releases/compatibility), [support](/support), and
+[troubleshooting](/troubleshooting) for operational details.

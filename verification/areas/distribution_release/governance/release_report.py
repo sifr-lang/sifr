@@ -37,7 +37,7 @@ REQUIRED_SUITES = {
         "stable-candidate",
     },
     "developer_tooling": {"full", "editor-release"},
-    "documentation": {"structure"},
+    "documentation": {"structure", "ga-release"},
     "distribution_release": {
         "full",
         "qualification",

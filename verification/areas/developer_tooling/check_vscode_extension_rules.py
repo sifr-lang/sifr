@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -48,6 +49,7 @@ FORBIDDEN_EXTENSION_TERMS = [
     "lintSifrInExtension",
     "generateRustInExtension",
 ]
+STABLE_CANDIDATE = (0, 1, 0)
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -77,6 +79,12 @@ def validate_rules(rules: dict[str, Any]) -> list[str]:
         failures.append("language id must be sifr")
     if ".sifr" not in extension.get("extensions", []):
         failures.append("extension must register .sifr")
+    compatibility = extension.get("compiler_compatibility")
+    if not canonical_range_contains(compatibility, STABLE_CANDIDATE):
+        failures.append(
+            "extension compiler_compatibility must use >=X.Y.Z,<X.Y.Z "
+            "and contain stable 0.1.0"
+        )
     launch = rules.get("launch", {})
     if launch.get("default_command") != "sifr" or launch.get("default_args") != ["lsp", "--stdio"]:
         failures.append("extension launch must default to sifr lsp --stdio")
@@ -101,6 +109,11 @@ def validate_package_json(rules: dict[str, Any], package_json: dict[str, Any]) -
     engines = package_json.get("engines", {})
     if engines.get("vscode") != extension["minimum_vscode_engine"]:
         failures.append("package.json VS Code engine does not match rules")
+    if (
+        package_json.get("sifrCompilerCompatibility")
+        != extension["compiler_compatibility"]
+    ):
+        failures.append("package.json compiler compatibility does not match rules")
 
     contributes = package_json.get("contributes", {})
     languages = contributes.get("languages", [])
@@ -159,7 +172,8 @@ def run_self_test() -> None:
     package_json = {
         "name": "sifr-vscode",
         "publisher": "sifr",
-        "engines": {"vscode": "^1.90.0"},
+        "engines": {"vscode": "^1.91.0"},
+        "sifrCompilerCompatibility": ">=0.1.0,<0.2.0",
         "contributes": {
             "languages": [{"id": "sifr", "extensions": [".sifr"]}],
             "commands": [{"command": command} for command in sorted(REQUIRED_COMMANDS - {"sifr.runCheck"})],
@@ -173,7 +187,26 @@ def run_self_test() -> None:
         failures = validate_package_json(rules, read_json(path))
     if not any("sifr.runCheck" in failure for failure in failures):
         raise SystemExit("VS Code rules self-test failed: missing command passed")
+    drifted = {**package_json, "sifrCompilerCompatibility": ">=0.1.1,<0.2.0"}
+    if not any(
+        "compiler compatibility" in failure
+        for failure in validate_package_json(rules, drifted)
+    ):
+        raise SystemExit("VS Code rules self-test failed: compiler range drift passed")
     print("VS Code extension rules self-test: PASS")
+
+
+def canonical_range_contains(value: Any, version: tuple[int, int, int]) -> bool:
+    if not isinstance(value, str):
+        return False
+    match = re.fullmatch(
+        r">=([0-9]+)\.([0-9]+)\.([0-9]+),<([0-9]+)\.([0-9]+)\.([0-9]+)",
+        value,
+    )
+    if match is None:
+        return False
+    parts = tuple(int(part) for part in match.groups())
+    return parts[:3] <= version < parts[3:]
 
 
 def main() -> int:

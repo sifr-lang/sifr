@@ -86,7 +86,7 @@
       "id": "install-receipt-channel",
       "location": "crates/sifr/src/self_update_receipt.rs",
       "owner": "release/distribution",
-      "current_behavior": "read-only receipt discovery accepts alpha, beta, and stable; stable update resolution remains gated",
+      "current_behavior": "read-only receipt discovery and update resolution accept alpha, beta, and stable schema-v2 receipts",
       "activation_boundary": "stable-installation",
       "disposition": "runtime accepts alpha, beta, and stable schema-v2 receipts; rc remains invalid"
     },
@@ -115,10 +115,34 @@
       "disposition": "provides the sole canonical transport index consumed by the stable planner"
     },
     {
+      "id": "stable-editor-qualification",
+      "location": "scripts/distribution/qualify_stable_editor.py",
+      "owner": "release/distribution",
+      "current_behavior": "installs the exact packaged VSIX, binds its Marketplace identity, protected publication plan, candidate and rollback compiler range, one qualified target report, and binary digest, and runs the native LSP protocol smoke",
+      "activation_boundary": "ga-documentation",
+      "disposition": "emits canonical editor evidence consumed by the stable plan without publishing or rebuilding the VSIX"
+    },
+    {
+      "id": "stable-documentation-qualification",
+      "location": "scripts/distribution/qualify_stable_documentation.py",
+      "owner": "documentation",
+      "current_behavior": "executes documentation structure and ga-release suites for one clean exact source commit and emits canonical result-bound evidence",
+      "activation_boundary": "ga-documentation",
+      "disposition": "provides the documentation report bound by the stable release plan"
+    },
+    {
+      "id": "stable-release-docs-renderer",
+      "location": "scripts/distribution/render_stable_release_docs.py",
+      "owner": "documentation",
+      "current_behavior": "renders the active version and withdrawals only from canonical schema-v2 stable site facts",
+      "activation_boundary": "ga-documentation",
+      "disposition": "is reused by qualification and protected site publication so public facts cannot drift from the governed release payload"
+    },
+    {
       "id": "public-installation-docs",
       "location": "docs/installation.mdx",
       "owner": "documentation",
-      "current_behavior": "documents preview standalone installation and update",
+      "current_behavior": "documents stable-default standalone installation, active exact pins, target and ABI floors, and managed updates",
       "activation_boundary": "ga-documentation",
       "disposition": "documents stable default, explicit previews, target and ABI floors, and recovery"
     },
@@ -126,7 +150,7 @@
       "id": "self-update-contract-docs",
       "location": "docs/self_update.md",
       "owner": "documentation",
-      "current_behavior": "documents stable as gated",
+      "current_behavior": "documents alpha, beta, and stable schema-v2 resolution plus withdrawn-version rejection",
       "activation_boundary": "ga-documentation",
       "disposition": "documents active stable resolution, checksum enforcement, and withdrawn-version failures"
     },
@@ -134,7 +158,7 @@
       "id": "distribution-architecture-docs",
       "location": "internal_docs/distribution_pipeline.md",
       "owner": "release/distribution",
-      "current_behavior": "documents preview publication and gated stable behavior",
+      "current_behavior": "documents qualified stable install/update behavior while protected production publication remains gated",
       "activation_boundary": "protected-publication",
       "disposition": "documents the canonical protected publication and incident path"
     },
@@ -142,7 +166,7 @@
       "id": "stable-negative-fixtures",
       "location": "verification/areas/distribution_release/cases",
       "owner": "release/distribution",
-      "current_behavior": "proves stable resolution and publication remain unavailable",
+      "current_behavior": "proves stable resolution, editor qualification, withdrawal, checksum, and publication-gating behavior",
       "activation_boundary": "stable-installation",
       "disposition": "replaced by positive stable resolution plus withdrawn, checksum, and mismatch negatives"
     },
@@ -184,7 +208,7 @@
       "owner": "compiler/verification",
       "current_behavior": "executes distribution, tooling, documentation, and Rust release gates",
       "activation_boundary": "architecture-lock",
-      "disposition": "durably executes incident-governance, evidence-custody, editor-release expansion, and stable-candidate"
+      "disposition": "durably executes incident-governance, evidence-custody, editor-release expansion, documentation ga-release, and Rust stable-candidate"
     }
   ]
 }

@@ -8,15 +8,16 @@ The official Sifr installer is a shell script that downloads a prebuilt binary f
 
 ## Supported platforms
 
-Sifr provides prebuilt preview binaries for the following targets:
+Sifr stable provides prebuilt binaries for the following targets:
 
-- `aarch64-apple-darwin` (Apple Silicon Mac)
-- `x86_64-apple-darwin` (Intel Mac)
-- `x86_64-unknown-linux-gnu` (Linux, x86-64)
-- `aarch64-unknown-linux-gnu` (Linux, ARM64)
+- `aarch64-apple-darwin` (Apple Silicon Mac, macOS 15.0 or newer)
+- `x86_64-apple-darwin` (Intel Mac, macOS 15.0 or newer)
+- `aarch64-unknown-linux-gnu` (Linux ARM64, glibc 2.39 or newer)
+- `x86_64-unknown-linux-gnu` (Linux x86-64, glibc 2.39 or newer)
 
 <Note>
-  Windows installer support is not yet available. If you are on Windows, you can build Sifr from source using the Rust toolchain.
+  Windows standalone installation and package-manager distribution are not
+  part of the current stable release.
 </Note>
 
 ## Install Sifr
@@ -26,16 +27,18 @@ Sifr provides prebuilt preview binaries for the following targets:
     Paste the command below into your terminal. The installer detects your platform automatically and fetches the correct binary.
 
     <CodeGroup>
-      ```bash Beta (recommended)
+      ```bash Stable (recommended)
       curl -fsSL https://sifr.sh/install | sh
       ```
 
-      ```bash Alpha
-      curl -fsSL https://sifr.sh/install/alpha | sh
+      ```bash Stable (explicit)
+      curl -fsSL https://sifr.sh/install/stable | sh
       ```
     </CodeGroup>
 
-    The beta channel is the recommended starting point. The installer resolves the latest beta from Sifr's GitHub-hosted channel metadata, then downloads the matching GitHub release installer. Use the alpha channel if you want the absolute latest preview features and are comfortable with a less stable build.
+    Stable is the recommended channel. Both commands resolve the active stable
+    version from Sifr's governed schema-v2 release index, verify the immutable
+    installer digest, and download the matching target artifact.
   </Step>
   <Step title="Reload your shell">
     The installer updates your shell profile (`~/.bashrc`, `~/.zshrc`, or equivalent), but the change only takes effect in new shell sessions. Reload your profile now so the current session can find `sifr`:
@@ -51,7 +54,8 @@ Sifr provides prebuilt preview binaries for the following targets:
     sifr --version
     ```
 
-    You should see a version string such as `0.1.0-beta.11`. If the command is not found, check that `~/.sifr/bin` is in your `PATH`.
+    The current stable release reports `sifr 0.1.0`. If the command is not
+    found, check that `~/.sifr/bin` is in your `PATH`.
   </Step>
 </Steps>
 
@@ -59,11 +63,14 @@ Sifr provides prebuilt preview binaries for the following targets:
 
 ### Pin an exact version
 
-If you need a specific preview release — for reproducible CI environments or to test a particular build — pass `--version` to the installer:
+If you need a reproducible stable setup, pass `--version` to the installer:
 
 ```bash
-curl -fsSL https://sifr.sh/install | sh -s -- --version 0.1.0-beta.11
+curl -fsSL https://sifr.sh/install | sh -s -- --version 0.1.0
 ```
+
+Only active versions present in the governed release index can be pinned.
+Withdrawn or unknown versions fail before installer execution.
 
 ### Install to a custom directory
 
@@ -107,19 +114,21 @@ sifr self update --dry-run
 
 ### Switching channels
 
-By default, `sifr self update` stays on the channel recorded in your install receipt (alpha or beta). Pass `--channel` to switch:
+By default, `sifr self update` stays on the channel recorded in your install
+receipt. Pass `--channel` to select stable or an explicit preview channel:
 
 ```bash
+sifr self update --channel stable
 sifr self update --channel alpha
 sifr self update --channel beta
 ```
 
 ### Pinning a version on update
 
-You can update to a specific preview version rather than the latest on your channel:
+You can update to a specific active stable version:
 
 ```bash
-sifr self update --version 0.1.0-beta.11
+sifr self update --version 0.1.0
 ```
 
 ### Reinstalls, downgrades, and channel switches
@@ -127,7 +136,7 @@ sifr self update --version 0.1.0-beta.11
 Same-version reinstalls, downgrades, and channel switches all require `--force`:
 
 ```bash
-sifr self update --version 0.1.0-beta.11 --force
+sifr self update --version 0.1.0 --force
 sifr self update --channel alpha --force
 ```
 
@@ -144,7 +153,9 @@ sifr self version --short   # prints only the version string
 ```
 
 <Warning>
-  `sifr self update` works only for standalone installs created by the official `https://sifr.sh/install` script. If you installed Sifr via Cargo, Homebrew, or a system package manager, use that tool's update mechanism instead.
+  `sifr self update` works only for standalone installs created by the
+  official `https://sifr.sh/install` script. Source and package-manager
+  installs are not managed by this command.
 </Warning>
 
 ## Uninstall Sifr
@@ -180,7 +191,9 @@ Restart your shell, then confirm that `sifr` is no longer on your PATH:
 command -v sifr
 ```
 
-If you installed Sifr to a custom directory with `SIFR_INSTALL_DIR`, remove that toolchain root. If you installed Sifr through Cargo, Homebrew, or a system package manager, uninstall it with that same tool.
+If you installed Sifr to a custom directory with `SIFR_INSTALL_DIR`, remove
+that toolchain root. If you installed Sifr from source or through another
+distribution system, remove it through that same system.
 
 ## Troubleshooting
 
@@ -200,6 +213,5 @@ curl -fsSL https://sifr.sh/install | SIFR_INSTALL_DIR="$HOME/.local/sifr/bin" sh
 
 **Network failure mid-update.** If a metadata or installer download fails, retry after your network recovers. The existing binary and sysroot are not replaced until the delegated installer validates and stages the target artifact, so a failed update leaves your working toolchain intact.
 
-<Tip>
-  Stable channels and release-candidate channels are not yet available in the self-update command. During the current preview release channel, only `alpha` and `beta` channels are accepted.
-</Tip>
+See [stable releases](/releases/stable) for withdrawal and rollback behavior,
+or [stable troubleshooting](/troubleshooting) for recovery steps.

@@ -901,8 +901,10 @@ install/update guidance, Rust interop claims, and the VS Code extension.
 - Docs, release plan, compiler behavior, compatibility matrix, and extension
   metadata agree.
 - The recorded VSIX installs and launches the exact stable candidate LSP.
-- A Marketplace publication dry run proves the main-repository workflow will
-  consume the recorded VSIX and package version without rebuilding.
+- A Marketplace publication plan binds the protected main-repository workflow
+  to the recorded VSIX and package version without rebuilding. The
+  credentialed dry run and publication evidence are realized and checked in
+  `milestone_40_5`, where that workflow exists.
 - Changing any final docs, Rust-claim, package-version, VSIX, compatibility, or
   extension-validation input changes the candidate-plan digest; an unchanged
   input set reproduces it byte-for-byte.
@@ -915,8 +917,11 @@ install/update guidance, Rust interop claims, and the VS Code extension.
 
 **Positive validation:**
 
-- Packaged and installed VSIX completes editor activation and LSP smoke against
-  the stable candidate.
+- Packaged and installed VSIX completes editor activation, diagnostics, and
+  formatting smoke against the stable candidate. Generated-Rust preview in the
+  packaged candidate is a non-prerequisite tooling follow-up recorded in
+  `adhoc_packaged_candidate_generated_rust.md`; GA docs explicitly record the
+  affected action as outside the packaged `0.1.0` qualified surface.
 
 **Negative validation:**
 
@@ -925,8 +930,10 @@ install/update guidance, Rust interop claims, and the VS Code extension.
   stale Rust support claims, and preview-only docs fail the gate.
 
 **Demo:** Install the candidate compiler and recorded VSIX into isolated
-locations, open a Sifr fixture, and demonstrate diagnostics, formatting,
-linting, check, tests, and generated Rust through the native LSP.
+locations, open a Sifr fixture, demonstrate diagnostics and formatting through
+the native LSP, and exercise linting, check, and tests through the exact
+candidate compiler. Packaged-candidate generated Rust is the non-prerequisite
+ad hoc follow-up named above.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 

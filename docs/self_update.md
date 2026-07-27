@@ -1,6 +1,6 @@
 # Sifr Self Update
 
-`sifr self update` updates official standalone preview installs created by the
+`sifr self update` updates official standalone installs created by the
 Sifr installer:
 
 ```bash
@@ -9,7 +9,7 @@ sifr self update
 ```
 
 The command is intentionally narrow. The CLI verifies the local `install.json`
-receipt, resolves a preview version, downloads the immutable version installer,
+receipt, resolves an active governed version, downloads the immutable version installer,
 and delegates installation to that installer. The CLI does not download release
 archives, extract artifacts, rewrite shell profiles, or bypass installer-owned
 checksum validation.
@@ -22,14 +22,14 @@ self-update allows only HTTPS downloads and HTTPS redirects.
 
 The metadata is the canonical schema-v2 governed release index. Each channel
 must point to an active release record with immutable installer and target
-digests. The preview workflow refuses publication when the existing v2 index
-is unavailable or its expected generation/digest has changed.
+digests. Release mutation refuses publication when the existing v2 index is
+unavailable or its expected generation/digest has changed.
 
 ## Commands
 
 ```bash
 sifr self version [--short] [--format text|json]
-sifr self update [--channel alpha|beta] [--version <preview-version>] [--dry-run] [--format text|json] [--force]
+sifr self update [--channel alpha|beta|stable] [--version <active-version>] [--dry-run] [--format text|json] [--force]
 ```
 
 `sifr self version` reports the current executable, receipt version, install
@@ -38,23 +38,24 @@ current executable version. `--short` prints only the current executable version
 in text mode.
 
 `sifr self update` defaults to the channel recorded in the install receipt.
-Use `--channel alpha|beta` to switch preview channels or `--version` to pin an
-exact preview version such as `0.1.0-beta.11`.
+Use `--channel stable` for the governed stable channel. Alpha and beta remain
+explicit preview choices. Use `--version` to pin an exact active release such
+as stable `0.1.0`.
 
 Use `--dry-run` to print the resolved plan without downloading an installer or
 acquiring the install lock. `--format json` is available only with `--dry-run`.
 
-## Preview Limits
+## Channel and version rules
 
-Self-update currently accepts only `alpha` and `beta` preview channels.
-`stable` channels and stable-looking version pins remain gated until the stable
-release channel is enabled. `rc` is not a public channel and `-rc.N` pins are
-rejected.
+Self-update accepts `alpha`, `beta`, and `stable`. `rc` is not a public channel,
+and `-rc.N` pins are rejected. Stable-looking pins resolve only when the exact
+version is present and active in the governed release index. Withdrawn versions
+are rejected.
 
 Same-version reinstalls, downgrades, and channel switches require `--force`:
 
 ```bash
-sifr self update --version 0.1.0-beta.11 --force
+sifr self update --version 0.1.0 --force
 sifr self update --channel alpha --force
 ```
 
@@ -88,6 +89,10 @@ intended installed binary directly, or reinstall the standalone binary so the
 receipt and executable match.
 
 If the installer reports a newer installed version, use `--force` only when you
-intend to downgrade. If metadata or installer download fails, retry after
-network recovery; the existing binary is not replaced until the delegated
-installer validates and installs the target artifact.
+intend to follow an approved downgrade or reinstall. If metadata or installer
+download fails, retry after network recovery; the existing binary is not
+replaced until the delegated installer validates and installs the target
+artifact.
+
+See [stable releases](/releases/stable) for the active version and
+withdrawal rules.

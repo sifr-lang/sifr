@@ -1,0 +1,63 @@
+---
+title: "Stable troubleshooting"
+sidebarTitle: "Troubleshooting"
+description: "Diagnose Sifr stable installation, self-update, and VS Code problems."
+---
+
+## Confirm the managed installation
+
+Run:
+
+```bash
+command -v sifr
+sifr --version
+sifr self version --format json
+```
+
+An official standalone install has a schema-v2 receipt whose executable,
+version, target, sysroot, and channel match the running binary. If the receipt
+is missing or malformed, reinstall from the stable entrypoint:
+
+```bash
+curl -fsSL https://sifr.sh/install/stable | sh
+```
+
+## Preview an update
+
+Resolve the update without downloading or replacing anything:
+
+```bash
+sifr self update --dry-run --format json
+```
+
+If the requested version is withdrawn or absent from the governed release
+index, choose the active stable version instead. Do not bypass checksum or
+withdrawal failures.
+
+## Recover from an interrupted update
+
+Retry after network access returns. The current binary and sysroot remain in
+place until the immutable installer validates and stages the full replacement.
+If the release team announces a rollback, use only the exact command in that
+incident notice; a downgrade requires `--force`.
+
+## Fix VS Code startup
+
+The `sifr.sifr-vscode` extension uses the compiler as its language server.
+Confirm that the configured binary supports the extension range
+`>=0.1.0,<0.2.0`:
+
+```bash
+sifr --version
+sifr lsp --stdio
+```
+
+Stop the second command after it starts waiting for protocol input. In VS Code,
+check **Sifr: Show Language Server Logs** and set `sifr.lsp.path` to the same
+standalone binary reported by `command -v sifr`.
+
+## Verify platform compatibility
+
+Stable standalone artifacts require macOS 15.0 or glibc 2.39. If your platform
+is older or is not one of the four supported targets, the standalone installer
+fails before replacing an existing toolchain.

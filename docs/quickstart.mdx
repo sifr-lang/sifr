@@ -100,7 +100,10 @@ This guide walks you through writing a real Sifr program from scratch, running i
     The output is identical to `sifr run`, but the binary is self-contained and can be distributed to any compatible platform without installing Sifr.
   </Step>
   <Step title="Inspect the generated Rust">
-    Curious what Sifr emits under the hood? Use `sifr emit` to print the generated Rust source without producing a binary. This is useful for understanding the ownership model and verifying that the compiler is doing what you expect.
+    `sifr emit` prints generated Rust without producing a binary. This command
+    is documented for development builds, but generated-Rust output is not in
+    the packaged `0.1.0` GA-qualified surface because its cold first-run
+    qualification exceeded the deterministic bound.
 
     ```bash
     sifr emit greet.sifr

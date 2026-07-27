@@ -4,6 +4,18 @@ set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
 
+stable_root="$(mktemp -d "${TMPDIR:-/tmp}/sifr-stable-dispatchers.XXXXXX")"
+preview_root=""
+cleanup() {
+  rm -rf "${stable_root}"
+  if [[ -n "${preview_root}" ]]; then
+    rm -rf "${preview_root}"
+  fi
+}
+trap cleanup EXIT HUP INT TERM
+make_dispatcher_fixture "${stable_root}"
+SITE_INSTALL_ROOT="${stable_root}"
+
 for dispatcher in index stable; do
   [[ -f "${SITE_INSTALL_ROOT}/${dispatcher}" ]] || {
     echo "stable installer entrypoint missing: ${SITE_INSTALL_ROOT}/${dispatcher}" >&2
@@ -21,10 +33,6 @@ grep -q '^# Entrypoint: beta$' "${SITE_INSTALL_ROOT}/beta"
 }
 
 preview_root="$(mktemp -d "${TMPDIR:-/tmp}/sifr-preview-dispatchers.XXXXXX")"
-cleanup() {
-  rm -rf "${preview_root}"
-}
-trap cleanup EXIT HUP INT TERM
 "${REPO_ROOT}/scripts/distribution/generate_dispatchers.sh" \
   --install-root "${preview_root}" \
   --default-channel beta >/dev/null

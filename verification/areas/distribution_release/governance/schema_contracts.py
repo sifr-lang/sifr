@@ -186,7 +186,7 @@ def qualification_index() -> dict[str, Any]:
             {
                 "id": "vsix",
                 "kind": "vsix",
-                "name": "sifr-vscode-0.1.0.vsix",
+                "name": "sifr-vscode-0.2.0.vsix",
                 "sha256": SHA_C,
                 "size_bytes": 1,
                 "workflow_artifact_id": 11,
@@ -286,9 +286,9 @@ def release_plan() -> dict[str, Any]:
         "vscode": {
             "submodule_path": "editor_integrations",
             "package_path": "editor_integrations/vscode",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "vsix_sha256": SHA_C,
-            "compiler_compatibility": ">=0.1.0 <0.2.0",
+            "compiler_compatibility": ">=0.1.0,<0.2.0",
             "validation_report_sha256": SHA_D,
         },
         "release_notes_sha256": SHA_A,
@@ -311,7 +311,10 @@ def release_report() -> dict[str, Any]:
             ("developer_tooling", "full"),
             ("developer_tooling", "editor-release"),
         ],
-        "documentation_checks": [("documentation", "structure")],
+        "documentation_checks": [
+            ("documentation", "structure"),
+            ("documentation", "ga-release"),
+        ],
         "distribution_validation": [
             ("distribution_release", "full"),
             ("distribution_release", "qualification"),
@@ -348,7 +351,7 @@ def release_report() -> dict[str, Any]:
                         ],
                     ),
                     ("developer_tooling", ["full", "editor-release"]),
-                    ("documentation", ["structure"]),
+                    ("documentation", ["structure", "ga-release"]),
                     (
                         "distribution_release",
                         [

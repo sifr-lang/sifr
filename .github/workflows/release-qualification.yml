@@ -12,6 +12,11 @@ on:
         description: Exact stable SemVer
         required: true
         type: string
+      rollback_version:
+        description: Exact stable rollback SemVer, or none for first GA
+        required: true
+        default: none
+        type: string
 
 permissions:
   contents: read
@@ -24,6 +29,7 @@ jobs:
     outputs:
       source_commit: ${{ steps.identity.outputs.source_commit }}
       version: ${{ steps.identity.outputs.version }}
+      rollback_version: ${{ steps.identity.outputs.rollback_version }}
     steps:
       - name: Validate exact inputs
         id: identity
@@ -31,6 +37,7 @@ jobs:
         env:
           SOURCE_COMMIT: ${{ inputs.source_commit }}
           VERSION: ${{ inputs.version }}
+          ROLLBACK_VERSION: ${{ inputs.rollback_version }}
           WORKFLOW_COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
@@ -42,12 +49,18 @@ jobs:
             echo "::error::version must be exact stable SemVer"
             exit 2
           }
+          [[ "${ROLLBACK_VERSION}" = "none" || \
+            "${ROLLBACK_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "::error::rollback_version must be none or exact stable SemVer"
+            exit 2
+          }
           [[ "${WORKFLOW_COMMIT}" = "${SOURCE_COMMIT}" ]] || {
             echo "::error::dispatch ref must resolve to source_commit"
             exit 2
           }
           echo "source_commit=${SOURCE_COMMIT}" >>"${GITHUB_OUTPUT}"
           echo "version=${VERSION}" >>"${GITHUB_OUTPUT}"
+          echo "rollback_version=${ROLLBACK_VERSION}" >>"${GITHUB_OUTPUT}"
 
       - uses: actions/checkout@v4
         with:
@@ -134,7 +147,9 @@ jobs:
 
   editor:
     name: qualify VS Code package
-    needs: validate
+    needs:
+      - validate
+      - build
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -149,10 +164,18 @@ jobs:
           cache: npm
           cache-dependency-path: editor_integrations/vscode/package-lock.json
 
+      - name: Download exact x86_64 Linux candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: sifr-stable-candidate-${{ needs.validate.outputs.version }}-${{ needs.validate.outputs.source_commit }}-x86_64-unknown-linux-gnu
+          path: candidate-toolchain
+
       - name: Build, test, and package VSIX
         shell: bash
         env:
           SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
+          VERSION: ${{ needs.validate.outputs.version }}
+          ROLLBACK_VERSION: ${{ needs.validate.outputs.rollback_version }}
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "${SOURCE_COMMIT}"
@@ -161,44 +184,25 @@ jobs:
             npm run --prefix editor_integrations/vscode "${script}"
           done
           mkdir -p qualification-editor
-          python3 - <<'PY'
-          import hashlib
-          import json
-          import os
-          import shutil
-          import subprocess
-          from pathlib import Path
-
-          package = json.loads(Path("editor_integrations/vscode/package.json").read_text())
-          compatibility = package.get("sifrCompilerCompatibility")
-          if not isinstance(compatibility, str) or not compatibility.strip():
-              raise SystemExit("package.json must declare sifrCompilerCompatibility")
-          built = sorted(Path("editor_integrations/vscode/dist").glob("*.vsix"))
-          if len(built) != 1:
-              raise SystemExit(f"expected exactly one built VSIX, found {len(built)}")
-          vsix = Path("qualification-editor") / built[0].name
-          shutil.copy2(built[0], vsix)
-          submodule_commit = subprocess.run(
-              ["git", "-C", "editor_integrations", "rev-parse", "HEAD"],
-              check=True,
-              text=True,
-              stdout=subprocess.PIPE,
-          ).stdout.strip()
-          payload = {
-              "schema_version": 2,
-              "kind": "stable-editor-qualification",
-              "source_commit": os.environ["SOURCE_COMMIT"],
-              "submodule_commit": submodule_commit,
-              "package_path": "editor_integrations/vscode",
-              "package_version": package["version"],
-              "compiler_compatibility": compatibility,
-              "vsix_sha256": hashlib.sha256(vsix.read_bytes()).hexdigest(),
-              "status": "pass",
-          }
-          Path("qualification-editor/qualification-editor.json").write_text(
-              json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n"
-          )
-          PY
+          archive="candidate-toolchain/sifr-${VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+          test -f "${archive}"
+          mkdir -p installed-candidate
+          tar -xzf "${archive}" -C installed-candidate
+          candidate_binary="installed-candidate/bin/sifr"
+          test -x "${candidate_binary}"
+          built=(editor_integrations/vscode/dist/*.vsix)
+          test "${#built[@]}" -eq 1
+          cp "${built[0]}" qualification-editor/
+          python3 scripts/distribution/qualify_stable_editor.py \
+            --source-root "${GITHUB_WORKSPACE}" \
+            --source-commit "${SOURCE_COMMIT}" \
+            --candidate-version "${VERSION}" \
+            --rollback-version "${ROLLBACK_VERSION}" \
+            --candidate-binary "${candidate_binary}" \
+            --target-report \
+              candidate-toolchain/qualification-x86_64-unknown-linux-gnu.json \
+            --vsix "qualification-editor/$(basename "${built[0]}")" \
+            --out qualification-editor/qualification-editor.json
 
       - uses: actions/upload-artifact@v4
         with:

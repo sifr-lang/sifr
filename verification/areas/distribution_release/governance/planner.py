@@ -18,9 +18,11 @@ from .common import (
     require_commit,
     require_nonempty_string,
     require_object,
+    require_positive_int,
     require_sha256,
     sha256_file,
 )
+from .editor_qualification import validate_editor_report
 from .release_plan import validate_release_plan
 from .release_report import (
     canonical_profile_digest,
@@ -328,11 +330,38 @@ def bind_aggregate_artifacts(
     if artifacts["vsix"]["sha256"] != plan["vscode"]["vsix_sha256"]:
         fail("$.vscode.vsix_sha256", "does not match the transported VSIX")
     editor_report_path = artifact_paths["editor-qualification-report"]
+    rollback_target = plan["rollback_target"]
+    rollback_version = (
+        rollback_target
+        if isinstance(rollback_target, str)
+        else rollback_target["version"]
+    )
     editor_report = validate_editor_report(
         load_json_strict(editor_report_path, require_canonical=True),
         source_commit=plan["source_commit"],
         submodule_commit=plan["submodules"].get("editor_integrations"),
+        candidate_version=plan["version"],
+        rollback_version=rollback_version,
     )
+    candidate_target = editor_report["candidate_target"]
+    target_report_path = artifact_paths[
+        f"qualification-report-{candidate_target}"
+    ]
+    target_report = validate_target_report(
+        load_json_strict(target_report_path, require_canonical=True),
+        version=plan["version"],
+        source_commit=plan["source_commit"],
+        target=candidate_target,
+    )
+    if (
+        sha256_file(target_report_path) != editor_report["target_report_sha256"]
+        or target_report["binary_sha256"]
+        != editor_report["candidate_binary_sha256"]
+    ):
+        fail(
+            "$.vscode.validation_report_sha256",
+            "editor smoke is not bound to the qualified target binary",
+        )
     if sha256_file(editor_report_path) != plan["vscode"]["validation_report_sha256"]:
         fail("$.vscode.validation_report_sha256", "does not match editor qualification")
     if (
@@ -423,47 +452,21 @@ def validate_aggregate_checksums(
         fail("$.artifacts.checksums", "does not bind the complete target artifact set")
 
 
-def validate_editor_report(
-    payload: Any,
-    *,
-    source_commit: str,
-    submodule_commit: str | None,
-) -> dict[str, Any]:
-    report = require_object(payload, "editor qualification report")
-    required = {
-        "schema_version",
-        "kind",
-        "source_commit",
-        "submodule_commit",
-        "package_path",
-        "package_version",
-        "compiler_compatibility",
-        "vsix_sha256",
-        "status",
-    }
-    if set(report) != required:
-        fail("$.vscode.validation_report_sha256", "editor report fields are not exact")
-    if (
-        report["schema_version"] != 2
-        or report["kind"] != "stable-editor-qualification"
-        or report["status"] != "pass"
-        or report["source_commit"] != source_commit
-        or report["submodule_commit"] != submodule_commit
-    ):
-        fail("$.vscode.validation_report_sha256", "editor report identity did not pass")
-    for field in ("package_path", "package_version", "compiler_compatibility"):
-        require_nonempty_string(report[field], f"editor qualification report.{field}")
-    require_sha256(report["vsix_sha256"], "editor qualification report.vsix_sha256")
-    return report
-
-
 def validate_documentation_report(
     payload: Any,
     *,
     source_commit: str,
 ) -> dict[str, Any]:
     report = require_object(payload, "documentation qualification report")
-    required = {"schema_version", "kind", "report_id", "source_commit", "status"}
+    required = {
+        "schema_version",
+        "kind",
+        "report_id",
+        "source_commit",
+        "suites",
+        "result_sha256",
+        "status",
+    }
     if set(report) != required:
         fail("$.documentation_report", "documentation report fields are not exact")
     if (
@@ -474,6 +477,24 @@ def validate_documentation_report(
     ):
         fail("$.documentation_report", "documentation qualification did not pass")
     require_nonempty_string(report["report_id"], "$.documentation_report.id")
+    require_sha256(report["result_sha256"], "$.documentation_report.result_sha256")
+    suites = require_array(report["suites"], "$.documentation_report.suites")
+    observed: list[str] = []
+    for index, value in enumerate(suites):
+        location = f"$.documentation_report.suites[{index}]"
+        suite = require_object(value, location)
+        if set(suite) != {"name", "status", "total_variants"}:
+            fail(location, "suite fields are not exact")
+        name = require_nonempty_string(suite["name"], f"{location}.name")
+        if suite["status"] != "pass":
+            fail(f"{location}.status", "must be pass")
+        require_positive_int(suite["total_variants"], f"{location}.total_variants")
+        observed.append(name)
+    if tuple(observed) != ("structure", "ga-release"):
+        fail(
+            "$.documentation_report.suites",
+            "must contain structure then ga-release",
+        )
     return report
 
 

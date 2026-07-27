@@ -33,10 +33,10 @@ enum SelfCommands {
 
 #[derive(Debug, Args)]
 struct SelfUpdateArgs {
-    /// Resolve the latest version for a preview channel
+    /// Resolve the latest version for an alpha|beta|stable channel
     #[arg(long)]
     channel: Option<String>,
-    /// Resolve one immutable preview version
+    /// Resolve one immutable governed version
     #[arg(long)]
     version: Option<String>,
     /// Print the plan without running the installer

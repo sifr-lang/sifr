@@ -98,14 +98,87 @@ Artifacts mapped to the Phase 40 exit gate:
   roll-forward, generation burning, and recovery evidence.
 - [x] Keep production mutation adapters disabled.
 - [x] Validate first-GA and later incident recovery.
-- [ ] Record review rounds, PR, validation, and merge.
+- [x] Record review rounds, PR, validation, and merge.
 
 ### milestone_40_4: Stable Documentation and VS Code Release
 
+- Packaged-candidate generated-Rust preview is intentionally not a Phase 40
+  prerequisite. The real `0.1.0` candidate serves initialization, diagnostics,
+  and formatting, but the cold first-run generated-Rust qualification exceeded
+  its deterministic bound through both `sifr emit` and
+  `sifr.server.showGeneratedRust`. That independently repairable compiler
+  startup/performance defect is recorded in
+  [`adhoc_packaged_candidate_generated_rust.md`](../../phases/adhoc_packaged_candidate_generated_rust.md);
+  stable public docs explicitly record the affected capability as outside the
+  packaged `0.1.0` GA-qualified surface.
+- The editor report records a Marketplace publication plan with status
+  `planned`, not a synthetic dry-run pass. The credentialed dry run and exact
+  no-rebuild workflow binding are realized in `milestone_40_5`.
+- [ ] Use the coordinated upstream-first exception for editor release:
+  merge the `sifr-vscode` package PR, merge the `editor-integrations` pointer
+  PR, then update the main-repository submodule pointer and matching consumer
+  rules in the same main PR.
 - [ ] Add GA documentation checks and stable public documentation.
 - [ ] Qualify the exact VSIX and Marketplace identity without publication.
 - [ ] Materialize the reviewed `0.1.0` candidate evidence.
 - [ ] Record review rounds, PR, validation, and merge.
+
+Review and upstream coordination ledger:
+
+- `sifr-lang/sifr-vscode`
+  [PR #12](https://github.com/sifr-lang/sifr-vscode/pull/12) merged as
+  `273fd5d3ebc958124c3151647e2b61136a3ddb06`. Package review pass 1 requested
+  package cleanup and metadata corrections; pass 2 approved the exact package
+  head. Both reports are archived as
+  `plans/reviews/archive/phase-40-milestone-40-4-vscode-package-claude-opus-review-pass-{1,2}.md`.
+- `sifr-lang/editor-integrations`
+  [PR #10](https://github.com/sifr-lang/editor-integrations/pull/10) merged as
+  `d7577d49274b97fdf508b7fa16b6d9bdb51b4acd`. Pointer review pass 1 requested
+  exact consumer binding corrections; pass 2 approved the paired pointer and
+  main-repository consumer head. Both reports are archived as
+  `plans/reviews/archive/phase-40-milestone-40-4-editor-pointer-claude-opus-review-pass-{1,2}.md`.
+- Main-repository Claude Opus review pass 1 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-1.md`.
+  Its eight findings are remediated: the GA sweep covers every public doc;
+  Marketplace evidence is a truthful protected-workflow plan; rollback is a
+  governed qualification input; the packaged generated-Rust limitation is
+  public and evidence-based; qualification fixtures have headroom;
+  unsupported target additions fail; and exact candidate commands preserve
+  paths containing spaces.
+- Main-repository Claude Opus review pass 2 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-2.md`.
+  It verified the substantive pass-1 closures and withheld approval only for
+  fixture headroom, semantic preview-claim patterns, import ordering, and this
+  review ledger. All four observations are remediated before pass 3.
+- Main-repository Claude Opus review pass 3 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-3.md`.
+  Its three findings are remediated before pass 4: the rollback input is bound
+  to the editor workflow step and protected by a structural contract; the LSP
+  guide installs the qualified VSIX until protected Marketplace activation;
+  and the capability demo runs the candidate compiler's test command. The
+  review observations are also closed with positive target allowlisting,
+  an operator command for documentation qualification, truthful VSIX package
+  smoke naming, and governance self-test headroom.
+- Main-repository Claude Opus review pass 4 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-4.md`.
+  Its three cross-surface findings are remediated before pass 5: the LSP guide
+  uses the contributed `sifr.lsp.path` setting and the protected Marketplace
+  acquisition path; the GA docs contract binds those exact facts; and
+  self-update help names `alpha|beta|stable` plus an immutable governed
+  version. The target detector also covers non-`aarch64`/`x86_64`
+  architectures.
+- Main-repository Claude Opus review pass 5 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-5.md`.
+  It re-ran the milestone gates, verified every finding from passes 1–4, found
+  no remaining actionable issue, and approved the implementation.
+- The rebased create-PR lane passed its coverage-matrix, core-guardrail, and
+  diagnostic-rule steps before 18 of 19 selected Python-interop variants
+  passed. Its sole failure was the repeated 120-second
+  `readonly-check-doctor` host timeout. The separately invoked documentation
+  structure/GA-release, editor-release, and distribution qualification/full
+  gates all passed. Exact create-PR evidence is appended to
+  `plans/phases/adhoc_performance_budget_host_variance.md` and is not a Phase
+  40 prerequisite. No timeout or validation waiver was added.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 
@@ -494,3 +567,11 @@ updating or deleting that exact tag with no bypass actors.
   demo, file-size guardrails, custody-layout reproduction, stale-path sweep,
   and a fresh full definition-of-done review against exact implementation head
   `cc87f1e79a2d11c2f2cd1fba8b99d470741c82da`.
+- Exact PR-head Claude Opus review pass 5 is approved with no actionable
+  findings and is archived at
+  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-5-pr-head.md`.
+  It reverified the complete merge candidate and the pass-4 tracking-only
+  delta at exact remote head
+  `e42bb9a3d4fb48ae3ba50fc9209aa2e8cd5c10d7`.
+- Main-repository [PR #3032](https://github.com/sifr-lang/sifr/pull/3032)
+  merged as `97df4acb4656ee55754ec87d4c2d982b13df740e`.

@@ -15,8 +15,12 @@ unless workflow.fetch("permissions") == {"contents" => "read", "actions" => "rea
 end
 triggers = workflow["on"] || workflow.fetch(true)
 inputs = triggers.fetch("workflow_dispatch").fetch("inputs")
-unless inputs.keys.sort == ["source_commit", "version"]
-  abort "release qualification accepts only exact source_commit and version inputs"
+unless inputs.keys.sort == ["rollback_version", "source_commit", "version"]
+  abort "release qualification accepts only governed candidate inputs"
+end
+rollback = inputs.fetch("rollback_version")
+unless rollback.fetch("required") == true && rollback.fetch("default") == "none"
+  abort "rollback_version must be required with first-GA default none"
 end
 jobs = workflow.fetch("jobs")
 unless jobs.keys.sort == ["assemble", "build", "collect", "editor", "validate"]
@@ -31,6 +35,17 @@ expected = {
 }
 actual = matrix.to_h { |row| [row.fetch("target"), row.fetch("runner")] }
 abort "release qualification target/runner matrix drifted" unless actual == expected
+unless jobs.fetch("editor").fetch("needs").sort == ["build", "validate"]
+  abort "editor qualification must consume the exact built candidate"
+end
+editor_step = jobs.fetch("editor").fetch("steps").find {
+  |step| step["name"] == "Build, test, and package VSIX"
+}
+abort "editor qualification step is missing" unless editor_step
+editor_env = editor_step.fetch("env")
+unless editor_env["ROLLBACK_VERSION"] == "${{ needs.validate.outputs.rollback_version }}"
+  abort "editor qualification must bind the governed rollback_version output"
+end
 
 uploads = jobs.values.flat_map { |job| job.fetch("steps", []) }.select {
   |step| step["uses"] == "actions/upload-artifact@v4"
@@ -58,6 +73,8 @@ builder = Path(sys.argv[2]).read_text(encoding="utf-8")
 required = (
     "[[ \"${SOURCE_COMMIT}\" =~ ^[0-9a-f]{40}$ ]]",
     "[[ \"${VERSION}\" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+$ ]]",
+    "[[ \"${ROLLBACK_VERSION}\" = \"none\" ||",
+    "rollback_version=${ROLLBACK_VERSION}",
     "[[ \"${WORKFLOW_COMMIT}\" = \"${SOURCE_COMMIT}\" ]]",
     "contents: read",
     "actions: read",
@@ -65,6 +82,10 @@ required = (
     "scripts/distribution/build_release_artifacts.sh",
     "--cargo-build",
     "scripts/distribution/qualify_stable_target.py",
+    "scripts/distribution/qualify_stable_editor.py",
+    "--candidate-binary \"${candidate_binary}\"",
+    "--target-report",
+    "--rollback-version \"${ROLLBACK_VERSION}\"",
     "scripts/distribution/generate_version_installer.sh",
     "scripts/distribution/collect_qualification_artifacts.py",
     "Verify immutable qualification workflow contract",
@@ -99,18 +120,22 @@ if text.count("overwrite: false") != 4 or text.count("retention-days: 30") != 4:
     raise SystemExit("every qualification upload must be immutable with 30-day retention")
 if "cargo build --locked --release -p sifr" not in builder:
     raise SystemExit("governed release artifact builder must use Cargo.lock")
-for target in (
-    "aarch64-apple-darwin",
-    "x86_64-apple-darwin",
-    "aarch64-unknown-linux-gnu",
-    "x86_64-unknown-linux-gnu",
-):
+download_counts = {
+    "aarch64-apple-darwin": 1,
+    "x86_64-apple-darwin": 1,
+    "aarch64-unknown-linux-gnu": 1,
+    "x86_64-unknown-linux-gnu": 2,
+}
+for target, expected_count in download_counts.items():
     exact_name = (
         "name: sifr-stable-candidate-${{ needs.validate.outputs.version }}-"
         "${{ needs.validate.outputs.source_commit }}-" + target
     )
-    if text.count(exact_name) != 1:
-        raise SystemExit(f"target {target} must be downloaded by exact artifact name")
+    if text.count(exact_name) != expected_count:
+        raise SystemExit(
+            f"target {target} exact artifact download count drifted: "
+            f"expected {expected_count}"
+        )
 PY
 
 echo "release qualification workflow contract: PASS"
