@@ -38,6 +38,12 @@
       "capability": "structured Rust decorator paths"
     },
     {
+      "id": "bridge_type_matrix",
+      "category": "supported-through-bridge",
+      "execution_kind": "cargo-probe",
+      "capability": "bridge type generation and conversion"
+    },
+    {
       "id": "local_bridge_blake3",
       "category": "supported-through-bridge",
       "execution_kind": "cargo-probe",

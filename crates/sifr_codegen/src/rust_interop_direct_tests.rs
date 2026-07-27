@@ -355,7 +355,7 @@ fn rust_interop_function_body_converts_python_int_dict_return() {
 
     assert!(rendered.contains("py_copy_dict_str_int"));
     assert!(rendered.contains("__sifr_bridge_value.to_i64_saturating()"));
-    assert!(rendered.contains("collect::<HashMap<_, _>>()"));
+    assert!(rendered.contains("collect::<::std::collections::HashMap<_, _>>()"));
 }
 
 fn zip_error_class() -> HirClass {

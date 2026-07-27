@@ -1,8 +1,7 @@
 # fixture: bridge_type_matrix
-# evidence: positive/supported_type_roundtrips
-# evidence-status: passing
+# scenario-example: bridge_type_roundtrip
 # execution-kind: cargo-probe
-# expected-result: pass
+# expected-result: scenario-example
 
 class DiagnosticError(Error):
     message: str
@@ -22,7 +21,7 @@ def nested_indexmap_roundtrip(input: dict[str, dict[str, str]]) -> dict[str, dic
 @rust(bridge.types.indexmap_list_roundtrip, panic=trusted_no_panic)
 def indexmap_list_roundtrip(type: list[dict[str, str]]) -> list[dict[str, str]]: ...
 
-def verify_supported_type_roundtrips() -> str:
+def verify_bridge_type_roundtrip() -> str:
     json_result: str = ""
     try:
         parsed_json: str = serde_json_roundtrip('{"label":"serde","tags":["nested"]}')
@@ -64,4 +63,4 @@ def verify_supported_type_roundtrips() -> str:
     return "serde:nested|bytes:6|invalid nested payload"
 
 def main() -> None:
-    print(verify_supported_type_roundtrips())
+    print(verify_bridge_type_roundtrip())

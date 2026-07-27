@@ -25,6 +25,7 @@ from _matrix_inventory import VALID_EVIDENCE_STATUS
 from _provenance_checks import load_profiles
 from _provenance_checks import run_self_test as run_provenance_self_test
 from _provenance_checks import validate_evidence_provenance
+from _scenario_checks import run_self_test as run_scenario_self_test
 from _scenario_checks import validate_scenario_examples
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -363,6 +364,15 @@ def _run_self_test() -> int:
         )
         return 1
     cases += catalog_cases
+
+    scenario_cases, scenario_error = run_scenario_self_test()
+    if scenario_error is not None:
+        print(
+            f"rust interop fixture matrix self-test error: {scenario_error}",
+            file=sys.stderr,
+        )
+        return 1
+    cases += scenario_cases
 
     print(f"rust interop fixture matrix self-test ok: cases={cases}")
     return 0

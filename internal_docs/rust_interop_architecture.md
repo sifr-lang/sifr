@@ -451,7 +451,22 @@ Sifr-facing Rust bridge signatures are intentionally small and explicit.
 
 Exact `int` is not a native ABI integer. `SifrIntBridge` lives in `sifr_runtime::interop` and is an owned, immutable, cloneable exact-integer value with `Eq`, `Ord`, `Hash`, `Send`, and `Sync`, no `Copy` implementation, and no `repr(C)` guarantee. Borrowed parameters use `&SifrIntBridge`; owned parameters and returns use `SifrIntBridge`. Bridges that need fixed-width storage or ABI layout must declare fixed-width integer types instead.
 
-`dict[str, T]` preserves Sifr/Python insertion order through `sifr_runtime::interop::IndexMap`, a runtime re-export of the pinned `indexmap::IndexMap` version used by generated bridge glue. Non-`str` dict keys are not bridge-compatible until a later design defines stable hashing/equality and ordering semantics for those key types.
+`dict[str, T]` crosses the Rust boundary through
+`sifr_runtime::interop::IndexMap`, a runtime re-export of the pinned
+`indexmap::IndexMap` version used by generated bridge glue. Sifr's internal
+dictionary representation is a `HashMap`, so insertion order is not preserved
+when converting into or back from the bridge representation. Non-`str` dict
+keys are not bridge-compatible until a later design defines stable
+hashing/equality and ordering semantics for those key types.
+
+The `bridge_type_matrix` certification executes this contract through a
+generated package binary. The bridge parses and emits nested `serde` /
+`serde_json` values, maps a `thiserror` display value into a Sifr error, copies
+through `bytes::Bytes`, and converts Sifr's internal hash map to and from the
+`IndexMap` bridge representation recursively through list, dictionary, exact
+integer, and optional payloads. Borrowed collection arguments materialize an
+owned statement-scoped bridge temporary; the bridge call borrows that
+temporary. This conversion does not certify key iteration order.
 
 Nested borrowed forms are generated from the outer ownership mode. For example, borrowed `list[str]` is not `&[&str]`; it is a generated list view whose elements are borrowed string views with the same lifetime as the list view. `Option[str]` and `Option[bytes]` use generated optional borrowed views for borrowed parameters and owned `Option<String>` / `Option<Vec<u8>>` for owned parameters and returns.
 

@@ -3,6 +3,9 @@ use sifr_ir::{
 };
 use sifr_type_system::Type;
 
+use crate::rust_interop_direct_collections::{
+    bridge_composite_to_sifr_expr, sifr_composite_to_bridge_expr,
+};
 use crate::rust_interop_error_mapping::bridge_error_expr;
 use crate::{RustExpr, RustParam, RustStmt, RustType};
 
@@ -80,6 +83,8 @@ fn direct_rust_arg_expr(param: &HirParam, target: &RustTargetPath) -> RustExpr {
             method: "map".to_string(),
             args: vec![sifr_int_bridge_path("from")],
         }
+    } else if argument_composite_conversion_required(&param.ty) {
+        sifr_composite_to_bridge_expr(&value, &param.ty, param.convention.is_borrowed())
     } else {
         value
     }
@@ -89,30 +94,42 @@ fn is_int_list(ty: &Type) -> bool {
     matches!(ty.resolve_alias(), Type::List(inner) if inner.resolve_alias() == &Type::Int)
 }
 
-fn is_optional_str(ty: &Type) -> bool {
+fn optional_inner_type(ty: &Type) -> Option<&Type> {
     let Type::Union(members) = ty.resolve_alias() else {
-        return false;
+        return None;
     };
-    members.len() == 2
+    (members.len() == 2
         && members
             .iter()
-            .any(|member| member.resolve_alias() == &Type::None)
-        && members
+            .any(|member| member.resolve_alias() == &Type::None))
+    .then(|| {
+        members
             .iter()
-            .any(|member| member.resolve_alias() == &Type::Str)
+            .find(|member| member.resolve_alias() != &Type::None)
+    })
+    .flatten()
+}
+
+fn is_optional_str(ty: &Type) -> bool {
+    optional_inner_type(ty).is_some_and(|inner| inner.resolve_alias() == &Type::Str)
 }
 
 fn is_optional_int(ty: &Type) -> bool {
-    let Type::Union(members) = ty.resolve_alias() else {
-        return false;
-    };
-    members.len() == 2
-        && members
-            .iter()
-            .any(|member| member.resolve_alias() == &Type::None)
-        && members
-            .iter()
-            .any(|member| member.resolve_alias() == &Type::Int)
+    optional_inner_type(ty).is_some_and(|inner| inner.resolve_alias() == &Type::Int)
+}
+
+fn argument_composite_conversion_required(ty: &Type) -> bool {
+    optional_inner_type(ty).is_some() || composite_conversion_required(ty)
+}
+
+fn composite_conversion_required(ty: &Type) -> bool {
+    match ty.resolve_alias() {
+        Type::Int => true,
+        Type::List(inner) => composite_conversion_required(inner),
+        Type::Dict(key, _) => key.resolve_alias() == &Type::Str,
+        Type::Union(_) => optional_inner_type(ty).is_some_and(composite_conversion_required),
+        _ => false,
+    }
 }
 
 fn is_python_callback_constructor_target(target: &RustTargetPath) -> bool {
@@ -160,8 +177,8 @@ fn direct_rust_return_expr(value: RustExpr, return_type: &Type) -> RustExpr {
         Type::List(inner) if inner.resolve_alias() == &Type::Int => {
             bridge_int_vec_to_i64_vec_expr(value)
         }
-        Type::Dict(key, item) if key.resolve_alias() == &Type::Str => {
-            bridge_index_map_to_hash_map_expr(value, item)
+        _ if composite_conversion_required(return_type) => {
+            bridge_composite_to_sifr_expr(&value, return_type)
         }
         Type::Result(ok, err) => bridge_result_expr(value, ok, err),
         _ => value,
@@ -287,38 +304,6 @@ fn bridge_int_vec_to_i64_vec_expr(value: RustExpr) -> RustExpr {
             }],
         }),
         method: "collect".to_string(),
-        args: Vec::new(),
-    }
-}
-
-fn bridge_index_map_to_hash_map_expr(value: RustExpr, item_type: &Type) -> RustExpr {
-    let iter = RustExpr::MethodCall {
-        receiver: Box::new(value),
-        method: "into_iter".to_string(),
-        args: Vec::new(),
-    };
-    let iter = if item_type.resolve_alias() == &Type::Int {
-        RustExpr::MethodCall {
-            receiver: Box::new(iter),
-            method: "map".to_string(),
-            args: vec![RustExpr::Closure {
-                params: vec![RustParam::Named {
-                    name: "(__sifr_bridge_key, __sifr_bridge_value)".to_string(),
-                    ty: RustType::Named("_".to_string()),
-                }],
-                body: Box::new(RustExpr::Tuple(vec![
-                    RustExpr::Ident("__sifr_bridge_key".to_string()),
-                    bridge_int_to_i64_expr(RustExpr::Ident("__sifr_bridge_value".to_string())),
-                ])),
-                is_move: false,
-            }],
-        }
-    } else {
-        iter
-    };
-    RustExpr::MethodCall {
-        receiver: Box::new(iter),
-        method: "collect::<HashMap<_, _>>".to_string(),
         args: Vec::new(),
     }
 }

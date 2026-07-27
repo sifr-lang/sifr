@@ -65,15 +65,14 @@
     {
       "id": "bridge_type_matrix",
       "fixture": "bridge_type_matrix",
-      "category": "future-owned-by-separate-phase",
-      "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
+      "category": "supported-through-bridge",
       "tier": 1,
       "capability": "bridge type generation and conversion",
       "execution_kind": "cargo-probe",
       "required_crates": ["serde", "serde_json", "thiserror", "bytes", "indexmap"],
-      "positive_evidence": {"id": "supported_type_roundtrips", "status": "planned"},
+      "positive_evidence": {"id": "supported_type_roundtrips", "status": "passing"},
       "negative_evidence": {"id": "unsupported_container_rejections", "status": "passing"},
-      "notes": "Unsupported containers are rejected, but full value roundtrip evidence is pending."
+      "notes": "Generated package glue roundtrips nested serde/serde_json, thiserror, bytes, and indexmap values; unsupported containers remain rejected."
     },
     {
       "id": "local_bridge_blake3",
