@@ -27,6 +27,11 @@ failures in the 412-variant algorithmic-compatibility lane:
   `any_unknown_typing_and_container_specialization_gap`, and 1
   `signature_invalid_fixture_surface`.
 
+The taxonomy artifact was generated on 2026-06-16 and contains 411 fixture
+records. The later profile lanes report 412 area variants because their count
+also includes the area-level policy/runner variant. The 20 failing fixture
+slugs are set-identical across all three evidence sources.
+
 The failing fixture slugs are:
 
 - `0002_add_two_numbers`
@@ -65,8 +70,18 @@ this issue is the durable repository record.
   fallback behavior, or Rust-interop-specific exceptions.
 - Name any associated demo after the capability it demonstrates. Demo names
   must not contain a phase number or phase name.
+- This user-directed naming rule supersedes the project-workflow skill's
+  generic `<milestone>_demo` example for every demo owned by this issue.
 - Do not modify Rust-interop matrices, stable claims, crate pins, or profile
   registration unless a separately reviewed cross-area requirement is proven.
+
+## Implementation Progress
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Failure diagnosis and root-cause grouping | pending | all 20 failures remain preserved above |
+| Focused remediation PR waves | blocked | starts after diagnosis groups establish reviewable compiler ownership boundaries |
+| Full-corpus closeout | blocked | starts after every remediation wave merges |
 
 ## Acceptance Criteria
 
@@ -76,4 +91,8 @@ this issue is the durable repository record.
 - [ ] Both nightly and release profiles pass their complete algorithmic-
   compatibility lane locally.
 - [ ] Focused compiler tests cover each corrected root-cause category.
+- [ ] Every associated demo uses a capability-based name containing no phase
+  number or phase name.
+- [ ] The authoritative create-PR and merge profiles, Clippy, rustfmt,
+  maintainability, file-size, and diff-hygiene gates pass locally.
 - [ ] Review rounds are satisfied and all remediation PRs are merged.
