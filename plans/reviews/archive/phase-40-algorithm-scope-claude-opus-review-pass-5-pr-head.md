@@ -23,9 +23,12 @@ Reviewed the full `c17f3c7d1..99c847705` diff (16 files) and the exact commit tr
 | Remove `ALG-CORPUS` from `plans/phases/index.md` | **rc=1** record is not indexed | — |
 | Repoint index link to a missing file | **rc=1** record target does not exist | — |
 | Remove `release_divergence_record` | **rc=1** missing or invalid | — |
-| Under-declare PAM `nightly` to match release | **rc=1** | **rc=1** nightly omits required suite |
+| Under-declare PAM `nightly` to match release | rc=0 (not its input) | **rc=1** nightly omits required suite and redundant `release_suite` |
 
-Every deletion and under-declaration path the earlier passes raised is closed, and closure does not depend on the hand-maintained assignment matrix.
+Every deletion and under-declaration path the earlier passes raised is closed.
+Deletion-path closure does not depend on the hand-maintained assignment matrix;
+the assignment-matrix checker owns the PAM under-declaration path, and both
+checks run in the same blocking readiness suite.
 
 **Prior-pass findings recheck.** All nine pass-1, six pass-2, and three pass-3 findings are closed at this commit, confirmed against the current text/code rather than the prior write-ups: README attributes the full corpus to nightly only and its remaining release suite list matches `release.json`; `profile_policy.md:11-13` qualifies the release bullet and `:50-52` names only implemented rules (no "ownerless"); the guarantee-layer authority note is present; taxonomy-smoke attribution matches `run_taxonomy_smoke`'s actual behavior; `release.json` description qualified and `resource_classes` is `["default-local"]` (matching merge's classification of the same suite); `performance_budget_checks` in `full` mode named in both evidence paragraphs; `milestone_40_1` cross-reference present; id-convention coupling documented; empty-`surface_id` `continue` in place.
 

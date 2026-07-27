@@ -244,6 +244,12 @@ Review and upstream coordination ledger:
   deletion and under-declaration path raised in earlier passes, verified the
   nightly corpus and release subsets remain blocking, and returned `APPROVED`
   with no actionable findings.
+- Final PR-head Claude Opus review pass 6 is archived at
+  `plans/reviews/archive/phase-40-algorithm-scope-claude-opus-review-pass-6-final-pr-head.md`.
+  It found one evidence-attribution error: the assignment-matrix checker, not
+  both checkers, owns the PAM under-declaration mutation. The underlying
+  readiness gate remains fail-closed because both checks are blocking; the
+  archived pass-5 table and conclusion now state that division accurately.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 
