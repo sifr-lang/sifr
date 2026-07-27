@@ -1,0 +1,44 @@
+# fixture: callbacks_call_scoped
+# scenario-example: call_scoped_callback_runtime
+# execution-kind: runtime-observed
+# expected-result: invoked-contained-and-call-scoped
+
+class EventError(Error):
+    message: str
+
+@rust(bridge.callbacks.visit)
+def invoke_callback(mode: str, handler: Callable[[str], Result[None, EventError]]) -> Result[str, EventError | RustPanicError]: ...
+
+def observe_event(event: str) -> Result[None, EventError]:
+    assert event != "panic"
+    if event == "reject":
+        raise EventError("callback rejected")
+    return None
+
+def observe_mode(mode: str) -> str:
+    try:
+        value: str = invoke_callback(mode, observe_event)
+        return value
+    except EventError as error:
+        return error.message
+    except RustPanicError as error:
+        return error.message
+
+def verify_call_scoped_callback_runtime() -> str:
+    safe: str = ""
+    try:
+        safe_value: str = invoke_callback("safe", observe_event)
+        safe = safe_value
+    except EventError as error:
+        safe = error.message
+    except RustPanicError as error:
+        safe = error.message
+    ordinary_error: str = observe_mode("error")
+    callback_panic: str = observe_mode("panic")
+    assert safe == "first,second"
+    assert ordinary_error == "callback rejected"
+    assert callback_panic == "Rust bridge panicked"
+    return safe + "|" + ordinary_error + "|" + callback_panic
+
+def main() -> None:
+    print(verify_call_scoped_callback_runtime())

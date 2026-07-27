@@ -7,7 +7,6 @@
     "advanced_data_runtime_matrix",
     "async_runtime_reqwest",
     "callback_subscription_ecosystem",
-    "callbacks_call_scoped",
     "opaque_resource_matrix",
     "zero_copy_runtime_matrix"
   ],
@@ -119,6 +118,12 @@
       "category": "supported",
       "execution_kind": "compiler-diagnostic",
       "capability": "blocking I/O and CPU-heavy classification"
+    },
+    {
+      "id": "callbacks_call_scoped",
+      "category": "supported-through-bridge",
+      "execution_kind": "runtime-observed",
+      "capability": "call-scoped callback lifetime"
     },
     {
       "id": "callbacks_threadsafe",

@@ -4,22 +4,39 @@
   "evidence": {
     "negative": {
       "expected_diagnostic": "SIFR-RUST-CB-0001",
-      "expected_result": "future-owned-diagnostic",
+      "expected_result": "diagnostic",
       "id": "callback_storage_rejected",
       "path": "negative/callback_storage_rejected.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs",
+        "test_name": "test_check_call_scoped_callback_storage_rejected"
+      }
     },
     "positive": {
-      "expected_result": "future-owned",
+      "expected_result": "pass",
       "id": "callback_valid_during_call",
       "path": "positive/callback_valid_during_call.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs",
+        "test_name": "test_build_call_scoped_callback_runtime"
+      }
     }
   },
   "execution_kind": "runtime-observed",
   "features": {},
   "id": "callbacks_call_scoped",
   "required_crates": [],
+  "scenario_examples": {
+    "call_scoped_callback_runtime": "examples/call_scoped_callback_runtime"
+  },
   "schema_version": 2,
   "tier": 2
 }

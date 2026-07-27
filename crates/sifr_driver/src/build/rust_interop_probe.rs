@@ -1,6 +1,7 @@
 use super::rust_interop_digest::fnv1a64_hex;
-use super::rust_interop_panic_probe::{panic_mapper_probe, stderr_reports_invalid_panic_mapper};
+use super::rust_interop_panic_probe::panic_mapper_probe;
 use super::rust_interop_probe_cache::{mark_probe_cache_hit, probe_cache_file, probe_cache_key};
+use super::rust_interop_probe_diagnostics::classify_probe_failure;
 use super::rust_interop_probe_manifest::{probe_cargo_toml, toml_quote_string};
 use super::workspace::artifact_cache_root;
 use sifr_codegen::{
@@ -111,47 +112,7 @@ pub(super) fn execute_direct_cargo_probe(
         return Ok(());
     }
     let stderr = String::from_utf8_lossy(&output.stderr);
-    let (code, message_template, args) = if stderr_reports_resolution_failure(&stderr) {
-        (
-            DiagnosticCode::RUST_RESOLVE_TARGET_ROOT,
-            "Rust bridge probe failed for `{target}`",
-            vec![("target", canonical_sifr_target_path(&probe.declaration))],
-        )
-    } else if stderr_reports_invalid_panic_mapper(&stderr) {
-        (
-            DiagnosticCode::RUST_PANIC_CONTRACT,
-            "invalid Rust panic contract: {reason}",
-            vec![(
-                "reason",
-                "panic error mapper must accept one `RustPanicErrorBridge` and return a Display error"
-                    .to_string(),
-            )],
-        )
-    } else if async_future_requires_send(probe) && stderr_reports_non_send_future(&stderr) {
-        (
-            DiagnosticCode::RUST_ASYNC_CONTRACT,
-            "invalid Rust async contract: {reason}",
-            vec![(
-                "reason",
-                format!(
-                    "future returned by `{}` must be Send or declare thread_affinity=tokio_current_thread",
-                    canonical_sifr_target_path(&probe.declaration)
-                ),
-            )],
-        )
-    } else {
-        (
-            DiagnosticCode::RUST_TYPE_PROBE_FAILURE,
-            "Rust bridge probe failed for `{target}`",
-            vec![("target", canonical_sifr_target_path(&probe.declaration))],
-        )
-    };
-    Err(ProbeExecutionFailure {
-        code,
-        message_template,
-        args,
-        notes: vec![format!("rustc stderr: {}", stderr.trim())],
-    })
+    Err(classify_probe_failure(probe, &stderr))
 }
 
 fn dependency_features(
@@ -429,7 +390,9 @@ fn rust_param_type(
         RustBridgeParamConvention::MutableBorrow => {
             ty.rust_borrowed_type.as_deref().map(mutable_borrow_type)
         }
-        RustBridgeParamConvention::Own => ty.rust_owned_type.clone(),
+        RustBridgeParamConvention::Own | RustBridgeParamConvention::OwnMutable => {
+            ty.rust_owned_type.clone()
+        }
     }
 }
 
@@ -449,24 +412,11 @@ fn is_async_probe(probe: &PendingRustBridgeProbe) -> bool {
             .async_boundary
 }
 
-fn async_future_requires_send(probe: &PendingRustBridgeProbe) -> bool {
+pub(super) fn async_future_requires_send(probe: &PendingRustBridgeProbe) -> bool {
     if !is_async_probe(probe) {
         return false;
     }
     probe.async_thread_affinity != AsyncThreadAffinity::TokioCurrentThread
-}
-
-fn stderr_reports_non_send_future(stderr: &str) -> bool {
-    stderr.contains("future cannot be sent")
-        || (stderr.contains("future") && stderr.contains("cannot be sent between threads safely"))
-        || stderr.contains("future is not `Send`")
-}
-
-fn stderr_reports_resolution_failure(stderr: &str) -> bool {
-    stderr.contains("cannot find")
-        || stderr.contains("failed to resolve")
-        || stderr.contains("unresolved")
-        || stderr.contains("not found")
 }
 
 fn opaque_bool_argument(probe: &PendingRustBridgeProbe, name: &str) -> bool {
@@ -588,7 +538,7 @@ fn probe_io_failure(message: String) -> ProbeExecutionFailure {
     }
 }
 
-fn canonical_sifr_target_path(declaration: &RustInteropPlanDeclaration) -> String {
+pub(super) fn canonical_sifr_target_path(declaration: &RustInteropPlanDeclaration) -> String {
     let mut path = declaration
         .module_name
         .clone()

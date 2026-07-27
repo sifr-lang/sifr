@@ -287,7 +287,7 @@ fn interop_bridge_resolves_imported_opaque_type_to_declared_rust_target() {
 }
 
 #[test]
-fn interop_bridge_callable_params_require_callback_contract() {
+fn interop_bridge_distinguishes_call_scoped_and_threadsafe_callbacks() {
     let mut function = HirFunction {
         name: "subscribe".to_string(),
         params: vec![HirParam {
@@ -318,11 +318,14 @@ fn interop_bridge_callable_params_require_callback_contract() {
     let plan_without_callback =
         interop_build_plan_for_named_modules([(Some("main"), &module_without_callback)]);
 
+    let call_scoped = &plan_without_callback.rust.bridge_contracts.signatures[0].params[0].ty;
+    assert_eq!(call_scoped.kind, RustBridgeTypeKind::CallScopedCallback);
     assert_eq!(
-        plan_without_callback.rust.bridge_contracts.signatures[0].params[0]
-            .ty
-            .kind,
-        RustBridgeTypeKind::Unsupported
+        call_scoped.rust_borrowed_type.as_deref(),
+        Some(
+            "::sifr_runtime::interop::CallScopedCallbackBridge<'_, \
+             (::sifr_runtime::interop::SifrIntBridge,), ()>"
+        )
     );
 
     function.rust_interop.push(callback_declaration());
@@ -337,6 +340,112 @@ fn interop_bridge_callable_params_require_callback_contract() {
         signature.params[0].ty.rust_borrowed_type.as_deref(),
         Some("&::sifr_runtime::interop::ThreadsafeCallbackBridge")
     );
+}
+
+#[test]
+fn interop_bridge_rejects_nested_and_returned_call_scoped_callbacks() {
+    let callback = Type::Callable(
+        vec![Type::Str],
+        vec![ParamConvention::borrow()],
+        Box::new(Type::None),
+    );
+    let nested_types = [
+        Type::List(Box::new(callback.clone())),
+        Type::Dict(Box::new(Type::Str), Box::new(callback.clone())),
+        Type::Union(vec![callback.clone(), Type::None]),
+    ];
+    for (index, nested) in nested_types.into_iter().enumerate() {
+        let function = HirFunction {
+            name: format!("nested_{index}"),
+            params: vec![HirParam {
+                name: "value".to_string(),
+                ty: nested,
+                default: None,
+                keyword_only: false,
+                convention: ParamConvention::borrow(),
+            }],
+            return_type: Type::None,
+            body: Vec::new(),
+            is_async: false,
+            method_kind: MethodKind::Regular,
+            decorators: Vec::new(),
+            rust_interop: vec![declaration(
+                RustInteropDecoratorKind::Function,
+                &format!("bridge.callbacks.nested_{index}"),
+            )],
+            python_interop: Vec::new(),
+            compiler_intrinsic: None,
+            type_params: Vec::new(),
+        };
+        let module = module_with(vec![function], Vec::new());
+        let plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);
+        assert_eq!(
+            plan.rust.bridge_contracts.signatures[0].params[0].ty.kind,
+            RustBridgeTypeKind::Unsupported
+        );
+    }
+
+    let function = HirFunction {
+        name: "returned".to_string(),
+        params: Vec::new(),
+        return_type: callback,
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: vec![declaration(
+            RustInteropDecoratorKind::Function,
+            "bridge.callbacks.returned",
+        )],
+        python_interop: Vec::new(),
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+    let module = module_with(vec![function], Vec::new());
+    let plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);
+    assert_eq!(
+        plan.rust.bridge_contracts.signatures[0].return_type.kind,
+        RustBridgeTypeKind::Unsupported
+    );
+}
+
+#[test]
+fn interop_bridge_rejects_mutable_callback_argument_conventions() {
+    let function = HirFunction {
+        name: "mutating".to_string(),
+        params: vec![HirParam {
+            name: "callback".to_string(),
+            ty: Type::Callable(
+                vec![Type::Str],
+                vec![ParamConvention::mut_borrow()],
+                Box::new(Type::None),
+            ),
+            default: None,
+            keyword_only: false,
+            convention: ParamConvention::borrow(),
+        }],
+        return_type: Type::None,
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: vec![declaration(
+            RustInteropDecoratorKind::Function,
+            "bridge.callbacks.mutating",
+        )],
+        python_interop: Vec::new(),
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+    let module = module_with(vec![function], Vec::new());
+    let plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);
+    let callback = &plan.rust.bridge_contracts.signatures[0].params[0].ty;
+
+    assert_eq!(callback.kind, RustBridgeTypeKind::CallScopedCallback);
+    assert!(matches!(
+        callback.unsupported_reason.as_deref(),
+        Some(reason) if reason.contains("mutable-borrow")
+    ));
 }
 
 #[test]

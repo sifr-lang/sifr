@@ -145,8 +145,8 @@ normative and must not be broadened.
 | --- | --- | --- |
 | `certification_0` | merged | [PR #3026](https://github.com/sifr-lang/sifr/pull/3026) |
 | `certification_1` | merged | [PR #3027](https://github.com/sifr-lang/sifr/pull/3027); executable recursive bridge-type roundtrips |
-| `certification_2` | in progress | generated panic wrapper emission and mapper fallback |
-| `certification_3` | blocked | starts after `certification_2` merges |
+| `certification_2` | merged | [PR #3031](https://github.com/sifr-lang/sifr/pull/3031); generated panic wrapper emission and mapper fallback |
+| `certification_3` | in progress | generated call-scoped callback invocation and lifetime rejection |
 | `certification_4` | blocked | starts after `certification_3` merges |
 | `certification_5` | blocked | starts after `certification_4` merges |
 | `certification_6` | blocked | starts after `certification_5` merges |
@@ -347,7 +347,7 @@ Implementation checklist:
 - [x] Bind both evidence directions to mandatory merge-lane tests, promote only
   `panic_boundary_wrapper_emission`, and update structured claims, public and
   architecture docs, provenance, and inventory counts.
-- [ ] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, Opus review rounds to
   satisfaction, merge the PR, and unblock only `certification_3`.
 
 Post-item inventory:
@@ -405,6 +405,65 @@ Review and gate evidence:
   Rust interop `10/10`, Python interop `19/19`, runtime platform 28 variants,
   all crate smoke suites, generated-code quality `5/5`, and create-PR E2E
   `131/131`.
+- [PR #3031](https://github.com/sifr-lang/sifr/pull/3031) merged as
+  `d6f41ac499`; exact-new-head Opus confirmation was `SATISFIED`.
+
+#### certification_3: Call-Scoped Callback Runtime
+
+Implementation checklist:
+
+- [x] Treat a plain top-level `Callable[[...], R]` Rust interop parameter as
+  call-scoped while preserving `@rust.callback(...)` as the separate
+  thread-safe policy contract.
+- [x] Add a borrowed `CallScopedCallbackBridge<'call, Args, Output>` that owns
+  no callback and is deliberately neither `Send` nor `Sync`.
+- [x] Emit generated callback adapters that convert callback arguments and
+  success values, map declared callback errors through display strings, and
+  execute inside the already-certified outer panic boundary.
+- [x] Probe the concrete callback bridge signature and report
+  `SIFR-RUST-CB-0001` when Rust attempts to store, return, or move the borrowed
+  callback across a thread boundary.
+- [x] Add the locked/offline `call_scoped_callback_runtime` package plus
+  mandatory generated-build evidence for invocation, ordinary callback errors,
+  redacted callback panic mapping, and storage/return/thread escape rejection.
+- [x] Promote only `callbacks_call_scoped` in both matrices, structured stable
+  claims, public and architecture docs, fixture provenance, and counts.
+- [ ] Run focused and authoritative local gates, Opus review rounds to
+  satisfaction, merge the PR, record the Native Pydantic-Sifr prerequisite,
+  and unblock only `certification_4`.
+
+Post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 52 passing and 20 planned evidence directions;
+- categories: 18 `supported`, 7 `supported-through-bridge`, 1
+  `unsupported-by-design`, and 10 `future-owned-by-separate-phase`;
+- execution kinds remain 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+  and
+- 26 structured stable claims.
+
+Focused implementation evidence:
+
+- the locked `call_scoped_callback_runtime` package executes two successful
+  callback invocations, preserves an ordinary callback error, maps a callback
+  panic to redacted `RustPanicError`, and emits no panic payload to stderr;
+- the paired generated-build negative test installs storage, returned deferred
+  invocation, and unmanaged-thread variants; each assertion is pinned to the
+  concrete rustc lifetime or thread-trait failure and reports
+  `SIFR-RUST-CB-0001` before the package can run.
+- focused callback/codegen/driver tests, Clippy, fixture-matrix checks,
+  maintainability guardrails, file-size guardrails, and generated positive and
+  negative package builds pass; Opus review round 5 reports `SATISFIED`;
+- the warmed `create-pr` lane passes every step through Python interop. Its
+  Rust-interop step is blocked only by the preserved parallel-worktree
+  promotion of `opaque_resource_matrix` while that row's evidence is still
+  planned; the certification-3 fixture-matrix and tier suites pass, and this PR
+  excludes that unrelated hunk. The earlier Python doctor timeout was
+  reproduced as a passing focused check and passed inside the warmed full
+  rerun.
 
 `certification_3` may use bridge-version 1 call-scoped callbacks. Any callback
 behavior that truly requires the bridge-version 2 structural call contract

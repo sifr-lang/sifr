@@ -30,6 +30,15 @@ REQUIRED_SCENARIO_EXAMPLES = {
             "tokens": ("bridge-version = 1", "version_bridge"),
         },
     },
+    "callbacks_call_scoped": {
+        "call_scoped_callback_runtime": {
+            "tokens": (
+                "CallScopedCallbackBridge",
+                "bridge.callbacks.visit",
+                "Rust bridge panicked",
+            ),
+        },
+    },
     "cargo_locked_offline": {
         "locked_offline_cache": {
             "tokens": ("locked_bridge", "Cargo.lock", "--locked", "--offline", "--frozen"),

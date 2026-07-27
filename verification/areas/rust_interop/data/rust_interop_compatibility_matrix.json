@@ -264,15 +264,14 @@
     {
       "id": "callbacks_call_scoped",
       "fixture": "callbacks_call_scoped",
-      "category": "future-owned-by-separate-phase",
-      "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
+      "category": "supported-through-bridge",
       "tier": 2,
       "capability": "call-scoped callback lifetime",
       "execution_kind": "runtime-observed",
       "required_crates": [],
-      "positive_evidence": {"id": "callback_valid_during_call", "status": "planned"},
-      "negative_evidence": {"id": "callback_storage_rejected", "status": "planned"},
-      "notes": "Call-scoped callback storage and invocation behavior need runtime fixtures before they are listed as verified support."
+      "positive_evidence": {"id": "callback_valid_during_call", "status": "passing"},
+      "negative_evidence": {"id": "callback_storage_rejected", "status": "passing"},
+      "notes": "Generated call-scoped callback glue is runtime-observed in a locked package; the borrowed non-Send bridge permits invocation only during the Rust call, maps callback panic through the redacted outer panic boundary, and rejects storage or thread escape during the Cargo probe."
     },
     {
       "id": "callbacks_threadsafe",

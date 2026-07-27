@@ -1,0 +1,15 @@
+# fixture: callbacks_call_scoped
+# scenario-example: call_scoped_callback_runtime
+
+[package]
+name = "call-scoped-callback-runtime"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[rust]
+bridge-version = 1
+bridges = ["src/bridges"]
+direct-crate-bindings = true

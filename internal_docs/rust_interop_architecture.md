@@ -452,8 +452,21 @@ Sifr-facing Rust bridge signatures are intentionally small and explicit.
 | closed enum | generated bridge enum | generated bridge enum | generated bridge enum |
 | record class | generated bridge struct | generated bridge struct | generated bridge struct |
 | opaque class | `&sifr_runtime::interop::Handle<T>` / `&mut sifr_runtime::interop::Handle<T>` | `sifr_runtime::interop::Handle<T>` | `sifr_runtime::interop::Handle<T>` |
-| `Callback[[...], R]` | generated call-scoped callback handle | not storable | not a return type |
-| `ThreadsafeCallback[[...], R]` | generated thread-safe callback handle | generated thread-safe callback handle | not a return type |
+| top-level `Callable[[...], R]` without `@rust.callback(...)` | generated borrowed call-scoped callback bridge | not storable | not a return type |
+| top-level `Callable[[...], R]` with `@rust.callback(...)` | generated thread-safe callback contract marker | generated thread-safe callback contract marker | not a return type |
+
+Call-scoped callback parameters are supported only on synchronous declarations
+with a `Result[T, E | RustPanicError]` return that supplies both an ordinary
+error and the redacted panic wrapper. This keeps panics originating in Sifr
+callback code inside the generated outer boundary; Rust target trust and abort
+policies cannot waive that requirement. Nested callback containers and
+mutable-borrow callback argument conventions remain unsupported.
+The selected generated-build Cargo profile must remain unwind-capable; an
+ambient `panic = "abort"` profile rejects the call-scoped contract even when
+the source declaration does not spell `panic=abort`.
+Rust invokes the call-scoped bridge with owned bridge argument values; the
+generated adapter performs the Sifr-side borrow and conversion for the duration
+of that invocation.
 
 Exact `int` is not a native ABI integer. `SifrIntBridge` lives in `sifr_runtime::interop` and is an owned, immutable, cloneable exact-integer value with `Eq`, `Ord`, `Hash`, `Send`, and `Sync`, no `Copy` implementation, and no `repr(C)` guarantee. Borrowed parameters use `&SifrIntBridge`; owned parameters and returns use `SifrIntBridge`. Bridges that need fixed-width storage or ABI layout must declare fixed-width integer types instead.
 
@@ -853,10 +866,14 @@ Call-scoped callback:
 
 ```sifr
 @rust(bridge.parser.visit)
-def visit(text: str, callback: Callback[[Token], Result[None, ParseError]]) -> Result[None, ParseError | RustPanicError]: ...
+def visit(text: str, callback: Callable[[Token], Result[None, ParseError]]) -> Result[None, ParseError | RustPanicError]: ...
 ```
 
-The Rust implementation cannot store a call-scoped callback, call it after the bridge call returns, or call it from an unmanaged thread.
+The Rust implementation cannot store a call-scoped callback, call it after the
+bridge call returns, or call it from an unmanaged thread. The declaration is
+synchronous and its distinct ordinary-error plus `RustPanicError` channel is
+mandatory because a Rust no-panic trust grant does not cover Sifr callback
+code.
 
 Thread-safe callback registration:
 
@@ -869,7 +886,7 @@ Thread-safe callback registration:
 @rust(bridge.kafka.on_message)
 def on_message(
     consumer: KafkaConsumer,
-    callback: ThreadsafeCallback[[Message], Result[None, KafkaError]],
+    callback: Callable[[Message], Result[None, KafkaError]],
 ) -> Result[Subscription, KafkaError | RustPanicError]: ...
 ```
 
@@ -888,26 +905,28 @@ Thread-safe callback policy values are:
 - `overflow=error | drop_oldest | drop_newest`
 - `shutdown=drain | cancel | detach_forbidden`
 
-`@rust.callback(...)` is required for `ThreadsafeCallback` parameters. Missing policy is a `SIFR-RUST-CB-*` diagnostic.
+The current source spelling for both callback forms is `Callable[[...], R]`.
+Without `@rust.callback(...)`, a top-level parameter lowers to
+`CallScopedCallbackBridge<'call, Args, Output>`. The runtime bridge borrows the
+generated adapter, carries a non-`Send`/non-`Sync` marker, and has no clone or
+ownership escape. Its concrete lifetime and thread traits make storage,
+use-after-return, and unmanaged-thread movement rustc errors during the Cargo
+probe. Callback invocation occurs inside the generated target panic boundary,
+so a callback panic is contained and redacted exactly like a target panic.
+`Result` callback errors cross this bridge as display strings for explicit
+package-bridge mapping.
 
-The initial callback contract surface is contract-only. It lowers
-`@rust.callback(...)` metadata, requires named `backpressure=`, `overflow=`,
-and `shutdown=` policy, rejects malformed or duplicate callback contracts with
-`SIFR-RUST-CB-0001`, and makes top-level Sifr `Callable[[...], R]` bridge
-parameters compatible only when the same declaration also has an explicit
-callback contract. A single `@rust.callback(...)` policy applies uniformly to
-all top-level callback parameters on that declaration; per-parameter callback
-policy requires a later extension. Callable parameters without
-`@rust.callback(...)`, nested callback containers, and callback returns remain
-rejected as unsupported bridge types. Runtime-observed call-scoped storage
-rejection, cross-thread capture enforcement, callback invocation panic mapping,
+`@rust.callback(...)` selects the separate thread-safe contract. It requires
+named `backpressure=`, `overflow=`, and `shutdown=` policy, rejects malformed
+or duplicate contracts with `SIFR-RUST-CB-0001`, and applies uniformly to all
+top-level callback parameters on that declaration. Per-parameter policy,
+nested callback containers, callback returns, cross-thread capture enforcement,
 and `tokio-tungstenite`/`redis`/`notify` ecosystem certification are
 future-owned by
 [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md)
-through the `callbacks_call_scoped` and `callback_subscription_ecosystem`
-compatibility rows. The supported `callback_subscription_core` row is limited
-to the signal-style declaration and policy contract; it does not claim
-subscription lifecycle execution.
+through the `callback_subscription_ecosystem` compatibility row. The supported
+`callback_subscription_core` and `callbacks_threadsafe` rows remain
+contract-only; they do not claim subscription lifecycle execution.
 
 ## Trust Policy
 

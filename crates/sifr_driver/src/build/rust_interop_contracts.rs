@@ -59,7 +59,9 @@ fn rust_param_type(
         RustBridgeParamConvention::MutableBorrow => {
             ty.rust_borrowed_type.as_deref().map(mutable_borrow_type)
         }
-        RustBridgeParamConvention::Own => ty.rust_owned_type.clone(),
+        RustBridgeParamConvention::Own | RustBridgeParamConvention::OwnMutable => {
+            ty.rust_owned_type.clone()
+        }
     }
 }
 

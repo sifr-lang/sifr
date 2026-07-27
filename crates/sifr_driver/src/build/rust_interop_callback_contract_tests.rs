@@ -2,7 +2,9 @@ use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
     apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
 };
-use super::rust_interop_contract_tests::{interop_errors, package_context, set_bridge_roots};
+use super::rust_interop_contract_tests::{
+    interop_errors, package_context, set_bridge_roots, temp_package_root,
+};
 use sifr_codegen::{generate_rust_multi_with_metadata, StdlibCode};
 use sifr_package::TrustPolicy;
 use std::collections::BTreeMap;
@@ -64,7 +66,7 @@ fn package_rust_interop_rejects_callback_policy_without_rust_target() {
 }
 
 #[test]
-fn package_rust_interop_rejects_callable_parameter_without_callback_policy() {
+fn package_rust_interop_accepts_callable_parameter_as_call_scoped() {
     let source = CALLBACK_SOURCE.replace(
         "@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)\n",
         "",
@@ -72,14 +74,187 @@ fn package_rust_interop_rejects_callable_parameter_without_callback_policy() {
     let generated = generated_from_source(&source);
     let context = context_with_source(&source);
 
+    apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("plain Callable parameters should use the call-scoped bridge contract");
+}
+
+#[test]
+fn package_rust_interop_rejects_call_scoped_callback_across_async_boundary() {
+    let source = CALLBACK_SOURCE
+        .replace(
+            "@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)\n",
+            "",
+        )
+        .replace("def subscribe", "async def subscribe")
+        .replace(
+            "    return Subscription(id=0)",
+            "    await task.sleep(0.0)\n    return Subscription(id=0)",
+        );
+    let generated = generated_from_source(&source);
+    let context = context_with_source(&source);
+
     let diagnostics = interop_errors(
         generated,
         Some(context),
-        "callable parameter without callback contract should fail",
+        "call-scoped callback across async boundary should fail",
     );
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
-    assert!(format!("{:?}", diagnostics[0].args)
-        .contains("callbacks require explicit callback contract support"));
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("cannot cross an async boundary"));
+}
+
+#[test]
+fn package_rust_interop_rejects_call_scoped_callback_with_async_policy() {
+    let source = CALLBACK_SOURCE
+        .replace(
+            "@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)\n",
+            "@rust.async(thread_affinity=tokio_current_thread)\n",
+        )
+        .replace("def subscribe", "async def subscribe")
+        .replace(
+            "    return Subscription(id=0)",
+            "    await task.sleep(0.0)\n    return Subscription(id=0)",
+        );
+    let generated = generated_from_source(&source);
+    let context = context_with_source(&source);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "explicit async callback policy should fail",
+    );
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("cannot cross an async boundary"));
+}
+
+#[test]
+fn package_rust_interop_rejects_call_scoped_callback_without_panic_boundary() {
+    let source = CALLBACK_SOURCE
+        .replace(
+            "@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)\n",
+            "",
+        )
+        .replace(
+            "@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))",
+            "@rust(bridge.events.subscribe, panic=trusted_no_panic)",
+        )
+        .replace(
+            "-> Result[Subscription, CallbackError | RustPanicError]",
+            "-> None",
+        )
+        .replace("return Subscription(id=0)", "return None");
+    let generated = generated_from_source(&source);
+    let context = context_with_source(&source);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "callback without recoverable panic boundary should fail",
+    );
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("recoverable outer panic boundary"));
+}
+
+#[test]
+fn package_rust_interop_rejects_call_scoped_callback_with_abort_policy() {
+    let source = CALLBACK_SOURCE
+        .replace(
+            "@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)\n",
+            "",
+        )
+        .replace("panic=map_error(bridge.events.map_panic)", "panic=abort");
+    let generated = generated_from_source(&source);
+    let context = context_with_source(&source);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "abort policy cannot contain callback panics",
+    );
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
+    assert!(diagnostics[0].message.contains("`panic=abort`"));
+}
+
+#[test]
+fn package_rust_interop_rejects_abort_policy_after_sibling_decorator() {
+    let source = CALLBACK_SOURCE
+        .replace(
+            "@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)\n",
+            "",
+        )
+        .replace(
+            "@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))",
+            "@rust.view(owner=callback, lifetime=owner, mutability=immutable, send=False, sync=False)\n@rust(bridge.events.subscribe, panic=abort)",
+        );
+    let generated = generated_from_source(&source);
+    let context = context_with_source(&source);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "abort policy must aggregate across sibling decorators",
+    );
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
+    assert!(diagnostics[0].message.contains("`panic=abort`"));
+}
+
+#[test]
+fn package_rust_interop_rejects_call_scoped_callback_in_abort_profile() {
+    let source = CALLBACK_SOURCE.replace(
+        "@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)\n",
+        "",
+    );
+    let generated = generated_from_source(&source);
+    let mut context = context_with_source(&source);
+    let package_root = temp_package_root("rust_callback_abort_profile");
+    std::fs::create_dir_all(&package_root).expect("abort-profile package root");
+    std::fs::write(
+        package_root.join("Cargo.toml"),
+        "[package]\nname = \"callback-abort-profile\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n[profile.release]\npanic = \"abort\"\n",
+    )
+    .expect("abort-profile Cargo.toml");
+    context
+        .graph
+        .packages
+        .get_mut(&context.package_id)
+        .expect("package metadata")
+        .package_root = package_root.clone();
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "abort Cargo profile cannot contain callback panic",
+    );
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
+    assert!(diagnostics[0].message.contains("abort profiles"));
+    let _ = std::fs::remove_dir_all(package_root);
+}
+
+#[test]
+fn package_rust_interop_rejects_mutable_call_scoped_callback_parameter() {
+    let source = CALLBACK_SOURCE
+        .replace(
+            "@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)\n",
+            "",
+        )
+        .replace("def subscribe(callback:", "def subscribe(mut callback:");
+    let generated = generated_from_source(&source);
+    let context = context_with_source(&source);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "mutable callback parameter should fail",
+    );
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("cannot be declared `mut`; remove `mut`"));
 }
 
 #[test]

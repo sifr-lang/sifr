@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+
+[package]
+name = "call-scoped-callback-runtime"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sifr_runtime = { path = "../../../../../../../crates/sifr_runtime" }
+
+[package.metadata.sifr]
+manifest = "sifr.toml"

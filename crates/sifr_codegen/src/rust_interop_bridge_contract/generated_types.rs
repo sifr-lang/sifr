@@ -7,7 +7,7 @@ use sifr_type_system::Type;
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Default)]
-pub(super) struct GeneratedTypeCollector {
+pub(crate) struct GeneratedTypeCollector {
     entries: BTreeMap<(Option<String>, String), RustGeneratedBridgeType>,
     in_progress: BTreeSet<(Option<String>, String)>,
 }

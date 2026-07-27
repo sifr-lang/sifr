@@ -81,9 +81,8 @@ In particular, `zero_copy_bytes`, `zero_copy_view_matrix`,
 `arrow_record_batch`, `tensor_dlpack_bridge`, and `advanced_data_matrix` are
 contract-only. The runtime-observed deferrals
 `advanced_data_runtime_matrix`, `async_runtime_reqwest`,
-`callback_subscription_ecosystem`, `callbacks_call_scoped`,
-`opaque_resource_matrix`, and `zero_copy_runtime_matrix` are future-owned,
-planned, and unadvertised until
+`callback_subscription_ecosystem`, `opaque_resource_matrix`, and
+`zero_copy_runtime_matrix` are future-owned, planned, and unadvertised until
 their runtime evidence passes.
 
 `bridge_type_matrix` is cargo-probed through generated package glue. Its
@@ -124,6 +123,7 @@ certified by its own runtime row.
 | `async_runtime_core` | `supported` | `contract-only` |
 | `async_ecosystem_matrix` | `supported` | `cargo-probe` |
 | `blocking_diagnostics` | `supported` | `compiler-diagnostic` |
+| `callbacks_call_scoped` | `supported-through-bridge` | `runtime-observed` |
 | `callbacks_threadsafe` | `supported` | `contract-only` |
 | `callback_subscription_core` | `supported` | `contract-only` |
 | `zero_copy_bytes` | `supported` | `contract-only` |
@@ -261,7 +261,36 @@ Returned borrowed views cannot outlive their owner, mutable views require exclus
 
 ## Callbacks
 
-Backpressure, overflow, and shutdown behavior must be visible in callback registration declarations. Thread-safety is part of the callback type and the explicit `@rust.callback(...)` contract.
+Plain top-level `Callable` parameters are call-scoped. Generated glue lends a
+non-`Send`, non-`Sync` callback bridge to Rust only for the duration of the
+call. Rust can invoke it synchronously, but storing it, returning it, or moving
+it to another thread fails the Cargo probe.
+The enclosing declaration must be synchronous and return
+`Result[T, E | RustPanicError]` with one distinct ordinary error. Nested
+callback containers, returned callbacks, and mutable-borrow callback
+arguments are rejected.
+The selected Cargo profile must use `panic = "unwind"`; an abort profile cannot
+contain panics originating in Sifr callback code.
+Each Rust callback invocation supplies owned bridge argument values (for
+example, an owned `String` for Sifr `str`); the generated adapter then lends or
+converts those values according to the Sifr callback signature.
+
+```sifr
+class EventError(Error):
+    message: str
+
+@rust(bridge.events.visit)
+def visit(handler: Callable[[str], Result[None, EventError]]) -> Result[None, EventError | RustPanicError]: ...
+```
+
+Callback panics unwind only to the generated outer Rust panic boundary and are
+returned as a redacted `RustPanicError`. A callback `Result` error crosses the
+call-scoped bridge as its display string and is mapped by the package bridge
+into the target's declared error.
+
+Backpressure, overflow, and shutdown behavior remain mandatory for the
+separate thread-safe registration contract. The current source spelling is a
+top-level `Callable` paired with `@rust.callback(...)`.
 
 ```sifr
 @rust.callback(
@@ -270,10 +299,12 @@ Backpressure, overflow, and shutdown behavior must be visible in callback regist
     shutdown=drain,
 )
 @rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
-def subscribe(handler: ThreadsafeCallback[[Event], Result[None, EventError]]) -> Result[Subscription, EventError | RustPanicError]: ...
+def subscribe(handler: Callable[[Event], Result[None, EventError]]) -> Result[Subscription, EventError | RustPanicError]: ...
 ```
 
-Sifr rejects callback contracts that permit hidden storage, unmanaged thread entry, missing shutdown behavior, or captures that cannot cross the declared thread boundary.
+Thread-safe runtime subscription behavior remains limited to the rows whose
+execution scope is listed as `runtime-observed`; contract-only rows certify
+declaration policy but not background delivery or shutdown.
 
 ## Diagnostics
 

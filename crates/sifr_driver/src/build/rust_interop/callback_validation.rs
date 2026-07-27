@@ -1,7 +1,10 @@
 use super::{canonical_sifr_target_path, RustInteropResolver};
+use crate::build::rust_interop_callback_probe::signature_contract_has_call_scoped_callback;
+use crate::build::rust_interop_trust::{effective_panic_policy, EffectivePanicPolicy};
+use sifr_codegen::{RustBridgePanicErrorContract, RustBridgeTypeKind};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropValue};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum CallbackBackpressure {
@@ -36,6 +39,8 @@ impl RustInteropResolver<'_> {
         &mut self,
         declarations: &[sifr_codegen::RustInteropPlanDeclaration],
     ) {
+        self.validate_call_scoped_callback_boundaries(declarations);
+
         let mut by_target: BTreeMap<String, Vec<&sifr_codegen::RustInteropPlanDeclaration>> =
             BTreeMap::new();
         for declaration in declarations {
@@ -53,6 +58,135 @@ impl RustInteropResolver<'_> {
         for declarations in by_target.values() {
             self.validate_callback_group(declarations);
         }
+    }
+
+    fn validate_call_scoped_callback_boundaries(
+        &mut self,
+        declarations: &[sifr_codegen::RustInteropPlanDeclaration],
+    ) {
+        let async_targets = declarations
+            .iter()
+            .filter(|declaration| declaration.declaration.abi_requirements.async_boundary)
+            .map(canonical_sifr_target_path)
+            .collect::<BTreeSet<_>>();
+        let call_scoped_targets = self
+            .signature_contracts
+            .iter()
+            .filter(|(_, signature)| signature_contract_has_call_scoped_callback(signature))
+            .map(|(target, _)| target.clone())
+            .collect::<BTreeSet<_>>();
+        let call_scoped_declarations = declarations
+            .iter()
+            .filter(|declaration| {
+                call_scoped_targets.contains(&canonical_sifr_target_path(declaration))
+            })
+            .collect::<Vec<_>>();
+        let call_scoped_packages = call_scoped_declarations
+            .iter()
+            .filter_map(|declaration| {
+                self.package_id_for_module(declaration.module_name.as_deref())
+            })
+            .collect::<BTreeSet<_>>();
+        let abort_profile_packages = call_scoped_packages
+            .into_iter()
+            .filter(|package_id| {
+                self.context
+                    .graph
+                    .packages
+                    .get(package_id)
+                    .is_some_and(|package| {
+                        super::panic_validation::selected_panic_strategy(package).as_deref()
+                            == Some("abort")
+                    })
+            })
+            .collect::<BTreeSet<_>>();
+        let abort_targets = call_scoped_declarations
+            .into_iter()
+            .filter(|declaration| {
+                self.declaration_uses_explicit_abort_policy(declaration)
+                    || self
+                        .package_id_for_module(declaration.module_name.as_deref())
+                        .is_some_and(|package_id| abort_profile_packages.contains(&package_id))
+            })
+            .map(canonical_sifr_target_path)
+            .collect::<BTreeSet<_>>();
+        let mut validated_targets = BTreeSet::new();
+        for declaration in declarations {
+            let target = canonical_sifr_target_path(declaration);
+            if !validated_targets.insert(target.clone()) {
+                continue;
+            }
+            let Some(signature) = self.signature_contracts.get(&target) else {
+                continue;
+            };
+            if !signature_contract_has_call_scoped_callback(signature) {
+                continue;
+            }
+            let unsupported_reason = signature.params.iter().find_map(|param| {
+                if param.ty.kind != RustBridgeTypeKind::CallScopedCallback {
+                    return None;
+                }
+                match param.convention {
+                    sifr_codegen::RustBridgeParamConvention::MutableBorrow => {
+                        return Some(
+                            "call-scoped callback parameters do not support mutable-borrow convention"
+                                .to_string(),
+                        );
+                    }
+                    sifr_codegen::RustBridgeParamConvention::OwnMutable => {
+                        return Some(
+                            "call-scoped callback parameters cannot be declared `mut`; remove `mut` from the callback parameter".to_string(),
+                        );
+                    }
+                    sifr_codegen::RustBridgeParamConvention::Borrow
+                    | sifr_codegen::RustBridgeParamConvention::Own => {}
+                }
+                param.ty.unsupported_reason.clone()
+            });
+            let panic_error = signature.panic_error;
+            if let Some(reason) = unsupported_reason {
+                self.push_call_scoped_callback_diagnostic(declaration, reason);
+                continue;
+            }
+            if async_targets.contains(&target) {
+                self.push_call_scoped_callback_diagnostic(
+                    declaration,
+                    "call-scoped callbacks require a synchronous Rust bridge call and cannot cross an async boundary",
+                );
+                continue;
+            }
+            if abort_targets.contains(&target) {
+                self.push_call_scoped_callback_diagnostic(
+                    declaration,
+                    "call-scoped callbacks require an unwind-capable Cargo panic strategy; `panic=abort` and abort profiles cannot contain Sifr callback panics",
+                );
+                continue;
+            }
+            if panic_error != RustBridgePanicErrorContract::OrdinaryAndWrapper {
+                self.push_call_scoped_callback_diagnostic(
+                    declaration,
+                    "call-scoped callbacks require a recoverable outer panic boundary with a distinct ordinary error and `RustPanicError` in the Result error channel",
+                );
+            }
+        }
+    }
+
+    fn declaration_uses_explicit_abort_policy(
+        &self,
+        declaration: &sifr_codegen::RustInteropPlanDeclaration,
+    ) -> bool {
+        let Some(package_id) = self.package_id_for_module(declaration.module_name.as_deref())
+        else {
+            return false;
+        };
+        let Some(package) = self.context.graph.packages.get(&package_id) else {
+            return false;
+        };
+        effective_panic_policy(
+            declaration,
+            package,
+            self.sysroot_trust_for_package(&package_id).is_some(),
+        ) == EffectivePanicPolicy::Abort
     }
 
     fn validate_callback_group(
@@ -117,6 +251,29 @@ impl RustInteropResolver<'_> {
             ],
             Some(
                 "Thread-safe Rust callbacks may outlive the bridge call or cross threads, so their queueing and shutdown behavior must be explicit.".to_string(),
+            ),
+        );
+    }
+
+    fn push_call_scoped_callback_diagnostic(
+        &mut self,
+        declaration: &sifr_codegen::RustInteropPlanDeclaration,
+        reason: impl Into<String>,
+    ) {
+        self.push_diagnostic(
+            declaration,
+            declaration.declaration.span,
+            DiagnosticCode::RUST_CALLBACK_CONTRACT,
+            "invalid Rust callback contract for `{target}`: {reason}",
+            vec![
+                ("target", canonical_sifr_target_path(declaration)),
+                ("reason", reason.into()),
+            ],
+            vec![
+                "Keep the bridge call synchronous, or add an explicit `@rust.callback(...)` thread-safe lifecycle contract.".to_string(),
+            ],
+            Some(
+                "A plain `Callable[...]` Rust parameter is borrowed for exactly one synchronous bridge call and cannot be retained across an await point.".to_string(),
             ),
         );
     }

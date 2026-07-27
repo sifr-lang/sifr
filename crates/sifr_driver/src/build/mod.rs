@@ -21,6 +21,7 @@ mod rust_interop_bridge_audit;
 mod rust_interop_bridge_sources;
 #[cfg(test)]
 mod rust_interop_callback_contract_tests;
+mod rust_interop_callback_probe;
 mod rust_interop_cargo_inputs;
 #[cfg(test)]
 mod rust_interop_contract_tests;
@@ -34,6 +35,7 @@ mod rust_interop_panic_contract_tests;
 mod rust_interop_panic_probe;
 mod rust_interop_probe;
 mod rust_interop_probe_cache;
+mod rust_interop_probe_diagnostics;
 mod rust_interop_probe_manifest;
 #[cfg(test)]
 mod rust_interop_tests;
