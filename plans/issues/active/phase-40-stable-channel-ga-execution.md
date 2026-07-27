@@ -102,6 +102,10 @@ Artifacts mapped to the Phase 40 exit gate:
 
 ### milestone_40_4: Stable Documentation and VS Code Release
 
+- [ ] Use the coordinated upstream-first exception for editor release:
+  merge the `sifr-vscode` package PR, merge the `editor-integrations` pointer
+  PR, then update the main-repository submodule pointer and matching consumer
+  rules in the same main PR.
 - [ ] Add GA documentation checks and stable public documentation.
 - [ ] Qualify the exact VSIX and Marketplace identity without publication.
 - [ ] Materialize the reviewed `0.1.0` candidate evidence.

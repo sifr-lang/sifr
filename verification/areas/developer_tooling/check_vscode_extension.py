@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -41,6 +42,7 @@ FORBIDDEN_MARKERS = [
     "lintSifrInExtension",
     "generateRustInExtension",
 ]
+STABLE_CANDIDATE = (0, 1, 0)
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -83,6 +85,14 @@ def validate_package_json(repo_path: Path, package_json: dict[str, Any]) -> list
     for metadata in ["displayName", "description", "categories", "keywords", "repository", "license"]:
         if metadata not in package_json:
             failures.append(f"package.json missing publication metadata: {metadata}")
+    if not canonical_range_contains(
+        package_json.get("sifrCompilerCompatibility"),
+        STABLE_CANDIDATE,
+    ):
+        failures.append(
+            "package.json sifrCompilerCompatibility must use "
+            ">=X.Y.Z,<X.Y.Z and contain stable 0.1.0"
+        )
     text = json.dumps(package_json)
     for marker in FORBIDDEN_MARKERS:
         if marker in text:
@@ -168,7 +178,24 @@ def run_self_test() -> None:
         failures = validate_package_json(repo_path, package_json)
     if not any("package" in failure for failure in failures):
         raise SystemExit("VS Code extension package self-test failed: missing package script passed")
+    if not any("sifrCompilerCompatibility" in failure for failure in failures):
+        raise SystemExit(
+            "VS Code extension package self-test failed: missing compiler range passed"
+        )
     print("VS Code extension package self-test: PASS")
+
+
+def canonical_range_contains(value: Any, version: tuple[int, int, int]) -> bool:
+    if not isinstance(value, str):
+        return False
+    match = re.fullmatch(
+        r">=([0-9]+)\.([0-9]+)\.([0-9]+),<([0-9]+)\.([0-9]+)\.([0-9]+)",
+        value,
+    )
+    if match is None:
+        return False
+    parts = tuple(int(part) for part in match.groups())
+    return parts[:3] <= version < parts[3:]
 
 
 def main() -> int:
