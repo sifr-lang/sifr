@@ -355,3 +355,8 @@ actors.
   wall-clock site deadline with cancellation headroom, rejecting exact stable
   pins under preview metadata in Rust, explicitly passing only the site
   Actions secret, and removing an early-exit snapshot-name pipeline.
+- Full main implementation review pass 5 verified every substantive pass-4
+  closure, all earlier findings, the live ruleset/tag/workflow identities, and
+  102 distribution variants with zero failures. Its sole actionable finding
+  was two trailing blank lines at EOF; those are removed. The informational
+  polling note is also hardened with three bounded query attempts.

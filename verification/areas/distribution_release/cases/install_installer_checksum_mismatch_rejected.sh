@@ -11,4 +11,3 @@ printf '%s\n' '# tampered after metadata generation' \
 require_failure_contains \
   "installer SHA-256 mismatch for 0.1.0" \
   run_dispatcher index
-

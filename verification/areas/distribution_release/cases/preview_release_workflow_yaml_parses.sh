@@ -57,6 +57,7 @@ publication_required = (
     "select(.created_at >= $since)",
     "timeout-minutes: 60",
     "poll_deadline=$((SECONDS + 1200))",
+    "poll_query_failures >= 3",
     'timeout --foreground "${remaining_seconds}s" gh api',
     "actions/runs/${site_run_id}/cancel",
 )

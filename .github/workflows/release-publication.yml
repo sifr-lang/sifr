@@ -595,6 +595,7 @@ jobs:
           expected_title="Sifr site release ${PUBLICATION_ATTEMPT}"
           site_run_id=""
           poll_error=""
+          poll_query_failures=0
           poll_deadline=$((SECONDS + 1200))
           while (( SECONDS < poll_deadline )); do
             remaining_seconds=$((poll_deadline - SECONDS))
@@ -618,9 +619,22 @@ jobs:
               break
             fi
             if [[ ${poll_status} -ne 0 ]]; then
-              poll_error="could not query the correlated site run"
-              break
+              poll_query_failures=$((poll_query_failures + 1))
+              if (( poll_query_failures >= 3 )); then
+                poll_error="could not query the correlated site run after three attempts"
+                break
+              fi
+              remaining_seconds=$((poll_deadline - SECONDS))
+              if (( remaining_seconds > 0 )); then
+                sleep_seconds=10
+                if (( remaining_seconds < sleep_seconds )); then
+                  sleep_seconds="${remaining_seconds}"
+                fi
+                sleep "${sleep_seconds}"
+              fi
+              continue
             fi
+            poll_query_failures=0
             matched="$(
               jq -r \
                 --arg title "${expected_title}" \

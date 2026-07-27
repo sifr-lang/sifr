@@ -24,4 +24,3 @@ PY
 require_failure_contains \
   "version 0.1.0 is not an active governed release" \
   run_dispatcher index
-
