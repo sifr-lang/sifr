@@ -391,6 +391,16 @@ Review and gate evidence:
 - Exact committed PR-head
   [round 8](../../reviews/active/rust-interop-certification-2-review-round8.md)
   is `SATISFIED` with no PR blockers.
+- Final merge-readiness
+  [round 9](../../reviews/active/rust-interop-certification-2-review-round9.md)
+  is `SATISFIED`. The merge lane passed every functional step and stopped only
+  at three unchanged `check`-mode performance medians under sustained unrelated
+  host load. The same five-sample runner reproduced all three misses with a
+  retained compiler binary that predates both `certification_1` merge and all
+  `certification_2` commits; that control was slower than the PR head on the
+  arithmetic case. Opus independently verified that the fixtures contain no
+  Rust interop, terminate before codegen/bridge planning, and demonstrate
+  environmental timing drift rather than a PR-attributable regression.
 - `scripts/run_all_tests.sh --profile create-pr` passes every blocking lane:
   Rust interop `10/10`, Python interop `19/19`, runtime platform 28 variants,
   all crate smoke suites, generated-code quality `5/5`, and create-PR E2E
