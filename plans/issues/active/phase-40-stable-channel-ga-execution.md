@@ -104,11 +104,16 @@ Artifacts mapped to the Phase 40 exit gate:
 
 - Packaged-candidate generated-Rust preview is intentionally not a Phase 40
   prerequisite. The real `0.1.0` candidate serves initialization, diagnostics,
-  and formatting, but generated-Rust production hangs through both `sifr emit`
-  and `sifr.server.showGeneratedRust`. That independently repairable compiler
-  defect is recorded in
+  and formatting, but the cold first-run generated-Rust qualification exceeded
+  its deterministic bound through both `sifr emit` and
+  `sifr.server.showGeneratedRust`. That independently repairable compiler
+  startup/performance defect is recorded in
   [`adhoc_packaged_candidate_generated_rust.md`](../../phases/adhoc_packaged_candidate_generated_rust.md);
-  stable public docs do not advertise the affected capability.
+  stable public docs explicitly record the affected capability as outside the
+  packaged `0.1.0` GA-qualified surface.
+- The editor report records a Marketplace publication plan with status
+  `planned`, not a synthetic dry-run pass. The credentialed dry run and exact
+  no-rebuild workflow binding are realized in `milestone_40_5`.
 - [ ] Use the coordinated upstream-first exception for editor release:
   merge the `sifr-vscode` package PR, merge the `editor-integrations` pointer
   PR, then update the main-repository submodule pointer and matching consumer

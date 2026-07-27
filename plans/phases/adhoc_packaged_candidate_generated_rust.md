@@ -6,10 +6,10 @@ Status: deferred follow-up; not a prerequisite for Phase 40.
 
 The exact packaged Sifr `0.1.0` candidate starts `sifr lsp --stdio`, completes
 initialization, publishes diagnostics, and serves formatting requests, but
-generated-Rust production does not complete through either `sifr emit` or the
-`sifr.server.showGeneratedRust` request. The LSP request exceeds the
-deterministic 90-second protocol timeout; the capability demo also required
-bounded termination of the CLI command after the same interval.
+the cold first-run generated-Rust qualification did not complete through either
+`sifr emit` or the `sifr.server.showGeneratedRust` request. The LSP request
+exceeded the deterministic 90-second protocol timeout; the capability demo also
+required bounded termination of the CLI command after the same interval.
 
 Phase 40 must not advertise generated Rust for the packaged candidate until
 both paths pass.
@@ -31,13 +31,18 @@ source commit `67a40febc`, installed its bundled sysroot in isolation, packaged
 - After successful packaged-candidate `check`, format, format-check, and lint
   commands, `sifr emit` also failed to return within 90 seconds and required
   bounded cleanup.
+- A reviewer observed the same shape with an in-tree debug binary: its first
+  cold invocation exceeded 90 seconds, while identical warm repeats completed
+  in roughly six seconds. This makes cold startup, cache population, or
+  first-run work the leading hypothesis; the evidence does not establish a
+  deadlock.
 
 ## Scope
 
-- Reproduce both hangs against an installed release artifact on every supported
-  host target.
-- Isolate the shared deadlock or unbounded operation in generated-Rust
-  production.
+- Reproduce cold and warm behavior against an installed release artifact on
+  every supported host target.
+- Isolate shared cold-start, cache-population, or unbounded first-run work in
+  generated-Rust production.
 - Preserve request cancellation and deterministic shutdown behavior.
 - Add a packaged-candidate regression test that executes the preview request.
 - Restore the editor action to stable documentation only after the exact

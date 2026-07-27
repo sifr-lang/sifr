@@ -51,6 +51,11 @@ Notes:
 | `sifr emit <file>` | emit generated Rust for file | emit generated Rust for file |
 | `sifr test <dir>` | discover tests and resolve imports against stdlib + local modules in `<dir>` | same |
 
+Generated-Rust output is not part of the packaged `0.1.0` GA-qualified surface:
+the cold first-run `sifr emit` and VS Code preview qualification exceeded the
+deterministic bound. The command semantics above remain the development
+contract while that packaged-release follow-up is open.
+
 Package-management commands use Cargo-backed package coordination as documented in [`package_management.md`](./package_management.md). Cargo owns external dependency resolution, lockfiles, registry/Git/path sources, publishing, and vendoring; Sifr validates package metadata, source roots, exports, trust policy, archive contents, and diagnostics before delegating Cargo-owned behavior.
 
 Standalone self-update commands are documented in [`self_update.md`](./self_update.md).

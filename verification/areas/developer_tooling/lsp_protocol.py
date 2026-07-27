@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import select
+import shlex
 import subprocess
 import sys
 import time
@@ -25,7 +26,7 @@ class LspClient:
         command = os.environ.get("SIFR_LSP_COMMAND")
         binary = REPO_ROOT / "target" / "debug" / "sifr"
         args = (
-            command.split()
+            shlex.split(command)
             if command
             else [str(binary), "lsp", "--stdio"]
             if binary.exists()

@@ -901,8 +901,10 @@ install/update guidance, Rust interop claims, and the VS Code extension.
 - Docs, release plan, compiler behavior, compatibility matrix, and extension
   metadata agree.
 - The recorded VSIX installs and launches the exact stable candidate LSP.
-- A Marketplace publication dry run proves the main-repository workflow will
-  consume the recorded VSIX and package version without rebuilding.
+- A Marketplace publication plan binds the protected main-repository workflow
+  to the recorded VSIX and package version without rebuilding. The
+  credentialed dry run and publication evidence are realized and checked in
+  `milestone_40_5`, where that workflow exists.
 - Changing any final docs, Rust-claim, package-version, VSIX, compatibility, or
   extension-validation input changes the candidate-plan digest; an unchanged
   input set reproduces it byte-for-byte.
@@ -918,8 +920,8 @@ install/update guidance, Rust interop claims, and the VS Code extension.
 - Packaged and installed VSIX completes editor activation, diagnostics, and
   formatting smoke against the stable candidate. Generated-Rust preview in the
   packaged candidate is a non-prerequisite tooling follow-up recorded in
-  `adhoc_packaged_candidate_generated_rust.md`; GA docs do not advertise the
-  affected packaged-candidate action.
+  `adhoc_packaged_candidate_generated_rust.md`; GA docs explicitly record the
+  affected action as outside the packaged `0.1.0` qualified surface.
 
 **Negative validation:**
 

@@ -281,7 +281,7 @@ def build_evidence_bundle(
         "vsix_sha256": sha256_file(vsix),
         "vsix_install_smoke": "pass",
         "lsp_smoke": "pass",
-        "marketplace_dry_run": {
+        "marketplace_publish_plan": {
             "publisher": "sifr",
             "extension": "sifr-vscode",
             "version": "0.2.0",
@@ -296,7 +296,8 @@ def build_evidence_bundle(
                 "sifr-vscode-0.2.0.vsix",
             ],
             "rebuild": False,
-            "status": "pass",
+            "execution_owner": "stable-publication-workflow",
+            "status": "planned",
         },
         "status": "pass",
     }

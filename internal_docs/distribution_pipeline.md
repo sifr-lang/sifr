@@ -183,7 +183,8 @@ Stable builders establish these public compatibility floors:
 
 `.github/workflows/release-qualification.yml` is the build/upload-only stable
 candidate workflow. It accepts only an exact lowercase 40-hex source commit and
-an exact stable SemVer, checks out that commit plus recursive submodules, and
+an exact stable SemVer plus `rollback_version` (`none` for first GA, otherwise
+one exact stable SemVer), checks out that commit plus recursive submodules, and
 uses only `contents: read` and `actions: read`. It has no release, package,
 Marketplace, site, protected-environment, or metadata-mutation authority.
 
@@ -194,6 +195,11 @@ smokes each matching-host toolchain, and packages the recorded
 the name
 `sifr-stable-candidate-<version>-<source-sha>-<target-or-kind>`,
 `overwrite: false`, and a 30-day retention period.
+
+Editor qualification records a `marketplace_publish_plan` with status
+`planned`; it does not claim that a credentialed dry run occurred. The
+protected stable-publication workflow introduced at activation consumes that
+exact VSIX and realizes the dry-run/publication evidence without rebuilding.
 
 The final collector reads the current workflow run's artifact API, verifies
 source/run attribution, and writes canonical

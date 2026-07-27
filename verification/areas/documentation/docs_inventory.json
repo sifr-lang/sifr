@@ -40,7 +40,8 @@
         "missing-support-section",
         "unsupported-rust-claim",
         "signing-claim",
-        "notarization-claim"
+        "notarization-claim",
+        "global-preview-claim"
       ],
       "status": "active"
     }

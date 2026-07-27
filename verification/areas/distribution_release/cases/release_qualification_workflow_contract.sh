@@ -15,8 +15,12 @@ unless workflow.fetch("permissions") == {"contents" => "read", "actions" => "rea
 end
 triggers = workflow["on"] || workflow.fetch(true)
 inputs = triggers.fetch("workflow_dispatch").fetch("inputs")
-unless inputs.keys.sort == ["source_commit", "version"]
-  abort "release qualification accepts only exact source_commit and version inputs"
+unless inputs.keys.sort == ["rollback_version", "source_commit", "version"]
+  abort "release qualification accepts only governed candidate inputs"
+end
+rollback = inputs.fetch("rollback_version")
+unless rollback.fetch("required") == true && rollback.fetch("default") == "none"
+  abort "rollback_version must be required with first-GA default none"
 end
 jobs = workflow.fetch("jobs")
 unless jobs.keys.sort == ["assemble", "build", "collect", "editor", "validate"]
@@ -61,6 +65,8 @@ builder = Path(sys.argv[2]).read_text(encoding="utf-8")
 required = (
     "[[ \"${SOURCE_COMMIT}\" =~ ^[0-9a-f]{40}$ ]]",
     "[[ \"${VERSION}\" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+$ ]]",
+    "[[ \"${ROLLBACK_VERSION}\" = \"none\" ||",
+    "rollback_version=${ROLLBACK_VERSION}",
     "[[ \"${WORKFLOW_COMMIT}\" = \"${SOURCE_COMMIT}\" ]]",
     "contents: read",
     "actions: read",
@@ -71,7 +77,7 @@ required = (
     "scripts/distribution/qualify_stable_editor.py",
     "--candidate-binary \"${candidate_binary}\"",
     "--target-report",
-    "--rollback-version none",
+    "--rollback-version \"${ROLLBACK_VERSION}\"",
     "scripts/distribution/generate_version_installer.sh",
     "scripts/distribution/collect_qualification_artifacts.py",
     "Verify immutable qualification workflow contract",

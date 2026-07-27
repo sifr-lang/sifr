@@ -24,7 +24,7 @@ for field in \
   target_report_sha256 \
   vsix_install_smoke \
   lsp_smoke \
-  marketplace_dry_run
+  marketplace_publish_plan
 do
   grep -F "\"${field}\"" "${report_validator}" "${editor_validator}" >/dev/null || {
     echo "editor qualification report omitted ${field}" >&2

@@ -12,6 +12,11 @@ on:
         description: Exact stable SemVer
         required: true
         type: string
+      rollback_version:
+        description: Exact stable rollback SemVer, or none for first GA
+        required: true
+        default: none
+        type: string
 
 permissions:
   contents: read
@@ -24,6 +29,7 @@ jobs:
     outputs:
       source_commit: ${{ steps.identity.outputs.source_commit }}
       version: ${{ steps.identity.outputs.version }}
+      rollback_version: ${{ steps.identity.outputs.rollback_version }}
     steps:
       - name: Validate exact inputs
         id: identity
@@ -31,6 +37,7 @@ jobs:
         env:
           SOURCE_COMMIT: ${{ inputs.source_commit }}
           VERSION: ${{ inputs.version }}
+          ROLLBACK_VERSION: ${{ inputs.rollback_version }}
           WORKFLOW_COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
@@ -42,12 +49,18 @@ jobs:
             echo "::error::version must be exact stable SemVer"
             exit 2
           }
+          [[ "${ROLLBACK_VERSION}" = "none" || \
+            "${ROLLBACK_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "::error::rollback_version must be none or exact stable SemVer"
+            exit 2
+          }
           [[ "${WORKFLOW_COMMIT}" = "${SOURCE_COMMIT}" ]] || {
             echo "::error::dispatch ref must resolve to source_commit"
             exit 2
           }
           echo "source_commit=${SOURCE_COMMIT}" >>"${GITHUB_OUTPUT}"
           echo "version=${VERSION}" >>"${GITHUB_OUTPUT}"
+          echo "rollback_version=${ROLLBACK_VERSION}" >>"${GITHUB_OUTPUT}"
 
       - uses: actions/checkout@v4
         with:
@@ -103,6 +116,7 @@ jobs:
         env:
           SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
           VERSION: ${{ needs.validate.outputs.version }}
+          ROLLBACK_VERSION: ${{ needs.validate.outputs.rollback_version }}
           TARGET: ${{ matrix.target }}
           BUILDER: ${{ matrix.runner }}
         run: |
@@ -183,7 +197,7 @@ jobs:
             --source-root "${GITHUB_WORKSPACE}" \
             --source-commit "${SOURCE_COMMIT}" \
             --candidate-version "${VERSION}" \
-            --rollback-version none \
+            --rollback-version "${ROLLBACK_VERSION}" \
             --candidate-binary "${candidate_binary}" \
             --target-report \
               candidate-toolchain/qualification-x86_64-unknown-linux-gnu.json \

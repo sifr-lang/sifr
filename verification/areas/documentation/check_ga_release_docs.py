@@ -42,6 +42,7 @@ CANONICAL_DOCUMENTS = {
     "troubleshooting": REPO_ROOT / "docs" / "troubleshooting.mdx",
     "rust-interop": REPO_ROOT / "docs" / "rust-interop.mdx",
 }
+PUBLIC_DOC_SUFFIXES = {".md", ".mdx"}
 TARGETS = (
     "aarch64-apple-darwin",
     "x86_64-apple-darwin",
@@ -134,6 +135,12 @@ FORBIDDEN_CLAIMS = (
     "Self-update currently accepts only `alpha` and `beta`",
     "Stable channels and release-candidate channels are not yet available",
     "The beta channel is the recommended starting point",
+    "Sifr is currently in preview.",
+    "sifr self update --channel nightly",
+    "-preview.2",
+    "one immutable preview version",
+    "aarch64-pc-windows-msvc",
+    "x86_64-pc-windows-msvc",
 )
 MUTATION_CASES = (
     "missing-stable-entrypoint",
@@ -148,6 +155,7 @@ MUTATION_CASES = (
     "unsupported-rust-claim",
     "signing-claim",
     "notarization-claim",
+    "global-preview-claim",
 )
 
 
@@ -162,6 +170,23 @@ def load_documents() -> dict[str, str]:
             documents[name] = path.read_text(encoding="utf-8")
         except (OSError, UnicodeError) as exc:
             raise DocumentationError(f"{name} document cannot be read: {exc}") from exc
+    return documents
+
+
+def load_public_documents() -> dict[str, str]:
+    documents: dict[str, str] = {}
+    for path in sorted((REPO_ROOT / "docs").rglob("*")):
+        if not path.is_file() or path.suffix not in PUBLIC_DOC_SUFFIXES:
+            continue
+        name = str(path.relative_to(REPO_ROOT / "docs"))
+        try:
+            documents[name] = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise DocumentationError(
+                f"public document {name} cannot be read: {exc}"
+            ) from exc
+    if not documents:
+        raise DocumentationError("public documentation sweep found no documents")
     return documents
 
 
@@ -220,6 +245,7 @@ def render_facts_block(facts: dict[str, Any]) -> str:
 def validate_documents(
     documents: dict[str, str],
     *,
+    public_documents: dict[str, str],
     facts: dict[str, Any],
     docs_config: str,
     internal_distribution: str,
@@ -238,7 +264,7 @@ def validate_documents(
     if render_facts_block(facts) not in stable_text:
         raise DocumentationError("stable release facts do not match the governed payload")
 
-    combined = "\n".join(documents.values())
+    combined = "\n".join(public_documents.values())
     for claim in FORBIDDEN_CLAIMS:
         if claim in combined:
             raise DocumentationError(f"forbidden or stale GA claim: {claim}")
@@ -259,19 +285,38 @@ def validate_documents(
             raise DocumentationError(f"internal/public release contract drift: {fact}")
 
 
-def canonical_inputs() -> tuple[dict[str, str], dict[str, Any], str, str]:
+def canonical_inputs() -> tuple[
+    dict[str, str],
+    dict[str, str],
+    dict[str, Any],
+    str,
+    str,
+]:
     try:
         docs_config = DOCS_CONFIG_PATH.read_text(encoding="utf-8")
         internal_distribution = INTERNAL_DISTRIBUTION_PATH.read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
         raise DocumentationError(f"documentation contract input cannot be read: {exc}") from exc
-    return load_documents(), load_facts(), docs_config, internal_distribution
+    return (
+        load_documents(),
+        load_public_documents(),
+        load_facts(),
+        docs_config,
+        internal_distribution,
+    )
 
 
 def run_self_test() -> None:
-    documents, facts, docs_config, internal_distribution = canonical_inputs()
+    (
+        documents,
+        public_documents,
+        facts,
+        docs_config,
+        internal_distribution,
+    ) = canonical_inputs()
     validate_documents(
         documents,
+        public_documents=public_documents,
         facts=facts,
         docs_config=docs_config,
         internal_distribution=internal_distribution,
@@ -290,10 +335,7 @@ def run_self_test() -> None:
         ),
         "unsupported-target-claim": lambda docs: docs.__setitem__(
             "compatibility",
-            docs["compatibility"].replace(
-                "aarch64-unknown-linux-gnu",
-                "aarch64-pc-windows-msvc",
-            ),
+            docs["compatibility"] + "\n`aarch64-pc-windows-msvc`\n",
         ),
         "platform-floor-drift": lambda docs: docs.__setitem__(
             "compatibility",
@@ -338,7 +380,7 @@ def run_self_test() -> None:
             docs["stable-release"] + "\nnotarized\n",
         ),
     }
-    if tuple(mutations) != MUTATION_CASES:
+    if tuple(mutations) != MUTATION_CASES[:-1]:
         raise DocumentationError("GA documentation mutation registration drifted")
     for case_id, mutate in mutations.items():
         changed = copy.deepcopy(documents)
@@ -346,6 +388,13 @@ def run_self_test() -> None:
         try:
             validate_documents(
                 changed,
+                public_documents={
+                    **public_documents,
+                    **{
+                        str(CANONICAL_DOCUMENTS[name].relative_to(REPO_ROOT / "docs")): text
+                        for name, text in changed.items()
+                    },
+                },
                 facts=facts,
                 docs_config=docs_config,
                 internal_distribution=internal_distribution,
@@ -353,6 +402,22 @@ def run_self_test() -> None:
         except DocumentationError:
             continue
         raise DocumentationError(f"GA documentation mutation unexpectedly passed: {case_id}")
+    changed_public = copy.deepcopy(public_documents)
+    changed_public["introduction.mdx"] += "\nSifr is currently in preview.\n"
+    try:
+        validate_documents(
+            documents,
+            public_documents=changed_public,
+            facts=facts,
+            docs_config=docs_config,
+            internal_distribution=internal_distribution,
+        )
+    except DocumentationError:
+        pass
+    else:
+        raise DocumentationError(
+            "GA documentation mutation unexpectedly passed: global-preview-claim"
+        )
 
 
 def parse_args() -> argparse.Namespace:
@@ -364,9 +429,16 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     try:
-        documents, facts, docs_config, internal_distribution = canonical_inputs()
+        (
+            documents,
+            public_documents,
+            facts,
+            docs_config,
+            internal_distribution,
+        ) = canonical_inputs()
         validate_documents(
             documents,
+            public_documents=public_documents,
             facts=facts,
             docs_config=docs_config,
             internal_distribution=internal_distribution,

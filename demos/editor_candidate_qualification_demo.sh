@@ -108,7 +108,7 @@ assert report["package_version"] == "0.2.0"
 assert report["compiler_compatibility"] == ">=0.1.0,<0.2.0"
 assert report["vsix_install_smoke"] == "pass"
 assert report["lsp_smoke"] == "pass"
-assert report["marketplace_dry_run"]["rebuild"] is False
-assert report["marketplace_dry_run"]["status"] == "pass"
+assert report["marketplace_publish_plan"]["rebuild"] is False
+assert report["marketplace_publish_plan"]["status"] == "planned"
 print("editor candidate qualification demo: PASS")
 PY

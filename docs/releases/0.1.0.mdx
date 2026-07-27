@@ -51,5 +51,8 @@ The governed release index uses `schema_version: 2`. Unknown, withdrawn, and
 - Alpha and beta remain explicit preview channels.
 - Runtime work marked future-owned in the Rust compatibility matrix is not
   advertised as stable support.
+- Generated-Rust output through `sifr emit` and the VS Code preview action is
+  not part of the packaged `0.1.0` GA-qualified surface because cold first-run
+  qualification exceeded its deterministic bound.
 - The first stable release has no rollback predecessor. A release incident
   recovers through a protected incident roll-forward.

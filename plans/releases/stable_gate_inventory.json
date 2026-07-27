@@ -118,7 +118,7 @@
       "id": "stable-editor-qualification",
       "location": "scripts/distribution/qualify_stable_editor.py",
       "owner": "release/distribution",
-      "current_behavior": "installs the exact packaged VSIX, binds its Marketplace identity and compiler range to one qualified target report and binary digest, and runs the native LSP protocol smoke",
+      "current_behavior": "installs the exact packaged VSIX, binds its Marketplace identity, protected publication plan, candidate and rollback compiler range, one qualified target report, and binary digest, and runs the native LSP protocol smoke",
       "activation_boundary": "ga-documentation",
       "disposition": "emits canonical editor evidence consumed by the stable plan without publishing or rebuilding the VSIX"
     },

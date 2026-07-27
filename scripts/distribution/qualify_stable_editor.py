@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import stat
 import subprocess
 import sys
@@ -51,6 +52,10 @@ def command_output(command: list[str], *, cwd: Path) -> str:
             f"{' '.join(command)} failed with exit {result.returncode}: {detail}"
         )
     return result.stdout.strip()
+
+
+def candidate_lsp_command(candidate_binary: Path) -> str:
+    return shlex.join([str(candidate_binary), "lsp", "--stdio"])
 
 
 def parse_version(value: str, label: str) -> tuple[int, int, int]:
@@ -285,7 +290,7 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
         raise EditorQualificationError(f"VSIX cannot be installed: {exc}") from exc
 
     environment = dict(os.environ)
-    environment["SIFR_LSP_COMMAND"] = f"{candidate_binary} lsp --stdio"
+    environment["SIFR_LSP_COMMAND"] = candidate_lsp_command(candidate_binary)
     smoke = subprocess.run(
         [
             sys.executable,
@@ -327,7 +332,7 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
         "vsix_sha256": sha256_file(vsix),
         "vsix_install_smoke": "pass",
         "lsp_smoke": "pass",
-        "marketplace_dry_run": {
+        "marketplace_publish_plan": {
             "publisher": package["publisher"],
             "extension": package["name"],
             "version": package["version"],
@@ -342,7 +347,8 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
                 vsix.name,
             ],
             "rebuild": False,
-            "status": "pass",
+            "execution_owner": "stable-publication-workflow",
+            "status": "planned",
         },
         "status": "pass",
     }
@@ -365,6 +371,13 @@ def run_self_test() -> None:
     )
     if any(range_contains(value, (0, 1, 0)) for value in invalid_ranges):
         raise EditorQualificationError("invalid compatibility range was accepted")
+    spaced_binary = Path("/tmp/sifr candidate/bin/sifr")
+    if shlex.split(candidate_lsp_command(spaced_binary)) != [
+        str(spaced_binary),
+        "lsp",
+        "--stdio",
+    ]:
+        raise EditorQualificationError("candidate LSP command quoting is unsafe")
     with tempfile.TemporaryDirectory(prefix="sifr-editor-self-test-") as directory:
         root = Path(directory)
         archive_path = root / "unsafe.vsix"

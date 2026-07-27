@@ -1,4 +1,4 @@
-"""Validate stable editor, compiler-range, and Marketplace dry-run evidence."""
+"""Validate stable editor, compiler-range, and Marketplace publication plan."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def validate_editor_report(
         "vsix_sha256",
         "vsix_install_smoke",
         "lsp_smoke",
-        "marketplace_dry_run",
+        "marketplace_publish_plan",
         "status",
     }
     if set(report) != required:
@@ -88,14 +88,14 @@ def validate_editor_report(
         "editor qualification report.target_report_sha256",
     )
     require_sha256(report["vsix_sha256"], "editor qualification report.vsix_sha256")
-    validate_marketplace_dry_run(report)
+    validate_marketplace_publish_plan(report)
     return report
 
 
-def validate_marketplace_dry_run(report: dict[str, Any]) -> None:
+def validate_marketplace_publish_plan(report: dict[str, Any]) -> None:
     marketplace = require_object(
-        report["marketplace_dry_run"],
-        "editor qualification report.marketplace_dry_run",
+        report["marketplace_publish_plan"],
+        "editor qualification report.marketplace_publish_plan",
     )
     if set(marketplace) != {
         "publisher",
@@ -105,11 +105,12 @@ def validate_marketplace_dry_run(report: dict[str, Any]) -> None:
         "vsix_sha256",
         "command",
         "rebuild",
+        "execution_owner",
         "status",
     }:
         fail(
             "$.vscode.validation_report_sha256",
-            "Marketplace dry-run fields are not exact",
+            "Marketplace publication-plan fields are not exact",
         )
     expected_vsix = f"sifr-vscode-{report['package_version']}.vsix"
     if (
@@ -128,11 +129,12 @@ def validate_marketplace_dry_run(report: dict[str, Any]) -> None:
             expected_vsix,
         ]
         or marketplace["rebuild"] is not False
-        or marketplace["status"] != "pass"
+        or marketplace["execution_owner"] != "stable-publication-workflow"
+        or marketplace["status"] != "planned"
     ):
         fail(
             "$.vscode.validation_report_sha256",
-            "Marketplace dry run must consume the exact VSIX without rebuilding",
+            "Marketplace plan must bind protected publication to the exact VSIX without rebuilding",
         )
 
 

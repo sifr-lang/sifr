@@ -88,11 +88,14 @@ sifr self version --format json
 sifr self update
 sifr self update --dry-run
 sifr self update --dry-run --format json
-sifr self update --channel nightly
-sifr self update --version 0.4.0-preview.2 --force
+sifr self update --channel stable
+sifr self update --version 0.1.0 --force
 ```
 
-`sifr self update --dry-run` prints the resolved plan without running the installer. Use `--channel` to resolve the latest preview for a channel, `--version` for one immutable preview version, and `--force` for an intentional reinstall, downgrade, or channel switch.
+`sifr self update --dry-run` prints the resolved plan without running the
+installer. Use `--channel alpha|beta|stable` to resolve the latest release for a
+channel, `--version` for one immutable governed version, and `--force` for an
+intentional reinstall, downgrade, or channel switch.
 
 <Note>
 `--format json` is accepted for `sifr self update` only with `--dry-run`. `sifr self version --short` cannot be combined with `--format json`.
