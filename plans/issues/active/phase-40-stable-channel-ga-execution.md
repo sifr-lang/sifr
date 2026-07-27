@@ -90,7 +90,7 @@ Artifacts mapped to the Phase 40 exit gate:
   receipts, and `sifr self update`.
 - [x] Keep stable-changing publication mutation disabled.
 - [x] Validate all four targets and negative checksum/withdrawal/channel cases.
-- [ ] Record review rounds, PR, validation, and merge.
+- [x] Record review rounds, PR, validation, and merge.
 
 ### milestone_40_3: Rollback and Incident Governance
 
@@ -409,3 +409,11 @@ updating or deleting that exact tag with no bypass actors.
   `editor-release` 6/6, consumed Rust-interop matrix/tiers/compatibility/stale
   drafts 8/8, Rust stable-candidate 2/2, and documentation structure 1/1.
   These commands made no tracked-file changes.
+- Exact PR-head review pass 9:
+  `plans/reviews/archive/phase-40-milestone-40-2-claude-opus-review-pass-9.md`
+  reverified the complete 86-file PR diff, reproduced the milestone contract
+  counts, independently accepted the indexed `PERF-HOST` result as
+  non-prerequisite host variance, and returned `APPROVED` with no finding at
+  exact remote head `939e69083`.
+- Main-repository [PR #3030](https://github.com/sifr-lang/sifr/pull/3030)
+  merged as `db80dd35e056b9dcc9a2ac64475a198f5c36bfaa`.
