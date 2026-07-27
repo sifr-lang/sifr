@@ -256,6 +256,13 @@ modifying its Rust-interop implementation.
   governed-producer regeneration and byte-equality binding, and the workflow
   contract pins the exact production invocation that must remain identical to
   planner regeneration. A seventh review pass is required.
+- Review pass 7:
+  `plans/reviews/active/phase-40-milestone-40-1-claude-opus-review-pass-7.md`
+  verified the architecture documentation but found that the new workflow
+  contract literal ended before the closing output-path quote. Remediation
+  anchors the full four-line invocation, including its closing quote and
+  newline, so appended arguments or an altered output path cannot satisfy the
+  contract. An eighth review pass is required.
 - Passing evidence so far:
   - `demos/stable_candidate_qualification_demo.sh` with a real
     `aarch64-apple-darwin` host artifact, isolated install, `sifr --version`,
