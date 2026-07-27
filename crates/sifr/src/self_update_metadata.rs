@@ -3,7 +3,6 @@ use serde_json::Value;
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
-use std::process::Command;
 
 const GITHUB_RELEASE_DOWNLOAD_BASE_URL: &str =
     "https://github.com/sifr-lang/sifr/releases/download";
@@ -409,23 +408,11 @@ pub(crate) fn resolve_update_plan(
     })
 }
 
-pub(crate) fn fetch_channel_metadata() -> Result<ChannelMetadata, Box<RenderedDiagnostic>> {
-    let output = Command::new("curl")
-        .args(["-fsSL", CHANNEL_METADATA_URL])
-        .output()
-        .map_err(|error| {
-            self_update_diagnostic(format!(
-                "could not run curl to fetch self-update metadata: {error}"
-            ))
-        })?;
-    if !output.status.success() {
-        return Err(self_update_diagnostic(format!(
-            "self-update metadata unavailable at {CHANNEL_METADATA_URL}"
-        )));
-    }
-    let text = String::from_utf8(output.stdout).map_err(|error| {
-        self_update_diagnostic(format!("self-update metadata was not UTF-8: {error}"))
-    })?;
+pub(crate) fn fetch_channel_metadata(
+    dry_run: bool,
+) -> Result<ChannelMetadata, Box<RenderedDiagnostic>> {
+    let text = crate::self_update_metadata_source::load(CHANNEL_METADATA_URL, dry_run)
+        .map_err(self_update_diagnostic)?;
     ChannelMetadata::parse(&text)
 }
 

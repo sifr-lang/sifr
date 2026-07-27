@@ -86,7 +86,7 @@ fn cmd_update(args: &SelfUpdateArgs, diagnostic_format: DiagnosticFormat) -> i32
         Ok(discovered) => discovered,
         Err(exit_code) => return exit_code,
     };
-    let metadata = match fetch_channel_metadata() {
+    let metadata = match fetch_channel_metadata(args.dry_run) {
         Ok(metadata) => metadata,
         Err(diagnostic) => {
             return render_user_error(diagnostic, diagnostic_format);

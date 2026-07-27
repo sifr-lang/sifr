@@ -83,6 +83,14 @@
       "disposition": "stable channel and exact active stable pins use the governed release index"
     },
     {
+      "id": "self-update-metadata-source",
+      "location": "crates/sifr/src/self_update_metadata_source.rs",
+      "owner": "release/distribution",
+      "current_behavior": "uses the trusted public governance asset by default and permits an absolute non-symlink fixture only for dry-run qualification",
+      "activation_boundary": "stable-qualification",
+      "disposition": "real updates remain bound to the public governance asset; isolated installed-sysroot qualification may replace metadata bytes only under --dry-run"
+    },
+    {
       "id": "install-receipt-channel",
       "location": "crates/sifr/src/self_update_receipt.rs",
       "owner": "release/distribution",
