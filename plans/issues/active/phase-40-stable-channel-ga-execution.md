@@ -480,3 +480,9 @@ updating or deleting that exact tag with no bypass actors.
   top-level separator is restored; and custody explicitly allows the release
   README only for candidate evidence while incident evidence remains an exact
   request-plus-withdrawal-evidence commit.
+- Claude Opus review pass 3 was not approved and is archived at
+  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-3.md`.
+  It cleared every implementation and prior-review finding; its sole new
+  documentation finding is remediated by making the adjacent release-evidence
+  README require the digest-bound `withdrawal-evidence.txt` beside every
+  incident request.
