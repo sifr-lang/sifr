@@ -144,7 +144,7 @@ normative and must not be broadened.
 | Item | Status | Evidence |
 | --- | --- | --- |
 | `certification_0` | merged | [PR #3026](https://github.com/sifr-lang/sifr/pull/3026) |
-| `certification_1` | in progress | executable bridge-type roundtrips and nested dict conversion |
+| `certification_1` | review | [PR #3027](https://github.com/sifr-lang/sifr/pull/3027); executable recursive bridge-type roundtrips |
 | `certification_2` | blocked | starts after `certification_1` merges |
 | `certification_3` | blocked | starts after `certification_2` merges |
 | `certification_4` | blocked | starts after `certification_3` merges |
@@ -302,6 +302,18 @@ Post-item inventory:
 - 44 required exact-pinned crate aliases in the checked-in root lock graph;
   and
 - 24 structured stable claims.
+
+Review and gate evidence:
+
+- Opus rounds 1 through 3 requested corrections for ordering claims, lock
+  hermeticity, recursive composite conversion, inventory counts, and escaped
+  user identifiers; [round 4](../../reviews/active/rust-interop-certification-1-review-round4.md)
+  is `SATISFIED`.
+- The authoritative `create-pr` profile passed on the warm rerun, including
+  Rust interop `10/10` and E2E `131/131`; the first attempt was functionally
+  green but exceeded the Python-interop step budget.
+- Draft [PR #3027](https://github.com/sifr-lang/sifr/pull/3027) is the
+  certification PR; `certification_2` remains blocked until it merges.
 
 `certification_3` may use bridge-version 1 call-scoped callbacks. Any callback
 behavior that truly requires the bridge-version 2 structural call contract
