@@ -205,7 +205,7 @@ owned Rust certification input merged through
 modifying its Rust-interop implementation.
 
 - Review pass 1:
-  `plans/reviews/active/phase-40-milestone-40-1-claude-opus-review-pass-1.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-1.md`
   requested exact artifact-id and path custody, end-to-end planner
   materialization and drift tests, immutable-installer identity binding,
   deterministic VSIX evidence, the governed locked build path, verified
@@ -213,7 +213,7 @@ modifying its Rust-interop implementation.
   capability demo. Those findings are remediated and await the next review
   pass.
 - Review pass 2:
-  `plans/reviews/active/phase-40-milestone-40-1-claude-opus-review-pass-2.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-2.md`
   verified all pass-1 product-path corrections, then found a confounded
   digest-sensitivity fixture, a symlinked-container custody escape, incomplete
   artifact-id-to-target/container binding, and a test-order flaw in the
@@ -223,7 +223,7 @@ modifying its Rust-interop implementation.
   exercises the output guard with valid evidence, and derives the 30-day
   retention interval from API timestamps. A third review pass is required.
 - Review pass 3:
-  `plans/reviews/active/phase-40-milestone-40-1-claude-opus-review-pass-3.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-3.md`
   confirmed the pass-2 corrections, then found raw non-UTF-8 evidence
   tracebacks, an unbound dispatch-workflow commit, loose editor/documentation
   report shapes, and missing mismatched-ref coverage. Remediation now converts
@@ -232,7 +232,7 @@ modifying its Rust-interop implementation.
   shapes, adds binary-evidence and mismatched-ref negatives, and makes fresh
   fixture commit identities deterministic. A fourth review pass is required.
 - Review pass 4:
-  `plans/reviews/active/phase-40-milestone-40-1-claude-opus-review-pass-4.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-4.md`
   verified the pass-3 corrections, then found sibling non-UTF-8 read sites,
   alternate shell assignments that could evade installer identity parsing,
   and a collector-side symlink-container gap. Remediation now governs every
@@ -241,7 +241,7 @@ modifying its Rust-interop implementation.
   the collector, and permanently covers those cases. A fifth review pass is
   required.
 - Review pass 5:
-  `plans/reviews/active/phase-40-milestone-40-1-claude-opus-review-pass-5.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-5.md`
   verified the pass-4 collector and most text-custody corrections, then found
   the archive verifier's earlier non-UTF-8 sysroot decode, further shell forms
   that evade assignment parsing, and a one-claim fixture that could not test
@@ -250,19 +250,25 @@ modifying its Rust-interop implementation.
   byte-for-byte equality instead of parsing shell, and exercises a two-claim
   fixture plus an order-reversal negative. A sixth review pass is required.
 - Review pass 6:
-  `plans/reviews/active/phase-40-milestone-40-1-claude-opus-review-pass-6.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-6.md`
   independently closed every pass-5 correctness finding and found one durable
   architecture-documentation omission. Remediation now documents the pinned
   governed-producer regeneration and byte-equality binding, and the workflow
   contract pins the exact production invocation that must remain identical to
   planner regeneration. A seventh review pass is required.
 - Review pass 7:
-  `plans/reviews/active/phase-40-milestone-40-1-claude-opus-review-pass-7.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-7.md`
   verified the architecture documentation but found that the new workflow
   contract literal ended before the closing output-path quote. Remediation
   anchors the full four-line invocation, including its closing quote and
   newline, so appended arguments or an altered output path cannot satisfy the
   contract. An eighth review pass is required.
+- Review pass 8:
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-8.md`
+  independently verified the full invocation anchor, all earlier correctness
+  closures, the capability-named demo and surfaces, durable documentation, and
+  the milestone tracker. The reviewer returned `APPROVED` with no actionable
+  findings.
 - Passing evidence so far:
   - `demos/stable_candidate_qualification_demo.sh` with a real
     `aarch64-apple-darwin` host artifact, isolated install, `sifr --version`,
