@@ -413,10 +413,13 @@ fn device_name(value: &RustInteropValue) -> Result<&str, &'static str> {
 }
 
 fn owner_param_is_owned(signature: &RustBridgeSignatureContract, owner: &str) -> bool {
-    signature
-        .params
-        .iter()
-        .any(|param| param.name == owner && param.convention == RustBridgeParamConvention::Own)
+    signature.params.iter().any(|param| {
+        param.name == owner
+            && matches!(
+                param.convention,
+                RustBridgeParamConvention::Own | RustBridgeParamConvention::OwnMutable
+            )
+    })
 }
 
 fn path_root_is(path: &str, expected_root: &str) -> bool {

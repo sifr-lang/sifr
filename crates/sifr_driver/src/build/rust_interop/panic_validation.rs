@@ -158,7 +158,7 @@ fn signature_has_unsupported_type(signature: &RustBridgeSignatureContract) -> bo
             .any(|param| param.ty.kind == RustBridgeTypeKind::Unsupported)
 }
 
-fn selected_panic_strategy(package: &SifrPackageMetadata) -> Option<String> {
+pub(super) fn selected_panic_strategy(package: &SifrPackageMetadata) -> Option<String> {
     // Rust interop bridge builds currently select the release Cargo profile.
     panic_strategy_from_profile(&package.package_root, "release")
         .or_else(|| std::env::var("SIFR_RUST_PANIC_STRATEGY").ok())

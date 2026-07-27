@@ -36,6 +36,7 @@ fn push_signature(out: &mut String, signature: &RustBridgeSignatureContract) {
             RustBridgeParamConvention::Borrow => "borrow",
             RustBridgeParamConvention::MutableBorrow => "mut-borrow",
             RustBridgeParamConvention::Own => "own",
+            RustBridgeParamConvention::OwnMutable => "own-mut",
         });
         out.push(':');
         push_type_contract(out, &param.ty);
@@ -76,6 +77,7 @@ fn push_type_contract(out: &mut String, ty: &RustBridgeTypeContract) {
         RustBridgeTypeKind::GeneratedError => "error",
         RustBridgeTypeKind::OpaqueHandle => "handle",
         RustBridgeTypeKind::Callback => "callback",
+        RustBridgeTypeKind::CallScopedCallback => "call-scoped-callback",
         RustBridgeTypeKind::None => "none",
         RustBridgeTypeKind::Unsupported => "unsupported",
     });

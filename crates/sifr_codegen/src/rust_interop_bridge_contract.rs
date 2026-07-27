@@ -1,5 +1,8 @@
-mod generated_types;
+pub(crate) mod generated_types;
 
+use crate::rust_interop_bridge_callback_contract::{
+    bridge_call_scoped_callback_type, CallScopedCallbackSignature,
+};
 pub(crate) use crate::rust_interop_bridge_contract_serialization::push_bridge_contract_plan;
 use crate::rust_interop_bridge_panic_contract::{
     recoverable_panic_bridge_error, rust_bridge_panic_error_contract,
@@ -51,6 +54,7 @@ pub enum RustBridgeParamConvention {
     Borrow,
     MutableBorrow,
     Own,
+    OwnMutable,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -81,6 +85,7 @@ pub enum RustBridgeTypeKind {
     GeneratedError,
     OpaqueHandle,
     Callback,
+    CallScopedCallback,
     None,
     Unsupported,
 }
@@ -181,8 +186,13 @@ fn signature_contract(
                 module_catalogs,
                 catalog,
                 generated_types,
-                BridgeTypePosition::Parameter,
-                callback_targets.contains(&canonical_sifr_target_path(declaration)),
+                BridgeTypePosition::Parameter(
+                    if callback_targets.contains(&canonical_sifr_target_path(declaration)) {
+                        CallbackParameterMode::Threadsafe
+                    } else {
+                        CallbackParameterMode::CallScoped
+                    },
+                ),
             ),
         })
         .collect::<Vec<_>>();
@@ -193,7 +203,6 @@ fn signature_contract(
         catalog,
         generated_types,
         BridgeTypePosition::Return,
-        false,
     );
     let panic_error = rust_bridge_panic_error_contract(&function.return_type);
     Some(RustBridgeSignatureContract {
@@ -213,7 +222,7 @@ struct ModuleFunction {
     return_type: Type,
 }
 
-struct ModuleCatalog {
+pub(crate) struct ModuleCatalog {
     functions: BTreeMap<String, ModuleFunction>,
     methods: BTreeMap<(String, String), ModuleFunction>,
     opaque_classes: BTreeMap<String, String>,
@@ -283,19 +292,34 @@ impl ModuleCatalog {
 }
 
 #[derive(Clone, Copy)]
-enum BridgeTypePosition {
-    Parameter,
+pub(crate) enum BridgeTypePosition {
+    Parameter(CallbackParameterMode),
     Return,
 }
 
-fn bridge_type_contract(
+#[derive(Clone, Copy)]
+pub(crate) enum CallbackParameterMode {
+    Nested,
+    CallScoped,
+    Threadsafe,
+}
+
+impl BridgeTypePosition {
+    fn nested(self) -> Self {
+        match self {
+            Self::Parameter(_) => Self::Parameter(CallbackParameterMode::Nested),
+            Self::Return => Self::Return,
+        }
+    }
+}
+
+pub(crate) fn bridge_type_contract(
     ty: &Type,
     module_name: Option<&String>,
     module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
     catalog: Option<&ModuleCatalog>,
     generated_types: &mut GeneratedTypeCollector,
     position: BridgeTypePosition,
-    callback_parameter_allowed: bool,
 ) -> RustBridgeTypeContract {
     let resolved = ty.resolve_alias();
     match resolved {
@@ -363,7 +387,7 @@ fn bridge_type_contract(
             module_catalogs,
         ),
         Type::Result(ok, err) => match position {
-            BridgeTypePosition::Parameter => unsupported_type(
+            BridgeTypePosition::Parameter(_) => unsupported_type(
                 ty,
                 "Result[T, E] is bridge-compatible only as a Rust return type",
             ),
@@ -375,7 +399,6 @@ fn bridge_type_contract(
                     catalog,
                     generated_types,
                     BridgeTypePosition::Return,
-                    false,
                 );
                 let bridge_error = match recoverable_panic_bridge_error(err) {
                     Ok(Some(ordinary_error)) => ordinary_error,
@@ -391,7 +414,6 @@ fn bridge_type_contract(
                     catalog,
                     generated_types,
                     BridgeTypePosition::Return,
-                    false,
                 );
                 combine_generic_type(
                     "Result",
@@ -465,7 +487,10 @@ fn bridge_type_contract(
             }
         }
         Type::Callable(..)
-            if matches!(position, BridgeTypePosition::Parameter) && callback_parameter_allowed =>
+            if matches!(
+                position,
+                BridgeTypePosition::Parameter(CallbackParameterMode::Threadsafe)
+            ) =>
         {
             RustBridgeTypeContract {
                 sifr_type: ty.display_name(),
@@ -478,10 +503,28 @@ fn bridge_type_contract(
                 unsupported_reason: None,
             }
         }
-        Type::Callable(..) => unsupported_type(
-            ty,
-            "callbacks require explicit callback contract support before they are bridge-compatible",
-        ),
+        Type::Callable(params, conventions, result)
+            if matches!(
+                position,
+                BridgeTypePosition::Parameter(CallbackParameterMode::CallScoped)
+            ) =>
+        {
+            bridge_call_scoped_callback_type(
+                CallScopedCallbackSignature {
+                    callable: ty,
+                    params,
+                    conventions,
+                    result,
+                },
+                module_name,
+                module_catalogs,
+                catalog,
+                generated_types,
+            )
+        }
+        Type::Callable(..) => {
+            unsupported_type(ty, "call-scoped callbacks are valid only as top-level parameters")
+        }
         Type::AsyncCallable(..) => unsupported_type(
             ty,
             "async callbacks require explicit callback contract support before they are bridge-compatible",
@@ -558,8 +601,7 @@ fn bridge_list_type(
         module_catalogs,
         catalog,
         generated_types,
-        position,
-        false,
+        position.nested(),
     );
     let Some(inner_owned) = inner_ty.rust_owned_type.clone() else {
         return unsupported_type(
@@ -598,8 +640,7 @@ fn bridge_dict_type(
         module_catalogs,
         catalog,
         generated_types,
-        position,
-        false,
+        position.nested(),
     );
     let Some(value_owned) = value_ty.rust_owned_type.clone() else {
         return unsupported_type(
@@ -641,8 +682,7 @@ fn bridge_union_type(
                     module_catalogs,
                     catalog,
                     generated_types,
-                    position,
-                    false,
+                    position.nested(),
                 );
                 let Some(inner_owned) = inner.rust_owned_type.clone() else {
                     return unsupported_type(
@@ -770,7 +810,7 @@ fn opaque_handle_type(name: &str, target: &str) -> RustBridgeTypeContract {
     }
 }
 
-fn unsupported_type(ty: &Type, reason: &str) -> RustBridgeTypeContract {
+pub(crate) fn unsupported_type(ty: &Type, reason: &str) -> RustBridgeTypeContract {
     RustBridgeTypeContract {
         sifr_type: ty.display_name(),
         rust_borrowed_type: None,
@@ -789,7 +829,12 @@ fn bridge_param_convention(convention: ParamConvention) -> RustBridgeParamConven
         (ParamOwnership::Borrow, sifr_type_system::ParamMutability::Immutable) => {
             RustBridgeParamConvention::Borrow
         }
-        (ParamOwnership::Own, _) => RustBridgeParamConvention::Own,
+        (ParamOwnership::Own, sifr_type_system::ParamMutability::Immutable) => {
+            RustBridgeParamConvention::Own
+        }
+        (ParamOwnership::Own, sifr_type_system::ParamMutability::Mutable) => {
+            RustBridgeParamConvention::OwnMutable
+        }
     }
 }
 

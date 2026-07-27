@@ -1,12 +1,27 @@
 # callbacks_call_scoped
 
-This fixture family tracks call-scoped callback storage and invocation behavior.
+This fixture family certifies generated call-scoped callback storage and
+invocation behavior.
 
-- Positive evidence: `callback_valid_during_call` remains planned for a
-  runtime fixture proving a callback can be invoked only during the Rust call.
-- Negative evidence: `callback_storage_rejected` remains planned for a fixture
-  proving storage or use-after-return is rejected before a Sifr package lists
-  call-scoped callback behavior as verified support.
-- Compatibility category: `future-owned-by-separate-phase`. Thread-safe
-  callback policy declarations are verified, but call-scoped runtime behavior is
-  not listed as verified support.
+- Positive evidence: `callback_valid_during_call` executes generated glue in
+  the locked `call_scoped_callback_runtime` package, observes invocation and
+  ordinary callback errors, compiles exact-integer, list, dictionary, optional,
+  and multi-argument conversions together, and maps a callback panic through
+  the enclosing redacted Rust panic boundary.
+- Negative evidence: `callback_storage_rejected` runs storage, returned
+  deferred-call, and unmanaged-thread bridge variants. Each Cargo probe is
+  pinned to the concrete rustc lifetime or thread-trait failure and reports
+  `SIFR-RUST-CB-0001`.
+- A paired ordinary signature mismatch remains `SIFR-RUST-TYPE-0001`, proving
+  callback diagnostics are reserved for concrete lifetime/thread escape.
+- The runtime bridge owns no callback. It borrows the generated adapter for the
+  duration of the Rust call and is deliberately neither `Send` nor `Sync`, so
+  storage, use-after-return, and unmanaged-thread movement remain rustc errors.
+- `@rust.callback(...)` continues to describe the separate thread-safe
+  subscription contract and does not widen this call-scoped certification.
+- A call-scoped declaration must stay synchronous and expose a distinct
+  ordinary error plus `RustPanicError`; `trusted_no_panic` and `panic=abort`
+  do not cover panics originating in Sifr callback code.
+- Assertions inside the callback are also redacted by that boundary, including
+  their message and source location; actionable callback failures use the
+  declared ordinary error.

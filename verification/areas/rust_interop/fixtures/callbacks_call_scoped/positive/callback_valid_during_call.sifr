@@ -1,18 +1,68 @@
 # fixture: callbacks_call_scoped
 # evidence: positive/callback_valid_during_call
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: runtime-observed
-# expected-result: future-owned
+# expected-result: pass
 class EventError(Error):
     message: str
 
-@rust.callback(backpressure=bounded(32), overflow=error, shutdown=drain)
-@rust(bridge.callbacks.visit, panic=map_error(bridge.callbacks.map_panic))
-def visit(handler: ThreadsafeCallback[[str], Result[None, EventError]]) -> Result[None, EventError | RustPanicError]: ...
+@rust(bridge.callbacks.visit)
+def invoke_callback(mode: str, handler: Callable[[str], Result[None, EventError]]) -> Result[str, EventError | RustPanicError]: ...
+
+@rust(bridge.callbacks.visit_converted)
+def invoke_converted_callback(handler: Callable[[int, list[int], dict[str, int], int | None], Result[int, EventError]]) -> Result[int, EventError | RustPanicError]: ...
 
 def sample_result_callback(event: str) -> Result[None, EventError]:
+    assert event != "panic"
+    if event == "reject":
+        raise EventError("callback rejected")
     return None
 
-def verify_callback_valid_during_call() -> Result[None, EventError | RustPanicError]:
-    visit_result: Result[None, EventError | RustPanicError] = visit(sample_result_callback)
-    return visit_result
+def sample_converted_callback(value: int, items: list[int], mapping: dict[str, int], optional: int | None) -> Result[int, EventError]:
+    optional_value: int = 0
+    if optional is not None:
+        optional_value = optional
+    return value + len(items) + len(mapping) + optional_value
+
+def verify_callback_valid_during_call() -> str:
+    safe: str = ""
+    try:
+        safe_value: str = invoke_callback("safe", sample_result_callback)
+        safe = safe_value
+    except EventError as error:
+        safe = "unexpected ordinary error: " + error.message
+    except RustPanicError as error:
+        safe = "unexpected panic error: " + error.message
+    assert safe == "first,second"
+
+    ordinary_error: str = ""
+    try:
+        unexpected_ordinary: str = invoke_callback("error", sample_result_callback)
+        ordinary_error = unexpected_ordinary
+    except EventError as error:
+        ordinary_error = error.message
+    except RustPanicError as error:
+        ordinary_error = "unexpected panic error: " + error.message
+    assert ordinary_error == "callback rejected"
+
+    callback_panic: str = ""
+    try:
+        unexpected_panic: str = invoke_callback("panic", sample_result_callback)
+        callback_panic = unexpected_panic
+    except RustPanicError as error:
+        callback_panic = error.message
+    except EventError as error:
+        callback_panic = "unexpected ordinary error: " + error.message
+    assert callback_panic == "Rust bridge panicked"
+
+    converted: int = 0
+    try:
+        converted_value: int = invoke_converted_callback(sample_converted_callback)
+        converted = converted_value
+    except EventError as error:
+        converted = -1
+    except RustPanicError as error:
+        converted = -2
+    assert converted == 8
+
+    return safe + "|" + ordinary_error + "|" + callback_panic + "|" + str(converted)

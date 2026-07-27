@@ -220,8 +220,8 @@
       "capability": "call-scoped callback lifetime",
       "required_crates": [],
       "execution_kind": "runtime-observed",
-      "positive_evidence": {"id": "callback_valid_during_call", "status": "planned"},
-      "negative_evidence": {"id": "callback_storage_rejected", "status": "planned"}
+      "positive_evidence": {"id": "callback_valid_during_call", "status": "passing"},
+      "negative_evidence": {"id": "callback_storage_rejected", "status": "passing"}
     },
     {
       "id": "callbacks_threadsafe",

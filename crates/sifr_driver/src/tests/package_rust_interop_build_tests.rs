@@ -39,6 +39,24 @@ const PANIC_WRAPPER_EVIDENCE: &str = include_str!(
 const PANIC_WRAPPER_INVALID_MAPPER: &str = include_str!(
     "../../../../verification/areas/rust_interop/fixtures/panic_boundary_wrapper_emission/negative/invalid_map_error_signature_rejected.sifr"
 );
+const CALL_SCOPED_CALLBACK_EVIDENCE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/callbacks_call_scoped/positive/callback_valid_during_call.sifr"
+);
+const CALL_SCOPED_CALLBACK_NEGATIVE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/callbacks_call_scoped/negative/callback_storage_rejected.sifr"
+);
+const CALL_SCOPED_CALLBACK_NEGATIVE_BRIDGE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/callbacks_call_scoped/examples/call_scoped_callback_runtime/negative_bridge.rs"
+);
+const CALL_SCOPED_CALLBACK_THREAD_ESCAPE_BRIDGE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/callbacks_call_scoped/examples/call_scoped_callback_runtime/negative_thread_bridge.rs"
+);
+const CALL_SCOPED_CALLBACK_RETURN_ESCAPE_BRIDGE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/callbacks_call_scoped/examples/call_scoped_callback_runtime/negative_return_bridge.rs"
+);
+const CALL_SCOPED_CALLBACK_SIGNATURE_MISMATCH_BRIDGE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/callbacks_call_scoped/examples/call_scoped_callback_runtime/negative_signature_bridge.rs"
+);
 
 fn fixture_scenario_root(fixture_id: &str, scenario_id: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -127,7 +145,7 @@ fn rebase_sifr_runtime_dependency(package_root: &Path) {
     );
     assert_ne!(
         rebased, manifest,
-        "panic wrapper scenario must declare the checked-in runtime path dependency"
+        "runtime scenario must declare the checked-in runtime path dependency"
     );
     std::fs::write(manifest_path, rebased)
         .expect("copied scenario runtime dependency should be rebased");
@@ -300,6 +318,126 @@ fn test_check_panic_boundary_invalid_mapper_signature() {
                 && error.message.contains("RustPanicErrorBridge")
         }),
         "invalid panic mapper signature must fail with the panic contract diagnostic: {errors:#?}"
+    );
+    let _ = std::fs::remove_dir_all(package_root);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+#[doc = "sifr-evidence: executes-runtime-observed"]
+fn test_build_call_scoped_callback_runtime() {
+    let package_root = copied_scenario(
+        "callbacks_call_scoped",
+        "call_scoped_callback_runtime",
+        "rust_interop_call_scoped_callback_runtime",
+    );
+    rebase_sifr_runtime_dependency(&package_root);
+    let pristine_entrypoint =
+        package_entrypoint_from_cargo_layout(&package_root, "call-scoped-callback-runtime");
+    let pristine_errors = check_package_project(&pristine_entrypoint);
+    assert!(
+        pristine_errors.is_empty(),
+        "checked-in call-scoped callback scenario should pass package checking: {pristine_errors:#?}"
+    );
+    install_evidence_source(
+        &package_root,
+        &format!(
+            "{CALL_SCOPED_CALLBACK_EVIDENCE}\n\ndef main() -> None:\n    print(verify_callback_valid_during_call())\n"
+        ),
+    );
+    let entrypoint =
+        package_entrypoint_from_cargo_layout(&package_root, "call-scoped-callback-runtime");
+
+    let output = built_package_output(&entrypoint);
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout).trim(),
+        "first,second|callback rejected|Rust bridge panicked|8"
+    );
+    assert!(
+        output.stderr.is_empty(),
+        "contained callback panics must not reach stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let _ = std::fs::remove_dir_all(package_root);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+#[doc = "sifr-evidence: executes-runtime-observed"]
+fn test_check_call_scoped_callback_storage_rejected() {
+    for (case, bridge, rustc_marker) in [
+        (
+            "storage",
+            CALL_SCOPED_CALLBACK_NEGATIVE_BRIDGE,
+            "borrowed data escapes",
+        ),
+        (
+            "thread",
+            CALL_SCOPED_CALLBACK_THREAD_ESCAPE_BRIDGE,
+            "cannot be sent between threads safely",
+        ),
+        (
+            "return",
+            CALL_SCOPED_CALLBACK_RETURN_ESCAPE_BRIDGE,
+            "lifetime may not live long enough",
+        ),
+    ] {
+        let package_root = copied_scenario(
+            "callbacks_call_scoped",
+            "call_scoped_callback_runtime",
+            &format!("rust_interop_call_scoped_callback_{case}"),
+        );
+        rebase_sifr_runtime_dependency(&package_root);
+        install_evidence_source(&package_root, CALL_SCOPED_CALLBACK_NEGATIVE);
+        std::fs::write(package_root.join("src/bridges/callbacks.rs"), bridge)
+            .expect("negative callback bridge should be installed");
+        let entrypoint =
+            package_entrypoint_from_cargo_layout(&package_root, "call-scoped-callback-runtime");
+
+        let errors = check_package_project(&entrypoint);
+
+        assert!(
+            errors.iter().any(|error| {
+                error.code == DiagnosticCode::RUST_CALLBACK_CONTRACT.code()
+                    && error.message.contains("cannot be stored")
+                    && error
+                        .children
+                        .iter()
+                        .any(|child| child.message.contains(rustc_marker))
+            }),
+            "{case} escape must fail for the concrete rustc lifetime/thread reason: {errors:#?}"
+        );
+        let _ = std::fs::remove_dir_all(package_root);
+    }
+
+    let package_root = copied_scenario(
+        "callbacks_call_scoped",
+        "call_scoped_callback_runtime",
+        "rust_interop_call_scoped_callback_signature_mismatch",
+    );
+    rebase_sifr_runtime_dependency(&package_root);
+    install_evidence_source(&package_root, CALL_SCOPED_CALLBACK_NEGATIVE);
+    std::fs::write(
+        package_root.join("src/bridges/callbacks.rs"),
+        CALL_SCOPED_CALLBACK_SIGNATURE_MISMATCH_BRIDGE,
+    )
+    .expect("signature mismatch bridge should be installed");
+    let entrypoint =
+        package_entrypoint_from_cargo_layout(&package_root, "call-scoped-callback-runtime");
+
+    let errors = check_package_project(&entrypoint);
+
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == DiagnosticCode::RUST_TYPE_PROBE_FAILURE.code()),
+        "ordinary signature mismatches must remain type diagnostics: {errors:#?}"
+    );
+    assert!(
+        errors
+            .iter()
+            .all(|error| error.code != DiagnosticCode::RUST_CALLBACK_CONTRACT.code()),
+        "ordinary signature mismatches must not be mislabeled callback escape: {errors:#?}"
     );
     let _ = std::fs::remove_dir_all(package_root);
 }

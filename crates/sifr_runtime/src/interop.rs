@@ -295,6 +295,40 @@ pub struct ThreadsafeCallbackBridge {
     _private: (),
 }
 
+/// A callback that may be invoked only while its generated Rust bridge call is
+/// active.
+///
+/// The borrowed closure prevents a bridge from retaining the callback beyond
+/// the call. The `Rc` marker deliberately makes the value neither `Send` nor
+/// `Sync`, so moving a call-scoped callback to an unmanaged worker thread is
+/// rejected by rustc.
+pub struct CallScopedCallbackBridge<'call, Args, Output> {
+    callback: &'call dyn Fn(Args) -> Output,
+    _current_thread: std::marker::PhantomData<std::rc::Rc<()>>,
+}
+
+impl<'call, Args, Output> CallScopedCallbackBridge<'call, Args, Output> {
+    #[must_use]
+    pub fn new(callback: &'call dyn Fn(Args) -> Output) -> Self {
+        Self {
+            callback,
+            _current_thread: std::marker::PhantomData,
+        }
+    }
+
+    pub fn call(&self, args: Args) -> Output {
+        (self.callback)(args)
+    }
+}
+
+impl<Args, Output> fmt::Debug for CallScopedCallbackBridge<'_, Args, Output> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("CallScopedCallbackBridge")
+            .finish_non_exhaustive()
+    }
+}
+
 pub fn catch_rust_panic<T, F>(f: F) -> Result<T, RustPanicErrorBridge>
 where
     F: FnOnce() -> T,
@@ -593,6 +627,37 @@ mod tests {
     fn catch_rust_panic_preserves_successful_values() {
         let _test_guard = panic_hook_test_guard();
         assert_eq!(super::catch_rust_panic(|| 42_i64), Ok(42));
+    }
+
+    #[test]
+    fn call_scoped_callback_invokes_the_borrowed_handler() {
+        let prefix = "event:".to_string();
+        let handler = |(event,): (String,)| format!("{prefix}{event}");
+        let callback = super::CallScopedCallbackBridge::new(&handler);
+
+        assert_eq!(callback.call(("ready".to_string(),)), "event:ready");
+    }
+
+    #[test]
+    fn call_scoped_callback_constructor_propagates_argument_types_to_the_closure() {
+        fn accept_callback(
+            callback: super::CallScopedCallbackBridge<
+                '_,
+                (super::SifrIntBridge, Vec<super::SifrIntBridge>),
+                i64,
+            >,
+        ) -> i64 {
+            callback.call((
+                super::SifrIntBridge::from(2_i64),
+                vec![super::SifrIntBridge::from(3_i64)],
+            ))
+        }
+
+        let total = accept_callback(super::CallScopedCallbackBridge::new(&|(value, items)| {
+            value.to_i64_saturating() + items[0].to_i64_saturating()
+        }));
+
+        assert_eq!(total, 5);
     }
 
     #[test]

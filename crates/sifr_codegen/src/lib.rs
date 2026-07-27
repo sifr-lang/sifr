@@ -123,10 +123,13 @@ pub use python_interop_plan::{
 };
 mod render;
 pub use render::*;
+mod rust_interop_bridge_callback_contract;
 mod rust_interop_bridge_contract;
 mod rust_interop_bridge_contract_serialization;
 mod rust_interop_bridge_panic_contract;
+mod rust_interop_callback;
 mod rust_interop_direct;
+mod rust_interop_direct_args;
 mod rust_interop_direct_collections;
 #[cfg(test)]
 mod rust_interop_direct_tests;

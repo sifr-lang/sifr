@@ -217,7 +217,7 @@ def _mask_rust_noncode(source: str) -> str:
             _blank_preserving_newlines(masked, source, index, end)
             index = end
             continue
-        character = re.match(r"(?:b)?'(?:\\.|[^'\\])+'", source[index:])
+        character = re.match(r"(?:b)?'(?:\\.|[^'\\\n])'", source[index:])
         if character is not None:
             end = index + len(character.group(0))
             masked[index:end] = " " * (end - index)
@@ -264,6 +264,7 @@ def run_self_test() -> tuple[int, str | None]:
         )
         source = root / "evidence.rs"
         source.write_text(
+            "struct Borrowed<'value> { value: &'value str }\n"
             "fn helper() { assert_eq!(code, "
             'DiagnosticCode::RUST_TYPE_PROBE_FAILURE); }\n'
             "#[test]\nfn diagnostic_test() { helper(); }\n"
