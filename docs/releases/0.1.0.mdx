@@ -16,8 +16,9 @@ Code compatibility contract.
   paths during compilation.
 - The standalone installer and `sifr self update` verify the governed immutable
   installer, target archive, and sysroot digests.
-- `sifr.sifr-vscode` `0.2.0` provides diagnostics, formatting, linting, tests,
-  and generated Rust through the native `sifr lsp --stdio` server.
+- `sifr.sifr-vscode` `0.2.0` provides editor diagnostics and formatting through
+  the native `sifr lsp --stdio` server, plus compiler-backed check, lint, and
+  test actions.
 - Rust interop support is limited to the categories and evidence scopes in the
   [stable claims table](/rust-interop#stable-support-claims).
 

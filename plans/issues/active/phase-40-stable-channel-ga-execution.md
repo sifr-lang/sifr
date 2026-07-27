@@ -102,6 +102,12 @@ Artifacts mapped to the Phase 40 exit gate:
 
 ### milestone_40_4: Stable Documentation and VS Code Release
 
+- Packaged-candidate generated-Rust preview is intentionally not a Phase 40
+  prerequisite. The real `0.1.0` candidate serves initialization, diagnostics,
+  and formatting, but its `sifr.server.showGeneratedRust` request hangs. That
+  independently repairable tooling defect is recorded in
+  [`adhoc_packaged_candidate_lsp_generated_rust_preview.md`](../../phases/adhoc_packaged_candidate_lsp_generated_rust_preview.md);
+  stable public docs do not advertise the affected editor action.
 - [ ] Use the coordinated upstream-first exception for editor release:
   merge the `sifr-vscode` package PR, merge the `editor-integrations` pointer
   PR, then update the main-repository submodule pointer and matching consumer

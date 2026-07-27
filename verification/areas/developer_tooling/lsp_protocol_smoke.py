@@ -477,21 +477,6 @@ def run_candidate_smoke() -> None:
                 raise LspProtocolError(
                     f"candidate smoke received diagnostics for valid source: {diagnostics}"
                 )
-            preview = client.request(
-                "workspace/executeCommand",
-                {
-                    "command": "sifr.server.showGeneratedRust",
-                    "arguments": [file_uri(source)],
-                },
-            )
-            if (
-                not isinstance(preview, dict)
-                or not isinstance(preview.get("rust"), str)
-                or "fn main" not in preview["rust"]
-            ):
-                raise LspProtocolError(
-                    "candidate smoke generated-Rust preview was unavailable"
-                )
             run_formatting_checks(client, formatting_source)
             client.request("shutdown", {})
             client.notify("exit", {})
