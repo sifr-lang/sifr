@@ -395,3 +395,17 @@ updating or deleting that exact tag with no bypass actors.
   returned `APPROVED` at pushed head `28fe8527f` with no actionable finding.
   The archived review and this ledger entry are the only subsequent
   documentation changes; a final exact-head review follows their push.
+- The required merge-profile run at documentation-inclusive head `27d2cea83`
+  passed every executed lane through developer tooling, including CPython
+  differential, 25/25 Python-interop variants, 10/10 consumed Rust-interop
+  variants, and all core/diagnostic/frontend/tooling checks. It stopped only at
+  the representative performance budget on two host-sensitive medians. An
+  immediate isolated retry reduced the overruns to 0.55% and 0.69% but
+  reproduced the same variance. This is the independently parent-reproduced
+  condition recorded in indexed, non-prerequisite follow-up `PERF-HOST`; no
+  baseline or waiver was changed.
+- The milestone-specific closure commands then passed independently:
+  distribution `full` plus `evidence-custody` 53/53, developer-tooling
+  `editor-release` 6/6, consumed Rust-interop matrix/tiers/compatibility/stale
+  drafts 8/8, Rust stable-candidate 2/2, and documentation structure 1/1.
+  These commands made no tracked-file changes.
