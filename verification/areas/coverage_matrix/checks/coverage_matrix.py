@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import date
@@ -80,6 +81,7 @@ def main() -> int:
     validate_rules_inventory(CLI_RULES_PATH, "rules", "profile_surface", errors)
     validate_rules_inventory(WORKSPACE_SUITES_PATH, "suites", "profile_surface", errors)
     validate_profile_policy(errors)
+    validate_release_surface_profile_policy(surfaces, errors)
     validate_cargo_metadata_classification(errors)
     validate_readiness_area_manifest_policy(surfaces, strict, errors)
 
@@ -222,6 +224,11 @@ def validate_surfaces(
             errors.append(f"{location}: stable guarantees may not be broad-only")
         for key in ("merge_suite", "nightly_release_suite", "regression_suite", "reproduction_command"):
             require_string(row, key, location, errors)
+        if "release_suite" in row:
+            require_string(row, "release_suite", location, errors)
+            validate_release_divergence(row, location, today, errors)
+        elif "release_divergence_record" in row or "release_divergence_expiry" in row:
+            errors.append(f"{location}: release divergence metadata requires release_suite")
         if status in TEMPORARY_STATUSES:
             validate_temporary_row(row, location, today, errors)
         if status == "red-blocker":
@@ -254,6 +261,50 @@ def validate_temporary_row(row: dict[str, Any], location: str, today: date, erro
         else:
             if expiry_date < today:
                 errors.append(f"{location}: expiry has passed: {expiry}")
+
+
+def validate_release_divergence(
+    row: dict[str, Any],
+    location: str,
+    today: date,
+    errors: list[str],
+) -> None:
+    release_suite = row.get("release_suite")
+    if release_suite == row.get("nightly_release_suite"):
+        errors.append(f"{location}: release_suite must differ from nightly_release_suite")
+    record = require_string(row, "release_divergence_record", location, errors)
+    if record:
+        tracking_path = REPO_ROOT / "plans" / "phases" / "index.md"
+        try:
+            tracking_text = tracking_path.read_text(encoding="utf-8")
+        except OSError:
+            tracking_text = ""
+        tracking_cells = next(
+            (
+                [cell.strip() for cell in line.strip().strip("|").split("|")]
+                for line in tracking_text.splitlines()
+                if [cell.strip() for cell in line.strip().strip("|").split("|")][0]
+                == record
+            ),
+            [],
+        )
+        target_cell = tracking_cells[3] if len(tracking_cells) >= 4 else ""
+        match = re.search(r"\]\(([^)]+)\)", target_cell)
+        if match is None:
+            errors.append(f"{location}: release divergence record is not indexed: {record}")
+        elif not (tracking_path.parent / match.group(1)).resolve().is_file():
+            errors.append(f"{location}: release divergence record target does not exist: {record}")
+    expiry = require_string(row, "release_divergence_expiry", location, errors)
+    if expiry:
+        try:
+            expiry_date = date.fromisoformat(expiry)
+        except ValueError:
+            errors.append(f"{location}: release_divergence_expiry must be YYYY-MM-DD")
+        else:
+            if expiry_date < today:
+                errors.append(
+                    f"{location}: release divergence expiry has passed: {expiry}"
+                )
 
 
 def validate_owner(value: Any, owners: set[str], location: str, errors: list[str]) -> None:
@@ -316,6 +367,62 @@ def validate_profile_policy(errors: list[str]) -> None:
         validate_profile_readiness_policy(profile_name, profile, errors)
 
 
+def validate_release_surface_profile_policy(
+    surfaces: Any,
+    errors: list[str],
+    *,
+    nightly_profile: dict[str, Any] | None = None,
+    release_profile: dict[str, Any] | None = None,
+) -> None:
+    if not isinstance(surfaces, list):
+        return
+    nightly = nightly_profile or load_json_object(PROFILES_DIR / "nightly.json", errors)
+    release = release_profile or load_json_object(PROFILES_DIR / "release.json", errors)
+    nightly_selected = selected_area_suite_tokens(nightly)
+    release_selected = selected_area_suite_tokens(release)
+    for row in surfaces:
+        if not isinstance(row, dict):
+            continue
+        surface_id = row.get("surface_id")
+        if not isinstance(surface_id, str) or not surface_id:
+            continue
+        declared = {
+            token
+            for token in split_suite_refs(row.get("nightly_release_suite"))
+            if is_area_suite_token(token)
+        }
+        nightly_coverage = declared.intersection(nightly_selected)
+        release_coverage = declared.intersection(release_selected)
+        if nightly_coverage != release_coverage and "release_suite" not in row:
+            errors.append(
+                f"{surface_id}: profile-derived release coverage diverges from "
+                "nightly without release_suite"
+            )
+
+
+def selected_area_suite_tokens(profile: dict[str, Any]) -> set[str]:
+    tokens: set[str] = set()
+    for selection in profile.get("selected_areas", []):
+        if not isinstance(selection, dict):
+            continue
+        area = selection.get("area")
+        suites = selection.get("suites", [])
+        if not isinstance(area, str) or not isinstance(suites, list):
+            continue
+        tokens.update(f"{area}:{suite}" for suite in suites if isinstance(suite, str))
+    return tokens
+
+
+def is_area_suite_token(token: str) -> bool:
+    area, separator, suite = token.partition(":")
+    return bool(separator and area and suite) and area not in {
+        "cargo",
+        "e2e",
+        "sifr",
+        "sifr_codegen",
+    }
+
+
 def validate_profile_readiness_policy(
     profile_name: str,
     profile: dict[str, Any],
@@ -375,7 +482,7 @@ def matrix_referenced_areas(surfaces: list[Any]) -> set[str]:
     for row in surfaces:
         if not isinstance(row, dict):
             continue
-        for key in ("merge_suite", "nightly_release_suite", "regression_suite"):
+        for key in ("merge_suite", "nightly_release_suite", "release_suite", "regression_suite"):
             for token in split_suite_refs(row.get(key)):
                 area, _sep, _suite = token.partition(":")
                 if area and area in area_manifest_names():

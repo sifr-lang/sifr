@@ -79,10 +79,11 @@ lanes.
   stdlib module merge checks, runtime/platform evidence, regression, fuzz smoke,
   and curated ecosystem checks.
 - `nightly` and `release` run the same readiness coverage suite plus broader
-  full/generated/profile-owned suites such as full algorithmic compatibility,
-  full generated-code quality, full performance, full distribution, broader
-  CPython differential, sanitizer-full, ecosystem-broader, and module-full
-  stdlib parity.
+  generated-code quality, performance, distribution, CPython differential,
+  sanitizer-full, ecosystem-broader, and module-full stdlib parity suites.
+  Nightly also runs the complete pinned algorithm corpus. Release runs its
+  blocking representative subset and taxonomy self-test under the temporary,
+  owner- and expiry-bound policy in `policy/profile_policy.md`.
 
 Crate test membership is data-owned by `crate_test_membership.suites` in each
 profile. The coverage matrix cross-checks that first-party compiler crates with

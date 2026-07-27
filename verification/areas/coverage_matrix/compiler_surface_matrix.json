@@ -330,6 +330,9 @@
       "status": "blocking",
       "merge_suite": "algorithmic_compatibility:representative-subset",
       "nightly_release_suite": "algorithmic_compatibility:leetcode-full,algorithmic_compatibility:taxonomy-smoke",
+      "release_suite": "algorithmic_compatibility:representative-subset,algorithmic_compatibility:taxonomy-smoke",
+      "release_divergence_record": "ALG-CORPUS",
+      "release_divergence_expiry": "2026-10-31",
       "regression_suite": "regression:fixedbugs",
       "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite representative-subset"
     },

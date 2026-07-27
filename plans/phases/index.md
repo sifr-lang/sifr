@@ -48,6 +48,7 @@ successor and is summarized here.
 | 38 | Phase 38: Docs and Documentation | unspecified | [38_docs_and_documentation.md](./38_docs_and_documentation.md) |
 | 39 | Phase 39: Rust Interop | completed, audited (2026-06-22, PRs #2702-#2729) | [39_rust_interop.md](./39_rust_interop.md) |
 | 40 | Phase 40: Stable Channel GA Promotion and Release Governance | in progress | [40_stable_channel_ga_promotion_and_release_governance.md](./40_stable_channel_ga_promotion_and_release_governance.md) |
+| ALG-CORPUS | Ad Hoc Algorithmic Full-Corpus Pre-Existing Failures | active non-blocking follow-up | [../issues/active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md](../issues/active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md) |
 | PKG-RUST | Ad Hoc Packaged Candidate Generated Rust | deferred follow-up | [adhoc_packaged_candidate_generated_rust.md](./adhoc_packaged_candidate_generated_rust.md) |
 | PERF-HOST | Ad Hoc Performance Budget Host Variance | deferred follow-up | [adhoc_performance_budget_host_variance.md](./adhoc_performance_budget_host_variance.md) |
 | 41 | Phase 41: Native Pydantic-Sifr | superseded by canonical ad hoc design | [41_typed_data_model_and_validation.md](./41_typed_data_model_and_validation.md) |
