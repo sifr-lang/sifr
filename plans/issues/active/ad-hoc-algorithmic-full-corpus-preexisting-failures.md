@@ -29,8 +29,9 @@ failures in the 412-variant algorithmic-compatibility lane:
 
 The taxonomy artifact was generated on 2026-06-16 and contains 411 fixture
 records. The later profile lanes report 412 area variants because their count
-also includes the area-level policy/runner variant. The 20 failing fixture
-slugs are set-identical across all three evidence sources.
+also includes the area-level `full-corpus-taxonomy-smoke` policy/runner
+variant. The 20 failing fixture slugs are set-identical across all three
+evidence sources.
 
 The failing fixture slugs are:
 

@@ -1,4 +1,4 @@
-# Algorithmic Full-Corpus Follow-Up Review — Round 1
+# Algorithmic Full-Corpus Follow-Up Claude Opus Review — Pass 1
 
 Commit `f9487cfaf` was reviewed read-only. No files, Git, or GitHub state were
 modified, and no Cargo or test command was run.
