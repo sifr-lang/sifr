@@ -270,6 +270,12 @@ modifying its Rust-interop implementation.
   closures, the capability-named demo and surfaces, durable documentation, and
   the milestone tracker. The reviewer returned `APPROVED` with no actionable
   findings.
+- Final PR-head review pass 9:
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-9.md`
+  verified ready PR #3028 at exact head `aeff4d07a`, all eight earlier review
+  closures, the three tracker-only follow-up commits, the authoritative
+  create-PR evidence, and the complete milestone diff. The reviewer returned
+  `APPROVED` with no actionable findings and declared the PR ready to merge.
 - Passing evidence so far:
   - `demos/stable_candidate_qualification_demo.sh` with a real
     `aarch64-apple-darwin` host artifact, isolated install, `sifr --version`,
