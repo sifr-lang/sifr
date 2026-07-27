@@ -12,6 +12,10 @@ cross fixed thresholds by small and inconsistent amounts.
 This follow-up must not change performance baselines or add waivers merely to
 make one host pass.
 
+The same host also exceeded the create-PR lane's aggregate Python-interop step
+budget despite every selected case passing. That timing variance belongs to
+this follow-up rather than to stable-release governance.
+
 ## Evidence
 
 On merged main commit `56f8c41eec`:
@@ -33,11 +37,22 @@ read-only self-update receipt channel in compiled sources. The immediate parent
 comparison demonstrates that this budget failure is not introduced by the
 milestone.
 
+During the stable incident-governance work, the create-PR profile completed all
+19 Python-interop variants with zero failures, but the aggregate step took
+788.45 seconds against its 600-second budget. The slowest individual cases were
+callback examples (161.70 seconds), CPython buffer compatibility (142.55
+seconds), read-only check/doctor (126.69 seconds), and buffer examples (113.33
+seconds). The lane exited only on the elapsed-time budget after reporting every
+case as passing; the incident-governance diff does not change Python-interop or
+compiler implementation files.
+
 ## Scope
 
 - Reproduce representative measurements across controlled warm and cold runs.
 - Record host thermal state, load, CPU frequency behavior, and cache state.
 - Determine why command medians and LSP samples are bimodal.
+- Determine why cold Python-interop fixtures can exceed the aggregate
+  create-PR step budget while all functional variants pass.
 - Make sampling, warm-up, isolation, or threshold derivation robust enough that
   the merge gate is repeatable without hiding real regressions.
 - Add a deterministic self-test for the chosen stability rule.

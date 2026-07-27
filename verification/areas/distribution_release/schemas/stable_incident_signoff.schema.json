@@ -7,6 +7,7 @@
   "required": [
     "schema_version",
     "incident_id",
+    "operation",
     "request_sha256",
     "attempts",
     "index_mutation",
@@ -18,11 +19,19 @@
   "properties": {
     "schema_version": {"const": 2},
     "incident_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+    "operation": {"enum": ["rollback", "incident-roll-forward"]},
     "request_sha256": {"$ref": "#/$defs/sha256"},
     "attempts": {
       "type": "array",
       "minItems": 1,
-      "items": {"$ref": "#/$defs/attempt"}
+      "items": {"$ref": "#/$defs/attempt"},
+      "contains": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {"status": {"const": "completed"}}
+      },
+      "minContains": 1,
+      "maxContains": 1
     },
     "index_mutation": {
       "type": "object",
@@ -40,8 +49,8 @@
         "previous_sha256": {"$ref": "#/$defs/sha256"},
         "realized_generation": {"type": "integer", "minimum": 1},
         "realized_sha256": {"$ref": "#/$defs/sha256"},
-        "affected_version": {"type": "string"},
-        "successor_version": {"type": "string"}
+        "affected_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "successor_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}
       }
     },
     "site_reconciliation": {"$ref": "#/$defs/evidence"},
@@ -78,7 +87,7 @@
         "run_id": {"type": "integer", "minimum": 1},
         "mode": {"enum": ["initial", "resume"]},
         "approver": {"type": "string", "minLength": 1},
-        "status": {"enum": ["started", "failed", "completed"]},
+        "status": {"enum": ["failed", "completed"]},
         "mutations": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/mutation"}}
       }
     }

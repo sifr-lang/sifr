@@ -61,6 +61,19 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "incident-governance",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "incident-recovery",
+          "entry": "verification/areas/distribution_release/governance/incident_recovery_selftest.py",
+          "command": "distribution-incident-recovery",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ],
   "network_mode": "offline",

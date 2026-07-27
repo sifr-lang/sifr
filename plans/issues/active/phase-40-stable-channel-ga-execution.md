@@ -90,14 +90,14 @@ Artifacts mapped to the Phase 40 exit gate:
   receipts, and `sifr self update`.
 - [x] Keep stable-changing publication mutation disabled.
 - [x] Validate all four targets and negative checksum/withdrawal/channel cases.
-- [ ] Record review rounds, PR, validation, and merge.
+- [x] Record review rounds, PR, validation, and merge.
 
 ### milestone_40_3: Rollback and Incident Governance
 
-- [ ] Implement local fail-closed incident planning, rollback, withdrawal,
+- [x] Implement local fail-closed incident planning, rollback, withdrawal,
   roll-forward, generation burning, and recovery evidence.
-- [ ] Keep production mutation adapters disabled.
-- [ ] Validate first-GA and later incident recovery.
+- [x] Keep production mutation adapters disabled.
+- [x] Validate first-GA and later incident recovery.
 - [ ] Record review rounds, PR, validation, and merge.
 
 ### milestone_40_4: Stable Documentation and VS Code Release
@@ -409,3 +409,88 @@ updating or deleting that exact tag with no bypass actors.
   `editor-release` 6/6, consumed Rust-interop matrix/tiers/compatibility/stale
   drafts 8/8, Rust stable-candidate 2/2, and documentation structure 1/1.
   These commands made no tracked-file changes.
+- Exact PR-head review pass 9:
+  `plans/reviews/archive/phase-40-milestone-40-2-claude-opus-review-pass-9.md`
+  reverified the complete 86-file PR diff, reproduced the milestone contract
+  counts, independently accepted the indexed `PERF-HOST` result as
+  non-prerequisite host variance, and returned `APPROVED` with no finding at
+  exact remote head `939e69083`.
+- Main-repository [PR #3030](https://github.com/sifr-lang/sifr/pull/3030)
+  merged as `db80dd35e056b9dcc9a2ac64475a198f5c36bfaa`.
+
+### milestone_40_3
+
+- Pure incident planning in
+  `verification/areas/distribution_release/governance/incident_planner.py`
+  binds canonical request, affected/target/successor plan, and expected live
+  generation/digest bytes. Rollback requires the affected `normal` plan's exact
+  active predecessor; incident roll-forward requires a request-bound qualified
+  successor with `rollback_target: none`.
+- The release-index core now preserves every unaffected channel and retained
+  release byte, withdraws only the affected stable, and either reuses exactly
+  one active retained rollback target or adds exactly one qualified successor.
+- The credential-free fixture harness takes explicit temporary index,
+  governance-asset, immutable-asset, Marketplace-stub, extension-metadata, and
+  non-deploying-site paths. It refuses production credentials and site
+  repositories without the local-only marker and has no network, GitHub
+  release, Marketplace publication, or repository-dispatch adapter.
+- Local mutation order is request retention, write-once proposed-generation
+  snapshot, atomic index replacement, exact generation/digest site recheck,
+  bounded 20-minute attempt model, site reconciliation, and schema-v2 incident
+  sign-off. Reservation failure burns the generation; post-index timeout
+  records cancellation and resumes site work without a second index mutation.
+- Fresh install, working-client self-update, and broken-client out-of-band
+  recovery all resolve the active stable and delegate to its digest-verified
+  immutable installer. Downgrades refuse without explicit `--force`.
+- Evidence-only commit validation accepts exactly the canonical incident
+  request and digest-bound withdrawal evidence under
+  `plans/releases/incidents/<incident-id>/`; source changes or unrelated
+  evidence fail.
+- The stable incident runbook records owner, non-initiating approval authority,
+  30-minute acknowledgement target, triggers, communication locations, retry
+  matrix, retention, first-GA roll-forward, and closure requirements.
+- Focused evidence:
+  `uv run --project verification --locked python -m sifr_verify areas run
+  --area distribution_release --suite incident-governance` passes the
+  nine-scenario recovery module; `demos/stable_incident_recovery_demo.sh`
+  demonstrates burned-generation resume, forced rollback recovery through both
+  client paths, immutable-installer execution, and first-GA roll-forward.
+- Claude Opus review pass 1 was not approved and is archived at
+  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-1.md`.
+  Its five findings are remediated: canonical incident custody now uses
+  `plans/releases/incidents/` and is called by the evidence-custody repository
+  check; the sole-first-GA rollback rejection has a direct acceptance test;
+  incident index-transition cases live in the dedicated incident module rather
+  than consuming the shared governance file-size boundary; the sign-off schema
+  and validator require exactly one completed terminal attempt; and merge,
+  nightly, and release profiles select the named `incident-governance` suite,
+  with the release report requiring it and the full-suite runner de-duplicating
+  the module.
+- The authoritative create-PR profile completed all functional validation,
+  including 19/19 Python-interop variants, but exited on the host timing budget
+  after that passing step took 788.45 seconds against 600 seconds. This
+  unrelated host variance is recorded in
+  `plans/phases/adhoc_performance_budget_host_variance.md` and is not a Phase
+  40 prerequisite; no baseline or waiver changed.
+- Claude Opus review pass 2 was not approved and is archived at
+  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-2.md`.
+  Its three findings are remediated: a focused incident-index mutation module
+  now directly tests atomic withdrawal, channel isolation, rollback/roll-forward
+  version sets, and retained-release byte preservation; the shared self-test's
+  top-level separator is restored; and custody explicitly allows the release
+  README only for candidate evidence while incident evidence remains an exact
+  request-plus-withdrawal-evidence commit.
+- Claude Opus review pass 3 was not approved and is archived at
+  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-3.md`.
+  It cleared every implementation and prior-review finding; its sole new
+  documentation finding is remediated by making the adjacent release-evidence
+  README require the digest-bound `withdrawal-evidence.txt` beside every
+  incident request.
+- Claude Opus review pass 4 is approved with no actionable findings and is
+  archived at
+  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-4.md`.
+  It re-ran the nine incident scenarios, combined 55-variant distribution
+  selection, coverage/profile assignment, runner self-tests, the capability
+  demo, file-size guardrails, custody-layout reproduction, stale-path sweep,
+  and a fresh full definition-of-done review against exact implementation head
+  `cc87f1e79a2d11c2f2cd1fba8b99d470741c82da`.

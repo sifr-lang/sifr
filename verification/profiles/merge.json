@@ -242,7 +242,8 @@
       "area": "distribution_release",
       "suites": [
         "representative",
-        "qualification"
+        "qualification",
+        "incident-governance"
       ],
       "resource_classes": [
         "default-local"

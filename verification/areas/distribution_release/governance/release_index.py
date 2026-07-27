@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 
 from .common import (
@@ -171,6 +172,7 @@ def validate_incident_index_mutation(
     previous_value: Any,
     proposed_value: Any,
     *,
+    operation: str,
     incident_id: str,
     affected_version: str,
     successor_version: str,
@@ -178,15 +180,147 @@ def validate_incident_index_mutation(
     previous = validate_release_index(previous_value)
     proposed = validate_release_index(proposed_value)
     validate_release_index_transition(previous, proposed)
+    operation = require_enum(
+        operation,
+        {"rollback", "incident-roll-forward"},
+        "operation",
+    )
     if previous["ga_status"] != "active" or previous["channels"].get("stable") != affected_version:
         fail("$.channels.stable", "affected version is not the live stable predecessor")
+    if proposed["ga_status"] != "active":
+        fail("$.ga_status", "incident mutation must preserve active GA status")
+    for channel, version in previous["channels"].items():
+        if channel != "stable" and proposed["channels"].get(channel) != version:
+            fail(f"$.channels.{channel}", "incident mutation may change only stable")
     affected = proposed["releases"].get(affected_version)
     if not isinstance(affected, dict):
         fail("$.releases", "incident mutation removed the affected release")
     if affected.get("status") != "withdrawn" or affected.get("incident_id") != incident_id:
         fail("$.releases", "incident mutation must withdraw the affected version atomically")
+    expected_affected = {
+        **previous["releases"][affected_version],
+        "status": "withdrawn",
+        "incident_id": incident_id,
+    }
+    if affected != expected_affected:
+        fail(
+            f"$.releases.{affected_version}",
+            "incident mutation may only add withdrawal status and incident identity",
+        )
     successor = proposed["releases"].get(successor_version)
     if not isinstance(successor, dict) or successor.get("status") != "active":
         fail("$.releases", "incident mutation must activate the successor atomically")
     if proposed["channels"].get("stable") != successor_version:
         fail("$.channels.stable", "incident mutation must point stable at the successor")
+    prior_versions = set(previous["releases"])
+    proposed_versions = set(proposed["releases"])
+    if operation == "rollback":
+        if successor_version not in prior_versions or proposed_versions != prior_versions:
+            fail("$.releases", "rollback must reuse one retained active release")
+    else:
+        if successor_version in prior_versions or proposed_versions != prior_versions | {successor_version}:
+            fail("$.releases", "incident roll-forward must add exactly the qualified successor")
+    for version, release in previous["releases"].items():
+        if version == affected_version:
+            continue
+        if proposed["releases"].get(version) != release:
+            fail(f"$.releases.{version}", "incident mutation must preserve retained release bytes")
+
+
+def propose_rollback(
+    current_value: Any,
+    *,
+    incident_id: str,
+    affected_version: str,
+    target_version: str,
+    proposed_generation: int,
+) -> dict[str, Any]:
+    """Return the immutable-index rollback mutation for an approved request."""
+    current = validate_release_index(current_value)
+    require_incident_id(incident_id, "incident_id")
+    _require_incident_generation(current, proposed_generation)
+    if current["ga_status"] != "active" or current["channels"].get("stable") != affected_version:
+        fail("affected_version", "must equal the live active stable version")
+    target = current["releases"].get(target_version)
+    if (
+        target_version == affected_version
+        or not isinstance(target, dict)
+        or target.get("channel") != "stable"
+        or target.get("status") != "active"
+    ):
+        fail("target_version", "must name a distinct retained active stable release")
+    proposed = deepcopy(current)
+    proposed["generation"] = proposed_generation
+    proposed["channels"]["stable"] = target_version
+    proposed["releases"][affected_version]["status"] = "withdrawn"
+    proposed["releases"][affected_version]["incident_id"] = incident_id
+    proposed["releases"] = dict(sorted(proposed["releases"].items()))
+    validate_incident_index_mutation(
+        current,
+        proposed,
+        operation="rollback",
+        incident_id=incident_id,
+        affected_version=affected_version,
+        successor_version=target_version,
+    )
+    return proposed
+
+
+def propose_incident_roll_forward(
+    current_value: Any,
+    *,
+    incident_id: str,
+    affected_version: str,
+    successor_version: str,
+    successor_release: Any,
+    proposed_generation: int,
+) -> dict[str, Any]:
+    """Return the atomic withdrawal plus qualified-successor index mutation."""
+    current = validate_release_index(current_value)
+    require_incident_id(incident_id, "incident_id")
+    _require_incident_generation(current, proposed_generation)
+    if current["ga_status"] != "active" or current["channels"].get("stable") != affected_version:
+        fail("affected_version", "must equal the live active stable version")
+    if successor_version in current["releases"]:
+        fail("successor_version", "must be a new immutable stable release")
+    if _stable_order(successor_version, "successor_version") <= _stable_order(
+        affected_version,
+        "affected_version",
+    ):
+        fail("successor_version", "incident roll-forward must move to a newer stable version")
+    successor = validate_release_record(
+        successor_release,
+        version=successor_version,
+        expected_channel="stable",
+    )
+    if successor["status"] != "active" or "incident_id" in successor:
+        fail("successor_release", "must be an active qualified release")
+    proposed = deepcopy(current)
+    proposed["generation"] = proposed_generation
+    proposed["channels"]["stable"] = successor_version
+    proposed["releases"][affected_version]["status"] = "withdrawn"
+    proposed["releases"][affected_version]["incident_id"] = incident_id
+    proposed["releases"][successor_version] = deepcopy(successor)
+    proposed["releases"] = dict(sorted(proposed["releases"].items()))
+    validate_incident_index_mutation(
+        current,
+        proposed,
+        operation="incident-roll-forward",
+        incident_id=incident_id,
+        affected_version=affected_version,
+        successor_version=successor_version,
+    )
+    return proposed
+
+
+def _require_incident_generation(current: dict[str, Any], proposed_generation: int) -> None:
+    if type(proposed_generation) is not int or proposed_generation <= current["generation"]:
+        fail("proposed_generation", "must be an integer greater than the live generation")
+
+
+def _stable_order(version: Any, location: str) -> tuple[int, int, int]:
+    if version_channel(version, location) != "stable":
+        fail(location, "must be an exact stable version")
+    assert isinstance(version, str)
+    major, minor, patch = (int(part) for part in version.split("."))
+    return major, minor, patch

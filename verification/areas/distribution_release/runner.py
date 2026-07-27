@@ -45,7 +45,13 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  manifest={MANIFEST_PATH.relative_to(REPO_ROOT)}", flush=True)
     print("  bless=no", flush=True)
 
-    suite_results = [run_suite(suite) for suite in selected]
+    incident_suite_selected = any(
+        str(suite["name"]) == "incident-governance" for suite in selected
+    )
+    suite_results = [
+        run_suite(suite, include_incident=not incident_suite_selected)
+        for suite in selected
+    ]
     total_variants = sum(int(result["total_variants"]) for result in suite_results)
     total_failures = sum(int(result["total_failures"]) for result in suite_results)
     payload = {
@@ -96,7 +102,11 @@ def select_suites(manifest: dict[str, Any], requested: set[str]) -> list[dict[st
     return selected
 
 
-def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
+def run_suite(
+    suite: dict[str, Any],
+    *,
+    include_incident: bool = True,
+) -> dict[str, Any]:
     suite_name = str(suite["name"])
     case = validate_suite_case(suite)
     if suite_name == "evidence-custody":
@@ -104,6 +114,13 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
             run_python_module(
                 "governance.evidence_custody",
                 "evidence-custody",
+            )
+        ]
+    elif suite_name == "incident-governance":
+        variants = [
+            run_python_module(
+                "governance.incident_recovery_selftest",
+                "incident-recovery",
             )
         ]
     elif suite_name == "qualification":
@@ -118,6 +135,13 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
         if suite_name == "full":
             variants.append(run_python_module("governance.selftest", "governance-contracts"))
             variants.append(run_python_module("governance.schema_epoch", "schema-epoch"))
+            if include_incident:
+                variants.append(
+                    run_python_module(
+                        "governance.incident_recovery_selftest",
+                        "incident-recovery",
+                    )
+                )
     failures = sum(1 for variant in variants if variant["status"] == "fail")
     return {
         "name": suite_name,
@@ -140,7 +164,13 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
 
 def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
     suite_name = str(suite["name"])
-    if suite_name not in {"representative", "full", "qualification", "evidence-custody"}:
+    if suite_name not in {
+        "representative",
+        "full",
+        "qualification",
+        "evidence-custody",
+        "incident-governance",
+    }:
         raise SystemExit(f"unsupported distribution_release suite: {suite_name}")
     cases = suite.get("cases", [])
     if not isinstance(cases, list) or len(cases) != 1:
@@ -148,6 +178,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
     case = cases[0]
     expected_command = {
         "evidence-custody": "distribution-evidence-custody",
+        "incident-governance": "distribution-incident-recovery",
         "qualification": "distribution-stable-qualification",
     }.get(suite_name, "distribution-case-directory")
     if str(case.get("command")) != expected_command:
@@ -155,6 +186,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
     entry = REPO_ROOT / str(case.get("entry"))
     expected_entry = {
         "evidence-custody": AREA_ROOT / "governance" / "evidence_custody.py",
+        "incident-governance": AREA_ROOT / "governance" / "incident_recovery_selftest.py",
         "qualification": AREA_ROOT / "governance" / "qualification_selftest.py",
     }.get(suite_name, CASES_ROOT)
     if entry != expected_entry or not entry.exists():

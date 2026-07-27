@@ -105,7 +105,12 @@ def write_source_contracts(source_root: Path) -> None:
             {"area": "documentation", "suites": ["structure"]},
             {
                 "area": "distribution_release",
-                "suites": ["full", "qualification", "evidence-custody"],
+                "suites": [
+                    "full",
+                    "qualification",
+                    "evidence-custody",
+                    "incident-governance",
+                ],
             },
         ],
     }
