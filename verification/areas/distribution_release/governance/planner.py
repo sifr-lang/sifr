@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -335,21 +336,26 @@ def bind_aggregate_artifacts(
 
 
 def validate_installer_identity(installer_path: Path, *, version: str) -> None:
-    assignments: dict[str, str] = {}
+    assignments: dict[str, list[str]] = {
+        "APP_VERSION": [],
+        "APP_CHANNEL": [],
+    }
+    assignment = re.compile(r"^\s*(?:export\s+)?(APP_VERSION|APP_CHANNEL)\s*=")
     for line in read_evidence_text(
         installer_path,
         location="$.installer_sha256",
     ).splitlines():
-        for name in ("APP_VERSION", "APP_CHANNEL"):
-            prefix = f'{name}="'
-            if line.startswith(prefix) and line.endswith('"'):
-                if name in assignments:
-                    fail("$.installer_sha256", "installer contains duplicate identity")
-                assignments[name] = line[len(prefix) : -1]
-    if assignments != {"APP_VERSION": version, "APP_CHANNEL": "stable"}:
+        match = assignment.match(line)
+        if match is not None:
+            assignments[match.group(1)].append(line)
+    expected = {
+        "APP_VERSION": [f'APP_VERSION="{version}"'],
+        "APP_CHANNEL": ['APP_CHANNEL="stable"'],
+    }
+    if assignments != expected:
         fail(
             "$.installer_sha256",
-            "installer does not embed the candidate stable version and channel",
+            "installer must contain exactly one canonical candidate version and channel assignment",
         )
 
 

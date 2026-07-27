@@ -204,6 +204,26 @@ def test_artifact_collector_rejects_drift() -> None:
         target_dir = (
             artifact_root / f"sifr-stable-candidate-{VERSION}-{COMMIT}-{TARGETS[0]}"
         )
+        outside_target_dir = root / "outside-target-container"
+        target_dir.rename(outside_target_dir)
+        target_dir.symlink_to(outside_target_dir, target_is_directory=True)
+        try:
+            load_collector().collect_index(
+                version=VERSION,
+                source_commit=COMMIT,
+                submodules_path=submodules_path,
+                run_id=42,
+                run_attempt=1,
+                run_metadata_path=run_metadata_path,
+                metadata_path=metadata_path,
+                artifact_root=artifact_root,
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("collector accepted a symlinked upload container")
+        target_dir.unlink()
+        outside_target_dir.rename(target_dir)
         (target_dir / f"sifr-{VERSION}-{TARGETS[0]}.tar.gz.sha256").unlink()
         try:
             load_collector().collect_index(
@@ -505,9 +525,14 @@ def test_planner_rejects_drift_cases() -> None:
             "symlink-container",
             "binary-installer",
             "binary-checksums",
+            "installer-trailing-channel",
+            "installer-export-version",
+            "installer-indented-version",
+            "installer-indented-channel",
             "bad-editor-shape",
             "bad-doc-shape",
             "mismatched-ref",
+            "binary-release-profile",
         ):
             case_root = root / case
             bundle = build_evidence_bundle(
@@ -555,6 +580,35 @@ def test_planner_rejects_drift_cases() -> None:
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                 )
+            elif case == "binary-release-profile":
+                profile = source_root / "verification" / "profiles" / "release.json"
+                profile.write_bytes(b"\xff\xfe")
+                subprocess.run(
+                    ["git", "add", str(profile.relative_to(source_root))],
+                    cwd=source_root,
+                    check=True,
+                    stdout=subprocess.PIPE,
+                )
+                subprocess.run(
+                    ["git", "commit", "-m", "binary release profile"],
+                    cwd=source_root,
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+                new_commit = subprocess.run(
+                    ["git", "rev-parse", "HEAD"],
+                    cwd=source_root,
+                    check=True,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                ).stdout.strip()
+                plan = json.loads(bundle["plan_spec"].read_text(encoding="utf-8"))
+                plan["source_commit"] = new_commit
+                plan["plan_id"] = f"stable-{VERSION}-{new_commit[:12]}"
+                plan["desired_release"]["source_commit"] = new_commit
+                rewrite_canonical(bundle["plan_spec"], plan)
+                bundle["source_ref"] = new_commit
             else:
                 qualification = json.loads(
                     bundle["qualification_index"].read_text(encoding="utf-8")
@@ -597,11 +651,19 @@ def test_planner_rejects_drift_cases() -> None:
                 elif case in {
                     "binary-installer",
                     "binary-checksums",
+                    "installer-trailing-channel",
+                    "installer-export-version",
+                    "installer-indented-version",
+                    "installer-indented-channel",
                     "bad-editor-shape",
                 }:
                     artifact_id = {
                         "binary-installer": "installer",
                         "binary-checksums": "checksums",
+                        "installer-trailing-channel": "installer",
+                        "installer-export-version": "installer",
+                        "installer-indented-version": "installer",
+                        "installer-indented-channel": "installer",
                         "bad-editor-shape": "editor-qualification-report",
                     }[case]
                     artifact = next(
@@ -620,6 +682,19 @@ def test_planner_rejects_drift_cases() -> None:
                         )
                         editor_report["unexpected"] = True
                         rewrite_canonical(artifact_path, editor_report)
+                    elif case.startswith("installer-"):
+                        extra_assignment = {
+                            "installer-trailing-channel": "APP_CHANNEL=beta",
+                            "installer-export-version": 'export APP_VERSION="9.9.9"',
+                            "installer-indented-version": "\tAPP_VERSION=9.9.9",
+                            "installer-indented-channel": '  APP_CHANNEL="beta"',
+                        }[case]
+                        artifact_path.write_text(
+                            artifact_path.read_text(encoding="utf-8")
+                            + extra_assignment
+                            + "\n",
+                            encoding="utf-8",
+                        )
                     else:
                         artifact_path.write_bytes(b"\xff\xfe")
                     artifact["sha256"] = hashlib.sha256(
@@ -627,7 +702,7 @@ def test_planner_rejects_drift_cases() -> None:
                     ).hexdigest()
                     artifact["size_bytes"] = artifact_path.stat().st_size
                     plan = json.loads(bundle["plan_spec"].read_text(encoding="utf-8"))
-                    if case == "binary-installer":
+                    if case == "binary-installer" or case.startswith("installer-"):
                         plan["installer_sha256"] = artifact["sha256"]
                         plan["desired_release"]["installer_sha256"] = artifact["sha256"]
                     elif case == "bad-editor-shape":

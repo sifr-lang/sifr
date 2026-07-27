@@ -205,12 +205,21 @@ def collect_container_rows(
     version: str,
     source_commit: str,
 ) -> list[dict[str, Any]]:
-    if not directory.is_dir():
+    resolved_root = directory.parent.resolve()
+    resolved_directory = directory.resolve()
+    if (
+        directory.is_symlink()
+        or not resolved_directory.is_relative_to(resolved_root)
+        or not directory.is_dir()
+    ):
         raise GovernanceError(
             f"{workflow_name}: downloaded artifact directory is missing"
         )
     files = sorted(path for path in directory.iterdir() if path.is_file())
-    if any(path.is_symlink() for path in directory.iterdir()):
+    if any(
+        path.is_symlink() or not path.resolve().is_relative_to(resolved_root)
+        for path in directory.iterdir()
+    ):
         raise GovernanceError(f"{workflow_name}: symlinks are not allowed")
     if any(path.is_dir() for path in directory.iterdir()):
         raise GovernanceError(

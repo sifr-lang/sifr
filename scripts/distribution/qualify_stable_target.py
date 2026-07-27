@@ -89,7 +89,10 @@ def qualify_target(
     checksum_path = Path(f"{archive}.sha256")
     if not checksum_path.is_file():
         raise GovernanceError(f"checksum does not exist: {checksum_path}")
-    expected_archive_sha = checksum_path.read_text(encoding="utf-8").strip()
+    expected_archive_sha = read_utf8(
+        checksum_path,
+        location="archive checksum",
+    ).strip()
     archive_sha = sha256_file(archive)
     if expected_archive_sha != archive_sha:
         raise GovernanceError(f"{archive}: checksum mismatch")
@@ -111,7 +114,10 @@ def qualify_target(
             source.extractall(install_root, filter="data")
         binary = install_root / "bin" / "sifr"
         sysroot_manifest = parse_sysroot_manifest(
-            (install_root / "sysroot.toml").read_text(encoding="utf-8")
+            read_utf8(
+                install_root / "sysroot.toml",
+                location="installed sysroot manifest",
+            )
         )
         version_output = run_checked(
             [str(binary), "--version"],
@@ -222,6 +228,13 @@ def sha256_bytes(value: bytes) -> str:
     import hashlib
 
     return hashlib.sha256(value).hexdigest()
+
+
+def read_utf8(path: Path, *, location: str) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise GovernanceError(f"{location} is not readable UTF-8: {exc}") from exc
 
 
 def current_host_target() -> str:

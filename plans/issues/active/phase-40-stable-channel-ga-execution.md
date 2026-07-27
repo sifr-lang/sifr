@@ -231,6 +231,15 @@ modifying its Rust-interop implementation.
   to equal the candidate source commit, validates exact schema-v2 report
   shapes, adds binary-evidence and mismatched-ref negatives, and makes fresh
   fixture commit identities deterministic. A fourth review pass is required.
+- Review pass 4:
+  `plans/reviews/active/phase-40-milestone-40-1-claude-opus-review-pass-4.md`
+  verified the pass-3 corrections, then found sibling non-UTF-8 read sites,
+  alternate shell assignments that could evade installer identity parsing,
+  and a collector-side symlink-container gap. Remediation now governs every
+  release-profile/checksum/sysroot text decode, rejects any direct alternate or
+  duplicate installer identity assignment, mirrors resolved-path custody in
+  the collector, and permanently covers those cases. A fifth review pass is
+  required.
 - Passing evidence so far:
   - `demos/stable_candidate_qualification_demo.sh` with a real
     `aarch64-apple-darwin` host artifact, isolated install, `sifr --version`,
@@ -238,7 +247,9 @@ modifying its Rust-interop implementation.
   - fixture-backed repeated materialization plus source, submodule, lockfile,
     target artifact, sysroot, installer, Rust-claim, and VSIX digest sensitivity
   - negative missing-artifact, expired-artifact, cross-target, stale-report,
-    source/version drift, floating-ref, and in-checkout output cases
+    source/version drift, floating/mismatched refs, in-checkout output,
+    symlink-container, binary installer/checksum/profile, alternate installer
+    assignments, and exact editor/documentation shape cases
   - Rust-interop `matrix`, `tiers`, `compatibility-matrix`, `stale-drafts`, and
     `stable-candidate` suites, including the stable-claim adversarial self-test
   - qualification workflow contract, stable artifact generation, governance
