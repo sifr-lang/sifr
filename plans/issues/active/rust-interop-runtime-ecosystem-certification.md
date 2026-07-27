@@ -308,7 +308,9 @@ Review and gate evidence:
 - Opus rounds 1 through 3 requested corrections for ordering claims, lock
   hermeticity, recursive composite conversion, inventory counts, and escaped
   user identifiers; [round 4](../../reviews/active/rust-interop-certification-1-review-round4.md)
-  is `SATISFIED`.
+  and the final PR-level
+  [round 5](../../reviews/active/rust-interop-certification-1-review-round5.md)
+  are `SATISFIED`.
 - The authoritative `create-pr` profile passed on the warm rerun, including
   Rust interop `10/10` and E2E `131/131`; the first attempt was functionally
   green but exceeded the Python-interop step budget.
