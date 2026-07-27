@@ -1,12 +1,25 @@
 # fixture: async_runtime_reqwest
 # evidence: negative/hidden_block_on_rejected
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: runtime-observed
-# expected-result: future-owned-diagnostic
+# expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-ASYNC-0001
-@rust(bridge.http.hidden_block_on, panic=trusted_no_panic)
-async def hidden_block_on(url: str) -> str: ...
+# rejected bridge source: examples/reqwest_loopback_runtime/negative_bridge.rs
+class HttpError(Error):
+    message: str
 
-async def verify_hidden_block_on_rejected() -> str:
-    hidden_block_on_result: str = await hidden_block_on("https://127.0.0.1/health")
-    return hidden_block_on_result
+@rust(bridge.http.request_roundtrip, panic=trusted_no_panic)
+async def request_roundtrip(payload: str, mode: str) -> Result[str, HttpError]:
+    await task.sleep(0.0)
+    return ""
+
+@rust(bridge.http.runtime_snapshot, panic=trusted_no_panic)
+def runtime_snapshot() -> str: ...
+
+async def verify_hidden_block_on_rejected() -> Result[str, HttpError]:
+    try:
+        hidden_block_on_result: str = await request_roundtrip("blocked", "fast")
+        snapshot: str = runtime_snapshot()
+        return hidden_block_on_result + "|" + snapshot
+    except HttpError as error:
+        return "unexpected request error:" + error.message

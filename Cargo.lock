@@ -7028,6 +7028,7 @@ dependencies = [
  "sifr_syntax",
  "sifr_sysroot",
  "sifr_type_system",
+ "syn 2.0.117",
  "toml",
 ]
 

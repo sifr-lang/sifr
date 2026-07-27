@@ -4,16 +4,30 @@
   "evidence": {
     "negative": {
       "expected_diagnostic": "SIFR-RUST-ASYNC-0001",
-      "expected_result": "future-owned-diagnostic",
+      "expected_result": "diagnostic",
       "id": "hidden_block_on_rejected",
       "path": "negative/hidden_block_on_rejected.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs",
+        "test_name": "test_check_async_reqwest_hidden_blocking_rejected"
+      }
     },
     "positive": {
-      "expected_result": "future-owned",
+      "expected_result": "pass",
       "id": "async_reqwest_loopback",
       "path": "positive/async_reqwest_loopback.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs",
+        "test_name": "test_build_async_reqwest_loopback_runtime"
+      }
     }
   },
   "execution_kind": "runtime-observed",
@@ -35,6 +49,9 @@
     "tokio",
     "reqwest"
   ],
+  "scenario_examples": {
+    "reqwest_loopback_runtime": "examples/reqwest_loopback_runtime"
+  },
   "schema_version": 2,
   "tier": 2
 }

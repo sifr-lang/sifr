@@ -35,6 +35,16 @@ async def hash(input: str) -> Result[str, RustError | RustPanicError]:
     return "ok"
 "#;
 
+const ASYNC_BORROWED_SOURCE: &str = r#"
+class RustError(Error):
+    message: str
+
+@rust(native.hash)
+async def hash(input: str) -> Result[str, RustError | RustPanicError]:
+    await task.sleep(0.0)
+    return "ok"
+"#;
+
 #[test]
 fn package_rust_interop_direct_probe_accepts_async_signature() {
     let backend_root = async_backend_root(
@@ -52,6 +62,56 @@ fn package_rust_interop_direct_probe_accepts_async_signature() {
 
     apply_package_rust_interop_metadata(generated, Some(context))
         .expect("compatible async signature should pass probe");
+}
+
+#[test]
+fn package_rust_interop_direct_probe_accepts_async_borrowed_signature() {
+    let backend_root = async_backend_root(
+        "rust_interop_async_borrowed_signature_probe_ok",
+        "pub async fn hash(input: &str) -> Result<String, String> { Ok(input.to_string()) }\n",
+    );
+    let generated = generated_from_source(
+        ASYNC_BORROWED_SOURCE,
+        vec![borrowed_hash_signature_contract()],
+    );
+    let context = context_with_source(
+        ASYNC_BORROWED_SOURCE,
+        vec![backend_with_manifest(
+            "native",
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
+    apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("async borrowed signature should preserve its input lifetime in the probe");
+}
+
+#[test]
+fn package_rust_interop_direct_probe_rejects_static_only_async_borrow() {
+    let backend_root = async_backend_root(
+        "rust_interop_async_static_borrow_probe_bad",
+        "pub async fn hash(input: &'static str) -> Result<String, String> { Ok(input.to_string()) }\n",
+    );
+    let generated = generated_from_source(
+        ASYNC_BORROWED_SOURCE,
+        vec![borrowed_hash_signature_contract()],
+    );
+    let context = context_with_source(
+        ASYNC_BORROWED_SOURCE,
+        vec![backend_with_manifest(
+            "native",
+            backend_root.join("Cargo.toml"),
+        )],
+    );
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "static-only async borrow must fail the caller-lifetime probe",
+    );
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
+    assert!(diagnostics[0].message.contains("Rust bridge probe failed"));
 }
 
 #[test]
@@ -157,6 +217,80 @@ async def hash(input: str) -> Result[str, RustError | RustPanicError]:
 }
 
 #[test]
+fn package_rust_interop_async_rejects_hidden_nested_runtime_operations() {
+    let source = r#"
+class RustError(Error):
+    message: str
+
+@rust(bridge.http.fetch, panic=trusted_no_panic)
+async def fetch(url: str) -> Result[str, RustError]:
+    await task.sleep(0.0)
+    return ""
+"#;
+    let package_root = temp_package_root("rust_interop_async_hidden_runtime");
+    std::fs::create_dir_all(package_root.join("rust/interop")).expect("create bridge source");
+    std::fs::write(
+        package_root.join("Cargo.toml"),
+        "[package]\nname = \"app\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+    )
+    .expect("write package manifest");
+    std::fs::write(
+        package_root.join("rust/interop/http.rs"),
+        r#"
+pub async fn fetch(_url: &str) -> Result<String, String> {
+    let control = "runtime.block_on and Builder::new_multi_thread are ignored in strings";
+    // Runtime::new and block_on in comments are also ignored.
+    let _thread = std::thread::Builder::new();
+    Ok(control.to_string())
+}
+"#,
+    )
+    .expect("write bridge source");
+    std::fs::write(
+        package_root.join("rust/interop/runtime_helper.rs"),
+        r#"
+use futures::executor::block_on as wait;
+use tokio::{runtime::Builder as Rt, task::block_in_place};
+
+pub fn hidden_runtime_operations() {
+    let runtime = Rt::new_current_thread();
+    runtime.block_on(async {});
+    wait(async {});
+    block_in_place(|| {});
+}
+"#,
+    )
+    .expect("write forbidden helper source");
+    let generated = generated_from_source(source, Vec::new());
+    let mut context = context_with_source(source, Vec::new());
+    set_bridge_roots(&mut context, vec![PathBuf::from("rust/interop")]);
+    let package = context
+        .graph
+        .packages
+        .get_mut(&context.package_id)
+        .expect("package metadata");
+    package.package_root = package_root;
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "nested bridge runtime operations must fail before Cargo probing",
+    );
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-ASYNC-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("reuse the generated Tokio runtime"));
+    assert!(diagnostics[0]
+        .children
+        .iter()
+        .any(|child| child.message.contains("block_on")
+            && child.message.contains("Tokio runtime construction")
+            && child.message.contains("blocking runtime operation")
+            && child.message.contains("rust/interop/runtime_helper.rs")));
+}
+
+#[test]
 fn package_rust_interop_opaque_current_thread_clears_async_method_send_probe() {
     let source = r#"
 class RustError(Error):
@@ -247,6 +381,12 @@ fn hash_signature_contract() -> RustBridgeSignatureContract {
         result_contract(string_contract(), error),
     );
     signature.panic_error = sifr_codegen::RustBridgePanicErrorContract::OrdinaryAndWrapper;
+    signature
+}
+
+fn borrowed_hash_signature_contract() -> RustBridgeSignatureContract {
+    let mut signature = hash_signature_contract();
+    signature.params[0].convention = RustBridgeParamConvention::Borrow;
     signature
 }
 

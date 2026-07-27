@@ -7,7 +7,7 @@ use ruff_text_size::{TextRange, TextSize};
 use sifr_codegen::{
     InteropBuildPlan, RustBridgeContractPlan, RustBridgeParamContract, RustBridgeParamConvention,
     RustBridgeSignatureContract, RustBridgeTypeContract, RustBridgeTypeKind, RustInteropOwner,
-    RustInteropPlan, RustInteropPlanDeclaration,
+    RustInteropPlan, RustInteropPlanDeclaration, RustInteropTrustRequirementKind,
 };
 use sifr_ir::{
     RustInteropAbiRequirements, RustInteropArgument, RustInteropDeclaration,
@@ -474,6 +474,32 @@ fn package_rust_interop_opaque_async_close_policy_rejects_sync_close_only_contra
     assert!(diagnostics[0]
         .message
         .contains("requires `aclose` cleanup method"));
+}
+
+#[test]
+fn package_rust_interop_records_declared_transitive_bridge_native_links() {
+    let declaration = declaration_entry("bridge.hash", RustInteropDecoratorKind::Function);
+    let generated = base_project_with_contracts(vec![declaration], Vec::new());
+    let trust = TrustPolicy {
+        native_links: vec!["ring_core_0_17_14_".to_string()],
+        ..TrustPolicy::default()
+    };
+    let mut context = package_context(trust, Vec::new());
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    let generated = apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("declared transitive bridge native link should be recorded");
+
+    assert!(generated
+        .interop
+        .rust
+        .trust_requirements
+        .iter()
+        .any(|requirement| {
+            requirement.kind == RustInteropTrustRequirementKind::NativeLinks
+                && requirement.required_entry == "ring_core_0_17_14_"
+                && requirement.trusted
+        }));
 }
 
 pub(super) fn base_project_with_contracts(

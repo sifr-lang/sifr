@@ -80,10 +80,9 @@ only public stable-claim inventory. Its execution scope is part of every claim.
 In particular, `zero_copy_bytes`, `zero_copy_view_matrix`,
 `arrow_record_batch`, `tensor_dlpack_bridge`, and `advanced_data_matrix` are
 contract-only. The runtime-observed deferrals
-`advanced_data_runtime_matrix`, `async_runtime_reqwest`,
-`callback_subscription_ecosystem`, `opaque_resource_matrix`, and
-`zero_copy_runtime_matrix` are future-owned, planned, and unadvertised until
-their runtime evidence passes.
+`advanced_data_runtime_matrix`, `callback_subscription_ecosystem`,
+`opaque_resource_matrix`, and `zero_copy_runtime_matrix` are future-owned,
+planned, and unadvertised until their runtime evidence passes.
 
 `bridge_type_matrix` is cargo-probed through generated package glue. Its
 certified bridge covers nested Serde/JSON values, display-mapped `thiserror`
@@ -101,6 +100,20 @@ including through aliases; similarly named errors and wrapper-only
 `Result[T, RustPanicError]` channels are rejected. Async
 `panic=map_error(path)` remains rejected until async panic-boundary emission is
 certified by its own runtime row.
+
+`async_runtime_reqwest` executes generated package glue against an ephemeral
+in-process HTTP server. The certified bridge accepts borrowed string inputs,
+reuses the generated current-thread Tokio runtime across calls, and observes
+request/server guard cleanup after a Sifr timeout cancels a delayed reqwest
+future. Packages with local async bridges are rejected with
+`SIFR-RUST-ASYNC-0001` when ordinary Rust source under `src/` or a declared
+bridge root constructs a Tokio runtime, calls a syntactically named `block_on`,
+imports a blocking executor call, or invokes `tokio::task::block_in_place`;
+same-file aliases and re-exports are resolved independent of declaration
+order. Cross-file re-exports reached only through an unresolved glob are
+governed by the declared package trust contract rather than this source audit.
+This does not certify arbitrary async services, macro-expanded operations, or
+async panic mapping.
 
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |
@@ -120,6 +133,7 @@ certified by its own runtime row.
 | `panic_boundary` | `supported` | `contract-only` |
 | `panic_boundary_wrapper_emission` | `supported` | `runtime-observed` |
 | `panic_abort_profile` | `supported` | `contract-only` |
+| `async_runtime_reqwest` | `supported-through-bridge` | `runtime-observed` |
 | `async_runtime_core` | `supported` | `contract-only` |
 | `async_ecosystem_matrix` | `supported` | `cargo-probe` |
 | `blocking_diagnostics` | `supported` | `compiler-diagnostic` |

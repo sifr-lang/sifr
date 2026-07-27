@@ -276,13 +276,11 @@ fn signature_probe_source(
     out.push_str("#![allow(dead_code)]\n");
     out.push_str(&generated_bridge_type_stubs(signature));
     if is_async_probe(probe) {
-        out.push_str("fn __sifr_assert_async_signature<F, Fut");
+        out.push_str("fn __sifr_assert_async_future<Fut");
         if return_type.display_error_generic {
             out.push_str(", __SifrBridgeError");
         }
-        out.push_str(">(_f: F)\nwhere\n    F: Fn(");
-        out.push_str(&params);
-        out.push_str(") -> Fut,\n    Fut: std::future::Future<Output = ");
+        out.push_str(">(_future: Fut)\nwhere\n    Fut: std::future::Future<Output = ");
         out.push_str(&return_type.ty);
         out.push('>');
         if async_future_requires_send(probe) {
@@ -291,9 +289,48 @@ fn signature_probe_source(
         if return_type.display_error_generic {
             out.push_str(",\n    __SifrBridgeError: std::fmt::Display");
         }
-        out.push_str(",\n{}\nfn __sifr_probe() {\n    __sifr_assert_async_signature(");
+        out.push_str(",\n{}\n");
+        let has_borrowed_param = signature.params.iter().any(|param| {
+            matches!(
+                param.convention,
+                RustBridgeParamConvention::Borrow | RustBridgeParamConvention::MutableBorrow
+            )
+        });
+        out.push_str("fn __sifr_probe");
+        if has_borrowed_param {
+            out.push_str("<'__sifr_call>");
+        }
+        out.push('(');
+        let probe_params = signature
+            .params
+            .iter()
+            .enumerate()
+            .map(|(index, param)| {
+                let ty = rust_param_type(param.convention, &param.ty)
+                    .unwrap_or_else(|| "__SifrUnsupportedBridgeType".to_string());
+                let ty = if has_borrowed_param {
+                    bind_probe_reference_lifetime(&ty)
+                } else {
+                    ty
+                };
+                format!("__sifr_arg_{index}: {ty}")
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
+        out.push_str(&probe_params);
+        out.push_str(") {\n");
+        let arguments = signature
+            .params
+            .iter()
+            .enumerate()
+            .map(|(index, _)| format!("__sifr_arg_{index}"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        out.push_str("    __sifr_assert_async_future(");
         out.push_str(rust_path);
-        out.push_str(");\n");
+        out.push('(');
+        out.push_str(&arguments);
+        out.push_str("));\n");
     } else {
         out.push_str("fn __sifr_assert_signature");
         if return_type.display_error_generic {
@@ -400,6 +437,13 @@ fn mutable_borrow_type(rust_type: &str) -> String {
     rust_type.strip_prefix('&').map_or_else(
         || rust_type.to_string(),
         |inner| format!("&mut {}", inner.trim_start()),
+    )
+}
+
+fn bind_probe_reference_lifetime(rust_type: &str) -> String {
+    rust_type.strip_prefix('&').map_or_else(
+        || rust_type.to_string(),
+        |inner| format!("&'__sifr_call {}", inner.trim_start()),
     )
 }
 
