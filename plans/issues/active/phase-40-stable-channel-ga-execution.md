@@ -123,6 +123,34 @@ Artifacts mapped to the Phase 40 exit gate:
 - [ ] Materialize the reviewed `0.1.0` candidate evidence.
 - [ ] Record review rounds, PR, validation, and merge.
 
+Review and upstream coordination ledger:
+
+- `sifr-lang/sifr-vscode`
+  [PR #12](https://github.com/sifr-lang/sifr-vscode/pull/12) merged as
+  `273fd5d3ebc958124c3151647e2b61136a3ddb06`. Package review pass 1 requested
+  package cleanup and metadata corrections; pass 2 approved the exact package
+  head. Both reports are archived as
+  `plans/reviews/archive/phase-40-milestone-40-4-vscode-package-claude-opus-review-pass-{1,2}.md`.
+- `sifr-lang/editor-integrations`
+  [PR #10](https://github.com/sifr-lang/editor-integrations/pull/10) merged as
+  `d7577d49274b97fdf508b7fa16b6d9bdb51b4acd`. Pointer review pass 1 requested
+  exact consumer binding corrections; pass 2 approved the paired pointer and
+  main-repository consumer head. Both reports are archived as
+  `plans/reviews/archive/phase-40-milestone-40-4-editor-pointer-claude-opus-review-pass-{1,2}.md`.
+- Main-repository Claude Opus review pass 1 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-1.md`.
+  Its eight findings are remediated: the GA sweep covers every public doc;
+  Marketplace evidence is a truthful protected-workflow plan; rollback is a
+  governed qualification input; the packaged generated-Rust limitation is
+  public and evidence-based; qualification fixtures have headroom;
+  unsupported target additions fail; and exact candidate commands preserve
+  paths containing spaces.
+- Main-repository Claude Opus review pass 2 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-2.md`.
+  It verified the substantive pass-1 closures and withheld approval only for
+  fixture headroom, semantic preview-claim patterns, import ordering, and this
+  review ledger. All four observations are remediated before pass 3.
+
 ### milestone_40_5: Protected Sign-off and GA Activation
 
 - [ ] Add the single protected publication workflow and production site adapter.

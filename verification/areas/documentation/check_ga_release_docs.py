@@ -7,6 +7,7 @@ import argparse
 import copy
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -135,12 +136,13 @@ FORBIDDEN_CLAIMS = (
     "Self-update currently accepts only `alpha` and `beta`",
     "Stable channels and release-candidate channels are not yet available",
     "The beta channel is the recommended starting point",
-    "Sifr is currently in preview.",
-    "sifr self update --channel nightly",
-    "-preview.2",
-    "one immutable preview version",
-    "aarch64-pc-windows-msvc",
-    "x86_64-pc-windows-msvc",
+)
+FORBIDDEN_CLAIM_PATTERNS = (
+    re.compile(r"\bSifr\b[^\n]{0,80}\b(?:is|remains)\b[^\n]{0,30}\bpreview\b", re.I),
+    re.compile(r"\bsifr self update --channel\s+(?:nightly|rc)\b", re.I),
+    re.compile(r"\b\d+\.\d+\.\d+-preview\.\d+\b", re.I),
+    re.compile(r"\bone immutable preview (?:release|version)\b", re.I),
+    re.compile(r"\b(?:aarch64|x86_64)-pc-windows-msvc\b", re.I),
 )
 MUTATION_CASES = (
     "missing-stable-entrypoint",
@@ -268,6 +270,11 @@ def validate_documents(
     for claim in FORBIDDEN_CLAIMS:
         if claim in combined:
             raise DocumentationError(f"forbidden or stale GA claim: {claim}")
+    for pattern in FORBIDDEN_CLAIM_PATTERNS:
+        if pattern.search(combined):
+            raise DocumentationError(
+                f"forbidden or stale GA claim pattern: {pattern.pattern}"
+            )
     for page in NAVIGATION_PAGES:
         if f'"{page}"' not in docs_config:
             raise DocumentationError(f"docs navigation is missing {page}")
@@ -403,7 +410,7 @@ def run_self_test() -> None:
             continue
         raise DocumentationError(f"GA documentation mutation unexpectedly passed: {case_id}")
     changed_public = copy.deepcopy(public_documents)
-    changed_public["introduction.mdx"] += "\nSifr is currently in preview.\n"
+    changed_public["introduction.mdx"] += "\nSifr remains in public preview.\n"
     try:
         validate_documents(
             documents,

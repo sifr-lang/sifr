@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 from .artifact_index import validate_qualification_artifact_index
-from .editor_qualification import validate_editor_report
 from .common import (
     GovernanceError,
     TARGETS,
@@ -23,6 +22,7 @@ from .common import (
     require_sha256,
     sha256_file,
 )
+from .editor_qualification import validate_editor_report
 from .release_plan import validate_release_plan
 from .release_report import (
     canonical_profile_digest,

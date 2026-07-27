@@ -21,6 +21,7 @@ from .common import (
     write_canonical_json,
 )
 from .planner import RUST_CLAIMS_SCHEMA_VERSION, stable_claim_ids
+from .qualification_rust_fixture import rust_candidate_result
 from .qualification_fixture_support import (
     command_output,
     configure_git,
@@ -813,59 +814,6 @@ def stable_claims(*, variant: str) -> dict[str, Any]:
     }
 
 
-def rust_candidate_result() -> dict[str, Any]:
-    suites = []
-    for name in (
-        "matrix",
-        "tiers",
-        "compatibility-matrix",
-        "stale-drafts",
-        "stable-candidate",
-    ):
-        case_ids = (
-            [
-                "rust-interop-stable-candidate",
-                "rust-interop-stable-candidate-self-test",
-            ]
-            if name == "stable-candidate"
-            else [f"rust-interop-{name}"]
-        )
-        cases = [
-            {
-                "id": case_id,
-                "variants": [
-                    {
-                        "actual_exit_code": 0,
-                        "expected_exit_code": 0,
-                        "mismatches": [],
-                        "status": "pass",
-                    }
-                ],
-            }
-            for case_id in case_ids
-        ]
-        suites.append(
-            {
-                "blocking": True,
-                "cases": cases,
-                "failed_cases": 0,
-                "name": name,
-                "total_failures": 0,
-                "total_variants": len(cases),
-            }
-        )
-    return {
-        "area": "rust_interop",
-        "bless": False,
-        "manifest": "verification/areas/rust_interop/manifest.json",
-        "suites": suites,
-        "summary": {
-            "blocking_failures": 0,
-            "non_blocking_failures": 0,
-            "total_failures": 0,
-            "total_variants": sum(suite["total_variants"] for suite in suites),
-        },
-    }
 
 
 def load_collector() -> Any:
