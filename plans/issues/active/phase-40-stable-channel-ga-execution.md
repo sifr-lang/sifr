@@ -387,3 +387,11 @@ updating or deleting that exact tag with no bypass actors.
   advisory is non-blocking and covered by the indexed `PERF-HOST` follow-up.
   PR #3030 now requires an independent full-diff review at its pushed
   documentation-inclusive head.
+- Exact PR-head review pass 8:
+  `plans/reviews/archive/phase-40-milestone-40-2-claude-opus-review-pass-8.md`
+  independently reproduced the preview planner against the real pinned site
+  checkout, reverified the live protected tag/ruleset/workflow identities,
+  closed all six pass-7 findings, ran the focused milestone checks, and
+  returned `APPROVED` at pushed head `28fe8527f` with no actionable finding.
+  The archived review and this ledger entry are the only subsequent
+  documentation changes; a final exact-head review follows their push.
