@@ -58,6 +58,7 @@ builder = Path(sys.argv[2]).read_text(encoding="utf-8")
 required = (
     "[[ \"${SOURCE_COMMIT}\" =~ ^[0-9a-f]{40}$ ]]",
     "[[ \"${VERSION}\" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+$ ]]",
+    "[[ \"${WORKFLOW_COMMIT}\" = \"${SOURCE_COMMIT}\" ]]",
     "contents: read",
     "actions: read",
     "submodules: recursive",

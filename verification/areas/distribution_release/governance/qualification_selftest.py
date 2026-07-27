@@ -98,6 +98,7 @@ def create_fixture(root: Path) -> tuple[Path, Path, Path, Path]:
             {
                 "id": 42,
                 "run_attempt": 1,
+                "head_sha": COMMIT,
                 "event": "workflow_dispatch",
                 "name": "release-qualification",
                 "repository": {"full_name": "sifr-lang/sifr"},
@@ -158,6 +159,28 @@ def test_artifact_collector_rejects_drift() -> None:
             run_metadata_path,
             submodules_path,
         ) = create_fixture(root)
+        run_metadata = json.loads(run_metadata_path.read_text(encoding="utf-8"))
+        run_metadata["head_sha"] = "f" * 40
+        rewrite_canonical(run_metadata_path, run_metadata)
+        try:
+            load_collector().collect_index(
+                version=VERSION,
+                source_commit=COMMIT,
+                submodules_path=submodules_path,
+                run_id=42,
+                run_attempt=1,
+                run_metadata_path=run_metadata_path,
+                metadata_path=metadata_path,
+                artifact_root=artifact_root,
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(
+                "collector accepted another workflow definition commit"
+            )
+        run_metadata["head_sha"] = COMMIT
+        rewrite_canonical(run_metadata_path, run_metadata)
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         metadata["artifacts"][0]["created_at"] = "2098-12-01T00:00:00Z"
         rewrite_canonical(metadata_path, metadata)
@@ -480,6 +503,11 @@ def test_planner_rejects_drift_cases() -> None:
             "other-source",
             "version-drift",
             "symlink-container",
+            "binary-installer",
+            "binary-checksums",
+            "bad-editor-shape",
+            "bad-doc-shape",
+            "mismatched-ref",
         ):
             case_root = root / case
             bundle = build_evidence_bundle(
@@ -499,6 +527,33 @@ def test_planner_rejects_drift_cases() -> None:
                     bundle,
                     "release_profile_report",
                     bundle["release_report"],
+                )
+            elif case == "bad-doc-shape":
+                report = json.loads(
+                    bundle["documentation_report"].read_text(encoding="utf-8")
+                )
+                report["unexpected"] = True
+                rewrite_canonical(bundle["documentation_report"], report)
+                refresh_plan_reference(
+                    bundle,
+                    "documentation_report",
+                    bundle["documentation_report"],
+                )
+            elif case == "mismatched-ref":
+                marker = source_root / "mismatched-ref.txt"
+                marker.write_text("new head\n", encoding="utf-8")
+                subprocess.run(
+                    ["git", "add", marker.name],
+                    cwd=source_root,
+                    check=True,
+                    stdout=subprocess.PIPE,
+                )
+                subprocess.run(
+                    ["git", "commit", "-m", "advance fixture head"],
+                    cwd=source_root,
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
                 )
             else:
                 qualification = json.loads(
@@ -539,6 +594,45 @@ def test_planner_rejects_drift_cases() -> None:
                     outside = case_root / "outside-editor"
                     container.rename(outside)
                     container.symlink_to(outside, target_is_directory=True)
+                elif case in {
+                    "binary-installer",
+                    "binary-checksums",
+                    "bad-editor-shape",
+                }:
+                    artifact_id = {
+                        "binary-installer": "installer",
+                        "binary-checksums": "checksums",
+                        "bad-editor-shape": "editor-qualification-report",
+                    }[case]
+                    artifact = next(
+                        row
+                        for row in qualification["artifacts"]
+                        if row["id"] == artifact_id
+                    )
+                    artifact_path = (
+                        bundle["artifact_root"]
+                        / artifact["workflow_artifact_name"]
+                        / artifact["name"]
+                    )
+                    if case == "bad-editor-shape":
+                        editor_report = json.loads(
+                            artifact_path.read_text(encoding="utf-8")
+                        )
+                        editor_report["unexpected"] = True
+                        rewrite_canonical(artifact_path, editor_report)
+                    else:
+                        artifact_path.write_bytes(b"\xff\xfe")
+                    artifact["sha256"] = hashlib.sha256(
+                        artifact_path.read_bytes()
+                    ).hexdigest()
+                    artifact["size_bytes"] = artifact_path.stat().st_size
+                    plan = json.loads(bundle["plan_spec"].read_text(encoding="utf-8"))
+                    if case == "binary-installer":
+                        plan["installer_sha256"] = artifact["sha256"]
+                        plan["desired_release"]["installer_sha256"] = artifact["sha256"]
+                    elif case == "bad-editor-shape":
+                        plan["vscode"]["validation_report_sha256"] = artifact["sha256"]
+                    rewrite_canonical(bundle["plan_spec"], plan)
                 if case != "symlink-container":
                     rewrite_canonical(bundle["qualification_index"], qualification)
                     refresh_plan_reference(
@@ -640,6 +734,36 @@ def test_plan_digest_sensitivity() -> None:
         )
         baseline = run_planner(bundle, baseline_root / "plan.json")
         baseline_digest = hashlib.sha256(baseline).hexdigest()
+        fresh_control_root = root / "fresh-control"
+        fresh_control_source = create_fixture_source(
+            fresh_control_root,
+            variant="nochange",
+        )
+        if (
+            subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=fresh_control_source,
+                check=True,
+                text=True,
+                stdout=subprocess.PIPE,
+            ).stdout.strip()
+            != bundle["source_ref"]
+        ):
+            raise AssertionError("identical fixture sources have unstable commit ids")
+        fresh_control_bundle = build_evidence_bundle(
+            source_root=fresh_control_source,
+            evidence_root=fresh_control_root / "evidence",
+            result_root=(
+                fresh_control_source / "target" / "verification" / "sensitivity-results"
+            ),
+            variant="nochange",
+        )
+        fresh_control = run_planner(
+            fresh_control_bundle,
+            fresh_control_root / "plan.json",
+        )
+        if hashlib.sha256(fresh_control).hexdigest() != baseline_digest:
+            raise AssertionError("identical fresh fixture changed the plan digest")
         for variant in (
             "nochange",
             "target-artifact",

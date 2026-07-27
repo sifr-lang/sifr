@@ -222,6 +222,15 @@ modifying its Rust-interop implementation.
   binds every governed artifact id to its exact kind/target/upload/name,
   exercises the output guard with valid evidence, and derives the 30-day
   retention interval from API timestamps. A third review pass is required.
+- Review pass 3:
+  `plans/reviews/active/phase-40-milestone-40-1-claude-opus-review-pass-3.md`
+  confirmed the pass-2 corrections, then found raw non-UTF-8 evidence
+  tracebacks, an unbound dispatch-workflow commit, loose editor/documentation
+  report shapes, and missing mismatched-ref coverage. Remediation now converts
+  text-decoding failures into governed errors, requires the dispatch head SHA
+  to equal the candidate source commit, validates exact schema-v2 report
+  shapes, adds binary-evidence and mismatched-ref negatives, and makes fresh
+  fixture commit identities deterministic. A fourth review pass is required.
 - Passing evidence so far:
   - `demos/stable_candidate_qualification_demo.sh` with a real
     `aarch64-apple-darwin` host artifact, isolated install, `sifr --version`,

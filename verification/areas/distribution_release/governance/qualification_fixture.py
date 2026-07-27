@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -66,6 +67,14 @@ def create_fixture_source(root: Path, *, variant: str = "baseline") -> Path:
         "add",
         str(submodule_root),
         "editor_integrations",
+    )
+    gitmodules = source_root / ".gitmodules"
+    gitmodules.write_text(
+        gitmodules.read_text(encoding="utf-8").replace(
+            str(submodule_root),
+            "https://example.invalid/sifr-editor-fixture.git",
+        ),
+        encoding="utf-8",
     )
     if variant == "source":
         (source_root / "source-variant.txt").write_text("changed\n", encoding="utf-8")
@@ -211,6 +220,7 @@ def build_evidence_bundle(
         evidence_root=evidence_root,
         artifact_root=artifact_root,
         prefix=prefix,
+        source_commit=source_commit,
     )
     submodules_path = evidence_root / "submodules.json"
     write_canonical_json(submodules_path, submodules)
@@ -247,7 +257,13 @@ def build_evidence_bundle(
     documentation_report_path = evidence_root / "documentation-report.json"
     write_canonical_json(
         documentation_report_path,
-        {"report_id": "docs-fixture", "status": "pass"},
+        {
+            "schema_version": 2,
+            "kind": "stable-documentation-qualification",
+            "report_id": "docs-fixture",
+            "source_commit": source_commit,
+            "status": "pass",
+        },
     )
     release_notes_path = evidence_root / "release-notes.md"
     release_notes_path.write_text("# Stable fixture notes\n", encoding="utf-8")
@@ -373,6 +389,7 @@ def write_workflow_metadata(
     evidence_root: Path,
     artifact_root: Path,
     prefix: str,
+    source_commit: str,
 ) -> tuple[Path, Path]:
     run_metadata_path = evidence_root / "run-metadata.json"
     write_canonical_json(
@@ -380,6 +397,7 @@ def write_workflow_metadata(
         {
             "id": 42,
             "run_attempt": 1,
+            "head_sha": source_commit,
             "event": "workflow_dispatch",
             "name": "release-qualification",
             "repository": {"full_name": "sifr-lang/sifr"},
@@ -721,12 +739,21 @@ def configure_git(root: Path) -> None:
 
 
 def git(root: Path, *args: str) -> None:
+    env = os.environ.copy()
+    if args and args[0] == "commit":
+        env.update(
+            {
+                "GIT_AUTHOR_DATE": "2026-01-01T00:00:00Z",
+                "GIT_COMMITTER_DATE": "2026-01-01T00:00:00Z",
+            }
+        )
     subprocess.run(
         ["git", *args],
         cwd=root,
         check=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        env=env,
     )
 
 

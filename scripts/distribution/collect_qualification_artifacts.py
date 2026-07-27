@@ -93,6 +93,7 @@ def collect_index(
     if (
         run_metadata.get("id") != run_id
         or run_metadata.get("run_attempt") != run_attempt
+        or run_metadata.get("head_sha") != source_commit
         or run_metadata.get("event") != "workflow_dispatch"
         or run_metadata.get("name") != "release-qualification"
         or repository.get("full_name") != "sifr-lang/sifr"

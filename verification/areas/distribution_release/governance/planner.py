@@ -148,19 +148,13 @@ def materialize_stable_plan(
             "must exactly match the ordered stable support claims",
         )
 
-    documentation_report = require_object(
+    documentation_report = validate_documentation_report(
         load_json_strict(documentation_report_path, require_canonical=True),
-        str(documentation_report_path),
-    )
-    if documentation_report.get("status") != "pass":
-        fail("$.documentation_report", "documentation qualification did not pass")
-    documentation_id = require_nonempty_string(
-        documentation_report.get("report_id"),
-        "$.documentation_report.id",
+        source_commit=plan["source_commit"],
     )
     require_reference(
         plan["documentation_report"],
-        identifier=documentation_id,
+        identifier=documentation_report["report_id"],
         path=documentation_report_path,
         location="$.documentation_report",
     )
@@ -323,19 +317,15 @@ def bind_aggregate_artifacts(
     if artifacts["vsix"]["sha256"] != plan["vscode"]["vsix_sha256"]:
         fail("$.vscode.vsix_sha256", "does not match the transported VSIX")
     editor_report_path = artifact_paths["editor-qualification-report"]
-    editor_report = require_object(
+    editor_report = validate_editor_report(
         load_json_strict(editor_report_path, require_canonical=True),
-        str(editor_report_path),
+        source_commit=plan["source_commit"],
+        submodule_commit=plan["submodules"].get("editor_integrations"),
     )
-    if editor_report.get("status") != "pass":
-        fail("$.vscode.validation_report_sha256", "editor qualification did not pass")
     if sha256_file(editor_report_path) != plan["vscode"]["validation_report_sha256"]:
         fail("$.vscode.validation_report_sha256", "does not match editor qualification")
     if (
-        editor_report.get("source_commit") != plan["source_commit"]
-        or editor_report.get("submodule_commit")
-        != plan["submodules"].get("editor_integrations")
-        or editor_report.get("package_path") != plan["vscode"]["package_path"]
+        editor_report.get("package_path") != plan["vscode"]["package_path"]
         or editor_report.get("package_version") != plan["vscode"]["version"]
         or editor_report.get("compiler_compatibility")
         != plan["vscode"]["compiler_compatibility"]
@@ -346,7 +336,10 @@ def bind_aggregate_artifacts(
 
 def validate_installer_identity(installer_path: Path, *, version: str) -> None:
     assignments: dict[str, str] = {}
-    for line in installer_path.read_text(encoding="utf-8").splitlines():
+    for line in read_evidence_text(
+        installer_path,
+        location="$.installer_sha256",
+    ).splitlines():
         for name in ("APP_VERSION", "APP_CHANNEL"):
             prefix = f'{name}="'
             if line.startswith(prefix) and line.endswith('"'):
@@ -370,7 +363,10 @@ def validate_aggregate_checksums(
         if artifact["kind"] in {"binary-archive", "checksum", "sysroot"}
     }
     observed: dict[str, str] = {}
-    for line in checksums_path.read_text(encoding="utf-8").splitlines():
+    for line in read_evidence_text(
+        checksums_path,
+        location="$.artifacts.checksums",
+    ).splitlines():
         parts = line.split()
         if len(parts) != 2 or parts[1] in observed:
             fail(
@@ -379,6 +375,69 @@ def validate_aggregate_checksums(
         observed[parts[1]] = parts[0]
     if observed != expected:
         fail("$.artifacts.checksums", "does not bind the complete target artifact set")
+
+
+def validate_editor_report(
+    payload: Any,
+    *,
+    source_commit: str,
+    submodule_commit: str | None,
+) -> dict[str, Any]:
+    report = require_object(payload, "editor qualification report")
+    required = {
+        "schema_version",
+        "kind",
+        "source_commit",
+        "submodule_commit",
+        "package_path",
+        "package_version",
+        "compiler_compatibility",
+        "vsix_sha256",
+        "status",
+    }
+    if set(report) != required:
+        fail("$.vscode.validation_report_sha256", "editor report fields are not exact")
+    if (
+        report["schema_version"] != 2
+        or report["kind"] != "stable-editor-qualification"
+        or report["status"] != "pass"
+        or report["source_commit"] != source_commit
+        or report["submodule_commit"] != submodule_commit
+    ):
+        fail("$.vscode.validation_report_sha256", "editor report identity did not pass")
+    for field in ("package_path", "package_version", "compiler_compatibility"):
+        require_nonempty_string(report[field], f"editor qualification report.{field}")
+    require_sha256(report["vsix_sha256"], "editor qualification report.vsix_sha256")
+    return report
+
+
+def validate_documentation_report(
+    payload: Any,
+    *,
+    source_commit: str,
+) -> dict[str, Any]:
+    report = require_object(payload, "documentation qualification report")
+    required = {"schema_version", "kind", "report_id", "source_commit", "status"}
+    if set(report) != required:
+        fail("$.documentation_report", "documentation report fields are not exact")
+    if (
+        report["schema_version"] != 2
+        or report["kind"] != "stable-documentation-qualification"
+        or report["source_commit"] != source_commit
+        or report["status"] != "pass"
+    ):
+        fail("$.documentation_report", "documentation qualification did not pass")
+    require_nonempty_string(report["report_id"], "$.documentation_report.id")
+    return report
+
+
+def read_evidence_text(path: Path, *, location: str) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise GovernanceError(
+            f"{location}: evidence is not readable UTF-8: {exc}"
+        ) from exc
 
 
 def validate_target_report(

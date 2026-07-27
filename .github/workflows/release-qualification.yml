@@ -31,6 +31,7 @@ jobs:
         env:
           SOURCE_COMMIT: ${{ inputs.source_commit }}
           VERSION: ${{ inputs.version }}
+          WORKFLOW_COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
           [[ "${SOURCE_COMMIT}" =~ ^[0-9a-f]{40}$ ]] || {
@@ -39,6 +40,10 @@ jobs:
           }
           [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
             echo "::error::version must be exact stable SemVer"
+            exit 2
+          }
+          [[ "${WORKFLOW_COMMIT}" = "${SOURCE_COMMIT}" ]] || {
+            echo "::error::dispatch ref must resolve to source_commit"
             exit 2
           }
           echo "source_commit=${SOURCE_COMMIT}" >>"${GITHUB_OUTPUT}"
