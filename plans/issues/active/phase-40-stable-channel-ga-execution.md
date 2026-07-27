@@ -190,6 +190,12 @@ Review and upstream coordination ledger:
   one-sided timestamp skew while the workflow contract still requires
   `retention-days: 30`; the real six-container replay produces and validates
   the complete canonical 20-row index.
+- Claude Opus collector-repair review pass 1 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-collector-repair-claude-opus-review-pass-1.md`.
+  It verified the API-path binding, one-sided timestamp bound, and real
+  six-container replay, then requested an explicit over-retention mutation.
+  The repair now rejects both a 61-second shortfall and one second beyond 30
+  days; its error also records the observed timestamps and interval.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 

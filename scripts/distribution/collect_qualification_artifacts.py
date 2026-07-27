@@ -166,7 +166,9 @@ def collect_index(
         ):
             raise GovernanceError(
                 f"{workflow_name}: artifact retention is outside the governed "
-                "30-day API timestamp bound"
+                "30-day API timestamp bound "
+                f"(created_at={created_at}, expires_at={expires_at}, "
+                f"observed={observed_retention})"
             )
         expiries.append((parsed_expiry, expires_at))
         workflow_run = require_object(

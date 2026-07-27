@@ -223,7 +223,24 @@ def test_artifact_collector_rejects_drift() -> None:
         except ValueError:
             pass
         else:
-            raise AssertionError("collector accepted non-governed artifact retention")
+            raise AssertionError("collector accepted excessive retention shortfall")
+        metadata["artifacts"][0]["created_at"] = "2098-12-01T23:59:59Z"
+        rewrite_canonical(metadata_path, metadata)
+        try:
+            load_collector().collect_index(
+                version=VERSION,
+                source_commit=COMMIT,
+                submodules_path=submodules_path,
+                run_id=42,
+                run_attempt=1,
+                run_metadata_path=run_metadata_path,
+                metadata_path=metadata_path,
+                artifact_root=artifact_root,
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("collector accepted retention longer than 30 days")
         metadata["artifacts"][0]["created_at"] = "2098-12-02T00:00:05Z"
         rewrite_canonical(metadata_path, metadata)
         target_dir = (
