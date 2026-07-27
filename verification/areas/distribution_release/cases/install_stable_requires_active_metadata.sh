@@ -24,9 +24,6 @@ generate_channel_metadata_fixture \
   "0.1.0-beta.1"
 
 SITE_INSTALL_ROOT="${tmp_dir}"
-DISPATCH_RELEASE_BASE_URL="file://${tmp_dir}/github-releases"
-DISPATCH_CHANNEL_METADATA_URL="file://${tmp_dir}/channels.json"
 require_failure_contains \
   "stable channel installs require active GA metadata" \
   run_dispatcher index
-

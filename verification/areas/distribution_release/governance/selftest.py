@@ -443,6 +443,15 @@ def test_release_index_transitions() -> None:
         release_value=release_record("beta"),
     )
     assert forward["channels"]["beta"] == "0.1.0-beta.3"
+    active_forward = propose_preview_release(
+        active_index(),
+        channel="alpha",
+        version="0.1.0-alpha.3",
+        release_value=release_record("alpha"),
+    )
+    assert active_forward["ga_status"] == "active"
+    assert active_forward["channels"]["stable"] == "0.1.0"
+    assert active_forward["channels"]["alpha"] == "0.1.0-alpha.3"
     reserved_generation = propose_preview_release(
         preview_index(),
         channel="beta",

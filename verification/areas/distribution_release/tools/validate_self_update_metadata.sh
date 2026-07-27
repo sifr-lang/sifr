@@ -110,12 +110,14 @@ for channel in sorted(expected_channels):
     if not isinstance(release, dict) or release.get("status") != "active":
         raise SystemExit(f"metadata channel {channel} does not point at an active release")
     print(f"{channel}={version}")
+print(f"ga_status={ga_status}")
 PY
 )" || fail "${metadata_values}"
 
 metadata_alpha=""
 metadata_beta=""
 metadata_stable=""
+metadata_ga_status=""
 while IFS='=' read -r key value; do
   case "${key}" in
     alpha)
@@ -127,10 +129,20 @@ while IFS='=' read -r key value; do
     stable)
       metadata_stable="${value}"
       ;;
+    ga_status)
+      metadata_ga_status="${value}"
+      ;;
   esac
 done <<<"${metadata_values}"
 
 [[ -n "${metadata_alpha}" && -n "${metadata_beta}" ]] || fail "metadata versions could not be extracted"
+if [[ "${metadata_ga_status}" == "active" ]]; then
+  [[ -n "${metadata_stable}" ]] || fail "active metadata stable version could not be extracted"
+elif [[ "${metadata_ga_status}" == "preview" ]]; then
+  [[ -z "${metadata_stable}" ]] || fail "preview metadata must not extract a stable version"
+else
+  fail "metadata ga_status could not be extracted"
+fi
 
 for dispatcher in index stable alpha beta; do
   [[ -f "${INSTALL_ROOT}/${dispatcher}" ]] || fail "dispatcher missing: ${INSTALL_ROOT}/${dispatcher}"

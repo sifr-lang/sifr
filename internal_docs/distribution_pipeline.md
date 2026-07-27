@@ -423,17 +423,22 @@ generation, uploads `channels-generation-<N>.json` write-once, and uses
 `--clobber` only for the canonical `channels.json` asset.
 
 After index replacement, the same leased workflow dispatches the pinned
-`sifr-lang/sifr-website` `release-site.yml` at an exact protected-main commit.
-The milestone-40.2 caller pins the site workflow merged through
-[sifr-website PR #14](https://github.com/sifr-lang/sifr-website/pull/14) at
-`721bceca795a79a03af74ccb707d117a6f031f38`.
+`sifr-lang/sifr-website` `release-site.yml` through the immutable
+`sifr-release-site-m40-2` dispatch tag, which must resolve to the exact
+protected-main commit pinned in the payload. The milestone-40.2 caller pins the
+governed workflow introduced by
+[sifr-website PR #14](https://github.com/sifr-lang/sifr-website/pull/14) and its
+GA-aware default-channel binding from
+[sifr-website PR #15](https://github.com/sifr-lang/sifr-website/pull/15), merged
+at `07d88cc3c24707e386c5ad73fb0875c06ffd598f`.
 The protected cross-repository token is limited to that repository's Actions
 operations. The site run checks exact Sifr/site commits, regenerates the four
 dispatchers, validates dispatcher and canonical publication-facts digests,
-re-fetches the exact governed generation immediately before deploy, deploys
-through Wrangler, and verifies the public bytes. The main workflow polls the
-exact attempt/head/title for at most 20 minutes and requests cancellation on
-timeout. The site workflow never writes release metadata.
+re-fetches the exact governed generation immediately before deploy, requires
+the default dispatcher to be beta for a preview index and stable for an active
+index, deploys through Wrangler, and verifies the public bytes. The main
+workflow polls the exact attempt/head/title for at most 20 minutes and requests
+cancellation on timeout. The site workflow never writes release metadata.
 
 The Cursor command wrapper lives at `.cursor/commands/create-new-version.md`.
 

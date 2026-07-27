@@ -375,17 +375,16 @@ pub(crate) fn resolve_update_plan(
     };
     let installer_sha256 = metadata.installer_sha256(&target_version)?;
 
-    if let Some(requested_channel) = requested_channel {
-        if requested_channel != receipt_channel && !force {
-            return Err(self_update_diagnostic(format!(
-                "switching self-update channel from {} to {} requires --force",
-                receipt_channel.as_str(),
-                requested_channel.as_str()
-            )));
-        }
+    let switches_channel = resolved_channel != receipt_channel;
+    if switches_channel && !force {
+        return Err(self_update_diagnostic(format!(
+            "switching self-update channel from {} to {} requires --force",
+            receipt_channel.as_str(),
+            resolved_channel.as_str()
+        )));
     }
 
-    let action = if requested_channel.is_some_and(|channel| channel != receipt_channel) {
+    let action = if switches_channel {
         UpdateAction::ChannelSwitch
     } else {
         match target_version.cmp_version(&current_version) {
@@ -617,7 +616,7 @@ mod tests {
         })
     }
 
-    fn active_metadata() -> ChannelMetadata {
+    pub(super) fn active_metadata() -> ChannelMetadata {
         let mut payload = metadata_payload();
         payload["ga_status"] = json!("active");
         payload["channels"]["stable"] = json!("0.1.0");
@@ -881,3 +880,7 @@ mod tests {
         .is_err());
     }
 }
+
+#[cfg(test)]
+#[path = "self_update_metadata_exact_pin_tests.rs"]
+mod exact_pin_tests;

@@ -23,8 +23,6 @@ generate_channel_metadata_fixture \
   "0.1.0-alpha.1" \
   "0.1.0-beta.1"
 SITE_INSTALL_ROOT="${tmp_dir}/install"
-DISPATCH_RELEASE_BASE_URL="file://${tmp_dir}/github-releases"
-DISPATCH_CHANNEL_METADATA_URL="file://${tmp_dir}/channels.json"
 require_failure_contains \
   "unknown release channel: rc" \
   run_dispatcher index --channel rc
@@ -42,7 +40,8 @@ if rg -n 'alpha\|beta\|rc|\(alpha\|beta\|rc\)|^[[:space:]]*rc\)' \
   "${REPO_ROOT}/crates/sifr/src/self_update_metadata.rs" \
   "${REPO_ROOT}/crates/sifr/src/self_update_receipt.rs" \
   "${REPO_ROOT}/crates/sifr/src/self_update_runner.rs" \
-  "${REPO_ROOT}/.github/workflows/preview-release.yml"
+  "${REPO_ROOT}/.github/workflows/preview-release.yml" \
+  "${REPO_ROOT}/.github/workflows/release-publication.yml"
 then
   echo "live release surface still contains rc acceptance" >&2
   exit 1

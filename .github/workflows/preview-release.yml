@@ -22,12 +22,15 @@ on:
         type: string
 
 permissions:
-  contents: read
+  actions: read
+  contents: write
 
 jobs:
   validate:
     name: validate preview inputs
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.validate.outputs.version }}
       channel: ${{ steps.validate.outputs.channel }}
@@ -49,7 +52,7 @@ jobs:
           INPUT_CHANNEL: ${{ inputs.channel }}
           INPUT_VERSION: ${{ inputs.version }}
           INPUT_BASE_REF: ${{ inputs.base_ref }}
-          SITE_BASE_COMMIT: 721bceca795a79a03af74ccb707d117a6f031f38
+          SITE_BASE_COMMIT: 07d88cc3c24707e386c5ad73fb0875c06ffd598f
         run: |
           set -euo pipefail
           case "${INPUT_CHANNEL}" in
@@ -92,6 +95,8 @@ jobs:
           - target: aarch64-unknown-linux-gnu
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -130,6 +135,9 @@ jobs:
       - validate
       - build-artifacts
     uses: ./.github/workflows/release-publication.yml
+    permissions:
+      actions: read
+      contents: write
     with:
       channel: ${{ needs.validate.outputs.channel }}
       version: ${{ needs.validate.outputs.version }}

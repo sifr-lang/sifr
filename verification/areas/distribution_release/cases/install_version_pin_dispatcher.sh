@@ -11,4 +11,8 @@ require_success_contains \
 
 require_success_contains \
   "sifr mock generated installer version=0.1.0-beta.1" \
+  run_dispatcher index --version 0.1.0-beta.1
+
+require_failure_contains \
+  "--version 0.1.0-beta.1 conflicts with selected channel alpha" \
   run_dispatcher alpha --version 0.1.0-beta.1

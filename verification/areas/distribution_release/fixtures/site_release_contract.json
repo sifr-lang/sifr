@@ -2,12 +2,16 @@
   "schema_version": 2,
   "repository": "sifr-lang/sifr-website",
   "workflow": ".github/workflows/release-site.yml",
-  "workflow_commit": "721bceca795a79a03af74ccb707d117a6f031f38",
-  "workflow_sha256": "6a04809da2be92a7a9eb3685f56c577e6ef204327e8557ec7c179f7bdda3ad90",
-  "workflow_pr": "https://github.com/sifr-lang/sifr-website/pull/14",
+  "workflow_commit": "07d88cc3c24707e386c5ad73fb0875c06ffd598f",
+  "workflow_ref": "sifr-release-site-m40-2",
+  "workflow_sha256": "7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958",
+  "workflow_pr": "https://github.com/sifr-lang/sifr-website/pull/15",
   "dispatcher_generation": {
     "script": "scripts/distribution/generate_dispatchers.sh",
-    "default_channel": "beta",
+    "default_channel_by_ga_status": {
+      "active": "stable",
+      "preview": "beta"
+    },
     "entrypoints": [
       "index",
       "stable",
@@ -30,6 +34,7 @@
     "dispatcher_stable_sha256",
     "dispatcher_alpha_sha256",
     "dispatcher_beta_sha256",
+    "dispatcher_default_channel",
     "publication_facts_sha256"
   ],
   "terminal_run": {

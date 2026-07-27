@@ -641,6 +641,10 @@ release index and immutable installer.
   records a terminal failed attempt, exits, and releases the lease. The
   downstream site workflow is not a second release-index writer and never
   uploads channel metadata.
+- Dispatch the reviewed workflow through an immutable tag because GitHub's
+  workflow-dispatch API accepts only a branch or tag ref. Resolve that tag to
+  the exact reviewed protected-main commit both before any release mutation and
+  again immediately before dispatch.
 - Immediately before site commit/deploy, the downstream workflow re-fetches the
   governed index and requires its generation and digest to match the dispatched
   payload. A timed-out or superseded run therefore cannot deploy after a

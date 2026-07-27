@@ -18,18 +18,20 @@ publication = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8")
 sha = re.compile(r"^[0-9a-f]{64}$")
 commit = re.compile(r"^[0-9a-f]{40}$")
 attempt = re.compile(r"^[A-Za-z0-9._-]{1,80}$")
+workflow_ref = re.compile(r"^[A-Za-z0-9._-]{1,80}$")
 dispatchers = {"index", "stable", "alpha", "beta"}
 
 assert fixture == {
     "schema_version": 2,
     "repository": "sifr-lang/sifr-website",
     "workflow": ".github/workflows/release-site.yml",
-    "workflow_commit": "721bceca795a79a03af74ccb707d117a6f031f38",
-    "workflow_sha256": "6a04809da2be92a7a9eb3685f56c577e6ef204327e8557ec7c179f7bdda3ad90",
-    "workflow_pr": "https://github.com/sifr-lang/sifr-website/pull/14",
+    "workflow_commit": "07d88cc3c24707e386c5ad73fb0875c06ffd598f",
+    "workflow_ref": "sifr-release-site-m40-2",
+    "workflow_sha256": "7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958",
+    "workflow_pr": "https://github.com/sifr-lang/sifr-website/pull/15",
     "dispatcher_generation": {
         "script": "scripts/distribution/generate_dispatchers.sh",
-        "default_channel": "beta",
+        "default_channel_by_ga_status": {"active": "stable", "preview": "beta"},
         "entrypoints": ["index", "stable", "alpha", "beta"],
     },
     "permissions": {"contents": "read", "release_metadata_write": False},
@@ -52,16 +54,22 @@ assert fixture["required_inputs"] == [
     "dispatcher_stable_sha256",
     "dispatcher_alpha_sha256",
     "dispatcher_beta_sha256",
+    "dispatcher_default_channel",
     "publication_facts_sha256",
 ]
 assert commit.fullmatch(fixture["workflow_commit"])
+assert workflow_ref.fullmatch(fixture["workflow_ref"])
 assert sha.fullmatch(fixture["workflow_sha256"])
 for fragment in (
-    "SITE_WORKFLOW_SHA256: 6a04809da2be92a7a9eb3685f56c577e6ef204327e8557ec7c179f7bdda3ad90",
+    "SITE_WORKFLOW_REF: sifr-release-site-m40-2",
+    "SITE_WORKFLOW_SHA256: 7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958",
+    "protected site workflow tag does not resolve to site_base_commit",
+    "protected site workflow tag moved before dispatch",
     "pinned site workflow bytes do not match the reviewed contract",
+    '--arg ref "${SITE_WORKFLOW_REF}"',
     "scripts/distribution/generate_dispatchers.sh \\\n"
     "            --install-root dispatchers \\\n"
-    "            --default-channel beta",
+    '            --default-channel "${site_default_channel}"',
 ):
     assert fragment in publication, fragment
 assert publication.index("pinned site workflow bytes do not match") < publication.index(
@@ -79,6 +87,7 @@ payload = {
     "dispatcher_stable_sha256": "e" * 64,
     "dispatcher_alpha_sha256": "f" * 64,
     "dispatcher_beta_sha256": "1" * 64,
+    "dispatcher_default_channel": "beta",
     "publication_facts_sha256": "2" * 64,
 }
 generated = {
@@ -95,7 +104,15 @@ run = {
 }
 
 
-def validate(candidate, *, live_generation=8, live_digest="c" * 64, observed=None, run_value=None):
+def validate(
+    candidate,
+    *,
+    live_generation=8,
+    live_digest="c" * 64,
+    live_ga_status="preview",
+    observed=None,
+    run_value=None,
+):
     if set(candidate) != set(fixture["required_inputs"]):
         raise ValueError("site dispatch inputs drifted")
     if not commit.fullmatch(candidate["sifr_source_commit"]):
@@ -126,6 +143,11 @@ def validate(candidate, *, live_generation=8, live_digest="c" * 64, observed=Non
         raise ValueError("stale release-index generation")
     if candidate["release_index_sha256"] != live_digest:
         raise ValueError("stale release-index digest")
+    expected_default = fixture["dispatcher_generation"]["default_channel_by_ga_status"].get(
+        live_ga_status
+    )
+    if candidate["dispatcher_default_channel"] != expected_default:
+        raise ValueError("dispatcher default disagrees with live GA status")
     run_value = run if run_value is None else run_value
     if (
         run_value["event"] != "workflow_dispatch"
@@ -138,6 +160,9 @@ def validate(candidate, *, live_generation=8, live_digest="c" * 64, observed=Non
 
 
 validate(payload)
+active_payload = copy.deepcopy(payload)
+active_payload["dispatcher_default_channel"] = "stable"
+validate(active_payload, live_ga_status="active")
 
 negatives = []
 moving = copy.deepcopy(payload)
@@ -149,6 +174,10 @@ wrong_dispatcher["stable"] = "9" * 64
 negatives.append(("dispatcher mismatch", payload, {"observed": wrong_dispatcher}))
 
 negatives.append(("stale generation", payload, {"live_generation": 9}))
+
+wrong_default = copy.deepcopy(payload)
+wrong_default["dispatcher_default_channel"] = "stable"
+negatives.append(("GA default mismatch", wrong_default, {}))
 
 wrong_run = dict(run)
 wrong_run["display_title"] = "Sifr site release another-attempt"

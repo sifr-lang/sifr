@@ -131,8 +131,6 @@ def propose_preview_release(
     proposed_generation: int | None = None,
 ) -> dict[str, Any]:
     current = validate_release_index(current_value)
-    if current["ga_status"] != "preview":
-        fail("$.ga_status", "preview publication cannot mutate an active GA index")
     channel = require_enum(channel, {"alpha", "beta"}, "channel")
     release = validate_release_record(
         release_value,

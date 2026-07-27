@@ -19,6 +19,7 @@ out="${tmp_dir}/site-publication-facts.json"
   --publication-attempt "run-42-1" \
   --release-index-generation 9 \
   --release-index-sha256 "$(printf 'c%.0s' {1..64})" \
+  --dispatcher-default-channel beta \
   --dispatcher-index-sha256 "$(printf 'd%.0s' {1..64})" \
   --dispatcher-stable-sha256 "$(printf 'e%.0s' {1..64})" \
   --dispatcher-alpha-sha256 "$(printf 'f%.0s' {1..64})" \
@@ -36,10 +37,11 @@ assert raw.endswith(b"\n")
 assert raw == (
     json.dumps(value, sort_keys=True, separators=(",", ":")).encode() + b"\n"
 )
-assert value["schema_version"] == 2
+assert value["contract"] == "sifr-site-publication-binding-v1"
 assert value["publication_attempt"] == "run-42-1"
 assert value["site_base_commit"] == "1" * 40
 assert value["release_index"]["generation"] == 9
+assert value["dispatcher_default_channel"] == "beta"
 assert set(value["dispatchers"]) == {"index", "stable", "alpha", "beta"}
 PY
 
@@ -53,6 +55,7 @@ require_failure_contains \
     --publication-attempt "run-42-1" \
     --release-index-generation 9 \
     --release-index-sha256 "$(printf 'c%.0s' {1..64})" \
+    --dispatcher-default-channel beta \
     --dispatcher-index-sha256 "$(printf 'd%.0s' {1..64})" \
     --dispatcher-stable-sha256 "$(printf 'e%.0s' {1..64})" \
     --dispatcher-alpha-sha256 "$(printf 'f%.0s' {1..64})" \

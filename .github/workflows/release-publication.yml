@@ -51,7 +51,8 @@ jobs:
       PUBLICATION_ATTEMPT: ${{ github.run_id }}-${{ github.run_attempt }}
       SITE_REPOSITORY: sifr-lang/sifr-website
       SITE_WORKFLOW: release-site.yml
-      SITE_WORKFLOW_SHA256: 6a04809da2be92a7a9eb3685f56c577e6ef204327e8557ec7c179f7bdda3ad90
+      SITE_WORKFLOW_REF: sifr-release-site-m40-2
+      SITE_WORKFLOW_SHA256: 7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -92,6 +93,15 @@ jobs:
           }
           if [[ ! "${SITE_BASE_COMMIT}" =~ ^[0-9a-f]{40}$ ]]; then
             echo "::error::site_base_commit must be an exact commit"
+            exit 2
+          fi
+          site_dispatch_sha="$(
+            GH_TOKEN="${SITE_TOKEN}" gh api \
+              "repos/${SITE_REPOSITORY}/git/ref/tags/${SITE_WORKFLOW_REF}" \
+              --jq '.object.sha'
+          )"
+          if [[ "${site_dispatch_sha}" != "${SITE_BASE_COMMIT}" ]]; then
+            echo "::error::protected site workflow tag does not resolve to site_base_commit"
             exit 2
           fi
           if gh release view "${VERSION}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
@@ -243,9 +253,18 @@ jobs:
             --expected-generation "${CURRENT_GENERATION}" \
             --expected-sha256 "${CURRENT_SHA256}" \
             --proposed-generation "${PROPOSED_GENERATION}"
+          ga_status="$(
+            python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["ga_status"])' \
+              publication/channels.json
+          )"
+          case "${ga_status}" in
+            preview) site_default_channel="beta" ;;
+            active) site_default_channel="stable" ;;
+            *) echo "::error::unsupported governed ga_status: ${ga_status}"; exit 2 ;;
+          esac
           scripts/distribution/generate_dispatchers.sh \
             --install-root dispatchers \
-            --default-channel beta
+            --default-channel "${site_default_channel}"
           python3 - \
             publication/publication-plan.json \
             "${CHANNEL}" \
@@ -255,12 +274,13 @@ jobs:
             "${CURRENT_GENERATION}" \
             "${CURRENT_SHA256}" \
             "${PROPOSED_GENERATION}" \
-            "${PUBLICATION_ATTEMPT}" <<'PY'
+            "${PUBLICATION_ATTEMPT}" \
+            "${site_default_channel}" <<'PY'
           import json
           import pathlib
           import sys
 
-          out, channel, version, source, site, current_gen, current_sha, proposed_gen, attempt = sys.argv[1:]
+          out, channel, version, source, site, current_gen, current_sha, proposed_gen, attempt, site_default = sys.argv[1:]
           value = {
               "schema_version": 2,
               "operation": "preview-publication",
@@ -271,6 +291,7 @@ jobs:
               "current_index": {"generation": int(current_gen), "sha256": current_sha},
               "proposed_generation": int(proposed_gen),
               "publication_attempt": attempt,
+              "site_default_channel": site_default,
           }
           pathlib.Path(out).write_text(
               json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n",
@@ -288,6 +309,7 @@ jobs:
           {
             echo "release_plan_sha256=${release_plan_sha256}"
             echo "release_index_sha256=${release_index_sha256}"
+            echo "site_default_channel=${site_default_channel}"
           } >>"${GITHUB_OUTPUT}"
 
       - name: Publish write-once version release and verify assets
@@ -402,6 +424,7 @@ jobs:
           DISPATCHER_STABLE_SHA256: ${{ steps.proposal.outputs.dispatcher_stable_sha256 }}
           DISPATCHER_ALPHA_SHA256: ${{ steps.proposal.outputs.dispatcher_alpha_sha256 }}
           DISPATCHER_BETA_SHA256: ${{ steps.proposal.outputs.dispatcher_beta_sha256 }}
+          SITE_DEFAULT_CHANNEL: ${{ steps.proposal.outputs.site_default_channel }}
         run: |
           set -euo pipefail
           scripts/distribution/generate_site_publication_facts.py \
@@ -412,6 +435,7 @@ jobs:
             --publication-attempt "${PUBLICATION_ATTEMPT}" \
             --release-index-generation "${PROPOSED_GENERATION}" \
             --release-index-sha256 "${RELEASE_INDEX_SHA256}" \
+            --dispatcher-default-channel "${SITE_DEFAULT_CHANNEL}" \
             --dispatcher-index-sha256 "${DISPATCHER_INDEX_SHA256}" \
             --dispatcher-stable-sha256 "${DISPATCHER_STABLE_SHA256}" \
             --dispatcher-alpha-sha256 "${DISPATCHER_ALPHA_SHA256}" \
@@ -433,11 +457,21 @@ jobs:
           DISPATCHER_ALPHA_SHA256: ${{ steps.proposal.outputs.dispatcher_alpha_sha256 }}
           DISPATCHER_BETA_SHA256: ${{ steps.proposal.outputs.dispatcher_beta_sha256 }}
           PUBLICATION_FACTS_SHA256: ${{ steps.site.outputs.publication_facts_sha256 }}
+          SITE_DEFAULT_CHANNEL: ${{ steps.proposal.outputs.site_default_channel }}
         run: |
           set -euo pipefail
           dispatched_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          site_dispatch_sha="$(
+            GH_TOKEN="${SITE_TOKEN}" gh api \
+              "repos/${SITE_REPOSITORY}/git/ref/tags/${SITE_WORKFLOW_REF}" \
+              --jq '.object.sha'
+          )"
+          if [[ "${site_dispatch_sha}" != "${SITE_BASE_COMMIT}" ]]; then
+            echo "::error::protected site workflow tag moved before dispatch"
+            exit 2
+          fi
           jq -n \
-            --arg ref "${SITE_BASE_COMMIT}" \
+            --arg ref "${SITE_WORKFLOW_REF}" \
             --arg source "${SOURCE_COMMIT}" \
             --arg plan "${RELEASE_PLAN_SHA256}" \
             --arg attempt "${PUBLICATION_ATTEMPT}" \
@@ -449,6 +483,7 @@ jobs:
             --arg dispatcher_alpha "${DISPATCHER_ALPHA_SHA256}" \
             --arg dispatcher_beta "${DISPATCHER_BETA_SHA256}" \
             --arg facts "${PUBLICATION_FACTS_SHA256}" \
+            --arg dispatcher_default "${SITE_DEFAULT_CHANNEL}" \
             '{
               ref: $ref,
               inputs: {
@@ -462,6 +497,7 @@ jobs:
                 dispatcher_stable_sha256: $dispatcher_stable,
                 dispatcher_alpha_sha256: $dispatcher_alpha,
                 dispatcher_beta_sha256: $dispatcher_beta,
+                dispatcher_default_channel: $dispatcher_default,
                 publication_facts_sha256: $facts
               }
             }' |
@@ -483,14 +519,20 @@ jobs:
           for _ in $(seq 1 120); do
             runs="$(
               GH_TOKEN="${SITE_TOKEN}" gh api \
-                "repos/${SITE_REPOSITORY}/actions/workflows/${SITE_WORKFLOW}/runs?event=workflow_dispatch&per_page=30"
+                --method GET \
+                --paginate \
+                --slurp \
+                "repos/${SITE_REPOSITORY}/actions/workflows/${SITE_WORKFLOW}/runs" \
+                -f event=workflow_dispatch \
+                -f created="${DISPATCHED_AT}..*" \
+                -f per_page=100
             )"
             matched="$(
               jq -r \
                 --arg title "${expected_title}" \
                 --arg sha "${SITE_BASE_COMMIT}" \
                 --arg since "${DISPATCHED_AT}" \
-                '.workflow_runs[]
+                '.[].workflow_runs[]
                  | select(.display_title == $title)
                  | select(.head_sha == $sha)
                  | select(.event == "workflow_dispatch")

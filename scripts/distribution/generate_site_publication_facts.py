@@ -32,6 +32,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--publication-attempt", required=True)
     parser.add_argument("--release-index-generation", type=int, required=True)
     parser.add_argument("--release-index-sha256", required=True)
+    parser.add_argument(
+        "--dispatcher-default-channel",
+        required=True,
+        choices=("beta", "stable"),
+    )
     for dispatcher in DISPATCHERS:
         parser.add_argument(f"--dispatcher-{dispatcher}-sha256", required=True)
     return parser.parse_args()
@@ -61,7 +66,7 @@ def main() -> None:
         for name in DISPATCHERS
     }
     payload = {
-        "schema_version": 2,
+        "contract": "sifr-site-publication-binding-v1",
         "publication_attempt": args.publication_attempt,
         "source_commit": args.source_commit,
         "site_base_commit": args.site_base_commit,
@@ -76,6 +81,7 @@ def main() -> None:
                 "release_index.sha256",
             ),
         },
+        "dispatcher_default_channel": args.dispatcher_default_channel,
         "dispatchers": dispatchers,
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
