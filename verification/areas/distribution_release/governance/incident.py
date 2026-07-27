@@ -133,8 +133,9 @@ def validate_incident_signoff(
         fail("$.attempts", "run_id values must be unique and strictly increasing")
     if any(attempt["status"] == "started" for attempt in attempts):
         fail("$.attempts", "completed sign-off cannot contain a pending attempt")
-    if attempts[-1]["status"] != "completed":
-        fail("$.attempts", "final attempt must be completed")
+    completed_attempts = sum(attempt["status"] == "completed" for attempt in attempts)
+    if completed_attempts != 1 or attempts[-1]["status"] != "completed":
+        fail("$.attempts", "must contain exactly one final completed attempt")
 
     mutation = require_object(signoff["index_mutation"], "$.index_mutation")
     require_exact_keys(

@@ -19,6 +19,7 @@ from .common import (
     sha256_file,
     write_canonical_json,
 )
+from .evidence_custody import validate_changed_path_set, validate_incident_directory
 from .incident import validate_incident_signoff
 from .incident_evidence import validate_incident_evidence_commit
 from .incident_fixture import (
@@ -28,7 +29,11 @@ from .incident_fixture import (
     run_incident_fixture,
 )
 from .incident_planner import materialize_incident_mutation
-from .release_index import propose_incident_roll_forward, validate_release_index
+from .release_index import (
+    propose_incident_roll_forward,
+    propose_rollback,
+    validate_release_index,
+)
 from .release_plan import validate_release_plan, validate_site_release_facts
 from .selftest import release_record as base_release_record
 from .selftest import valid_plan as base_plan
@@ -149,6 +154,17 @@ def test_site_timeout_resumes_without_second_index_mutation() -> None:
 def test_first_ga_incident_roll_forward() -> None:
     with tempfile.TemporaryDirectory(prefix="sifr-incident-forward-") as temporary:
         fixture = build_roll_forward_fixture(Path(temporary))
+        sole_stable = read_index(fixture.root)
+        expect_rejected(
+            lambda: propose_rollback(
+                sole_stable,
+                incident_id="inc-first-ga-rollback",
+                affected_version="0.1.0",
+                target_version="0.1.0",
+                proposed_generation=21,
+            ),
+            "distinct retained active stable release",
+        )
         write_range_fixture(
             fixture.root / "extension-metadata.json",
             ">=9.0.0,<10.0.0",
@@ -316,23 +332,37 @@ def test_evidence_only_commit_validator() -> None:
                 "evidence_sha256": sha256_bytes(evidence),
             },
         }
-        incident_root = repository / "plans" / "incidents" / request["incident_id"]
+        incident_root = (
+            repository / "plans" / "releases" / "incidents" / request["incident_id"]
+        )
         incident_root.mkdir(parents=True)
         (incident_root / "stable-incident-request.json").write_bytes(canonical_json_bytes(request))
         (incident_root / "withdrawal-evidence.txt").write_bytes(evidence)
         git(repository, "add", "plans")
         git(repository, "commit", "-qm", "incident evidence")
         head = git(repository, "rev-parse", "HEAD").strip()
+        request_relative = (
+            "plans/releases/incidents/"
+            f"{request['incident_id']}/stable-incident-request.json"
+        )
+        evidence_relative = (
+            "plans/releases/incidents/"
+            f"{request['incident_id']}/withdrawal-evidence.txt"
+        )
+        validate_changed_path_set({request_relative, evidence_relative})
+        validate_incident_directory(incident_root)
+        expect_rejected(
+            lambda: validate_changed_path_set(
+                {request_relative, evidence_relative, "crates/sifr/src/main.rs"}
+            ),
+            "cannot mix with source changes",
+        )
         validated = validate_incident_evidence_commit(
             repository=repository,
             base=base,
             head=head,
-            request_path=(
-                f"plans/incidents/{request['incident_id']}/stable-incident-request.json"
-            ),
-            evidence_path=(
-                f"plans/incidents/{request['incident_id']}/withdrawal-evidence.txt"
-            ),
+            request_path=request_relative,
+            evidence_path=evidence_relative,
         )
         assert validated == request
 
@@ -345,12 +375,8 @@ def test_evidence_only_commit_validator() -> None:
                 repository=repository,
                 base=base,
                 head=bad_head,
-                request_path=(
-                    f"plans/incidents/{request['incident_id']}/stable-incident-request.json"
-                ),
-                evidence_path=(
-                    f"plans/incidents/{request['incident_id']}/withdrawal-evidence.txt"
-                ),
+                request_path=request_relative,
+                evidence_path=evidence_relative,
             ),
             "exactly request",
         )

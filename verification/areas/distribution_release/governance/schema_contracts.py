@@ -41,6 +41,22 @@ def validate_schema_contracts() -> None:
             raise ValueError(
                 f"qualification schema accepted invalid expiry: {expires_at}"
             )
+    incident_schema = SCHEMA_ROOT / "stable_incident_signoff.schema.json"
+    no_completed = copy.deepcopy(fixtures["stable_incident_signoff.schema.json"])
+    no_completed["attempts"][0]["status"] = "failed"
+    duplicate_completed = copy.deepcopy(fixtures["stable_incident_signoff.schema.json"])
+    duplicate_completed["attempts"].append(
+        {**copy.deepcopy(duplicate_completed["attempts"][0]), "run_id": 2}
+    )
+    for invalid_signoff in (no_completed, duplicate_completed):
+        try:
+            validate_instance(invalid_signoff, incident_schema)
+        except JsonSchemaError:
+            pass
+        else:
+            raise ValueError(
+                "incident sign-off schema accepted an invalid completed-attempt count"
+            )
 
 
 def schema_fixtures() -> dict[str, Any]:
@@ -300,6 +316,7 @@ def release_report() -> dict[str, Any]:
             ("distribution_release", "full"),
             ("distribution_release", "qualification"),
             ("distribution_release", "evidence-custody"),
+            ("distribution_release", "incident-governance"),
         ],
     }
     return {
@@ -334,7 +351,12 @@ def release_report() -> dict[str, Any]:
                     ("documentation", ["structure"]),
                     (
                         "distribution_release",
-                        ["full", "qualification", "evidence-custody"],
+                        [
+                            "full",
+                            "qualification",
+                            "evidence-custody",
+                            "incident-governance",
+                        ],
                     ),
                 )
             ],

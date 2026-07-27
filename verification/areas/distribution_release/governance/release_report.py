@@ -38,7 +38,12 @@ REQUIRED_SUITES = {
     },
     "developer_tooling": {"full", "editor-release"},
     "documentation": {"structure"},
-    "distribution_release": {"full", "qualification", "evidence-custody"},
+    "distribution_release": {
+        "full",
+        "qualification",
+        "evidence-custody",
+        "incident-governance",
+    },
 }
 
 

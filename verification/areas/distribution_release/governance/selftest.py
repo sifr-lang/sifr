@@ -25,7 +25,6 @@ from .evidence_custody import (
 from .incident import validate_incident_request, validate_incident_signoff
 from .release_index import (
     propose_preview_release,
-    validate_incident_index_mutation,
     validate_release_index,
     validate_release_index_transition,
 )
@@ -237,6 +236,7 @@ def valid_report() -> dict[str, Any]:
             ("distribution_release", "full"),
             ("distribution_release", "qualification"),
             ("distribution_release", "evidence-custody"),
+            ("distribution_release", "incident-governance"),
         ],
     }
     steps = []
@@ -288,7 +288,12 @@ def valid_report() -> dict[str, Any]:
                     ("documentation", {"structure"}),
                     (
                         "distribution_release",
-                        {"full", "qualification", "evidence-custody"},
+                        {
+                            "full",
+                            "qualification",
+                            "evidence-custody",
+                            "incident-governance",
+                        },
                     ),
                 )
             ],
@@ -488,32 +493,6 @@ def test_release_index_transitions() -> None:
         ),
         preview_index(),
     )
-    incident = mutate(active_index(), lambda item: item.update({"generation": 9}))
-    incident["releases"]["0.1.0"]["status"] = "withdrawn"
-    incident["releases"]["0.1.0"]["incident_id"] = "inc-2026-001"
-    incident["releases"]["0.1.1"] = release_record("stable")
-    incident["channels"]["stable"] = "0.1.1"
-    validate_incident_index_mutation(
-        active_index(),
-        incident,
-        operation="incident-roll-forward",
-        incident_id="inc-2026-001",
-        affected_version="0.1.0",
-        successor_version="0.1.1",
-    )
-    invalid = mutate(incident, lambda item: item["releases"]["0.1.0"].update({"status": "active"}))
-    invalid["releases"]["0.1.0"].pop("incident_id")
-    expect_rejected(
-        lambda value: validate_incident_index_mutation(
-            active_index(),
-            value,
-            operation="incident-roll-forward",
-            incident_id="inc-2026-001",
-            affected_version="0.1.0",
-            successor_version="0.1.1",
-        ),
-        invalid,
-    )
 
 def test_release_plan_mutations() -> None:
     ga = valid_plan()
@@ -559,6 +538,7 @@ def test_release_plan_mutations() -> None:
         lambda value: validate_release_plan(value, incident_request_sha256=SHA_B),
         incident,
     )
+
 
 def test_incident_mutations() -> None:
     request = valid_incident_request()

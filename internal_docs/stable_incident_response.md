@@ -3,7 +3,7 @@
 This runbook defines the governed response to a defect in the active stable
 Sifr release. It is authoritative for local planning and fixture drills now.
 Production workflow inputs and credentials remain intentionally absent until
-the protected publication milestone wires this tested core into the single
+the protected publication workflow wires this tested core into the single
 release-publication workflow.
 
 ## Ownership and service target
@@ -49,7 +49,7 @@ of the affected version in one new index generation.
 
 The durable incident identifier is used in all locations:
 
-1. `plans/incidents/<incident-id>/stable-incident-request.json` and
+1. `plans/releases/incidents/<incident-id>/stable-incident-request.json` and
    `withdrawal-evidence.txt` in an evidence-only PR. Repository validation
    permits exactly those two added files, checks canonical request bytes, and
    verifies the evidence digest. Source changes, renames, deletions, or
@@ -125,7 +125,7 @@ immutable installer fixtures, a Marketplace range stub, extension metadata,
 and a non-deploying site repository. It refuses production credentials, has no
 network or production adapter, and cannot invoke `gh release`, `vsce publish`,
 or repository dispatch. The production workflow still exposes neither incident
-operation and receives no incident write permissions in this milestone.
+operation and receives no incident write permissions at this boundary.
 
 Run the capability demo with:
 

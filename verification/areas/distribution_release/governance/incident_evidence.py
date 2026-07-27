@@ -35,9 +35,11 @@ def validate_incident_evidence_commit(
     if request_relative.parent != evidence_relative.parent:
         raise GovernanceError("incident request and evidence must share one incident directory")
     parts = request_relative.parts
-    if len(parts) != 4 or parts[:2] != ("plans", "incidents"):
-        raise GovernanceError("incident evidence must use plans/incidents/<incident-id>/")
-    require_incident_id(parts[2], "incident evidence directory")
+    if len(parts) != 5 or parts[:3] != ("plans", "releases", "incidents"):
+        raise GovernanceError(
+            "incident evidence must use plans/releases/incidents/<incident-id>/"
+        )
+    require_incident_id(parts[3], "incident evidence directory")
 
     _git(repository, "merge-base", "--is-ancestor", base, head)
     changed = _git(
@@ -64,7 +66,7 @@ def validate_incident_evidence_commit(
         raise GovernanceError("withdrawal evidence must not be empty")
     request = _load_canonical_bytes(request_bytes)
     validate_incident_request(request)
-    if request["incident_id"] != parts[2]:
+    if request["incident_id"] != parts[3]:
         raise GovernanceError("incident directory does not match request incident_id")
     if request["withdrawal"]["evidence_sha256"] != sha256_bytes(evidence_bytes):
         raise GovernanceError("withdrawal evidence bytes do not match the request digest")

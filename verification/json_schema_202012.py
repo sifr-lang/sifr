@@ -23,8 +23,11 @@ SCHEMA_KEYS = {
     "propertyNames",
     "additionalProperties",
     "items",
+    "contains",
     "minItems",
     "maxItems",
+    "minContains",
+    "maxContains",
     "uniqueItems",
     "minProperties",
     "minimum",
@@ -73,7 +76,16 @@ def _lint_node(node: Any, path: Path, location: str) -> None:
             raise JsonSchemaError(f"{path}:{location}.{keyword}: must be an object")
         for name, child in children.items():
             _lint_node(child, path, f"{location}.{keyword}.{name}")
-    for keyword in ("items", "propertyNames", "additionalProperties", "if", "then", "else", "not"):
+    for keyword in (
+        "items",
+        "contains",
+        "propertyNames",
+        "additionalProperties",
+        "if",
+        "then",
+        "else",
+        "not",
+    ):
         child = node.get(keyword)
         if child is not None and isinstance(child, (dict, bool)):
             _lint_node(child, path, f"{location}.{keyword}")
@@ -193,6 +205,17 @@ def _validate_array(
         raise JsonSchemaError(f"{location}: has too many items")
     if schema.get("uniqueItems") and len({canonical(item) for item in value}) != len(value):
         raise JsonSchemaError(f"{location}: items must be unique")
+    if "contains" in schema:
+        matches = sum(
+            _matches(item, schema["contains"], root_path, current_path, f"{location}[{index}]")
+            for index, item in enumerate(value)
+        )
+        minimum = schema.get("minContains", 1)
+        maximum = schema.get("maxContains")
+        if matches < minimum:
+            raise JsonSchemaError(f"{location}: has too few matching items")
+        if maximum is not None and matches > maximum:
+            raise JsonSchemaError(f"{location}: has too many matching items")
     if "items" in schema:
         for index, item in enumerate(value):
             _validate(item, schema["items"], root_path, current_path, f"{location}[{index}]")

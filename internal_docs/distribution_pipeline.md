@@ -497,7 +497,7 @@ the stable channel atomically in one validated generation.
 Incident requests are prepared outside the repository with exact affected
 plan, withdrawal-evidence, and—for rollback—target-plan digests. The
 evidence-commit validator permits exactly
-`plans/incidents/<incident-id>/stable-incident-request.json` and
+`plans/releases/incidents/<incident-id>/stable-incident-request.json` and
 `withdrawal-evidence.txt` as added files. It rejects source edits, renames,
 deletions, unrelated files, noncanonical request bytes, directory/id drift, and
 evidence-digest drift.

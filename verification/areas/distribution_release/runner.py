@@ -45,7 +45,13 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  manifest={MANIFEST_PATH.relative_to(REPO_ROOT)}", flush=True)
     print("  bless=no", flush=True)
 
-    suite_results = [run_suite(suite) for suite in selected]
+    incident_suite_selected = any(
+        str(suite["name"]) == "incident-governance" for suite in selected
+    )
+    suite_results = [
+        run_suite(suite, include_incident=not incident_suite_selected)
+        for suite in selected
+    ]
     total_variants = sum(int(result["total_variants"]) for result in suite_results)
     total_failures = sum(int(result["total_failures"]) for result in suite_results)
     payload = {
@@ -96,7 +102,11 @@ def select_suites(manifest: dict[str, Any], requested: set[str]) -> list[dict[st
     return selected
 
 
-def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
+def run_suite(
+    suite: dict[str, Any],
+    *,
+    include_incident: bool = True,
+) -> dict[str, Any]:
     suite_name = str(suite["name"])
     case = validate_suite_case(suite)
     if suite_name == "evidence-custody":
@@ -125,12 +135,13 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
         if suite_name == "full":
             variants.append(run_python_module("governance.selftest", "governance-contracts"))
             variants.append(run_python_module("governance.schema_epoch", "schema-epoch"))
-            variants.append(
-                run_python_module(
-                    "governance.incident_recovery_selftest",
-                    "incident-recovery",
+            if include_incident:
+                variants.append(
+                    run_python_module(
+                        "governance.incident_recovery_selftest",
+                        "incident-recovery",
+                    )
                 )
-            )
     failures = sum(1 for variant in variants if variant["status"] == "fail")
     return {
         "name": suite_name,

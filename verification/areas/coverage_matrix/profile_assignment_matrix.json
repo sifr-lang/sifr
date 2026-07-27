@@ -96,9 +96,18 @@
       "surface_id": "distribution_release",
       "profiles": {
         "create-pr": [],
-        "merge": ["distribution_release:representative"],
-        "nightly": ["distribution_release:full"],
-        "release": ["distribution_release:full"]
+        "merge": [
+          "distribution_release:representative",
+          "distribution_release:incident-governance"
+        ],
+        "nightly": [
+          "distribution_release:full",
+          "distribution_release:incident-governance"
+        ],
+        "release": [
+          "distribution_release:full",
+          "distribution_release:incident-governance"
+        ]
       }
     },
     {

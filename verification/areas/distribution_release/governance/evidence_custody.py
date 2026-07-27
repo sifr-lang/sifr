@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from .common import GovernanceError, load_json_strict, sha256_bytes
+from .incident_evidence import validate_incident_evidence_commit
 from .incident import validate_incident_request, validate_incident_signoff
 from .release_plan import validate_release_plan, validate_release_signoff
 from .release_report import validate_release_profile_report
@@ -22,13 +23,14 @@ CANDIDATE_PATH_RE = re.compile(
 )
 INCIDENT_PATH_RE = re.compile(
     r"^plans/releases/incidents/([a-z0-9][a-z0-9-]{2,63})/"
-    r"(stable-incident-request|stable-incident-signoff)\.json$"
+    r"((stable-incident-request|stable-incident-signoff)\.json|withdrawal-evidence\.txt)$"
 )
 
 
 def run_evidence_custody_checks() -> int:
     try:
         validate_changed_evidence_scope()
+        validate_committed_incident_addition()
         validate_existing_evidence()
     except GovernanceError as exc:
         print(f"evidence-custody: {exc}", file=sys.stderr)
@@ -79,11 +81,7 @@ def validate_changed_path_set(changed: set[str]) -> None:
 
 
 def changed_paths() -> set[str]:
-    base_ref = os.environ.get("SIFR_EVIDENCE_BASE_REF", "origin/main")
-    merge_base = git_output("merge-base", base_ref, "HEAD", allow_failure=True)
-    if not merge_base:
-        merge_base = git_output("rev-parse", "HEAD^", allow_failure=True)
-    merge_base = require_comparison_base(merge_base, base_ref=base_ref)
+    merge_base = comparison_base()
     tracked: set[str] = set()
     tracked.update(
         line
@@ -106,6 +104,39 @@ def changed_paths() -> set[str]:
         if line
     )
     return tracked
+
+
+def comparison_base() -> str:
+    base_ref = os.environ.get("SIFR_EVIDENCE_BASE_REF", "origin/main")
+    merge_base = git_output("merge-base", base_ref, "HEAD", allow_failure=True)
+    if not merge_base:
+        merge_base = git_output("rev-parse", "HEAD^", allow_failure=True)
+    return require_comparison_base(merge_base, base_ref=base_ref)
+
+
+def validate_committed_incident_addition() -> None:
+    merge_base = comparison_base()
+    committed = {
+        line
+        for line in git_output("diff", "--name-only", f"{merge_base}...HEAD").splitlines()
+        if line
+    }
+    request_paths = sorted(
+        path
+        for path in committed
+        if path.endswith("/stable-incident-request.json")
+        and path.startswith("plans/releases/incidents/")
+    )
+    for request_path in request_paths:
+        directory = request_path.rsplit("/", 1)[0]
+        evidence_path = f"{directory}/withdrawal-evidence.txt"
+        validate_incident_evidence_commit(
+            repository=REPO_ROOT,
+            base=merge_base,
+            head="HEAD",
+            request_path=request_path,
+            evidence_path=evidence_path,
+        )
 
 
 def require_comparison_base(value: str, *, base_ref: str) -> str:
@@ -186,16 +217,25 @@ def validate_candidate_directory(directory: Path) -> None:
 
 def validate_incident_directory(directory: Path) -> None:
     files = {path.name for path in directory.iterdir() if path.is_file()}
-    allowed = {"stable-incident-request.json", "stable-incident-signoff.json"}
+    allowed = {
+        "stable-incident-request.json",
+        "withdrawal-evidence.txt",
+        "stable-incident-signoff.json",
+    }
     unknown = sorted(files.difference(allowed))
     if unknown:
         raise GovernanceError(f"{directory}: unsupported incident evidence: {', '.join(unknown)}")
     request_path = directory / "stable-incident-request.json"
     if not request_path.is_file():
         raise GovernanceError(f"{directory}: stable-incident-request.json is required")
+    evidence_path = directory / "withdrawal-evidence.txt"
+    if not evidence_path.is_file():
+        raise GovernanceError(f"{directory}: withdrawal-evidence.txt is required")
     request = validate_incident_request(load_json_strict(request_path, require_canonical=True))
     if request["incident_id"] != directory.name:
         raise GovernanceError(f"{directory}: incident id does not match directory")
+    if request["withdrawal"]["evidence_sha256"] != sha256_bytes(evidence_path.read_bytes()):
+        raise GovernanceError(f"{directory}: withdrawal evidence digest mismatch")
     signoff_path = directory / "stable-incident-signoff.json"
     if signoff_path.is_file():
         signoff = validate_incident_signoff(

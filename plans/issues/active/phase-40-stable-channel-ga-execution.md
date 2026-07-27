@@ -444,7 +444,8 @@ updating or deleting that exact tag with no bypass actors.
   immutable installer. Downgrades refuse without explicit `--force`.
 - Evidence-only commit validation accepts exactly the canonical incident
   request and digest-bound withdrawal evidence under
-  `plans/incidents/<incident-id>/`; source changes or unrelated evidence fail.
+  `plans/releases/incidents/<incident-id>/`; source changes or unrelated
+  evidence fail.
 - The stable incident runbook records owner, non-initiating approval authority,
   30-minute acknowledgement target, triggers, communication locations, retry
   matrix, retention, first-GA roll-forward, and closure requirements.
@@ -454,3 +455,20 @@ updating or deleting that exact tag with no bypass actors.
   eight-scenario recovery module; `demos/stable_incident_recovery_demo.sh`
   demonstrates burned-generation resume, forced rollback recovery through both
   client paths, immutable-installer execution, and first-GA roll-forward.
+- Claude Opus review pass 1 was not approved and is archived at
+  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-1.md`.
+  Its five findings are remediated: canonical incident custody now uses
+  `plans/releases/incidents/` and is called by the evidence-custody repository
+  check; the sole-first-GA rollback rejection has a direct acceptance test;
+  incident index-transition cases live in the dedicated incident module rather
+  than consuming the shared governance file-size boundary; the sign-off schema
+  and validator require exactly one completed terminal attempt; and merge,
+  nightly, and release profiles select the named `incident-governance` suite,
+  with the release report requiring it and the full-suite runner de-duplicating
+  the module.
+- The authoritative create-PR profile completed all functional validation,
+  including 19/19 Python-interop variants, but exited on the host timing budget
+  after that passing step took 788.45 seconds against 600 seconds. This
+  unrelated host variance is recorded in
+  `plans/phases/adhoc_performance_budget_host_variance.md` and is not a Phase
+  40 prerequisite; no baseline or waiver changed.

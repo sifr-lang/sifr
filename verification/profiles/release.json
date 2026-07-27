@@ -221,7 +221,8 @@
       "suites": [
         "full",
         "qualification",
-        "evidence-custody"
+        "evidence-custody",
+        "incident-governance"
       ],
       "resource_classes": [
         "default-local"

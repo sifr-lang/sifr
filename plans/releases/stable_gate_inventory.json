@@ -184,7 +184,7 @@
       "owner": "compiler/verification",
       "current_behavior": "executes distribution, tooling, documentation, and Rust release gates",
       "activation_boundary": "architecture-lock",
-      "disposition": "durably executes evidence-custody, editor-release expansion, and stable-candidate"
+      "disposition": "durably executes incident-governance, evidence-custody, editor-release expansion, and stable-candidate"
     }
   ]
 }
