@@ -39,6 +39,7 @@ from governance.common import (  # noqa: E402
     write_canonical_json,
 )
 from governance.release_index import propose_preview_release, validate_release_record  # noqa: E402
+from governance.planner import materialize_stable_plan  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
@@ -98,6 +99,20 @@ def parse_args() -> argparse.Namespace:
     plan.add_argument("--out", required=True)
     plan.add_argument("--live-index")
 
+    stable_plan = commands.add_parser("plan-stable-release")
+    stable_plan.add_argument("--spec", required=True)
+    stable_plan.add_argument("--source-root", default=str(REPO_ROOT))
+    stable_plan.add_argument("--source-ref", required=True)
+    stable_plan.add_argument("--live-index", required=True)
+    stable_plan.add_argument("--release-report", required=True)
+    stable_plan.add_argument("--qualification-index", required=True)
+    stable_plan.add_argument("--artifact-root", required=True)
+    stable_plan.add_argument("--stable-support-claims", required=True)
+    stable_plan.add_argument("--rust-validation-report", required=True)
+    stable_plan.add_argument("--documentation-report", required=True)
+    stable_plan.add_argument("--release-notes", required=True)
+    stable_plan.add_argument("--out", required=True)
+
     record = commands.add_parser("build-release-record")
     record.add_argument("--version", required=True)
     record.add_argument("--channel", required=True, choices=("alpha", "beta", "stable"))
@@ -135,6 +150,8 @@ def main() -> int:
             build_release_record(args)
         elif args.command == "generate-release-plan":
             generate_release_plan(args)
+        elif args.command == "plan-stable-release":
+            plan_stable_release(args)
         elif args.command == "generate-site-facts":
             generate_site_facts(args)
         elif args.command == "generate-incident-request":
@@ -232,6 +249,32 @@ def generate_release_plan(args: argparse.Namespace) -> None:
     live_index = load_json_strict(Path(args.live_index)) if args.live_index else None
     validate_release_plan(payload, active_index=live_index)
     write_canonical_json(Path(args.out), payload, refuse_existing=True)
+
+
+def plan_stable_release(args: argparse.Namespace) -> None:
+    output = Path(args.out).resolve()
+    try:
+        output.relative_to(REPO_ROOT.resolve())
+    except ValueError:
+        pass
+    else:
+        raise GovernanceError("stable release evidence output must be outside the repository")
+    if output.exists():
+        raise GovernanceError(f"refusing to overwrite stable release evidence: {output}")
+    payload = materialize_stable_plan(
+        plan_spec=Path(args.spec),
+        source_root=Path(args.source_root),
+        source_ref=args.source_ref,
+        active_index_path=Path(args.live_index),
+        release_report_path=Path(args.release_report),
+        qualification_index_path=Path(args.qualification_index),
+        artifact_root=Path(args.artifact_root),
+        stable_support_claims_path=Path(args.stable_support_claims),
+        rust_validation_report_path=Path(args.rust_validation_report),
+        documentation_report_path=Path(args.documentation_report),
+        release_notes_path=Path(args.release_notes),
+    )
+    write_canonical_json(output, payload, refuse_existing=True)
 
 
 def build_release_record(args: argparse.Namespace) -> None:

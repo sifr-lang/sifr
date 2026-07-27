@@ -74,12 +74,12 @@ Artifacts mapped to the Phase 40 exit gate:
 
 ### milestone_40_1: Canonical Release Plan and Qualification
 
-- [ ] Implement the non-mutating stable planner and canonical digest binding.
-- [ ] Consume and register the separately delivered Rust-interop
+- [x] Implement the non-mutating stable planner and canonical digest binding.
+- [x] Consume and register the separately delivered Rust-interop
   stable-candidate suite and claims artifact before qualification.
 - [ ] Qualify all compiler, sysroot, installer, documentation, Rust-claim, site,
   and VSIX artifacts.
-- [ ] Validate first-GA and normal predecessor/rollback semantics.
+- [x] Validate first-GA and normal predecessor/rollback semantics.
 - [ ] Record review rounds, PR, validation, and merge.
 
 ### milestone_40_2: Stable Distribution and Self-Update
@@ -196,3 +196,103 @@ architecture/gate lock PR.
   performs its preview-only structural checks with text matching. Its mandatory
   strict schema-v2 active/preview parser and stable behavior remain assigned to
   `milestone_40_2`; 40.0 keeps stable resolution unavailable.
+
+### milestone_40_1
+
+Status: implementation, local qualification, and independent review complete;
+ready [PR #3028](https://github.com/sifr-lang/sifr/pull/3028) is open. The
+separately owned Rust certification input merged through
+[PR #3026](https://github.com/sifr-lang/sifr/pull/3026) and is consumed without
+modifying its Rust-interop implementation.
+
+- Review pass 1:
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-1.md`
+  requested exact artifact-id and path custody, end-to-end planner
+  materialization and drift tests, immutable-installer identity binding,
+  deterministic VSIX evidence, the governed locked build path, verified
+  workflow repository identity, exact Rust-claim consumption, and the missing
+  capability demo. Those findings are remediated and await the next review
+  pass.
+- Review pass 2:
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-2.md`
+  verified all pass-1 product-path corrections, then found a confounded
+  digest-sensitivity fixture, a symlinked-container custody escape, incomplete
+  artifact-id-to-target/container binding, and a test-order flaw in the
+  outside-checkout assertion. Remediation now uses a same-source no-op control,
+  rejects container symlinks and resolved paths outside the artifact root,
+  binds every governed artifact id to its exact kind/target/upload/name,
+  exercises the output guard with valid evidence, and derives the 30-day
+  retention interval from API timestamps. A third review pass is required.
+- Review pass 3:
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-3.md`
+  confirmed the pass-2 corrections, then found raw non-UTF-8 evidence
+  tracebacks, an unbound dispatch-workflow commit, loose editor/documentation
+  report shapes, and missing mismatched-ref coverage. Remediation now converts
+  text-decoding failures into governed errors, requires the dispatch head SHA
+  to equal the candidate source commit, validates exact schema-v2 report
+  shapes, adds binary-evidence and mismatched-ref negatives, and makes fresh
+  fixture commit identities deterministic. A fourth review pass is required.
+- Review pass 4:
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-4.md`
+  verified the pass-3 corrections, then found sibling non-UTF-8 read sites,
+  alternate shell assignments that could evade installer identity parsing,
+  and a collector-side symlink-container gap. Remediation now governs every
+  release-profile/checksum/sysroot text decode, rejects any direct alternate or
+  duplicate installer identity assignment, mirrors resolved-path custody in
+  the collector, and permanently covers those cases. A fifth review pass is
+  required.
+- Review pass 5:
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-5.md`
+  verified the pass-4 collector and most text-custody corrections, then found
+  the archive verifier's earlier non-UTF-8 sysroot decode, further shell forms
+  that evade assignment parsing, and a one-claim fixture that could not test
+  claim order. Remediation now governs the verifier decode without a traceback,
+  regenerates the installer with the pinned governed producer and requires
+  byte-for-byte equality instead of parsing shell, and exercises a two-claim
+  fixture plus an order-reversal negative. A sixth review pass is required.
+- Review pass 6:
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-6.md`
+  independently closed every pass-5 correctness finding and found one durable
+  architecture-documentation omission. Remediation now documents the pinned
+  governed-producer regeneration and byte-equality binding, and the workflow
+  contract pins the exact production invocation that must remain identical to
+  planner regeneration. A seventh review pass is required.
+- Review pass 7:
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-7.md`
+  verified the architecture documentation but found that the new workflow
+  contract literal ended before the closing output-path quote. Remediation
+  anchors the full four-line invocation, including its closing quote and
+  newline, so appended arguments or an altered output path cannot satisfy the
+  contract. An eighth review pass is required.
+- Review pass 8:
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-8.md`
+  independently verified the full invocation anchor, all earlier correctness
+  closures, the capability-named demo and surfaces, durable documentation, and
+  the milestone tracker. The reviewer returned `APPROVED` with no actionable
+  findings.
+- Final PR-head review pass 9:
+  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-9.md`
+  verified ready PR #3028 at exact head `aeff4d07a`, all eight earlier review
+  closures, the three tracker-only follow-up commits, the authoritative
+  create-PR evidence, and the complete milestone diff. The reviewer returned
+  `APPROVED` with no actionable findings and declared the PR ready to merge.
+- Passing evidence so far:
+  - `demos/stable_candidate_qualification_demo.sh` with a real
+    `aarch64-apple-darwin` host artifact, isolated install, `sifr --version`,
+    `sifr check`, `sifr self version`, and canonical planner output
+  - fixture-backed repeated materialization plus source, submodule, lockfile,
+    target artifact, sysroot, installer, Rust-claim, and VSIX digest sensitivity
+  - negative missing-artifact, expired-artifact, cross-target, stale-report,
+    source/version drift, floating/mismatched refs, in-checkout output,
+    symlink-container, binary installer/checksum/profile, alternate installer
+    assignments, byte-divergent installer regeneration, Rust-claim ordering,
+    and exact editor/documentation shape cases
+  - Rust-interop `matrix`, `tiers`, `compatibility-matrix`, `stale-drafts`, and
+    `stable-candidate` suites, including the stable-claim adversarial self-test
+  - qualification workflow contract, stable artifact generation, governance
+    contracts, schema epoch, runner self-tests, formatting, HIR, and file-size
+    guardrails
+  - authoritative `scripts/run_all_tests.sh --profile create-pr`: pass,
+    including 131/131 E2E fixtures and zero blocking failures; the cold-cache
+    21.8-minute wall time exceeded only the advisory warm target, with 1.5 GiB
+    peak RSS and no swap

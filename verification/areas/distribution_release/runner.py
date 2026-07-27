@@ -106,6 +106,13 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
                 "evidence-custody",
             )
         ]
+    elif suite_name == "qualification":
+        variants = [
+            run_python_module(
+                "governance.qualification_selftest",
+                "stable-qualification",
+            )
+        ]
     else:
         variants = [run_distribution_case(script) for script in distribution_case_scripts()]
         if suite_name == "full":
@@ -133,25 +140,23 @@ def run_suite(suite: dict[str, Any]) -> dict[str, Any]:
 
 def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
     suite_name = str(suite["name"])
-    if suite_name not in {"representative", "full", "evidence-custody"}:
+    if suite_name not in {"representative", "full", "qualification", "evidence-custody"}:
         raise SystemExit(f"unsupported distribution_release suite: {suite_name}")
     cases = suite.get("cases", [])
     if not isinstance(cases, list) or len(cases) != 1:
         raise SystemExit(f"distribution_release suite '{suite_name}' must contain exactly one case directory")
     case = cases[0]
-    expected_command = (
-        "distribution-evidence-custody"
-        if suite_name == "evidence-custody"
-        else "distribution-case-directory"
-    )
+    expected_command = {
+        "evidence-custody": "distribution-evidence-custody",
+        "qualification": "distribution-stable-qualification",
+    }.get(suite_name, "distribution-case-directory")
     if str(case.get("command")) != expected_command:
         raise SystemExit(f"distribution_release suite '{suite_name}' must use {expected_command}")
     entry = REPO_ROOT / str(case.get("entry"))
-    expected_entry = (
-        AREA_ROOT / "governance" / "evidence_custody.py"
-        if suite_name == "evidence-custody"
-        else CASES_ROOT
-    )
+    expected_entry = {
+        "evidence-custody": AREA_ROOT / "governance" / "evidence_custody.py",
+        "qualification": AREA_ROOT / "governance" / "qualification_selftest.py",
+    }.get(suite_name, CASES_ROOT)
     if entry != expected_entry or not entry.exists():
         raise SystemExit(f"distribution_release suite '{suite_name}' entry does not exist: {entry}")
     return case

@@ -358,11 +358,11 @@ real_run() {
     if [[ -n "${SYSROOT_ROOT}" ]]; then
       package_args+=(--sysroot-root "${SYSROOT_ROOT}")
     fi
-    "${SCRIPT_DIR}/build_preview_artifacts.sh" "${package_args[@]}" >/dev/null
+    "${SCRIPT_DIR}/build_release_artifacts.sh" "${package_args[@]}" >/dev/null
   elif [[ -d "${ARTIFACT_DIR}" ]]; then
     verify_artifact_dir
   else
-    "${SCRIPT_DIR}/build_preview_artifacts.sh" --version "${VERSION}" --output-dir "${ARTIFACT_DIR}" --cargo-build >/dev/null
+    "${SCRIPT_DIR}/build_release_artifacts.sh" --version "${VERSION}" --output-dir "${ARTIFACT_DIR}" --cargo-build >/dev/null
   fi
 
   "${SCRIPT_DIR}/generate_version_installer.sh" \

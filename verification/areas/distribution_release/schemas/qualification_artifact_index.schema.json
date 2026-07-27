@@ -4,36 +4,47 @@
   "title": "Sifr qualification artifact index",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "candidate_version", "source_commit", "workflow", "artifacts"],
+  "required": ["schema_version", "candidate_version", "source_commit", "submodules", "workflow", "artifacts"],
   "properties": {
     "schema_version": {"const": 2},
     "candidate_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
     "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "submodules": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"pattern": "^[A-Za-z0-9_./-]+$"},
+      "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+    },
     "workflow": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["run_id", "run_attempt", "repository", "expires_at"],
+      "required": ["run_id", "run_attempt", "repository", "retention_days", "overwrite", "expires_at"],
       "properties": {
         "run_id": {"type": "integer", "minimum": 1},
         "run_attempt": {"type": "integer", "minimum": 1},
         "repository": {"const": "sifr-lang/sifr"},
+        "retention_days": {"const": 30},
+        "overwrite": {"const": false},
         "expires_at": {"type": "string", "format": "date-time"}
       }
     },
     "artifacts": {
       "type": "array",
-      "minItems": 1,
+      "minItems": 20,
+      "maxItems": 20,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "kind", "name", "sha256", "size_bytes", "workflow_artifact_id"],
+        "required": ["id", "kind", "name", "sha256", "size_bytes", "workflow_artifact_id", "workflow_artifact_name", "expires_at"],
         "properties": {
           "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]+$"},
-          "kind": {"enum": ["binary-archive", "installer", "sysroot", "vsix", "report"]},
-          "name": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["binary-archive", "checksum", "checksums", "installer", "report", "sysroot", "vsix"]},
+          "name": {"type": "string", "minLength": 1, "pattern": "^[^/]+$"},
           "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}},
           "size_bytes": {"type": "integer", "minimum": 1},
           "workflow_artifact_id": {"type": "integer", "minimum": 1},
+          "workflow_artifact_name": {"type": "string", "minLength": 1, "pattern": "^[^/]+$"},
+          "expires_at": {"type": "string", "format": "date-time"},
           "target": {
             "enum": [
               "aarch64-apple-darwin",

@@ -17,7 +17,6 @@ from .common import (
     require_exact_keys,
     require_nonempty_string,
     require_object,
-    require_positive_int,
     require_schema_v2,
     require_sha256,
     sha256_file,
@@ -39,7 +38,7 @@ REQUIRED_SUITES = {
     },
     "developer_tooling": {"full", "editor-release"},
     "documentation": {"structure"},
-    "distribution_release": {"full", "evidence-custody"},
+    "distribution_release": {"full", "qualification", "evidence-custody"},
 }
 
 
@@ -71,6 +70,11 @@ def validate_release_profile_report(
     require_nonempty_string(report["report_id"], "$.report_id")
     validate_source(report["source"], source_root=source_root)
     validate_profile(report["profile"], expected_profile_sha256=expected_profile_sha256)
+    if source_root is not None:
+        validate_profile_matches_source(
+            report["profile"],
+            source_root / "verification" / "profiles" / "release.json",
+        )
     command = require_array(report["command"], "$.command")
     if not command:
         fail("$.command", "must contain the exact invocation")
@@ -79,12 +83,12 @@ def validate_release_profile_report(
     validate_toolchain(report["toolchain"])
     if report["overall_status"] != "pass":
         fail("$.overall_status", "release evidence must pass")
-    validate_steps(report["steps"])
-    validate_result_artifacts(
+    artifact_digests = validate_result_artifacts(
         report["result_artifacts"],
         source_root=source_root,
         verify_artifacts=verify_artifacts,
     )
+    validate_steps(report["steps"], artifact_digests=artifact_digests)
     if canonical_bytes is not None and canonical_bytes != canonical_json_bytes(report):
         fail("$", "release profile report is not canonical JSON")
     return report
@@ -128,7 +132,9 @@ def validate_profile(payload: Any, *, expected_profile_sha256: str | None) -> No
     digest = require_sha256(profile["manifest_sha256"], "$.profile.manifest_sha256")
     if expected_profile_sha256 is not None and digest != expected_profile_sha256:
         fail("$.profile.manifest_sha256", "does not match the known release profile")
-    selections = require_array(profile["expanded_selected_areas"], "$.profile.expanded_selected_areas")
+    selections = require_array(
+        profile["expanded_selected_areas"], "$.profile.expanded_selected_areas"
+    )
     actual: dict[str, set[str]] = {}
     for index, value in enumerate(selections):
         location = f"$.profile.expanded_selected_areas[{index}]"
@@ -154,6 +160,55 @@ def validate_profile(payload: Any, *, expected_profile_sha256: str | None) -> No
             )
 
 
+def validate_profile_matches_source(
+    payload: dict[str, Any], profile_path: Path
+) -> None:
+    try:
+        source_profile = require_object(
+            json.loads(profile_path.read_text(encoding="utf-8")),
+            str(profile_path),
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise GovernanceError(
+            f"{profile_path}: invalid release profile: {exc}"
+        ) from exc
+    if source_profile.get("name") != "release":
+        fail("$.profile.name", "source profile is not the release profile")
+    selections = require_array(
+        source_profile.get("selected_areas"),
+        f"{profile_path}:selected_areas",
+    )
+    expected: dict[str, set[str]] = {}
+    for index, value in enumerate(selections):
+        selection = require_object(value, f"{profile_path}:selected_areas[{index}]")
+        area = require_nonempty_string(
+            selection.get("area"),
+            f"{profile_path}:selected_areas[{index}].area",
+        )
+        suites = require_array(
+            selection.get("suites"),
+            f"{profile_path}:selected_areas[{index}].suites",
+        )
+        expected.setdefault(area, set()).update(
+            require_nonempty_string(
+                suite,
+                f"{profile_path}:selected_areas[{index}].suites",
+            )
+            for suite in suites
+        )
+    if "full" in expected.get("developer_tooling", set()):
+        expected["developer_tooling"].add("editor-release")
+    observed = {
+        selection["area"]: set(selection["suites"])
+        for selection in payload["expanded_selected_areas"]
+    }
+    if observed != expected:
+        fail(
+            "$.profile.expanded_selected_areas",
+            "does not exactly match the source release profile",
+        )
+
+
 def validate_toolchain(payload: Any) -> None:
     toolchain = require_object(payload, "$.toolchain")
     require_exact_keys(
@@ -165,7 +220,7 @@ def validate_toolchain(payload: Any) -> None:
         require_nonempty_string(value, f"$.toolchain.{name}")
 
 
-def validate_steps(payload: Any) -> None:
+def validate_steps(payload: Any, *, artifact_digests: set[str]) -> None:
     steps = require_array(payload, "$.steps")
     if not steps:
         fail("$.steps", "must contain executed steps")
@@ -185,7 +240,11 @@ def validate_steps(payload: Any) -> None:
         names.add(name)
         if step["status"] != "pass":
             fail(f"{location}.status", "must be pass")
-        if type(step["elapsed_ms"]) is not int or step["elapsed_ms"] < 0:
+        if (
+            isinstance(step["elapsed_ms"], bool)
+            or not isinstance(step["elapsed_ms"], int)
+            or step["elapsed_ms"] < 0
+        ):
             fail(f"{location}.elapsed_ms", "must be a non-negative integer")
         suites = require_array(step["suite_results"], f"{location}.suite_results")
         for suite_index, suite_value in enumerate(suites):
@@ -193,16 +252,26 @@ def validate_steps(payload: Any) -> None:
             suite = require_object(suite_value, suite_location)
             require_exact_keys(
                 suite,
-                required={"area", "suite", "status", "case_ids", "result_artifact_sha256"},
+                required={
+                    "area",
+                    "suite",
+                    "status",
+                    "case_ids",
+                    "result_artifact_sha256",
+                },
                 location=suite_location,
             )
             area = require_nonempty_string(suite["area"], f"{suite_location}.area")
-            suite_name = require_nonempty_string(suite["suite"], f"{suite_location}.suite")
+            suite_name = require_nonempty_string(
+                suite["suite"], f"{suite_location}.suite"
+            )
             if suite["status"] != "pass":
                 fail(f"{suite_location}.status", "must be pass")
             case_ids = require_array(suite["case_ids"], f"{suite_location}.case_ids")
             if not case_ids:
-                fail(f"{suite_location}.case_ids", "must contain executed case evidence")
+                fail(
+                    f"{suite_location}.case_ids", "must contain executed case evidence"
+                )
             observed_case_ids = {
                 require_nonempty_string(case_id, f"{suite_location}.case_ids")
                 for case_id in case_ids
@@ -210,14 +279,27 @@ def validate_steps(payload: Any) -> None:
             if len(observed_case_ids) != len(case_ids):
                 fail(f"{suite_location}.case_ids", "contains duplicate case evidence")
             if area == "developer_tooling" and suite_name == "editor-release":
-                if any(not case_id.startswith("editor-release:") for case_id in observed_case_ids):
-                    fail(f"{suite_location}.case_ids", "contains non-editor-release evidence")
-            require_sha256(
+                if any(
+                    not case_id.startswith("editor-release:")
+                    for case_id in observed_case_ids
+                ):
+                    fail(
+                        f"{suite_location}.case_ids",
+                        "contains non-editor-release evidence",
+                    )
+            result_digest = require_sha256(
                 suite["result_artifact_sha256"],
                 f"{suite_location}.result_artifact_sha256",
             )
+            if result_digest not in artifact_digests:
+                fail(
+                    f"{suite_location}.result_artifact_sha256",
+                    "does not identify a retained result artifact",
+                )
             if suite_name in observed_suites.setdefault(area, set()):
-                fail(suite_location, f"duplicate suite evidence for {area}:{suite_name}")
+                fail(
+                    suite_location, f"duplicate suite evidence for {area}:{suite_name}"
+                )
             observed_suites[area].add(suite_name)
     missing_steps = sorted(REQUIRED_RELEASE_STEPS.difference(names))
     if missing_steps:
@@ -233,11 +315,12 @@ def validate_result_artifacts(
     *,
     source_root: Path | None,
     verify_artifacts: bool,
-) -> None:
+) -> set[str]:
     artifacts = require_array(payload, "$.result_artifacts")
     if not artifacts:
         fail("$.result_artifacts", "must contain result artifact digests")
     paths: set[str] = set()
+    digests: set[str] = set()
     for index, value in enumerate(artifacts):
         location = f"$.result_artifacts[{index}]"
         artifact = require_object(value, location)
@@ -250,12 +333,14 @@ def validate_result_artifacts(
             fail(f"{location}.path", "duplicate artifact")
         paths.add(path_text)
         expected = require_sha256(artifact["sha256"], f"{location}.sha256")
+        digests.add(expected)
         if verify_artifacts:
             if source_root is None:
                 fail(location, "source_root is required to verify artifacts")
             artifact_path = source_root / path
             if not artifact_path.is_file() or sha256_file(artifact_path) != expected:
                 fail(f"{location}.sha256", "does not match the result artifact")
+    return digests
 
 
 def collect_submodules(source_root: Path) -> dict[str, str]:
@@ -284,12 +369,14 @@ def git_output(source_root: Path, *args: str) -> str:
     )
     if result.returncode != 0:
         raise GovernanceError(f"git {' '.join(args)} failed: {result.stderr.strip()}")
-    return result.stdout.strip()
+    return result.stdout.rstrip("\r\n")
 
 
 def canonical_profile_digest(profile_path: Path) -> str:
     try:
         payload = json.loads(profile_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise GovernanceError(f"{profile_path}: invalid release profile: {exc}") from exc
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise GovernanceError(
+            f"{profile_path}: invalid release profile: {exc}"
+        ) from exc
     return hashlib.sha256(canonical_json_bytes(payload)).hexdigest()

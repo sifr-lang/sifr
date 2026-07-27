@@ -49,7 +49,9 @@ def validate_member(member: tarfile.TarInfo) -> str:
     if not name or path.is_absolute() or ".." in path.parts:
         raise SystemExit(f"unsafe archive member path: {member.name!r}")
     if any(part.startswith("._") for part in path.parts):
-        raise SystemExit(f"archive member must not contain AppleDouble metadata: {name}")
+        raise SystemExit(
+            f"archive member must not contain AppleDouble metadata: {name}"
+        )
     if member.issym() or member.islnk():
         raise SystemExit(f"archive member must not be a link: {name}")
     if not (member.isfile() or member.isdir()):
@@ -76,9 +78,13 @@ def validate_manifest(
         )
     content_sha = manifest.get("sysroot-content-sha256")
     if not isinstance(content_sha, str) or SHA256_RE.fullmatch(content_sha) is None:
-        raise SystemExit("sysroot.toml sysroot-content-sha256 must be a lowercase sha256 hex string")
+        raise SystemExit(
+            "sysroot.toml sysroot-content-sha256 must be a lowercase sha256 hex string"
+        )
     if content_sha == ZERO_SHA256:
-        raise SystemExit("sysroot.toml sysroot-content-sha256 must not be the zero placeholder")
+        raise SystemExit(
+            "sysroot.toml sysroot-content-sha256 must not be the zero placeholder"
+        )
     actual_content_sha = sysroot_content_sha256(sysroot_file_digests)
     if content_sha != actual_content_sha:
         raise SystemExit(
@@ -98,9 +104,11 @@ def sysroot_content_sha256(sysroot_file_digests: dict[str, str]) -> str:
 
 
 def is_sysroot_content_path(name: str) -> bool:
-    return name in {"Cargo.toml", "Cargo.lock", ".cargo/config.toml"} or name.startswith(
-        ("crates/", "lib/", "vendor/")
-    )
+    return name in {
+        "Cargo.toml",
+        "Cargo.lock",
+        ".cargo/config.toml",
+    } or name.startswith(("crates/", "lib/", "vendor/"))
 
 
 def parse_sysroot_manifest(source: str) -> dict[str, object]:
@@ -133,13 +141,20 @@ def verify_archive(path: str, version: str, target: str) -> None:
                 continue
             names.add(name)
             name_to_member[name] = member
-            if member.isfile() and (name == "sysroot.toml" or is_sysroot_content_path(name)):
+            if member.isfile() and (
+                name == "sysroot.toml" or is_sysroot_content_path(name)
+            ):
                 extracted = archive.extractfile(member)
                 if extracted is None:
                     raise SystemExit(f"archive member could not be read: {name}")
                 content = extracted.read()
                 if name == "sysroot.toml":
-                    manifest_source = content.decode("utf-8")
+                    try:
+                        manifest_source = content.decode("utf-8")
+                    except UnicodeDecodeError as exc:
+                        raise SystemExit(
+                            f"sysroot.toml must be readable UTF-8: {exc}"
+                        ) from exc
                 if is_sysroot_content_path(name):
                     sysroot_file_digests[name] = hashlib.sha256(content).hexdigest()
 
@@ -149,13 +164,21 @@ def verify_archive(path: str, version: str, target: str) -> None:
                 raise SystemExit(f"missing required archive file: {required}")
 
         for prefix in REQUIRED_DIR_PREFIXES:
-            if not any(name == prefix.rstrip("/") or name.startswith(prefix) for name in names):
-                raise SystemExit(f"missing required archive directory: {prefix.rstrip('/')}")
+            if not any(
+                name == prefix.rstrip("/") or name.startswith(prefix) for name in names
+            ):
+                raise SystemExit(
+                    f"missing required archive directory: {prefix.rstrip('/')}"
+                )
 
-        if not any(name.startswith("lib/sifr/stdlib/sifr/") and name.endswith(".sifr") for name in names):
+        if not any(
+            name.startswith("lib/sifr/stdlib/sifr/") and name.endswith(".sifr")
+            for name in names
+        ):
             raise SystemExit("stdlib public root contains no .sifr files")
         if not any(
-            name.startswith("lib/sifr/stdlib/_sifr/") and name.endswith(".sifr") for name in names
+            name.startswith("lib/sifr/stdlib/_sifr/") and name.endswith(".sifr")
+            for name in names
         ):
             raise SystemExit("stdlib private root contains no .sifr files")
 

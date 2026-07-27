@@ -13,12 +13,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/distribution/generate_version_installer.sh --version <preview> --artifact-dir <dir> --out <path> [options]
+Usage: scripts/distribution/generate_version_installer.sh --version <version> --artifact-dir <dir> --out <path> [options]
 
 Generate an immutable Sifr version installer that embeds artifact names and SHA-256 checksums.
 
 Options:
-  --version <preview>          Semver prerelease version
+  --version <version>          Stable or prerelease SemVer
   --artifact-dir <dir>         Directory containing sifr-<version>-<target>.tar.gz and .sha256 files
   --out <path>                 Output installer path
   --artifact-base-url <url>    Public artifact base URL (default: GitHub release URL for the version)
@@ -67,14 +67,22 @@ if [[ -z "${VERSION}" || -z "${ARTIFACT_DIR}" || -z "${OUT}" ]]; then
   exit 2
 fi
 
-if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$ ]]; then
-  echo "version must be a semver prerelease using -alpha.N, -beta.N, or -rc.N: ${VERSION}" >&2
+if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ &&
+      ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$ ]]; then
+  echo "version must be stable SemVer or a prerelease using -alpha.N, -beta.N, or -rc.N: ${VERSION}" >&2
   exit 2
 fi
 
 if [[ -z "${ARTIFACT_BASE_URL}" ]]; then
   ARTIFACT_BASE_URL="https://github.com/sifr-lang/sifr/releases/download/${VERSION}"
 fi
+
+case "${VERSION}" in
+  *-alpha.*) INSTALLER_CHANNEL="alpha" ;;
+  *-beta.*) INSTALLER_CHANNEL="beta" ;;
+  *-rc.*) INSTALLER_CHANNEL="rc" ;;
+  *) INSTALLER_CHANNEL="stable" ;;
+esac
 
 sha256_file() {
   local path="$1"
@@ -128,8 +136,7 @@ ARTIFACT_BASE_URL="${ARTIFACT_BASE_URL}"
 NO_MODIFY_PATH="\${SIFR_NO_MODIFY_PATH:-0}"
 INSTALL_LOCK_HELD="\${SIFR_INSTALL_LOCK_HELD:-0}"
 FORCE_INSTALL=0
-APP_CHANNEL="${VERSION#*-}"
-APP_CHANNEL="\${APP_CHANNEL%%.*}"
+APP_CHANNEL="${INSTALLER_CHANNEL}"
 
 fail() {
   echo "sifr installer: \$*" >&2

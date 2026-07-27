@@ -167,6 +167,8 @@ def validate_candidate_directory(directory: Path) -> None:
         raise GovernanceError(f"{directory}: qualification candidate version mismatch")
     if qualification["source_commit"] != plan["source_commit"]:
         raise GovernanceError(f"{directory}: qualification source mismatch")
+    if qualification["submodules"] != plan["submodules"]:
+        raise GovernanceError(f"{directory}: qualification submodule mismatch")
     if plan["release_profile_report"]["sha256"] != sha256_bytes(report_path.read_bytes()):
         raise GovernanceError(f"{directory}: release report digest mismatch")
     if plan["qualification_artifact_index"]["sha256"] != sha256_bytes(

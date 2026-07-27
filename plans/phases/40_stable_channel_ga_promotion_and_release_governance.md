@@ -66,6 +66,8 @@ Phase 40 consumes these completed or canonical upstream contracts:
   release-only or substitute prose checks for it. The four hardening
   implementation items are merged through
   [PR #3023](https://github.com/sifr-lang/sifr/pull/3023);
+  certification prerequisites and the stable claims contract are merged through
+  [PR #3026](https://github.com/sifr-lang/sifr/pull/3026);
   `certification_0` must create and validate the stable-claim artifacts before
   qualification, but does not block the architecture-and-gate-lock milestone.
 

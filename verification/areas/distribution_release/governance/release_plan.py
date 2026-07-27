@@ -70,6 +70,8 @@ def validate_release_plan(
         "$.transition",
     )
     require_commit(plan["source_commit"], "$.source_commit")
+    if plan["plan_id"] != f"stable-{version}-{plan['source_commit'][:12]}":
+        fail("$.plan_id", "must bind the exact source commit prefix")
     validate_submodules(plan["submodules"])
     require_sha256(plan["cargo_lock_sha256"], "$.cargo_lock_sha256")
     validate_toolchain(plan["toolchain"])

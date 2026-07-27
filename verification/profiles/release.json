@@ -220,6 +220,7 @@
       "area": "distribution_release",
       "suites": [
         "full",
+        "qualification",
         "evidence-custody"
       ],
       "resource_classes": [

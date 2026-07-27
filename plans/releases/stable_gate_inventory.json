@@ -28,19 +28,19 @@
     },
     {
       "id": "preview-artifact-builder",
-      "location": "scripts/distribution/build_preview_artifacts.sh",
+      "location": "scripts/distribution/build_release_artifacts.sh",
       "owner": "release/distribution",
-      "current_behavior": "accepts alpha and beta versions only",
+      "current_behavior": "packages alpha, beta, rc, or stable candidates without publication",
       "activation_boundary": "stable-qualification",
-      "disposition": "shared target packaging moves behind stable qualification without enabling publication"
+      "disposition": "shared target packaging moves behind stable qualification without enabling publication; milestone 40.2 removes rc acceptance from the shared public release surface"
     },
     {
       "id": "immutable-installer-generator",
       "location": "scripts/distribution/generate_version_installer.sh",
       "owner": "release/distribution",
-      "current_behavior": "accepts alpha and beta versions only",
+      "current_behavior": "generates immutable alpha, beta, rc, or stable candidate installers without publication",
       "activation_boundary": "stable-installation",
-      "disposition": "accepts exact stable versions and derives APP_CHANNEL=stable"
+      "disposition": "accepts exact stable versions and derives APP_CHANNEL=stable; milestone 40.2 removes rc acceptance"
     },
     {
       "id": "site-default-channel",
@@ -86,9 +86,33 @@
       "id": "install-receipt-channel",
       "location": "crates/sifr/src/self_update_receipt.rs",
       "owner": "release/distribution",
-      "current_behavior": "runtime accepts alpha and beta receipts only",
+      "current_behavior": "read-only receipt discovery accepts alpha, beta, and stable; stable update resolution remains gated",
       "activation_boundary": "stable-installation",
       "disposition": "runtime accepts alpha, beta, and stable schema-v2 receipts; rc remains invalid"
+    },
+    {
+      "id": "stable-qualification-workflow",
+      "location": ".github/workflows/release-qualification.yml",
+      "owner": "release/distribution",
+      "current_behavior": "builds, smokes, and uploads exact-SHA stable candidate artifacts with read-only permissions",
+      "activation_boundary": "stable-qualification",
+      "disposition": "remains build/upload-only and never gains release, package, Marketplace, site, environment, or metadata mutation authority"
+    },
+    {
+      "id": "canonical-stable-planner",
+      "location": "scripts/distribution/release_governance.py",
+      "owner": "release/distribution",
+      "current_behavior": "materializes a canonical plan only from a clean exact-SHA checkout and digest-bound unexpired evidence",
+      "activation_boundary": "stable-qualification",
+      "disposition": "remains non-mutating; publication consumes the reviewed plan bytes without rebuilding"
+    },
+    {
+      "id": "qualification-artifact-collector",
+      "location": "scripts/distribution/collect_qualification_artifacts.py",
+      "owner": "release/distribution",
+      "current_behavior": "binds immutable workflow artifact identities, exact expiry, source, submodules, names, sizes, and digests",
+      "activation_boundary": "stable-qualification",
+      "disposition": "provides the sole canonical transport index consumed by the stable planner"
     },
     {
       "id": "public-installation-docs",
