@@ -351,7 +351,7 @@ fn test_build_call_scoped_callback_runtime() {
     let output = built_package_output(&entrypoint);
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
-        "first,second|callback rejected|Rust bridge panicked"
+        "first,second|callback rejected|Rust bridge panicked|8"
     );
     assert!(
         output.stderr.is_empty(),

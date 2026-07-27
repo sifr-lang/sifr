@@ -5,8 +5,9 @@ invocation behavior.
 
 - Positive evidence: `callback_valid_during_call` executes generated glue in
   the locked `call_scoped_callback_runtime` package, observes invocation and
-  ordinary callback errors, and maps a callback panic through the enclosing
-  redacted Rust panic boundary.
+  ordinary callback errors, compiles exact-integer, list, dictionary, optional,
+  and multi-argument conversions together, and maps a callback panic through
+  the enclosing redacted Rust panic boundary.
 - Negative evidence: `callback_storage_rejected` runs storage, returned
   deferred-call, and unmanaged-thread bridge variants. Each Cargo probe is
   pinned to the concrete rustc lifetime or thread-trait failure and reports
@@ -21,3 +22,6 @@ invocation behavior.
 - A call-scoped declaration must stay synchronous and expose a distinct
   ordinary error plus `RustPanicError`; `trusted_no_panic` and `panic=abort`
   do not cover panics originating in Sifr callback code.
+- Assertions inside the callback are also redacted by that boundary, including
+  their message and source location; actionable callback failures use the
+  declared ordinary error.

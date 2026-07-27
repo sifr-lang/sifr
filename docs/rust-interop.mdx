@@ -286,7 +286,11 @@ def visit(handler: Callable[[str], Result[None, EventError]]) -> Result[None, Ev
 Callback panics unwind only to the generated outer Rust panic boundary and are
 returned as a redacted `RustPanicError`. A callback `Result` error crosses the
 call-scoped bridge as its display string and is mapped by the package bridge
-into the target's declared error.
+into the target's declared error. Because the outer boundary deliberately
+suppresses panic payloads and hook output, an `assert` inside Sifr callback code
+also loses its assertion message and source location and is observed only as
+the redacted `RustPanicError`. Use the callback's declared `Result` error for
+application failures that need actionable diagnostics.
 
 Backpressure, overflow, and shutdown behavior remain mandatory for the
 separate thread-safe registration contract. The current source spelling is a

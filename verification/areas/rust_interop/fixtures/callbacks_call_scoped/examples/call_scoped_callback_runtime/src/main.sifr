@@ -9,11 +9,20 @@ class EventError(Error):
 @rust(bridge.callbacks.visit)
 def invoke_callback(mode: str, handler: Callable[[str], Result[None, EventError]]) -> Result[str, EventError | RustPanicError]: ...
 
+@rust(bridge.callbacks.visit_converted)
+def invoke_converted_callback(handler: Callable[[int, list[int], dict[str, int], int | None], Result[int, EventError]]) -> Result[int, EventError | RustPanicError]: ...
+
 def observe_event(event: str) -> Result[None, EventError]:
     assert event != "panic"
     if event == "reject":
         raise EventError("callback rejected")
     return None
+
+def observe_converted(value: int, items: list[int], mapping: dict[str, int], optional: int | None) -> Result[int, EventError]:
+    optional_value: int = 0
+    if optional is not None:
+        optional_value = optional
+    return value + len(items) + len(mapping) + optional_value
 
 def observe_mode(mode: str) -> str:
     try:
@@ -38,7 +47,16 @@ def verify_call_scoped_callback_runtime() -> str:
     assert safe == "first,second"
     assert ordinary_error == "callback rejected"
     assert callback_panic == "Rust bridge panicked"
-    return safe + "|" + ordinary_error + "|" + callback_panic
+    converted: int = 0
+    try:
+        converted_value: int = invoke_converted_callback(observe_converted)
+        converted = converted_value
+    except EventError as error:
+        converted = -1
+    except RustPanicError as error:
+        converted = -2
+    assert converted == 8
+    return safe + "|" + ordinary_error + "|" + callback_panic + "|" + str(converted)
 
 def main() -> None:
     print(verify_call_scoped_callback_runtime())

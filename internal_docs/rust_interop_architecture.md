@@ -466,7 +466,11 @@ ambient `panic = "abort"` profile rejects the call-scoped contract even when
 the source declaration does not spell `panic=abort`.
 Rust invokes the call-scoped bridge with owned bridge argument values; the
 generated adapter performs the Sifr-side borrow and conversion for the duration
-of that invocation.
+of that invocation. The silent outer panic boundary does not distinguish an
+assertion originating in Sifr callback code from a Rust panic: assertion
+payload, hook output, and source location are suppressed and the caller sees
+only the redacted `RustPanicError`. Callback code that needs recoverable,
+actionable diagnostics must return its declared ordinary error instead.
 
 Exact `int` is not a native ABI integer. `SifrIntBridge` lives in `sifr_runtime::interop` and is an owned, immutable, cloneable exact-integer value with `Eq`, `Ord`, `Hash`, `Send`, and `Sync`, no `Copy` implementation, and no `repr(C)` guarantee. Borrowed parameters use `&SifrIntBridge`; owned parameters and returns use `SifrIntBridge`. Bridges that need fixed-width storage or ABI layout must declare fixed-width integer types instead.
 

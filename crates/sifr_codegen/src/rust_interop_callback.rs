@@ -46,9 +46,7 @@ pub(crate) fn call_scoped_callbacks(func: &HirFunction) -> bool {
 }
 
 fn callback_handler_arg(name: &str, ty: &Type, convention: ParamConvention) -> String {
-    let converted = if ty.resolve_alias() == &Type::Int {
-        format!("{name}.to_i64_saturating()")
-    } else if composite_conversion_required(ty) {
+    let converted = if composite_conversion_required(ty) {
         render_expr(&bridge_composite_to_sifr_expr(
             &RustExpr::Ident(name.to_string()),
             ty,
