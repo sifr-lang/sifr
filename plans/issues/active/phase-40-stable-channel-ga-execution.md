@@ -314,12 +314,38 @@ Review and upstream coordination ledger:
   archived at
   `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-1.md`.
   Its findings are remediated before pass 2: the override is dry-run-only,
-  direct runner execution is restored, the source boundary is inventoried,
-  symlinks and malformed fixture inputs fail closed, and this wave is tracked.
+  direct runner execution is restored, the release trust boundary is
+  inventoried, symlinks and malformed fixture inputs fail closed, and this
+  wave is tracked.
   Review pass 2 is archived at
   `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-2.md`;
   it reproduced the release-binary dry-run and real-update rejection, found no
   remaining actionable issue, and returned `VERDICT: SATISFIED`.
+- Exact pushed-head review pass 3 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-3-final-pr-head.md`.
+  It re-ran the installed release smoke, full self-update unit surface,
+  workspace clippy, and fail-closed fixture matrix at exact remote head
+  `d78cfb756`, and returned `VERDICT: SATISFIED`. That approval was superseded
+  when the later authoritative create-PR profile found the inventory omission
+  described below.
+- The first authoritative create-PR profile found that the new regular-file
+  probe and fixture read were absent from the existing TypeScript-Go
+  direct-read/probe inventory. The source-provider guardrail now classifies
+  both sites as a non-semantic, dry-run-only release-qualification command
+  surface; the compiler source-provider boundary is unchanged.
+- Review pass 4 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-4.md`.
+  It independently reproduced the guardrail mutation, 53 self-update tests,
+  workspace clippy, formatting, file-size and inventory checks, and a
+  nine-case release-binary fail-closed matrix. Its sole bookkeeping finding,
+  the missing pass-3 artifact and ledger link, is remediated above.
+- Review pass 5 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-5.md`.
+  Its full authoritative create-PR profile passed 131 E2E fixtures and every
+  blocking lane on the remediated working tree. Its remaining findings were
+  to commit and push that remediation and refresh PR #3039's review summary;
+  both are release-mechanics requirements completed before the final exact-head
+  round.
 - [ ] Add the single protected publication workflow and production site adapter.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
