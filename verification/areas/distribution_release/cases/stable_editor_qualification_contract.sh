@@ -15,6 +15,7 @@ python3 "${REPO_ROOT}/scripts/distribution/render_stable_release_docs.py" \
   --check
 
 report_validator="${REPO_ROOT}/verification/areas/distribution_release/governance/planner.py"
+editor_validator="${REPO_ROOT}/verification/areas/distribution_release/governance/editor_qualification.py"
 for field in \
   candidate_version \
   rollback_version \
@@ -25,7 +26,7 @@ for field in \
   lsp_smoke \
   marketplace_dry_run
 do
-  grep -F "\"${field}\"" "${report_validator}" >/dev/null || {
+  grep -F "\"${field}\"" "${report_validator}" "${editor_validator}" >/dev/null || {
     echo "editor qualification report omitted ${field}" >&2
     exit 1
   }
