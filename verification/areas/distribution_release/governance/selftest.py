@@ -330,13 +330,22 @@ def mutate(payload: dict[str, Any], callback: Callable[[dict[str, Any]], None]) 
 
 
 def test_schemas_use_epoch_two() -> None:
+    def contains_default_keyword(value: Any) -> bool:
+        if isinstance(value, dict):
+            return "default" in value or any(
+                contains_default_keyword(item) for item in value.values()
+            )
+        return isinstance(value, list) and any(
+            contains_default_keyword(item) for item in value
+        )
+
     schema_paths = sorted((AREA_ROOT / "schemas").glob("*.schema.json"))
     assert schema_paths
     for path in schema_paths:
         schema = json.loads(path.read_text(encoding="utf-8"))
         assert "schema_version" in schema["required"], path
         assert schema["properties"]["schema_version"] == {"const": 2}, path
-        assert "default" not in path.read_text(encoding="utf-8"), path
+        assert not contains_default_keyword(schema), path
         assert '"rc"' not in path.read_text(encoding="utf-8"), path
     validate_schema_contracts()
 

@@ -17,6 +17,7 @@ from .surface_contracts import (
     validate_self_update_plan,
     validate_self_version,
 )
+from .site_publication import validate_site_publication_facts
 
 __all__ = [
     "GovernanceError",
@@ -33,5 +34,6 @@ __all__ = [
     "validate_install_receipt",
     "validate_self_update_plan",
     "validate_self_version",
+    "validate_site_publication_facts",
     "validate_site_release_facts",
 ]

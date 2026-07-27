@@ -29,6 +29,7 @@ from governance import (  # noqa: E402
     validate_install_receipt,
     validate_self_update_plan,
     validate_self_version,
+    validate_site_publication_facts,
     validate_site_release_facts,
 )
 from governance.common import (  # noqa: E402
@@ -62,6 +63,7 @@ def parse_args() -> argparse.Namespace:
             "install-receipt",
             "self-update-plan",
             "self-version",
+            "site-publication-facts",
         ),
     )
     validate.add_argument("--input", required=True)
@@ -182,6 +184,7 @@ def validate_command(args: argparse.Namespace) -> None:
         "install-receipt": validate_install_receipt,
         "self-update-plan": validate_self_update_plan,
         "self-version": validate_self_version,
+        "site-publication-facts": validate_site_publication_facts,
     }
     if args.kind == "release-index" and args.previous:
         validate_release_index_transition(load_json_strict(Path(args.previous)), payload)

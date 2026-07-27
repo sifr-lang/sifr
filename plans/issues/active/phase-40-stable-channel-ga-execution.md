@@ -66,6 +66,7 @@ Artifacts mapped to the Phase 40 exit gate:
 | `stable-release-plan.json` | 40.0, 40.1, 40.4 | Immutable candidate provenance and artifact binding |
 | `qualification-artifact-index.json` | 40.0, 40.1 | Workflow transport and expiry binding |
 | `stable-site-release-facts.json` | 40.0, 40.5 | Derived pinned site deployment facts |
+| `site-publication-facts.json` | 40.2 | Schema-v2 preview publication/site-dispatch binding |
 | `stable-release-signoff.json` | 40.0, 40.5 | Protected attempts, mutations, Marketplace, and smoke |
 | incident request/sign-off | 40.0, 40.3, 40.5 | Withdrawal, rollback, roll-forward, and closure |
 | install receipt / CLI version / update plan | 40.0, 40.2 | Stable installer and self-update agreement |
@@ -85,10 +86,10 @@ Artifacts mapped to the Phase 40 exit gate:
 
 ### milestone_40_2: Stable Distribution and Self-Update
 
-- [ ] Enable stable resolution in dispatchers, immutable installer, exact pins,
+- [x] Enable stable resolution in dispatchers, immutable installer, exact pins,
   receipts, and `sifr self update`.
-- [ ] Keep publication mutation disabled.
-- [ ] Validate all four targets and negative checksum/withdrawal/channel cases.
+- [x] Keep stable-changing publication mutation disabled.
+- [x] Validate all four targets and negative checksum/withdrawal/channel cases.
 - [ ] Record review rounds, PR, validation, and merge.
 
 ### milestone_40_3: Rollback and Incident Governance
@@ -364,3 +365,17 @@ updating or deleting that exact tag with no bypass actors.
   milestone diff, all earlier closures, 49 self-update tests, and 27 targeted
   distribution cases at exact head `f28b9d8fa`; it returned `APPROVED` with no
   actionable findings.
+- Main-repository [PR #3030](https://github.com/sifr-lang/sifr/pull/3030)
+  opened at exact head `2c282f1c7`. The authoritative
+  `scripts/run_all_tests.sh --profile create-pr` gate passed at that head,
+  including all blocking lanes and 131/131 E2E fixtures. A prior cold,
+  contended Python doctor timeout passed in isolation and then passed inside
+  the complete authoritative rerun.
+- Exact PR-head review pass 7 found six issues: preview-era site planner and
+  validator defaults, an unschematized publication binding, zero-digest
+  acceptance, missing current evidence, and phase-index/EOF drift. The
+  remediation makes preview/active site source validation GA-aware, registers
+  canonical `site-publication-facts.json` schema-v2 producer/schema/validator
+  coverage with zero-digest rejection, records current PR evidence, and repairs
+  the ad hoc phase index and whitespace. The complete distribution area passes
+  52/52 variants after remediation; another exact-head review is required.

@@ -50,4 +50,3 @@ milestone.
 - No product milestone needs a waiver for unrelated host variance.
 - The merge profile and performance documentation describe the controlled
   measurement conditions.
-

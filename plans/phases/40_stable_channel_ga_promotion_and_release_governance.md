@@ -184,8 +184,9 @@ using any other field.
   `stable-release-signoff.json`, official install receipts,
   `sifr self version --format json`, self-update plan JSON,
   `qualification-artifact-index.json`, `stable-site-release-facts.json`,
-  `stable-incident-request.json`, `stable-incident-signoff.json`, and
-  `release-profile-report.json` all use `schema_version: 2`.
+  `site-publication-facts.json`, `stable-incident-request.json`,
+  `stable-incident-signoff.json`, and `release-profile-report.json` all use
+  `schema_version: 2`.
 - Receipt, CLI-version, and self-update-plan producers and consumers are
   replaced atomically with the canonical alpha/beta/stable field and enum
   definitions. `rc` is deleted rather than retained beside stable.
@@ -195,6 +196,10 @@ using any other field.
   digests consumed by `sifr-lang/sifr-website`; it is not a second release
   authority. Its realized payload and digest are post-approval evidence recorded
   in sign-off, not candidate-plan inputs.
+- `site-publication-facts.json` is the schema-v2 cross-repository binding for
+  each preview publication attempt. It binds exact source/site commits, plan
+  and release-index identity, the GA-aware site default, and all four generated
+  dispatcher digests before the paired site workflow is dispatched.
 - `stable-incident-request.json` defines `rollback` and
   `incident-roll-forward`. It binds the incident id, trigger,
   affected active version and approved plan digest, requested operation,

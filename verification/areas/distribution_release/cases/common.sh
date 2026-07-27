@@ -297,8 +297,10 @@ make_self_update_install_root_fixture() {
   local install_root="$1"
   local alpha_version="${2:-0.1.0-alpha.4}"
   local beta_version="${3:-0.1.0-beta.7}"
+  local default_channel="${4:-stable}"
   "${REPO_ROOT}/scripts/distribution/generate_dispatchers.sh" \
-    --install-root "${install_root}" >/dev/null
+    --install-root "${install_root}" \
+    --default-channel "${default_channel}" >/dev/null
   generate_channel_metadata_fixture \
     "${install_root}/channels.json" \
     "${alpha_version}" \
@@ -307,15 +309,15 @@ make_self_update_install_root_fixture() {
 
 make_site_repo_fixture() {
   local target_repo="$1"
-  if [[ -z "${SIFR_SITE_INSTALL_ROOT:-}" ]]; then
-    rm -rf "${SITE_INSTALL_ROOT}"
-    make_self_update_install_root_fixture "${SITE_INSTALL_ROOT}"
-  fi
+  local default_channel="${2:-beta}"
+  local install_root="${target_repo}/apps/sifr-site/public/install"
   mkdir -p "${target_repo}/apps/sifr-site/public"
-  cp -R "${SITE_INSTALL_ROOT}" "${target_repo}/apps/sifr-site/public/install"
-  rm -f "${target_repo}/apps/sifr-site/public/install/channels.json"
-  rm -f "${target_repo}/apps/sifr-site/public/install/metadata/channels.json"
-  rmdir "${target_repo}/apps/sifr-site/public/install/metadata" 2>/dev/null || true
+  "${REPO_ROOT}/scripts/distribution/generate_dispatchers.sh" \
+    --install-root "${install_root}" \
+    --default-channel "${default_channel}" >/dev/null
+  if [[ "${default_channel}" == "beta" ]]; then
+    rm "${install_root}/stable"
+  fi
   git -C "${target_repo}" init -q
   git -C "${target_repo}" config user.name "Sifr Test"
   git -C "${target_repo}" config user.email "test@sifr.invalid"

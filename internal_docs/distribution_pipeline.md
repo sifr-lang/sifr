@@ -408,10 +408,13 @@ scripts/distribution/create_new_version.sh \
 ```
 
 The planner validates the exact Sifr commit, clean exact website base commit,
-production dispatcher URLs/defaults, absence of website metadata shadow state,
-and current canonical index identity. It prints the proposed channel mutation
-and write-once/replace-only policies without writing files. Artifact, real-run,
-work-directory, and mutation options are rejected.
+production dispatcher URLs, the GA-aware site source shape (beta-default
+`index` with no required stable entrypoint for a preview index; stable-default
+`index` plus the stable entrypoint for an active index), absence of website
+metadata shadow state, and current canonical index identity. It prints the
+proposed channel mutation, paired site default, and write-once/replace-only
+policies without writing files. Artifact, real-run, work-directory, and
+mutation options are rejected.
 
 `.github/workflows/preview-release.yml` is a build-only caller.
 `.github/workflows/release-publication.yml` is the sole reusable mutation
@@ -438,7 +441,8 @@ GA-aware default-channel binding from
 at `07d88cc3c24707e386c5ad73fb0875c06ffd598f`.
 The protected cross-repository token is limited to that repository's Actions
 operations. The site run checks exact Sifr/site commits, regenerates the four
-dispatchers, validates dispatcher and canonical publication-facts digests,
+dispatchers, validates dispatcher and canonical schema-v2
+`site-publication-facts.json` digests,
 re-fetches the exact governed generation immediately before deploy, requires
 the default dispatcher to be beta for a preview index and stable for an active
 index, deploys through Wrangler, and verifies the public bytes. The main

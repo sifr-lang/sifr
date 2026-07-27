@@ -154,7 +154,13 @@ for dispatcher in index stable alpha beta; do
     "${INSTALL_ROOT}/${dispatcher}" || fail "dispatcher does not use GitHub installer assets: ${dispatcher}"
 done
 
-grep -q 'DEFAULT_CHANNEL="stable"' "${INSTALL_ROOT}/index" || fail "index dispatcher must default to stable"
+if [[ "${metadata_ga_status}" == "active" ]]; then
+  expected_index_channel="stable"
+else
+  expected_index_channel="beta"
+fi
+grep -q "DEFAULT_CHANNEL=\"${expected_index_channel}\"" "${INSTALL_ROOT}/index" ||
+  fail "index dispatcher must default to ${expected_index_channel}"
 grep -q 'DEFAULT_CHANNEL="stable"' "${INSTALL_ROOT}/stable" || fail "stable dispatcher must default to stable"
 grep -q 'DEFAULT_CHANNEL="alpha"' "${INSTALL_ROOT}/alpha" || fail "alpha dispatcher must default to alpha"
 grep -q 'DEFAULT_CHANNEL="beta"' "${INSTALL_ROOT}/beta" || fail "beta dispatcher must default to beta"

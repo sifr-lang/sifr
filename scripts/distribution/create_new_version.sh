@@ -107,27 +107,6 @@ site_base_commit="$(git -C "${SITE_REPO}" rev-parse HEAD)"
 [[ -z "$(git -C "${SITE_REPO}" status --porcelain --untracked-files=all)" ]] ||
   fail "site checkout must be clean"
 
-install_root="${SITE_REPO}/apps/sifr-site/public/install"
-for dispatcher in index stable alpha beta; do
-  [[ -f "${install_root}/${dispatcher}" ]] ||
-    fail "site dispatcher missing: ${install_root}/${dispatcher}"
-  grep -q 'CHANNEL_METADATA_URL="https://github.com/sifr-lang/sifr/releases/download/channels/channels.json"' \
-    "${install_root}/${dispatcher}" ||
-    fail "site dispatcher drift: ${dispatcher} must resolve channels from GitHub"
-done
-[[ "$(extract_var "${install_root}/index" DEFAULT_CHANNEL)" == "stable" ]] ||
-  fail "site dispatcher drift: index must default to stable"
-[[ "$(extract_var "${install_root}/stable" DEFAULT_CHANNEL)" == "stable" ]] ||
-  fail "site dispatcher drift: stable must default to stable"
-[[ "$(extract_var "${install_root}/alpha" DEFAULT_CHANNEL)" == "alpha" ]] ||
-  fail "site dispatcher drift: alpha must default to alpha"
-[[ "$(extract_var "${install_root}/beta" DEFAULT_CHANNEL)" == "beta" ]] ||
-  fail "site dispatcher drift: beta must default to beta"
-[[ ! -e "${install_root}/channels.json" ]] ||
-  fail "site checkout contains forbidden top-level channels.json shadow state"
-[[ ! -d "${install_root}/metadata" && ! -d "${install_root}/versions" ]] ||
-  fail "site checkout contains forbidden metadata or version shadow state"
-
 read -r generation current_alpha current_beta ga_status < <(
   python3 - "${RELEASE_INDEX}" <<'PY'
 import json
@@ -142,6 +121,42 @@ print(
 )
 PY
 )
+case "${ga_status}" in
+  preview) site_default_channel="beta" ;;
+  active) site_default_channel="stable" ;;
+  *) fail "release index has unsupported ga_status: ${ga_status}" ;;
+esac
+
+install_root="${SITE_REPO}/apps/sifr-site/public/install"
+required_dispatchers=(index alpha beta)
+if [[ "${ga_status}" == "active" ]]; then
+  required_dispatchers+=(stable)
+fi
+for dispatcher in "${required_dispatchers[@]}"; do
+  [[ -f "${install_root}/${dispatcher}" ]] ||
+    fail "site dispatcher missing: ${install_root}/${dispatcher}"
+  grep -q 'CHANNEL_METADATA_URL="https://github.com/sifr-lang/sifr/releases/download/channels/channels.json"' \
+    "${install_root}/${dispatcher}" ||
+    fail "site dispatcher drift: ${dispatcher} must resolve channels from GitHub"
+done
+[[ "$(extract_var "${install_root}/index" DEFAULT_CHANNEL)" == "${site_default_channel}" ]] ||
+  fail "site dispatcher drift: index must default to ${site_default_channel}"
+[[ "$(extract_var "${install_root}/alpha" DEFAULT_CHANNEL)" == "alpha" ]] ||
+  fail "site dispatcher drift: alpha must default to alpha"
+[[ "$(extract_var "${install_root}/beta" DEFAULT_CHANNEL)" == "beta" ]] ||
+  fail "site dispatcher drift: beta must default to beta"
+if [[ -f "${install_root}/stable" ]]; then
+  grep -q 'CHANNEL_METADATA_URL="https://github.com/sifr-lang/sifr/releases/download/channels/channels.json"' \
+    "${install_root}/stable" ||
+    fail "site dispatcher drift: stable must resolve channels from GitHub"
+  [[ "$(extract_var "${install_root}/stable" DEFAULT_CHANNEL)" == "stable" ]] ||
+    fail "site dispatcher drift: stable must default to stable"
+fi
+[[ ! -e "${install_root}/channels.json" ]] ||
+  fail "site checkout contains forbidden top-level channels.json shadow state"
+[[ ! -d "${install_root}/metadata" && ! -d "${install_root}/versions" ]] ||
+  fail "site checkout contains forbidden metadata or version shadow state"
+
 index_sha256="$(sha256_file "${RELEASE_INDEX}")"
 next_generation="$((generation + 1))"
 new_alpha="${current_alpha}"
@@ -170,6 +185,7 @@ current_alpha=${current_alpha}
 current_beta=${current_beta}
 proposed_alpha=${new_alpha}
 proposed_beta=${new_beta}
+site_default_channel=${site_default_channel}
 version_asset_policy=write-once
 channel_index_policy=replace-only
 site_deployment=paired-after-index

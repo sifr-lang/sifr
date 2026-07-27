@@ -50,6 +50,7 @@ publication_required = (
     "channels-generation-${PROPOSED_GENERATION}.json",
     "gh release upload channels \"${snapshot}\"",
     "Replace only canonical channels.json",
+    "--kind site-publication-facts",
     "--clobber",
     "site_base_commit must be an exact commit",
     "repos/${SITE_REPOSITORY}/actions/workflows/${SITE_WORKFLOW}/dispatches",

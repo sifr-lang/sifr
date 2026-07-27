@@ -497,6 +497,10 @@ jobs:
             --dispatcher-stable-sha256 "${DISPATCHER_STABLE_SHA256}" \
             --dispatcher-alpha-sha256 "${DISPATCHER_ALPHA_SHA256}" \
             --dispatcher-beta-sha256 "${DISPATCHER_BETA_SHA256}"
+          scripts/distribution/release_governance.py validate \
+            --kind site-publication-facts \
+            --input publication/site-publication-facts.json \
+            --require-canonical
           echo "publication_facts_sha256=$(
             sha256sum publication/site-publication-facts.json | awk '{print $1}'
           )" >>"${GITHUB_OUTPUT}"
