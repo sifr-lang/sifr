@@ -80,7 +80,7 @@ Artifacts mapped to the Phase 40 exit gate:
 - [ ] Qualify all compiler, sysroot, installer, documentation, Rust-claim, site,
   and VSIX artifacts.
 - [x] Validate first-GA and normal predecessor/rollback semantics.
-- [ ] Record review rounds, PR, validation, and merge.
+- [x] Record review rounds, PR, validation, and merge.
 
 ### milestone_40_2: Stable Distribution and Self-Update
 
@@ -199,9 +199,9 @@ architecture/gate lock PR.
 
 ### milestone_40_1
 
-Status: implementation, local qualification, and independent review complete;
-ready [PR #3028](https://github.com/sifr-lang/sifr/pull/3028) is open. The
-separately owned Rust certification input merged through
+Status: complete. [PR #3028](https://github.com/sifr-lang/sifr/pull/3028)
+merged as `56f8c41eec`. The separately owned Rust certification input merged
+through
 [PR #3026](https://github.com/sifr-lang/sifr/pull/3026) and is consumed without
 modifying its Rust-interop implementation.
 
@@ -296,3 +296,11 @@ modifying its Rust-interop implementation.
     including 131/131 E2E fixtures and zero blocking failures; the cold-cache
     21.8-minute wall time exceeded only the advisory warm target, with 1.5 GiB
     peak RSS and no swap
+  - post-merge `scripts/run_all_tests.sh`: every completed merge-only area
+    passed, including CPython differential, 25 Python-interop variants, all
+    Rust-interop suites, and 32 developer-tooling variants; representative
+    performance then stopped on small median-budget variance
+  - the representative retry failed a changed benchmark set, and the identical
+    suite also failed on immediate parent `082988df1f`; the unrelated
+    host/budget-stability work is deferred to
+    `plans/phases/adhoc_performance_budget_host_variance.md`
