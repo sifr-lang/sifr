@@ -124,17 +124,21 @@ pub use python_interop_plan::{
 mod render;
 pub use render::*;
 mod rust_interop_bridge_contract;
+mod rust_interop_bridge_contract_serialization;
+mod rust_interop_bridge_panic_contract;
 mod rust_interop_direct;
 mod rust_interop_direct_collections;
 #[cfg(test)]
 mod rust_interop_direct_tests;
+mod rust_interop_panic;
 mod rust_interop_plan;
 pub use rust_interop_bridge_contract::{
-    RustBridgeContractPlan, RustBridgeParamContract, RustBridgeParamConvention,
-    RustBridgeSignatureContract, RustBridgeTypeContract, RustBridgeTypeKind,
-    RustGeneratedBridgeField, RustGeneratedBridgeType, RustGeneratedBridgeTypeKind,
-    RustGeneratedBridgeVariant,
+    RustBridgeContractPlan, RustBridgePanicErrorContract, RustBridgeParamContract,
+    RustBridgeParamConvention, RustBridgeSignatureContract, RustBridgeTypeContract,
+    RustBridgeTypeKind, RustGeneratedBridgeField, RustGeneratedBridgeType,
+    RustGeneratedBridgeTypeKind, RustGeneratedBridgeVariant,
 };
+pub use rust_interop_bridge_panic_contract::rust_bridge_panic_error_contract;
 pub use rust_interop_plan::{
     interop_build_plan_for_named_modules, InteropBuildPlan, RustBridgeProbe, RustBridgeProbeKind,
     RustBridgeProbePlan, RustBridgeSourceDigest, RustGeneratedBridgeModule, RustInteropCargoInputs,

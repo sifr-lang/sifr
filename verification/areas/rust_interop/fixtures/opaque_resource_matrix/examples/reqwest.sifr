@@ -10,7 +10,7 @@ class HttpResponse:
     status: uint32
     body: bytes
 
-@rust(reqwest.Client.get, panic=map_error(bridge.reqwest.map_panic))
+@rust(reqwest.Client.get)
 async def reqwest_get(url: str) -> Result[HttpResponse, PackageExampleError | RustPanicError]: ...
 
 async def verify_reqwest_package() -> Result[HttpResponse, PackageExampleError | RustPanicError]:

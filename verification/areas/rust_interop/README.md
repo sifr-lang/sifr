@@ -81,9 +81,14 @@ only valid combinations are:
 `contract-only` certifies only the compiler or metadata contract named by the
 row. `cargo-probe` exercises the real Cargo package graph: positive directions
 build generated/package Rust code, while negative directions may observe a
-required compiler rejection before Cargo execution. `runtime-observed` executes
-the lifecycle or runtime behavior named by the row. Neither a contract-only row
-nor a compiler-diagnostic row satisfies a build or runtime claim.
+required compiler rejection before Cargo execution. `runtime-observed`
+positive evidence executes the lifecycle or runtime behavior named by the row;
+its negative direction may bind a compiler diagnostic when rejection before
+runtime is the capability's required safety behavior. Generated-package tests
+outside `sifr_runtime` must carry the
+`sifr-evidence: executes-runtime-observed` marker and actually execute the
+built binary. Neither a contract-only row nor a compiler-diagnostic row
+satisfies a build or runtime claim.
 
 Tier-0 rows may list crates only to identify the API shapes used by diagnostic
 examples. Such rows must repeat an identical

@@ -197,7 +197,7 @@ Status: implemented in [PR #2711](https://github.com/sifr-lang/sifr/pull/2711); 
 
 ### milestone_39_8: Panic Boundary and Rust Error Surface
 
-Status: merged in [PR #2717](https://github.com/sifr-lang/sifr/pull/2717); focused validation covers built-in `RustPanicError` signatures, explicit `RustPanicError`/`panic=map_error(...)` Result panic surfaces, rejection of missing or invalid panic policies, rejection of `panic=map_error(...)` on non-Result APIs, abort policy trust gates, abort-profile strategy validation, and redacted `RustPanicErrorBridge` panic payload conversion. Full generated wrapper emission for package-local bridge calls is future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../issues/active/rust-interop-runtime-ecosystem-certification.md) through the `panic_boundary_wrapper_emission` compatibility row.
+Status: merged in [PR #2717](https://github.com/sifr-lang/sifr/pull/2717); focused validation covers built-in `RustPanicError` signatures, explicit `RustPanicError`/`panic=map_error(...)` Result panic surfaces, rejection of missing or invalid panic policies, rejection of `panic=map_error(...)` on non-Result APIs, abort policy trust gates, abort-profile strategy validation, and redacted `RustPanicErrorBridge` panic payload conversion. The follow-on [`certification_2` work](../issues/active/rust-interop-runtime-ecosystem-certification.md#certification_2-panic-boundary-wrapper-emission) completes synchronous generated wrapper execution for package-local calls: target and mapper panics are contained and redacted, ordinary Rust `Err` values remain distinct, mapper signatures are Cargo-probed, mapper-panic fallback is runtime-observed, and async mapper policies remain rejected pending their own wrapper certification.
 
 - Scope:
   - Wrap Rust bridge calls in unwind boundaries where recoverable.
@@ -210,6 +210,11 @@ Status: merged in [PR #2717](https://github.com/sifr-lang/sifr/pull/2717); focus
   - Panicking Rust bridge functions cannot panic through Sifr user code in recoverable builds.
   - Abort-profile behavior is explicit and covered by negative validation.
   - Rust user errors and Rust panics remain distinguishable.
+
+Follow-on closure evidence is owned by the
+`panic_boundary_wrapper_emission` compatibility row and its dedicated
+`certification_2` PR. It does not promote the separately future-owned async,
+callback, opaque-handle, or ecosystem runtime rows.
 
 ### milestone_39_9: Zero-Copy and Core Views
 

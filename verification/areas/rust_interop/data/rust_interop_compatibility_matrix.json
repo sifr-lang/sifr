@@ -186,15 +186,14 @@
     {
       "id": "panic_boundary_wrapper_emission",
       "fixture": "panic_boundary_wrapper_emission",
-      "category": "future-owned-by-separate-phase",
-      "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
+      "category": "supported",
       "tier": 2,
       "capability": "generated panic wrapper emission, mapper signature validation, and mapper-panic fallback behavior",
       "execution_kind": "runtime-observed",
       "required_crates": [],
-      "positive_evidence": {"id": "generated_wrapper_maps_panic_to_declared_error", "status": "planned"},
-      "negative_evidence": {"id": "invalid_map_error_signature_rejected", "status": "planned"},
-      "notes": "Runtime wrapper emission and mapper fallback behavior need passing generated-code fixtures before they are listed as verified support."
+      "positive_evidence": {"id": "generated_wrapper_maps_panic_to_declared_error", "status": "passing"},
+      "negative_evidence": {"id": "invalid_map_error_signature_rejected", "status": "passing"},
+      "notes": "Synchronous generated package wrappers catch and redact target panics, validate RustPanicErrorBridge mapper signatures, protect mapper calls, and preserve the original redacted RustPanicError fallback."
     },
     {
       "id": "panic_abort_profile",

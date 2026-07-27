@@ -1,21 +1,12 @@
-use super::{RustExpr, RustItem, RustParam, RustStmt, RustType, Visibility};
+use super::{RustItem, RustParam, RustStmt, RustType, Visibility};
 
 pub fn build_worker_panic_hook_items() -> Vec<RustItem> {
     vec![
-        RustItem::Static {
-            name: "__SIFR_WORKER_PANIC_HOOK_LOCK".to_string(),
-            visibility: Visibility::Private,
-            ty: RustType::Named("std::sync::Mutex<()>".to_string()),
-            value: RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "std".to_string(),
-                    "sync".to_string(),
-                    "Mutex".to_string(),
-                    "new".to_string(),
-                ])),
-                args: vec![RustExpr::Tuple(vec![])],
-            },
-        },
+        RustItem::Use(vec![
+            "sifr_runtime".to_string(),
+            "interop".to_string(),
+            "SilentPanicBoundary".to_string(),
+        ]),
         RustItem::Fn {
             name: "__sifr_with_silent_worker_panic_hook".to_string(),
             visibility: Visibility::Private,
@@ -26,7 +17,7 @@ pub fn build_worker_panic_hook_items() -> Vec<RustItem> {
                 },
                 crate::RustTypeParam {
                     name: "F".to_string(),
-                    bounds: vec!["FnOnce() -> T".to_string()],
+                    bounds: vec!["FnOnce(&SilentPanicBoundary) -> T".to_string()],
                 },
             ],
             params: vec![RustParam::Named {
@@ -35,7 +26,7 @@ pub fn build_worker_panic_hook_items() -> Vec<RustItem> {
             }],
             ret: Some(RustType::Named("T".to_string())),
             body: vec![RustStmt::Verbatim(
-                "let _hook_guard = match __SIFR_WORKER_PANIC_HOOK_LOCK.lock() {\n            Ok(guard) => guard,\n            Err(poisoned) => poisoned.into_inner(),\n        };\n        let previous_hook = std::panic::take_hook();\n        std::panic::set_hook(Box::new(|_| {}));\n        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(body));\n        std::panic::set_hook(previous_hook);\n        return match result {\n            Ok(value) => value,\n            Err(payload) => std::panic::resume_unwind(payload),\n        }"
+                "let __sifr_panic_boundary = SilentPanicBoundary::enter();\n        return match __sifr_panic_boundary.catch_unwind(|| body(&__sifr_panic_boundary)) {\n            Ok(value) => value,\n            Err(payload) => std::panic::resume_unwind(payload),\n        }"
                     .to_string(),
             )],
             is_async: false,
@@ -70,7 +61,7 @@ pub fn build_cpu_offload_items() -> Vec<RustItem> {
                 "__SifrBlockingTask<T, WorkerRuntimeError>".to_string(),
             )),
             body: vec![RustStmt::Verbatim(
-                "let observed = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));\n        let handle = tokio::task::spawn_blocking(move || {\n            let workers = std::thread::available_parallelism().map_or(1usize, std::num::NonZeroUsize::get);\n            let pool = rayon::ThreadPoolBuilder::new().num_threads(workers).build();\n            match pool {\n                Ok(pool) => pool.install(|| {\n                    __sifr_with_silent_worker_panic_hook(|| {\n                        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(work)) {\n                            Ok(value) => __SifrTaskResult::Ok(value),\n                            Err(_) => __SifrTaskResult::Err(__SifrFailure::new(WorkerRuntimeError::new(\"cpu worker panicked\".to_string()))),\n                        }\n                    })\n                }),\n                Err(error) => __SifrTaskResult::Err(__SifrFailure::new(WorkerRuntimeError::new(format!(\"cpu worker pool could not start: {}\", error)))),\n            }\n        });\n        return __SifrBlockingTask { handle: Some(handle), observed, _error: std::marker::PhantomData }"
+                "let observed = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));\n        let handle = tokio::task::spawn_blocking(move || {\n            let workers = std::thread::available_parallelism().map_or(1usize, std::num::NonZeroUsize::get);\n            let pool = rayon::ThreadPoolBuilder::new().num_threads(workers).build();\n            match pool {\n                Ok(pool) => pool.install(|| {\n                    __sifr_with_silent_worker_panic_hook(|_| {\n                        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(work)) {\n                            Ok(value) => __SifrTaskResult::Ok(value),\n                            Err(_) => __SifrTaskResult::Err(__SifrFailure::new(WorkerRuntimeError::new(\"cpu worker panicked\".to_string()))),\n                        }\n                    })\n                }),\n                Err(error) => __SifrTaskResult::Err(__SifrFailure::new(WorkerRuntimeError::new(format!(\"cpu worker pool could not start: {}\", error)))),\n            }\n        });\n        return __SifrBlockingTask { handle: Some(handle), observed, _error: std::marker::PhantomData }"
                     .to_string(),
             )],
             is_async: false,
@@ -106,10 +97,38 @@ pub fn build_cpu_offload_items() -> Vec<RustItem> {
             }],
             ret: Some(RustType::Named("__SifrBlockingTask<T, WorkerError>".to_string())),
             body: vec![RustStmt::Verbatim(
-                "let observed = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));\n        let handle = tokio::task::spawn_blocking(move || {\n            let workers = std::thread::available_parallelism().map_or(1usize, std::num::NonZeroUsize::get);\n            let pool = rayon::ThreadPoolBuilder::new().num_threads(workers).build();\n            match pool {\n                Ok(pool) => pool.install(|| {\n                    __sifr_with_silent_worker_panic_hook(|| {\n                        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(work)) {\n                            Ok(Ok(value)) => __SifrTaskResult::Ok(value),\n                            Ok(Err(error)) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(format!(\"{}\", error)))),\n                            Err(_) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(\"cpu worker panicked\".to_string()))),\n                        }\n                    })\n                }),\n                Err(error) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(format!(\"cpu worker pool could not start: {}\", error)))),\n            }\n        });\n        return __SifrBlockingTask { handle: Some(handle), observed, _error: std::marker::PhantomData }"
+                "let observed = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));\n        let handle = tokio::task::spawn_blocking(move || {\n            let workers = std::thread::available_parallelism().map_or(1usize, std::num::NonZeroUsize::get);\n            let pool = rayon::ThreadPoolBuilder::new().num_threads(workers).build();\n            match pool {\n                Ok(pool) => pool.install(|| {\n                    __sifr_with_silent_worker_panic_hook(|_| {\n                        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(work)) {\n                            Ok(Ok(value)) => __SifrTaskResult::Ok(value),\n                            Ok(Err(error)) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(format!(\"{}\", error)))),\n                            Err(_) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(\"cpu worker panicked\".to_string()))),\n                        }\n                    })\n                }),\n                Err(error) => __SifrTaskResult::Err(__SifrFailure::new(WorkerError::new(format!(\"cpu worker pool could not start: {}\", error)))),\n            }\n        });\n        return __SifrBlockingTask { handle: Some(handle), observed, _error: std::marker::PhantomData }"
                     .to_string(),
             )],
             is_async: false,
         },
     ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn worker_panic_boundary_uses_the_shared_runtime_hook() {
+        let items = build_worker_panic_hook_items();
+        assert_eq!(items.len(), 2);
+        assert!(matches!(
+            &items[0],
+            RustItem::Use(path)
+                if path == &["sifr_runtime", "interop", "SilentPanicBoundary"]
+        ));
+        let Some(RustItem::Fn { body, .. }) = items
+            .iter()
+            .find(|item| matches!(item, RustItem::Fn { .. }))
+        else {
+            panic!("worker panic boundary must be a function");
+        };
+        let rendered = format!("{body:?}");
+
+        assert!(rendered.contains("SilentPanicBoundary::enter"));
+        assert!(rendered.contains("__sifr_panic_boundary.catch_unwind"));
+        assert!(!rendered.contains("take_hook"));
+        assert!(!rendered.contains("set_hook"));
+    }
 }

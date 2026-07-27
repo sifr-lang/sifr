@@ -6,7 +6,7 @@
 class BackendError(Error):
     message: str
 
-@rust(bridge.backend.route_probe, panic=map_error(bridge.backend.map_panic))
+@rust(bridge.backend.route_probe)
 async def route_probe(path: str) -> Result[str, BackendError | RustPanicError]: ...
 
 async def verify_backend_feature_package() -> Result[str, BackendError | RustPanicError]:

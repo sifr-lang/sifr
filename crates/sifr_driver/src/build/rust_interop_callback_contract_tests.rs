@@ -17,7 +17,7 @@ class Subscription:
 
 @rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)
 @rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
-def subscribe(callback: Callable[[int], None]) -> Result[Subscription, CallbackError]:
+def subscribe(callback: Callable[[int], None]) -> Result[Subscription, CallbackError | RustPanicError]:
     return Subscription(id=0)
 "#;
 

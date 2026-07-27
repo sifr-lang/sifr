@@ -12,7 +12,7 @@ class SignalEvent:
 
 @rust.opaque(type=bridge.signals.SignalSubscription, send=True, sync=False, clone=none, close=async_close)
 class SignalSubscription:
-    @rust(bridge.signals.cancel, panic=map_error(bridge.signals.map_panic))
+    @rust(bridge.signals.cancel)
     async def aclose(own self) -> Result[None, SignalSubscriptionError | RustPanicError]: ...
 
 @rust.callback(backpressure=bounded(16), overflow=error, shutdown=drain)

@@ -1,5 +1,9 @@
 mod generated_types;
 
+pub(crate) use crate::rust_interop_bridge_contract_serialization::push_bridge_contract_plan;
+use crate::rust_interop_bridge_panic_contract::{
+    recoverable_panic_bridge_error, rust_bridge_panic_error_contract,
+};
 use crate::rust_interop_plan::{RustInteropOwner, RustInteropPlanDeclaration};
 use generated_types::{
     absolute_runtime_target, bridge_type_definition_module, class_bridge_declaration_name,
@@ -23,7 +27,16 @@ pub struct RustBridgeSignatureContract {
     pub owner: RustInteropOwner,
     pub params: Vec<RustBridgeParamContract>,
     pub return_type: RustBridgeTypeContract,
+    pub panic_error: RustBridgePanicErrorContract,
     pub span: ruff_text_size::TextRange,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum RustBridgePanicErrorContract {
+    #[default]
+    None,
+    WrapperOnly,
+    OrdinaryAndWrapper,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -139,23 +152,6 @@ pub(crate) fn bridge_contract_plan_for_named_modules<'a>(
     }
 }
 
-pub(crate) fn push_bridge_contract_plan(out: &mut String, plan: &RustBridgeContractPlan) {
-    out.push_str("rust.bridge_signatures=");
-    out.push_str(&plan.signatures.len().to_string());
-    out.push('\n');
-    for signature in &plan.signatures {
-        push_signature(out, signature);
-        out.push('\n');
-    }
-    out.push_str("rust.generated_bridge_types=");
-    out.push_str(&plan.generated_types.len().to_string());
-    out.push('\n');
-    for bridge_type in &plan.generated_types {
-        push_generated_type(out, bridge_type);
-        out.push('\n');
-    }
-}
-
 fn signature_contract(
     declaration: &RustInteropPlanDeclaration,
     module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
@@ -199,12 +195,14 @@ fn signature_contract(
         BridgeTypePosition::Return,
         false,
     );
+    let panic_error = rust_bridge_panic_error_contract(&function.return_type);
     Some(RustBridgeSignatureContract {
         canonical_target_path: canonical_sifr_target_path(declaration),
         module_name,
         owner: declaration.owner.clone(),
         params,
         return_type,
+        panic_error,
         span: declaration.declaration.span,
     })
 }
@@ -379,8 +377,15 @@ fn bridge_type_contract(
                     BridgeTypePosition::Return,
                     false,
                 );
+                let bridge_error = match recoverable_panic_bridge_error(err) {
+                    Ok(Some(ordinary_error)) => ordinary_error,
+                    Ok(None) => err,
+                    Err(reason) => {
+                        return unsupported_type(err, reason);
+                    }
+                };
                 let err_ty = bridge_type_contract(
-                    err,
+                    bridge_error,
                     module_name,
                     module_catalogs,
                     catalog,
@@ -810,87 +815,4 @@ fn canonical_sifr_target_path(declaration: &RustInteropPlanDeclaration) -> Strin
         }
     }
     path
-}
-
-fn push_signature(out: &mut String, signature: &RustBridgeSignatureContract) {
-    out.push_str("bridge-signature=");
-    out.push_str(&signature.canonical_target_path);
-    out.push_str("|module=");
-    out.push_str(signature.module_name.as_deref().unwrap_or("<single>"));
-    out.push_str("|params=");
-    out.push_str(&signature.params.len().to_string());
-    for param in &signature.params {
-        out.push('|');
-        out.push_str(&param.name);
-        out.push(':');
-        out.push_str(match param.convention {
-            RustBridgeParamConvention::Borrow => "borrow",
-            RustBridgeParamConvention::MutableBorrow => "mut-borrow",
-            RustBridgeParamConvention::Own => "own",
-        });
-        out.push(':');
-        push_type_contract(out, &param.ty);
-    }
-    out.push_str("|return=");
-    push_type_contract(out, &signature.return_type);
-}
-
-fn push_type_contract(out: &mut String, ty: &RustBridgeTypeContract) {
-    out.push_str(&ty.sifr_type);
-    out.push_str("=>");
-    out.push_str(ty.rust_return_type.as_deref().unwrap_or("<unsupported>"));
-    out.push(':');
-    out.push_str(match ty.kind {
-        RustBridgeTypeKind::Bool => "bool",
-        RustBridgeTypeKind::FixedInt => "fixed-int",
-        RustBridgeTypeKind::ExactInt => "exact-int",
-        RustBridgeTypeKind::Float64 => "float64",
-        RustBridgeTypeKind::String => "string",
-        RustBridgeTypeKind::Bytes => "bytes",
-        RustBridgeTypeKind::List => "list",
-        RustBridgeTypeKind::Dict => "dict",
-        RustBridgeTypeKind::Option => "option",
-        RustBridgeTypeKind::Tuple => "tuple",
-        RustBridgeTypeKind::Result => "result",
-        RustBridgeTypeKind::GeneratedRecord => "record",
-        RustBridgeTypeKind::GeneratedEnum => "enum",
-        RustBridgeTypeKind::GeneratedError => "error",
-        RustBridgeTypeKind::OpaqueHandle => "handle",
-        RustBridgeTypeKind::Callback => "callback",
-        RustBridgeTypeKind::None => "none",
-        RustBridgeTypeKind::Unsupported => "unsupported",
-    });
-    if let Some(reason) = &ty.unsupported_reason {
-        out.push_str(":unsupported=");
-        out.push_str(reason);
-    }
-}
-
-fn push_generated_type(out: &mut String, bridge_type: &RustGeneratedBridgeType) {
-    out.push_str("bridge-type=");
-    out.push_str(bridge_type.module_name.as_deref().unwrap_or("<single>"));
-    out.push('|');
-    out.push_str(&bridge_type.name);
-    out.push('|');
-    out.push_str(&bridge_type.rust_type_path);
-    out.push('|');
-    out.push_str(match bridge_type.kind {
-        RustGeneratedBridgeTypeKind::Record => "record",
-        RustGeneratedBridgeTypeKind::ClosedEnum => "enum",
-        RustGeneratedBridgeTypeKind::Error => "error",
-    });
-    for field in &bridge_type.fields {
-        out.push_str("|field=");
-        out.push_str(&field.name);
-        out.push(':');
-        out.push_str(&field.sifr_type);
-        out.push(':');
-        out.push_str(&field.rust_type);
-    }
-    for variant in &bridge_type.variants {
-        out.push_str("|variant=");
-        out.push_str(&variant.name);
-        out.push(':');
-        out.push_str(&variant.discriminant.to_string());
-    }
 }

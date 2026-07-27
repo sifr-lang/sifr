@@ -9,7 +9,6 @@
     "callback_subscription_ecosystem",
     "callbacks_call_scoped",
     "opaque_resource_matrix",
-    "panic_boundary_wrapper_emission",
     "zero_copy_runtime_matrix"
   ],
   "claims": [
@@ -90,6 +89,12 @@
       "category": "supported",
       "execution_kind": "contract-only",
       "capability": "panic-to-error behavior"
+    },
+    {
+      "id": "panic_boundary_wrapper_emission",
+      "category": "supported",
+      "execution_kind": "runtime-observed",
+      "capability": "generated panic wrapper emission, mapper signature validation, and mapper-panic fallback behavior"
     },
     {
       "id": "panic_abort_profile",

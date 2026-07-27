@@ -63,11 +63,6 @@ pub async fn fetch_text(url: String) -> Result<String, HttpErrorBridge> {
         })
 }
 
-pub fn map_panic(message: &str) -> HttpErrorBridge {
-    HttpErrorBridge {
-        message: message.to_owned(),
-    }
-}
 ```
 
 The bridge owns reqwest details. The Sifr side only sees `str` in and `Result[str, ...]` out.
@@ -78,14 +73,19 @@ The bridge owns reqwest details. The Sifr side only sees `str` in and `Result[st
 class HttpError(Error):
     message: str
 
-@rust(bridge.http.fetch_text, panic=map_error(bridge.http.map_panic))
+@rust(bridge.http.fetch_text)
 async def fetch_text(url: str) -> Result[str, HttpError | RustPanicError]: ...
 
 async def load_health() -> Result[str, HttpError | RustPanicError]:
     return await fetch_text("https://example.com/health")
 ```
 
-`bridge.http.fetch_text` resolves to your package-local module under `src/bridges`. Panic mapping keeps Rust panics inside the declared error union.
+`bridge.http.fetch_text` resolves to your package-local module under
+`src/bridges`. The nominal `RustPanicError` member reserves that error surface,
+but current async code generation does not catch panics while polling the
+returned Rust future. Do not rely on async panic containment here.
+`panic=map_error(path)` is synchronous-only and is rejected on `async def`
+until generated async panic wrappers receive runtime certification.
 
 If you need status and body together, return a Sifr record from the bridge instead of a bare string:
 
@@ -94,7 +94,7 @@ class HttpResponse:
     status: uint32
     body: str
 
-@rust(bridge.http.fetch, panic=map_error(bridge.http.map_panic))
+@rust(bridge.http.fetch)
 async def fetch(url: str) -> Result[HttpResponse, HttpError | RustPanicError]: ...
 ```
 

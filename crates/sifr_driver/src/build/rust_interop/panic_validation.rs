@@ -1,8 +1,8 @@
 use super::{canonical_sifr_target_path, canonical_trust_target_path, RustInteropResolver};
 use crate::build::rust_interop_trust::{effective_panic_policy, EffectivePanicPolicy};
-use sifr_codegen::{RustBridgeSignatureContract, RustBridgeTypeKind};
+use sifr_codegen::{RustBridgePanicErrorContract, RustBridgeSignatureContract, RustBridgeTypeKind};
 use sifr_diagnostics::DiagnosticCode;
-use sifr_ir::RustInteropDecoratorKind;
+use sifr_ir::{RustInteropDecoratorKind, RustInteropEffect};
 use sifr_package::SifrPackageMetadata;
 
 impl RustInteropResolver<'_> {
@@ -53,7 +53,32 @@ impl RustInteropResolver<'_> {
 
         match signature.return_type.kind {
             RustBridgeTypeKind::Result => {
-                if result_carries_rust_panic_error(signature) || surface.is_some() {
+                if signature.panic_error == RustBridgePanicErrorContract::WrapperOnly {
+                    self.push_panic_diagnostic(
+                        declaration,
+                        "`RustPanicError` is reserved for generated wrapper failures; a fallible Rust target also requires a distinct ordinary error member",
+                    );
+                    return;
+                }
+                if surface == EffectivePanicPolicy::MapError {
+                    if declaration.declaration.effect == RustInteropEffect::Async {
+                        self.push_panic_diagnostic(
+                            declaration,
+                            "async `panic=map_error(path)` requires async panic-wrapper certification and is not supported by the synchronous wrapper contract",
+                        );
+                        return;
+                    }
+                    if signature.panic_error != RustBridgePanicErrorContract::OrdinaryAndWrapper {
+                        self.push_panic_diagnostic(
+                            declaration,
+                            "`panic=map_error(path)` requires a mapped error member plus `RustPanicError` in the Result error channel so mapper panics have a representable redacted fallback",
+                        );
+                    }
+                    return;
+                }
+                if signature.panic_error == RustBridgePanicErrorContract::OrdinaryAndWrapper
+                    || surface.is_some()
+                {
                     return;
                 }
                 self.push_panic_diagnostic(
@@ -66,9 +91,9 @@ impl RustInteropResolver<'_> {
                 EffectivePanicPolicy::TrustedNoPanic | EffectivePanicPolicy::Abort => {}
                 EffectivePanicPolicy::MapError => {
                     self.push_panic_diagnostic(
-                            declaration,
-                            "`panic=map_error(path)` requires a Result-returning Sifr declaration so mapped panic errors have a public error channel",
-                        );
+                        declaration,
+                        "`panic=map_error(path)` requires a Result-returning Sifr declaration so mapped panic errors have a public error channel",
+                    );
                 }
                 EffectivePanicPolicy::None => {
                     self.push_panic_diagnostic(
@@ -123,10 +148,6 @@ impl RustInteropResolver<'_> {
             "`panic=abort` requires the selected Cargo panic strategy to be `abort`",
         );
     }
-}
-
-fn result_carries_rust_panic_error(signature: &RustBridgeSignatureContract) -> bool {
-    signature.return_type.sifr_type.contains("RustPanicError")
 }
 
 fn signature_has_unsupported_type(signature: &RustBridgeSignatureContract) -> bool {

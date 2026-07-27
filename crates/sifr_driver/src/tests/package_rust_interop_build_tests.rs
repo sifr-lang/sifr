@@ -33,6 +33,12 @@ const LOCAL_BRIDGE_NEGATIVE: &str = include_str!(
 const BRIDGE_TYPE_ROUNDTRIP_EVIDENCE: &str = include_str!(
     "../../../../verification/areas/rust_interop/fixtures/bridge_type_matrix/positive/supported_type_roundtrips.sifr"
 );
+const PANIC_WRAPPER_EVIDENCE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/panic_boundary_wrapper_emission/positive/generated_wrapper_maps_panic_to_declared_error.sifr"
+);
+const PANIC_WRAPPER_INVALID_MAPPER: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/panic_boundary_wrapper_emission/negative/invalid_map_error_signature_rejected.sifr"
+);
 
 fn fixture_scenario_root(fixture_id: &str, scenario_id: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -107,7 +113,27 @@ fn install_evidence_source(package_root: &Path, source: &str) {
         .expect("checked-in evidence source should be installed");
 }
 
-fn run_built_package(entrypoint: &PackageEntrypoint) -> String {
+fn rebase_sifr_runtime_dependency(package_root: &Path) {
+    let manifest_path = package_root.join("Cargo.toml");
+    let manifest = std::fs::read_to_string(&manifest_path)
+        .expect("scenario Cargo manifest should be readable");
+    let runtime_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("driver crate should have a crates parent")
+        .join("sifr_runtime");
+    let rebased = manifest.replace(
+        "../../../../../../../crates/sifr_runtime",
+        &runtime_path.display().to_string(),
+    );
+    assert_ne!(
+        rebased, manifest,
+        "panic wrapper scenario must declare the checked-in runtime path dependency"
+    );
+    std::fs::write(manifest_path, rebased)
+        .expect("copied scenario runtime dependency should be rebased");
+}
+
+fn built_package_output(entrypoint: &PackageEntrypoint) -> std::process::Output {
     let artifact =
         build_cached_package_project(entrypoint).expect("Rust interop package should build");
     let output = std::process::Command::new(artifact.binary_path())
@@ -118,6 +144,11 @@ fn run_built_package(entrypoint: &PackageEntrypoint) -> String {
         "package binary should pass: {}",
         String::from_utf8_lossy(&output.stderr)
     );
+    output
+}
+
+fn run_built_package(entrypoint: &PackageEntrypoint) -> String {
+    let output = built_package_output(entrypoint);
     String::from_utf8_lossy(&output.stdout).trim().to_string()
 }
 
@@ -207,6 +238,68 @@ fn test_build_bridge_type_matrix_positive_cargo_probe() {
     assert_eq!(
         run_built_package(&entrypoint),
         "serde:nested|bytes:6|invalid nested payload"
+    );
+    let _ = std::fs::remove_dir_all(package_root);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+#[doc = "sifr-evidence: executes-runtime-observed"]
+fn test_build_panic_boundary_wrapper_runtime() {
+    let package_root = copied_scenario(
+        "panic_boundary_wrapper_emission",
+        "panic_wrapper_runtime",
+        "rust_interop_panic_wrapper_runtime",
+    );
+    rebase_sifr_runtime_dependency(&package_root);
+    let pristine_entrypoint =
+        package_entrypoint_from_cargo_layout(&package_root, "panic-wrapper-runtime");
+    let pristine_errors = check_package_project(&pristine_entrypoint);
+    assert!(
+        pristine_errors.is_empty(),
+        "checked-in panic wrapper scenario should pass package checking: {pristine_errors:#?}"
+    );
+    install_evidence_source(
+        &package_root,
+        &format!(
+            "{PANIC_WRAPPER_EVIDENCE}\n\ndef main() -> None:\n    print(verify_generated_wrapper_maps_panic_to_declared_error())\n"
+        ),
+    );
+    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "panic-wrapper-runtime");
+
+    let output = built_package_output(&entrypoint);
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout).trim(),
+        "ok:safe|ordinary bridge error|mapped: Rust bridge panicked|Rust bridge panicked|Rust bridge panicked|mapped: Rust bridge panicked"
+    );
+    assert!(
+        output.stderr.is_empty(),
+        "caught target and mapper panic payloads must not reach stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let _ = std::fs::remove_dir_all(package_root);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+fn test_check_panic_boundary_invalid_mapper_signature() {
+    let package_root = copied_scenario(
+        "panic_boundary_wrapper_emission",
+        "panic_wrapper_runtime",
+        "rust_interop_panic_wrapper_invalid_mapper",
+    );
+    rebase_sifr_runtime_dependency(&package_root);
+    install_evidence_source(&package_root, PANIC_WRAPPER_INVALID_MAPPER);
+    let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "panic-wrapper-runtime");
+
+    let errors = check_package_project(&entrypoint);
+
+    assert!(
+        errors.iter().any(|error| {
+            error.code == DiagnosticCode::RUST_PANIC_CONTRACT.code()
+                && error.message.contains("RustPanicErrorBridge")
+        }),
+        "invalid panic mapper signature must fail with the panic contract diagnostic: {errors:#?}"
     );
     let _ = std::fs::remove_dir_all(package_root);
 }

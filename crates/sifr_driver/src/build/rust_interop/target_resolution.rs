@@ -13,6 +13,16 @@ pub(super) fn declaration_paths(declaration: &RustInteropDeclaration) -> Vec<&Ru
     paths
 }
 
+pub(super) fn is_primary_target(
+    declaration: &RustInteropDeclaration,
+    path: &RustTargetPath,
+) -> bool {
+    declaration
+        .target
+        .as_ref()
+        .is_some_and(|target| target.span == path.span && target.segments == path.segments)
+}
+
 fn collect_value_paths<'a>(value: &'a RustInteropValue, paths: &mut Vec<&'a RustTargetPath>) {
     match value {
         RustInteropValue::TargetPath(path) => paths.push(path),

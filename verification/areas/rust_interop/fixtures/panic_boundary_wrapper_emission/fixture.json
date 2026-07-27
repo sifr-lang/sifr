@@ -4,22 +4,39 @@
   "evidence": {
     "negative": {
       "expected_diagnostic": "SIFR-RUST-PANIC-0001",
-      "expected_result": "future-owned-diagnostic",
+      "expected_result": "diagnostic",
       "id": "invalid_map_error_signature_rejected",
       "path": "negative/invalid_map_error_signature_rejected.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs",
+        "test_name": "test_check_panic_boundary_invalid_mapper_signature"
+      }
     },
     "positive": {
-      "expected_result": "future-owned",
+      "expected_result": "pass",
       "id": "generated_wrapper_maps_panic_to_declared_error",
       "path": "positive/generated_wrapper_maps_panic_to_declared_error.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs",
+        "test_name": "test_build_panic_boundary_wrapper_runtime"
+      }
     }
   },
   "execution_kind": "runtime-observed",
   "features": {},
   "id": "panic_boundary_wrapper_emission",
   "required_crates": [],
+  "scenario_examples": {
+    "panic_wrapper_runtime": "examples/panic_wrapper_runtime"
+  },
   "schema_version": 2,
   "tier": 2
 }

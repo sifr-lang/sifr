@@ -513,6 +513,7 @@ pub(super) fn signature_contract(
         },
         params,
         return_type,
+        panic_error: sifr_codegen::RustBridgePanicErrorContract::None,
         span: span(),
     }
 }

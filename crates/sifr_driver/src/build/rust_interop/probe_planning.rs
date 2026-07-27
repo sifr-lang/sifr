@@ -53,12 +53,15 @@ impl RustInteropResolver<'_> {
         sysroot_trust: Option<&SysrootRustInteropTrust>,
     ) -> Option<String> {
         let dependency_name = package_bridge_dependency_name(package);
-        let signature = self
-            .signature_contracts
-            .get(&super::target_resolution::canonical_sifr_target_path(
-                declaration,
-            ))
-            .cloned();
+        let signature = super::target_resolution::is_primary_target(&declaration.declaration, path)
+            .then(|| {
+                self.signature_contracts
+                    .get(&super::target_resolution::canonical_sifr_target_path(
+                        declaration,
+                    ))
+                    .cloned()
+            })
+            .flatten();
         let async_thread_affinity = self.async_thread_affinity_for_probe(declaration);
         let Some(sysroot_runtime_crate) = self.context.sysroot_runtime_crate.clone() else {
             self.push_diagnostic(

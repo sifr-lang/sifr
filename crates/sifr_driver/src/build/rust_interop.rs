@@ -398,10 +398,14 @@ impl<'a> RustInteropResolver<'a> {
                     sysroot_trust.is_some(),
                 );
                 self.validate_backend_generated_bridge_imports(declaration, backend);
-                let signature = self
-                    .signature_contracts
-                    .get(&canonical_target_path)
-                    .cloned();
+                let signature =
+                    target_resolution::is_primary_target(&declaration.declaration, path)
+                        .then(|| {
+                            self.signature_contracts
+                                .get(&canonical_target_path)
+                                .cloned()
+                        })
+                        .flatten();
                 let async_thread_affinity = self.async_thread_affinity_for_probe(declaration);
                 let Some(sysroot_runtime_crate) = self.context.sysroot_runtime_crate.clone() else {
                     self.push_diagnostic(

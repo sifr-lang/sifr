@@ -5,8 +5,12 @@ use super::rust_interop_contract_tests::{
 };
 use ruff_text_size::TextRange;
 use sifr_codegen::{RustBridgeTypeContract, RustBridgeTypeKind};
-use sifr_ir::{RustInteropArgument, RustInteropDecoratorKind, RustInteropValue, RustTargetPath};
+use sifr_ir::{
+    RustInteropArgument, RustInteropDecoratorKind, RustInteropEffect, RustInteropValue,
+    RustTargetPath,
+};
 use sifr_package::TrustPolicy;
+use sifr_type_system::Type;
 use std::path::PathBuf;
 
 #[test]
@@ -17,9 +21,9 @@ fn package_rust_interop_result_requires_panic_surface() {
             RustInteropDecoratorKind::Function,
             Vec::new(),
         )],
-        vec![signature_contract(
-            Vec::new(),
-            result_contract(string_contract(), error_contract("HashError")),
+        vec![panic_result_signature(
+            "HashError",
+            declared_error_type("HashError"),
         )],
     );
     let context = bridge_context(TrustPolicy::default());
@@ -38,12 +42,9 @@ fn package_rust_interop_result_accepts_rust_panic_error_surface() {
             RustInteropDecoratorKind::Function,
             Vec::new(),
         )],
-        vec![signature_contract(
-            Vec::new(),
-            result_contract(
-                string_contract(),
-                error_contract("HashError | RustPanicError"),
-            ),
+        vec![panic_result_signature(
+            "HashError | RustPanicError",
+            declared_error_union("HashError"),
         )],
     );
     let context = bridge_context(TrustPolicy::default());
@@ -60,15 +61,153 @@ fn package_rust_interop_result_accepts_map_error_surface() {
             RustInteropDecoratorKind::Function,
             vec![map_error_argument("bridge.hash.map_panic")],
         )],
-        vec![signature_contract(
-            Vec::new(),
-            result_contract(string_contract(), error_contract("HashError")),
+        vec![panic_result_signature(
+            "HashError | RustPanicError",
+            declared_error_union("HashError"),
         )],
     );
     let context = bridge_context(TrustPolicy::default());
 
     super::rust_interop::apply_package_rust_interop_metadata(generated, Some(context))
-        .expect("map_error adapter should satisfy Result panic surface");
+        .expect("map_error adapter with a redacted fallback should satisfy Result panic surface");
+}
+
+#[test]
+fn package_rust_interop_rejects_map_error_without_representable_fallback() {
+    let generated = base_project_with_contracts(
+        vec![declaration_entry_with_arguments(
+            "bridge.hash.digest",
+            RustInteropDecoratorKind::Function,
+            vec![map_error_argument("bridge.hash.map_panic")],
+        )],
+        vec![panic_result_signature(
+            "HashError",
+            declared_error_type("HashError"),
+        )],
+    );
+    let context = bridge_context(TrustPolicy::default());
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "map_error without a redacted fallback must fail",
+    );
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("representable redacted fallback"));
+}
+
+#[test]
+fn package_rust_interop_rejects_map_error_without_a_mapped_error_member() {
+    let generated = base_project_with_contracts(
+        vec![declaration_entry_with_arguments(
+            "bridge.hash.digest",
+            RustInteropDecoratorKind::Function,
+            vec![map_error_argument("bridge.hash.map_panic")],
+        )],
+        vec![panic_result_signature(
+            "RustPanicError",
+            declared_error_type("RustPanicError"),
+        )],
+    );
+    let context = bridge_context(TrustPolicy::default());
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "map_error without a mapped error member must fail",
+    );
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("reserved for generated wrapper failures"));
+}
+
+#[test]
+fn package_rust_interop_rejects_wrapper_only_error_channel() {
+    let generated = base_project_with_contracts(
+        vec![declaration_entry_with_arguments(
+            "bridge.hash.digest",
+            RustInteropDecoratorKind::Function,
+            Vec::new(),
+        )],
+        vec![panic_result_signature(
+            "RustPanicError",
+            declared_error_type("RustPanicError"),
+        )],
+    );
+    let context = bridge_context(TrustPolicy::default());
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "ordinary target errors require a distinct declared member",
+    );
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("reserved for generated wrapper failures"));
+}
+
+#[test]
+fn package_rust_interop_rejects_similarly_named_panic_error() {
+    let generated = base_project_with_contracts(
+        vec![declaration_entry_with_arguments(
+            "bridge.hash.digest",
+            RustInteropDecoratorKind::Function,
+            Vec::new(),
+        )],
+        vec![panic_result_signature(
+            "RustPanicErrorish",
+            declared_error_type("RustPanicErrorish"),
+        )],
+    );
+    let context = bridge_context(TrustPolicy::default());
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "a similarly named error must not satisfy the nominal panic contract",
+    );
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("must expose `RustPanicError`"));
+}
+
+#[test]
+fn package_rust_interop_rejects_async_map_error_until_async_wrapper_certification() {
+    let mut declaration = declaration_entry_with_arguments(
+        "bridge.hash.digest",
+        RustInteropDecoratorKind::Function,
+        vec![map_error_argument("bridge.hash.map_panic")],
+    );
+    declaration.declaration.effect = RustInteropEffect::Async;
+    declaration.declaration.abi_requirements.async_boundary = true;
+    let generated = base_project_with_contracts(
+        vec![declaration],
+        vec![panic_result_signature(
+            "HashError | RustPanicError",
+            declared_error_union("HashError"),
+        )],
+    );
+    let context = bridge_context(TrustPolicy::default());
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "async map_error must wait for async wrapper certification",
+    );
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-PANIC-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("async panic-wrapper certification"));
 }
 
 #[test]
@@ -87,9 +226,9 @@ fn package_rust_interop_rejects_invalid_map_error_shape() {
                 span: TextRange::default(),
             }],
         )],
-        vec![signature_contract(
-            Vec::new(),
-            result_contract(string_contract(), error_contract("HashError")),
+        vec![panic_result_signature(
+            "HashError",
+            declared_error_type("HashError"),
         )],
     );
     let context = bridge_context(TrustPolicy::default());
@@ -108,9 +247,9 @@ fn package_rust_interop_rejects_unknown_panic_policy() {
             RustInteropDecoratorKind::Function,
             vec![symbol_argument("panic", "resume_unwind")],
         )],
-        vec![signature_contract(
-            Vec::new(),
-            result_contract(string_contract(), error_contract("HashError")),
+        vec![panic_result_signature(
+            "HashError",
+            declared_error_type("HashError"),
         )],
     );
     let context = bridge_context(TrustPolicy::default());
@@ -288,6 +427,37 @@ fn target_path(target: &str) -> RustTargetPath {
     RustTargetPath {
         segments: target.split('.').map(str::to_string).collect(),
         span: TextRange::default(),
+    }
+}
+
+fn panic_result_signature(
+    error_contract_name: &str,
+    declared_error: Type,
+) -> sifr_codegen::RustBridgeSignatureContract {
+    let return_type = Type::Result(Box::new(Type::Str), Box::new(declared_error));
+    let mut signature = signature_contract(
+        Vec::new(),
+        result_contract(string_contract(), error_contract(error_contract_name)),
+    );
+    signature.panic_error = sifr_codegen::rust_bridge_panic_error_contract(&return_type);
+    signature
+}
+
+fn declared_error_union(ordinary_name: &str) -> Type {
+    Type::Union(vec![
+        declared_error_type(ordinary_name),
+        declared_error_type("RustPanicError"),
+    ])
+}
+
+fn declared_error_type(name: &str) -> Type {
+    Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: name.to_string(),
+        fields: vec![("message".to_string(), Type::Str)],
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
     }
 }
 

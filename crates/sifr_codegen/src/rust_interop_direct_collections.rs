@@ -2,6 +2,21 @@ use sifr_type_system::Type;
 
 use crate::{render_expr, RustExpr};
 
+pub(super) fn argument_composite_conversion_required(ty: &Type) -> bool {
+    matches!(ty.resolve_alias(), Type::Union(members) if optional_inner(members).is_some())
+        || composite_conversion_required(ty)
+}
+
+pub(super) fn composite_conversion_required(ty: &Type) -> bool {
+    match ty.resolve_alias() {
+        Type::Int => true,
+        Type::List(inner) => composite_conversion_required(inner),
+        Type::Dict(key, _) => key.resolve_alias() == &Type::Str,
+        Type::Union(members) => optional_inner(members).is_some_and(composite_conversion_required),
+        _ => false,
+    }
+}
+
 pub(super) fn sifr_composite_to_bridge_expr(
     value: &RustExpr,
     ty: &Type,
