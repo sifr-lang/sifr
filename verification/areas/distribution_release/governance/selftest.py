@@ -183,9 +183,9 @@ def valid_plan(*, transition: str = "ga-activation") -> dict[str, Any]:
         "vscode": {
             "submodule_path": "editor_integrations",
             "package_path": "editor_integrations/vscode",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "vsix_sha256": SHA_C,
-            "compiler_compatibility": ">=0.1.0 <0.2.0",
+            "compiler_compatibility": ">=0.1.0,<0.2.0",
             "validation_report_sha256": SHA_D,
         },
         "release_notes_sha256": SHA_A,
@@ -231,7 +231,10 @@ def valid_report() -> dict[str, Any]:
             ("developer_tooling", "full"),
             ("developer_tooling", "editor-release"),
         ],
-        "documentation_checks": [("documentation", "structure")],
+        "documentation_checks": [
+            ("documentation", "structure"),
+            ("documentation", "ga-release"),
+        ],
         "distribution_validation": [
             ("distribution_release", "full"),
             ("distribution_release", "qualification"),
@@ -285,7 +288,7 @@ def valid_report() -> dict[str, Any]:
                         {"matrix", "tiers", "compatibility-matrix", "stale-drafts", "stable-candidate"},
                     ),
                     ("developer_tooling", {"full", "editor-release"}),
-                    ("documentation", {"structure"}),
+                    ("documentation", {"structure", "ga-release"}),
                     (
                         "distribution_release",
                         {

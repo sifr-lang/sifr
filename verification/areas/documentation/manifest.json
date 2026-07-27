@@ -21,6 +21,19 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "ga-release",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "documentation-ga-release",
+          "entry": "verification/areas/documentation/docs_inventory.json",
+          "command": "documentation-ga-release",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ],
   "network_mode": "offline",

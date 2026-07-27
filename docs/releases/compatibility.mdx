@@ -1,0 +1,38 @@
+---
+title: "Stable compatibility"
+sidebarTitle: "Compatibility"
+description: "Supported standalone targets, platform floors, and editor compatibility for Sifr stable."
+---
+
+## Supported standalone targets
+
+Sifr `0.1.0` publishes exactly four standalone targets:
+
+| Target | Platform floor |
+| --- | --- |
+| `aarch64-apple-darwin` | macOS 15.0 |
+| `x86_64-apple-darwin` | macOS 15.0 |
+| `aarch64-unknown-linux-gnu` | glibc 2.39 |
+| `x86_64-unknown-linux-gnu` | glibc 2.39 |
+
+There is no Windows standalone installer in this release. Package-manager
+distribution is also outside the stable standalone contract.
+
+## VS Code extension
+
+The qualified VS Code extension is `sifr.sifr-vscode` version `0.2.0`. Extension
+and compiler versions are independent. Its advertised compiler range is
+`>=0.1.0,<0.2.0`, which includes the current stable compiler and any eligible
+`0.1.x` rollback target.
+
+The extension remains a thin client. It starts the installed compiler with
+`sifr lsp --stdio`; parsing, type checking, diagnostics, formatting, linting,
+testing, and Rust generation remain compiler-owned.
+
+## Rust interop
+
+Stable Rust interop claims come only from
+`stable_support_claims.json` and the compatibility matrix. The public
+[Rust interop reference](/rust-interop) lists every claim with its exact
+category and evidence scope. A `contract-only` row does not claim
+runtime-observed support, and future-owned runtime work remains unadvertised.

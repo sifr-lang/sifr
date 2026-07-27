@@ -31,6 +31,9 @@ expected = {
 }
 actual = matrix.to_h { |row| [row.fetch("target"), row.fetch("runner")] }
 abort "release qualification target/runner matrix drifted" unless actual == expected
+unless jobs.fetch("editor").fetch("needs").sort == ["build", "validate"]
+  abort "editor qualification must consume the exact built candidate"
+end
 
 uploads = jobs.values.flat_map { |job| job.fetch("steps", []) }.select {
   |step| step["uses"] == "actions/upload-artifact@v4"
@@ -65,6 +68,10 @@ required = (
     "scripts/distribution/build_release_artifacts.sh",
     "--cargo-build",
     "scripts/distribution/qualify_stable_target.py",
+    "scripts/distribution/qualify_stable_editor.py",
+    "--candidate-binary \"${candidate_binary}\"",
+    "--target-report",
+    "--rollback-version none",
     "scripts/distribution/generate_version_installer.sh",
     "scripts/distribution/collect_qualification_artifacts.py",
     "Verify immutable qualification workflow contract",
@@ -99,18 +106,22 @@ if text.count("overwrite: false") != 4 or text.count("retention-days: 30") != 4:
     raise SystemExit("every qualification upload must be immutable with 30-day retention")
 if "cargo build --locked --release -p sifr" not in builder:
     raise SystemExit("governed release artifact builder must use Cargo.lock")
-for target in (
-    "aarch64-apple-darwin",
-    "x86_64-apple-darwin",
-    "aarch64-unknown-linux-gnu",
-    "x86_64-unknown-linux-gnu",
-):
+download_counts = {
+    "aarch64-apple-darwin": 1,
+    "x86_64-apple-darwin": 1,
+    "aarch64-unknown-linux-gnu": 1,
+    "x86_64-unknown-linux-gnu": 2,
+}
+for target, expected_count in download_counts.items():
     exact_name = (
         "name: sifr-stable-candidate-${{ needs.validate.outputs.version }}-"
         "${{ needs.validate.outputs.source_commit }}-" + target
     )
-    if text.count(exact_name) != 1:
-        raise SystemExit(f"target {target} must be downloaded by exact artifact name")
+    if text.count(exact_name) != expected_count:
+        raise SystemExit(
+            f"target {target} exact artifact download count drifted: "
+            f"expected {expected_count}"
+        )
 PY
 
 echo "release qualification workflow contract: PASS"

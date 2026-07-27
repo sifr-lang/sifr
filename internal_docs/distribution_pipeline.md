@@ -173,6 +173,12 @@ The preview-release pipeline target set is:
 - `x86_64-unknown-linux-gnu`
 - `aarch64-unknown-linux-gnu`
 
+Stable builders establish these public compatibility floors:
+
+- macOS 15.0 for `aarch64-apple-darwin` and `x86_64-apple-darwin`.
+- glibc 2.39 for `aarch64-unknown-linux-gnu` and
+  `x86_64-unknown-linux-gnu`.
+
 ## Stable Candidate Qualification
 
 `.github/workflows/release-qualification.yml` is the build/upload-only stable

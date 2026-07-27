@@ -55,10 +55,11 @@ Package-management commands use Cargo-backed package coordination as documented 
 
 Standalone self-update commands are documented in [`self_update.md`](./self_update.md).
 `sifr self update` is available only for official standalone installs with a
-schema-versioned receipt. It resolves `alpha`/`beta` preview metadata, derives
-the immutable installer URL from Sifr's trusted install base, and delegates
-checksum validation and artifact replacement to the generated installer.
-Stable-channel self-update remains gated until the stable release channel is enabled.
+schema-versioned receipt. It resolves `alpha`, `beta`, or `stable` through the
+canonical schema-v2 governed release index, derives the immutable installer URL
+from Sifr's trusted install base, and delegates checksum validation and artifact
+replacement to the generated installer. Exact stable pins resolve only active,
+non-withdrawn releases.
 
 ## Build And Run Output
 

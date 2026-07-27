@@ -1,0 +1,43 @@
+---
+title: "Stable support"
+sidebarTitle: "Support"
+description: "Support boundaries and incident reporting for the Sifr stable channel."
+---
+
+## Supported release surface
+
+Stable support covers active governed releases installed from
+`https://sifr.sh/install` on the four targets listed in
+[stable compatibility](/releases/compatibility). Support applies to the exact
+compiler, sysroot, installer, and VS Code compatibility metadata published for
+that release.
+
+Alpha and beta remain preview channels. `rc` is not a public channel. Windows
+standalone installers and package-manager distribution are outside the current
+support boundary.
+
+## Before reporting a problem
+
+Collect the following details:
+
+```bash
+sifr --version
+sifr self version --format json
+```
+
+Include your operating system, architecture, the failing command, and the
+complete diagnostic. For editor problems, include VS Code extension version
+`0.2.0`, the configured `sifr.lsp.path`, and the Sifr language-server output.
+
+Do not include credentials, private source code, or access tokens.
+
+## Release incidents
+
+The release team can withdraw a bad stable version. Withdrawal immediately
+blocks fresh installs and exact pins while preserving immutable release and
+incident evidence. Existing users receive a governed rollback or
+incident-roll-forward instruction; Sifr never silently installs an
+unapproved version.
+
+For installation and update recovery, follow
+[stable troubleshooting](/troubleshooting).

@@ -19,6 +19,10 @@ SUITE_COMMANDS = {
         sys.executable,
         str(AREA_ROOT / "check_structure.py"),
     ],
+    "ga-release": [
+        sys.executable,
+        str(AREA_ROOT / "check_ga_release_docs.py"),
+    ],
 }
 
 

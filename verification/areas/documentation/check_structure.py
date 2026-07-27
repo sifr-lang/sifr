@@ -18,7 +18,7 @@ INVENTORY_PATH = AREA_ROOT / "docs_inventory.json"
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 EXPECTED_CHECKS = {
     "structure": ("structure", "active", "check_structure.py"),
-    "ga-release": ("ga-release", "reserved", "check_ga_release_docs.py"),
+    "ga-release": ("ga-release", "active", "check_ga_release_docs.py"),
 }
 STRUCTURE_MUTATION_CASES = (
     "missing-inventory-field",

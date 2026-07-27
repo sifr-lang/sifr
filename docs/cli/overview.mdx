@@ -47,6 +47,7 @@ These flags apply across all subcommands.
 | `sifr vendor [PATH]` | Vendor dependency sources. |
 | `sifr repair` | Repair Sifr-managed Cargo projection drift. |
 | `sifr trace <FILE>` | Print deterministic compiler-service trace and status output. |
+| `sifr self version [--format text\|json]` | Inspect the managed standalone installation and schema-v2 receipt. |
 | `sifr self update` | Update a standalone Sifr installation. |
 | `--explain <CODE>` | Look up a diagnostic code without running a command. |
 
@@ -81,6 +82,22 @@ The table below summarises which import forms trigger project mode.
 <Tip>
 `sifr run` and `sifr build` always use the same mode resolver for identical input paths, so the mode you observe interactively is the same mode a CI script sees.
 </Tip>
+
+## Stable self-update
+
+Official standalone installs can resolve the active stable release through the
+governed release index:
+
+```bash
+sifr self update --dry-run --format json
+sifr self update --channel stable
+sifr self update --version 0.1.0
+```
+
+The stable channel, exact pins, installer, and target artifacts are all
+SHA-256 verified. Unknown, withdrawn, and `-rc.N` versions are rejected.
+Same-version reinstalls, channel changes, and approved downgrades require
+`--force`.
 
 ## Diagnostic output formats
 

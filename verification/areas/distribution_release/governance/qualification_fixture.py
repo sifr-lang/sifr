@@ -7,7 +7,6 @@ import hashlib
 import importlib.util
 import io
 import json
-import os
 import shutil
 import subprocess
 import tarfile
@@ -22,6 +21,13 @@ from .common import (
     write_canonical_json,
 )
 from .planner import RUST_CLAIMS_SCHEMA_VERSION, stable_claim_ids
+from .qualification_fixture_support import (
+    command_output,
+    configure_git,
+    digest_text,
+    git,
+    git_output,
+)
 from .release_report import canonical_profile_digest, collect_submodules
 from .schema_contracts import preview_index, release_plan, release_report
 
@@ -102,7 +108,10 @@ def write_source_contracts(source_root: Path) -> None:
                 ],
             },
             {"area": "developer_tooling", "suites": ["full"]},
-            {"area": "documentation", "suites": ["structure"]},
+            {
+                "area": "documentation",
+                "suites": ["structure", "ga-release"],
+            },
             {
                 "area": "distribution_release",
                 "suites": [
@@ -238,9 +247,15 @@ def build_evidence_bundle(
 
     editor = artifact_root / f"{prefix}editor"
     editor.mkdir()
-    vsix = editor / "sifr-vscode-0.1.0.vsix"
+    vsix = editor / "sifr-vscode-0.2.0.vsix"
     vsix.write_bytes(
         f"fixture-vsix:{'changed' if variant == 'vsix' else 'baseline'}\n".encode()
+    )
+    candidate_target = host_target or TARGETS[0]
+    candidate_report_path = (
+        artifact_root
+        / f"{prefix}{candidate_target}"
+        / f"qualification-{candidate_target}.json"
     )
     editor_report = {
         "schema_version": 2,
@@ -248,9 +263,41 @@ def build_evidence_bundle(
         "source_commit": source_commit,
         "submodule_commit": editor_commit,
         "package_path": "editor_integrations/vscode",
-        "package_version": "0.1.0",
-        "compiler_compatibility": ">=0.1.0 <0.2.0",
+        "package_version": "0.2.0",
+        "compiler_compatibility": (
+            ">=0.1.0,<0.2.0"
+            if transition == "ga-activation"
+            else ">=0.0.9,<0.2.0"
+        ),
+        "candidate_version": VERSION,
+        "rollback_version": (
+            "none"
+            if transition == "ga-activation"
+            else "0.0.9"
+        ),
+        "candidate_target": candidate_target,
+        "candidate_binary_sha256": reports[candidate_target]["binary_sha256"],
+        "target_report_sha256": sha256_file(candidate_report_path),
         "vsix_sha256": sha256_file(vsix),
+        "vsix_install_smoke": "pass",
+        "lsp_smoke": "pass",
+        "marketplace_dry_run": {
+            "publisher": "sifr",
+            "extension": "sifr-vscode",
+            "version": "0.2.0",
+            "package_path": "sifr-vscode-0.2.0.vsix",
+            "vsix_sha256": sha256_file(vsix),
+            "command": [
+                "npx",
+                "--no-install",
+                "vsce",
+                "publish",
+                "--packagePath",
+                "sifr-vscode-0.2.0.vsix",
+            ],
+            "rebuild": False,
+            "status": "pass",
+        },
         "status": "pass",
     }
     write_canonical_json(editor / "qualification-editor.json", editor_report)
@@ -301,6 +348,11 @@ def build_evidence_bundle(
             "kind": "stable-documentation-qualification",
             "report_id": "docs-fixture",
             "source_commit": source_commit,
+            "suites": [
+                {"name": "structure", "status": "pass", "total_variants": 1},
+                {"name": "ga-release", "status": "pass", "total_variants": 1},
+            ],
+            "result_sha256": "8" * 64,
             "status": "pass",
         },
     )
@@ -825,45 +877,3 @@ def load_collector() -> Any:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
-
-
-def configure_git(root: Path) -> None:
-    git(root, "config", "user.name", "Sifr Fixture")
-    git(root, "config", "user.email", "fixture@sifr.invalid")
-
-
-def git(root: Path, *args: str) -> None:
-    env = os.environ.copy()
-    if args and args[0] == "commit":
-        env.update(
-            {
-                "GIT_AUTHOR_DATE": "2026-01-01T00:00:00Z",
-                "GIT_COMMITTER_DATE": "2026-01-01T00:00:00Z",
-            }
-        )
-    subprocess.run(
-        ["git", *args],
-        cwd=root,
-        check=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=env,
-    )
-
-
-def git_output(root: Path, *args: str) -> str:
-    return command_output(root, "git", *args)
-
-
-def command_output(root: Path, *args: str) -> str:
-    return subprocess.run(
-        list(args),
-        cwd=root,
-        check=True,
-        text=True,
-        stdout=subprocess.PIPE,
-    ).stdout.strip()
-
-
-def digest_text(value: str) -> str:
-    return hashlib.sha256(value.encode()).hexdigest()

@@ -554,8 +554,11 @@ def _documentation_profile_self_test() -> None:
         for selection in release["selected_areas"]
         if selection.get("area") == "documentation"
     ]
-    if len(selected) != 1 or selected[0].get("suites") != ["structure"]:
-        raise AssertionError("release profile must select documentation:structure exactly once")
+    expected_suites = ["structure", "ga-release"]
+    if len(selected) != 1 or selected[0].get("suites") != expected_suites:
+        raise AssertionError(
+            "release profile must select documentation:structure and ga-release exactly once"
+        )
     if "documentation_suites" in legacy_facade(release):
         raise AssertionError("documentation suites must have selected_areas as their sole authority")
     if "documentation_checks" not in legacy_facade_step_names(release):
@@ -585,9 +588,15 @@ def _documentation_profile_self_test() -> None:
                             "blocking": True,
                             "total_variants": 1,
                             "total_failures": 0,
-                        }
+                        },
+                        {
+                            "name": "ga-release",
+                            "blocking": True,
+                            "total_variants": 1,
+                            "total_failures": 0,
+                        },
                     ],
-                    "summary": {"blocking_failures": 0, "total_variants": 1},
+                    "summary": {"blocking_failures": 0, "total_variants": 2},
                 }
             ),
             encoding="utf-8",
@@ -599,7 +608,7 @@ def _documentation_profile_self_test() -> None:
             "documentation_checks",
             lambda: run_selected_area(
                 area="documentation",
-                suites=["structure"],
+                suites=expected_suites,
                 profile_name="documentation-self-test",
                 result_slug="documentation",
                 command_builder=lambda *args: list(args),
@@ -614,7 +623,7 @@ def _documentation_profile_self_test() -> None:
     validate_area_result(
         result_path,
         area="documentation",
-        expected_suites=["structure"],
+        expected_suites=expected_suites,
     )
     result_path.unlink(missing_ok=True)
     with tempfile.TemporaryDirectory(prefix="sifr-doc-result-self-test-") as temp_dir:
@@ -623,7 +632,7 @@ def _documentation_profile_self_test() -> None:
             validate_area_result(
                 missing,
                 area="documentation",
-                expected_suites=["structure"],
+                expected_suites=expected_suites,
             )
         except AreaResultError:
             pass
@@ -666,7 +675,7 @@ def _release_report_production_self_test() -> None:
             "stable-candidate",
         ],
         "developer_tooling": ["full"],
-        "documentation": ["structure"],
+        "documentation": ["structure", "ga-release"],
         "distribution_release": [
             "full",
             "qualification",

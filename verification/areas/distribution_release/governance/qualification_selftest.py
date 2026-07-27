@@ -16,6 +16,11 @@ from typing import Any
 from .common import TARGETS, canonical_json_bytes
 from .artifact_index import validate_qualification_artifact_index
 from .qualification_fixture import build_evidence_bundle, create_fixture_source
+from .qualification_editor_selftest import EDITOR_REPORT_CASES, mutate_editor_report
+from .qualification_editor_selftest import (
+    test_planner_rejects_rollback_range_drift,
+    update_editor_plan,
+)
 from .planner import (
     RUST_CLAIMS_SCHEMA_VERSION,
     resolve_source_once,
@@ -39,6 +44,7 @@ def run_self_tests() -> int:
         test_rust_candidate_result_contract,
         test_materialized_planner_contract,
         test_planner_rejects_drift_cases,
+        test_planner_rejects_rollback_range_drift,
         test_plan_digest_sensitivity,
     )
     for test in tests:
@@ -77,7 +83,7 @@ def create_fixture(root: Path) -> tuple[Path, Path, Path, Path]:
         elif suffix == "assemble":
             files = ("checksums.txt", f"sifr-installer-{VERSION}")
         else:
-            files = ("qualification-editor.json", "sifr-vscode-0.1.0.vsix")
+            files = ("qualification-editor.json", "sifr-vscode-0.2.0.vsix")
         for name in files:
             (directory / name).write_text(f"{workflow_name}:{name}\n", encoding="utf-8")
         metadata["artifacts"].append(
@@ -529,7 +535,7 @@ def test_planner_rejects_drift_cases() -> None:
             "installer-export-version",
             "installer-indented-version",
             "installer-indented-channel",
-            "bad-editor-shape",
+            *EDITOR_REPORT_CASES,
             "bad-doc-shape",
             "rust-claim-order",
             "mismatched-ref",
@@ -660,7 +666,7 @@ def test_planner_rejects_drift_cases() -> None:
                     "installer-export-version",
                     "installer-indented-version",
                     "installer-indented-channel",
-                    "bad-editor-shape",
+                    *EDITOR_REPORT_CASES,
                 }:
                     artifact_id = {
                         "binary-installer": "installer",
@@ -669,7 +675,10 @@ def test_planner_rejects_drift_cases() -> None:
                         "installer-export-version": "installer",
                         "installer-indented-version": "installer",
                         "installer-indented-channel": "installer",
-                        "bad-editor-shape": "editor-qualification-report",
+                        **{
+                            item: "editor-qualification-report"
+                            for item in EDITOR_REPORT_CASES
+                        },
                     }[case]
                     artifact = next(
                         row
@@ -681,12 +690,8 @@ def test_planner_rejects_drift_cases() -> None:
                         / artifact["workflow_artifact_name"]
                         / artifact["name"]
                     )
-                    if case == "bad-editor-shape":
-                        editor_report = json.loads(
-                            artifact_path.read_text(encoding="utf-8")
-                        )
-                        editor_report["unexpected"] = True
-                        rewrite_canonical(artifact_path, editor_report)
+                    if case in EDITOR_REPORT_CASES:
+                        editor_report = mutate_editor_report(case, artifact_path)
                     elif case.startswith("installer-"):
                         extra_assignment = {
                             "installer-trailing-channel": "APP_CHANNEL=beta",
@@ -710,8 +715,13 @@ def test_planner_rejects_drift_cases() -> None:
                     if case == "binary-installer" or case.startswith("installer-"):
                         plan["installer_sha256"] = artifact["sha256"]
                         plan["desired_release"]["installer_sha256"] = artifact["sha256"]
-                    elif case == "bad-editor-shape":
-                        plan["vscode"]["validation_report_sha256"] = artifact["sha256"]
+                    elif case in EDITOR_REPORT_CASES:
+                        update_editor_plan(
+                            case,
+                            plan,
+                            report=editor_report,
+                            report_sha256=artifact["sha256"],
+                        )
                     rewrite_canonical(bundle["plan_spec"], plan)
                 if case != "symlink-container":
                     rewrite_canonical(bundle["qualification_index"], qualification)

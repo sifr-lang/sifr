@@ -231,7 +231,8 @@
     {
       "area": "documentation",
       "suites": [
-        "structure"
+        "structure",
+        "ga-release"
       ],
       "resource_classes": [
         "default-local"
