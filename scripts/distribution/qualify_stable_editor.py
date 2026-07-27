@@ -296,6 +296,7 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
                 / "developer_tooling"
                 / "lsp_protocol_smoke.py"
             ),
+            "--candidate-smoke",
         ],
         cwd=source_root,
         env=environment,

@@ -461,6 +461,44 @@ def run_smoke() -> None:
         run_stdlib_import_context_checks()
 
 
+def run_candidate_smoke() -> None:
+    """Exercise the editor-critical protocol surface against a packaged binary."""
+    with tempfile.TemporaryDirectory(prefix="sifr-lsp-candidate-") as raw:
+        root = Path(raw)
+        source = root / "main.sifr"
+        formatting_source = root / "formatting.sifr"
+        source.write_text(SAMPLE, encoding="utf-8")
+        formatting_source.write_text(UNFORMATTED_SAMPLE, encoding="utf-8")
+        client = LspClient()
+        try:
+            initialize(client, root)
+            diagnostics = open_document(client, source, SAMPLE)
+            if diagnostics:
+                raise LspProtocolError(
+                    f"candidate smoke received diagnostics for valid source: {diagnostics}"
+                )
+            preview = client.request(
+                "workspace/executeCommand",
+                {
+                    "command": "sifr.server.showGeneratedRust",
+                    "arguments": [file_uri(source)],
+                },
+            )
+            if (
+                not isinstance(preview, dict)
+                or not isinstance(preview.get("rust"), str)
+                or "fn main" not in preview["rust"]
+            ):
+                raise LspProtocolError(
+                    "candidate smoke generated-Rust preview was unavailable"
+                )
+            run_formatting_checks(client, formatting_source)
+            client.request("shutdown", {})
+            client.notify("exit", {})
+        finally:
+            client.close()
+
+
 def run_self_test() -> None:
     try:
         assert_has_keys({"capabilities": {}}, {"missing"}, "negative smoke")
@@ -472,13 +510,18 @@ def run_self_test() -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--self-test", action="store_true")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--self-test", action="store_true")
+    mode.add_argument("--candidate-smoke", action="store_true")
     args = parser.parse_args()
     if args.self_test:
         run_self_test()
         return 0
     try:
-        run_smoke()
+        if args.candidate_smoke:
+            run_candidate_smoke()
+        else:
+            run_smoke()
     except (LspProtocolError, OSError, json.JSONDecodeError) as error:
         print(f"LSP protocol smoke: FAIL: {error}", file=sys.stderr)
         return 1

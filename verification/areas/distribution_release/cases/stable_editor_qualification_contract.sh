@@ -6,6 +6,8 @@ source "$(dirname "$0")/common.sh"
 
 python3 "${REPO_ROOT}/scripts/distribution/qualify_stable_editor.py" --self-test
 python3 "${REPO_ROOT}/scripts/distribution/qualify_stable_documentation.py" --self-test
+grep -F '"--candidate-smoke"' \
+  "${REPO_ROOT}/scripts/distribution/qualify_stable_editor.py" >/dev/null
 python3 "${REPO_ROOT}/scripts/distribution/render_stable_release_docs.py" \
   --facts \
   "${REPO_ROOT}/verification/areas/documentation/fixtures/stable_site_release_facts.json" \
