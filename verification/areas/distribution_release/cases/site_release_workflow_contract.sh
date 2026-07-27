@@ -5,7 +5,8 @@ set -euo pipefail
 source "$(dirname "$0")/common.sh"
 
 fixture="${REPO_ROOT}/verification/areas/distribution_release/fixtures/site_release_contract.json"
-python3 - "${fixture}" <<'PY'
+publication_workflow="${REPO_ROOT}/.github/workflows/release-publication.yml"
+python3 - "${fixture}" "${publication_workflow}" <<'PY'
 import copy
 import json
 import pathlib
@@ -13,6 +14,7 @@ import re
 import sys
 
 fixture = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+publication = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8")
 sha = re.compile(r"^[0-9a-f]{64}$")
 commit = re.compile(r"^[0-9a-f]{40}$")
 attempt = re.compile(r"^[A-Za-z0-9._-]{1,80}$")
@@ -23,7 +25,13 @@ assert fixture == {
     "repository": "sifr-lang/sifr-website",
     "workflow": ".github/workflows/release-site.yml",
     "workflow_commit": "721bceca795a79a03af74ccb707d117a6f031f38",
+    "workflow_sha256": "6a04809da2be92a7a9eb3685f56c577e6ef204327e8557ec7c179f7bdda3ad90",
     "workflow_pr": "https://github.com/sifr-lang/sifr-website/pull/14",
+    "dispatcher_generation": {
+        "script": "scripts/distribution/generate_dispatchers.sh",
+        "default_channel": "beta",
+        "entrypoints": ["index", "stable", "alpha", "beta"],
+    },
     "permissions": {"contents": "read", "release_metadata_write": False},
     "required_inputs": fixture["required_inputs"],
     "terminal_run": {
@@ -47,6 +55,18 @@ assert fixture["required_inputs"] == [
     "publication_facts_sha256",
 ]
 assert commit.fullmatch(fixture["workflow_commit"])
+assert sha.fullmatch(fixture["workflow_sha256"])
+for fragment in (
+    "SITE_WORKFLOW_SHA256: 6a04809da2be92a7a9eb3685f56c577e6ef204327e8557ec7c179f7bdda3ad90",
+    "pinned site workflow bytes do not match the reviewed contract",
+    "scripts/distribution/generate_dispatchers.sh \\\n"
+    "            --install-root dispatchers \\\n"
+    "            --default-channel beta",
+):
+    assert fragment in publication, fragment
+assert publication.index("pinned site workflow bytes do not match") < publication.index(
+    "Publish write-once version release and verify assets"
+)
 
 payload = {
     "sifr_source_commit": "a" * 40,

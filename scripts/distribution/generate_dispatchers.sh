@@ -82,6 +82,7 @@ write_dispatcher() {
 set -eu
 
 DEFAULT_CHANNEL="${default_channel}"
+ENTRYPOINT_NAME="${entrypoint_name}"
 CHANNEL_METADATA_URL="${CHANNEL_METADATA_URL}"
 INSTALLER_RELEASE_BASE_URL="${INSTALLER_RELEASE_BASE_URL}"
 
@@ -216,6 +217,17 @@ if [ -n "\${env_channel}" ] && [ -n "\${arg_channel}" ] && [ "\${env_channel}" !
 fi
 
 explicit_channel="\${arg_channel:-\${env_channel}}"
+entrypoint_channel=""
+case "\${ENTRYPOINT_NAME}" in
+  alpha|beta|stable) entrypoint_channel="\${ENTRYPOINT_NAME}" ;;
+  index) ;;
+  *) fail "generated dispatcher has invalid entrypoint identity: \${ENTRYPOINT_NAME}" ;;
+esac
+if [ -n "\${entrypoint_channel}" ] && [ -n "\${explicit_channel}" ] &&
+   [ "\${entrypoint_channel}" != "\${explicit_channel}" ]; then
+  fail "entrypoint channel \${entrypoint_channel} conflicts with selected channel \${explicit_channel}"
+fi
+selected_channel="\${explicit_channel:-\${entrypoint_channel}}"
 tmp_dir="\$(mktemp -d "\${TMPDIR:-/tmp}/sifr-install-dispatch.XXXXXX")"
 cleanup() {
   rm -rf "\${tmp_dir}"
@@ -224,12 +236,12 @@ trap cleanup EXIT HUP INT TERM
 
 if [ -n "\${version_pin}" ]; then
   version_channel="\$(release_channel_for_version "\${version_pin}")"
-  if [ -n "\${explicit_channel}" ] && [ "\${explicit_channel}" != "\${version_channel}" ]; then
-    fail "--version \${version_pin} conflicts with selected channel \${explicit_channel}"
+  if [ -n "\${selected_channel}" ] && [ "\${selected_channel}" != "\${version_channel}" ]; then
+    fail "--version \${version_pin} conflicts with selected channel \${selected_channel}"
   fi
   resolved_channel="\${version_channel}"
 else
-  resolved_channel="\$(normalize_channel "\${explicit_channel:-\${DEFAULT_CHANNEL}}")"
+  resolved_channel="\$(normalize_channel "\${selected_channel:-\${DEFAULT_CHANNEL}}")"
 fi
 metadata_url="\${CHANNEL_METADATA_URL}"
 metadata_path="\${tmp_dir}/channels.json"

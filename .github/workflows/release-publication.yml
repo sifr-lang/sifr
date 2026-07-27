@@ -51,6 +51,7 @@ jobs:
       PUBLICATION_ATTEMPT: ${{ github.run_id }}-${{ github.run_attempt }}
       SITE_REPOSITORY: sifr-lang/sifr-website
       SITE_WORKFLOW: release-site.yml
+      SITE_WORKFLOW_SHA256: 6a04809da2be92a7a9eb3685f56c577e6ef204327e8557ec7c179f7bdda3ad90
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -65,6 +66,8 @@ jobs:
 
       - name: Validate protected publication inputs
         shell: bash
+        env:
+          SITE_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}
         run: |
           set -euo pipefail
           case "${CHANNEL}" in
@@ -93,6 +96,16 @@ jobs:
           fi
           if gh release view "${VERSION}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
             echo "::error::version release already exists; preview assets are write-once"
+            exit 2
+          fi
+          site_workflow="$(mktemp)"
+          GH_TOKEN="${SITE_TOKEN}" gh api \
+            -H "Accept: application/vnd.github.raw+json" \
+            "repos/${SITE_REPOSITORY}/contents/.github/workflows/${SITE_WORKFLOW}?ref=${SITE_BASE_COMMIT}" \
+            >"${site_workflow}"
+          actual_site_workflow_sha256="$(sha256sum "${site_workflow}" | awk '{print $1}')"
+          if [[ "${actual_site_workflow_sha256}" != "${SITE_WORKFLOW_SHA256}" ]]; then
+            echo "::error::pinned site workflow bytes do not match the reviewed contract"
             exit 2
           fi
 
