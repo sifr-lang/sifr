@@ -238,6 +238,12 @@ Review and upstream coordination ledger:
   negative cases, formatting, diff hygiene, and the 900-line file-size
   guardrail also passed. The only lane advisory was the unchanged warm
   wall-time budget while isolated e2e caches rebuilt.
+- Exact pushed-head Claude Opus review pass 5 is archived at
+  `plans/reviews/archive/phase-40-algorithm-scope-claude-opus-review-pass-5-pr-head.md`.
+  It independently reviewed commit `99c847705`, mutation-tested every
+  deletion and under-declaration path raised in earlier passes, verified the
+  nightly corpus and release subsets remain blocking, and returned `APPROVED`
+  with no actionable findings.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 
