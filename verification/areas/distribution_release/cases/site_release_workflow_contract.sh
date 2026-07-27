@@ -26,12 +26,12 @@ assert fixture == {
     "repository": "sifr-lang/sifr-website",
     "workflow": ".github/workflows/release-site.yml",
     "workflow_commit": "07d88cc3c24707e386c5ad73fb0875c06ffd598f",
-    "workflow_ref": "sifr-release-site-m40-2",
+    "workflow_ref": "sifr-release-site-stable-distribution",
     "workflow_ref_ruleset": {
         "bypass_actors": [],
         "enforcement": "active",
-        "id": 19790146,
-        "updated_at": "2026-07-27T04:17:06.204Z",
+        "id": 19791667,
+        "updated_at": "2026-07-27T05:06:21.354Z",
         "rules": ["deletion", "update"],
     },
     "workflow_sha256": "7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958",
@@ -68,9 +68,10 @@ assert commit.fullmatch(fixture["workflow_commit"])
 assert workflow_ref.fullmatch(fixture["workflow_ref"])
 assert sha.fullmatch(fixture["workflow_sha256"])
 for fragment in (
-    "SITE_WORKFLOW_REF: sifr-release-site-m40-2",
-    'SITE_WORKFLOW_RULESET_ID: "19790146"',
-    'SITE_WORKFLOW_RULESET_UPDATED_AT: "2026-07-27T04:17:06.204Z"',
+    "SITE_WORKFLOW_REF: sifr-release-site-stable-distribution",
+    'SITE_WORKFLOW_RULESET_ID: "19791667"',
+    'SITE_WORKFLOW_RULESET_UPDATED_AT: "2026-07-27T05:06:21.354Z"',
+    '-H "Time-Zone: UTC"',
     "SITE_WORKFLOW_SHA256: 7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958",
     ".updated_at == $updated_at",
     "(.bypass_actors // []) == []",

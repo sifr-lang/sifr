@@ -314,9 +314,9 @@ as `721bceca795a79a03af74ccb707d117a6f031f38`. Its GA-aware default-channel
 binding landed through
 [sifr-website PR #15](https://github.com/sifr-lang/sifr-website/pull/15), merged
 as `07d88cc3c24707e386c5ad73fb0875c06ffd598f`. The main-repository caller pins
-that exact protected-main commit through `sifr-release-site-m40-2`; active
-ruleset `19790146` prohibits updating or deleting that exact tag with no bypass
-actors.
+that exact protected-main commit through
+`sifr-release-site-stable-distribution`; active ruleset `19791667` prohibits
+updating or deleting that exact tag with no bypass actors.
 
 - Site review passes 1–5 found and closed immutable-action pinning, credential
   persistence, metadata-shadow output, deployed-byte custody, stale-CDN index

@@ -51,9 +51,9 @@ jobs:
       PUBLICATION_ATTEMPT: ${{ github.run_id }}-${{ github.run_attempt }}
       SITE_REPOSITORY: sifr-lang/sifr-website
       SITE_WORKFLOW: release-site.yml
-      SITE_WORKFLOW_REF: sifr-release-site-m40-2
-      SITE_WORKFLOW_RULESET_ID: "19790146"
-      SITE_WORKFLOW_RULESET_UPDATED_AT: "2026-07-27T04:17:06.204Z"
+      SITE_WORKFLOW_REF: sifr-release-site-stable-distribution
+      SITE_WORKFLOW_RULESET_ID: "19791667"
+      SITE_WORKFLOW_RULESET_UPDATED_AT: "2026-07-27T05:06:21.354Z"
       SITE_WORKFLOW_SHA256: 7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -99,6 +99,7 @@ jobs:
           fi
           site_ruleset="$(
             GH_TOKEN="${SITE_TOKEN}" gh api \
+              -H "Time-Zone: UTC" \
               "repos/${SITE_REPOSITORY}/rulesets/${SITE_WORKFLOW_RULESET_ID}"
           )"
           if ! jq -e \
@@ -519,6 +520,7 @@ jobs:
           dispatched_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           site_ruleset="$(
             GH_TOKEN="${SITE_TOKEN}" gh api \
+              -H "Time-Zone: UTC" \
               "repos/${SITE_REPOSITORY}/rulesets/${SITE_WORKFLOW_RULESET_ID}"
           )"
           if ! jq -e \
