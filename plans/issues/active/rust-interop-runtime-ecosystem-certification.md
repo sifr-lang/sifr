@@ -456,7 +456,9 @@ Focused implementation evidence:
   `SIFR-RUST-CB-0001` before the package can run.
 - focused callback/codegen/driver tests, Clippy, fixture-matrix checks,
   maintainability guardrails, file-size guardrails, and generated positive and
-  negative package builds pass; Opus review round 5 reports `SATISFIED`;
+  negative package builds pass; working-tree Opus review round 5 and exact PR
+  [#3033](https://github.com/sifr-lang/sifr/pull/3033) review round 2 report
+  `SATISFIED`;
 - the warmed `create-pr` lane passes every step through Python interop. Its
   Rust-interop step is blocked only by the preserved parallel-worktree
   promotion of `opaque_resource_matrix` while that row's evidence is still
