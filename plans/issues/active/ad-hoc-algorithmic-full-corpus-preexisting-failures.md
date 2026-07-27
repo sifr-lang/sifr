@@ -6,6 +6,8 @@ Active non-blocking follow-up created from the Rust-interop
 `certification_0` validation on 2026-07-26. The failures predate that
 milestone, are outside its Rust-interop scope, and do not block
 `certification_0`, Phase 40, or stable-channel Rust-interop certification.
+The durable issue was established in
+[PR #3029](https://github.com/sifr-lang/sifr/pull/3029).
 
 No failure is suppressed or reclassified by the Rust-interop work. Remediation
 belongs in separate focused PRs owned by this issue.
