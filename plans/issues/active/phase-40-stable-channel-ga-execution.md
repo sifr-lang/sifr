@@ -379,3 +379,11 @@ updating or deleting that exact tag with no bypass actors.
   coverage with zero-digest rejection, records current PR evidence, and repairs
   the ad hoc phase index and whitespace. The complete distribution area passes
   52/52 variants after remediation; another exact-head review is required.
+- The authoritative remediation gate
+  `scripts/run_all_tests.sh --profile create-pr` passed at exact implementation
+  head `e29722dfe46bc4f091eb66e7be47744a4c14b24b`, including the registered
+  12-schema runner-foundation inventory, every blocking lane, and 131/131 E2E
+  fixtures (`report_signature=7c39b8c1dd4fec7c`). The reported warm-wall-time
+  advisory is non-blocking and covered by the indexed `PERF-HOST` follow-up.
+  PR #3030 now requires an independent full-diff review at its pushed
+  documentation-inclusive head.
