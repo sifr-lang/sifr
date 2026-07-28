@@ -88,7 +88,11 @@ def run_async_reqwest_self_test(
     cases = 0
     with tempfile.TemporaryDirectory(prefix="sifr-rust-async-scenario-self-test-") as raw_temp:
         fixture_dir = Path(raw_temp) / "async_runtime_reqwest"
-        shutil.copytree(source, fixture_dir)
+        shutil.copytree(
+            source,
+            fixture_dir,
+            ignore=shutil.ignore_patterns("target"),
+        )
         baseline_failures: list[str] = []
         validate_scenarios(
             baseline_failures,

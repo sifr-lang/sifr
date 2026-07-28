@@ -21,6 +21,48 @@ pub(in crate::lower) enum RustInteropStubBody {
     Normal,
 }
 
+/// Collect declaration-selected Rust opaque close members before bodies lower so
+/// call-site ownership sees the receiver as affine.
+pub(in crate::lower) fn collect_rust_opaque_close_methods(stmts: &[Stmt], ctx: &mut LowerCtx) {
+    for stmt in stmts {
+        let Stmt::ClassDef(class_def) = stmt else {
+            continue;
+        };
+        let close_method = class_def.decorator_list.iter().find_map(|decorator| {
+            let Expr::Call(call) = &decorator.expression else {
+                return None;
+            };
+            let Expr::Attribute(attribute) = call.func.as_ref() else {
+                return None;
+            };
+            let Expr::Name(root) = attribute.value.as_ref() else {
+                return None;
+            };
+            if root.id.as_str() != "rust" || attribute.attr.as_str() != "opaque" {
+                return None;
+            }
+            call.arguments.keywords.iter().find_map(|keyword| {
+                if keyword
+                    .arg
+                    .as_ref()
+                    .is_none_or(|name| name.as_str() != "close")
+                {
+                    return None;
+                }
+                match &keyword.value {
+                    Expr::Name(policy) if policy.id.as_str() == "close" => Some("close"),
+                    Expr::Name(policy) if policy.id.as_str() == "async_close" => Some("aclose"),
+                    _ => None,
+                }
+            })
+        });
+        if let Some(close_method) = close_method {
+            ctx.rust_consuming_methods
+                .insert(format!("{}.{}", class_def.name, close_method));
+        }
+    }
+}
+
 impl RustInteropStubBody {
     pub(in crate::lower) const fn skips_normal_body_lowering(self) -> bool {
         matches!(self, Self::Bodyless | Self::Invalid)
@@ -210,6 +252,7 @@ fn parse_declaration(
         span: call.range,
         effect: RustInteropEffect::Sync,
         abi_requirements: abi_requirements(kind, is_async_decl),
+        consumes_receiver: false,
     })
 }
 

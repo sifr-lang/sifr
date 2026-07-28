@@ -24,7 +24,7 @@ def record_signal_event(event: SignalEvent) -> Result[None, SignalSubscriptionEr
     event_number: int = event.number
     return None
 
-async def verify_signal_subscription_cancel_shutdown(subscription: SignalSubscription) -> Result[SignalSubscription, SignalSubscriptionError | RustPanicError]:
+async def verify_signal_subscription_cancel_shutdown(own subscription: SignalSubscription) -> Result[SignalSubscription, SignalSubscriptionError | RustPanicError]:
     subscribe_result: Result[SignalSubscription, SignalSubscriptionError | RustPanicError] = subscribe_signal_shutdown(record_signal_event)
     close_result: Result[None, SignalSubscriptionError | RustPanicError] = await subscription.aclose()
     return subscribe_result

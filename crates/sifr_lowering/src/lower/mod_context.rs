@@ -45,6 +45,8 @@ pub(in crate::lower) struct LowerCtx {
         HashMap<String, super::must_use_obligations::MustUseObligation>,
     /// Qualified opaque methods whose source receiver is declared `own self`.
     pub(in crate::lower) python_consuming_methods: HashSet<String>,
+    /// Qualified Rust opaque close members selected by their class declaration.
+    pub(in crate::lower) rust_consuming_methods: HashSet<String>,
     /// Qualified context exits callable only from dedicated Python-with lowering.
     pub(in crate::lower) python_context_exit_methods: HashSet<String>,
     /// Current scope for name resolution
@@ -180,6 +182,7 @@ impl LowerCtx {
             python_opaque_classes: HashMap::new(),
             live_must_use_bindings: HashMap::new(),
             python_consuming_methods: HashSet::new(),
+            rust_consuming_methods: HashSet::new(),
             python_context_exit_methods: HashSet::new(),
             scope: Scope::new(),
             task_group_error_types: HashMap::new(),

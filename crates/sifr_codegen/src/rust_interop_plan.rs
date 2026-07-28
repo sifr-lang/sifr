@@ -384,6 +384,12 @@ fn push_declaration(out: &mut String, declaration: &RustInteropDeclaration) {
     } else {
         "view:0"
     });
+    out.push_str(";consumes_receiver=");
+    out.push(if declaration.consumes_receiver {
+        '1'
+    } else {
+        '0'
+    });
     for argument in &declaration.arguments {
         out.push_str(";arg=");
         out.push_str(argument.name.as_deref().unwrap_or("<pos>"));

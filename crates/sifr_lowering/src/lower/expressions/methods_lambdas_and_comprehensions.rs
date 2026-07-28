@@ -223,7 +223,32 @@ pub(in crate::lower) fn lower_method_call(
             );
             return None;
         }
-        if ctx.python_consuming_methods.contains(&qualified) {
+        let consumes_rust_receiver = ctx.rust_consuming_methods.contains(&qualified);
+        if consumes_rust_receiver {
+            match &object {
+                HirExpr::Name { name, .. } if ctx.borrowed_params.contains(name) => {
+                    ctx.error_with_code_at(
+                        sifr_diagnostics::DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES,
+                        format!(
+                            "cannot consume borrowed parameter '{name}' through Rust opaque cleanup; accept it with `own`"
+                        ),
+                        attr.value.range(),
+                    );
+                    return None;
+                }
+                HirExpr::Name { .. } => {}
+                _ => {
+                    ctx.error_with_code_at(
+                        sifr_diagnostics::DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES,
+                        "Rust opaque cleanup must consume an owned local binding; field and temporary receivers cannot prove exclusive ownership"
+                            .to_string(),
+                        attr.value.range(),
+                    );
+                    return None;
+                }
+            }
+        }
+        if ctx.python_consuming_methods.contains(&qualified) || consumes_rust_receiver {
             if let HirExpr::Name { name, .. } = &object {
                 ctx.mark_moved_with_flow(name);
             }

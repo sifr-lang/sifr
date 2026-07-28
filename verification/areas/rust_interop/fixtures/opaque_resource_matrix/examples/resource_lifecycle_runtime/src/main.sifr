@@ -1,0 +1,76 @@
+# fixture: opaque_resource_matrix
+# scenario-example: resource_lifecycle_runtime
+# execution-kind: runtime-observed
+# expected-result: resource-lifecycle-clean
+
+class ResourceError(Error):
+    message: str
+
+@rust.opaque(
+    type=bridge.resources.ResourceMatrix,
+    send=False,
+    sync=False,
+    close=async_close,
+    borrow=exclusive,
+    thread_affinity=tokio_current_thread,
+)
+class ResourceMatrix:
+    @rust(bridge.resources.aclose, panic=trusted_no_panic)
+    async def aclose(own self) -> Result[None, ResourceError]:
+        ...
+
+@rust(bridge.resources.open, panic=trusted_no_panic)
+async def open_resources() -> Result[ResourceMatrix, ResourceError]:
+    await task.sleep(0.0)
+    raise ResourceError("declaration only")
+
+@rust(bridge.resources.contract, panic=trusted_no_panic)
+def resource_contract() -> str: ...
+
+@rust(bridge.resources.close_observation, panic=trusted_no_panic)
+def resource_close_observation() -> Result[str, ResourceError]: ...
+
+@rust.async(thread_affinity=tokio_current_thread)
+@rust(bridge.resources.run, panic=trusted_no_panic)
+async def run_resources(resource: ResourceMatrix) -> Result[str, ResourceError]:
+    await task.sleep(0.0)
+    return ""
+
+@rust.async(thread_affinity=tokio_current_thread)
+@rust(bridge.resources.invalid_aliasing, panic=trusted_no_panic)
+async def reject_resource_alias(own resource: ResourceMatrix) -> Result[str, ResourceError]:
+    await task.sleep(0.0)
+    return ""
+
+async def verify_resource_lifecycle_runtime() -> Result[str, ResourceError]:
+    try:
+        contract: str = resource_contract()
+        assert contract == "opaque-resource-runtime-v1"
+        resource: ResourceMatrix = await open_resources()
+        summary: str = await run_resources(resource)
+        _closed: None = await resource.aclose()
+        closed: str = resource_close_observation()
+        verified: str = summary + ";close=" + closed
+        assert verified == "http=echo:reqwest;sqlite=sqlite;redis=PONG;postgres=1;protocol-negatives=redis-malformed/postgres-early-close;poison=Rust bridge panicked;close=closed/already-closed"
+        return verified
+    except ResourceError as error:
+        raise error
+
+async def verify_invalid_resource_aliasing() -> Result[str, ResourceError]:
+    observed: str = ""
+    try:
+        resource: ResourceMatrix = await open_resources()
+        unexpected: str = await reject_resource_alias(resource)
+        observed = "unexpected alias success: " + unexpected
+    except ResourceError as error:
+        observed = error.message
+    assert observed == "resource is closed"
+    return "resource-state=closed"
+
+async def main() -> Result[None, ResourceError]:
+    try:
+        verified: str = await verify_resource_lifecycle_runtime()
+        print(verified)
+    except ResourceError as error:
+        raise error
+    return None

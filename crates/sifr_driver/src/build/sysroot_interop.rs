@@ -276,6 +276,7 @@ mod tests {
     };
     use sifr_stdlib_manifest::StdlibFeature;
     use sifr_sysroot::{SysrootManifest, SysrootPaths};
+    use std::cell::RefCell;
     use std::collections::HashSet;
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -345,14 +346,25 @@ mod tests {
         let root = TempSysroot::new("opaque_self_close");
         root.write_private(
             "_sifr.io",
-            "@rust.opaque(type=sifr_stdlib.io.FileHandle, close=close)\n\
+            "class FileHandleError(Error):\n\
+    message: str\n\
+\n\
+@rust.opaque(type=sifr_stdlib.io.FileHandle, close=close)\n\
 class FileHandle:\n\
 \n\
     @rust(Self.close, panic=trusted_no_panic)\n\
-    def close(self) -> None:\n\
+    def close(own self) -> Result[None, FileHandleError]:\n\
         ...\n",
         );
         root.write_stdlib_crate("pub mod io { pub struct FileHandle; pub fn close() {} }\n");
+        let mut close_method = method_declaration(
+            "_sifr.io",
+            "FileHandle",
+            "close",
+            "Self.close",
+            vec![symbol_argument("panic", "trusted_no_panic")],
+        );
+        close_method.declaration.consumes_receiver = true;
         let stdlib = stdlib_interop_many(
             &root,
             vec![
@@ -362,13 +374,7 @@ class FileHandle:\n\
                     "sifr_stdlib.io.FileHandle",
                     vec![symbol_argument("close", "close")],
                 ),
-                method_declaration(
-                    "_sifr.io",
-                    "FileHandle",
-                    "close",
-                    "Self.close",
-                    vec![symbol_argument("panic", "trusted_no_panic")],
-                ),
+                close_method,
             ],
         );
 
@@ -540,7 +546,7 @@ class FileHandle:\n\
             .module_name
             .clone()
             .expect("test declaration should be named");
-        let source = fs::read_to_string(root.private_path(&module)).expect("private source");
+        let source = root.private_source(&module);
         StdlibRustInterop {
             plan: InteropBuildPlan {
                 rust: RustInteropPlan {
@@ -580,6 +586,7 @@ class FileHandle:\n\
                 span: span(),
                 effect: RustInteropEffect::Sync,
                 abi_requirements: RustInteropAbiRequirements::default(),
+                consumes_receiver: false,
             },
         }
     }
@@ -606,6 +613,7 @@ class FileHandle:\n\
                     opaque_handle: true,
                     ..RustInteropAbiRequirements::default()
                 },
+                consumes_receiver: false,
             },
         }
     }
@@ -630,6 +638,7 @@ class FileHandle:\n\
                 span: span(),
                 effect: RustInteropEffect::Sync,
                 abi_requirements: RustInteropAbiRequirements::default(),
+                consumes_receiver: false,
             },
         }
     }
@@ -675,6 +684,7 @@ class FileHandle:\n\
 
     struct TempSysroot {
         path: PathBuf,
+        private_sources: RefCell<HashMap<String, String>>,
     }
 
     impl TempSysroot {
@@ -720,11 +730,25 @@ class FileHandle:\n\
             )
             .expect("stdlib manifest");
             fs::write(path.join("sysroot.toml"), "# test sysroot\n").expect("sysroot manifest");
-            Self { path }
+            Self {
+                path,
+                private_sources: RefCell::new(HashMap::new()),
+            }
         }
 
         fn write_private(&self, module: &str, source: &str) {
             fs::write(self.private_path(module), source).expect("private source");
+            self.private_sources
+                .borrow_mut()
+                .insert(module.to_string(), source.to_string());
+        }
+
+        fn private_source(&self, module: &str) -> String {
+            self.private_sources
+                .borrow()
+                .get(module)
+                .cloned()
+                .expect("private source should be registered")
         }
 
         fn write_stdlib_crate(&self, source: &str) {

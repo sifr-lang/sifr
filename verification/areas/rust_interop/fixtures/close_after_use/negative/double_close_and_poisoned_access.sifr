@@ -4,11 +4,14 @@
 # execution-kind: runtime-observed
 # expected-result: runtime-error-state
 # expected-runtime-state: closed
+class HandleError(Error):
+    message: str
+
 @rust.opaque(type=bridge.handle.Handle, send=True, sync=False, clone=none, close=close)
 class NativeHandle:
-    @rust(bridge.handle.close, panic=trusted_no_panic)
-    def close(self) -> None: ...
+    @rust(bridge.handle.close, panic=map_error(bridge.handle.map_panic))
+    def close(own self) -> Result[None, HandleError | RustPanicError]: ...
 
-def verify_double_close_and_poisoned_access(resource: NativeHandle) -> None:
-    resource.close()
-    return None
+def verify_double_close_and_poisoned_access(own resource: NativeHandle) -> Result[None, HandleError | RustPanicError]:
+    close_result: Result[None, HandleError | RustPanicError] = resource.close()
+    return close_result

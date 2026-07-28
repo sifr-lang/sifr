@@ -17,9 +17,12 @@ DIAGNOSTIC_CONST = re.compile(
 DIAGNOSTIC_USE = re.compile(r"DiagnosticCode::([A-Z][A-Z0-9_]*)")
 ASSERTION_MACRO = re.compile(r"\bassert(?:_eq|_ne|_matches)?!\s*\(")
 RUNTIME_STATE_TYPES = {
-    "closed": "HandleStateError::Closed",
-    "poisoned": "HandleStateError::Poisoned",
+    "closed": ("HandleStateError::Closed", "ObservedRuntimeState::Closed"),
+    "poisoned": ("HandleStateError::Poisoned", "ObservedRuntimeState::Poisoned"),
 }
+PROCESS_DERIVED_STATE = re.compile(
+    r"\bobserved_[A-Za-z_][A-Za-z0-9_]*state\s*\(\s*&\s*output\s*\)"
+)
 
 
 def validate_bound_test_outcome(
@@ -44,7 +47,10 @@ def validate_bound_test_outcome(
             f"{label}.validation cannot inspect outcome assertions for {test_name}"
         )
         return
-    assertions = _rust_assertions(reachable)
+    assertions = _rust_assertions(
+        reachable,
+        mask_literals=expected_result == "runtime-error-state",
+    )
     if expected_result == "diagnostic":
         expected_diagnostic = evidence.get("expected_diagnostic")
         if not isinstance(expected_diagnostic, str):
@@ -66,11 +72,26 @@ def validate_bound_test_outcome(
         return
 
     expected_state = evidence.get("expected_runtime_state")
-    state_type = RUNTIME_STATE_TYPES.get(str(expected_state))
-    if state_type is not None and state_type not in assertions:
+    state_types = RUNTIME_STATE_TYPES.get(str(expected_state))
+    if state_types is not None and not any(
+        state_type in assertions for state_type in state_types
+    ):
         failures.append(
             f"{label}.validation bound test does not assert declared runtime state "
             f"{expected_state}"
+        )
+        return
+    if (
+        state_types is not None
+        and "ObservedRuntimeState::" in assertions
+        and (
+            PROCESS_DERIVED_STATE.search(assertions) is None
+            or "built_package_output" not in _mask_rust_noncode(reachable)
+        )
+    ):
+        failures.append(
+            f"{label}.validation observed runtime state must derive from "
+            "built package process output"
         )
 
 
@@ -142,15 +163,16 @@ def _matching_brace(masked: str, opening: int) -> int | None:
     return None
 
 
-def _rust_assertions(source: str) -> str:
-    """Return exact balanced assertion macros from reachable function bodies."""
+def _rust_assertions(source: str, *, mask_literals: bool) -> str:
+    """Return balanced assertions, masking prose for runtime-state checks."""
     masked = _mask_rust_noncode(source)
     assertions: list[str] = []
     for assertion in ASSERTION_MACRO.finditer(masked):
         opening = masked.find("(", assertion.start())
         closing = _matching_delimiter(masked, opening, "(", ")")
         if closing is not None:
-            assertions.append(source[assertion.start() : closing + 1])
+            selected = masked if mask_literals else source
+            assertions.append(selected[assertion.start() : closing + 1])
     return "\n".join(assertions)
 
 
@@ -270,7 +292,15 @@ def run_self_test() -> tuple[int, str | None]:
             "#[test]\nfn diagnostic_test() { helper(); }\n"
             '#[test]\nfn unrelated_test() { assert_eq!(code, "SIFR-RUST-PANIC-0001"); }\n'
             "#[test]\nfn state_test() { "
-            "assert_eq!(error, HandleStateError::Closed); }\n",
+            "assert_eq!(error, HandleStateError::Closed); }\n"
+            "#[test]\nfn observed_state_test() { "
+            "assert_eq!(state, ObservedRuntimeState::Closed); }\n"
+            "#[test]\nfn observed_output_state_test() { "
+            "let output = built_package_output(&entrypoint); "
+            "assert_eq!(observed_resource_state(&output), "
+            "ObservedRuntimeState::Closed); }\n"
+            '#[test]\nfn state_literal_only() { assert!(ok, '
+            '"HandleStateError::Closed"); }\n',
             encoding="utf-8",
         )
         cases = (
@@ -307,6 +337,33 @@ def run_self_test() -> tuple[int, str | None]:
                 {
                     "expected_result": "runtime-error-state",
                     "expected_runtime_state": "poisoned",
+                },
+                "does not assert declared runtime state",
+            ),
+            (
+                "observed state control",
+                "observed_state_test",
+                {
+                    "expected_result": "runtime-error-state",
+                    "expected_runtime_state": "closed",
+                },
+                "must derive from built package process output",
+            ),
+            (
+                "process-derived state control",
+                "observed_output_state_test",
+                {
+                    "expected_result": "runtime-error-state",
+                    "expected_runtime_state": "closed",
+                },
+                None,
+            ),
+            (
+                "state literal does not count",
+                "state_literal_only",
+                {
+                    "expected_result": "runtime-error-state",
+                    "expected_runtime_state": "closed",
                 },
                 "does not assert declared runtime state",
             ),

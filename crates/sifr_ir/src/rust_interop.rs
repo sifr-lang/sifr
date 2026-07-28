@@ -77,4 +77,24 @@ pub struct RustInteropDeclaration {
     pub span: TextRange,
     pub effect: RustInteropEffect,
     pub abi_requirements: RustInteropAbiRequirements,
+    /// Whether an opaque instance method's source receiver is declared `own self`.
+    pub consumes_receiver: bool,
+}
+
+/// Return the canonical member selected by an opaque Rust close policy.
+#[must_use]
+pub fn rust_opaque_close_method(declarations: &[RustInteropDeclaration]) -> Option<&'static str> {
+    let opaque = declarations
+        .iter()
+        .find(|declaration| declaration.kind == RustInteropDecoratorKind::Opaque)?;
+    opaque.arguments.iter().find_map(|argument| {
+        if argument.name.as_deref() != Some("close") {
+            return None;
+        }
+        match &argument.value {
+            RustInteropValue::Symbol(policy) if policy == "close" => Some("close"),
+            RustInteropValue::Symbol(policy) if policy == "async_close" => Some("aclose"),
+            _ => None,
+        }
+    })
 }

@@ -52,7 +52,8 @@ impl RustInteropResolver<'_> {
                     &candidate.owner,
                     RustInteropOwner::Method { class_name: owner_class, name }
                         if owner_class == class_name && name == method_name
-                ) && close_method_kind_matches(method_name, &candidate.declaration)
+                ) && candidate.declaration.consumes_receiver
+                    && close_method_kind_matches(method_name, &candidate.declaration)
             });
             if found {
                 continue;

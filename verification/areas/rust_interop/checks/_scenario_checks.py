@@ -15,6 +15,10 @@ from _scenario_async_reqwest import (
     run_async_reqwest_self_test,
     validate_async_reqwest_scenario,
 )
+from _scenario_opaque_resources import (
+    run_opaque_resource_self_test,
+    validate_opaque_resource_scenario,
+)
 
 REQUIRED_SCENARIO_EXAMPLES = {
     "async_runtime_reqwest": {
@@ -64,6 +68,34 @@ REQUIRED_SCENARIO_EXAMPLES = {
     "local_bridge_blake3": {
         "local_blake3_bridge": {
             "tokens": ("bridge.blake3.hash_bytes", "src/bridges", "blake3"),
+        },
+    },
+    "opaque_resource_matrix": {
+        "resource_lifecycle_runtime": {
+            "tokens": (
+                "resource_contract",
+                "reqwest::Client",
+                ".no_proxy()",
+                "Connection::open",
+                "redis::Client",
+                "tokio_postgres::Config",
+                'TcpListener::bind(("127.0.0.1", 0))',
+                "OPERATION_TIMEOUT",
+                "ACTIVE_TASKS.load(Ordering::SeqCst) != 0",
+                "bridge.resources.aclose",
+                "bridge.resources.close_observation",
+                "bridge.resources.invalid_aliasing",
+                "close=async_close,\n    borrow=exclusive",
+                "impl Drop for TemporaryDatabase",
+                "impl Drop for TrackedTask",
+                "let activity = TaskActivity::new();",
+                ".set_skip_set_lib_name()",
+                "serve_redis_malformed",
+                "PostgreSQL early-close shutdown",
+                "catch_unwind_silently",
+                "PoisonOnPanic::new(",
+                "Rust bridge panicked",
+            ),
         },
     },
     "panic_abort_profile": {
@@ -177,7 +209,11 @@ def run_self_test() -> tuple[int, str | None]:
     cases = 0
     with tempfile.TemporaryDirectory(prefix="sifr-rust-interop-scenario-self-test-") as raw_temp:
         fixture_dir = Path(raw_temp) / "bridge_type_matrix"
-        shutil.copytree(source, fixture_dir)
+        shutil.copytree(
+            source,
+            fixture_dir,
+            ignore=shutil.ignore_patterns("target"),
+        )
 
         baseline_failures: list[str] = []
         validate_scenario_examples(
@@ -264,7 +300,11 @@ def run_self_test() -> tuple[int, str | None]:
     raw_examples = {"panic_wrapper_runtime": "examples/panic_wrapper_runtime"}
     with tempfile.TemporaryDirectory(prefix="sifr-rust-panic-scenario-self-test-") as raw_temp:
         fixture_dir = Path(raw_temp) / "panic_boundary_wrapper_emission"
-        shutil.copytree(source, fixture_dir)
+        shutil.copytree(
+            source,
+            fixture_dir,
+            ignore=shutil.ignore_patterns("target"),
+        )
 
         baseline_failures = []
         validate_scenario_examples(
@@ -317,6 +357,13 @@ def run_self_test() -> tuple[int, str | None]:
     cases += async_cases
     if async_error is not None:
         return cases, async_error
+
+    resource_cases, resource_error = run_opaque_resource_self_test(
+        AREA_ROOT, validate_scenario_examples
+    )
+    cases += resource_cases
+    if resource_error is not None:
+        return cases, resource_error
 
     return cases, None
 
@@ -536,6 +583,10 @@ def _validate_scenario_manifests(
             )
     elif fixture_id == "async_runtime_reqwest":
         validate_async_reqwest_scenario(
+            failures, fixture_id, raw_path, rust, dependencies, trust
+        )
+    elif fixture_id == "opaque_resource_matrix":
+        validate_opaque_resource_scenario(
             failures, fixture_id, raw_path, rust, dependencies, trust
         )
     elif fixture_id == "same_workspace_crate":

@@ -18,7 +18,7 @@ def subscribe(handler: ThreadsafeCallback[[str], Result[None, SubscriptionError]
 def sample_result_callback(event: str) -> Result[None, SubscriptionError]:
     return None
 
-async def verify_subscription_cancel_shutdown(subscription: Subscription) -> Result[Subscription, SubscriptionError | RustPanicError]:
+async def verify_subscription_cancel_shutdown(own subscription: Subscription) -> Result[Subscription, SubscriptionError | RustPanicError]:
     subscribe_result: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(sample_result_callback)
     aclose_result: Result[None, SubscriptionError | RustPanicError] = await subscription.aclose()
     return subscribe_result

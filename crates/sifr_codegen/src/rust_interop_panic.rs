@@ -59,6 +59,42 @@ pub(crate) fn rust_panic_error_member(error_type: &Type) -> Option<&Type> {
     }
 }
 
+pub(crate) fn stored_rust_panic_error_value(
+    panic: RustExpr,
+    error_type: &Type,
+) -> Option<RustExpr> {
+    let panic_type = rust_panic_error_member(error_type)?;
+    let message = RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(panic),
+            method: "message".to_string(),
+            args: Vec::new(),
+        }),
+        method: "to_string".to_string(),
+        args: Vec::new(),
+    };
+    let panic_error = RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            panic_type.rust_type(),
+            "new".to_string(),
+        ])),
+        args: vec![message],
+    };
+    Some(
+        wrap_union_member_expr(error_type, panic_type, panic_error).unwrap_or_else(|| {
+            RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    panic_type.rust_type(),
+                    "new".to_string(),
+                ])),
+                args: vec![RustExpr::Verbatim(
+                    "\"Rust bridge panicked\".to_string()".to_string(),
+                )],
+            }
+        }),
+    )
+}
+
 pub(crate) fn ordinary_error_member(error_type: &Type) -> Option<&Type> {
     let Type::Union(members) = error_type.resolve_alias() else {
         return None;
@@ -228,6 +264,7 @@ mod tests {
             span: ruff_text_size::TextRange::default(),
             effect: sifr_ir::RustInteropEffect::Sync,
             abi_requirements: sifr_ir::RustInteropAbiRequirements::default(),
+            consumes_receiver: false,
         };
 
         assert_eq!(map_error_target(&declaration), Some(&target));

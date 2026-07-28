@@ -1,5 +1,5 @@
 use super::*;
-use crate::rust_interop_bridge_contract::RustBridgeTypeKind;
+use crate::rust_interop_bridge_contract::{RustBridgeParamConvention, RustBridgeTypeKind};
 use sifr_ir::{
     HirClass, HirClassKind, HirFunction, HirParam, MethodKind, RustInteropAbiRequirements,
     RustInteropArgument, RustInteropDecoratorKind, RustInteropEffect, RustInteropValue,
@@ -284,6 +284,92 @@ fn interop_bridge_resolves_imported_opaque_type_to_declared_rust_target() {
         Some("::sifr_runtime::interop::Handle<::sifr_runtime::python::ForeignObject>")
     );
     assert!(plan.rust.bridge_contracts.generated_types.is_empty());
+}
+
+#[test]
+fn interop_bridge_includes_owned_receiver_for_opaque_close_method() {
+    let mut resource = class("Resource", HirClassKind::Regular, Vec::new());
+    resource.rust_interop = vec![opaque_declaration("bridge.resources.Resource")];
+    resource.rust_interop[0]
+        .arguments
+        .push(RustInteropArgument {
+            name: Some("close".to_string()),
+            value: RustInteropValue::Symbol("async_close".to_string()),
+            span: Default::default(),
+        });
+    let mut close_declaration = declaration(
+        RustInteropDecoratorKind::Function,
+        "bridge.resources.aclose",
+    );
+    close_declaration.consumes_receiver = true;
+    resource.methods.push(HirFunction {
+        name: "aclose".to_string(),
+        params: Vec::new(),
+        return_type: Type::Str,
+        body: Vec::new(),
+        is_async: true,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: vec![close_declaration],
+        python_interop: Vec::new(),
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    });
+    let module = module_with(Vec::new(), vec![resource]);
+
+    let plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);
+    let signature = plan
+        .rust
+        .bridge_contracts
+        .signatures
+        .iter()
+        .find(|signature| {
+            matches!(
+                &signature.owner,
+                RustInteropOwner::Method { class_name, name }
+                    if class_name == "Resource" && name == "aclose"
+            )
+        })
+        .expect("opaque close signature should exist");
+
+    assert_eq!(signature.params.len(), 1);
+    assert_eq!(
+        signature.params[0].convention,
+        RustBridgeParamConvention::Own
+    );
+    assert_eq!(
+        signature.params[0].ty.rust_owned_type.as_deref(),
+        Some("::sifr_runtime::interop::Handle<bridge::resources::Resource>")
+    );
+}
+
+#[test]
+fn interop_bridge_omits_explicit_receiver_for_opaque_self_method() {
+    let mut resource = class("Resource", HirClassKind::Regular, Vec::new());
+    resource.rust_interop = vec![opaque_declaration("bridge.resources.Resource")];
+    resource.methods.push(function_with_declaration(
+        "ping",
+        RustInteropDecoratorKind::Function,
+        "Self.ping",
+    ));
+    let module = module_with(Vec::new(), vec![resource]);
+
+    let plan = interop_build_plan_for_named_modules([(Some("main"), &module)]);
+    let signature = plan
+        .rust
+        .bridge_contracts
+        .signatures
+        .iter()
+        .find(|signature| {
+            matches!(
+                &signature.owner,
+                RustInteropOwner::Method { class_name, name }
+                    if class_name == "Resource" && name == "ping"
+            )
+        })
+        .expect("opaque Self method signature should exist");
+
+    assert!(signature.params.is_empty());
 }
 
 #[test]
@@ -707,6 +793,7 @@ fn declaration(kind: RustInteropDecoratorKind, target: &str) -> RustInteropDecla
         span: Default::default(),
         effect: RustInteropEffect::Sync,
         abi_requirements: RustInteropAbiRequirements::default(),
+        consumes_receiver: false,
     }
 }
 
@@ -728,6 +815,7 @@ fn opaque_declaration(target: &str) -> RustInteropDeclaration {
             opaque_handle: true,
             ..RustInteropAbiRequirements::default()
         },
+        consumes_receiver: false,
     }
 }
 
@@ -739,5 +827,6 @@ fn callback_declaration() -> RustInteropDeclaration {
         span: Default::default(),
         effect: RustInteropEffect::Sync,
         abi_requirements: RustInteropAbiRequirements::default(),
+        consumes_receiver: false,
     }
 }

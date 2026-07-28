@@ -485,6 +485,7 @@ mod tests {
                         span: Default::default(),
                         effect: RustInteropEffect::Sync,
                         abi_requirements: RustInteropAbiRequirements::default(),
+                        consumes_receiver: false,
                     },
                 }],
                 ..RustInteropPlan::default()

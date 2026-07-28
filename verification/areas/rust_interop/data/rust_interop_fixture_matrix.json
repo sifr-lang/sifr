@@ -123,8 +123,8 @@
         "tokio-postgres": {"default_features": false, "features": ["runtime"]}
       },
       "execution_kind": "runtime-observed",
-      "positive_evidence": {"id": "resource_close_aclose_matrix", "status": "planned"},
-      "negative_evidence": {"id": "invalid_resource_aliasing", "status": "planned"}
+      "positive_evidence": {"id": "resource_close_aclose_matrix", "status": "passing"},
+      "negative_evidence": {"id": "invalid_resource_aliasing", "status": "passing"}
     },
     {
       "id": "close_after_use",

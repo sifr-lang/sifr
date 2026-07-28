@@ -19,6 +19,9 @@ use sifr_type_system::{FunctionType, ParamConvention, Type};
 
 mod class_type_collection;
 pub(in crate::lower) use class_type_collection::*;
+mod class_semantics;
+pub(in crate::lower) use class_semantics::*;
 mod class_body_lowering;
 pub(in crate::lower) use class_body_lowering::*;
 mod parameter_conventions;
+mod rust_opaque_validation;
