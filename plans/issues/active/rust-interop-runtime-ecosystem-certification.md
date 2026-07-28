@@ -148,8 +148,8 @@ normative and must not be broadened.
 | `certification_2` | merged | [PR #3031](https://github.com/sifr-lang/sifr/pull/3031); generated panic wrapper emission and mapper fallback |
 | `certification_3` | merged | [PR #3033](https://github.com/sifr-lang/sifr/pull/3033); generated call-scoped callback invocation and lifetime rejection |
 | `certification_4` | merged | [PR #3036](https://github.com/sifr-lang/sifr/pull/3036); async reqwest loopback, runtime reuse, cancellation/drop, timeout cleanup, and hidden blocking rejection |
-| `certification_5` | in progress | resource lifecycle matrix with HTTP/Redis/PostgreSQL loopbacks and a temporary SQLite database |
-| `certification_6` | blocked | starts after `certification_5` merges |
+| `certification_5` | merged | [PR #3042](https://github.com/sifr-lang/sifr/pull/3042); opaque resource lifecycle matrix with HTTP/Redis/PostgreSQL loopbacks and a temporary SQLite database |
+| `certification_6` | in progress | callback subscription lifecycle matrix starts after `certification_5` |
 | `certification_7` | blocked | starts after `certification_6` merges |
 | `certification_8` | blocked | starts after `certification_7` merges |
 | `certification_9` | blocked | starts after `certification_8` merges |
@@ -574,7 +574,7 @@ Implementation checklist:
 - [x] Bind both evidence directions to distinct mandatory generated-build
   tests, promote only `opaque_resource_matrix`, and update structured stable
   claims, public/internal docs, provenance, counts, and validator self-tests.
-- [ ] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, Opus review rounds to
   satisfaction, merge the PR, and unblock only `certification_6`.
 
 Post-item inventory:
@@ -633,7 +633,12 @@ Focused implementation evidence:
   fails on stable Rust toolchains (including stable 1.94);
   the downgraded locked graph retains the required bundled SQLite feature, and
   the already-supported blocking-diagnostics row is revalidated against that
-  same exact root lock graph.
+  same exact root lock graph;
+- working-tree review rounds 1–17 are recorded under `plans/reviews/active/`;
+  [round 17](../../reviews/active/rust-interop-certification-5-review-round17.md)
+  independently closes all prior findings and reports `SATISFIED`, and
+  [PR #3042](https://github.com/sifr-lang/sifr/pull/3042) is the Certification
+  5 merge.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 
