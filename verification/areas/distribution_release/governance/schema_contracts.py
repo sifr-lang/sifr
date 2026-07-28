@@ -9,6 +9,12 @@ from typing import Any
 from verification.json_schema_202012 import JsonSchemaError, validate_instance
 
 from .common import TARGETS
+from .schema_bootstrap import (
+    BOOTSTRAP_GENERATION,
+    LEGACY_INDEX_SHA256,
+    LEGACY_INDEX_SIZE_BYTES,
+    expected_asset_names,
+)
 
 SCHEMA_ROOT = Path(__file__).resolve().parents[1] / "schemas"
 SHA_A = "a" * 64
@@ -57,6 +63,38 @@ def validate_schema_contracts() -> None:
             raise ValueError(
                 "incident sign-off schema accepted an invalid completed-attempt count"
             )
+    bootstrap_schema = SCHEMA_ROOT / "schema_epoch_bootstrap_evidence.schema.json"
+    alpha_stage = copy.deepcopy(
+        fixtures["schema_epoch_bootstrap_evidence.schema.json"]
+    )
+    alpha_stage["stage"] = "alpha-assets"
+    for key in ("alpha_evidence", "beta", "index", "public_smoke"):
+        del alpha_stage[key]
+    validate_instance(alpha_stage, bootstrap_schema)
+    duplicate_smoke = copy.deepcopy(
+        fixtures["schema_epoch_bootstrap_evidence.schema.json"]
+    )
+    duplicate_smoke["public_smoke"][1]["id"] = duplicate_smoke["public_smoke"][0]["id"]
+    duplicate_smoke["public_smoke"][1]["sha256"] = SHA_A
+    extra_asset = copy.deepcopy(fixtures["schema_epoch_bootstrap_evidence.schema.json"])
+    extra_asset["alpha"]["published_assets"][
+        "sifr-0.9.9-alpha.1-x86_64-apple-darwin.tar.gz"
+    ] = SHA_A
+    alpha_with_beta = copy.deepcopy(
+        fixtures["schema_epoch_bootstrap_evidence.schema.json"]
+    )
+    alpha_with_beta["stage"] = "alpha-assets"
+    for key in ("alpha_evidence", "index", "public_smoke"):
+        del alpha_with_beta[key]
+    for invalid_bootstrap in (duplicate_smoke, extra_asset, alpha_with_beta):
+        try:
+            validate_instance(invalid_bootstrap, bootstrap_schema)
+        except JsonSchemaError:
+            pass
+        else:
+            raise ValueError(
+                "bootstrap evidence schema accepted an invalid governed collection"
+            )
 
 
 def schema_fixtures() -> dict[str, Any]:
@@ -65,6 +103,7 @@ def schema_fixtures() -> dict[str, Any]:
         "qualification_artifact_index.schema.json": qualification_index(),
         "release_index.schema.json": index,
         "release_profile_report.schema.json": release_report(),
+        "schema_epoch_bootstrap_evidence.schema.json": schema_bootstrap_evidence(),
         "self_update_install_receipt.schema.json": install_receipt(),
         "self_update_plan.schema.json": self_update_plan(),
         "self_version.schema.json": self_version(),
@@ -74,6 +113,53 @@ def schema_fixtures() -> dict[str, Any]:
         "stable_release_plan.schema.json": release_plan(),
         "stable_release_signoff.schema.json": release_signoff(),
         "stable_site_release_facts.schema.json": site_facts(),
+    }
+
+
+def schema_bootstrap_evidence() -> dict[str, Any]:
+    def release(version: str) -> dict[str, Any]:
+        return {
+            "version": version,
+            "source_commit": COMMIT,
+            "release_record_sha256": SHA_A,
+            "published_assets": {
+                name: SHA_B for name in sorted(expected_asset_names(version))
+            },
+        }
+
+    return {
+        "schema_version": 2,
+        "operation": "schema-epoch-bootstrap",
+        "stage": "preview-index",
+        "run_id": 42,
+        "run_attempt": 1,
+        "initiator": "release-initiator",
+        "approvers": ["release-reviewer"],
+        "prepare_summary_sha256": SHA_A,
+        "legacy_index": {
+            "sha256": LEGACY_INDEX_SHA256,
+            "size_bytes": LEGACY_INDEX_SIZE_BYTES,
+        },
+        "alpha": release("0.1.0-alpha.2"),
+        "alpha_evidence": {
+            "sha256": SHA_B,
+            "run_id": 41,
+            "run_attempt": 1,
+            "initiator": "alpha-initiator",
+            "approvers": ["alpha-reviewer"],
+            "prepare_summary_sha256": SHA_C,
+        },
+        "beta": release("0.1.0-beta.15"),
+        "index": {"generation": BOOTSTRAP_GENERATION, "sha256": SHA_C},
+        "public_smoke": [
+            {"id": smoke_id, "status": "pass", "sha256": SHA_D}
+            for smoke_id in (
+                "dispatcher-default",
+                "dispatcher-stable-rejection",
+                "governance-index",
+                "installed-self-update",
+            )
+        ],
     }
 
 
@@ -320,6 +406,7 @@ def release_report() -> dict[str, Any]:
             ("distribution_release", "qualification"),
             ("distribution_release", "evidence-custody"),
             ("distribution_release", "incident-governance"),
+            ("distribution_release", "epoch-bootstrap"),
         ],
     }
     return {
@@ -359,6 +446,7 @@ def release_report() -> dict[str, Any]:
                             "qualification",
                             "evidence-custody",
                             "incident-governance",
+                            "epoch-bootstrap",
                         ],
                     ),
                 )
@@ -443,7 +531,9 @@ def release_signoff() -> dict[str, Any]:
 
 
 def incident_signoff() -> dict[str, Any]:
-    evidence = lambda digest: {"status": "pass", "evidence_sha256": digest}
+    def evidence(digest: str) -> dict[str, str]:
+        return {"status": "pass", "evidence_sha256": digest}
+
     return {
         "schema_version": 2,
         "incident_id": "inc-2026-001",

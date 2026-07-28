@@ -120,6 +120,8 @@ def category_for_path(rel_path: Path) -> str | None:
         return "python-tooling"
     if rel.startswith("verification/") and rel.endswith(".py"):
         return "python-verification"
+    if rel.startswith(".github/workflows/") and rel.endswith((".yml", ".yaml")):
+        return "github-workflow"
     if rel.startswith("demos/") and rel.endswith(".sifr"):
         return "sifr-demo"
     if rel.startswith("crates/sifr/tests/") and rel.endswith(".sifr"):
@@ -128,8 +130,8 @@ def category_for_path(rel_path: Path) -> str | None:
 
 
 def iter_source_files(repo_root: Path) -> Iterable[SourceFile]:
-    roots = ("crates", "scripts", "verification", "demos")
-    suffixes = (".rs", ".py", ".sifr")
+    roots = ("crates", "scripts", "verification", "demos", ".github/workflows")
+    suffixes = (".rs", ".py", ".sifr", ".yml", ".yaml")
     for root_name in roots:
         root = repo_root / root_name
         if not root.exists():
@@ -257,6 +259,7 @@ def run_self_test() -> None:
             "verification/areas/developer_tooling/check.py",
             "demos/sample.sifr",
             "crates/sifr/tests/e2e/pass/sample.sifr",
+            ".github/workflows/release.yml",
         )
         for rel in passing_included:
             write_lines(repo_root / rel, MAX_SOURCE_LINES)
@@ -266,6 +269,12 @@ def run_self_test() -> None:
         repo_root = Path(temp_dir)
         write_lines(repo_root / "scripts/oversized.py", MAX_SOURCE_LINES + 1)
         assert_violation(repo_root, "scripts/oversized.py", "python-tooling")
+
+    with tempfile.TemporaryDirectory(prefix="sifr-file-size-guardrail-") as temp_dir:
+        repo_root = Path(temp_dir)
+        workflow = ".github/workflows/oversized.yml"
+        write_lines(repo_root / workflow, MAX_SOURCE_LINES + 1)
+        assert_violation(repo_root, workflow, "github-workflow")
 
     excluded_oversized = (
         "target/generated.rs",

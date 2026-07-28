@@ -12,6 +12,7 @@ from .release_plan import (
     validate_site_release_facts,
 )
 from .release_report import validate_release_profile_report
+from .schema_bootstrap import validate_bootstrap_evidence
 from .surface_contracts import (
     validate_install_receipt,
     validate_self_update_plan,
@@ -23,6 +24,7 @@ __all__ = [
     "GovernanceError",
     "generate_site_release_facts",
     "materialize_stable_plan",
+    "validate_bootstrap_evidence",
     "validate_incident_request",
     "validate_incident_signoff",
     "validate_qualification_artifact_index",

@@ -46,6 +46,17 @@ seconds). The lane exited only on the elapsed-time budget after reporting every
 case as passing; the incident-governance diff does not change Python-interop or
 compiler implementation files.
 
+During the schema-v2 preview epoch bootstrap wave, the final create-PR profile
+again completed all 19 Python-interop variants with zero failures, but the
+aggregate step took 690.10 seconds against the same 600-second budget. The
+slowest cases were callback examples (145.16 seconds), read-only check/doctor
+(121.95 seconds), CPython buffer compatibility (106.41 seconds), buffer
+examples (102.67 seconds), and DLPack examples (80.62 seconds); Cargo also
+reported package-cache file-lock waits. Two preceding runs of the same wave
+completed that functional step within budget at 456.79 and 455.79 seconds.
+The bootstrap diff does not change Python-interop or compiler implementation
+files, and no threshold, baseline, or waiver was changed.
+
 During stable documentation/editor qualification on source head `147296fb0`,
 the create-PR profile passed coverage, core, diagnostics, and 18 of 19 selected
 Python-interop variants. `readonly-check-doctor` alone exceeded its internal

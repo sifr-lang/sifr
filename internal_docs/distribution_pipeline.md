@@ -575,13 +575,46 @@ mutation.
 
 The canonical ownership, acknowledgement, communication, retry, retention, and
 closure policy is in
-[`stable_incident_response.md`](./stable_incident_response.md). Production
-workflow inputs, write permissions, Marketplace calls, and site dispatch remain
-absent until protected publication wiring.
+[`stable_incident_response.md`](./stable_incident_response.md). Stable,
+Marketplace, and incident production mutations remain gated until their later
+protected-publication slices.
 
-Run the incident-specific suite and capability demo with:
+The first protected-publication slice wires only the one-time schema-epoch
+bootstrap into `.github/workflows/release-publication.yml`. Its nested
+`release-publication-prepare.yml` job has read-only permissions, no protected
+environment, and no production secret. It verifies the exact source and
+artifact bytes, the current governance-asset identity, and any staged alpha
+evidence, then uploads an immutable 30-day summary whose digest is rechecked by
+the publish job and retained in each durable bootstrap evidence record.
+
+`bootstrap-alpha` publishes a fresh, qualified alpha release and a write-once
+evidence record under the `channels` governance release. `bootstrap-index`
+re-downloads and hashes every staged alpha asset, publishes a fresh qualified
+beta release, and builds generation 1 from those two release records. The
+discarded pre-epoch asset is accepted only by its observed SHA-256
+`71b3243925670f56dc510b8f45b6614a622f58097a0fea9492f61d20dc4bf9ef`
+and 105-byte size; no code parses its fields and no pre-epoch fixture,
+migration, or fallback is retained.
+
+Both bootstrap stages run in the `stable-release` environment. Publish reads
+the workflow run's GitHub approval history and fails unless the recorded
+environment approvers include at least one login distinct from
+`GITHUB_TRIGGERING_ACTOR`. The final evidence binds the alpha-stage evidence
+digest, run/attempt, initiator, approvers, and prepare-summary digest as well as
+the final stage's own prepare-summary digest. The final stage
+reserves `channels-generation-1.json`, replaces only `channels.json`,
+reconciles the pinned site workflow, and then verifies the real governance
+asset, beta-default dispatcher, stable preview rejection, fresh public install,
+and installed `self update --dry-run` without
+`SIFR_TEST_CHANNEL_METADATA_PATH`. Only after those checks does it upload the
+write-once generation-1 bootstrap evidence.
+
+Run the protected bootstrap and incident-specific suites, plus the capability
+demo, with:
 
 ```bash
+uv run --project verification --locked python -m sifr_verify areas run \
+  --area distribution_release --suite epoch-bootstrap
 uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite incident-governance
 demos/stable_incident_recovery_demo.sh

@@ -48,8 +48,15 @@ def main(argv: list[str] | None = None) -> int:
     incident_suite_selected = any(
         str(suite["name"]) == "incident-governance" for suite in selected
     )
+    epoch_suite_selected = any(
+        str(suite["name"]) == "epoch-bootstrap" for suite in selected
+    )
     suite_results = [
-        run_suite(suite, include_incident=not incident_suite_selected)
+        run_suite(
+            suite,
+            include_incident=not incident_suite_selected,
+            include_epoch_bootstrap=not epoch_suite_selected,
+        )
         for suite in selected
     ]
     total_variants = sum(int(result["total_variants"]) for result in suite_results)
@@ -106,6 +113,7 @@ def run_suite(
     suite: dict[str, Any],
     *,
     include_incident: bool = True,
+    include_epoch_bootstrap: bool = True,
 ) -> dict[str, Any]:
     suite_name = str(suite["name"])
     case = validate_suite_case(suite)
@@ -123,6 +131,13 @@ def run_suite(
                 "incident-recovery",
             )
         ]
+    elif suite_name == "epoch-bootstrap":
+        variants = [
+            run_python_module(
+                "governance.schema_bootstrap_selftest",
+                "schema-v2-preview-epoch-bootstrap",
+            )
+        ]
     elif suite_name == "qualification":
         variants = [
             run_python_module(
@@ -135,6 +150,13 @@ def run_suite(
         if suite_name == "full":
             variants.append(run_python_module("governance.selftest", "governance-contracts"))
             variants.append(run_python_module("governance.schema_epoch", "schema-epoch"))
+            if include_epoch_bootstrap:
+                variants.append(
+                    run_python_module(
+                        "governance.schema_bootstrap_selftest",
+                        "schema-v2-preview-epoch-bootstrap",
+                    )
+                )
             if include_incident:
                 variants.append(
                     run_python_module(
@@ -170,6 +192,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
         "qualification",
         "evidence-custody",
         "incident-governance",
+        "epoch-bootstrap",
     }:
         raise SystemExit(f"unsupported distribution_release suite: {suite_name}")
     cases = suite.get("cases", [])
@@ -179,6 +202,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
     expected_command = {
         "evidence-custody": "distribution-evidence-custody",
         "incident-governance": "distribution-incident-recovery",
+        "epoch-bootstrap": "distribution-schema-bootstrap",
         "qualification": "distribution-stable-qualification",
     }.get(suite_name, "distribution-case-directory")
     if str(case.get("command")) != expected_command:
@@ -187,6 +211,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
     expected_entry = {
         "evidence-custody": AREA_ROOT / "governance" / "evidence_custody.py",
         "incident-governance": AREA_ROOT / "governance" / "incident_recovery_selftest.py",
+        "epoch-bootstrap": AREA_ROOT / "governance" / "schema_bootstrap_selftest.py",
         "qualification": AREA_ROOT / "governance" / "qualification_selftest.py",
     }.get(suite_name, CASES_ROOT)
     if entry != expected_entry or not entry.exists():
