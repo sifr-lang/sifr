@@ -15,6 +15,17 @@ import tomllib
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+AREA_MODULE_ROOT = str(Path(__file__).resolve().parent)
+if AREA_MODULE_ROOT not in sys.path:
+    sys.path.insert(0, AREA_MODULE_ROOT)
+
+from self_update_certification import (  # noqa: E402
+    CertificationError,
+    run_self_update_snapshots,
+    write_install_receipt,
+    write_self_update_metadata_fixture,
+)
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
@@ -284,6 +295,7 @@ def run_host_installed_smoke() -> tuple[int, list[str]]:
             broken_doctor_json_path = ACTUAL_ROOT / "installed-doctor-broken.json"
             self_version_path = ACTUAL_ROOT / "installed-self-version.json"
             self_update_dry_run_path = ACTUAL_ROOT / "installed-self-update-dry-run.json"
+            self_update_metadata_path = write_self_update_metadata_fixture(temp_root)
             extract_archive(archive_path, install_root)
             work_root.mkdir()
             build_root.mkdir()
@@ -301,7 +313,12 @@ def run_host_installed_smoke() -> tuple[int, list[str]]:
             )
             sysroot_json_path.write_text(sysroot_output.stdout, encoding="utf-8")
             sysroot_payload = validate_sysroot_json(sysroot_output.stdout, install_root, host)
-            write_install_receipt(install_root, host, sysroot_payload)
+            write_install_receipt(
+                install_root,
+                host,
+                sysroot_payload,
+                release_version=RELEASE_VERSION,
+            )
             run_self_update_snapshots(
                 installed_sifr,
                 install_root,
@@ -309,6 +326,9 @@ def run_host_installed_smoke() -> tuple[int, list[str]]:
                 env,
                 self_version_path,
                 self_update_dry_run_path,
+                self_update_metadata_path,
+                release_version=RELEASE_VERSION,
+                run_checked=run_checked,
             )
             run_doctor_snapshots(
                 installed_sifr,
@@ -607,93 +627,6 @@ def validate_sysroot_json(raw: str, install_root: Path, host: str) -> dict[str, 
     return payload
 
 
-def write_install_receipt(install_root: Path, host: str, sysroot_payload: dict[str, Any]) -> None:
-    receipt = {
-        "schema_version": 2,
-        "name": "sifr",
-        "version": RELEASE_VERSION,
-        "channel": "beta",
-        "target": host,
-        "install_dir": str(install_root / "bin"),
-        "binary_path": str(install_root / "bin" / "sifr"),
-        "sysroot_path": str(install_root),
-        "sysroot_schema_version": 1,
-        "sysroot_sifr_version": RELEASE_VERSION,
-        "sysroot_target_triple": host,
-        "sysroot_content_sha256": str(sysroot_payload.get("sysroot_content_sha256")),
-        "artifact": f"sifr-{RELEASE_VERSION}-{host}.tar.gz",
-        "modify_path": False,
-    }
-    (install_root / "install.json").write_text(json.dumps(receipt, indent=2, sort_keys=True), encoding="utf-8")
-
-
-def run_self_update_snapshots(
-    installed_sifr: Path,
-    install_root: Path,
-    work_root: Path,
-    env: dict[str, str],
-    self_version_path: Path,
-    self_update_dry_run_path: Path,
-) -> None:
-    version = run_checked(
-        [str(installed_sifr), "self", "version", "--format", "json"],
-        cwd=work_root,
-        env=env,
-        label="self version json",
-        stdout_path=self_version_path,
-        echo_output=False,
-    )
-    validate_self_version_json(version.stdout, install_root)
-    dry_run = run_checked(
-        [
-            str(installed_sifr),
-            "self",
-            "update",
-            "--dry-run",
-            "--version",
-            "0.1.0-beta.1301",
-            "--format",
-            "json",
-        ],
-        cwd=work_root,
-        env=env,
-        label="self update dry-run json",
-        stdout_path=self_update_dry_run_path,
-        echo_output=False,
-    )
-    validate_self_update_dry_run_json(dry_run.stdout, install_root)
-
-
-def validate_self_version_json(raw: str, install_root: Path) -> None:
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError as error:
-        raise CertificationError(f"self version json did not parse: {error}") from error
-    if payload.get("current_version") != RELEASE_VERSION or payload.get("receipt_version") != RELEASE_VERSION:
-        raise CertificationError("self version json did not preserve the installed receipt version")
-    if Path(str(payload.get("sysroot_path"))).resolve() != install_root.resolve():
-        raise CertificationError("self version json did not preserve the installed sysroot path")
-    if Path(str(payload.get("binary_path"))).resolve() != (install_root / "bin" / "sifr").resolve():
-        raise CertificationError("self version json did not preserve the installed binary path")
-    if payload.get("matches_receipt") is not True:
-        raise CertificationError("self version json did not report a matching receipt")
-
-
-def validate_self_update_dry_run_json(raw: str, install_root: Path) -> None:
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError as error:
-        raise CertificationError(f"self update dry-run json did not parse: {error}") from error
-    if payload.get("current_version") != RELEASE_VERSION or payload.get("target_version") != "0.1.0-beta.1301":
-        raise CertificationError("self update dry-run json did not preserve requested version transition")
-    if payload.get("action") != "update" or payload.get("would_run_installer") is not True:
-        raise CertificationError("self update dry-run json did not plan an update action")
-    if Path(str(payload.get("sysroot_path"))).resolve() != install_root.resolve():
-        raise CertificationError("self update dry-run json did not preserve the installed sysroot path")
-    if Path(str(payload.get("binary_path"))).resolve() != (install_root / "bin" / "sifr").resolve():
-        raise CertificationError("self update dry-run json did not preserve the installed binary path")
-
-
 def run_doctor_snapshots(
     installed_sifr: Path,
     install_root: Path,
@@ -812,6 +745,7 @@ def installed_env(temp_root: Path) -> dict[str, str]:
     env.pop("SIFR_SYSROOT", None)
     env.pop("SIFR_RUNTIME_PATH", None)
     env.pop("SIFR_INSTALL_MANIFEST_DIR", None)
+    env.pop("SIFR_TEST_CHANNEL_METADATA_PATH", None)
     env["CARGO_NET_OFFLINE"] = "true"
     probe_cache_root = ACTUAL_ROOT / "probe-cache"
     probe_cache_root.mkdir(parents=True, exist_ok=True)
@@ -872,10 +806,6 @@ def run_command(
     if echo_output and completed.stderr:
         sys.stderr.write(completed.stderr)
     return CommandResult(command, completed.returncode, completed.stdout, completed.stderr)
-
-
-class CertificationError(Exception):
-    """A sysroot release certification assertion failed."""
 
 
 class CommandResult:

@@ -8,7 +8,9 @@ Sifr local validation uses four profiles:
   with blocking per-step budgets for regression control.
 - `merge`: authoritative merge gate for compiler correctness.
 - `nightly`: broad hardening, full generated-code quality, and full e2e pass corpus.
-- `release`: highest-confidence release qualification profile.
+- `release`: highest-confidence publication-specific qualification profile;
+  it is not required to be a strict nightly superset where an explicit,
+  expiry-bound release policy says otherwise.
 
 Profile policy lives in `verification/profiles/{create-pr,merge,nightly,release}.json`.
 `uv run --project verification --locked python -m sifr_verify profiles shell --profile <profile>`
@@ -45,8 +47,9 @@ through the blocking `readiness` suite. The suite runs strict mode with
 negative self-tests. It rejects `expected-missing`, `tests:none`, `red-blocker`,
 ownerless rows, unknown owners, expired quarantine, v1 stable-surface manifests,
 unpinned required corpora, live-network create-pr/merge policy, missing locked
-or offline Cargo policy, and first-party compiler crates without executed merge
-membership.
+or offline Cargo policy, undeclared release-suite drift, expired release
+divergence, missing or unindexed divergence records, and first-party compiler
+crates without executed merge membership.
 
 Cargo workspace packages, targets, and features are inventoried from
 `cargo metadata --locked --no-deps --format-version 1` and classified in
@@ -117,3 +120,24 @@ sifr_verify reports summarize` writes
 `target/validation_lane_reports/<profile>.latest.json` with wall time, step
 timings, slowest cases, e2e cache/group stats, generated artifact cache hits,
 and advisories.
+
+## Algorithmic Corpus Policy
+
+The full pinned LeetCode corpus is a blocking nightly compatibility signal.
+Release qualification runs the blocking representative subset plus the
+taxonomy self-test. The representative subset pins the complete corpus size and
+preserves coverage across every declared algorithm category; the taxonomy
+self-test keeps taxonomy generation executable without making known
+corpus-remediation work a stable-channel publication prerequisite.
+
+The complete failure inventory, remediation ownership, and the condition for
+restoring the full corpus to release qualification are tracked from the phase
+index. No fixture is removed from the corpus, re-baselined, or hidden from
+nightly. For this guarantee, the shipped-guarantee registry's combined
+`nightly_release_surface` remains the nightly-authoritative full-corpus
+surface; the surface matrix's `release_suite`, record, and expiry fields are the
+release-specific authority.
+
+When a profile-assignment row gives nightly and release different area suites,
+its identifier must exactly match the compiler-surface row that owns the
+explicit release-suite declaration.

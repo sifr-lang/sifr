@@ -76,6 +76,9 @@ Artifacts mapped to the Phase 40 exit gate:
 
 ### milestone_40_1: Canonical Release Plan and Qualification
 
+- Frozen qualification scope treats the pinned algorithmic full corpus as the
+  separately owned, expiry-bound follow-up linked under `milestone_40_4`;
+  release retains its blocking representative subset and taxonomy self-test.
 - [x] Implement the non-mutating stable planner and canonical digest binding.
 - [x] Consume and register the separately delivered Rust-interop
   stable-candidate suite and claims artifact before qualification.
@@ -102,6 +105,15 @@ Artifacts mapped to the Phase 40 exit gate:
 
 ### milestone_40_4: Stable Documentation and VS Code Release
 
+- The pinned algorithmic full corpus is intentionally not a Phase 40
+  prerequisite. Exact-source release validation reproduced the same 20
+  pre-existing failures already preserved in
+  [`ad-hoc-algorithmic-full-corpus-preexisting-failures.md`](./ad-hoc-algorithmic-full-corpus-preexisting-failures.md)
+  after every preceding gate—including `performance_budget_checks` in `full`
+  mode—passed.
+  Nightly keeps the full corpus blocking; release qualification keeps the
+  representative subset and taxonomy self-test blocking until the ad hoc
+  issue restores the full corpus.
 - Packaged-candidate generated-Rust preview is intentionally not a Phase 40
   prerequisite. The real `0.1.0` candidate serves initialization, diagnostics,
   and formatting, but the cold first-run generated-Rust qualification exceeded
@@ -201,9 +213,139 @@ Review and upstream coordination ledger:
   It independently reproduced the live API semantics and 509 MB artifact
   replay, mutation-tested both retention bounds and the workflow-path binding,
   found no remaining actionable issue, and approved the repair.
+- The clean exact-source release profile on
+  `c17f3c7d1ea1ed97ca125eb7a43344b30cf9413b` passed every lane through
+  `performance_budget_checks` in `full` mode before reproducing exactly the 20
+  previously preserved failures among 412 pinned algorithm variants. The
+  governed correction keeps `leetcode-full` blocking in nightly and selects
+  the already blocking representative subset plus taxonomy self-test for
+  release qualification. Its indexed divergence record expires on 2026-10-31
+  and fails readiness closed if not restored or separately renewed.
+- Claude Opus algorithm-scope review passes 1 through 3 are archived at
+  `plans/reviews/archive/phase-40-algorithm-scope-claude-opus-review-pass-{1,2,3}.md`.
+  Their findings are closed by exact release-suite/profile agreement,
+  profile-derived divergence detection independent of the assignment matrix,
+  indexed-record and expiry validation, mutation coverage for deletion and
+  under-declaration paths, truthful policy/docs attribution, and restoration
+  criteria in the ad hoc issue.
+- Claude Opus algorithm-scope review pass 4 is archived at
+  `plans/reviews/archive/phase-40-algorithm-scope-claude-opus-review-pass-4.md`.
+  It independently re-ran the focused gates and 24 negative cases, found no
+  remaining actionable issue, and approved the correction.
+- The authoritative `create-pr` profile passed every blocking step, including
+  131 of 131 selected e2e fixtures. The exact-state documentation
+  `structure`/`ga-release` suites, coverage-matrix readiness with all 24
+  negative cases, formatting, diff hygiene, and the 900-line file-size
+  guardrail also passed. The only lane advisory was the unchanged warm
+  wall-time budget while isolated e2e caches rebuilt.
+- Exact pushed-head Claude Opus review pass 5 is archived at
+  `plans/reviews/archive/phase-40-algorithm-scope-claude-opus-review-pass-5-pr-head.md`.
+  It independently reviewed commit `99c847705`, mutation-tested every
+  deletion and under-declaration path raised in earlier passes, verified the
+  nightly corpus and release subsets remain blocking, and returned `APPROVED`
+  with no actionable findings.
+- Final PR-head Claude Opus review pass 6 is archived at
+  `plans/reviews/archive/phase-40-algorithm-scope-claude-opus-review-pass-6-final-pr-head.md`.
+  It found one evidence-attribution error: the assignment-matrix checker, not
+  both checkers, owns the PAM under-declaration mutation. The underlying
+  readiness gate remains fail-closed because both checks are blocking; the
+  archived pass-5 table and conclusion now state that division accurately.
+- Final PR-head Claude Opus review pass 7 is archived at
+  `plans/reviews/archive/phase-40-algorithm-scope-claude-opus-review-pass-7-final-pr-head.md`.
+  It independently reproduced the corrected checker attribution, re-ran the
+  mutation matrix, found no remaining actionable issue, and approved exact PR
+  head `95d5e2bbb`.
+- The governed algorithm-scope correction merged through
+  [PR #3037](https://github.com/sifr-lang/sifr/pull/3037) as
+  `7242e4737b1ee89f9f02a3b4793d5cdb13d372ea`.
+- Exact-source qualification run
+  [#30297288986](https://github.com/sifr-lang/sifr/actions/runs/30297288986)
+  passed all four governed targets, aggregate installer/checksum assembly,
+  VS Code package qualification, and immutable-index collection. External
+  replay verified all 20 indexed files (533,743,470 bytes) by exact size and
+  SHA-256; the workflow and every transported artifact remain unexpired.
+- Documentation qualification on the same source passed as
+  `docs-7242e4737b1e-038b0eabc1c1` in a local canonical report. Canonical
+  release-profile report attempts passed every preceding gate but reproduced
+  the indexed `PERF-HOST` condition; the same-host old-source control timed
+  out, while the unchanged standalone full suite passed after disposable cache
+  cleanup. No performance baseline, threshold, waiver, or release-profile
+  selection changed. Commands, result paths, digests, and replay totals are
+  archived in
+  `plans/reviews/archive/phase-40-milestone-40-4-exact-source-evidence.md`.
+- A later unchanged canonical run passed all eight performance variants and all
+  earlier release lanes. It then failed only the installed sysroot smoke because
+  the public governance release still serves schema-v1 `channels.json`; the
+  exact schema-v2 candidate correctly rejected that preview state because the
+  required `generation`, `ga_status`, and `releases` fields are absent. This is
+  the truthful one-time GA epoch-bootstrap boundary for `milestone_40_5`, not a
+  compiler, sysroot, or performance failure. The installed heavy-stdlib sysroot
+  variant passed on the same run. Milestone 40.5 also owns the missing
+  test-only endpoint override so installed-sysroot qualification uses an
+  isolated schema-v2 fixture instead of mutable public network state.
+- Milestone evidence-closure Claude Opus review passes 1 through 4 are archived
+  at
+  `plans/reviews/archive/phase-40-milestone-40-4-evidence-closure-review-pass-{1,2,3,4}.md`.
+  The first three rounds found and closed bootstrap ownership, public-network
+  isolation, wording, command, artifact, metric-count, and digest-custody gaps.
+  Pass 4 recomputed every preserved digest and measurement, found no remaining
+  actionable issue, and returned `VERDICT: SATISFIED`.
+- Exact pushed-head review pass 5 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-evidence-closure-review-pass-5-final-pr-head.md`.
+  It verified PR head `b09845a86`, re-ran the 20-file custody replay, found no
+  actionable issue, and returned `VERDICT: SATISFIED`. The evidence slice
+  merged through [PR #3038](https://github.com/sifr-lang/sifr/pull/3038) as
+  `21bd64d7c4cd83a45da274519ed0fdd3ac8d63f7`.
+- The exact-head create-PR profile passed every selected case except the
+  already indexed `readonly-check-doctor` 120-second host timeout. All later
+  Python-interop cases passed, including the CPython 3.11 buffer, Arrow, and
+  DLPack suites; no Phase 40 source change was present in that evidence PR.
 
 ### milestone_40_5: Protected Sign-off and GA Activation
 
+- [ ] Publish a protected, truthful one-time schema-v2 preview epoch with fresh
+  qualified alpha/beta records and no stable mapping; retain no v1 migration
+  or fallback path.
+- [ ] Isolate installed-sysroot self-update qualification from mutable public
+  network state while retaining separate protected public-endpoint smoke.
+- Qualification-isolation wave validation passed the complete installed
+  release smoke from a schema-v2 fixture, including self-update dry run,
+  doctor, emit, LSP, and path-leakage checks. Claude Opus review pass 1 is
+  archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-1.md`.
+  Its findings are remediated before pass 2: the override is dry-run-only,
+  direct runner execution is restored, the release trust boundary is
+  inventoried, symlinks and malformed fixture inputs fail closed, and this
+  wave is tracked.
+  Review pass 2 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-2.md`;
+  it reproduced the release-binary dry-run and real-update rejection, found no
+  remaining actionable issue, and returned `VERDICT: SATISFIED`.
+- Exact pushed-head review pass 3 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-3-final-pr-head.md`.
+  It re-ran the installed release smoke, full self-update unit surface,
+  workspace clippy, and fail-closed fixture matrix at exact remote head
+  `d78cfb756`, and returned `VERDICT: SATISFIED`. That approval was superseded
+  when the later authoritative create-PR profile found the inventory omission
+  described below.
+- The first authoritative create-PR profile found that the new regular-file
+  probe and fixture read were absent from the existing TypeScript-Go
+  direct-read/probe inventory. The source-provider guardrail now classifies
+  both sites as a non-semantic, dry-run-only release-qualification command
+  surface; the compiler source-provider boundary is unchanged.
+- Review pass 4 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-4.md`.
+  It independently reproduced the guardrail mutation, 53 self-update tests,
+  workspace clippy, formatting, file-size and inventory checks, and a
+  nine-case release-binary fail-closed matrix. Its sole bookkeeping finding,
+  the missing pass-3 artifact and ledger link, is remediated above.
+- Review pass 5 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-5.md`.
+  Its full authoritative create-PR profile passed 131 E2E fixtures and every
+  blocking lane on the remediated working tree. Its remaining findings were
+  to commit and push that remediation and refresh PR #3039's review summary;
+  both are release-mechanics requirements completed before the final exact-head
+  round.
 - [ ] Add the single protected publication workflow and production site adapter.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.

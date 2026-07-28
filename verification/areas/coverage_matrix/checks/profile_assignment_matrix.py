@@ -11,6 +11,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[4]
 AREA_ROOT = REPO_ROOT / "verification" / "areas" / "coverage_matrix"
 MATRIX_PATH = AREA_ROOT / "profile_assignment_matrix.json"
+SURFACE_MATRIX_PATH = AREA_ROOT / "compiler_surface_matrix.json"
 PROFILES_DIR = REPO_ROOT / "verification" / "profiles"
 AREA_ROOTS = REPO_ROOT / "verification" / "areas"
 PROFILE_NAMES = ("create-pr", "merge", "nightly", "release")
@@ -26,6 +27,7 @@ def main() -> int:
         errors.append("profile_assignment_matrix.json must define non-empty rows")
 
     area_suites = load_area_suites(errors)
+    release_suites = load_release_surface_suites(area_suites, errors)
     profiles = {profile: load_profile(profile, errors) for profile in PROFILE_NAMES}
     profile_suites = {
         profile: selected_area_suite_tokens(payload)
@@ -60,6 +62,25 @@ def main() -> int:
                 profile_suites.get(profile, set()),
                 errors,
             )
+        has_release_suite = surface_id in release_suites
+        validate_release_divergence_declaration(
+            surface_id,
+            assignments.get("nightly", []),
+            assignments.get("release", []),
+            has_release_suite,
+            errors,
+        )
+        if has_release_suite:
+            validate_release_suite_alignment(
+                surface_id,
+                release_suites[surface_id],
+                assignments.get("release", []),
+                errors,
+            )
+
+    missing_release_rows = sorted(set(release_suites).difference(seen))
+    for surface_id in missing_release_rows:
+        errors.append(f"{surface_id}: release_suite has no profile assignment row")
 
     if errors:
         for error in errors:
@@ -107,6 +128,31 @@ def load_area_suites(errors: list[str]) -> dict[str, set[str]]:
     return suites
 
 
+def load_release_surface_suites(
+    area_suites: dict[str, set[str]],
+    errors: list[str],
+) -> dict[str, list[str]]:
+    payload = load_json(SURFACE_MATRIX_PATH, errors)
+    rows = payload.get("rows", [])
+    if not isinstance(rows, list):
+        errors.append("compiler_surface_matrix.json must define a rows array")
+        return {}
+    release_suites: dict[str, list[str]] = {}
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict) or "release_suite" not in row:
+            continue
+        surface_id = require_string(row, "surface_id", f"surface rows[{index}]", errors)
+        if not surface_id:
+            continue
+        raw = row.get("release_suite")
+        if not isinstance(raw, str):
+            continue
+        tokens = [part.strip() for part in raw.split(",") if part.strip()]
+        validate_expected_tokens(surface_id, "release_suite", tokens, area_suites, errors)
+        release_suites[surface_id] = tokens
+    return release_suites
+
+
 def selected_area_suite_tokens(profile: dict[str, Any]) -> set[str]:
     tokens: set[str] = set()
     for selection in profile.get("selected_areas", []):
@@ -152,6 +198,46 @@ def validate_row_membership(
     for token in expected:
         if is_area_suite_token(token) and token not in actual:
             errors.append(f"{surface_id}: {profile} omits required suite {token}")
+
+
+def validate_release_suite_alignment(
+    surface_id: str,
+    advertised: list[str],
+    assigned: list[Any],
+    errors: list[str],
+) -> None:
+    assigned_tokens = {
+        token for token in assigned if isinstance(token, str) and is_area_suite_token(token)
+    }
+    advertised_tokens = {token for token in advertised if is_area_suite_token(token)}
+    if advertised_tokens != assigned_tokens:
+        errors.append(
+            f"{surface_id}: release_suite does not match release profile assignment: "
+            f"advertised={sorted(advertised_tokens)} assigned={sorted(assigned_tokens)}"
+        )
+
+
+def validate_release_divergence_declaration(
+    surface_id: str,
+    nightly: list[Any],
+    release: list[Any],
+    has_release_suite: bool,
+    errors: list[str],
+) -> None:
+    nightly_tokens = {
+        token for token in nightly if isinstance(token, str) and is_area_suite_token(token)
+    }
+    release_tokens = {
+        token for token in release if isinstance(token, str) and is_area_suite_token(token)
+    }
+    if nightly_tokens != release_tokens and not has_release_suite:
+        errors.append(
+            f"{surface_id}: release assignment diverges from nightly without release_suite"
+        )
+    if nightly_tokens == release_tokens and has_release_suite:
+        errors.append(
+            f"{surface_id}: release_suite is declared without a profile assignment divergence"
+        )
 
 
 def is_area_suite_token(token: Any) -> bool:

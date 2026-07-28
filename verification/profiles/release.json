@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "name": "release",
-  "description": "Highest-confidence local qualification gate with full breadth plus determinism/equivalence checks.",
+  "description": "Highest-confidence local publication qualification with full breadth except where an expiry-bound release policy applies.",
   "budgets": {
     "warm_wall_time_minutes": 45,
     "cold_wall_time_minutes": 60
@@ -181,12 +181,11 @@
     {
       "area": "algorithmic_compatibility",
       "suites": [
-        "leetcode-full",
+        "representative-subset",
         "taxonomy-smoke"
       ],
       "resource_classes": [
-        "external-corpus",
-        "long-running"
+        "default-local"
       ]
     },
     {

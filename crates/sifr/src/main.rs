@@ -27,6 +27,7 @@ mod python_dlpack_certification_cli;
 mod python_runtime_context;
 mod self_update_cli;
 mod self_update_metadata;
+mod self_update_metadata_source;
 mod self_update_receipt;
 mod self_update_runner;
 mod sysroot_cli;

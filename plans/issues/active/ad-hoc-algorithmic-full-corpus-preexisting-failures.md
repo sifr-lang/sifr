@@ -4,13 +4,21 @@
 
 Active non-blocking follow-up created from the Rust-interop
 `certification_0` validation on 2026-07-26. The failures predate that
-milestone, are outside its Rust-interop scope, and do not block
-`certification_0`, Phase 40, or stable-channel Rust-interop certification.
+milestone, are outside Rust interop and stable-release-governance scope, and do
+not block `certification_0`, Phase 40, or stable-channel Rust-interop
+certification.
 The durable issue was established in
 [PR #3029](https://github.com/sifr-lang/sifr/pull/3029).
 
-No failure is suppressed or reclassified by the Rust-interop work. Remediation
-belongs in separate focused PRs owned by this issue.
+No failure is suppressed or reclassified by the Rust-interop work. Phase 40
+keeps the complete pinned corpus blocking in nightly and uses the already
+blocking representative subset plus the taxonomy self-test for canonical
+release qualification. Remediation belongs in separate focused PRs owned by
+this issue. Restoring the full corpus to release qualification is part of this
+issue's closeout, not a Phase 40 prerequisite.
+The release-profile divergence expires on 2026-10-31. If remediation is not
+complete by then, readiness fails closed until a separately reviewed decision
+either restores the full corpus or renews the deadline with current evidence.
 
 ## Preserved Evidence
 
@@ -58,6 +66,16 @@ The failing fixture slugs are:
 - `1489_find_critical_and_pseudo_critical_edges_in_minimum_spanning_tree`
 - `2402_meeting_rooms_iii`
 
+Phase 40 reproduced the set exactly on source
+`c17f3c7d1ea1ed97ca125eb7a43344b30cf9413b`. The canonical release attempt
+passed coverage, core guardrails, diagnostics, CPython differential, all 25
+Python-interop variants, Rust interop, frontend syntax guardrails, all 48
+developer-tooling variants, documentation, and `performance_budget_checks` in
+`full` mode. It then reported the same 20 failures among 412 algorithmic area
+variants. This independent reproduction is the evidence for separating the
+nightly full-corpus remediation signal from stable-channel release
+qualification.
+
 Representative diagnostics include unknown `Any` hash/equality capability,
 mutable-borrow representation changes, unavailable generated total `Ord`, and
 structural-equality mismatches between concrete and `Any` containers. The
@@ -69,8 +87,10 @@ this issue is the durable repository record.
 - Diagnose each failure against the current language contract.
 - Group fixes by compiler concern and ownership boundary.
 - Implement root-cause compiler or fixture corrections in focused PRs.
-- Preserve the full-corpus gate as blocking; do not add baselines, exclusions,
-  fallback behavior, or Rust-interop-specific exceptions.
+- Preserve the full-corpus gate as blocking in nightly; do not add baselines,
+  exclusions, fallback behavior, or area-specific exceptions.
+- Keep the release profile's representative subset and taxonomy self-test
+  blocking until this issue closes.
 - Name any associated demo after the capability it demonstrates. Demo names
   must not contain a phase number or phase name.
 - This user-directed naming rule supersedes the project-workflow skill's
@@ -84,15 +104,17 @@ this issue is the durable repository record.
 | --- | --- | --- |
 | Failure diagnosis and root-cause grouping | pending | all 20 failures remain preserved above |
 | Focused remediation PR waves | blocked | starts after diagnosis groups establish reviewable compiler ownership boundaries |
-| Full-corpus closeout | blocked | starts after every remediation wave merges |
+| Full-corpus closeout | blocked | starts after every remediation wave merges; includes restoring `leetcode-full` to the release profile |
 
 ## Acceptance Criteria
 
 - [ ] Every listed fixture passes the canonical full-corpus algorithmic suite.
 - [ ] The current canonical corpus count passes without a baseline,
   suppression, exclusion, or non-blocking reclassification.
-- [ ] Both nightly and release profiles pass their complete algorithmic-
-  compatibility lane locally.
+- [ ] The nightly profile passes the complete algorithmic-compatibility lane
+  locally.
+- [ ] After the corpus is green, `leetcode-full` is restored to the release
+  profile and the release lane passes locally.
 - [ ] Focused compiler tests cover each corrected root-cause category.
 - [ ] Every associated demo uses a capability-based name containing no phase
   number or phase name.
