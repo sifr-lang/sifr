@@ -19,6 +19,7 @@ sys.path.insert(0, str(AREA_ROOT))
 from governance import (  # noqa: E402
     GovernanceError,
     generate_site_release_facts,
+    materialize_stable_prepare,
     validate_bootstrap_evidence,
     validate_drill_evidence,
     validate_incident_request,
@@ -35,6 +36,7 @@ from governance import (  # noqa: E402
     validate_site_publication_facts,
     validate_site_release_facts,
     validate_stable_mutation_evidence,
+    validate_stable_prepare_summary,
 )
 from governance.common import (  # noqa: E402
     load_json_strict,
@@ -78,6 +80,7 @@ def parse_args() -> argparse.Namespace:
             "self-version",
             "site-publication-facts",
             "stable-index-mutation-evidence",
+            "stable-publication-prepare",
         ),
     )
     validate.add_argument("--input", required=True)
@@ -185,6 +188,22 @@ def parse_args() -> argparse.Namespace:
     stable_index.add_argument("--expected-sha256", required=True)
     stable_index.add_argument("--proposed-generation", required=True, type=int)
     stable_index.add_argument("--out", required=True)
+    stable_prepare = commands.add_parser("prepare-stable-publication")
+    stable_prepare.add_argument(
+        "--operation",
+        required=True,
+        choices=("ga-activation", "normal"),
+    )
+    stable_prepare.add_argument("--mode", required=True, choices=("initial", "resume"))
+    stable_prepare.add_argument("--evidence-root", required=True)
+    stable_prepare.add_argument("--evidence-commit", required=True)
+    stable_prepare.add_argument("--candidate-path", required=True)
+    stable_prepare.add_argument("--expected-plan-sha256", required=True)
+    stable_prepare.add_argument("--source-root", required=True)
+    stable_prepare.add_argument("--live-index", required=True)
+    stable_prepare.add_argument("--artifact-root", required=True)
+    stable_prepare.add_argument("--proposed-generation", required=True, type=int)
+    stable_prepare.add_argument("--out", required=True)
     approvers = commands.add_parser("resolve-publication-approvers")
     approvers.add_argument("--approvals", required=True)
     approvers.add_argument("--initiator", required=True)
@@ -221,6 +240,8 @@ def main() -> int:
             generate_schema_bootstrap_index(args)
         elif args.command == "plan-stable-index":
             plan_stable_index(args)
+        elif args.command == "prepare-stable-publication":
+            prepare_stable_publication(args)
         elif args.command == "resolve-publication-approvers":
             resolve_publication_approvers(args)
         else:
@@ -250,6 +271,7 @@ def validate_command(args: argparse.Namespace) -> None:
         "self-version": validate_self_version,
         "site-publication-facts": validate_site_publication_facts,
         "stable-index-mutation-evidence": validate_stable_mutation_evidence,
+        "stable-publication-prepare": validate_stable_prepare_summary,
     }
     if args.kind == "protected-drill-evidence" and args.expected_drill_scenario:
         validate_drill_evidence(
@@ -505,6 +527,22 @@ def plan_stable_index(args: argparse.Namespace) -> None:
         evidence,
         refuse_existing=True,
     )
+
+
+def prepare_stable_publication(args: argparse.Namespace) -> None:
+    summary = materialize_stable_prepare(
+        operation=args.operation,
+        mode=args.mode,
+        evidence_root=Path(args.evidence_root),
+        evidence_commit=args.evidence_commit,
+        candidate_path=args.candidate_path,
+        expected_plan_sha256=args.expected_plan_sha256,
+        source_root=Path(args.source_root),
+        live_index_path=Path(args.live_index),
+        artifact_root=Path(args.artifact_root),
+        proposed_generation=args.proposed_generation,
+    )
+    write_canonical_json(Path(args.out), summary, refuse_existing=True)
 
 
 def resolve_publication_approvers(args: argparse.Namespace) -> None:

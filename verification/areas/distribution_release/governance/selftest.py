@@ -13,15 +13,9 @@ from .artifact_index import validate_qualification_artifact_index
 from .common import (
     GovernanceError,
     TARGETS,
-    canonical_json_bytes,
     load_json_strict,
-    sha256_bytes,
 )
-from .evidence_custody import (
-    require_comparison_base,
-    validate_candidate_directory,
-    validate_changed_path_set,
-)
+from .evidence_custody_selftest import run_evidence_custody_mutations
 from .incident import validate_incident_request, validate_incident_signoff
 from .release_index import (
     propose_preview_release,
@@ -243,6 +237,7 @@ def valid_report() -> dict[str, Any]:
             ("distribution_release", "incident-governance"),
             ("distribution_release", "epoch-bootstrap"),
             ("distribution_release", "protected-drill"),
+            ("distribution_release", "stable-prepare"),
         ],
     }
     steps = []
@@ -301,6 +296,7 @@ def valid_report() -> dict[str, Any]:
                             "incident-governance",
                             "epoch-bootstrap",
                             "protected-drill",
+                            "stable-prepare",
                         },
                     ),
                 )
@@ -667,6 +663,22 @@ def test_artifact_index_mutations() -> None:
         validate_qualification_artifact_index,
         mutate(
             payload,
+            lambda item: item["artifacts"][4].update({"workflow_artifact_id": 1}),
+        ),
+    )
+    expect_rejected(
+        validate_qualification_artifact_index,
+        mutate(
+            payload,
+            lambda item: item["artifacts"][1].update(
+                {"expires_at": "2026-08-21T00:00:00Z"}
+            ),
+        ),
+    )
+    expect_rejected(
+        validate_qualification_artifact_index,
+        mutate(
+            payload,
             lambda item: item["artifacts"].__setitem__(
                 slice(None),
                 [
@@ -799,48 +811,12 @@ def test_release_report_mutations() -> None:
 
 
 def test_evidence_custody_mutations() -> None:
-    expect_rejected(
-        lambda value: require_comparison_base(value, base_ref="missing"),
-        "",
+    run_evidence_custody_mutations(
+        valid_plan=valid_plan,
+        valid_report=valid_report,
+        source_commit=COMMIT,
+        retained_digest=SHA_A,
     )
-    candidate = "plans/releases/candidates/0.1.0/stable-release-plan.json"
-    validate_changed_path_set({candidate})
-    validate_changed_path_set({candidate, "plans/releases/README.md"})
-    path_mutations = [
-        {candidate, "crates/sifr/src/main.rs"},
-        {candidate, "plans/releases/candidates/0.1.1/stable-release-plan.json"},
-        {"plans/releases/candidates/0.1.0/unexpected.json"},
-    ]
-    for paths in path_mutations:
-        try:
-            validate_changed_path_set(paths)
-        except GovernanceError:
-            continue
-        raise AssertionError(f"invalid evidence custody paths passed: {paths}")
-
-    with tempfile.TemporaryDirectory() as directory:
-        candidate_dir = Path(directory) / "0.1.0"
-        candidate_dir.mkdir()
-        report = valid_report()
-        report_bytes = canonical_json_bytes(report)
-        qualification = qualification_index()
-        qualification_bytes = canonical_json_bytes(qualification)
-        plan = valid_plan()
-        plan["release_profile_report"]["sha256"] = sha256_bytes(report_bytes)
-        plan["qualification_artifact_index"]["sha256"] = sha256_bytes(qualification_bytes)
-        (candidate_dir / "stable-release-plan.json").write_bytes(canonical_json_bytes(plan))
-        (candidate_dir / "release-profile-report.json").write_bytes(report_bytes)
-        (candidate_dir / "qualification-artifact-index.json").write_bytes(qualification_bytes)
-        validate_candidate_directory(candidate_dir)
-        (candidate_dir / "release-profile-report.json").write_bytes(
-            canonical_json_bytes({**report, "report_id": "tampered"})
-        )
-        try:
-            validate_candidate_directory(candidate_dir)
-        except GovernanceError:
-            pass
-        else:
-            raise AssertionError("candidate report digest mismatch passed custody")
 
 
 def test_strict_loader_rejects_duplicate_keys() -> None:

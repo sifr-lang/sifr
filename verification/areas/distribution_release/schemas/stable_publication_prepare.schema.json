@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Stable publication protected-prepare summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "operation",
+    "mode",
+    "version",
+    "evidence",
+    "source",
+    "release_report",
+    "qualification",
+    "live_index",
+    "mutation",
+    "artifacts",
+    "marketplace",
+    "site"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "operation": {"enum": ["ga-activation", "normal"]},
+    "mode": {"enum": ["initial", "resume"]},
+    "version": {"$ref": "#/$defs/version"},
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit", "candidate_path", "plan_sha256"],
+      "properties": {
+        "commit": {"$ref": "#/$defs/commit"},
+        "candidate_path": {
+          "type": "string",
+          "pattern": "^plans/releases/candidates/[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "plan_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit", "submodules"],
+      "properties": {
+        "commit": {"$ref": "#/$defs/commit"},
+        "submodules": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {"$ref": "#/$defs/commit"}
+        }
+      }
+    },
+    "release_report": {"$ref": "#/$defs/reference"},
+    "qualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sha256", "run_id", "run_attempt", "expires_at"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "run_id": {"type": "integer", "minimum": 1},
+        "run_attempt": {"type": "integer", "minimum": 1},
+        "expires_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "live_index": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generation", "sha256"],
+      "properties": {
+        "generation": {"type": "integer", "minimum": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "mutation": {"$ref": "stable_index_mutation_evidence.schema.json"},
+    "artifacts": {
+      "type": "object",
+      "minProperties": 20,
+      "propertyNames": {
+        "enum": [
+          "binary-archive-aarch64-apple-darwin",
+          "binary-archive-aarch64-unknown-linux-gnu",
+          "binary-archive-x86_64-apple-darwin",
+          "binary-archive-x86_64-unknown-linux-gnu",
+          "checksum-aarch64-apple-darwin",
+          "checksum-aarch64-unknown-linux-gnu",
+          "checksum-x86_64-apple-darwin",
+          "checksum-x86_64-unknown-linux-gnu",
+          "checksums",
+          "editor-qualification-report",
+          "installer",
+          "qualification-report-aarch64-apple-darwin",
+          "qualification-report-aarch64-unknown-linux-gnu",
+          "qualification-report-x86_64-apple-darwin",
+          "qualification-report-x86_64-unknown-linux-gnu",
+          "sysroot-aarch64-apple-darwin",
+          "sysroot-aarch64-unknown-linux-gnu",
+          "sysroot-x86_64-apple-darwin",
+          "sysroot-x86_64-unknown-linux-gnu",
+          "vsix"
+        ]
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "sha256",
+          "size_bytes",
+          "workflow_artifact_id",
+          "workflow_artifact_name"
+        ],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "sha256": {"$ref": "#/$defs/sha256"},
+          "size_bytes": {"type": "integer", "minimum": 1},
+          "workflow_artifact_id": {"type": "integer", "minimum": 1},
+          "workflow_artifact_name": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "marketplace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["publisher", "extension", "version", "vsix_sha256"],
+      "properties": {
+        "publisher": {"type": "string", "minLength": 1},
+        "extension": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "vsix_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "site": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "base_commit"],
+      "properties": {
+        "repository": {"const": "sifr-lang/sifr-website"},
+        "base_commit": {"$ref": "#/$defs/commit"}
+      }
+    }
+  },
+  "$defs": {
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "not": {
+        "const": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sha256"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

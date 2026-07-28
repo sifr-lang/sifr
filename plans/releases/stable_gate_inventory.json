@@ -110,9 +110,9 @@
       "id": "protected-publication-prepare",
       "location": ".github/workflows/release-publication-prepare.yml",
       "owner": "release/distribution",
-      "current_behavior": "revalidates exact source, release artifacts, current index identity, and staged alpha evidence with read-only permissions and emits a digest-bound 30-day summary",
+      "current_behavior": "revalidates exact preview/bootstrap inputs or the exact stable candidate evidence commit, clean source/submodules, unexpired qualification uploads, supporting reports, current index identity, Marketplace bytes, and site base with read-only permissions and emits a digest-bound 30-day summary",
       "activation_boundary": "protected-publication",
-      "disposition": "remains read-only, has no protected environment or production secret, and supplies the reviewer-visible bytes consumed by publish"
+      "disposition": "remains read-only, has no protected environment or production secret, and supplies the exact reviewer-visible stable mutation proposal and transported bytes consumed by publish"
     },
     {
       "id": "schema-v2-preview-epoch-bootstrap",
@@ -262,9 +262,9 @@
       "id": "release-profile-stable-gates",
       "location": "verification/profiles/release.json",
       "owner": "compiler/verification",
-      "current_behavior": "executes distribution, tooling, documentation, and Rust release gates",
+      "current_behavior": "executes distribution, stable prepare, tooling, documentation, and Rust release gates",
       "activation_boundary": "architecture-lock",
-      "disposition": "durably executes incident-governance, evidence-custody, editor-release expansion, documentation ga-release, and Rust stable-candidate"
+      "disposition": "durably executes incident-governance, evidence-custody, protected-drill, stable-prepare, editor-release expansion, documentation ga-release, and Rust stable-candidate"
     }
   ]
 }

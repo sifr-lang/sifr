@@ -9,8 +9,14 @@ import sys
 from pathlib import Path
 
 from .common import GovernanceError, load_json_strict, sha256_bytes
+from .artifact_index import validate_qualification_artifact_index
 from .incident_evidence import validate_incident_evidence_commit
 from .incident import validate_incident_request, validate_incident_signoff
+from .planner import (
+    stable_claim_ids,
+    validate_documentation_report,
+    validate_rust_candidate_result,
+)
 from .release_plan import validate_release_plan, validate_release_signoff
 from .release_report import validate_release_profile_report
 
@@ -18,8 +24,9 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 RELEASES_ROOT = REPO_ROOT / "plans" / "releases"
 CANDIDATE_PATH_RE = re.compile(
     r"^plans/releases/candidates/([0-9]+\.[0-9]+\.[0-9]+)/"
-    r"(stable-release-plan|release-profile-report|qualification-artifact-index|"
-    r"stable-release-signoff)\.json$"
+    r"((stable-release-plan|release-profile-report|qualification-artifact-index|"
+    r"stable-support-claims|rust-validation-report|documentation-report|"
+    r"stable-release-signoff)\.json|release-notes\.md)$"
 )
 INCIDENT_PATH_RE = re.compile(
     r"^plans/releases/incidents/([a-z0-9][a-z0-9-]{2,63})/"
@@ -164,24 +171,46 @@ def validate_existing_evidence() -> None:
 
 def validate_candidate_directory(directory: Path) -> None:
     expected_version = directory.name
-    files = {path.name for path in directory.iterdir() if path.is_file()}
+    if directory.is_symlink() or not directory.is_dir():
+        raise GovernanceError(f"{directory}: candidate evidence must be a directory")
+    entries = list(directory.iterdir())
+    unsafe = sorted(
+        path.name for path in entries if path.is_symlink() or not path.is_file()
+    )
+    if unsafe:
+        raise GovernanceError(
+            f"{directory}: unsupported candidate evidence entries: {', '.join(unsafe)}"
+        )
+    files = {path.name for path in entries}
     allowed = {
         "stable-release-plan.json",
         "release-profile-report.json",
         "qualification-artifact-index.json",
+        "stable-support-claims.json",
+        "rust-validation-report.json",
+        "documentation-report.json",
+        "release-notes.md",
         "stable-release-signoff.json",
     }
     unknown = sorted(files.difference(allowed))
     if unknown:
-        raise GovernanceError(f"{directory}: unsupported evidence files: {', '.join(unknown)}")
+        raise GovernanceError(
+            f"{directory}: unsupported evidence files: {', '.join(unknown)}"
+        )
     required = {
         "stable-release-plan.json",
         "release-profile-report.json",
         "qualification-artifact-index.json",
+        "stable-support-claims.json",
+        "rust-validation-report.json",
+        "documentation-report.json",
+        "release-notes.md",
     }
     missing = sorted(required.difference(files))
     if missing:
-        raise GovernanceError(f"{directory}: missing candidate evidence: {', '.join(missing)}")
+        raise GovernanceError(
+            f"{directory}: missing candidate evidence: {', '.join(missing)}"
+        )
 
     plan_path = directory / "stable-release-plan.json"
     report_path = directory / "release-profile-report.json"
@@ -191,12 +220,13 @@ def validate_candidate_directory(directory: Path) -> None:
         load_json_strict(report_path, require_canonical=True),
         canonical_bytes=report_path.read_bytes(),
     )
-    from .artifact_index import validate_qualification_artifact_index
-
     qualification = validate_qualification_artifact_index(
         load_json_strict(qualification_path, require_canonical=True)
     )
-    if plan["version"] != expected_version or report["source"]["commit"] != plan["source_commit"]:
+    if (
+        plan["version"] != expected_version
+        or report["source"]["commit"] != plan["source_commit"]
+    ):
         raise GovernanceError(f"{directory}: candidate identity/source mismatch")
     if qualification["candidate_version"] != expected_version:
         raise GovernanceError(f"{directory}: qualification candidate version mismatch")
@@ -204,18 +234,57 @@ def validate_candidate_directory(directory: Path) -> None:
         raise GovernanceError(f"{directory}: qualification source mismatch")
     if qualification["submodules"] != plan["submodules"]:
         raise GovernanceError(f"{directory}: qualification submodule mismatch")
-    if plan["release_profile_report"]["sha256"] != sha256_bytes(report_path.read_bytes()):
+    if plan["release_profile_report"]["sha256"] != sha256_bytes(
+        report_path.read_bytes()
+    ):
         raise GovernanceError(f"{directory}: release report digest mismatch")
     if plan["qualification_artifact_index"]["sha256"] != sha256_bytes(
         qualification_path.read_bytes()
     ):
-        raise GovernanceError(f"{directory}: qualification artifact index digest mismatch")
+        raise GovernanceError(
+            f"{directory}: qualification artifact index digest mismatch"
+        )
+    claims_path = directory / "stable-support-claims.json"
+    if plan["rust_interop"]["stable_support_claims_sha256"] != sha256_bytes(
+        claims_path.read_bytes()
+    ):
+        raise GovernanceError(f"{directory}: stable support claims digest mismatch")
+    claims = load_json_strict(claims_path, require_canonical=True)
+    if plan["rust_interop"]["advertised_claim_ids"] != stable_claim_ids(claims):
+        raise GovernanceError(f"{directory}: stable support claim ids drifted")
+    rust_report_path = directory / "rust-validation-report.json"
+    if plan["rust_interop"]["validation_report_sha256"] != sha256_bytes(
+        rust_report_path.read_bytes()
+    ):
+        raise GovernanceError(f"{directory}: Rust validation report digest mismatch")
+    validate_rust_candidate_result(
+        load_json_strict(rust_report_path, require_canonical=True),
+        expected_digest=plan["rust_interop"]["validation_report_sha256"],
+        release_report=report,
+    )
+    documentation_path = directory / "documentation-report.json"
+    if plan["documentation_report"]["sha256"] != sha256_bytes(
+        documentation_path.read_bytes()
+    ):
+        raise GovernanceError(f"{directory}: documentation report digest mismatch")
+    documentation = validate_documentation_report(
+        load_json_strict(documentation_path, require_canonical=True),
+        source_commit=plan["source_commit"],
+    )
+    if documentation["report_id"] != plan["documentation_report"]["id"]:
+        raise GovernanceError(f"{directory}: documentation report id mismatch")
+    if plan["release_notes_sha256"] != sha256_bytes(
+        (directory / "release-notes.md").read_bytes()
+    ):
+        raise GovernanceError(f"{directory}: release notes digest mismatch")
     signoff_path = directory / "stable-release-signoff.json"
     if signoff_path.is_file():
-        signoff = validate_release_signoff(load_json_strict(signoff_path, require_canonical=True))
-        if signoff["version"] != expected_version or signoff["plan_sha256"] != sha256_bytes(
-            plan_path.read_bytes()
-        ):
+        signoff = validate_release_signoff(
+            load_json_strict(signoff_path, require_canonical=True)
+        )
+        if signoff["version"] != expected_version or signoff[
+            "plan_sha256"
+        ] != sha256_bytes(plan_path.read_bytes()):
             raise GovernanceError(f"{directory}: stable sign-off provenance mismatch")
 
 

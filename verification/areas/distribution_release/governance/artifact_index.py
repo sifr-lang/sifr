@@ -123,6 +123,9 @@ def validate_qualification_artifact_index(
     target_coverage = {kind: set() for kind in TARGET_KINDS}
     singleton_counts = {kind: 0 for kind in SINGLETON_KINDS}
     report_ids: set[str] = set()
+    workflow_id_to_name: dict[int, str] = {}
+    workflow_name_to_id: dict[str, int] = {}
+    workflow_id_to_expiry: dict[int, str] = {}
     for position, value in enumerate(artifacts):
         location = f"$.artifacts[{position}]"
         artifact = require_object(value, location)
@@ -153,7 +156,7 @@ def validate_qualification_artifact_index(
         name = require_nonempty_string(artifact["name"], f"{location}.name")
         require_sha256(artifact["sha256"], f"{location}.sha256")
         require_positive_int(artifact["size_bytes"], f"{location}.size_bytes")
-        require_positive_int(
+        workflow_artifact_id = require_positive_int(
             artifact["workflow_artifact_id"],
             f"{location}.workflow_artifact_id",
         )
@@ -165,6 +168,16 @@ def validate_qualification_artifact_index(
             fail(
                 f"{location}.workflow_artifact_name",
                 "must be a single governed upload name",
+            )
+        if (
+            workflow_id_to_name.setdefault(workflow_artifact_id, workflow_name)
+            != workflow_name
+            or workflow_name_to_id.setdefault(workflow_name, workflow_artifact_id)
+            != workflow_artifact_id
+        ):
+            fail(
+                location,
+                "workflow artifact id/name mapping must be one-to-one",
             )
         artifact_expiry = require_nonempty_string(
             artifact["expires_at"],
@@ -182,6 +195,14 @@ def validate_qualification_artifact_index(
             fail(
                 f"{location}.expires_at",
                 "must not expire before the workflow qualification boundary",
+            )
+        if (
+            workflow_id_to_expiry.setdefault(workflow_artifact_id, artifact_expiry)
+            != artifact_expiry
+        ):
+            fail(
+                f"{location}.expires_at",
+                "must equal the expiry of its governed workflow upload",
             )
         expected_prefix = (
             f"sifr-stable-candidate-{index['candidate_version']}-"
@@ -239,6 +260,8 @@ def validate_qualification_artifact_index(
             "$.artifacts",
             "must contain the exact governed qualification artifact identifiers",
         )
+    if len(workflow_id_to_name) != 6:
+        fail("$.artifacts", "must bind exactly six workflow artifact uploads")
     for kind, observed in target_coverage.items():
         if observed != set(TARGETS):
             missing = sorted(set(TARGETS).difference(observed))

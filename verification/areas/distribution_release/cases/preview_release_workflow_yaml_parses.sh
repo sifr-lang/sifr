@@ -96,7 +96,7 @@ prepare_required = (
     "permissions:\n  actions: read\n  contents: read",
     "prepare governed publication",
     'summary_artifact_name="publication-prepare-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"',
-    "name: ${{ steps.summary.outputs.summary_artifact_name }}",
+    "name: ${{ steps.outputs.outputs.summary_artifact_name }}",
     "one-time bootstrap source is not the exact opaque v1 asset",
     "--kind schema-bootstrap-evidence",
     "retention-days: 30",

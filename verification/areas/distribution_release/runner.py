@@ -59,12 +59,16 @@ def main(argv: list[str] | None = None) -> int:
     drill_suite_selected = any(
         str(suite["name"]) == "protected-drill" for suite in selected
     )
+    stable_prepare_selected = any(
+        str(suite["name"]) == "stable-prepare" for suite in selected
+    )
     suite_results = [
         run_suite(
             suite,
             include_incident=not incident_suite_selected,
             include_epoch_bootstrap=not epoch_suite_selected,
             include_protected_drill=not drill_suite_selected,
+            include_stable_prepare=not stable_prepare_selected,
         )
         for suite in selected
     ]
@@ -124,6 +128,7 @@ def run_suite(
     include_incident: bool = True,
     include_epoch_bootstrap: bool = True,
     include_protected_drill: bool = True,
+    include_stable_prepare: bool = True,
 ) -> dict[str, Any]:
     suite_name = str(suite["name"])
     case = validate_suite_case(suite)
@@ -154,6 +159,13 @@ def run_suite(
                 "governance.protected_drill_selftest",
                 "protected-stable-release-drill",
                 scrub_credentials=True,
+            )
+        ]
+    elif suite_name == "stable-prepare":
+        variants = [
+            run_python_module(
+                "governance.stable_prepare_selftest",
+                "stable-publication-prepare",
             )
         ]
     elif suite_name == "qualification":
@@ -190,6 +202,13 @@ def run_suite(
                         scrub_credentials=True,
                     )
                 )
+            if include_stable_prepare:
+                variants.append(
+                    run_python_module(
+                        "governance.stable_prepare_selftest",
+                        "stable-publication-prepare",
+                    )
+                )
     failures = sum(1 for variant in variants if variant["status"] == "fail")
     return {
         "name": suite_name,
@@ -220,6 +239,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
         "incident-governance",
         "epoch-bootstrap",
         "protected-drill",
+        "stable-prepare",
     }:
         raise SystemExit(f"unsupported distribution_release suite: {suite_name}")
     cases = suite.get("cases", [])
@@ -231,6 +251,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
         "incident-governance": "distribution-incident-recovery",
         "epoch-bootstrap": "distribution-schema-bootstrap",
         "protected-drill": "distribution-protected-drill",
+        "stable-prepare": "distribution-stable-prepare",
         "qualification": "distribution-stable-qualification",
     }.get(suite_name, "distribution-case-directory")
     if str(case.get("command")) != expected_command:
@@ -241,6 +262,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
         "incident-governance": AREA_ROOT / "governance" / "incident_recovery_selftest.py",
         "epoch-bootstrap": AREA_ROOT / "governance" / "schema_bootstrap_selftest.py",
         "protected-drill": AREA_ROOT / "governance" / "protected_drill_selftest.py",
+        "stable-prepare": AREA_ROOT / "governance" / "stable_prepare_selftest.py",
         "qualification": AREA_ROOT / "governance" / "qualification_selftest.py",
     }.get(suite_name, CASES_ROOT)
     if entry != expected_entry or not entry.exists():

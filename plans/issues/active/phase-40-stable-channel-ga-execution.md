@@ -518,6 +518,58 @@ Review and upstream coordination ledger:
   It matched local, remote branch, and PR head at
   `774592acd140747c068bfe6f4752b34006e9664a`, rechecked the complete wave,
   found no actionable issue, and returned `SATISFIED`.
+- Frozen-head review pass 5 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-protected-drill-review-pass-5-frozen-pr-head-satisfied.md`.
+  It matched local, remote branch, and PR head at
+  `a5ffe3704bbdf71616f5edee6f08c9de34c3ac76`, confirmed the pass-4 archive
+  delta was documentation-only and truthful, and returned `SATISFIED`.
+- [PR #3041](https://github.com/sifr-lang/sifr/pull/3041) merged the protected
+  credential-free drill and stable index planning wave as
+  `f9837adb105f048ed56624c148ee83ecbd2a3d03`.
+- The next protected-publication wave adds a credential-free stable prepare
+  path for `ga-activation` and `normal`. It binds an exact evidence commit,
+  canonical candidate directory and plan digest, a separate clean exact source
+  checkout, at least seven full days of qualification lifetime, all 20
+  transported artifact identities from six write-once qualification uploads,
+  Rust/documentation/release-note evidence, Marketplace VSIX bytes, live index
+  identity, site base commit, and a deterministic proposed stable mutation.
+  The reusable workflow remains read-only and secret-free and retains the
+  reviewer-visible summary for 30 days. The named `stable-prepare` suite is
+  selected by merge, nightly, and release profiles and required by the release
+  report.
+- Stable-prepare review pass 1 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-prepare-review-pass-1-satisfied.md`.
+  Opus re-read every file after the in-review hardening, reproduced the
+  stable-prepare, governance, runner, combined 60-variant distribution,
+  coverage, workflow-contract, diff, and file-size gates, and found no
+  actionable correctness, provenance, extraction, schema, permission, or
+  compatibility issue. Its verdict binds the final reviewed workflow,
+  extractor, artifact-index, and prepare-core byte identities recorded in the
+  archive.
+- The authoritative `scripts/run_all_tests.sh --profile create-pr` gate passed
+  for the stable-prepare implementation, including every blocking lane and
+  131/131 E2E fixtures (`report_signature=7c39b8c1dd4fec7c`). The only
+  advisory was the already-indexed non-blocking warm wall-time variance; every
+  enforced step budget passed.
+- Exact PR-head stable-prepare review pass 2 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-prepare-review-pass-2-exact-pr-head-satisfied.md`.
+  It independently matched local, remote, and [PR #3043](https://github.com/sifr-lang/sifr/pull/3043)
+  at `a671c913116e6fa30073d6220abe639154b51e72`, reproduced the focused
+  gates, found no actionable issue, and returned `SATISFIED`.
+- Its non-blocking observations were hardened before the frozen-head review:
+  each governed upload now has one canonical expiry shared by all transported
+  entries and matched exactly to the authoritative GitHub artifact API,
+  the stable-prepare schema fixture passes the semantic validator, and the
+  extraction self-test pins pre-write rejection of uncompressed byte-count
+  drift. The focused 60-variant distribution run, stable-prepare 6/6,
+  governance 14/14, runner foundation, coverage readiness, schema/workflow
+  contracts, Ruff, diff, and file-size guardrails pass after these changes.
+- Frozen PR-head stable-prepare review pass 3 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-prepare-review-pass-3-frozen-pr-head-satisfied.md`.
+  It matched local, remote, and PR #3043 at
+  `55c6d960c4ea29b7b945df88d72573a6008c9651`, independently rechecked the
+  complete wave and all post-pass-2 hardening, reproduced the focused gates,
+  found no actionable issue, and returned `SATISFIED`.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
 - [ ] Exercise resume, stale generation, burned generation, rollback, and
