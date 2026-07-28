@@ -465,6 +465,11 @@ Review and upstream coordination ledger:
   baseline or waiver changed, and it is not a Phase 40 prerequisite.
 - Schema-v2 preview epoch bootstrap implementation is under review in
   [PR #3040](https://github.com/sifr-lang/sifr/pull/3040).
+- Exact PR-head bootstrap review pass 13 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-schema-bootstrap-review-pass-13-exact-pr-head-satisfied.md`.
+  It independently matched local, remote-branch, and PR head at
+  `e51491338e396e6b8f2d19345c9df68242e2b029`, re-ran the complete focused
+  gate set, found no actionable issue, and returned `VERDICT: SATISFIED`.
 - [x] Add the single protected publication workflow and production site adapter.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
