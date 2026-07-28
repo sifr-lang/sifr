@@ -346,6 +346,123 @@ Review and upstream coordination ledger:
   to commit and push that remediation and refresh PR #3039's review summary;
   both are release-mechanics requirements completed before the final exact-head
   round.
+- Exact pushed-head review pass 6 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-6-final-pr-head.md`.
+  It matched local, remote branch, and PR head
+  `36e20eeb166a7a241b9f71c5b2080dd9b01e8703`, re-ran every gate affected by
+  the final documentation commit, found no actionable issue, and returned
+  `VERDICT: SATISFIED`.
+- Qualification isolation merged through
+  [PR #3039](https://github.com/sifr-lang/sifr/pull/3039) as
+  `d8dd28a8013447365e3b1fab5a7422de5509ac3b`.
+- The schema-epoch bootstrap wave now has a read-only prepare workflow, a
+  `stable-release` environment boundary, immutable workflow-approval-history
+  validation that rejects the initiator, exact opaque pre-epoch digest/size
+  custody, fresh alpha staging, fresh beta plus generation-1 preview
+  activation, write-once bootstrap evidence, site reconciliation, and real
+  public install/self-update smoke. No pre-epoch payload fixture, parser,
+  migration, compatibility reader, or fallback is present.
+- Bootstrap review pass 1 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-schema-bootstrap-review-pass-1.md`.
+  Its `VERDICT: NOT SATISFIED` findings were remediated by making prepare
+  artifact selection rerun-safe, retaining prepare and alpha-stage
+  correlations in durable evidence, accepting and recording all distinct
+  non-initiating approvers, adding producer and schema mutation coverage,
+  failing on any public-smoke override, preserving site-run cancellation after
+  query failure, enforcing numeric ruleset identity, reducing the publication
+  workflow to 795 lines, and extending the 900-line guardrail to workflow YAML.
+- Bootstrap review pass 2 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-schema-bootstrap-review-pass-2.md`.
+  Its `VERDICT: NOT SATISFIED` findings were remediated by freezing all four
+  public-smoke output filenames and their shared workflow directory in the
+  contract test, directly testing wrong-stage and wrong-alpha staged evidence,
+  and checking the opaque pre-epoch digest and byte size agree across both
+  workflows, the semantic validator, and the JSON Schema.
+- Bootstrap review pass 3 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-schema-bootstrap-review-pass-3.md`.
+  Its `VERDICT: NOT SATISFIED` findings were remediated by proving both
+  site-workflow identity checks surround publication and dispatch, deduplicating
+  the named bootstrap self-test from the default full-area run, removing an
+  unused evidence serializer, using the installer's actual sysroot-isolation
+  variable, validating a positive alpha-stage instance against the JSON Schema,
+  and consolidating the bootstrap module's common imports.
+- Bootstrap review pass 4 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-schema-bootstrap-review-pass-4.md`.
+  Its `VERDICT: NOT SATISFIED` findings were remediated by assigning
+  `epoch-bootstrap` to merge, nightly, and release profiles and release-report
+  custody, documenting the named suite, and adding load-bearing negatives for
+  duplicate smoke IDs with distinct digests and forbidden beta data in an
+  alpha-stage record.
+- The review's live query-string preflight succeeded against the public
+  governance endpoint: the cache-busted URL returned the exact opaque
+  `channels.json` identity
+  `71b3243925670f56dc510b8f45b6614a622f58097a0fea9492f61d20dc4bf9ef`
+  at 105 bytes.
+- Bootstrap review pass 5 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-schema-bootstrap-review-pass-5.md`.
+  Its `VERDICT: NOT SATISFIED` findings were remediated with independent
+  semantic mutations for smoke length, duplicate and unknown smoke IDs,
+  evidence and prepare digests, case-folded approver uniqueness, and active
+  release status, plus a validly named tenth asset that makes the JSON Schema's
+  exact-nine bound load-bearing.
+- Bootstrap review pass 6 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-schema-bootstrap-review-pass-6.md`.
+  Its `VERDICT: NOT SATISFIED` findings were remediated by isolating the
+  short-smoke and valid-withdrawn-release cases and expanding the semantic
+  mutation matrix across run identity, approval presence/uniqueness, prepare,
+  alpha-stage and index digests, release-record custody, smoke membership and
+  exact object shapes.
+- Bootstrap review pass 7 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-schema-bootstrap-review-pass-7.md`.
+  Its `VERDICT: NOT SATISFIED` full-validator mutation sweep was remediated with
+  producer-path isolation for withdrawn records, source-commit disagreement,
+  and record-version disagreement, plus direct guards for opaque byte size,
+  wrapper shape, channel/version evidence, approver container/value types, and
+  empty approval initiator/login identities.
+- Bootstrap review pass 8 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-schema-bootstrap-review-pass-8.md`.
+  Its `VERDICT: NOT SATISFIED` full-validator sweep found one remaining masked
+  case: the scalar approver test repeated characters and hit uniqueness before
+  the array-container guard. The scalar is now `abc`, whose distinct characters
+  isolate and pin the container requirement; this also makes pass 7's ledgered
+  container/value claim accurate.
+- Bootstrap review pass 9 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-schema-bootstrap-review-pass-9.md`.
+  Its `VERDICT: NOT SATISFIED` widened whole-call mutation sweep found the beta
+  evidence validator was not independently pinned. The complete alpha mutation
+  set is now mirrored for beta: object shape, channel/version, source commit,
+  release-record digest, exact asset membership, and individual asset digests.
+- Bootstrap review pass 10 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-schema-bootstrap-review-pass-10-satisfied.md`.
+  Its widened 88-mutant whole-wave sweep independently re-ran every guard and
+  validator deletion, confirmed all 33 survivors are structurally masked by
+  pinned sibling guards, found no fail-open path, and returned
+  `VERDICT: SATISFIED` with no actionable findings.
+- The first authoritative create-PR run reached one unrelated transient LSP
+  transcript timeout; the exact replay passed immediately in 7.6 seconds and
+  the second full run passed it in 6 seconds. That second run then exposed two
+  real bootstrap-registration gaps: the verification runner still expected 12
+  governed release schemas and its production release-report fixture omitted
+  the newly required `epoch-bootstrap` suite. Both fixtures now include the
+  schema and suite, and the complete runner self-test passes.
+- Bootstrap review pass 11 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-schema-bootstrap-review-pass-11.md`.
+  Its `VERDICT: NOT SATISFIED` whole-wave registration sweep confirmed both
+  runner remediations, then found the new read-only prepare workflow was
+  omitted from the no-v1-residue contract. The forbidden reader, migration,
+  and fallback sweep now covers prepare, publication, and bootstrap workflows.
+- Bootstrap review pass 12 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-schema-bootstrap-review-pass-12-satisfied.md`.
+  It re-ran the full distribution area (110/110, with the bootstrap exactly
+  once), found no remaining actionable issue, and returned
+  `VERDICT: SATISFIED`.
+- The final create-PR profile completed all 19 Python-interop variants with
+  zero failures but exited on the host timing budget after that passing step
+  took 690.10 seconds against 600 seconds. Two preceding wave runs completed
+  the same functional step within budget at 456.79 and 455.79 seconds. This
+  unrelated host variance is recorded in
+  `plans/phases/adhoc_performance_budget_host_variance.md`; no performance
+  baseline or waiver changed, and it is not a Phase 40 prerequisite.
 - [ ] Add the single protected publication workflow and production site adapter.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import re
 import subprocess
 import sys
@@ -18,22 +19,22 @@ sys.path.insert(0, str(AREA_ROOT))
 from governance import (  # noqa: E402
     GovernanceError,
     generate_site_release_facts,
+    validate_bootstrap_evidence,
     validate_incident_request,
     validate_incident_signoff,
+    validate_install_receipt,
+    validate_qualification_artifact_index,
     validate_release_index,
     validate_release_index_transition,
     validate_release_plan,
     validate_release_profile_report,
     validate_release_signoff,
-    validate_qualification_artifact_index,
-    validate_install_receipt,
     validate_self_update_plan,
     validate_self_version,
     validate_site_publication_facts,
     validate_site_release_facts,
 )
 from governance.common import (  # noqa: E402
-    canonical_json_bytes,
     load_json_strict,
     require_sha256,
     sha256_bytes,
@@ -41,9 +42,13 @@ from governance.common import (  # noqa: E402
     write_canonical_json,
 )
 from governance.incident_evidence import validate_incident_evidence_commit  # noqa: E402
-from governance.release_index import propose_preview_release, validate_release_record  # noqa: E402
 from governance.incident_planner import materialize_incident_mutation  # noqa: E402
 from governance.planner import materialize_stable_plan  # noqa: E402
+from governance.release_index import propose_preview_release, validate_release_record  # noqa: E402
+from governance.schema_bootstrap import (  # noqa: E402
+    build_preview_epoch,
+    resolve_distinct_approvers,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -56,6 +61,7 @@ def parse_args() -> argparse.Namespace:
         required=True,
         choices=(
             "release-index",
+            "schema-bootstrap-evidence",
             "release-plan",
             "release-signoff",
             "site-facts",
@@ -158,6 +164,15 @@ def parse_args() -> argparse.Namespace:
     evidence_commit.add_argument("--head", required=True)
     evidence_commit.add_argument("--request-path", required=True)
     evidence_commit.add_argument("--evidence-path", required=True)
+    bootstrap_index = commands.add_parser("generate-schema-bootstrap-index")
+    bootstrap_index.add_argument("--current", required=True)
+    bootstrap_index.add_argument("--alpha-release", required=True)
+    bootstrap_index.add_argument("--beta-release", required=True)
+    bootstrap_index.add_argument("--out", required=True)
+    approvers = commands.add_parser("resolve-publication-approvers")
+    approvers.add_argument("--approvals", required=True)
+    approvers.add_argument("--initiator", required=True)
+    approvers.add_argument("--environment", default="stable-release")
     return parser.parse_args()
 
 
@@ -186,6 +201,10 @@ def main() -> int:
             plan_incident_index(args)
         elif args.command == "validate-incident-evidence-commit":
             validate_incident_evidence(args)
+        elif args.command == "generate-schema-bootstrap-index":
+            generate_schema_bootstrap_index(args)
+        elif args.command == "resolve-publication-approvers":
+            resolve_publication_approvers(args)
         else:
             raise AssertionError(args.command)
     except GovernanceError as exc:
@@ -199,6 +218,7 @@ def validate_command(args: argparse.Namespace) -> None:
     payload = load_json_strict(path, require_canonical=args.require_canonical)
     validators: dict[str, Callable[[Any], Any]] = {
         "release-index": validate_release_index,
+        "schema-bootstrap-evidence": validate_bootstrap_evidence,
         "release-plan": validate_release_plan,
         "release-signoff": validate_release_signoff,
         "site-facts": validate_site_release_facts,
@@ -430,6 +450,28 @@ def validate_incident_evidence(args: argparse.Namespace) -> None:
         "release-governance incident evidence ok: "
         f"incident_id={request['incident_id']} operation={request['operation']}"
     )
+
+
+def generate_schema_bootstrap_index(args: argparse.Namespace) -> None:
+    legacy_bytes = Path(args.current).read_bytes()
+    payload = build_preview_epoch(
+        legacy_index_sha256=sha256_bytes(legacy_bytes),
+        legacy_index_size_bytes=len(legacy_bytes),
+        alpha_wrapper=load_json_strict(
+            Path(args.alpha_release), require_canonical=True
+        ),
+        beta_wrapper=load_json_strict(Path(args.beta_release), require_canonical=True),
+    )
+    write_canonical_json(Path(args.out), payload, refuse_existing=True)
+
+
+def resolve_publication_approvers(args: argparse.Namespace) -> None:
+    approvers = resolve_distinct_approvers(
+        load_json_strict(Path(args.approvals)),
+        initiator=args.initiator,
+        environment=args.environment,
+    )
+    print(json.dumps(approvers, separators=(",", ":")))
 
 
 def _require_clean_external_incident_directory(

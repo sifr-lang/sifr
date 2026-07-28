@@ -6,7 +6,8 @@ source "$(dirname "$0")/common.sh"
 
 fixture="${REPO_ROOT}/verification/areas/distribution_release/fixtures/site_release_contract.json"
 publication_workflow="${REPO_ROOT}/.github/workflows/release-publication.yml"
-python3 - "${fixture}" "${publication_workflow}" <<'PY'
+identity_helper="${REPO_ROOT}/scripts/distribution/verify_site_workflow_identity.sh"
+python3 - "${fixture}" "${publication_workflow}" "${identity_helper}" <<'PY'
 import copy
 import json
 import pathlib
@@ -15,6 +16,7 @@ import sys
 
 fixture = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
 publication = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8")
+identity = pathlib.Path(sys.argv[3]).read_text(encoding="utf-8")
 sha = re.compile(r"^[0-9a-f]{64}$")
 commit = re.compile(r"^[0-9a-f]{40}$")
 attempt = re.compile(r"^[A-Za-z0-9._-]{1,80}$")
@@ -71,24 +73,35 @@ for fragment in (
     "SITE_WORKFLOW_REF: sifr-release-site-stable-distribution",
     'SITE_WORKFLOW_RULESET_ID: "19791667"',
     'SITE_WORKFLOW_RULESET_UPDATED_AT: "2026-07-27T05:06:21.354Z"',
-    '-H "Time-Zone: UTC"',
     "SITE_WORKFLOW_SHA256: 7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958",
-    ".updated_at == $updated_at",
-    "(.bypass_actors // []) == []",
-    '(.current_user_can_bypass // "never") == "never"',
-    "site workflow tag immutability ruleset is not active and exact",
-    "site workflow tag lost immutable protection before dispatch",
-    "protected site workflow tag does not resolve to site_base_commit",
-    "protected site workflow tag moved before dispatch",
-    "pinned site workflow bytes do not match the reviewed contract",
+    "scripts/distribution/verify_site_workflow_identity.sh",
+    '--workflow-sha256 "${SITE_WORKFLOW_SHA256}"',
     '--arg ref "${SITE_WORKFLOW_REF}"',
     "scripts/distribution/generate_dispatchers.sh \\\n"
     "            --install-root dispatchers \\\n"
     '            --default-channel "${site_default_channel}"',
 ):
     assert fragment in publication, fragment
-assert publication.index("pinned site workflow bytes do not match") < publication.index(
-    "Publish write-once version release and verify assets"
+for fragment in (
+    '"${ruleset_id}" =~ ^[1-9][0-9]*$',
+    '-H "Time-Zone: UTC"',
+    ".updated_at == $updated_at",
+    "(.bypass_actors // []) == []",
+    '(.current_user_can_bypass // "never") == "never"',
+    "immutable tag ruleset is not active and exact",
+    "protected workflow tag moved",
+    "pinned workflow bytes do not match the reviewed contract",
+):
+    assert fragment in identity, fragment
+identity_call = "scripts/distribution/verify_site_workflow_identity.sh"
+assert publication.count(identity_call) == 2
+first_identity = publication.index(identity_call)
+second_identity = publication.index(identity_call, first_identity + 1)
+assert first_identity < publication.index("Publish write-once version release and verify assets")
+assert (
+    publication.index("Dispatch exact site workflow")
+    < second_identity
+    < publication.index("Poll exact site run")
 )
 
 payload = {

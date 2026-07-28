@@ -98,15 +98,18 @@
         "create-pr": [],
         "merge": [
           "distribution_release:representative",
-          "distribution_release:incident-governance"
+          "distribution_release:incident-governance",
+          "distribution_release:epoch-bootstrap"
         ],
         "nightly": [
           "distribution_release:full",
-          "distribution_release:incident-governance"
+          "distribution_release:incident-governance",
+          "distribution_release:epoch-bootstrap"
         ],
         "release": [
           "distribution_release:full",
-          "distribution_release:incident-governance"
+          "distribution_release:incident-governance",
+          "distribution_release:epoch-bootstrap"
         ]
       }
     },

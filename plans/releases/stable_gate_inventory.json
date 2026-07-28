@@ -107,6 +107,38 @@
       "disposition": "remains build/upload-only and never gains release, package, Marketplace, site, environment, or metadata mutation authority"
     },
     {
+      "id": "protected-publication-prepare",
+      "location": ".github/workflows/release-publication-prepare.yml",
+      "owner": "release/distribution",
+      "current_behavior": "revalidates exact source, release artifacts, current index identity, and staged alpha evidence with read-only permissions and emits a digest-bound 30-day summary",
+      "activation_boundary": "protected-publication",
+      "disposition": "remains read-only, has no protected environment or production secret, and supplies the reviewer-visible bytes consumed by publish"
+    },
+    {
+      "id": "schema-v2-preview-epoch-bootstrap",
+      "location": "verification/areas/distribution_release/governance/schema_bootstrap.py",
+      "owner": "release/distribution",
+      "current_behavior": "builds generation 1 preview metadata only from the exact opaque pre-epoch asset identity and fresh alpha/beta release records",
+      "activation_boundary": "protected-publication",
+      "disposition": "executes once under stable-release approval without parsing, migrating, or retaining the discarded schema-v1 data model"
+    },
+    {
+      "id": "protected-publication-approval",
+      "location": ".github/workflows/release-publication.yml",
+      "owner": "release/distribution",
+      "current_behavior": "queries immutable workflow approval history and requires at least one stable-release approver distinct from the workflow initiator before mutation",
+      "activation_boundary": "protected-publication",
+      "disposition": "records all actual distinct environment reviewers in bootstrap and later stable sign-off evidence"
+    },
+    {
+      "id": "schema-bootstrap-public-smoke",
+      "location": "scripts/distribution/run_schema_bootstrap_public_smoke.sh",
+      "owner": "release/distribution",
+      "current_behavior": "verifies the real governance asset, beta-default and stable-rejection dispatchers, a fresh public install, and installed self-update without the qualification override",
+      "activation_boundary": "protected-publication",
+      "disposition": "remains the mutable-public-endpoint proof separate from isolated local qualification"
+    },
+    {
       "id": "canonical-stable-planner",
       "location": "scripts/distribution/release_governance.py",
       "owner": "release/distribution",

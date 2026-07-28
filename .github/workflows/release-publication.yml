@@ -23,6 +23,16 @@ on:
         description: Exact sifr-website workflow and deployment base
         required: true
         type: string
+      governance_mode:
+        description: Ordinary preview publication or protected one-time bootstrap stage
+        required: false
+        default: preview
+        type: string
+      bootstrap_alpha_version:
+        description: Fresh staged alpha version for bootstrap-index
+        required: false
+        default: ""
+        type: string
     secrets:
       SIFR_WEBSITE_ACTIONS_TOKEN:
         description: Fine-grained token limited to sifr-website Actions
@@ -37,10 +47,28 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  prepare:
+    uses: ./.github/workflows/release-publication-prepare.yml
+    permissions:
+      actions: read
+      contents: read
+    with:
+      channel: ${{ inputs.channel }}
+      version: ${{ inputs.version }}
+      source_commit: ${{ inputs.source_commit }}
+      governance_mode: ${{ inputs.governance_mode }}
+      bootstrap_alpha_version: ${{ inputs.bootstrap_alpha_version }}
+
   publish:
     name: mutate governed preview release
+    needs: prepare
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    environment:
+      name: ${{ inputs.governance_mode == 'preview' && 'preview-release' || 'stable-release' }}
+    permissions:
+      actions: read
+      contents: write
     env:
       GH_TOKEN: ${{ github.token }}
       CHANNEL: ${{ inputs.channel }}
@@ -48,6 +76,10 @@ jobs:
       BASE_REF: ${{ inputs.base_ref }}
       SOURCE_COMMIT: ${{ inputs.source_commit }}
       SITE_BASE_COMMIT: ${{ inputs.site_base_commit }}
+      GOVERNANCE_MODE: ${{ inputs.governance_mode }}
+      BOOTSTRAP_ALPHA_VERSION: ${{ inputs.bootstrap_alpha_version }}
+      PREPARE_SUMMARY_SHA256: ${{ needs.prepare.outputs.summary_sha256 }}
+      LEGACY_INDEX_SHA256: 71b3243925670f56dc510b8f45b6614a622f58097a0fea9492f61d20dc4bf9ef
       PUBLICATION_ATTEMPT: ${{ github.run_id }}-${{ github.run_attempt }}
       SITE_REPOSITORY: sifr-lang/sifr-website
       SITE_WORKFLOW: release-site.yml
@@ -64,8 +96,63 @@ jobs:
 
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
+          pattern: sifr-${{ inputs.version }}-*
           path: release-assets
           merge-multiple: true
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ needs.prepare.outputs.summary_artifact_name }}
+          path: protected-prepare
+
+      - name: Revalidate prepare summary and protected approver
+        id: approval
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum protected-prepare/summary.json | awk '{print $1}')" = \
+            "${PREPARE_SUMMARY_SHA256}" || {
+              echo "::error::protected job received different prepare-summary bytes"
+              exit 2
+            }
+          jq -e \
+            --arg mode "${GOVERNANCE_MODE}" \
+            --arg channel "${CHANNEL}" \
+            --arg version "${VERSION}" \
+            --arg source "${SOURCE_COMMIT}" \
+            --arg alpha "${BOOTSTRAP_ALPHA_VERSION}" \
+            '.schema_version == 2
+             and .operation == $mode
+             and .channel == $channel
+             and .version == $version
+             and .source_commit == $source
+             and .bootstrap_alpha_version == $alpha
+             and (
+               if $mode == "bootstrap-index"
+               then (.bootstrap_alpha_evidence_sha256 | test("^[0-9a-f]{64}$"))
+               else .bootstrap_alpha_evidence_sha256 == ""
+               end
+             )
+             and (.current_index_sha256 | test("^[0-9a-f]{64}$"))
+             and (.assets | type == "object")' \
+            protected-prepare/summary.json >/dev/null || {
+            echo "::error::prepare summary outputs do not match protected job inputs"
+            exit 2
+          }
+          if [[ "${GOVERNANCE_MODE}" == bootstrap-* ]]; then
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/approvals" \
+              >protected-prepare/approvals.json
+            approvers_json="$(
+              scripts/distribution/release_governance.py resolve-publication-approvers \
+                --approvals protected-prepare/approvals.json \
+                --initiator "${GITHUB_TRIGGERING_ACTOR}" \
+                --environment stable-release
+            )"
+            echo "approvers_json=${approvers_json}" >>"${GITHUB_OUTPUT}"
+          else
+            echo 'approvers_json=[]' >>"${GITHUB_OUTPUT}"
+          fi
 
       - name: Validate protected publication inputs
         shell: bash
@@ -76,6 +163,31 @@ jobs:
           case "${CHANNEL}" in
             alpha|beta) ;;
             *) echo "::error::release-publication accepts only alpha or beta"; exit 2 ;;
+          esac
+          case "${GOVERNANCE_MODE}" in
+            preview)
+              test -z "${BOOTSTRAP_ALPHA_VERSION}" || {
+                echo "::error::preview mode cannot name a bootstrap alpha"
+                exit 2
+              }
+              ;;
+            bootstrap-alpha)
+              test "${CHANNEL}" = "alpha" && test -z "${BOOTSTRAP_ALPHA_VERSION}" || {
+                echo "::error::bootstrap-alpha input mismatch"
+                exit 2
+              }
+              ;;
+            bootstrap-index)
+              test "${CHANNEL}" = "beta" || {
+                echo "::error::bootstrap-index requires beta"
+                exit 2
+              }
+              [[ "${BOOTSTRAP_ALPHA_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$ ]] || {
+                echo "::error::bootstrap-index requires a fresh alpha version"
+                exit 2
+              }
+              ;;
+            *) echo "::error::unsupported governance_mode"; exit 2 ;;
           esac
           if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta)\.[0-9]+$ ||
                 "${BASH_REMATCH[1]}" != "${CHANNEL}" ]]; then
@@ -97,38 +209,15 @@ jobs:
             echo "::error::site_base_commit must be an exact commit"
             exit 2
           fi
-          site_ruleset="$(
-            GH_TOKEN="${SITE_TOKEN}" gh api \
-              -H "Time-Zone: UTC" \
-              "repos/${SITE_REPOSITORY}/rulesets/${SITE_WORKFLOW_RULESET_ID}"
-          )"
-          if ! jq -e \
-            --arg ref "refs/tags/${SITE_WORKFLOW_REF}" \
-            --arg updated_at "${SITE_WORKFLOW_RULESET_UPDATED_AT}" \
-            --argjson id "${SITE_WORKFLOW_RULESET_ID}" \
-            '.id == $id
-             and .target == "tag"
-             and .enforcement == "active"
-             and .updated_at == $updated_at
-             and .conditions.ref_name.include == [$ref]
-             and .conditions.ref_name.exclude == []
-             and (.bypass_actors // []) == []
-             and (.current_user_can_bypass // "never") == "never"
-             and ([.rules[].type] | sort) == ["deletion", "update"]' \
-            <<<"${site_ruleset}" >/dev/null
-          then
-            echo "::error::site workflow tag immutability ruleset is not active and exact"
-            exit 2
-          fi
-          site_dispatch_sha="$(
-            GH_TOKEN="${SITE_TOKEN}" gh api \
-              "repos/${SITE_REPOSITORY}/git/ref/tags/${SITE_WORKFLOW_REF}" \
-              --jq '.object.sha'
-          )"
-          if [[ "${site_dispatch_sha}" != "${SITE_BASE_COMMIT}" ]]; then
-            echo "::error::protected site workflow tag does not resolve to site_base_commit"
-            exit 2
-          fi
+          GH_TOKEN="${SITE_TOKEN}" \
+            scripts/distribution/verify_site_workflow_identity.sh \
+              --repository "${SITE_REPOSITORY}" \
+              --ruleset-id "${SITE_WORKFLOW_RULESET_ID}" \
+              --ruleset-updated-at "${SITE_WORKFLOW_RULESET_UPDATED_AT}" \
+              --workflow-ref "${SITE_WORKFLOW_REF}" \
+              --site-commit "${SITE_BASE_COMMIT}" \
+              --workflow "${SITE_WORKFLOW}" \
+              --workflow-sha256 "${SITE_WORKFLOW_SHA256}"
           existing_release_count="$(
             gh api \
               --method GET \
@@ -153,69 +242,15 @@ jobs:
             echo "::error::version tag already exists; release source identity is write-once"
             exit 2
           fi
-          site_workflow="$(mktemp)"
-          GH_TOKEN="${SITE_TOKEN}" gh api \
-            -H "Accept: application/vnd.github.raw+json" \
-            "repos/${SITE_REPOSITORY}/contents/.github/workflows/${SITE_WORKFLOW}?ref=${SITE_BASE_COMMIT}" \
-            >"${site_workflow}"
-          actual_site_workflow_sha256="$(sha256sum "${site_workflow}" | awk '{print $1}')"
-          if [[ "${actual_site_workflow_sha256}" != "${SITE_WORKFLOW_SHA256}" ]]; then
-            echo "::error::pinned site workflow bytes do not match the reviewed contract"
-            exit 2
-          fi
 
       - name: Verify complete immutable asset set
         shell: bash
         run: |
           set -euo pipefail
-          for target in \
-            aarch64-apple-darwin \
-            x86_64-apple-darwin \
-            x86_64-unknown-linux-gnu \
-            aarch64-unknown-linux-gnu
-          do
-            archive="release-assets/sifr-${VERSION}-${target}.tar.gz"
-            checksum="${archive}.sha256"
-            test -f "${archive}" || { echo "::error::missing ${archive}"; exit 2; }
-            test -f "${checksum}" || { echo "::error::missing ${checksum}"; exit 2; }
-            expected="$(tr -d '[:space:]' <"${checksum}")"
-            actual="$(sha256sum "${archive}" | awk '{print $1}')"
-            test "${expected}" = "${actual}" || {
-              echo "::error::checksum mismatch for ${archive}"
-              exit 2
-            }
-            scripts/distribution/verify_release_archive.py \
-              "${archive}" \
-              --version "${VERSION}" \
-              --target "${target}"
-          done
-          scripts/distribution/generate_version_installer.sh \
+          scripts/distribution/verify_release_publication_assets.sh \
             --version "${VERSION}" \
-            --artifact-dir release-assets \
-            --out "release-assets/sifr-installer-${VERSION}"
-          expected_names="$(
-            {
-              for target in \
-                aarch64-apple-darwin \
-                x86_64-apple-darwin \
-                x86_64-unknown-linux-gnu \
-                aarch64-unknown-linux-gnu
-              do
-                echo "sifr-${VERSION}-${target}.tar.gz"
-                echo "sifr-${VERSION}-${target}.tar.gz.sha256"
-              done
-              echo "sifr-installer-${VERSION}"
-            } | LC_ALL=C sort
-          )"
-          actual_names="$(
-            find release-assets -mindepth 1 -maxdepth 1 -type f -exec basename {} \; |
-              LC_ALL=C sort
-          )"
-          if [[ "${actual_names}" != "${expected_names}" ]]; then
-            echo "::error::release asset set contains missing or unexpected files"
-            diff -u <(printf '%s\n' "${expected_names}") <(printf '%s\n' "${actual_names}") || true
-            exit 2
-          fi
+            --assets release-assets \
+            --prepare-summary protected-prepare/summary.json
 
       - name: Fetch governed index and allocate max generation
         id: index
@@ -228,6 +263,46 @@ jobs:
             --pattern channels.json \
             --dir publication
           mv publication/channels.json publication/current-channels.json
+          current_sha256="$(sha256sum publication/current-channels.json | awk '{print $1}')"
+          test "$(
+            jq -r '.current_index_sha256' protected-prepare/summary.json
+          )" = "${current_sha256}" || {
+            echo "::error::governed index changed after read-only prepare"
+            exit 2
+          }
+          if [[ "${GOVERNANCE_MODE}" == bootstrap-* ]]; then
+            test "${current_sha256}" = "${LEGACY_INDEX_SHA256}" &&
+              test "$(wc -c <publication/current-channels.json | tr -d '[:space:]')" = "105" || {
+                echo "::error::one-time bootstrap source is not the exact opaque v1 asset"
+                exit 2
+              }
+            if [[ "${GOVERNANCE_MODE}" == "bootstrap-index" ]]; then
+              stage_evidence="publication/schema-v2-bootstrap-alpha-${BOOTSTRAP_ALPHA_VERSION}.json"
+              gh release download channels \
+                --repo "${GITHUB_REPOSITORY}" \
+                --pattern "$(basename "${stage_evidence}")" \
+                --dir publication
+              test "$(sha256sum "${stage_evidence}" | awk '{print $1}')" = "$(
+                jq -r '.bootstrap_alpha_evidence_sha256' \
+                  protected-prepare/summary.json
+              )" || {
+                echo "::error::staged alpha evidence changed after read-only prepare"
+                exit 2
+              }
+              scripts/distribution/fetch_schema_bootstrap_alpha.sh \
+                --repository "${GITHUB_REPOSITORY}" \
+                --version "${BOOTSTRAP_ALPHA_VERSION}" \
+                --evidence "${stage_evidence}" \
+                --assets publication/bootstrap-alpha-assets \
+                --record publication/alpha-release.json
+            fi
+            {
+              echo "current_generation=0"
+              echo "current_sha256=${current_sha256}"
+              echo "proposed_generation=1"
+            } >>"${GITHUB_OUTPUT}"
+            exit 0
+          fi
           scripts/distribution/release_governance.py validate \
             --kind release-index \
             --input publication/current-channels.json \
@@ -236,7 +311,6 @@ jobs:
             python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["generation"])' \
               publication/current-channels.json
           )"
-          current_sha256="$(sha256sum publication/current-channels.json | awk '{print $1}')"
           max_generation="${current_generation}"
           while IFS= read -r snapshot; do
             [[ -n "${snapshot}" ]] || continue
@@ -290,14 +364,45 @@ jobs:
             --installer "release-assets/sifr-installer-${VERSION}" \
             --artifact-dir release-assets \
             --out publication/new-release.json
-          scripts/distribution/release_governance.py update-preview-index \
-            --current publication/current-channels.json \
-            --out publication/channels.json \
-            --channel "${CHANNEL}" \
-            --release publication/new-release.json \
-            --expected-generation "${CURRENT_GENERATION}" \
-            --expected-sha256 "${CURRENT_SHA256}" \
-            --proposed-generation "${PROPOSED_GENERATION}"
+          release_record_sha256="$(
+            sha256sum publication/new-release.json | awk '{print $1}'
+          )"
+          echo "release_record_sha256=${release_record_sha256}" >>"${GITHUB_OUTPUT}"
+          if [[ "${GOVERNANCE_MODE}" == "bootstrap-alpha" ]]; then
+            jq -cnS \
+              --arg version "${VERSION}" \
+              --arg source "${SOURCE_COMMIT}" \
+              --arg current "${CURRENT_SHA256}" \
+              --arg attempt "${PUBLICATION_ATTEMPT}" \
+              '{
+                schema_version: 2,
+                operation: "schema-epoch-bootstrap-alpha-assets",
+                version: $version,
+                source_commit: $source,
+                current_index_sha256: $current,
+                publication_attempt: $attempt
+              }' >publication/publication-plan.json
+            echo "release_plan_sha256=$(
+              sha256sum publication/publication-plan.json | awk '{print $1}'
+            )" >>"${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          if [[ "${GOVERNANCE_MODE}" == "bootstrap-index" ]]; then
+            scripts/distribution/release_governance.py generate-schema-bootstrap-index \
+              --current publication/current-channels.json \
+              --alpha-release publication/alpha-release.json \
+              --beta-release publication/new-release.json \
+              --out publication/channels.json
+          else
+            scripts/distribution/release_governance.py update-preview-index \
+              --current publication/current-channels.json \
+              --out publication/channels.json \
+              --channel "${CHANNEL}" \
+              --release publication/new-release.json \
+              --expected-generation "${CURRENT_GENERATION}" \
+              --expected-sha256 "${CURRENT_SHA256}" \
+              --proposed-generation "${PROPOSED_GENERATION}"
+          fi
           ga_status="$(
             python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["ga_status"])' \
               publication/channels.json
@@ -310,39 +415,42 @@ jobs:
           scripts/distribution/generate_dispatchers.sh \
             --install-root dispatchers \
             --default-channel "${site_default_channel}"
-          python3 - \
-            publication/publication-plan.json \
-            "${CHANNEL}" \
-            "${VERSION}" \
-            "${SOURCE_COMMIT}" \
-            "${SITE_BASE_COMMIT}" \
-            "${CURRENT_GENERATION}" \
-            "${CURRENT_SHA256}" \
-            "${PROPOSED_GENERATION}" \
-            "${PUBLICATION_ATTEMPT}" \
-            "${site_default_channel}" <<'PY'
-          import json
-          import pathlib
-          import sys
-
-          out, channel, version, source, site, current_gen, current_sha, proposed_gen, attempt, site_default = sys.argv[1:]
-          value = {
-              "schema_version": 2,
-              "operation": "preview-publication",
-              "channel": channel,
-              "version": version,
-              "source_commit": source,
-              "site_base_commit": site,
-              "current_index": {"generation": int(current_gen), "sha256": current_sha},
-              "proposed_generation": int(proposed_gen),
-              "publication_attempt": attempt,
-              "site_default_channel": site_default,
-          }
-          pathlib.Path(out).write_text(
-              json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n",
-              encoding="utf-8",
-          )
-          PY
+          jq -cnS \
+            --arg mode "${GOVERNANCE_MODE}" \
+            --arg channel "${CHANNEL}" \
+            --arg version "${VERSION}" \
+            --arg source "${SOURCE_COMMIT}" \
+            --arg site "${SITE_BASE_COMMIT}" \
+            --arg current_sha "${CURRENT_SHA256}" \
+            --argjson current_generation "${CURRENT_GENERATION}" \
+            --argjson proposed_generation "${PROPOSED_GENERATION}" \
+            --arg attempt "${PUBLICATION_ATTEMPT}" \
+            --arg site_default "${site_default_channel}" \
+            --arg alpha "${BOOTSTRAP_ALPHA_VERSION}" \
+            '{
+              schema_version: 2,
+              operation: (
+                if $mode == "bootstrap-index"
+                then "schema-epoch-bootstrap"
+                else "preview-publication"
+                end
+              ),
+              channel: $channel,
+              version: $version,
+              source_commit: $source,
+              site_base_commit: $site,
+              current_index: {
+                generation: $current_generation,
+                sha256: $current_sha
+              },
+              proposed_generation: $proposed_generation,
+              publication_attempt: $attempt,
+              site_default_channel: $site_default
+            }
+            + if $mode == "bootstrap-index"
+              then {bootstrap_alpha_version: $alpha}
+              else {}
+              end' >publication/publication-plan.json
           release_plan_sha256="$(
             sha256sum publication/publication-plan.json | awk '{print $1}'
           )"
@@ -409,7 +517,40 @@ jobs:
             }
           done < <(find release-assets -mindepth 1 -maxdepth 1 -type f | LC_ALL=C sort)
 
+      - name: Retain protected alpha bootstrap evidence
+        if: inputs.governance_mode == 'bootstrap-alpha'
+        shell: bash
+        env:
+          APPROVERS_JSON: ${{ steps.approval.outputs.approvers_json }}
+        run: |
+          set -euo pipefail
+          evidence="publication/schema-v2-bootstrap-alpha-${VERSION}.json"
+          scripts/distribution/materialize_schema_bootstrap_evidence.py \
+            --stage alpha-assets \
+            --run-id "${GITHUB_RUN_ID}" \
+            --run-attempt "${GITHUB_RUN_ATTEMPT}" \
+            --initiator "${GITHUB_TRIGGERING_ACTOR}" \
+            --approvers-json "${APPROVERS_JSON}" \
+            --prepare-summary protected-prepare/summary.json \
+            --legacy-index publication/current-channels.json \
+            --alpha-version "${VERSION}" \
+            --alpha-source-commit "${SOURCE_COMMIT}" \
+            --alpha-record publication/new-release.json \
+            --alpha-assets publication/published-assets \
+            --out "${evidence}"
+          gh release upload channels "${evidence}" --repo "${GITHUB_REPOSITORY}"
+          verify_dir="$(mktemp -d)"
+          gh release download channels \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern "$(basename "${evidence}")" \
+            --dir "${verify_dir}"
+          cmp "${evidence}" "${verify_dir}/$(basename "${evidence}")" || {
+            echo "::error::protected alpha bootstrap evidence drifted after upload"
+            exit 2
+          }
+
       - name: Revalidate lease and publish write-once generation snapshot
+        if: inputs.governance_mode != 'bootstrap-alpha'
         shell: bash
         env:
           EXPECTED_GENERATION: ${{ steps.index.outputs.current_generation }}
@@ -423,15 +564,24 @@ jobs:
             --pattern channels.json \
             --dir "${live_dir}"
           live_index="${live_dir}/channels.json"
-          scripts/distribution/release_governance.py validate \
-            --kind release-index \
-            --input "${live_index}" \
-            --require-canonical
-          live_generation="$(
-            python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["generation"])' \
-              "${live_index}"
-          )"
           live_sha256="$(sha256sum "${live_index}" | awk '{print $1}')"
+          if [[ "${GOVERNANCE_MODE}" == "bootstrap-index" ]]; then
+            test "${live_sha256}" = "${LEGACY_INDEX_SHA256}" &&
+              test "$(wc -c <"${live_index}" | tr -d '[:space:]')" = "105" || {
+                echo "::error::opaque bootstrap lease changed before reservation"
+                exit 2
+              }
+            live_generation=0
+          else
+            scripts/distribution/release_governance.py validate \
+              --kind release-index \
+              --input "${live_index}" \
+              --require-canonical
+            live_generation="$(
+              python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["generation"])' \
+                "${live_index}"
+            )"
+          fi
           if [[ "${live_generation}" != "${EXPECTED_GENERATION}" ||
                 "${live_sha256}" != "${EXPECTED_SHA256}" ]]; then
             echo "::error::release index changed after proposal generation"
@@ -452,6 +602,7 @@ jobs:
           gh release upload channels "${snapshot}" --repo "${GITHUB_REPOSITORY}"
 
       - name: Replace only canonical channels.json
+        if: inputs.governance_mode != 'bootstrap-alpha'
         shell: bash
         run: |
           set -euo pipefail
@@ -471,6 +622,7 @@ jobs:
             }
 
       - name: Build correlated site publication facts
+        if: inputs.governance_mode != 'bootstrap-alpha'
         id: site
         shell: bash
         env:
@@ -506,6 +658,7 @@ jobs:
           )" >>"${GITHUB_OUTPUT}"
 
       - name: Dispatch exact site workflow
+        if: inputs.governance_mode != 'bootstrap-alpha'
         id: dispatch
         shell: bash
         env:
@@ -522,38 +675,15 @@ jobs:
         run: |
           set -euo pipefail
           dispatched_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          site_ruleset="$(
-            GH_TOKEN="${SITE_TOKEN}" gh api \
-              -H "Time-Zone: UTC" \
-              "repos/${SITE_REPOSITORY}/rulesets/${SITE_WORKFLOW_RULESET_ID}"
-          )"
-          if ! jq -e \
-            --arg ref "refs/tags/${SITE_WORKFLOW_REF}" \
-            --arg updated_at "${SITE_WORKFLOW_RULESET_UPDATED_AT}" \
-            --argjson id "${SITE_WORKFLOW_RULESET_ID}" \
-            '.id == $id
-             and .target == "tag"
-             and .enforcement == "active"
-             and .updated_at == $updated_at
-             and .conditions.ref_name.include == [$ref]
-             and .conditions.ref_name.exclude == []
-             and (.bypass_actors // []) == []
-             and (.current_user_can_bypass // "never") == "never"
-             and ([.rules[].type] | sort) == ["deletion", "update"]' \
-            <<<"${site_ruleset}" >/dev/null
-          then
-            echo "::error::site workflow tag lost immutable protection before dispatch"
-            exit 2
-          fi
-          site_dispatch_sha="$(
-            GH_TOKEN="${SITE_TOKEN}" gh api \
-              "repos/${SITE_REPOSITORY}/git/ref/tags/${SITE_WORKFLOW_REF}" \
-              --jq '.object.sha'
-          )"
-          if [[ "${site_dispatch_sha}" != "${SITE_BASE_COMMIT}" ]]; then
-            echo "::error::protected site workflow tag moved before dispatch"
-            exit 2
-          fi
+          GH_TOKEN="${SITE_TOKEN}" \
+            scripts/distribution/verify_site_workflow_identity.sh \
+              --repository "${SITE_REPOSITORY}" \
+              --ruleset-id "${SITE_WORKFLOW_RULESET_ID}" \
+              --ruleset-updated-at "${SITE_WORKFLOW_RULESET_UPDATED_AT}" \
+              --workflow-ref "${SITE_WORKFLOW_REF}" \
+              --site-commit "${SITE_BASE_COMMIT}" \
+              --workflow "${SITE_WORKFLOW}" \
+              --workflow-sha256 "${SITE_WORKFLOW_SHA256}"
           jq -n \
             --arg ref "${SITE_WORKFLOW_REF}" \
             --arg source "${SOURCE_COMMIT}" \
@@ -592,98 +722,74 @@ jobs:
           echo "dispatched_at=${dispatched_at}" >>"${GITHUB_OUTPUT}"
 
       - name: Poll exact site run with 20-minute deadline
+        if: inputs.governance_mode != 'bootstrap-alpha'
         shell: bash
         env:
           SITE_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}
           DISPATCHED_AT: ${{ steps.dispatch.outputs.dispatched_at }}
         run: |
           set -euo pipefail
-          expected_title="Sifr site release ${PUBLICATION_ATTEMPT}"
-          site_run_id=""
-          poll_error=""
-          poll_query_failures=0
-          poll_deadline=$((SECONDS + 1200))
-          while (( SECONDS < poll_deadline )); do
-            remaining_seconds=$((poll_deadline - SECONDS))
-            if (( remaining_seconds <= 0 )); then
-              break
-            fi
-            set +e
-            runs="$(
-              GH_TOKEN="${SITE_TOKEN}" timeout --foreground "${remaining_seconds}s" gh api \
-                --method GET \
-                --paginate \
-                --slurp \
-                "repos/${SITE_REPOSITORY}/actions/workflows/${SITE_WORKFLOW}/runs" \
-                -f event=workflow_dispatch \
-                -f created="${DISPATCHED_AT}..*" \
-                -f per_page=100
-            )"
-            poll_status=$?
-            set -e
-            if [[ ${poll_status} -eq 124 ]]; then
-              break
-            fi
-            if [[ ${poll_status} -ne 0 ]]; then
-              poll_query_failures=$((poll_query_failures + 1))
-              if (( poll_query_failures >= 3 )); then
-                poll_error="could not query the correlated site run after three attempts"
-                break
-              fi
-              remaining_seconds=$((poll_deadline - SECONDS))
-              if (( remaining_seconds > 0 )); then
-                sleep_seconds=10
-                if (( remaining_seconds < sleep_seconds )); then
-                  sleep_seconds="${remaining_seconds}"
-                fi
-                sleep "${sleep_seconds}"
-              fi
-              continue
-            fi
-            poll_query_failures=0
-            matched="$(
-              jq -r \
-                --arg title "${expected_title}" \
-                --arg sha "${SITE_BASE_COMMIT}" \
-                --arg since "${DISPATCHED_AT}" \
-                'first(
-                   .[].workflow_runs[]
-                   | select(.display_title == $title)
-                   | select(.head_sha == $sha)
-                   | select(.event == "workflow_dispatch")
-                   | select(.created_at >= $since)
-                   | [.id, .status, (.conclusion // "")]
-                   | @tsv
-                 ) // empty' <<<"${runs}"
-            )"
-            if [[ -n "${matched}" ]]; then
-              IFS=$'\t' read -r site_run_id status conclusion <<<"${matched}"
-              if [[ "${status}" == "completed" ]]; then
-                if [[ "${conclusion}" == "success" ]]; then
-                  echo "Correlated site run ${site_run_id} completed successfully"
-                  exit 0
-                fi
-                echo "::error::correlated site run ${site_run_id} concluded ${conclusion}"
-                exit 2
-              fi
-            fi
-            remaining_seconds=$((poll_deadline - SECONDS))
-            if (( remaining_seconds > 0 )); then
-              sleep_seconds=10
-              if (( remaining_seconds < sleep_seconds )); then
-                sleep_seconds="${remaining_seconds}"
-              fi
-              sleep "${sleep_seconds}"
-            fi
-          done
-          if [[ -n "${site_run_id}" ]]; then
-            GH_TOKEN="${SITE_TOKEN}" gh api \
-              --method POST \
-              "repos/${SITE_REPOSITORY}/actions/runs/${site_run_id}/cancel" || true
-          fi
-          if [[ -n "${poll_error}" ]]; then
-            echo "::error::${poll_error}"
+          GH_TOKEN="${SITE_TOKEN}" \
+            scripts/distribution/poll_site_release_run.sh \
+              --repository "${SITE_REPOSITORY}" \
+              --workflow "${SITE_WORKFLOW}" \
+              --title "Sifr site release ${PUBLICATION_ATTEMPT}" \
+              --sha "${SITE_BASE_COMMIT}" \
+              --dispatched-at "${DISPATCHED_AT}" \
+              --deadline-seconds 1200
+
+      - name: Run protected public schema-bootstrap smoke
+        if: inputs.governance_mode == 'bootstrap-index'
+        shell: bash
+        run: |
+          set -euo pipefail
+          scripts/distribution/run_schema_bootstrap_public_smoke.sh \
+            --repository "${GITHUB_REPOSITORY}" \
+            --version "${VERSION}" \
+            --index publication/channels.json \
+            --dispatchers dispatchers \
+            --out publication/bootstrap-smoke
+
+      - name: Retain final protected schema-bootstrap evidence
+        if: inputs.governance_mode == 'bootstrap-index'
+        shell: bash
+        env:
+          APPROVERS_JSON: ${{ steps.approval.outputs.approvers_json }}
+        run: |
+          set -euo pipefail
+          alpha_source="$(
+            jq -r '.alpha.source_commit' \
+              "publication/schema-v2-bootstrap-alpha-${BOOTSTRAP_ALPHA_VERSION}.json"
+          )"
+          evidence="publication/schema-v2-bootstrap-generation-1.json"
+          scripts/distribution/materialize_schema_bootstrap_evidence.py \
+            --stage preview-index \
+            --run-id "${GITHUB_RUN_ID}" \
+            --run-attempt "${GITHUB_RUN_ATTEMPT}" \
+            --initiator "${GITHUB_TRIGGERING_ACTOR}" \
+            --approvers-json "${APPROVERS_JSON}" \
+            --prepare-summary protected-prepare/summary.json \
+            --legacy-index publication/current-channels.json \
+            --alpha-version "${BOOTSTRAP_ALPHA_VERSION}" \
+            --alpha-source-commit "${alpha_source}" \
+            --alpha-record publication/alpha-release.json \
+            --alpha-assets publication/bootstrap-alpha-assets \
+            --beta-version "${VERSION}" \
+            --beta-source-commit "${SOURCE_COMMIT}" \
+            --beta-record publication/new-release.json \
+            --beta-assets publication/published-assets \
+            --index publication/channels.json \
+            --smoke-dir publication/bootstrap-smoke \
+            --alpha-evidence \
+              "publication/schema-v2-bootstrap-alpha-${BOOTSTRAP_ALPHA_VERSION}.json" \
+            --out "${evidence}"
+          gh release upload channels "${evidence}" --repo "${GITHUB_REPOSITORY}"
+          verify_dir="$(mktemp -d)"
+          gh release download channels \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern "$(basename "${evidence}")" \
+            --dir "${verify_dir}"
+          cmp "${evidence}" "${verify_dir}/$(basename "${evidence}")" || {
+            echo "::error::final schema-bootstrap evidence drifted after upload"
             exit 2
-          fi
-          echo "::error::correlated site deployment exceeded the 20-minute deadline"
-          exit 2
+          }

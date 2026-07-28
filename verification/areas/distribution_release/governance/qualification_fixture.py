@@ -120,6 +120,7 @@ def write_source_contracts(source_root: Path) -> None:
                     "qualification",
                     "evidence-custody",
                     "incident-governance",
+                    "epoch-bootstrap",
                 ],
             },
         ],

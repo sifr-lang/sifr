@@ -74,6 +74,19 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "epoch-bootstrap",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "schema-v2-preview-epoch-bootstrap",
+          "entry": "verification/areas/distribution_release/governance/schema_bootstrap_selftest.py",
+          "command": "distribution-schema-bootstrap",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ],
   "network_mode": "offline",

@@ -222,7 +222,8 @@
       "suites": [
         "full",
         "qualification",
-        "incident-governance"
+        "incident-governance",
+        "epoch-bootstrap"
       ],
       "resource_classes": [
         "default-local"

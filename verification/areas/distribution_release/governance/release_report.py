@@ -43,6 +43,7 @@ REQUIRED_SUITES = {
         "qualification",
         "evidence-custody",
         "incident-governance",
+        "epoch-bootstrap",
     },
 }
 
