@@ -1,6 +1,16 @@
 name: release-publication
 
 on:
+  workflow_dispatch:
+    inputs:
+      governance_mode:
+        description: Credential-free protected drill
+        required: true
+        type: choice
+        options:
+          - drill-publication
+          - drill-rollback
+          - drill-first-ga
   workflow_call:
     inputs:
       channel:
@@ -24,7 +34,7 @@ on:
         required: true
         type: string
       governance_mode:
-        description: Ordinary preview publication or protected one-time bootstrap stage
+        description: Preview/bootstrap publication or credential-free protected drill
         required: false
         default: preview
         type: string
@@ -43,11 +53,12 @@ permissions:
   contents: write
 
 concurrency:
-  group: sifr-release-index
+  group: ${{ startsWith(inputs.governance_mode, 'drill-') && 'sifr-release-drill' || 'sifr-release-index' }}
   cancel-in-progress: false
 
 jobs:
   prepare:
+    if: ${{ !startsWith(inputs.governance_mode, 'drill-') }}
     uses: ./.github/workflows/release-publication-prepare.yml
     permissions:
       actions: read
@@ -61,6 +72,7 @@ jobs:
 
   publish:
     name: mutate governed preview release
+    if: ${{ !startsWith(inputs.governance_mode, 'drill-') }}
     needs: prepare
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -793,3 +805,11 @@ jobs:
             echo "::error::final schema-bootstrap evidence drifted after upload"
             exit 2
           }
+
+  drill:
+    if: ${{ startsWith(inputs.governance_mode, 'drill-') }}
+    uses: ./.github/workflows/release-publication-drill.yml
+    permissions:
+      contents: read
+    with:
+      mode: ${{ inputs.governance_mode }}

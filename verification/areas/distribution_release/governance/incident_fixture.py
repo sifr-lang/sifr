@@ -12,6 +12,7 @@ from typing import Any, Iterator
 
 from .common import (
     GovernanceError,
+    PRODUCTION_CREDENTIAL_NAMES,
     canonical_json_bytes,
     fail,
     load_json_strict,
@@ -32,13 +33,7 @@ from .release_plan import generate_site_release_facts, validate_site_release_fac
 
 SNAPSHOT_RE = re.compile(r"^channels-generation-([1-9][0-9]*)\.json$")
 ATTEMPT_RE = re.compile(r"^attempt-([1-9][0-9]*)\.json$")
-FORBIDDEN_CREDENTIALS = {
-    "CLOUDFLARE_API_TOKEN",
-    "GH_TOKEN",
-    "GITHUB_TOKEN",
-    "VSCE_PAT",
-    "SIFR_SITE_TOKEN",
-}
+FORBIDDEN_CREDENTIALS = set(PRODUCTION_CREDENTIAL_NAMES)
 SITE_WAIT_MINUTES = 20
 
 

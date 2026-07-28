@@ -121,6 +121,7 @@ def write_source_contracts(source_root: Path) -> None:
                     "evidence-custody",
                     "incident-governance",
                     "epoch-bootstrap",
+                    "protected-drill",
                 ],
             },
         ],

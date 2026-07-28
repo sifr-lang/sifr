@@ -99,17 +99,20 @@
         "merge": [
           "distribution_release:representative",
           "distribution_release:incident-governance",
-          "distribution_release:epoch-bootstrap"
+          "distribution_release:epoch-bootstrap",
+          "distribution_release:protected-drill"
         ],
         "nightly": [
           "distribution_release:full",
           "distribution_release:incident-governance",
-          "distribution_release:epoch-bootstrap"
+          "distribution_release:epoch-bootstrap",
+          "distribution_release:protected-drill"
         ],
         "release": [
           "distribution_release:full",
           "distribution_release:incident-governance",
-          "distribution_release:epoch-bootstrap"
+          "distribution_release:epoch-bootstrap",
+          "distribution_release:protected-drill"
         ]
       }
     },

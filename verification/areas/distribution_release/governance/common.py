@@ -15,6 +15,14 @@ TARGETS = (
     "aarch64-unknown-linux-gnu",
     "x86_64-unknown-linux-gnu",
 )
+PRODUCTION_CREDENTIAL_NAMES = (
+    "CLOUDFLARE_API_TOKEN",
+    "GH_TOKEN",
+    "GITHUB_TOKEN",
+    "VSCE_PAT",
+    "SIFR_SITE_TOKEN",
+    "SIFR_WEBSITE_ACTIONS_TOKEN",
+)
 BUILDERS = {
     "aarch64-apple-darwin": "macos-15",
     "x86_64-apple-darwin": "macos-15-intel",
@@ -70,7 +78,7 @@ def require_exact_keys(
 
 def require_schema_v2(value: dict[str, Any], location: str = "$") -> None:
     schema_version = value.get("schema_version")
-    if type(schema_version) is not int or schema_version != SCHEMA_VERSION:
+    if type(schema_version) is not int or schema_version != SCHEMA_VERSION:  # noqa: E721
         fail(location, "schema_version must be integer 2")
 
 
@@ -87,7 +95,7 @@ def require_enum(value: Any, allowed: set[str] | frozenset[str], location: str) 
 
 
 def require_positive_int(value: Any, location: str) -> int:
-    if type(value) is not int or value < 1:
+    if type(value) is not int or value < 1:  # noqa: E721
         fail(location, "must be a positive integer")
     return value
 
@@ -180,20 +188,36 @@ def write_canonical_json(path: Path, value: Any, *, refuse_existing: bool = Fals
     path.write_bytes(canonical_json_bytes(value))
 
 
-def load_json_strict(path: Path, *, require_canonical: bool = False) -> Any:
+def load_json_bytes_strict(
+    raw: bytes,
+    *,
+    source: str,
+    require_canonical: bool = False,
+) -> Any:
     def object_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
         result: dict[str, Any] = {}
         for key, value in pairs:
             if key in result:
-                fail(str(path), f"duplicate object key: {key}")
+                fail(source, f"duplicate object key: {key}")
             result[key] = value
         return result
 
     try:
-        raw = path.read_bytes()
         value = json.loads(raw, object_pairs_hook=object_pairs)
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise GovernanceError(f"{path}: invalid JSON: {exc}") from exc
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise GovernanceError(f"{source}: invalid JSON: {exc}") from exc
     if require_canonical and raw != canonical_json_bytes(value):
-        fail(str(path), "must use canonical JSON bytes")
+        fail(source, "must use canonical JSON bytes")
     return value
+
+
+def load_json_strict(path: Path, *, require_canonical: bool = False) -> Any:
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise GovernanceError(f"{path}: invalid JSON: {exc}") from exc
+    return load_json_bytes_strict(
+        raw,
+        source=str(path),
+        require_canonical=require_canonical,
+    )

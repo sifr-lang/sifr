@@ -8,7 +8,7 @@ from typing import Any
 
 from verification.json_schema_202012 import JsonSchemaError, validate_instance
 
-from .common import TARGETS
+from .common import TARGETS, canonical_json_bytes, sha256_bytes
 from .schema_bootstrap import (
     BOOTSTRAP_GENERATION,
     LEGACY_INDEX_SHA256,
@@ -95,12 +95,51 @@ def validate_schema_contracts() -> None:
             raise ValueError(
                 "bootstrap evidence schema accepted an invalid governed collection"
             )
+    drill_schema = SCHEMA_ROOT / "protected_release_drill_evidence.schema.json"
+    unknown_scenario = copy.deepcopy(
+        fixtures["protected_release_drill_evidence.schema.json"]
+    )
+    unknown_scenario["scenarios"][0]["name"] = "production"
+    duplicate_test = copy.deepcopy(
+        fixtures["protected_release_drill_evidence.schema.json"]
+    )
+    duplicate_test["scenarios"][0]["tests"].append(
+        duplicate_test["scenarios"][0]["tests"][0]
+    )
+    for invalid_drill in (unknown_scenario, duplicate_test):
+        try:
+            validate_instance(invalid_drill, drill_schema)
+        except JsonSchemaError:
+            pass
+        else:
+            raise ValueError(
+                "protected drill schema accepted an invalid governed collection"
+            )
+    mutation_schema = SCHEMA_ROOT / "stable_index_mutation_evidence.schema.json"
+    invalid_transition = copy.deepcopy(
+        fixtures["stable_index_mutation_evidence.schema.json"]
+    )
+    invalid_transition["transition"] = "rollback"
+    invalid_previous_generation = copy.deepcopy(
+        fixtures["stable_index_mutation_evidence.schema.json"]
+    )
+    invalid_previous_generation["previous_index"]["generation"] = 0
+    for invalid_mutation in (invalid_transition, invalid_previous_generation):
+        try:
+            validate_instance(invalid_mutation, mutation_schema)
+        except JsonSchemaError:
+            pass
+        else:
+            raise ValueError(
+                "stable mutation evidence schema accepted an invalid binding"
+            )
 
 
 def schema_fixtures() -> dict[str, Any]:
     index = preview_index()
     return {
         "qualification_artifact_index.schema.json": qualification_index(),
+        "protected_release_drill_evidence.schema.json": protected_drill_evidence(),
         "release_index.schema.json": index,
         "release_profile_report.schema.json": release_report(),
         "schema_epoch_bootstrap_evidence.schema.json": schema_bootstrap_evidence(),
@@ -110,9 +149,52 @@ def schema_fixtures() -> dict[str, Any]:
         "site_publication_facts.schema.json": site_publication_facts(),
         "stable_incident_request.schema.json": incident_request(),
         "stable_incident_signoff.schema.json": incident_signoff(),
+        "stable_index_mutation_evidence.schema.json": stable_index_mutation_evidence(),
         "stable_release_plan.schema.json": release_plan(),
         "stable_release_signoff.schema.json": release_signoff(),
         "stable_site_release_facts.schema.json": site_facts(),
+    }
+
+
+def protected_drill_evidence() -> dict[str, Any]:
+    return {
+        "schema_version": 2,
+        "environment": "stable-release-drill",
+        "external_network": "blocked",
+        "production_credentials": "absent",
+        "scenarios": [
+            {
+                "name": "publication",
+                "tests": [
+                    "test_ga_activation",
+                    "test_normal_successor",
+                    "test_fail_closed_identity_and_transition",
+                    "test_direct_transition_defenses",
+                    "test_cli_producer",
+                    "test_evidence_contract",
+                ],
+            }
+        ],
+        "status": "pass",
+    }
+
+
+def stable_index_mutation_evidence() -> dict[str, Any]:
+    proposed = preview_index()
+    proposed["generation"] = 8
+    proposed["ga_status"] = "active"
+    proposed["channels"]["stable"] = "0.1.0"
+    proposed["channels"] = dict(sorted(proposed["channels"].items()))
+    proposed["releases"]["0.1.0"] = release_record("stable")
+    proposed["releases"] = dict(sorted(proposed["releases"].items()))
+    return {
+        "schema_version": 2,
+        "transition": "ga-activation",
+        "version": "0.1.0",
+        "plan_sha256": SHA_A,
+        "previous_index": {"generation": 7, "sha256": SHA_B},
+        "proposed_index": proposed,
+        "proposed_index_sha256": sha256_bytes(canonical_json_bytes(proposed)),
     }
 
 
@@ -407,6 +489,7 @@ def release_report() -> dict[str, Any]:
             ("distribution_release", "evidence-custody"),
             ("distribution_release", "incident-governance"),
             ("distribution_release", "epoch-bootstrap"),
+            ("distribution_release", "protected-drill"),
         ],
     }
     return {
@@ -447,6 +530,7 @@ def release_report() -> dict[str, Any]:
                             "evidence-custody",
                             "incident-governance",
                             "epoch-bootstrap",
+                            "protected-drill",
                         ],
                     ),
                 )
