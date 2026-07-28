@@ -1,16 +1,18 @@
 use super::parameter_conventions::{
     class_method_param_convention, class_method_param_default, prepare_method_param_ownership,
 };
+use super::rust_opaque_validation::validate_rust_opaque_close_method;
+use super::{body_contains_field_assign, is_hashable_type};
 use super::{
     collect_enum_variants, function_body_contains_yield, get_newtype_inner, get_parent_class,
     has_decorator, is_enum_class, is_operator_dunder, is_protocol_class, lower_stmts,
     missing_method_param_annotation, resolve_annotation_expr, unsupported_class_declaration, Expr,
-    FunctionType, HirClass, HirClassKind, HirExpr, HirFunction, HirParam, HirPattern, HirStmt,
-    HirTupleTargetBinding, LowerCtx, MethodKind, ParamConvention, Ranged, Stmt, StmtClassDef, Type,
+    FunctionType, HirClass, HirClassKind, HirFunction, HirParam, LowerCtx, MethodKind,
+    ParamConvention, Ranged, Stmt, StmtClassDef, Type,
 };
 use crate::lower::python_interop::{
     classify_python_interop_stub_body, collect_python_method_declarations,
-    has_python_interop_decorator_syntax, validate_context_class_methods,
+    has_python_interop_decorator_syntax, receiver_is_owned, validate_context_class_methods,
     validate_python_interop_signature,
 };
 use crate::lower::rust_interop::{
@@ -486,7 +488,7 @@ pub(in crate::lower) fn lower_class(
                 return_ty.clone(),
             );
 
-            let rust_interop = collect_rust_interop_declarations(
+            let mut rust_interop = collect_rust_interop_declarations(
                 &func.decorator_list,
                 RustInteropOwner::Method,
                 ctx,
@@ -494,6 +496,11 @@ pub(in crate::lower) fn lower_class(
                 has_decorator(func, "cpu_heavy"),
                 func.is_async,
             );
+            let consumes_rust_receiver =
+                method_kind == MethodKind::Regular && receiver_is_owned(&func.parameters);
+            for declaration in &mut rust_interop {
+                declaration.consumes_receiver = consumes_rust_receiver;
+            }
             let mut python_interop = collect_python_method_declarations(
                 &func.decorator_list,
                 &func.parameters,
@@ -629,6 +636,16 @@ pub(in crate::lower) fn lower_class(
             }
         }
     }
+
+    let rust_interop = collect_rust_interop_declarations(
+        &class_def.decorator_list,
+        RustInteropOwner::Class,
+        ctx,
+        false,
+        false,
+        false,
+    );
+    validate_rust_opaque_close_method(class_def, &hir_methods, &rust_interop, ctx);
 
     let semantic_close_methods = hir_methods
         .iter()
@@ -799,98 +816,6 @@ pub(in crate::lower) fn lower_class(
         parent_type,
         type_params: class_type_params,
         enum_variants: Vec::new(),
-        rust_interop: collect_rust_interop_declarations(
-            &class_def.decorator_list,
-            RustInteropOwner::Class,
-            ctx,
-            false,
-            false,
-            false,
-        ),
+        rust_interop,
     })
-}
-
-/// Check if a type is hashable (can derive Hash + Eq).
-pub(in crate::lower) fn is_hashable_type(ty: &Type) -> bool {
-    ty.supports_hash_key()
-}
-
-/// Check if a method body contains any field assignments (self.field = ...).
-pub(in crate::lower) fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
-    fn stmt_contains_field_assign(stmt: &HirStmt) -> bool {
-        match stmt {
-            HirStmt::FieldAssign { .. } | HirStmt::NestedFieldAssign { .. } => true,
-            HirStmt::TupleUnpack { targets, .. } => targets
-                .iter()
-                .any(|target| matches!(target.binding, HirTupleTargetBinding::Field { .. })),
-            HirStmt::If {
-                then_body,
-                elif_clauses,
-                else_body,
-                ..
-            } => {
-                body_contains_field_assign(then_body)
-                    || elif_clauses
-                        .iter()
-                        .any(|(_, body)| body_contains_field_assign(body))
-                    || else_body
-                        .as_ref()
-                        .is_some_and(|body| body_contains_field_assign(body))
-            }
-            HirStmt::While {
-                body, else_body, ..
-            }
-            | HirStmt::For {
-                body, else_body, ..
-            }
-            | HirStmt::AsyncFor {
-                body, else_body, ..
-            } => {
-                body_contains_field_assign(body)
-                    || else_body
-                        .as_ref()
-                        .is_some_and(|body| body_contains_field_assign(body))
-            }
-            HirStmt::TryExcept { body, handlers, .. } => {
-                body_contains_field_assign(body)
-                    || handlers
-                        .iter()
-                        .any(|handler| body_contains_field_assign(&handler.body))
-            }
-            HirStmt::TryFinally { body, finalbody } => {
-                body_contains_field_assign(body) || body_contains_field_assign(finalbody)
-            }
-            HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => {
-                body_contains_field_assign(body)
-            }
-            HirStmt::Match { arms, .. } => {
-                arms.iter().any(|arm| body_contains_field_assign(&arm.body))
-            }
-            _ => false,
-        }
-    }
-
-    stmts.iter().any(stmt_contains_field_assign)
-}
-
-pub(in crate::lower) fn collect_literal_coverage(
-    pattern: &HirPattern,
-    covered_literal_strs: &mut std::collections::HashSet<String>,
-    covered_literal_ints: &mut std::collections::HashSet<i64>,
-    covered_literal_bools: &mut std::collections::HashSet<bool>,
-) {
-    if let HirPattern::Literal { value } = pattern {
-        match value {
-            HirExpr::StringLiteral(s) => {
-                covered_literal_strs.insert(s.clone());
-            }
-            HirExpr::IntLiteral(n) => {
-                covered_literal_ints.insert(*n);
-            }
-            HirExpr::BoolLiteral(b) => {
-                covered_literal_bools.insert(*b);
-            }
-            _ => {}
-        }
-    }
 }

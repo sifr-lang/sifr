@@ -647,11 +647,17 @@ impl RustEmitter {
         let mut params = Vec::new();
         match method.method_kind {
             MethodKind::Regular if method.name != "new" => {
-                if method
+                let consumes_python_receiver = method
                     .python_interop
                     .first()
-                    .is_some_and(|declaration| declaration.consumes_receiver)
-                {
+                    .is_some_and(|declaration| declaration.consumes_receiver);
+                let consumes_rust_close_receiver = class.rust_interop.iter().any(|declaration| {
+                    declaration.kind == sifr_ir::RustInteropDecoratorKind::Opaque
+                }) && method
+                    .rust_interop
+                    .first()
+                    .is_some_and(|declaration| declaration.consumes_receiver);
+                if consumes_python_receiver || consumes_rust_close_receiver {
                     params.push(RustParam::SelfValue);
                 } else {
                     params.push(RustParam::SelfParam {
@@ -694,7 +700,13 @@ impl RustEmitter {
                 .map_or(&[], Vec::as_slice),
         ) {
             interop_body
-        } else if let Some(interop_body) = rust_interop_method_body(method) {
+        } else if let Some(interop_body) = rust_interop_method_body(
+            method,
+            class
+                .rust_interop
+                .iter()
+                .any(|declaration| declaration.kind == sifr_ir::RustInteropDecoratorKind::Opaque),
+        ) {
             interop_body
         } else if method.method_kind == MethodKind::Regular && method.name == "new" {
             self.lower_constructor_body(method, class, uses_python_error_bridge)

@@ -2,8 +2,8 @@ use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop::{
     apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
 };
+use super::rust_interop_test_support::span;
 use crate::diagnostics::RenderedDiagnostic;
-use ruff_text_size::{TextRange, TextSize};
 use sifr_codegen::{
     InteropBuildPlan, RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration,
 };
@@ -707,6 +707,7 @@ fn opaque_class_declaration_entry() -> RustInteropPlanDeclaration {
             span: span(),
             effect: RustInteropEffect::Sync,
             abi_requirements: RustInteropAbiRequirements::default(),
+            consumes_receiver: false,
         },
     }
 }
@@ -728,6 +729,7 @@ fn declaration_entry_with_args(
             span: span(),
             effect: RustInteropEffect::Sync,
             abi_requirements: RustInteropAbiRequirements::default(),
+            consumes_receiver: false,
         },
     }
 }
@@ -892,8 +894,4 @@ fn temp_package_root(name: &str) -> PathBuf {
         std::fs::remove_dir_all(&root).expect("remove stale temp root");
     }
     root
-}
-
-fn span() -> TextRange {
-    TextRange::new(TextSize::from(0), TextSize::from(18))
 }

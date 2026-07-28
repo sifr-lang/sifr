@@ -32,6 +32,7 @@ impl RustEmitter {
                 } else {
                     Some(crate::sifr_type_to_rust_type(&method.return_type))
                 },
+                is_async: method.is_async,
             })
             .collect::<Vec<_>>();
         self.body_items.push(RustItem::Trait {

@@ -147,8 +147,8 @@ normative and must not be broadened.
 | `certification_1` | merged | [PR #3027](https://github.com/sifr-lang/sifr/pull/3027); executable recursive bridge-type roundtrips |
 | `certification_2` | merged | [PR #3031](https://github.com/sifr-lang/sifr/pull/3031); generated panic wrapper emission and mapper fallback |
 | `certification_3` | merged | [PR #3033](https://github.com/sifr-lang/sifr/pull/3033); generated call-scoped callback invocation and lifetime rejection |
-| `certification_4` | in progress | async reqwest loopback, runtime reuse, cancellation/drop, timeout cleanup, and hidden blocking rejection |
-| `certification_5` | blocked | starts after `certification_4` merges |
+| `certification_4` | merged | [PR #3036](https://github.com/sifr-lang/sifr/pull/3036); async reqwest loopback, runtime reuse, cancellation/drop, timeout cleanup, and hidden blocking rejection |
+| `certification_5` | in progress | resource lifecycle matrix with HTTP/Redis/PostgreSQL loopbacks and a temporary SQLite database |
 | `certification_6` | blocked | starts after `certification_5` merges |
 | `certification_7` | blocked | starts after `certification_6` merges |
 | `certification_8` | blocked | starts after `certification_7` merges |
@@ -499,7 +499,7 @@ Implementation checklist:
 - [x] Bind both evidence directions to mandatory generated-build tests, promote
   only `async_runtime_reqwest`, update structured claims/docs/provenance/counts,
   and preserve all later future-owned rows.
-- [ ] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, Opus review rounds to
   satisfaction, merge the PR, and unblock only `certification_5`.
 
 Post-item inventory:
@@ -531,7 +531,10 @@ Focused implementation evidence:
   formatting, matrix self-tests, maintainability guardrails, and file-size
   guardrails pass; working-tree Opus review
   [round 13](../../reviews/active/rust-interop-certification-4-review-round13.md)
-  reports `SATISFIED`;
+  reports `SATISFIED`, the
+  [exact-PR review](https://github.com/sifr-lang/sifr/pull/3036#issuecomment-5094639600)
+  also reports `SATISFIED`, and
+  [PR #3036](https://github.com/sifr-lang/sifr/pull/3036) is merged;
 - the Rust interop area facade's only two failures are caused by the preserved
   parallel-worktree `opaque_resource_matrix` promotion while that row's
   evidence remains planned; shadow-copy checks excluding that one unrelated
@@ -550,6 +553,79 @@ Redis and PostgreSQL harnesses emulate only the handshake and request/response
 frames exercised by the certified operations, plus the malformed/early-close
 frames required by negative evidence. General Redis or PostgreSQL server
 compliance is out of scope and must not expand these PRs.
+
+#### certification_5: Opaque Resource Lifecycle Matrix
+
+Implementation checklist:
+
+- [x] Add a locked/offline `resource_lifecycle_runtime` package whose generated
+  bridge signatures construct and consume `Handle<ResourceMatrix>` on the
+  generated current-thread Tokio runtime.
+- [x] Exercise `reqwest` through an ephemeral HTTP loopback, bundled
+  `rusqlite` through a unique temporary database, and `redis` plus
+  `tokio-postgres` through minimal deterministic loopback protocol servers.
+- [x] Bind listeners and cleanup handles before task start, bound every
+  operation and join, remove the temporary database, and require zero active
+  harness-owned tracked tasks after close.
+- [x] Execute malformed Redis RESP and PostgreSQL early-close paths and keep
+  their scope limited to the frames used by this certification.
+- [x] Prove shared-alias use-after-close rejection, stable double close, and
+  exact panic-payload redaction through the runtime handle substrate.
+- [x] Bind both evidence directions to distinct mandatory generated-build
+  tests, promote only `opaque_resource_matrix`, and update structured stable
+  claims, public/internal docs, provenance, counts, and validator self-tests.
+- [ ] Run focused and authoritative local gates, Opus review rounds to
+  satisfaction, merge the PR, and unblock only `certification_6`.
+
+Post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 56 passing and 16 planned evidence directions;
+- categories: 18 `supported`, 9 `supported-through-bridge`, 1
+  `unsupported-by-design`, and 8 `future-owned-by-separate-phase`;
+- execution kinds remain 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+- 60 package examples and 15 scenario examples; and
+- 28 structured stable claims.
+
+Focused implementation evidence:
+
+- `cargo test -p sifr_driver --lib -- --ignored --test-threads=1
+  test_build_opaque_resource` executed both mandatory generated-build runtime
+  paths: 2 passed, 0 failed, in 77.58 seconds. This focused run complements the
+  create-PR smoke profile, which compiles but intentionally does not execute
+  ignored generated-build tests;
+- `scripts/run_all_tests.sh --profile create-pr` passed every lane, including
+  131/131 representative E2E fixtures, the 10/10 Rust interop area matrix,
+  compiler/codegen/driver crate suites, all guardrails, and zero blocking
+  hardening failures;
+- generated opaque-handle glue executes HTTP, SQLite, Redis, and PostgreSQL
+  operations through a borrowed signature and closes the handle through the
+  declared owned `close=async_close` member routed to
+  `bridge.resources.aclose`; the operation summary is
+  `http=echo:reqwest;sqlite=sqlite;redis=PONG;postgres=1`;
+- the compiler carries the selected close receiver's ownership in Rust
+  declaration metadata, preserves ordinary non-opaque bridge-method call
+  shapes, and rejects mismatched, borrowed, or duplicate opaque closes before
+  rustc;
+- malformed Redis RESP and PostgreSQL early-close probes are rejected before
+  cleanup, and the normal servers implement only the handshake and operation
+  frames exercised by this scenario; Redis library-metadata `CLIENT SETINFO`
+  is explicitly disabled rather than included in the certified frame set;
+- the negative generated path operates on the four-resource identity, closes
+  the original, and observes `resource-state=closed` when a real operation is
+  attempted through its bridge-local shared alias; no Sifr-level clone policy
+  is declared or claimed. The positive path observes `closed` then
+  `already-closed`, exact `Rust bridge panicked` guard redaction, temporary
+  database removal, and zero active harness-owned tracked tasks;
+- `rusqlite` is exact-pinned at `0.39.0` because `0.40.1` selects
+  `libsqlite3-sys 0.38.1`, whose build script uses unstable `cfg_select!` and
+  fails on stable Rust toolchains (including stable 1.94);
+  the downgraded locked graph retains the required bundled SQLite feature, and
+  the already-supported blocking-diagnostics row is revalidated against that
+  same exact root lock graph.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

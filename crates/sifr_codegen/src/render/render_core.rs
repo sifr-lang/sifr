@@ -273,7 +273,12 @@ impl Renderer {
                 self.dedent();
                 self.emit_line("}");
             }
-            RustItem::TraitMethodSig { name, params, ret } => {
+            RustItem::TraitMethodSig {
+                name,
+                params,
+                ret,
+                is_async,
+            } => {
                 let params = params
                     .iter()
                     .map(Self::render_param_string)
@@ -284,7 +289,8 @@ impl Renderer {
                     .map(|t| format!(" -> {}", Self::render_type_string(t)))
                     .unwrap_or_default();
                 self.emit_line(&format!(
-                    "fn {}({params}){ret};",
+                    "{}fn {}({params}){ret};",
+                    if *is_async { "async " } else { "" },
                     Self::render_identifier(name)
                 ));
             }

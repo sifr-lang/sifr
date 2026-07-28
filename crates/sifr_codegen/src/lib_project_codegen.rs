@@ -5,8 +5,59 @@ use super::{
 };
 use crate::lib_project_signatures::project_func_signatures;
 use sifr_stdlib_manifest::{try_generated_cargo_dependencies, StdlibFeature};
-pub(super) fn render_local_module_imports(module: &HirModule) -> String {
+use sifr_type_system::source_class_rust_name;
+
+fn resolve_exported_rust_opaque_class<'a>(
+    module_name: &str,
+    export_name: &str,
+    project_modules: &HashMap<&str, &'a HirModule>,
+    visiting: &mut HashSet<(String, String)>,
+) -> Option<(String, &'a sifr_ir::HirClass)> {
+    if !visiting.insert((module_name.to_string(), export_name.to_string())) {
+        return None;
+    }
+    let module = project_modules.get(module_name)?;
+    if let Some(class) = module.classes.iter().find(|class| {
+        class.name == export_name
+            && class
+                .rust_interop
+                .iter()
+                .any(|declaration| declaration.kind == sifr_ir::RustInteropDecoratorKind::Opaque)
+            && class
+                .methods
+                .iter()
+                .any(|method| !method.rust_interop.is_empty())
+    }) {
+        return Some((module_name.to_string(), class));
+    }
+    for import in &module.imports {
+        for source_name in &import.names {
+            let local_name = import
+                .aliases
+                .iter()
+                .find(|(source, _)| source == source_name)
+                .map_or(source_name.as_str(), |(_, local)| local.as_str());
+            if local_name == export_name {
+                if let Some(resolved) = resolve_exported_rust_opaque_class(
+                    &import.module,
+                    source_name,
+                    project_modules,
+                    visiting,
+                ) {
+                    return Some(resolved);
+                }
+            }
+        }
+    }
+    None
+}
+
+pub(super) fn render_local_module_imports(
+    module: &HirModule,
+    project_modules: &HashMap<&str, &HirModule>,
+) -> String {
     let mut module_import_items: Vec<RustItem> = Vec::new();
+    let mut imported_opaque_traits = HashSet::new();
     for import in &module.imports {
         if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {
             continue;
@@ -25,6 +76,24 @@ pub(super) fn render_local_module_imports(module: &HirModule) -> String {
                 let mut import_path = module_path.clone();
                 import_path.push(name.clone());
                 module_import_items.push(RustItem::Use(import_path));
+            }
+            if let Some((owner_module, class)) = resolve_exported_rust_opaque_class(
+                &import.module,
+                name,
+                project_modules,
+                &mut HashSet::new(),
+            ) {
+                let trait_name =
+                    format!("__SifrOpaque{}Methods", source_class_rust_name(&class.name));
+                if imported_opaque_traits.insert((owner_module.clone(), trait_name.clone())) {
+                    let mut trait_path = vec!["crate".to_string()];
+                    trait_path.extend(owner_module.split('.').map(str::to_string));
+                    trait_path.push(trait_name);
+                    module_import_items.push(RustItem::UseAlias {
+                        path: trait_path,
+                        alias: "_".to_string(),
+                    });
+                }
             }
         }
     }
@@ -133,7 +202,7 @@ pub fn generate_rust_multi_with_metadata(
         let mut module_codegen_code = project_codegen_code.clone();
         register_imported_generic_classes(&mut module_codegen_code, module, &project_modules);
         let codegen_result = generate_rust_with_stdlib(module, &module_codegen_code);
-        let local_imports = render_local_module_imports(module);
+        let local_imports = render_local_module_imports(module, &project_modules);
         let mut rust_source = codegen_result.rust_source;
         if !local_imports.trim().is_empty() {
             rust_source = format!("{}\n\n{}", local_imports.trim_end(), rust_source);
@@ -217,4 +286,87 @@ edition = "2021"
 
     let main_rs = generate_rust(module);
     (cargo_toml, main_rs)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ruff_text_size::TextRange;
+    use sifr_ir::{
+        HirClass, HirClassKind, HirFunction, HirImport, MethodKind, RustInteropAbiRequirements,
+        RustInteropDeclaration, RustInteropDecoratorKind, RustInteropEffect,
+    };
+
+    #[test]
+    fn local_imports_bring_opaque_extension_traits_into_scope() {
+        let declaration = |kind| RustInteropDeclaration {
+            kind,
+            target: None,
+            arguments: Vec::new(),
+            span: TextRange::default(),
+            effect: RustInteropEffect::Sync,
+            abi_requirements: RustInteropAbiRequirements::default(),
+            consumes_receiver: false,
+        };
+        let provider = HirModule {
+            functions: Vec::new(),
+            classes: vec![HirClass {
+                name: "Resource".to_string(),
+                identity: None,
+                fields: Vec::new(),
+                methods: vec![HirFunction {
+                    name: "close".to_string(),
+                    params: Vec::new(),
+                    return_type: sifr_type_system::Type::None,
+                    body: Vec::new(),
+                    is_async: false,
+                    method_kind: MethodKind::Regular,
+                    decorators: Vec::new(),
+                    rust_interop: vec![declaration(RustInteropDecoratorKind::Function)],
+                    python_interop: Vec::new(),
+                    compiler_intrinsic: None,
+                    type_params: Vec::new(),
+                }],
+                is_hashable: false,
+                is_error_type: false,
+                kind: HirClassKind::Regular,
+                operator_impls: Vec::new(),
+                newtype_inner: None,
+                implements_protocols: Vec::new(),
+                parent_class: None,
+                parent_type: None,
+                type_params: Vec::new(),
+                enum_variants: Vec::new(),
+                rust_interop: vec![declaration(RustInteropDecoratorKind::Opaque)],
+            }],
+            imports: Vec::new(),
+            constants: Vec::new(),
+            generic_functions: HashMap::new(),
+            type_param_bounds: HashMap::new(),
+        };
+        let consumer = HirModule {
+            functions: Vec::new(),
+            classes: Vec::new(),
+            imports: vec![HirImport {
+                module: "resources".to_string(),
+                names: vec!["Resource".to_string()],
+                aliases: Vec::new(),
+            }],
+            constants: Vec::new(),
+            generic_functions: HashMap::new(),
+            type_param_bounds: HashMap::new(),
+        };
+        let modules = HashMap::from([("resources", &provider), ("main", &consumer)]);
+
+        let imports = render_local_module_imports(&consumer, &modules);
+
+        assert!(
+            imports.contains("use crate::resources::Resource;"),
+            "{imports}"
+        );
+        assert!(
+            imports.contains("use crate::resources::__SifrOpaqueResourceMethods as _;"),
+            "{imports}"
+        );
+    }
 }

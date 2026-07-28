@@ -3,12 +3,20 @@
 This fixture family tracks resource-shaped opaque handles for `reqwest`,
 `rusqlite`, `tokio-postgres`, and `redis`.
 
-- Positive evidence: `resource_close_aclose_matrix` remains planned for runtime
-  fixtures proving close/aclose, cleanup, and service-local behavior with
-  explicit loopback or local service configuration.
-- Negative evidence: `invalid_resource_aliasing` remains planned for fixtures
-  proving invalid borrowing, aliasing, and cleanup contracts fail before the
-  row is listed as verified support.
-- Compatibility category: `future-owned-by-separate-phase`. Basic opaque handle
-  contracts and state transitions are verified; full resource ecosystem
-  certification is not listed as verified support.
+- Positive evidence: `resource_close_aclose_matrix` is executed by
+  `test_build_opaque_resource_lifecycle_runtime`. Generated glue transfers an
+  opaque handle through borrowed operation and owned `close=async_close`
+  member bridges on the current-thread runtime, performs HTTP, SQLite, RESP, and PostgreSQL
+  operations, closes the handle twice with a stable
+  `closed`/`already-closed` result, removes the temporary database, exercises
+  the runtime poison guard, and observes zero live harness-owned tracked tasks.
+- Negative evidence: `invalid_resource_aliasing` is executed by
+  `test_build_opaque_resource_alias_rejection_runtime`. Its distinct generated
+  bridge path first operates on all four live resources, closes the original,
+  retries through a bridge-local shared alias, and classifies the resulting
+  `resource-state=closed` rejection. No Sifr-level clone policy is claimed.
+- Compatibility category: `supported-through-bridge`. The locked
+  `resource_lifecycle_runtime` scenario uses only ephemeral loopback listeners,
+  a unique temporary SQLite path, bounded operations, and checked-in offline
+  Cargo resolution. Redis library-metadata `CLIENT SETINFO` is disabled, so the
+  RESP harness covers only the exercised connection and `PING` frames.

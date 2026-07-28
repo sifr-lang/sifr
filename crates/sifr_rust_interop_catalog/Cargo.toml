@@ -36,7 +36,7 @@ rayon = { version = "=1.12.0", default-features = true, optional = true }
 redis = { version = "=1.4.1", default-features = false, features = ["tokio-comp"], optional = true }
 regex = { version = "=1.12.3", default-features = true, optional = true }
 reqwest = { version = "=0.12.28", default-features = false, features = ["rustls-tls", "json"], optional = true }
-rusqlite = { version = "=0.40.1", default-features = true, features = ["bundled"], optional = true }
+rusqlite = { version = "=0.39.0", default-features = true, features = ["bundled"], optional = true }
 serde = { version = "=1.0.228", default-features = true, optional = true }
 serde_derive = { version = "=1.0.228", default-features = true, optional = true }
 serde_json = { version = "=1.0.149", default-features = true, optional = true }

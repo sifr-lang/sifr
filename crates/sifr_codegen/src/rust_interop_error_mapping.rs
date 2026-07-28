@@ -16,15 +16,18 @@ fn bridge_error_expr_with_contract(
     declared_error_contract: bool,
 ) -> RustExpr {
     if let Type::Alias { name, body, .. } = err_type {
-        if matches!(
-            body.resolve_alias(),
-            Type::Class { fields, .. }
-                if is_message_error_alias(name) && message_error_fields(fields).is_some()
-        ) {
-            return RustExpr::StructInit {
-                name: name.clone(),
-                fields: vec![("message".to_string(), to_string_expr(value))],
-            };
+        if let Type::Class { fields, .. } = body.resolve_alias() {
+            if is_message_error_alias(name) {
+                if let Some(error_fields) = message_error_fields(fields) {
+                    return RustExpr::StructInit {
+                        name: name.clone(),
+                        fields: error_fields
+                            .into_iter()
+                            .map(|field| (field, to_string_expr(value.clone())))
+                            .collect(),
+                    };
+                }
+            }
         }
     }
     match err_type.resolve_alias() {
@@ -50,7 +53,11 @@ fn bridge_error_expr_with_contract(
         } if is_message_error_alias(name) && message_error_fields(fields).is_some() => {
             RustExpr::StructInit {
                 name: class.rust_type(),
-                fields: vec![("message".to_string(), to_string_expr(value))],
+                fields: message_error_fields(fields)
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|field| (field, to_string_expr(value.clone())))
+                    .collect(),
             }
         }
         class @ Type::Class { .. } if err_type.is_python_error_contract() => {
@@ -302,6 +309,31 @@ mod tests {
         assert_eq!(
             render_expr(&mapped),
             "DiagnosticError { message: __sifr_bridge_error.to_string() }"
+        );
+    }
+
+    #[test]
+    fn reserved_message_errors_initialize_every_declared_string_field() {
+        let http_error = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "HttpError".to_string(),
+            fields: vec![
+                ("message".to_string(), Type::Str),
+                ("detail".to_string(), Type::Str),
+            ],
+            methods: Vec::new(),
+            parent_class: Some("Error".to_string()),
+        };
+
+        let mapped = bridge_error_contract_expr(
+            RustExpr::Ident("__sifr_bridge_error".to_string()),
+            &http_error,
+        );
+
+        assert_eq!(
+            render_expr(&mapped),
+            "HttpError { message: __sifr_bridge_error.to_string(), detail: __sifr_bridge_error.to_string() }"
         );
     }
 

@@ -574,13 +574,15 @@ impl RustEmitter {
                 // source-spellable name in the user's flat Rust namespace.
                 return;
             }
+            let class_name = source_class_rust_name(&class.name);
             self.body_items.push(RustItem::TypeAlias {
-                name: source_class_rust_name(&class.name),
+                name: class_name.clone(),
                 ty: RustType::Named(format!(
                     "::sifr_runtime::interop::Handle<{}>",
                     target.replace('.', "::")
                 )),
             });
+            self.emit_opaque_rust_method_trait(class, &class_name);
             return;
         }
 
@@ -768,6 +770,55 @@ impl RustEmitter {
         }
 
         self.emit_protocol_impls(class, module);
+    }
+
+    fn emit_opaque_rust_method_trait(&mut self, class: &HirClass, class_name: &str) {
+        let methods = class
+            .methods
+            .iter()
+            .filter(|method| !method.rust_interop.is_empty())
+            .collect::<Vec<_>>();
+        if methods.is_empty() {
+            return;
+        }
+        let trait_name = format!("__SifrOpaque{class_name}Methods");
+        let saved_class_name = self.current_class_name.clone();
+        self.current_class_name = Some(class.name.clone());
+        let mut signatures = Vec::with_capacity(methods.len());
+        let mut implementations = Vec::with_capacity(methods.len());
+        for method in methods {
+            let item = self.lower_class_method_item(method, class, false, false);
+            let RustItem::Fn {
+                name,
+                params,
+                ret,
+                is_async,
+                ..
+            } = &item
+            else {
+                unreachable!("opaque Rust method must lower to a function item");
+            };
+            signatures.push(RustItem::TraitMethodSig {
+                name: name.clone(),
+                params: params.clone(),
+                ret: ret.clone(),
+                is_async: *is_async,
+            });
+            implementations.push(item);
+        }
+        self.current_class_name = saved_class_name;
+        self.body_items.push(RustItem::Trait {
+            name: trait_name.clone(),
+            visibility: Visibility::Pub,
+            supertraits: Vec::new(),
+            methods: signatures,
+        });
+        self.body_items.push(RustItem::Impl {
+            target: class_name.to_string(),
+            type_params: Vec::new(),
+            trait_: Some(trait_name),
+            items: implementations,
+        });
     }
 }
 

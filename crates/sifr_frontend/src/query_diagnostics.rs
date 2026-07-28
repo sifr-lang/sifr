@@ -2,7 +2,7 @@ use super::{
     DocumentVersion, FileId, FrontendDiagnosticStyle, FrontendSourceContext, ModuleId, ModuleState,
     SourceHash, SourcePath, SourceText, SymbolKind, SymbolView,
 };
-use crate::class_method_exports::{imported_instance_methods, local_instance_methods};
+use crate::class_method_exports::ClassMethodExports;
 pub(crate) use crate::export_type_localization::should_export_callable;
 use crate::export_type_localization::{
     copy_class_generic_metadata, copy_function_generic_metadata, declared_generic_metadata,
@@ -20,7 +20,7 @@ use sifr_lowering::{
 };
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap};
 pub(super) fn module_state(
     id: ModuleId,
     file: FileId,
@@ -276,7 +276,7 @@ pub fn collect_module_exports(
     let module = &lowering_result.module;
     let mut fn_exports = HashMap::new();
     let mut class_exports = HashMap::new();
-    let mut class_instance_method_exports: HashMap<String, HashSet<String>> = HashMap::new();
+    let mut class_method_exports = ClassMethodExports::default();
     let mut class_type_param_exports = HashMap::new();
     let mut const_exports = HashMap::new();
     let mut const_integer_value_exports = HashMap::new();
@@ -323,8 +323,7 @@ pub fn collect_module_exports(
 
     for class in &module.classes {
         if !class.name.starts_with('_') {
-            let instance_methods = local_instance_methods(class, &class_instance_method_exports);
-            class_instance_method_exports.insert(class.name.clone(), instance_methods);
+            class_method_exports.record_local(class);
             let mut methods: Vec<(String, FunctionType)> = class
                 .methods
                 .iter()
@@ -467,9 +466,12 @@ pub fn collect_module_exports(
                         local_name.clone(),
                         localize_user_import_type(class_type, &import.module, &class_aliases),
                     );
-                    let instance_methods =
-                        imported_instance_methods(external_defs, &import.module, name);
-                    class_instance_method_exports.insert(local_name.clone(), instance_methods);
+                    class_method_exports.record_imported(
+                        external_defs,
+                        &import.module,
+                        name,
+                        &local_name,
+                    );
                     copy_class_generic_metadata(
                         external_defs,
                         &import.module,
@@ -506,9 +508,7 @@ pub fn collect_module_exports(
     external_defs
         .classes
         .insert(module_name.to_string(), class_exports);
-    external_defs
-        .class_instance_methods
-        .insert(module_name.to_string(), class_instance_method_exports);
+    class_method_exports.store(external_defs, module_name);
     if !class_type_param_exports.is_empty() {
         external_defs
             .class_type_params

@@ -14,7 +14,7 @@ class Tokenizer:
     @rust(bridge.tokenizer.close, panic=map_error(bridge.tokenizer.map_panic))
     def close(own self) -> Result[None, TokenError | RustPanicError]: ...
 
-def verify_declared_send_sync_copy_handle(resource: Tokenizer) -> Result[list[uint32], TokenError | RustPanicError]:
+def verify_declared_send_sync_copy_handle(own resource: Tokenizer) -> Result[list[uint32], TokenError | RustPanicError]:
     encode_result: Result[list[uint32], TokenError | RustPanicError] = resource.encode("sifr-rust")
     close_result: Result[None, TokenError | RustPanicError] = resource.close()
     return encode_result

@@ -56,6 +56,7 @@ pub enum RustItem {
         name: String,
         params: Vec<RustParam>,
         ret: Option<RustType>,
+        is_async: bool,
     },
     TypeAlias {
         name: String,

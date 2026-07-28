@@ -1,16 +1,51 @@
 # fixture: opaque_resource_matrix
 # evidence: positive/resource_close_aclose_matrix
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: runtime-observed
-# expected-result: future-owned
+# expected-result: pass
 class ResourceError(Error):
     message: str
 
-@rust.opaque(type=bridge.resources.Client, send=True, sync=False, clone=none, close=async_close)
-class ResourceClient:
-    @rust(bridge.resources.aclose)
-    async def aclose(own self) -> Result[None, ResourceError | RustPanicError]: ...
+@rust.opaque(
+    type=bridge.resources.ResourceMatrix,
+    send=False,
+    sync=False,
+    close=async_close,
+    borrow=exclusive,
+    thread_affinity=tokio_current_thread,
+)
+class ResourceMatrix:
+    @rust(bridge.resources.aclose, panic=trusted_no_panic)
+    async def aclose(own self) -> Result[None, ResourceError]:
+        ...
 
-async def verify_resource_close_aclose_matrix(resource: ResourceClient) -> Result[None, ResourceError | RustPanicError]:
-    aclose_result: Result[None, ResourceError | RustPanicError] = await resource.aclose()
-    return aclose_result
+@rust(bridge.resources.open, panic=trusted_no_panic)
+async def open_resources() -> Result[ResourceMatrix, ResourceError]:
+    await task.sleep(0.0)
+    raise ResourceError("declaration only")
+
+@rust(bridge.resources.contract, panic=trusted_no_panic)
+def resource_contract() -> str: ...
+
+@rust(bridge.resources.close_observation, panic=trusted_no_panic)
+def resource_close_observation() -> Result[str, ResourceError]: ...
+
+@rust.async(thread_affinity=tokio_current_thread)
+@rust(bridge.resources.run, panic=trusted_no_panic)
+async def run_resources(resource: ResourceMatrix) -> Result[str, ResourceError]:
+    await task.sleep(0.0)
+    return ""
+
+async def verify_resource_close_aclose_matrix() -> Result[str, ResourceError]:
+    try:
+        contract: str = resource_contract()
+        assert contract == "opaque-resource-runtime-v1"
+        resource: ResourceMatrix = await open_resources()
+        summary: str = await run_resources(resource)
+        _closed: None = await resource.aclose()
+        closed: str = resource_close_observation()
+        verified: str = summary + ";close=" + closed
+        assert verified == "http=echo:reqwest;sqlite=sqlite;redis=PONG;postgres=1;protocol-negatives=redis-malformed/postgres-early-close;poison=Rust bridge panicked;close=closed/already-closed"
+        return verified
+    except ResourceError as error:
+        raise error
