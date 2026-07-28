@@ -511,6 +511,8 @@ Review and upstream coordination ledger:
   131/131, and every crate, runtime, tooling, performance, and guardrail step.
   Its 1058.85-second cold-cache wall time produced only the declared warm-target
   advisory; every enforced per-step budget passed.
+- Protected credential-free drill and stable index planning are under review
+  in [PR #3041](https://github.com/sifr-lang/sifr/pull/3041).
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
 - [ ] Exercise resume, stale generation, burned generation, rollback, and
