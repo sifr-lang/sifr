@@ -154,7 +154,15 @@ def run_suite(
             run_python_module(
                 "governance.incident_recovery_selftest",
                 "incident-recovery",
-            )
+            ),
+            run_python_module(
+                "governance.incident_publication_selftest",
+                "incident-publication",
+            ),
+            run_python_module(
+                "governance.incident_public_recovery_selftest",
+                "incident-public-recovery",
+            ),
         ]
     elif suite_name == "epoch-bootstrap":
         variants = [
@@ -190,7 +198,11 @@ def run_suite(
             run_python_module(
                 "governance.stable_publish_selftest",
                 "stable-publication",
-            )
+            ),
+            run_python_module(
+                "governance.stable_public_smoke_selftest",
+                "stable-public-smoke",
+            ),
         ]
     elif suite_name == "qualification":
         variants = [
@@ -212,11 +224,21 @@ def run_suite(
                     )
                 )
             if include_incident:
-                variants.append(
-                    run_python_module(
-                        "governance.incident_recovery_selftest",
-                        "incident-recovery",
-                    )
+                variants.extend(
+                    [
+                        run_python_module(
+                            "governance.incident_recovery_selftest",
+                            "incident-recovery",
+                        ),
+                        run_python_module(
+                            "governance.incident_publication_selftest",
+                            "incident-publication",
+                        ),
+                        run_python_module(
+                            "governance.incident_public_recovery_selftest",
+                            "incident-public-recovery",
+                        ),
+                    ]
                 )
             if include_protected_drill:
                 variants.append(
@@ -241,11 +263,17 @@ def run_suite(
                     )
                 )
             if include_stable_publication:
-                variants.append(
-                    run_python_module(
-                        "governance.stable_publish_selftest",
-                        "stable-publication",
-                    )
+                variants.extend(
+                    [
+                        run_python_module(
+                            "governance.stable_publish_selftest",
+                            "stable-publication",
+                        ),
+                        run_python_module(
+                            "governance.stable_public_smoke_selftest",
+                            "stable-public-smoke",
+                        ),
+                    ]
                 )
     failures = sum(1 for variant in variants if variant["status"] == "fail")
     return {

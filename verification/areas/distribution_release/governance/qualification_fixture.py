@@ -259,6 +259,11 @@ def build_evidence_bundle(
         "name": "sifr-vscode",
         "publisher": "sifr",
         "version": "0.2.0",
+        "sifrCompilerCompatibility": (
+            ">=0.1.0,<0.2.0"
+            if transition == "ga-activation"
+            else ">=0.0.9,<0.2.0"
+        ),
         "fixture": "changed" if variant == "vsix" else "baseline",
     }
     package_entry = zipfile.ZipInfo(

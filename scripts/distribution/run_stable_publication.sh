@@ -324,59 +324,31 @@ python3 scripts/distribution/generate_site_publication_facts.py \
 publication_facts_sha256="$(
   sha256sum "${work}/site-publication-facts.json" | awk '{print $1}'
 )"
+stable_site_facts_sha256="$(
+  sha256sum "${work}/staged/stable-site-release-facts.json" | awk '{print $1}'
+)"
 
-GH_TOKEN="${site_token}" \
-  scripts/distribution/verify_site_workflow_identity.sh \
+SITE_TOKEN="${site_token}" \
+  scripts/distribution/dispatch_stable_site_publication.sh \
     --repository "${site_repository}" \
+    --workflow "${site_workflow}" \
+    --workflow-ref "${site_workflow_ref}" \
     --ruleset-id "${site_ruleset_id}" \
     --ruleset-updated-at "${site_ruleset_updated_at}" \
-    --workflow-ref "${site_workflow_ref}" \
+    --workflow-sha256 "${site_workflow_sha256}" \
+    --source-commit "$(jq -er '.source.commit' "${prepare_summary}")" \
     --site-commit "${site_base_commit}" \
-    --workflow "${site_workflow}" \
-    --workflow-sha256 "${site_workflow_sha256}"
-dispatched_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-jq -n \
-  --arg ref "${site_workflow_ref}" \
-  --arg source "$(jq -er '.source.commit' "${prepare_summary}")" \
-  --arg plan "${expected_plan_sha256}" \
-  --arg attempt "${publication_attempt}" \
-  --arg generation "${proposed_generation}" \
-  --arg index "${proposed_sha256}" \
-  --arg site "${site_base_commit}" \
-  --arg dispatcher_index "${dispatcher_index_sha256}" \
-  --arg dispatcher_stable "${dispatcher_stable_sha256}" \
-  --arg dispatcher_alpha "${dispatcher_alpha_sha256}" \
-  --arg dispatcher_beta "${dispatcher_beta_sha256}" \
-  --arg facts "${publication_facts_sha256}" \
-  '{
-    ref: $ref,
-    inputs: {
-      sifr_source_commit: $source,
-      release_plan_sha256: $plan,
-      publication_attempt: $attempt,
-      release_index_generation: $generation,
-      release_index_sha256: $index,
-      site_base_commit: $site,
-      dispatcher_index_sha256: $dispatcher_index,
-      dispatcher_stable_sha256: $dispatcher_stable,
-      dispatcher_alpha_sha256: $dispatcher_alpha,
-      dispatcher_beta_sha256: $dispatcher_beta,
-      dispatcher_default_channel: "stable",
-      publication_facts_sha256: $facts
-    }
-  }' |
-  GH_TOKEN="${site_token}" gh api \
-    --method POST \
-    "repos/${site_repository}/actions/workflows/${site_workflow}/dispatches" \
-    --input -
-GH_TOKEN="${site_token}" \
-  scripts/distribution/poll_site_release_run.sh \
-    --repository "${site_repository}" \
-    --workflow "${site_workflow}" \
-    --title "Sifr site release ${publication_attempt}" \
-    --sha "${site_base_commit}" \
-    --dispatched-at "${dispatched_at}" \
-    --deadline-seconds 1200 \
+    --release-plan-sha256 "${expected_plan_sha256}" \
+    --publication-attempt "${publication_attempt}" \
+    --generation "${proposed_generation}" \
+    --index-sha256 "${proposed_sha256}" \
+    --default-channel stable \
+    --dispatcher-index-sha256 "${dispatcher_index_sha256}" \
+    --dispatcher-stable-sha256 "${dispatcher_stable_sha256}" \
+    --dispatcher-alpha-sha256 "${dispatcher_alpha_sha256}" \
+    --dispatcher-beta-sha256 "${dispatcher_beta_sha256}" \
+    --publication-facts-sha256 "${publication_facts_sha256}" \
+    --stable-site-facts-sha256 "${stable_site_facts_sha256}" \
     --result-out "${work}/site-run.json"
 
 GH_TOKEN="" SITE_TOKEN="" VSCE_PAT="" \
@@ -385,6 +357,7 @@ GH_TOKEN="" SITE_TOKEN="" VSCE_PAT="" \
   --version "${version}" \
   --index "${work}/staged/channels.json" \
   --dispatchers "${work}/dispatchers" \
+  --site-facts "${work}/staged/stable-site-release-facts.json" \
   --asset-digests "${work}/published-assets.json" \
   --marketplace-vsix "${work}/marketplace.vsix" \
   --out "${work}/stable-smoke"

@@ -19,11 +19,14 @@ sys.path.insert(0, str(AREA_ROOT))
 from governance import (  # noqa: E402
     GovernanceError,
     generate_site_release_facts,
+    materialize_incident_prepare,
     materialize_stable_prepare,
     validate_bootstrap_evidence,
     validate_drill_evidence,
     validate_incident_request,
     validate_incident_signoff,
+    validate_incident_mutation_evidence,
+    validate_incident_prepare_summary,
     validate_install_receipt,
     validate_qualification_artifact_index,
     validate_release_index,
@@ -73,6 +76,8 @@ def parse_args() -> argparse.Namespace:
             "site-facts",
             "incident-request",
             "incident-signoff",
+            "incident-index-mutation-evidence",
+            "incident-publication-prepare",
             "release-profile-report",
             "qualification-artifact-index",
             "install-receipt",
@@ -192,7 +197,7 @@ def parse_args() -> argparse.Namespace:
     stable_prepare.add_argument(
         "--operation",
         required=True,
-        choices=("ga-activation", "normal"),
+        choices=("ga-activation", "normal", "incident-roll-forward"),
     )
     stable_prepare.add_argument("--mode", required=True, choices=("initial", "resume"))
     stable_prepare.add_argument("--evidence-root", required=True)
@@ -203,8 +208,32 @@ def parse_args() -> argparse.Namespace:
     stable_prepare.add_argument("--live-index", required=True)
     stable_prepare.add_argument("--snapshot-root", required=True)
     stable_prepare.add_argument("--artifact-root", required=True)
+    stable_prepare.add_argument("--incident-request")
+    stable_prepare.add_argument("--affected-plan")
     stable_prepare.add_argument("--proposed-generation", required=True, type=int)
     stable_prepare.add_argument("--out", required=True)
+    incident_prepare = commands.add_parser("prepare-incident-publication")
+    incident_prepare.add_argument(
+        "--operation",
+        required=True,
+        choices=("rollback", "incident-roll-forward"),
+    )
+    incident_prepare.add_argument("--mode", required=True, choices=("initial", "resume"))
+    incident_prepare.add_argument("--governance-root", required=True)
+    incident_prepare.add_argument("--incident-root", required=True)
+    incident_prepare.add_argument("--incident-commit", required=True)
+    incident_prepare.add_argument("--incident-path", required=True)
+    incident_prepare.add_argument("--expected-request-sha256", required=True)
+    incident_prepare.add_argument("--live-index", required=True)
+    incident_prepare.add_argument("--snapshot-root", required=True)
+    incident_prepare.add_argument("--proposed-generation", required=True, type=int)
+    incident_prepare.add_argument("--candidate-root")
+    incident_prepare.add_argument("--candidate-commit", default="")
+    incident_prepare.add_argument("--candidate-path", default="")
+    incident_prepare.add_argument("--expected-plan-sha256", default="")
+    incident_prepare.add_argument("--source-root")
+    incident_prepare.add_argument("--artifact-root")
+    incident_prepare.add_argument("--out", required=True)
     approvers = commands.add_parser("resolve-publication-approvers")
     approvers.add_argument("--approvals", required=True)
     approvers.add_argument("--initiator", required=True)
@@ -243,6 +272,8 @@ def main() -> int:
             plan_stable_index(args)
         elif args.command == "prepare-stable-publication":
             prepare_stable_publication(args)
+        elif args.command == "prepare-incident-publication":
+            prepare_incident_publication(args)
         elif args.command == "resolve-publication-approvers":
             resolve_publication_approvers(args)
         else:
@@ -265,6 +296,8 @@ def validate_command(args: argparse.Namespace) -> None:
         "site-facts": validate_site_release_facts,
         "incident-request": validate_incident_request,
         "incident-signoff": validate_incident_signoff,
+        "incident-index-mutation-evidence": validate_incident_mutation_evidence,
+        "incident-publication-prepare": validate_incident_prepare_summary,
         "release-profile-report": validate_release_profile_report,
         "qualification-artifact-index": validate_qualification_artifact_index,
         "install-receipt": validate_install_receipt,
@@ -543,6 +576,34 @@ def prepare_stable_publication(args: argparse.Namespace) -> None:
         snapshot_root=Path(args.snapshot_root),
         artifact_root=Path(args.artifact_root),
         proposed_generation=args.proposed_generation,
+        incident_request_path=(
+            Path(args.incident_request) if args.incident_request else None
+        ),
+        affected_plan_path=(
+            Path(args.affected_plan) if args.affected_plan else None
+        ),
+    )
+    write_canonical_json(Path(args.out), summary, refuse_existing=True)
+
+
+def prepare_incident_publication(args: argparse.Namespace) -> None:
+    summary = materialize_incident_prepare(
+        operation=args.operation,
+        mode=args.mode,
+        governance_root=Path(args.governance_root),
+        incident_root=Path(args.incident_root),
+        incident_commit=args.incident_commit,
+        incident_path=args.incident_path,
+        expected_request_sha256=args.expected_request_sha256,
+        live_index_path=Path(args.live_index),
+        snapshot_root=Path(args.snapshot_root),
+        proposed_generation=args.proposed_generation,
+        candidate_root=Path(args.candidate_root) if args.candidate_root else None,
+        candidate_commit=args.candidate_commit,
+        candidate_path=args.candidate_path,
+        expected_plan_sha256=args.expected_plan_sha256,
+        source_root=Path(args.source_root) if args.source_root else None,
+        artifact_root=Path(args.artifact_root) if args.artifact_root else None,
     )
     write_canonical_json(Path(args.out), summary, refuse_existing=True)
 

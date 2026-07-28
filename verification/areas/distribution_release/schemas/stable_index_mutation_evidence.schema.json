@@ -19,7 +19,8 @@
     "transition": {
       "enum": [
         "ga-activation",
-        "normal"
+        "normal",
+        "incident-roll-forward"
       ]
     },
     "version": {

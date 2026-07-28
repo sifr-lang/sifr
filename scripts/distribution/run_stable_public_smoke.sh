@@ -6,7 +6,7 @@ usage() {
   cat <<'EOF'
 Usage: scripts/distribution/run_stable_public_smoke.sh \
   --repository OWNER/REPO --version X.Y.Z --index PATH --dispatchers DIR \
-  --asset-digests PATH --marketplace-vsix PATH --out DIR
+  --site-facts PATH --asset-digests PATH --marketplace-vsix PATH --out DIR
 EOF
   exit 2
 }
@@ -15,6 +15,7 @@ repository=""
 version=""
 index=""
 dispatchers=""
+site_facts=""
 asset_digests=""
 marketplace_vsix=""
 out=""
@@ -24,6 +25,7 @@ while [[ $# -gt 0 ]]; do
     --version) version="${2:-}"; shift 2 ;;
     --index) index="${2:-}"; shift 2 ;;
     --dispatchers) dispatchers="${2:-}"; shift 2 ;;
+    --site-facts) site_facts="${2:-}"; shift 2 ;;
     --asset-digests) asset_digests="${2:-}"; shift 2 ;;
     --marketplace-vsix) marketplace_vsix="${2:-}"; shift 2 ;;
     --out) out="${2:-}"; shift 2 ;;
@@ -34,7 +36,7 @@ done
 [[ "${repository}" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ &&
   "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || usage
 for path in "${index}" "${dispatchers}/index" "${dispatchers}/stable" \
-  "${asset_digests}" "${marketplace_vsix}"
+  "${site_facts}" "${asset_digests}" "${marketplace_vsix}"
 do
   [[ -f "${path}" && ! -L "${path}" ]] || usage
 done
@@ -102,6 +104,9 @@ jq -e \
   echo "stable-public-smoke: public index did not activate the expected stable release" >&2
   exit 2
 }
+scripts/distribution/release_governance.py validate \
+  --kind site-facts --input "${site_facts}" \
+  --live-index "${out}/governed-index.json" --require-canonical
 
 download_until_matches \
   https://sifr.sh/install \
@@ -111,6 +116,27 @@ download_until_matches \
   https://sifr.sh/install/stable \
   "${dispatchers}/stable" \
   "${out}/stable-dispatcher"
+
+docs_output="${out}/stable-release-docs.html"
+docs_deadline=$((SECONDS + 180))
+docs_converged=false
+while (( SECONDS < docs_deadline )); do
+  if curl -fsSL \
+    -H "Cache-Control: no-cache" \
+    "https://sifr.sh/releases/stable?sifr_publication_smoke=${RANDOM}-${SECONDS}" \
+    -o "${docs_output}" &&
+    python3 scripts/distribution/verify_public_stable_docs.py \
+      --facts "${site_facts}" --document "${docs_output}"
+  then
+    docs_converged=true
+    break
+  fi
+  sleep 5
+done
+if [[ "${docs_converged}" != "true" ]]; then
+  echo "stable-public-smoke: public stable documentation did not converge" >&2
+  exit 2
+fi
 
 version_assets_root="$(mktemp -d)"
 install_root="$(mktemp -d)"

@@ -1,4 +1,4 @@
-"""Plan deterministic GA-activation and normal stable index mutations."""
+"""Plan deterministic qualified stable index mutations."""
 
 from __future__ import annotations
 
@@ -135,7 +135,7 @@ def validate_stable_mutation_evidence(payload: object) -> dict[str, Any]:
     require_schema_v2(evidence)
     require_enum(
         evidence["transition"],
-        {"ga-activation", "normal"},
+        {"ga-activation", "normal", "incident-roll-forward"},
         "$.transition",
     )
     version = evidence["version"]

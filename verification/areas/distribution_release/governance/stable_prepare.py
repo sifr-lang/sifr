@@ -1,4 +1,4 @@
-"""Read-only protected preparation for GA and normal stable publication."""
+"""Read-only protected preparation for qualified stable publication."""
 
 from __future__ import annotations
 
@@ -20,15 +20,19 @@ from .common import (
     require_commit,
     require_enum,
     require_exact_keys,
+    require_incident_id,
     require_nonempty_string,
     require_object,
     require_positive_int,
     require_schema_v2,
     require_sha256,
+    sha256_bytes,
     sha256_file,
     version_channel,
 )
 from .generation import SNAPSHOT_RE, allocate_next_generation
+from .incident import validate_incident_request
+from .incident_planner import IncidentMutation, materialize_incident_mutation
 from .planner import (
     bind_aggregate_artifacts,
     bind_target_reports,
@@ -75,12 +79,14 @@ def materialize_stable_prepare(
     snapshot_root: Path,
     artifact_root: Path,
     proposed_generation: int,
+    incident_request_path: Path | None = None,
+    affected_plan_path: Path | None = None,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     """Revalidate exact reviewer-visible inputs and return a read-only summary."""
     operation = require_enum(
         operation,
-        {"ga-activation", "normal"},
+        {"ga-activation", "normal", "incident-roll-forward"},
         "operation",
     )
     mode = require_enum(mode, {"initial", "resume"}, "mode")
@@ -115,7 +121,27 @@ def materialize_stable_prepare(
         fail("expected_plan_sha256", "does not match candidate evidence")
 
     plan_value = load_json_strict(plan_path, require_canonical=True)
-    plan = validate_release_plan(plan_value)
+    incident_request: dict[str, Any] | None = None
+    incident_request_sha256: str | None = None
+    if operation == "incident-roll-forward":
+        if incident_request_path is None or affected_plan_path is None:
+            fail(
+                "incident-roll-forward",
+                "requires incident_request_path and affected_plan_path",
+            )
+        incident_request = validate_incident_request(
+            load_json_strict(incident_request_path, require_canonical=True)
+        )
+        incident_request_sha256 = sha256_file(incident_request_path)
+    elif incident_request_path is not None or affected_plan_path is not None:
+        fail(
+            "incident inputs",
+            "are accepted only for incident-roll-forward",
+        )
+    plan = validate_release_plan(
+        plan_value,
+        incident_request_sha256=incident_request_sha256,
+    )
     if plan["transition"] != operation or plan["version"] != match.group(1):
         fail("candidate_path", "does not match the requested plan operation/version")
     if signoff_path.is_file():
@@ -207,25 +233,65 @@ def materialize_stable_prepare(
         )
     publication_state = "pending"
     try:
-        validate_release_plan(plan_value, active_index=live_index)
+        validate_release_plan(
+            plan_value,
+            active_index=live_index,
+            incident_request_sha256=incident_request_sha256,
+        )
     except GovernanceError:
-        if mode != "resume" or not _plan_is_realized(plan, live_index):
+        if (
+            mode != "resume"
+            or not _plan_is_realized(
+                plan,
+                live_index,
+                incident_request=incident_request,
+            )
+        ):
             raise
         publication_state = "activated"
-        mutation = _recover_realized_mutation(
-            plan_path=plan_path,
-            live_index=live_index,
-            live_index_path=live_index_path,
-            snapshot_root=snapshot_root,
-        )
+        if operation == "incident-roll-forward":
+            assert incident_request_path is not None
+            assert affected_plan_path is not None
+            mutation = _recover_realized_incident_mutation(
+                request_path=incident_request_path,
+                affected_plan_path=affected_plan_path,
+                successor_plan_path=plan_path,
+                live_index=live_index,
+                live_index_path=live_index_path,
+                snapshot_root=snapshot_root,
+            )
+        else:
+            mutation = _recover_realized_mutation(
+                plan_path=plan_path,
+                live_index=live_index,
+                live_index_path=live_index_path,
+                snapshot_root=snapshot_root,
+            )
     else:
-        mutation = materialize_stable_mutation(
-            plan_path=plan_path,
-            live_index_path=live_index_path,
-            expected_generation=live_index["generation"],
-            expected_sha256=live_sha256,
-            proposed_generation=proposed_generation,
-        )
+        if operation == "incident-roll-forward":
+            assert incident_request_path is not None
+            assert affected_plan_path is not None
+            incident_mutation = materialize_incident_mutation(
+                request_path=incident_request_path,
+                live_index_path=live_index_path,
+                affected_plan_path=affected_plan_path,
+                successor_plan_path=plan_path,
+                expected_generation=live_index["generation"],
+                expected_sha256=live_sha256,
+                proposed_generation=proposed_generation,
+            )
+            mutation = _stable_mutation_from_incident(
+                incident_mutation,
+                plan_sha256=expected_plan_sha256,
+            )
+        else:
+            mutation = materialize_stable_mutation(
+                plan_path=plan_path,
+                live_index_path=live_index_path,
+                expected_generation=live_index["generation"],
+                expected_sha256=live_sha256,
+                proposed_generation=proposed_generation,
+            )
     mutation_evidence = mutation.evidence()
     validate_stable_mutation_evidence(mutation_evidence)
     summary = {
@@ -276,6 +342,15 @@ def materialize_stable_prepare(
             "base_commit": plan["site"]["base_commit"],
         },
     }
+    if incident_request is not None:
+        summary["incident"] = {
+            "incident_id": incident_request["incident_id"],
+            "request_sha256": incident_request_sha256,
+            "affected_version": incident_request["affected_release"]["version"],
+            "affected_plan_sha256": incident_request["affected_release"][
+                "plan_sha256"
+            ],
+        }
     validate_stable_prepare_summary(summary)
     return summary
 
@@ -283,33 +358,36 @@ def materialize_stable_prepare(
 def validate_stable_prepare_summary(payload: object) -> dict[str, Any]:
     """Validate the protected reviewer-visible summary contract."""
     summary = require_object(payload, "$")
+    operation = require_enum(
+        summary.get("operation"),
+        {"ga-activation", "normal", "incident-roll-forward"},
+        "$.operation",
+    )
+    required = {
+        "schema_version",
+        "operation",
+        "mode",
+        "publication_state",
+        "next_generation",
+        "version",
+        "evidence",
+        "source",
+        "release_report",
+        "qualification",
+        "live_index",
+        "mutation",
+        "artifacts",
+        "marketplace",
+        "site",
+    }
+    if operation == "incident-roll-forward":
+        required.add("incident")
     require_exact_keys(
         summary,
-        required={
-            "schema_version",
-            "operation",
-            "mode",
-            "publication_state",
-            "next_generation",
-            "version",
-            "evidence",
-            "source",
-            "release_report",
-            "qualification",
-            "live_index",
-            "mutation",
-            "artifacts",
-            "marketplace",
-            "site",
-        },
+        required=required,
         location="$",
     )
     require_schema_v2(summary)
-    operation = require_enum(
-        summary["operation"],
-        {"ga-activation", "normal"},
-        "$.operation",
-    )
     require_enum(summary["mode"], {"initial", "resume"}, "$.mode")
     publication_state = require_enum(
         summary["publication_state"],
@@ -497,15 +575,54 @@ def validate_stable_prepare_summary(payload: object) -> dict[str, Any]:
     if site["repository"] != "sifr-lang/sifr-website":
         fail("$.site.repository", "must be sifr-lang/sifr-website")
     require_commit(site["base_commit"], "$.site.base_commit")
+    if operation == "incident-roll-forward":
+        incident = require_object(summary["incident"], "$.incident")
+        require_exact_keys(
+            incident,
+            required={
+                "incident_id",
+                "request_sha256",
+                "affected_version",
+                "affected_plan_sha256",
+            },
+            location="$.incident",
+        )
+        require_incident_id(incident["incident_id"], "$.incident.incident_id")
+        require_sha256(incident["request_sha256"], "$.incident.request_sha256")
+        if version_channel(
+            incident["affected_version"],
+            "$.incident.affected_version",
+        ) != "stable":
+            fail("$.incident.affected_version", "must be an exact stable version")
+        require_sha256(
+            incident["affected_plan_sha256"],
+            "$.incident.affected_plan_sha256",
+        )
     return summary
 
 
-def _plan_is_realized(plan: dict[str, Any], live_index: dict[str, Any]) -> bool:
+def _plan_is_realized(
+    plan: dict[str, Any],
+    live_index: dict[str, Any],
+    *,
+    incident_request: dict[str, Any] | None = None,
+) -> bool:
     version = plan["version"]
-    return (
+    realized = (
         live_index.get("ga_status") == "active"
         and live_index.get("channels", {}).get("stable") == version
         and live_index.get("releases", {}).get(version) == plan["desired_release"]
+    )
+    if not realized or plan["transition"] != "incident-roll-forward":
+        return realized
+    if incident_request is None:
+        return False
+    affected = incident_request["affected_release"]["version"]
+    affected_release = live_index.get("releases", {}).get(affected)
+    return (
+        isinstance(affected_release, dict)
+        and affected_release.get("status") == "withdrawn"
+        and affected_release.get("incident_id") == incident_request["incident_id"]
     )
 
 
@@ -539,6 +656,64 @@ def _recover_realized_mutation(
     fail(
         "snapshot_root",
         "does not contain the exact predecessor for the activated release",
+    )
+
+
+def _recover_realized_incident_mutation(
+    *,
+    request_path: Path,
+    affected_plan_path: Path,
+    successor_plan_path: Path,
+    live_index: dict[str, Any],
+    live_index_path: Path,
+    snapshot_root: Path,
+) -> StableMutation:
+    candidates: list[tuple[int, Path]] = []
+    for path in snapshot_root.iterdir():
+        match = SNAPSHOT_RE.fullmatch(path.name)
+        if match is not None:
+            generation = int(match.group(1))
+            if generation < live_index["generation"]:
+                candidates.append((generation, path))
+    for generation, path in sorted(candidates, reverse=True):
+        try:
+            incident_mutation = materialize_incident_mutation(
+                request_path=request_path,
+                live_index_path=path,
+                affected_plan_path=affected_plan_path,
+                successor_plan_path=successor_plan_path,
+                expected_generation=generation,
+                expected_sha256=sha256_file(path),
+                proposed_generation=live_index["generation"],
+            )
+        except GovernanceError:
+            continue
+        mutation = _stable_mutation_from_incident(
+            incident_mutation,
+            plan_sha256=sha256_file(successor_plan_path),
+        )
+        if canonical_json_bytes(mutation.proposed_index) == live_index_path.read_bytes():
+            return mutation
+    fail(
+        "snapshot_root",
+        "does not contain the exact predecessor for the activated incident release",
+    )
+
+
+def _stable_mutation_from_incident(
+    mutation: IncidentMutation,
+    *,
+    plan_sha256: str,
+) -> StableMutation:
+    return StableMutation(
+        transition="incident-roll-forward",
+        version=mutation.successor_version,
+        plan_sha256=plan_sha256,
+        previous_index_sha256=sha256_bytes(
+            canonical_json_bytes(mutation.previous_index)
+        ),
+        previous_index=mutation.previous_index,
+        proposed_index=mutation.proposed_index,
     )
 
 
