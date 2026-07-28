@@ -212,13 +212,16 @@ def run(state: LocalState) -> Result[Subscription, SubscriptionError | RustPanic
         Err(errors) => errors,
     };
 
-    assert!(errors.iter().any(|error| {
-        error.code == Some(DiagnosticCode::RUST_CALLBACK_CONTRACT)
-            && error
-                .message
-                .contains("handler `handler` capture `inner.state`")
-            && error.message.contains("not sendable")
-    }));
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::RUST_CALLBACK_CONTRACT)
+                && error
+                    .message
+                    .contains("handler `handler` capture `inner.state`")
+                && error.message.contains("not sendable")
+        }),
+        "{errors:#?}"
+    );
 }
 
 #[test]
@@ -399,10 +402,53 @@ def attach(registry: Registry) -> Result[Subscription, SubscriptionError | RustP
 }
 
 #[test]
+fn rust_threadsafe_callback_prefers_lexical_type_over_shadowed_builtin_inference() {
+    let source = r#"
+class SubscriptionError(Error):
+    message: str
+
+class Subscription:
+    lifecycle_token: int
+
+class Counter:
+    count: int
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+def attach() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    holder: Counter = Counter(0)
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        assert holder.count == 0
+        return None
+    return subscribe(handler)
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("mutable user class capture should fail lowering"),
+        Err(errors) => errors,
+    };
+
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::RUST_CALLBACK_CONTRACT)
+                && error.message.contains("capture `holder` of type `Counter`")
+                && error.message.contains("not share-safe")
+                && !error.message.contains("dict")
+        }),
+        "{errors:#?}"
+    );
+}
+
+#[test]
 fn rust_threadsafe_callback_rejects_direct_and_transitive_mutating_captures() {
     let source = r#"
 class SubscriptionError(Error):
     message: str
+
+class LocalState(NonSend):
+    value: int
 
 class Subscription:
     lifecycle_token: int
@@ -428,6 +474,62 @@ def attach_transitive() -> Result[Subscription, SubscriptionError | RustPanicErr
     def transitive_handler(event: str) -> Result[None, SubscriptionError]:
         return bump(event)
     return subscribe(transitive_handler)
+
+def attach_assignment_target_only() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    state: LocalState = LocalState(0)
+    def state_handler(event: str) -> Result[None, SubscriptionError]:
+        state.value = 1
+        return None
+    return subscribe(state_handler)
+
+def attach_container_subscript() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seen: dict[str, int] = {}
+    def subscript_handler(event: str) -> Result[None, SubscriptionError]:
+        seen[event] = 1
+        return None
+    return subscribe(subscript_handler)
+
+def attach_mutating_method() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seen: dict[str, int] = {}
+    def method_handler(event: str) -> Result[None, SubscriptionError]:
+        _value: int = seen.setdefault(event, 1)
+        return None
+    return subscribe(method_handler)
+
+def attach_delete_target() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seen: dict[str, int] = {"seed": 1}
+    def delete_handler(event: str) -> Result[None, SubscriptionError]:
+        del seen[event]
+        return None
+    return subscribe(delete_handler)
+
+def attach_mixed_capture() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    label: str = "mixed"
+    seen: list[str] = [""]
+    def mixed_handler(event: str) -> Result[None, SubscriptionError]:
+        assert label == "mixed"
+        seen[0] = event
+        return None
+    return subscribe(mixed_handler)
+
+def attach_assignment_target_transitive() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seen: dict[str, int] = {}
+    def record(event: str) -> Result[None, SubscriptionError]:
+        seen[event] = 1
+        return None
+    def target_handler(event: str) -> Result[None, SubscriptionError]:
+        return record(event)
+    return subscribe(target_handler)
+
+def attach_mutation_in_exception_flow() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    state: LocalState = LocalState(0)
+    def try_handler(event: str) -> Result[None, SubscriptionError]:
+        try:
+            state.value = 1
+        finally:
+            assert event != ""
+        return None
+    return subscribe(try_handler)
 "#;
     let parsed = parse_module(source).expect("source should parse");
     let errors = match lower_module(parsed.suite()) {
@@ -451,6 +553,35 @@ def attach_transitive() -> Result[Subscription, SubscriptionError | RustPanicErr
                 && error
                     .message
                     .contains("handler `transitive_handler` capture `bump.transitive_counter`")
+                && error.message.contains("requires `FnMut`")
+        }),
+        "{errors:#?}"
+    );
+    for (handler, capture) in [
+        ("state_handler", "state"),
+        ("subscript_handler", "seen"),
+        ("method_handler", "seen"),
+        ("delete_handler", "seen"),
+        ("mixed_handler", "seen"),
+        ("try_handler", "state"),
+    ] {
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::RUST_CALLBACK_CONTRACT)
+                    && error
+                        .message
+                        .contains(&format!("handler `{handler}` capture `{capture}`"))
+                    && error.message.contains("requires `FnMut`")
+            }),
+            "missing direct assignment-target mutation for {handler}.{capture}: {errors:#?}"
+        );
+    }
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::RUST_CALLBACK_CONTRACT)
+                && error
+                    .message
+                    .contains("handler `target_handler` capture `record.seen`")
                 && error.message.contains("requires `FnMut`")
         }),
         "{errors:#?}"

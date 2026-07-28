@@ -75,6 +75,9 @@ const OPAQUE_RESOURCE_EVIDENCE: &str = include_str!(
 const OPAQUE_RESOURCE_NEGATIVE: &str = include_str!(
     "../../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/negative/invalid_resource_aliasing.sifr"
 );
+const CALLBACK_SUBSCRIPTION_NEGATIVE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/callback_subscription_ecosystem/negative/invalid_thread_capture_rejected.sifr"
+);
 #[derive(Debug, PartialEq, Eq)]
 enum ObservedRuntimeState {
     Closed,
@@ -593,7 +596,70 @@ fn test_build_callback_subscription_lifecycle_runtime() {
 #[ignore = "generated build integration coverage runs in full validation profiles"]
 #[doc = "sifr-evidence: executes-compiler-diagnostic"]
 fn test_check_callback_subscription_invalid_thread_capture_rejected() {
-    callback_subscription_support::check_invalid_thread_capture_rejected();
+    let package_root = copied_scenario(
+        "callback_subscription_ecosystem",
+        "subscription_lifecycle_runtime",
+        "rust_interop_callback_subscription_invalid_capture",
+    );
+    rebase_sifr_runtime_dependency(&package_root);
+    install_evidence_source(&package_root, CALLBACK_SUBSCRIPTION_NEGATIVE);
+    let entrypoint =
+        package_entrypoint_from_cargo_layout(&package_root, "subscription-lifecycle-runtime");
+    let errors = check_package_project(&entrypoint);
+
+    assert_eq!(
+        errors.len(),
+        10,
+        "invalid retained captures must stop before Cargo probing: {errors:#?}"
+    );
+    for (capture, reason) in [
+        ("handler `handler` capture `state`", "not sendable"),
+        (
+            "handler `handler` capture `hook`",
+            "captures cannot be proven thread-safe",
+        ),
+    ] {
+        assert!(
+            errors.iter().any(|error| {
+                error.code == DiagnosticCode::RUST_CALLBACK_CONTRACT.code()
+                    && error.message.contains(capture)
+                    && error.message.contains(reason)
+            }),
+            "missing retained capture rejection for {capture}: {errors:#?}"
+        );
+    }
+    assert!(
+        errors.iter().any(|error| {
+            error.code == DiagnosticCode::OWN_USE_AFTER_MOVE.code()
+                && error.message.contains("handler")
+        }),
+        "retained handler reuse must fail in Sifr ownership checking: {errors:#?}"
+    );
+    for capture in [
+        "handler `handler` capture `counter`",
+        "handler `handler` capture `bump.counter`",
+        "handler `state_write_handler` capture `state`",
+        "handler `subscript_handler` capture `seen`",
+        "handler `method_handler` capture `seen`",
+        "handler `mixed_handler` capture `seen`",
+        "handler `target_handler` capture `record.seen`",
+    ] {
+        assert!(
+            errors.iter().any(|error| {
+                error.code == DiagnosticCode::RUST_CALLBACK_CONTRACT.code()
+                    && error.message.contains(capture)
+                    && error.message.contains("requires `FnMut`")
+            }),
+            "missing retained Fn rejection for {capture}: {errors:#?}"
+        );
+    }
+    assert!(
+        errors
+            .iter()
+            .all(|error| !error.message.contains("Rust bridge probe failed")),
+        "invalid retained capture must reject before Cargo probing: {errors:#?}"
+    );
+    let _ = std::fs::remove_dir_all(package_root);
 }
 
 #[test]

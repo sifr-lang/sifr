@@ -742,6 +742,16 @@ Focused implementation evidence:
   diagnostic, records mutated nested captures, and rejects direct and
   transitive `FnMut` handlers before Cargo. Both mandatory generated-package
   directions exercise the corrected contract.
+- [Opus review round 6](../../reviews/active/rust-interop-certification-6-review-round-6.md)
+  confirmed every round-1 through round-5 remediation, then found that the
+  test-body decomposition broke negative-evidence provenance and that
+  assignment-target-only capture mutation could still reach raw rustc
+  `E0525`. The follow-up restores diagnostic assertions to the manifest-bound
+  generated-build test, discovers captures in assignment and deletion targets,
+  analyzes mutation over actual captured bindings through structured control
+  flow and sibling functions, covers collection-mutating methods, and prefers
+  lowered lexical types over builtin-name inference. The unresolved-type
+  branch now has a direct regression.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

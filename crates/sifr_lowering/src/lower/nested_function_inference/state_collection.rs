@@ -1,4 +1,5 @@
 use super::capture_collection::collect_nested_function_captures;
+use super::mutation_collection::collect_mutated_binding_names;
 use super::{
     analyze_assign, analyze_match_stmt, analyze_try_stmt, analyze_with_stmt,
     collect_compound_local_bindings, collect_compound_nonlocals, function_has_value_return,
@@ -184,9 +185,13 @@ fn infer_function_types(
     let function_mutated_captures = states
         .iter()
         .map(|(name, state)| {
-            let mut nonlocal_names = HashSet::new();
-            collect_nonlocal_names(&state.func.body, &mut nonlocal_names);
-            let mut mutated = collect_mutated_parameter_names(&state.func.body, &nonlocal_names)
+            let candidate_names = function_captures
+                .get(name)
+                .into_iter()
+                .flatten()
+                .map(|(capture, _)| capture.clone())
+                .collect::<HashSet<_>>();
+            let mut mutated = collect_mutated_binding_names(&state.func.body, &candidate_names)
                 .into_iter()
                 .collect::<Vec<_>>();
             mutated.sort();
@@ -221,7 +226,7 @@ fn collect_function_states<'a>(
             .iter()
             .map(|param| param.parameter.name.to_string())
             .collect::<HashSet<_>>();
-        let mutated_params = collect_mutated_parameter_names(&func.body, &param_names);
+        let mutated_params = collect_mutated_binding_names(&func.body, &param_names);
         for param in &func.parameters.args {
             let name = param.parameter.name.to_string();
             let (ty, explicit) = if let Some(annotation) = &param.parameter.annotation {
@@ -259,214 +264,6 @@ fn collect_function_states<'a>(
     }
 
     states
-}
-
-pub(super) fn collect_mutated_parameter_names(
-    stmts: &[Stmt],
-    param_names: &HashSet<String>,
-) -> HashSet<String> {
-    let mut mutated = HashSet::new();
-    for stmt in stmts {
-        collect_mutated_parameter_names_in_stmt(stmt, param_names, &mut mutated);
-    }
-    mutated
-}
-
-pub(super) fn collect_mutated_parameter_names_in_stmt(
-    stmt: &Stmt,
-    param_names: &HashSet<String>,
-    mutated: &mut HashSet<String>,
-) {
-    match stmt {
-        Stmt::Assign(assign) => {
-            for target in &assign.targets {
-                collect_mutated_parameter_names_in_target(target, param_names, mutated);
-            }
-            collect_mutated_parameter_names_in_expr(&assign.value, param_names, mutated);
-        }
-        Stmt::AnnAssign(assign) => {
-            collect_mutated_parameter_names_in_target(assign.target.as_ref(), param_names, mutated);
-            if let Some(value) = &assign.value {
-                collect_mutated_parameter_names_in_expr(value, param_names, mutated);
-            }
-        }
-        Stmt::AugAssign(assign) => {
-            collect_mutated_parameter_names_in_target(assign.target.as_ref(), param_names, mutated);
-            collect_mutated_parameter_names_in_expr(&assign.value, param_names, mutated);
-        }
-        Stmt::Expr(expr_stmt) => {
-            collect_mutated_parameter_names_in_expr(&expr_stmt.value, param_names, mutated);
-        }
-        Stmt::Return(ret) => {
-            if let Some(value) = &ret.value {
-                collect_mutated_parameter_names_in_expr(value, param_names, mutated);
-            }
-        }
-        Stmt::If(if_stmt) => {
-            collect_mutated_parameter_names_in_expr(&if_stmt.test, param_names, mutated);
-            for body_stmt in &if_stmt.body {
-                collect_mutated_parameter_names_in_stmt(body_stmt, param_names, mutated);
-            }
-            for clause in &if_stmt.elif_else_clauses {
-                if let Some(test) = &clause.test {
-                    collect_mutated_parameter_names_in_expr(test, param_names, mutated);
-                }
-                for body_stmt in &clause.body {
-                    collect_mutated_parameter_names_in_stmt(body_stmt, param_names, mutated);
-                }
-            }
-        }
-        Stmt::While(while_stmt) => {
-            collect_mutated_parameter_names_in_expr(&while_stmt.test, param_names, mutated);
-            for body_stmt in &while_stmt.body {
-                collect_mutated_parameter_names_in_stmt(body_stmt, param_names, mutated);
-            }
-            for body_stmt in &while_stmt.orelse {
-                collect_mutated_parameter_names_in_stmt(body_stmt, param_names, mutated);
-            }
-        }
-        Stmt::For(for_stmt) => {
-            collect_mutated_parameter_names_in_target(
-                for_stmt.target.as_ref(),
-                param_names,
-                mutated,
-            );
-            collect_mutated_parameter_names_in_expr(&for_stmt.iter, param_names, mutated);
-            for body_stmt in &for_stmt.body {
-                collect_mutated_parameter_names_in_stmt(body_stmt, param_names, mutated);
-            }
-            for body_stmt in &for_stmt.orelse {
-                collect_mutated_parameter_names_in_stmt(body_stmt, param_names, mutated);
-            }
-        }
-        Stmt::FunctionDef(_) => {}
-        _ => {}
-    }
-}
-
-pub(super) fn collect_mutated_parameter_names_in_target(
-    expr: &Expr,
-    param_names: &HashSet<String>,
-    mutated: &mut HashSet<String>,
-) {
-    match expr {
-        Expr::Name(name) => {
-            if param_names.contains(name.id.as_str()) {
-                mutated.insert(name.id.to_string());
-            }
-        }
-        Expr::Attribute(attr) => {
-            if let Expr::Name(name) = attr.value.as_ref() {
-                if param_names.contains(name.id.as_str()) {
-                    mutated.insert(name.id.to_string());
-                }
-            }
-        }
-        Expr::Subscript(sub) => {
-            if let Expr::Name(name) = sub.value.as_ref() {
-                if param_names.contains(name.id.as_str()) {
-                    mutated.insert(name.id.to_string());
-                }
-            }
-            collect_mutated_parameter_names_in_expr(&sub.slice, param_names, mutated);
-        }
-        Expr::Tuple(tuple) => {
-            for elt in &tuple.elts {
-                collect_mutated_parameter_names_in_target(elt, param_names, mutated);
-            }
-        }
-        _ => {}
-    }
-}
-
-pub(super) fn collect_mutated_parameter_names_in_expr(
-    expr: &Expr,
-    param_names: &HashSet<String>,
-    mutated: &mut HashSet<String>,
-) {
-    match expr {
-        Expr::Call(call) => {
-            if let Expr::Attribute(attr) = call.func.as_ref() {
-                if let Expr::Name(name) = attr.value.as_ref() {
-                    if param_names.contains(name.id.as_str())
-                        && matches!(
-                            attr.attr.as_str(),
-                            "append"
-                                | "appendleft"
-                                | "clear"
-                                | "extend"
-                                | "insert"
-                                | "pop"
-                                | "popleft"
-                                | "remove"
-                                | "reverse"
-                                | "sort"
-                                | "update"
-                                | "add"
-                                | "discard"
-                        )
-                    {
-                        mutated.insert(name.id.to_string());
-                    }
-                }
-                collect_mutated_parameter_names_in_expr(attr.value.as_ref(), param_names, mutated);
-            } else {
-                collect_mutated_parameter_names_in_expr(call.func.as_ref(), param_names, mutated);
-            }
-            for arg in &call.arguments.args {
-                collect_mutated_parameter_names_in_expr(arg, param_names, mutated);
-            }
-        }
-        Expr::Attribute(attr) => {
-            collect_mutated_parameter_names_in_expr(attr.value.as_ref(), param_names, mutated);
-        }
-        Expr::Subscript(sub) => {
-            collect_mutated_parameter_names_in_expr(sub.value.as_ref(), param_names, mutated);
-            collect_mutated_parameter_names_in_expr(sub.slice.as_ref(), param_names, mutated);
-        }
-        Expr::BinOp(binop) => {
-            collect_mutated_parameter_names_in_expr(binop.left.as_ref(), param_names, mutated);
-            collect_mutated_parameter_names_in_expr(binop.right.as_ref(), param_names, mutated);
-        }
-        Expr::BoolOp(boolop) => {
-            for value in &boolop.values {
-                collect_mutated_parameter_names_in_expr(value, param_names, mutated);
-            }
-        }
-        Expr::UnaryOp(unary) => {
-            collect_mutated_parameter_names_in_expr(unary.operand.as_ref(), param_names, mutated);
-        }
-        Expr::Compare(compare) => {
-            collect_mutated_parameter_names_in_expr(compare.left.as_ref(), param_names, mutated);
-            for comparator in &compare.comparators {
-                collect_mutated_parameter_names_in_expr(comparator, param_names, mutated);
-            }
-        }
-        Expr::If(if_expr) => {
-            collect_mutated_parameter_names_in_expr(if_expr.test.as_ref(), param_names, mutated);
-            collect_mutated_parameter_names_in_expr(if_expr.body.as_ref(), param_names, mutated);
-            collect_mutated_parameter_names_in_expr(if_expr.orelse.as_ref(), param_names, mutated);
-        }
-        Expr::List(list) => {
-            for elt in &list.elts {
-                collect_mutated_parameter_names_in_expr(elt, param_names, mutated);
-            }
-        }
-        Expr::Tuple(tuple) => {
-            for elt in &tuple.elts {
-                collect_mutated_parameter_names_in_expr(elt, param_names, mutated);
-            }
-        }
-        Expr::Dict(dict) => {
-            for item in &dict.items {
-                if let Some(key) = &item.key {
-                    collect_mutated_parameter_names_in_expr(key, param_names, mutated);
-                }
-                collect_mutated_parameter_names_in_expr(&item.value, param_names, mutated);
-            }
-        }
-        _ => {}
-    }
 }
 
 pub(super) fn snapshot_signatures(

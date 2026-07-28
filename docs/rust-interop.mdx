@@ -145,14 +145,17 @@ retaining non-send or non-share-safe state, or callable values whose captures
 cannot be proven thread-safe, are rejected with `SIFR-RUST-CB-0001` before
 Cargo probing. The same diagnostic rejects unresolved capture types and
 direct or sibling-transitive capture mutation because the retained adapter
-requires `Fn`, not `FnMut`. Verified non-`Copy` values are cloned into the retained
-closure's isolated construction scope, so the surrounding binding remains
-usable after attachment and on later loop iterations. That clone snapshots the
-value when the nested handler is declared; rebinding the surrounding name
-before attachment does not change the retained value. Attachment consumes the
-handler binding, so attaching or calling that same nested handler again is an
-ownership error. This certifies only the exercised local protocol frames and
-package bridge, not general WebSocket, Redis, or filesystem event semantics.
+requires `Fn`, not `FnMut`. Mutation detection includes ordinary `nonlocal`
+rebinding, attribute and collection-item assignment or deletion, and
+collection-mutating method calls. Verified non-`Copy` values are cloned into
+the retained closure's isolated construction scope, so the surrounding binding
+remains usable after attachment and on later loop iterations. That clone
+snapshots the value when the nested handler is declared; rebinding the
+surrounding name before attachment does not change the retained value.
+Attachment consumes the handler binding, so attaching or calling that same
+nested handler again is an ownership error. This certifies only the exercised
+local protocol frames and package bridge, not general WebSocket, Redis, or
+filesystem event semantics.
 
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |
@@ -370,10 +373,11 @@ loop iterations. The capture clone is taken when the nested handler is
 declared, and attachment consumes the handler binding even though the
 surrounding captured names remain available. Capture types come from the
 lowered lexical binding, including locals initialized from attribute reads and
-method calls. The compiler checks sibling nested-function capture chains
-transitively, rejects callable-valued captures whose own captures lack
-compiler-known provenance, and rejects capture mutation that would require
-`FnMut`. Callback
+method calls and user classes whose names shadow builtin inference helpers.
+The compiler checks sibling nested-function capture chains transitively,
+rejects callable-valued captures whose own captures lack compiler-known
+provenance, and rejects assignment-target, deletion, and mutating-method
+capture use that would require `FnMut`. Callback
 attachment checks remain active through imported functions, aliases,
 re-exports, and imported methods; an unsafe or unverifiable capture is
 rejected with `SIFR-RUST-CB-0001` before Cargo probing regardless of the

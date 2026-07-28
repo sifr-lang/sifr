@@ -75,3 +75,53 @@ def verify_transitive_mutating_capture_rejected() -> Result[Subscription, Subscr
         return bump(event)
 
     return subscribe(handler)
+
+def verify_mutating_nonsend_target_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    state: LocalState = LocalState(0)
+
+    def state_write_handler(event: str) -> Result[None, SubscriptionError]:
+        state.value = 1
+        return None
+
+    return subscribe(state_write_handler)
+
+def verify_container_subscript_mutation_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seen: dict[str, int] = {}
+
+    def subscript_handler(event: str) -> Result[None, SubscriptionError]:
+        seen[event] = 1
+        return None
+
+    return subscribe(subscript_handler)
+
+def verify_mutating_method_capture_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seen: dict[str, int] = {}
+
+    def method_handler(event: str) -> Result[None, SubscriptionError]:
+        _value: int = seen.setdefault(event, 1)
+        return None
+
+    return subscribe(method_handler)
+
+def verify_mixed_capture_mutation_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    label: str = "mixed"
+    seen: list[str] = [""]
+
+    def mixed_handler(event: str) -> Result[None, SubscriptionError]:
+        assert label == "mixed"
+        seen[0] = event
+        return None
+
+    return subscribe(mixed_handler)
+
+def verify_transitive_target_mutation_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seen: dict[str, int] = {}
+
+    def record(event: str) -> Result[None, SubscriptionError]:
+        seen[event] = 1
+        return None
+
+    def target_handler(event: str) -> Result[None, SubscriptionError]:
+        return record(event)
+
+    return subscribe(target_handler)

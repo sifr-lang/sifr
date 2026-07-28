@@ -20,8 +20,10 @@ This fixture family tracks runtime-observed subscription callbacks for
   captures are rejected with `SIFR-RUST-CB-0001`, while second attachment of a
   consumed nested handler is rejected with `SIFR-OWN-0001`. Direct and
   sibling-transitive capture mutation are also rejected with
-  `SIFR-RUST-CB-0001` because the retained bridge requires `Fn`, all before
-  Cargo probing.
+  `SIFR-RUST-CB-0001` because the retained bridge requires `Fn`. The generated
+  negative package covers `nonlocal` rebinding, assignment-target-only
+  `NonSend` state, collection subscript writes, collection-mutating methods,
+  and a mixed safe/unsafe capture set, all before Cargo probing.
 - Compatibility category: `supported-through-bridge`. Ecosystem callbacks use
   an owned typed bridge carrying the exact declared queue and shutdown policy;
   package code remains responsible for its protocol-specific queue and cleanup

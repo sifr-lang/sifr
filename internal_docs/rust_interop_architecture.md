@@ -1004,17 +1004,21 @@ Successful retained attachment consumes the nested handler binding itself;
 second attachment, direct invocation after attachment, and attachment of one
 outer handler across loop iterations are ownership errors.
 Capture validation walks dependencies on sibling nested functions
-transitively. Capture types are refreshed from the lowered lexical binding at
-attachment, so annotated or inferred attribute and method results retain their
-actual type; a genuinely unresolved capture is rejected as unverifiable rather
-than exposed as an internal `Unknown`. Callable-valued captures without
+transitively. Capture types are taken from the lowered lexical binding at
+attachment, so annotated or inferred attribute and method results and
+user-defined types shadowing builtin inference names retain their actual type;
+a genuinely unresolved capture is rejected as unverifiable rather than
+exposed as an internal `Unknown`. Callable-valued captures without
 compiler-known nested-function provenance are rejected because their own
-captures cannot be proven thread-safe. A handler that mutates a capture,
-directly or through a sibling nested function, is rejected because the
-retained bridge requires `Fn`, not `FnMut`. Retained callback parameter indices are exported through
-project-module metadata for direct imports, aliases, re-exports, and imported
-methods. This keeps `SIFR-RUST-CB-0001` enforcement identical at same-module
-and cross-module attachment sites.
+captures cannot be proven thread-safe. Capture discovery includes assignment
+and deletion targets. Mutation analysis is restricted to actual captured
+bindings and walks ordinary `nonlocal` rebinding, attribute or subscript
+writes, collection-mutating methods, structured control flow, and sibling
+nested functions. A handler that mutates a capture is rejected because the
+retained bridge requires `Fn`, not `FnMut`. Retained callback parameter indices
+are exported through project-module metadata for direct imports, aliases,
+re-exports, and imported methods. This keeps `SIFR-RUST-CB-0001` enforcement
+identical at same-module and cross-module attachment sites.
 Per-parameter policy, nested callback containers, and callback returns remain
 outside the supported contract. The `callback_subscription_ecosystem` row
 certifies the retained

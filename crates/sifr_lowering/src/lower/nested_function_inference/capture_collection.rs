@@ -83,8 +83,14 @@ fn collect_referenced_names_in_stmts(stmts: &[Stmt], names: &mut HashSet<String>
                     collect_referenced_names_in_expr(value, names);
                 }
             }
-            Stmt::Assign(assign) => collect_referenced_names_in_expr(&assign.value, names),
+            Stmt::Assign(assign) => {
+                for target in &assign.targets {
+                    collect_referenced_names_in_expr(target, names);
+                }
+                collect_referenced_names_in_expr(&assign.value, names);
+            }
             Stmt::AnnAssign(assign) => {
+                collect_referenced_names_in_expr(assign.target.as_ref(), names);
                 if let Some(value) = &assign.value {
                     collect_referenced_names_in_expr(value, names);
                 }
@@ -116,6 +122,9 @@ fn collect_referenced_names_in_stmts(stmts: &[Stmt], names: &mut HashSet<String>
             Stmt::With(with_stmt) => {
                 for item in &with_stmt.items {
                     collect_referenced_names_in_expr(&item.context_expr, names);
+                    if let Some(target) = &item.optional_vars {
+                        collect_referenced_names_in_expr(target.as_ref(), names);
+                    }
                 }
                 collect_referenced_names_in_stmts(&with_stmt.body, names);
             }
@@ -131,7 +140,29 @@ fn collect_referenced_names_in_stmts(stmts: &[Stmt], names: &mut HashSet<String>
                     collect_referenced_names_in_stmts(&handler.body, names);
                 }
             }
-            Stmt::FunctionDef(_) | Stmt::Nonlocal(_) => {}
+            Stmt::Match(match_stmt) => {
+                collect_referenced_names_in_expr(&match_stmt.subject, names);
+                for case in &match_stmt.cases {
+                    if let Some(guard) = &case.guard {
+                        collect_referenced_names_in_expr(guard, names);
+                    }
+                    collect_referenced_names_in_stmts(&case.body, names);
+                }
+            }
+            Stmt::Raise(raise_stmt) => {
+                if let Some(exc) = &raise_stmt.exc {
+                    collect_referenced_names_in_expr(exc, names);
+                }
+                if let Some(cause) = &raise_stmt.cause {
+                    collect_referenced_names_in_expr(cause, names);
+                }
+            }
+            Stmt::Delete(delete_stmt) => {
+                for target in &delete_stmt.targets {
+                    collect_referenced_names_in_expr(target, names);
+                }
+            }
+            Stmt::FunctionDef(_) | Stmt::ClassDef(_) | Stmt::Nonlocal(_) => {}
             _ => {}
         }
     }

@@ -74,13 +74,13 @@ pub(in crate::lower) fn validate_threadsafe_callback_captures(
             continue;
         };
         let mut valid = true;
-        if let Some(capture_name) = ctx
+        let mutated_captures = ctx
             .nested_function_mutated_captures
             .get(name)
-            .and_then(|captures| captures.first())
             .cloned()
-        {
-            let capture_ty = nested_capture_type(name, &capture_name, ctx);
+            .unwrap_or_default();
+        for capture_name in &mutated_captures {
+            let capture_ty = nested_capture_type(name, capture_name, ctx);
             ctx.error_with_code_at(
                 DiagnosticCode::RUST_CALLBACK_CONTRACT,
                 format!(
@@ -92,6 +92,9 @@ pub(in crate::lower) fn validate_threadsafe_callback_captures(
             valid = false;
         }
         for (capture_name, capture_ty) in &captures {
+            if mutated_captures.contains(capture_name) {
+                continue;
+            }
             let mut visited = HashSet::from([name.clone()]);
             if let Some(violation) =
                 retained_capture_violation(capture_name, capture_ty, ctx, &mut visited)
@@ -242,7 +245,7 @@ fn refresh_retained_capture_types(
 }
 
 fn resolved_retained_capture_type(name: &str, ty: &Type, ctx: &LowerCtx) -> Type {
-    if !ty.is_unknown() {
+    if ctx.nested_function_captures.contains_key(name) {
         return ty.clone();
     }
     ctx.scope
@@ -300,4 +303,24 @@ fn reject_unverifiable_handler(range: TextRange, ctx: &mut LowerCtx) {
             .to_string(),
         range,
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unresolved_retained_capture_has_explicit_contract_reason() {
+        let ctx = LowerCtx::new();
+        let violation =
+            retained_capture_violation("unresolved", &Type::Unknown, &ctx, &mut HashSet::new())
+                .expect("an unresolved retained capture must be rejected");
+
+        assert_eq!(violation.path, "unresolved");
+        assert!(violation.ty.is_unknown());
+        assert_eq!(
+            violation.reason,
+            "has a type that could not be resolved for retained callback verification"
+        );
+    }
 }
