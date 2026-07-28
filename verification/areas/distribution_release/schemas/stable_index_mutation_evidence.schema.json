@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Stable index mutation evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "transition",
+    "version",
+    "plan_sha256",
+    "previous_index",
+    "proposed_index",
+    "proposed_index_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "transition": {
+      "enum": [
+        "ga-activation",
+        "normal"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "plan_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "previous_index": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generation",
+        "sha256"
+      ],
+      "properties": {
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "proposed_index": {
+      "type": "object"
+    },
+    "proposed_index_sha256": {
+      "$ref": "#/$defs/sha256"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "not": {
+        "const": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  }
+}

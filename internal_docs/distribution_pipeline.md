@@ -579,13 +579,23 @@ closure policy is in
 Marketplace, and incident production mutations remain gated until their later
 protected-publication slices.
 
-The first protected-publication slice wires only the one-time schema-epoch
-bootstrap into `.github/workflows/release-publication.yml`. Its nested
+The first protected-publication slice wires the one-time schema-epoch
+bootstrap and credential-free protected drills into
+`.github/workflows/release-publication.yml`. Its nested
 `release-publication-prepare.yml` job has read-only permissions, no protected
 environment, and no production secret. It verifies the exact source and
 artifact bytes, the current governance-asset identity, and any staged alpha
 evidence, then uploads an immutable 30-day summary whose digest is rechecked by
 the publish job and retained in each durable bootstrap evidence record.
+
+Manual drill dispatch selects exactly publication, rollback, or first-GA
+coverage and passes that mode unchanged to `release-publication-drill.yml`;
+unknown reusable-workflow modes fail before the drill core runs. Drills use the
+isolated `sifr-release-drill` concurrency group, read-only repository
+permission, no inherited secret, an explicit production-credential scrub, and
+a blocked network namespace. They retain canonical, write-once schema-v2
+evidence for 30 days, bound to the selected scenario and the exact governed
+tests. They never acquire the production `sifr-release-index` mutation lock.
 
 `bootstrap-alpha` publishes a fresh, qualified alpha release and a write-once
 evidence record under the `channels` governance release. `bootstrap-index`
@@ -615,6 +625,8 @@ demo, with:
 ```bash
 uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite epoch-bootstrap
+uv run --project verification --locked python -m sifr_verify areas run \
+  --area distribution_release --suite protected-drill
 uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite incident-governance
 demos/stable_incident_recovery_demo.sh

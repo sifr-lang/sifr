@@ -87,6 +87,19 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "protected-drill",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "protected-stable-release-drill",
+          "entry": "verification/areas/distribution_release/governance/protected_drill_selftest.py",
+          "command": "distribution-protected-drill",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ],
   "network_mode": "offline",

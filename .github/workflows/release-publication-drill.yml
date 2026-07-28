@@ -1,0 +1,83 @@
+name: release-publication-drill
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: Exact credential-free protected drill mode
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  drill:
+    name: protected credential-free release drill
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: stable-release-drill
+    permissions:
+      contents: read
+    env:
+      DRILL_MODE: ${{ inputs.mode }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Validate drill boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${DRILL_MODE}" in
+            drill-publication) scenario=publication ;;
+            drill-rollback) scenario=rollback ;;
+            drill-first-ga) scenario=first-ga ;;
+            *)
+              echo "::error::unsupported protected drill mode"
+              exit 2
+              ;;
+          esac
+          echo "DRILL_SCENARIO=${scenario}" >>"${GITHUB_ENV}"
+          for credential in \
+            CLOUDFLARE_API_TOKEN GH_TOKEN GITHUB_TOKEN VSCE_PAT \
+            SIFR_SITE_TOKEN SIFR_WEBSITE_ACTIONS_TOKEN; do
+            test -z "${!credential:-}" || {
+              echo "::error::protected drill received production credential ${credential}"
+              exit 2
+            }
+          done
+
+      - name: Run exact shared cores with local adapters and no network
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir drill-evidence
+          sudo env \
+            -u CLOUDFLARE_API_TOKEN \
+            -u GH_TOKEN \
+            -u GITHUB_TOKEN \
+            -u VSCE_PAT \
+            -u SIFR_SITE_TOKEN \
+            -u SIFR_WEBSITE_ACTIONS_TOKEN \
+            unshare --net --mount-proc \
+              python3 -m \
+                verification.areas.distribution_release.governance.protected_drill_selftest \
+                --scenario "${DRILL_SCENARIO}" \
+                --report drill-evidence/protected-drill.json
+          python3 scripts/distribution/release_governance.py validate \
+            --kind protected-drill-evidence \
+            --input drill-evidence/protected-drill.json \
+            --expected-drill-scenario "${DRILL_SCENARIO}" \
+            --require-canonical
+
+      - name: Retain immutable drill evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: stable-release-drill-${{ github.run_id }}-${{ github.run_attempt }}
+          path: drill-evidence/protected-drill.json
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: false

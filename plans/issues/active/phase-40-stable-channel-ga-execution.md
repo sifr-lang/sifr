@@ -470,7 +470,47 @@ Review and upstream coordination ledger:
   It independently matched local, remote-branch, and PR head at
   `e51491338e396e6b8f2d19345c9df68242e2b029`, re-ran the complete focused
   gate set, found no actionable issue, and returned `VERDICT: SATISFIED`.
+- Frozen-head bootstrap review pass 14 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-schema-bootstrap-review-pass-14-final-pr-head-satisfied.md`.
+  It matched local, remote-branch, and PR head at
+  `7236ce5f773979ec6d56c8942785f25be04a60d9`, verified the pass-13 archive
+  delta was documentation-only and truthful, re-ran the focused gates, and
+  returned `VERDICT: SATISFIED` with no actionable finding.
+- [PR #3040](https://github.com/sifr-lang/sifr/pull/3040) merged the schema-v2
+  preview epoch bootstrap implementation as
+  `e22a8cfbf058f9657b285370d7d075f9ff0209b3`.
 - [x] Add the single protected publication workflow and production site adapter.
+- The protected-drill wave adds the deterministic `ga-activation` and `normal`
+  index-planning core, a named `protected-drill` suite, and a
+  `stable-release-drill` job whose dispatch selects exactly publication,
+  rollback, or first-GA coverage through temporary local adapters inside a
+  network namespace. The local suite runs all scenarios, including normal,
+  site-timeout resume, and stale/credential boundaries. The reusable drill
+  accepts no secrets, grants read-only repository permission, and retains
+  write-once schema-v2 evidence for 30 days.
+- Protected-drill review pass 1 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-protected-drill-review-pass-1-not-satisfied.md`.
+  Its six findings are remediated: drill concurrency is isolated, unknown
+  modes fail closed, the production site secret remains required, credential
+  names share one Python contract checked against the workflow, transition
+  defenses have direct tests, and emitted mutation evidence binds the exact
+  plan, previous index identity, and proposed index bytes.
+- Protected-drill review pass 2 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-protected-drill-review-pass-2-not-satisfied.md`.
+  Both findings are remediated: mutation evidence now accepts intentional
+  burned-generation gaps while requiring strict monotonicity and validating
+  before write, and the durable distribution reference documents the exact
+  drill dispatch, concurrency, credential, network, and retention boundaries.
+- Protected-drill review pass 3 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-protected-drill-review-pass-3-satisfied.md`.
+  It re-ran the focused and combined 60-variant gates, confirmed every prior
+  finding remains closed, found no actionable issue, and returned
+  `SATISFIED`.
+- The authoritative create-PR profile passed with zero blocking failures:
+  Python interop 19/19 in 414.69 seconds, consumed Rust interop 10/10, e2e
+  131/131, and every crate, runtime, tooling, performance, and guardrail step.
+  Its 1058.85-second cold-cache wall time produced only the declared warm-target
+  advisory; every enforced per-step budget passed.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
 - [ ] Exercise resume, stale generation, burned generation, rollback, and
