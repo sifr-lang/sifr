@@ -385,7 +385,7 @@ fn interop_bridge_distinguishes_call_scoped_and_threadsafe_callbacks() {
             ),
             default: None,
             keyword_only: false,
-            convention: ParamConvention::borrow(),
+            convention: ParamConvention::own(),
         }],
         return_type: Type::None,
         body: Vec::new(),
@@ -424,7 +424,17 @@ fn interop_bridge_distinguishes_call_scoped_and_threadsafe_callbacks() {
     assert_eq!(signature.params[0].ty.kind, RustBridgeTypeKind::Callback);
     assert_eq!(
         signature.params[0].ty.rust_borrowed_type.as_deref(),
-        Some("&::sifr_runtime::interop::ThreadsafeCallbackBridge")
+        Some(
+            "&::sifr_runtime::interop::ThreadsafeCallbackBridge<\
+             (::sifr_runtime::interop::SifrIntBridge,), ()>"
+        )
+    );
+    assert_eq!(
+        signature.params[0].ty.rust_owned_type.as_deref(),
+        Some(
+            "::sifr_runtime::interop::ThreadsafeCallbackBridge<\
+             (::sifr_runtime::interop::SifrIntBridge,), ()>"
+        )
     );
 }
 

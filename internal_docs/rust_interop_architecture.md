@@ -956,7 +956,7 @@ Thread-safe callback registration:
 @rust(bridge.kafka.on_message)
 def on_message(
     consumer: KafkaConsumer,
-    callback: Callable[[Message], Result[None, KafkaError]],
+    own callback: Callable[[Message], Result[None, KafkaError]],
 ) -> Result[Subscription, KafkaError | RustPanicError]: ...
 ```
 
@@ -990,13 +990,22 @@ package-bridge mapping.
 named `backpressure=`, `overflow=`, and `shutdown=` policy, rejects malformed
 or duplicate contracts with `SIFR-RUST-CB-0001`, and applies uniformly to all
 top-level callback parameters on that declaration. Per-parameter policy,
-nested callback containers, callback returns, cross-thread capture enforcement,
-and `tokio-tungstenite`/`redis`/`notify` ecosystem certification are
-future-owned by
-[`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md)
-through the `callback_subscription_ecosystem` compatibility row. The supported
-`callback_subscription_core` and `callbacks_threadsafe` rows remain
-contract-only; they do not claim subscription lifecycle execution.
+nested callback containers, and callback returns remain outside the supported
+contract. The `callback_subscription_ecosystem` row certifies the retained
+form through an explicit package bridge:
+`ThreadsafeCallbackBridge<Args, Output>` owns a `Send + Sync + 'static`
+adapter, carries the exact declaration policy, and contains each invocation
+behind stable panic redaction. The compiler requires an owned callback and an
+opaque subscription handle result, rejects mutable or borrowed retained
+callbacks, and checks named nested captures for sendability and share safety
+before Cargo probing. Locked runtime evidence uses raw loopback WebSocket
+frames through `tokio-tungstenite`, Redis Pub/Sub RESP, and a real `notify`
+watcher to observe foreign-thread invocation, bounded overflow-as-error,
+callback errors, drain shutdown, cancellation, consuming async close, bounded
+joins, temporary-directory removal, and zero harness-owned active work. The
+supported `callback_subscription_core` and `callbacks_threadsafe` rows remain
+contract-only; only `callback_subscription_ecosystem` carries the subscription
+lifecycle runtime claim.
 
 ## Trust Policy
 

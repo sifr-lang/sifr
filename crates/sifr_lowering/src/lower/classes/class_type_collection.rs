@@ -639,6 +639,12 @@ pub(in crate::lower) fn collect_class_type(
                         !is_static && !is_class,
                     );
                     let skip_count = usize::from(!is_static);
+                    if crate::lower::rust_callback_callsite::has_threadsafe_callback_decorator(
+                        &func.decorator_list,
+                    ) {
+                        ctx.rust_threadsafe_callback_targets
+                            .insert(format!("{class_name}.{method_name}"));
+                    }
                     let callback_policies = crate::lower::python_interop::callback_call_policies(
                         &func.decorator_list,
                         &func.parameters,

@@ -298,15 +298,14 @@
     {
       "id": "callback_subscription_ecosystem",
       "fixture": "callback_subscription_ecosystem",
-      "category": "future-owned-by-separate-phase",
-      "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
+      "category": "supported-through-bridge",
       "tier": 2,
       "capability": "callback subscriptions and shutdown",
       "execution_kind": "runtime-observed",
       "required_crates": ["tokio-tungstenite", "redis", "notify"],
-      "positive_evidence": {"id": "subscription_cancel_shutdown", "status": "planned"},
-      "negative_evidence": {"id": "invalid_thread_capture_rejected", "status": "planned"},
-      "notes": "Ecosystem subscription cleanup, shutdown, and cross-thread capture behavior for tokio-tungstenite, Redis pub/sub, and notify remain pending runtime evidence."
+      "positive_evidence": {"id": "subscription_cancel_shutdown", "status": "passing"},
+      "negative_evidence": {"id": "invalid_thread_capture_rejected", "status": "passing"},
+      "notes": "A typed retained-callback bridge carries exact bounded overflow and drain policy. Locked WebSocket, Redis Pub/Sub, and notify evidence observes worker-thread invocation, handler errors, panic redaction, cancellation, drain shutdown, and zero leaked resources; non-send captures are rejected before Cargo probing."
     },
     {
       "id": "zero_copy_bytes",

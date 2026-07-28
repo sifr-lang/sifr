@@ -1,8 +1,8 @@
 # fixture: callback_subscription_ecosystem
-# evidence: positive/subscription_cancel_shutdown
-# evidence-status: passing
+# scenario-example: subscription_lifecycle_runtime
 # execution-kind: runtime-observed
-# expected-result: pass
+# expected-result: callback-subscription-clean
+
 class SubscriptionError(Error):
     message: str
 
@@ -36,7 +36,7 @@ def event_handler(event: str) -> Result[None, SubscriptionError]:
     assert event != "panic"
     return None
 
-async def verify_subscription_cancel_shutdown() -> Result[str, SubscriptionError | RustPanicError]:
+async def verify_subscription_lifecycle_runtime() -> Result[str, SubscriptionError | RustPanicError]:
     try:
         subscription: Subscription = subscribe(event_handler)
         observed: str = await subscription.verify()
@@ -49,3 +49,13 @@ async def verify_subscription_cancel_shutdown() -> Result[str, SubscriptionError
         raise error
     except RustPanicError as error:
         raise error
+
+async def main() -> Result[None, SubscriptionError | RustPanicError]:
+    try:
+        verified: str = await verify_subscription_lifecycle_runtime()
+        print(verified)
+    except SubscriptionError as error:
+        raise error
+    except RustPanicError as error:
+        raise error
+    return None

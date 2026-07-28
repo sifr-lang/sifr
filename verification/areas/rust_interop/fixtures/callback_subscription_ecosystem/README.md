@@ -3,12 +3,15 @@
 This fixture family tracks runtime-observed subscription callbacks for
 `tokio-tungstenite`, Redis pub/sub, and filesystem notification workflows.
 
-- Positive evidence: `subscription_cancel_shutdown` remains planned for a
-  runtime fixture that observes cancellation handles and deterministic shutdown.
-- Negative evidence: `invalid_thread_capture_rejected` remains planned for a
-  fixture proving non-send captures and invalid thread-affinity captures cannot
-  cross the declared callback boundary.
-- Compatibility category: `future-owned-by-separate-phase`. Stdlib-owned signal
-  subscription mechanics are verified by `callback_subscription_core`;
-  ecosystem callback subscription certification is not listed as verified
-  support.
+- Positive evidence: `subscription_cancel_shutdown` executes a locked package
+  against real loopback WebSocket and Redis Pub/Sub transports plus a real
+  `notify` watcher. It observes bounded overflow, handler errors, stable panic
+  redaction, a foreign-thread callback, drain shutdown, cancellation, and zero
+  leaked tasks/watchers/resources.
+- Negative evidence: `invalid_thread_capture_rejected` proves a nested handler
+  retaining `NonSend` state is rejected with `SIFR-RUST-CB-0001` before Cargo
+  probing.
+- Compatibility category: `supported-through-bridge`. Ecosystem callbacks use
+  an owned typed bridge carrying the exact declared queue and shutdown policy;
+  package code remains responsible for its protocol-specific queue and cleanup
+  handles.

@@ -2,6 +2,7 @@ use super::{
     body_contains_yield, collect_mutated_vars_with_sigs, collect_reassigned_vars,
     python_callback_bounds::{
         python_callback_bound_param_names, python_callback_static_param_names,
+        rust_callback_bound_param_names,
     },
     HirFunction, HirStmt, OwnershipKind, RustEmitter, RustExpr, RustItem, RustLiteral, RustParam,
     RustStmt, RustType, Type, Visibility,
@@ -311,8 +312,11 @@ impl RustEmitter {
             Self::lower_mutable_param_shadows(&func.params, &reassigned_vars);
         self.apply_mutable_param_shadowing(&mutable_param_shadows);
 
-        let callback_bound_params = python_callback_bound_param_names(func);
-        let callback_static_params = python_callback_static_param_names(func);
+        let mut callback_bound_params = python_callback_bound_param_names(func);
+        let mut callback_static_params = python_callback_static_param_names(func);
+        let rust_callback_params = rust_callback_bound_param_names(func);
+        callback_bound_params.extend(rust_callback_params.iter().cloned());
+        callback_static_params.extend(rust_callback_params);
         let python_omit_params = func
             .python_interop
             .first()

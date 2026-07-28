@@ -136,6 +136,9 @@ mod result_diagnostics;
 #[cfg(test)]
 mod result_diagnostics_tests;
 mod return_lowering;
+mod rust_callback_callsite;
+#[cfg(test)]
+mod rust_callback_callsite_tests;
 mod rust_interop;
 #[cfg(test)]
 mod rust_interop_tests;

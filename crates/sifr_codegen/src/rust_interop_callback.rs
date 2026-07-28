@@ -2,7 +2,7 @@ use crate::rust_interop_direct_collections::{
     bridge_composite_to_sifr_expr, composite_conversion_required, sifr_composite_to_bridge_expr,
 };
 use crate::{render_expr, RustExpr};
-use sifr_ir::{HirFunction, HirParam, RustInteropDecoratorKind};
+use sifr_ir::{HirFunction, HirParam, RustInteropDecoratorKind, RustInteropValue};
 use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 
 pub(crate) fn call_scoped_callback_adapter_expr(param: &HirParam) -> RustExpr {
@@ -14,6 +14,42 @@ pub(crate) fn call_scoped_callback_adapter_expr(param: &HirParam) -> RustExpr {
         conventions.len(),
         "Callable parameter types and conventions must stay aligned"
     );
+    callback_adapter_expr(param, params, conventions, result, |tuple_pattern, body| {
+        format!(
+            "::sifr_runtime::interop::CallScopedCallbackBridge::new(&move |{tuple_pattern}| {{ {body} }})"
+        )
+    })
+}
+
+pub(crate) fn threadsafe_callback_adapter_expr(
+    param: &HirParam,
+    func: &HirFunction,
+) -> Option<RustExpr> {
+    let Type::Callable(params, conventions, result) = param.ty.resolve_alias() else {
+        return None;
+    };
+    let policy = threadsafe_callback_policy_expr(func)?;
+    Some(callback_adapter_expr(
+        param,
+        params,
+        conventions,
+        result,
+        |tuple_pattern, body| {
+            format!(
+                "::sifr_runtime::interop::ThreadsafeCallbackBridge::new({policy}, \
+                 move |{tuple_pattern}| {{ {body} }})"
+            )
+        },
+    ))
+}
+
+fn callback_adapter_expr(
+    param: &HirParam,
+    params: &[Type],
+    conventions: &[ParamConvention],
+    result: &Type,
+    render: impl FnOnce(&str, &str) -> String,
+) -> RustExpr {
     let argument_names = (0..params.len())
         .map(|index| format!("__sifr_callback_arg_{index}"))
         .collect::<Vec<_>>();
@@ -33,9 +69,7 @@ pub(crate) fn call_scoped_callback_adapter_expr(param: &HirParam) -> RustExpr {
     let invocation = format!("{handler}({handler_args})");
     let body = callback_return_expr(&invocation, result);
 
-    RustExpr::Verbatim(format!(
-        "::sifr_runtime::interop::CallScopedCallbackBridge::new(&move |{tuple_pattern}| {{ {body} }})"
-    ))
+    RustExpr::Verbatim(render(&tuple_pattern, &body))
 }
 
 pub(crate) fn call_scoped_callbacks(func: &HirFunction) -> bool {
@@ -43,6 +77,65 @@ pub(crate) fn call_scoped_callbacks(func: &HirFunction) -> bool {
         .rust_interop
         .iter()
         .any(|declaration| declaration.kind == RustInteropDecoratorKind::Callback)
+}
+
+fn threadsafe_callback_policy_expr(func: &HirFunction) -> Option<String> {
+    let declaration = func
+        .rust_interop
+        .iter()
+        .find(|declaration| declaration.kind == RustInteropDecoratorKind::Callback)?;
+    let mut backpressure = None;
+    let mut overflow = None;
+    let mut shutdown = None;
+    for argument in &declaration.arguments {
+        match (argument.name.as_deref(), &argument.value) {
+            (Some("backpressure"), RustInteropValue::Symbol(value)) if value == "direct" => {
+                backpressure =
+                    Some("::sifr_runtime::interop::CallbackBackpressure::Direct".to_string());
+            }
+            (Some("backpressure"), RustInteropValue::Symbol(value)) if value == "unbounded" => {
+                backpressure =
+                    Some("::sifr_runtime::interop::CallbackBackpressure::Unbounded".to_string());
+            }
+            (Some("backpressure"), RustInteropValue::PolicyCall { name, argument, .. })
+                if name == "bounded" =>
+            {
+                if let RustInteropValue::Integer(bound) = argument.as_ref() {
+                    backpressure = Some(format!(
+                        "::sifr_runtime::interop::CallbackBackpressure::Bounded({bound}usize)"
+                    ));
+                }
+            }
+            (Some("overflow"), RustInteropValue::Symbol(value)) => {
+                let variant = match value.as_str() {
+                    "error" => "Error",
+                    "drop_oldest" => "DropOldest",
+                    "drop_newest" => "DropNewest",
+                    _ => continue,
+                };
+                overflow = Some(format!(
+                    "::sifr_runtime::interop::CallbackOverflow::{variant}"
+                ));
+            }
+            (Some("shutdown"), RustInteropValue::Symbol(value)) => {
+                let variant = match value.as_str() {
+                    "drain" => "Drain",
+                    "cancel" => "Cancel",
+                    "detach_forbidden" => "DetachForbidden",
+                    _ => continue,
+                };
+                shutdown = Some(format!(
+                    "::sifr_runtime::interop::CallbackShutdown::{variant}"
+                ));
+            }
+            _ => {}
+        }
+    }
+    Some(format!(
+        "::sifr_runtime::interop::ThreadsafeCallbackPolicy {{ backpressure: {}, \
+         overflow: {}, shutdown: {} }}",
+        backpressure?, overflow?, shutdown?
+    ))
 }
 
 fn callback_handler_arg(name: &str, ty: &Type, convention: ParamConvention) -> String {

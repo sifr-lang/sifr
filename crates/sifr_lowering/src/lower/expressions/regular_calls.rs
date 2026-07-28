@@ -343,6 +343,13 @@ pub(super) fn lower_regular_call(
         call.range(),
         ctx,
     );
+    crate::lower::rust_callback_callsite::validate_threadsafe_callback_captures(
+        &func_name,
+        &args,
+        &arg_ranges,
+        call.range(),
+        ctx,
+    );
     if func_name == "require_serializable" {
         // This marker is checked entirely during lowering. Emit a concrete
         // expression so statement-position calls do not generate an ambiguous

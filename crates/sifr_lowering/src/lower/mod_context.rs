@@ -109,6 +109,9 @@ pub(in crate::lower) struct LowerCtx {
     /// Callback attachment policies keyed by the callable surface used at each call site.
     pub(in crate::lower) python_callback_call_policies:
         HashMap<String, Vec<super::python_interop::CallbackCallPolicy>>,
+    /// Rust bridge declarations whose retained callbacks must be capture-checked
+    /// at every attachment call site.
+    pub(in crate::lower) rust_threadsafe_callback_targets: std::collections::HashSet<String>,
     /// Set of registered type variable names (e.g., T, K, V from `TypeVar` declarations)
     pub(in crate::lower) type_vars: std::collections::HashSet<String>,
     /// Map of generic function names to their type variable names
@@ -213,6 +216,7 @@ impl LowerCtx {
             vararg_functions: HashMap::new(),
             python_call_shapes: HashMap::new(),
             python_callback_call_policies: HashMap::new(),
+            rust_threadsafe_callback_targets: std::collections::HashSet::new(),
             type_vars: std::collections::HashSet::new(),
             generic_functions: HashMap::new(),
             type_param_bounds: HashMap::new(),

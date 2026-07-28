@@ -1,7 +1,10 @@
 use super::{canonical_sifr_target_path, RustInteropResolver};
 use crate::build::rust_interop_callback_probe::signature_contract_has_call_scoped_callback;
 use crate::build::rust_interop_trust::{effective_panic_policy, EffectivePanicPolicy};
-use sifr_codegen::{RustBridgePanicErrorContract, RustBridgeTypeKind};
+use sifr_codegen::{
+    RustBridgePanicErrorContract, RustBridgeParamConvention, RustBridgeSignatureContract,
+    RustBridgeTypeKind,
+};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropValue};
 use std::collections::{BTreeMap, BTreeSet};
@@ -228,6 +231,17 @@ impl RustInteropResolver<'_> {
         let declaration = callback_declarations[0];
         if let Err(reason) = parse_callback_contract(declaration) {
             self.push_callback_diagnostic(declaration, reason);
+            return;
+        }
+        let target = canonical_sifr_target_path(declaration);
+        if is_python_callback_constructor_target(&target) {
+            return;
+        }
+        let Some(signature) = self.signature_contracts.get(&target) else {
+            return;
+        };
+        if let Err(reason) = validate_threadsafe_callback_signature(signature) {
+            self.push_callback_diagnostic(declaration, reason);
         }
     }
 
@@ -277,6 +291,71 @@ impl RustInteropResolver<'_> {
             ),
         );
     }
+}
+
+fn is_python_callback_constructor_target(target: &str) -> bool {
+    matches!(
+        target,
+        "_sifr.python.py_local_callback" | "_sifr.python.py_threadsafe_callback"
+    )
+}
+
+fn validate_threadsafe_callback_signature(
+    signature: &RustBridgeSignatureContract,
+) -> Result<(), String> {
+    let callback_params = signature
+        .params
+        .iter()
+        .filter(|param| param.ty.kind == RustBridgeTypeKind::Callback)
+        .collect::<Vec<_>>();
+    if callback_params.is_empty() {
+        return Err(
+            "`@rust.callback(...)` requires at least one top-level `Callable[...]` parameter"
+                .to_string(),
+        );
+    }
+    for param in callback_params {
+        if let Some(reason) = &param.ty.unsupported_reason {
+            return Err(format!(
+                "thread-safe callback parameter `{}` is unsupported: {reason}",
+                param.name
+            ));
+        }
+        match param.convention {
+            RustBridgeParamConvention::Own => {}
+            RustBridgeParamConvention::OwnMutable => {
+                return Err(format!(
+                    "thread-safe callback parameter `{}` cannot be declared `mut`; retained callbacks must be immutable and share-safe",
+                    param.name
+                ));
+            }
+            RustBridgeParamConvention::Borrow | RustBridgeParamConvention::MutableBorrow => {
+                return Err(format!(
+                    "thread-safe callback parameter `{}` must be declared `own` so the subscription owns its retained handler",
+                    param.name
+                ));
+            }
+        }
+    }
+    if signature.return_type.kind != RustBridgeTypeKind::Result
+        || !signature
+            .return_type
+            .rust_return_type
+            .as_deref()
+            .is_some_and(|ty| ty.contains("::sifr_runtime::interop::Handle<"))
+    {
+        return Err(
+            "thread-safe callback registration must return `Result[OpaqueSubscription, E]` with an explicit cleanup handle"
+                .to_string(),
+        );
+    }
+    if signature.panic_error != RustBridgePanicErrorContract::OrdinaryAndWrapper {
+        return Err(
+            "thread-safe callbacks require a recoverable outer panic boundary with a distinct ordinary error and `RustPanicError` in the Result error channel"
+                .to_string(),
+        );
+    }
+    Ok(())
 }
 
 fn parse_callback_contract(

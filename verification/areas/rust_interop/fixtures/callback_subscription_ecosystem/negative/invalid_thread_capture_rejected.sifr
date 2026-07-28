@@ -1,16 +1,34 @@
 # fixture: callback_subscription_ecosystem
 # evidence: negative/invalid_thread_capture_rejected
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: runtime-observed
-# expected-result: future-owned-diagnostic
+# expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-CB-0001
-@rust.callback(backpressure=bounded(256), overflow=error, shutdown=drain)
-@rust(bridge.events.subscribe_non_send_capture, panic=trusted_no_panic)
-def subscribe(handler: ThreadsafeCallback[[str], None]) -> None: ...
+class SubscriptionError(Error):
+    message: str
 
-def sample_event_callback(event: str) -> None:
-    return None
+class LocalState(NonSend):
+    value: int
 
-def verify_invalid_thread_capture_rejected() -> None:
-    subscribe(sample_event_callback)
-    return None
+@rust.opaque(
+    type=bridge.events.Subscription,
+    send=False,
+    sync=False,
+    borrow=exclusive,
+    thread_affinity=tokio_current_thread,
+)
+class Subscription: ...
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+def verify_invalid_thread_capture_rejected(
+    state: LocalState,
+) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        _value: int = state.value
+        return None
+
+    result: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(handler)
+    return result

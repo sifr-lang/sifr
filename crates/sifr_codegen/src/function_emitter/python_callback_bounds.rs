@@ -1,5 +1,20 @@
 use super::{HashSet, HirExpr, HirFunction, HirStmt, Type};
 
+pub(super) fn rust_callback_bound_param_names(func: &HirFunction) -> HashSet<String> {
+    if !func
+        .rust_interop
+        .iter()
+        .any(|declaration| declaration.kind == sifr_ir::RustInteropDecoratorKind::Callback)
+    {
+        return HashSet::new();
+    }
+    func.params
+        .iter()
+        .filter(|param| matches!(param.ty.resolve_alias(), Type::Callable(..)))
+        .map(|param| param.name.clone())
+        .collect()
+}
+
 pub(super) fn python_callback_bound_param_names(func: &HirFunction) -> HashSet<String> {
     python_callback_param_names(func, false)
 }

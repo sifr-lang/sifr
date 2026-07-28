@@ -80,9 +80,8 @@ only public stable-claim inventory. Its execution scope is part of every claim.
 In particular, `zero_copy_bytes`, `zero_copy_view_matrix`,
 `arrow_record_batch`, `tensor_dlpack_bridge`, and `advanced_data_matrix` are
 contract-only. The remaining runtime-observed deferrals
-`advanced_data_runtime_matrix`, `callback_subscription_ecosystem`, and
-`zero_copy_runtime_matrix` are future-owned, planned, and unadvertised until
-their runtime evidence passes.
+`advanced_data_runtime_matrix` and `zero_copy_runtime_matrix` are future-owned,
+planned, and unadvertised until their runtime evidence passes.
 
 `bridge_type_matrix` is cargo-probed through generated package glue. Its
 certified bridge covers nested Serde/JSON values, display-mapped `thiserror`
@@ -131,6 +130,19 @@ so the RESP harness certifies only the exercised connection and `PING` frames.
 Client-library-internal tasks are outside the harness counter. This does not
 claim general Redis or PostgreSQL server compliance.
 
+`callback_subscription_ecosystem` executes an owned, typed
+`Send + Sync + 'static` callback bridge against raw loopback WebSocket frames,
+a minimal Redis Pub/Sub RESP exchange, and a real `notify` watcher over a
+unique temporary directory. The bridge carries the exact declared bounded
+backpressure, overflow-as-error, and drain-shutdown policy. The observed scope
+includes callback success and ordinary errors, stable panic redaction,
+foreign-thread notification entry, queue drain, explicit task cancellation,
+consuming async close, bounded joins, temporary-directory removal, and zero
+harness-owned active tasks or watchers. Named nested handlers retaining
+non-send or non-share-safe state are rejected with `SIFR-RUST-CB-0001` before
+Cargo probing. This certifies only the exercised local protocol frames and
+package bridge, not general WebSocket, Redis, or filesystem event semantics.
+
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |
 | --- | --- | --- |
@@ -157,6 +169,7 @@ claim general Redis or PostgreSQL server compliance.
 | `callbacks_call_scoped` | `supported-through-bridge` | `runtime-observed` |
 | `callbacks_threadsafe` | `supported` | `contract-only` |
 | `callback_subscription_core` | `supported` | `contract-only` |
+| `callback_subscription_ecosystem` | `supported-through-bridge` | `runtime-observed` |
 | `zero_copy_bytes` | `supported` | `contract-only` |
 | `zero_copy_view_matrix` | `supported` | `contract-only` |
 | `arrow_record_batch` | `supported-through-bridge` | `contract-only` |

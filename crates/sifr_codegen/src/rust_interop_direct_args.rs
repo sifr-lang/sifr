@@ -1,22 +1,27 @@
-use crate::rust_interop_callback::call_scoped_callback_adapter_expr;
+use crate::rust_interop_callback::{
+    call_scoped_callback_adapter_expr, call_scoped_callbacks, threadsafe_callback_adapter_expr,
+};
 use crate::rust_interop_direct::{i64_vec_to_bridge_int_vec_expr, sifr_int_bridge_path};
 use crate::rust_interop_direct_collections::{
     argument_composite_conversion_required, sifr_composite_to_bridge_expr,
 };
 use crate::RustExpr;
-use sifr_ir::{HirParam, RustTargetPath};
+use sifr_ir::{HirFunction, HirParam, RustTargetPath};
 use sifr_type_system::Type;
 
 pub(crate) fn direct_rust_arg_expr(
     param: &HirParam,
     target: &RustTargetPath,
-    call_scoped_callbacks: bool,
+    func: &HirFunction,
 ) -> RustExpr {
     let value = RustExpr::Ident(param.name.clone());
     if is_python_callback_constructor_target(target) && is_python_object_callback_type(&param.ty) {
         python_object_callback_adapter_expr(&param.name)
-    } else if call_scoped_callbacks && matches!(param.ty.resolve_alias(), Type::Callable(..)) {
+    } else if call_scoped_callbacks(func) && matches!(param.ty.resolve_alias(), Type::Callable(..))
+    {
         call_scoped_callback_adapter_expr(param)
+    } else if matches!(param.ty.resolve_alias(), Type::Callable(..)) {
+        threadsafe_callback_adapter_expr(param, func).unwrap_or(value)
     } else if param.ty == Type::Int {
         RustExpr::FnCall {
             func: Box::new(sifr_int_bridge_path("from")),

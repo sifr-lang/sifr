@@ -1,7 +1,6 @@
 use sifr_ir::{HirFunction, RustInteropDeclaration, RustInteropDecoratorKind, RustTargetPath};
 use sifr_type_system::Type;
 
-use crate::rust_interop_callback::call_scoped_callbacks;
 use crate::rust_interop_direct_args::direct_rust_arg_expr;
 use crate::rust_interop_direct_collections::{
     bridge_composite_to_sifr_expr, composite_conversion_required,
@@ -30,7 +29,7 @@ pub(crate) fn rust_interop_function_body(func: &HirFunction) -> Option<Vec<RustS
         args: func
             .params
             .iter()
-            .map(|param| direct_rust_arg_expr(param, target, call_scoped_callbacks(func)))
+            .map(|param| direct_rust_arg_expr(param, target, func))
             .collect(),
     };
     let is_async = direct_rust_function_is_async(func, declaration);
@@ -94,7 +93,7 @@ pub(crate) fn rust_interop_method_body(
         args.extend(
             func.params
                 .iter()
-                .map(|param| direct_rust_arg_expr(param, target, call_scoped_callbacks(func))),
+                .map(|param| direct_rust_arg_expr(param, target, func)),
         );
         (
             Vec::new(),
@@ -142,7 +141,7 @@ fn self_method_call(
             args: func
                 .params
                 .iter()
-                .map(|param| direct_rust_arg_expr(param, target, call_scoped_callbacks(func)))
+                .map(|param| direct_rust_arg_expr(param, target, func))
                 .collect(),
         },
     ))

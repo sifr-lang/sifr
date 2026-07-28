@@ -758,7 +758,7 @@ fn rust_interop_lowers_callback_policy_contract() {
     let source = r"
 @rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)
 @rust(bridge.events.subscribe)
-def subscribe(callback: Callable[[int], None]) -> None:
+def subscribe(own callback: Callable[[int], None]) -> None:
     pass
 ";
     let module = lower_ok(source);

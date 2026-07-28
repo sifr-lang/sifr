@@ -14,13 +14,14 @@ const CALLBACK_SOURCE: &str = r#"
 class CallbackError(Error):
     message: str
 
+@rust.opaque(type=bridge.events.Subscription, send=True, sync=False, clone=none, close=close)
 class Subscription:
-    id: int
+    @rust(Self.close)
+    def close(own self) -> Result[None, CallbackError | RustPanicError]: ...
 
 @rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)
 @rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
-def subscribe(callback: Callable[[int], None]) -> Result[Subscription, CallbackError | RustPanicError]:
-    return Subscription(id=0)
+def subscribe(own callback: Callable[[int], None]) -> Result[Subscription, CallbackError | RustPanicError]: ...
 "#;
 
 #[test]
@@ -46,11 +47,49 @@ fn package_rust_interop_accepts_direct_callback_backpressure() {
 }
 
 #[test]
-fn package_rust_interop_rejects_callback_policy_without_rust_target() {
-    let source = CALLBACK_SOURCE.replace(
-        "@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))\n",
-        "",
+fn package_rust_interop_rejects_mutable_threadsafe_callback() {
+    let source = CALLBACK_SOURCE.replace("own callback:", "own mut callback:");
+    let generated = generated_from_source(&source);
+    let context = context_with_source(&source);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "retained callback cannot expose mutable callable state",
     );
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
+    assert!(diagnostics[0].message.contains("cannot be declared `mut`"));
+}
+
+#[test]
+fn package_rust_interop_rejects_threadsafe_callback_without_subscription_handle() {
+    let source = CALLBACK_SOURCE.replace(
+        "Result[Subscription, CallbackError | RustPanicError]",
+        "Result[int, CallbackError | RustPanicError]",
+    );
+    let generated = generated_from_source(&source);
+    let context = context_with_source(&source);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "retained callback must return a cleanup handle",
+    );
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
+    assert!(diagnostics[0].message.contains("explicit cleanup handle"));
+}
+
+#[test]
+fn package_rust_interop_rejects_callback_policy_without_rust_target() {
+    let source = CALLBACK_SOURCE
+        .replace(
+            "@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))\n",
+            "",
+        )
+        .replace(
+            "-> Result[Subscription, CallbackError | RustPanicError]: ...",
+            "-> None:\n    return None",
+        );
     let generated = generated_from_source(&source);
     let context = context_with_source(&source);
 
@@ -85,11 +124,7 @@ fn package_rust_interop_rejects_call_scoped_callback_across_async_boundary() {
             "@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)\n",
             "",
         )
-        .replace("def subscribe", "async def subscribe")
-        .replace(
-            "    return Subscription(id=0)",
-            "    await task.sleep(0.0)\n    return Subscription(id=0)",
-        );
+        .replace("def subscribe", "async def subscribe");
     let generated = generated_from_source(&source);
     let context = context_with_source(&source);
 
@@ -111,11 +146,7 @@ fn package_rust_interop_rejects_call_scoped_callback_with_async_policy() {
             "@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)\n",
             "@rust.async(thread_affinity=tokio_current_thread)\n",
         )
-        .replace("def subscribe", "async def subscribe")
-        .replace(
-            "    return Subscription(id=0)",
-            "    await task.sleep(0.0)\n    return Subscription(id=0)",
-        );
+        .replace("def subscribe", "async def subscribe");
     let generated = generated_from_source(&source);
     let context = context_with_source(&source);
 
@@ -144,8 +175,7 @@ fn package_rust_interop_rejects_call_scoped_callback_without_panic_boundary() {
         .replace(
             "-> Result[Subscription, CallbackError | RustPanicError]",
             "-> None",
-        )
-        .replace("return Subscription(id=0)", "return None");
+        );
     let generated = generated_from_source(&source);
     let context = context_with_source(&source);
 
@@ -242,7 +272,10 @@ fn package_rust_interop_rejects_mutable_call_scoped_callback_parameter() {
             "@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)\n",
             "",
         )
-        .replace("def subscribe(callback:", "def subscribe(mut callback:");
+        .replace(
+            "def subscribe(own callback:",
+            "def subscribe(own mut callback:",
+        );
     let generated = generated_from_source(&source);
     let context = context_with_source(&source);
 

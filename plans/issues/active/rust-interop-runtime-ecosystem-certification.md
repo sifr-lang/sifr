@@ -640,6 +640,61 @@ Focused implementation evidence:
   [PR #3042](https://github.com/sifr-lang/sifr/pull/3042) is the Certification
   5 merge.
 
+#### certification_6: Callback Subscription Ecosystem
+
+Implementation checklist:
+
+- [x] Replace the thread-safe callback marker with a typed generated/runtime
+  bridge that owns a `Send + Sync + 'static` handler, preserves the declared
+  callback argument/result contract, contains callback panics, and exposes the
+  exact backpressure, overflow, and shutdown policy to the package bridge.
+- [x] Require owned thread-safe callback parameters and a fallible opaque
+  subscription result, and reject named or nested handlers whose captures
+  cannot be proven sendable and share-safe with `SIFR-RUST-CB-0001`.
+- [x] Add a locked/offline `subscription_lifecycle_runtime` package using raw
+  loopback WebSocket framing through `tokio-tungstenite`, a minimal Redis
+  pub/sub RESP harness, and a unique temporary watched directory through
+  `notify`.
+- [x] Prove bounded overflow-as-error behavior, callback error propagation,
+  exact panic-payload redaction, foreign-thread notification entry, explicit
+  cancellation, drain shutdown, consuming async close, bounded task joins,
+  temporary-directory removal, and zero active harness-owned work.
+- [x] Bind both evidence directions to distinct mandatory generated-build
+  tests, promote only `callback_subscription_ecosystem`, and update structured
+  claims, public/internal docs, provenance, counts, and validator self-tests.
+- [ ] Run focused and authoritative local gates, Opus review rounds to
+  satisfaction, merge the PR, and unblock only `certification_7`.
+
+Post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 58 passing and 14 planned evidence directions;
+- categories: 18 `supported`, 10 `supported-through-bridge`, 1
+  `unsupported-by-design`, and 7 `future-owned-by-separate-phase`;
+- execution kinds remain 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+- 60 package examples and 16 scenario examples; and
+- 29 structured stable claims.
+
+Focused implementation evidence:
+
+- the mandatory positive generated-build test executes typed retained callbacks
+  through raw loopback WebSocket frames, Redis Pub/Sub RESP, and a real
+  filesystem watcher, producing the exact lifecycle summary with bounded
+  overflow, ordinary callback error, redacted panic, foreign-thread entry,
+  queue drain, cancellation, consuming async close, zero active work, and
+  temporary-directory removal;
+- the mandatory negative generated-build test rejects a named nested handler
+  retaining `NonSend` state with `SIFR-RUST-CB-0001` before Cargo probing;
+- the package lock is an exact subset of the root lock graph, and its standalone
+  Rust library passes locked/offline Cargo check and Clippy;
+- fixture, compatibility, tier, scenario, stable-claim, and provenance checks
+  bind both directions to distinct merge-profile test names and mutation-test
+  the locked dependency policy, callback policy, foreign-thread observation,
+  and subscription cleanup guardrails.
+
 ### certification_9 through certification_13: Cargo and Ecosystem
 
 Implement the rows in numeric order as separate PRs. `certification_11` must
