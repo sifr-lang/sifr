@@ -45,6 +45,7 @@ REQUIRED_SUITES = {
         "incident-governance",
         "epoch-bootstrap",
         "protected-drill",
+        "stable-prepare",
     },
 }
 

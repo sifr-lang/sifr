@@ -223,7 +223,8 @@
         "evidence-custody",
         "incident-governance",
         "epoch-bootstrap",
-        "protected-drill"
+        "protected-drill",
+        "stable-prepare"
       ],
       "resource_classes": [
         "default-local"

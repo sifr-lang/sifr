@@ -122,6 +122,7 @@ def write_source_contracts(source_root: Path) -> None:
                     "incident-governance",
                     "epoch-bootstrap",
                     "protected-drill",
+                    "stable-prepare",
                 ],
             },
         ],

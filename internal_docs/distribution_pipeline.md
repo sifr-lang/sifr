@@ -588,6 +588,22 @@ artifact bytes, the current governance-asset identity, and any staged alpha
 evidence, then uploads an immutable 30-day summary whose digest is rechecked by
 the publish job and retained in each durable bootstrap evidence record.
 
+The same reusable prepare workflow now has a stable-publication path for
+`ga-activation` and `normal`. It separately checks out the exact evidence
+commit and candidate source commit without persisted credentials, reads the
+qualification run identity from the canonical candidate directory, and
+downloads the six exact write-once workflow uploads named by that
+qualification index. The `stable-prepare` validator rejects a dirty or
+mismatched checkout, an expired qualification window shorter than seven full
+days, source/profile/toolchain/submodule drift, any changed transported byte,
+supporting report or release-note drift, and a stale live index identity. It
+then emits—without mutation—the exact proposed generation/index, 20 artifact
+identities, Marketplace VSIX binding, site base commit, and evidence/source
+identities for protected-environment review. The summary is immutable for 30
+days; its plan, release-report, qualification, live-index, and proposed-index
+digests are explicit reusable-workflow outputs, and the later publish job must
+consume the exact summary digest.
+
 Manual drill dispatch selects exactly publication, rollback, or first-GA
 coverage and passes that mode unchanged to `release-publication-drill.yml`;
 unknown reusable-workflow modes fail before the drill core runs. Drills use the
@@ -627,6 +643,8 @@ uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite epoch-bootstrap
 uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite protected-drill
+uv run --project verification --locked python -m sifr_verify areas run \
+  --area distribution_release --suite stable-prepare
 uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite incident-governance
 demos/stable_incident_recovery_demo.sh

@@ -22,6 +22,10 @@ from .stable_planner import (
     materialize_stable_mutation,
     validate_stable_mutation_evidence,
 )
+from .stable_prepare import (
+    materialize_stable_prepare,
+    validate_stable_prepare_summary,
+)
 from .surface_contracts import (
     validate_install_receipt,
     validate_self_update_plan,
@@ -34,6 +38,7 @@ __all__ = [
     "generate_site_release_facts",
     "materialize_stable_plan",
     "materialize_stable_mutation",
+    "materialize_stable_prepare",
     "propose_stable_release",
     "validate_bootstrap_evidence",
     "validate_drill_evidence",
@@ -51,4 +56,5 @@ __all__ = [
     "validate_site_publication_facts",
     "validate_site_release_facts",
     "validate_stable_mutation_evidence",
+    "validate_stable_prepare_summary",
 ]

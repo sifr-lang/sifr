@@ -92,7 +92,7 @@ for fragment in (
     "contents: read",
     "one-time bootstrap source is not the exact opaque v1 asset",
     'summary_artifact_name="publication-prepare-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"',
-    "name: ${{ steps.summary.outputs.summary_artifact_name }}",
+    "name: ${{ steps.outputs.outputs.summary_artifact_name }}",
     "retention-days: 30",
     "overwrite: false",
 ):

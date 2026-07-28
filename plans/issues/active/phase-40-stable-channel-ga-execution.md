@@ -518,6 +518,39 @@ Review and upstream coordination ledger:
   It matched local, remote branch, and PR head at
   `774592acd140747c068bfe6f4752b34006e9664a`, rechecked the complete wave,
   found no actionable issue, and returned `SATISFIED`.
+- Frozen-head review pass 5 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-protected-drill-review-pass-5-frozen-pr-head-satisfied.md`.
+  It matched local, remote branch, and PR head at
+  `a5ffe3704bbdf71616f5edee6f08c9de34c3ac76`, confirmed the pass-4 archive
+  delta was documentation-only and truthful, and returned `SATISFIED`.
+- [PR #3041](https://github.com/sifr-lang/sifr/pull/3041) merged the protected
+  credential-free drill and stable index planning wave as
+  `f9837adb105f048ed56624c148ee83ecbd2a3d03`.
+- The next protected-publication wave adds a credential-free stable prepare
+  path for `ga-activation` and `normal`. It binds an exact evidence commit,
+  canonical candidate directory and plan digest, a separate clean exact source
+  checkout, at least seven full days of qualification lifetime, all 20
+  transported artifact identities from six write-once qualification uploads,
+  Rust/documentation/release-note evidence, Marketplace VSIX bytes, live index
+  identity, site base commit, and a deterministic proposed stable mutation.
+  The reusable workflow remains read-only and secret-free and retains the
+  reviewer-visible summary for 30 days. The named `stable-prepare` suite is
+  selected by merge, nightly, and release profiles and required by the release
+  report.
+- Stable-prepare review pass 1 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-prepare-review-pass-1-satisfied.md`.
+  Opus re-read every file after the in-review hardening, reproduced the
+  stable-prepare, governance, runner, combined 60-variant distribution,
+  coverage, workflow-contract, diff, and file-size gates, and found no
+  actionable correctness, provenance, extraction, schema, permission, or
+  compatibility issue. Its verdict binds the final reviewed workflow,
+  extractor, artifact-index, and prepare-core byte identities recorded in the
+  archive.
+- The authoritative `scripts/run_all_tests.sh --profile create-pr` gate passed
+  for the stable-prepare implementation, including every blocking lane and
+  131/131 E2E fixtures (`report_signature=7c39b8c1dd4fec7c`). The only
+  advisory was the already-indexed non-blocking warm wall-time variance; every
+  enforced step budget passed.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
 - [ ] Exercise resume, stale generation, burned generation, rollback, and

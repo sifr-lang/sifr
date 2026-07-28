@@ -19,11 +19,41 @@ on:
         required: false
         default: ""
         type: string
+      evidence_commit:
+        required: false
+        default: ""
+        type: string
+      candidate_path:
+        required: false
+        default: ""
+        type: string
+      expected_plan_sha256:
+        required: false
+        default: ""
+        type: string
+      publication_mode:
+        required: false
+        default: ""
+        type: string
+      proposed_generation:
+        required: false
+        default: ""
+        type: string
     outputs:
       summary_sha256:
         value: ${{ jobs.prepare.outputs.summary_sha256 }}
       summary_artifact_name:
         value: ${{ jobs.prepare.outputs.summary_artifact_name }}
+      plan_sha256:
+        value: ${{ jobs.prepare.outputs.plan_sha256 }}
+      release_report_sha256:
+        value: ${{ jobs.prepare.outputs.release_report_sha256 }}
+      qualification_sha256:
+        value: ${{ jobs.prepare.outputs.qualification_sha256 }}
+      live_index_sha256:
+        value: ${{ jobs.prepare.outputs.live_index_sha256 }}
+      proposed_index_sha256:
+        value: ${{ jobs.prepare.outputs.proposed_index_sha256 }}
 
 permissions:
   actions: read
@@ -35,8 +65,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
-      summary_sha256: ${{ steps.summary.outputs.summary_sha256 }}
-      summary_artifact_name: ${{ steps.summary.outputs.summary_artifact_name }}
+      summary_sha256: ${{ steps.outputs.outputs.summary_sha256 }}
+      summary_artifact_name: ${{ steps.outputs.outputs.summary_artifact_name }}
+      plan_sha256: ${{ steps.outputs.outputs.plan_sha256 }}
+      release_report_sha256: ${{ steps.outputs.outputs.release_report_sha256 }}
+      qualification_sha256: ${{ steps.outputs.outputs.qualification_sha256 }}
+      live_index_sha256: ${{ steps.outputs.outputs.live_index_sha256 }}
+      proposed_index_sha256: ${{ steps.outputs.outputs.proposed_index_sha256 }}
     env:
       GH_TOKEN: ${{ github.token }}
       CHANNEL: ${{ inputs.channel }}
@@ -44,25 +79,36 @@ jobs:
       SOURCE_COMMIT: ${{ inputs.source_commit }}
       GOVERNANCE_MODE: ${{ inputs.governance_mode }}
       BOOTSTRAP_ALPHA_VERSION: ${{ inputs.bootstrap_alpha_version }}
+      EVIDENCE_COMMIT: ${{ inputs.evidence_commit }}
+      CANDIDATE_PATH: ${{ inputs.candidate_path }}
+      EXPECTED_PLAN_SHA256: ${{ inputs.expected_plan_sha256 }}
+      PUBLICATION_MODE: ${{ inputs.publication_mode }}
+      PROPOSED_GENERATION: ${{ inputs.proposed_generation }}
       LEGACY_INDEX_SHA256: 71b3243925670f56dc510b8f45b6614a622f58097a0fea9492f61d20dc4bf9ef
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
         with:
           ref: ${{ inputs.source_commit }}
           fetch-depth: 0
           persist-credentials: false
 
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
         with:
           pattern: sifr-${{ inputs.version }}-*
           path: prepare-assets
           merge-multiple: true
 
       - name: Validate read-only prepare inputs and artifact bytes
-        id: summary
+        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
         shell: bash
         run: |
           set -euo pipefail
+          if [[ -n "${EVIDENCE_COMMIT}${CANDIDATE_PATH}${EXPECTED_PLAN_SHA256}${PUBLICATION_MODE}${PROPOSED_GENERATION}" ]]; then
+            echo "::error::preview/bootstrap prepare cannot receive stable inputs"
+            exit 2
+          fi
           case "${GOVERNANCE_MODE}" in
             preview)
               test -z "${BOOTSTRAP_ALPHA_VERSION}" || {
@@ -194,9 +240,6 @@ jobs:
               assets: $assets
             }' >prepare/summary.json
           summary_sha256="$(sha256sum prepare/summary.json | awk '{print $1}')"
-          summary_artifact_name="publication-prepare-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          echo "summary_sha256=${summary_sha256}" >>"${GITHUB_OUTPUT}"
-          echo "summary_artifact_name=${summary_artifact_name}" >>"${GITHUB_OUTPUT}"
           {
             echo "## Governed publication prepare"
             echo
@@ -210,9 +253,173 @@ jobs:
             fi
           } >>"${GITHUB_STEP_SUMMARY}"
 
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        with:
+          ref: ${{ inputs.evidence_commit }}
+          fetch-depth: 0
+          path: stable-evidence
+          persist-credentials: false
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        with:
+          ref: ${{ inputs.source_commit }}
+          fetch-depth: 0
+          path: stable-source
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Prepare exact stable publication inputs
+        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${CHANNEL}" = "stable" &&
+            [[ "${EVIDENCE_COMMIT}" =~ ^[0-9a-f]{40}$ ]] &&
+            [[ "${CANDIDATE_PATH}" =~ ^plans/releases/candidates/[0-9]+\.[0-9]+\.[0-9]+$ ]] &&
+            [[ "${EXPECTED_PLAN_SHA256}" =~ ^[0-9a-f]{64}$ ]] &&
+            [[ "${PUBLICATION_MODE}" =~ ^(initial|resume)$ ]] &&
+            [[ "${PROPOSED_GENERATION}" =~ ^[1-9][0-9]*$ ]] || {
+              echo "::error::stable prepare inputs are incomplete or malformed"
+              exit 2
+            }
+          test -z "${BOOTSTRAP_ALPHA_VERSION}" || {
+            echo "::error::stable publication cannot name a bootstrap alpha"
+            exit 2
+          }
+          candidate_version="${CANDIDATE_PATH##*/}"
+          test "${VERSION}" = "${candidate_version}" || {
+            echo "::error::stable candidate path/version mismatch"
+            exit 2
+          }
+          candidate="stable-evidence/${CANDIDATE_PATH}"
+          qualification="${candidate}/qualification-artifact-index.json"
+          test -f "${qualification}" || {
+            echo "::error::candidate qualification index is missing"
+            exit 2
+          }
+          (
+            cd stable-source
+            python3 scripts/distribution/release_governance.py validate \
+              --kind qualification-artifact-index \
+              --input "../${qualification}" \
+              --require-canonical
+          )
+          run_id="$(jq -er '.workflow.run_id' "${qualification}")"
+          run_attempt="$(jq -er '.workflow.run_attempt' "${qualification}")"
+          test "$(jq -er '.workflow.repository' "${qualification}")" = "${GITHUB_REPOSITORY}" || {
+            echo "::error::qualification repository identity mismatch"
+            exit 2
+          }
+          run_metadata="$(
+            gh api \
+              "/repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/attempts/${run_attempt}"
+          )"
+          test "$(jq -er '.id' <<<"${run_metadata}")" = "${run_id}" &&
+            test "$(jq -er '.run_attempt' <<<"${run_metadata}")" = "${run_attempt}" &&
+            test "$(jq -er '.head_sha' <<<"${run_metadata}")" = "${SOURCE_COMMIT}" &&
+            test "$(jq -er '.conclusion' <<<"${run_metadata}")" = "success" || {
+              echo "::error::qualification workflow-run provenance mismatch"
+              exit 2
+            }
+          mkdir -p stable-assets prepare
+          while IFS=$'\t' read -r artifact_id artifact_name artifact_size_bytes; do
+            artifact_metadata="$(
+              gh api \
+                "/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}"
+            )"
+            test "$(jq -er '.id' <<<"${artifact_metadata}")" = "${artifact_id}" &&
+              test "$(jq -er '.name' <<<"${artifact_metadata}")" = "${artifact_name}" &&
+              test "$(jq -r '.expired' <<<"${artifact_metadata}")" = "false" &&
+              test "$(jq -er '.workflow_run.id' <<<"${artifact_metadata}")" = "${run_id}" || {
+                echo "::error::qualification artifact provenance mismatch"
+                exit 2
+              }
+            mkdir -p "stable-assets/${artifact_name}"
+            archive="stable-assets/${artifact_name}.zip"
+            gh api \
+              "/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}/zip" \
+              >"${archive}"
+            python3 stable-source/scripts/distribution/extract_github_artifact.py \
+              "${archive}" \
+              "stable-assets/${artifact_name}" \
+              --expected-uncompressed-bytes "${artifact_size_bytes}"
+            rm "${archive}"
+          done < <(
+            jq -er \
+              '[.artifacts[] | {
+                id: .workflow_artifact_id,
+                name: .workflow_artifact_name,
+                size: .size_bytes
+              }]
+              | group_by(.id)
+              | .[]
+              | [.[0].id, .[0].name, (map(.size) | add)]
+              | @tsv' \
+              "${qualification}"
+          )
+          gh release download channels \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern channels.json \
+            --dir prepare
+          mv prepare/channels.json prepare/current-channels.json
+          (
+            cd stable-source
+            python3 scripts/distribution/release_governance.py \
+              prepare-stable-publication \
+              --operation "${GOVERNANCE_MODE}" \
+              --mode "${PUBLICATION_MODE}" \
+              --evidence-root ../stable-evidence \
+              --evidence-commit "${EVIDENCE_COMMIT}" \
+              --candidate-path "${CANDIDATE_PATH}" \
+              --expected-plan-sha256 "${EXPECTED_PLAN_SHA256}" \
+              --source-root . \
+              --live-index ../prepare/current-channels.json \
+              --artifact-root ../stable-assets \
+              --proposed-generation "${PROPOSED_GENERATION}" \
+              --out ../prepare/summary.json
+          )
+          test "$(jq -er '.qualification.run_id' prepare/summary.json)" = "${run_id}" &&
+            test "$(jq -er '.qualification.run_attempt' prepare/summary.json)" = "${run_attempt}" &&
+            test "$(jq -er '.version' prepare/summary.json)" = "${VERSION}" || {
+              echo "::error::stable prepare summary lost candidate identity"
+              exit 2
+            }
+          summary_sha256="$(sha256sum prepare/summary.json | awk '{print $1}')"
+          {
+            echo "## Governed stable publication prepare"
+            echo
+            echo "- operation/mode: \`${GOVERNANCE_MODE}\` / \`${PUBLICATION_MODE}\`"
+            echo "- candidate: \`${VERSION}\` at \`${SOURCE_COMMIT}\`"
+            echo "- evidence: \`${EVIDENCE_COMMIT}:${CANDIDATE_PATH}\`"
+            echo "- qualification run: \`${run_id}/${run_attempt}\`"
+            echo "- live index: generation \`$(jq -r '.live_index.generation' prepare/summary.json)\`"
+            echo "- proposed generation: \`$(jq -r '.mutation.proposed_index.generation' prepare/summary.json)\`"
+            echo "- prepare summary SHA-256: \`${summary_sha256}\`"
+          } >>"${GITHUB_STEP_SUMMARY}"
+
+      - name: Bind prepare outputs
+        id: outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f prepare/summary.json
+          summary_sha256="$(sha256sum prepare/summary.json | awk '{print $1}')"
+          summary_artifact_name="publication-prepare-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "summary_sha256=${summary_sha256}" >>"${GITHUB_OUTPUT}"
+          echo "summary_artifact_name=${summary_artifact_name}" >>"${GITHUB_OUTPUT}"
+          {
+            echo "plan_sha256=$(jq -r '.evidence.plan_sha256 // ""' prepare/summary.json)"
+            echo "release_report_sha256=$(jq -r '.release_report.sha256 // ""' prepare/summary.json)"
+            echo "qualification_sha256=$(jq -r '.qualification.sha256 // ""' prepare/summary.json)"
+            echo "live_index_sha256=$(jq -r '.live_index.sha256 // ""' prepare/summary.json)"
+            echo "proposed_index_sha256=$(jq -r '.mutation.proposed_index_sha256 // ""' prepare/summary.json)"
+          } >>"${GITHUB_OUTPUT}"
+
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: ${{ steps.summary.outputs.summary_artifact_name }}
+          name: ${{ steps.outputs.outputs.summary_artifact_name }}
           path: prepare/summary.json
           if-no-files-found: error
           retention-days: 30

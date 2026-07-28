@@ -100,6 +100,19 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "stable-prepare",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "stable-publication-prepare",
+          "entry": "verification/areas/distribution_release/governance/stable_prepare_selftest.py",
+          "command": "distribution-stable-prepare",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ],
   "network_mode": "offline",

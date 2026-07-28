@@ -133,6 +133,19 @@ def validate_schema_contracts() -> None:
             raise ValueError(
                 "stable mutation evidence schema accepted an invalid binding"
             )
+    prepare_schema = SCHEMA_ROOT / "stable_publication_prepare.schema.json"
+    unknown_artifact = copy.deepcopy(
+        fixtures["stable_publication_prepare.schema.json"]
+    )
+    unknown_artifact["artifacts"]["unknown"] = unknown_artifact["artifacts"].pop(
+        "installer"
+    )
+    try:
+        validate_instance(unknown_artifact, prepare_schema)
+    except JsonSchemaError:
+        pass
+    else:
+        raise ValueError("stable prepare schema accepted an unknown artifact identity")
 
 
 def schema_fixtures() -> dict[str, Any]:
@@ -150,6 +163,7 @@ def schema_fixtures() -> dict[str, Any]:
         "stable_incident_request.schema.json": incident_request(),
         "stable_incident_signoff.schema.json": incident_signoff(),
         "stable_index_mutation_evidence.schema.json": stable_index_mutation_evidence(),
+        "stable_publication_prepare.schema.json": stable_publication_prepare(),
         "stable_release_plan.schema.json": release_plan(),
         "stable_release_signoff.schema.json": release_signoff(),
         "stable_site_release_facts.schema.json": site_facts(),
@@ -195,6 +209,73 @@ def stable_index_mutation_evidence() -> dict[str, Any]:
         "previous_index": {"generation": 7, "sha256": SHA_B},
         "proposed_index": proposed,
         "proposed_index_sha256": sha256_bytes(canonical_json_bytes(proposed)),
+    }
+
+
+def stable_publication_prepare() -> dict[str, Any]:
+    mutation = stable_index_mutation_evidence()
+    artifact_ids = sorted(
+        {
+            "installer",
+            "checksums",
+            "vsix",
+            "editor-qualification-report",
+            *{
+                f"{kind}-{target}"
+                for target in TARGETS
+                for kind in (
+                    "binary-archive",
+                    "checksum",
+                    "sysroot",
+                    "qualification-report",
+                )
+            },
+        }
+    )
+    return {
+        "schema_version": 2,
+        "operation": "ga-activation",
+        "mode": "initial",
+        "version": "0.1.0",
+        "evidence": {
+            "commit": COMMIT,
+            "candidate_path": "plans/releases/candidates/0.1.0",
+            "plan_sha256": SHA_A,
+        },
+        "source": {
+            "commit": COMMIT,
+            "submodules": {"editor_integrations": "f" * 40},
+        },
+        "release_report": {"id": "release-report-a", "sha256": SHA_B},
+        "qualification": {
+            "id": "qualification-42-1",
+            "sha256": SHA_C,
+            "run_id": 42,
+            "run_attempt": 1,
+            "expires_at": "2026-08-20T00:00:00Z",
+        },
+        "live_index": {"generation": 7, "sha256": SHA_B},
+        "mutation": mutation,
+        "artifacts": {
+            artifact_id: {
+                "name": f"{artifact_id}.bin",
+                "sha256": SHA_A,
+                "size_bytes": 1,
+                "workflow_artifact_id": index,
+                "workflow_artifact_name": f"candidate-artifact-{index}",
+            }
+            for index, artifact_id in enumerate(artifact_ids, start=1)
+        },
+        "marketplace": {
+            "publisher": "sifr",
+            "extension": "sifr-vscode",
+            "version": "0.2.0",
+            "vsix_sha256": SHA_D,
+        },
+        "site": {
+            "repository": "sifr-lang/sifr-website",
+            "base_commit": "1" * 40,
+        },
     }
 
 
@@ -490,6 +571,7 @@ def release_report() -> dict[str, Any]:
             ("distribution_release", "incident-governance"),
             ("distribution_release", "epoch-bootstrap"),
             ("distribution_release", "protected-drill"),
+            ("distribution_release", "stable-prepare"),
         ],
     }
     return {
@@ -531,6 +613,7 @@ def release_report() -> dict[str, Any]:
                             "incident-governance",
                             "epoch-bootstrap",
                             "protected-drill",
+                            "stable-prepare",
                         ],
                     ),
                 )
