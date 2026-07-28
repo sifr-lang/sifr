@@ -264,7 +264,7 @@
       "owner": "compiler/verification",
       "current_behavior": "executes distribution, stable prepare and publish-revalidation primitives, tooling, documentation, and Rust release gates",
       "activation_boundary": "architecture-lock",
-      "disposition": "durably executes incident-governance, evidence-custody, protected-drill, stable-prepare, stable-publish-primitives, editor-release expansion, documentation ga-release, and Rust stable-candidate"
+      "disposition": "durably executes incident-governance, evidence-custody, protected-drill, stable-prepare, stable-publish-primitives, stable-publication, editor-release expansion, documentation ga-release, and Rust stable-candidate"
     }
   ]
 }

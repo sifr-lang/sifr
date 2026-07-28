@@ -10,6 +10,7 @@ import json
 import shutil
 import subprocess
 import tarfile
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -124,6 +125,7 @@ def write_source_contracts(source_root: Path) -> None:
                     "protected-drill",
                     "stable-prepare",
                     "stable-publish-primitives",
+                    "stable-publication",
                 ],
             },
         ],
@@ -253,9 +255,19 @@ def build_evidence_bundle(
     editor = artifact_root / f"{prefix}editor"
     editor.mkdir()
     vsix = editor / "sifr-vscode-0.2.0.vsix"
-    vsix.write_bytes(
-        f"fixture-vsix:{'changed' if variant == 'vsix' else 'baseline'}\n".encode()
+    package = {
+        "name": "sifr-vscode",
+        "publisher": "sifr",
+        "version": "0.2.0",
+        "fixture": "changed" if variant == "vsix" else "baseline",
+    }
+    package_entry = zipfile.ZipInfo(
+        "extension/package.json",
+        date_time=(2020, 1, 1, 0, 0, 0),
     )
+    package_entry.external_attr = 0o100644 << 16
+    with zipfile.ZipFile(vsix, "w", compression=zipfile.ZIP_STORED) as archive:
+        archive.writestr(package_entry, canonical_json_bytes(package))
     candidate_target = host_target or TARGETS[0]
     candidate_report_path = (
         artifact_root

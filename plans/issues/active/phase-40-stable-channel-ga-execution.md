@@ -625,6 +625,93 @@ Review and upstream coordination ledger:
   at `f355a2b0a40a4ab644f711d0e6fd6d2aa63bf19a`, independently reproduced
   the full distribution gate, verified the complete wave and earlier review
   closures, found no actionable issue, and returned `SATISFIED`.
+- Final exact-head publish-primitives review pass 5 is satisfied and archived
+  at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-publish-primitives-review-pass-5-final-pr-head-satisfied.md`.
+  It matched local, remote, and PR #3044 at
+  `338f318d47b3b6b2459a7fcfac9a05886273e459`, verified that the final review
+  archive was the only delta after the frozen review, and returned
+  `SATISFIED`.
+- [PR #3044](https://github.com/sifr-lang/sifr/pull/3044) merged the protected
+  stable publication-primitives wave as
+  `47c837a4b7f9d4a06322b5fbb0e6b65255dda8c0`.
+- The stable production-wiring wave enables `ga-activation` and `normal` in the
+  existing single protected `publish` job. It makes protected resume
+  distinguish a pending proposal from an already-activated exact release,
+  re-fetches exact qualification uploads, reproduces the reviewer-visible
+  summary before any publication and again immediately before index
+  reservation, and stages the exact 20 qualified artifacts plus approved plan.
+  Its adapters create or byte-verify the write-once GitHub release, publish the
+  recorded VSIX only when the exact Marketplace version is absent, verify the
+  raw Gallery VSIX, reserve and activate the governed generation, dispatch and
+  poll the pinned site workflow, run public install/update/asset smoke, and
+  retain generation-specific site facts and release sign-off without
+  overwriting them. Sign-off now records the correlated site run and deployed
+  commit. Each protected run retains a distinct immutable sign-off asset, so a
+  later resume adds attempt evidence without rewriting an earlier sign-off.
+  The named `stable-publication` suite is selected by merge, nightly,
+  and release and is required by release-report custody.
+- Production-wiring review pass 1 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-publication-wiring-review-pass-1-not-satisfied.md`.
+  Its `NOT SATISFIED` findings are remediated: prepare and publish now execute
+  the same governance code from the exact workflow commit and stable mutation
+  refuses any ref except protected main HEAD; Node 22 plus the candidate's
+  exact extension lockfile provision the local `vsce` binary without lifecycle
+  scripts or publication secrets; sign-off is immutable per run/attempt;
+  Marketplace raw-byte drift and public-smoke execution have negative/positive
+  coverage; and governance asset inventory is paginated.
+- Production-wiring review pass 2 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-publication-wiring-review-pass-2-not-satisfied.md`.
+  It verified every pass-1 finding was closed, then identified the missing
+  protected-main ancestry proof for the stable candidate source and evidence
+  commits. The orchestrator now checks both commits with
+  `git merge-base --is-ancestor` against the freshly fetched protected main
+  head before any network mutation, and an executed fake-git test rejects an
+  unmerged candidate.
+- Production-wiring review pass 3 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-publication-wiring-review-pass-3-not-satisfied.md`.
+  It verified both earlier review rounds were closed, then requested tighter
+  process-secret scoping and direct negative schema parity coverage. The
+  orchestrator now unexports site/Marketplace secrets and exposes them only to
+  their intended commands, clears all publication tokens for Marketplace's
+  unrelated credentials and for dispatcher/installed-binary smoke, and schema
+  self-tests reject activated-initial prepare plus a noncanonical site
+  repository in stable sign-off.
+- Production-wiring review pass 4 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-publication-wiring-review-pass-4-satisfied.md`.
+  It independently reproduced distribution `full` at 63/63 and the whole area
+  at 120/120, verified every prior review finding and the complete mutation
+  ordering/resume/secret/schema/profile surface, found no actionable issue, and
+  returned `SATISFIED`.
+- Exact [PR #3045](https://github.com/sifr-lang/sifr/pull/3045) head review
+  pass 5 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-publication-wiring-review-pass-5-exact-pr-head-satisfied.md`.
+  It matched local, remote, and PR head at
+  `a5c9a2ce873b6a3f65b142c803bca61b191abbbf`, independently reproduced
+  the 63-variant focused distribution run and all workflow/schema/coverage,
+  parsing, diff, and file-size gates, reverified every earlier closure and the
+  complete production mutation ordering, found no actionable issue, and
+  returned `SATISFIED`.
+- Final exact-head review pass 6 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-publication-wiring-review-pass-6-final-exact-head-satisfied.md`.
+  It matched local, remote, and PR head at
+  `d2b919eb8a5a32ede375ab7f9e03f18431a4e506`, verified the only
+  post-pass-5 delta was the truthful review archive and ledger entry,
+  independently reran the focused suites and guardrails, found no actionable
+  issue, and returned `SATISFIED`.
+- Focused production-wiring validation passes: stable prepare 7/7, stable
+  publication primitives 4/4, stable publication 9/9, governance 14/14,
+  runner self-tests, workflow/schema contracts, coverage readiness, and the
+  combined distribution run at 63 variants with zero failures. File-size
+  guardrails pass with the single publication workflow at 899 lines.
+- The production-wiring create-PR profile passed coverage-matrix checks, core
+  guardrails, diagnostic rules, and CPython differential checks, then passed
+  18 of 19 Python interop variants. Its sole failure was a repeated
+  120-second timeout in the pre-existing `readonly-check-doctor` capability;
+  the exact isolated suite reproduced the same timeout. This unrelated
+  follow-up is preserved in
+  [`python-interop-readonly-inspection-timeout.md`](./python-interop-readonly-inspection-timeout.md)
+  without a timeout change, waiver, suppression, or Phase 40 code change.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
 - [ ] Exercise resume, stale generation, burned generation, rollback, and

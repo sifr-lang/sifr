@@ -575,9 +575,10 @@ mutation.
 
 The canonical ownership, acknowledgement, communication, retry, retention, and
 closure policy is in
-[`stable_incident_response.md`](./stable_incident_response.md). Stable,
-Marketplace, and incident production mutations remain gated until their later
-protected-publication slices.
+[`stable_incident_response.md`](./stable_incident_response.md). GA and normal
+stable publication use the canonical protected workflow described below.
+Incident rollback and roll-forward production adapters remain gated until
+their later protected-publication slice.
 
 The first protected-publication slice wires the one-time schema-epoch
 bootstrap and credential-free protected drills into
@@ -611,12 +612,44 @@ maximum live or retained generation so a reserved failed attempt stays burned.
 Read-only prepare uses the reusable exact-ID artifact fetcher, which verifies
 the workflow run/attempt/source, upload ID/name/expiry/run identity, safe
 compressed and uncompressed byte boundaries, and every transported SHA-256.
-The separate protected revalidation command accepts caller-supplied clean
+The protected revalidation command accepts caller-supplied clean
 evidence/source checkouts, live index and retained snapshots, and refetched
 artifact root. It recomputes the complete stable-prepare summary and requires
 byte-for-byte equality with the reviewer-visible summary. The production
-workflow does not yet invoke this command; it must supply those fresh inputs
-before stable mutation is enabled.
+`publish` job invokes it after re-fetching exact evidence and transported
+artifacts, then repeats the live-index/history fetch and revalidation
+immediately before generation reservation.
+
+`ga-activation` and `normal` remain in that one protected `publish` job and use
+explicit `initial` or `resume` mode. The job stages the exact 20 transported
+artifacts plus the approved plan as the version release asset set. Initial
+publication requires an absent version tag/release; resume inventories assets
+by immutable GitHub asset ID, downloads and byte-compares every existing
+planned asset, rejects unknown or drifted state, and uploads only missing exact
+bytes. The recorded VSIX is verified locally, then the raw
+`Microsoft.VisualStudio.Services.VSIXPackage` Gallery asset is reused only when
+its digest and package publisher/name/version match; otherwise the absent
+version is published once with `vsce publish --packagePath` and re-downloaded.
+The protected job installs Node 22 and runs `npm ci --ignore-scripts` against
+the exact candidate submodule lockfile before secrets enter the publication
+step, then invokes that pinned local `vsce` executable. The orchestrator
+unexports the site and Marketplace secrets after capturing them in shell-local
+variables, exposes each only to its intended command, and clears all
+publication tokens before executing the public dispatcher and installed binary.
+
+Only after the release and Marketplace states are exact does the job reacquire
+the governed index lease. A pending attempt publishes the write-once generation
+snapshot, proves `channels.json` did not change during reservation, and replaces
+only that canonical mutable asset. A post-activation resume recovers the exact
+predecessor from retained history, proves the live index already equals the
+approved proposal, and skips index mutation. Both paths dispatch and poll the
+pinned site workflow, verify public `/install` and `/install/stable`, every
+version asset, a fresh installed stable no-op update, and the raw Marketplace
+VSIX. Generation-specific stable site facts and the versioned stable release
+sign-off are retained without clobber; sign-off binds the correlated site run
+and deployed commit. Each protected run retains its own
+`stable-release-signoff-<version>-attempt-<run>-<attempt>.json`, so a completed
+sign-off never has to be rewritten and a later resume remains convergent.
 
 Manual drill dispatch selects exactly publication, rollback, or first-GA
 coverage and passes that mode unchanged to `release-publication-drill.yml`;
@@ -661,6 +694,8 @@ uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite stable-prepare
 uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite stable-publish-primitives
+uv run --project verification --locked python -m sifr_verify areas run \
+  --area distribution_release --suite stable-publication
 uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite incident-governance
 demos/stable_incident_recovery_demo.sh

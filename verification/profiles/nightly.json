@@ -226,7 +226,8 @@
         "epoch-bootstrap",
         "protected-drill",
         "stable-prepare",
-        "stable-publish-primitives"
+        "stable-publish-primitives",
+        "stable-publication"
       ],
       "resource_classes": [
         "default-local"

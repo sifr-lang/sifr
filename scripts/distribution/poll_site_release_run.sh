@@ -3,7 +3,7 @@
 set -euo pipefail
 
 usage() {
-  echo "usage: poll_site_release_run.sh --repository OWNER/REPO --workflow FILE --title TEXT --sha COMMIT --dispatched-at TIMESTAMP [--deadline-seconds N]" >&2
+  echo "usage: poll_site_release_run.sh --repository OWNER/REPO --workflow FILE --title TEXT --sha COMMIT --dispatched-at TIMESTAMP [--deadline-seconds N] [--result-out PATH]" >&2
   exit 2
 }
 
@@ -13,6 +13,7 @@ title=""
 sha=""
 dispatched_at=""
 deadline_seconds=1200
+result_out=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --repository) repository="${2:-}"; shift 2 ;;
@@ -21,12 +22,17 @@ while [[ $# -gt 0 ]]; do
     --sha) sha="${2:-}"; shift 2 ;;
     --dispatched-at) dispatched_at="${2:-}"; shift 2 ;;
     --deadline-seconds) deadline_seconds="${2:-}"; shift 2 ;;
+    --result-out) result_out="${2:-}"; shift 2 ;;
     *) usage ;;
   esac
 done
 [[ -n "${repository}" && -n "${workflow}" && -n "${title}" &&
   "${sha}" =~ ^[0-9a-f]{40}$ && -n "${dispatched_at}" &&
   "${deadline_seconds}" =~ ^[1-9][0-9]*$ ]] || usage
+[[ -z "${result_out}" || ( ! -e "${result_out}" && ! -L "${result_out}" ) ]] || {
+  echo "site-release-poll: --result-out must not already exist" >&2
+  exit 2
+}
 
 run_id=""
 query_failures=0
@@ -76,6 +82,19 @@ while (( SECONDS < poll_deadline )); do
       IFS=$'\t' read -r run_id status conclusion <<<"${matched}"
       if [[ "${status}" == "completed" ]]; then
         if [[ "${conclusion}" == "success" ]]; then
+          if [[ -n "${result_out}" ]]; then
+            jq -cnS \
+              --arg repository "${repository}" \
+              --arg workflow "${workflow}" \
+              --argjson run_id "${run_id}" \
+              --arg deployed_commit "${sha}" \
+              '{
+                repository: $repository,
+                workflow: $workflow,
+                run_id: $run_id,
+                deployed_commit: $deployed_commit
+              }' >"${result_out}"
+          fi
           echo "Correlated site run ${run_id} completed successfully"
           exit 0
         fi

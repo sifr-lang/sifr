@@ -24,9 +24,11 @@ from .common import (
     write_canonical_json,
 )
 from .generation import allocate_next_generation
+from .stable_prepare import materialize_stable_prepare
 from .stable_prepare_selftest import (
     StablePrepareFixture,
     prepare,
+    prepare_arguments,
 )
 
 
@@ -35,6 +37,7 @@ def run_self_tests() -> int:
         test_generation_allocation_burns_gaps,
         test_exact_artifact_refetch,
         test_protected_revalidation,
+        test_post_activation_revalidation,
     )
     for test in tests:
         test()
@@ -45,15 +48,8 @@ def run_self_tests() -> int:
 
 def test_generation_allocation_burns_gaps() -> None:
     with StablePrepareFixture() as context:
-        root = context["root"]
-        history = root / "history"
-        history.mkdir()
+        history = context["snapshot_root"]
         live = load_json_strict(context["live_index_path"], require_canonical=True)
-        write_canonical_json(
-            history / f"channels-generation-{live['generation']}.json",
-            live,
-            refuse_existing=True,
-        )
         burned = copy.deepcopy(live)
         burned["generation"] = live["generation"] + 3
         write_canonical_json(
@@ -423,6 +419,67 @@ def test_protected_revalidation() -> None:
         )
 
 
+def test_post_activation_revalidation() -> None:
+    with StablePrepareFixture() as context:
+        pending = prepare(context)
+        activated = pending["mutation"]["proposed_index"]
+        activated_generation = activated["generation"]
+        live_index_path = context["live_index_path"]
+        live_index_path.unlink()
+        write_canonical_json(live_index_path, activated, refuse_existing=True)
+        history = _write_live_snapshot(context)
+        write_canonical_json(
+            history / f"channels-generation-{activated_generation}.json",
+            activated,
+            refuse_existing=True,
+        )
+        arguments = prepare_arguments(context)
+        arguments["mode"] = "resume"
+        arguments["proposed_generation"] = activated_generation + 1
+        summary = materialize_stable_prepare(**arguments)
+        summary_path = context["root"] / "activated-summary.json"
+        write_canonical_json(summary_path, summary, refuse_existing=True)
+        result = revalidate_stable_publication(
+            prepare_summary_path=summary_path,
+            expected_summary_sha256=sha256_file(summary_path),
+            operation=context["operation"],
+            mode="resume",
+            evidence_root=context["evidence_root"],
+            evidence_commit=context["evidence_commit"],
+            candidate_path=context["candidate_path"],
+            expected_plan_sha256=context["expected_plan_sha256"],
+            source_root=context["source_root"],
+            live_index_path=live_index_path,
+            snapshot_root=history,
+            artifact_root=context["artifact_root"],
+        )
+        assert result["publication_state"] == "activated"
+
+        burned = copy.deepcopy(activated)
+        burned["generation"] = activated_generation + 1
+        write_canonical_json(
+            history / f"channels-generation-{activated_generation + 1}.json",
+            burned,
+            refuse_existing=True,
+        )
+        _expect_governance_error(
+            lambda: revalidate_stable_publication(
+                prepare_summary_path=summary_path,
+                expected_summary_sha256=sha256_file(summary_path),
+                operation=context["operation"],
+                mode="resume",
+                evidence_root=context["evidence_root"],
+                evidence_commit=context["evidence_commit"],
+                candidate_path=context["candidate_path"],
+                expected_plan_sha256=context["expected_plan_sha256"],
+                source_root=context["source_root"],
+                live_index_path=live_index_path,
+                snapshot_root=history,
+                artifact_root=context["artifact_root"],
+            )
+        )
+
+
 def _write_fake_github_api(
     *,
     api_root: Path,
@@ -536,16 +593,7 @@ def _expect_governance_error(callback: Callable[[], object]) -> None:
 
 
 def _write_live_snapshot(context: dict[str, object]) -> Path:
-    history = Path(context["root"]) / "history"
-    history.mkdir()
-    live_index_path = Path(context["live_index_path"])
-    live = load_json_strict(live_index_path, require_canonical=True)
-    write_canonical_json(
-        history / f"channels-generation-{live['generation']}.json",
-        live,
-        refuse_existing=True,
-    )
-    return history
+    return Path(context["snapshot_root"])
 
 
 if __name__ == "__main__":

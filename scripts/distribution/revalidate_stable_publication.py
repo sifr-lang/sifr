@@ -67,13 +67,12 @@ def revalidate_stable_publication(
         }
     ):
         raise GovernanceError("protected inputs do not match the prepare summary")
-    proposed_generation = summary["mutation"]["proposed_index"]["generation"]
     if (
         allocate_next_generation(
             live_index_path=live_index_path,
             snapshot_root=snapshot_root,
         )
-        != proposed_generation
+        != summary["next_generation"]
     ):
         raise GovernanceError("retained generations changed after prepare")
     recomputed = materialize_stable_prepare(
@@ -85,8 +84,9 @@ def revalidate_stable_publication(
         expected_plan_sha256=expected_plan_sha256,
         source_root=source_root,
         live_index_path=live_index_path,
+        snapshot_root=snapshot_root,
         artifact_root=artifact_root,
-        proposed_generation=proposed_generation,
+        proposed_generation=summary["next_generation"],
     )
     if canonical_json_bytes(recomputed) != summary_bytes:
         raise GovernanceError(
