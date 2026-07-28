@@ -15,7 +15,9 @@ from typing import Any, Callable
 
 from .common import (
     GovernanceError,
+    canonical_json_bytes,
     load_json_strict,
+    sha256_bytes,
     sha256_file,
     write_canonical_json,
 )
@@ -51,6 +53,7 @@ def run_self_tests() -> int:
     tests = (
         test_materialized_prepare,
         test_materialized_normal_prepare,
+        test_materialized_incident_roll_forward_prepare,
         test_resume_after_activation,
         test_prepare_rejects_input_drift,
         test_summary_contract,
@@ -91,6 +94,117 @@ def test_materialized_normal_prepare() -> None:
         assert summary["mutation"]["previous_index"]["generation"] == 8
         assert summary["mutation"]["proposed_index"]["generation"] == 9
         assert summary["mutation"]["proposed_index"]["channels"]["stable"] == "0.1.0"
+
+
+def test_materialized_incident_roll_forward_prepare() -> None:
+    with StablePrepareFixture() as context:
+        live_path = context["live_index_path"]
+        live = load_json_strict(live_path, require_canonical=True)
+        predecessor = copy.deepcopy(live["releases"]["0.1.0-beta.2"])
+        predecessor["channel"] = "stable"
+        predecessor["source_commit"] = "d" * 40
+        live["ga_status"] = "active"
+        live["channels"]["stable"] = "0.0.9"
+        live["releases"]["0.0.9"] = predecessor
+        live_path.unlink()
+        write_canonical_json(live_path, live, refuse_existing=True)
+        snapshot = context["snapshot_root"] / "channels-generation-7.json"
+        snapshot.unlink()
+        write_canonical_json(snapshot, live, refuse_existing=True)
+
+        candidate_plan_path = (
+            context["evidence_root"]
+            / context["candidate_path"]
+            / "stable-release-plan.json"
+        )
+        original_candidate = load_json_strict(
+            candidate_plan_path,
+            require_canonical=True,
+        )
+        affected_plan_path = context["root"] / "affected-plan.json"
+        affected_plan = copy.deepcopy(original_candidate)
+        affected_plan["version"] = "0.0.9"
+        affected_plan["source_commit"] = predecessor["source_commit"]
+        affected_plan["plan_id"] = (
+            f"stable-0.0.9-{predecessor['source_commit'][:12]}"
+        )
+        affected_plan["desired_release"] = copy.deepcopy(predecessor)
+        affected_plan["installer_sha256"] = predecessor["installer_sha256"]
+        for target in affected_plan["targets"]:
+            version_target = predecessor["targets"][target["triple"]]
+            target["archive_sha256"] = version_target["artifact_sha256"]
+            target["sysroot_sha256"] = version_target["sysroot_content_sha256"]
+            target["sifr_version"] = "0.0.9"
+            target["installer_version"] = "0.0.9"
+            target["sysroot_version"] = "0.0.9"
+        write_canonical_json(
+            affected_plan_path,
+            affected_plan,
+            refuse_existing=True,
+        )
+        withdrawal = b"qualified roll-forward incident evidence\n"
+        request = {
+            "schema_version": 2,
+            "incident_id": "inc-forward-qualified",
+            "operation": "incident-roll-forward",
+            "trigger": "post-GA regression",
+            "affected_release": {
+                "version": "0.0.9",
+                "plan_sha256": sha256_file(affected_plan_path),
+            },
+            "withdrawal": {
+                "reason": "qualified successor required",
+                "evidence_sha256": sha256_bytes(withdrawal),
+            },
+        }
+        request_path = context["root"] / "stable-incident-request.json"
+        request_path.write_bytes(canonical_json_bytes(request))
+
+        candidate_plan = original_candidate
+        candidate_plan["transition"] = "incident-roll-forward"
+        candidate_plan["expected_stable_predecessor"] = {
+            "version": "0.0.9",
+            "status": "active",
+            "plan_sha256": sha256_file(affected_plan_path),
+        }
+        candidate_plan["rollback_target"] = "none"
+        candidate_plan["incident_request_sha256"] = sha256_file(request_path)
+        candidate_plan_path.unlink()
+        write_canonical_json(
+            candidate_plan_path,
+            candidate_plan,
+            refuse_existing=True,
+        )
+        git(context["evidence_root"], "add", ".")
+        git(
+            context["evidence_root"],
+            "commit",
+            "--amend",
+            "--no-edit",
+        )
+        context["evidence_commit"] = git_output(
+            context["evidence_root"],
+            "rev-parse",
+            "HEAD",
+        )
+        context["expected_plan_sha256"] = sha256_file(candidate_plan_path)
+        arguments = prepare_arguments(context)
+        arguments.update(
+            {
+                "operation": "incident-roll-forward",
+                "incident_request_path": request_path,
+                "affected_plan_path": affected_plan_path,
+            }
+        )
+        summary = materialize_stable_prepare(**arguments)
+        assert summary["operation"] == "incident-roll-forward"
+        assert summary["incident"]["incident_id"] == "inc-forward-qualified"
+        assert summary["mutation"]["transition"] == "incident-roll-forward"
+        assert summary["mutation"]["proposed_index"]["channels"]["stable"] == "0.1.0"
+        assert (
+            summary["mutation"]["proposed_index"]["releases"]["0.0.9"]["status"]
+            == "withdrawn"
+        )
 
 
 def test_resume_after_activation() -> None:

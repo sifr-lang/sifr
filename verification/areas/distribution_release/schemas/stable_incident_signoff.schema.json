@@ -9,6 +9,7 @@
     "incident_id",
     "operation",
     "request_sha256",
+    "release_signoff_sha256",
     "attempts",
     "index_mutation",
     "site_reconciliation",
@@ -21,6 +22,12 @@
     "incident_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
     "operation": {"enum": ["rollback", "incident-roll-forward"]},
     "request_sha256": {"$ref": "#/$defs/sha256"},
+    "release_signoff_sha256": {
+      "oneOf": [
+        {"const": "none"},
+        {"$ref": "#/$defs/sha256"}
+      ]
+    },
     "attempts": {
       "type": "array",
       "minItems": 1,
@@ -53,12 +60,48 @@
         "successor_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}
       }
     },
-    "site_reconciliation": {"$ref": "#/$defs/evidence"},
+    "site_reconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "evidence_sha256",
+        "repository",
+        "workflow",
+        "run_id",
+        "deployed_commit"
+      ],
+      "properties": {
+        "status": {"const": "pass"},
+        "evidence_sha256": {"$ref": "#/$defs/sha256"},
+        "repository": {"const": "sifr-lang/sifr-website"},
+        "workflow": {"const": "release-site.yml"},
+        "run_id": {"type": "integer", "minimum": 1},
+        "deployed_commit": {"$ref": "#/$defs/commit"}
+      }
+    },
     "validation": {"$ref": "#/$defs/evidence"},
     "communications": {"$ref": "#/$defs/evidence"},
     "closure": {"$ref": "#/$defs/evidence"}
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"operation": {"const": "rollback"}},
+        "required": ["operation"]
+      },
+      "then": {
+        "properties": {"release_signoff_sha256": {"const": "none"}}
+      },
+      "else": {
+        "properties": {
+          "release_signoff_sha256": {"$ref": "#/$defs/sha256"}
+        }
+      }
+    }
+  ],
   "$defs": {
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
     "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}},
     "evidence": {
       "type": "object",

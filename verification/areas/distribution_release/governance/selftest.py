@@ -605,6 +605,7 @@ def test_signoff_mutations() -> None:
         "incident_id": "inc-2026-001",
         "operation": "rollback",
         "request_sha256": SHA_A,
+        "release_signoff_sha256": "none",
         "attempts": [valid_attempt()],
         "index_mutation": {
             "previous_generation": 8,
@@ -614,7 +615,14 @@ def test_signoff_mutations() -> None:
             "affected_version": "0.1.0",
             "successor_version": "0.0.9",
         },
-        "site_reconciliation": {"status": "pass", "evidence_sha256": SHA_A},
+        "site_reconciliation": {
+            "status": "pass",
+            "evidence_sha256": SHA_A,
+            "repository": "sifr-lang/sifr-website",
+            "workflow": "release-site.yml",
+            "run_id": 11,
+            "deployed_commit": COMMIT,
+        },
         "validation": {"status": "pass", "evidence_sha256": SHA_B},
         "communications": {"status": "pass", "evidence_sha256": SHA_C},
         "closure": {"status": "pass", "evidence_sha256": SHA_D},

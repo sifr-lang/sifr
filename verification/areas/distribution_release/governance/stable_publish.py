@@ -32,6 +32,7 @@ SMOKE_FILES = {
     "governed-index": "governed-index.json",
     "install-dispatcher": "install-dispatcher",
     "stable-dispatcher": "stable-dispatcher",
+    "stable-release-docs": "stable-release-docs.html",
     "version-assets": "version-assets.json",
     "installed-self-update": "installed-self-update.json",
     "marketplace-vsix": "marketplace.vsix",

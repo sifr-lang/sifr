@@ -1449,12 +1449,19 @@ Validation profile policy is defined in `verification/profiles/{create-pr,merge,
 Stable incident recovery is a pure extension of the governed release-index
 state machine. Canonical request and approved plan digests authorize exactly
 one rollback or incident roll-forward generation; all prior releases and
-snapshots remain immutable. Stable and incident production adapters remain
-deliberately absent until their protected-publication slices; the one-time
-schema-epoch bootstrap adapter is separately fail-closed on the exact opaque
-pre-epoch asset identity and protected approval. The offline fixture core owns generation burning,
-exact resume, site reconciliation, range eligibility, downgrade consent, and
-incident sign-off evidence, as specified in
+snapshots remain immutable. Stable activation, normal publication, rollback,
+and incident roll-forward share one protected publication workflow, one
+`stable-release` environment boundary, and one `sifr-release-index` mutation
+lease. Read-only prepare and protected revalidation bind the exact evidence,
+plans, live index, retained snapshots, candidate artifacts where applicable,
+and proposed index before the sole mutable `channels.json` replacement.
+Generation reservation, exact resume, site reconciliation, public
+install/update/recovery smoke, Marketplace verification, and release/incident
+sign-off remain fail-closed. The one-time schema-epoch bootstrap is separately
+bound to the exact opaque pre-epoch asset identity and protected approval. The
+offline fixture core mirrors generation burning, exact resume, site
+reconciliation, range eligibility, downgrade consent, and incident sign-off
+evidence, as specified in
 `internal_docs/stable_incident_response.md`.
 
 The readiness coverage matrix is the executable registry for shipped guarantees, compiler surfaces, owners, profile assignments, and Cargo package/target/feature classification. `coverage_matrix:readiness` is selected by create-pr, merge, nightly, and release. It runs strict mode, rejects temporary statuses such as `expected-missing`, `tests:none`, and `red-blocker`, validates local-first profile policy, checks profile assignments against `profile_assignment_matrix.json`, and runs negative self-tests for the readiness enforcement claims. CI may run broader profiles, but local-vs-CI plan equivalence is checked by comparing emitted profile plans with `sifr_verify profiles compare-plans`.

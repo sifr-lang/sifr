@@ -18,6 +18,12 @@ from .common import (
     write_canonical_json,
 )
 from .stable_prepare_selftest import StablePrepareFixture, prepare
+from .stable_publish_fixture import (
+    fixture_paths,
+    run_command,
+    stage_call,
+    stage_fixture,
+)
 from .stable_publish import (
     PLAN_ASSET_NAME,
     SMOKE_FILES,
@@ -39,7 +45,6 @@ def run_self_tests() -> int:
         test_signoff_rejects_public_drift,
         test_marketplace_adapter,
         test_github_release_adapter,
-        test_public_smoke_adapter,
         test_orchestrator_rejects_unprotected_ref,
         test_orchestrator_rejects_unmerged_candidate,
         test_cli_producer,
@@ -53,7 +58,7 @@ def run_self_tests() -> int:
 
 def test_stage_and_signoff() -> None:
     with StablePrepareFixture() as context:
-        paths = _stage(context)
+        paths = stage_fixture(context)
         summary = paths["summary"]
         staged = paths["staged"]
         assets = staged / "release-assets"
@@ -88,19 +93,19 @@ def test_stage_and_signoff() -> None:
 
 def test_stage_rejects_input_drift() -> None:
     with StablePrepareFixture() as context:
-        paths = _fixture_paths(context)
+        paths = fixture_paths(context)
         summary = prepare(context)
         write_canonical_json(paths["prepare"], summary, refuse_existing=True)
         plan = paths["plan"]
         plan_bytes = plan.read_bytes()
         plan.write_bytes(plan_bytes + b"\n")
-        _expect_rejected(lambda: _stage_call(context, paths, "plan-drift"))
+        _expect_rejected(lambda: stage_call(context, paths, "plan-drift"))
         plan.write_bytes(plan_bytes)
 
         dispatcher = context["dispatcher_root"] / "stable"
         dispatcher_bytes = dispatcher.read_bytes()
         dispatcher.write_bytes(dispatcher_bytes + b"drift")
-        _expect_rejected(lambda: _stage_call(context, paths, "dispatcher-drift"))
+        _expect_rejected(lambda: stage_call(context, paths, "dispatcher-drift"))
         dispatcher.write_bytes(dispatcher_bytes)
 
         artifact = next(
@@ -110,7 +115,7 @@ def test_stage_rejects_input_drift() -> None:
         )
         artifact_bytes = artifact.read_bytes()
         artifact.write_bytes(artifact_bytes + b"drift")
-        _expect_rejected(lambda: _stage_call(context, paths, "artifact-drift"))
+        _expect_rejected(lambda: stage_call(context, paths, "artifact-drift"))
         artifact.write_bytes(artifact_bytes)
 
         existing = context["root"] / "existing"
@@ -129,7 +134,7 @@ def test_stage_rejects_input_drift() -> None:
 
 def test_signoff_rejects_public_drift() -> None:
     with StablePrepareFixture() as context:
-        paths = _stage(context)
+        paths = stage_fixture(context)
         summary = paths["summary"]
         staged = paths["staged"]
         smoke = _write_smoke(context, summary, staged)
@@ -169,6 +174,7 @@ def test_marketplace_adapter() -> None:
             publisher=marketplace["publisher"],
             extension=marketplace["extension"],
             version=marketplace["version"],
+            compiler_version="0.1.0",
         )
         _expect_rejected(
             lambda: verify_marketplace_vsix(
@@ -177,6 +183,16 @@ def test_marketplace_adapter() -> None:
                 publisher=marketplace["publisher"],
                 extension="other-extension",
                 version=marketplace["version"],
+            )
+        )
+        _expect_rejected(
+            lambda: verify_marketplace_vsix(
+                vsix_path=vsix,
+                expected_sha256=marketplace["vsix_sha256"],
+                publisher=marketplace["publisher"],
+                extension=marketplace["extension"],
+                version=marketplace["version"],
+                compiler_version="0.2.0",
             )
         )
 
@@ -196,7 +212,7 @@ def test_marketplace_adapter() -> None:
         )
         shutil.copyfile(vsix, server)
         reused = context["root"] / "reused.vsix"
-        _run(_marketplace_command(vsix, marketplace, reused), env=environment)
+        run_command(_marketplace_command(vsix, marketplace, reused), env=environment)
         assert reused.read_bytes() == vsix.read_bytes()
         assert not marker.exists()
 
@@ -216,14 +232,14 @@ def test_marketplace_adapter() -> None:
         server.unlink()
         published = context["root"] / "published.vsix"
         environment["VSCE_PAT"] = "fixture-token"
-        _run(_marketplace_command(vsix, marketplace, published), env=environment)
+        run_command(_marketplace_command(vsix, marketplace, published), env=environment)
         assert published.read_bytes() == vsix.read_bytes()
         assert marker.read_text(encoding="utf-8") == "called\n"
 
 
 def test_github_release_adapter() -> None:
     with StablePrepareFixture() as context:
-        paths = _stage(context)
+        paths = stage_fixture(context)
         fake_bin = context["root"] / "fake-gh-bin"
         fake_bin.mkdir()
         state_root = context["root"] / "fake-gh-state"
@@ -250,7 +266,7 @@ def test_github_release_adapter() -> None:
             mode="initial",
             output=initial_output,
         )
-        _run(command, env=environment)
+        run_command(command, env=environment)
         expected = {
             path.name: sha256_file(path)
             for path in sorted(assets.iterdir())
@@ -282,7 +298,7 @@ def test_github_release_adapter() -> None:
         state["assets"].pop(missing_name)
         _write_fake_gh_state(state_root, state)
         resume_output = context["root"] / "resume-assets.json"
-        _run(
+        run_command(
             _github_release_command(
                 context,
                 assets=assets,
@@ -317,98 +333,9 @@ def test_github_release_adapter() -> None:
         assert rejected.returncode != 0
 
 
-def test_public_smoke_adapter() -> None:
-    with StablePrepareFixture() as context:
-        paths = _stage(context)
-        summary = paths["summary"]
-        staged = paths["staged"]
-        dispatchers = context["root"] / "smoke-dispatchers"
-        dispatchers.mkdir()
-        (dispatchers / "index").write_text("#!/usr/bin/env sh\nexit 0\n")
-        self_update = {
-            "schema_version": 2,
-            "current_version": summary["version"],
-            "target_version": summary["version"],
-            "receipt_channel": "stable",
-            "requested_channel": "stable",
-            "resolved_channel": "stable",
-            "install_dir": "/tmp/sifr/bin",
-            "binary_path": "/tmp/sifr/bin/sifr",
-            "sysroot_path": "/tmp/sifr",
-            "installer_url": "https://example.invalid/sifr-installer-0.1.0",
-            "action": "no_op",
-            "force": False,
-            "would_run_installer": False,
-            "warnings": [],
-        }
-        (dispatchers / "stable").write_text(
-            """#!/usr/bin/env sh
-set -eu
-mkdir -p "${SIFR_INSTALL_DIR}"
-cat >"${SIFR_INSTALL_DIR}/sifr" <<'SIFR'
-#!/usr/bin/env sh
-printf '%s\\n' '"""
-            + canonical_json_bytes(self_update).decode().strip()
-            + """'
-SIFR
-chmod +x "${SIFR_INSTALL_DIR}/sifr"
-""",
-            encoding="utf-8",
-        )
-        asset_digests = context["root"] / "smoke-assets.json"
-        write_canonical_json(
-            asset_digests,
-            {
-                path.name: sha256_file(path)
-                for path in sorted((staged / "release-assets").iterdir())
-            },
-            refuse_existing=True,
-        )
-        fake_bin = context["root"] / "smoke-bin"
-        fake_bin.mkdir()
-        _write_smoke_curl(fake_bin / "curl")
-        environment = os.environ.copy()
-        environment.update(
-            {
-                "PATH": f"{fake_bin}:{environment['PATH']}",
-                "SMOKE_INDEX": str(staged / "channels.json"),
-                "SMOKE_DISPATCHERS": str(dispatchers),
-                "SMOKE_ASSETS": str(staged / "release-assets"),
-            }
-        )
-        output = context["root"] / "public-smoke"
-        _run(
-            [
-                str(REPO_ROOT / "scripts/distribution/run_stable_public_smoke.sh"),
-                "--repository",
-                "sifr-lang/sifr",
-                "--version",
-                summary["version"],
-                "--index",
-                str(staged / "channels.json"),
-                "--dispatchers",
-                str(dispatchers),
-                "--asset-digests",
-                str(asset_digests),
-                "--marketplace-vsix",
-                str(
-                    context["artifact_root"]
-                    / summary["artifacts"]["vsix"]["workflow_artifact_name"]
-                    / summary["artifacts"]["vsix"]["name"]
-                ),
-                "--out",
-                str(output),
-            ],
-            env=environment,
-        )
-        assert {path.name for path in output.iterdir()} == set(
-            SMOKE_FILES.values()
-        )
-
-
 def test_orchestrator_rejects_unprotected_ref() -> None:
     with StablePrepareFixture() as context:
-        paths = _fixture_paths(context)
+        paths = fixture_paths(context)
         write_canonical_json(paths["prepare"], prepare(context), refuse_existing=True)
         environment = os.environ.copy()
         environment.update({"SITE_TOKEN": "fixture", "VSCE_BIN": "/usr/bin/true"})
@@ -471,7 +398,7 @@ def test_orchestrator_rejects_unprotected_ref() -> None:
 
 def test_cli_producer() -> None:
     with StablePrepareFixture() as context:
-        paths = _fixture_paths(context)
+        paths = fixture_paths(context)
         write_canonical_json(paths["prepare"], prepare(context), refuse_existing=True)
         staged = context["root"] / "cli-staged"
         command = [
@@ -491,7 +418,7 @@ def test_cli_producer() -> None:
             "--out",
             str(staged),
         ]
-        _run(command)
+        run_command(command)
         smoke = _write_smoke(
             context,
             load_json_strict(paths["prepare"], require_canonical=True),
@@ -500,7 +427,7 @@ def test_cli_producer() -> None:
         summary = load_json_strict(paths["prepare"], require_canonical=True)
         site_run = _write_site_run(context, summary)
         signoff = context["root"] / "stable-release-signoff.json"
-        _run(
+        run_command(
             [
                 "python3",
                 str(
@@ -537,41 +464,6 @@ def test_cli_producer() -> None:
         assert failed.returncode != 0
 
 
-def _stage(context: dict[str, Any]) -> dict[str, Any]:
-    paths = _fixture_paths(context)
-    summary = prepare(context)
-    write_canonical_json(paths["prepare"], summary, refuse_existing=True)
-    staged = _stage_call(context, paths, "staged")
-    paths.update({"summary": summary, "staged": staged})
-    return paths
-
-
-def _stage_call(
-    context: dict[str, Any],
-    paths: dict[str, Path],
-    name: str,
-) -> Path:
-    output = context["root"] / name
-    stage_stable_publication(
-        prepare_summary_path=paths["prepare"],
-        qualification_index_path=paths["qualification"],
-        artifact_root=context["artifact_root"],
-        plan_path=paths["plan"],
-        dispatcher_root=context["dispatcher_root"],
-        output_root=output,
-    )
-    return output
-
-
-def _fixture_paths(context: dict[str, Any]) -> dict[str, Path]:
-    candidate = context["evidence_root"] / context["candidate_path"]
-    return {
-        "prepare": context["root"] / "stable-prepare.json",
-        "qualification": candidate / "qualification-artifact-index.json",
-        "plan": candidate / "stable-release-plan.json",
-    }
-
-
 def _write_smoke(
     context: dict[str, Any],
     summary: dict[str, Any],
@@ -585,6 +477,11 @@ def _write_smoke(
     )
     (smoke / "stable-dispatcher").write_bytes(
         (context["dispatcher_root"] / "stable").read_bytes()
+    )
+    (smoke / "stable-release-docs.html").write_text(
+        f"Active stable version: {summary['version']}\n"
+        "Withdrawn stable versions: none.\n",
+        encoding="utf-8",
     )
     published_assets = {
         path.name: sha256_file(path)
@@ -780,46 +677,6 @@ else:
     path.chmod(0o755)
 
 
-def _write_smoke_curl(path: Path) -> None:
-    path.write_text(
-        """#!/usr/bin/env bash
-set -euo pipefail
-output=""
-url=""
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    -o|--output) output="$2"; shift 2 ;;
-    -H|--connect-timeout|--max-time) shift 2 ;;
-    -*) shift ;;
-    *) url="$1"; shift ;;
-  esac
-done
-url="${url%%\\?*}"
-case "${url}" in
-  */releases/download/channels/channels.json)
-    source="${SMOKE_INDEX}"
-    ;;
-  https://sifr.sh/install)
-    source="${SMOKE_DISPATCHERS}/index"
-    ;;
-  https://sifr.sh/install/stable)
-    source="${SMOKE_DISPATCHERS}/stable"
-    ;;
-  */releases/download/*/*)
-    source="${SMOKE_ASSETS}/${url##*/}"
-    ;;
-  *)
-    echo "unexpected smoke URL: ${url}" >&2
-    exit 2
-    ;;
-esac
-cp "${source}" "${output}"
-""",
-        encoding="utf-8",
-    )
-    path.chmod(0o755)
-
-
 def _load_fake_gh_state(root: Path) -> dict[str, Any]:
     return json.loads((root / "state.json").read_text(encoding="utf-8"))
 
@@ -872,20 +729,6 @@ printf 'called\\n' >"${NPX_MARKER}"
     )
     curl.chmod(0o755)
     vsce.chmod(0o755)
-
-
-def _run(command: list[str], *, env: dict[str, str] | None = None) -> None:
-    completed = subprocess.run(
-        command,
-        cwd=REPO_ROOT,
-        env=env,
-        check=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    if completed.returncode != 0:
-        raise AssertionError(completed.stderr)
 
 
 if __name__ == "__main__":

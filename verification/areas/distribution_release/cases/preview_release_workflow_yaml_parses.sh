@@ -4,17 +4,23 @@ set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
 
+for script in "${REPO_ROOT}"/scripts/distribution/*.sh; do
+  bash -n "${script}"
+done
+
 preview="${REPO_ROOT}/.github/workflows/preview-release.yml"
 publication="${REPO_ROOT}/.github/workflows/release-publication.yml"
 prepare="${REPO_ROOT}/.github/workflows/release-publication-prepare.yml"
 drill="${REPO_ROOT}/.github/workflows/release-publication-drill.yml"
 poller="${REPO_ROOT}/scripts/distribution/poll_site_release_run.sh"
+preview_validator="${REPO_ROOT}/scripts/distribution/validate_preview_publication_inputs.sh"
 ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0))' "${preview}" >/dev/null
 ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0))' "${publication}" >/dev/null
 ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0))' "${prepare}" >/dev/null
 ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0))' "${drill}" >/dev/null
 
-python3 - "${preview}" "${publication}" "${prepare}" "${drill}" "${poller}" <<'PY'
+python3 - "${preview}" "${publication}" "${prepare}" "${drill}" "${poller}" \
+  "${preview_validator}" <<'PY'
 import pathlib
 import sys
 
@@ -23,11 +29,12 @@ publication = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8")
 prepare = pathlib.Path(sys.argv[3]).read_text(encoding="utf-8")
 drill = pathlib.Path(sys.argv[4]).read_text(encoding="utf-8")
 poller = pathlib.Path(sys.argv[5]).read_text(encoding="utf-8")
+preview_validator = pathlib.Path(sys.argv[6]).read_text(encoding="utf-8")
 
 preview_required = (
     "options:\n          - alpha\n          - beta",
     "version must be a semver prerelease using -alpha.N or -beta.N",
-    "SITE_BASE_COMMIT: 07d88cc3c24707e386c5ad73fb0875c06ffd598f",
+    "SITE_BASE_COMMIT: ff472f2af59255c8031b1a6f9b9b294c4b820496",
     "preview release must pin an exact merged website commit",
     "cargo build --release --locked",
     "uses: ./.github/workflows/release-publication.yml",
@@ -62,9 +69,7 @@ publication_required = (
     "schema-v2-bootstrap-generation-1.json",
     "run_schema_bootstrap_public_smoke.sh",
     "materialize_schema_bootstrap_evidence.py",
-    "release-publication accepts only alpha or beta",
-    "version release already exists; preview assets are write-once",
-    "version tag already exists; release source identity is write-once",
+    "validate_preview_publication_inputs.sh",
     '--target "${SOURCE_COMMIT}"',
     "published version tag does not resolve to source_commit",
     "channels-generation-${PROPOSED_GENERATION}.json",
@@ -72,14 +77,23 @@ publication_required = (
     "Replace only canonical channels.json",
     "--kind site-publication-facts",
     "--clobber",
-    "site_base_commit must be an exact commit",
-    "repos/${SITE_REPOSITORY}/actions/workflows/${SITE_WORKFLOW}/dispatches",
+    "dispatch_stable_site_publication.sh",
     "timeout-minutes: 60",
-    "poll_site_release_run.sh",
 )
 for fragment in publication_required:
     if fragment not in publication:
         raise SystemExit(f"publication workflow omitted governed fragment: {fragment}")
+validator_required = (
+    "bootstrap-alpha input mismatch",
+    "bootstrap-index input mismatch",
+    "source must be reachable from protected main",
+    "version release already exists",
+    "version tag already exists",
+    "verify_site_workflow_identity.sh",
+)
+for fragment in validator_required:
+    if fragment not in preview_validator:
+        raise SystemExit(f"preview validator omitted governed fragment: {fragment}")
 if publication.count("--clobber") != 1:
     raise SystemExit("channels.json must be the sole clobbered release asset")
 if "gh release upload \"${VERSION}\"" in publication:
@@ -88,7 +102,7 @@ if "stable|alpha|beta" in publication or "choices=(\"stable\"" in publication:
     raise SystemExit("stable mutation must remain absent from the preview/bootstrap workflow")
 snapshot = publication.index('gh release upload channels "${snapshot}"')
 replacement = publication.index("Replace only canonical channels.json")
-dispatch = publication.index("Dispatch exact site workflow")
+dispatch = publication.index("Dispatch and await exact site workflow")
 if not snapshot < replacement < dispatch:
     raise SystemExit("snapshot, index replacement, and site dispatch are misordered")
 

@@ -7,7 +7,12 @@ source "$(dirname "$0")/common.sh"
 fixture="${REPO_ROOT}/verification/areas/distribution_release/fixtures/site_release_contract.json"
 publication_workflow="${REPO_ROOT}/.github/workflows/release-publication.yml"
 identity_helper="${REPO_ROOT}/scripts/distribution/verify_site_workflow_identity.sh"
-python3 - "${fixture}" "${publication_workflow}" "${identity_helper}" <<'PY'
+dispatch_helper="${REPO_ROOT}/scripts/distribution/dispatch_stable_site_publication.sh"
+preview_validator="${REPO_ROOT}/scripts/distribution/validate_preview_publication_inputs.sh"
+public_docs_verifier="${REPO_ROOT}/scripts/distribution/verify_public_stable_docs.py"
+python3 - "${fixture}" "${publication_workflow}" "${identity_helper}" \
+  "${dispatch_helper}" "${preview_validator}" "${public_docs_verifier}" <<'PY'
+import ast
 import copy
 import json
 import pathlib
@@ -17,6 +22,9 @@ import sys
 fixture = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
 publication = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8")
 identity = pathlib.Path(sys.argv[3]).read_text(encoding="utf-8")
+dispatch = pathlib.Path(sys.argv[4]).read_text(encoding="utf-8")
+preview_validator = pathlib.Path(sys.argv[5]).read_text(encoding="utf-8")
+public_docs_verifier = pathlib.Path(sys.argv[6]).read_text(encoding="utf-8")
 sha = re.compile(r"^[0-9a-f]{64}$")
 commit = re.compile(r"^[0-9a-f]{40}$")
 attempt = re.compile(r"^[A-Za-z0-9._-]{1,80}$")
@@ -27,21 +35,44 @@ assert fixture == {
     "schema_version": 2,
     "repository": "sifr-lang/sifr-website",
     "workflow": ".github/workflows/release-site.yml",
-    "workflow_commit": "07d88cc3c24707e386c5ad73fb0875c06ffd598f",
-    "workflow_ref": "sifr-release-site-stable-distribution",
+    "workflow_commit": "ff472f2af59255c8031b1a6f9b9b294c4b820496",
+    "workflow_ref": "sifr-release-site-stable-facts",
     "workflow_ref_ruleset": {
         "bypass_actors": [],
         "enforcement": "active",
-        "id": 19791667,
-        "updated_at": "2026-07-27T05:06:21.354Z",
+        "id": 19899766,
+        "updated_at": "2026-07-28T13:22:41.496Z",
         "rules": ["deletion", "update"],
     },
-    "workflow_sha256": "7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958",
-    "workflow_pr": "https://github.com/sifr-lang/sifr-website/pull/15",
+    "workflow_sha256": "a9360c82395f6e9d9822f201e56cc0f2eabab1bacda01c31e4e9f22d0202b3af",
+    "workflow_pr": "https://github.com/sifr-lang/sifr-website/pull/16",
     "dispatcher_generation": {
         "script": "scripts/distribution/generate_dispatchers.sh",
         "default_channel_by_ga_status": {"active": "stable", "preview": "beta"},
         "entrypoints": ["index", "stable", "alpha", "beta"],
+    },
+    "stable_documentation": {
+        "facts_input": "stable-site-release-facts.json",
+        "canonical_producer": (
+            "scripts/distribution/release_governance.py generate-site-facts"
+        ),
+        "renderer": (
+            "apps/sifr-site/scripts/render-stable-release-page.mjs"
+        ),
+        "renderer_sha256": (
+            "5382ec769ab77ea667912a24b5752c7ec0c09ce106dc22f01b1adba76d6ee1ff"
+        ),
+        "rendered_labels": [
+            "Active stable version",
+            "Withdrawn stable versions",
+        ],
+        "required_fields": [
+            "stable_version",
+            "withdrawals[].version",
+            "withdrawals[].incident_id",
+        ],
+        "route": "/releases/stable/",
+        "preview_behavior": "absent",
     },
     "permissions": {"contents": "read", "release_metadata_write": False},
     "required_inputs": fixture["required_inputs"],
@@ -65,23 +96,36 @@ assert fixture["required_inputs"] == [
     "dispatcher_beta_sha256",
     "dispatcher_default_channel",
     "publication_facts_sha256",
+    "stable_site_facts_sha256",
 ]
+verifier_tree = ast.parse(public_docs_verifier)
+rendered_labels = next(
+    ast.literal_eval(node.value)
+    for node in verifier_tree.body
+    if isinstance(node, ast.Assign)
+    and any(
+        isinstance(target, ast.Name) and target.id == "RENDERED_LABELS"
+        for target in node.targets
+    )
+)
+assert list(rendered_labels) == fixture["stable_documentation"]["rendered_labels"]
 assert commit.fullmatch(fixture["workflow_commit"])
 assert workflow_ref.fullmatch(fixture["workflow_ref"])
 assert sha.fullmatch(fixture["workflow_sha256"])
 for fragment in (
-    "SITE_WORKFLOW_REF: sifr-release-site-stable-distribution",
-    'SITE_WORKFLOW_RULESET_ID: "19791667"',
-    'SITE_WORKFLOW_RULESET_UPDATED_AT: "2026-07-27T05:06:21.354Z"',
-    "SITE_WORKFLOW_SHA256: 7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958",
-    "scripts/distribution/verify_site_workflow_identity.sh",
+    "SITE_WORKFLOW_REF: sifr-release-site-stable-facts",
+    'SITE_WORKFLOW_RULESET_ID: "19899766"',
+    'SITE_WORKFLOW_RULESET_UPDATED_AT: "2026-07-28T13:22:41.496Z"',
+    "SITE_WORKFLOW_SHA256: a9360c82395f6e9d9822f201e56cc0f2eabab1bacda01c31e4e9f22d0202b3af",
     '--workflow-sha256 "${SITE_WORKFLOW_SHA256}"',
-    '--arg ref "${SITE_WORKFLOW_REF}"',
+    "scripts/distribution/validate_preview_publication_inputs.sh",
+    "scripts/distribution/dispatch_stable_site_publication.sh",
     "scripts/distribution/generate_dispatchers.sh \\\n"
     "            --install-root dispatchers \\\n"
     '            --default-channel "${site_default_channel}"',
 ):
     assert fragment in publication, fragment
+assert "scripts/distribution/verify_site_workflow_identity.sh" in preview_validator
 for fragment in (
     '"${ruleset_id}" =~ ^[1-9][0-9]*$',
     '-H "Time-Zone: UTC"',
@@ -94,15 +138,20 @@ for fragment in (
 ):
     assert fragment in identity, fragment
 identity_call = "scripts/distribution/verify_site_workflow_identity.sh"
-assert publication.count(identity_call) == 2
-first_identity = publication.index(identity_call)
-second_identity = publication.index(identity_call, first_identity + 1)
-assert first_identity < publication.index("Publish write-once version release and verify assets")
-assert (
-    publication.index("Dispatch exact site workflow")
-    < second_identity
-    < publication.index("Poll exact site run")
+assert preview_validator.count(identity_call) == 1
+assert publication.index("validate_preview_publication_inputs.sh") < publication.index(
+    "Publish write-once version release and verify assets"
 )
+for fragment in (
+    '--arg ref "${workflow_ref}"',
+    "repos/${repository}/actions/workflows/${workflow}/dispatches",
+    "poll_site_release_run.sh",
+    '--default-channel beta|stable',
+):
+    assert fragment in dispatch, fragment
+assert dispatch.index(identity_call) < dispatch.index(
+    "repos/${repository}/actions/workflows/${workflow}/dispatches"
+) < dispatch.index("poll_site_release_run.sh")
 
 payload = {
     "sifr_source_commit": "a" * 40,
@@ -117,6 +166,7 @@ payload = {
     "dispatcher_beta_sha256": "1" * 64,
     "dispatcher_default_channel": "beta",
     "publication_facts_sha256": "2" * 64,
+    "stable_site_facts_sha256": "none",
 }
 generated = {
     "index": payload["dispatcher_index_sha256"],
@@ -176,6 +226,11 @@ def validate(
     )
     if candidate["dispatcher_default_channel"] != expected_default:
         raise ValueError("dispatcher default disagrees with live GA status")
+    expected_stable_facts = (
+        "none" if live_ga_status == "preview" else "3" * 64
+    )
+    if candidate["stable_site_facts_sha256"] != expected_stable_facts:
+        raise ValueError("stable facts identity disagrees with live GA status")
     run_value = run if run_value is None else run_value
     if (
         run_value["event"] != "workflow_dispatch"
@@ -190,6 +245,7 @@ def validate(
 validate(payload)
 active_payload = copy.deepcopy(payload)
 active_payload["dispatcher_default_channel"] = "stable"
+active_payload["stable_site_facts_sha256"] = "3" * 64
 validate(active_payload, live_ga_status="active")
 
 negatives = []
@@ -207,6 +263,10 @@ wrong_default = copy.deepcopy(payload)
 wrong_default["dispatcher_default_channel"] = "stable"
 negatives.append(("GA default mismatch", wrong_default, {}))
 
+wrong_facts = copy.deepcopy(payload)
+wrong_facts["stable_site_facts_sha256"] = "3" * 64
+negatives.append(("preview stable facts", wrong_facts, {}))
+
 wrong_run = dict(run)
 wrong_run["display_title"] = "Sifr site release another-attempt"
 negatives.append(("unattributable run", payload, {"run_value": wrong_run}))
@@ -217,6 +277,12 @@ for label, candidate, kwargs in negatives:
     except ValueError:
         continue
     raise AssertionError(f"site contract accepted {label}")
+
+for fragment in (
+    '--stable-site-facts-sha256 "${STABLE_SITE_FACTS_SHA256}"',
+    "stable_site_facts_sha256: $stable_facts",
+):
+    assert fragment in publication + dispatch, fragment
 
 print("site release cross-repository contract: PASS")
 PY

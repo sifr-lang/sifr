@@ -15,6 +15,7 @@ from .schema_bootstrap import (
     LEGACY_INDEX_SIZE_BYTES,
     expected_asset_names,
 )
+from .schema_negative_contracts import validate_incident_schema_negatives
 
 SCHEMA_ROOT = Path(__file__).resolve().parents[1] / "schemas"
 SHA_A = "a" * 64
@@ -156,6 +157,7 @@ def validate_schema_contracts() -> None:
         pass
     else:
         raise ValueError("stable prepare schema accepted activated initial mode")
+    validate_incident_schema_negatives(fixtures, SCHEMA_ROOT)
     signoff_schema = SCHEMA_ROOT / "stable_release_signoff.schema.json"
     wrong_site = copy.deepcopy(fixtures["stable_release_signoff.schema.json"])
     wrong_site["site_publication"]["repository"] = "example.invalid/site"
@@ -179,6 +181,10 @@ def schema_fixtures() -> dict[str, Any]:
         "self_update_plan.schema.json": self_update_plan(),
         "self_version.schema.json": self_version(),
         "site_publication_facts.schema.json": site_publication_facts(),
+        "incident_index_mutation_evidence.schema.json": (
+            incident_publication_prepare()["mutation"]
+        ),
+        "incident_publication_prepare.schema.json": incident_publication_prepare(),
         "stable_incident_request.schema.json": incident_request(),
         "stable_incident_signoff.schema.json": incident_signoff(),
         "stable_index_mutation_evidence.schema.json": stable_index_mutation_evidence(),
@@ -283,6 +289,56 @@ def stable_publication_prepare() -> dict[str, Any]:
             "repository": "sifr-lang/sifr-website",
             "base_commit": "1" * 40,
         },
+    }
+
+
+def incident_publication_prepare() -> dict[str, Any]:
+    release_prepare = stable_publication_prepare()
+    release_prepare["operation"] = "incident-roll-forward"
+    release_prepare["mutation"]["transition"] = "incident-roll-forward"
+    release_prepare["incident"] = {
+        "incident_id": "inc-2026-001",
+        "request_sha256": SHA_D,
+        "affected_version": "0.0.9",
+        "affected_plan_sha256": SHA_C,
+    }
+    mutation = {
+        "schema_version": 2,
+        "operation": "incident-roll-forward",
+        "request_sha256": SHA_D,
+        "affected_plan_sha256": SHA_C,
+        "successor_plan_sha256": SHA_A,
+        "affected_version": "0.0.9",
+        "successor_version": "0.1.0",
+        "previous_index": release_prepare["mutation"]["previous_index"],
+        "proposed_index": release_prepare["mutation"]["proposed_index"],
+        "proposed_index_sha256": release_prepare["mutation"][
+            "proposed_index_sha256"
+        ],
+        "plan_sha256": SHA_A,
+    }
+    return {
+        "schema_version": 2,
+        "operation": "incident-roll-forward",
+        "mode": "initial",
+        "publication_state": "pending",
+        "next_generation": 8,
+        "incident": {
+            "commit": COMMIT,
+            "path": (
+                "plans/releases/incidents/inc-2026-001/"
+                "stable-incident-request.json"
+            ),
+            "incident_id": "inc-2026-001",
+            "request_sha256": SHA_D,
+            "withdrawal_evidence_sha256": SHA_B,
+        },
+        "affected": {"version": "0.0.9", "plan_sha256": SHA_C},
+        "successor": {"version": "0.1.0", "plan_sha256": SHA_A},
+        "live_index": {"generation": 7, "sha256": SHA_B},
+        "mutation": mutation,
+        "site": release_prepare["site"],
+        "release_prepare": release_prepare,
     }
 
 
@@ -723,6 +779,7 @@ def incident_signoff() -> dict[str, Any]:
         "incident_id": "inc-2026-001",
         "operation": "rollback",
         "request_sha256": SHA_A,
+        "release_signoff_sha256": "none",
         "attempts": [attempt()],
         "index_mutation": {
             "previous_generation": 8,
@@ -732,7 +789,13 @@ def incident_signoff() -> dict[str, Any]:
             "affected_version": "0.1.0",
             "successor_version": "0.0.9",
         },
-        "site_reconciliation": evidence(SHA_A),
+        "site_reconciliation": {
+            **evidence(SHA_A),
+            "repository": "sifr-lang/sifr-website",
+            "workflow": "release-site.yml",
+            "run_id": 11,
+            "deployed_commit": COMMIT,
+        },
         "validation": evidence(SHA_B),
         "communications": evidence(SHA_C),
         "closure": evidence(SHA_D),

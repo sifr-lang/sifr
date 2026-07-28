@@ -469,9 +469,9 @@ generation, uploads `channels-generation-<N>.json` write-once, and uses
 
 After index replacement, the same leased workflow dispatches the pinned
 `sifr-lang/sifr-website` `release-site.yml` through the immutable
-`sifr-release-site-stable-distribution` dispatch tag, which must resolve to the exact
+`sifr-release-site-stable-facts` dispatch tag, which must resolve to the exact
 protected-main commit pinned in the payload. Active site repository ruleset
-`19791667` forbids updating or deleting that exact tag and grants no bypass;
+`19899766` forbids updating or deleting that exact tag and grants no bypass;
 the caller verifies the ruleset's active exact-name update/deletion guards and
 the attested no-bypass ruleset revision, plus the tag target, before release
 mutation and again immediately before dispatch. The stable-distribution caller
@@ -480,14 +480,21 @@ workflow introduced by
 [sifr-website PR #14](https://github.com/sifr-lang/sifr-website/pull/14) and its
 GA-aware default-channel binding from
 [sifr-website PR #15](https://github.com/sifr-lang/sifr-website/pull/15), merged
-at `07d88cc3c24707e386c5ad73fb0875c06ffd598f`.
+with the governed stable-facts page from
+[sifr-website PR #16](https://github.com/sifr-lang/sifr-website/pull/16), at
+`ff472f2af59255c8031b1a6f9b9b294c4b820496`.
 The protected cross-repository token is limited to that repository's Actions
 operations. The site run checks exact Sifr/site commits, regenerates the four
 dispatchers, validates dispatcher and canonical schema-v2
 `site-publication-facts.json` digests,
 re-fetches the exact governed generation immediately before deploy, requires
 the default dispatcher to be beta for a preview index and stable for an active
-index, deploys through Wrangler, and verifies the public bytes. The main
+index, and—once GA is active—regenerates the exact canonical
+`stable-site-release-facts.json`, byte-compares it with the caller-approved
+digest, and renders `/releases/stable/`. Preview publication proves that page
+is absent; active stable and post-GA preview publication prove its deployed
+bytes exactly. The workflow deploys through Wrangler and verifies the public
+bytes. The main
 workflow polls the exact attempt/head/title for at most 20 minutes and requests
 cancellation on timeout. The site workflow never writes release metadata.
 
@@ -577,8 +584,9 @@ The canonical ownership, acknowledgement, communication, retry, retention, and
 closure policy is in
 [`stable_incident_response.md`](./stable_incident_response.md). GA and normal
 stable publication use the canonical protected workflow described below.
-Incident rollback and roll-forward production adapters remain gated until
-their later protected-publication slice.
+Rollback and incident roll-forward use that same protected workflow, prepare
+boundary, environment, repository-wide mutation lease, and site adapter; there
+is no second production release authority.
 
 The first protected-publication slice wires the one-time schema-epoch
 bootstrap and credential-free protected drills into
@@ -650,6 +658,26 @@ sign-off are retained without clobber; sign-off binds the correlated site run
 and deployed commit. Each protected run retains its own
 `stable-release-signoff-<version>-attempt-<run>-<attempt>.json`, so a completed
 sign-off never has to be rewritten and a later resume remains convergent.
+
+`rollback` and `incident-roll-forward` enter the same protected `publish` job
+from an exact incident evidence commit. The read-only prepare path verifies the
+request and withdrawal-evidence bytes against `HEAD`, the affected and
+successor/target plans against protected main, the live index and every
+retained generation, and—only for roll-forward—the complete stable candidate
+prepare. Protected publication revalidates those exact bytes before mutation,
+retains the request and proposed generation write-once, and uses the sole
+`channels.json --clobber` boundary to withdraw the affected stable and activate
+the retained rollback target or qualified successor atomically.
+
+After index activation, incident publication dispatches the same pinned site
+workflow with the exact canonical stable-site-facts digest, verifies the public
+stable installer/update/asset/Marketplace and withdrawal-documentation facts,
+and exercises both working-client and out-of-band recovery. Roll-forward also
+emits the exact stable release sign-off; both operations emit a schema-v2
+incident sign-off correlated to the protected approver, site run, deployed
+commit, smoke evidence, and optional release sign-off. Resume either finishes a
+pending attempt with a newly allocated non-reused generation or proves the
+approved mutation is already live and performs no second index replacement.
 
 Manual drill dispatch selects exactly publication, rollback, or first-GA
 coverage and passes that mode unchanged to `release-publication-drill.yml`;
