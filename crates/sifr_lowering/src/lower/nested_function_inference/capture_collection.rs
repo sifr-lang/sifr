@@ -162,7 +162,8 @@ fn collect_referenced_names_in_stmts(stmts: &[Stmt], names: &mut HashSet<String>
                     collect_referenced_names_in_expr(target, names);
                 }
             }
-            Stmt::FunctionDef(_) | Stmt::ClassDef(_) | Stmt::Nonlocal(_) => {}
+            Stmt::FunctionDef(func) => collect_nested_function_free_names(func, names),
+            Stmt::ClassDef(_) | Stmt::Nonlocal(_) => {}
             _ => {}
         }
     }
@@ -253,8 +254,34 @@ pub(in crate::lower) fn collect_referenced_names_in_expr(expr: &Expr, names: &mu
         Expr::YieldFrom(yield_from) => {
             collect_referenced_names_in_expr(yield_from.value.as_ref(), names);
         }
+        Expr::Named(named) => {
+            collect_referenced_names_in_expr(named.value.as_ref(), names);
+        }
         _ => {}
     }
+}
+
+fn collect_nested_function_free_names(func: &StmtFunctionDef, names: &mut HashSet<String>) {
+    let mut references = HashSet::new();
+    collect_referenced_names_in_stmts(&func.body, &mut references);
+
+    let mut local_bindings = HashSet::new();
+    collect_current_function_local_bindings(&func.body, &mut local_bindings);
+    let mut nonlocal_names = HashSet::new();
+    collect_nonlocal_names(&func.body, &mut nonlocal_names);
+    let parameter_names = func
+        .parameters
+        .args
+        .iter()
+        .map(|parameter| parameter.parameter.name.as_str())
+        .collect::<HashSet<_>>();
+
+    names.extend(
+        references
+            .into_iter()
+            .filter(|name| !parameter_names.contains(name.as_str()))
+            .filter(|name| !local_bindings.contains(name) || nonlocal_names.contains(name)),
+    );
 }
 
 fn collect_comprehension_names(

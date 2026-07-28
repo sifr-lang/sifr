@@ -12,9 +12,11 @@ This fixture family tracks runtime-observed subscription callbacks for
   tasks/watchers/resources. Its retained handlers include attribute- and
   method-derived `str` captures, a declaration-time non-`Copy` snapshot whose
   enclosing binding is rebound and used after attachment, and a loop-local
-  attachment. The generated package therefore proves capture-type fidelity,
-  the snapshot contract, isolated capture cloning, and owning `move`-closure
-  emission through rustc.
+  attachment. A retained handler using `RwLock.write()` proves that sanctioned
+  interior synchronization remains an `Fn` callback. The generated package
+  therefore proves capture-type fidelity, the snapshot contract, isolated
+  capture cloning, receiver-aware mutation classification, and owning
+  `move`-closure emission through rustc.
 - Negative evidence: `invalid_thread_capture_rejected` proves both a nested
   handler retaining `NonSend` state and one retaining a callable with unknown
   captures are rejected with `SIFR-RUST-CB-0001`, while second attachment of a
@@ -23,7 +25,9 @@ This fixture family tracks runtime-observed subscription callbacks for
   `SIFR-RUST-CB-0001` because the retained bridge requires `Fn`. The generated
   negative package covers `nonlocal` rebinding, assignment-target-only
   `NonSend` state, collection subscript writes, collection-mutating methods,
-  and a mixed safe/unsafe capture set, all before Cargo probing.
+  a mixed safe/unsafe capture set, and both direct and sibling handlers whose
+  capture use occurs only inside another nested function, all before Cargo
+  probing.
 - Compatibility category: `supported-through-bridge`. Ecosystem callbacks use
   an owned typed bridge carrying the exact declared queue and shutdown policy;
   package code remains responsible for its protocol-specific queue and cleanup

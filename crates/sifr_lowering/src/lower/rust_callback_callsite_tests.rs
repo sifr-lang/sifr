@@ -587,3 +587,195 @@ def attach_mutation_in_exception_flow() -> Result[Subscription, SubscriptionErro
         "{errors:#?}"
     );
 }
+
+#[test]
+fn rust_threadsafe_callback_checks_captures_inside_nested_handler_functions() {
+    let source = r#"
+class SubscriptionError(Error):
+    message: str
+
+class LocalState(NonSend):
+    value: int
+
+class Subscription:
+    lifecycle_token: int
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+def attach_inner_mutation() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    counter: int = 0
+    def inner_mutation_handler(event: str) -> Result[None, SubscriptionError]:
+        def bump() -> None:
+            nonlocal counter
+            counter = counter + 1
+            return None
+        bump()
+        return None
+    return subscribe(inner_mutation_handler)
+
+def attach_inner_nonsend() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    state: LocalState = LocalState(0)
+    def inner_nonsend_handler(event: str) -> Result[None, SubscriptionError]:
+        def peek() -> int:
+            return state.value
+        _value: int = peek()
+        return None
+    return subscribe(inner_nonsend_handler)
+
+def attach_sibling_inner_mutation() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    counter: int = 0
+    def mutation_helper(event: str) -> Result[None, SubscriptionError]:
+        def bump() -> None:
+            nonlocal counter
+            counter = counter + 1
+            return None
+        bump()
+        return None
+    def sibling_mutation_handler(event: str) -> Result[None, SubscriptionError]:
+        return mutation_helper(event)
+    return subscribe(sibling_mutation_handler)
+
+def attach_sibling_inner_nonsend() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    state: LocalState = LocalState(0)
+    def nonsend_helper(event: str) -> Result[None, SubscriptionError]:
+        def peek() -> int:
+            return state.value
+        _value: int = peek()
+        return None
+    def sibling_nonsend_handler(event: str) -> Result[None, SubscriptionError]:
+        return nonsend_helper(event)
+    return subscribe(sibling_nonsend_handler)
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("captures inside nested handler functions should fail lowering"),
+        Err(errors) => errors,
+    };
+
+    for capture in [
+        "handler `inner_mutation_handler` capture `counter`",
+        "handler `sibling_mutation_handler` capture `mutation_helper.counter`",
+    ] {
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::RUST_CALLBACK_CONTRACT)
+                    && error.message.contains(capture)
+                    && error.message.contains("requires `FnMut`")
+            }),
+            "missing nested mutation rejection for {capture}: {errors:#?}"
+        );
+    }
+    for capture in [
+        "handler `inner_nonsend_handler` capture `state`",
+        "handler `sibling_nonsend_handler` capture `nonsend_helper.state`",
+    ] {
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::RUST_CALLBACK_CONTRACT)
+                    && error.message.contains(capture)
+                    && error.message.contains("not sendable")
+            }),
+            "missing nested NonSend rejection for {capture}: {errors:#?}"
+        );
+    }
+}
+
+#[test]
+fn rust_threadsafe_callback_allows_rwlock_write_capture() {
+    let source = r#"
+class SubscriptionError(Error):
+    message: str
+
+class Subscription:
+    lifecycle_token: int
+
+class RwLock:
+    value: int
+
+    def write(self) -> int:
+        return self.value
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+def attach() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    lock: RwLock = RwLock(0)
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        guard: int = lock.write()
+        assert guard >= 0
+        return None
+    return subscribe(handler)
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    lower_module(parsed.suite())
+        .expect("RwLock.write uses interior synchronization and must retain an Fn handler");
+}
+
+#[test]
+fn rust_threadsafe_callback_nested_helper_shadowing_is_not_an_outer_capture() {
+    let source = r#"
+class SubscriptionError(Error):
+    message: str
+
+class LocalState(NonSend):
+    value: int
+
+class Subscription:
+    lifecycle_token: int
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+def attach() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    state: LocalState = LocalState(0)
+    seen: dict[str, int] = {}
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        def read_shadow(state: int) -> int:
+            return state
+        def mutate_local() -> None:
+            seen: dict[str, int] = {}
+            _value: int = seen.setdefault("local", 1)
+            return None
+        assert read_shadow(1) == 1
+        mutate_local()
+        return None
+    return subscribe(handler)
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    lower_module(parsed.suite())
+        .expect("nested helper parameters and locals must shadow same-named outer bindings");
+}
+
+#[test]
+fn nonlocal_walrus_is_rejected_instead_of_silently_shadowing() {
+    let source = r#"
+def run() -> None:
+    counter: int = 0
+    def bump() -> None:
+        nonlocal counter
+        if (counter := counter + 1) > 0:
+            return None
+        return None
+    bump()
+    return None
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("nonlocal walrus must be explicitly rejected"),
+        Err(errors) => errors,
+    };
+
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::FLOW_INVALID_NONLOCAL)
+                && error
+                    .message
+                    .contains("walrus assignment cannot rebind captured state `counter`")
+        }),
+        "{errors:#?}"
+    );
+}

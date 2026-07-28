@@ -609,7 +609,7 @@ fn test_check_callback_subscription_invalid_thread_capture_rejected() {
 
     assert_eq!(
         errors.len(),
-        10,
+        14,
         "invalid retained captures must stop before Cargo probing: {errors:#?}"
     );
     for (capture, reason) in [
@@ -643,6 +643,8 @@ fn test_check_callback_subscription_invalid_thread_capture_rejected() {
         "handler `method_handler` capture `seen`",
         "handler `mixed_handler` capture `seen`",
         "handler `target_handler` capture `record.seen`",
+        "handler `inner_mutation_handler` capture `counter`",
+        "handler `sibling_mutation_handler` capture `mutation_helper.counter`",
     ] {
         assert!(
             errors.iter().any(|error| {
@@ -651,6 +653,19 @@ fn test_check_callback_subscription_invalid_thread_capture_rejected() {
                     && error.message.contains("requires `FnMut`")
             }),
             "missing retained Fn rejection for {capture}: {errors:#?}"
+        );
+    }
+    for capture in [
+        "handler `inner_nonsend_handler` capture `state`",
+        "handler `sibling_nonsend_handler` capture `nonsend_helper.state`",
+    ] {
+        assert!(
+            errors.iter().any(|error| {
+                error.code == DiagnosticCode::RUST_CALLBACK_CONTRACT.code()
+                    && error.message.contains(capture)
+                    && error.message.contains("not sendable")
+            }),
+            "missing nested retained capture rejection for {capture}: {errors:#?}"
         );
     }
     assert!(

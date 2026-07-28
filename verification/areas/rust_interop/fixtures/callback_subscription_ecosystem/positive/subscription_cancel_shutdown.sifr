@@ -3,6 +3,8 @@
 # evidence-status: passing
 # execution-kind: runtime-observed
 # expected-result: pass
+from sifr.sync import RwLock
+
 class SubscriptionError(Error):
     message: str
 
@@ -70,3 +72,13 @@ def verify_subscription_loop_attachment_build() -> Result[Subscription, Subscrip
         assert label != ""
         return subscribe(loop_handler)
     raise SubscriptionError("missing loop label")
+
+def verify_rwlock_write_capture_build() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    lock: RwLock[int] = RwLock(0)
+
+    def rwlock_handler(event: str) -> Result[None, SubscriptionError]:
+        value: int = lock.write().get()
+        assert value >= 0
+        return None
+
+    return subscribe(rwlock_handler)

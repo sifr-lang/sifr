@@ -752,6 +752,16 @@ Focused implementation evidence:
   flow and sibling functions, covers collection-mutating methods, and prefers
   lowered lexical types over builtin-name inference. The unresolved-type
   branch now has a direct regression.
+- [Opus review round 7](../../reviews/active/rust-interop-certification-6-review-round-7.md)
+  confirmed all earlier findings and the real area gates, then found that a
+  function nested inside the retained handler could hide both `FnMut` and
+  `NonSend` capture use. It also found name-only `write` classification falsely
+  rejected `RwLock.write()`, and exposed silent shadowing for a `nonlocal`
+  walrus. The follow-up propagates free captures through arbitrarily nested
+  helper scopes, walks their mutations with parameter/local shadowing, uses
+  receiver types for collection mutation, adds generated positive `RwLock`
+  evidence and four generated negative nested-helper directions, and rejects
+  `nonlocal` walrus with `SIFR-FLOW-0003`.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

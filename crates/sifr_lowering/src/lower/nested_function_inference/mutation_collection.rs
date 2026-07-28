@@ -1,9 +1,20 @@
-use sifr_python_ast::{ExceptHandler, Expr, Stmt};
-use std::collections::HashSet;
+use super::{collect_current_function_local_bindings, collect_nonlocal_names};
+use crate::lower::mutating_methods::{
+    is_collection_mutating_method, is_potential_collection_mutating_method,
+};
+use sifr_python_ast::{ExceptHandler, Expr, Stmt, StmtFunctionDef};
+use sifr_type_system::Type;
+use std::collections::{HashMap, HashSet};
+
+#[derive(Clone)]
+pub(super) enum MutationCandidate {
+    Exact(Type),
+    InferFromUsage,
+}
 
 pub(super) fn collect_mutated_binding_names(
     stmts: &[Stmt],
-    candidate_names: &HashSet<String>,
+    candidate_names: &HashMap<String, MutationCandidate>,
 ) -> HashSet<String> {
     let mut mutated = HashSet::new();
     for stmt in stmts {
@@ -14,7 +25,7 @@ pub(super) fn collect_mutated_binding_names(
 
 fn collect_mutated_binding_names_in_stmt(
     stmt: &Stmt,
-    candidate_names: &HashSet<String>,
+    candidate_names: &HashMap<String, MutationCandidate>,
     mutated: &mut HashSet<String>,
 ) {
     match stmt {
@@ -128,14 +139,18 @@ fn collect_mutated_binding_names_in_stmt(
                 collect_mutated_binding_names_into(&case.body, candidate_names, mutated);
             }
         }
-        Stmt::FunctionDef(_) | Stmt::ClassDef(_) => {}
+        Stmt::FunctionDef(func) => {
+            let nested_candidates = nested_function_candidates(func, candidate_names);
+            collect_mutated_binding_names_into(&func.body, &nested_candidates, mutated);
+        }
+        Stmt::ClassDef(_) => {}
         _ => {}
     }
 }
 
 fn collect_mutated_binding_names_into(
     stmts: &[Stmt],
-    candidate_names: &HashSet<String>,
+    candidate_names: &HashMap<String, MutationCandidate>,
     mutated: &mut HashSet<String>,
 ) {
     for stmt in stmts {
@@ -145,18 +160,18 @@ fn collect_mutated_binding_names_into(
 
 fn collect_mutated_binding_names_in_target(
     expr: &Expr,
-    candidate_names: &HashSet<String>,
+    candidate_names: &HashMap<String, MutationCandidate>,
     mutated: &mut HashSet<String>,
 ) {
     match expr {
         Expr::Name(name) => {
-            if candidate_names.contains(name.id.as_str()) {
+            if candidate_names.contains_key(name.id.as_str()) {
                 mutated.insert(name.id.to_string());
             }
         }
         Expr::Attribute(_) | Expr::Subscript(_) => {
             if let Some(name) = mutation_root_name(expr) {
-                if candidate_names.contains(name) {
+                if candidate_names.contains_key(name) {
                     mutated.insert(name.to_string());
                 }
             }
@@ -184,37 +199,17 @@ fn mutation_root_name(expr: &Expr) -> Option<&str> {
 
 fn collect_mutated_binding_names_in_expr(
     expr: &Expr,
-    candidate_names: &HashSet<String>,
+    candidate_names: &HashMap<String, MutationCandidate>,
     mutated: &mut HashSet<String>,
 ) {
     match expr {
         Expr::Call(call) => {
             if let Expr::Attribute(attribute) = call.func.as_ref() {
-                if matches!(
-                    attribute.attr.as_str(),
-                    "write"
-                        | "append"
-                        | "appendleft"
-                        | "clear"
-                        | "extend"
-                        | "insert"
-                        | "pop"
-                        | "popleft"
-                        | "remove"
-                        | "reverse"
-                        | "sort"
-                        | "update"
-                        | "setdefault"
-                        | "add"
-                        | "discard"
-                        | "intersection_update"
-                        | "difference_update"
-                        | "symmetric_difference_update"
-                ) {
-                    if let Some(name) = mutation_root_name(attribute.value.as_ref()) {
-                        if candidate_names.contains(name) {
-                            mutated.insert(name.to_string());
-                        }
+                if let Some(name) = mutation_root_name(attribute.value.as_ref()) {
+                    if candidate_names.get(name).is_some_and(|candidate| {
+                        candidate.is_mutating_method(attribute.attr.as_str())
+                    }) {
+                        mutated.insert(name.to_string());
                     }
                 }
             }
@@ -314,6 +309,49 @@ fn collect_mutated_binding_names_in_expr(
                 mutated,
             );
         }
+        Expr::Named(named) => {
+            collect_mutated_binding_names_in_target(
+                named.target.as_ref(),
+                candidate_names,
+                mutated,
+            );
+            collect_mutated_binding_names_in_expr(named.value.as_ref(), candidate_names, mutated);
+        }
         _ => {}
+    }
+}
+
+fn nested_function_candidates(
+    func: &StmtFunctionDef,
+    candidate_names: &HashMap<String, MutationCandidate>,
+) -> HashMap<String, MutationCandidate> {
+    let mut local_bindings = HashSet::new();
+    collect_current_function_local_bindings(&func.body, &mut local_bindings);
+    let mut nonlocal_names = HashSet::new();
+    collect_nonlocal_names(&func.body, &mut nonlocal_names);
+    let parameter_names = func
+        .parameters
+        .args
+        .iter()
+        .map(|parameter| parameter.parameter.name.as_str())
+        .collect::<HashSet<_>>();
+
+    candidate_names
+        .iter()
+        .filter(|(name, _)| {
+            nonlocal_names.contains(name.as_str())
+                || (!local_bindings.contains(name.as_str())
+                    && !parameter_names.contains(name.as_str()))
+        })
+        .map(|(name, ty)| (name.clone(), ty.clone()))
+        .collect()
+}
+
+impl MutationCandidate {
+    fn is_mutating_method(&self, method: &str) -> bool {
+        match self {
+            Self::Exact(ty) => is_collection_mutating_method(ty, method),
+            Self::InferFromUsage => is_potential_collection_mutating_method(method),
+        }
     }
 }

@@ -125,3 +125,61 @@ def verify_transitive_target_mutation_rejected() -> Result[Subscription, Subscri
         return record(event)
 
     return subscribe(target_handler)
+
+def verify_inner_function_mutation_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    counter: int = 0
+
+    def inner_mutation_handler(event: str) -> Result[None, SubscriptionError]:
+        def bump() -> None:
+            nonlocal counter
+            counter = counter + 1
+            return None
+
+        bump()
+        return None
+
+    return subscribe(inner_mutation_handler)
+
+def verify_inner_function_nonsend_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    state: LocalState = LocalState(0)
+
+    def inner_nonsend_handler(event: str) -> Result[None, SubscriptionError]:
+        def peek() -> int:
+            return state.value
+
+        _value: int = peek()
+        return None
+
+    return subscribe(inner_nonsend_handler)
+
+def verify_sibling_inner_mutation_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    counter: int = 0
+
+    def mutation_helper(event: str) -> Result[None, SubscriptionError]:
+        def bump() -> None:
+            nonlocal counter
+            counter = counter + 1
+            return None
+
+        bump()
+        return None
+
+    def sibling_mutation_handler(event: str) -> Result[None, SubscriptionError]:
+        return mutation_helper(event)
+
+    return subscribe(sibling_mutation_handler)
+
+def verify_sibling_inner_nonsend_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    state: LocalState = LocalState(0)
+
+    def nonsend_helper(event: str) -> Result[None, SubscriptionError]:
+        def peek() -> int:
+            return state.value
+
+        _value: int = peek()
+        return None
+
+    def sibling_nonsend_handler(event: str) -> Result[None, SubscriptionError]:
+        return nonsend_helper(event)
+
+    return subscribe(sibling_nonsend_handler)

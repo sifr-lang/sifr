@@ -115,6 +115,30 @@ pub(in crate::lower) fn is_collection_mutating_method(object_ty: &Type, method: 
     }
 }
 
+pub(in crate::lower) fn is_potential_collection_mutating_method(method: &str) -> bool {
+    matches!(
+        method,
+        "write"
+            | "append"
+            | "extend"
+            | "insert"
+            | "clear"
+            | "reverse"
+            | "sort"
+            | "pop"
+            | "popleft"
+            | "appendleft"
+            | "remove"
+            | "update"
+            | "setdefault"
+            | "add"
+            | "discard"
+            | "intersection_update"
+            | "difference_update"
+            | "symmetric_difference_update"
+    )
+}
+
 pub(in crate::lower) fn method_invalidates_collection_flow_facts(
     object_ty: &Type,
     method: &str,

@@ -1,5 +1,5 @@
 use super::capture_collection::collect_nested_function_captures;
-use super::mutation_collection::collect_mutated_binding_names;
+use super::mutation_collection::{collect_mutated_binding_names, MutationCandidate};
 use super::{
     analyze_assign, analyze_match_stmt, analyze_try_stmt, analyze_with_stmt,
     collect_compound_local_bindings, collect_compound_nonlocals, function_has_value_return,
@@ -189,8 +189,8 @@ fn infer_function_types(
                 .get(name)
                 .into_iter()
                 .flatten()
-                .map(|(capture, _)| capture.clone())
-                .collect::<HashSet<_>>();
+                .map(|(capture, ty)| (capture.clone(), MutationCandidate::Exact(ty.clone())))
+                .collect::<HashMap<_, _>>();
             let mut mutated = collect_mutated_binding_names(&state.func.body, &candidate_names)
                 .into_iter()
                 .collect::<Vec<_>>();
@@ -220,20 +220,33 @@ fn collect_function_states<'a>(
         };
 
         let mut params = Vec::new();
-        let param_names = func
+        let resolved_params = func
             .parameters
             .args
             .iter()
-            .map(|param| param.parameter.name.to_string())
-            .collect::<HashSet<_>>();
-        let mutated_params = collect_mutated_binding_names(&func.body, &param_names);
-        for param in &func.parameters.args {
-            let name = param.parameter.name.to_string();
-            let (ty, explicit) = if let Some(annotation) = &param.parameter.annotation {
-                (resolve_annotation_expr(annotation, ctx), true)
-            } else {
-                (Type::Unknown, false)
-            };
+            .map(|param| {
+                let name = param.parameter.name.to_string();
+                let (ty, explicit) = if let Some(annotation) = &param.parameter.annotation {
+                    (resolve_annotation_expr(annotation, ctx), true)
+                } else {
+                    (Type::Unknown, false)
+                };
+                (name, ty, explicit)
+            })
+            .collect::<Vec<_>>();
+        let param_types = resolved_params
+            .iter()
+            .map(|(name, ty, _)| {
+                let candidate = if ty.is_unknown() {
+                    MutationCandidate::InferFromUsage
+                } else {
+                    MutationCandidate::Exact(ty.clone())
+                };
+                (name.clone(), candidate)
+            })
+            .collect::<HashMap<_, _>>();
+        let mutated_params = collect_mutated_binding_names(&func.body, &param_types);
+        for (param, (name, ty, explicit)) in func.parameters.args.iter().zip(resolved_params) {
             params.push(ParamState {
                 name,
                 name_range: param.parameter.name.range(),
