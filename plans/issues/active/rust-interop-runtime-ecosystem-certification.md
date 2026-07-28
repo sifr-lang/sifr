@@ -686,8 +686,9 @@ Focused implementation evidence:
   overflow, ordinary callback error, redacted panic, foreign-thread entry,
   queue drain, cancellation, consuming async close, zero active work, and
   temporary-directory removal;
-- the mandatory negative generated-build test rejects a named nested handler
-  retaining `NonSend` state with `SIFR-RUST-CB-0001` before Cargo probing;
+- the mandatory negative generated-build test rejects both a named nested
+  handler retaining `NonSend` state and one retaining a callable whose
+  captures are unknown with `SIFR-RUST-CB-0001` before Cargo probing;
 - the package lock is an exact subset of the root lock graph, and its standalone
   Rust library passes locked/offline Cargo check and Clippy;
 - fixture, compatibility, tier, scenario, stable-claim, and provenance checks
@@ -711,6 +712,16 @@ Focused implementation evidence:
   bridge-signature lookup. Focused regressions cover each path, and the
   mandatory positive generated package now builds and executes a nested
   handler with a verified local capture.
+- [Opus review round 3](../../reviews/active/rust-interop-certification-6-review-round-3.md)
+  confirmed the round-2 attachment, metadata, and panic-strategy findings
+  closed, then exposed raw-rustc failures for blanket-moving non-`Copy`
+  captures and accepting callable values with unknown captures. The follow-up
+  clones verified non-`Copy` captures inside an isolated closure-construction
+  block, preserves the enclosing binding after attachment and across loop
+  iterations, rejects unprovable callable captures with
+  `SIFR-RUST-CB-0001`, and teaches structured loop bodies to emit retained
+  nested handlers. Focused lowering, codegen, and both mandatory generated
+  package directions cover the corrected contract.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

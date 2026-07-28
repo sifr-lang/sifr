@@ -412,6 +412,7 @@ impl RustEmitter {
         let HirStmt::NestedFunction {
             func,
             move_captures,
+            capture_clones,
         } = stmt
         else {
             return false;
@@ -661,12 +662,13 @@ impl RustEmitter {
                 mutable: nested_binding_mutable,
                 name: func.name.clone(),
                 ty: None,
-                value: RustExpr::ClosureBlock {
+                value: crate::retained_callback_closure::closure_with_capture_clones(
                     params,
-                    body: lowered_body,
-                    is_move: func.is_async || *move_captures,
-                    is_async: func.is_async,
-                },
+                    lowered_body,
+                    func.is_async || *move_captures,
+                    func.is_async,
+                    capture_clones,
+                ),
             }
         };
 

@@ -882,6 +882,7 @@ pub(in crate::lower) fn lower_stmt(
                     type_params: Vec::new(),
                 },
                 move_captures: false,
+                capture_clones: Vec::new(),
             })
         }
         Stmt::Match(match_stmt) => lower_match(match_stmt, func_type, ctx),

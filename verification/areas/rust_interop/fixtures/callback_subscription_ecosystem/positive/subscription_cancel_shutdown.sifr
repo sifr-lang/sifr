@@ -31,17 +31,17 @@ def subscribe(
 def close_observation() -> Result[str, SubscriptionError]: ...
 
 async def verify_subscription_cancel_shutdown() -> Result[str, SubscriptionError | RustPanicError]:
-    handler_marker: int = 6
+    handler_label: str = "handler-error"
 
     def event_handler(event: str) -> Result[None, SubscriptionError]:
-        assert handler_marker == 6
-        if event == "handler-error":
+        if event == handler_label:
             raise SubscriptionError("expected-handler-error")
         assert event != "panic"
         return None
 
     try:
         subscription: Subscription = subscribe(event_handler)
+        assert handler_label == "handler-error"
         observed: str = await subscription.verify()
         _closed: None = await subscription.aclose()
         cleanup: str = close_observation()
@@ -52,3 +52,14 @@ async def verify_subscription_cancel_shutdown() -> Result[str, SubscriptionError
         raise error
     except RustPanicError as error:
         raise error
+
+def verify_subscription_loop_attachment_build() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    labels: list[str] = ["first", "second"]
+    for label in labels:
+        def loop_handler(event: str) -> Result[None, SubscriptionError]:
+            assert label != ""
+            return None
+
+        assert label != ""
+        return subscribe(loop_handler)
+    raise SubscriptionError("missing loop label")

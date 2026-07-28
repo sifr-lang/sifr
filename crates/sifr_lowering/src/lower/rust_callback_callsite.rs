@@ -5,7 +5,7 @@ use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Decorator, Expr};
 use sifr_type_system::{ParamConvention, Type};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub(in crate::lower) fn has_threadsafe_callback_decorator(decorators: &[Decorator]) -> bool {
     decorators.iter().any(|decorator| {
@@ -92,8 +92,15 @@ pub(in crate::lower) fn validate_threadsafe_callback_captures(
             }
         }
         if valid {
+            let mut capture_plans = HashMap::new();
+            collect_retained_handler_capture_plans(
+                name,
+                ctx,
+                &mut HashSet::new(),
+                &mut capture_plans,
+            );
             ctx.rust_threadsafe_callback_move_handlers
-                .insert(name.clone());
+                .extend(capture_plans);
         }
     }
 }
@@ -110,6 +117,16 @@ fn retained_capture_violation(
     ctx: &LowerCtx,
     visited: &mut HashSet<String>,
 ) -> Option<CaptureViolation> {
+    if matches!(
+        capture_ty.resolve_alias(),
+        Type::Callable(..) | Type::AsyncCallable(..)
+    ) {
+        return Some(CaptureViolation {
+            path: capture_name.to_string(),
+            ty: capture_ty.clone(),
+            reason: "is a callable value whose captures cannot be proven thread-safe".to_string(),
+        });
+    }
     if let Some(reason) = non_send_reason(capture_ty) {
         return Some(CaptureViolation {
             path: capture_name.to_string(),
@@ -124,25 +141,66 @@ fn retained_capture_violation(
             reason: format!("is not share-safe: {reason}"),
         });
     }
-    let nested_captures = ctx.nested_function_captures.get(capture_name)?;
-    if !visited.insert(capture_name.to_string()) {
+    if let Some(nested_captures) = ctx.nested_function_captures.get(capture_name) {
+        if !visited.insert(capture_name.to_string()) {
+            return Some(CaptureViolation {
+                path: capture_name.to_string(),
+                ty: capture_ty.clone(),
+                reason: "has a recursive callable capture cycle that cannot be proven thread-safe"
+                    .to_string(),
+            });
+        }
+        for (nested_name, nested_ty) in nested_captures {
+            if let Some(mut violation) =
+                retained_capture_violation(nested_name, nested_ty, ctx, visited)
+            {
+                violation.path = format!("{capture_name}.{}", violation.path);
+                return Some(violation);
+            }
+        }
+        visited.remove(capture_name);
+        return None;
+    }
+    if capture_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+        && !capture_ty.supports_derived_clone()
+    {
         return Some(CaptureViolation {
             path: capture_name.to_string(),
             ty: capture_ty.clone(),
-            reason: "has a recursive callable capture cycle that cannot be proven thread-safe"
-                .to_string(),
+            reason: "is not clone-capable for retained callback ownership".to_string(),
         });
     }
-    for (nested_name, nested_ty) in nested_captures {
-        if let Some(mut violation) =
-            retained_capture_violation(nested_name, nested_ty, ctx, visited)
-        {
-            violation.path = format!("{capture_name}.{}", violation.path);
-            return Some(violation);
+    None
+}
+
+fn collect_retained_handler_capture_plans(
+    handler: &str,
+    ctx: &LowerCtx,
+    visited: &mut HashSet<String>,
+    plans: &mut HashMap<String, Vec<String>>,
+) {
+    if !visited.insert(handler.to_string()) {
+        return;
+    }
+    let Some(captures) = ctx.nested_function_captures.get(handler) else {
+        return;
+    };
+    plans.insert(
+        handler.to_string(),
+        captures
+            .iter()
+            .filter(|(name, ty)| {
+                ctx.nested_function_captures.contains_key(name)
+                    || ty.ownership() != sifr_type_system::OwnershipKind::Copy
+            })
+            .map(|(name, _)| name.clone())
+            .collect(),
+    );
+    for (capture, _) in captures {
+        if ctx.nested_function_captures.contains_key(capture) {
+            collect_retained_handler_capture_plans(capture, ctx, visited, plans);
         }
     }
-    visited.remove(capture_name);
-    None
 }
 
 fn reject_unverifiable_handler(range: TextRange, ctx: &mut LowerCtx) {

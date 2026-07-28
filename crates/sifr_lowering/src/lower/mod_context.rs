@@ -114,7 +114,7 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) rust_threadsafe_callback_targets: HashMap<String, Vec<usize>>,
     /// Directly declared nested handlers that must own their capture
     /// environments because they escape into a retained Rust callback.
-    pub(in crate::lower) rust_threadsafe_callback_move_handlers: std::collections::HashSet<String>,
+    pub(in crate::lower) rust_threadsafe_callback_move_handlers: HashMap<String, Vec<String>>,
     /// Set of registered type variable names (e.g., T, K, V from `TypeVar` declarations)
     pub(in crate::lower) type_vars: std::collections::HashSet<String>,
     /// Map of generic function names to their type variable names
@@ -220,7 +220,7 @@ impl LowerCtx {
             python_call_shapes: HashMap::new(),
             python_callback_call_policies: HashMap::new(),
             rust_threadsafe_callback_targets: HashMap::new(),
-            rust_threadsafe_callback_move_handlers: std::collections::HashSet::new(),
+            rust_threadsafe_callback_move_handlers: HashMap::new(),
             type_vars: std::collections::HashSet::new(),
             generic_functions: HashMap::new(),
             type_param_bounds: HashMap::new(),

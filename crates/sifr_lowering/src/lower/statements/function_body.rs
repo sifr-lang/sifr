@@ -17,11 +17,16 @@ pub(super) fn mark_threadsafe_callback_move_handlers(stmts: &mut [HirStmt], ctx:
         if let HirStmt::NestedFunction {
             func,
             move_captures,
+            capture_clones,
         } = stmt
         {
-            *move_captures = ctx
-                .rust_threadsafe_callback_move_handlers
-                .contains(&func.name);
+            if let Some(captures) = ctx.rust_threadsafe_callback_move_handlers.get(&func.name) {
+                *move_captures = true;
+                capture_clones.clone_from(captures);
+            } else {
+                *move_captures = false;
+                capture_clones.clear();
+            }
         }
     }
 }

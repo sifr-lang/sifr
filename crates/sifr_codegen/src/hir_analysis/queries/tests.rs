@@ -162,6 +162,7 @@ fn collect_mutated_vars_marks_local_nested_function_mutborrow_call_argument() {
         HirStmt::NestedFunction {
             func: nested,
             move_captures: false,
+            capture_clones: Vec::new(),
         },
         HirStmt::Expr {
             expr: HirExpr::Call {
@@ -263,6 +264,7 @@ fn body_calls_function_ignores_nested_function_scope() {
     let stmts = vec![HirStmt::NestedFunction {
         func: nested,
         move_captures: false,
+        capture_clones: Vec::new(),
     }];
 
     assert!(!body_calls_function(&stmts, "target"));
@@ -318,6 +320,7 @@ fn collect_try_error_carriers_descends_into_nested_functions() {
         collect_try_error_carriers(&[HirStmt::NestedFunction {
             func: nested,
             move_captures: false,
+            capture_clones: Vec::new(),
         }]),
         vec![Type::Union(vec![first_error, second_error])]
     );
@@ -366,6 +369,7 @@ fn collect_locally_defined_vars_ignores_nested_function_body_bindings() {
     let stmts = vec![HirStmt::NestedFunction {
         func: nested,
         move_captures: false,
+        capture_clones: Vec::new(),
     }];
     let defined = collect_locally_defined_vars(&stmts);
 
@@ -421,6 +425,7 @@ fn collect_mutated_vars_ignores_nested_function_scope() {
         &[HirStmt::NestedFunction {
             func: nested,
             move_captures: false,
+            capture_clones: Vec::new(),
         }],
         None,
     );
@@ -451,6 +456,7 @@ fn collect_mutated_vars_includes_captured_rebinds_from_nested_functions() {
         &[HirStmt::NestedFunction {
             func: nested,
             move_captures: false,
+            capture_clones: Vec::new(),
         }],
         None,
     );
@@ -487,6 +493,7 @@ fn collect_mutated_vars_marks_captured_outer_mutation_from_nested_function() {
         &[HirStmt::NestedFunction {
             func: nested,
             move_captures: false,
+            capture_clones: Vec::new(),
         }],
         None,
     );

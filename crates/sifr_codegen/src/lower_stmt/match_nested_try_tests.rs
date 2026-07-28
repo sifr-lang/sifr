@@ -228,6 +228,7 @@ fn lowers_simple_nested_function_to_closure_block() {
             type_params: vec![],
         },
         move_captures: false,
+        capture_clones: Vec::new(),
     };
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("nested function lowered");
@@ -265,6 +266,7 @@ fn lowers_recursive_nested_function_without_captures_to_local_fn() {
             type_params: vec![],
         },
         move_captures: false,
+        capture_clones: Vec::new(),
     };
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("recursive nested function lowered");
@@ -295,6 +297,7 @@ fn lowers_mutating_capture_nested_function_to_mutable_closure_binding() {
             type_params: vec![],
         },
         move_captures: false,
+        capture_clones: Vec::new(),
     };
 
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())

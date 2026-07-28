@@ -467,6 +467,9 @@ pub enum HirStmt {
         func: HirFunction,
         /// Whether the closure must own its captured environment.
         move_captures: bool,
+        /// Captures cloned in an isolated construction block before a
+        /// retained closure takes ownership.
+        capture_clones: Vec<String>,
     },
     /// Match/case statement (Python 3.10 structural pattern matching)
     Match {

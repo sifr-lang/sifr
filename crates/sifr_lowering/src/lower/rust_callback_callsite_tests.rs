@@ -156,7 +156,7 @@ class Subscription:
 def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
 
 def run() -> Result[Subscription, SubscriptionError | RustPanicError]:
-    prefix: int = 3
+    prefix: str = 'event'
     def handler(event: str) -> Result[None, SubscriptionError]:
         _ = prefix
         return None
@@ -170,15 +170,16 @@ def run() -> Result[Subscription, SubscriptionError | RustPanicError]:
         .iter()
         .find(|function| function.name == "run")
         .expect("run function");
-    let move_captures = run.body.iter().find_map(|stmt| match stmt {
+    let move_plan = run.body.iter().find_map(|stmt| match stmt {
         HirStmt::NestedFunction {
             func,
             move_captures,
-        } if func.name == "handler" => Some(*move_captures),
+            capture_clones,
+        } if func.name == "handler" => Some((*move_captures, capture_clones.clone())),
         _ => None,
     });
 
-    assert_eq!(move_captures, Some(true));
+    assert_eq!(move_plan, Some((true, vec!["prefix".to_string()])));
 }
 
 #[test]
@@ -217,5 +218,40 @@ def run(state: LocalState) -> Result[Subscription, SubscriptionError | RustPanic
                 .message
                 .contains("handler `handler` capture `inner.state`")
             && error.message.contains("not sendable")
+    }));
+}
+
+#[test]
+fn rust_threadsafe_callback_rejects_captured_callable_parameter() {
+    let source = r"
+class SubscriptionError(Error):
+    message: str
+
+class Subscription:
+    lifecycle_token: int
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+def attach(
+    own hook: Callable[[str], Result[None, SubscriptionError]],
+) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        return hook(event)
+    return subscribe(handler)
+";
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("captured callable parameter should fail lowering"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::RUST_CALLBACK_CONTRACT)
+            && error.message.contains("handler `handler` capture `hook`")
+            && error
+                .message
+                .contains("captures cannot be proven thread-safe")
     }));
 }

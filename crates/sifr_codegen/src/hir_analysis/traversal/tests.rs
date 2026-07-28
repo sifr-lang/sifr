@@ -99,6 +99,7 @@ fn walk_stmts_covers_try_handlers_loop_else_and_match_patterns() {
         HirStmt::NestedFunction {
             func: nested,
             move_captures: false,
+            capture_clones: Vec::new(),
         },
     ];
 
@@ -147,6 +148,7 @@ fn walk_stmts_respects_nested_function_scope_boundary() {
     let stmts = vec![HirStmt::NestedFunction {
         func: nested,
         move_captures: false,
+        capture_clones: Vec::new(),
     }];
 
     let mut saw_nested_call = false;

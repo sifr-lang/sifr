@@ -33,3 +33,12 @@ def verify_invalid_thread_capture_rejected(
 
     result: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(handler)
     return result
+
+def verify_unprovable_callable_capture_rejected(
+    own hook: Callable[[str], Result[None, SubscriptionError]],
+) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        return hook(event)
+
+    result: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(handler)
+    return result

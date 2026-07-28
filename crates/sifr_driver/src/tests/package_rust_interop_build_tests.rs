@@ -637,7 +637,7 @@ fn test_check_callback_subscription_invalid_thread_capture_rejected() {
 
     assert_eq!(
         errors.len(),
-        1,
+        2,
         "invalid retained capture must stop before Cargo probing: {errors:#?}"
     );
     assert!(
@@ -649,7 +649,19 @@ fn test_check_callback_subscription_invalid_thread_capture_rejected() {
         "invalid retained capture must use the callback contract diagnostic: {errors:#?}"
     );
     assert!(
-        !errors[0].message.contains("Rust bridge probe failed"),
+        errors.iter().any(|error| {
+            error.code == DiagnosticCode::RUST_CALLBACK_CONTRACT.code()
+                && error.message.contains("handler `handler` capture `hook`")
+                && error
+                    .message
+                    .contains("captures cannot be proven thread-safe")
+        }),
+        "unprovable callable captures must use the callback contract diagnostic: {errors:#?}"
+    );
+    assert!(
+        errors
+            .iter()
+            .all(|error| !error.message.contains("Rust bridge probe failed")),
         "invalid retained capture must reject before Cargo probing: {errors:#?}"
     );
     let _ = std::fs::remove_dir_all(package_root);

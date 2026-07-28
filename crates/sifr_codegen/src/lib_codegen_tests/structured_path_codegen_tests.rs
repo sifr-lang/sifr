@@ -27,6 +27,7 @@ fn test_stmt_path_handles_nested_function() {
                 HirStmt::NestedFunction {
                     func: nested,
                     move_captures: false,
+                    capture_clones: Vec::new(),
                 },
                 HirStmt::Expr {
                     expr: HirExpr::Call {
@@ -71,16 +72,53 @@ class Subscription:
 def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
 
 def run() -> Result[Subscription, SubscriptionError | RustPanicError]:
-    prefix: int = 3
+    prefix: str = "event"
     def handler(event: str) -> Result[None, SubscriptionError]:
         _ = prefix
         return None
-    return subscribe(handler)
+    result: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(handler)
+    print(prefix)
+    return result
 "#,
     );
 
     assert!(
-        generated.contains("let handler = move |event: &String|"),
+        generated.contains("let prefix = prefix.clone();")
+            && generated.contains("move |event: &String|"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn retained_rust_callback_nested_handler_owns_loop_capture() {
+    let generated = generate_rust_from_source(
+        r#"
+class SubscriptionError(Error):
+    message: str
+
+class Subscription:
+    lifecycle_token: int
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+def run() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    labels: list[str] = ["first", "second"]
+    for label in labels:
+        def handler(event: str) -> Result[None, SubscriptionError]:
+            _ = label
+            return None
+        print(label)
+        return subscribe(handler)
+    raise SubscriptionError("missing label")
+"#,
+    );
+
+    assert!(
+        generated.contains("for label in labels.iter().cloned()")
+            && generated.contains("let label = label.clone();")
+            && generated.contains("move |event: &String|"),
         "{generated}"
     );
 }
