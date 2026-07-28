@@ -200,7 +200,7 @@
     {
       "area": "generated_code_quality",
       "suites": [
-        "full"
+        "release-full"
       ],
       "resource_classes": [
         "default-local"
@@ -377,7 +377,7 @@
       "full"
     ],
     "distribution": "full",
-    "generated_code_quality": "full",
+    "generated_code_quality": "release-full",
     "performance_budget": "full",
     "crate_tests": "full",
     "e2e": {
