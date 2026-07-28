@@ -283,6 +283,18 @@ Review and upstream coordination ledger:
   variant passed on the same run. Milestone 40.5 also owns the missing
   test-only endpoint override so installed-sysroot qualification uses an
   isolated schema-v2 fixture instead of mutable public network state.
+- On exact source `8a23f90869a68438a7b4ae3b8f9623531d1ce68f`, a
+  low-noise canonical release-profile run passed all eight performance
+  variants, all 69 distribution-release variants, all 25 Python-interop
+  variants, all 10 consumed Rust-interop variants, all 48 developer-tooling
+  variants, and both GA documentation variants. The blocking release profile
+  later reached its first generated-code Clippy failure at
+  `e2e-018-cpython-math-semantic-corrections`, whose emitted
+  `const NAN: f64 = (0.0_f64) / (0.0_f64);` is rejected by Rust 1.94
+  `clippy::zero_divided_by_zero`; later ordered corpus entries were not
+  Clippy-checked by that run. This generated stdlib constant defect is recorded
+  in indexed, non-prerequisite follow-up `GENC-NAN`; no Clippy allow,
+  release-profile selection, threshold, or stable-governance contract changed.
 - Milestone evidence-closure Claude Opus review passes 1 through 4 are archived
   at
   `plans/reviews/archive/phase-40-milestone-40-4-evidence-closure-review-pass-{1,2,3,4}.md`.
