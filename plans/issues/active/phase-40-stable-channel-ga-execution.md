@@ -463,7 +463,9 @@ Review and upstream coordination ledger:
   unrelated host variance is recorded in
   `plans/phases/adhoc_performance_budget_host_variance.md`; no performance
   baseline or waiver changed, and it is not a Phase 40 prerequisite.
-- [ ] Add the single protected publication workflow and production site adapter.
+- Schema-v2 preview epoch bootstrap implementation is under review in
+  [PR #3040](https://github.com/sifr-lang/sifr/pull/3040).
+- [x] Add the single protected publication workflow and production site adapter.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
 - [ ] Exercise resume, stale generation, burned generation, rollback, and
