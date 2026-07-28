@@ -43,6 +43,9 @@ pub struct VarInfo {
     pub narrowed_type: Option<Type>,
     /// Whether the variable has been moved.
     pub is_moved: bool,
+    /// Whether a specialized lowered representation requires move tracking
+    /// even though its surface type is ordinarily copyable.
+    requires_move_tracking: bool,
     /// Whether the variable is currently mutably borrowed.
     pub is_mut_borrowed: bool,
     /// Whether the binding itself is mutable.
@@ -237,6 +240,7 @@ impl Scope {
                     ty,
                     narrowed_type: None,
                     is_moved: false,
+                    requires_move_tracking: false,
                     is_mut_borrowed: false,
                     mutability,
                     binding_kind,
@@ -330,7 +334,7 @@ impl Scope {
     /// Mark a variable as moved (for ownership tracking).
     pub fn mark_moved(&mut self, name: &str) -> bool {
         if let Some(info) = self.lookup_var_mut(name) {
-            if info.ty.ownership() == OwnershipKind::Move {
+            if info.ty.ownership() == OwnershipKind::Move || info.requires_move_tracking {
                 info.is_moved = true;
                 return true;
             }
@@ -338,6 +342,19 @@ impl Scope {
             return false; // Copy type, don't mark as moved
         }
         false
+    }
+
+    /// Mark a binding moved even when its surface type is ordinarily copyable.
+    ///
+    /// This is used when lowering proves that a specialized representation,
+    /// such as an owning retained closure, is consumed at the boundary.
+    pub fn mark_binding_moved(&mut self, name: &str) -> bool {
+        let Some(info) = self.lookup_var_mut(name) else {
+            return false;
+        };
+        info.requires_move_tracking = true;
+        info.is_moved = true;
+        true
     }
 
     /// Check if a variable has been moved.
@@ -529,6 +546,18 @@ mod tests {
         let moved = scope.mark_moved("x");
         assert!(!moved); // Int is Copy, not moved
         assert!(!scope.is_moved("x"));
+    }
+
+    #[test]
+    fn test_specialized_copy_binding_can_be_marked_moved() {
+        let mut scope = Scope::new();
+        scope.define("handler".to_string(), Type::Int);
+
+        assert!(scope.mark_binding_moved("handler"));
+        assert!(scope.is_moved("handler"));
+        scope.reset_moved("handler");
+        assert!(scope.mark_moved("handler"));
+        assert!(scope.is_moved("handler"));
     }
 
     // --- Narrowing tests ---

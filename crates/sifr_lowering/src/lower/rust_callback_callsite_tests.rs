@@ -255,3 +255,90 @@ def attach(
                 .contains("captures cannot be proven thread-safe")
     }));
 }
+
+#[test]
+fn rust_threadsafe_callback_consumes_nested_handler_binding() {
+    let source = r#"
+class SubscriptionError(Error):
+    message: str
+
+class Subscription:
+    lifecycle_token: int
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+def attach_twice() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seed: str = "twice"
+    def twice_handler(event: str) -> Result[None, SubscriptionError]:
+        assert seed != ""
+        return None
+    first: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(twice_handler)
+    return subscribe(twice_handler)
+
+def call_after_attachment() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seed: str = "call"
+    def call_handler(event: str) -> Result[None, SubscriptionError]:
+        assert seed != ""
+        return None
+    attached: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(call_handler)
+    _called: Result[None, SubscriptionError] = call_handler("after")
+    return attached
+
+def attach_outer_handler_in_loop() -> Result[None, SubscriptionError]:
+    seed: str = "loop"
+    def loop_handler(event: str) -> Result[None, SubscriptionError]:
+        assert seed != ""
+        return None
+    labels: list[str] = ["first", "second"]
+    for label in labels:
+        _attached: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(loop_handler)
+    return None
+
+def attach_conditionally_then_reuse(
+    should_attach: bool,
+) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seed: str = "conditional"
+    def conditional_handler(event: str) -> Result[None, SubscriptionError]:
+        assert seed != ""
+        return None
+    if should_attach:
+        first: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(conditional_handler)
+    return subscribe(conditional_handler)
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("retained handler reuse should fail lowering"),
+        Err(errors) => errors,
+    };
+
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+                && error.message.contains("twice_handler")
+        }),
+        "{errors:#?}"
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+                && error.message.contains("call_handler")
+        }),
+        "{errors:#?}"
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::OWN_MOVED_ACROSS_LOOP)
+                && error.message.contains("loop_handler")
+        }),
+        "{errors:#?}"
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::OWN_USE_AFTER_MOVE)
+                && error.message.contains("conditional_handler")
+        }),
+        "{errors:#?}"
+    );
+}

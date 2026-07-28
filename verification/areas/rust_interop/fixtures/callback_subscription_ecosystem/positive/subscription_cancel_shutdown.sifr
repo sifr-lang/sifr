@@ -39,9 +39,10 @@ async def verify_subscription_cancel_shutdown() -> Result[str, SubscriptionError
         assert event != "panic"
         return None
 
+    handler_label = "outer-after"
     try:
         subscription: Subscription = subscribe(event_handler)
-        assert handler_label == "handler-error"
+        assert handler_label == "outer-after"
         observed: str = await subscription.verify()
         _closed: None = await subscription.aclose()
         cleanup: str = close_observation()

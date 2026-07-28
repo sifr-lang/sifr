@@ -997,7 +997,12 @@ Valid directly declared nested handlers are emitted as owning `move` closures
 so the generated adapter can satisfy the retained `'static` contract. Each
 verified non-`Copy` capture is first cloned into an isolated
 closure-construction block; the closure owns that clone while the enclosing
-binding remains available after attachment and across loop iterations.
+binding remains available after attachment and across loop iterations. The
+clone is a declaration-time snapshot: rebinding the enclosing name after the
+nested handler declaration does not change the retained callback's value.
+Successful retained attachment consumes the nested handler binding itself;
+second attachment, direct invocation after attachment, and attachment of one
+outer handler across loop iterations are ownership errors.
 Capture validation walks dependencies on sibling nested functions
 transitively. Callable-valued captures without compiler-known nested-function
 provenance are rejected because their own captures cannot be proven

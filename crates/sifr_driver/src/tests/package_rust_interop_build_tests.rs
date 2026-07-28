@@ -637,7 +637,7 @@ fn test_check_callback_subscription_invalid_thread_capture_rejected() {
 
     assert_eq!(
         errors.len(),
-        2,
+        3,
         "invalid retained capture must stop before Cargo probing: {errors:#?}"
     );
     assert!(
@@ -657,6 +657,13 @@ fn test_check_callback_subscription_invalid_thread_capture_rejected() {
                     .contains("captures cannot be proven thread-safe")
         }),
         "unprovable callable captures must use the callback contract diagnostic: {errors:#?}"
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == DiagnosticCode::OWN_USE_AFTER_MOVE.code()
+                && error.message.contains("handler")
+        }),
+        "retained handler reuse must fail in Sifr ownership checking: {errors:#?}"
     );
     assert!(
         errors

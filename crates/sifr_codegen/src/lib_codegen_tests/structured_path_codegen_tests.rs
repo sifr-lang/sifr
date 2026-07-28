@@ -76,6 +76,7 @@ def run() -> Result[Subscription, SubscriptionError | RustPanicError]:
     def handler(event: str) -> Result[None, SubscriptionError]:
         _ = prefix
         return None
+    prefix = "outer-after"
     result: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(handler)
     print(prefix)
     return result
@@ -84,9 +85,18 @@ def run() -> Result[Subscription, SubscriptionError | RustPanicError]:
 
     assert!(
         generated.contains("let prefix = prefix.clone();")
-            && generated.contains("move |event: &String|"),
+            && generated.contains("move |event: &String|")
+            && generated.contains("prefix = \"outer-after\".to_string();"),
         "{generated}"
     );
+    let snapshot = generated
+        .find("let prefix = prefix.clone();")
+        .expect("capture snapshot");
+    let rebind = generated
+        .find("prefix = \"outer-after\".to_string();")
+        .expect("outer rebind");
+    let attachment = generated.find("subscribe(handler)").expect("attachment");
+    assert!(snapshot < rebind && rebind < attachment, "{generated}");
 }
 
 #[test]

@@ -688,7 +688,8 @@ Focused implementation evidence:
   temporary-directory removal;
 - the mandatory negative generated-build test rejects both a named nested
   handler retaining `NonSend` state and one retaining a callable whose
-  captures are unknown with `SIFR-RUST-CB-0001` before Cargo probing;
+  captures are unknown with `SIFR-RUST-CB-0001`, and rejects second attachment
+  of a consumed nested handler with `SIFR-OWN-0001`, before Cargo probing;
 - the package lock is an exact subset of the root lock graph, and its standalone
   Rust library passes locked/offline Cargo check and Clippy;
 - fixture, compatibility, tier, scenario, stable-claim, and provenance checks
@@ -722,6 +723,14 @@ Focused implementation evidence:
   `SIFR-RUST-CB-0001`, and teaches structured loop bodies to emit retained
   nested handlers. Focused lowering, codegen, and both mandatory generated
   package directions cover the corrected contract.
+- [Opus review round 4](../../reviews/active/rust-interop-certification-6-review-round-4.md)
+  confirmed every earlier high-severity raw-rustc gap closed, then found that
+  reusing the generated handler binding itself could still reach rustc
+  `E0382`, and that declaration-time capture snapshot semantics were unstated.
+  The follow-up makes successful retained attachment an explicit ownership
+  move, diagnoses second attachment and direct invocation with
+  `SIFR-OWN-0001`, diagnoses outer-loop reuse with `SIFR-OWN-0004`, and pins
+  declaration-time snapshots in codegen and the runtime-observed package.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

@@ -101,6 +101,7 @@ pub(in crate::lower) fn validate_threadsafe_callback_captures(
             );
             ctx.rust_threadsafe_callback_move_handlers
                 .extend(capture_plans);
+            ctx.mark_binding_moved_with_flow(name);
         }
     }
 }

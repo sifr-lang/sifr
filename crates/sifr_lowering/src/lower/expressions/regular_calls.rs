@@ -69,6 +69,13 @@ pub(super) fn lower_regular_call(
     }
 
     // Check if this is a Callable-typed variable being called
+    if ctx
+        .scope
+        .lookup(&func_name)
+        .is_some_and(|info| info.is_moved)
+    {
+        ownership_diagnostics::use_after_move(ctx, &func_name, call.func.range());
+    }
     let callable_info = ctx
         .scope
         .lookup(&func_name)

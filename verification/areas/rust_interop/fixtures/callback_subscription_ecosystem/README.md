@@ -9,13 +9,16 @@ This fixture family tracks runtime-observed subscription callbacks for
   and observes bounded overflow, handler errors, stable panic redaction, a
   foreign-thread callback, close-time drain shutdown, cancellation of a
   scheduled delivery before invocation, and zero leaked
-  tasks/watchers/resources. Its retained handlers include non-`Copy` captures
-  used again after attachment and a loop-local attachment, so the generated
-  package proves isolated capture cloning and owning `move`-closure emission
-  through rustc.
+  tasks/watchers/resources. Its retained handlers include a declaration-time
+  non-`Copy` capture snapshot whose enclosing binding is rebound and used after
+  attachment, plus a loop-local attachment. The generated package therefore
+  proves the snapshot contract, isolated capture cloning, and owning
+  `move`-closure emission through rustc.
 - Negative evidence: `invalid_thread_capture_rejected` proves both a nested
   handler retaining `NonSend` state and one retaining a callable with unknown
-  captures are rejected with `SIFR-RUST-CB-0001` before Cargo probing.
+  captures are rejected with `SIFR-RUST-CB-0001`, while second attachment of a
+  consumed nested handler is rejected with `SIFR-OWN-0001`, all before Cargo
+  probing.
 - Compatibility category: `supported-through-bridge`. Ecosystem callbacks use
   an owned typed bridge carrying the exact declared queue and shutdown policy;
   package code remains responsible for its protocol-specific queue and cleanup

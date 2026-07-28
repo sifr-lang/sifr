@@ -42,3 +42,13 @@ def verify_unprovable_callable_capture_rejected(
 
     result: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(handler)
     return result
+
+def verify_retained_handler_reuse_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seed: str = "reuse"
+
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        assert seed != ""
+        return None
+
+    first: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(handler)
+    return subscribe(handler)

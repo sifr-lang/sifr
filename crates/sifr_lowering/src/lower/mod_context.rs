@@ -478,6 +478,16 @@ impl LowerCtx {
         moved
     }
 
+    pub(in crate::lower) fn mark_binding_moved_with_flow(&mut self, name: &str) -> bool {
+        let moved = self.scope.mark_binding_moved(name);
+        if moved {
+            self.record_flow_effect(FlowEffect::Move {
+                binding: name.to_string(),
+            });
+        }
+        moved
+    }
+
     pub(in crate::lower) fn reset_moved_with_flow(&mut self, name: &str) {
         self.scope.reset_moved(name);
         self.record_flow_effect(FlowEffect::ResetMove {
