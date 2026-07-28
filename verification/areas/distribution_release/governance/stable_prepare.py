@@ -363,27 +363,28 @@ def validate_stable_prepare_summary(payload: object) -> dict[str, Any]:
         {"ga-activation", "normal", "incident-roll-forward"},
         "$.operation",
     )
-    optional = {"incident"} if operation == "incident-roll-forward" else set()
+    required = {
+        "schema_version",
+        "operation",
+        "mode",
+        "publication_state",
+        "next_generation",
+        "version",
+        "evidence",
+        "source",
+        "release_report",
+        "qualification",
+        "live_index",
+        "mutation",
+        "artifacts",
+        "marketplace",
+        "site",
+    }
+    if operation == "incident-roll-forward":
+        required.add("incident")
     require_exact_keys(
         summary,
-        required={
-            "schema_version",
-            "operation",
-            "mode",
-            "publication_state",
-            "next_generation",
-            "version",
-            "evidence",
-            "source",
-            "release_report",
-            "qualification",
-            "live_index",
-            "mutation",
-            "artifacts",
-            "marketplace",
-            "site",
-        },
-        optional=optional,
+        required=required,
         location="$",
     )
     require_schema_v2(summary)

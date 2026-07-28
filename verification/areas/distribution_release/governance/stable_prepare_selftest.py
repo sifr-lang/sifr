@@ -205,6 +205,16 @@ def test_materialized_incident_roll_forward_prepare() -> None:
             summary["mutation"]["proposed_index"]["releases"]["0.0.9"]["status"]
             == "withdrawn"
         )
+        missing_incident = copy.deepcopy(summary)
+        del missing_incident["incident"]
+        try:
+            validate_stable_prepare_summary(missing_incident)
+        except GovernanceError as exc:
+            assert "missing required field(s): incident" in str(exc)
+        else:
+            raise AssertionError(
+                "roll-forward prepare accepted a missing incident binding"
+            )
 
 
 def test_resume_after_activation() -> None:
@@ -324,6 +334,18 @@ def test_prepare_rejects_input_drift() -> None:
 def test_summary_contract() -> None:
     with StablePrepareFixture() as context:
         summary = prepare(context)
+        unexpected_incident = copy.deepcopy(summary)
+        unexpected_incident["incident"] = {
+            "incident_id": "inc-unexpected",
+            "request_sha256": "a" * 64,
+            "affected_version": "0.0.9",
+            "affected_plan_sha256": "b" * 64,
+        }
+        expect_rejected(
+            validate_stable_prepare_summary,
+            unexpected_incident,
+            label="non-incident summary with incident binding",
+        )
         mutations: tuple[Callable[[dict[str, Any]], None], ...] = (
             lambda value: value["evidence"].update(
                 {"candidate_path": "plans/releases/candidates/0.1.1"}
@@ -393,6 +415,34 @@ def test_cli_producer() -> None:
         if completed.returncode != 0:
             raise AssertionError(completed.stderr)
         validate_stable_prepare_summary(json.loads(output.read_text(encoding="utf-8")))
+        missing_incident = load_json_strict(output, require_canonical=True)
+        missing_incident["operation"] = "incident-roll-forward"
+        missing_incident_path = context["root"] / "missing-incident.json"
+        write_canonical_json(
+            missing_incident_path,
+            missing_incident,
+            refuse_existing=True,
+        )
+        rejected = subprocess.run(
+            [
+                "python3",
+                str(REPO_ROOT / "scripts/distribution/release_governance.py"),
+                "validate",
+                "--kind",
+                "stable-publication-prepare",
+                "--input",
+                str(missing_incident_path),
+                "--require-canonical",
+            ],
+            cwd=REPO_ROOT,
+            check=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        assert rejected.returncode == 2
+        assert "missing required field(s): incident" in rejected.stderr
+        assert "Traceback" not in rejected.stderr
         second = subprocess.run(
             command,
             cwd=REPO_ROOT,

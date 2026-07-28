@@ -50,3 +50,23 @@ def validate_incident_schema_negatives(
         raise ValueError(
             "incident mutation schema accepted a zero predecessor generation"
         )
+
+    stable_prepare_schema = schema_root / "stable_publication_prepare.schema.json"
+    roll_forward_prepare = prepare["release_prepare"]
+    missing_incident = copy.deepcopy(roll_forward_prepare)
+    del missing_incident["incident"]
+    unexpected_incident = copy.deepcopy(
+        fixtures["stable_publication_prepare.schema.json"]
+    )
+    unexpected_incident["incident"] = copy.deepcopy(
+        roll_forward_prepare["incident"]
+    )
+    for invalid in (missing_incident, unexpected_incident):
+        try:
+            validate_instance(invalid, stable_prepare_schema)
+        except JsonSchemaError:
+            pass
+        else:
+            raise ValueError(
+                "stable prepare schema accepted an invalid incident binding"
+            )

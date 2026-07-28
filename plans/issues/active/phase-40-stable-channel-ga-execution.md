@@ -808,6 +808,17 @@ Review and upstream coordination ledger:
   inside their 600-second blocking budgets. The 1116-second cold-cache wall
   time exceeded only the advisory warm target; no budget, waiver, or
   validation policy changed.
+- Exact [PR #3047](https://github.com/sifr-lang/sifr/pull/3047) head review
+  pass 7 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-incident-publication-wiring-review-pass-7-exact-pr-head-not-satisfied.md`.
+  It matched local, remote, and PR head at
+  `8776b4dbbec3d4b342c937dd1a6b4effaabca5aa`, reverified all earlier
+  closures and full validation, then found one malformed-input diagnostic
+  defect: an incident roll-forward stable-prepare summary without its required
+  `incident` binding raised raw `KeyError`. Runtime required-key construction
+  now mirrors the schema, both conditional directions have runtime and schema
+  negatives, and the operator-facing CLI negative proves exit 2 with the
+  governed missing-field diagnostic and no traceback.
 - [ ] Merge the protected rollback and incident roll-forward production wiring.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
