@@ -123,6 +123,7 @@ def write_source_contracts(source_root: Path) -> None:
                     "epoch-bootstrap",
                     "protected-drill",
                     "stable-prepare",
+                    "stable-publish-primitives",
                 ],
             },
         ],

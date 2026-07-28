@@ -113,6 +113,19 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "stable-publish-primitives",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "stable-publication-primitives",
+          "entry": "verification/areas/distribution_release/governance/stable_publication_primitives_selftest.py",
+          "command": "distribution-stable-publish-primitives",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ],
   "network_mode": "offline",

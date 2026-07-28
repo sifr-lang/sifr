@@ -262,9 +262,9 @@
       "id": "release-profile-stable-gates",
       "location": "verification/profiles/release.json",
       "owner": "compiler/verification",
-      "current_behavior": "executes distribution, stable prepare, tooling, documentation, and Rust release gates",
+      "current_behavior": "executes distribution, stable prepare and publish-revalidation primitives, tooling, documentation, and Rust release gates",
       "activation_boundary": "architecture-lock",
-      "disposition": "durably executes incident-governance, evidence-custody, protected-drill, stable-prepare, editor-release expansion, documentation ga-release, and Rust stable-candidate"
+      "disposition": "durably executes incident-governance, evidence-custody, protected-drill, stable-prepare, stable-publish-primitives, editor-release expansion, documentation ga-release, and Rust stable-candidate"
     }
   ]
 }

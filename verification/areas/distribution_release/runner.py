@@ -62,6 +62,9 @@ def main(argv: list[str] | None = None) -> int:
     stable_prepare_selected = any(
         str(suite["name"]) == "stable-prepare" for suite in selected
     )
+    stable_publish_primitives_selected = any(
+        str(suite["name"]) == "stable-publish-primitives" for suite in selected
+    )
     suite_results = [
         run_suite(
             suite,
@@ -69,6 +72,7 @@ def main(argv: list[str] | None = None) -> int:
             include_epoch_bootstrap=not epoch_suite_selected,
             include_protected_drill=not drill_suite_selected,
             include_stable_prepare=not stable_prepare_selected,
+            include_stable_publish_primitives=not stable_publish_primitives_selected,
         )
         for suite in selected
     ]
@@ -129,6 +133,7 @@ def run_suite(
     include_epoch_bootstrap: bool = True,
     include_protected_drill: bool = True,
     include_stable_prepare: bool = True,
+    include_stable_publish_primitives: bool = True,
 ) -> dict[str, Any]:
     suite_name = str(suite["name"])
     case = validate_suite_case(suite)
@@ -166,6 +171,13 @@ def run_suite(
             run_python_module(
                 "governance.stable_prepare_selftest",
                 "stable-publication-prepare",
+            )
+        ]
+    elif suite_name == "stable-publish-primitives":
+        variants = [
+            run_python_module(
+                "governance.stable_publication_primitives_selftest",
+                "stable-publication-primitives",
             )
         ]
     elif suite_name == "qualification":
@@ -209,6 +221,13 @@ def run_suite(
                         "stable-publication-prepare",
                     )
                 )
+            if include_stable_publish_primitives:
+                variants.append(
+                    run_python_module(
+                        "governance.stable_publication_primitives_selftest",
+                        "stable-publication-primitives",
+                    )
+                )
     failures = sum(1 for variant in variants if variant["status"] == "fail")
     return {
         "name": suite_name,
@@ -240,6 +259,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
         "epoch-bootstrap",
         "protected-drill",
         "stable-prepare",
+        "stable-publish-primitives",
     }:
         raise SystemExit(f"unsupported distribution_release suite: {suite_name}")
     cases = suite.get("cases", [])
@@ -252,6 +272,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
         "epoch-bootstrap": "distribution-schema-bootstrap",
         "protected-drill": "distribution-protected-drill",
         "stable-prepare": "distribution-stable-prepare",
+        "stable-publish-primitives": "distribution-stable-publish-primitives",
         "qualification": "distribution-stable-qualification",
     }.get(suite_name, "distribution-case-directory")
     if str(case.get("command")) != expected_command:
@@ -263,6 +284,9 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
         "epoch-bootstrap": AREA_ROOT / "governance" / "schema_bootstrap_selftest.py",
         "protected-drill": AREA_ROOT / "governance" / "protected_drill_selftest.py",
         "stable-prepare": AREA_ROOT / "governance" / "stable_prepare_selftest.py",
+        "stable-publish-primitives": (
+            AREA_ROOT / "governance" / "stable_publication_primitives_selftest.py"
+        ),
         "qualification": AREA_ROOT / "governance" / "qualification_selftest.py",
     }.get(suite_name, CASES_ROOT)
     if entry != expected_entry or not entry.exists():

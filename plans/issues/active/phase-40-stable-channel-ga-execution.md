@@ -570,6 +570,55 @@ Review and upstream coordination ledger:
   `55c6d960c4ea29b7b945df88d72573a6008c9651`, independently rechecked the
   complete wave and all post-pass-2 hardening, reproduced the focused gates,
   found no actionable issue, and returned `SATISFIED`.
+- Final exact-head review pass 4 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-prepare-review-pass-4-final-pr-head-satisfied.md`.
+  It matched local, remote, and PR #3043 at
+  `8d81040e597cb3d64f90788fb2ce2e822eb236f1`, verified the pass-3 archive
+  delta was documentation-only and truthful, reproduced 60 distribution
+  variants plus the focused gates, and returned `SATISFIED`.
+- [PR #3043](https://github.com/sifr-lang/sifr/pull/3043) merged the protected
+  stable-prepare wave as `da7c38fb15dbebe11b1e9be943f4d080b8e7bafc`.
+- The protected publish-primitives wave removes the operator-selected
+  generation from stable prepare, allocates after every canonical retained
+  snapshot, and requires the live index to equal its retained snapshot. It
+  centralizes exact-ID qualification artifact refetch with authoritative
+  run/attempt/source/name/expiry verification and safe bounded extraction, then
+  adds a protected revalidation command that recomputes and byte-compares the
+  complete reviewer-visible prepare summary before any production mutation.
+  The named `stable-publish-primitives` suite is selected by merge, nightly,
+  and release and is required by release-report custody.
+- Publish-primitives review pass 1 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-publish-primitives-review-pass-1-not-satisfied.md`.
+  Its `NOT SATISFIED` findings are remediated: durable docs now describe the
+  unwired command rather than a nonexistent publish integration; mutation
+  coverage pins summary byte inequality, generation names/payloads/live bytes,
+  run/attempt/repository/source and transported content; the protected-input
+  gate remains an early defense-in-depth check subsumed by the final byte
+  equality check. Preview still requires alpha/beta, and unreadable summaries
+  produce governed diagnostics without a hash/read race. The review's hardening
+  suggestions are also applied: revalidation rejects a generation burned after
+  prepare, history enumeration uses paginated release assets, ZIP download is
+  streamed to an authoritative API-size boundary, and the new scripts use one
+  canonical governance package identity. The unchanged legacy distribution
+  scripts still use their earlier top-level import convention.
+- Publish-primitives review pass 2 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-publish-primitives-review-pass-2-not-satisfied.md`.
+  Its `NOT SATISFIED` findings are remediated: the ledger no longer overstates
+  independent coverage of the defense-in-depth protected-input check; the
+  artifact refetch self-test now rejects both truncated and overlong downloads,
+  expired artifacts, wrong artifact-run custody, and symlinked output parents;
+  and streamed downloads direct stderr to a file so a full stderr pipe cannot
+  deadlock the protected release path. The six-upload grouping check is retained
+  as defense in depth after the semantic qualification-index validator.
+- Publish-primitives review pass 3 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-publish-primitives-review-pass-3-satisfied.md`.
+  It re-ran the focused suites and mutation-tested the wave, verified every
+  prior finding was closed, found no actionable correctness, security, test,
+  workflow, or documentation issue, and returned `SATISFIED`.
+- The authoritative `scripts/run_all_tests.sh --profile create-pr` gate passes
+  for the publish-primitives wave: all blocking steps pass, the e2e suite is
+  131/131, and the only advisory is the nonblocking warm wall-time target
+  (`1033.83s`).
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
 - [ ] Exercise resume, stale generation, burned generation, rollback, and
