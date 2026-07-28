@@ -365,7 +365,7 @@
         },
         "generated_code_quality": {
           "type": "string",
-          "enum": ["none", "smoke", "representative", "full"]
+          "enum": ["none", "smoke", "representative", "full", "release-full"]
         },
         "performance_budget": {
           "type": "string",

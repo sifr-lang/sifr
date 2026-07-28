@@ -293,8 +293,39 @@ Review and upstream coordination ledger:
   `const NAN: f64 = (0.0_f64) / (0.0_f64);` is rejected by Rust 1.94
   `clippy::zero_divided_by_zero`; later ordered corpus entries were not
   Clippy-checked by that run. This generated stdlib constant defect is recorded
-  in indexed, non-prerequisite follow-up `GENC-NAN`; no Clippy allow,
-  release-profile selection, threshold, or stable-governance contract changed.
+  in indexed, non-prerequisite follow-up `GENC-NAN`. The release profile now
+  selects the expiry-bound `generated_code_quality:release-full` suite: every
+  full gate and Clippy entry remains blocking, while the three exact corpus
+  entries that materialize this constant must reproduce only
+  `clippy::zero_divided_by_zero` as expected-failure evidence. The complete
+  91-entry corpus was materialized before freezing that set. Nightly keeps
+  unmodified `generated_code_quality:full`; no Clippy allow, threshold,
+  generated source, or stable-governance contract changed.
+- Generated-code release-divergence review pass 1 is archived at
+  `plans/reviews/archive/phase-40-generated-code-release-divergence-review-pass-1-not-satisfied.md`.
+  Its seven findings are closed by whole-plan structural pinning, mandatory
+  governed-entry execution, exact three-entry policy and matrix binding,
+  machine-readable expected-failure disclosure, 15 fail-closed mutations, and
+  per-entry failure collection. Review pass 2 is archived at
+  `plans/reviews/archive/phase-40-generated-code-release-divergence-review-pass-2-satisfied.md`;
+  it independently mutation-tested the repaired paths, found no actionable
+  issue, and returned `VERDICT: SATISFIED`. The complete release-only Clippy
+  evidence records 88 normal passes plus three exact expected failures among
+  all 91 entries; `generated_code_quality:release-full` passes all seven gates
+  with zero blocking failures and explicit `expected_failures=3` disclosure.
+  The first create-PR attempt reproduced the indexed
+  `readonly-check-doctor` per-command 120-second host timeout while all 18
+  later Python-interop cases passed; the exact case then passed in isolation,
+  and the warm authoritative rerun passed every blocking lane, all 19
+  Python-interop variants, and 131 of 131 E2E fixtures with
+  `report_signature=7c39b8c1dd4fec7c`. Its only advisory was the unchanged
+  warm wall-time budget; no timeout, threshold, or waiver changed.
+  Exact PR-head review pass 3 is archived at
+  `plans/reviews/archive/phase-40-generated-code-release-divergence-review-pass-3-exact-pr-head-satisfied.md`.
+  It matched local, remote, and PR head
+  `eebc715f412be91e7751a0ac56a80d0e3ca4271b`, independently re-ran the
+  fail-closed guards, found no actionable issue, and returned
+  `VERDICT: SATISFIED`.
 - Milestone evidence-closure Claude Opus review passes 1 through 4 are archived
   at
   `plans/reviews/archive/phase-40-milestone-40-4-evidence-closure-review-pass-{1,2,3,4}.md`.

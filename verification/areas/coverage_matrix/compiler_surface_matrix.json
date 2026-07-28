@@ -121,6 +121,14 @@
       "status": "blocking",
       "merge_suite": "sifr_codegen:cargo-test",
       "nightly_release_suite": "generated_code_quality:full",
+      "release_suite": "generated_code_quality:release-full",
+      "release_divergence_record": "GENC-NAN",
+      "release_divergence_expiry": "2026-10-31",
+      "release_divergence_entries": [
+        "e2e-018-cpython-math-semantic-corrections",
+        "e2e-027-error-mixed-builtin-stdlib",
+        "stdlib-007-math"
+      ],
       "regression_suite": "regression:fixedbugs",
       "reproduction_command": "cargo test -p sifr_codegen"
     },
@@ -132,6 +140,14 @@
       "status": "blocking",
       "merge_suite": "generated_code_quality:representative",
       "nightly_release_suite": "generated_code_quality:full",
+      "release_suite": "generated_code_quality:release-full",
+      "release_divergence_record": "GENC-NAN",
+      "release_divergence_expiry": "2026-10-31",
+      "release_divergence_entries": [
+        "e2e-018-cpython-math-semantic-corrections",
+        "e2e-027-error-mixed-builtin-stdlib",
+        "stdlib-007-math"
+      ],
       "regression_suite": "regression:fixedbugs",
       "reproduction_command": "uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite representative"
     },
@@ -143,6 +159,14 @@
       "status": "blocking",
       "merge_suite": "sifr_codegen:cargo-test",
       "nightly_release_suite": "generated_code_quality:full",
+      "release_suite": "generated_code_quality:release-full",
+      "release_divergence_record": "GENC-NAN",
+      "release_divergence_expiry": "2026-10-31",
+      "release_divergence_entries": [
+        "e2e-018-cpython-math-semantic-corrections",
+        "e2e-027-error-mixed-builtin-stdlib",
+        "stdlib-007-math"
+      ],
       "regression_suite": "regression:fixedbugs",
       "reproduction_command": "cargo test -p sifr_codegen"
     },

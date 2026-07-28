@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import json
 import os
 import resource
 import shutil
@@ -645,7 +644,7 @@ class ProfileRunner:
     def run_generated_code_quality_checks(self) -> None:
         print("Running Generated Code Quality Checks")
         print(f"  mode={self.generated_code_quality_mode}")
-        if self.generated_code_quality_mode not in {"smoke", "representative", "full"}:
+        if self.generated_code_quality_mode not in {"smoke", "representative", "full", "release-full"}:
             raise ProfileRunnerError(
                 f"unsupported generated-code quality mode: {self.generated_code_quality_mode}"
             )
