@@ -67,15 +67,14 @@ ordered = (
     'upload_or_verify_governance "${snapshot}"',
     "gh release upload channels \"${work}/staged/channels.json\"",
     "generate_site_publication_facts.py",
-    'repos/${site_repository}/actions/workflows/${site_workflow}/dispatches',
-    "poll_site_release_run.sh",
+    "dispatch_stable_site_publication.sh",
     "run_stable_public_smoke.sh",
     "materialize_stable_publication.py signoff",
     'upload_or_verify_governance \\\n  "${work}/stable-release-signoff-${version}-attempt-${publication_attempt}.json"',
 )
 positions = [orchestrator.index(fragment) for fragment in ordered]
 assert positions == sorted(positions)
-assert orchestrator.count("verify_site_workflow_identity.sh") == 2
+assert orchestrator.count("verify_site_workflow_identity.sh") == 1
 assert "--clobber" in orchestrator
 assert orchestrator.count("--clobber") == 1
 assert "channels.json" in orchestrator

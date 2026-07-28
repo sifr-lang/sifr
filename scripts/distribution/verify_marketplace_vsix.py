@@ -20,6 +20,9 @@ from verification.areas.distribution_release.governance.common import (  # noqa:
     require_nonempty_string,
     sha256_file,
 )
+from verification.areas.distribution_release.governance.editor_qualification import (  # noqa: E402
+    compiler_range_contains,
+)
 
 IDENTIFIER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 PACKAGE_JSON = "extension/package.json"
@@ -32,6 +35,7 @@ def verify_marketplace_vsix(
     publisher: str,
     extension: str,
     version: str,
+    compiler_version: str | None = None,
 ) -> dict[str, str]:
     """Verify bytes, safe archive structure, and exact package metadata."""
     if not vsix_path.is_file() or vsix_path.is_symlink():
@@ -83,6 +87,14 @@ def verify_marketplace_vsix(
     ):
         if package.get(field) != expected:
             fail(f"{PACKAGE_JSON}.{field}", f"must equal {expected}")
+    if compiler_version is not None and not compiler_range_contains(
+        package.get("sifrCompilerCompatibility", ""),
+        compiler_version,
+    ):
+        fail(
+            f"{PACKAGE_JSON}.sifrCompilerCompatibility",
+            f"must contain compiler {compiler_version}",
+        )
     return {
         "publisher": publisher,
         "extension": extension,
@@ -108,6 +120,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--publisher", required=True)
     parser.add_argument("--extension", required=True)
     parser.add_argument("--version", required=True)
+    parser.add_argument("--compiler-version")
     return parser.parse_args()
 
 
@@ -120,6 +133,7 @@ def main() -> int:
             publisher=args.publisher,
             extension=args.extension,
             version=args.version,
+            compiler_version=args.compiler_version,
         )
     except GovernanceError as exc:
         print(f"Marketplace VSIX verification failed: {exc}", file=sys.stderr)

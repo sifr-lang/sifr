@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Stable incident release-index mutation evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "operation",
+    "request_sha256",
+    "affected_plan_sha256",
+    "successor_plan_sha256",
+    "affected_version",
+    "successor_version",
+    "previous_index",
+    "proposed_index",
+    "proposed_index_sha256",
+    "plan_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "operation": {"enum": ["rollback", "incident-roll-forward"]},
+    "request_sha256": {"$ref": "#/$defs/sha256"},
+    "affected_plan_sha256": {"$ref": "#/$defs/sha256"},
+    "successor_plan_sha256": {"$ref": "#/$defs/sha256"},
+    "affected_version": {"$ref": "#/$defs/version"},
+    "successor_version": {"$ref": "#/$defs/version"},
+    "previous_index": {"$ref": "#/$defs/index_ref"},
+    "proposed_index": {"type": "object"},
+    "proposed_index_sha256": {"$ref": "#/$defs/sha256"},
+    "plan_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "not": {
+        "const": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "index_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generation", "sha256"],
+      "properties": {
+        "generation": {"type": "integer", "minimum": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

@@ -51,7 +51,6 @@ def run_self_tests() -> int:
         test_concurrency_and_credential_boundaries,
         test_evidence_only_commit_validator,
         test_cli_surfaces,
-        test_no_production_adapter_surface,
     )
     for test in tests:
         test()
@@ -391,37 +390,6 @@ def test_evidence_only_commit_validator() -> None:
             ),
             "exactly request",
         )
-
-
-def test_no_production_adapter_surface() -> None:
-    root = REPO_ROOT
-    harness = (Path(__file__).with_name("incident_fixture.py")).read_text(encoding="utf-8")
-    for forbidden in ("import socket", "import urllib", "import requests", "import subprocess"):
-        assert forbidden not in harness
-    workflow = (root / ".github" / "workflows" / "release-publication.yml").read_text(
-        encoding="utf-8"
-    )
-    dispatch = workflow.split("jobs:", 1)[0]
-    assert "\n          - rollback\n" not in dispatch
-    assert "incident-roll-forward" not in dispatch
-    assert "- drill-rollback" in dispatch
-    assert "uses: ./.github/workflows/release-publication-drill.yml" in workflow
-    drill = (
-        root / ".github" / "workflows" / "release-publication-drill.yml"
-    ).read_text(encoding="utf-8")
-    assert "name: stable-release-drill" in drill
-    assert "unshare --net --mount-proc" in drill
-    assert "${{ secrets." not in drill
-    assert "contents: write" not in drill
-    assert "gh release" not in drill
-    assert "vsce publish" not in drill
-    assert "/dispatches" not in drill
-    script = (root / "scripts" / "distribution" / "run_incident_fixture.py").read_text(
-        encoding="utf-8"
-    )
-    assert "gh release" not in script
-    assert "vsce publish" not in script
-    assert "repository_dispatch" not in script
 
 
 def test_cli_surfaces() -> None:
@@ -783,12 +751,13 @@ def run_fixture(
 
 
 def assert_signoff_and_site(fixture: Fixture, result: dict[str, Any]) -> None:
+    request = load_json_strict(
+        fixture.request,
+        require_canonical=True,
+    )
     signoff = validate_incident_signoff(
         load_json_strict(Path(result["signoff"]), require_canonical=True),
-        incident_request=load_json_strict(
-            fixture.request,
-            require_canonical=True,
-        ),
+        incident_request=request,
     )
     index = read_index(fixture.root)
     facts_paths = sorted(
@@ -802,6 +771,15 @@ def assert_signoff_and_site(fixture: Fixture, result: dict[str, Any]) -> None:
     assert facts["stable_version"] == index["channels"]["stable"]
     assert facts["withdrawals"]
     assert signoff["index_mutation"]["realized_generation"] == index["generation"]
+    release_signoffs = list(
+        (fixture.root / "governance-release").glob("stable-release-signoff-*.json")
+    )
+    if request["operation"] == "incident-roll-forward":
+        assert len(release_signoffs) == 1
+        assert signoff["release_signoff_sha256"] == sha256_file(release_signoffs[0])
+    else:
+        assert not release_signoffs
+        assert signoff["release_signoff_sha256"] == "none"
 
 
 def read_index(root: Path) -> dict[str, Any]:

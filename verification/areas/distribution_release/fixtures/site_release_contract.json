@@ -2,20 +2,20 @@
   "schema_version": 2,
   "repository": "sifr-lang/sifr-website",
   "workflow": ".github/workflows/release-site.yml",
-  "workflow_commit": "07d88cc3c24707e386c5ad73fb0875c06ffd598f",
-  "workflow_ref": "sifr-release-site-stable-distribution",
+  "workflow_commit": "ff472f2af59255c8031b1a6f9b9b294c4b820496",
+  "workflow_ref": "sifr-release-site-stable-facts",
   "workflow_ref_ruleset": {
     "bypass_actors": [],
     "enforcement": "active",
-    "id": 19791667,
-    "updated_at": "2026-07-27T05:06:21.354Z",
+    "id": 19899766,
+    "updated_at": "2026-07-28T13:22:41.496Z",
     "rules": [
       "deletion",
       "update"
     ]
   },
-  "workflow_sha256": "7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958",
-  "workflow_pr": "https://github.com/sifr-lang/sifr-website/pull/15",
+  "workflow_sha256": "a9360c82395f6e9d9822f201e56cc0f2eabab1bacda01c31e4e9f22d0202b3af",
+  "workflow_pr": "https://github.com/sifr-lang/sifr-website/pull/16",
   "dispatcher_generation": {
     "script": "scripts/distribution/generate_dispatchers.sh",
     "default_channel_by_ga_status": {
@@ -28,6 +28,23 @@
       "alpha",
       "beta"
     ]
+  },
+  "stable_documentation": {
+    "facts_input": "stable-site-release-facts.json",
+    "canonical_producer": "scripts/distribution/release_governance.py generate-site-facts",
+    "renderer": "apps/sifr-site/scripts/render-stable-release-page.mjs",
+    "renderer_sha256": "5382ec769ab77ea667912a24b5752c7ec0c09ce106dc22f01b1adba76d6ee1ff",
+    "rendered_labels": [
+      "Active stable version",
+      "Withdrawn stable versions"
+    ],
+    "required_fields": [
+      "stable_version",
+      "withdrawals[].version",
+      "withdrawals[].incident_id"
+    ],
+    "route": "/releases/stable/",
+    "preview_behavior": "absent"
   },
   "permissions": {
     "contents": "read",
@@ -45,7 +62,8 @@
     "dispatcher_alpha_sha256",
     "dispatcher_beta_sha256",
     "dispatcher_default_channel",
-    "publication_facts_sha256"
+    "publication_facts_sha256",
+    "stable_site_facts_sha256"
   ],
   "terminal_run": {
     "event": "workflow_dispatch",

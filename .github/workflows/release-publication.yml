@@ -11,14 +11,19 @@ on:
           - drill-first-ga
           - ga-activation
           - normal
+          - rollback
+          - incident-roll-forward
       evidence_commit:
-        required: false
         default: ""
       candidate_path:
-        required: false
         default: ""
       expected_plan_sha256:
-        required: false
+        default: ""
+      incident_commit:
+        default: ""
+      incident_path:
+        default: ""
+      expected_request_sha256:
         default: ""
       publication_mode:
         required: false
@@ -30,47 +35,45 @@ on:
   workflow_call:
     inputs:
       channel:
-        required: false
         default: ""
         type: string
       version:
-        required: false
         default: ""
         type: string
       base_ref:
-        required: false
         default: ""
         type: string
       source_commit:
-        required: false
         default: ""
         type: string
       site_base_commit:
-        required: false
         default: ""
         type: string
       governance_mode:
-        required: false
         default: preview
         type: string
       bootstrap_alpha_version:
-        required: false
         default: ""
         type: string
       evidence_commit:
-        required: false
         default: ""
         type: string
       candidate_path:
-        required: false
         default: ""
         type: string
       expected_plan_sha256:
-        required: false
+        default: ""
+        type: string
+      incident_commit:
+        default: ""
+        type: string
+      incident_path:
+        default: ""
+        type: string
+      expected_request_sha256:
         default: ""
         type: string
       publication_mode:
-        required: false
         default: ""
         type: string
     secrets:
@@ -78,7 +81,6 @@ on:
         required: true
       VSCE_PAT:
         required: false
-
 permissions:
   actions: read
   contents: read
@@ -101,6 +103,9 @@ jobs:
       evidence_commit: ${{ inputs.evidence_commit }}
       candidate_path: ${{ inputs.candidate_path }}
       expected_plan_sha256: ${{ inputs.expected_plan_sha256 }}
+      incident_commit: ${{ inputs.incident_commit }}
+      incident_path: ${{ inputs.incident_path }}
+      expected_request_sha256: ${{ inputs.expected_request_sha256 }}
       publication_mode: ${{ inputs.publication_mode }}
   publish:
     name: mutate governed release
@@ -116,39 +121,46 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       CHANNEL: ${{ inputs.channel }}
-      VERSION: ${{ (inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal') && needs.prepare.outputs.version || inputs.version }}
+      VERSION: ${{ (inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' || inputs.governance_mode == 'rollback' || inputs.governance_mode == 'incident-roll-forward') && needs.prepare.outputs.version || inputs.version }}
       BASE_REF: ${{ inputs.base_ref }}
-      SOURCE_COMMIT: ${{ (inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal') && needs.prepare.outputs.source_commit || inputs.source_commit }}
-      SITE_BASE_COMMIT: ${{ (inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal') && needs.prepare.outputs.site_base_commit || inputs.site_base_commit }}
+      SOURCE_COMMIT: ${{ (inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' || inputs.governance_mode == 'incident-roll-forward') && needs.prepare.outputs.source_commit || inputs.source_commit }}
+      SITE_BASE_COMMIT: ${{ (inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' || inputs.governance_mode == 'rollback' || inputs.governance_mode == 'incident-roll-forward') && needs.prepare.outputs.site_base_commit || inputs.site_base_commit }}
       GOVERNANCE_MODE: ${{ inputs.governance_mode }}
+      STABLE_MUTATION_OPERATION: ${{ contains(fromJSON('["ga-activation","normal","rollback","incident-roll-forward"]'), inputs.governance_mode) }}
+      STABLE_CANDIDATE_OPERATION: ${{ contains(fromJSON('["ga-activation","normal","incident-roll-forward"]'), inputs.governance_mode) }}
+      STABLE_PUBLICATION_OPERATION: ${{ contains(fromJSON('["ga-activation","normal"]'), inputs.governance_mode) }}
+      INCIDENT_OPERATION: ${{ contains(fromJSON('["rollback","incident-roll-forward"]'), inputs.governance_mode) }}
       BOOTSTRAP_ALPHA_VERSION: ${{ inputs.bootstrap_alpha_version }}
       EVIDENCE_COMMIT: ${{ inputs.evidence_commit }}
       CANDIDATE_PATH: ${{ inputs.candidate_path }}
       EXPECTED_PLAN_SHA256: ${{ inputs.expected_plan_sha256 }}
+      INCIDENT_COMMIT: ${{ inputs.incident_commit }}
+      INCIDENT_PATH: ${{ inputs.incident_path }}
+      EXPECTED_REQUEST_SHA256: ${{ inputs.expected_request_sha256 }}
       PUBLICATION_MODE: ${{ inputs.publication_mode }}
       PREPARE_SUMMARY_SHA256: ${{ needs.prepare.outputs.summary_sha256 }}
       LEGACY_INDEX_SHA256: 71b3243925670f56dc510b8f45b6614a622f58097a0fea9492f61d20dc4bf9ef
       PUBLICATION_ATTEMPT: ${{ github.run_id }}-${{ github.run_attempt }}
       SITE_REPOSITORY: sifr-lang/sifr-website
       SITE_WORKFLOW: release-site.yml
-      SITE_WORKFLOW_REF: sifr-release-site-stable-distribution
-      SITE_WORKFLOW_RULESET_ID: "19791667"
-      SITE_WORKFLOW_RULESET_UPDATED_AT: "2026-07-27T05:06:21.354Z"
-      SITE_WORKFLOW_SHA256: 7a27abaf9d7e67298ea3033abf19f1c504c68bf50bdcd4e3cc5577330456a958
+      SITE_WORKFLOW_REF: sifr-release-site-stable-facts
+      SITE_WORKFLOW_RULESET_ID: "19899766"
+      SITE_WORKFLOW_RULESET_UPDATED_AT: "2026-07-28T13:22:41.496Z"
+      SITE_WORKFLOW_SHA256: a9360c82395f6e9d9822f201e56cc0f2eabab1bacda01c31e4e9f22d0202b3af
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
+        if: env.STABLE_MUTATION_OPERATION != 'true'
         with:
           ref: ${{ inputs.source_commit }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        if: env.STABLE_MUTATION_OPERATION == 'true'
         with:
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        if: env.STABLE_CANDIDATE_OPERATION == 'true'
         with:
           ref: ${{ needs.prepare.outputs.source_commit }}
           fetch-depth: 0
@@ -156,14 +168,21 @@ jobs:
           submodules: recursive
           persist-credentials: false
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        if: env.STABLE_CANDIDATE_OPERATION == 'true'
         with:
           ref: ${{ inputs.evidence_commit }}
           fetch-depth: 0
           path: stable-evidence
           persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: env.INCIDENT_OPERATION == 'true'
+        with:
+          ref: ${{ inputs.incident_commit }}
+          fetch-depth: 0
+          path: incident-evidence
+          persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
+        if: env.STABLE_MUTATION_OPERATION != 'true'
         with:
           pattern: sifr-${{ inputs.version }}-*
           path: release-assets
@@ -173,19 +192,19 @@ jobs:
           name: ${{ needs.prepare.outputs.summary_artifact_name }}
           path: protected-prepare
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        if: env.STABLE_CANDIDATE_OPERATION == 'true'
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: stable-source/editor_integrations/vscode/package-lock.json
       - name: Provision pinned Marketplace publisher
-        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        if: env.STABLE_CANDIDATE_OPERATION == 'true'
         shell: bash
         env:
           GH_TOKEN: ""
         run: npm ci --ignore-scripts --prefix stable-source/editor_integrations/vscode
       - name: Revalidate prepare summary and protected approver
-        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
+        if: env.STABLE_MUTATION_OPERATION != 'true'
         id: approval
         shell: bash
         run: |
@@ -234,96 +253,27 @@ jobs:
             echo 'approvers_json=[]' >>"${GITHUB_OUTPUT}"
           fi
       - name: Validate protected publication inputs
-        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
+        if: env.STABLE_MUTATION_OPERATION != 'true'
         shell: bash
         env:
           SITE_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}
         run: |
           set -euo pipefail
-          case "${CHANNEL}" in
-            alpha|beta) ;;
-            *) echo "::error::release-publication accepts only alpha or beta"; exit 2 ;;
-          esac
-          case "${GOVERNANCE_MODE}" in
-            preview)
-              test -z "${BOOTSTRAP_ALPHA_VERSION}" || {
-                echo "::error::preview mode cannot name a bootstrap alpha"
-                exit 2
-              }
-              ;;
-            bootstrap-alpha)
-              test "${CHANNEL}" = "alpha" && test -z "${BOOTSTRAP_ALPHA_VERSION}" || {
-                echo "::error::bootstrap-alpha input mismatch"
-                exit 2
-              }
-              ;;
-            bootstrap-index)
-              test "${CHANNEL}" = "beta" || {
-                echo "::error::bootstrap-index requires beta"
-                exit 2
-              }
-              [[ "${BOOTSTRAP_ALPHA_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$ ]] || {
-                echo "::error::bootstrap-index requires a fresh alpha version"
-                exit 2
-              }
-              ;;
-            *) echo "::error::unsupported governance_mode"; exit 2 ;;
-          esac
-          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta)\.[0-9]+$ ||
-                "${BASH_REMATCH[1]}" != "${CHANNEL}" ]]; then
-            echo "::error::version and preview channel disagree"
-            exit 2
-          fi
-          if [[ ! "${SOURCE_COMMIT}" =~ ^[0-9a-f]{40}$ ||
-                "$(git rev-parse HEAD)" != "${SOURCE_COMMIT}" ]]; then
-            echo "::error::source_commit must identify the exact checked-out commit"
-            exit 2
-          fi
-          git fetch --no-tags origin main:refs/remotes/origin/main
-          git merge-base --is-ancestor \
-            "${SOURCE_COMMIT}" refs/remotes/origin/main || {
-            echo "::error::public release source must be reachable from protected main"
-            exit 2
-          }
-          if [[ ! "${SITE_BASE_COMMIT}" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "::error::site_base_commit must be an exact commit"
-            exit 2
-          fi
-          GH_TOKEN="${SITE_TOKEN}" \
-            scripts/distribution/verify_site_workflow_identity.sh \
-              --repository "${SITE_REPOSITORY}" \
-              --ruleset-id "${SITE_WORKFLOW_RULESET_ID}" \
-              --ruleset-updated-at "${SITE_WORKFLOW_RULESET_UPDATED_AT}" \
-              --workflow-ref "${SITE_WORKFLOW_REF}" \
-              --site-commit "${SITE_BASE_COMMIT}" \
-              --workflow "${SITE_WORKFLOW}" \
-              --workflow-sha256 "${SITE_WORKFLOW_SHA256}"
-          existing_release_count="$(
-            gh api \
-              --method GET \
-              --paginate \
-              --slurp \
-              "repos/${GITHUB_REPOSITORY}/releases" \
-              -f per_page=100 |
-              jq --arg version "${VERSION}" \
-                '[.[][] | select(.tag_name == $version)] | length'
-          )"
-          if [[ "${existing_release_count}" != "0" ]]; then
-            echo "::error::version release already exists; preview assets are write-once"
-            exit 2
-          fi
-          existing_tag_count="$(
-            gh api \
-              "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/${VERSION}" |
-              jq --arg ref "refs/tags/${VERSION}" \
-                '[.[] | select(.ref == $ref)] | length'
-          )"
-          if [[ "${existing_tag_count}" != "0" ]]; then
-            echo "::error::version tag already exists; release source identity is write-once"
-            exit 2
-          fi
+          scripts/distribution/validate_preview_publication_inputs.sh \
+            --channel "${CHANNEL}" --operation "${GOVERNANCE_MODE}" \
+            --version "${VERSION}" \
+            --bootstrap-alpha-version "${BOOTSTRAP_ALPHA_VERSION}" \
+            --source-commit "${SOURCE_COMMIT}" \
+            --repository "${GITHUB_REPOSITORY}" \
+            --site-repository "${SITE_REPOSITORY}" \
+            --site-commit "${SITE_BASE_COMMIT}" \
+            --site-workflow "${SITE_WORKFLOW}" \
+            --site-workflow-ref "${SITE_WORKFLOW_REF}" \
+            --site-ruleset-id "${SITE_WORKFLOW_RULESET_ID}" \
+            --site-ruleset-updated-at "${SITE_WORKFLOW_RULESET_UPDATED_AT}" \
+            --site-workflow-sha256 "${SITE_WORKFLOW_SHA256}"
       - name: Verify complete immutable asset set
-        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
+        if: env.STABLE_MUTATION_OPERATION != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -332,7 +282,7 @@ jobs:
             --assets release-assets \
             --prepare-summary protected-prepare/summary.json
       - name: Fetch governed index and allocate max generation
-        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
+        if: env.STABLE_MUTATION_OPERATION != 'true'
         id: index
         shell: bash
         run: |
@@ -428,7 +378,7 @@ jobs:
             echo "proposed_generation=${proposed_generation}"
           } >>"${GITHUB_OUTPUT}"
       - name: Build exact release record, index, dispatchers, and plan
-        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
+        if: env.STABLE_MUTATION_OPERATION != 'true'
         id: proposal
         shell: bash
         env:
@@ -545,7 +495,7 @@ jobs:
             echo "site_default_channel=${site_default_channel}"
           } >>"${GITHUB_OUTPUT}"
       - name: Publish write-once version release and verify assets
-        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
+        if: env.STABLE_MUTATION_OPERATION != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -628,7 +578,7 @@ jobs:
             exit 2
           }
       - name: Revalidate lease and publish write-once generation snapshot
-        if: ${{ inputs.governance_mode != 'bootstrap-alpha' && inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
+        if: ${{ inputs.governance_mode != 'bootstrap-alpha' && env.STABLE_MUTATION_OPERATION != 'true' }}
         shell: bash
         env:
           EXPECTED_GENERATION: ${{ steps.index.outputs.current_generation }}
@@ -679,7 +629,7 @@ jobs:
           fi
           gh release upload channels "${snapshot}" --repo "${GITHUB_REPOSITORY}"
       - name: Replace only canonical channels.json
-        if: ${{ inputs.governance_mode != 'bootstrap-alpha' && inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
+        if: ${{ inputs.governance_mode != 'bootstrap-alpha' && env.STABLE_MUTATION_OPERATION != 'true' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -698,7 +648,7 @@ jobs:
               exit 2
             }
       - name: Build correlated site publication facts
-        if: ${{ inputs.governance_mode != 'bootstrap-alpha' && inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
+        if: ${{ inputs.governance_mode != 'bootstrap-alpha' && env.STABLE_MUTATION_OPERATION != 'true' }}
         id: site
         shell: bash
         env:
@@ -732,9 +682,26 @@ jobs:
           echo "publication_facts_sha256=$(
             sha256sum publication/site-publication-facts.json | awk '{print $1}'
           )" >>"${GITHUB_OUTPUT}"
-      - name: Dispatch exact site workflow
-        if: ${{ inputs.governance_mode != 'bootstrap-alpha' && inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
-        id: dispatch
+          stable_site_facts_sha256=none
+          if [[ "${SITE_DEFAULT_CHANNEL}" == "stable" ]]; then
+            scripts/distribution/release_governance.py generate-site-facts \
+              --release-index publication/channels.json \
+              --source-plan-sha256 "${RELEASE_PLAN_SHA256}" \
+              --release-index-sha256 "${RELEASE_INDEX_SHA256}" \
+              --dispatcher "index=${DISPATCHER_INDEX_SHA256}" \
+              --dispatcher "stable=${DISPATCHER_STABLE_SHA256}" \
+              --dispatcher "alpha=${DISPATCHER_ALPHA_SHA256}" \
+              --dispatcher "beta=${DISPATCHER_BETA_SHA256}" \
+              --out publication/stable-site-release-facts.json
+            stable_site_facts_sha256="$(
+              sha256sum publication/stable-site-release-facts.json |
+                awk '{print $1}'
+            )"
+          fi
+          echo "stable_site_facts_sha256=${stable_site_facts_sha256}" \
+            >>"${GITHUB_OUTPUT}"
+      - name: Dispatch and await exact site workflow
+        if: ${{ inputs.governance_mode != 'bootstrap-alpha' && env.STABLE_MUTATION_OPERATION != 'true' }}
         shell: bash
         env:
           SITE_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}
@@ -746,71 +713,29 @@ jobs:
           DISPATCHER_ALPHA_SHA256: ${{ steps.proposal.outputs.dispatcher_alpha_sha256 }}
           DISPATCHER_BETA_SHA256: ${{ steps.proposal.outputs.dispatcher_beta_sha256 }}
           PUBLICATION_FACTS_SHA256: ${{ steps.site.outputs.publication_facts_sha256 }}
+          STABLE_SITE_FACTS_SHA256: ${{ steps.site.outputs.stable_site_facts_sha256 }}
           SITE_DEFAULT_CHANNEL: ${{ steps.proposal.outputs.site_default_channel }}
         run: |
           set -euo pipefail
-          dispatched_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          GH_TOKEN="${SITE_TOKEN}" \
-            scripts/distribution/verify_site_workflow_identity.sh \
-              --repository "${SITE_REPOSITORY}" \
-              --ruleset-id "${SITE_WORKFLOW_RULESET_ID}" \
-              --ruleset-updated-at "${SITE_WORKFLOW_RULESET_UPDATED_AT}" \
-              --workflow-ref "${SITE_WORKFLOW_REF}" \
-              --site-commit "${SITE_BASE_COMMIT}" \
-              --workflow "${SITE_WORKFLOW}" \
-              --workflow-sha256 "${SITE_WORKFLOW_SHA256}"
-          jq -n \
-            --arg ref "${SITE_WORKFLOW_REF}" \
-            --arg source "${SOURCE_COMMIT}" \
-            --arg plan "${RELEASE_PLAN_SHA256}" \
-            --arg attempt "${PUBLICATION_ATTEMPT}" \
-            --arg generation "${PROPOSED_GENERATION}" \
-            --arg index "${RELEASE_INDEX_SHA256}" \
-            --arg site "${SITE_BASE_COMMIT}" \
-            --arg dispatcher_index "${DISPATCHER_INDEX_SHA256}" \
-            --arg dispatcher_stable "${DISPATCHER_STABLE_SHA256}" \
-            --arg dispatcher_alpha "${DISPATCHER_ALPHA_SHA256}" \
-            --arg dispatcher_beta "${DISPATCHER_BETA_SHA256}" \
-            --arg facts "${PUBLICATION_FACTS_SHA256}" \
-            --arg dispatcher_default "${SITE_DEFAULT_CHANNEL}" \
-            '{
-              ref: $ref,
-              inputs: {
-                sifr_source_commit: $source,
-                release_plan_sha256: $plan,
-                publication_attempt: $attempt,
-                release_index_generation: $generation,
-                release_index_sha256: $index,
-                site_base_commit: $site,
-                dispatcher_index_sha256: $dispatcher_index,
-                dispatcher_stable_sha256: $dispatcher_stable,
-                dispatcher_alpha_sha256: $dispatcher_alpha,
-                dispatcher_beta_sha256: $dispatcher_beta,
-                dispatcher_default_channel: $dispatcher_default,
-                publication_facts_sha256: $facts
-              }
-            }' |
-            GH_TOKEN="${SITE_TOKEN}" gh api \
-              --method POST \
-              "repos/${SITE_REPOSITORY}/actions/workflows/${SITE_WORKFLOW}/dispatches" \
-              --input -
-          echo "dispatched_at=${dispatched_at}" >>"${GITHUB_OUTPUT}"
-      - name: Poll exact site run with 20-minute deadline
-        if: ${{ inputs.governance_mode != 'bootstrap-alpha' && inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
-        shell: bash
-        env:
-          SITE_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}
-          DISPATCHED_AT: ${{ steps.dispatch.outputs.dispatched_at }}
-        run: |
-          set -euo pipefail
-          GH_TOKEN="${SITE_TOKEN}" \
-            scripts/distribution/poll_site_release_run.sh \
-              --repository "${SITE_REPOSITORY}" \
-              --workflow "${SITE_WORKFLOW}" \
-              --title "Sifr site release ${PUBLICATION_ATTEMPT}" \
-              --sha "${SITE_BASE_COMMIT}" \
-              --dispatched-at "${DISPATCHED_AT}" \
-              --deadline-seconds 1200
+          scripts/distribution/dispatch_stable_site_publication.sh \
+            --repository "${SITE_REPOSITORY}" --workflow "${SITE_WORKFLOW}" \
+            --workflow-ref "${SITE_WORKFLOW_REF}" \
+            --ruleset-id "${SITE_WORKFLOW_RULESET_ID}" \
+            --ruleset-updated-at "${SITE_WORKFLOW_RULESET_UPDATED_AT}" \
+            --workflow-sha256 "${SITE_WORKFLOW_SHA256}" \
+            --source-commit "${SOURCE_COMMIT}" --site-commit "${SITE_BASE_COMMIT}" \
+            --release-plan-sha256 "${RELEASE_PLAN_SHA256}" \
+            --publication-attempt "${PUBLICATION_ATTEMPT}" \
+            --generation "${PROPOSED_GENERATION}" \
+            --index-sha256 "${RELEASE_INDEX_SHA256}" \
+            --default-channel "${SITE_DEFAULT_CHANNEL}" \
+            --dispatcher-index-sha256 "${DISPATCHER_INDEX_SHA256}" \
+            --dispatcher-stable-sha256 "${DISPATCHER_STABLE_SHA256}" \
+            --dispatcher-alpha-sha256 "${DISPATCHER_ALPHA_SHA256}" \
+            --dispatcher-beta-sha256 "${DISPATCHER_BETA_SHA256}" \
+            --publication-facts-sha256 "${PUBLICATION_FACTS_SHA256}" \
+            --stable-site-facts-sha256 "${STABLE_SITE_FACTS_SHA256}" \
+            --result-out publication/site-run.json
       - name: Run protected public schema-bootstrap smoke
         if: inputs.governance_mode == 'bootstrap-index'
         shell: bash
@@ -866,7 +791,7 @@ jobs:
             exit 2
           }
       - name: Run exact protected stable publication
-        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        if: env.STABLE_PUBLICATION_OPERATION == 'true'
         shell: bash
         env:
           SITE_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}
@@ -876,20 +801,56 @@ jobs:
           set -euo pipefail
           scripts/distribution/run_stable_publication.sh \
             --operation "${GOVERNANCE_MODE}" --mode "${PUBLICATION_MODE}" \
-            --repository "${GITHUB_REPOSITORY}" \
-            --evidence-root stable-evidence --evidence-commit "${EVIDENCE_COMMIT}" \
+            --repository "${GITHUB_REPOSITORY}" --evidence-root stable-evidence \
+            --evidence-commit "${EVIDENCE_COMMIT}" \
             --candidate-path "${CANDIDATE_PATH}" \
             --expected-plan-sha256 "${EXPECTED_PLAN_SHA256}" \
-            --source-root stable-source --prepare-summary protected-prepare/summary.json \
+            --source-root stable-source \
+            --prepare-summary protected-prepare/summary.json \
             --expected-summary-sha256 "${PREPARE_SUMMARY_SHA256}" \
             --workflow-ref "${GITHUB_REF}" --workflow-commit "${GITHUB_SHA}" \
             --run-id "${GITHUB_RUN_ID}" --run-attempt "${GITHUB_RUN_ATTEMPT}" \
             --initiator "${GITHUB_TRIGGERING_ACTOR}" \
-            --site-repository "${SITE_REPOSITORY}" --site-workflow "${SITE_WORKFLOW}" \
+            --site-repository "${SITE_REPOSITORY}" \
+            --site-workflow "${SITE_WORKFLOW}" \
             --site-workflow-ref "${SITE_WORKFLOW_REF}" \
             --site-ruleset-id "${SITE_WORKFLOW_RULESET_ID}" \
             --site-ruleset-updated-at "${SITE_WORKFLOW_RULESET_UPDATED_AT}" \
             --site-workflow-sha256 "${SITE_WORKFLOW_SHA256}"
+      - name: Run exact protected incident publication
+        if: env.INCIDENT_OPERATION == 'true'
+        shell: bash
+        env:
+          SITE_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          VSCE_BIN: ${{ github.workspace }}/stable-source/editor_integrations/vscode/node_modules/.bin/vsce
+        run: |
+          set -euo pipefail
+          arguments=(
+            --operation "${GOVERNANCE_MODE}" --mode "${PUBLICATION_MODE}"
+            --repository "${GITHUB_REPOSITORY}" --incident-root incident-evidence
+            --incident-commit "${INCIDENT_COMMIT}" --incident-path "${INCIDENT_PATH}"
+            --expected-request-sha256 "${EXPECTED_REQUEST_SHA256}"
+            --prepare-summary protected-prepare/summary.json
+            --expected-summary-sha256 "${PREPARE_SUMMARY_SHA256}"
+            --workflow-ref "${GITHUB_REF}" --workflow-commit "${GITHUB_SHA}"
+            --run-id "${GITHUB_RUN_ID}" --run-attempt "${GITHUB_RUN_ATTEMPT}"
+            --initiator "${GITHUB_TRIGGERING_ACTOR}"
+            --site-repository "${SITE_REPOSITORY}" --site-workflow "${SITE_WORKFLOW}"
+            --site-workflow-ref "${SITE_WORKFLOW_REF}"
+            --site-ruleset-id "${SITE_WORKFLOW_RULESET_ID}"
+            --site-ruleset-updated-at "${SITE_WORKFLOW_RULESET_UPDATED_AT}"
+            --site-workflow-sha256 "${SITE_WORKFLOW_SHA256}"
+          )
+          if [[ "${GOVERNANCE_MODE}" == "incident-roll-forward" ]]; then
+            arguments+=(
+              --candidate-root stable-evidence --candidate-commit "${EVIDENCE_COMMIT}"
+              --candidate-path "${CANDIDATE_PATH}"
+              --expected-plan-sha256 "${EXPECTED_PLAN_SHA256}"
+              --source-root stable-source
+            )
+          fi
+          scripts/distribution/run_incident_publication.sh "${arguments[@]}"
   drill:
     if: ${{ startsWith(inputs.governance_mode, 'drill-') }}
     uses: ./.github/workflows/release-publication-drill.yml

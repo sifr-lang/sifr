@@ -7,6 +7,7 @@ from typing import Any
 from .common import (
     fail,
     require_array,
+    require_commit,
     require_enum,
     require_exact_keys,
     require_incident_id,
@@ -32,6 +33,7 @@ SIGNOFF_REQUIRED = {
     "incident_id",
     "operation",
     "request_sha256",
+    "release_signoff_sha256",
     "attempts",
     "index_mutation",
     "site_reconciliation",
@@ -126,6 +128,12 @@ def validate_incident_signoff(
         "$.operation",
     )
     require_sha256(signoff["request_sha256"], "$.request_sha256")
+    release_signoff = signoff["release_signoff_sha256"]
+    if operation == "rollback":
+        if release_signoff != "none":
+            fail("$.release_signoff_sha256", "rollback must not name a release sign-off")
+    else:
+        require_sha256(release_signoff, "$.release_signoff_sha256")
     validate_attempts(signoff["attempts"], "$.attempts")
     attempts = signoff["attempts"]
     run_ids = [attempt["run_id"] for attempt in attempts]
@@ -159,7 +167,30 @@ def validate_incident_signoff(
     version_channel(mutation["affected_version"], "$.index_mutation.affected_version")
     version_channel(mutation["successor_version"], "$.index_mutation.successor_version")
 
-    for name in ("site_reconciliation", "validation", "communications", "closure"):
+    site = require_object(signoff["site_reconciliation"], "$.site_reconciliation")
+    require_exact_keys(
+        site,
+        required={
+            "status",
+            "evidence_sha256",
+            "repository",
+            "workflow",
+            "run_id",
+            "deployed_commit",
+        },
+        location="$.site_reconciliation",
+    )
+    if (
+        site["status"] != "pass"
+        or site["repository"] != "sifr-lang/sifr-website"
+        or site["workflow"] != "release-site.yml"
+    ):
+        fail("$.site_reconciliation", "must bind the successful canonical site workflow")
+    require_sha256(site["evidence_sha256"], "$.site_reconciliation.evidence_sha256")
+    require_positive_int(site["run_id"], "$.site_reconciliation.run_id")
+    require_commit(site["deployed_commit"], "$.site_reconciliation.deployed_commit")
+
+    for name in ("validation", "communications", "closure"):
         evidence = require_object(signoff[name], f"$.{name}")
         require_exact_keys(
             evidence,

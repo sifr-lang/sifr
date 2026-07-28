@@ -34,6 +34,18 @@ on:
         required: false
         default: ""
         type: string
+      incident_commit:
+        required: false
+        default: ""
+        type: string
+      incident_path:
+        required: false
+        default: ""
+        type: string
+      expected_request_sha256:
+        required: false
+        default: ""
+        type: string
       publication_mode:
         required: false
         default: ""
@@ -93,29 +105,32 @@ jobs:
       EVIDENCE_COMMIT: ${{ inputs.evidence_commit }}
       CANDIDATE_PATH: ${{ inputs.candidate_path }}
       EXPECTED_PLAN_SHA256: ${{ inputs.expected_plan_sha256 }}
+      INCIDENT_COMMIT: ${{ inputs.incident_commit }}
+      INCIDENT_PATH: ${{ inputs.incident_path }}
+      EXPECTED_REQUEST_SHA256: ${{ inputs.expected_request_sha256 }}
       PUBLICATION_MODE: ${{ inputs.publication_mode }}
       LEGACY_INDEX_SHA256: 71b3243925670f56dc510b8f45b6614a622f58097a0fea9492f61d20dc4bf9ef
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
+        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' && inputs.governance_mode != 'rollback' && inputs.governance_mode != 'incident-roll-forward' }}
         with:
           ref: ${{ inputs.source_commit }}
           fetch-depth: 0
           persist-credentials: false
 
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
+        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' && inputs.governance_mode != 'rollback' && inputs.governance_mode != 'incident-roll-forward' }}
         with:
           pattern: sifr-${{ inputs.version }}-*
           path: prepare-assets
           merge-multiple: true
 
       - name: Validate read-only prepare inputs and artifact bytes
-        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' }}
+        if: ${{ inputs.governance_mode != 'ga-activation' && inputs.governance_mode != 'normal' && inputs.governance_mode != 'rollback' && inputs.governance_mode != 'incident-roll-forward' }}
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -n "${EVIDENCE_COMMIT}${CANDIDATE_PATH}${EXPECTED_PLAN_SHA256}${PUBLICATION_MODE}" ]]; then
+          if [[ -n "${EVIDENCE_COMMIT}${CANDIDATE_PATH}${EXPECTED_PLAN_SHA256}${INCIDENT_COMMIT}${INCIDENT_PATH}${EXPECTED_REQUEST_SHA256}${PUBLICATION_MODE}" ]]; then
             echo "::error::preview/bootstrap prepare cannot receive stable inputs"
             exit 2
           fi
@@ -265,7 +280,7 @@ jobs:
           } >>"${GITHUB_STEP_SUMMARY}"
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' || inputs.governance_mode == 'rollback' || inputs.governance_mode == 'incident-roll-forward' }}
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
@@ -273,16 +288,51 @@ jobs:
           persist-credentials: false
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' || inputs.governance_mode == 'incident-roll-forward' }}
         with:
           ref: ${{ inputs.evidence_commit }}
           fetch-depth: 0
           path: stable-evidence
           persist-credentials: false
 
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: ${{ inputs.governance_mode == 'rollback' || inputs.governance_mode == 'incident-roll-forward' }}
+        with:
+          ref: ${{ inputs.incident_commit }}
+          fetch-depth: 0
+          path: incident-evidence
+          persist-credentials: false
+
+      - name: Resolve exact incident request identity
+        if: ${{ inputs.governance_mode == 'rollback' || inputs.governance_mode == 'incident-roll-forward' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${CHANNEL}${VERSION}${SOURCE_COMMIT}${BOOTSTRAP_ALPHA_VERSION}" &&
+            [[ "${INCIDENT_COMMIT}" =~ ^[0-9a-f]{40}$ ]] &&
+            [[ "${INCIDENT_PATH}" =~ ^plans/releases/incidents/[a-z0-9][a-z0-9-]{2,63}/stable-incident-request[.]json$ ]] &&
+            [[ "${EXPECTED_REQUEST_SHA256}" =~ ^[0-9a-f]{64}$ ]] &&
+            [[ "${PUBLICATION_MODE}" =~ ^(initial|resume)$ ]] || {
+              echo "::error::incident prepare inputs are incomplete or malformed"
+              exit 2
+            }
+          request="incident-evidence/${INCIDENT_PATH}"
+          test -f "${request}" &&
+            test "$(sha256sum "${request}" | awk '{print $1}')" = \
+              "${EXPECTED_REQUEST_SHA256}" &&
+            test "$(jq -er '.operation' "${request}")" = "${GOVERNANCE_MODE}" || {
+              echo "::error::incident request identity mismatch"
+              exit 2
+            }
+          git -C governance-source merge-base --is-ancestor \
+            "${INCIDENT_COMMIT}" HEAD || {
+            echo "::error::incident evidence commit must be merged into protected main"
+            exit 2
+          }
+
       - name: Resolve exact stable candidate identity
         id: stable
-        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' || inputs.governance_mode == 'incident-roll-forward' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -294,6 +344,17 @@ jobs:
               echo "::error::stable prepare inputs are incomplete or malformed"
               exit 2
             }
+          if [[ "${GOVERNANCE_MODE}" != "incident-roll-forward" ]]; then
+            test -z "${INCIDENT_COMMIT}${INCIDENT_PATH}${EXPECTED_REQUEST_SHA256}" || {
+              echo "::error::non-incident stable prepare cannot receive incident inputs"
+              exit 2
+            }
+          fi
+          git -C governance-source merge-base --is-ancestor \
+            "${EVIDENCE_COMMIT}" HEAD || {
+            echo "::error::candidate evidence commit must be merged into protected main"
+            exit 2
+          }
           candidate="stable-evidence/${CANDIDATE_PATH}"
           plan="${candidate}/stable-release-plan.json"
           test -f "${plan}" &&
@@ -313,7 +374,7 @@ jobs:
           } >>"${GITHUB_OUTPUT}"
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' || inputs.governance_mode == 'incident-roll-forward' }}
         with:
           ref: ${{ steps.stable.outputs.source_commit }}
           fetch-depth: 0
@@ -322,7 +383,7 @@ jobs:
           persist-credentials: false
 
       - name: Prepare exact stable publication inputs
-        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' || inputs.governance_mode == 'incident-roll-forward' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -377,23 +438,44 @@ jobs:
               --live-index prepare/current-channels.json \
               --snapshot-root prepare/history
           )"
-          python3 governance-source/scripts/distribution/release_governance.py \
-            prepare-stable-publication \
-            --operation "${GOVERNANCE_MODE}" \
-            --mode "${PUBLICATION_MODE}" \
-            --evidence-root stable-evidence \
-            --evidence-commit "${EVIDENCE_COMMIT}" \
-            --candidate-path "${CANDIDATE_PATH}" \
-            --expected-plan-sha256 "${EXPECTED_PLAN_SHA256}" \
-            --source-root stable-source \
-            --live-index prepare/current-channels.json \
-            --snapshot-root prepare/history \
-            --artifact-root stable-assets \
-            --proposed-generation "${proposed_generation}" \
-            --out prepare/summary.json
-          test "$(jq -er '.qualification.run_id' prepare/summary.json)" = "${run_id}" &&
-            test "$(jq -er '.qualification.run_attempt' prepare/summary.json)" = "${run_attempt}" &&
-            test "$(jq -er '.version' prepare/summary.json)" = "${candidate_version}" || {
+          if [[ "${GOVERNANCE_MODE}" == "incident-roll-forward" ]]; then
+            python3 governance-source/scripts/distribution/release_governance.py \
+              prepare-incident-publication \
+              --operation "${GOVERNANCE_MODE}" --mode "${PUBLICATION_MODE}" \
+              --governance-root governance-source \
+              --incident-root incident-evidence \
+              --incident-commit "${INCIDENT_COMMIT}" \
+              --incident-path "${INCIDENT_PATH}" \
+              --expected-request-sha256 "${EXPECTED_REQUEST_SHA256}" \
+              --candidate-root stable-evidence \
+              --candidate-commit "${EVIDENCE_COMMIT}" \
+              --candidate-path "${CANDIDATE_PATH}" \
+              --expected-plan-sha256 "${EXPECTED_PLAN_SHA256}" \
+              --source-root stable-source --artifact-root stable-assets \
+              --live-index prepare/current-channels.json \
+              --snapshot-root prepare/history \
+              --proposed-generation "${proposed_generation}" \
+              --out prepare/summary.json
+            release_summary='.release_prepare'
+          else
+            python3 governance-source/scripts/distribution/release_governance.py \
+              prepare-stable-publication \
+              --operation "${GOVERNANCE_MODE}" --mode "${PUBLICATION_MODE}" \
+              --evidence-root stable-evidence \
+              --evidence-commit "${EVIDENCE_COMMIT}" \
+              --candidate-path "${CANDIDATE_PATH}" \
+              --expected-plan-sha256 "${EXPECTED_PLAN_SHA256}" \
+              --source-root stable-source \
+              --live-index prepare/current-channels.json \
+              --snapshot-root prepare/history \
+              --artifact-root stable-assets \
+              --proposed-generation "${proposed_generation}" \
+              --out prepare/summary.json
+            release_summary='.'
+          fi
+          test "$(jq -er "${release_summary}.qualification.run_id" prepare/summary.json)" = "${run_id}" &&
+            test "$(jq -er "${release_summary}.qualification.run_attempt" prepare/summary.json)" = "${run_attempt}" &&
+            test "$(jq -er "${release_summary}.version" prepare/summary.json)" = "${candidate_version}" || {
               echo "::error::stable prepare summary lost candidate identity"
               exit 2
             }
@@ -411,6 +493,71 @@ jobs:
             echo "- prepare summary SHA-256: \`${summary_sha256}\`"
           } >>"${GITHUB_STEP_SUMMARY}"
 
+      - name: Prepare exact rollback inputs
+        if: inputs.governance_mode == 'rollback'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${EVIDENCE_COMMIT}${CANDIDATE_PATH}${EXPECTED_PLAN_SHA256}" || {
+            echo "::error::rollback cannot receive successor candidate inputs"
+            exit 2
+          }
+          mkdir -p prepare/history
+          gh release download channels \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern channels.json \
+            --dir prepare
+          mv prepare/channels.json prepare/current-channels.json
+          channels_release_id="$(
+            gh api \
+              "/repos/${GITHUB_REPOSITORY}/releases/tags/channels" \
+              --jq '.id'
+          )"
+          while IFS= read -r snapshot; do
+            [[ -n "${snapshot}" ]] || continue
+            gh release download channels \
+              --repo "${GITHUB_REPOSITORY}" \
+              --pattern "${snapshot}" \
+              --dir prepare/history
+          done < <(
+            gh api \
+              --paginate \
+              --slurp \
+              "/repos/${GITHUB_REPOSITORY}/releases/${channels_release_id}/assets?per_page=100" |
+              jq -er \
+                '.[][] | .name
+                 | select(test("^channels-generation-[1-9][0-9]*[.]json$"))'
+          )
+          proposed_generation="$(
+            python3 governance-source/scripts/distribution/allocate_release_generation.py \
+              --live-index prepare/current-channels.json \
+              --snapshot-root prepare/history
+          )"
+          python3 governance-source/scripts/distribution/release_governance.py \
+            prepare-incident-publication \
+            --operation rollback --mode "${PUBLICATION_MODE}" \
+            --governance-root governance-source \
+            --incident-root incident-evidence \
+            --incident-commit "${INCIDENT_COMMIT}" \
+            --incident-path "${INCIDENT_PATH}" \
+            --expected-request-sha256 "${EXPECTED_REQUEST_SHA256}" \
+            --live-index prepare/current-channels.json \
+            --snapshot-root prepare/history \
+            --proposed-generation "${proposed_generation}" \
+            --out prepare/summary.json
+          summary_sha256="$(sha256sum prepare/summary.json | awk '{print $1}')"
+          {
+            echo "## Governed rollback prepare"
+            echo
+            echo "- operation/mode: \`rollback\` / \`${PUBLICATION_MODE}\`"
+            echo "- incident: \`$(jq -r '.incident.incident_id' prepare/summary.json)\`"
+            echo "- evidence: \`${INCIDENT_COMMIT}:${INCIDENT_PATH}\`"
+            echo "- affected: \`$(jq -r '.affected.version' prepare/summary.json)\`"
+            echo "- target: \`$(jq -r '.successor.version' prepare/summary.json)\`"
+            echo "- proposed generation: \`$(jq -r '.mutation.proposed_index.generation' prepare/summary.json)\`"
+            echo "- prepare summary SHA-256: \`${summary_sha256}\`"
+          } >>"${GITHUB_STEP_SUMMARY}"
+
       - name: Bind prepare outputs
         id: outputs
         shell: bash
@@ -422,13 +569,13 @@ jobs:
           echo "summary_sha256=${summary_sha256}" >>"${GITHUB_OUTPUT}"
           echo "summary_artifact_name=${summary_artifact_name}" >>"${GITHUB_OUTPUT}"
           {
-            echo "plan_sha256=$(jq -r '.evidence.plan_sha256 // ""' prepare/summary.json)"
-            echo "release_report_sha256=$(jq -r '.release_report.sha256 // ""' prepare/summary.json)"
-            echo "qualification_sha256=$(jq -r '.qualification.sha256 // ""' prepare/summary.json)"
+            echo "plan_sha256=$(jq -r '.evidence.plan_sha256 // .successor.plan_sha256 // ""' prepare/summary.json)"
+            echo "release_report_sha256=$(jq -r '.release_report.sha256 // ((.release_prepare | objects).release_report.sha256) // ""' prepare/summary.json)"
+            echo "qualification_sha256=$(jq -r '.qualification.sha256 // ((.release_prepare | objects).qualification.sha256) // ""' prepare/summary.json)"
             echo "live_index_sha256=$(jq -r '.live_index.sha256 // ""' prepare/summary.json)"
             echo "proposed_index_sha256=$(jq -r '.mutation.proposed_index_sha256 // ""' prepare/summary.json)"
-            echo "version=$(jq -r '.version // ""' prepare/summary.json)"
-            echo "source_commit=$(jq -r '.source.commit // .source_commit // ""' prepare/summary.json)"
+            echo "version=$(jq -r '.version // .successor.version // ""' prepare/summary.json)"
+            echo "source_commit=$(jq -r '.source.commit // ((.release_prepare | objects).source.commit) // .source_commit // ""' prepare/summary.json)"
             echo "proposed_generation=$(jq -r '.mutation.proposed_index.generation // ""' prepare/summary.json)"
             echo "site_base_commit=$(jq -r '.site.base_commit // ""' prepare/summary.json)"
           } >>"${GITHUB_OUTPUT}"

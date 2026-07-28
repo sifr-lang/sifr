@@ -70,7 +70,7 @@ jobs:
           INPUT_BASE_REF: ${{ inputs.base_ref }}
           GOVERNANCE_MODE: ${{ inputs.governance_mode }}
           BOOTSTRAP_ALPHA_VERSION: ${{ inputs.bootstrap_alpha_version }}
-          SITE_BASE_COMMIT: 07d88cc3c24707e386c5ad73fb0875c06ffd598f
+          SITE_BASE_COMMIT: ff472f2af59255c8031b1a6f9b9b294c4b820496
         run: |
           set -euo pipefail
           case "${INPUT_CHANNEL}" in

@@ -26,6 +26,7 @@ from .common import (
     sha256_file,
     version_channel,
 )
+from .fixture_release_signoff import write_fixture_release_signoff
 from .incident import validate_attempts, validate_incident_request, validate_incident_signoff
 from .incident_planner import IncidentMutation, materialize_incident_mutation
 from .release_index import validate_release_index
@@ -630,11 +631,24 @@ def _write_signoff(
         )
     ]
     validate_attempts(attempts, "$.attempts")
+    if mutation.operation == "incident-roll-forward":
+        release_signoff_path, release_signoff_bytes = write_fixture_release_signoff(
+            governance_root=governance_root,
+            realized=realized,
+            mutation=mutation,
+            attempts=attempts,
+            site_facts_sha256=site_facts_sha256,
+        )
+        _write_once_bytes(release_signoff_path, release_signoff_bytes)
+        release_signoff_sha256 = sha256_bytes(release_signoff_bytes)
+    else:
+        release_signoff_sha256 = "none"
     signoff = {
         "schema_version": 2,
         "incident_id": request["incident_id"],
         "operation": mutation.operation,
         "request_sha256": request_sha256,
+        "release_signoff_sha256": release_signoff_sha256,
         "attempts": attempts,
         "index_mutation": {
             "previous_generation": previous[0]["generation"],
@@ -647,6 +661,10 @@ def _write_signoff(
         "site_reconciliation": {
             "status": "pass",
             "evidence_sha256": site_facts_sha256,
+            "repository": "sifr-lang/sifr-website",
+            "workflow": "release-site.yml",
+            "run_id": attempts[-1]["run_id"],
+            "deployed_commit": "1" * 40,
         },
         "validation": {"status": "pass", "evidence_sha256": evidence_digests["validation"]},
         "communications": {

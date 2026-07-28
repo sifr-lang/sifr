@@ -712,6 +712,130 @@ Review and upstream coordination ledger:
   follow-up is preserved in
   [`python-interop-readonly-inspection-timeout.md`](./python-interop-readonly-inspection-timeout.md)
   without a timeout change, waiver, suppression, or Phase 40 code change.
+- The incident production-wiring wave extends that same protected job and
+  read-only prepare boundary to `rollback` and `incident-roll-forward`. It
+  binds exact incident request, withdrawal evidence, affected and
+  successor/target plan bytes, protected-main ancestry, live index and retained
+  generations, and—only for roll-forward—the complete stable candidate
+  prepare. The protected path retains request/generation evidence write-once,
+  performs the sole atomic `channels.json` replacement, reconciles the pinned
+  site, verifies stable install/update/Marketplace/withdrawal documentation
+  and both recovery paths, and emits exact stable/incident sign-offs.
+- Incident production-wiring review passes 1 and 2 are retained at
+  `plans/reviews/archive/phase-40-milestone-40-5-incident-publication-wiring-review-pass-{1,2}-not-satisfied.md`.
+  Both returned `CHANGES_REQUIRED`. Their findings are remediated: tracked
+  checkout bytes are `HEAD`-bound without false sibling-checkout dirtiness;
+  rollback and roll-forward have executed end-to-end and drift/ancestry
+  negatives; schema/runtime and release-signoff cross-bindings are direct;
+  public smoke includes a non-empty withdrawal; the demo invokes the extracted
+  public-smoke suite; secret scrubbing, diagnostics, and workflow decomposition
+  are restored; and durable architecture/pipeline/ledger truth is updated here.
+- The facts-driven public stable page landed through
+  [sifr-website PR #16](https://github.com/sifr-lang/sifr-website/pull/16) as
+  `ff472f2af59255c8031b1a6f9b9b294c4b820496`. Site review passes 1 and 2
+  found preview breakage, unpinned runtime, missing facts custody, shell
+  precedence, post-GA preview persistence, and contract/test gaps. Pass 3
+  closed every actionable finding and returned `SATISFIED`; exact PR-head pass
+  4 independently matched `03a407933ad054309cef0d8408043012970af710`,
+  reproduced the renderer/build/provenance/contracts, and returned
+  `SATISFIED`.
+- Immutable site tag `sifr-release-site-stable-facts` resolves to that merge
+  commit. Active no-bypass tag ruleset `19899766` forbids update and deletion
+  at attested revision `2026-07-28T13:22:41.496Z`; the pinned workflow digest
+  is `a9360c82395f6e9d9822f201e56cc0f2eabab1bacda01c31e4e9f22d0202b3af`.
+  The live identity helper and cross-repository fixture both verify the exact
+  tag, commit, workflow bytes, ruleset, 13 dispatch inputs, renderer, route,
+  and preview-absence/active-facts behavior.
+- Focused incident-publication validation passes 5/5, public stable smoke 2/2,
+  executed working-client/out-of-band rollback and roll-forward recovery 2/2,
+  the site renderer/build and active-only sitemap paths, every publication/site
+  workflow contract, individual distribution shell parsing, Python/YAML
+  parsing, and live immutable site identity verification. Incident review pass
+  3 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-incident-publication-wiring-review-pass-3-not-satisfied.md`.
+  It found the production recovery adapter used the nonexistent
+  `install-receipt.json` path and incorrectly required canonical installer
+  receipt bytes. The adapter now validates the real pretty-printed
+  `install.json`, scrubs production credentials internally as well as at its
+  call site, and is executed for rollback, roll-forward, downgrade consent,
+  out-of-band installation, version/receipt convergence, and receipt drift.
+  The same remediation adds an untracked-plan forgery negative and moves
+  stable publication fixture helpers out of private self-test coupling.
+  The complete focused distribution selection passes 68 variants with zero
+  failures after that remediation.
+- Incident review pass 4 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-incident-publication-wiring-review-pass-4-not-satisfied.md`.
+  Its three actionable findings are remediated: executed roll-forward recovery
+  now uses a strictly newer stable successor while the fake client rejects
+  every non-forced downgrade; schema-valid receipt-version drift and binary
+  version drift reach and fail the production adapter's own convergence
+  assertions; and the capability demo invokes the recovery adapter suite.
+  The smaller findings are closed as well: explicit dispatch defaults and one
+  named stable-publication predicate are restored, the site renderer digest
+  and exact public labels are pinned, incident IDs use the schema-equivalent
+  runtime validator, the site dispatcher advertises only its two supported
+  defaults, and the local roll-forward fixture retains a validated stable
+  release sign-off asset whose exact digest is bound by the incident sign-off.
+  The new fixture sign-off responsibility is isolated in its own focused module
+  so all hand-maintained files remain below 900 lines.
+- Incident review pass 5 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-incident-publication-wiring-review-pass-5-not-satisfied.md`.
+  It verified every pass-4 finding closed and independently reproduced the
+  full 125-variant distribution area, then found one pre-mutation rollback
+  provenance gap. Staging now requires the rollback target and affected plan
+  to agree on all four site dispatcher digests before creating the staged
+  output; an executed negative binds a deliberately mismatched target plan into
+  an otherwise valid prepare summary, verifies the precise rejection, and
+  proves no output was created. The site contract also cross-checks its public
+  rendered labels against the verifier's single canonical label tuple, and
+  focused negative schema contracts exercise all incident-prepare conditionals
+  plus the incident-mutation generation floor. Those negative contracts are
+  decomposed into a focused module to preserve the file-size guardrail.
+- Incident review pass 6 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-incident-publication-wiring-review-pass-6-satisfied.md`.
+  It independently reproduced the full distribution area at 125 variants with
+  zero failures, the capability demo, all parsing and file-size guardrails,
+  and every pass-1 through pass-5 closure. It verified the new rollback
+  dispatcher-provenance gate runs before staging output and every mutation,
+  verified the negative reaches that precise diagnostic with no output, found
+  no actionable issue, and returned `VERDICT: SATISFIED`.
+- The authoritative `scripts/run_all_tests.sh --profile create-pr` gate passed
+  every blocking step: coverage and maintainability guardrails, 19/19
+  Python-interop variants, the required existing Rust-consumption suites at
+  10/10, frontend/tooling/performance checks, generated-code quality, crate
+  tests, 28 runtime-platform variants, and 131/131 E2E fixtures with
+  `report_signature=7c39b8c1dd4fec7c`. Both Python-interop and E2E completed
+  inside their 600-second blocking budgets. The 1116-second cold-cache wall
+  time exceeded only the advisory warm target; no budget, waiver, or
+  validation policy changed.
+- Exact [PR #3047](https://github.com/sifr-lang/sifr/pull/3047) head review
+  pass 7 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-incident-publication-wiring-review-pass-7-exact-pr-head-not-satisfied.md`.
+  It matched local, remote, and PR head at
+  `8776b4dbbec3d4b342c937dd1a6b4effaabca5aa`, reverified all earlier
+  closures and full validation, then found one malformed-input diagnostic
+  defect: an incident roll-forward stable-prepare summary without its required
+  `incident` binding raised raw `KeyError`. Runtime required-key construction
+  now mirrors the schema, both conditional directions have runtime and schema
+  negatives, and the operator-facing CLI negative proves exit 2 with the
+  governed missing-field diagnostic and no traceback.
+- Exact PR-head review pass 8 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-incident-publication-wiring-review-pass-8-exact-pr-head-satisfied.md`.
+  It matched local, remote, and PR head at
+  `341b312f50de61c549f1bde01a6676f248231d02`, independently reproduced
+  the missing/forbidden incident-binding schema and runtime cases plus both
+  operator-facing validator kinds, reran the focused publication/recovery
+  suites and guardrails, found no actionable finding, and returned
+  `VERDICT: SATISFIED`.
+- Final exact PR-head review pass 9 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-incident-publication-wiring-review-pass-9-final-exact-pr-head-satisfied.md`.
+  It matched local, remote, and PR head at
+  `dabdfec856b1e9a31ea5f95201de84c7cb70402c`, verified that the pass-8
+  archive delta was documentation-only and faithful, re-audited the full
+  incident-publication implementation, independently reproduced 68 focused
+  variants with zero failures plus the malformed-input CLI matrix, found no
+  actionable issue, and returned `VERDICT: SATISFIED`.
+- [ ] Merge the protected rollback and incident roll-forward production wiring.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
 - [ ] Exercise resume, stale generation, burned generation, rollback, and

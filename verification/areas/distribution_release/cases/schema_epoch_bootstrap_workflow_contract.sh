@@ -76,9 +76,9 @@ assert publication.index('gh release upload channels "${snapshot}"') < publicati
     "Replace only canonical channels.json"
 )
 assert publication.index("Replace only canonical channels.json") < publication.index(
-    "Dispatch exact site workflow"
+    "Dispatch and await exact site workflow"
 )
-assert publication.index("Dispatch exact site workflow") < publication.index(
+assert publication.index("Dispatch and await exact site workflow") < publication.index(
     "Run protected public schema-bootstrap smoke"
 )
 assert publication.index("Run protected public schema-bootstrap smoke") < publication.index(

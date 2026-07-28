@@ -22,7 +22,9 @@
   ],
   "properties": {
     "schema_version": {"const": 2},
-    "operation": {"enum": ["ga-activation", "normal"]},
+    "operation": {
+      "enum": ["ga-activation", "normal", "incident-roll-forward"]
+    },
     "mode": {"enum": ["initial", "resume"]},
     "publication_state": {"enum": ["pending", "activated"]},
     "next_generation": {"type": "integer", "minimum": 1},
@@ -141,6 +143,25 @@
         "repository": {"const": "sifr-lang/sifr-website"},
         "base_commit": {"$ref": "#/$defs/commit"}
       }
+    },
+    "incident": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "incident_id",
+        "request_sha256",
+        "affected_version",
+        "affected_plan_sha256"
+      ],
+      "properties": {
+        "incident_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"
+        },
+        "request_sha256": {"$ref": "#/$defs/sha256"},
+        "affected_version": {"$ref": "#/$defs/version"},
+        "affected_plan_sha256": {"$ref": "#/$defs/sha256"}
+      }
     }
   },
   "allOf": [
@@ -150,6 +171,16 @@
         "required": ["publication_state"]
       },
       "then": {"properties": {"mode": {"const": "resume"}}}
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {"const": "incident-roll-forward"}
+        },
+        "required": ["operation"]
+      },
+      "then": {"required": ["incident"]},
+      "else": {"not": {"required": ["incident"]}}
     }
   ],
   "$defs": {

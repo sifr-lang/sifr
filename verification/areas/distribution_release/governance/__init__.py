@@ -3,6 +3,11 @@
 from .common import GovernanceError
 from .artifact_index import validate_qualification_artifact_index
 from .incident import validate_incident_request, validate_incident_signoff
+from .incident_prepare import (
+    materialize_incident_prepare,
+    validate_incident_mutation_evidence,
+    validate_incident_prepare_summary,
+)
 from .planner import materialize_stable_plan
 from .protected_drill_evidence import validate_drill_evidence
 from .release_index import (
@@ -39,11 +44,14 @@ __all__ = [
     "materialize_stable_plan",
     "materialize_stable_mutation",
     "materialize_stable_prepare",
+    "materialize_incident_prepare",
     "propose_stable_release",
     "validate_bootstrap_evidence",
     "validate_drill_evidence",
     "validate_incident_request",
     "validate_incident_signoff",
+    "validate_incident_mutation_evidence",
+    "validate_incident_prepare_summary",
     "validate_qualification_artifact_index",
     "validate_release_index",
     "validate_release_index_transition",
