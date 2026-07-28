@@ -558,6 +558,7 @@ def release_report() -> dict[str, Any]:
             ("distribution_release", "epoch-bootstrap"),
             ("distribution_release", "protected-drill"),
             ("distribution_release", "stable-prepare"),
+            ("distribution_release", "stable-publish-primitives"),
         ],
     }
     return {
@@ -600,6 +601,7 @@ def release_report() -> dict[str, Any]:
                             "epoch-bootstrap",
                             "protected-drill",
                             "stable-prepare",
+                            "stable-publish-primitives",
                         ],
                     ),
                 )

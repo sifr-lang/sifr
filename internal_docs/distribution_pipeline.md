@@ -604,6 +604,20 @@ days; its plan, release-report, qualification, live-index, and proposed-index
 digests are explicit reusable-workflow outputs, and the later publish job must
 consume the exact summary digest.
 
+Stable prepare does not accept an operator-selected generation. It validates
+every retained canonical `channels-generation-<N>.json`, requires the live
+index to equal its retained snapshot, and allocates one greater than the
+maximum live or retained generation so a reserved failed attempt stays burned.
+Read-only prepare uses the reusable exact-ID artifact fetcher, which verifies
+the workflow run/attempt/source, upload ID/name/expiry/run identity, safe
+compressed and uncompressed byte boundaries, and every transported SHA-256.
+The separate protected revalidation command accepts caller-supplied clean
+evidence/source checkouts, live index and retained snapshots, and refetched
+artifact root. It recomputes the complete stable-prepare summary and requires
+byte-for-byte equality with the reviewer-visible summary. The production
+workflow does not yet invoke this command; it must supply those fresh inputs
+before stable mutation is enabled.
+
 Manual drill dispatch selects exactly publication, rollback, or first-GA
 coverage and passes that mode unchanged to `release-publication-drill.yml`;
 unknown reusable-workflow modes fail before the drill core runs. Drills use the
@@ -645,6 +659,8 @@ uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite protected-drill
 uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite stable-prepare
+uv run --project verification --locked python -m sifr_verify areas run \
+  --area distribution_release --suite stable-publish-primitives
 uv run --project verification --locked python -m sifr_verify areas run \
   --area distribution_release --suite incident-governance
 demos/stable_incident_recovery_demo.sh
