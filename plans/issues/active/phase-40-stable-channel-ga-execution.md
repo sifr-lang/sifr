@@ -692,6 +692,13 @@ Review and upstream coordination ledger:
   parsing, diff, and file-size gates, reverified every earlier closure and the
   complete production mutation ordering, found no actionable issue, and
   returned `SATISFIED`.
+- Final exact-head review pass 6 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-publication-wiring-review-pass-6-final-exact-head-satisfied.md`.
+  It matched local, remote, and PR head at
+  `d2b919eb8a5a32ede375ab7f9e03f18431a4e506`, verified the only
+  post-pass-5 delta was the truthful review archive and ledger entry,
+  independently reran the focused suites and guardrails, found no actionable
+  issue, and returned `SATISFIED`.
 - Focused production-wiring validation passes: stable prepare 7/7, stable
   publication primitives 4/4, stable publication 9/9, governance 14/14,
   runner self-tests, workflow/schema contracts, coverage readiness, and the
