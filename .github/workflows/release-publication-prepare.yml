@@ -1,0 +1,219 @@
+name: release-publication-prepare
+
+on:
+  workflow_call:
+    inputs:
+      channel:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+      source_commit:
+        required: true
+        type: string
+      governance_mode:
+        required: true
+        type: string
+      bootstrap_alpha_version:
+        required: false
+        default: ""
+        type: string
+    outputs:
+      summary_sha256:
+        value: ${{ jobs.prepare.outputs.summary_sha256 }}
+      summary_artifact_name:
+        value: ${{ jobs.prepare.outputs.summary_artifact_name }}
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  prepare:
+    name: prepare governed publication
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      summary_sha256: ${{ steps.summary.outputs.summary_sha256 }}
+      summary_artifact_name: ${{ steps.summary.outputs.summary_artifact_name }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CHANNEL: ${{ inputs.channel }}
+      VERSION: ${{ inputs.version }}
+      SOURCE_COMMIT: ${{ inputs.source_commit }}
+      GOVERNANCE_MODE: ${{ inputs.governance_mode }}
+      BOOTSTRAP_ALPHA_VERSION: ${{ inputs.bootstrap_alpha_version }}
+      LEGACY_INDEX_SHA256: 71b3243925670f56dc510b8f45b6614a622f58097a0fea9492f61d20dc4bf9ef
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.source_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: sifr-${{ inputs.version }}-*
+          path: prepare-assets
+          merge-multiple: true
+
+      - name: Validate read-only prepare inputs and artifact bytes
+        id: summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${GOVERNANCE_MODE}" in
+            preview)
+              test -z "${BOOTSTRAP_ALPHA_VERSION}" || {
+                echo "::error::preview mode cannot name a bootstrap alpha"
+                exit 2
+              }
+              ;;
+            bootstrap-alpha)
+              test "${CHANNEL}" = "alpha" && test -z "${BOOTSTRAP_ALPHA_VERSION}" || {
+                echo "::error::bootstrap-alpha input mismatch"
+                exit 2
+              }
+              ;;
+            bootstrap-index)
+              test "${CHANNEL}" = "beta" || {
+                echo "::error::bootstrap-index requires beta"
+                exit 2
+              }
+              [[ "${BOOTSTRAP_ALPHA_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$ ]] || {
+                echo "::error::bootstrap-index requires a fresh alpha version"
+                exit 2
+              }
+              ;;
+            *) echo "::error::unsupported governance_mode"; exit 2 ;;
+          esac
+          if [[ ! "${SOURCE_COMMIT}" =~ ^[0-9a-f]{40}$ ||
+                "$(git rev-parse HEAD)" != "${SOURCE_COMMIT}" ]]; then
+            echo "::error::prepare source identity mismatch"
+            exit 2
+          fi
+          for target in \
+            aarch64-apple-darwin \
+            x86_64-apple-darwin \
+            x86_64-unknown-linux-gnu \
+            aarch64-unknown-linux-gnu
+          do
+            archive="prepare-assets/sifr-${VERSION}-${target}.tar.gz"
+            checksum="${archive}.sha256"
+            test -f "${archive}" && test -f "${checksum}" || {
+              echo "::error::prepare artifact set is incomplete"
+              exit 2
+            }
+            test "$(tr -d '[:space:]' <"${checksum}")" = \
+              "$(sha256sum "${archive}" | awk '{print $1}')" || {
+                echo "::error::prepare checksum mismatch for ${archive}"
+                exit 2
+              }
+            scripts/distribution/verify_release_archive.py \
+              "${archive}" \
+              --version "${VERSION}" \
+              --target "${target}"
+          done
+          scripts/distribution/generate_version_installer.sh \
+            --version "${VERSION}" \
+            --artifact-dir prepare-assets \
+            --out "prepare-assets/sifr-installer-${VERSION}"
+          mkdir -p prepare
+          gh release download channels \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern channels.json \
+            --dir prepare
+          mv prepare/channels.json prepare/current-channels.json
+          current_sha256="$(
+            sha256sum prepare/current-channels.json | awk '{print $1}'
+          )"
+          if [[ "${GOVERNANCE_MODE}" == bootstrap-* ]]; then
+            test "${current_sha256}" = "${LEGACY_INDEX_SHA256}" &&
+              test "$(wc -c <prepare/current-channels.json | tr -d '[:space:]')" = "105" || {
+                echo "::error::one-time bootstrap source is not the exact opaque v1 asset"
+                exit 2
+              }
+          else
+            scripts/distribution/release_governance.py validate \
+              --kind release-index \
+              --input prepare/current-channels.json \
+              --require-canonical
+          fi
+          bootstrap_alpha_evidence_sha256=""
+          if [[ "${GOVERNANCE_MODE}" == "bootstrap-index" ]]; then
+            gh release download channels \
+              --repo "${GITHUB_REPOSITORY}" \
+              --pattern "schema-v2-bootstrap-alpha-${BOOTSTRAP_ALPHA_VERSION}.json" \
+              --dir prepare
+            scripts/distribution/release_governance.py validate \
+              --kind schema-bootstrap-evidence \
+              --input "prepare/schema-v2-bootstrap-alpha-${BOOTSTRAP_ALPHA_VERSION}.json" \
+              --require-canonical
+            test "$(
+              jq -r '.stage + ":" + .alpha.version' \
+                "prepare/schema-v2-bootstrap-alpha-${BOOTSTRAP_ALPHA_VERSION}.json"
+            )" = "alpha-assets:${BOOTSTRAP_ALPHA_VERSION}" || {
+              echo "::error::staged alpha evidence identity mismatch"
+              exit 2
+            }
+            bootstrap_alpha_evidence_sha256="$(
+              sha256sum \
+                "prepare/schema-v2-bootstrap-alpha-${BOOTSTRAP_ALPHA_VERSION}.json" |
+                awk '{print $1}'
+            )"
+          fi
+          asset_digests="$(
+            find prepare-assets -mindepth 1 -maxdepth 1 -type f -print0 |
+              LC_ALL=C sort -z |
+              xargs -0 sha256sum |
+              jq -Rn '
+                [inputs | capture("^(?<sha>[0-9a-f]{64})  prepare-assets/(?<name>.+)$")]
+                | map({key:.name, value:.sha})
+                | from_entries
+              '
+          )"
+          jq -cnS \
+            --arg mode "${GOVERNANCE_MODE}" \
+            --arg channel "${CHANNEL}" \
+            --arg version "${VERSION}" \
+            --arg source "${SOURCE_COMMIT}" \
+            --arg alpha "${BOOTSTRAP_ALPHA_VERSION}" \
+            --arg alpha_evidence "${bootstrap_alpha_evidence_sha256}" \
+            --arg current "${current_sha256}" \
+            --argjson assets "${asset_digests}" \
+            '{
+              schema_version: 2,
+              operation: $mode,
+              channel: $channel,
+              version: $version,
+              source_commit: $source,
+              bootstrap_alpha_version: $alpha,
+              bootstrap_alpha_evidence_sha256: $alpha_evidence,
+              current_index_sha256: $current,
+              assets: $assets
+            }' >prepare/summary.json
+          summary_sha256="$(sha256sum prepare/summary.json | awk '{print $1}')"
+          summary_artifact_name="publication-prepare-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "summary_sha256=${summary_sha256}" >>"${GITHUB_OUTPUT}"
+          echo "summary_artifact_name=${summary_artifact_name}" >>"${GITHUB_OUTPUT}"
+          {
+            echo "## Governed publication prepare"
+            echo
+            echo "- operation: \`${GOVERNANCE_MODE}\`"
+            echo "- channel/version: \`${CHANNEL}\` / \`${VERSION}\`"
+            echo "- source commit: \`${SOURCE_COMMIT}\`"
+            echo "- current index SHA-256: \`${current_sha256}\`"
+            echo "- prepare summary SHA-256: \`${summary_sha256}\`"
+            if [[ -n "${BOOTSTRAP_ALPHA_VERSION}" ]]; then
+              echo "- staged alpha: \`${BOOTSTRAP_ALPHA_VERSION}\`"
+            fi
+          } >>"${GITHUB_STEP_SUMMARY}"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ steps.summary.outputs.summary_artifact_name }}
+          path: prepare/summary.json
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: false

@@ -241,6 +241,7 @@ def valid_report() -> dict[str, Any]:
             ("distribution_release", "qualification"),
             ("distribution_release", "evidence-custody"),
             ("distribution_release", "incident-governance"),
+            ("distribution_release", "epoch-bootstrap"),
         ],
     }
     steps = []
@@ -297,6 +298,7 @@ def valid_report() -> dict[str, Any]:
                             "qualification",
                             "evidence-custody",
                             "incident-governance",
+                            "epoch-bootstrap",
                         },
                     ),
                 )

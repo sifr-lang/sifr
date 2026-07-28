@@ -20,6 +20,20 @@ on:
         required: false
         default: main
         type: string
+      governance_mode:
+        description: Ordinary preview publication or one-time protected schema bootstrap stage
+        required: false
+        default: preview
+        type: choice
+        options:
+          - preview
+          - bootstrap-alpha
+          - bootstrap-index
+      bootstrap_alpha_version:
+        description: Fresh protected alpha version required only by bootstrap-index
+        required: false
+        default: ""
+        type: string
 
 permissions:
   actions: read
@@ -37,6 +51,8 @@ jobs:
       base_ref: ${{ steps.validate.outputs.base_ref }}
       source_sha: ${{ steps.validate.outputs.source_sha }}
       site_base_commit: ${{ steps.validate.outputs.site_base_commit }}
+      governance_mode: ${{ steps.validate.outputs.governance_mode }}
+      bootstrap_alpha_version: ${{ steps.validate.outputs.bootstrap_alpha_version }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -52,6 +68,8 @@ jobs:
           INPUT_CHANNEL: ${{ inputs.channel }}
           INPUT_VERSION: ${{ inputs.version }}
           INPUT_BASE_REF: ${{ inputs.base_ref }}
+          GOVERNANCE_MODE: ${{ inputs.governance_mode }}
+          BOOTSTRAP_ALPHA_VERSION: ${{ inputs.bootstrap_alpha_version }}
           SITE_BASE_COMMIT: 07d88cc3c24707e386c5ad73fb0875c06ffd598f
         run: |
           set -euo pipefail
@@ -67,6 +85,38 @@ jobs:
             echo "::error::version ${INPUT_VERSION} belongs to ${BASH_REMATCH[1]}, not ${INPUT_CHANNEL}"
             exit 2
           fi
+          case "${GOVERNANCE_MODE}" in
+            preview)
+              test -z "${BOOTSTRAP_ALPHA_VERSION}" || {
+                echo "::error::ordinary preview publication cannot name a bootstrap alpha"
+                exit 2
+              }
+              ;;
+            bootstrap-alpha)
+              test "${INPUT_CHANNEL}" = "alpha" || {
+                echo "::error::bootstrap-alpha requires an alpha release"
+                exit 2
+              }
+              test -z "${BOOTSTRAP_ALPHA_VERSION}" || {
+                echo "::error::bootstrap-alpha does not accept bootstrap_alpha_version"
+                exit 2
+              }
+              ;;
+            bootstrap-index)
+              test "${INPUT_CHANNEL}" = "beta" || {
+                echo "::error::bootstrap-index requires a beta release"
+                exit 2
+              }
+              [[ "${BOOTSTRAP_ALPHA_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$ ]] || {
+                echo "::error::bootstrap-index requires a fresh alpha version"
+                exit 2
+              }
+              ;;
+            *)
+              echo "::error::unsupported governance_mode"
+              exit 2
+              ;;
+          esac
           if [[ ! "${SITE_BASE_COMMIT}" =~ ^[0-9a-f]{40}$ ]]; then
             echo "::error::preview release must pin an exact merged website commit"
             exit 2
@@ -77,6 +127,8 @@ jobs:
             echo "base_ref=${INPUT_BASE_REF:-main}"
             echo "source_sha=$(git rev-parse HEAD)"
             echo "site_base_commit=${SITE_BASE_COMMIT}"
+            echo "governance_mode=${GOVERNANCE_MODE}"
+            echo "bootstrap_alpha_version=${BOOTSTRAP_ALPHA_VERSION}"
           } >>"${GITHUB_OUTPUT}"
 
   build-artifacts:
@@ -144,5 +196,7 @@ jobs:
       base_ref: ${{ needs.validate.outputs.base_ref }}
       source_commit: ${{ needs.validate.outputs.source_sha }}
       site_base_commit: ${{ needs.validate.outputs.site_base_commit }}
+      governance_mode: ${{ needs.validate.outputs.governance_mode }}
+      bootstrap_alpha_version: ${{ needs.validate.outputs.bootstrap_alpha_version }}
     secrets:
       SIFR_WEBSITE_ACTIONS_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}

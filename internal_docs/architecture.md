@@ -1430,6 +1430,7 @@ cargo test                                    # Run all tests (layers 1-3)
 ./scripts/run_all_tests.sh --profile python-interop-live # Explicit opt-in container-runtime Python interop profile
 uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite full     # Preview installer/artifact/release automation checks
 uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite incident-governance # Offline rollback/roll-forward generation, retention, and recovery
+uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite epoch-bootstrap # One-time opaque schema-v2 preview epoch bootstrap contracts
 ./verification/runner/e2e/check_report_determinism.sh --profile release # Stable e2e report signature across reruns
 uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke
 cargo test --manifest-path third_party/ruff/Cargo.toml -p ruff_python_parser # Parser snapshots
@@ -1447,8 +1448,10 @@ Validation profile policy is defined in `verification/profiles/{create-pr,merge,
 Stable incident recovery is a pure extension of the governed release-index
 state machine. Canonical request and approved plan digests authorize exactly
 one rollback or incident roll-forward generation; all prior releases and
-snapshots remain immutable. The production adapter is deliberately absent
-until protected publication. The offline fixture core owns generation burning,
+snapshots remain immutable. Stable and incident production adapters remain
+deliberately absent until their protected-publication slices; the one-time
+schema-epoch bootstrap adapter is separately fail-closed on the exact opaque
+pre-epoch asset identity and protected approval. The offline fixture core owns generation burning,
 exact resume, site reconciliation, range eligibility, downgrade consent, and
 incident sign-off evidence, as specified in
 `internal_docs/stable_incident_response.md`.

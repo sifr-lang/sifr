@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sifr.sh/schemas/schema-epoch-bootstrap-evidence-v2.json",
+  "title": "Sifr one-time schema epoch bootstrap evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "operation",
+    "stage",
+    "run_id",
+    "run_attempt",
+    "initiator",
+    "approvers",
+    "prepare_summary_sha256",
+    "legacy_index",
+    "alpha"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "operation": {"const": "schema-epoch-bootstrap"},
+    "stage": {"enum": ["alpha-assets", "preview-index"]},
+    "run_id": {"type": "integer", "minimum": 1},
+    "run_attempt": {"type": "integer", "minimum": 1},
+    "initiator": {"type": "string", "minLength": 1},
+    "approvers": {"$ref": "#/$defs/approvers"},
+    "prepare_summary_sha256": {"$ref": "#/$defs/sha256"},
+    "legacy_index": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "size_bytes"],
+      "properties": {
+        "sha256": {"const": "71b3243925670f56dc510b8f45b6614a622f58097a0fea9492f61d20dc4bf9ef"},
+        "size_bytes": {"const": 105}
+      }
+    },
+    "alpha": {"$ref": "#/$defs/alpha"},
+    "alpha_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sha256",
+        "run_id",
+        "run_attempt",
+        "initiator",
+        "approvers",
+        "prepare_summary_sha256"
+      ],
+      "properties": {
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "run_id": {"type": "integer", "minimum": 1},
+        "run_attempt": {"type": "integer", "minimum": 1},
+        "initiator": {"type": "string", "minLength": 1},
+        "approvers": {"$ref": "#/$defs/approvers"},
+        "prepare_summary_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "beta": {"$ref": "#/$defs/beta"},
+    "index": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generation", "sha256"],
+      "properties": {
+        "generation": {"const": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "public_smoke": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "sha256"],
+        "properties": {
+          "id": {
+            "enum": [
+              "dispatcher-default",
+              "dispatcher-stable-rejection",
+              "governance-index",
+              "installed-self-update"
+            ]
+          },
+          "status": {"const": "pass"},
+          "sha256": {"$ref": "#/$defs/sha256"}
+        }
+      },
+      "allOf": [
+        {
+          "contains": {"properties": {"id": {"const": "dispatcher-default"}}},
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {"properties": {"id": {"const": "dispatcher-stable-rejection"}}},
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {"properties": {"id": {"const": "governance-index"}}},
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {"properties": {"id": {"const": "installed-self-update"}}},
+          "minContains": 1,
+          "maxContains": 1
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"stage": {"const": "preview-index"}}},
+      "then": {"required": ["alpha_evidence", "beta", "index", "public_smoke"]},
+      "else": {
+        "allOf": [
+          {"not": {"required": ["alpha_evidence"]}},
+          {"not": {"required": ["beta"]}},
+          {"not": {"required": ["index"]}},
+          {"not": {"required": ["public_smoke"]}}
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}
+    },
+    "approvers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "alpha_assets": {
+      "type": "object",
+      "minProperties": 9,
+      "not": {"minProperties": 10},
+      "propertyNames": {
+        "pattern": "^sifr-(installer-[0-9]+\\.[0-9]+\\.[0-9]+-alpha\\.[0-9]+|[0-9]+\\.[0-9]+\\.[0-9]+-alpha\\.[0-9]+-(aarch64-apple-darwin|x86_64-apple-darwin|x86_64-unknown-linux-gnu|aarch64-unknown-linux-gnu)\\.tar\\.gz(\\.sha256)?)$"
+      },
+      "additionalProperties": {"$ref": "#/$defs/sha256"}
+    },
+    "beta_assets": {
+      "type": "object",
+      "minProperties": 9,
+      "not": {"minProperties": 10},
+      "propertyNames": {
+        "pattern": "^sifr-(installer-[0-9]+\\.[0-9]+\\.[0-9]+-beta\\.[0-9]+|[0-9]+\\.[0-9]+\\.[0-9]+-beta\\.[0-9]+-(aarch64-apple-darwin|x86_64-apple-darwin|x86_64-unknown-linux-gnu|aarch64-unknown-linux-gnu)\\.tar\\.gz(\\.sha256)?)$"
+      },
+      "additionalProperties": {"$ref": "#/$defs/sha256"}
+    },
+    "alpha": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "source_commit", "release_record_sha256", "published_assets"],
+      "properties": {
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+-alpha\\.[0-9]+$"},
+        "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "release_record_sha256": {"$ref": "#/$defs/sha256"},
+        "published_assets": {"$ref": "#/$defs/alpha_assets"}
+      }
+    },
+    "beta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "source_commit", "release_record_sha256", "published_assets"],
+      "properties": {
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+-beta\\.[0-9]+$"},
+        "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "release_record_sha256": {"$ref": "#/$defs/sha256"},
+        "published_assets": {"$ref": "#/$defs/beta_assets"}
+      }
+    }
+  }
+}
