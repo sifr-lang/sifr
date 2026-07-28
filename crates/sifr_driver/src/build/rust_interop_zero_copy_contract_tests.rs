@@ -206,6 +206,26 @@ fn package_rust_interop_rejects_view_nested_in_list_return() {
 }
 
 #[test]
+fn package_rust_interop_preserves_unsupported_return_diagnostic() {
+    let mut generated = generated_from_source(VALID_ZERO_COPY_SOURCE);
+    let return_type = &mut generated.interop.rust.bridge_contracts.signatures[0].return_type;
+    return_type.rust_return_type = None;
+    return_type.unsupported_reason = Some("error type is not bridge-compatible".to_string());
+    let mut context = context_with_source(VALID_ZERO_COPY_SOURCE);
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    let diagnostics = interop_errors(generated, Some(context), "unsupported return must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-TYPE-0001");
+    assert!(diagnostics[0]
+        .message
+        .contains("unsupported Rust bridge type"));
+    assert!(!diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.code == "SIFR-RUST-ZC-0001"));
+}
+
+#[test]
 fn package_rust_interop_rejects_unknown_view_owner() {
     let source = VALID_ZERO_COPY_SOURCE
         .replace(

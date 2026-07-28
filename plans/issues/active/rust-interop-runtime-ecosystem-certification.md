@@ -832,6 +832,13 @@ Focused implementation evidence:
   and the catalog, reinterprets a mutated sealed mmap through bytemuck and
   zerocopy, expands scenario mutations, and decomposes scenario/probe tests so
   all maintained files remain below the 900-line cap.
+- [Opus review round 2](../../reviews/active/rust-interop-certification-7-review-round-2.md)
+  confirmed every round-1 finding closed and all focused gates green, then
+  found one diagnostic-ordering regression and two robustness gaps. The
+  follow-up preserves the bridge-type diagnostic for propagated unsupported
+  Result slots, asserts the actual Send/Sync probe invocations, and moves
+  callback/resource token inventories into their scenario-owned modules to
+  restore durable file-size headroom.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

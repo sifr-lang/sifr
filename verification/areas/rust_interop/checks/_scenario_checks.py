@@ -13,10 +13,12 @@ from _scenario_async_reqwest import (
     validate_async_reqwest_scenario,
 )
 from _scenario_callback_subscriptions import (
+    CALLBACK_SUBSCRIPTION_SCENARIO_TOKENS,
     run_callback_subscription_self_test,
     validate_callback_subscription_scenario,
 )
 from _scenario_opaque_resources import (
+    OPAQUE_RESOURCE_SCENARIO_TOKENS,
     run_opaque_resource_self_test,
     validate_opaque_resource_scenario,
 )
@@ -73,22 +75,7 @@ REQUIRED_SCENARIO_EXAMPLES = {
     },
     "callback_subscription_ecosystem": {
         "subscription_lifecycle_runtime": {
-            "tokens": (
-                "ThreadsafeCallbackBridge",
-                "backpressure=bounded(2)",
-                "CallbackQueue::from_policy(callback.policy())",
-                "policy.backpressure",
-                "CallbackOverflow::Error",
-                "CallbackShutdown::Drain",
-                "WebSocketStream::from_raw_socket",
-                ".get_async_pubsub()",
-                "notify::recommended_watcher",
-                "std::thread::current().id() != owner_thread",
-                "OPERATION_TIMEOUT",
-                "impl Drop for Subscription",
-                "Rust bridge panicked",
-                "active=0;temp-removed=true",
-            ),
+            "tokens": CALLBACK_SUBSCRIPTION_SCENARIO_TOKENS,
         },
     },
     "cargo_locked_offline": {
@@ -103,30 +90,7 @@ REQUIRED_SCENARIO_EXAMPLES = {
     },
     "opaque_resource_matrix": {
         "resource_lifecycle_runtime": {
-            "tokens": (
-                "resource_contract",
-                "reqwest::Client",
-                ".no_proxy()",
-                "Connection::open",
-                "redis::Client",
-                "tokio_postgres::Config",
-                'TcpListener::bind(("127.0.0.1", 0))',
-                "OPERATION_TIMEOUT",
-                "ACTIVE_TASKS.load(Ordering::SeqCst) != 0",
-                "bridge.resources.aclose",
-                "bridge.resources.close_observation",
-                "bridge.resources.invalid_aliasing",
-                "close=async_close,\n    borrow=exclusive",
-                "impl Drop for TemporaryDatabase",
-                "impl Drop for TrackedTask",
-                "let activity = TaskActivity::new();",
-                ".set_skip_set_lib_name()",
-                "serve_redis_malformed",
-                "PostgreSQL early-close shutdown",
-                "catch_unwind_silently",
-                "PoisonOnPanic::new(",
-                "Rust bridge panicked",
-            ),
+            "tokens": OPAQUE_RESOURCE_SCENARIO_TOKENS,
         },
     },
     "panic_abort_profile": {

@@ -171,11 +171,11 @@ impl RustInteropResolver<'_> {
         let Some(signature) = self.signature_contracts.get(&key).cloned() else {
             return;
         };
-        if let Some(zero_copy) = zero_copy {
-            self.validate_view_return(&signature, declarations, &zero_copy.view);
-        }
         if signature_has_unsupported_type(&signature) {
             return;
+        }
+        if let Some(zero_copy) = zero_copy {
+            self.validate_view_return(&signature, declarations, &zero_copy.view);
         }
         self.validate_view_owner(&signature, declarations, &view);
     }
@@ -345,10 +345,11 @@ fn view_mutability(value: &RustInteropValue) -> Result<ViewMutability, &'static 
 
 fn signature_has_unsupported_type(signature: &RustBridgeSignatureContract) -> bool {
     signature.return_type.kind == sifr_codegen::RustBridgeTypeKind::Unsupported
-        || signature
-            .params
-            .iter()
-            .any(|param| param.ty.kind == sifr_codegen::RustBridgeTypeKind::Unsupported)
+        || signature.return_type.unsupported_reason.is_some()
+        || signature.params.iter().any(|param| {
+            param.ty.kind == sifr_codegen::RustBridgeTypeKind::Unsupported
+                || param.ty.unsupported_reason.is_some()
+        })
 }
 
 fn returned_ok_type(signature: &RustBridgeSignatureContract) -> Option<&str> {
