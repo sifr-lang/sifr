@@ -11,7 +11,8 @@ use crate::rust_interop_plan::{RustInteropOwner, RustInteropPlanDeclaration};
 use generated_types::{
     absolute_runtime_target, bridge_type_definition_module, class_bridge_declaration_name,
     class_bridge_definition_module, generated_bridge_type_path, generated_class_bridge_type_path,
-    opaque_rust_type_path, opaque_type_definition, GeneratedTypeCollector,
+    is_generated_bridge_type_path, opaque_rust_type_path, opaque_type_definition,
+    GeneratedTypeCollector,
 };
 use sifr_ir::HirModule;
 use sifr_type_system::{ParamConvention, ParamOwnership, Type};
@@ -851,6 +852,11 @@ pub fn rust_opaque_handle_type(target: &str) -> String {
         "::sifr_runtime::interop::Handle<{}>",
         absolute_runtime_target(target)
     )
+}
+
+#[must_use]
+pub fn is_rust_generated_bridge_type_path(rust_type_path: &str) -> bool {
+    is_generated_bridge_type_path(rust_type_path)
 }
 
 pub(crate) fn unsupported_type(ty: &Type, reason: &str) -> RustBridgeTypeContract {

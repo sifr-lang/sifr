@@ -233,7 +233,8 @@ impl RustInteropResolver<'_> {
             return;
         };
         let expected = sifr_codegen::rust_opaque_handle_type(&view_type.dotted());
-        if return_type != expected && !is_generated_record_view_type(return_type) {
+        if return_type != expected && !sifr_codegen::is_rust_generated_bridge_type_path(return_type)
+        {
             self.push_zero_copy_diagnostic(
                 zero_copy_declaration,
                 "`view=` must name the Rust type carried by the function return value",
@@ -369,29 +370,4 @@ fn returned_ok_type(signature: &RustBridgeSignatureContract) -> Option<&str> {
         }
     }
     None
-}
-
-fn is_generated_record_view_type(return_type: &str) -> bool {
-    let Some(path) = return_type.strip_prefix("crate::__sifr_bridge::") else {
-        return false;
-    };
-    let mut segments = path.split("::");
-    let Some(first) = segments.next() else {
-        return false;
-    };
-    let second = segments.next();
-    if segments.next().is_some() {
-        return false;
-    }
-    let (module, type_name) = second.map_or((None, first), |type_name| (Some(first), type_name));
-    module.is_none_or(is_rust_identifier)
-        && type_name.ends_with("Bridge")
-        && is_rust_identifier(type_name)
-}
-
-fn is_rust_identifier(value: &str) -> bool {
-    !value.is_empty()
-        && value
-            .chars()
-            .all(|ch| ch.is_ascii_alphanumeric() || ch == '_')
 }

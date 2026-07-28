@@ -3,11 +3,18 @@
 # evidence-status: passing
 # execution-kind: contract-only
 # expected-result: pass
+class BytesViewError(Error):
+    message: str
+
+@rust.opaque(type=bridge.bytes.BytesView, send=True, sync=True, clone=none, close=drop)
+class BytesView:
+    ptr: int
+
 @rust.zero_copy(owner=input, view=bridge.bytes.BytesView)
 @rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True)
-@rust(bridge.bytes.borrowed_view, panic=trusted_no_panic)
-def borrowed_view(input: bytes) -> bytes: ...
+@rust(bridge.bytes.borrowed_view, panic=map_error(bridge.bytes.map_panic))
+def borrowed_view(input: bytes) -> Result[BytesView, BytesViewError | RustPanicError]: ...
 
-def verify_borrowed_bytes_view() -> bytes:
-    borrowed_view_result: bytes = borrowed_view(b"sifr-rust-interop")
+def verify_borrowed_bytes_view() -> Result[BytesView, BytesViewError | RustPanicError]:
+    borrowed_view_result: Result[BytesView, BytesViewError | RustPanicError] = borrowed_view(b"sifr-rust-interop")
     return borrowed_view_result

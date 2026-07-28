@@ -14,6 +14,12 @@ use sifr_package::TrustPolicy;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+const ZERO_COPY_BYTES_FIXTURE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/zero_copy_bytes/positive/borrowed_bytes_view.sifr"
+);
+const ZERO_COPY_VIEW_MATRIX_FIXTURE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/zero_copy_view_matrix/positive/owner_lifetime_views.sifr"
+);
 const VALID_ZERO_COPY_SOURCE: &str = r#"
 class RustError(Error):
     message: str
@@ -31,8 +37,8 @@ def hash(input: bytes) -> Result[BytesView, RustError | RustPanicError]:
 
 #[test]
 fn package_rust_interop_zero_copy_accepts_borrowed_bytes_view_contract() {
-    let mut generated = generated_from_source(VALID_ZERO_COPY_SOURCE);
-    let mut context = context_with_source(VALID_ZERO_COPY_SOURCE);
+    let mut generated = generated_from_fixture_source(ZERO_COPY_BYTES_FIXTURE);
+    let mut context = context_with_source(ZERO_COPY_BYTES_FIXTURE);
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
     generated = apply_package_rust_interop_metadata(generated, Some(context))
@@ -46,8 +52,8 @@ fn package_rust_interop_zero_copy_accepts_borrowed_bytes_view_contract() {
         .iter()
         .find(|probe| probe.kind == sifr_codegen::RustBridgeProbeKind::View)
         .expect("view probe");
-    assert!(!view_probe.requires_send);
-    assert!(!view_probe.requires_sync);
+    assert!(view_probe.requires_send);
+    assert!(view_probe.requires_sync);
     let zero_copy_probe = generated
         .interop
         .rust
@@ -56,15 +62,14 @@ fn package_rust_interop_zero_copy_accepts_borrowed_bytes_view_contract() {
         .iter()
         .find(|probe| probe.kind == sifr_codegen::RustBridgeProbeKind::ZeroCopy)
         .expect("zero-copy probe");
-    assert!(!zero_copy_probe.requires_send);
-    assert!(!zero_copy_probe.requires_sync);
+    assert!(zero_copy_probe.requires_send);
+    assert!(zero_copy_probe.requires_sync);
 }
 
 #[test]
 fn package_rust_interop_view_send_sync_metadata_reaches_probe_plan() {
-    let source = VALID_ZERO_COPY_SOURCE.replace("send=False, sync=False", "send=True, sync=True");
-    let mut generated = generated_from_source(&source);
-    let mut context = context_with_source(&source);
+    let mut generated = generated_from_fixture_source(ZERO_COPY_VIEW_MATRIX_FIXTURE);
+    let mut context = context_with_source(ZERO_COPY_VIEW_MATRIX_FIXTURE);
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
     generated = apply_package_rust_interop_metadata(generated, Some(context))
@@ -326,12 +331,17 @@ fn package_rust_interop_rejects_async_owner_lifetime_view() {
 }
 
 fn generated_from_source(source: &str) -> GeneratedBinaryProject {
+    let mut generated = generated_from_fixture_source(source);
+    generated.interop.rust.bridge_contracts.signatures = vec![hash_signature_contract()];
+    generated
+}
+
+fn generated_from_fixture_source(source: &str) -> GeneratedBinaryProject {
     let parsed = sifr_syntax::parse_module(source, Some("app")).expect("source should parse");
     let module = sifr_lowering::lower_module(parsed.suite())
         .map(|result| result.module)
         .expect("source should lower");
     let mut result = generate_rust_multi_with_metadata(&[("app", &module)], &StdlibCode::default());
-    result.interop.rust.bridge_contracts.signatures = vec![hash_signature_contract()];
     let main_rs = result.rust_files.remove("app").unwrap_or_default();
     GeneratedBinaryProject {
         main_rs,

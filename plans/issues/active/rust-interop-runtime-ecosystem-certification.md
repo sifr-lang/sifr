@@ -848,6 +848,14 @@ Focused implementation evidence:
   preserving generated-record metadata validation, reuses codegen's canonical
   handle renderer, adds a generated-record regression, and uses the
   Clippy-approved diagnostic note branch.
+- [Opus review round 4](../../reviews/active/rust-interop-certification-7-review-round-4.md)
+  reproduced the full driver and area gates and confirmed all earlier findings
+  closed, then found two supported positive fixture sources still returned
+  `bytes` instead of their declared opaque views and that the driver locally
+  parsed codegen's generated bridge paths. The follow-up makes the manifest-
+  bound tests lower and validate those exact checked-in fixtures, gives both
+  fixtures opaque handle returns, and moves canonical/legacy generated-path
+  recognition and its malformed-path regressions into codegen.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

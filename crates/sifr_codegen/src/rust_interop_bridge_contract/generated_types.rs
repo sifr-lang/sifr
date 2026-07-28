@@ -171,6 +171,32 @@ pub(super) fn generated_bridge_type_path(module_name: Option<&String>, name: &st
     format!("crate::__sifr_bridge::{module}::{name}Bridge")
 }
 
+pub(super) fn is_generated_bridge_type_path(rust_type_path: &str) -> bool {
+    let Some(path) = rust_type_path.strip_prefix("crate::__sifr_bridge::") else {
+        return false;
+    };
+    let mut segments = path.split("::");
+    let Some(first) = segments.next() else {
+        return false;
+    };
+    let second = segments.next();
+    if segments.next().is_some() {
+        return false;
+    }
+    let (module, type_name) = second.map_or((None, first), |type_name| (Some(first), type_name));
+    module.is_none_or(is_rust_identifier)
+        && type_name.ends_with("Bridge")
+        && is_rust_identifier(type_name)
+}
+
+fn is_rust_identifier(value: &str) -> bool {
+    let mut chars = value.chars();
+    chars
+        .next()
+        .is_some_and(|ch| ch.is_ascii_alphabetic() || ch == '_')
+        && chars.all(|ch| ch.is_ascii_alphanumeric() || ch == '_')
+}
+
 pub(super) fn generated_class_bridge_type_path(
     module_name: Option<&String>,
     class_type: &Type,
@@ -330,4 +356,28 @@ fn enum_discriminant_reason(name: &str, variant: &str, value: i64) -> String {
     format!(
         "enum `{name}.{variant}` discriminant {value} is outside the Rust bridge repr(u32) range"
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_generated_bridge_type_path;
+
+    #[test]
+    fn generated_bridge_type_paths_accept_only_owned_canonical_forms() {
+        assert!(is_generated_bridge_type_path(
+            "crate::__sifr_bridge::main::BytesViewBridge"
+        ));
+        assert!(is_generated_bridge_type_path(
+            "crate::__sifr_bridge::BytesViewBridge"
+        ));
+        assert!(!is_generated_bridge_type_path(
+            "Vec<crate::__sifr_bridge::main::BytesViewBridge>"
+        ));
+        assert!(!is_generated_bridge_type_path(
+            "crate::__sifr_bridge::main::BytesViewBridgeAlias"
+        ));
+        assert!(!is_generated_bridge_type_path(
+            "crate::__sifr_bridge::3main::BytesViewBridge"
+        ));
+    }
 }
