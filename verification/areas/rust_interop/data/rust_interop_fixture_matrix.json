@@ -274,9 +274,10 @@
       "tier": 2,
       "capability": "crate-backed zero-copy view lifecycle",
       "required_crates": ["bytes", "memmap2", "bytemuck", "zerocopy"],
+      "features": {"zerocopy": {"features": ["derive"]}},
       "execution_kind": "runtime-observed",
-      "positive_evidence": {"id": "crate_backed_view_lifecycle", "status": "planned"},
-      "negative_evidence": {"id": "borrow_escape_and_invalid_mutability_rejected", "status": "planned"}
+      "positive_evidence": {"id": "crate_backed_view_lifecycle", "status": "passing"},
+      "negative_evidence": {"id": "borrow_escape_and_invalid_mutability_rejected", "status": "passing"}
     },
     {
       "id": "arrow_record_batch",

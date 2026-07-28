@@ -780,6 +780,45 @@ Focused implementation evidence:
   head, the authoritative create-PR report, all mandatory and focused
   evidence, and the complete inventory, and reported `SATISFIED`.
 
+#### certification_7: Crate-Backed Zero-Copy Runtime
+
+Implementation checklist:
+
+- [x] Bind `@rust.zero_copy(view=...)` to the Rust type carried by the
+  function return and reject annotation/return mismatches with
+  `SIFR-RUST-ZC-0001`.
+- [x] Carry the paired `@rust.view(...)` Send/Sync obligations onto the direct
+  zero-copy type probe, treat `view=` as a type rather than a value, and map
+  failed obligations to the zero-copy diagnostic family.
+- [x] Add a locked/offline `crate_backed_view_runtime` generated package using
+  exact root-lock versions of `bytes`, `memmap2`, `bytemuck`, and `zerocopy`
+  with only safe Rust.
+- [x] Observe moved-allocation identity and retained owner lifetime for
+  `bytes::Bytes`, exclusive mutation followed by read-only sealing for
+  `memmap2`, pointer-identical `bytemuck` and `zerocopy` views, and consuming
+  release with exactly one drop and zero active views.
+- [x] Reject mutable views from shared owners, returned call-lifetime escape,
+  and owner-lifetime async suspension before Cargo; independently mutate the
+  package view to non-Send/non-Sync and require the direct probe to reject it.
+- [x] Bind both evidence directions to distinct mandatory generated-build
+  tests, promote only `zero_copy_runtime_matrix`, and update structured
+  claims, public/internal docs, provenance, counts, and validator self-tests.
+- [ ] Run focused and authoritative local gates, Opus review rounds to
+  satisfaction, merge the PR, and unblock only `certification_8`.
+
+Post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 60 passing and 12 planned evidence directions;
+- categories: 18 `supported`, 11 `supported-through-bridge`, 1
+  `unsupported-by-design`, and 6 `future-owned-by-separate-phase`;
+- execution kinds remain 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+- 60 package examples and 17 scenario examples; and
+- 30 structured stable claims.
+
 ### certification_9 through certification_13: Cargo and Ecosystem
 
 Implement the rows in numeric order as separate PRs. `certification_11` must

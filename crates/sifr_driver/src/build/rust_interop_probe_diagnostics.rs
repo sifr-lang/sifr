@@ -7,6 +7,7 @@ use super::rust_interop_probe::{
     ProbeExecutionFailure,
 };
 use sifr_diagnostics::DiagnosticCode;
+use sifr_ir::RustInteropDecoratorKind;
 
 pub(super) fn classify_probe_failure(
     probe: &PendingRustBridgeProbe,
@@ -53,6 +54,18 @@ pub(super) fn classify_probe_failure(
                 ),
             ],
         )
+    } else if probe.declaration.declaration.kind == RustInteropDecoratorKind::ZeroCopy
+        && stderr_reports_unsatisfied_view_obligation(stderr)
+    {
+        (
+            DiagnosticCode::RUST_ZERO_COPY_CONTRACT,
+            "invalid Rust zero-copy/view contract: {reason}",
+            vec![(
+                "reason",
+                "the declared Rust view type does not satisfy its Send/Sync obligations"
+                    .to_string(),
+            )],
+        )
     } else {
         (
             DiagnosticCode::RUST_TYPE_PROBE_FAILURE,
@@ -66,6 +79,14 @@ pub(super) fn classify_probe_failure(
         args,
         notes: vec![format!("rustc stderr: {}", stderr.trim())],
     }
+}
+
+fn stderr_reports_unsatisfied_view_obligation(stderr: &str) -> bool {
+    (stderr.contains("cannot be sent between threads safely")
+        || stderr.contains("cannot be shared between threads safely")
+        || stderr.contains("the trait `Send` is not implemented")
+        || stderr.contains("the trait `Sync` is not implemented"))
+        && stderr.contains("__SifrView")
 }
 
 pub(super) fn stderr_reports_non_send_future(stderr: &str) -> bool {

@@ -334,15 +334,15 @@
     {
       "id": "zero_copy_runtime_matrix",
       "fixture": "zero_copy_runtime_matrix",
-      "category": "future-owned-by-separate-phase",
-      "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
+      "category": "supported-through-bridge",
       "tier": 2,
       "capability": "crate-backed zero-copy view lifecycle",
       "execution_kind": "runtime-observed",
       "required_crates": ["bytes", "memmap2", "bytemuck", "zerocopy"],
-      "positive_evidence": {"id": "crate_backed_view_lifecycle", "status": "planned"},
-      "negative_evidence": {"id": "borrow_escape_and_invalid_mutability_rejected", "status": "planned"},
-      "notes": "Crate-backed alias preservation, owner lifetime, mutation exclusivity, release, thread obligations, and suspension rejection remain future-owned pending runtime evidence."
+      "features": {"zerocopy": {"features": ["derive"]}},
+      "positive_evidence": {"id": "crate_backed_view_lifecycle", "status": "passing"},
+      "negative_evidence": {"id": "borrow_escape_and_invalid_mutability_rejected", "status": "passing"},
+      "notes": "Generated package evidence moves a Sifr byte owner into bytes::Bytes without allocation change, retains aliases through owner release, seals memmap2 mutation before publication, observes pointer-identical bytemuck and zerocopy views, enforces Send/Sync and async-suspension obligations, and records deterministic release."
     },
     {
       "id": "arrow_record_batch",

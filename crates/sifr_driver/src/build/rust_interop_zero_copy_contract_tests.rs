@@ -18,6 +18,7 @@ const VALID_ZERO_COPY_SOURCE: &str = r#"
 class RustError(Error):
     message: str
 
+@rust.opaque(type=bridge.bytes.BytesView, send=False, sync=False, clone=none, close=drop)
 class BytesView:
     ptr: int
 
@@ -47,6 +48,16 @@ fn package_rust_interop_zero_copy_accepts_borrowed_bytes_view_contract() {
         .expect("view probe");
     assert!(!view_probe.requires_send);
     assert!(!view_probe.requires_sync);
+    let zero_copy_probe = generated
+        .interop
+        .rust
+        .probe_plan
+        .probes
+        .iter()
+        .find(|probe| probe.kind == sifr_codegen::RustBridgeProbeKind::ZeroCopy)
+        .expect("zero-copy probe");
+    assert!(!zero_copy_probe.requires_send);
+    assert!(!zero_copy_probe.requires_sync);
 }
 
 #[test]
@@ -69,6 +80,16 @@ fn package_rust_interop_view_send_sync_metadata_reaches_probe_plan() {
         .expect("view probe");
     assert!(view_probe.requires_send);
     assert!(view_probe.requires_sync);
+    let zero_copy_probe = generated
+        .interop
+        .rust
+        .probe_plan
+        .probes
+        .iter()
+        .find(|probe| probe.kind == sifr_codegen::RustBridgeProbeKind::ZeroCopy)
+        .expect("zero-copy probe");
+    assert!(zero_copy_probe.requires_send);
+    assert!(zero_copy_probe.requires_sync);
 }
 
 #[test]
@@ -140,6 +161,20 @@ fn package_rust_interop_rejects_zero_copy_and_view_owner_mismatch() {
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-ZC-0001");
     assert!(diagnostics[0].message.contains("same owner"));
+}
+
+#[test]
+fn package_rust_interop_rejects_view_type_return_mismatch() {
+    let source = VALID_ZERO_COPY_SOURCE
+        .replace("view=bridge.bytes.BytesView", "view=bridge.bytes.OtherView");
+    let generated = generated_from_source(&source);
+    let mut context = context_with_source(&source);
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    let diagnostics = interop_errors(generated, Some(context), "view return mismatch must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-ZC-0001");
+    assert!(diagnostics[0].message.contains("function return value"));
 }
 
 #[test]
@@ -284,10 +319,16 @@ fn bytes_contract() -> RustBridgeTypeContract {
 fn view_type_contract() -> RustBridgeTypeContract {
     RustBridgeTypeContract {
         sifr_type: "BytesView".to_string(),
-        rust_borrowed_type: Some("crate::__sifr_bridge::BytesViewBridge".to_string()),
-        rust_owned_type: Some("crate::__sifr_bridge::BytesViewBridge".to_string()),
-        rust_return_type: Some("crate::__sifr_bridge::BytesViewBridge".to_string()),
-        kind: RustBridgeTypeKind::GeneratedRecord,
+        rust_borrowed_type: Some(
+            "&::sifr_runtime::interop::Handle<bridge::bytes::BytesView>".to_string(),
+        ),
+        rust_owned_type: Some(
+            "::sifr_runtime::interop::Handle<bridge::bytes::BytesView>".to_string(),
+        ),
+        rust_return_type: Some(
+            "::sifr_runtime::interop::Handle<bridge::bytes::BytesView>".to_string(),
+        ),
+        kind: RustBridgeTypeKind::OpaqueHandle,
         unsupported_reason: None,
     }
 }

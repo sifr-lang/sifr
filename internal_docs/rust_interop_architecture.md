@@ -894,13 +894,27 @@ Rules:
 - fallible downgrade to copying must be a different API name and declaration,
 - views crossing async suspension points must satisfy the same lifetime and pinning requirements as native Sifr borrows.
 
-The initial compile-time zero-copy contract surface enforces explicit `owner=` and `view=` on `@rust.zero_copy(...)`, explicit `owner=`, `lifetime=`, `mutability=`, `send=`, and `sync=` on `@rust.view(...)`, paired view contracts for zero-copy borrowed returns, returned-view rejection for `lifetime=call`, mutable-view rejection for non-exclusive owners, copy-fallback rejection, async borrowed-view suspension rejection, and view Send/Sync probe metadata. View probes now derive Send/Sync obligations from the explicit `@rust.view(...)` contract rather than implicit ABI flags, so contract authors must declare the thread behavior that generated probes certify. Runtime-observed generated wrapper behavior and crate-backed certification for `bytes`, `memmap2`, `bytemuck`, and `zerocopy` are future-owned by [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md).
+The zero-copy contract surface enforces explicit `owner=` and `view=` on
+`@rust.zero_copy(...)`, explicit `owner=`, `lifetime=`, `mutability=`, `send=`,
+and `sync=` on `@rust.view(...)`, paired declarations, and identity between
+the declared `view=` target and the Rust type carried by the function return.
+Returned `lifetime=call` views, mutable views from non-exclusive owners, copy
+fallbacks, and owner-lifetime views crossing async suspension are rejected.
+The paired view contract's `Send` and `Sync` obligations are carried onto the
+zero-copy type probe, which treats `view=` as a Rust type and asks rustc to
+prove those bounds.
 
-That deferral is modeled independently as `zero_copy_runtime_matrix`, a
-tier-2 `runtime-observed` compatibility row with both evidence directions
-planned. This preserves the narrower contract-only claims in
-`zero_copy_bytes` and `zero_copy_view_matrix`; neither row may be used as
-crate-backed runtime evidence.
+`zero_copy_runtime_matrix` is the tier-2 runtime-observed crate-backed claim.
+Its generated package moves an owned Sifr buffer into `bytes::Bytes` without
+allocation change, retains a slice after the original Rust owner binding is
+dropped, mutates and then seals an anonymous `memmap2` allocation without
+address change, and observes pointer-identical `bytemuck` and `zerocopy`
+views. The handle is consumed on close and its drop counters require exactly
+one release and zero active views. The mandatory negative package binds shared
+mutation, call-lifetime escape, and async suspension diagnostics to
+`SIFR-RUST-ZC-0001`; a bridge mutation independently proves non-`Send` and
+non-`Sync` view types fail the direct probe. The narrower `zero_copy_bytes`
+and `zero_copy_view_matrix` rows remain contract-only.
 
 Data-oriented bridges must support explicit contracts for:
 
@@ -1222,7 +1236,7 @@ verification/areas/rust_interop/
     callback_subscription_ecosystem/ # tokio-tungstenite, redis pub/sub, notify
     zero_copy_bytes/
     zero_copy_view_matrix/        # memmap2, bytemuck, zerocopy
-    zero_copy_runtime_matrix/     # future crate-backed runtime lifecycle
+    zero_copy_runtime_matrix/     # bytes, memmap2, bytemuck, zerocopy runtime lifecycle
     arrow_record_batch/
     tensor_dlpack_bridge/         # contract-only DLPack ownership handoff
     advanced_data_matrix/         # datafusion, polars, ndarray, candle

@@ -1,12 +1,40 @@
 # fixture: zero_copy_runtime_matrix
 # evidence: negative/borrow_escape_and_invalid_mutability_rejected
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: runtime-observed
-# expected-result: future-owned-diagnostic
+# expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-ZC-0001
-@rust(bridge.zero_copy.invalid_mutable_escape, panic=trusted_no_panic)
-def invalid_mutable_escape(data: bytes) -> bytes: ...
 
-def verify_borrow_escape_and_invalid_mutability_rejected() -> bytes:
-    escaped_view: bytes = invalid_mutable_escape(b"sifr")
-    return escaped_view
+class ViewError(Error):
+    message: str
+
+@rust.opaque(type=bridge.zero_copy.CrateBackedView, send=False, sync=False, clone=none, close=drop)
+class CrateBackedView:
+    marker: int
+
+@rust.zero_copy(owner=data, view=bridge.zero_copy.CrateBackedView)
+@rust.view(owner=data, lifetime=owner, mutability=mutable, send=False, sync=False)
+@rust(bridge.zero_copy.invalid_mutability, panic=trusted_no_panic)
+def invalid_mutability(data: bytes) -> Result[CrateBackedView, ViewError]: ...
+
+@rust.zero_copy(owner=data, view=bridge.zero_copy.CrateBackedView)
+@rust.view(owner=data, lifetime=call, mutability=immutable, send=False, sync=False)
+@rust(bridge.zero_copy.borrow_escape, panic=trusted_no_panic)
+def borrow_escape(data: bytes) -> Result[CrateBackedView, ViewError]: ...
+
+@rust.async(thread_affinity=tokio_current_thread)
+@rust.zero_copy(owner=data, view=bridge.zero_copy.CrateBackedView)
+@rust.view(owner=data, lifetime=owner, mutability=immutable, send=False, sync=False)
+@rust(bridge.zero_copy.async_owner_view, panic=trusted_no_panic)
+async def async_owner_view(data: bytes) -> Result[CrateBackedView, ViewError]:
+    await task.sleep(0.0)
+    raise ViewError("declaration only")
+
+async def verify_borrow_escape_and_invalid_mutability_rejected() -> Result[None, ViewError]:
+    try:
+        _mutable: CrateBackedView = invalid_mutability(b"mutable")
+        _escaped: CrateBackedView = borrow_escape(b"escape")
+        _suspended: CrateBackedView = await async_owner_view(b"suspend")
+    except ViewError as error:
+        raise error
+    return None

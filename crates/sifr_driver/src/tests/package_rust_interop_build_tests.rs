@@ -2,6 +2,8 @@ use super::*;
 
 #[path = "package_rust_interop_callback_subscription_support.rs"]
 mod callback_subscription_support;
+#[path = "package_rust_interop_zero_copy_support.rs"]
+mod zero_copy_support;
 
 const SAME_WORKSPACE_EVIDENCE: &str = include_str!(
     "../../../../verification/areas/rust_interop/fixtures/same_workspace_crate/positive/declared_path_dependency_resolves.sifr"

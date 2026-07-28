@@ -118,6 +118,7 @@ struct RustInteropResolver<'a> {
     pending_direct_probes: Vec<PendingRustBridgeProbe>,
     signature_contracts: HashMap<String, RustBridgeSignatureContract>,
     opaque_contracts: HashMap<String, OpaqueContract>,
+    zero_copy_probe_obligations: HashMap<String, (bool, bool)>,
     async_contracts: HashMap<String, AsyncThreadAffinity>,
     async_runtime_policy_violations:
         HashMap<SifrPackageId, Vec<super::rust_interop_bridge_audit::AsyncRuntimeBridgeViolation>>,
@@ -136,6 +137,7 @@ impl<'a> RustInteropResolver<'a> {
             pending_direct_probes: Vec::new(),
             signature_contracts: HashMap::new(),
             opaque_contracts: HashMap::new(),
+            zero_copy_probe_obligations: HashMap::new(),
             async_contracts: HashMap::new(),
             async_runtime_policy_violations: HashMap::new(),
         }
@@ -434,6 +436,11 @@ impl<'a> RustInteropResolver<'a> {
                     source_prefix: None,
                     signature,
                     async_thread_affinity,
+                    zero_copy_obligations: self
+                        .zero_copy_probe_obligations
+                        .get(&canonical_target_path)
+                        .copied()
+                        .unwrap_or((false, false)),
                     sysroot_runtime_crate,
                     sysroot_vendor_dir: sysroot_trust
                         .as_ref()
@@ -712,8 +719,11 @@ impl<'a> RustInteropResolver<'a> {
         };
         let (mut requires_send, requires_sync) =
             opaque_probe_obligations(declaration, &self.opaque_contracts);
-        let (view_requires_send, view_requires_sync) =
-            zero_copy_validation::view_probe_obligations(declaration);
+        let (view_requires_send, view_requires_sync) = self
+            .zero_copy_probe_obligations
+            .get(&canonical_sifr_target_path(declaration))
+            .copied()
+            .unwrap_or((false, false));
         requires_send |= view_requires_send;
         let requires_sync = requires_sync || view_requires_sync;
         if requires_send
