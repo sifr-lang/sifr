@@ -239,6 +239,7 @@ def valid_report() -> dict[str, Any]:
             ("distribution_release", "protected-drill"),
             ("distribution_release", "stable-prepare"),
             ("distribution_release", "stable-publish-primitives"),
+            ("distribution_release", "stable-publication"),
         ],
     }
     steps = []
@@ -299,6 +300,7 @@ def valid_report() -> dict[str, Any]:
                             "protected-drill",
                             "stable-prepare",
                             "stable-publish-primitives",
+                            "stable-publication",
                         },
                     ),
                 )
@@ -566,6 +568,12 @@ def test_signoff_mutations() -> None:
             "vsix_sha256": SHA_B,
         },
         "channel_generation": 8,
+        "site_publication": {
+            "repository": "sifr-lang/sifr-website",
+            "workflow": "release-site.yml",
+            "run_id": 11,
+            "deployed_commit": COMMIT,
+        },
         "site_facts_sha256": SHA_C,
         "post_publication_smoke": [
             {"id": f"smoke-{index}", "status": "pass", "sha256": SHA_D}

@@ -12,6 +12,7 @@
     "published_assets",
     "marketplace",
     "channel_generation",
+    "site_publication",
     "site_facts_sha256",
     "post_publication_smoke"
   ],
@@ -41,6 +42,17 @@
       }
     },
     "channel_generation": {"type": "integer", "minimum": 1},
+    "site_publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "workflow", "run_id", "deployed_commit"],
+      "properties": {
+        "repository": {"const": "sifr-lang/sifr-website"},
+        "workflow": {"const": "release-site.yml"},
+        "run_id": {"type": "integer", "minimum": 1},
+        "deployed_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
     "site_facts_sha256": {"$ref": "#/$defs/sha256"},
     "post_publication_smoke": {
       "type": "array",

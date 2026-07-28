@@ -65,6 +65,9 @@ def main(argv: list[str] | None = None) -> int:
     stable_publish_primitives_selected = any(
         str(suite["name"]) == "stable-publish-primitives" for suite in selected
     )
+    stable_publication_selected = any(
+        str(suite["name"]) == "stable-publication" for suite in selected
+    )
     suite_results = [
         run_suite(
             suite,
@@ -73,6 +76,7 @@ def main(argv: list[str] | None = None) -> int:
             include_protected_drill=not drill_suite_selected,
             include_stable_prepare=not stable_prepare_selected,
             include_stable_publish_primitives=not stable_publish_primitives_selected,
+            include_stable_publication=not stable_publication_selected,
         )
         for suite in selected
     ]
@@ -134,6 +138,7 @@ def run_suite(
     include_protected_drill: bool = True,
     include_stable_prepare: bool = True,
     include_stable_publish_primitives: bool = True,
+    include_stable_publication: bool = True,
 ) -> dict[str, Any]:
     suite_name = str(suite["name"])
     case = validate_suite_case(suite)
@@ -178,6 +183,13 @@ def run_suite(
             run_python_module(
                 "governance.stable_publication_primitives_selftest",
                 "stable-publication-primitives",
+            )
+        ]
+    elif suite_name == "stable-publication":
+        variants = [
+            run_python_module(
+                "governance.stable_publish_selftest",
+                "stable-publication",
             )
         ]
     elif suite_name == "qualification":
@@ -228,6 +240,13 @@ def run_suite(
                         "stable-publication-primitives",
                     )
                 )
+            if include_stable_publication:
+                variants.append(
+                    run_python_module(
+                        "governance.stable_publish_selftest",
+                        "stable-publication",
+                    )
+                )
     failures = sum(1 for variant in variants if variant["status"] == "fail")
     return {
         "name": suite_name,
@@ -260,6 +279,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
         "protected-drill",
         "stable-prepare",
         "stable-publish-primitives",
+        "stable-publication",
     }:
         raise SystemExit(f"unsupported distribution_release suite: {suite_name}")
     cases = suite.get("cases", [])
@@ -273,6 +293,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
         "protected-drill": "distribution-protected-drill",
         "stable-prepare": "distribution-stable-prepare",
         "stable-publish-primitives": "distribution-stable-publish-primitives",
+        "stable-publication": "distribution-stable-publication",
         "qualification": "distribution-stable-qualification",
     }.get(suite_name, "distribution-case-directory")
     if str(case.get("command")) != expected_command:
@@ -286,6 +307,9 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
         "stable-prepare": AREA_ROOT / "governance" / "stable_prepare_selftest.py",
         "stable-publish-primitives": (
             AREA_ROOT / "governance" / "stable_publication_primitives_selftest.py"
+        ),
+        "stable-publication": (
+            AREA_ROOT / "governance" / "stable_publish_selftest.py"
         ),
         "qualification": AREA_ROOT / "governance" / "qualification_selftest.py",
     }.get(suite_name, CASES_ROOT)

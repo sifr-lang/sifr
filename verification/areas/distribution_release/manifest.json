@@ -126,6 +126,19 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "stable-publication",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "stable-publication",
+          "entry": "verification/areas/distribution_release/governance/stable_publish_selftest.py",
+          "command": "distribution-stable-publication",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ],
   "network_mode": "offline",

@@ -15,7 +15,9 @@ from typing import Any, Callable
 
 from .common import (
     GovernanceError,
+    load_json_strict,
     sha256_file,
+    write_canonical_json,
 )
 from .qualification_fixture import (
     build_evidence_bundle,
@@ -49,6 +51,7 @@ def run_self_tests() -> int:
     tests = (
         test_materialized_prepare,
         test_materialized_normal_prepare,
+        test_resume_after_activation,
         test_prepare_rejects_input_drift,
         test_summary_contract,
         test_cli_producer,
@@ -66,6 +69,8 @@ def test_materialized_prepare() -> None:
         summary = prepare(context)
         assert summary["operation"] == "ga-activation"
         assert summary["mode"] == "initial"
+        assert summary["publication_state"] == "pending"
+        assert summary["next_generation"] == 8
         assert summary["source"]["commit"] == context["source_commit"]
         assert summary["evidence"]["commit"] == context["evidence_commit"]
         assert summary["mutation"]["proposed_index"]["generation"] == 8
@@ -86,6 +91,40 @@ def test_materialized_normal_prepare() -> None:
         assert summary["mutation"]["previous_index"]["generation"] == 8
         assert summary["mutation"]["proposed_index"]["generation"] == 9
         assert summary["mutation"]["proposed_index"]["channels"]["stable"] == "0.1.0"
+
+
+def test_resume_after_activation() -> None:
+    with StablePrepareFixture() as context:
+        pending = prepare(context)
+        activated = pending["mutation"]["proposed_index"]
+        activated_generation = activated["generation"]
+        live_index_path = context["live_index_path"]
+        live_index_path.unlink()
+        write_canonical_json(live_index_path, activated, refuse_existing=True)
+        write_canonical_json(
+            context["snapshot_root"]
+            / f"channels-generation-{activated_generation}.json",
+            activated,
+            refuse_existing=True,
+        )
+        arguments = prepare_arguments(context)
+        arguments["mode"] = "resume"
+        arguments["proposed_generation"] = activated_generation + 1
+        summary = materialize_stable_prepare(**arguments)
+        assert summary["publication_state"] == "activated"
+        assert summary["live_index"]["generation"] == activated_generation
+        assert (
+            summary["mutation"]["proposed_index_sha256"]
+            == summary["live_index"]["sha256"]
+        )
+        assert summary["next_generation"] == activated_generation + 1
+
+        arguments["mode"] = "initial"
+        expect_rejected(
+            lambda value: materialize_stable_prepare(**value),
+            arguments,
+            label="initial after activation",
+        )
 
 
 def test_prepare_rejects_input_drift() -> None:
@@ -220,6 +259,8 @@ def test_cli_producer() -> None:
             str(arguments["source_root"]),
             "--live-index",
             str(arguments["live_index_path"]),
+            "--snapshot-root",
+            str(arguments["snapshot_root"]),
             "--artifact-root",
             str(arguments["artifact_root"]),
             "--proposed-generation",
@@ -346,12 +387,39 @@ class StablePrepareFixture:
         evidence_root = root / "evidence"
         candidate_root = evidence_root / CANDIDATE_PATH
         candidate_root.mkdir(parents=True)
+        dispatcher_root = root / "dispatchers"
+        dispatcher_root.mkdir()
+        dispatcher_digests: dict[str, str] = {}
+        for name in ("index", "stable", "alpha", "beta"):
+            dispatcher = dispatcher_root / name
+            dispatcher.write_text(
+                f"#!/usr/bin/env sh\n# fixture dispatcher: {name}\n",
+                encoding="utf-8",
+            )
+            dispatcher_digests[name] = sha256_file(dispatcher)
         for source_key, destination_name in EVIDENCE_FILES.items():
-            shutil.copyfile(bundle[source_key], candidate_root / destination_name)
+            destination = candidate_root / destination_name
+            if source_key == "plan_spec":
+                plan = load_json_strict(
+                    bundle[source_key],
+                    require_canonical=True,
+                )
+                plan["site"]["dispatcher_sha256"] = dispatcher_digests
+                write_canonical_json(destination, plan, refuse_existing=True)
+            else:
+                shutil.copyfile(bundle[source_key], destination)
         git(evidence_root, "init")
         configure_git(evidence_root)
         git(evidence_root, "add", ".")
         git(evidence_root, "commit", "-m", "candidate evidence")
+        snapshot_root = root / "history"
+        snapshot_root.mkdir()
+        live_index = load_json_strict(bundle["active_index"], require_canonical=True)
+        write_canonical_json(
+            snapshot_root / f"channels-generation-{live_index['generation']}.json",
+            live_index,
+            refuse_existing=True,
+        )
         return {
             "root": root,
             "source_root": source_root,
@@ -363,7 +431,9 @@ class StablePrepareFixture:
                 candidate_root / "stable-release-plan.json"
             ),
             "live_index_path": bundle["active_index"],
+            "snapshot_root": snapshot_root,
             "artifact_root": bundle["artifact_root"],
+            "dispatcher_root": dispatcher_root,
             "operation": self.transition,
             "proposed_generation": 8 if self.transition == "ga-activation" else 9,
         }
@@ -387,6 +457,7 @@ def prepare_arguments(context: dict[str, Any]) -> dict[str, Any]:
         "expected_plan_sha256": context["expected_plan_sha256"],
         "source_root": context["source_root"],
         "live_index_path": context["live_index_path"],
+        "snapshot_root": context["snapshot_root"],
         "artifact_root": context["artifact_root"],
         "proposed_generation": context["proposed_generation"],
         "now": NOW,
