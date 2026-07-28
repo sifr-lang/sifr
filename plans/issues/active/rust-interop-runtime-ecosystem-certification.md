@@ -863,6 +863,12 @@ Focused implementation evidence:
   The follow-up gives that fixture a complete paired opaque view with explicit
   `copy_fallback=True` and makes both manifest-bound tests lower and validate
   their exact checked-in negative sources.
+- [Opus review round 6](../../reviews/active/rust-interop-certification-7-review-round-6.md)
+  confirmed direct provenance for all four contract-only directions and every
+  earlier remediation, then found the copy-fallback test could not distinguish
+  that key from any other unsupported key. The follow-up includes the exact
+  rejected key in zero-copy and view diagnostics and pins the `copy_fallback`
+  and legacy `mutable` assertions to their source tokens.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

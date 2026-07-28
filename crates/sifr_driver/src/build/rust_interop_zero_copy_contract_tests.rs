@@ -283,7 +283,9 @@ fn package_rust_interop_rejects_legacy_mutable_bool_key() {
     let diagnostics = interop_errors(generated, Some(context), "legacy mutable key must fail");
 
     assert_eq!(diagnostics[0].code, "SIFR-RUST-ZC-0001");
-    assert!(diagnostics[0].message.contains("unsupported `@rust.view"));
+    assert!(diagnostics[0]
+        .message
+        .contains("unsupported `@rust.view(...)` key `mutable`"));
     assert_eq!(diagnostics.len(), 1);
 }
 
@@ -310,7 +312,7 @@ fn package_rust_interop_rejects_zero_copy_copy_fallback() {
     assert_eq!(diagnostics[0].code, "SIFR-RUST-ZC-0001");
     assert!(diagnostics[0]
         .message
-        .contains("unsupported `@rust.zero_copy"));
+        .contains("unsupported `@rust.zero_copy(...)` key `copy_fallback`"));
 }
 
 #[test]

@@ -245,14 +245,15 @@ impl RustInteropResolver<'_> {
     fn push_zero_copy_diagnostic(
         &mut self,
         declaration: &sifr_codegen::RustInteropPlanDeclaration,
-        reason: &'static str,
+        reason: impl Into<String>,
     ) {
+        let reason = reason.into();
         self.push_diagnostic(
             declaration,
             declaration.declaration.span,
             DiagnosticCode::RUST_ZERO_COPY_CONTRACT,
             "invalid Rust zero-copy/view contract: {reason}",
-            vec![("reason", reason.to_string())],
+            vec![("reason", reason)],
             Vec::new(),
             None,
         );
@@ -261,34 +262,34 @@ impl RustInteropResolver<'_> {
 
 fn parse_zero_copy_contract(
     declaration: &sifr_codegen::RustInteropPlanDeclaration,
-) -> Result<ZeroCopyContract, &'static str> {
+) -> Result<ZeroCopyContract, String> {
     let mut owner = None;
     let mut view = None;
     for argument in &declaration.declaration.arguments {
         let Some(name) = argument.name.as_deref() else {
-            return Err("`@rust.zero_copy(...)` requires named arguments");
+            return Err("`@rust.zero_copy(...)` requires named arguments".to_string());
         };
         match name {
             "owner" => match &argument.value {
                 RustInteropValue::Symbol(symbol) => owner = Some(symbol.clone()),
-                _ => return Err("`owner=` must name a Sifr parameter"),
+                _ => return Err("`owner=` must name a Sifr parameter".to_string()),
             },
             "view" => match &argument.value {
                 RustInteropValue::TargetPath(path) => view = Some(path.clone()),
-                _ => return Err("`view=` must be a dotted Rust target path"),
+                _ => return Err("`view=` must be a dotted Rust target path".to_string()),
             },
-            _ => return Err("unsupported `@rust.zero_copy(...)` key"),
+            _ => return Err(format!("unsupported `@rust.zero_copy(...)` key `{name}`")),
         }
     }
     Ok(ZeroCopyContract {
-        owner: owner.ok_or("`@rust.zero_copy(...)` requires `owner=`")?,
-        view: view.ok_or("`@rust.zero_copy(...)` requires `view=`")?,
+        owner: owner.ok_or_else(|| "`@rust.zero_copy(...)` requires `owner=`".to_string())?,
+        view: view.ok_or_else(|| "`@rust.zero_copy(...)` requires `view=`".to_string())?,
     })
 }
 
 fn parse_view_contract(
     declaration: &sifr_codegen::RustInteropPlanDeclaration,
-) -> Result<ViewContract, &'static str> {
+) -> Result<ViewContract, String> {
     let mut owner = None;
     let mut lifetime = None;
     let mut mutability = None;
@@ -296,33 +297,34 @@ fn parse_view_contract(
     let mut sync = None;
     for argument in &declaration.declaration.arguments {
         let Some(name) = argument.name.as_deref() else {
-            return Err("`@rust.view(...)` requires named arguments");
+            return Err("`@rust.view(...)` requires named arguments".to_string());
         };
         match name {
             "owner" => match &argument.value {
                 RustInteropValue::Symbol(symbol) => owner = Some(symbol.clone()),
-                _ => return Err("`owner=` must name a Sifr parameter"),
+                _ => return Err("`owner=` must name a Sifr parameter".to_string()),
             },
             "lifetime" => lifetime = Some(view_lifetime(&argument.value)?),
             "mutability" => mutability = Some(view_mutability(&argument.value)?),
             "send" => match &argument.value {
                 RustInteropValue::Boolean(value) => send = Some(*value),
-                _ => return Err("`send=` must be True or False"),
+                _ => return Err("`send=` must be True or False".to_string()),
             },
             "sync" => match &argument.value {
                 RustInteropValue::Boolean(value) => sync = Some(*value),
-                _ => return Err("`sync=` must be True or False"),
+                _ => return Err("`sync=` must be True or False".to_string()),
             },
             _ if super::advanced_data_validation::is_advanced_view_key(name) => {}
-            _ => return Err("unsupported `@rust.view(...)` key"),
+            _ => return Err(format!("unsupported `@rust.view(...)` key `{name}`")),
         }
     }
     Ok(ViewContract {
-        owner: owner.ok_or("`@rust.view(...)` requires `owner=`")?,
-        lifetime: lifetime.ok_or("`@rust.view(...)` requires `lifetime=`")?,
-        mutability: mutability.ok_or("`@rust.view(...)` requires `mutability=`")?,
-        send: send.ok_or("`@rust.view(...)` requires `send=`")?,
-        sync: sync.ok_or("`@rust.view(...)` requires `sync=`")?,
+        owner: owner.ok_or_else(|| "`@rust.view(...)` requires `owner=`".to_string())?,
+        lifetime: lifetime.ok_or_else(|| "`@rust.view(...)` requires `lifetime=`".to_string())?,
+        mutability: mutability
+            .ok_or_else(|| "`@rust.view(...)` requires `mutability=`".to_string())?,
+        send: send.ok_or_else(|| "`@rust.view(...)` requires `send=`".to_string())?,
+        sync: sync.ok_or_else(|| "`@rust.view(...)` requires `sync=`".to_string())?,
     })
 }
 
