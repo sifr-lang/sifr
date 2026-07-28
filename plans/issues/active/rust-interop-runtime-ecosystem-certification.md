@@ -149,7 +149,7 @@ normative and must not be broadened.
 | `certification_3` | merged | [PR #3033](https://github.com/sifr-lang/sifr/pull/3033); generated call-scoped callback invocation and lifetime rejection |
 | `certification_4` | merged | [PR #3036](https://github.com/sifr-lang/sifr/pull/3036); async reqwest loopback, runtime reuse, cancellation/drop, timeout cleanup, and hidden blocking rejection |
 | `certification_5` | merged | [PR #3042](https://github.com/sifr-lang/sifr/pull/3042); opaque resource lifecycle matrix with HTTP/Redis/PostgreSQL loopbacks and a temporary SQLite database |
-| `certification_6` | in progress | callback subscription lifecycle matrix starts after `certification_5` |
+| `certification_6` | merged | [PR #3046](https://github.com/sifr-lang/sifr/pull/3046); retained callback subscription lifecycle and capture contract |
 | `certification_7` | blocked | starts after `certification_6` merges |
 | `certification_8` | blocked | starts after `certification_7` merges |
 | `certification_9` | blocked | starts after `certification_8` merges |
@@ -662,7 +662,7 @@ Implementation checklist:
 - [x] Bind both evidence directions to distinct mandatory generated-build
   tests, promote only `callback_subscription_ecosystem`, and update structured
   claims, public/internal docs, provenance, counts, and validator self-tests.
-- [ ] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, Opus review rounds to
   satisfaction, merge the PR, and unblock only `certification_7`.
 
 Post-item inventory:
@@ -775,6 +775,10 @@ Focused implementation evidence:
   both mandatory generated packages, 1,901 affected tests, the full
   Rust-interop area, Clippy, formatting, and all guardrails, recomputed the
   complete inventory, and reported `SATISFIED` with no actionable finding.
+- [Final PR-head review](../../reviews/active/rust-interop-certification-6-review-round-10.md)
+  verified the exact [PR #3046](https://github.com/sifr-lang/sifr/pull/3046)
+  head, the authoritative create-PR report, all mandatory and focused
+  evidence, and the complete inventory, and reported `SATISFIED`.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 
