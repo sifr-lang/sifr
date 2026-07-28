@@ -44,6 +44,7 @@ REQUIRED_SUITES = {
         "evidence-custody",
         "incident-governance",
         "epoch-bootstrap",
+        "protected-drill",
     },
 }
 

@@ -223,7 +223,8 @@
         "full",
         "qualification",
         "incident-governance",
-        "epoch-bootstrap"
+        "epoch-bootstrap",
+        "protected-drill"
       ],
       "resource_classes": [
         "default-local"

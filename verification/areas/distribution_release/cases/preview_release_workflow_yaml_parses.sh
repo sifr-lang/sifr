@@ -7,19 +7,22 @@ source "$(dirname "$0")/common.sh"
 preview="${REPO_ROOT}/.github/workflows/preview-release.yml"
 publication="${REPO_ROOT}/.github/workflows/release-publication.yml"
 prepare="${REPO_ROOT}/.github/workflows/release-publication-prepare.yml"
+drill="${REPO_ROOT}/.github/workflows/release-publication-drill.yml"
 poller="${REPO_ROOT}/scripts/distribution/poll_site_release_run.sh"
 ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0))' "${preview}" >/dev/null
 ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0))' "${publication}" >/dev/null
 ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0))' "${prepare}" >/dev/null
+ruby -e 'require "yaml"; YAML.load_file(ARGV.fetch(0))' "${drill}" >/dev/null
 
-python3 - "${preview}" "${publication}" "${prepare}" "${poller}" <<'PY'
+python3 - "${preview}" "${publication}" "${prepare}" "${drill}" "${poller}" <<'PY'
 import pathlib
 import sys
 
 preview = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
 publication = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8")
 prepare = pathlib.Path(sys.argv[3]).read_text(encoding="utf-8")
-poller = pathlib.Path(sys.argv[4]).read_text(encoding="utf-8")
+drill = pathlib.Path(sys.argv[4]).read_text(encoding="utf-8")
+poller = pathlib.Path(sys.argv[5]).read_text(encoding="utf-8")
 
 preview_required = (
     "options:\n          - alpha\n          - beta",
@@ -49,7 +52,7 @@ for forbidden in ("-rc.", "alpha|beta|rc", "stable\n          -"):
         raise SystemExit(f"preview workflow retained forbidden release input: {forbidden}")
 
 publication_required = (
-    "group: sifr-release-index",
+    "'sifr-release-drill' || 'sifr-release-index'",
     "uses: ./.github/workflows/release-publication-prepare.yml",
     "name: ${{ inputs.governance_mode == 'preview' && 'preview-release' || 'stable-release' }}",
     "actions/runs/${GITHUB_RUN_ID}/approvals",
@@ -104,6 +107,8 @@ for fragment in prepare_required:
         raise SystemExit(f"prepare workflow omitted governed fragment: {fragment}")
 if "contents: write" in prepare or "environment:" in prepare:
     raise SystemExit("prepare workflow must remain read-only and unprotected")
+if "name: stable-release-drill" not in drill or "unshare --net --mount-proc" not in drill:
+    raise SystemExit("protected drill must use its credential-free environment and network namespace")
 
 poll_required = (
     "poll_deadline=$((SECONDS + deadline_seconds))",

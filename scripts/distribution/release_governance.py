@@ -20,6 +20,7 @@ from governance import (  # noqa: E402
     GovernanceError,
     generate_site_release_facts,
     validate_bootstrap_evidence,
+    validate_drill_evidence,
     validate_incident_request,
     validate_incident_signoff,
     validate_install_receipt,
@@ -33,6 +34,7 @@ from governance import (  # noqa: E402
     validate_self_version,
     validate_site_publication_facts,
     validate_site_release_facts,
+    validate_stable_mutation_evidence,
 )
 from governance.common import (  # noqa: E402
     load_json_strict,
@@ -49,6 +51,7 @@ from governance.schema_bootstrap import (  # noqa: E402
     build_preview_epoch,
     resolve_distinct_approvers,
 )
+from governance.stable_planner import materialize_stable_mutation  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
@@ -61,6 +64,7 @@ def parse_args() -> argparse.Namespace:
         required=True,
         choices=(
             "release-index",
+            "protected-drill-evidence",
             "schema-bootstrap-evidence",
             "release-plan",
             "release-signoff",
@@ -73,11 +77,16 @@ def parse_args() -> argparse.Namespace:
             "self-update-plan",
             "self-version",
             "site-publication-facts",
+            "stable-index-mutation-evidence",
         ),
     )
     validate.add_argument("--input", required=True)
     validate.add_argument("--previous")
     validate.add_argument("--live-index")
+    validate.add_argument(
+        "--expected-drill-scenario",
+        choices=("publication", "rollback", "first-ga"),
+    )
     validate.add_argument("--require-canonical", action="store_true")
 
     generate_index = commands.add_parser("generate-release-index")
@@ -169,6 +178,13 @@ def parse_args() -> argparse.Namespace:
     bootstrap_index.add_argument("--alpha-release", required=True)
     bootstrap_index.add_argument("--beta-release", required=True)
     bootstrap_index.add_argument("--out", required=True)
+    stable_index = commands.add_parser("plan-stable-index")
+    stable_index.add_argument("--plan", required=True)
+    stable_index.add_argument("--live-index", required=True)
+    stable_index.add_argument("--expected-generation", required=True, type=int)
+    stable_index.add_argument("--expected-sha256", required=True)
+    stable_index.add_argument("--proposed-generation", required=True, type=int)
+    stable_index.add_argument("--out", required=True)
     approvers = commands.add_parser("resolve-publication-approvers")
     approvers.add_argument("--approvals", required=True)
     approvers.add_argument("--initiator", required=True)
@@ -203,6 +219,8 @@ def main() -> int:
             validate_incident_evidence(args)
         elif args.command == "generate-schema-bootstrap-index":
             generate_schema_bootstrap_index(args)
+        elif args.command == "plan-stable-index":
+            plan_stable_index(args)
         elif args.command == "resolve-publication-approvers":
             resolve_publication_approvers(args)
         else:
@@ -218,6 +236,7 @@ def validate_command(args: argparse.Namespace) -> None:
     payload = load_json_strict(path, require_canonical=args.require_canonical)
     validators: dict[str, Callable[[Any], Any]] = {
         "release-index": validate_release_index,
+        "protected-drill-evidence": validate_drill_evidence,
         "schema-bootstrap-evidence": validate_bootstrap_evidence,
         "release-plan": validate_release_plan,
         "release-signoff": validate_release_signoff,
@@ -230,8 +249,14 @@ def validate_command(args: argparse.Namespace) -> None:
         "self-update-plan": validate_self_update_plan,
         "self-version": validate_self_version,
         "site-publication-facts": validate_site_publication_facts,
+        "stable-index-mutation-evidence": validate_stable_mutation_evidence,
     }
-    if args.kind == "release-index" and args.previous:
+    if args.kind == "protected-drill-evidence" and args.expected_drill_scenario:
+        validate_drill_evidence(
+            payload,
+            expected_scenarios=(args.expected_drill_scenario,),
+        )
+    elif args.kind == "release-index" and args.previous:
         validate_release_index_transition(load_json_strict(Path(args.previous)), payload)
     elif args.kind == "incident-request" and args.live_index:
         validate_incident_request(payload, live_index=load_json_strict(Path(args.live_index)))
@@ -463,6 +488,23 @@ def generate_schema_bootstrap_index(args: argparse.Namespace) -> None:
         beta_wrapper=load_json_strict(Path(args.beta_release), require_canonical=True),
     )
     write_canonical_json(Path(args.out), payload, refuse_existing=True)
+
+
+def plan_stable_index(args: argparse.Namespace) -> None:
+    mutation = materialize_stable_mutation(
+        plan_path=Path(args.plan),
+        live_index_path=Path(args.live_index),
+        expected_generation=args.expected_generation,
+        expected_sha256=args.expected_sha256,
+        proposed_generation=args.proposed_generation,
+    )
+    evidence = mutation.evidence()
+    validate_stable_mutation_evidence(evidence)
+    write_canonical_json(
+        Path(args.out),
+        evidence,
+        refuse_existing=True,
+    )
 
 
 def resolve_publication_approvers(args: argparse.Namespace) -> None:

@@ -168,6 +168,68 @@ def propose_preview_release(
     return proposed
 
 
+def propose_stable_release(
+    current_value: Any,
+    *,
+    transition: str,
+    version: str,
+    release_value: Any,
+    expected_predecessor: str | None,
+    proposed_generation: int,
+) -> dict[str, Any]:
+    """Return a GA activation or normal stable release-index mutation."""
+    current = validate_release_index(current_value)
+    transition = require_enum(
+        transition,
+        {"ga-activation", "normal"},
+        "transition",
+    )
+    release = validate_release_record(
+        release_value,
+        version=version,
+        expected_channel="stable",
+    )
+    if release["status"] != "active" or "incident_id" in release:
+        fail("release", "stable publication requires an active qualified release")
+    if version in current["releases"]:
+        fail("$.releases", f"release record already exists: {version}")
+    _require_incident_generation(current, proposed_generation)
+
+    live_stable = current["channels"].get("stable")
+    if transition == "ga-activation":
+        if current["ga_status"] != "preview" or live_stable is not None:
+            fail("transition", "ga-activation requires preview metadata without stable")
+        if expected_predecessor is not None:
+            fail("expected_predecessor", "ga-activation cannot name a predecessor")
+    else:
+        if current["ga_status"] != "active" or live_stable is None:
+            fail("transition", "normal requires an active stable predecessor")
+        if expected_predecessor != live_stable:
+            fail("expected_predecessor", "does not equal the live stable version")
+        if _stable_order(version, "version") <= _stable_order(live_stable, "live stable"):
+            fail("version", "normal stable publication must move forward")
+
+    proposed = deepcopy(current)
+    proposed["generation"] = proposed_generation
+    proposed["ga_status"] = "active"
+    proposed["channels"]["stable"] = version
+    proposed["channels"] = dict(sorted(proposed["channels"].items()))
+    proposed["releases"][version] = deepcopy(release)
+    proposed["releases"] = dict(sorted(proposed["releases"].items()))
+    validate_release_index_transition(current, proposed)
+
+    for channel in ("alpha", "beta"):
+        if proposed["channels"][channel] != current["channels"][channel]:
+            fail(f"$.channels.{channel}", "stable publication must preserve preview channels")
+    for retained_version, retained_release in current["releases"].items():
+        if proposed["releases"].get(retained_version) != retained_release:
+            fail(
+                f"$.releases.{retained_version}",
+                "stable publication must preserve retained release bytes",
+            )
+    return proposed
+
+
 def validate_incident_index_mutation(
     previous_value: Any,
     proposed_value: Any,
@@ -314,7 +376,11 @@ def propose_incident_roll_forward(
 
 
 def _require_incident_generation(current: dict[str, Any], proposed_generation: int) -> None:
-    if type(proposed_generation) is not int or proposed_generation <= current["generation"]:
+    if (
+        not isinstance(proposed_generation, int)
+        or isinstance(proposed_generation, bool)
+        or proposed_generation <= current["generation"]
+    ):
         fail("proposed_generation", "must be an integer greater than the live generation")
 
 

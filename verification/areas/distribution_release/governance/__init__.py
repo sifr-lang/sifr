@@ -4,7 +4,12 @@ from .common import GovernanceError
 from .artifact_index import validate_qualification_artifact_index
 from .incident import validate_incident_request, validate_incident_signoff
 from .planner import materialize_stable_plan
-from .release_index import validate_release_index, validate_release_index_transition
+from .protected_drill_evidence import validate_drill_evidence
+from .release_index import (
+    propose_stable_release,
+    validate_release_index,
+    validate_release_index_transition,
+)
 from .release_plan import (
     generate_site_release_facts,
     validate_release_plan,
@@ -13,6 +18,10 @@ from .release_plan import (
 )
 from .release_report import validate_release_profile_report
 from .schema_bootstrap import validate_bootstrap_evidence
+from .stable_planner import (
+    materialize_stable_mutation,
+    validate_stable_mutation_evidence,
+)
 from .surface_contracts import (
     validate_install_receipt,
     validate_self_update_plan,
@@ -24,7 +33,10 @@ __all__ = [
     "GovernanceError",
     "generate_site_release_facts",
     "materialize_stable_plan",
+    "materialize_stable_mutation",
+    "propose_stable_release",
     "validate_bootstrap_evidence",
+    "validate_drill_evidence",
     "validate_incident_request",
     "validate_incident_signoff",
     "validate_qualification_artifact_index",
@@ -38,4 +50,5 @@ __all__ = [
     "validate_self_version",
     "validate_site_publication_facts",
     "validate_site_release_facts",
+    "validate_stable_mutation_evidence",
 ]

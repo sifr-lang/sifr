@@ -1431,6 +1431,7 @@ cargo test                                    # Run all tests (layers 1-3)
 uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite full     # Preview installer/artifact/release automation checks
 uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite incident-governance # Offline rollback/roll-forward generation, retention, and recovery
 uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite epoch-bootstrap # One-time opaque schema-v2 preview epoch bootstrap contracts
+uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite protected-drill # Credential-free GA/normal/rollback/first-GA orchestration under local adapters
 ./verification/runner/e2e/check_report_determinism.sh --profile release # Stable e2e report signature across reruns
 uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke
 cargo test --manifest-path third_party/ruff/Cargo.toml -p ruff_python_parser # Parser snapshots

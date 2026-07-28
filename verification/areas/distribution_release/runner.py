@@ -4,11 +4,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
 from pathlib import Path
 from typing import Any
+
+from verification.areas.distribution_release.governance.common import (
+    PRODUCTION_CREDENTIAL_NAMES,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
@@ -51,11 +56,15 @@ def main(argv: list[str] | None = None) -> int:
     epoch_suite_selected = any(
         str(suite["name"]) == "epoch-bootstrap" for suite in selected
     )
+    drill_suite_selected = any(
+        str(suite["name"]) == "protected-drill" for suite in selected
+    )
     suite_results = [
         run_suite(
             suite,
             include_incident=not incident_suite_selected,
             include_epoch_bootstrap=not epoch_suite_selected,
+            include_protected_drill=not drill_suite_selected,
         )
         for suite in selected
     ]
@@ -114,6 +123,7 @@ def run_suite(
     *,
     include_incident: bool = True,
     include_epoch_bootstrap: bool = True,
+    include_protected_drill: bool = True,
 ) -> dict[str, Any]:
     suite_name = str(suite["name"])
     case = validate_suite_case(suite)
@@ -136,6 +146,14 @@ def run_suite(
             run_python_module(
                 "governance.schema_bootstrap_selftest",
                 "schema-v2-preview-epoch-bootstrap",
+            )
+        ]
+    elif suite_name == "protected-drill":
+        variants = [
+            run_python_module(
+                "governance.protected_drill_selftest",
+                "protected-stable-release-drill",
+                scrub_credentials=True,
             )
         ]
     elif suite_name == "qualification":
@@ -162,6 +180,14 @@ def run_suite(
                     run_python_module(
                         "governance.incident_recovery_selftest",
                         "incident-recovery",
+                    )
+                )
+            if include_protected_drill:
+                variants.append(
+                    run_python_module(
+                        "governance.protected_drill_selftest",
+                        "protected-stable-release-drill",
+                        scrub_credentials=True,
                     )
                 )
     failures = sum(1 for variant in variants if variant["status"] == "fail")
@@ -193,6 +219,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
         "evidence-custody",
         "incident-governance",
         "epoch-bootstrap",
+        "protected-drill",
     }:
         raise SystemExit(f"unsupported distribution_release suite: {suite_name}")
     cases = suite.get("cases", [])
@@ -203,6 +230,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
         "evidence-custody": "distribution-evidence-custody",
         "incident-governance": "distribution-incident-recovery",
         "epoch-bootstrap": "distribution-schema-bootstrap",
+        "protected-drill": "distribution-protected-drill",
         "qualification": "distribution-stable-qualification",
     }.get(suite_name, "distribution-case-directory")
     if str(case.get("command")) != expected_command:
@@ -212,6 +240,7 @@ def validate_suite_case(suite: dict[str, Any]) -> dict[str, Any]:
         "evidence-custody": AREA_ROOT / "governance" / "evidence_custody.py",
         "incident-governance": AREA_ROOT / "governance" / "incident_recovery_selftest.py",
         "epoch-bootstrap": AREA_ROOT / "governance" / "schema_bootstrap_selftest.py",
+        "protected-drill": AREA_ROOT / "governance" / "protected_drill_selftest.py",
         "qualification": AREA_ROOT / "governance" / "qualification_selftest.py",
     }.get(suite_name, CASES_ROOT)
     if entry != expected_entry or not entry.exists():
@@ -245,13 +274,23 @@ def run_distribution_case(script: Path) -> dict[str, Any]:
     }
 
 
-def run_python_module(module: str, label: str) -> dict[str, Any]:
+def run_python_module(
+    module: str,
+    label: str,
+    *,
+    scrub_credentials: bool = False,
+) -> dict[str, Any]:
     print(f"Running distribution governance module {module}", flush=True)
     started = time.perf_counter()
     qualified_module = f"verification.areas.distribution_release.{module}"
+    environment = os.environ.copy()
+    if scrub_credentials:
+        for name in PRODUCTION_CREDENTIAL_NAMES:
+            environment.pop(name, None)
     result = subprocess.run(
         [sys.executable, "-m", qualified_module],
         cwd=REPO_ROOT,
+        env=environment,
         check=False,
     )
     elapsed_ms = (time.perf_counter() - started) * 1000.0

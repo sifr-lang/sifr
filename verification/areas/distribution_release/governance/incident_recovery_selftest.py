@@ -12,7 +12,6 @@ from typing import Any, Iterator
 
 from .common import (
     GovernanceError,
-    TARGETS,
     canonical_json_bytes,
     load_json_strict,
     sha256_bytes,
@@ -403,9 +402,20 @@ def test_no_production_adapter_surface() -> None:
         encoding="utf-8"
     )
     dispatch = workflow.split("jobs:", 1)[0]
-    assert "rollback" not in dispatch
+    assert "\n          - rollback\n" not in dispatch
     assert "incident-roll-forward" not in dispatch
-    assert "stable-release-drill" not in workflow
+    assert "- drill-rollback" in dispatch
+    assert "uses: ./.github/workflows/release-publication-drill.yml" in workflow
+    drill = (
+        root / ".github" / "workflows" / "release-publication-drill.yml"
+    ).read_text(encoding="utf-8")
+    assert "name: stable-release-drill" in drill
+    assert "unshare --net --mount-proc" in drill
+    assert "${{ secrets." not in drill
+    assert "contents: write" not in drill
+    assert "gh release" not in drill
+    assert "vsce publish" not in drill
+    assert "/dispatches" not in drill
     script = (root / "scripts" / "distribution" / "run_incident_fixture.py").read_text(
         encoding="utf-8"
     )
@@ -623,7 +633,7 @@ def make_release(root: Path, version: str, commit_character: str) -> dict[str, A
     installer = (
         b"#!/bin/sh\nset -eu\n"
         + b': "${SIFR_FIXTURE_INSTALL_STATE:?missing fixture state path}"\n'
-        + f"mkdir -p \"$(dirname \"${{SIFR_FIXTURE_INSTALL_STATE}}\")\"\n".encode()
+        + "mkdir -p \"$(dirname \"${SIFR_FIXTURE_INSTALL_STATE}\")\"\n".encode()
         + f"printf '%s\\n' '{version}' >\"${{SIFR_FIXTURE_INSTALL_STATE}}\"\n".encode()
         + f"# immutable fixture installer for {version}\n".encode()
         + b"# padding-000000000000000000000000000000000000000000000000000000000000\n"

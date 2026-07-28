@@ -86,7 +86,7 @@ def _schema_self_test() -> None:
         / "schemas"
     )
     governed = [lint_schema(path) for path in sorted(governance_schemas.glob("*.schema.json"))]
-    if len(governed) != 13:
+    if len(governed) != 15:
         raise AssertionError("release-governance schema lint registration drifted")
     try:
         validate_schema_requirement({"type": "object", "oneOf": []}, Path("bad.schema.json"))
@@ -682,6 +682,7 @@ def _release_report_production_self_test() -> None:
             "evidence-custody",
             "incident-governance",
             "epoch-bootstrap",
+            "protected-drill",
         ],
     }
     with tempfile.TemporaryDirectory(prefix="sifr-release-report-production-") as directory:
