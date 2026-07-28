@@ -1,4 +1,5 @@
 use crate::lower_module;
+use crate::HirStmt;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 
@@ -137,6 +138,84 @@ def run(
     assert!(errors.iter().any(|error| {
         error.code == Some(DiagnosticCode::RUST_CALLBACK_CONTRACT)
             && error.message.contains("handler `handler` capture `state`")
+            && error.message.contains("not sendable")
+    }));
+}
+
+#[test]
+fn rust_threadsafe_callback_marks_valid_nested_handler_as_move() {
+    let source = r"
+class SubscriptionError(Error):
+    message: str
+
+class Subscription:
+    lifecycle_token: int
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+def run() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    prefix: int = 3
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        _ = prefix
+        return None
+    return subscribe(handler)
+";
+    let parsed = parse_module(source).expect("source should parse");
+    let result = lower_module(parsed.suite()).expect("valid retained capture should lower");
+    let run = result
+        .module
+        .functions
+        .iter()
+        .find(|function| function.name == "run")
+        .expect("run function");
+    let move_captures = run.body.iter().find_map(|stmt| match stmt {
+        HirStmt::NestedFunction {
+            func,
+            move_captures,
+        } if func.name == "handler" => Some(*move_captures),
+        _ => None,
+    });
+
+    assert_eq!(move_captures, Some(true));
+}
+
+#[test]
+fn rust_threadsafe_callback_rejects_indirect_non_send_capture() {
+    let source = r"
+class SubscriptionError(Error):
+    message: str
+
+class LocalState(NonSend):
+    value: int
+
+class Subscription:
+    lifecycle_token: int
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+def run(state: LocalState) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    def inner(event: str) -> Result[None, SubscriptionError]:
+        _ = state.value
+        return None
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        return inner(event)
+    return subscribe(handler)
+";
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("indirect non-send capture should fail lowering"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::RUST_CALLBACK_CONTRACT)
+            && error
+                .message
+                .contains("handler `handler` capture `inner.state`")
             && error.message.contains("not sendable")
     }));
 }

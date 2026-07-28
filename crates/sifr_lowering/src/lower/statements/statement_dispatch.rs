@@ -173,6 +173,7 @@ pub(in crate::lower) fn lower_stmts(
             &mut ctx.pending_container_specialization_patches,
         );
     }
+    super::function_body::mark_threadsafe_callback_move_handlers(&mut result, ctx);
     let _ = ctx.inferred_binding_hints.pop();
     ctx.pop_empty_collection_hint_adoption();
     restore_nested_function_captures(previous_nested_captures, ctx);
@@ -812,7 +813,7 @@ pub(in crate::lower) fn lower_stmt(
             let body = if stub_body.skips_normal_body_lowering() {
                 Vec::new()
             } else {
-                lower_stmts(&func.body, &ft, ctx)
+                super::function_body::lower_function_stmts(&func.body, &ft, ctx)
             };
             ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
             ctx.exit_function_scope();
@@ -880,6 +881,7 @@ pub(in crate::lower) fn lower_stmt(
                     compiler_intrinsic: None,
                     type_params: Vec::new(),
                 },
+                move_captures: false,
             })
         }
         Stmt::Match(match_stmt) => lower_match(match_stmt, func_type, ctx),

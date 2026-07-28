@@ -993,6 +993,14 @@ target and Cargo profile, and applies uniformly to all top-level callback
 parameters on either a function or method declaration. The lowering capture
 check uses the declaration's callable parameter indices for both forms, and
 generated method signatures retain the same `Send + Sync + 'static` backstop.
+Valid directly declared nested handlers are emitted as owning `move` closures,
+so the generated adapter can satisfy the retained `'static` contract instead
+of passing lowering and failing later in rustc. Capture validation walks
+dependencies on sibling nested functions transitively, and retained callback
+parameter indices are exported through project-module metadata for direct
+imports, aliases, re-exports, and imported methods. This keeps
+`SIFR-RUST-CB-0001` enforcement identical at same-module and cross-module
+attachment sites.
 Per-parameter policy, nested callback containers, and callback returns remain
 outside the supported contract. The `callback_subscription_ecosystem` row
 certifies the retained

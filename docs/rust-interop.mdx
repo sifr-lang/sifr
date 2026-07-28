@@ -356,6 +356,12 @@ separate thread-safe registration contract. The current source spelling is a
 top-level `Callable` paired with `@rust.callback(...)`. Retained callbacks also
 require an unwind-capable Cargo profile and target panic policy; `panic=abort`
 and abort profiles are rejected because they cannot contain callback panics.
+Directly declared nested retained handlers own their verified captures, and
+the compiler checks sibling nested-function capture chains transitively.
+Callback attachment checks remain active through imported functions, aliases,
+re-exports, and imported methods; an unsafe capture is rejected with
+`SIFR-RUST-CB-0001` before Cargo probing regardless of the declaration's
+module.
 
 ```sifr
 @rust.callback(

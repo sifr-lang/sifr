@@ -9,7 +9,9 @@ This fixture family tracks runtime-observed subscription callbacks for
   and observes bounded overflow, handler errors, stable panic redaction, a
   foreign-thread callback, close-time drain shutdown, cancellation of a
   scheduled delivery before invocation, and zero leaked
-  tasks/watchers/resources.
+  tasks/watchers/resources. Its retained handler is a nested function with a
+  verified local capture, so the generated package also proves owning
+  `move`-closure emission through rustc.
 - Negative evidence: `invalid_thread_capture_rejected` proves a nested handler
   retaining `NonSend` state is rejected with `SIFR-RUST-CB-0001` before Cargo
   probing.

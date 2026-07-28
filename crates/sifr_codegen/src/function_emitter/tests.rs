@@ -55,6 +55,7 @@ fn middle_with_inner_returning_name(name: &str) -> HirFunction {
         body: vec![
             HirStmt::NestedFunction {
                 func: helper_returning_name(name),
+                move_captures: false,
             },
             HirStmt::Return {
                 value: Some(HirExpr::Call {
@@ -135,6 +136,7 @@ fn nested_helper_captures_outer_shadow_without_promoting_return_to_sifr_int() {
             },
             HirStmt::NestedFunction {
                 func: helper_returning_name("BIG_LIMIT"),
+                move_captures: false,
             },
             HirStmt::Return {
                 value: Some(HirExpr::Call {
@@ -167,6 +169,7 @@ fn multilevel_nested_helper_captures_outer_shadow_without_promoting_return_to_si
             },
             HirStmt::NestedFunction {
                 func: middle_with_inner_returning_name("BIG_LIMIT"),
+                move_captures: false,
             },
             HirStmt::Return {
                 value: Some(HirExpr::Call {

@@ -14,6 +14,13 @@ pub(super) fn register_imported_class_instance_methods(
     source_name: &str,
     local_name: &str,
 ) {
+    super::imported_defaults::import_rust_threadsafe_callback_class(
+        ctx,
+        externals,
+        module,
+        source_name,
+        local_name,
+    );
     let Some(methods) = externals
         .class_instance_methods
         .get(module)
@@ -272,6 +279,13 @@ pub(in crate::lower) fn resolve_imports_early(
                             &class_aliases,
                         );
                         ctx.functions.entry(local.clone()).or_insert(imported);
+                        super::imported_defaults::import_rust_threadsafe_callback_target(
+                            ctx,
+                            externals,
+                            &module_key,
+                            name,
+                            &local,
+                        );
                         if let Some(intrinsic) = externals
                             .compiler_intrinsics
                             .get(&module_key)

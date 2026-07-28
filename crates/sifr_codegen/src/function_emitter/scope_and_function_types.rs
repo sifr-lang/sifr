@@ -409,7 +409,11 @@ impl RustEmitter {
     }
 
     pub(crate) fn try_lower_structured_nested_function_stmt(&mut self, stmt: &HirStmt) -> bool {
-        let HirStmt::NestedFunction { func } = stmt else {
+        let HirStmt::NestedFunction {
+            func,
+            move_captures,
+        } = stmt
+        else {
             return false;
         };
 
@@ -660,7 +664,7 @@ impl RustEmitter {
                 value: RustExpr::ClosureBlock {
                     params,
                     body: lowered_body,
-                    is_move: func.is_async,
+                    is_move: func.is_async || *move_captures,
                     is_async: func.is_async,
                 },
             }

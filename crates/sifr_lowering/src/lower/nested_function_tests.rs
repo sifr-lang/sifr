@@ -100,7 +100,7 @@ fn test_recursive_nested_helper_infers_mutable_collection_param_from_usage() {
         .iter()
         .find(|function| function.name == "accumulate_items")
         .expect("accumulate_items function missing");
-    let HirStmt::NestedFunction { func } = &accumulate_items.body[1] else {
+    let HirStmt::NestedFunction { func, .. } = &accumulate_items.body[1] else {
         panic!("expected nested visit helper");
     };
 

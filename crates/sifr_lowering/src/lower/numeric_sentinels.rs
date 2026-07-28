@@ -279,7 +279,7 @@ fn patch_stmt_numeric_sentinels(
         HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => {
             apply_numeric_sentinel_patches(body, pending);
         }
-        HirStmt::NestedFunction { func } => {
+        HirStmt::NestedFunction { func, .. } => {
             apply_numeric_sentinel_patches(&mut func.body, pending);
         }
         HirStmt::Match { arms, .. } => {

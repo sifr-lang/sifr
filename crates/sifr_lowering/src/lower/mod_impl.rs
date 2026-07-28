@@ -398,6 +398,13 @@ pub(in crate::lower) fn lower_module_impl(
                             if let Some(module_fns) = externals.functions.get(&stdlib_module_key) {
                                 if let Some(ft) = module_fns.get(name) {
                                     ctx.functions.insert(local.clone(), ft.clone());
+                                    imported_defaults::import_rust_threadsafe_callback_target(
+                                        &mut ctx,
+                                        externals,
+                                        &stdlib_module_key,
+                                        name,
+                                        &local,
+                                    );
                                     if let Some(module_intrinsics) =
                                         externals.compiler_intrinsics.get(&stdlib_module_key)
                                     {

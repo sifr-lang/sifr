@@ -30,13 +30,16 @@ def subscribe(
 @rust(bridge.events.close_observation, panic=trusted_no_panic)
 def close_observation() -> Result[str, SubscriptionError]: ...
 
-def event_handler(event: str) -> Result[None, SubscriptionError]:
-    if event == "handler-error":
-        raise SubscriptionError("expected-handler-error")
-    assert event != "panic"
-    return None
-
 async def verify_subscription_cancel_shutdown() -> Result[str, SubscriptionError | RustPanicError]:
+    handler_marker: int = 6
+
+    def event_handler(event: str) -> Result[None, SubscriptionError]:
+        assert handler_marker == 6
+        if event == "handler-error":
+            raise SubscriptionError("expected-handler-error")
+        assert event != "panic"
+        return None
+
     try:
         subscription: Subscription = subscribe(event_handler)
         observed: str = await subscription.verify()

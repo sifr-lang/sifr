@@ -209,9 +209,6 @@ impl RustInteropResolver<'_> {
         if is_python_callback_constructor_target(&target) {
             return;
         }
-        let Some(signature) = self.signature_contracts.get(&target) else {
-            return;
-        };
         let rust_declaration = declarations
             .iter()
             .find(|candidate| candidate.declaration.kind == RustInteropDecoratorKind::Function)
@@ -224,6 +221,9 @@ impl RustInteropResolver<'_> {
             );
             return;
         }
+        let Some(signature) = self.signature_contracts.get(&target) else {
+            return;
+        };
         if let Err(reason) = validate_threadsafe_callback_signature(signature) {
             self.push_callback_diagnostic(declaration, reason);
         }

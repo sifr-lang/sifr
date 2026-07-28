@@ -5,7 +5,7 @@ use super::rust_opaque_validation::validate_rust_opaque_close_method;
 use super::{body_contains_field_assign, is_hashable_type};
 use super::{
     collect_enum_variants, function_body_contains_yield, get_newtype_inner, get_parent_class,
-    has_decorator, is_enum_class, is_operator_dunder, is_protocol_class, lower_stmts,
+    has_decorator, is_enum_class, is_operator_dunder, is_protocol_class, lower_function_stmts,
     missing_method_param_annotation, resolve_annotation_expr, unsupported_class_declaration, Expr,
     FunctionType, HirClass, HirClassKind, HirFunction, HirParam, LowerCtx, MethodKind,
     ParamConvention, Ranged, Stmt, StmtClassDef, Type,
@@ -164,7 +164,7 @@ pub(in crate::lower) fn lower_class(
                 let body = if stub_body.skips_normal_body_lowering() {
                     Vec::new()
                 } else {
-                    lower_stmts(&func.body, &method_ft, ctx)
+                    lower_function_stmts(&func.body, &method_ft, ctx)
                 };
                 ctx.current_function_is_async = previous_async;
                 ctx.current_function_is_async_generator = previous_async_generator;
@@ -294,7 +294,7 @@ pub(in crate::lower) fn lower_class(
                 let body = if stub_body.skips_normal_body_lowering() {
                     Vec::new()
                 } else {
-                    lower_stmts(&func.body, &method_ft, ctx)
+                    lower_function_stmts(&func.body, &method_ft, ctx)
                 };
                 ctx.current_function_is_async = previous_async;
                 ctx.current_function_is_async_generator = previous_async_generator;
@@ -556,7 +556,7 @@ pub(in crate::lower) fn lower_class(
             let body = if skips_normal_body_lowering {
                 Vec::new()
             } else {
-                lower_stmts(&func.body, &method_ft, ctx)
+                lower_function_stmts(&func.body, &method_ft, ctx)
             };
             let mut live_must_use = ctx
                 .live_must_use_bindings

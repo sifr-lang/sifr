@@ -203,7 +203,7 @@ fn collect_stmt(stmt: &HirStmt, path: &str, facts: &mut NameFacts) {
                 collect_nested_block(else_body, &format!("{path}/for:{target}/else"), facts);
             }
         }
-        HirStmt::NestedFunction { func } => {
+        HirStmt::NestedFunction { func, .. } => {
             facts.nested_functions.push(project_function(
                 func,
                 &format!("{path}/nested:{}", func.name),

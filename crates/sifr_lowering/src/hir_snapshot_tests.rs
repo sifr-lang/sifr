@@ -401,7 +401,7 @@ fn project_stmt(stmt: &HirStmt) -> Value {
             "target": target,
             "body": project_stmts(body),
         }),
-        HirStmt::NestedFunction { func } => json!({
+        HirStmt::NestedFunction { func, .. } => json!({
             "kind": "NestedFunction",
             "function": project_function(func),
         }),

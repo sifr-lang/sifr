@@ -96,7 +96,10 @@ fn walk_stmts_covers_try_handlers_loop_else_and_match_patterns() {
             }],
             body_error_types: vec![test_error_type("Error")],
         },
-        HirStmt::NestedFunction { func: nested },
+        HirStmt::NestedFunction {
+            func: nested,
+            move_captures: false,
+        },
     ];
 
     let mut calls = Vec::<String>::new();
@@ -141,7 +144,10 @@ fn walk_stmts_respects_nested_function_scope_boundary() {
         compiler_intrinsic: None,
         type_params: vec![],
     };
-    let stmts = vec![HirStmt::NestedFunction { func: nested }];
+    let stmts = vec![HirStmt::NestedFunction {
+        func: nested,
+        move_captures: false,
+    }];
 
     let mut saw_nested_call = false;
     let mut on_stmt = |_stmt: &HirStmt| {};

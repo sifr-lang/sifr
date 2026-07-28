@@ -3,7 +3,7 @@ use super::expressions::lower_expr;
 use super::function_flow::{collect_yield_types, infer_function_return_type};
 use super::nonlocal_support::collect_declared_nonlocals;
 use super::ownership_diagnostics;
-use super::statements::lower_stmts;
+use super::statements::lower_function_stmts;
 use super::workload_annotations;
 use super::{async_effects, flow_diagnostics, simple_expr, str};
 use super::{substitute_type_vars, LowerCtx};

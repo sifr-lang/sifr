@@ -60,6 +60,8 @@ use sifr_type_system::{make_union, FunctionType, NarrowingCondition, Type};
 
 mod statement_dispatch;
 pub(in crate::lower) use statement_dispatch::*;
+mod function_body;
+pub(in crate::lower) use function_body::lower_function_stmts;
 mod patterns_and_assignments;
 pub(in crate::lower) use patterns_and_assignments::*;
 mod control_flow;

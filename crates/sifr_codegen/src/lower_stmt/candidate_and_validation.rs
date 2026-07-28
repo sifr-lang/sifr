@@ -351,7 +351,7 @@ pub(super) fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), Codegen
             }
             validate_stmt_block_lowering_shape(body)
         }
-        HirStmt::NestedFunction { func } => {
+        HirStmt::NestedFunction { func, .. } => {
             for param in &func.params {
                 if let Some(default) = &param.default {
                     validate_expr_lowering_shape(default)?;

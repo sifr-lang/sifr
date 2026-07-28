@@ -702,6 +702,15 @@ Focused implementation evidence:
   policy, cancels a real scheduled callback delivery before invocation, and
   splits callback bridges out of the saturated runtime module. The mandatory
   positive and negative generated-build tests pass together after these fixes.
+- [Opus review round 2](../../reviews/active/rust-interop-certification-6-review-round-2.md)
+  confirmed all round-1 findings closed and found four deeper attachment
+  gaps. The follow-up emits verified nested retained handlers as owning
+  `move` closures, traverses sibling nested-function captures transitively,
+  transports retained-callback parameter indices through direct imports,
+  aliases, re-exports, and imported methods, and enforces abort strategy before
+  bridge-signature lookup. Focused regressions cover each path, and the
+  mandatory positive generated package now builds and executes a nested
+  handler with a verified local capture.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

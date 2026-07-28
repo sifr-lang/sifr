@@ -84,7 +84,7 @@ def outer() -> int:
 ",
     );
 
-    let HirStmt::NestedFunction { func } = &module.functions[0].body[0] else {
+    let HirStmt::NestedFunction { func, .. } = &module.functions[0].body[0] else {
         panic!("expected nested function");
     };
     assert!(func.body.is_empty());

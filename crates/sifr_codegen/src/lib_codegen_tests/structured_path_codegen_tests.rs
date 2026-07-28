@@ -24,7 +24,10 @@ fn test_stmt_path_handles_nested_function() {
             params: vec![],
             return_type: Type::None,
             body: vec![
-                HirStmt::NestedFunction { func: nested },
+                HirStmt::NestedFunction {
+                    func: nested,
+                    move_captures: false,
+                },
                 HirStmt::Expr {
                     expr: HirExpr::Call {
                         func: "inner".to_string(),
@@ -51,6 +54,35 @@ fn test_stmt_path_handles_nested_function() {
     let generated = generate_rust_with_metadata(&module);
     assert!(generated.rust_source.contains("let inner = || {"));
     assert!(generated.rust_source.contains("inner()"));
+}
+
+#[test]
+fn retained_rust_callback_nested_handler_owns_captures() {
+    let generated = generate_rust_from_source(
+        r#"
+class SubscriptionError(Error):
+    message: str
+
+class Subscription:
+    lifecycle_token: int
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+def run() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    prefix: int = 3
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        _ = prefix
+        return None
+    return subscribe(handler)
+"#,
+    );
+
+    assert!(
+        generated.contains("let handler = move |event: &String|"),
+        "{generated}"
+    );
 }
 
 #[test]

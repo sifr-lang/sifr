@@ -520,7 +520,7 @@ pub(crate) fn module_uses_bigint(module: &HirModule) -> bool {
                 nested_field_ty, ..
             } => type_has_bigint(nested_field_ty),
             HirStmt::Match { subject_ty, .. } => type_has_bigint(subject_ty),
-            HirStmt::NestedFunction { func } => {
+            HirStmt::NestedFunction { func, .. } => {
                 func.params.iter().any(|param| type_has_bigint(&param.ty))
                     || type_has_bigint(&func.return_type)
             }

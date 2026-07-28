@@ -382,7 +382,7 @@ pub(crate) fn collect_mutated_vars(
     ) -> HashMap<String, Vec<(Type, ParamConvention)>> {
         let mut local = HashMap::new();
         for stmt in stmts {
-            let HirStmt::NestedFunction { func } = stmt else {
+            let HirStmt::NestedFunction { func, .. } = stmt else {
                 continue;
             };
             let nested_mutated_vars = collect_mutated_vars(&func.body, func_signatures);
@@ -414,7 +414,7 @@ pub(crate) fn collect_mutated_vars(
         HirStmt::Assign { name, .. } | HirStmt::AugAssign { name, .. } => {
             mutated.borrow_mut().insert(name.clone());
         }
-        HirStmt::NestedFunction { func } => {
+        HirStmt::NestedFunction { func, .. } => {
             let param_names = func
                 .params
                 .iter()
@@ -643,7 +643,7 @@ pub(crate) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String>
                 defined.insert(name.clone());
             }
         }
-        HirStmt::NestedFunction { func } => {
+        HirStmt::NestedFunction { func, .. } => {
             defined.insert(func.name.clone());
         }
         HirStmt::Match { arms, .. } => {

@@ -3,7 +3,7 @@ use super::{
     ast_convention_to_param, collect_declared_nonlocals, collect_yield_types,
     first_await_range_in_stmts, first_yield_range_in_stmts, format_type_name,
     function_body_contains_yield, infer_function_return_type, invalid_type_annotation,
-    is_valid_error_type, lower_expr, lower_stmts, make_union, ownership_diagnostics,
+    is_valid_error_type, lower_expr, lower_function_stmts, make_union, ownership_diagnostics,
     reject_borrowed_affine_generator_params, reject_declared_async_generator_boundary,
     reject_live_join_sets_at_function_exit, reject_live_must_use_bindings_at_function_exit,
     reserved_integer_width_name, resolve_python_dlpack_tensor_annotation,
@@ -757,7 +757,7 @@ pub(in crate::lower) fn lower_function(
     let body = if skips_normal_body_lowering {
         Vec::new()
     } else {
-        lower_stmts(&func.body, &ft, ctx)
+        lower_function_stmts(&func.body, &ft, ctx)
     };
     reject_live_join_sets_at_function_exit(func, ctx);
     reject_live_must_use_bindings_at_function_exit(func, ctx);

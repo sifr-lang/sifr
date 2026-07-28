@@ -463,7 +463,11 @@ pub enum HirStmt {
         body: Vec<HirStmt>,
     },
     /// Nested function definition: def inside def
-    NestedFunction { func: HirFunction },
+    NestedFunction {
+        func: HirFunction,
+        /// Whether the closure must own its captured environment.
+        move_captures: bool,
+    },
     /// Match/case statement (Python 3.10 structural pattern matching)
     Match {
         subject: HirExpr,

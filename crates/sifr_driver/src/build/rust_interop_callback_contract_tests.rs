@@ -226,6 +226,23 @@ fn package_rust_interop_rejects_threadsafe_callback_with_abort_policy() {
 }
 
 #[test]
+fn package_rust_interop_rejects_threadsafe_abort_without_signature_contract() {
+    let source = CALLBACK_SOURCE.replace("panic=map_error(bridge.events.map_panic)", "panic=abort");
+    let mut generated = generated_from_source(&source);
+    generated.interop.rust.bridge_contracts.signatures.clear();
+    let context = context_with_source(&source);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "retained callback abort policy is independent of signature lookup",
+    );
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == "SIFR-RUST-CB-0001" && diagnostic.message.contains("`panic=abort`")
+    }));
+}
+
+#[test]
 fn package_rust_interop_rejects_abort_policy_after_sibling_decorator() {
     let source = CALLBACK_SOURCE
         .replace(

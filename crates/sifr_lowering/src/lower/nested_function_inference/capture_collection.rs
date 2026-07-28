@@ -18,7 +18,7 @@ pub(super) fn collect_nested_function_captures(
         let Some(state) = states.get(func.name.as_str()) else {
             continue;
         };
-        let function_captures = collect_function_captures(func, state, env);
+        let function_captures = collect_function_captures(func, state, env, states);
         // Keep capture-free nested functions in the map as positive evidence
         // that the callable was inspected. Consumers must distinguish them
         // from callable values whose closure environment is unknown.
@@ -31,6 +31,7 @@ fn collect_function_captures(
     func: &StmtFunctionDef,
     state: &LocalFunctionState<'_>,
     env: &FunctionEnv,
+    states: &HashMap<String, LocalFunctionState<'_>>,
 ) -> Vec<(String, Type)> {
     let mut references = HashSet::new();
     collect_referenced_names_in_stmts(&func.body, &mut references);
@@ -51,7 +52,17 @@ fn collect_function_captures(
         .into_iter()
         .filter(|name| !param_names.contains(name.as_str()))
         .filter(|name| !local_bindings.contains(name) || nonlocal_names.contains(name))
-        .filter_map(|name| env.vars.get(&name).cloned().map(|ty| (name, ty)))
+        .filter_map(|name| {
+            env.vars
+                .get(&name)
+                .cloned()
+                .or_else(|| {
+                    states
+                        .get(&name)
+                        .map(|state| Type::Function(state.function_type()))
+                })
+                .map(|ty| (name, ty))
+        })
         .collect::<Vec<_>>();
     captures.sort_by(|left, right| left.0.cmp(&right.0));
     captures

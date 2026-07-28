@@ -334,7 +334,7 @@ fn patch_stmt_container_specialization(stmt: &mut HirStmt, pending: &mut HashMap
         HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => {
             apply_container_specialization_patches(body, pending);
         }
-        HirStmt::NestedFunction { func } => {
+        HirStmt::NestedFunction { func, .. } => {
             apply_container_specialization_patches(&mut func.body, pending);
         }
         HirStmt::Match { arms, .. } => {

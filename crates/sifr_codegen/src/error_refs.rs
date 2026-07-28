@@ -314,7 +314,7 @@ fn collect_stmt_error_refs(
                 }
                 collect_stmt_error_refs(body, referenced, builtin_error_classes);
             }
-            HirStmt::NestedFunction { func } => {
+            HirStmt::NestedFunction { func, .. } => {
                 collect_stmt_error_refs(&func.body, referenced, builtin_error_classes);
             }
             HirStmt::Match { subject, arms, .. } => {

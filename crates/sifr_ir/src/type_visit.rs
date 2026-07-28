@@ -500,7 +500,7 @@ where
             transform_async_with_kind(kind, transform);
             transform_stmts(body, transform);
         }
-        HirStmt::NestedFunction { func } => transform_hir_function_types(func, transform),
+        HirStmt::NestedFunction { func, .. } => transform_hir_function_types(func, transform),
         HirStmt::Match {
             subject,
             subject_ty,

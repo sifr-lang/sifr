@@ -308,8 +308,11 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
         } => {
             try_lower_simple_match_stmt(subject, subject_ty, arms, in_loop_with_else, bindings, ctx)
         }
-        HirStmt::NestedFunction { func } => {
-            try_lower_simple_nested_function_stmt(func, in_loop_with_else, bindings)
+        HirStmt::NestedFunction {
+            func,
+            move_captures,
+        } => {
+            try_lower_simple_nested_function_stmt(func, *move_captures, in_loop_with_else, bindings)
         }
         HirStmt::TryExcept {
             body,
@@ -521,6 +524,7 @@ pub(super) fn should_force_mutable_binding(ty: &Type) -> bool {
 
 pub(super) fn try_lower_simple_nested_function_stmt(
     func: &HirFunction,
+    move_captures: bool,
     in_loop_with_else: bool,
     outer_bindings: SimpleStmtBindings<'_>,
 ) -> Option<Vec<RustStmt>> {
@@ -633,7 +637,7 @@ pub(super) fn try_lower_simple_nested_function_stmt(
         value: RustExpr::ClosureBlock {
             params: lowered_params,
             body: lowered_body,
-            is_move: false,
+            is_move: func.is_async || move_captures,
             is_async: func.is_async,
         },
     }])

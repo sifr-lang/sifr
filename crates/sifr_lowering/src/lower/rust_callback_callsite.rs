@@ -5,6 +5,7 @@ use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Decorator, Expr};
 use sifr_type_system::{ParamConvention, Type};
+use std::collections::HashSet;
 
 pub(in crate::lower) fn has_threadsafe_callback_decorator(decorators: &[Decorator]) -> bool {
     decorators.iter().any(|decorator| {
@@ -71,25 +72,77 @@ pub(in crate::lower) fn validate_threadsafe_callback_captures(
             }
             continue;
         };
-        for (capture_name, capture_ty) in captures {
-            let reason = non_send_reason(&capture_ty)
-                .map(|reason| format!("is not sendable: {reason}"))
-                .or_else(|| {
-                    non_share_safe_reason(&capture_ty)
-                        .map(|reason| format!("is not share-safe: {reason}"))
-                });
-            if let Some(reason) = reason {
+        let mut valid = true;
+        for (capture_name, capture_ty) in &captures {
+            let mut visited = HashSet::from([name.clone()]);
+            if let Some(violation) =
+                retained_capture_violation(capture_name, capture_ty, ctx, &mut visited)
+            {
                 ctx.error_with_code_at(
                     DiagnosticCode::RUST_CALLBACK_CONTRACT,
                     format!(
-                        "invalid Rust callback attachment: handler `{name}` capture `{capture_name}` of type `{}` {reason}",
-                        capture_ty.display_name()
+                        "invalid Rust callback attachment: handler `{name}` capture `{}` of type `{}` {}",
+                        violation.path,
+                        violation.ty.display_name(),
+                        violation.reason
                     ),
                     range,
                 );
+                valid = false;
             }
         }
+        if valid {
+            ctx.rust_threadsafe_callback_move_handlers
+                .insert(name.clone());
+        }
     }
+}
+
+struct CaptureViolation {
+    path: String,
+    ty: Type,
+    reason: String,
+}
+
+fn retained_capture_violation(
+    capture_name: &str,
+    capture_ty: &Type,
+    ctx: &LowerCtx,
+    visited: &mut HashSet<String>,
+) -> Option<CaptureViolation> {
+    if let Some(reason) = non_send_reason(capture_ty) {
+        return Some(CaptureViolation {
+            path: capture_name.to_string(),
+            ty: capture_ty.clone(),
+            reason: format!("is not sendable: {reason}"),
+        });
+    }
+    if let Some(reason) = non_share_safe_reason(capture_ty) {
+        return Some(CaptureViolation {
+            path: capture_name.to_string(),
+            ty: capture_ty.clone(),
+            reason: format!("is not share-safe: {reason}"),
+        });
+    }
+    let nested_captures = ctx.nested_function_captures.get(capture_name)?;
+    if !visited.insert(capture_name.to_string()) {
+        return Some(CaptureViolation {
+            path: capture_name.to_string(),
+            ty: capture_ty.clone(),
+            reason: "has a recursive callable capture cycle that cannot be proven thread-safe"
+                .to_string(),
+        });
+    }
+    for (nested_name, nested_ty) in nested_captures {
+        if let Some(mut violation) =
+            retained_capture_violation(nested_name, nested_ty, ctx, visited)
+        {
+            violation.path = format!("{capture_name}.{}", violation.path);
+            return Some(violation);
+        }
+    }
+    visited.remove(capture_name);
+    None
 }
 
 fn reject_unverifiable_handler(range: TextRange, ctx: &mut LowerCtx) {
