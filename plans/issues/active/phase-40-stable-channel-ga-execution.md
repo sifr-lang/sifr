@@ -827,6 +827,14 @@ Review and upstream coordination ledger:
   operator-facing validator kinds, reran the focused publication/recovery
   suites and guardrails, found no actionable finding, and returned
   `VERDICT: SATISFIED`.
+- Final exact PR-head review pass 9 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-incident-publication-wiring-review-pass-9-final-exact-pr-head-satisfied.md`.
+  It matched local, remote, and PR head at
+  `dabdfec856b1e9a31ea5f95201de84c7cb70402c`, verified that the pass-8
+  archive delta was documentation-only and faithful, re-audited the full
+  incident-publication implementation, independently reproduced 68 focused
+  variants with zero failures plus the malformed-input CLI matrix, found no
+  actionable issue, and returned `VERDICT: SATISFIED`.
 - [ ] Merge the protected rollback and incident roll-forward production wiring.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
