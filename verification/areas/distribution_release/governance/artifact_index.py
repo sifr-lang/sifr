@@ -125,6 +125,7 @@ def validate_qualification_artifact_index(
     report_ids: set[str] = set()
     workflow_id_to_name: dict[int, str] = {}
     workflow_name_to_id: dict[str, int] = {}
+    workflow_id_to_expiry: dict[int, str] = {}
     for position, value in enumerate(artifacts):
         location = f"$.artifacts[{position}]"
         artifact = require_object(value, location)
@@ -194,6 +195,14 @@ def validate_qualification_artifact_index(
             fail(
                 f"{location}.expires_at",
                 "must not expire before the workflow qualification boundary",
+            )
+        if (
+            workflow_id_to_expiry.setdefault(workflow_artifact_id, artifact_expiry)
+            != artifact_expiry
+        ):
+            fail(
+                f"{location}.expires_at",
+                "must equal the expiry of its governed workflow upload",
             )
         expected_prefix = (
             f"sifr-stable-candidate-{index['candidate_version']}-"

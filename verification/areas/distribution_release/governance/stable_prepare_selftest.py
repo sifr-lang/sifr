@@ -303,6 +303,26 @@ def test_safe_artifact_extractor() -> None:
             if any(destination.iterdir()):
                 raise AssertionError(f"unsafe artifact ZIP wrote bytes: {archive.name}")
 
+        mismatch_destination = root / "rejected-byte-count"
+        mismatch_destination.mkdir()
+        mismatch = subprocess.run(
+            [
+                "python3",
+                str(script),
+                str(safe_archive),
+                str(mismatch_destination),
+                "--expected-uncompressed-bytes",
+                "12",
+            ],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        if mismatch.returncode == 0:
+            raise AssertionError("artifact ZIP byte-count mismatch passed")
+        if any(mismatch_destination.iterdir()):
+            raise AssertionError("artifact ZIP byte-count mismatch wrote bytes")
+
 
 class StablePrepareFixture:
     """Context manager that creates an exact source/evidence/artifact bundle."""

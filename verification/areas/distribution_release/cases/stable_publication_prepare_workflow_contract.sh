@@ -28,6 +28,8 @@ for fragment in (
     "persist-credentials: false",
     "/actions/runs/${run_id}/attempts/${run_attempt}",
     "/actions/artifacts/${artifact_id}",
+    "artifact_expires_at",
+    "'.expires_at'",
     "group_by(.id)",
     "extract_github_artifact.py",
     "--expected-uncompressed-bytes",

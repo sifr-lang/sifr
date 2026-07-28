@@ -324,7 +324,7 @@ jobs:
               exit 2
             }
           mkdir -p stable-assets prepare
-          while IFS=$'\t' read -r artifact_id artifact_name artifact_size_bytes; do
+          while IFS=$'\t' read -r artifact_id artifact_name artifact_size_bytes artifact_expires_at; do
             artifact_metadata="$(
               gh api \
                 "/repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}"
@@ -332,6 +332,7 @@ jobs:
             test "$(jq -er '.id' <<<"${artifact_metadata}")" = "${artifact_id}" &&
               test "$(jq -er '.name' <<<"${artifact_metadata}")" = "${artifact_name}" &&
               test "$(jq -r '.expired' <<<"${artifact_metadata}")" = "false" &&
+              test "$(jq -er '.expires_at' <<<"${artifact_metadata}")" = "${artifact_expires_at}" &&
               test "$(jq -er '.workflow_run.id' <<<"${artifact_metadata}")" = "${run_id}" || {
                 echo "::error::qualification artifact provenance mismatch"
                 exit 2
@@ -351,11 +352,12 @@ jobs:
               '[.artifacts[] | {
                 id: .workflow_artifact_id,
                 name: .workflow_artifact_name,
-                size: .size_bytes
+                size: .size_bytes,
+                expires_at: .expires_at
               }]
               | group_by(.id)
               | .[]
-              | [.[0].id, .[0].name, (map(.size) | add)]
+              | [.[0].id, .[0].name, (map(.size) | add), .[0].expires_at]
               | @tsv' \
               "${qualification}"
           )

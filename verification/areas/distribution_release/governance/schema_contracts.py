@@ -214,24 +214,10 @@ def stable_index_mutation_evidence() -> dict[str, Any]:
 
 def stable_publication_prepare() -> dict[str, Any]:
     mutation = stable_index_mutation_evidence()
-    artifact_ids = sorted(
-        {
-            "installer",
-            "checksums",
-            "vsix",
-            "editor-qualification-report",
-            *{
-                f"{kind}-{target}"
-                for target in TARGETS
-                for kind in (
-                    "binary-archive",
-                    "checksum",
-                    "sysroot",
-                    "qualification-report",
-                )
-            },
-        }
-    )
+    qualification = qualification_index()
+    transported = {
+        artifact["id"]: artifact for artifact in qualification["artifacts"]
+    }
     return {
         "schema_version": 2,
         "operation": "ga-activation",
@@ -258,19 +244,19 @@ def stable_publication_prepare() -> dict[str, Any]:
         "mutation": mutation,
         "artifacts": {
             artifact_id: {
-                "name": f"{artifact_id}.bin",
-                "sha256": SHA_A,
-                "size_bytes": 1,
-                "workflow_artifact_id": index,
-                "workflow_artifact_name": f"candidate-artifact-{index}",
+                "name": artifact["name"],
+                "sha256": artifact["sha256"],
+                "size_bytes": artifact["size_bytes"],
+                "workflow_artifact_id": artifact["workflow_artifact_id"],
+                "workflow_artifact_name": artifact["workflow_artifact_name"],
             }
-            for index, artifact_id in enumerate(artifact_ids, start=1)
+            for artifact_id, artifact in sorted(transported.items())
         },
         "marketplace": {
             "publisher": "sifr",
             "extension": "sifr-vscode",
             "version": "0.2.0",
-            "vsix_sha256": SHA_D,
+            "vsix_sha256": transported["vsix"]["sha256"],
         },
         "site": {
             "repository": "sifr-lang/sifr-website",

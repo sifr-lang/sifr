@@ -551,6 +551,19 @@ Review and upstream coordination ledger:
   131/131 E2E fixtures (`report_signature=7c39b8c1dd4fec7c`). The only
   advisory was the already-indexed non-blocking warm wall-time variance; every
   enforced step budget passed.
+- Exact PR-head stable-prepare review pass 2 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-stable-prepare-review-pass-2-exact-pr-head-satisfied.md`.
+  It independently matched local, remote, and [PR #3043](https://github.com/sifr-lang/sifr/pull/3043)
+  at `a671c913116e6fa30073d6220abe639154b51e72`, reproduced the focused
+  gates, found no actionable issue, and returned `SATISFIED`.
+- Its non-blocking observations were hardened before the frozen-head review:
+  each governed upload now has one canonical expiry shared by all transported
+  entries and matched exactly to the authoritative GitHub artifact API,
+  the stable-prepare schema fixture passes the semantic validator, and the
+  extraction self-test pins pre-write rejection of uncompressed byte-count
+  drift. The focused 60-variant distribution run, stable-prepare 6/6,
+  governance 14/14, runner foundation, coverage readiness, schema/workflow
+  contracts, Ruff, diff, and file-size guardrails pass after these changes.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
 - [ ] Exercise resume, stale generation, burned generation, rollback, and

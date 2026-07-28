@@ -670,6 +670,15 @@ def test_artifact_index_mutations() -> None:
         validate_qualification_artifact_index,
         mutate(
             payload,
+            lambda item: item["artifacts"][1].update(
+                {"expires_at": "2026-08-21T00:00:00Z"}
+            ),
+        ),
+    )
+    expect_rejected(
+        validate_qualification_artifact_index,
+        mutate(
+            payload,
             lambda item: item["artifacts"].__setitem__(
                 slice(None),
                 [
