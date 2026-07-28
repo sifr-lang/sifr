@@ -513,6 +513,11 @@ Review and upstream coordination ledger:
   advisory; every enforced per-step budget passed.
 - Protected credential-free drill and stable index planning are under review
   in [PR #3041](https://github.com/sifr-lang/sifr/pull/3041).
+- Exact PR-head review pass 4 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-protected-drill-review-pass-4-exact-pr-head-satisfied.md`.
+  It matched local, remote branch, and PR head at
+  `774592acd140747c068bfe6f4752b34006e9664a`, rechecked the complete wave,
+  found no actionable issue, and returned `SATISFIED`.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
 - [ ] Exercise resume, stale generation, burned generation, rollback, and
