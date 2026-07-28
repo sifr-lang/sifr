@@ -602,11 +602,13 @@ Focused implementation evidence:
   compiler/codegen/driver crate suites, all guardrails, and zero blocking
   hardening failures;
 - `scripts/run_all_tests.sh` passed the authoritative merge profile after
-  integrating current `origin/main`: 50/50 ignored generated-build tests
-  (including both opaque-resource runtime paths), 674/674 E2E pass fixtures,
-  261/261 hardening variants, and every blocking verification lane completed
-  with zero failures. The report recorded only non-blocking cold-cache timing
-  advisories after the regenerable generated-artifact cache was cleared;
+  integrating exact `origin/main` base `f9837adb10`: 57/57 distribution
+  variants (including the protected stable-release drill), 50/50 ignored
+  generated-build tests (including both opaque-resource runtime paths),
+  674/674 E2E pass fixtures, 261/261 hardening variants, and every blocking
+  verification lane completed with zero failures. The report recorded only
+  non-blocking cold-cache timing advisories after the regenerable
+  generated-artifact cache was cleared;
 - generated opaque-handle glue executes HTTP, SQLite, Redis, and PostgreSQL
   operations through a borrowed signature and closes the handle through the
   declared owned `close=async_close` member routed to
