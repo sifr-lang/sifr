@@ -784,8 +784,9 @@ Focused implementation evidence:
 
 Implementation checklist:
 
-- [x] Bind `@rust.zero_copy(view=...)` to the Rust type carried by the
-  function return and reject annotation/return mismatches with
+- [x] Bind opaque crate-backed `@rust.zero_copy(view=...)` to the exact Rust
+  handle type carried by the function return, preserve contract-only generated
+  record views, and reject annotation/return mismatches with
   `SIFR-RUST-ZC-0001`.
 - [x] Carry the paired `@rust.view(...)` Send/Sync obligations onto the direct
   zero-copy type probe, treat `view=` as a type rather than a value, and map
@@ -839,6 +840,14 @@ Focused implementation evidence:
   Result slots, asserts the actual Send/Sync probe invocations, and moves
   callback/resource token inventories into their scenario-owned modules to
   restore durable file-size headroom.
+- [Opus review round 3](../../reviews/active/rust-interop-certification-7-review-round-3.md)
+  confirmed all earlier findings closed, then exposed full-driver regressions
+  from applying opaque-handle identity to contract-only generated records, a
+  new Clippy violation, and duplicated canonical target rendering. The
+  follow-up scopes exact identity to opaque crate-backed handles while
+  preserving generated-record metadata validation, reuses codegen's canonical
+  handle renderer, adds a generated-record regression, and uses the
+  Clippy-approved diagnostic note branch.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

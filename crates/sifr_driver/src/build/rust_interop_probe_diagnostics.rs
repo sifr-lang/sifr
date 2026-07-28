@@ -86,9 +86,11 @@ pub(super) fn classify_probe_failure(
         code,
         message_template,
         args,
-        notes: include_stderr
-            .then(|| vec![format!("rustc stderr: {}", stderr.trim())])
-            .unwrap_or_default(),
+        notes: if include_stderr {
+            vec![format!("rustc stderr: {}", stderr.trim())]
+        } else {
+            Vec::new()
+        },
     }
 }
 

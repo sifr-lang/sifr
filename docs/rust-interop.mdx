@@ -167,8 +167,10 @@ is moved into `bytes::Bytes` without changing its allocation, and a sliced
 alias remains valid after the original Rust owner binding is dropped. The same package
 mutates an anonymous mapping only while it is exclusive, seals it read-only
 without changing its address, and observes pointer-identical `bytemuck` and
-`zerocopy` views. The compiler binds `view=` to the actual returned Rust type,
-directly probes its declared `Send` and `Sync` obligations, rejects mutable
+`zerocopy` views. For opaque crate-backed returns, the compiler binds `view=`
+to the exact returned Rust handle type and directly probes its declared
+`Send` and `Sync` obligations. Contract-only generated-record views retain
+their metadata-specific validation. The compiler rejects mutable
 views from shared owners, rejects returned call-lifetime views, and rejects
 owner-lifetime views across async suspension. Consuming close drops the view
 and the scenario requires one release with zero active views. This claim is

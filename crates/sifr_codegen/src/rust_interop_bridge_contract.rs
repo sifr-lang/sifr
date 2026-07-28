@@ -834,10 +834,7 @@ fn combine_generic_type(
 }
 
 fn opaque_handle_type(name: &str, target: &str) -> RustBridgeTypeContract {
-    let rust_type = format!(
-        "::sifr_runtime::interop::Handle<{}>",
-        absolute_runtime_target(target)
-    );
+    let rust_type = rust_opaque_handle_type(target);
     RustBridgeTypeContract {
         sifr_type: name.to_string(),
         rust_borrowed_type: Some(format!("&{rust_type}")),
@@ -846,6 +843,14 @@ fn opaque_handle_type(name: &str, target: &str) -> RustBridgeTypeContract {
         kind: RustBridgeTypeKind::OpaqueHandle,
         unsupported_reason: None,
     }
+}
+
+#[must_use]
+pub fn rust_opaque_handle_type(target: &str) -> String {
+    format!(
+        "::sifr_runtime::interop::Handle<{}>",
+        absolute_runtime_target(target)
+    )
 }
 
 pub(crate) fn unsupported_type(ty: &Type, reason: &str) -> RustBridgeTypeContract {

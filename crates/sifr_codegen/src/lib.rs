@@ -137,9 +137,9 @@ mod rust_interop_direct_tests;
 mod rust_interop_panic;
 mod rust_interop_plan;
 pub use rust_interop_bridge_contract::{
-    RustBridgeContractPlan, RustBridgePanicErrorContract, RustBridgeParamContract,
-    RustBridgeParamConvention, RustBridgeSignatureContract, RustBridgeTypeContract,
-    RustBridgeTypeKind, RustGeneratedBridgeField, RustGeneratedBridgeType,
+    rust_opaque_handle_type, RustBridgeContractPlan, RustBridgePanicErrorContract,
+    RustBridgeParamContract, RustBridgeParamConvention, RustBridgeSignatureContract,
+    RustBridgeTypeContract, RustBridgeTypeKind, RustGeneratedBridgeField, RustGeneratedBridgeType,
     RustGeneratedBridgeTypeKind, RustGeneratedBridgeVariant,
 };
 pub use rust_interop_bridge_panic_contract::rust_bridge_panic_error_contract;

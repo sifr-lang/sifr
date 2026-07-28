@@ -896,8 +896,10 @@ Rules:
 
 The zero-copy contract surface enforces explicit `owner=` and `view=` on
 `@rust.zero_copy(...)`, explicit `owner=`, `lifetime=`, `mutability=`, `send=`,
-and `sync=` on `@rust.view(...)`, paired declarations, and identity between
-the declared `view=` target and the Rust type carried by the function return.
+and `sync=` on `@rust.view(...)`, paired declarations, and, for opaque
+crate-backed returns, identity between the declared `view=` target and the
+Rust type carried by the function return. Contract-only generated-record views
+continue through their advanced-data metadata validators.
 Returned `lifetime=call` views, mutable views from non-exclusive owners, copy
 fallbacks, and owner-lifetime views crossing async suspension are rejected.
 The paired view contract's `Send` and `Sync` obligations are carried onto the

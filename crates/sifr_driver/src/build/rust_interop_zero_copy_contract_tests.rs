@@ -206,6 +206,22 @@ fn package_rust_interop_rejects_view_nested_in_list_return() {
 }
 
 #[test]
+fn package_rust_interop_preserves_generated_record_view_contract() {
+    let source = generated_record_view_source();
+    let mut generated = generated_from_source(&source);
+    let generated_record_path = generated_record_view_path(&generated);
+    generated.interop.rust.bridge_contracts.signatures[0].return_type = result_contract(
+        generated_record_view_type_contract(&generated_record_path),
+        error_type_contract(),
+    );
+    let mut context = context_with_source(&source);
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("contract-only generated record view should remain supported");
+}
+
+#[test]
 fn package_rust_interop_preserves_unsupported_return_diagnostic() {
     let mut generated = generated_from_source(VALID_ZERO_COPY_SOURCE);
     let return_type = &mut generated.interop.rust.bridge_contracts.signatures[0].return_type;
@@ -328,6 +344,27 @@ fn generated_from_source(source: &str) -> GeneratedBinaryProject {
     }
 }
 
+fn generated_record_view_source() -> String {
+    VALID_ZERO_COPY_SOURCE.replace(
+        "@rust.opaque(type=bridge.bytes.BytesView, send=False, sync=False, clone=none, close=drop)\n",
+        "",
+    )
+}
+
+fn generated_record_view_path(generated: &GeneratedBinaryProject) -> String {
+    generated
+        .interop
+        .rust
+        .bridge_contracts
+        .generated_types
+        .iter()
+        .find(|generated_type| {
+            generated_type.kind == sifr_codegen::RustGeneratedBridgeTypeKind::Record
+        })
+        .map(|generated_type| generated_type.rust_type_path.clone())
+        .expect("generated record source should produce a record bridge")
+}
+
 fn context_with_source(source: &str) -> PackageRustInteropContext {
     let mut context = package_context(TrustPolicy::default(), Vec::new());
     context.module_sources.insert(
@@ -365,30 +402,36 @@ fn bytes_contract() -> RustBridgeTypeContract {
 }
 
 fn view_type_contract() -> RustBridgeTypeContract {
+    let handle = sifr_codegen::rust_opaque_handle_type("bridge.bytes.BytesView");
     RustBridgeTypeContract {
         sifr_type: "BytesView".to_string(),
-        rust_borrowed_type: Some(
-            "&::sifr_runtime::interop::Handle<bridge::bytes::BytesView>".to_string(),
-        ),
-        rust_owned_type: Some(
-            "::sifr_runtime::interop::Handle<bridge::bytes::BytesView>".to_string(),
-        ),
-        rust_return_type: Some(
-            "::sifr_runtime::interop::Handle<bridge::bytes::BytesView>".to_string(),
-        ),
+        rust_borrowed_type: Some(format!("&{handle}")),
+        rust_owned_type: Some(handle.clone()),
+        rust_return_type: Some(handle),
         kind: RustBridgeTypeKind::OpaqueHandle,
         unsupported_reason: None,
     }
 }
 
 fn list_view_type_contract() -> RustBridgeTypeContract {
-    let handle = "::sifr_runtime::interop::Handle<bridge::bytes::BytesView>";
+    let handle = sifr_codegen::rust_opaque_handle_type("bridge.bytes.BytesView");
     RustBridgeTypeContract {
         sifr_type: "list[BytesView]".to_string(),
         rust_borrowed_type: Some(format!("&[{handle}]")),
         rust_owned_type: Some(format!("Vec<{handle}>")),
         rust_return_type: Some(format!("Vec<{handle}>")),
         kind: RustBridgeTypeKind::List,
+        unsupported_reason: None,
+    }
+}
+
+fn generated_record_view_type_contract(rust_type_path: &str) -> RustBridgeTypeContract {
+    RustBridgeTypeContract {
+        sifr_type: "BytesView".to_string(),
+        rust_borrowed_type: Some(rust_type_path.to_string()),
+        rust_owned_type: Some(rust_type_path.to_string()),
+        rust_return_type: Some(rust_type_path.to_string()),
+        kind: RustBridgeTypeKind::GeneratedRecord,
         unsupported_reason: None,
     }
 }
