@@ -134,14 +134,17 @@ claim general Redis or PostgreSQL server compliance.
 `Send + Sync + 'static` callback bridge against raw loopback WebSocket frames,
 a minimal Redis Pub/Sub RESP exchange, and a real `notify` watcher over a
 unique temporary directory. The bridge carries the exact declared bounded
-backpressure, overflow-as-error, and drain-shutdown policy. The observed scope
-includes callback success and ordinary errors, stable panic redaction,
-foreign-thread notification entry, queue drain, explicit task cancellation,
-consuming async close, bounded joins, temporary-directory removal, and zero
-harness-owned active tasks or watchers. Named nested handlers retaining
-non-send or non-share-safe state are rejected with `SIFR-RUST-CB-0001` before
-Cargo probing. This certifies only the exercised local protocol frames and
-package bridge, not general WebSocket, Redis, or filesystem event semantics.
+backpressure, overflow-as-error, and drain-shutdown policy. The package queue
+derives its capacity, overflow branch, and close-time drain/cancel behavior
+from that carried policy. The observed scope includes callback success and
+ordinary errors, stable panic redaction, foreign-thread notification entry,
+close-time queue drain, cancellation of a scheduled callback delivery before
+invocation, consuming async close, bounded joins, temporary-directory removal,
+and zero harness-owned active tasks or watchers. Named nested handlers
+retaining non-send or non-share-safe state are rejected with
+`SIFR-RUST-CB-0001` before Cargo probing. This certifies only the exercised
+local protocol frames and package bridge, not general WebSocket, Redis, or
+filesystem event semantics.
 
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |
@@ -350,7 +353,9 @@ application failures that need actionable diagnostics.
 
 Backpressure, overflow, and shutdown behavior remain mandatory for the
 separate thread-safe registration contract. The current source spelling is a
-top-level `Callable` paired with `@rust.callback(...)`.
+top-level `Callable` paired with `@rust.callback(...)`. Retained callbacks also
+require an unwind-capable Cargo profile and target panic policy; `panic=abort`
+and abort profiles are rejected because they cannot contain callback panics.
 
 ```sifr
 @rust.callback(

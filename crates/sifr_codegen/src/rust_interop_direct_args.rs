@@ -21,7 +21,7 @@ pub(crate) fn direct_rust_arg_expr(
     {
         call_scoped_callback_adapter_expr(param)
     } else if matches!(param.ty.resolve_alias(), Type::Callable(..)) {
-        threadsafe_callback_adapter_expr(param, func).unwrap_or(value)
+        threadsafe_callback_adapter_expr(param, func)
     } else if param.ty == Type::Int {
         RustExpr::FnCall {
             func: Box::new(sifr_int_bridge_path("from")),

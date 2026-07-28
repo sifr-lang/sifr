@@ -5,4 +5,7 @@ Locked, offline runtime evidence for retained Rust callbacks across
 
 The package binds only ephemeral loopback ports, watches a unique temporary
 directory, contains callback panics, bounds all network operations and joins,
-and removes every harness-owned resource during consuming async close.
+derives queue capacity, overflow, and shutdown behavior from the callback's
+carried policy, drains pending delivery during consuming async close, cancels
+a scheduled callback before invocation, and removes every harness-owned
+resource.

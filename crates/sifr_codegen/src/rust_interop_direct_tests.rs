@@ -98,6 +98,66 @@ fn rust_interop_function_body_emits_owned_threadsafe_callback_policy() {
 }
 
 #[test]
+fn rust_interop_method_callback_parameter_is_send_sync_static() {
+    let method = HirFunction {
+        name: "subscribe".to_string(),
+        params: vec![HirParam {
+            name: "handler".to_string(),
+            ty: Type::Callable(
+                vec![Type::Str],
+                vec![ParamConvention::borrow()],
+                Box::new(Type::None),
+            ),
+            default: None,
+            keyword_only: false,
+            convention: ParamConvention::own(),
+        }],
+        return_type: Type::None,
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: vec![
+            declaration(
+                RustInteropDecoratorKind::Function,
+                &["bridge", "events", "subscribe"],
+            ),
+            callback_policy_declaration(),
+        ],
+        python_interop: Vec::new(),
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+    let class = HirClass {
+        name: "Registrar".to_string(),
+        identity: None,
+        fields: Vec::new(),
+        methods: vec![method.clone()],
+        is_hashable: false,
+        is_error_type: false,
+        kind: HirClassKind::Regular,
+        operator_impls: Vec::new(),
+        newtype_inner: None,
+        implements_protocols: Vec::new(),
+        parent_class: None,
+        parent_type: None,
+        type_params: Vec::new(),
+        enum_variants: Vec::new(),
+        rust_interop: Vec::new(),
+    };
+    let emitter = crate::RustEmitter::new();
+    let rendered = crate::render_type(&emitter.lower_class_method_param_type(
+        &class,
+        &method,
+        "handler",
+        &method.params[0].ty,
+        method.params[0].convention,
+    ));
+
+    assert!(rendered.contains("+ Send + Sync + 'static"), "{rendered}");
+}
+
+#[test]
 fn rust_interop_method_body_emits_self_handle_call() {
     let error_ty = Type::Class {
         identity: None,

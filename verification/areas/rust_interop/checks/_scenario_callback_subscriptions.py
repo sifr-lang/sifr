@@ -152,6 +152,14 @@ def run_callback_subscription_self_test(
                 "missing scenario token 'backpressure=bounded(2)'",
             ),
             (
+                "callback policy consumption drift",
+                "examples/subscription_lifecycle_runtime/src/bridges/events.rs",
+                "CallbackQueue::from_policy(callback.policy())",
+                "CallbackQueue::from_policy(ThreadsafeCallbackPolicy::default())",
+                "missing scenario token "
+                "'CallbackQueue::from_policy(callback.policy())'",
+            ),
+            (
                 "foreign-thread callback drift",
                 "examples/subscription_lifecycle_runtime/src/bridges/events.rs",
                 "std::thread::current().id() != owner_thread",

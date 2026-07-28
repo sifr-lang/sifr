@@ -71,7 +71,8 @@ REQUIRED_SCENARIO_EXAMPLES = {
             "tokens": (
                 "ThreadsafeCallbackBridge",
                 "backpressure=bounded(2)",
-                "CallbackBackpressure::Bounded(2)",
+                "CallbackQueue::from_policy(callback.policy())",
+                "policy.backpressure",
                 "CallbackOverflow::Error",
                 "CallbackShutdown::Drain",
                 "WebSocketStream::from_raw_socket",

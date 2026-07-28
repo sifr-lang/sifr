@@ -17,7 +17,8 @@ class LocalState(NonSend):
     borrow=exclusive,
     thread_affinity=tokio_current_thread,
 )
-class Subscription: ...
+class Subscription:
+    lifecycle_token: int
 
 @rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
 @rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))

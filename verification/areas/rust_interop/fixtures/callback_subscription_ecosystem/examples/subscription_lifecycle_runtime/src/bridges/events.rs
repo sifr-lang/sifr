@@ -1,16 +1,14 @@
-use std::collections::VecDeque;
 use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread::ThreadId;
 
 use notify::{EventKind, RecommendedWatcher, RecursiveMode, Watcher};
-use sifr_runtime::interop::{
-    CallbackBackpressure, CallbackOverflow, CallbackShutdown, Handle, RustPanicErrorBridge,
-};
+use sifr_runtime::interop::{Handle, RustPanicErrorBridge};
 use tokio::net::TcpListener;
 use tokio::task::JoinHandle;
 
+use super::callback_queue::CallbackQueue;
 use super::protocols;
 use super::support::{
     active_work, cancel_task, join_task, spawn_tracked, watcher_started, watcher_stopped,
@@ -24,6 +22,8 @@ pub struct Subscription {
     observations: Observations,
     tasks: Mutex<Option<Vec<CallbackTask>>>,
     cancellation_task: Mutex<Option<CallbackTask>>,
+    cancelled_delivery_ran: Arc<AtomicBool>,
+    callback_queue: Mutex<Option<CallbackQueue>>,
     watcher: Mutex<Option<RecommendedWatcher>>,
     temporary_directory: Mutex<Option<TemporaryDirectory>>,
     verified: AtomicBool,
@@ -39,7 +39,7 @@ impl fmt::Debug for Subscription {
 }
 
 pub fn subscribe(callback: EventCallback) -> Result<Handle<Subscription>, SubscriptionError> {
-    verify_callback_policy(&callback)?;
+    let callback_queue = CallbackQueue::from_policy(callback.policy())?;
     let websocket_listener = bind_loopback("WebSocket")?;
     let websocket_address = websocket_listener
         .local_addr()
@@ -71,11 +71,18 @@ pub fn subscribe(callback: EventCallback) -> Result<Handle<Subscription>, Subscr
             observations.clone(),
         )),
     ];
-    let cancellation_task = spawn_tracked(async {
+    let cancelled_delivery_ran = Arc::new(AtomicBool::new(false));
+    let delayed_delivery_ran = Arc::clone(&cancelled_delivery_ran);
+    let delayed_callback = callback.clone();
+    let cancellation_task = spawn_tracked(async move {
         tokio::time::sleep(std::time::Duration::from_secs(60)).await;
-        Err(SubscriptionError::new(
-            "cancellation sentinel was not cancelled",
-        ))
+        invoke_expected_success(
+            &delayed_callback,
+            "cancelled-delivery".to_string(),
+            "delayed callback delivery",
+        )?;
+        delayed_delivery_ran.store(true, Ordering::SeqCst);
+        Ok(())
     });
     std::fs::write(temporary_directory.path()?.join("event.txt"), b"notify")
         .map_err(|error| SubscriptionError::context("notify trigger", error))?;
@@ -85,6 +92,8 @@ pub fn subscribe(callback: EventCallback) -> Result<Handle<Subscription>, Subscr
         observations,
         tasks: Mutex::new(Some(tasks)),
         cancellation_task: Mutex::new(Some(cancellation_task)),
+        cancelled_delivery_ran,
+        callback_queue: Mutex::new(Some(callback_queue)),
         watcher: Mutex::new(Some(watcher)),
         temporary_directory: Mutex::new(Some(temporary_directory)),
         verified: AtomicBool::new(false),
@@ -101,7 +110,11 @@ pub async fn verify(subscription: &Handle<Subscription>) -> Result<String, Subsc
     }
     wait_for_notify(&subscription.observations).await?;
 
-    let (overflow, queue_drained) = verify_bounded_queue(&subscription.callback)?;
+    let overflow = verify_bounded_overflow(
+        mutex_value(&subscription.callback_queue)
+            .as_mut()
+            .ok_or_else(|| SubscriptionError::new("callback queue was already consumed"))?,
+    )?;
     let handler_error = verify_handler_error(&subscription.callback)?;
     let panic = verify_callback_panic(&subscription.callback)?;
     subscription.verified.store(true, Ordering::SeqCst);
@@ -109,7 +122,7 @@ pub async fn verify(subscription: &Handle<Subscription>) -> Result<String, Subsc
     let foreign_thread = subscription.observations.foreign_thread()?;
     Ok(format!(
         "{observations};overflow={overflow};handler-error={handler_error};panic={panic};\
-         foreign-thread={foreign_thread};queue-drained={queue_drained}"
+         foreign-thread={foreign_thread}"
     ))
 }
 
@@ -126,10 +139,21 @@ pub async fn aclose(mut subscription: Handle<Subscription>) -> Result<(), Subscr
     for task in remaining_tasks {
         join_task(task, "subscription close protocol task").await?;
     }
+    let callback_queue = mutex_value(&subscription.callback_queue)
+        .take()
+        .ok_or_else(|| SubscriptionError::new("callback queue was already consumed"))?;
+    let (queue_drained, shutdown) = callback_queue.shutdown(&subscription.callback)?;
     let cancellation_task = mutex_value(&subscription.cancellation_task)
         .take()
         .ok_or_else(|| SubscriptionError::new("cancellation handle was already consumed"))?;
     cancel_task(cancellation_task).await?;
+    tokio::task::yield_now().await;
+    let cancelled = !subscription.cancelled_delivery_ran.load(Ordering::SeqCst);
+    if !cancelled {
+        return Err(SubscriptionError::new(
+            "callback delivery ran after subscription cancellation",
+        ));
+    }
 
     if mutex_value(&subscription.watcher).take().is_some() {
         watcher_stopped();
@@ -145,7 +169,8 @@ pub async fn aclose(mut subscription: Handle<Subscription>) -> Result<(), Subscr
         )));
     }
     set_close_observation(format!(
-        "shutdown=drain;cancelled=true;active=0;temp-removed={temp_removed}"
+        "queue-drained={queue_drained};shutdown={shutdown};cancelled={cancelled};\
+         active=0;temp-removed={temp_removed}"
     ));
     Ok(())
 }
@@ -161,19 +186,6 @@ pub fn close_observation() -> Result<String, SubscriptionError> {
 
 pub fn map_panic(error: RustPanicErrorBridge) -> SubscriptionError {
     SubscriptionError::new(error.to_string())
-}
-
-fn verify_callback_policy(callback: &EventCallback) -> Result<(), SubscriptionError> {
-    let policy = callback.policy();
-    if policy.backpressure != CallbackBackpressure::Bounded(2)
-        || policy.overflow != CallbackOverflow::Error
-        || policy.shutdown != CallbackShutdown::Drain
-    {
-        return Err(SubscriptionError::new(format!(
-            "unexpected retained callback policy: {policy:?}"
-        )));
-    }
-    Ok(())
 }
 
 fn create_watcher(
@@ -220,13 +232,10 @@ async fn wait_for_notify(observations: &Observations) -> Result<(), Subscription
     observations.summary().map(|_| ())
 }
 
-fn verify_bounded_queue(
-    callback: &EventCallback,
-) -> Result<(&'static str, usize), SubscriptionError> {
-    let mut queue = VecDeque::with_capacity(2);
-    enqueue_callback_event(&mut queue, "queue:first")?;
-    enqueue_callback_event(&mut queue, "queue:second")?;
-    let overflow = match enqueue_callback_event(&mut queue, "queue:overflow") {
+fn verify_bounded_overflow(queue: &mut CallbackQueue) -> Result<&'static str, SubscriptionError> {
+    queue.enqueue("queue:first")?;
+    queue.enqueue("queue:second")?;
+    let overflow = match queue.enqueue("queue:overflow") {
         Err(error) if error.to_string() == "bounded callback queue overflow" => "error",
         Err(error) => return Err(error),
         Ok(()) => {
@@ -235,27 +244,12 @@ fn verify_bounded_queue(
             ));
         }
     };
-    let mut drained = 0;
-    while let Some(event) = queue.pop_front() {
-        invoke_expected_success(callback, event, "drain callback queue")?;
-        drained += 1;
-    }
-    Ok((overflow, drained))
-}
-
-fn enqueue_callback_event(
-    queue: &mut VecDeque<String>,
-    event: &str,
-) -> Result<(), SubscriptionError> {
-    const CALLBACK_QUEUE_CAPACITY: usize = 2;
-
-    if queue.len() >= CALLBACK_QUEUE_CAPACITY {
+    if queue.pending() != 2 {
         return Err(SubscriptionError::new(
-            "bounded callback queue overflow",
+            "overflow changed the bounded callback queue contents",
         ));
     }
-    queue.push_back(event.to_string());
-    Ok(())
+    Ok(overflow)
 }
 
 fn verify_handler_error(callback: &EventCallback) -> Result<String, SubscriptionError> {
@@ -334,6 +328,7 @@ impl Drop for Subscription {
         if let Some(task) = mutex_value(&self.cancellation_task).take() {
             task.abort();
         }
+        mutex_value(&self.callback_queue).take();
         if mutex_value(&self.watcher).take().is_some() {
             watcher_stopped();
         }

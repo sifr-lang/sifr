@@ -988,10 +988,14 @@ package-bridge mapping.
 
 `@rust.callback(...)` selects the separate thread-safe contract. It requires
 named `backpressure=`, `overflow=`, and `shutdown=` policy, rejects malformed
-or duplicate contracts with `SIFR-RUST-CB-0001`, and applies uniformly to all
-top-level callback parameters on that declaration. Per-parameter policy,
-nested callback containers, and callback returns remain outside the supported
-contract. The `callback_subscription_ecosystem` row certifies the retained
+or duplicate contracts with `SIFR-RUST-CB-0001`, requires an unwind-capable
+target and Cargo profile, and applies uniformly to all top-level callback
+parameters on either a function or method declaration. The lowering capture
+check uses the declaration's callable parameter indices for both forms, and
+generated method signatures retain the same `Send + Sync + 'static` backstop.
+Per-parameter policy, nested callback containers, and callback returns remain
+outside the supported contract. The `callback_subscription_ecosystem` row
+certifies the retained
 form through an explicit package bridge:
 `ThreadsafeCallbackBridge<Args, Output>` owns a `Send + Sync + 'static`
 adapter, carries the exact declaration policy, and contains each invocation
@@ -1001,7 +1005,8 @@ callbacks, and checks named nested captures for sendability and share safety
 before Cargo probing. Locked runtime evidence uses raw loopback WebSocket
 frames through `tokio-tungstenite`, Redis Pub/Sub RESP, and a real `notify`
 watcher to observe foreign-thread invocation, bounded overflow-as-error,
-callback errors, drain shutdown, cancellation, consuming async close, bounded
+callback errors, policy-driven close-time drain shutdown, cancellation of a
+scheduled callback delivery before invocation, consuming async close, bounded
 joins, temporary-directory removal, and zero harness-owned active work. The
 supported `callback_subscription_core` and `callbacks_threadsafe` rows remain
 contract-only; only `callback_subscription_ecosystem` carries the subscription

@@ -4,7 +4,7 @@ use crate::hir_nodes::HirExpr;
 use ruff_text_size::TextRange;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Decorator, Expr};
-use sifr_type_system::Type;
+use sifr_type_system::{ParamConvention, Type};
 
 pub(in crate::lower) fn has_threadsafe_callback_decorator(decorators: &[Decorator]) -> bool {
     decorators.iter().any(|decorator| {
@@ -16,6 +16,26 @@ pub(in crate::lower) fn has_threadsafe_callback_decorator(decorators: &[Decorato
     })
 }
 
+pub(in crate::lower) fn record_threadsafe_callback_target(
+    callable: String,
+    params: &[(String, Type, ParamConvention)],
+    decorators: &[Decorator],
+    ctx: &mut LowerCtx,
+) {
+    if !has_threadsafe_callback_decorator(decorators) {
+        return;
+    }
+    let callback_indices = params
+        .iter()
+        .enumerate()
+        .filter_map(|(index, (_, ty, _))| {
+            matches!(ty.resolve_alias(), Type::Callable(..)).then_some(index)
+        })
+        .collect();
+    ctx.rust_threadsafe_callback_targets
+        .insert(callable, callback_indices);
+}
+
 pub(in crate::lower) fn validate_threadsafe_callback_captures(
     callable: &str,
     args: &[HirExpr],
@@ -23,20 +43,9 @@ pub(in crate::lower) fn validate_threadsafe_callback_captures(
     fallback_range: TextRange,
     ctx: &mut LowerCtx,
 ) {
-    if !ctx.rust_threadsafe_callback_targets.contains(callable) {
-        return;
-    }
-    let Some(function) = ctx.functions.get(callable).cloned() else {
+    let Some(callback_indices) = ctx.rust_threadsafe_callback_targets.get(callable).cloned() else {
         return;
     };
-    let callback_indices = function
-        .params
-        .iter()
-        .enumerate()
-        .filter_map(|(index, (_, ty, _))| {
-            matches!(ty.resolve_alias(), Type::Callable(..)).then_some(index)
-        })
-        .collect::<Vec<_>>();
     for index in callback_indices {
         let range = argument_ranges
             .get(index)

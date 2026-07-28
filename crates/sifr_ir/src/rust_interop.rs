@@ -68,6 +68,123 @@ pub enum RustInteropValue {
     TargetPath(RustTargetPath),
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RustCallbackBackpressure {
+    Direct,
+    Bounded(i64),
+    Unbounded,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RustCallbackOverflow {
+    Error,
+    DropOldest,
+    DropNewest,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RustCallbackShutdown {
+    Drain,
+    Cancel,
+    DetachForbidden,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RustThreadsafeCallbackContract {
+    pub backpressure: RustCallbackBackpressure,
+    pub overflow: RustCallbackOverflow,
+    pub shutdown: RustCallbackShutdown,
+}
+
+pub fn rust_threadsafe_callback_contract(
+    declaration: &RustInteropDeclaration,
+) -> Result<RustThreadsafeCallbackContract, String> {
+    let mut backpressure = None;
+    let mut overflow = None;
+    let mut shutdown = None;
+
+    for argument in &declaration.arguments {
+        let Some(name) = argument.name.as_deref() else {
+            return Err("`@rust.callback(...)` requires named arguments".to_string());
+        };
+        match name {
+            "backpressure" => {
+                if backpressure.is_some() {
+                    return Err("duplicate `backpressure=` policy".to_string());
+                }
+                backpressure = Some(parse_callback_backpressure(&argument.value)?);
+            }
+            "overflow" => {
+                if overflow.is_some() {
+                    return Err("duplicate `overflow=` policy".to_string());
+                }
+                overflow = Some(parse_callback_overflow(&argument.value)?);
+            }
+            "shutdown" => {
+                if shutdown.is_some() {
+                    return Err("duplicate `shutdown=` policy".to_string());
+                }
+                shutdown = Some(parse_callback_shutdown(&argument.value)?);
+            }
+            other => return Err(format!("unsupported `@rust.callback(...)` key `{other}`")),
+        }
+    }
+
+    Ok(RustThreadsafeCallbackContract {
+        backpressure: backpressure
+            .ok_or_else(|| "missing required `backpressure=` policy".to_string())?,
+        overflow: overflow.ok_or_else(|| "missing required `overflow=` policy".to_string())?,
+        shutdown: shutdown.ok_or_else(|| "missing required `shutdown=` policy".to_string())?,
+    })
+}
+
+fn parse_callback_backpressure(
+    value: &RustInteropValue,
+) -> Result<RustCallbackBackpressure, String> {
+    match value {
+        RustInteropValue::Symbol(symbol) if symbol == "direct" => {
+            Ok(RustCallbackBackpressure::Direct)
+        }
+        RustInteropValue::Symbol(symbol) if symbol == "unbounded" => {
+            Ok(RustCallbackBackpressure::Unbounded)
+        }
+        RustInteropValue::PolicyCall { name, argument, .. } if name == "bounded" => {
+            let RustInteropValue::Integer(bound) = argument.as_ref() else {
+                return Err("`backpressure=bounded(...)` requires an integer bound".to_string());
+            };
+            if *bound <= 0 {
+                return Err("`backpressure=bounded(...)` requires a positive bound".to_string());
+            }
+            Ok(RustCallbackBackpressure::Bounded(*bound))
+        }
+        _ => Err("`backpressure=` must be direct, unbounded, or bounded(N)".to_string()),
+    }
+}
+
+fn parse_callback_overflow(value: &RustInteropValue) -> Result<RustCallbackOverflow, String> {
+    let RustInteropValue::Symbol(symbol) = value else {
+        return Err("`overflow=` must be error, drop_oldest, or drop_newest".to_string());
+    };
+    match symbol.as_str() {
+        "error" => Ok(RustCallbackOverflow::Error),
+        "drop_oldest" => Ok(RustCallbackOverflow::DropOldest),
+        "drop_newest" => Ok(RustCallbackOverflow::DropNewest),
+        _ => Err("`overflow=` must be error, drop_oldest, or drop_newest".to_string()),
+    }
+}
+
+fn parse_callback_shutdown(value: &RustInteropValue) -> Result<RustCallbackShutdown, String> {
+    let RustInteropValue::Symbol(symbol) = value else {
+        return Err("`shutdown=` must be drain, cancel, or detach_forbidden".to_string());
+    };
+    match symbol.as_str() {
+        "drain" => Ok(RustCallbackShutdown::Drain),
+        "cancel" => Ok(RustCallbackShutdown::Cancel),
+        "detach_forbidden" => Ok(RustCallbackShutdown::DetachForbidden),
+        _ => Err("`shutdown=` must be drain, cancel, or detach_forbidden".to_string()),
+    }
+}
+
 /// A Rust interop declaration associated with a HIR function or class.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RustInteropDeclaration {

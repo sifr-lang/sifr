@@ -170,10 +170,12 @@ pub(in crate::lower) fn lower_module_impl(
             }
 
             collect_function_defaults(&mut ctx, &function_name, func);
-            if rust_callback_callsite::has_threadsafe_callback_decorator(&func.decorator_list) {
-                ctx.rust_threadsafe_callback_targets
-                    .insert(function_name.clone());
-            }
+            rust_callback_callsite::record_threadsafe_callback_target(
+                function_name.clone(),
+                &ft.params,
+                &func.decorator_list,
+                &mut ctx,
+            );
             if python_interop::has_python_interop_decorator_syntax(&func.decorator_list) {
                 let callback_policies = python_interop::callback_call_policies(
                     &func.decorator_list,

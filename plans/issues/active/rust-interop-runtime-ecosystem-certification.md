@@ -694,6 +694,14 @@ Focused implementation evidence:
   bind both directions to distinct merge-profile test names and mutation-test
   the locked dependency policy, callback policy, foreign-thread observation,
   and subscription cleanup guardrails.
+- Opus review round 1 found eight actionable gaps. The follow-up makes callback
+  policy parsing canonical in the IR and rejects malformed policy before
+  codegen, rejects retained callbacks under explicit or profile-level abort
+  strategy, covers function and method attachment captures plus generated
+  method bounds, drives queue overflow and close-time drain from the carried
+  policy, cancels a real scheduled callback delivery before invocation, and
+  splits callback bridges out of the saturated runtime module. The mandatory
+  positive and negative generated-build tests pass together after these fixes.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

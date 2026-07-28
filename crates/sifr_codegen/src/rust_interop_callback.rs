@@ -2,7 +2,11 @@ use crate::rust_interop_direct_collections::{
     bridge_composite_to_sifr_expr, composite_conversion_required, sifr_composite_to_bridge_expr,
 };
 use crate::{render_expr, RustExpr};
-use sifr_ir::{HirFunction, HirParam, RustInteropDecoratorKind, RustInteropValue};
+use sifr_ir::{
+    rust_threadsafe_callback_contract, HirFunction, HirParam, RustCallbackBackpressure,
+    RustCallbackOverflow, RustCallbackShutdown, RustInteropDecoratorKind,
+    RustThreadsafeCallbackContract,
+};
 use sifr_type_system::{OwnershipKind, ParamConvention, Type};
 
 pub(crate) fn call_scoped_callback_adapter_expr(param: &HirParam) -> RustExpr {
@@ -21,26 +25,17 @@ pub(crate) fn call_scoped_callback_adapter_expr(param: &HirParam) -> RustExpr {
     })
 }
 
-pub(crate) fn threadsafe_callback_adapter_expr(
-    param: &HirParam,
-    func: &HirFunction,
-) -> Option<RustExpr> {
+pub(crate) fn threadsafe_callback_adapter_expr(param: &HirParam, func: &HirFunction) -> RustExpr {
     let Type::Callable(params, conventions, result) = param.ty.resolve_alias() else {
-        return None;
+        unreachable!("thread-safe callback adapter requires a Callable parameter");
     };
-    let policy = threadsafe_callback_policy_expr(func)?;
-    Some(callback_adapter_expr(
-        param,
-        params,
-        conventions,
-        result,
-        |tuple_pattern, body| {
-            format!(
-                "::sifr_runtime::interop::ThreadsafeCallbackBridge::new({policy}, \
-                 move |{tuple_pattern}| {{ {body} }})"
-            )
-        },
-    ))
+    let policy = threadsafe_callback_policy_expr(func);
+    callback_adapter_expr(param, params, conventions, result, |tuple_pattern, body| {
+        format!(
+            "::sifr_runtime::interop::ThreadsafeCallbackBridge::new({policy}, \
+                move |{tuple_pattern}| {{ {body} }})"
+        )
+    })
 }
 
 fn callback_adapter_expr(
@@ -79,63 +74,47 @@ pub(crate) fn call_scoped_callbacks(func: &HirFunction) -> bool {
         .any(|declaration| declaration.kind == RustInteropDecoratorKind::Callback)
 }
 
-fn threadsafe_callback_policy_expr(func: &HirFunction) -> Option<String> {
-    let declaration = func
+fn threadsafe_callback_policy_expr(func: &HirFunction) -> String {
+    let Some(declaration) = func
         .rust_interop
         .iter()
-        .find(|declaration| declaration.kind == RustInteropDecoratorKind::Callback)?;
-    let mut backpressure = None;
-    let mut overflow = None;
-    let mut shutdown = None;
-    for argument in &declaration.arguments {
-        match (argument.name.as_deref(), &argument.value) {
-            (Some("backpressure"), RustInteropValue::Symbol(value)) if value == "direct" => {
-                backpressure =
-                    Some("::sifr_runtime::interop::CallbackBackpressure::Direct".to_string());
-            }
-            (Some("backpressure"), RustInteropValue::Symbol(value)) if value == "unbounded" => {
-                backpressure =
-                    Some("::sifr_runtime::interop::CallbackBackpressure::Unbounded".to_string());
-            }
-            (Some("backpressure"), RustInteropValue::PolicyCall { name, argument, .. })
-                if name == "bounded" =>
-            {
-                if let RustInteropValue::Integer(bound) = argument.as_ref() {
-                    backpressure = Some(format!(
-                        "::sifr_runtime::interop::CallbackBackpressure::Bounded({bound}usize)"
-                    ));
-                }
-            }
-            (Some("overflow"), RustInteropValue::Symbol(value)) => {
-                let variant = match value.as_str() {
-                    "error" => "Error",
-                    "drop_oldest" => "DropOldest",
-                    "drop_newest" => "DropNewest",
-                    _ => continue,
-                };
-                overflow = Some(format!(
-                    "::sifr_runtime::interop::CallbackOverflow::{variant}"
-                ));
-            }
-            (Some("shutdown"), RustInteropValue::Symbol(value)) => {
-                let variant = match value.as_str() {
-                    "drain" => "Drain",
-                    "cancel" => "Cancel",
-                    "detach_forbidden" => "DetachForbidden",
-                    _ => continue,
-                };
-                shutdown = Some(format!(
-                    "::sifr_runtime::interop::CallbackShutdown::{variant}"
-                ));
-            }
-            _ => {}
+        .find(|declaration| declaration.kind == RustInteropDecoratorKind::Callback)
+    else {
+        unreachable!("thread-safe callback adapter requires callback policy metadata");
+    };
+    let Ok(contract) = rust_threadsafe_callback_contract(declaration) else {
+        unreachable!("invalid callback policies are rejected during HIR lowering");
+    };
+    render_threadsafe_callback_policy(contract)
+}
+
+fn render_threadsafe_callback_policy(contract: RustThreadsafeCallbackContract) -> String {
+    let backpressure = match contract.backpressure {
+        RustCallbackBackpressure::Direct => {
+            "::sifr_runtime::interop::CallbackBackpressure::Direct".to_string()
         }
-    }
-    Some(format!(
-        "::sifr_runtime::interop::ThreadsafeCallbackPolicy {{ backpressure: {}, \
-         overflow: {}, shutdown: {} }}",
-        backpressure?, overflow?, shutdown?
-    ))
+        RustCallbackBackpressure::Bounded(bound) => {
+            format!("::sifr_runtime::interop::CallbackBackpressure::Bounded({bound}usize)")
+        }
+        RustCallbackBackpressure::Unbounded => {
+            "::sifr_runtime::interop::CallbackBackpressure::Unbounded".to_string()
+        }
+    };
+    let overflow = match contract.overflow {
+        RustCallbackOverflow::Error => "Error",
+        RustCallbackOverflow::DropOldest => "DropOldest",
+        RustCallbackOverflow::DropNewest => "DropNewest",
+    };
+    let shutdown = match contract.shutdown {
+        RustCallbackShutdown::Drain => "Drain",
+        RustCallbackShutdown::Cancel => "Cancel",
+        RustCallbackShutdown::DetachForbidden => "DetachForbidden",
+    };
+    format!(
+        "::sifr_runtime::interop::ThreadsafeCallbackPolicy {{ backpressure: {backpressure}, \
+         overflow: ::sifr_runtime::interop::CallbackOverflow::{overflow}, \
+         shutdown: ::sifr_runtime::interop::CallbackShutdown::{shutdown} }}"
+    )
 }
 
 fn callback_handler_arg(name: &str, ty: &Type, convention: ParamConvention) -> String {
