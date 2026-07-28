@@ -296,6 +296,25 @@ def _run_self_test() -> int:
             return 1
         cases += 1
 
+    feature_failures: list[str] = []
+    _validate_feature_policies(
+        feature_failures,
+        "zerocopy_feature_missing",
+        {},
+        ["zerocopy"],
+    )
+    if not any(
+        "feature policy for zerocopy must be" in failure
+        for failure in feature_failures
+    ):
+        print(
+            "rust interop fixture matrix self-test error: "
+            f"missing zerocopy feature policy passed: {feature_failures}",
+            file=sys.stderr,
+        )
+        return 1
+    cases += 1
+
     alignment_failures: list[str] = []
     _validate_manifest_alignment(
         alignment_failures,

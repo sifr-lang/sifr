@@ -905,12 +905,13 @@ zero-copy type probe, which treats `view=` as a Rust type and asks rustc to
 prove those bounds.
 
 `zero_copy_runtime_matrix` is the tier-2 runtime-observed crate-backed claim.
-Its generated package moves an owned Sifr buffer into `bytes::Bytes` without
-allocation change, retains a slice after the original Rust owner binding is
-dropped, mutates and then seals an anonymous `memmap2` allocation without
-address change, and observes pointer-identical `bytemuck` and `zerocopy`
-views. The handle is consumed on close and its drop counters require exactly
-one release and zero active views. The mandatory negative package binds shared
+Its generated package moves the owned buffer received by the bridge into
+`bytes::Bytes` without allocation change, retains a slice after the original
+Rust owner binding is dropped, mutates and then seals an anonymous `memmap2`
+allocation without address change, and reads the sealed values through
+pointer-identical `bytemuck` and `zerocopy` views. The handle is consumed on
+close and its drop counters require exactly one release and zero active views.
+The mandatory negative package binds shared
 mutation, call-lifetime escape, and async suspension diagnostics to
 `SIFR-RUST-ZC-0001`; a bridge mutation independently proves non-`Send` and
 non-`Sync` view types fail the direct probe. The narrower `zero_copy_bytes`

@@ -793,8 +793,9 @@ Implementation checklist:
 - [x] Add a locked/offline `crate_backed_view_runtime` generated package using
   exact root-lock versions of `bytes`, `memmap2`, `bytemuck`, and `zerocopy`
   with only safe Rust.
-- [x] Observe moved-allocation identity and retained owner lifetime for
-  `bytes::Bytes`, exclusive mutation followed by read-only sealing for
+- [x] Observe moved-allocation identity for the owned buffer received by the
+  bridge and retained owner lifetime for `bytes::Bytes`, exclusive mutation
+  followed by read-only sealing for
   `memmap2`, pointer-identical `bytemuck` and `zerocopy` views, and consuming
   release with exactly one drop and zero active views.
 - [x] Reject mutable views from shared owners, returned call-lifetime escape,
@@ -818,6 +819,19 @@ Post-item inventory:
 - 44 required exact-pinned crate aliases in the checked-in root lock graph;
 - 60 package examples and 17 scenario examples; and
 - 30 structured stable claims.
+
+Focused implementation evidence:
+
+- [Opus review round 1](../../reviews/active/rust-interop-certification-7-review-round-1.md)
+  independently passed the mandatory packages, the full Rust-interop area,
+  Clippy, formatting, and maintainability checks, then found six actionable
+  gaps. The remediation replaces substring matching with exact Ok-slot opaque
+  handle identity and prefix/container regressions, classifies view-trait
+  failures without renderer-dependent raw rustc leakage, unit-tests all four
+  Send/Sync probe forms, freezes `zerocopy[derive]` across both zero-copy rows
+  and the catalog, reinterprets a mutated sealed mmap through bytemuck and
+  zerocopy, expands scenario mutations, and decomposes scenario/probe tests so
+  all maintained files remain below the 900-line cap.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

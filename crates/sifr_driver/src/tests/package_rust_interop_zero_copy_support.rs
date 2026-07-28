@@ -30,7 +30,7 @@ fn test_build_zero_copy_crate_backed_view_lifecycle() {
 
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
-        "bytes=alias+owner;memmap2=alias+readonly;bytemuck=alias;zerocopy=alias;mutation=exclusive;send-sync=required;release=released=1;active=0"
+        "bytes=alias+owner;memmap2=alias+readonly;bytemuck=alias+mutated-value;zerocopy=alias+parsed-value;mutation=exclusive+sealed;send-sync=type-probed;release=released=1;active=0"
     );
     assert!(
         output.stderr.is_empty(),
@@ -111,12 +111,17 @@ fn test_check_zero_copy_view_send_sync_obligations() {
 
     let errors = check_package_project(&entrypoint);
 
+    let obligation_error = errors.iter().find(|error| {
+        error.code == DiagnosticCode::RUST_ZERO_COPY_CONTRACT.code()
+            && error.message.contains("Send/Sync obligations")
+    });
     assert!(
-        errors.iter().any(|error| {
-            error.code == DiagnosticCode::RUST_ZERO_COPY_CONTRACT.code()
-                && error.message.contains("Send/Sync obligations")
-        }),
+        obligation_error.is_some(),
         "view type obligations must be enforced by the direct probe: {errors:#?}"
+    );
+    assert!(
+        obligation_error.is_some_and(|error| error.children.is_empty()),
+        "recognized view obligation failures must not leak raw rustc output: {errors:#?}"
     );
     let _ = std::fs::remove_dir_all(package_root);
 }

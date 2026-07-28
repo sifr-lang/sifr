@@ -21,6 +21,8 @@ from _scenario_opaque_resources import (
     validate_opaque_resource_scenario,
 )
 from _scenario_zero_copy import (
+    ZERO_COPY_SCENARIO_TOKENS,
+    reject_unsafe_rust,
     run_zero_copy_self_test,
     validate_zero_copy_scenario,
 )
@@ -29,7 +31,6 @@ from _scenario_source_checks import (
     reject_generated_bridge_imports as _reject_generated_bridge_imports,
     validate_scenario_sifr_source as _validate_scenario_sifr_source,
 )
-
 REQUIRED_SCENARIO_EXAMPLES = {
     "async_runtime_reqwest": {
         "reqwest_loopback_runtime": {
@@ -161,21 +162,7 @@ REQUIRED_SCENARIO_EXAMPLES = {
     },
     "zero_copy_runtime_matrix": {
         "crate_backed_view_runtime": {
-            "tokens": (
-                "@rust.zero_copy(owner=data, view=bridge.zero_copy.CrateBackedView)",
-                "lifetime=owner, mutability=immutable, send=True, sync=True",
-                "Bytes::from(data)",
-                "owner.slice(..)",
-                "drop(owner)",
-                "MmapMut::map_anon",
-                ".make_read_only()",
-                "bytemuck::cast_slice",
-                "view.packet.as_bytes()",
-                "impl Drop for CrateBackedView",
-                "ACTIVE_VIEWS.fetch_sub",
-                "RELEASED_VIEWS.fetch_add",
-                "mutation=exclusive;send-sync=required",
-            ),
+            "tokens": ZERO_COPY_SCENARIO_TOKENS,
         },
     },
     "native_build_script": {
@@ -470,15 +457,7 @@ def _validate_scenario_example_dir(
     if fixture_id == "shared_bridge_crate":
         _reject_generated_bridge_imports(failures, fixture_id, raw_path, rust_sources)
     if fixture_id == "zero_copy_runtime_matrix":
-        for source in rust_sources:
-            for line_number, line in enumerate(
-                source.read_text(encoding="utf-8").splitlines(), start=1
-            ):
-                if "unsafe" in line and not line.lstrip().startswith("//"):
-                    failures.append(
-                        f"{fixture_id}: {source.relative_to(example_dir)}:"
-                        f"{line_number} must use only safe Rust"
-                    )
+        reject_unsafe_rust(failures, fixture_id, rust_sources, example_dir)
     for source in sifr_sources:
         text = source.read_text(encoding="utf-8")
         raw_source_path = source.relative_to(example_dir).as_posix()

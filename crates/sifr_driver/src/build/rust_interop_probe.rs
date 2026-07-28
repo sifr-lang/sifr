@@ -199,7 +199,9 @@ fn probe_source(probe: &PendingRustBridgeProbe) -> String {
         RustInteropDecoratorKind::Callback => {
             unreachable!("callback metadata is targetless and never enters probe planning")
         }
-        RustInteropDecoratorKind::ZeroCopy => zero_copy_type_probe_source(probe, &rust_path),
+        RustInteropDecoratorKind::ZeroCopy => {
+            zero_copy_type_probe_source(probe.zero_copy_obligations, &rust_path)
+        }
         RustInteropDecoratorKind::Function
         | RustInteropDecoratorKind::Async
         | RustInteropDecoratorKind::View => {
@@ -218,8 +220,8 @@ fn probe_source(probe: &PendingRustBridgeProbe) -> String {
     prefixed_probe_source(prefix, &body)
 }
 
-fn zero_copy_type_probe_source(probe: &PendingRustBridgeProbe, rust_path: &str) -> String {
-    let (requires_send, requires_sync) = probe.zero_copy_obligations;
+pub(super) fn zero_copy_type_probe_source(obligations: (bool, bool), rust_path: &str) -> String {
+    let (requires_send, requires_sync) = obligations;
     let mut out = format!("#![allow(dead_code)]\ntype __SifrView = {rust_path};\n");
     if requires_send {
         out.push_str("fn __sifr_assert_send<T: Send>() {}\n");

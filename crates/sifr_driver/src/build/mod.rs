@@ -40,6 +40,8 @@ mod rust_interop_probe_cache;
 mod rust_interop_probe_diagnostics;
 mod rust_interop_probe_manifest;
 #[cfg(test)]
+mod rust_interop_probe_tests;
+#[cfg(test)]
 mod rust_interop_test_support;
 #[cfg(test)]
 mod rust_interop_tests;

@@ -3,11 +3,12 @@
 This runtime-observed fixture certifies `bytes`, `memmap2`, `bytemuck`, and
 `zerocopy` through a generated package bridge.
 
-The positive direction moves the Sifr byte owner into `bytes::Bytes` without
-changing its allocation, retains a sliced alias after the original Rust owner
-binding is dropped, seals a mutable anonymous `memmap2` mapping without
-changing its address, and observes pointer-identical `bytemuck` and `zerocopy`
-views. The bridge type is checked against its declared `Send + Sync`
+The positive direction moves the owned byte buffer received by the bridge into
+`bytes::Bytes` without changing its allocation, retains a sliced alias after
+the original Rust owner binding is dropped, seals a mutable anonymous
+`memmap2` mapping without changing its address, and reads its mutated values
+through pointer-identical `bytemuck` and `zerocopy` views. The bridge type is
+checked against its declared `Send + Sync`
 obligations, mutation occurs only before immutable aliases are published, and
 consuming close records deterministic release with zero active views.
 

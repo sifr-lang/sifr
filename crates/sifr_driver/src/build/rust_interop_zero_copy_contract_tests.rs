@@ -178,6 +178,34 @@ fn package_rust_interop_rejects_view_type_return_mismatch() {
 }
 
 #[test]
+fn package_rust_interop_rejects_view_type_prefix_alias() {
+    let source =
+        VALID_ZERO_COPY_SOURCE.replace("view=bridge.bytes.BytesView", "view=bridge.bytes.Bytes");
+    let generated = generated_from_source(&source);
+    let mut context = context_with_source(&source);
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    let diagnostics = interop_errors(generated, Some(context), "view prefix alias must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-ZC-0001");
+    assert!(diagnostics[0].message.contains("function return value"));
+}
+
+#[test]
+fn package_rust_interop_rejects_view_nested_in_list_return() {
+    let mut generated = generated_from_source(VALID_ZERO_COPY_SOURCE);
+    generated.interop.rust.bridge_contracts.signatures[0].return_type =
+        result_contract(list_view_type_contract(), error_type_contract());
+    let mut context = context_with_source(VALID_ZERO_COPY_SOURCE);
+    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
+
+    let diagnostics = interop_errors(generated, Some(context), "nested view return must fail");
+
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-ZC-0001");
+    assert!(diagnostics[0].message.contains("function return value"));
+}
+
+#[test]
 fn package_rust_interop_rejects_unknown_view_owner() {
     let source = VALID_ZERO_COPY_SOURCE
         .replace(
@@ -329,6 +357,18 @@ fn view_type_contract() -> RustBridgeTypeContract {
             "::sifr_runtime::interop::Handle<bridge::bytes::BytesView>".to_string(),
         ),
         kind: RustBridgeTypeKind::OpaqueHandle,
+        unsupported_reason: None,
+    }
+}
+
+fn list_view_type_contract() -> RustBridgeTypeContract {
+    let handle = "::sifr_runtime::interop::Handle<bridge::bytes::BytesView>";
+    RustBridgeTypeContract {
+        sifr_type: "list[BytesView]".to_string(),
+        rust_borrowed_type: Some(format!("&[{handle}]")),
+        rust_owned_type: Some(format!("Vec<{handle}>")),
+        rust_return_type: Some(format!("Vec<{handle}>")),
+        kind: RustBridgeTypeKind::List,
         unsupported_reason: None,
     }
 }

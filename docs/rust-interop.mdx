@@ -162,9 +162,9 @@ only the exercised local protocol frames and package bridge, not general
 WebSocket, Redis, or filesystem event semantics.
 
 `zero_copy_runtime_matrix` executes generated package glue for `bytes`,
-`memmap2`, `bytemuck`, and `zerocopy`. An owned Sifr byte buffer is moved into
-`bytes::Bytes` without changing its allocation, and a sliced alias remains
-valid after the original Rust owner binding is dropped. The same package
+`memmap2`, `bytemuck`, and `zerocopy`. The owned buffer received by the bridge
+is moved into `bytes::Bytes` without changing its allocation, and a sliced
+alias remains valid after the original Rust owner binding is dropped. The same package
 mutates an anonymous mapping only while it is exclusive, seals it read-only
 without changing its address, and observes pointer-identical `bytemuck` and
 `zerocopy` views. The compiler binds `view=` to the actual returned Rust type,

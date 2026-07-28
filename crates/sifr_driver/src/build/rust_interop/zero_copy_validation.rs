@@ -171,13 +171,13 @@ impl RustInteropResolver<'_> {
         let Some(signature) = self.signature_contracts.get(&key).cloned() else {
             return;
         };
+        if let Some(zero_copy) = zero_copy {
+            self.validate_view_return(&signature, declarations, &zero_copy.view);
+        }
         if signature_has_unsupported_type(&signature) {
             return;
         }
         self.validate_view_owner(&signature, declarations, &view);
-        if let Some(zero_copy) = zero_copy {
-            self.validate_view_return(&signature, declarations, &zero_copy.view);
-        }
     }
 
     fn validate_view_owner(
@@ -225,11 +225,16 @@ impl RustInteropResolver<'_> {
         else {
             return;
         };
-        let Some(return_type) = signature.return_type.rust_return_type.as_deref() else {
+        let Some(return_type) = returned_ok_type(signature) else {
+            self.push_zero_copy_diagnostic(
+                zero_copy_declaration,
+                "`view=` requires a concrete Rust view type in the function return value",
+            );
             return;
         };
-        let rust_view_type = view_type.segments.join("::");
-        if !return_type.contains(&rust_view_type) {
+        let rust_view_type = canonical_rust_view_type(view_type);
+        let expected = format!("::sifr_runtime::interop::Handle<{rust_view_type}>");
+        if return_type != expected {
             self.push_zero_copy_diagnostic(
                 zero_copy_declaration,
                 "`view=` must name the Rust type carried by the function return value",
@@ -344,4 +349,36 @@ fn signature_has_unsupported_type(signature: &RustBridgeSignatureContract) -> bo
             .params
             .iter()
             .any(|param| param.ty.kind == sifr_codegen::RustBridgeTypeKind::Unsupported)
+}
+
+fn returned_ok_type(signature: &RustBridgeSignatureContract) -> Option<&str> {
+    let rendered = signature.return_type.rust_return_type.as_deref()?.trim();
+    if signature.return_type.kind != sifr_codegen::RustBridgeTypeKind::Result {
+        return Some(rendered);
+    }
+    let inner = rendered
+        .strip_prefix("Result<")
+        .and_then(|value| value.strip_suffix('>'))?;
+    let mut depth = 0_u32;
+    for (index, ch) in inner.char_indices() {
+        match ch {
+            '<' => depth = depth.saturating_add(1),
+            '>' => depth = depth.saturating_sub(1),
+            ',' if depth == 0 => return Some(inner[..index].trim()),
+            _ => {}
+        }
+    }
+    None
+}
+
+fn canonical_rust_view_type(view_type: &RustTargetPath) -> String {
+    let path = view_type.segments.join("::");
+    if matches!(
+        view_type.segments.first().map(String::as_str),
+        Some("sifr_runtime" | "sifr_stdlib")
+    ) {
+        format!("::{path}")
+    } else {
+        path
+    }
 }

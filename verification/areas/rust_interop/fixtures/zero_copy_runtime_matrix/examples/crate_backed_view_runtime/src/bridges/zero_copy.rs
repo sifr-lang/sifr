@@ -47,8 +47,6 @@ pub struct CrateBackedView {
     bytes_pointer: usize,
     mmap_view: Mmap,
     mmap_pointer: usize,
-    words: [u32; 2],
-    packet: Packet,
 }
 
 impl Drop for CrateBackedView {
@@ -83,7 +81,9 @@ pub fn create(mut data: Vec<u8>) -> Result<Handle<CrateBackedView>, ViewError> {
 
     let mut mutable_map =
         memmap2::MmapMut::map_anon(8).map_err(|error| ViewError::context("anonymous mmap", error))?;
-    mutable_map.copy_from_slice(b"mmapview");
+    let initial_words = [7_u32, 8_u32];
+    mutable_map.copy_from_slice(bytemuck::cast_slice(&initial_words));
+    mutable_map[..4].copy_from_slice(&9_u32.to_ne_bytes());
     let mutable_pointer = mutable_map.as_ptr() as usize;
     let mmap_view = mutable_map
         .make_read_only()
@@ -101,8 +101,6 @@ pub fn create(mut data: Vec<u8>) -> Result<Handle<CrateBackedView>, ViewError> {
         bytes_pointer,
         mmap_view,
         mmap_pointer,
-        words: [0x7266_6953, 0x7765_6976],
-        packet: Packet { tag: 7, length: 8 },
     }))
 }
 
@@ -116,23 +114,31 @@ pub fn observe(view: &Handle<CrateBackedView>) -> Result<String, ViewError> {
         ));
     }
     if view.mmap_view.as_ptr() as usize != view.mmap_pointer
-        || view.mmap_view.as_ref() != b"mmapview"
     {
         return Err(ViewError::new(
             "read-only memmap view lost its alias or owner",
         ));
     }
 
-    let word_bytes: &[u8] = bytemuck::cast_slice(&view.words);
-    if word_bytes.as_ptr() as usize != view.words.as_ptr() as usize {
-        return Err(ViewError::new("bytemuck cast introduced a copy"));
+    let mapped_words: &[u32] = bytemuck::try_cast_slice(view.mmap_view.as_ref())
+        .map_err(|error| ViewError::context("bytemuck mmap view", error))?;
+    if mapped_words != [9, 8] || mapped_words.as_ptr() as usize != view.mmap_pointer {
+        return Err(ViewError::new(
+            "bytemuck view lost the sealed mapping or its pre-seal mutation",
+        ));
     }
-    let packet_bytes = view.packet.as_bytes();
-    if packet_bytes.as_ptr() as usize != std::ptr::from_ref(&view.packet) as usize {
-        return Err(ViewError::new("zerocopy view introduced a copy"));
+    let packet = Packet::ref_from_bytes(view.mmap_view.as_ref())
+        .map_err(|_| ViewError::new("zerocopy could not parse the sealed mapping"))?;
+    if packet.tag != 9
+        || packet.length != 8
+        || std::ptr::from_ref(packet) as usize != view.mmap_pointer
+    {
+        return Err(ViewError::new(
+            "zerocopy parsed view lost the sealed mapping or its values",
+        ));
     }
 
-    Ok("bytes=alias+owner;memmap2=alias+readonly;bytemuck=alias;zerocopy=alias;mutation=exclusive;send-sync=required".to_string())
+    Ok("bytes=alias+owner;memmap2=alias+readonly;bytemuck=alias+mutated-value;zerocopy=alias+parsed-value;mutation=exclusive+sealed;send-sync=type-probed".to_string())
 }
 
 pub fn close(mut view: Handle<CrateBackedView>) -> Result<(), ViewError> {

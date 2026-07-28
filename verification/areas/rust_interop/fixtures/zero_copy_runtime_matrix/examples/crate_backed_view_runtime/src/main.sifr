@@ -30,7 +30,7 @@ def verify_crate_backed_view_runtime() -> Result[str, ViewError]:
         _closed: None = view.close()
         released: str = release_observation()
         verified: str = summary + ";release=" + released
-        assert verified == "bytes=alias+owner;memmap2=alias+readonly;bytemuck=alias;zerocopy=alias;mutation=exclusive;send-sync=required;release=released=1;active=0"
+        assert verified == "bytes=alias+owner;memmap2=alias+readonly;bytemuck=alias+mutated-value;zerocopy=alias+parsed-value;mutation=exclusive+sealed;send-sync=type-probed;release=released=1;active=0"
         return verified
     except ViewError as error:
         raise error

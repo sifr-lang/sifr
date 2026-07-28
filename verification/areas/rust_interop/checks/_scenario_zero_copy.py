@@ -18,6 +18,39 @@ ScenarioValidator = Callable[
     int,
 ]
 
+ZERO_COPY_SCENARIO_TOKENS = (
+    "@rust.zero_copy(owner=data, view=bridge.zero_copy.CrateBackedView)",
+    "lifetime=owner, mutability=immutable, send=True, sync=True",
+    "Bytes::from(data)",
+    "owner.slice(..)",
+    "drop(owner)",
+    "MmapMut::map_anon",
+    ".make_read_only()",
+    "bytemuck::try_cast_slice",
+    "Packet::ref_from_bytes",
+    "impl Drop for CrateBackedView",
+    "ACTIVE_VIEWS.fetch_sub",
+    "RELEASED_VIEWS.fetch_add",
+    "mutation=exclusive+sealed;send-sync=type-probed",
+)
+
+
+def reject_unsafe_rust(
+    failures: list[str],
+    fixture_id: str,
+    rust_sources: list[Path],
+    example_dir: Path,
+) -> None:
+    for source in rust_sources:
+        for line_number, line in enumerate(
+            source.read_text(encoding="utf-8").splitlines(), start=1
+        ):
+            if "unsafe" in line and not line.lstrip().startswith("//"):
+                failures.append(
+                    f"{fixture_id}: {source.relative_to(example_dir)}:"
+                    f"{line_number} must use only safe Rust"
+                )
+
 
 def validate_zero_copy_scenario(
     failures: list[str],
@@ -154,6 +187,36 @@ def run_zero_copy_self_test(
                 "RELEASED_VIEWS.fetch_add",
                 "RELEASED_VIEWS.fetch_sub",
                 "missing scenario token 'RELEASED_VIEWS.fetch_add'",
+            ),
+            (
+                "active-view tracking drift",
+                "examples/crate_backed_view_runtime/src/bridges/zero_copy.rs",
+                "ACTIVE_VIEWS.fetch_sub",
+                "ACTIVE_VIEWS.fetch_add",
+                "missing scenario token 'ACTIVE_VIEWS.fetch_sub'",
+            ),
+            (
+                "bytemuck view drift",
+                "examples/crate_backed_view_runtime/src/bridges/zero_copy.rs",
+                "bytemuck::try_cast_slice",
+                "bytemuck::pod_read_unaligned",
+                "missing scenario token 'bytemuck::try_cast_slice'",
+            ),
+            (
+                "zerocopy parse drift",
+                "examples/crate_backed_view_runtime/src/bridges/zero_copy.rs",
+                "Packet::ref_from_bytes",
+                "Packet::read_from_bytes",
+                "missing scenario token 'Packet::ref_from_bytes'",
+            ),
+            (
+                "zero-copy decorator drift",
+                "examples/crate_backed_view_runtime/src/main.sifr",
+                "@rust.zero_copy(owner=data, view=bridge.zero_copy.CrateBackedView)",
+                "@rust.zero_copy(owner=data, view=bridge.zero_copy.OtherView)",
+                "missing scenario token "
+                "'@rust.zero_copy(owner=data, "
+                "view=bridge.zero_copy.CrateBackedView)'",
             ),
         )
         for name, relative_path, before, after, expected in mutation_cases:
