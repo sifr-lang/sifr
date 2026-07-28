@@ -20,6 +20,7 @@ pub(in crate::lower) struct NestedFunctionInference {
     pub(in crate::lower) function_types: HashMap<String, FunctionType>,
     pub(in crate::lower) binding_hints: HashMap<String, Type>,
     pub(in crate::lower) function_captures: HashMap<String, Vec<(String, Type)>>,
+    pub(in crate::lower) function_mutated_captures: HashMap<String, Vec<String>>,
 }
 
 #[derive(Clone)]
@@ -151,6 +152,7 @@ fn infer_function_types(
             function_types: HashMap::new(),
             binding_hints: env.vars,
             function_captures: HashMap::new(),
+            function_mutated_captures: HashMap::new(),
         };
     }
 
@@ -179,11 +181,24 @@ fn infer_function_types(
     };
     analyze_block(stmts, &mut env, &mut states, None, ctx);
     let function_captures = collect_nested_function_captures(stmts, &env, &states);
+    let function_mutated_captures = states
+        .iter()
+        .map(|(name, state)| {
+            let mut nonlocal_names = HashSet::new();
+            collect_nonlocal_names(&state.func.body, &mut nonlocal_names);
+            let mut mutated = collect_mutated_parameter_names(&state.func.body, &nonlocal_names)
+                .into_iter()
+                .collect::<Vec<_>>();
+            mutated.sort();
+            (name.clone(), mutated)
+        })
+        .collect();
 
     NestedFunctionInference {
         function_types: finalize_nested_function_types(&mut states, ctx),
         binding_hints: env.vars,
         function_captures,
+        function_mutated_captures,
     }
 }
 

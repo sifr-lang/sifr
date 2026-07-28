@@ -57,6 +57,7 @@ pub(in crate::lower) fn validate_threadsafe_callback_captures(
             reject_unverifiable_handler(range, ctx);
             continue;
         };
+        refresh_retained_capture_types(name, ctx, &mut HashSet::new());
         let Some(captures) = ctx.nested_function_captures.get(name).cloned() else {
             let top_level = ctx.functions.contains_key(name)
                 && ctx.lookup_current_function_binding(name).is_none()
@@ -73,6 +74,23 @@ pub(in crate::lower) fn validate_threadsafe_callback_captures(
             continue;
         };
         let mut valid = true;
+        if let Some(capture_name) = ctx
+            .nested_function_mutated_captures
+            .get(name)
+            .and_then(|captures| captures.first())
+            .cloned()
+        {
+            let capture_ty = nested_capture_type(name, &capture_name, ctx);
+            ctx.error_with_code_at(
+                DiagnosticCode::RUST_CALLBACK_CONTRACT,
+                format!(
+                    "invalid Rust callback attachment: handler `{name}` capture `{capture_name}` of type `{}` is mutated by the handler and requires `FnMut`, but retained callbacks require `Fn`",
+                    capture_ty.display_name()
+                ),
+                range,
+            );
+            valid = false;
+        }
         for (capture_name, capture_ty) in &captures {
             let mut visited = HashSet::from([name.clone()]);
             if let Some(violation) =
@@ -118,6 +136,28 @@ fn retained_capture_violation(
     ctx: &LowerCtx,
     visited: &mut HashSet<String>,
 ) -> Option<CaptureViolation> {
+    let capture_ty = resolved_retained_capture_type(capture_name, capture_ty, ctx);
+    if capture_ty.is_unknown() {
+        return Some(CaptureViolation {
+            path: capture_name.to_string(),
+            ty: capture_ty,
+            reason: "has a type that could not be resolved for retained callback verification"
+                .to_string(),
+        });
+    }
+    if let Some(mutated_name) = ctx
+        .nested_function_mutated_captures
+        .get(capture_name)
+        .and_then(|captures| captures.first())
+    {
+        return Some(CaptureViolation {
+            path: format!("{capture_name}.{mutated_name}"),
+            ty: nested_capture_type(capture_name, mutated_name, ctx),
+            reason:
+                "is mutated by the nested handler and requires `FnMut`, but retained callbacks require `Fn`"
+                    .to_string(),
+        });
+    }
     if matches!(
         capture_ty.resolve_alias(),
         Type::Callable(..) | Type::AsyncCallable(..)
@@ -128,14 +168,14 @@ fn retained_capture_violation(
             reason: "is a callable value whose captures cannot be proven thread-safe".to_string(),
         });
     }
-    if let Some(reason) = non_send_reason(capture_ty) {
+    if let Some(reason) = non_send_reason(&capture_ty) {
         return Some(CaptureViolation {
             path: capture_name.to_string(),
             ty: capture_ty.clone(),
             reason: format!("is not sendable: {reason}"),
         });
     }
-    if let Some(reason) = non_share_safe_reason(capture_ty) {
+    if let Some(reason) = non_share_safe_reason(&capture_ty) {
         return Some(CaptureViolation {
             path: capture_name.to_string(),
             ty: capture_ty.clone(),
@@ -172,6 +212,55 @@ fn retained_capture_violation(
         });
     }
     None
+}
+
+fn refresh_retained_capture_types(
+    handler: &str,
+    ctx: &mut LowerCtx,
+    visited: &mut HashSet<String>,
+) {
+    if !visited.insert(handler.to_string()) {
+        return;
+    }
+    let Some(captures) = ctx.nested_function_captures.get(handler).cloned() else {
+        return;
+    };
+    let captures = captures
+        .into_iter()
+        .map(|(name, ty)| {
+            let resolved = resolved_retained_capture_type(&name, &ty, ctx);
+            (name, resolved)
+        })
+        .collect::<Vec<_>>();
+    ctx.nested_function_captures
+        .insert(handler.to_string(), captures.clone());
+    for (capture, _) in captures {
+        if ctx.nested_function_captures.contains_key(&capture) {
+            refresh_retained_capture_types(&capture, ctx, visited);
+        }
+    }
+}
+
+fn resolved_retained_capture_type(name: &str, ty: &Type, ctx: &LowerCtx) -> Type {
+    if !ty.is_unknown() {
+        return ty.clone();
+    }
+    ctx.scope
+        .lookup(name)
+        .map(|info| info.effective_type().clone())
+        .unwrap_or_else(|| ty.clone())
+}
+
+fn nested_capture_type(function: &str, capture: &str, ctx: &LowerCtx) -> Type {
+    ctx.nested_function_captures
+        .get(function)
+        .and_then(|captures| {
+            captures
+                .iter()
+                .find_map(|(name, ty)| (name == capture).then(|| ty.clone()))
+        })
+        .map(|ty| resolved_retained_capture_type(capture, &ty, ctx))
+        .unwrap_or(Type::Unknown)
 }
 
 fn collect_retained_handler_capture_plans(

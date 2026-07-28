@@ -6,6 +6,9 @@
 class SubscriptionError(Error):
     message: str
 
+class CallbackConfig:
+    label: str
+
 @rust.opaque(
     type=bridge.events.Subscription,
     send=False,
@@ -31,9 +34,12 @@ def subscribe(
 def close_observation() -> Result[str, SubscriptionError]: ...
 
 async def verify_subscription_cancel_shutdown() -> Result[str, SubscriptionError | RustPanicError]:
-    handler_label: str = "handler-error"
+    config: CallbackConfig = CallbackConfig("handler-error")
+    attribute_label: str = config.label
+    handler_label: str = attribute_label.upper().lower()
 
     def event_handler(event: str) -> Result[None, SubscriptionError]:
+        assert attribute_label == "handler-error"
         if event == handler_label:
             raise SubscriptionError("expected-handler-error")
         assert event != "panic"

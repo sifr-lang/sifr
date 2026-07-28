@@ -150,6 +150,8 @@ pub(in crate::lower) struct LowerCtx {
         std::collections::BTreeMap<String, PythonBridgeTargetAuthority>,
     /// Nested local function captures observed while lowering the current statement block.
     pub(in crate::lower) nested_function_captures: HashMap<String, Vec<(String, Type)>>,
+    /// Captured bindings mutated by each nested local function.
+    pub(in crate::lower) nested_function_mutated_captures: HashMap<String, Vec<String>>,
     pub(in crate::lower) sequence_guards: Vec<SequenceGuard>,
     pub(in crate::lower) len_aliases: Vec<LenAliasFact>,
     pub(in crate::lower) sequence_pointers: Vec<SequencePointerFact>,
@@ -241,6 +243,7 @@ impl LowerCtx {
             python_trust_policy: None,
             python_bridge_authorities: std::collections::BTreeMap::new(),
             nested_function_captures: HashMap::new(),
+            nested_function_mutated_captures: HashMap::new(),
             sequence_guards: Vec::new(),
             len_aliases: Vec::new(),
             sequence_pointers: Vec::new(),

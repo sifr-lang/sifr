@@ -1004,9 +1004,14 @@ Successful retained attachment consumes the nested handler binding itself;
 second attachment, direct invocation after attachment, and attachment of one
 outer handler across loop iterations are ownership errors.
 Capture validation walks dependencies on sibling nested functions
-transitively. Callable-valued captures without compiler-known nested-function
-provenance are rejected because their own captures cannot be proven
-thread-safe. Retained callback parameter indices are exported through
+transitively. Capture types are refreshed from the lowered lexical binding at
+attachment, so annotated or inferred attribute and method results retain their
+actual type; a genuinely unresolved capture is rejected as unverifiable rather
+than exposed as an internal `Unknown`. Callable-valued captures without
+compiler-known nested-function provenance are rejected because their own
+captures cannot be proven thread-safe. A handler that mutates a capture,
+directly or through a sibling nested function, is rejected because the
+retained bridge requires `Fn`, not `FnMut`. Retained callback parameter indices are exported through
 project-module metadata for direct imports, aliases, re-exports, and imported
 methods. This keeps `SIFR-RUST-CB-0001` enforcement identical at same-module
 and cross-module attachment sites.
@@ -1019,8 +1024,8 @@ adapter, carries the exact declaration policy, and contains each invocation
 behind stable panic redaction. The compiler requires an owned callback and an
 opaque subscription handle result, rejects mutable or borrowed retained
 callbacks, and checks named nested captures for sendability, share safety, and
-clone-capable owned transfer before Cargo probing. Locked runtime evidence
-uses raw loopback WebSocket
+clone-capable owned transfer plus the immutable `Fn` call contract before
+Cargo probing. Locked runtime evidence uses raw loopback WebSocket
 frames through `tokio-tungstenite`, Redis Pub/Sub RESP, and a real `notify`
 watcher to observe foreign-thread invocation, bounded overflow-as-error,
 callback errors, policy-driven close-time drain shutdown, cancellation of a

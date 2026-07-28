@@ -342,3 +342,117 @@ def attach_conditionally_then_reuse(
         "{errors:#?}"
     );
 }
+
+#[test]
+fn rust_threadsafe_callback_resolves_attribute_and_method_capture_types() {
+    let source = r#"
+class SubscriptionError(Error):
+    message: str
+
+class Subscription:
+    lifecycle_token: int
+
+class Registry:
+    label: str
+
+    def upper_label(self) -> str:
+        return self.label.upper()
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+def attach(registry: Registry) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    attribute_label: str = registry.label
+    method_label: str = registry.upper_label()
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        assert attribute_label != ""
+        assert method_label != ""
+        return None
+    return subscribe(handler)
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let result = lower_module(parsed.suite())
+        .expect("declared attribute and method result captures should lower");
+    let attach = result
+        .module
+        .functions
+        .iter()
+        .find(|function| function.name == "attach")
+        .expect("attach function");
+    let capture_clones = attach.body.iter().find_map(|stmt| match stmt {
+        HirStmt::NestedFunction {
+            func,
+            capture_clones,
+            ..
+        } if func.name == "handler" => Some(capture_clones.clone()),
+        _ => None,
+    });
+
+    assert_eq!(
+        capture_clones,
+        Some(vec![
+            "attribute_label".to_string(),
+            "method_label".to_string()
+        ])
+    );
+}
+
+#[test]
+fn rust_threadsafe_callback_rejects_direct_and_transitive_mutating_captures() {
+    let source = r#"
+class SubscriptionError(Error):
+    message: str
+
+class Subscription:
+    lifecycle_token: int
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+def attach_direct() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    direct_counter: int = 0
+    def direct_handler(event: str) -> Result[None, SubscriptionError]:
+        nonlocal direct_counter
+        direct_counter = direct_counter + 1
+        return None
+    return subscribe(direct_handler)
+
+def attach_transitive() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    transitive_counter: int = 0
+    def bump(event: str) -> Result[None, SubscriptionError]:
+        nonlocal transitive_counter
+        transitive_counter = transitive_counter + 1
+        return None
+    def transitive_handler(event: str) -> Result[None, SubscriptionError]:
+        return bump(event)
+    return subscribe(transitive_handler)
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("mutating retained captures should fail lowering"),
+        Err(errors) => errors,
+    };
+
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::RUST_CALLBACK_CONTRACT)
+                && error
+                    .message
+                    .contains("handler `direct_handler` capture `direct_counter`")
+                && error.message.contains("requires `FnMut`")
+        }),
+        "{errors:#?}"
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::RUST_CALLBACK_CONTRACT)
+                && error
+                    .message
+                    .contains("handler `transitive_handler` capture `bump.transitive_counter`")
+                && error.message.contains("requires `FnMut`")
+        }),
+        "{errors:#?}"
+    );
+}

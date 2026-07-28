@@ -689,7 +689,9 @@ Focused implementation evidence:
 - the mandatory negative generated-build test rejects both a named nested
   handler retaining `NonSend` state and one retaining a callable whose
   captures are unknown with `SIFR-RUST-CB-0001`, and rejects second attachment
-  of a consumed nested handler with `SIFR-OWN-0001`, before Cargo probing;
+  of a consumed nested handler with `SIFR-OWN-0001`; direct and
+  sibling-transitive mutating captures also fail the retained `Fn` contract
+  with `SIFR-RUST-CB-0001`, before Cargo probing;
 - the package lock is an exact subset of the root lock graph, and its standalone
   Rust library passes locked/offline Cargo check and Clippy;
 - fixture, compatibility, tier, scenario, stable-claim, and provenance checks
@@ -731,6 +733,15 @@ Focused implementation evidence:
   move, diagnoses second attachment and direct invocation with
   `SIFR-OWN-0001`, diagnoses outer-loop reuse with `SIFR-OWN-0004`, and pins
   declaration-time snapshots in codegen and the runtime-observed package.
+- [Opus review round 5](../../reviews/active/rust-interop-certification-6-review-round-5.md)
+  independently closed every prior finding, then found false rejection of
+  attribute/method-derived locals whose capture type remained inference-time
+  `Unknown`, plus an `FnMut` escape through direct or transitive `nonlocal`
+  mutation. The follow-up refreshes capture types from lowered lexical
+  bindings, gives genuinely unresolved captures an explicit contract
+  diagnostic, records mutated nested captures, and rejects direct and
+  transitive `FnMut` handlers before Cargo. Both mandatory generated-package
+  directions exercise the corrected contract.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

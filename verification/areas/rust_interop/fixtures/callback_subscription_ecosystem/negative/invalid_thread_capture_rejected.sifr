@@ -52,3 +52,26 @@ def verify_retained_handler_reuse_rejected() -> Result[Subscription, Subscriptio
 
     first: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(handler)
     return subscribe(handler)
+
+def verify_mutating_capture_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    counter: int = 0
+
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        nonlocal counter
+        counter = counter + 1
+        return None
+
+    return subscribe(handler)
+
+def verify_transitive_mutating_capture_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    counter: int = 0
+
+    def bump(event: str) -> Result[None, SubscriptionError]:
+        nonlocal counter
+        counter = counter + 1
+        return None
+
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        return bump(event)
+
+    return subscribe(handler)
