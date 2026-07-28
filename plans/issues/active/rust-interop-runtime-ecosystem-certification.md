@@ -874,6 +874,11 @@ Focused implementation evidence:
   builds, Clippy, the Rust-interop area, guardrails, counts, and safe-Rust
   audit; confirmed every round-1 through round-6 remediation and unrelated-
   path preservation; and reported `SATISFIED` with no actionable finding.
+- [Integrated-head Opus review round 8](../../reviews/active/rust-interop-certification-7-review-round-8.md)
+  verified the current-main merge changed no Rust or Rust-interop file, the
+  authoritative create-PR failure's three transfer-inventory anchors now match
+  the exact probe reads and both transfer gates pass, all earlier findings
+  remain closed, and the exact head is `SATISFIED`.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 
