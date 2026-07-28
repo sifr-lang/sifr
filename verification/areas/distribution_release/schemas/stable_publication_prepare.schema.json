@@ -7,6 +7,8 @@
     "schema_version",
     "operation",
     "mode",
+    "publication_state",
+    "next_generation",
     "version",
     "evidence",
     "source",
@@ -22,6 +24,8 @@
     "schema_version": {"const": 2},
     "operation": {"enum": ["ga-activation", "normal"]},
     "mode": {"enum": ["initial", "resume"]},
+    "publication_state": {"enum": ["pending", "activated"]},
+    "next_generation": {"type": "integer", "minimum": 1},
     "version": {"$ref": "#/$defs/version"},
     "evidence": {
       "type": "object",
@@ -139,6 +143,15 @@
       }
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"publication_state": {"const": "activated"}},
+        "required": ["publication_state"]
+      },
+      "then": {"properties": {"mode": {"const": "resume"}}}
+    }
+  ],
   "$defs": {
     "commit": {
       "type": "string",

@@ -69,6 +69,7 @@ def release_report_production_self_test() -> None:
             "protected-drill",
             "stable-prepare",
             "stable-publish-primitives",
+            "stable-publication",
         ],
     }
     with tempfile.TemporaryDirectory(

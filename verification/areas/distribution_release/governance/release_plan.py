@@ -327,6 +327,7 @@ def validate_release_signoff(payload: Any) -> dict[str, Any]:
             "published_assets",
             "marketplace",
             "channel_generation",
+            "site_publication",
             "site_facts_sha256",
             "post_publication_smoke",
         },
@@ -353,6 +354,18 @@ def validate_release_signoff(payload: Any) -> dict[str, Any]:
         require_nonempty_string(marketplace[field], f"$.marketplace.{field}")
     require_sha256(marketplace["vsix_sha256"], "$.marketplace.vsix_sha256")
     require_positive_int(signoff["channel_generation"], "$.channel_generation")
+    site = require_object(signoff["site_publication"], "$.site_publication")
+    require_exact_keys(
+        site,
+        required={"repository", "workflow", "run_id", "deployed_commit"},
+        location="$.site_publication",
+    )
+    if site["repository"] != "sifr-lang/sifr-website":
+        fail("$.site_publication.repository", "must be sifr-lang/sifr-website")
+    if site["workflow"] != "release-site.yml":
+        fail("$.site_publication.workflow", "must be release-site.yml")
+    require_positive_int(site["run_id"], "$.site_publication.run_id")
+    require_commit(site["deployed_commit"], "$.site_publication.deployed_commit")
     require_sha256(signoff["site_facts_sha256"], "$.site_facts_sha256")
     smoke = require_array(signoff["post_publication_smoke"], "$.post_publication_smoke")
     if len(smoke) < 4:

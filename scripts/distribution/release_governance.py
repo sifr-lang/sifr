@@ -201,6 +201,7 @@ def parse_args() -> argparse.Namespace:
     stable_prepare.add_argument("--expected-plan-sha256", required=True)
     stable_prepare.add_argument("--source-root", required=True)
     stable_prepare.add_argument("--live-index", required=True)
+    stable_prepare.add_argument("--snapshot-root", required=True)
     stable_prepare.add_argument("--artifact-root", required=True)
     stable_prepare.add_argument("--proposed-generation", required=True, type=int)
     stable_prepare.add_argument("--out", required=True)
@@ -539,6 +540,7 @@ def prepare_stable_publication(args: argparse.Namespace) -> None:
         expected_plan_sha256=args.expected_plan_sha256,
         source_root=Path(args.source_root),
         live_index_path=Path(args.live_index),
+        snapshot_root=Path(args.snapshot_root),
         artifact_root=Path(args.artifact_root),
         proposed_generation=args.proposed_generation,
     )

@@ -59,6 +59,8 @@ on:
         value: ${{ jobs.prepare.outputs.source_commit }}
       proposed_generation:
         value: ${{ jobs.prepare.outputs.proposed_generation }}
+      site_base_commit:
+        value: ${{ jobs.prepare.outputs.site_base_commit }}
 
 permissions:
   actions: read
@@ -80,6 +82,7 @@ jobs:
       version: ${{ steps.outputs.outputs.version }}
       source_commit: ${{ steps.outputs.outputs.source_commit }}
       proposed_generation: ${{ steps.outputs.outputs.proposed_generation }}
+      site_base_commit: ${{ steps.outputs.outputs.site_base_commit }}
     env:
       GH_TOKEN: ${{ github.token }}
       CHANNEL: ${{ inputs.channel }}
@@ -264,6 +267,14 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
         with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          path: governance-source
+          persist-credentials: false
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: ${{ inputs.governance_mode == 'ga-activation' || inputs.governance_mode == 'normal' }}
+        with:
           ref: ${{ inputs.evidence_commit }}
           fetch-depth: 0
           path: stable-evidence
@@ -323,17 +334,14 @@ jobs:
             echo "::error::candidate qualification index is missing"
             exit 2
           }
-          (
-            cd stable-source
-            python3 scripts/distribution/release_governance.py validate \
-              --kind qualification-artifact-index \
-              --input "../${qualification}" \
-              --require-canonical
-          )
+          python3 governance-source/scripts/distribution/release_governance.py validate \
+            --kind qualification-artifact-index \
+            --input "${qualification}" \
+            --require-canonical
           run_id="$(jq -er '.workflow.run_id' "${qualification}")"
           run_attempt="$(jq -er '.workflow.run_attempt' "${qualification}")"
           mkdir -p prepare
-          python3 stable-source/scripts/distribution/fetch_qualification_artifacts.py \
+          python3 governance-source/scripts/distribution/fetch_qualification_artifacts.py \
             --qualification-index "${qualification}" \
             --repository "${GITHUB_REPOSITORY}" \
             --expected-source-commit "${source_commit}" \
@@ -365,26 +373,24 @@ jobs:
                  | select(test("^channels-generation-[1-9][0-9]*[.]json$"))'
           )
           proposed_generation="$(
-            python3 stable-source/scripts/distribution/allocate_release_generation.py \
+            python3 governance-source/scripts/distribution/allocate_release_generation.py \
               --live-index prepare/current-channels.json \
               --snapshot-root prepare/history
           )"
-          (
-            cd stable-source
-            python3 scripts/distribution/release_governance.py \
-              prepare-stable-publication \
-              --operation "${GOVERNANCE_MODE}" \
-              --mode "${PUBLICATION_MODE}" \
-              --evidence-root ../stable-evidence \
-              --evidence-commit "${EVIDENCE_COMMIT}" \
-              --candidate-path "${CANDIDATE_PATH}" \
-              --expected-plan-sha256 "${EXPECTED_PLAN_SHA256}" \
-              --source-root . \
-              --live-index ../prepare/current-channels.json \
-              --artifact-root ../stable-assets \
-              --proposed-generation "${proposed_generation}" \
-              --out ../prepare/summary.json
-          )
+          python3 governance-source/scripts/distribution/release_governance.py \
+            prepare-stable-publication \
+            --operation "${GOVERNANCE_MODE}" \
+            --mode "${PUBLICATION_MODE}" \
+            --evidence-root stable-evidence \
+            --evidence-commit "${EVIDENCE_COMMIT}" \
+            --candidate-path "${CANDIDATE_PATH}" \
+            --expected-plan-sha256 "${EXPECTED_PLAN_SHA256}" \
+            --source-root stable-source \
+            --live-index prepare/current-channels.json \
+            --snapshot-root prepare/history \
+            --artifact-root stable-assets \
+            --proposed-generation "${proposed_generation}" \
+            --out prepare/summary.json
           test "$(jq -er '.qualification.run_id' prepare/summary.json)" = "${run_id}" &&
             test "$(jq -er '.qualification.run_attempt' prepare/summary.json)" = "${run_attempt}" &&
             test "$(jq -er '.version' prepare/summary.json)" = "${candidate_version}" || {
@@ -397,6 +403,7 @@ jobs:
             echo
             echo "- operation/mode: \`${GOVERNANCE_MODE}\` / \`${PUBLICATION_MODE}\`"
             echo "- candidate: \`${candidate_version}\` at \`${source_commit}\`"
+            echo "- governance code: \`$(git -C governance-source rev-parse HEAD)\`"
             echo "- evidence: \`${EVIDENCE_COMMIT}:${CANDIDATE_PATH}\`"
             echo "- qualification run: \`${run_id}/${run_attempt}\`"
             echo "- live index: generation \`$(jq -r '.live_index.generation' prepare/summary.json)\`"
@@ -423,6 +430,7 @@ jobs:
             echo "version=$(jq -r '.version // ""' prepare/summary.json)"
             echo "source_commit=$(jq -r '.source.commit // .source_commit // ""' prepare/summary.json)"
             echo "proposed_generation=$(jq -r '.mutation.proposed_index.generation // ""' prepare/summary.json)"
+            echo "site_base_commit=$(jq -r '.site.base_commit // ""' prepare/summary.json)"
           } >>"${GITHUB_OUTPUT}"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

@@ -146,6 +146,25 @@ def validate_schema_contracts() -> None:
         pass
     else:
         raise ValueError("stable prepare schema accepted an unknown artifact identity")
+    activated_initial = copy.deepcopy(
+        fixtures["stable_publication_prepare.schema.json"]
+    )
+    activated_initial["publication_state"] = "activated"
+    try:
+        validate_instance(activated_initial, prepare_schema)
+    except JsonSchemaError:
+        pass
+    else:
+        raise ValueError("stable prepare schema accepted activated initial mode")
+    signoff_schema = SCHEMA_ROOT / "stable_release_signoff.schema.json"
+    wrong_site = copy.deepcopy(fixtures["stable_release_signoff.schema.json"])
+    wrong_site["site_publication"]["repository"] = "example.invalid/site"
+    try:
+        validate_instance(wrong_site, signoff_schema)
+    except JsonSchemaError:
+        pass
+    else:
+        raise ValueError("stable sign-off schema accepted the wrong site repository")
 
 
 def schema_fixtures() -> dict[str, Any]:
@@ -222,6 +241,8 @@ def stable_publication_prepare() -> dict[str, Any]:
         "schema_version": 2,
         "operation": "ga-activation",
         "mode": "initial",
+        "publication_state": "pending",
+        "next_generation": 8,
         "version": "0.1.0",
         "evidence": {
             "commit": COMMIT,
@@ -559,6 +580,7 @@ def release_report() -> dict[str, Any]:
             ("distribution_release", "protected-drill"),
             ("distribution_release", "stable-prepare"),
             ("distribution_release", "stable-publish-primitives"),
+            ("distribution_release", "stable-publication"),
         ],
     }
     return {
@@ -602,6 +624,7 @@ def release_report() -> dict[str, Any]:
                             "protected-drill",
                             "stable-prepare",
                             "stable-publish-primitives",
+                            "stable-publication",
                         ],
                     ),
                 )
@@ -677,6 +700,12 @@ def release_signoff() -> dict[str, Any]:
             "vsix_sha256": SHA_B,
         },
         "channel_generation": 8,
+        "site_publication": {
+            "repository": "sifr-lang/sifr-website",
+            "workflow": "release-site.yml",
+            "run_id": 11,
+            "deployed_commit": COMMIT,
+        },
         "site_facts_sha256": SHA_C,
         "post_publication_smoke": [
             {"id": f"smoke-{index}", "status": "pass", "sha256": SHA_D}

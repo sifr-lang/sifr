@@ -14,6 +14,7 @@ from .artifact_index import (
 )
 from .common import (
     GovernanceError,
+    canonical_json_bytes,
     fail,
     load_json_strict,
     require_commit,
@@ -27,6 +28,7 @@ from .common import (
     sha256_file,
     version_channel,
 )
+from .generation import SNAPSHOT_RE, allocate_next_generation
 from .planner import (
     bind_aggregate_artifacts,
     bind_target_reports,
@@ -41,6 +43,7 @@ from .release_report import (
     validate_release_profile_report,
 )
 from .stable_planner import (
+    StableMutation,
     materialize_stable_mutation,
     validate_stable_mutation_evidence,
 )
@@ -69,6 +72,7 @@ def materialize_stable_prepare(
     expected_plan_sha256: str,
     source_root: Path,
     live_index_path: Path,
+    snapshot_root: Path,
     artifact_root: Path,
     proposed_generation: int,
     now: datetime | None = None,
@@ -110,10 +114,8 @@ def materialize_stable_prepare(
     if sha256_file(plan_path) != expected_plan_sha256:
         fail("expected_plan_sha256", "does not match candidate evidence")
 
-    plan = validate_release_plan(
-        load_json_strict(plan_path, require_canonical=True),
-        active_index=load_json_strict(live_index_path, require_canonical=True),
-    )
+    plan_value = load_json_strict(plan_path, require_canonical=True)
+    plan = validate_release_plan(plan_value)
     if plan["transition"] != operation or plan["version"] != match.group(1):
         fail("candidate_path", "does not match the requested plan operation/version")
     if signoff_path.is_file():
@@ -194,19 +196,44 @@ def materialize_stable_prepare(
 
     live_sha256 = sha256_file(live_index_path)
     live_index = load_json_strict(live_index_path, require_canonical=True)
-    mutation = materialize_stable_mutation(
-        plan_path=plan_path,
+    allocated_generation = allocate_next_generation(
         live_index_path=live_index_path,
-        expected_generation=live_index["generation"],
-        expected_sha256=live_sha256,
-        proposed_generation=proposed_generation,
+        snapshot_root=snapshot_root,
     )
+    if proposed_generation != allocated_generation:
+        fail(
+            "proposed_generation",
+            "does not equal the next retained generation",
+        )
+    publication_state = "pending"
+    try:
+        validate_release_plan(plan_value, active_index=live_index)
+    except GovernanceError:
+        if mode != "resume" or not _plan_is_realized(plan, live_index):
+            raise
+        publication_state = "activated"
+        mutation = _recover_realized_mutation(
+            plan_path=plan_path,
+            live_index=live_index,
+            live_index_path=live_index_path,
+            snapshot_root=snapshot_root,
+        )
+    else:
+        mutation = materialize_stable_mutation(
+            plan_path=plan_path,
+            live_index_path=live_index_path,
+            expected_generation=live_index["generation"],
+            expected_sha256=live_sha256,
+            proposed_generation=proposed_generation,
+        )
     mutation_evidence = mutation.evidence()
     validate_stable_mutation_evidence(mutation_evidence)
     summary = {
         "schema_version": 2,
         "operation": operation,
         "mode": mode,
+        "publication_state": publication_state,
+        "next_generation": allocated_generation,
         "version": plan["version"],
         "evidence": {
             "commit": evidence_commit,
@@ -262,6 +289,8 @@ def validate_stable_prepare_summary(payload: object) -> dict[str, Any]:
             "schema_version",
             "operation",
             "mode",
+            "publication_state",
+            "next_generation",
             "version",
             "evidence",
             "source",
@@ -282,6 +311,17 @@ def validate_stable_prepare_summary(payload: object) -> dict[str, Any]:
         "$.operation",
     )
     require_enum(summary["mode"], {"initial", "resume"}, "$.mode")
+    publication_state = require_enum(
+        summary["publication_state"],
+        {"pending", "activated"},
+        "$.publication_state",
+    )
+    next_generation = require_positive_int(
+        summary["next_generation"],
+        "$.next_generation",
+    )
+    if publication_state == "activated" and summary["mode"] != "resume":
+        fail("$.publication_state", "activated state requires resume mode")
     version = summary["version"]
     if version_channel(version, "$.version") != "stable":
         fail("$.version", "must be an exact stable version")
@@ -364,11 +404,23 @@ def validate_stable_prepare_summary(payload: object) -> dict[str, Any]:
     )
     require_positive_int(live["generation"], "$.live_index.generation")
     require_sha256(live["sha256"], "$.live_index.sha256")
-    if (
-        mutation["previous_index"]["generation"] != live["generation"]
-        or mutation["previous_index"]["sha256"] != live["sha256"]
-    ):
-        fail("$.live_index", "does not equal the mutation predecessor")
+    proposed_generation = mutation["proposed_index"]["generation"]
+    if publication_state == "pending":
+        if (
+            mutation["previous_index"]["generation"] != live["generation"]
+            or mutation["previous_index"]["sha256"] != live["sha256"]
+        ):
+            fail("$.live_index", "does not equal the mutation predecessor")
+        if next_generation != proposed_generation:
+            fail("$.next_generation", "must equal the pending proposal generation")
+    else:
+        if (
+            proposed_generation != live["generation"]
+            or mutation["proposed_index_sha256"] != live["sha256"]
+        ):
+            fail("$.live_index", "does not equal the activated proposed index")
+        if next_generation <= proposed_generation:
+            fail("$.next_generation", "must follow the activated generation")
 
     artifacts = require_object(summary["artifacts"], "$.artifacts")
     if set(artifacts) != EXPECTED_ARTIFACT_IDS:
@@ -446,6 +498,48 @@ def validate_stable_prepare_summary(payload: object) -> dict[str, Any]:
         fail("$.site.repository", "must be sifr-lang/sifr-website")
     require_commit(site["base_commit"], "$.site.base_commit")
     return summary
+
+
+def _plan_is_realized(plan: dict[str, Any], live_index: dict[str, Any]) -> bool:
+    version = plan["version"]
+    return (
+        live_index.get("ga_status") == "active"
+        and live_index.get("channels", {}).get("stable") == version
+        and live_index.get("releases", {}).get(version) == plan["desired_release"]
+    )
+
+
+def _recover_realized_mutation(
+    *,
+    plan_path: Path,
+    live_index: dict[str, Any],
+    live_index_path: Path,
+    snapshot_root: Path,
+) -> StableMutation:
+    candidates: list[tuple[int, Path]] = []
+    for path in snapshot_root.iterdir():
+        match = SNAPSHOT_RE.fullmatch(path.name)
+        if match is not None:
+            generation = int(match.group(1))
+            if generation < live_index["generation"]:
+                candidates.append((generation, path))
+    for generation, path in sorted(candidates, reverse=True):
+        try:
+            mutation = materialize_stable_mutation(
+                plan_path=plan_path,
+                live_index_path=path,
+                expected_generation=generation,
+                expected_sha256=sha256_file(path),
+                proposed_generation=live_index["generation"],
+            )
+        except GovernanceError:
+            continue
+        if canonical_json_bytes(mutation.proposed_index) == live_index_path.read_bytes():
+            return mutation
+    fail(
+        "snapshot_root",
+        "does not contain the exact predecessor for the activated release",
+    )
 
 
 def _require_checkout(root: Path, expected_commit: str, label: str) -> None:

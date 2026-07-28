@@ -47,6 +47,7 @@ REQUIRED_SUITES = {
         "protected-drill",
         "stable-prepare",
         "stable-publish-primitives",
+        "stable-publication",
     },
 }
 
