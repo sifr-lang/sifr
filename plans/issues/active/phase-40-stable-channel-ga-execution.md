@@ -819,6 +819,14 @@ Review and upstream coordination ledger:
   now mirrors the schema, both conditional directions have runtime and schema
   negatives, and the operator-facing CLI negative proves exit 2 with the
   governed missing-field diagnostic and no traceback.
+- Exact PR-head review pass 8 is satisfied and archived at
+  `plans/reviews/archive/phase-40-milestone-40-5-incident-publication-wiring-review-pass-8-exact-pr-head-satisfied.md`.
+  It matched local, remote, and PR head at
+  `341b312f50de61c549f1bde01a6676f248231d02`, independently reproduced
+  the missing/forbidden incident-binding schema and runtime cases plus both
+  operator-facing validator kinds, reran the focused publication/recovery
+  suites and guardrails, found no actionable finding, and returned
+  `VERDICT: SATISFIED`.
 - [ ] Merge the protected rollback and incident roll-forward production wiring.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
