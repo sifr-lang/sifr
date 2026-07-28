@@ -4,10 +4,18 @@
 # execution-kind: contract-only
 # expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-ZC-0001
-@rust.zero_copy(owner=input, view=bridge.bytes.BytesView)
-@rust(bridge.bytes.copies_anyway, panic=trusted_no_panic)
-def copies_anyway(input: bytes) -> bytes: ...
+class BytesViewError(Error):
+    message: str
 
-def verify_copy_fallback_rejected() -> bytes:
-    copies_anyway_result: bytes = copies_anyway(b"sifr-rust-interop")
+@rust.opaque(type=bridge.bytes.BytesView, send=True, sync=True, clone=none, close=drop)
+class BytesView:
+    ptr: int
+
+@rust.zero_copy(owner=input, view=bridge.bytes.BytesView, copy_fallback=True)
+@rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True)
+@rust(bridge.bytes.copies_anyway, panic=map_error(bridge.bytes.map_panic))
+def copies_anyway(input: bytes) -> Result[BytesView, BytesViewError | RustPanicError]: ...
+
+def verify_copy_fallback_rejected() -> Result[BytesView, BytesViewError | RustPanicError]:
+    copies_anyway_result: Result[BytesView, BytesViewError | RustPanicError] = copies_anyway(b"sifr-rust-interop")
     return copies_anyway_result

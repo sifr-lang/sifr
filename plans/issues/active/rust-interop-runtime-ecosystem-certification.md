@@ -856,6 +856,13 @@ Focused implementation evidence:
   bound tests lower and validate those exact checked-in fixtures, gives both
   fixtures opaque handle returns, and moves canonical/legacy generated-path
   recognition and its malformed-path regressions into codegen.
+- [Opus review round 5](../../reviews/active/rust-interop-certification-7-review-round-5.md)
+  confirmed the positive fixture and shared codegen-policy fixes, then found
+  both contract-only negative provenance tests still used synthetic sources;
+  the bytes fixture also omitted the copy-fallback contract it advertised.
+  The follow-up gives that fixture a complete paired opaque view with explicit
+  `copy_fallback=True` and makes both manifest-bound tests lower and validate
+  their exact checked-in negative sources.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

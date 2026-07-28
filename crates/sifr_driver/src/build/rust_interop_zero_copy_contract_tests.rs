@@ -17,8 +17,14 @@ use std::path::PathBuf;
 const ZERO_COPY_BYTES_FIXTURE: &str = include_str!(
     "../../../../verification/areas/rust_interop/fixtures/zero_copy_bytes/positive/borrowed_bytes_view.sifr"
 );
+const ZERO_COPY_BYTES_NEGATIVE_FIXTURE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/zero_copy_bytes/negative/copy_fallback_rejected.sifr"
+);
 const ZERO_COPY_VIEW_MATRIX_FIXTURE: &str = include_str!(
     "../../../../verification/areas/rust_interop/fixtures/zero_copy_view_matrix/positive/owner_lifetime_views.sifr"
+);
+const ZERO_COPY_VIEW_MATRIX_NEGATIVE_FIXTURE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/zero_copy_view_matrix/negative/mutable_alias_rejected.sifr"
 );
 const VALID_ZERO_COPY_SOURCE: &str = r#"
 class RustError(Error):
@@ -283,9 +289,8 @@ fn package_rust_interop_rejects_legacy_mutable_bool_key() {
 
 #[test]
 fn package_rust_interop_rejects_mutable_view_from_shared_borrow_owner() {
-    let source = VALID_ZERO_COPY_SOURCE.replace("mutability=immutable", "mutability=mutable");
-    let generated = generated_from_source(&source);
-    let mut context = context_with_source(&source);
+    let generated = generated_from_fixture_source(ZERO_COPY_VIEW_MATRIX_NEGATIVE_FIXTURE);
+    let mut context = context_with_source(ZERO_COPY_VIEW_MATRIX_NEGATIVE_FIXTURE);
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
     let diagnostics = interop_errors(generated, Some(context), "shared owner must fail");
@@ -296,12 +301,8 @@ fn package_rust_interop_rejects_mutable_view_from_shared_borrow_owner() {
 
 #[test]
 fn package_rust_interop_rejects_zero_copy_copy_fallback() {
-    let source = VALID_ZERO_COPY_SOURCE.replace(
-        "@rust.zero_copy(owner=input, view=bridge.bytes.BytesView)",
-        "@rust.zero_copy(owner=input, view=bridge.bytes.BytesView, copy_fallback=True)",
-    );
-    let generated = generated_from_source(&source);
-    let mut context = context_with_source(&source);
+    let generated = generated_from_fixture_source(ZERO_COPY_BYTES_NEGATIVE_FIXTURE);
+    let mut context = context_with_source(ZERO_COPY_BYTES_NEGATIVE_FIXTURE);
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
     let diagnostics = interop_errors(generated, Some(context), "copy fallback must fail");
