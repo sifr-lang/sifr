@@ -68,6 +68,7 @@ def release_report_production_self_test() -> None:
             "epoch-bootstrap",
             "protected-drill",
             "stable-prepare",
+            "stable-publish-primitives",
         ],
     }
     with tempfile.TemporaryDirectory(

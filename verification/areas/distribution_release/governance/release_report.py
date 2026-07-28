@@ -46,6 +46,7 @@ REQUIRED_SUITES = {
         "epoch-bootstrap",
         "protected-drill",
         "stable-prepare",
+        "stable-publish-primitives",
     },
 }
 

@@ -225,7 +225,8 @@
         "incident-governance",
         "epoch-bootstrap",
         "protected-drill",
-        "stable-prepare"
+        "stable-prepare",
+        "stable-publish-primitives"
       ],
       "resource_classes": [
         "default-local"
