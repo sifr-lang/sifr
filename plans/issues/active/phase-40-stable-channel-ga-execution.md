@@ -325,7 +325,13 @@ Review and upstream coordination ledger:
   It matched local, remote, and PR head
   `eebc715f412be91e7751a0ac56a80d0e3ca4271b`, independently re-ran the
   fail-closed guards, found no actionable issue, and returned
-  `VERDICT: SATISFIED`.
+  `VERDICT: SATISFIED`. Final frozen-head review pass 4 is archived at
+  `plans/reviews/archive/phase-40-generated-code-release-divergence-review-pass-4-final-exact-head-satisfied.md`.
+  It verified exact final head
+  `a93330231735a83f78e7d0e8762a9d56d15022ed`, found no actionable issue,
+  and returned `VERDICT: SATISFIED`. The release-divergence slice merged
+  through [PR #3049](https://github.com/sifr-lang/sifr/pull/3049) as
+  `bae42ba47d4c1324b2d34dc654effaef2d39576e`.
 - Milestone evidence-closure Claude Opus review passes 1 through 4 are archived
   at
   `plans/reviews/archive/phase-40-milestone-40-4-evidence-closure-review-pass-{1,2,3,4}.md`.
