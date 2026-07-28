@@ -869,6 +869,11 @@ Focused implementation evidence:
   that key from any other unsupported key. The follow-up includes the exact
   rejected key in zero-copy and view diagnostics and pins the `copy_fallback`
   and legacy `mutable` assertions to their source tokens.
+- [Opus review round 7](../../reviews/active/rust-interop-certification-7-review-round-7.md)
+  independently reproduced the full driver, all three mandatory generated
+  builds, Clippy, the Rust-interop area, guardrails, counts, and safe-Rust
+  audit; confirmed every round-1 through round-6 remediation and unrelated-
+  path preservation; and reported `SATISFIED` with no actionable finding.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 
