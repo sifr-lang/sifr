@@ -150,7 +150,7 @@ normative and must not be broadened.
 | `certification_4` | merged | [PR #3036](https://github.com/sifr-lang/sifr/pull/3036); async reqwest loopback, runtime reuse, cancellation/drop, timeout cleanup, and hidden blocking rejection |
 | `certification_5` | merged | [PR #3042](https://github.com/sifr-lang/sifr/pull/3042); opaque resource lifecycle matrix with HTTP/Redis/PostgreSQL loopbacks and a temporary SQLite database |
 | `certification_6` | merged | [PR #3046](https://github.com/sifr-lang/sifr/pull/3046); retained callback subscription lifecycle and capture contract |
-| `certification_7` | blocked | starts after `certification_6` merges |
+| `certification_7` | in progress | zero-copy runtime matrix starts after `certification_6` |
 | `certification_8` | blocked | starts after `certification_7` merges |
 | `certification_9` | blocked | starts after `certification_8` merges |
 | `certification_10` | blocked | starts after `certification_9` merges |

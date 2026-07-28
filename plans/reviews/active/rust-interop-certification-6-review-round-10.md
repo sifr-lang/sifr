@@ -26,3 +26,8 @@ expression traversal and scope shadowing, receiver-aware mutation, handler
 ownership and imported provenance, runtime lifecycle and cleanup, locked
 package evidence, stable claims, and the absence of unrelated changes. No
 actionable finding remained.
+
+A final tracking-only verification after recording this artifact found that
+the checklist unblocked certification 7 while the progress table still called
+it blocked. The closure commit now marks certification 7 `in progress`,
+matching the established milestone handoff convention.
