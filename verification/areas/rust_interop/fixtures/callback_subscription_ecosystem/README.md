@@ -13,10 +13,12 @@ This fixture family tracks runtime-observed subscription callbacks for
   method-derived `str` captures, a declaration-time non-`Copy` snapshot whose
   enclosing binding is rebound and used after attachment, and a loop-local
   attachment. A retained handler using `RwLock.write()` proves that sanctioned
-  interior synchronization remains an `Fn` callback. The generated package
-  therefore proves capture-type fidelity, the snapshot contract, isolated
-  capture cloning, receiver-aware mutation classification, and owning
-  `move`-closure emission through rustc.
+  interior synchronization remains an `Fn` callback. A `str` capture used only
+  inside an f-string and then again after attachment proves interpolated
+  expression capture discovery and isolated cloning through rustc. The
+  generated package therefore proves capture-type fidelity, the snapshot
+  contract, isolated capture cloning, receiver-aware mutation classification,
+  and owning `move`-closure emission.
 - Negative evidence: `invalid_thread_capture_rejected` proves both a nested
   handler retaining `NonSend` state and one retaining a callable with unknown
   captures are rejected with `SIFR-RUST-CB-0001`, while second attachment of a
@@ -26,8 +28,9 @@ This fixture family tracks runtime-observed subscription callbacks for
   negative package covers `nonlocal` rebinding, assignment-target-only
   `NonSend` state, collection subscript writes, collection-mutating methods,
   a mixed safe/unsafe capture set, and both direct and sibling handlers whose
-  capture use occurs only inside another nested function, all before Cargo
-  probing.
+  capture use occurs only inside another nested function. It also covers
+  `NonSend` and unprovable callable captures hidden in f-string interpolation
+  and lambda bodies, all before Cargo probing.
 - Compatibility category: `supported-through-bridge`. Ecosystem callbacks use
   an owned typed bridge carrying the exact declared queue and shutdown policy;
   package code remains responsible for its protocol-specific queue and cleanup

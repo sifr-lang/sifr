@@ -609,13 +609,17 @@ fn test_check_callback_subscription_invalid_thread_capture_rejected() {
 
     assert_eq!(
         errors.len(),
-        14,
+        17,
         "invalid retained captures must stop before Cargo probing: {errors:#?}"
     );
     for (capture, reason) in [
         ("handler `handler` capture `state`", "not sendable"),
         (
             "handler `handler` capture `hook`",
+            "captures cannot be proven thread-safe",
+        ),
+        (
+            "handler `lambda_callable_handler` capture `hook`",
             "captures cannot be proven thread-safe",
         ),
     ] {
@@ -658,6 +662,8 @@ fn test_check_callback_subscription_invalid_thread_capture_rejected() {
     for capture in [
         "handler `inner_nonsend_handler` capture `state`",
         "handler `sibling_nonsend_handler` capture `nonsend_helper.state`",
+        "handler `fstring_nonsend_handler` capture `state`",
+        "handler `lambda_nonsend_handler` capture `state`",
     ] {
         assert!(
             errors.iter().any(|error| {

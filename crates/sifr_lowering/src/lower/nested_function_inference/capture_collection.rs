@@ -1,5 +1,8 @@
-use super::{collect_current_function_local_bindings, collect_nonlocal_names, FunctionEnv};
-use sifr_python_ast::{Expr, Stmt, StmtFunctionDef};
+use super::{
+    collect_assignment_target_names, collect_current_function_local_bindings,
+    collect_nonlocal_names, FunctionEnv,
+};
+use sifr_python_ast::{Expr, InterpolatedStringElement, Parameters, Stmt, StmtFunctionDef};
 use sifr_type_system::Type;
 use std::collections::{HashMap, HashSet};
 
@@ -15,10 +18,10 @@ pub(super) fn collect_nested_function_captures(
         let Stmt::FunctionDef(func) = stmt else {
             continue;
         };
-        let Some(state) = states.get(func.name.as_str()) else {
+        if !states.contains_key(func.name.as_str()) {
             continue;
-        };
-        let function_captures = collect_function_captures(func, state, env, states);
+        }
+        let function_captures = collect_function_captures(func, env, states);
         // Keep capture-free nested functions in the map as positive evidence
         // that the callable was inspected. Consumers must distinguish them
         // from callable values whose closure environment is unknown.
@@ -29,7 +32,6 @@ pub(super) fn collect_nested_function_captures(
 
 fn collect_function_captures(
     func: &StmtFunctionDef,
-    state: &LocalFunctionState<'_>,
     env: &FunctionEnv,
     states: &HashMap<String, LocalFunctionState<'_>>,
 ) -> Vec<(String, Type)> {
@@ -42,15 +44,11 @@ fn collect_function_captures(
     let mut nonlocal_names = HashSet::new();
     collect_nonlocal_names(&func.body, &mut nonlocal_names);
 
-    let param_names = state
-        .params
-        .iter()
-        .map(|param| param.name.as_str())
-        .collect::<HashSet<_>>();
+    let param_names = parameter_names(&func.parameters);
 
     let mut captures = references
         .into_iter()
-        .filter(|name| !param_names.contains(name.as_str()))
+        .filter(|name| !param_names.contains(name))
         .filter(|name| !local_bindings.contains(name) || nonlocal_names.contains(name))
         .filter_map(|name| {
             env.vars
@@ -233,16 +231,60 @@ pub(in crate::lower) fn collect_referenced_names_in_expr(expr: &Expr, names: &mu
             }
         }
         Expr::ListComp(comp) => {
-            collect_comprehension_names(&comp.generators, names, Some(&comp.elt));
+            collect_comprehension_names(&comp.generators, names, &[comp.elt.as_ref()]);
         }
         Expr::SetComp(comp) => {
-            collect_comprehension_names(&comp.generators, names, Some(&comp.elt));
+            collect_comprehension_names(&comp.generators, names, &[comp.elt.as_ref()]);
         }
         Expr::DictComp(comp) => {
-            collect_comprehension_names(&comp.generators, names, Some(&comp.key));
-            collect_referenced_names_in_expr(comp.value.as_ref(), names);
+            collect_comprehension_names(
+                &comp.generators,
+                names,
+                &[comp.key.as_ref(), comp.value.as_ref()],
+            );
         }
-        Expr::Generator(gen) => collect_comprehension_names(&gen.generators, names, Some(&gen.elt)),
+        Expr::Generator(gen) => {
+            collect_comprehension_names(&gen.generators, names, &[gen.elt.as_ref()]);
+        }
+        Expr::Lambda(lambda) => {
+            if let Some(parameters) = lambda.parameters.as_deref() {
+                collect_parameter_default_names(parameters, names);
+            }
+            let mut body_names = HashSet::new();
+            collect_referenced_names_in_expr(lambda.body.as_ref(), &mut body_names);
+            if let Some(parameters) = lambda.parameters.as_deref() {
+                let shadowed = parameter_names(parameters);
+                body_names.retain(|name| !shadowed.contains(name));
+            }
+            names.extend(body_names);
+        }
+        Expr::FString(fstring) => {
+            for element in fstring.value.elements() {
+                collect_interpolated_element_names(element, names);
+            }
+        }
+        Expr::TString(tstring) => {
+            for part in &tstring.value {
+                for element in &part.elements {
+                    collect_interpolated_element_names(element, names);
+                }
+            }
+        }
+        Expr::Starred(starred) => {
+            collect_referenced_names_in_expr(starred.value.as_ref(), names);
+        }
+        Expr::Slice(slice) => {
+            for bound in [
+                slice.lower.as_deref(),
+                slice.upper.as_deref(),
+                slice.step.as_deref(),
+            ]
+            .into_iter()
+            .flatten()
+            {
+                collect_referenced_names_in_expr(bound, names);
+            }
+        }
         Expr::Await(await_expr) => {
             collect_referenced_names_in_expr(await_expr.value.as_ref(), names);
         }
@@ -257,11 +299,22 @@ pub(in crate::lower) fn collect_referenced_names_in_expr(expr: &Expr, names: &mu
         Expr::Named(named) => {
             collect_referenced_names_in_expr(named.value.as_ref(), names);
         }
-        _ => {}
+        Expr::StringLiteral(_)
+        | Expr::BytesLiteral(_)
+        | Expr::NumberLiteral(_)
+        | Expr::BooleanLiteral(_)
+        | Expr::NoneLiteral(_)
+        | Expr::EllipsisLiteral(_)
+        | Expr::IpyEscapeCommand(_) => {}
     }
 }
 
 fn collect_nested_function_free_names(func: &StmtFunctionDef, names: &mut HashSet<String>) {
+    collect_parameter_default_names(&func.parameters, names);
+    for decorator in &func.decorator_list {
+        collect_referenced_names_in_expr(&decorator.expression, names);
+    }
+
     let mut references = HashSet::new();
     collect_referenced_names_in_stmts(&func.body, &mut references);
 
@@ -269,17 +322,12 @@ fn collect_nested_function_free_names(func: &StmtFunctionDef, names: &mut HashSe
     collect_current_function_local_bindings(&func.body, &mut local_bindings);
     let mut nonlocal_names = HashSet::new();
     collect_nonlocal_names(&func.body, &mut nonlocal_names);
-    let parameter_names = func
-        .parameters
-        .args
-        .iter()
-        .map(|parameter| parameter.parameter.name.as_str())
-        .collect::<HashSet<_>>();
+    let parameter_names = parameter_names(&func.parameters);
 
     names.extend(
         references
             .into_iter()
-            .filter(|name| !parameter_names.contains(name.as_str()))
+            .filter(|name| !parameter_names.contains(name))
             .filter(|name| !local_bindings.contains(name) || nonlocal_names.contains(name)),
     );
 }
@@ -287,15 +335,78 @@ fn collect_nested_function_free_names(func: &StmtFunctionDef, names: &mut HashSe
 fn collect_comprehension_names(
     generators: &[sifr_python_ast::Comprehension],
     names: &mut HashSet<String>,
-    element: Option<&Expr>,
+    elements: &[&Expr],
 ) {
-    if let Some(element) = element {
-        collect_referenced_names_in_expr(element, names);
-    }
+    let mut shadowed = HashSet::new();
     for generator in generators {
-        collect_referenced_names_in_expr(&generator.iter, names);
+        collect_names_excluding(&generator.iter, &shadowed, names);
+        collect_assignment_target_names(std::slice::from_ref(&generator.target), &mut shadowed);
         for condition in &generator.ifs {
-            collect_referenced_names_in_expr(condition, names);
+            collect_names_excluding(condition, &shadowed, names);
         }
+    }
+    for element in elements {
+        collect_names_excluding(element, &shadowed, names);
+    }
+}
+
+fn collect_names_excluding(expr: &Expr, shadowed: &HashSet<String>, names: &mut HashSet<String>) {
+    let mut referenced = HashSet::new();
+    collect_referenced_names_in_expr(expr, &mut referenced);
+    names.extend(
+        referenced
+            .into_iter()
+            .filter(|name| !shadowed.contains(name)),
+    );
+}
+
+fn collect_parameter_default_names(parameters: &Parameters, names: &mut HashSet<String>) {
+    for parameter in parameters {
+        if let Some(default) = parameter.default() {
+            collect_referenced_names_in_expr(default, names);
+        }
+    }
+}
+
+fn parameter_names(parameters: &Parameters) -> HashSet<String> {
+    parameters
+        .iter()
+        .map(|parameter| parameter.name().to_string())
+        .collect()
+}
+
+fn collect_interpolated_element_names(
+    element: &InterpolatedStringElement,
+    names: &mut HashSet<String>,
+) {
+    let InterpolatedStringElement::Interpolation(interpolation) = element else {
+        return;
+    };
+    collect_referenced_names_in_expr(&interpolation.expression, names);
+    if let Some(format_spec) = &interpolation.format_spec {
+        for nested in &format_spec.elements {
+            collect_interpolated_element_names(nested, names);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sifr_python_parser::parse_module;
+
+    #[test]
+    fn nested_function_all_parameter_kinds_shadow_outer_names() {
+        let parsed = parse_module(
+            "def outer() -> None:\n    def inner(pos, /, regular, *items, keyword, **extras):\n        return (pos, regular, items, keyword, extras, captured)\n    return None\n",
+        )
+        .expect("source should parse");
+        let Stmt::FunctionDef(outer) = &parsed.suite()[0] else {
+            panic!("outer function missing");
+        };
+        let mut names = HashSet::new();
+        collect_referenced_names_in_stmts(&outer.body, &mut names);
+
+        assert_eq!(names, HashSet::from([String::from("captured")]));
     }
 }

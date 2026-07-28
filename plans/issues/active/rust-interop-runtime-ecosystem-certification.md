@@ -762,6 +762,14 @@ Focused implementation evidence:
   receiver types for collection mutation, adds generated positive `RwLock`
   evidence and four generated negative nested-helper directions, and rejects
   `nonlocal` walrus with `SIFR-FLOW-0003`.
+- [Opus review round 8](../../reviews/active/rust-interop-certification-6-review-round-8.md)
+  revalidated every earlier finding and both mandatory packages, then found
+  capture and mutation traversal gaps in interpolated strings, lambdas, slice
+  bounds, starred expressions, and comprehensions, plus incomplete nested
+  parameter shadowing. The follow-up makes both expression walkers exhaustive,
+  preserves comprehension/lambda lexical scope, strips every parameter kind,
+  adds focused regressions for each escape, and extends the generated positive
+  f-string clone evidence and negative hidden-capture diagnostics.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

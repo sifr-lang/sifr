@@ -148,9 +148,10 @@ direct or sibling-transitive capture mutation because the retained adapter
 requires `Fn`, not `FnMut`. Mutation detection includes ordinary `nonlocal`
 rebinding, attribute and collection-item assignment or deletion, and
 collection-mutating method calls, including uses inside further nested helper
-functions. Receiver types distinguish ordinary collection mutation from
-interior synchronization such as `RwLock.write()`. A walrus expression cannot
-rebind a declared `nonlocal`; use a statement assignment instead. Verified
+functions, comprehensions, lambdas, interpolated strings, slice bounds, and
+starred expressions. Receiver types distinguish ordinary collection mutation
+from interior synchronization such as `RwLock.write()`. A walrus expression
+cannot rebind a declared `nonlocal`; use a statement assignment instead. Verified
 non-`Copy` values are cloned into the retained closure's isolated construction
 scope, so the surrounding binding remains usable after attachment and on later
 loop iterations. That clone snapshots the value when the nested handler is
@@ -380,10 +381,12 @@ method calls and user classes whose names shadow builtin inference helpers.
 The compiler checks sibling nested-function capture chains transitively,
 rejects callable-valued captures whose own captures lack compiler-known
 provenance, and follows further nested helper scopes while respecting their
-parameters and locals. It rejects assignment-target, deletion, and
-type-confirmed collection-mutating-method capture use that would require
-`FnMut`, while allowing synchronization-wrapper operations that retain `Fn`.
-Callback
+complete parameter lists and locals. Expression capture and mutation discovery
+also traverses comprehensions, lambdas, interpolated strings and nested format
+specifications, slice bounds, and starred expressions. It rejects
+assignment-target, deletion, and type-confirmed collection-mutating-method
+capture use that would require `FnMut`, while allowing
+synchronization-wrapper operations that retain `Fn`. Callback
 attachment checks remain active through imported functions, aliases,
 re-exports, and imported methods; an unsafe or unverifiable capture is
 rejected with `SIFR-RUST-CB-0001` before Cargo probing regardless of the

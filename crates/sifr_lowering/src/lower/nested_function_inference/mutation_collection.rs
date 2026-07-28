@@ -1,8 +1,13 @@
-use super::{collect_current_function_local_bindings, collect_nonlocal_names};
+use super::{
+    collect_assignment_target_names, collect_current_function_local_bindings,
+    collect_nonlocal_names,
+};
 use crate::lower::mutating_methods::{
     is_collection_mutating_method, is_potential_collection_mutating_method,
 };
-use sifr_python_ast::{ExceptHandler, Expr, Stmt, StmtFunctionDef};
+use sifr_python_ast::{
+    ExceptHandler, Expr, InterpolatedStringElement, Parameters, Stmt, StmtFunctionDef,
+};
 use sifr_type_system::Type;
 use std::collections::{HashMap, HashSet};
 
@@ -140,6 +145,14 @@ fn collect_mutated_binding_names_in_stmt(
             }
         }
         Stmt::FunctionDef(func) => {
+            collect_parameter_default_mutations(&func.parameters, candidate_names, mutated);
+            for decorator in &func.decorator_list {
+                collect_mutated_binding_names_in_expr(
+                    &decorator.expression,
+                    candidate_names,
+                    mutated,
+                );
+            }
             let nested_candidates = nested_function_candidates(func, candidate_names);
             collect_mutated_binding_names_into(&func.body, &nested_candidates, mutated);
         }
@@ -290,6 +303,67 @@ fn collect_mutated_binding_names_in_expr(
                 collect_mutated_binding_names_in_expr(&item.value, candidate_names, mutated);
             }
         }
+        Expr::ListComp(comp) => collect_comprehension_mutations(
+            &comp.generators,
+            &[comp.elt.as_ref()],
+            candidate_names,
+            mutated,
+        ),
+        Expr::SetComp(comp) => collect_comprehension_mutations(
+            &comp.generators,
+            &[comp.elt.as_ref()],
+            candidate_names,
+            mutated,
+        ),
+        Expr::DictComp(comp) => collect_comprehension_mutations(
+            &comp.generators,
+            &[comp.key.as_ref(), comp.value.as_ref()],
+            candidate_names,
+            mutated,
+        ),
+        Expr::Generator(generator) => collect_comprehension_mutations(
+            &generator.generators,
+            &[generator.elt.as_ref()],
+            candidate_names,
+            mutated,
+        ),
+        Expr::Lambda(lambda) => {
+            if let Some(parameters) = lambda.parameters.as_deref() {
+                collect_parameter_default_mutations(parameters, candidate_names, mutated);
+            }
+            let mut body_candidates = candidate_names.clone();
+            if let Some(parameters) = lambda.parameters.as_deref() {
+                remove_parameter_candidates(parameters, &mut body_candidates);
+            }
+            collect_mutated_binding_names_in_expr(lambda.body.as_ref(), &body_candidates, mutated);
+        }
+        Expr::FString(fstring) => {
+            for element in fstring.value.elements() {
+                collect_interpolated_element_mutations(element, candidate_names, mutated);
+            }
+        }
+        Expr::TString(tstring) => {
+            for part in &tstring.value {
+                for element in &part.elements {
+                    collect_interpolated_element_mutations(element, candidate_names, mutated);
+                }
+            }
+        }
+        Expr::Starred(starred) => {
+            collect_mutated_binding_names_in_expr(starred.value.as_ref(), candidate_names, mutated);
+        }
+        Expr::Slice(slice) => {
+            for bound in [
+                slice.lower.as_deref(),
+                slice.upper.as_deref(),
+                slice.step.as_deref(),
+            ]
+            .into_iter()
+            .flatten()
+            {
+                collect_mutated_binding_names_in_expr(bound, candidate_names, mutated);
+            }
+        }
         Expr::Await(await_expr) => {
             collect_mutated_binding_names_in_expr(
                 await_expr.value.as_ref(),
@@ -317,7 +391,14 @@ fn collect_mutated_binding_names_in_expr(
             );
             collect_mutated_binding_names_in_expr(named.value.as_ref(), candidate_names, mutated);
         }
-        _ => {}
+        Expr::Name(_)
+        | Expr::StringLiteral(_)
+        | Expr::BytesLiteral(_)
+        | Expr::NumberLiteral(_)
+        | Expr::BooleanLiteral(_)
+        | Expr::NoneLiteral(_)
+        | Expr::EllipsisLiteral(_)
+        | Expr::IpyEscapeCommand(_) => {}
     }
 }
 
@@ -329,12 +410,7 @@ fn nested_function_candidates(
     collect_current_function_local_bindings(&func.body, &mut local_bindings);
     let mut nonlocal_names = HashSet::new();
     collect_nonlocal_names(&func.body, &mut nonlocal_names);
-    let parameter_names = func
-        .parameters
-        .args
-        .iter()
-        .map(|parameter| parameter.parameter.name.as_str())
-        .collect::<HashSet<_>>();
+    let parameter_names = parameter_names(&func.parameters);
 
     candidate_names
         .iter()
@@ -345,6 +421,71 @@ fn nested_function_candidates(
         })
         .map(|(name, ty)| (name.clone(), ty.clone()))
         .collect()
+}
+
+fn collect_comprehension_mutations(
+    generators: &[sifr_python_ast::Comprehension],
+    elements: &[&Expr],
+    candidate_names: &HashMap<String, MutationCandidate>,
+    mutated: &mut HashSet<String>,
+) {
+    let mut active_candidates = candidate_names.clone();
+    for generator in generators {
+        collect_mutated_binding_names_in_expr(&generator.iter, &active_candidates, mutated);
+        let mut target_names = HashSet::new();
+        collect_assignment_target_names(std::slice::from_ref(&generator.target), &mut target_names);
+        active_candidates.retain(|name, _| !target_names.contains(name));
+        for condition in &generator.ifs {
+            collect_mutated_binding_names_in_expr(condition, &active_candidates, mutated);
+        }
+    }
+    for element in elements {
+        collect_mutated_binding_names_in_expr(element, &active_candidates, mutated);
+    }
+}
+
+fn collect_parameter_default_mutations(
+    parameters: &Parameters,
+    candidate_names: &HashMap<String, MutationCandidate>,
+    mutated: &mut HashSet<String>,
+) {
+    for parameter in parameters {
+        if let Some(default) = parameter.default() {
+            collect_mutated_binding_names_in_expr(default, candidate_names, mutated);
+        }
+    }
+}
+
+fn parameter_names(parameters: &Parameters) -> HashSet<String> {
+    parameters
+        .iter()
+        .map(|parameter| parameter.name().to_string())
+        .collect()
+}
+
+fn remove_parameter_candidates(
+    parameters: &Parameters,
+    candidate_names: &mut HashMap<String, MutationCandidate>,
+) {
+    for parameter in parameters {
+        candidate_names.remove(parameter.name().as_str());
+    }
+}
+
+fn collect_interpolated_element_mutations(
+    element: &InterpolatedStringElement,
+    candidate_names: &HashMap<String, MutationCandidate>,
+    mutated: &mut HashSet<String>,
+) {
+    let InterpolatedStringElement::Interpolation(interpolation) = element else {
+        return;
+    };
+    collect_mutated_binding_names_in_expr(&interpolation.expression, candidate_names, mutated);
+    if let Some(format_spec) = &interpolation.format_spec {
+        for nested in &format_spec.elements {
+            collect_interpolated_element_mutations(nested, candidate_names, mutated);
+        }
+    }
 }
 
 impl MutationCandidate {

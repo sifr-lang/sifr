@@ -24,6 +24,9 @@ class Subscription:
 @rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
 def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
 
+def apply_int(producer: Callable[[], int]) -> int:
+    return producer()
+
 def verify_invalid_thread_capture_rejected(
     state: LocalState,
 ) -> Result[Subscription, SubscriptionError | RustPanicError]:
@@ -183,3 +186,30 @@ def verify_sibling_inner_nonsend_rejected() -> Result[Subscription, Subscription
         return nonsend_helper(event)
 
     return subscribe(sibling_nonsend_handler)
+
+def verify_fstring_nonsend_capture_rejected(
+    state: LocalState,
+) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    def fstring_nonsend_handler(event: str) -> Result[None, SubscriptionError]:
+        _message: str = f"value={state.value}"
+        return None
+
+    return subscribe(fstring_nonsend_handler)
+
+def verify_lambda_nonsend_capture_rejected(
+    state: LocalState,
+) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    def lambda_nonsend_handler(event: str) -> Result[None, SubscriptionError]:
+        _value: int = apply_int(lambda: state.value)
+        return None
+
+    return subscribe(lambda_nonsend_handler)
+
+def verify_lambda_callable_capture_rejected(
+    own hook: Callable[[], int],
+) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    def lambda_callable_handler(event: str) -> Result[None, SubscriptionError]:
+        _value: int = apply_int(lambda: hook())
+        return None
+
+    return subscribe(lambda_callable_handler)

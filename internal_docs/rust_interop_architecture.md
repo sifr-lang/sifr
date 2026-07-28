@@ -1015,10 +1015,14 @@ and deletion targets. Mutation analysis is restricted to actual captured
 bindings and walks ordinary `nonlocal` rebinding, attribute or subscript
 writes, collection-mutating methods, structured control flow, sibling nested
 functions, and functions nested further inside the handler. Nested traversal
-removes parameters and locals declared by each inner scope, retaining only
-free captured bindings. Mutating-method classification consults the receiver
-type, so interior synchronization through `RwLock.write()` remains an `Fn`
-operation while list, dict, set, and buffer mutations require `FnMut`. A
+removes every positional, keyword-only, and variadic parameter plus locals
+declared by each inner scope, retaining only free captured bindings. Both
+capture and mutation analysis traverse comprehensions with their lexical
+targets, lambda bodies and defaults, f-string/t-string interpolation and
+nested format specifications, slice bounds, starred expressions, and nested
+function defaults and decorators. Mutating-method classification consults the
+receiver type, so interior synchronization through `RwLock.write()` remains an
+`Fn` operation while list, dict, set, and buffer mutations require `FnMut`. A
 handler that mutates a capture is rejected because the retained bridge requires
 `Fn`, not `FnMut`. Walrus rebinding of a declared `nonlocal` is rejected with
 `SIFR-FLOW-0003` rather than emitted as a shadowing Rust `let`. Retained
