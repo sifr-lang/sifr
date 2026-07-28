@@ -770,6 +770,11 @@ Focused implementation evidence:
   preserves comprehension/lambda lexical scope, strips every parameter kind,
   adds focused regressions for each escape, and extends the generated positive
   f-string clone evidence and negative hidden-capture diagnostics.
+- [Opus review round 9](../../reviews/active/rust-interop-certification-6-review-round-9.md)
+  independently reproduced every prior finding and expression escape, passed
+  both mandatory generated packages, 1,901 affected tests, the full
+  Rust-interop area, Clippy, formatting, and all guardrails, recomputed the
+  complete inventory, and reported `SATISFIED` with no actionable finding.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 
