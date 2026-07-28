@@ -75,6 +75,94 @@ def main():
 }
 
 #[test]
+fn test_project_lowering_propagates_imported_rust_opaque_close_ownership() {
+    let mut parsed_modules = HashMap::new();
+    parsed_modules.insert(
+        "resources".to_string(),
+        parse_suite(
+            r#"
+class ResourceError(Error):
+    message: str
+
+@rust.opaque(type=bridge.resources.Resource, close=close)
+class Resource:
+    @rust(bridge.resources.close)
+    def close(own self) -> Result[None, ResourceError]:
+        ...
+"#,
+        ),
+    );
+    parsed_modules.insert(
+        "main".to_string(),
+        parse_suite(
+            r#"
+from resources import Resource
+
+def close_borrowed(resource: Resource) -> None:
+    resource.close()
+"#,
+        ),
+    );
+    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+
+    let errors = match collect_project_hir_modules(&parsed_modules, stdlib_defs) {
+        Ok(_) => panic!("borrowed imported close must fail before codegen"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES.code()
+            && error.message.contains("borrowed parameter 'resource'")
+    }));
+}
+
+#[test]
+fn test_project_lowering_propagates_reexported_rust_opaque_close_ownership() {
+    let mut parsed_modules = HashMap::new();
+    parsed_modules.insert(
+        "resources".to_string(),
+        parse_suite(
+            r#"
+class ResourceError(Error):
+    message: str
+
+@rust.opaque(type=bridge.resources.Resource, close=close)
+class Resource:
+    @rust(bridge.resources.close)
+    def close(own self) -> Result[None, ResourceError]:
+        ...
+"#,
+        ),
+    );
+    parsed_modules.insert(
+        "facade".to_string(),
+        parse_suite("from resources import Resource as ManagedResource\n"),
+    );
+    parsed_modules.insert(
+        "main".to_string(),
+        parse_suite(
+            r#"
+from facade import ManagedResource
+
+def close_borrowed(resource: ManagedResource) -> None:
+    resource.close()
+"#,
+        ),
+    );
+    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+
+    let errors = match collect_project_hir_modules(&parsed_modules, stdlib_defs) {
+        Ok(_) => panic!("borrowed reexported close must fail before codegen"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == DiagnosticCode::OWN_BORROWED_PARAMETER_ESCAPES.code()
+            && error.message.contains("borrowed parameter 'resource'")
+    }));
+}
+
+#[test]
 fn test_collect_project_modules_supports_single_level_relative_import() {
     let mut parsed_modules = HashMap::new();
     parsed_modules.insert(

@@ -66,6 +66,18 @@ const ASYNC_REQWEST_NEGATIVE: &str = include_str!(
 const ASYNC_REQWEST_NEGATIVE_BRIDGE: &str = include_str!(
     "../../../../verification/areas/rust_interop/fixtures/async_runtime_reqwest/examples/reqwest_loopback_runtime/negative_bridge.rs"
 );
+const OPAQUE_RESOURCE_EVIDENCE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/positive/resource_close_aclose_matrix.sifr"
+);
+const OPAQUE_RESOURCE_NEGATIVE: &str = include_str!(
+    "../../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/negative/invalid_resource_aliasing.sifr"
+);
+
+#[derive(Debug, PartialEq, Eq)]
+enum ObservedRuntimeState {
+    Closed,
+    Poisoned,
+}
 
 fn fixture_scenario_root(fixture_id: &str, scenario_id: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -180,6 +192,19 @@ fn built_package_output(entrypoint: &PackageEntrypoint) -> std::process::Output 
 fn run_built_package(entrypoint: &PackageEntrypoint) -> String {
     let output = built_package_output(entrypoint);
     String::from_utf8_lossy(&output.stdout).trim().to_string()
+}
+
+fn observed_resource_state(output: &std::process::Output) -> ObservedRuntimeState {
+    assert!(
+        output.stderr.is_empty(),
+        "resource-state observation must not emit stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    match String::from_utf8_lossy(&output.stdout).trim() {
+        "resource-state=closed" => ObservedRuntimeState::Closed,
+        "resource-state=poisoned" => ObservedRuntimeState::Poisoned,
+        other => panic!("unexpected resource runtime state: {other}"),
+    }
 }
 
 #[test]
@@ -490,6 +515,67 @@ fn test_build_async_reqwest_loopback_runtime() {
         output.stderr.is_empty(),
         "loopback runtime scenario must not emit stderr: {}",
         String::from_utf8_lossy(&output.stderr)
+    );
+    let _ = std::fs::remove_dir_all(package_root);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+#[doc = "sifr-evidence: executes-runtime-observed"]
+fn test_build_opaque_resource_lifecycle_runtime() {
+    let package_root = copied_scenario(
+        "opaque_resource_matrix",
+        "resource_lifecycle_runtime",
+        "rust_interop_opaque_resource_lifecycle",
+    );
+    rebase_sifr_runtime_dependency(&package_root);
+    install_evidence_source(
+        &package_root,
+        &format!(
+            "{OPAQUE_RESOURCE_EVIDENCE}\n\nasync def main() -> Result[None, ResourceError]:\n    try:\n        verified: str = await verify_resource_close_aclose_matrix()\n        print(verified)\n    except ResourceError as error:\n        raise error\n    return None\n"
+        ),
+    );
+    let entrypoint =
+        package_entrypoint_from_cargo_layout(&package_root, "resource-lifecycle-runtime");
+
+    let output = built_package_output(&entrypoint);
+
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout).trim(),
+        "http=echo:reqwest;sqlite=sqlite;redis=PONG;postgres=1;protocol-negatives=redis-malformed/postgres-early-close;poison=Rust bridge panicked;close=closed/already-closed"
+    );
+    assert!(
+        output.stderr.is_empty(),
+        "resource lifecycle scenario must not emit stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let _ = std::fs::remove_dir_all(package_root);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+#[doc = "sifr-evidence: executes-runtime-observed"]
+fn test_build_opaque_resource_alias_rejection_runtime() {
+    let package_root = copied_scenario(
+        "opaque_resource_matrix",
+        "resource_lifecycle_runtime",
+        "rust_interop_opaque_resource_alias_rejection",
+    );
+    rebase_sifr_runtime_dependency(&package_root);
+    install_evidence_source(
+        &package_root,
+        &format!(
+            "{OPAQUE_RESOURCE_NEGATIVE}\n\nasync def main() -> Result[None, ResourceError]:\n    try:\n        verified: str = await verify_invalid_resource_aliasing()\n        print(verified)\n    except ResourceError as error:\n        raise error\n    return None\n"
+        ),
+    );
+    let entrypoint =
+        package_entrypoint_from_cargo_layout(&package_root, "resource-lifecycle-runtime");
+
+    let output = built_package_output(&entrypoint);
+
+    assert_eq!(
+        observed_resource_state(&output),
+        ObservedRuntimeState::Closed
     );
     let _ = std::fs::remove_dir_all(package_root);
 }

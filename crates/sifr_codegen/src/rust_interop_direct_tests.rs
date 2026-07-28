@@ -45,6 +45,14 @@ fn rust_interop_function_body_emits_package_bridge_root() {
 
 #[test]
 fn rust_interop_method_body_emits_self_handle_call() {
+    let error_ty = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "EncodeError".to_string(),
+        fields: vec![("message".to_string(), Type::Str)],
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    };
     let func = HirFunction {
         name: "encode".to_string(),
         params: vec![HirParam {
@@ -54,7 +62,10 @@ fn rust_interop_method_body_emits_self_handle_call() {
             keyword_only: false,
             convention: ParamConvention::borrow(),
         }],
-        return_type: Type::List(Box::new(Type::FixedInt(FixedIntType::U32))),
+        return_type: Type::Result(
+            Box::new(Type::List(Box::new(Type::FixedInt(FixedIntType::U32)))),
+            Box::new(error_ty),
+        ),
         body: Vec::new(),
         is_async: false,
         method_kind: MethodKind::Regular,
@@ -68,13 +79,234 @@ fn rust_interop_method_body_emits_self_handle_call() {
         type_params: Vec::new(),
     };
 
-    let body =
-        rust_interop_method_body(&func).expect("Self interop metadata should lower to a body");
-    let [RustStmt::Return(Some(expr))] = body.as_slice() else {
-        panic!("Self interop should lower to a return expression");
+    let body = rust_interop_method_body(&func, false)
+        .expect("Self interop metadata should lower to a body");
+    let [RustStmt::Let { value, .. }, RustStmt::Return(Some(expr))] = body.as_slice() else {
+        panic!("Self interop should bind the checked handle before its return expression");
     };
 
-    assert_eq!(render_expr(expr), "self._handle.encode(text)");
+    let checked_receiver = render_expr(value);
+    let rendered = render_expr(expr);
+    assert!(
+        checked_receiver.contains("self.inner_ref().map_err"),
+        "{checked_receiver}"
+    );
+    assert!(
+        rendered.contains("__sifr_opaque_inner.encode(text)"),
+        "{rendered}"
+    );
+    assert!(!rendered.contains("self._handle"), "{rendered}");
+}
+
+#[test]
+fn non_opaque_rust_bound_method_does_not_inject_receiver_argument() {
+    let func = HirFunction {
+        name: "encode".to_string(),
+        params: vec![HirParam {
+            name: "text".to_string(),
+            ty: Type::Str,
+            default: None,
+            keyword_only: false,
+            convention: ParamConvention::borrow(),
+        }],
+        return_type: Type::Str,
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: vec![declaration(
+            RustInteropDecoratorKind::Function,
+            &["bridge", "encode"],
+        )],
+        python_interop: Vec::new(),
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+
+    let body = rust_interop_method_body(&func, false)
+        .expect("ordinary Rust-bound method should lower to a body");
+    let [RustStmt::Return(Some(expr))] = body.as_slice() else {
+        panic!("ordinary Rust-bound method should lower to a return expression");
+    };
+
+    assert_eq!(render_expr(expr), "bridge::encode(text)");
+}
+
+#[test]
+fn emitted_non_opaque_owned_rust_method_preserves_borrowed_receiver_shape() {
+    let source = r"
+class BridgeError(Error):
+    message: str
+
+class Plain:
+    @rust(bridge.consume, panic=trusted_no_panic)
+    def consume(own self) -> Result[str, BridgeError]:
+        ...
+";
+    let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
+    let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
+    let generated = generate_rust_with_metadata(&lowered.module).rust_source;
+
+    assert!(
+        generated.contains("fn consume(&self) -> Result<String, BridgeError>"),
+        "{generated}"
+    );
+    assert!(generated.contains("bridge::consume()"), "{generated}");
+    assert!(!generated.contains("bridge::consume(self)"), "{generated}");
+}
+
+#[test]
+fn emitted_opaque_non_close_methods_forward_borrowed_handle_receivers() {
+    let source = r"
+class ResourceError(Error):
+    message: str
+
+@rust.opaque(type=bridge.resources.Resource, close=close)
+class Resource:
+    @rust(bridge.resources.ping, panic=trusted_no_panic)
+    def ping(self) -> Result[str, ResourceError]:
+        ...
+
+    @rust(bridge.resources.close, panic=trusted_no_panic)
+    def close(own self) -> Result[None, ResourceError]:
+        ...
+";
+    let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
+    let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
+    let generated = generate_rust_with_metadata(&lowered.module).rust_source;
+
+    assert!(
+        generated.contains("fn ping(&self) -> Result<String, ResourceError>;"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("bridge::resources::ping(self)"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn emitted_opaque_self_method_checks_handle_state_without_panicking() {
+    let source = r"
+class ResourceError(Error):
+    message: str
+
+@rust.opaque(type=bridge.resources.Resource)
+class Resource:
+    @rust(Self.ping, panic=trusted_no_panic)
+    def ping(self) -> Result[str, ResourceError | RustPanicError]:
+        ...
+";
+    let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
+    let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
+    let generated = generate_rust_with_metadata(&lowered.module).rust_source;
+
+    assert!(
+        generated.contains("self.inner_ref().map_err"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("HandleStateError::Closed"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("HandleStateError::Poisoned"),
+        "{generated}"
+    );
+    assert!(!generated.contains("self._handle"), "{generated}");
+}
+
+#[test]
+fn emitted_opaque_self_method_maps_poison_to_plain_declared_error() {
+    let source = r"
+class ResourceError(Error):
+    message: str
+
+@rust.opaque(type=bridge.resources.Resource)
+class Resource:
+    @rust(Self.ping, panic=trusted_no_panic)
+    def ping(self) -> Result[str, ResourceError]:
+        ...
+";
+    let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
+    let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
+    let generated = generate_rust_with_metadata(&lowered.module).rust_source;
+
+    assert!(
+        generated.contains("HandleStateError::Poisoned(__sifr_stored_panic)"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("message: __sifr_stored_panic.to_string()"),
+        "{generated}"
+    );
+    assert!(!generated.contains("__SifrRustPanicError"), "{generated}");
+}
+
+#[test]
+fn emitted_sync_opaque_self_method_checks_state_outside_panic_boundary() {
+    let source = r"
+class ResourceError(Error):
+    message: str
+
+@rust.opaque(type=bridge.resources.Resource)
+class Resource:
+    @rust(Self.ping)
+    def ping(self) -> Result[str, ResourceError | RustPanicError]:
+        ...
+";
+    let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
+    let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
+    let generated = generate_rust_with_metadata(&lowered.module).rust_source;
+
+    assert!(
+        generated
+            .contains("let __sifr_opaque_inner = self.inner_ref().map_err(|__sifr_handle_error|"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("catch_rust_panic(|| __sifr_opaque_inner.ping())"),
+        "{generated}"
+    );
+    assert!(
+        !generated.contains("catch_rust_panic(|| self.inner_ref()"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn emitted_opaque_async_close_method_routes_owned_handle_to_bridge() {
+    let source = r"
+class ResourceError(Error):
+    message: str
+
+@rust.opaque(
+    type=bridge.resources.Resource,
+    close=async_close,
+    borrow=exclusive,
+    thread_affinity=tokio_current_thread,
+)
+class Resource:
+    @rust(bridge.resources.aclose, panic=trusted_no_panic)
+    async def aclose(own self) -> Result[None, ResourceError]:
+        ...
+";
+    let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
+    let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
+    let generated = generate_rust_with_metadata(&lowered.module).rust_source;
+
+    assert!(
+        generated.contains(
+            "trait __SifrOpaqueResourceMethods {\n    async fn aclose(self) -> Result<(), ResourceError>;"
+        ),
+        "{generated}"
+    );
+    assert!(
+        generated.contains(
+            "bridge::resources::aclose(self).await.map(|__sifr_bridge_ok| __sifr_bridge_ok)"
+        ),
+        "{generated}"
+    );
 }
 
 #[test]
@@ -150,6 +382,7 @@ fn emitted_python_object_class_does_not_claim_a_source_spellable_rust_name() {
             opaque_handle: true,
             ..RustInteropAbiRequirements::default()
         },
+        consumes_receiver: false,
     }];
     let module = HirModule {
         functions: Vec::new(),
@@ -392,5 +625,6 @@ fn declaration(kind: RustInteropDecoratorKind, segments: &[&str]) -> RustInterop
         span: TextRange::default(),
         effect: RustInteropEffect::Sync,
         abi_requirements: RustInteropAbiRequirements::default(),
+        consumes_receiver: false,
     }
 }

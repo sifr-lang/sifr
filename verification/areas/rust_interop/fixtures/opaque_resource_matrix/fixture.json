@@ -3,17 +3,31 @@
   "diagnostic_family": "SIFR-RUST-HANDLE-0001",
   "evidence": {
     "negative": {
-      "expected_diagnostic": "SIFR-RUST-HANDLE-0001",
-      "expected_result": "future-owned-diagnostic",
+      "expected_result": "runtime-error-state",
+      "expected_runtime_state": "closed",
       "id": "invalid_resource_aliasing",
       "path": "negative/invalid_resource_aliasing.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs",
+        "test_name": "test_build_opaque_resource_alias_rejection_runtime"
+      }
     },
     "positive": {
-      "expected_result": "future-owned",
+      "expected_result": "pass",
       "id": "resource_close_aclose_matrix",
       "path": "positive/resource_close_aclose_matrix.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs",
+        "test_name": "test_build_opaque_resource_lifecycle_runtime"
+      }
     }
   },
   "execution_kind": "runtime-observed",
@@ -56,6 +70,9 @@
     "tokio-postgres",
     "redis"
   ],
+  "scenario_examples": {
+    "resource_lifecycle_runtime": "examples/resource_lifecycle_runtime"
+  },
   "schema_version": 2,
   "tier": 2
 }

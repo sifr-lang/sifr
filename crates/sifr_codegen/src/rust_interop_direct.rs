@@ -6,11 +6,14 @@ use crate::rust_interop_direct_args::direct_rust_arg_expr;
 use crate::rust_interop_direct_collections::{
     bridge_composite_to_sifr_expr, composite_conversion_required,
 };
-use crate::rust_interop_panic::{bridge_declared_error_expr, recoverable_sync_panic_result_expr};
-use crate::{RustExpr, RustParam, RustStmt, RustType};
+use crate::rust_interop_panic::{
+    bridge_declared_error_expr, recoverable_sync_panic_result_expr, stored_rust_panic_error_value,
+};
+use crate::{RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType};
 
 const BRIDGE_ROOT: &str = "bridge";
 const SELF_ROOT: &str = "Self";
+const OPAQUE_INNER: &str = "__sifr_opaque_inner";
 
 pub(crate) fn rust_interop_function_body(func: &HirFunction) -> Option<Vec<RustStmt>> {
     let declaration = rust_interop_function_declaration(func)?;
@@ -72,21 +75,34 @@ fn direct_rust_return_expr(value: RustExpr, return_type: &Type) -> RustExpr {
     }
 }
 
-pub(crate) fn rust_interop_method_body(func: &HirFunction) -> Option<Vec<RustStmt>> {
+pub(crate) fn rust_interop_method_body(
+    func: &HirFunction,
+    include_receiver: bool,
+) -> Option<Vec<RustStmt>> {
     let declaration = rust_interop_function_declaration(func)?;
     let target = declaration.target.as_ref()?;
     let root = target.segments.first()?;
-    let value = if root == SELF_ROOT {
-        self_method_call(func, declaration, target)?
+    let (mut body, value) = if root == SELF_ROOT {
+        let (binding, call) = self_method_call(func, declaration, target)?;
+        (vec![binding], call)
     } else {
-        RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(rust_function_path(target))),
-            args: func
-                .params
+        let mut args = if include_receiver && func.method_kind == sifr_ir::MethodKind::Regular {
+            vec![RustExpr::Ident("self".to_string())]
+        } else {
+            Vec::new()
+        };
+        args.extend(
+            func.params
                 .iter()
-                .map(|param| direct_rust_arg_expr(param, target, call_scoped_callbacks(func)))
-                .collect(),
-        }
+                .map(|param| direct_rust_arg_expr(param, target, call_scoped_callbacks(func))),
+        );
+        (
+            Vec::new(),
+            RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(rust_function_path(target))),
+                args,
+            },
+        )
     };
     let is_async = direct_rust_function_is_async(func, declaration);
     let value = if is_async {
@@ -94,32 +110,96 @@ pub(crate) fn rust_interop_method_body(func: &HirFunction) -> Option<Vec<RustStm
     } else {
         value
     };
-    Some(return_stmt_for_type(
+    body.extend(return_stmt_for_type(
         value,
         &func.return_type,
         declaration,
         is_async,
-    ))
+    ));
+    Some(body)
 }
 
 fn self_method_call(
     func: &HirFunction,
-    _declaration: &RustInteropDeclaration,
+    declaration: &RustInteropDeclaration,
     target: &RustTargetPath,
-) -> Option<RustExpr> {
+) -> Option<(RustStmt, RustExpr)> {
     let method = target.segments.get(1)?.clone();
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Field {
-            expr: Box::new(RustExpr::Ident("self".to_string())),
-            field: "_handle".to_string(),
-        }),
-        method,
-        args: func
-            .params
-            .iter()
-            .map(|param| direct_rust_arg_expr(param, target, call_scoped_callbacks(func)))
-            .collect(),
-    })
+    let Type::Result(_, error_type) = func.return_type.resolve_alias() else {
+        return None;
+    };
+    let receiver = opaque_self_receiver(declaration, error_type);
+    Some((
+        RustStmt::Let {
+            mutable: false,
+            name: OPAQUE_INNER.to_string(),
+            ty: None,
+            value: receiver,
+        },
+        RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(OPAQUE_INNER.to_string())),
+            method,
+            args: func
+                .params
+                .iter()
+                .map(|param| direct_rust_arg_expr(param, target, call_scoped_callbacks(func)))
+                .collect(),
+        },
+    ))
+}
+
+fn opaque_self_receiver(declaration: &RustInteropDeclaration, error_type: &Type) -> RustExpr {
+    let accessor = if declaration.consumes_receiver {
+        "into_inner"
+    } else {
+        "inner_ref"
+    };
+    let access = RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident("self".to_string())),
+        method: accessor.to_string(),
+        args: Vec::new(),
+    };
+    let closed = bridge_declared_error_expr(
+        RustExpr::Literal(RustLiteral::Str("Rust handle is closed".to_string())),
+        error_type,
+    );
+    let panic_name = "__sifr_stored_panic";
+    let poisoned =
+        stored_rust_panic_error_value(RustExpr::Ident(panic_name.to_string()), error_type)
+            .unwrap_or_else(|| {
+                bridge_declared_error_expr(RustExpr::Ident(panic_name.to_string()), error_type)
+            });
+    let mapped = RustExpr::MethodCall {
+        receiver: Box::new(access),
+        method: "map_err".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "__sifr_handle_error".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(RustExpr::Match {
+                expr: Box::new(RustExpr::Ident("__sifr_handle_error".to_string())),
+                arms: vec![
+                    RustMatchArm {
+                        pattern: "sifr_runtime::interop::HandleStateError::Closed".to_string(),
+                        bindings: Vec::new(),
+                        guard: None,
+                        body: vec![RustStmt::TailExpr(closed)],
+                    },
+                    RustMatchArm {
+                        pattern: format!(
+                            "sifr_runtime::interop::HandleStateError::Poisoned({panic_name})"
+                        ),
+                        bindings: vec![panic_name.to_string()],
+                        guard: None,
+                        body: vec![RustStmt::TailExpr(poisoned)],
+                    },
+                ],
+            }),
+            is_move: false,
+        }],
+    };
+    RustExpr::Try(Box::new(mapped))
 }
 
 fn return_stmt_for_type(
@@ -778,6 +858,7 @@ mod tests {
             span: TextRange::default(),
             effect: RustInteropEffect::Sync,
             abi_requirements: RustInteropAbiRequirements::default(),
+            consumes_receiver: false,
         }
     }
 }

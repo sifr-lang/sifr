@@ -165,19 +165,46 @@ fn signature_contract(
 ) -> Option<RustBridgeSignatureContract> {
     let module_name = declaration.module_name.clone();
     let catalog = module_catalogs.get(&module_name);
-    let function = match &declaration.owner {
-        RustInteropOwner::Function { name } => {
-            catalog.and_then(|catalog| catalog.functions.get(name))
-        }
+    let (function, receiver) = match &declaration.owner {
+        RustInteropOwner::Function { name } => (
+            catalog.and_then(|catalog| catalog.functions.get(name)),
+            None,
+        ),
         RustInteropOwner::Method { class_name, name } => {
-            catalog.and_then(|catalog| catalog.methods.get(&(class_name.clone(), name.clone())))
+            let function = catalog
+                .and_then(|catalog| catalog.methods.get(&(class_name.clone(), name.clone())));
+            let receiver = catalog
+                .and_then(|catalog| catalog.opaque_classes.get(class_name))
+                .filter(|_| {
+                    function.is_some_and(|function| {
+                        function.method_kind == Some(sifr_ir::MethodKind::Regular)
+                    })
+                })
+                .filter(|_| {
+                    declaration
+                        .declaration
+                        .target
+                        .as_ref()
+                        .and_then(|target| target.segments.first())
+                        .is_none_or(|root| root != "Self")
+                })
+                .map(|target| RustBridgeParamContract {
+                    name: "self".to_string(),
+                    convention: if function.is_some_and(|function| function.consumes_receiver) {
+                        RustBridgeParamConvention::Own
+                    } else {
+                        RustBridgeParamConvention::Borrow
+                    },
+                    ty: opaque_handle_type(class_name, target),
+                });
+            (function, receiver)
         }
-        RustInteropOwner::Class { .. } => None,
-    }?;
-    let params = function
-        .params
-        .iter()
-        .map(|param| RustBridgeParamContract {
+        RustInteropOwner::Class { .. } => (None, None),
+    };
+    let function = function?;
+    let params = receiver
+        .into_iter()
+        .chain(function.params.iter().map(|param| RustBridgeParamContract {
             name: param.name.clone(),
             convention: bridge_param_convention(param.convention),
             ty: bridge_type_contract(
@@ -194,7 +221,7 @@ fn signature_contract(
                     },
                 ),
             ),
-        })
+        }))
         .collect::<Vec<_>>();
     let return_type = bridge_type_contract(
         &function.return_type,
@@ -220,6 +247,8 @@ fn signature_contract(
 struct ModuleFunction {
     params: Vec<sifr_ir::HirParam>,
     return_type: Type,
+    method_kind: Option<sifr_ir::MethodKind>,
+    consumes_receiver: bool,
 }
 
 pub(crate) struct ModuleCatalog {
@@ -245,6 +274,8 @@ impl ModuleCatalog {
                 ModuleFunction {
                     params: function.params.clone(),
                     return_type: function.return_type.clone(),
+                    method_kind: None,
+                    consumes_receiver: false,
                 },
             );
         }
@@ -276,6 +307,11 @@ impl ModuleCatalog {
                     ModuleFunction {
                         params: method.params.clone(),
                         return_type: method.return_type.clone(),
+                        method_kind: Some(method.method_kind.clone()),
+                        consumes_receiver: method
+                            .rust_interop
+                            .first()
+                            .is_some_and(|declaration| declaration.consumes_receiver),
                     },
                 );
             }

@@ -79,10 +79,10 @@ The following table is validated against
 only public stable-claim inventory. Its execution scope is part of every claim.
 In particular, `zero_copy_bytes`, `zero_copy_view_matrix`,
 `arrow_record_batch`, `tensor_dlpack_bridge`, and `advanced_data_matrix` are
-contract-only. The runtime-observed deferrals
-`advanced_data_runtime_matrix`, `callback_subscription_ecosystem`,
-`opaque_resource_matrix`, and `zero_copy_runtime_matrix` are future-owned,
-planned, and unadvertised until their runtime evidence passes.
+contract-only. The remaining runtime-observed deferrals
+`advanced_data_runtime_matrix`, `callback_subscription_ecosystem`, and
+`zero_copy_runtime_matrix` are future-owned, planned, and unadvertised until
+their runtime evidence passes.
 
 `bridge_type_matrix` is cargo-probed through generated package glue. Its
 certified bridge covers nested Serde/JSON values, display-mapped `thiserror`
@@ -115,6 +115,22 @@ governed by the declared package trust contract rather than this source audit.
 This does not certify arbitrary async services, macro-expanded operations, or
 async panic mapping.
 
+`opaque_resource_matrix` executes an owned generated opaque handle on the
+generated current-thread Tokio runtime. Its package-local bridge uses an
+ephemeral HTTP server with `reqwest`, a bundled `rusqlite` temporary database,
+and minimal deterministic Redis RESP and PostgreSQL wire-protocol loopbacks.
+The certified scope includes the exercised request/response frames, stable
+double close through an owned generated `close=async_close` member routed to
+the package bridge, operation
+rejection through a shared resource alias after close, runtime-guard poison
+redaction, bounded cleanup of every harness-owned tracked task, and observed
+temporary database removal. The bridge-local alias shares the resource
+identity; no Sifr-level clone policy is claimed. The certified alias rejection
+is the shared resource's closed-state check. The Redis client metadata handshake is disabled,
+so the RESP harness certifies only the exercised connection and `PING` frames.
+Client-library-internal tasks are outside the harness counter. This does not
+claim general Redis or PostgreSQL server compliance.
+
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |
 | --- | --- | --- |
@@ -128,6 +144,7 @@ async panic mapping.
 | `shared_bridge_crate` | `supported-through-bridge` | `cargo-probe` |
 | `opaque_handle_tokenizer` | `supported` | `cargo-probe` |
 | `opaque_resource_core` | `supported` | `runtime-observed` |
+| `opaque_resource_matrix` | `supported-through-bridge` | `runtime-observed` |
 | `close_after_use` | `supported` | `runtime-observed` |
 | `bridge_version_mismatch` | `supported` | `compiler-diagnostic` |
 | `panic_boundary` | `supported` | `contract-only` |
@@ -191,12 +208,24 @@ class Tokenizer:
     def close(own self) -> Result[None, TokenizerError | RustPanicError]: ...
 ```
 
+Opaque instance members must return `Result[...]`. `Self.method` targets are
+limited to regular instance methods and use generated handle-state checks
+before entering the Rust panic boundary. They therefore require a
+message-shaped Error result, optionally combined with `RustPanicError`;
+`PythonError` and other richer shapes require a package-bridge adapter.
+Consuming `close`/`aclose` calls require an owned local binding (`own` at a
+function boundary); the compiler carries that rule through imports, aliases,
+and re-exports and rejects borrowed or field-based cleanup before Rust
+compilation.
+
 ```rust src/bridges/tokenizer.rs
 pub struct Tokenizer {
     inner: tokenizer_backend::Tokenizer,
 }
 
-pub fn close(_tokenizer: Tokenizer) -> Result<(), TokenizerErrorBridge> {
+pub fn close(
+    _tokenizer: sifr_runtime::interop::Handle<Tokenizer>,
+) -> Result<(), TokenizerErrorBridge> {
     Ok(())
 }
 ```

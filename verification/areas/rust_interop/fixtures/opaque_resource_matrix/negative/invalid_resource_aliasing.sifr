@@ -1,14 +1,48 @@
 # fixture: opaque_resource_matrix
 # evidence: negative/invalid_resource_aliasing
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: runtime-observed
-# expected-result: future-owned-diagnostic
-# expected-diagnostic: SIFR-RUST-HANDLE-0001
-@rust.opaque(type=bridge.resources.Client, send=True, sync=True, clone=arc, close=async_close)
-class SharedResourceClient:
-    @rust(bridge.resources.borrow_exclusive, panic=trusted_no_panic)
-    def borrow_exclusive(self) -> bytes: ...
+# expected-result: runtime-error-state
+# expected-runtime-state: closed
+class ResourceError(Error):
+    message: str
 
-def verify_invalid_resource_aliasing(resource: SharedResourceClient) -> bytes:
-    borrow_exclusive_result: bytes = resource.borrow_exclusive()
-    return borrow_exclusive_result
+@rust.opaque(
+    type=bridge.resources.ResourceMatrix,
+    send=False,
+    sync=False,
+    close=async_close,
+    borrow=exclusive,
+    thread_affinity=tokio_current_thread,
+)
+class ResourceMatrix:
+    @rust(bridge.resources.aclose, panic=trusted_no_panic)
+    async def aclose(own self) -> Result[None, ResourceError]:
+        ...
+
+@rust(bridge.resources.open, panic=trusted_no_panic)
+async def open_resources() -> Result[ResourceMatrix, ResourceError]:
+    await task.sleep(0.0)
+    raise ResourceError("declaration only")
+
+@rust(bridge.resources.contract, panic=trusted_no_panic)
+def resource_contract() -> str: ...
+
+@rust.async(thread_affinity=tokio_current_thread)
+@rust(bridge.resources.invalid_aliasing, panic=trusted_no_panic)
+async def reject_resource_alias(own resource: ResourceMatrix) -> Result[str, ResourceError]:
+    await task.sleep(0.0)
+    return ""
+
+async def verify_invalid_resource_aliasing() -> Result[str, ResourceError]:
+    observed: str = ""
+    try:
+        contract: str = resource_contract()
+        assert contract == "opaque-resource-runtime-v1"
+        resource: ResourceMatrix = await open_resources()
+        unexpected: str = await reject_resource_alias(resource)
+        observed = "unexpected alias success: " + unexpected
+    except ResourceError as error:
+        observed = error.message
+    assert observed == "resource is closed"
+    return "resource-state=closed"

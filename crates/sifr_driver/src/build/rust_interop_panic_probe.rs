@@ -91,6 +91,7 @@ mod tests {
                 span: TextRange::default(),
                 effect: RustInteropEffect::Sync,
                 abi_requirements: RustInteropAbiRequirements::default(),
+                consumes_receiver: false,
             },
         };
 

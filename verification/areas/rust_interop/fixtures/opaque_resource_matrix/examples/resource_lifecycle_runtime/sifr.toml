@@ -1,0 +1,27 @@
+# fixture: opaque_resource_matrix
+# scenario-example: resource_lifecycle_runtime
+
+[package]
+name = "resource-lifecycle-runtime"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[rust]
+bridge-version = 1
+bridges = ["src/bridges"]
+direct-crate-bindings = true
+
+[trust]
+rust-no-panic = [
+  "bridge.resources.aclose",
+  "bridge.resources.close_observation",
+  "bridge.resources.contract",
+  "bridge.resources.invalid_aliasing",
+  "bridge.resources.open",
+  "bridge.resources.run",
+]
+rust-build-scripts = ["libsqlite3-sys", "ring"]
+native-links = ["ring_core_0_17_14_", "ring_core_0_17_14__test", "sqlite3"]

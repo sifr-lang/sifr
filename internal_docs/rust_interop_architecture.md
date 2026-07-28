@@ -205,6 +205,28 @@ Opaque decorator keys are fixed:
 
 Method receiver annotations win over the class-level `borrow=` default. `def method(self, ...)` uses the class default, `def method(mut self, ...)` lowers to `&mut self`, and `def method(own self, ...)` consumes the handle and marks it closed or moved. `close=close` requires `def close(own self) -> Result[None, E]`; `close=async_close` requires `async def aclose(own self) -> Result[None, E]`. If the close target is a package-local function rather than `Self.method`, generated glue passes the owned handle value to the bridge function, marks the Sifr handle closed before returning success, and marks it poisoned if the Rust call panics.
 
+Rust opaque classes are emitted as `Handle<T>` aliases. Their Rust-bound
+members are materialized as generated public extension traits on that alias;
+consumer modules import the defining trait anonymously, including through
+class aliases and re-exports. Package-bridge members forward the borrowed or
+owned `Handle<T>` receiver as the first bridge argument. `Self.method` members
+instead access the wrapped Rust value through `inner_ref` or `into_inner`, so
+their bridge-signature contract does not invent an explicit receiver argument.
+
+Every opaque instance member returns `Result[...]`. A `Self.method` target is
+valid only on a regular instance method. Generated code resolves `inner_ref`
+or `into_inner` and propagates its typed state error before entering the Rust
+panic boundary. The method requires one message-shaped ordinary Error result,
+optionally unioned with `RustPanicError`, so `Closed` and `Poisoned` conversion
+is total and typed. `PythonError` and other richer state-error shapes require a
+package bridge adapter.
+Receiver ownership is carried in Rust declaration metadata and exported across
+module and re-export boundaries; the `close=` policy selects the sole
+consuming member. Consuming cleanup calls require an owned local binding.
+Mismatched members, borrowed or field-based close receivers, duplicate close
+calls, and use after close are rejected during lowering or package-contract
+validation before rustc.
+
 Allowed symbolic values are:
 
 - `send=True | False`
@@ -799,6 +821,25 @@ delayed call is cancelled through a Sifr timeout; request and server drop
 guards must leave zero active work after bounded cleanup. This certification
 does not add a nested runtime, implicit blocking adapter, external service
 dependency, or async panic-mapper support.
+
+The `opaque_resource_matrix` runtime certification consumes a generated
+`Handle<T>` through an owned async bridge on the generated current-thread
+runtime. Its locked package binds cleanup handles before spawning ephemeral
+HTTP, Redis RESP, and PostgreSQL wire-protocol servers, and uses a unique
+temporary database for bundled `rusqlite`. The bridge exercises one
+deterministic operation per crate, then proves shared-alias closed-state
+visibility through a real operation, stable double close through an owned
+generated `close=async_close` member routed to the package bridge, redacted
+`PoisonOnPanic` state, bounded
+shutdown of every harness-owned tracked task, and observed database removal.
+The bridge-local aliased `ResourceMatrix` values share one resource state; this
+row does not declare or certify a Sifr-level clone policy.
+Client-library-internal tasks are not included in the harness activity counter.
+The Redis client disables its library-metadata `CLIENT SETINFO` handshake, so
+the RESP harness certifies only the exercised connection and `PING` frames.
+The Redis and PostgreSQL harnesses certify only the handshake and
+request/response frames exercised by this package, not general server
+compliance.
 
 For async Rust targets that borrow converted inputs, generated glue owns the converted values inside the wrapper future. The raw Rust future may borrow those owned wrapper values, but any Sifr-exposed future must satisfy Sifr async lifetime and spawn rules after wrapping. This allows ordinary Rust APIs such as `async fn fetch(url: &str) -> Result<_, _>` without exposing borrowed futures that outlive their generated wrapper state.
 

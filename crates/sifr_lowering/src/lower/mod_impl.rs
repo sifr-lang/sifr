@@ -5,8 +5,9 @@ use super::{
     integer_literal_diagnostics, module_constants_lowering, module_function_registry,
     name_diagnostics, parse_typevar_bound_expr, parse_typevar_declaration_specs,
     predeclare_type_aliases, private_stdlib_imports, python_interop, register_builtins,
-    resolve_imports_early, resolve_type_aliases, str, workload_annotations, Expr, ExternalDefs,
-    HirDiagnostic, HirExpr, HirImport, HirModule, LowerCtx, Ranged, Stmt, TextRange, Type,
+    resolve_imports_early, resolve_type_aliases, rust_interop, str, workload_annotations, Expr,
+    ExternalDefs, HirDiagnostic, HirExpr, HirImport, HirModule, LowerCtx, Ranged, Stmt, TextRange,
+    Type,
 };
 use sifr_ir::LoweringResult;
 pub(in crate::lower) fn lower_module_impl(
@@ -68,6 +69,7 @@ pub(in crate::lower) fn lower_module_impl(
     resolve_imports_early(stmts, externals, &mut ctx);
     let imported_class_aliases = imports::class_aliases_by_module(stmts, externals, &ctx);
     python_interop::collect_python_opaque_classes(stmts, &mut ctx);
+    rust_interop::collect_rust_opaque_close_methods(stmts, &mut ctx);
     let alias_decls = collect_type_alias_decls(stmts, &mut ctx);
     predeclare_type_aliases(&alias_decls, &mut ctx);
     // First class pass materializes full class shapes before alias resolution so aliases like

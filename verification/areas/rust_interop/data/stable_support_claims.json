@@ -6,7 +6,6 @@
   "runtime_deferrals": [
     "advanced_data_runtime_matrix",
     "callback_subscription_ecosystem",
-    "opaque_resource_matrix",
     "zero_copy_runtime_matrix"
   ],
   "claims": [
@@ -69,6 +68,12 @@
       "category": "supported",
       "execution_kind": "runtime-observed",
       "capability": "stdlib-owned opaque resource lifecycle core"
+    },
+    {
+      "id": "opaque_resource_matrix",
+      "category": "supported-through-bridge",
+      "execution_kind": "runtime-observed",
+      "capability": "resource-shaped opaque handles"
     },
     {
       "id": "close_after_use",

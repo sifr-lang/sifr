@@ -28,6 +28,27 @@ pub(super) fn register_imported_class_instance_methods(
     );
 }
 
+fn register_imported_rust_consuming_methods(
+    ctx: &mut LowerCtx,
+    externals: &ExternalDefs,
+    module: &str,
+    source_name: &str,
+    local_name: &str,
+) {
+    let Some(methods) = externals
+        .rust_consuming_methods
+        .get(module)
+        .and_then(|classes| classes.get(source_name))
+    else {
+        return;
+    };
+    ctx.rust_consuming_methods.extend(
+        methods
+            .iter()
+            .map(|method| format!("{local_name}.{method}")),
+    );
+}
+
 pub(in crate::lower) fn class_aliases_by_module(
     stmts: &[Stmt],
     externals: &ExternalDefs,
@@ -182,6 +203,13 @@ pub(in crate::lower) fn resolve_imports_early(
                             ctx.class_types
                                 .insert(local.clone(), imported_class_ty.clone());
                             register_imported_class_instance_methods(
+                                ctx,
+                                externals,
+                                &module_key,
+                                name,
+                                &local,
+                            );
+                            register_imported_rust_consuming_methods(
                                 ctx,
                                 externals,
                                 &module_key,
