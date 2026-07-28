@@ -8,16 +8,22 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
-from _binding_helpers import contains_empty_pass_body as _contains_empty_pass_body
-from _binding_helpers import rust_bound_declarations as _rust_bound_declarations
-from _binding_helpers import verifier_binds_call as _verifier_binds_call
 from _scenario_async_reqwest import (
     run_async_reqwest_self_test,
     validate_async_reqwest_scenario,
 )
+from _scenario_callback_subscriptions import (
+    run_callback_subscription_self_test,
+    validate_callback_subscription_scenario,
+)
 from _scenario_opaque_resources import (
     run_opaque_resource_self_test,
     validate_opaque_resource_scenario,
+)
+from _scenario_source_checks import (
+    read_scenario_text as _read_scenario_text,
+    reject_generated_bridge_imports as _reject_generated_bridge_imports,
+    validate_scenario_sifr_source as _validate_scenario_sifr_source,
 )
 
 REQUIRED_SCENARIO_EXAMPLES = {
@@ -57,6 +63,26 @@ REQUIRED_SCENARIO_EXAMPLES = {
                 "CallScopedCallbackBridge",
                 "bridge.callbacks.visit",
                 "Rust bridge panicked",
+            ),
+        },
+    },
+    "callback_subscription_ecosystem": {
+        "subscription_lifecycle_runtime": {
+            "tokens": (
+                "ThreadsafeCallbackBridge",
+                "backpressure=bounded(2)",
+                "CallbackQueue::from_policy(callback.policy())",
+                "policy.backpressure",
+                "CallbackOverflow::Error",
+                "CallbackShutdown::Drain",
+                "WebSocketStream::from_raw_socket",
+                ".get_async_pubsub()",
+                "notify::recommended_watcher",
+                "std::thread::current().id() != owner_thread",
+                "OPERATION_TIMEOUT",
+                "impl Drop for Subscription",
+                "Rust bridge panicked",
+                "active=0;temp-removed=true",
             ),
         },
     },
@@ -365,6 +391,13 @@ def run_self_test() -> tuple[int, str | None]:
     if resource_error is not None:
         return cases, resource_error
 
+    callback_cases, callback_error = run_callback_subscription_self_test(
+        AREA_ROOT, validate_scenario_examples
+    )
+    cases += callback_cases
+    if callback_error is not None:
+        return cases, callback_error
+
     return cases, None
 
 
@@ -410,65 +443,6 @@ def _validate_scenario_example_dir(
         text = source.read_text(encoding="utf-8")
         raw_source_path = source.relative_to(example_dir).as_posix()
         _validate_scenario_sifr_source(failures, fixture_id, example, f"{raw_path}/{raw_source_path}", text)
-
-
-def _read_scenario_text(
-    readme_path: Path,
-    sifr_config_path: Path,
-    sifr_sources: list[Path],
-    cargo_manifests: list[Path],
-    rust_sources: list[Path],
-) -> str:
-    paths = [readme_path, sifr_config_path, *sifr_sources, *cargo_manifests, *rust_sources]
-    return "\n".join(path.read_text(encoding="utf-8") for path in paths if path.is_file())
-
-
-def _validate_scenario_sifr_source(
-    failures: list[str],
-    fixture_id: str,
-    example: str,
-    raw_path: str,
-    text: str,
-) -> None:
-    if len(text.strip().splitlines()) < 10:
-        failures.append(f"{fixture_id}: {raw_path} must contain a full scenario source")
-    for header in ("# execution-kind:", "# expected-result:"):
-        if header not in text:
-            failures.append(f"{fixture_id}: {raw_path} missing {header} header")
-    if _contains_empty_pass_body(text):
-        failures.append(f"{fixture_id}: {raw_path} must not use empty placeholder class bodies")
-    if not any(line.lstrip().startswith("@rust") for line in text.splitlines()):
-        failures.append(f"{fixture_id}: {raw_path} must exercise a Rust interop declaration")
-    bound_declarations = _rust_bound_declarations(text)
-    if not bound_declarations:
-        failures.append(f"{fixture_id}: {raw_path} must include Rust-decorated binding declarations")
-
-    verifier_markers = (f"def verify_{example}(", f"async def verify_{example}(")
-    verifier_start = min((text.find(marker) for marker in verifier_markers if marker in text), default=-1)
-    if verifier_start < 0:
-        failures.append(f"{fixture_id}: {raw_path} must include verify_{example}")
-        return
-
-    verifier_body = text[verifier_start:]
-    for name, return_type in bound_declarations:
-        if f"{name}(" not in verifier_body and f".{name}(" not in verifier_body:
-            failures.append(f"{fixture_id}: {raw_path} verifier must call {name}")
-        if return_type != "None" and not _verifier_binds_call(verifier_body, name):
-            failures.append(f"{fixture_id}: {raw_path} verifier must bind {name} result before returning")
-
-
-def _reject_generated_bridge_imports(
-    failures: list[str],
-    fixture_id: str,
-    raw_path: str,
-    rust_sources: list[Path],
-) -> None:
-    for source in rust_sources:
-        for line_number, line in enumerate(source.read_text(encoding="utf-8").splitlines(), start=1):
-            stripped = line.strip()
-            if "crate::__sifr_bridge" in stripped and not stripped.startswith("//"):
-                relative = source.as_posix().split(f"{raw_path}/", maxsplit=1)[-1]
-                failures.append(f"{fixture_id}: {relative}:{line_number} must not reference crate::__sifr_bridge")
 
 
 def _validate_scenario_manifests(
@@ -587,6 +561,10 @@ def _validate_scenario_manifests(
         )
     elif fixture_id == "opaque_resource_matrix":
         validate_opaque_resource_scenario(
+            failures, fixture_id, raw_path, rust, dependencies, trust
+        )
+    elif fixture_id == "callback_subscription_ecosystem":
+        validate_callback_subscription_scenario(
             failures, fixture_id, raw_path, rust, dependencies, trust
         )
     elif fixture_id == "same_workspace_crate":

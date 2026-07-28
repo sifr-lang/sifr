@@ -14,13 +14,14 @@ const CALLBACK_SOURCE: &str = r#"
 class CallbackError(Error):
     message: str
 
+@rust.opaque(type=bridge.events.Subscription, send=True, sync=False, clone=none, close=close)
 class Subscription:
-    id: int
+    @rust(Self.close)
+    def close(own self) -> Result[None, CallbackError | RustPanicError]: ...
 
 @rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)
 @rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
-def subscribe(callback: Callable[[int], None]) -> Result[Subscription, CallbackError | RustPanicError]:
-    return Subscription(id=0)
+def subscribe(own callback: Callable[[int], None]) -> Result[Subscription, CallbackError | RustPanicError]: ...
 "#;
 
 #[test]
@@ -46,11 +47,49 @@ fn package_rust_interop_accepts_direct_callback_backpressure() {
 }
 
 #[test]
-fn package_rust_interop_rejects_callback_policy_without_rust_target() {
-    let source = CALLBACK_SOURCE.replace(
-        "@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))\n",
-        "",
+fn package_rust_interop_rejects_mutable_threadsafe_callback() {
+    let source = CALLBACK_SOURCE.replace("own callback:", "own mut callback:");
+    let generated = generated_from_source(&source);
+    let context = context_with_source(&source);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "retained callback cannot expose mutable callable state",
     );
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
+    assert!(diagnostics[0].message.contains("cannot be declared `mut`"));
+}
+
+#[test]
+fn package_rust_interop_rejects_threadsafe_callback_without_subscription_handle() {
+    let source = CALLBACK_SOURCE.replace(
+        "Result[Subscription, CallbackError | RustPanicError]",
+        "Result[int, CallbackError | RustPanicError]",
+    );
+    let generated = generated_from_source(&source);
+    let context = context_with_source(&source);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "retained callback must return a cleanup handle",
+    );
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
+    assert!(diagnostics[0].message.contains("explicit cleanup handle"));
+}
+
+#[test]
+fn package_rust_interop_rejects_callback_policy_without_rust_target() {
+    let source = CALLBACK_SOURCE
+        .replace(
+            "@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))\n",
+            "",
+        )
+        .replace(
+            "-> Result[Subscription, CallbackError | RustPanicError]: ...",
+            "-> None:\n    return None",
+        );
     let generated = generated_from_source(&source);
     let context = context_with_source(&source);
 
@@ -85,11 +124,7 @@ fn package_rust_interop_rejects_call_scoped_callback_across_async_boundary() {
             "@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)\n",
             "",
         )
-        .replace("def subscribe", "async def subscribe")
-        .replace(
-            "    return Subscription(id=0)",
-            "    await task.sleep(0.0)\n    return Subscription(id=0)",
-        );
+        .replace("def subscribe", "async def subscribe");
     let generated = generated_from_source(&source);
     let context = context_with_source(&source);
 
@@ -111,11 +146,7 @@ fn package_rust_interop_rejects_call_scoped_callback_with_async_policy() {
             "@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)\n",
             "@rust.async(thread_affinity=tokio_current_thread)\n",
         )
-        .replace("def subscribe", "async def subscribe")
-        .replace(
-            "    return Subscription(id=0)",
-            "    await task.sleep(0.0)\n    return Subscription(id=0)",
-        );
+        .replace("def subscribe", "async def subscribe");
     let generated = generated_from_source(&source);
     let context = context_with_source(&source);
 
@@ -144,8 +175,7 @@ fn package_rust_interop_rejects_call_scoped_callback_without_panic_boundary() {
         .replace(
             "-> Result[Subscription, CallbackError | RustPanicError]",
             "-> None",
-        )
-        .replace("return Subscription(id=0)", "return None");
+        );
     let generated = generated_from_source(&source);
     let context = context_with_source(&source);
 
@@ -178,6 +208,38 @@ fn package_rust_interop_rejects_call_scoped_callback_with_abort_policy() {
     );
     assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
     assert!(diagnostics[0].message.contains("`panic=abort`"));
+}
+
+#[test]
+fn package_rust_interop_rejects_threadsafe_callback_with_abort_policy() {
+    let source = CALLBACK_SOURCE.replace("panic=map_error(bridge.events.map_panic)", "panic=abort");
+    let generated = generated_from_source(&source);
+    let context = context_with_source(&source);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "retained callback panics require unwind",
+    );
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
+    assert!(diagnostics[0].message.contains("`panic=abort`"));
+}
+
+#[test]
+fn package_rust_interop_rejects_threadsafe_abort_without_signature_contract() {
+    let source = CALLBACK_SOURCE.replace("panic=map_error(bridge.events.map_panic)", "panic=abort");
+    let mut generated = generated_from_source(&source);
+    generated.interop.rust.bridge_contracts.signatures.clear();
+    let context = context_with_source(&source);
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "retained callback abort policy is independent of signature lookup",
+    );
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == "SIFR-RUST-CB-0001" && diagnostic.message.contains("`panic=abort`")
+    }));
 }
 
 #[test]
@@ -236,13 +298,44 @@ fn package_rust_interop_rejects_call_scoped_callback_in_abort_profile() {
 }
 
 #[test]
+fn package_rust_interop_rejects_threadsafe_callback_in_abort_profile() {
+    let generated = generated_from_source(CALLBACK_SOURCE);
+    let mut context = context_with_source(CALLBACK_SOURCE);
+    let package_root = temp_package_root("rust_threadsafe_callback_abort_profile");
+    std::fs::create_dir_all(&package_root).expect("abort-profile package root");
+    std::fs::write(
+        package_root.join("Cargo.toml"),
+        "[package]\nname = \"threadsafe-callback-abort-profile\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n[profile.release]\npanic = \"abort\"\n",
+    )
+    .expect("abort-profile Cargo.toml");
+    context
+        .graph
+        .packages
+        .get_mut(&context.package_id)
+        .expect("package metadata")
+        .package_root = package_root.clone();
+
+    let diagnostics = interop_errors(
+        generated,
+        Some(context),
+        "abort Cargo profile cannot contain retained callback panic",
+    );
+    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
+    assert!(diagnostics[0].message.contains("abort profiles"));
+    let _ = std::fs::remove_dir_all(package_root);
+}
+
+#[test]
 fn package_rust_interop_rejects_mutable_call_scoped_callback_parameter() {
     let source = CALLBACK_SOURCE
         .replace(
             "@rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)\n",
             "",
         )
-        .replace("def subscribe(callback:", "def subscribe(mut callback:");
+        .replace(
+            "def subscribe(own callback:",
+            "def subscribe(own mut callback:",
+        );
     let generated = generated_from_source(&source);
     let context = context_with_source(&source);
 
@@ -263,18 +356,9 @@ fn package_rust_interop_rejects_callback_missing_backpressure() {
         "backpressure=bounded(1024), overflow=error, shutdown=drain",
         "overflow=error, shutdown=drain",
     );
-    let generated = generated_from_source(&source);
-    let context = context_with_source(&source);
-
-    let diagnostics = interop_errors(
-        generated,
-        Some(context),
-        "missing callback backpressure should fail",
-    );
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("missing required `backpressure=` policy"));
+    let (code, message) = lowering_callback_error(&source);
+    assert_eq!(code, "SIFR-RUST-CB-0001");
+    assert!(message.contains("missing required `backpressure=` policy"));
 }
 
 #[test]
@@ -283,18 +367,9 @@ fn package_rust_interop_rejects_callback_missing_overflow() {
         "backpressure=bounded(1024), overflow=error, shutdown=drain",
         "backpressure=bounded(8), shutdown=drain",
     );
-    let generated = generated_from_source(&source);
-    let context = context_with_source(&source);
-
-    let diagnostics = interop_errors(
-        generated,
-        Some(context),
-        "missing callback overflow should fail",
-    );
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("missing required `overflow=` policy"));
+    let (code, message) = lowering_callback_error(&source);
+    assert_eq!(code, "SIFR-RUST-CB-0001");
+    assert!(message.contains("missing required `overflow=` policy"));
 }
 
 #[test]
@@ -303,67 +378,33 @@ fn package_rust_interop_rejects_callback_missing_shutdown() {
         "backpressure=bounded(1024), overflow=error, shutdown=drain",
         "backpressure=bounded(8), overflow=error",
     );
-    let generated = generated_from_source(&source);
-    let context = context_with_source(&source);
-
-    let diagnostics = interop_errors(
-        generated,
-        Some(context),
-        "missing callback shutdown should fail",
-    );
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("missing required `shutdown=` policy"));
+    let (code, message) = lowering_callback_error(&source);
+    assert_eq!(code, "SIFR-RUST-CB-0001");
+    assert!(message.contains("missing required `shutdown=` policy"));
 }
 
 #[test]
 fn package_rust_interop_rejects_invalid_callback_backpressure_bound() {
     let source = CALLBACK_SOURCE.replace("backpressure=bounded(1024)", "backpressure=bounded(0)");
-    let generated = generated_from_source(&source);
-    let context = context_with_source(&source);
-
-    let diagnostics = interop_errors(
-        generated,
-        Some(context),
-        "invalid callback bound should fail",
-    );
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
-    assert!(diagnostics[0].message.contains("requires a positive bound"));
+    let (code, message) = lowering_callback_error(&source);
+    assert_eq!(code, "SIFR-RUST-CB-0001");
+    assert!(message.contains("requires a positive bound"));
 }
 
 #[test]
 fn package_rust_interop_rejects_unknown_callback_overflow_policy() {
     let source = CALLBACK_SOURCE.replace("overflow=error", "overflow=block");
-    let generated = generated_from_source(&source);
-    let context = context_with_source(&source);
-
-    let diagnostics = interop_errors(
-        generated,
-        Some(context),
-        "unknown callback overflow should fail",
-    );
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("`overflow=` must be error, drop_oldest, or drop_newest"));
+    let (code, message) = lowering_callback_error(&source);
+    assert_eq!(code, "SIFR-RUST-CB-0001");
+    assert!(message.contains("`overflow=` must be error, drop_oldest, or drop_newest"));
 }
 
 #[test]
 fn package_rust_interop_rejects_unknown_callback_shutdown_policy() {
     let source = CALLBACK_SOURCE.replace("shutdown=drain", "shutdown=leak");
-    let generated = generated_from_source(&source);
-    let context = context_with_source(&source);
-
-    let diagnostics = interop_errors(
-        generated,
-        Some(context),
-        "unknown callback shutdown should fail",
-    );
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-CB-0001");
-    assert!(diagnostics[0]
-        .message
-        .contains("`shutdown=` must be drain, cancel, or detach_forbidden"));
+    let (code, message) = lowering_callback_error(&source);
+    assert_eq!(code, "SIFR-RUST-CB-0001");
+    assert!(message.contains("`shutdown=` must be drain, cancel, or detach_forbidden"));
 }
 
 #[test]
@@ -402,6 +443,29 @@ fn generated_from_source(source: &str) -> GeneratedBinaryProject {
         cache_key_fragment: None,
         python_runtime: None,
     }
+}
+
+fn lowering_callback_error(source: &str) -> (String, String) {
+    let parsed = sifr_syntax::parse_module(source, Some("app")).expect("source should parse");
+    let errors = match sifr_lowering::lower_module(parsed.suite()) {
+        Ok(_) => panic!("invalid callback policy should fail lowering"),
+        Err(errors) => errors,
+    };
+    let callback_errors = errors
+        .into_iter()
+        .filter(|error| {
+            error
+                .code
+                .is_some_and(|code| code.code() == "SIFR-RUST-CB-0001")
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(callback_errors.len(), 1, "{callback_errors:?}");
+    (
+        callback_errors[0]
+            .code
+            .map_or_else(String::new, |code| code.code().to_string()),
+        callback_errors[0].message.clone(),
+    )
 }
 
 fn context_with_source(source: &str) -> PackageRustInteropContext {

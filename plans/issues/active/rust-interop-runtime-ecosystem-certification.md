@@ -149,8 +149,8 @@ normative and must not be broadened.
 | `certification_3` | merged | [PR #3033](https://github.com/sifr-lang/sifr/pull/3033); generated call-scoped callback invocation and lifetime rejection |
 | `certification_4` | merged | [PR #3036](https://github.com/sifr-lang/sifr/pull/3036); async reqwest loopback, runtime reuse, cancellation/drop, timeout cleanup, and hidden blocking rejection |
 | `certification_5` | merged | [PR #3042](https://github.com/sifr-lang/sifr/pull/3042); opaque resource lifecycle matrix with HTTP/Redis/PostgreSQL loopbacks and a temporary SQLite database |
-| `certification_6` | in progress | callback subscription lifecycle matrix starts after `certification_5` |
-| `certification_7` | blocked | starts after `certification_6` merges |
+| `certification_6` | merged | [PR #3046](https://github.com/sifr-lang/sifr/pull/3046); retained callback subscription lifecycle and capture contract |
+| `certification_7` | in progress | zero-copy runtime matrix starts after `certification_6` |
 | `certification_8` | blocked | starts after `certification_7` merges |
 | `certification_9` | blocked | starts after `certification_8` merges |
 | `certification_10` | blocked | starts after `certification_9` merges |
@@ -639,6 +639,146 @@ Focused implementation evidence:
   independently closes all prior findings and reports `SATISFIED`, and
   [PR #3042](https://github.com/sifr-lang/sifr/pull/3042) is the Certification
   5 merge.
+
+#### certification_6: Callback Subscription Ecosystem
+
+Implementation checklist:
+
+- [x] Replace the thread-safe callback marker with a typed generated/runtime
+  bridge that owns a `Send + Sync + 'static` handler, preserves the declared
+  callback argument/result contract, contains callback panics, and exposes the
+  exact backpressure, overflow, and shutdown policy to the package bridge.
+- [x] Require owned thread-safe callback parameters and a fallible opaque
+  subscription result, and reject named or nested handlers whose captures
+  cannot be proven sendable and share-safe with `SIFR-RUST-CB-0001`.
+- [x] Add a locked/offline `subscription_lifecycle_runtime` package using raw
+  loopback WebSocket framing through `tokio-tungstenite`, a minimal Redis
+  pub/sub RESP harness, and a unique temporary watched directory through
+  `notify`.
+- [x] Prove bounded overflow-as-error behavior, callback error propagation,
+  exact panic-payload redaction, foreign-thread notification entry, explicit
+  cancellation, drain shutdown, consuming async close, bounded task joins,
+  temporary-directory removal, and zero active harness-owned work.
+- [x] Bind both evidence directions to distinct mandatory generated-build
+  tests, promote only `callback_subscription_ecosystem`, and update structured
+  claims, public/internal docs, provenance, counts, and validator self-tests.
+- [x] Run focused and authoritative local gates, Opus review rounds to
+  satisfaction, merge the PR, and unblock only `certification_7`.
+
+Post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 58 passing and 14 planned evidence directions;
+- categories: 18 `supported`, 10 `supported-through-bridge`, 1
+  `unsupported-by-design`, and 7 `future-owned-by-separate-phase`;
+- execution kinds remain 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+- 60 package examples and 16 scenario examples; and
+- 29 structured stable claims.
+
+Focused implementation evidence:
+
+- the mandatory positive generated-build test executes typed retained callbacks
+  through raw loopback WebSocket frames, Redis Pub/Sub RESP, and a real
+  filesystem watcher, producing the exact lifecycle summary with bounded
+  overflow, ordinary callback error, redacted panic, foreign-thread entry,
+  queue drain, cancellation, consuming async close, zero active work, and
+  temporary-directory removal;
+- the mandatory negative generated-build test rejects both a named nested
+  handler retaining `NonSend` state and one retaining a callable whose
+  captures are unknown with `SIFR-RUST-CB-0001`, and rejects second attachment
+  of a consumed nested handler with `SIFR-OWN-0001`; direct and
+  sibling-transitive mutating captures also fail the retained `Fn` contract
+  with `SIFR-RUST-CB-0001`, before Cargo probing;
+- the package lock is an exact subset of the root lock graph, and its standalone
+  Rust library passes locked/offline Cargo check and Clippy;
+- fixture, compatibility, tier, scenario, stable-claim, and provenance checks
+  bind both directions to distinct merge-profile test names and mutation-test
+  the locked dependency policy, callback policy, foreign-thread observation,
+  and subscription cleanup guardrails.
+- Opus review round 1 found eight actionable gaps. The follow-up makes callback
+  policy parsing canonical in the IR and rejects malformed policy before
+  codegen, rejects retained callbacks under explicit or profile-level abort
+  strategy, covers function and method attachment captures plus generated
+  method bounds, drives queue overflow and close-time drain from the carried
+  policy, cancels a real scheduled callback delivery before invocation, and
+  splits callback bridges out of the saturated runtime module. The mandatory
+  positive and negative generated-build tests pass together after these fixes.
+- [Opus review round 2](../../reviews/active/rust-interop-certification-6-review-round-2.md)
+  confirmed all round-1 findings closed and found four deeper attachment
+  gaps. The follow-up emits verified nested retained handlers as owning
+  `move` closures, traverses sibling nested-function captures transitively,
+  transports retained-callback parameter indices through direct imports,
+  aliases, re-exports, and imported methods, and enforces abort strategy before
+  bridge-signature lookup. Focused regressions cover each path, and the
+  mandatory positive generated package now builds and executes a nested
+  handler with a verified local capture.
+- [Opus review round 3](../../reviews/active/rust-interop-certification-6-review-round-3.md)
+  confirmed the round-2 attachment, metadata, and panic-strategy findings
+  closed, then exposed raw-rustc failures for blanket-moving non-`Copy`
+  captures and accepting callable values with unknown captures. The follow-up
+  clones verified non-`Copy` captures inside an isolated closure-construction
+  block, preserves the enclosing binding after attachment and across loop
+  iterations, rejects unprovable callable captures with
+  `SIFR-RUST-CB-0001`, and teaches structured loop bodies to emit retained
+  nested handlers. Focused lowering, codegen, and both mandatory generated
+  package directions cover the corrected contract.
+- [Opus review round 4](../../reviews/active/rust-interop-certification-6-review-round-4.md)
+  confirmed every earlier high-severity raw-rustc gap closed, then found that
+  reusing the generated handler binding itself could still reach rustc
+  `E0382`, and that declaration-time capture snapshot semantics were unstated.
+  The follow-up makes successful retained attachment an explicit ownership
+  move, diagnoses second attachment and direct invocation with
+  `SIFR-OWN-0001`, diagnoses outer-loop reuse with `SIFR-OWN-0004`, and pins
+  declaration-time snapshots in codegen and the runtime-observed package.
+- [Opus review round 5](../../reviews/active/rust-interop-certification-6-review-round-5.md)
+  independently closed every prior finding, then found false rejection of
+  attribute/method-derived locals whose capture type remained inference-time
+  `Unknown`, plus an `FnMut` escape through direct or transitive `nonlocal`
+  mutation. The follow-up refreshes capture types from lowered lexical
+  bindings, gives genuinely unresolved captures an explicit contract
+  diagnostic, records mutated nested captures, and rejects direct and
+  transitive `FnMut` handlers before Cargo. Both mandatory generated-package
+  directions exercise the corrected contract.
+- [Opus review round 6](../../reviews/active/rust-interop-certification-6-review-round-6.md)
+  confirmed every round-1 through round-5 remediation, then found that the
+  test-body decomposition broke negative-evidence provenance and that
+  assignment-target-only capture mutation could still reach raw rustc
+  `E0525`. The follow-up restores diagnostic assertions to the manifest-bound
+  generated-build test, discovers captures in assignment and deletion targets,
+  analyzes mutation over actual captured bindings through structured control
+  flow and sibling functions, covers collection-mutating methods, and prefers
+  lowered lexical types over builtin-name inference. The unresolved-type
+  branch now has a direct regression.
+- [Opus review round 7](../../reviews/active/rust-interop-certification-6-review-round-7.md)
+  confirmed all earlier findings and the real area gates, then found that a
+  function nested inside the retained handler could hide both `FnMut` and
+  `NonSend` capture use. It also found name-only `write` classification falsely
+  rejected `RwLock.write()`, and exposed silent shadowing for a `nonlocal`
+  walrus. The follow-up propagates free captures through arbitrarily nested
+  helper scopes, walks their mutations with parameter/local shadowing, uses
+  receiver types for collection mutation, adds generated positive `RwLock`
+  evidence and four generated negative nested-helper directions, and rejects
+  `nonlocal` walrus with `SIFR-FLOW-0003`.
+- [Opus review round 8](../../reviews/active/rust-interop-certification-6-review-round-8.md)
+  revalidated every earlier finding and both mandatory packages, then found
+  capture and mutation traversal gaps in interpolated strings, lambdas, slice
+  bounds, starred expressions, and comprehensions, plus incomplete nested
+  parameter shadowing. The follow-up makes both expression walkers exhaustive,
+  preserves comprehension/lambda lexical scope, strips every parameter kind,
+  adds focused regressions for each escape, and extends the generated positive
+  f-string clone evidence and negative hidden-capture diagnostics.
+- [Opus review round 9](../../reviews/active/rust-interop-certification-6-review-round-9.md)
+  independently reproduced every prior finding and expression escape, passed
+  both mandatory generated packages, 1,901 affected tests, the full
+  Rust-interop area, Clippy, formatting, and all guardrails, recomputed the
+  complete inventory, and reported `SATISFIED` with no actionable finding.
+- [Final PR-head review](../../reviews/active/rust-interop-certification-6-review-round-10.md)
+  verified the exact [PR #3046](https://github.com/sifr-lang/sifr/pull/3046)
+  head, the authoritative create-PR report, all mandatory and focused
+  evidence, and the complete inventory, and reported `SATISFIED`.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

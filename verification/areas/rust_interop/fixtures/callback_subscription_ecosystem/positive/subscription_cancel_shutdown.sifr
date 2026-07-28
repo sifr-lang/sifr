@@ -1,24 +1,87 @@
 # fixture: callback_subscription_ecosystem
 # evidence: positive/subscription_cancel_shutdown
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: runtime-observed
-# expected-result: future-owned
+# expected-result: pass
+from sifr.sync import RwLock
+
 class SubscriptionError(Error):
     message: str
 
-@rust.opaque(type=bridge.events.Subscription, send=True, sync=False, clone=none, close=async_close)
+class CallbackConfig:
+    label: str
+
+@rust.opaque(
+    type=bridge.events.Subscription,
+    send=False,
+    sync=False,
+    close=async_close,
+    borrow=exclusive,
+    thread_affinity=tokio_current_thread,
+)
 class Subscription:
-    @rust(bridge.events.cancel)
-    async def aclose(own self) -> Result[None, SubscriptionError | RustPanicError]: ...
+    @rust(bridge.events.verify, panic=trusted_no_panic)
+    async def verify(self) -> Result[str, SubscriptionError]: ...
 
-@rust.callback(backpressure=bounded(256), overflow=error, shutdown=drain)
+    @rust(bridge.events.aclose, panic=trusted_no_panic)
+    async def aclose(own self) -> Result[None, SubscriptionError]: ...
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
 @rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
-def subscribe(handler: ThreadsafeCallback[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+def subscribe(
+    own handler: Callable[[str], Result[None, SubscriptionError]],
+) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
 
-def sample_result_callback(event: str) -> Result[None, SubscriptionError]:
-    return None
+@rust(bridge.events.close_observation, panic=trusted_no_panic)
+def close_observation() -> Result[str, SubscriptionError]: ...
 
-async def verify_subscription_cancel_shutdown(own subscription: Subscription) -> Result[Subscription, SubscriptionError | RustPanicError]:
-    subscribe_result: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(sample_result_callback)
-    aclose_result: Result[None, SubscriptionError | RustPanicError] = await subscription.aclose()
-    return subscribe_result
+async def verify_subscription_cancel_shutdown() -> Result[str, SubscriptionError | RustPanicError]:
+    config: CallbackConfig = CallbackConfig("handler-error")
+    attribute_label: str = config.label
+    handler_label: str = attribute_label.upper().lower()
+    format_label: str = "retained"
+
+    def event_handler(event: str) -> Result[None, SubscriptionError]:
+        _formatted: str = f"{format_label}:{event}"
+        assert attribute_label == "handler-error"
+        if event == handler_label:
+            raise SubscriptionError("expected-handler-error")
+        assert event != "panic"
+        return None
+
+    handler_label = "outer-after"
+    try:
+        subscription: Subscription = subscribe(event_handler)
+        assert handler_label == "outer-after"
+        assert format_label == "retained"
+        observed: str = await subscription.verify()
+        _closed: None = await subscription.aclose()
+        cleanup: str = close_observation()
+        verified: str = observed + ";" + cleanup
+        assert verified == "ws=ws:hello;redis=redis:hello;notify=notify:create;overflow=error;handler-error=expected-handler-error;panic=Rust bridge panicked;foreign-thread=true;queue-drained=2;shutdown=drain;cancelled=true;active=0;temp-removed=true"
+        return verified
+    except SubscriptionError as error:
+        raise error
+    except RustPanicError as error:
+        raise error
+
+def verify_subscription_loop_attachment_build() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    labels: list[str] = ["first", "second"]
+    for label in labels:
+        def loop_handler(event: str) -> Result[None, SubscriptionError]:
+            assert label != ""
+            return None
+
+        assert label != ""
+        return subscribe(loop_handler)
+    raise SubscriptionError("missing loop label")
+
+def verify_rwlock_write_capture_build() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    lock: RwLock[int] = RwLock(0)
+
+    def rwlock_handler(event: str) -> Result[None, SubscriptionError]:
+        value: int = lock.write().get()
+        assert value >= 0
+        return None
+
+    return subscribe(rwlock_handler)

@@ -159,7 +159,11 @@ fn collect_mutated_vars_marks_local_nested_function_mutborrow_call_argument() {
     };
 
     let stmts = vec![
-        HirStmt::NestedFunction { func: nested },
+        HirStmt::NestedFunction {
+            func: nested,
+            move_captures: false,
+            capture_clones: Vec::new(),
+        },
         HirStmt::Expr {
             expr: HirExpr::Call {
                 func: "touch_local".to_string(),
@@ -257,7 +261,11 @@ fn body_calls_function_ignores_nested_function_scope() {
         compiler_intrinsic: None,
         type_params: vec![],
     };
-    let stmts = vec![HirStmt::NestedFunction { func: nested }];
+    let stmts = vec![HirStmt::NestedFunction {
+        func: nested,
+        move_captures: false,
+        capture_clones: Vec::new(),
+    }];
 
     assert!(!body_calls_function(&stmts, "target"));
 }
@@ -309,7 +317,11 @@ fn collect_try_error_carriers_descends_into_nested_functions() {
     };
 
     assert_eq!(
-        collect_try_error_carriers(&[HirStmt::NestedFunction { func: nested }]),
+        collect_try_error_carriers(&[HirStmt::NestedFunction {
+            func: nested,
+            move_captures: false,
+            capture_clones: Vec::new(),
+        }]),
         vec![Type::Union(vec![first_error, second_error])]
     );
 }
@@ -354,7 +366,11 @@ fn collect_locally_defined_vars_ignores_nested_function_body_bindings() {
         type_params: vec![],
     };
 
-    let stmts = vec![HirStmt::NestedFunction { func: nested }];
+    let stmts = vec![HirStmt::NestedFunction {
+        func: nested,
+        move_captures: false,
+        capture_clones: Vec::new(),
+    }];
     let defined = collect_locally_defined_vars(&stmts);
 
     assert!(defined.contains("inner"));
@@ -405,7 +421,14 @@ fn collect_mutated_vars_ignores_nested_function_scope() {
         type_params: vec![],
     };
 
-    let mutated = collect_mutated_vars(&[HirStmt::NestedFunction { func: nested }], None);
+    let mutated = collect_mutated_vars(
+        &[HirStmt::NestedFunction {
+            func: nested,
+            move_captures: false,
+            capture_clones: Vec::new(),
+        }],
+        None,
+    );
     assert!(!mutated.contains("inside"));
 }
 
@@ -429,7 +452,14 @@ fn collect_mutated_vars_includes_captured_rebinds_from_nested_functions() {
         type_params: vec![],
     };
 
-    let mutated = collect_mutated_vars(&[HirStmt::NestedFunction { func: nested }], None);
+    let mutated = collect_mutated_vars(
+        &[HirStmt::NestedFunction {
+            func: nested,
+            move_captures: false,
+            capture_clones: Vec::new(),
+        }],
+        None,
+    );
     assert!(mutated.contains("total"));
 }
 
@@ -459,7 +489,14 @@ fn collect_mutated_vars_marks_captured_outer_mutation_from_nested_function() {
         type_params: vec![],
     };
 
-    let mutated = collect_mutated_vars(&[HirStmt::NestedFunction { func: nested }], None);
+    let mutated = collect_mutated_vars(
+        &[HirStmt::NestedFunction {
+            func: nested,
+            move_captures: false,
+            capture_clones: Vec::new(),
+        }],
+        None,
+    );
     assert!(mutated.contains("items"));
 }
 

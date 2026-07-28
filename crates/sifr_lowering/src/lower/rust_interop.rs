@@ -245,7 +245,7 @@ fn parse_declaration(
 ) -> Option<RustInteropDeclaration> {
     let target = parse_positional_target(kind, call, owner, ctx)?;
     let arguments = parse_keyword_arguments(call, owner, ctx)?;
-    Some(RustInteropDeclaration {
+    let declaration = RustInteropDeclaration {
         kind,
         target,
         arguments,
@@ -253,7 +253,18 @@ fn parse_declaration(
         effect: RustInteropEffect::Sync,
         abi_requirements: abi_requirements(kind, is_async_decl),
         consumes_receiver: false,
-    })
+    };
+    if kind == RustInteropDecoratorKind::Callback {
+        if let Err(reason) = sifr_ir::rust_threadsafe_callback_contract(&declaration) {
+            ctx.error_with_code_at(
+                DiagnosticCode::RUST_CALLBACK_CONTRACT,
+                format!("invalid Rust callback contract: {reason}"),
+                call.range,
+            );
+            return None;
+        }
+    }
+    Some(declaration)
 }
 
 fn parse_positional_target(

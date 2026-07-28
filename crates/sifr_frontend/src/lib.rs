@@ -6,6 +6,7 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 mod cache_keys;
+mod callable_exports;
 mod class_method_exports;
 pub use cache_keys::*;
 mod analysis_views;

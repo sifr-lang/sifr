@@ -1,7 +1,7 @@
 pub(crate) mod generated_types;
 
 use crate::rust_interop_bridge_callback_contract::{
-    bridge_call_scoped_callback_type, CallScopedCallbackSignature,
+    bridge_call_scoped_callback_type, bridge_threadsafe_callback_type, CallbackSignature,
 };
 pub(crate) use crate::rust_interop_bridge_contract_serialization::push_bridge_contract_plan;
 use crate::rust_interop_bridge_panic_contract::{
@@ -135,7 +135,7 @@ pub(crate) fn bridge_contract_plan_for_named_modules<'a>(
         .filter(|declaration| {
             declaration.declaration.kind == sifr_ir::RustInteropDecoratorKind::Callback
         })
-        .map(canonical_sifr_target_path)
+        .map(RustInteropPlanDeclaration::canonical_sifr_target_path)
         .collect::<BTreeSet<_>>();
     for declaration in declarations {
         if declaration.declaration.kind == sifr_ir::RustInteropDecoratorKind::Callback {
@@ -214,7 +214,7 @@ fn signature_contract(
                 catalog,
                 generated_types,
                 BridgeTypePosition::Parameter(
-                    if callback_targets.contains(&canonical_sifr_target_path(declaration)) {
+                    if callback_targets.contains(&declaration.canonical_sifr_target_path()) {
                         CallbackParameterMode::Threadsafe
                     } else {
                         CallbackParameterMode::CallScoped
@@ -233,7 +233,7 @@ fn signature_contract(
     );
     let panic_error = rust_bridge_panic_error_contract(&function.return_type);
     Some(RustBridgeSignatureContract {
-        canonical_target_path: canonical_sifr_target_path(declaration),
+        canonical_target_path: declaration.canonical_sifr_target_path(),
         module_name,
         owner: declaration.owner.clone(),
         params,
@@ -522,22 +522,24 @@ pub(crate) fn bridge_type_contract(
                 unsupported_reason: None,
             }
         }
-        Type::Callable(..)
+        Type::Callable(params, conventions, result)
             if matches!(
                 position,
                 BridgeTypePosition::Parameter(CallbackParameterMode::Threadsafe)
             ) =>
         {
-            RustBridgeTypeContract {
-                sifr_type: ty.display_name(),
-                rust_borrowed_type: Some(
-                    "&::sifr_runtime::interop::ThreadsafeCallbackBridge".to_string(),
-                ),
-                rust_owned_type: Some("::sifr_runtime::interop::ThreadsafeCallbackBridge".to_string()),
-                rust_return_type: None,
-                kind: RustBridgeTypeKind::Callback,
-                unsupported_reason: None,
-            }
+            bridge_threadsafe_callback_type(
+                CallbackSignature {
+                    callable: ty,
+                    params,
+                    conventions,
+                    result,
+                },
+                module_name,
+                module_catalogs,
+                catalog,
+                generated_types,
+            )
         }
         Type::Callable(params, conventions, result)
             if matches!(
@@ -546,7 +548,7 @@ pub(crate) fn bridge_type_contract(
             ) =>
         {
             bridge_call_scoped_callback_type(
-                CallScopedCallbackSignature {
+                CallbackSignature {
                     callable: ty,
                     params,
                     conventions,
@@ -872,28 +874,4 @@ fn bridge_param_convention(convention: ParamConvention) -> RustBridgeParamConven
             RustBridgeParamConvention::OwnMutable
         }
     }
-}
-
-fn canonical_sifr_target_path(declaration: &RustInteropPlanDeclaration) -> String {
-    let mut path = declaration
-        .module_name
-        .clone()
-        .unwrap_or_else(|| "main".to_string());
-    match &declaration.owner {
-        RustInteropOwner::Function { name } => {
-            path.push('.');
-            path.push_str(name);
-        }
-        RustInteropOwner::Class { name } => {
-            path.push('.');
-            path.push_str(name);
-        }
-        RustInteropOwner::Method { class_name, name } => {
-            path.push('.');
-            path.push_str(class_name);
-            path.push('.');
-            path.push_str(name);
-        }
-    }
-    path
 }

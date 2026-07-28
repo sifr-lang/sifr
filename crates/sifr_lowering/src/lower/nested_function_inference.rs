@@ -22,3 +22,4 @@ use compound_statement_inference::{
 };
 mod capture_collection;
 pub(in crate::lower) use capture_collection::collect_referenced_names_in_expr;
+mod mutation_collection;

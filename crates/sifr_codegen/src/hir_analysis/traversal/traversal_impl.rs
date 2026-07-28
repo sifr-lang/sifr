@@ -625,7 +625,7 @@ where
                 return TraversalControl::Stop;
             }
         }
-        HirStmt::NestedFunction { func } => {
+        HirStmt::NestedFunction { func, .. } => {
             if config.descend_nested_functions {
                 if matches!(
                     walk_stmts_until(&func.body, config, on_stmt, on_expr),

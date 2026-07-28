@@ -1,0 +1,61 @@
+# fixture: callback_subscription_ecosystem
+# scenario-example: subscription_lifecycle_runtime
+# execution-kind: runtime-observed
+# expected-result: callback-subscription-clean
+
+class SubscriptionError(Error):
+    message: str
+
+@rust.opaque(
+    type=bridge.events.Subscription,
+    send=False,
+    sync=False,
+    close=async_close,
+    borrow=exclusive,
+    thread_affinity=tokio_current_thread,
+)
+class Subscription:
+    @rust(bridge.events.verify, panic=trusted_no_panic)
+    async def verify(self) -> Result[str, SubscriptionError]: ...
+
+    @rust(bridge.events.aclose, panic=trusted_no_panic)
+    async def aclose(own self) -> Result[None, SubscriptionError]: ...
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(
+    own handler: Callable[[str], Result[None, SubscriptionError]],
+) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+@rust(bridge.events.close_observation, panic=trusted_no_panic)
+def close_observation() -> Result[str, SubscriptionError]: ...
+
+def event_handler(event: str) -> Result[None, SubscriptionError]:
+    if event == "handler-error":
+        raise SubscriptionError("expected-handler-error")
+    assert event != "panic"
+    return None
+
+async def verify_subscription_lifecycle_runtime() -> Result[str, SubscriptionError | RustPanicError]:
+    try:
+        subscription: Subscription = subscribe(event_handler)
+        observed: str = await subscription.verify()
+        _closed: None = await subscription.aclose()
+        cleanup: str = close_observation()
+        verified: str = observed + ";" + cleanup
+        assert verified == "ws=ws:hello;redis=redis:hello;notify=notify:create;overflow=error;handler-error=expected-handler-error;panic=Rust bridge panicked;foreign-thread=true;queue-drained=2;shutdown=drain;cancelled=true;active=0;temp-removed=true"
+        return verified
+    except SubscriptionError as error:
+        raise error
+    except RustPanicError as error:
+        raise error
+
+async def main() -> Result[None, SubscriptionError | RustPanicError]:
+    try:
+        verified: str = await verify_subscription_lifecycle_runtime()
+        print(verified)
+    except SubscriptionError as error:
+        raise error
+    except RustPanicError as error:
+        raise error
+    return None

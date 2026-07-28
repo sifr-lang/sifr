@@ -232,7 +232,7 @@ impl FlowGraphBuilder {
                 self.build_stmt_list(vec![node], FlowEdgeKind::Sequence, body, false)
             }
             HirStmt::Match { arms, .. } => self.build_match(node, arms),
-            HirStmt::NestedFunction { func } => self.build_function(func, &[node]),
+            HirStmt::NestedFunction { func, .. } => self.build_function(func, &[node]),
             _ => vec![node],
         }
     }

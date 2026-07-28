@@ -51,6 +51,7 @@ mod structured_return_if_while;
 mod subscript_augassign_delete;
 mod try_error_helpers;
 mod try_handlers;
+mod tuple_unpack_block;
 use async_cleanup::{inject_async_for_early_exit_cleanup, inject_async_with_return_cleanup};
 use result_type_helpers::{
     is_none_like_result_value, is_result_int_division_error_type, result_int_to_sifr_int_rust_type,

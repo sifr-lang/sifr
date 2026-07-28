@@ -7,7 +7,7 @@ use sifr_type_system::{ParamConvention, Type};
 use std::collections::BTreeMap;
 
 #[derive(Clone, Copy)]
-pub(crate) struct CallScopedCallbackSignature<'a> {
+pub(crate) struct CallbackSignature<'a> {
     pub(crate) callable: &'a Type,
     pub(crate) params: &'a [Type],
     pub(crate) conventions: &'a [ParamConvention],
@@ -15,7 +15,7 @@ pub(crate) struct CallScopedCallbackSignature<'a> {
 }
 
 pub(crate) fn bridge_call_scoped_callback_type(
-    signature: CallScopedCallbackSignature<'_>,
+    signature: CallbackSignature<'_>,
     module_name: Option<&String>,
     module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
     catalog: Option<&ModuleCatalog>,
@@ -38,7 +38,79 @@ pub(crate) fn bridge_call_scoped_callback_type(
             ),
         };
     }
-    let Some(param_types) = signature
+    let Ok((tuple, result_type)) = callback_rust_types(
+        signature,
+        module_name,
+        module_catalogs,
+        catalog,
+        generated_types,
+    ) else {
+        return unsupported_type(
+            signature.callable,
+            "call-scoped callback parameter or result type is not Rust bridge-compatible",
+        );
+    };
+    let rust_type =
+        format!("::sifr_runtime::interop::CallScopedCallbackBridge<'_, {tuple}, {result_type}>");
+    RustBridgeTypeContract {
+        sifr_type: signature.callable.display_name(),
+        rust_borrowed_type: Some(rust_type.clone()),
+        rust_owned_type: Some(rust_type),
+        rust_return_type: None,
+        kind: RustBridgeTypeKind::CallScopedCallback,
+        unsupported_reason: None,
+    }
+}
+
+pub(crate) fn bridge_threadsafe_callback_type(
+    signature: CallbackSignature<'_>,
+    module_name: Option<&String>,
+    module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
+    catalog: Option<&ModuleCatalog>,
+    generated_types: &mut GeneratedTypeCollector,
+) -> RustBridgeTypeContract {
+    if signature
+        .conventions
+        .iter()
+        .any(|convention| convention.is_mut_borrow())
+    {
+        return unsupported_type(
+            signature.callable,
+            "thread-safe callback arguments do not support mutable-borrow conventions",
+        );
+    }
+    let Ok((tuple, result_type)) = callback_rust_types(
+        signature,
+        module_name,
+        module_catalogs,
+        catalog,
+        generated_types,
+    ) else {
+        return unsupported_type(
+            signature.callable,
+            "thread-safe callback parameter or result type is not Rust bridge-compatible",
+        );
+    };
+    let rust_type =
+        format!("::sifr_runtime::interop::ThreadsafeCallbackBridge<{tuple}, {result_type}>");
+    RustBridgeTypeContract {
+        sifr_type: signature.callable.display_name(),
+        rust_borrowed_type: Some(format!("&{rust_type}")),
+        rust_owned_type: Some(rust_type),
+        rust_return_type: None,
+        kind: RustBridgeTypeKind::Callback,
+        unsupported_reason: None,
+    }
+}
+
+fn callback_rust_types(
+    signature: CallbackSignature<'_>,
+    module_name: Option<&String>,
+    module_catalogs: &BTreeMap<Option<String>, ModuleCatalog>,
+    catalog: Option<&ModuleCatalog>,
+    generated_types: &mut GeneratedTypeCollector,
+) -> Result<(String, String), ()> {
+    let param_types = signature
         .params
         .iter()
         .map(|param| {
@@ -53,12 +125,7 @@ pub(crate) fn bridge_call_scoped_callback_type(
             .rust_owned_type
         })
         .collect::<Option<Vec<_>>>()
-    else {
-        return unsupported_type(
-            signature.callable,
-            "call-scoped callback parameter type is not Rust bridge-compatible",
-        );
-    };
+        .ok_or(())?;
     let result_type = if let Type::Result(ok, _) = signature.result.resolve_alias() {
         let ok_contract = bridge_type_contract(
             ok,
@@ -68,12 +135,7 @@ pub(crate) fn bridge_call_scoped_callback_type(
             generated_types,
             BridgeTypePosition::Return,
         );
-        let Some(ok_type) = ok_contract.rust_return_type else {
-            return unsupported_type(
-                signature.callable,
-                "call-scoped callback success type is not Rust bridge-compatible",
-            );
-        };
+        let ok_type = ok_contract.rust_return_type.ok_or(())?;
         format!("Result<{ok_type}, String>")
     } else {
         let result_contract = bridge_type_contract(
@@ -84,27 +146,12 @@ pub(crate) fn bridge_call_scoped_callback_type(
             generated_types,
             BridgeTypePosition::Return,
         );
-        let Some(result_type) = result_contract.rust_return_type else {
-            return unsupported_type(
-                signature.callable,
-                "call-scoped callback result type is not Rust bridge-compatible",
-            );
-        };
-        result_type
+        result_contract.rust_return_type.ok_or(())?
     };
     let tuple = match param_types.as_slice() {
         [] => "()".to_string(),
         [only] => format!("({only},)"),
         many => format!("({})", many.join(", ")),
     };
-    let rust_type =
-        format!("::sifr_runtime::interop::CallScopedCallbackBridge<'_, {tuple}, {result_type}>");
-    RustBridgeTypeContract {
-        sifr_type: signature.callable.display_name(),
-        rust_borrowed_type: Some(rust_type.clone()),
-        rust_owned_type: Some(rust_type),
-        rust_return_type: None,
-        kind: RustBridgeTypeKind::CallScopedCallback,
-        unsupported_reason: None,
-    }
+    Ok((tuple, result_type))
 }

@@ -360,7 +360,7 @@ impl RustEmitter {
             },
         };
 
-        if let HirStmt::NestedFunction { func } = stmt {
+        if let HirStmt::NestedFunction { func, .. } = stmt {
             let captures = self.collect_recursive_nested_fn_captures(func);
             if captures.is_empty() {
                 self.nested_fn_captures.remove(&func.name);

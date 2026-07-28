@@ -2,6 +2,7 @@ use super::{
     DocumentVersion, FileId, FrontendDiagnosticStyle, FrontendSourceContext, ModuleId, ModuleState,
     SourceHash, SourcePath, SourceText, SymbolKind, SymbolView,
 };
+use crate::callable_exports::{exported_function_type, RustCallbackExports};
 use crate::class_method_exports::ClassMethodExports;
 pub(crate) use crate::export_type_localization::should_export_callable;
 use crate::export_type_localization::{
@@ -14,9 +15,9 @@ use crate::{
 };
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{
-    canonicalize_user_export_function_type, canonicalize_user_export_type,
-    localize_user_import_function_type, localize_user_import_type, ExternalDefs, HirDiagnostic,
-    HirModule, LoweringResult, LoweringWarningDiagnostic, RevealTypeDiagnostic,
+    canonicalize_user_export_type, localize_user_import_function_type, localize_user_import_type,
+    ExternalDefs, HirDiagnostic, HirModule, LoweringResult, LoweringWarningDiagnostic,
+    RevealTypeDiagnostic,
 };
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
@@ -284,24 +285,16 @@ pub fn collect_module_exports(
     let mut vararg_exports = HashMap::new();
     let mut python_shape_exports = HashMap::new();
     let mut workload_exports = HashMap::new();
+    let mut rust_callback_exports = RustCallbackExports::default();
     let (mut generic_exports, mut type_param_bound_exports, local_classes) =
         declared_generic_metadata(module_name, module);
     let imported_ancestry = imported_class_ancestry(module, external_defs);
 
     for func in &module.functions {
         if should_export_callable(module_name, &func.name) {
-            let params: Vec<(String, Type, ParamConvention)> = func
-                .params
-                .iter()
-                .map(|p| (p.name.clone(), p.ty.clone(), p.convention))
-                .collect();
-            let function_type = FunctionType {
-                params,
-                return_type: Box::new(func.return_type.clone()),
-            };
             fn_exports.insert(
                 func.name.clone(),
-                canonicalize_user_export_function_type(&function_type, &local_classes),
+                exported_function_type(func, &local_classes),
             );
             if let Some(vararg_index) = lowering_result.function_varargs.get(&func.name) {
                 vararg_exports.insert(func.name.clone(), *vararg_index);
@@ -312,6 +305,7 @@ pub fn collect_module_exports(
             if let Some(label) = lowering_result.function_workloads.get(&func.name) {
                 workload_exports.insert(func.name.clone(), label.clone());
             }
+            rust_callback_exports.record_function(func);
         }
     }
 
@@ -324,6 +318,7 @@ pub fn collect_module_exports(
     for class in &module.classes {
         if !class.name.starts_with('_') {
             class_method_exports.record_local(class);
+            rust_callback_exports.record_class(class);
             let mut methods: Vec<(String, FunctionType)> = class
                 .methods
                 .iter()
@@ -411,6 +406,7 @@ pub fn collect_module_exports(
             if local_name.starts_with('_') {
                 continue;
             }
+            rust_callback_exports.copy_imported(external_defs, &import.module, name, &local_name);
             if let Some(module_fns) = external_defs.functions.get(&import.module) {
                 if let Some(function_type) = module_fns.get(name) {
                     fn_exports.insert(
@@ -544,6 +540,7 @@ pub fn collect_module_exports(
             .function_workloads
             .insert(module_name.to_string(), workload_exports);
     }
+    rust_callback_exports.store(external_defs, module_name);
     external_defs
         .constants
         .insert(module_name.to_string(), const_exports);

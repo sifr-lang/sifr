@@ -44,6 +44,120 @@ fn rust_interop_function_body_emits_package_bridge_root() {
 }
 
 #[test]
+fn rust_interop_function_body_emits_owned_threadsafe_callback_policy() {
+    let callback_error = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "CallbackError".to_string(),
+        fields: vec![("message".to_string(), Type::Str)],
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    };
+    let func = HirFunction {
+        name: "subscribe".to_string(),
+        params: vec![HirParam {
+            name: "handler".to_string(),
+            ty: Type::Callable(
+                vec![Type::Str],
+                vec![ParamConvention::borrow()],
+                Box::new(Type::Result(Box::new(Type::None), Box::new(callback_error))),
+            ),
+            default: None,
+            keyword_only: false,
+            convention: ParamConvention::own(),
+        }],
+        return_type: Type::None,
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: vec![
+            declaration(
+                RustInteropDecoratorKind::Function,
+                &["bridge", "events", "subscribe"],
+            ),
+            callback_policy_declaration(),
+        ],
+        python_interop: Vec::new(),
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+
+    let body = rust_interop_function_body(&func).expect("thread-safe callback body");
+    let [RustStmt::Expr(expr)] = body.as_slice() else {
+        panic!("thread-safe callback should lower to a direct expression");
+    };
+    let rendered = render_expr(expr);
+
+    assert!(rendered.contains("ThreadsafeCallbackBridge::new"));
+    assert!(rendered.contains("CallbackBackpressure::Bounded(2usize)"));
+    assert!(rendered.contains("CallbackOverflow::Error"));
+    assert!(rendered.contains("CallbackShutdown::Drain"));
+    assert!(rendered.contains("handler(&__sifr_callback_arg_0)"));
+    assert!(rendered.contains("Err(__sifr_callback_error) => Err("));
+}
+
+#[test]
+fn rust_interop_method_callback_parameter_is_send_sync_static() {
+    let method = HirFunction {
+        name: "subscribe".to_string(),
+        params: vec![HirParam {
+            name: "handler".to_string(),
+            ty: Type::Callable(
+                vec![Type::Str],
+                vec![ParamConvention::borrow()],
+                Box::new(Type::None),
+            ),
+            default: None,
+            keyword_only: false,
+            convention: ParamConvention::own(),
+        }],
+        return_type: Type::None,
+        body: Vec::new(),
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        decorators: Vec::new(),
+        rust_interop: vec![
+            declaration(
+                RustInteropDecoratorKind::Function,
+                &["bridge", "events", "subscribe"],
+            ),
+            callback_policy_declaration(),
+        ],
+        python_interop: Vec::new(),
+        compiler_intrinsic: None,
+        type_params: Vec::new(),
+    };
+    let class = HirClass {
+        name: "Registrar".to_string(),
+        identity: None,
+        fields: Vec::new(),
+        methods: vec![method.clone()],
+        is_hashable: false,
+        is_error_type: false,
+        kind: HirClassKind::Regular,
+        operator_impls: Vec::new(),
+        newtype_inner: None,
+        implements_protocols: Vec::new(),
+        parent_class: None,
+        parent_type: None,
+        type_params: Vec::new(),
+        enum_variants: Vec::new(),
+        rust_interop: Vec::new(),
+    };
+    let emitter = crate::RustEmitter::new();
+    let rendered = crate::render_type(&emitter.lower_class_method_param_type(
+        &class,
+        &method,
+        "handler",
+        &method.params[0].ty,
+        method.params[0].convention,
+    ));
+
+    assert!(rendered.contains("+ Send + Sync + 'static"), "{rendered}");
+}
+
+#[test]
 fn rust_interop_method_body_emits_self_handle_call() {
     let error_ty = Type::Class {
         identity: None,
@@ -622,6 +736,38 @@ fn declaration(kind: RustInteropDecoratorKind, segments: &[&str]) -> RustInterop
             span: TextRange::default(),
         }),
         arguments: Vec::new(),
+        span: TextRange::default(),
+        effect: RustInteropEffect::Sync,
+        abi_requirements: RustInteropAbiRequirements::default(),
+        consumes_receiver: false,
+    }
+}
+
+fn callback_policy_declaration() -> RustInteropDeclaration {
+    RustInteropDeclaration {
+        kind: RustInteropDecoratorKind::Callback,
+        target: None,
+        arguments: vec![
+            RustInteropArgument {
+                name: Some("backpressure".to_string()),
+                value: RustInteropValue::PolicyCall {
+                    name: "bounded".to_string(),
+                    argument: Box::new(RustInteropValue::Integer(2)),
+                    span: TextRange::default(),
+                },
+                span: TextRange::default(),
+            },
+            RustInteropArgument {
+                name: Some("overflow".to_string()),
+                value: RustInteropValue::Symbol("error".to_string()),
+                span: TextRange::default(),
+            },
+            RustInteropArgument {
+                name: Some("shutdown".to_string()),
+                value: RustInteropValue::Symbol("drain".to_string()),
+                span: TextRange::default(),
+            },
+        ],
         span: TextRange::default(),
         effect: RustInteropEffect::Sync,
         abi_requirements: RustInteropAbiRequirements::default(),

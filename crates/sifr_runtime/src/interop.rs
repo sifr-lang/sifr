@@ -8,6 +8,11 @@ use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
+pub use crate::interop_callbacks::{
+    CallScopedCallbackBridge, CallbackBackpressure, CallbackOverflow, CallbackShutdown,
+    ThreadsafeCallbackBridge, ThreadsafeCallbackPolicy,
+};
+
 type PanicHook = Box<dyn Fn(&std::panic::PanicHookInfo<'_>) + Send + Sync + 'static>;
 type SharedPanicHook = Arc<Mutex<Option<PanicHook>>>;
 
@@ -288,46 +293,6 @@ impl fmt::Display for RustPanicErrorBridge {
 }
 
 impl std::error::Error for RustPanicErrorBridge {}
-
-#[derive(Debug)]
-pub struct ThreadsafeCallbackBridge {
-    // Contract marker for generated Rust callback bridge signatures.
-    _private: (),
-}
-
-/// A callback that may be invoked only while its generated Rust bridge call is
-/// active.
-///
-/// The borrowed closure prevents a bridge from retaining the callback beyond
-/// the call. The `Rc` marker deliberately makes the value neither `Send` nor
-/// `Sync`, so moving a call-scoped callback to an unmanaged worker thread is
-/// rejected by rustc.
-pub struct CallScopedCallbackBridge<'call, Args, Output> {
-    callback: &'call dyn Fn(Args) -> Output,
-    _current_thread: std::marker::PhantomData<std::rc::Rc<()>>,
-}
-
-impl<'call, Args, Output> CallScopedCallbackBridge<'call, Args, Output> {
-    #[must_use]
-    pub fn new(callback: &'call dyn Fn(Args) -> Output) -> Self {
-        Self {
-            callback,
-            _current_thread: std::marker::PhantomData,
-        }
-    }
-
-    pub fn call(&self, args: Args) -> Output {
-        (self.callback)(args)
-    }
-}
-
-impl<Args, Output> fmt::Debug for CallScopedCallbackBridge<'_, Args, Output> {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter
-            .debug_struct("CallScopedCallbackBridge")
-            .finish_non_exhaustive()
-    }
-}
 
 pub fn catch_rust_panic<T, F>(f: F) -> Result<T, RustPanicErrorBridge>
 where
@@ -658,6 +623,47 @@ mod tests {
         }));
 
         assert_eq!(total, 5);
+    }
+
+    #[test]
+    fn threadsafe_callback_preserves_policy_and_crosses_a_worker_thread() {
+        let callback = super::ThreadsafeCallbackBridge::new(
+            super::ThreadsafeCallbackPolicy {
+                backpressure: super::CallbackBackpressure::Bounded(2),
+                overflow: super::CallbackOverflow::Error,
+                shutdown: super::CallbackShutdown::Drain,
+            },
+            |(event,): (String,)| event.to_uppercase(),
+        );
+        let policy = callback.policy();
+        let worker = std::thread::spawn(move || callback.call(("ready".to_string(),)));
+
+        assert_eq!(
+            worker.join().expect("managed callback worker").as_deref(),
+            Ok("READY")
+        );
+        assert_eq!(policy.backpressure, super::CallbackBackpressure::Bounded(2));
+        assert_eq!(policy.overflow, super::CallbackOverflow::Error);
+        assert_eq!(policy.shutdown, super::CallbackShutdown::Drain);
+    }
+
+    #[test]
+    fn threadsafe_callback_redacts_panics_from_worker_threads() {
+        let _test_guard = panic_hook_test_guard();
+        let callback = super::ThreadsafeCallbackBridge::new(
+            super::ThreadsafeCallbackPolicy {
+                backpressure: super::CallbackBackpressure::Direct,
+                overflow: super::CallbackOverflow::Error,
+                shutdown: super::CallbackShutdown::Cancel,
+            },
+            |(): ()| panic!("private callback payload"),
+        );
+        let error = std::thread::spawn(move || callback.call(()))
+            .join()
+            .expect("managed callback worker")
+            .expect_err("callback panic must map");
+
+        assert_eq!(error.message(), "Rust bridge panicked");
     }
 
     #[test]

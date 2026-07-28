@@ -248,8 +248,8 @@
       "required_crates": ["tokio-tungstenite", "redis", "notify"],
       "features": {"redis": {"default_features": false, "features": ["tokio-comp"]}, "tokio-tungstenite": {"default_features": false}},
       "execution_kind": "runtime-observed",
-      "positive_evidence": {"id": "subscription_cancel_shutdown", "status": "planned"},
-      "negative_evidence": {"id": "invalid_thread_capture_rejected", "status": "planned"}
+      "positive_evidence": {"id": "subscription_cancel_shutdown", "status": "passing"},
+      "negative_evidence": {"id": "invalid_thread_capture_rejected", "status": "passing"}
     },
     {
       "id": "zero_copy_bytes",

@@ -9,6 +9,7 @@ pub mod http;
 pub mod i18n;
 mod int;
 pub mod interop;
+mod interop_callbacks;
 pub mod json;
 #[cfg(feature = "net")]
 pub mod net;

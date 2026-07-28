@@ -3,7 +3,7 @@ use super::diagnostics::{
     is_operator_dunder, is_protocol_class,
 };
 use super::protocol_diagnostics;
-use super::statements::lower_stmts;
+use super::statements::lower_function_stmts;
 use super::typing_and_functions::{function_body_contains_yield, resolve_annotation_expr};
 use super::{
     async_await, class_field_inference, diagnostics, simple_expr, str, typing_and_functions,

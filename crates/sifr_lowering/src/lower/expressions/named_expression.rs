@@ -16,6 +16,16 @@ pub(in crate::lower) fn lower_named_expr(named: &ExprNamed, ctx: &mut LowerCtx) 
         );
         return None;
     };
+    if ctx.is_declared_nonlocal(&name) {
+        super::super::flow_diagnostics::invalid_nonlocal_at(
+            ctx,
+            format!(
+                "walrus assignment cannot rebind captured state `{name}` with `nonlocal`; use a statement assignment"
+            ),
+            named.target.range(),
+        );
+        return None;
+    }
 
     let value = lower_expr(&named.value, ctx)?;
     reject_python_context_borrow_storage(&value, named.value.range(), ctx);

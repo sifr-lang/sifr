@@ -3,12 +3,35 @@
 This fixture family tracks runtime-observed subscription callbacks for
 `tokio-tungstenite`, Redis pub/sub, and filesystem notification workflows.
 
-- Positive evidence: `subscription_cancel_shutdown` remains planned for a
-  runtime fixture that observes cancellation handles and deterministic shutdown.
-- Negative evidence: `invalid_thread_capture_rejected` remains planned for a
-  fixture proving non-send captures and invalid thread-affinity captures cannot
-  cross the declared callback boundary.
-- Compatibility category: `future-owned-by-separate-phase`. Stdlib-owned signal
-  subscription mechanics are verified by `callback_subscription_core`;
-  ecosystem callback subscription certification is not listed as verified
-  support.
+- Positive evidence: `subscription_cancel_shutdown` executes a locked package
+  against real loopback WebSocket and Redis Pub/Sub transports plus a real
+  `notify` watcher. Its package queue consumes the callback's carried policy
+  and observes bounded overflow, handler errors, stable panic redaction, a
+  foreign-thread callback, close-time drain shutdown, cancellation of a
+  scheduled delivery before invocation, and zero leaked
+  tasks/watchers/resources. Its retained handlers include attribute- and
+  method-derived `str` captures, a declaration-time non-`Copy` snapshot whose
+  enclosing binding is rebound and used after attachment, and a loop-local
+  attachment. A retained handler using `RwLock.write()` proves that sanctioned
+  interior synchronization remains an `Fn` callback. A `str` capture used only
+  inside an f-string and then again after attachment proves interpolated
+  expression capture discovery and isolated cloning through rustc. The
+  generated package therefore proves capture-type fidelity, the snapshot
+  contract, isolated capture cloning, receiver-aware mutation classification,
+  and owning `move`-closure emission.
+- Negative evidence: `invalid_thread_capture_rejected` proves both a nested
+  handler retaining `NonSend` state and one retaining a callable with unknown
+  captures are rejected with `SIFR-RUST-CB-0001`, while second attachment of a
+  consumed nested handler is rejected with `SIFR-OWN-0001`. Direct and
+  sibling-transitive capture mutation are also rejected with
+  `SIFR-RUST-CB-0001` because the retained bridge requires `Fn`. The generated
+  negative package covers `nonlocal` rebinding, assignment-target-only
+  `NonSend` state, collection subscript writes, collection-mutating methods,
+  a mixed safe/unsafe capture set, and both direct and sibling handlers whose
+  capture use occurs only inside another nested function. It also covers
+  `NonSend` and unprovable callable captures hidden in f-string interpolation
+  and lambda bodies, all before Cargo probing.
+- Compatibility category: `supported-through-bridge`. Ecosystem callbacks use
+  an owned typed bridge carrying the exact declared queue and shutdown policy;
+  package code remains responsible for its protocol-specific queue and cleanup
+  handles.

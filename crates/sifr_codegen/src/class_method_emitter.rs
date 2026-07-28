@@ -178,6 +178,14 @@ impl RustEmitter {
                 );
             }
         }
+        if method
+            .rust_interop
+            .iter()
+            .any(|declaration| declaration.kind == sifr_ir::RustInteropDecoratorKind::Callback)
+            && matches!(param_ty.resolve_alias(), Type::Callable(..))
+        {
+            return self.lower_python_callback_param_type(param_ty, convention, true);
+        }
         if method.name == "new" {
             let is_recursive = self
                 .recursive_fields

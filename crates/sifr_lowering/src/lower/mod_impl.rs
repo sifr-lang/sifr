@@ -5,9 +5,9 @@ use super::{
     integer_literal_diagnostics, module_constants_lowering, module_function_registry,
     name_diagnostics, parse_typevar_bound_expr, parse_typevar_declaration_specs,
     predeclare_type_aliases, private_stdlib_imports, python_interop, register_builtins,
-    resolve_imports_early, resolve_type_aliases, rust_interop, str, workload_annotations, Expr,
-    ExternalDefs, HirDiagnostic, HirExpr, HirImport, HirModule, LowerCtx, Ranged, Stmt, TextRange,
-    Type,
+    resolve_imports_early, resolve_type_aliases, rust_callback_callsite, rust_interop, str,
+    workload_annotations, Expr, ExternalDefs, HirDiagnostic, HirExpr, HirImport, HirModule,
+    LowerCtx, Ranged, Stmt, TextRange, Type,
 };
 use sifr_ir::LoweringResult;
 pub(in crate::lower) fn lower_module_impl(
@@ -170,6 +170,12 @@ pub(in crate::lower) fn lower_module_impl(
             }
 
             collect_function_defaults(&mut ctx, &function_name, func);
+            rust_callback_callsite::record_threadsafe_callback_target(
+                function_name.clone(),
+                &ft.params,
+                &func.decorator_list,
+                &mut ctx,
+            );
             if python_interop::has_python_interop_decorator_syntax(&func.decorator_list) {
                 let callback_policies = python_interop::callback_call_policies(
                     &func.decorator_list,
@@ -392,6 +398,13 @@ pub(in crate::lower) fn lower_module_impl(
                             if let Some(module_fns) = externals.functions.get(&stdlib_module_key) {
                                 if let Some(ft) = module_fns.get(name) {
                                     ctx.functions.insert(local.clone(), ft.clone());
+                                    imported_defaults::import_rust_threadsafe_callback_target(
+                                        &mut ctx,
+                                        externals,
+                                        &stdlib_module_key,
+                                        name,
+                                        &local,
+                                    );
                                     if let Some(module_intrinsics) =
                                         externals.compiler_intrinsics.get(&stdlib_module_key)
                                     {

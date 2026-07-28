@@ -109,6 +109,12 @@ pub(in crate::lower) struct LowerCtx {
     /// Callback attachment policies keyed by the callable surface used at each call site.
     pub(in crate::lower) python_callback_call_policies:
         HashMap<String, Vec<super::python_interop::CallbackCallPolicy>>,
+    /// Callable parameter indices for Rust declarations whose retained
+    /// callbacks must be capture-checked at every attachment call site.
+    pub(in crate::lower) rust_threadsafe_callback_targets: HashMap<String, Vec<usize>>,
+    /// Directly declared nested handlers that must own their capture
+    /// environments because they escape into a retained Rust callback.
+    pub(in crate::lower) rust_threadsafe_callback_move_handlers: HashMap<String, Vec<String>>,
     /// Set of registered type variable names (e.g., T, K, V from `TypeVar` declarations)
     pub(in crate::lower) type_vars: std::collections::HashSet<String>,
     /// Map of generic function names to their type variable names
@@ -144,6 +150,8 @@ pub(in crate::lower) struct LowerCtx {
         std::collections::BTreeMap<String, PythonBridgeTargetAuthority>,
     /// Nested local function captures observed while lowering the current statement block.
     pub(in crate::lower) nested_function_captures: HashMap<String, Vec<(String, Type)>>,
+    /// Captured bindings mutated by each nested local function.
+    pub(in crate::lower) nested_function_mutated_captures: HashMap<String, Vec<String>>,
     pub(in crate::lower) sequence_guards: Vec<SequenceGuard>,
     pub(in crate::lower) len_aliases: Vec<LenAliasFact>,
     pub(in crate::lower) sequence_pointers: Vec<SequencePointerFact>,
@@ -213,6 +221,8 @@ impl LowerCtx {
             vararg_functions: HashMap::new(),
             python_call_shapes: HashMap::new(),
             python_callback_call_policies: HashMap::new(),
+            rust_threadsafe_callback_targets: HashMap::new(),
+            rust_threadsafe_callback_move_handlers: HashMap::new(),
             type_vars: std::collections::HashSet::new(),
             generic_functions: HashMap::new(),
             type_param_bounds: HashMap::new(),
@@ -233,6 +243,7 @@ impl LowerCtx {
             python_trust_policy: None,
             python_bridge_authorities: std::collections::BTreeMap::new(),
             nested_function_captures: HashMap::new(),
+            nested_function_mutated_captures: HashMap::new(),
             sequence_guards: Vec::new(),
             len_aliases: Vec::new(),
             sequence_pointers: Vec::new(),
@@ -462,6 +473,16 @@ impl LowerCtx {
             return false;
         }
         let moved = self.scope.mark_moved(name);
+        if moved {
+            self.record_flow_effect(FlowEffect::Move {
+                binding: name.to_string(),
+            });
+        }
+        moved
+    }
+
+    pub(in crate::lower) fn mark_binding_moved_with_flow(&mut self, name: &str) -> bool {
+        let moved = self.scope.mark_binding_moved(name);
         if moved {
             self.record_flow_effect(FlowEffect::Move {
                 binding: name.to_string(),

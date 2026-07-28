@@ -30,6 +30,7 @@ pub(in crate::lower) fn import_user_callable(
             class_aliases,
         ),
     );
+    import_rust_threadsafe_callback_target(ctx, externals, module_name, external_name, local_name);
     import_callable_generic_metadata(ctx, externals, module_name, external_name, local_name);
     if let Some(values) = externals.compiler_intrinsics.get(module_name) {
         import_callable_compiler_intrinsic(ctx, values, external_name, local_name);
@@ -47,6 +48,43 @@ pub(in crate::lower) fn import_user_callable(
         import_callable_workload(ctx, values, external_name, local_name);
     }
     true
+}
+
+pub(in crate::lower) fn import_rust_threadsafe_callback_target(
+    ctx: &mut LowerCtx,
+    externals: &ExternalDefs,
+    module_name: &str,
+    external_name: &str,
+    local_name: &str,
+) {
+    let Some(indices) = externals
+        .rust_threadsafe_callback_targets
+        .get(module_name)
+        .and_then(|targets| targets.get(external_name))
+    else {
+        return;
+    };
+    ctx.rust_threadsafe_callback_targets
+        .insert(local_name.to_string(), indices.clone());
+}
+
+pub(in crate::lower) fn import_rust_threadsafe_callback_class(
+    ctx: &mut LowerCtx,
+    externals: &ExternalDefs,
+    module_name: &str,
+    external_name: &str,
+    local_name: &str,
+) {
+    let Some(targets) = externals.rust_threadsafe_callback_targets.get(module_name) else {
+        return;
+    };
+    let external_prefix = format!("{external_name}.");
+    for (target, indices) in targets {
+        if let Some(method) = target.strip_prefix(&external_prefix) {
+            ctx.rust_threadsafe_callback_targets
+                .insert(format!("{local_name}.{method}"), indices.clone());
+        }
+    }
 }
 
 fn import_callable_generic_metadata(

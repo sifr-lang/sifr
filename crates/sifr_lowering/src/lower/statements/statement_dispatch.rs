@@ -11,6 +11,10 @@ use super::expressions::consume_affine_value_name;
 use super::expressions::lower_expr;
 use super::function_flow::infer_function_return_type;
 use super::match_lowering::lower_match;
+use super::nested_function_state::{
+    push_nested_function_captures, push_nested_function_mutations,
+    restore_nested_function_captures, restore_nested_function_mutations,
+};
 use super::nonlocal_support::{
     collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal,
 };
@@ -41,8 +45,6 @@ use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{ExceptHandler, Expr, Stmt};
 use sifr_type_system::{FunctionType, Type};
-
-type NestedCaptureSnapshot = Vec<(String, Option<Vec<(String, Type)>>)>;
 
 pub(super) fn empty_collection_literal_kind(expr: &Expr) -> Option<&'static str> {
     match expr {
@@ -124,6 +126,8 @@ pub(in crate::lower) fn lower_stmts(
     predeclare_nested_function_symbols(stmts, &nested_inference.function_types, ctx);
     let previous_nested_captures =
         push_nested_function_captures(&nested_inference.function_captures, ctx);
+    let previous_nested_mutations =
+        push_nested_function_mutations(&nested_inference.function_mutated_captures, ctx);
 
     let mut result = Vec::new();
     for stmt in stmts {
@@ -173,37 +177,14 @@ pub(in crate::lower) fn lower_stmts(
             &mut ctx.pending_container_specialization_patches,
         );
     }
+    super::function_body::mark_threadsafe_callback_move_handlers(&mut result, ctx);
     let _ = ctx.inferred_binding_hints.pop();
     ctx.pop_empty_collection_hint_adoption();
+    restore_nested_function_mutations(previous_nested_mutations, ctx);
     restore_nested_function_captures(previous_nested_captures, ctx);
     result
 }
 
-fn push_nested_function_captures(
-    captures: &std::collections::HashMap<String, Vec<(String, Type)>>,
-    ctx: &mut LowerCtx,
-) -> NestedCaptureSnapshot {
-    captures
-        .iter()
-        .map(|(name, function_captures)| {
-            (
-                name.clone(),
-                ctx.nested_function_captures
-                    .insert(name.clone(), function_captures.clone()),
-            )
-        })
-        .collect()
-}
-
-fn restore_nested_function_captures(previous: NestedCaptureSnapshot, ctx: &mut LowerCtx) {
-    for (name, captures) in previous {
-        if let Some(captures) = captures {
-            ctx.nested_function_captures.insert(name, captures);
-        } else {
-            ctx.nested_function_captures.remove(&name);
-        }
-    }
-}
 pub(super) fn predeclare_nested_function_symbols(
     stmts: &[Stmt],
     inferred_types: &std::collections::HashMap<String, FunctionType>,
@@ -812,7 +793,7 @@ pub(in crate::lower) fn lower_stmt(
             let body = if stub_body.skips_normal_body_lowering() {
                 Vec::new()
             } else {
-                lower_stmts(&func.body, &ft, ctx)
+                super::function_body::lower_function_stmts(&func.body, &ft, ctx)
             };
             ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
             ctx.exit_function_scope();
@@ -880,6 +861,8 @@ pub(in crate::lower) fn lower_stmt(
                     compiler_intrinsic: None,
                     type_params: Vec::new(),
                 },
+                move_captures: false,
+                capture_clones: Vec::new(),
             })
         }
         Stmt::Match(match_stmt) => lower_match(match_stmt, func_type, ctx),

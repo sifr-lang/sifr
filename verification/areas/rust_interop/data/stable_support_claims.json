@@ -5,7 +5,6 @@
   "public_document": "docs/rust-interop.mdx",
   "runtime_deferrals": [
     "advanced_data_runtime_matrix",
-    "callback_subscription_ecosystem",
     "zero_copy_runtime_matrix"
   ],
   "claims": [
@@ -146,6 +145,12 @@
       "category": "supported",
       "execution_kind": "contract-only",
       "capability": "stdlib-owned signal callback subscription policy contract"
+    },
+    {
+      "id": "callback_subscription_ecosystem",
+      "category": "supported-through-bridge",
+      "execution_kind": "runtime-observed",
+      "capability": "callback subscriptions and shutdown"
     },
     {
       "id": "zero_copy_bytes",

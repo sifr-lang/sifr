@@ -333,7 +333,11 @@ fn body_calls_function_ignores_nested_function_scope() {
         compiler_intrinsic: None,
         type_params: vec![],
     };
-    let stmts = vec![HirStmt::NestedFunction { func: nested }];
+    let stmts = vec![HirStmt::NestedFunction {
+        func: nested,
+        move_captures: false,
+        capture_clones: Vec::new(),
+    }];
 
     assert!(!body_calls_function(&stmts, "target"));
 }
@@ -445,7 +449,11 @@ fn body_contains_return_ignores_nested_function_scope() {
         compiler_intrinsic: None,
         type_params: vec![],
     };
-    let stmts = vec![HirStmt::NestedFunction { func: nested }];
+    let stmts = vec![HirStmt::NestedFunction {
+        func: nested,
+        move_captures: false,
+        capture_clones: Vec::new(),
+    }];
 
     assert!(!body_contains_return_stmt(&stmts));
 }

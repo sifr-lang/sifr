@@ -84,7 +84,7 @@ def outer() -> int:
 ",
     );
 
-    let HirStmt::NestedFunction { func } = &module.functions[0].body[0] else {
+    let HirStmt::NestedFunction { func, .. } = &module.functions[0].body[0] else {
         panic!("expected nested function");
     };
     assert!(func.body.is_empty());
@@ -758,7 +758,7 @@ fn rust_interop_lowers_callback_policy_contract() {
     let source = r"
 @rust.callback(backpressure=bounded(1024), overflow=error, shutdown=drain)
 @rust(bridge.events.subscribe)
-def subscribe(callback: Callable[[int], None]) -> None:
+def subscribe(own callback: Callable[[int], None]) -> None:
     pass
 ";
     let module = lower_ok(source);

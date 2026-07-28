@@ -80,9 +80,8 @@ only public stable-claim inventory. Its execution scope is part of every claim.
 In particular, `zero_copy_bytes`, `zero_copy_view_matrix`,
 `arrow_record_batch`, `tensor_dlpack_bridge`, and `advanced_data_matrix` are
 contract-only. The remaining runtime-observed deferrals
-`advanced_data_runtime_matrix`, `callback_subscription_ecosystem`, and
-`zero_copy_runtime_matrix` are future-owned, planned, and unadvertised until
-their runtime evidence passes.
+`advanced_data_runtime_matrix` and `zero_copy_runtime_matrix` are future-owned,
+planned, and unadvertised until their runtime evidence passes.
 
 `bridge_type_matrix` is cargo-probed through generated package glue. Its
 certified bridge covers nested Serde/JSON values, display-mapped `thiserror`
@@ -131,6 +130,37 @@ so the RESP harness certifies only the exercised connection and `PING` frames.
 Client-library-internal tasks are outside the harness counter. This does not
 claim general Redis or PostgreSQL server compliance.
 
+`callback_subscription_ecosystem` executes an owned, typed
+`Send + Sync + 'static` callback bridge against raw loopback WebSocket frames,
+a minimal Redis Pub/Sub RESP exchange, and a real `notify` watcher over a
+unique temporary directory. The bridge carries the exact declared bounded
+backpressure, overflow-as-error, and drain-shutdown policy. The package queue
+derives its capacity, overflow branch, and close-time drain/cancel behavior
+from that carried policy. The observed scope includes callback success and
+ordinary errors, stable panic redaction, foreign-thread notification entry,
+close-time queue drain, cancellation of a scheduled callback delivery before
+invocation, consuming async close, bounded joins, temporary-directory removal,
+and zero harness-owned active tasks or watchers. Named nested handlers
+retaining non-send or non-share-safe state, or callable values whose captures
+cannot be proven thread-safe, are rejected with `SIFR-RUST-CB-0001` before
+Cargo probing. The same diagnostic rejects unresolved capture types and
+direct or sibling-transitive capture mutation because the retained adapter
+requires `Fn`, not `FnMut`. Mutation detection includes ordinary `nonlocal`
+rebinding, attribute and collection-item assignment or deletion, and
+collection-mutating method calls, including uses inside further nested helper
+functions, comprehensions, lambdas, interpolated strings, slice bounds, and
+starred expressions. Receiver types distinguish ordinary collection mutation
+from interior synchronization such as `RwLock.write()`. A walrus expression
+cannot rebind a declared `nonlocal`; use a statement assignment instead. Verified
+non-`Copy` values are cloned into the retained closure's isolated construction
+scope, so the surrounding binding remains usable after attachment and on later
+loop iterations. That clone snapshots the value when the nested handler is
+declared; rebinding the surrounding name before attachment does not change the
+retained value. Attachment consumes the handler binding, so attaching or
+calling that same nested handler again is an ownership error. This certifies
+only the exercised local protocol frames and package bridge, not general
+WebSocket, Redis, or filesystem event semantics.
+
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |
 | --- | --- | --- |
@@ -157,6 +187,7 @@ claim general Redis or PostgreSQL server compliance.
 | `callbacks_call_scoped` | `supported-through-bridge` | `runtime-observed` |
 | `callbacks_threadsafe` | `supported` | `contract-only` |
 | `callback_subscription_core` | `supported` | `contract-only` |
+| `callback_subscription_ecosystem` | `supported-through-bridge` | `runtime-observed` |
 | `zero_copy_bytes` | `supported` | `contract-only` |
 | `zero_copy_view_matrix` | `supported` | `contract-only` |
 | `arrow_record_batch` | `supported-through-bridge` | `contract-only` |
@@ -337,7 +368,30 @@ application failures that need actionable diagnostics.
 
 Backpressure, overflow, and shutdown behavior remain mandatory for the
 separate thread-safe registration contract. The current source spelling is a
-top-level `Callable` paired with `@rust.callback(...)`.
+top-level `Callable` paired with `@rust.callback(...)`. Retained callbacks also
+require an unwind-capable Cargo profile and target panic policy; `panic=abort`
+and abort profiles are rejected because they cannot contain callback panics.
+Directly declared nested retained handlers own isolated clones of verified
+non-`Copy` captures, preserving enclosing bindings after attachment and across
+loop iterations. The capture clone is taken when the nested handler is
+declared, and attachment consumes the handler binding even though the
+surrounding captured names remain available. Capture types come from the
+lowered lexical binding, including locals initialized from attribute reads and
+method calls and user classes whose names shadow builtin inference helpers.
+The compiler checks sibling nested-function capture chains transitively,
+rejects callable-valued captures whose own captures lack compiler-known
+provenance, and follows further nested helper scopes while respecting their
+complete parameter lists and locals. Expression capture and mutation discovery
+also traverses comprehensions, lambdas, interpolated strings and nested format
+specifications, slice bounds, and starred expressions. It rejects
+assignment-target, deletion, and type-confirmed collection-mutating-method
+capture use that would require `FnMut`, while allowing
+synchronization-wrapper operations that retain `Fn`. Callback
+attachment checks remain active through imported functions, aliases,
+re-exports, and imported methods; an unsafe or unverifiable capture is
+rejected with `SIFR-RUST-CB-0001` before Cargo probing regardless of the
+declaration's module, while reuse of a consumed handler is rejected by the
+`SIFR-OWN-*` ownership diagnostics.
 
 ```sifr
 @rust.callback(

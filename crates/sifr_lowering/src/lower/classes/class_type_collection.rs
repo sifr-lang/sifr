@@ -698,6 +698,12 @@ pub(in crate::lower) fn collect_class_type(
                         );
                         params.push((param_name, param_ty, convention));
                     }
+                    crate::lower::rust_callback_callsite::record_threadsafe_callback_target(
+                        format!("{class_name}.{method_name}"),
+                        &params,
+                        &func.decorator_list,
+                        ctx,
+                    );
                     let return_ty = if let Some(ref ret_ann) = func.returns {
                         resolve_annotation_expr(ret_ann, ctx)
                     } else {

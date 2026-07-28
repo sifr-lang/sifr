@@ -91,6 +91,29 @@ pub struct RustInteropPlanDeclaration {
     pub owner: RustInteropOwner,
     pub declaration: RustInteropDeclaration,
 }
+
+impl RustInteropPlanDeclaration {
+    pub(crate) fn canonical_sifr_target_path(&self) -> String {
+        let mut path = self
+            .module_name
+            .clone()
+            .unwrap_or_else(|| "main".to_string());
+        match &self.owner {
+            RustInteropOwner::Function { name } | RustInteropOwner::Class { name } => {
+                path.push('.');
+                path.push_str(name);
+            }
+            RustInteropOwner::Method { class_name, name } => {
+                path.push('.');
+                path.push_str(class_name);
+                path.push('.');
+                path.push_str(name);
+            }
+        }
+        path
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RustInteropOwner {
     Function { name: String },

@@ -60,6 +60,13 @@ fn import_function_metadata(
     name: &str,
     local: &str,
 ) {
+    imported_defaults::import_rust_threadsafe_callback_target(
+        ctx,
+        externals,
+        module_name,
+        name,
+        local,
+    );
     if let Some(module_intrinsics) = externals.compiler_intrinsics.get(module_name) {
         imported_defaults::import_callable_compiler_intrinsic(ctx, module_intrinsics, name, local);
     }

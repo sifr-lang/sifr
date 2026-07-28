@@ -1,16 +1,215 @@
 # fixture: callback_subscription_ecosystem
 # evidence: negative/invalid_thread_capture_rejected
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: runtime-observed
-# expected-result: future-owned-diagnostic
+# expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-CB-0001
-@rust.callback(backpressure=bounded(256), overflow=error, shutdown=drain)
-@rust(bridge.events.subscribe_non_send_capture, panic=trusted_no_panic)
-def subscribe(handler: ThreadsafeCallback[[str], None]) -> None: ...
+class SubscriptionError(Error):
+    message: str
 
-def sample_event_callback(event: str) -> None:
-    return None
+class LocalState(NonSend):
+    value: int
 
-def verify_invalid_thread_capture_rejected() -> None:
-    subscribe(sample_event_callback)
-    return None
+@rust.opaque(
+    type=bridge.events.Subscription,
+    send=False,
+    sync=False,
+    borrow=exclusive,
+    thread_affinity=tokio_current_thread,
+)
+class Subscription:
+    lifecycle_token: int
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> Result[Subscription, SubscriptionError | RustPanicError]: ...
+
+def apply_int(producer: Callable[[], int]) -> int:
+    return producer()
+
+def verify_invalid_thread_capture_rejected(
+    state: LocalState,
+) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        _value: int = state.value
+        return None
+
+    result: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(handler)
+    return result
+
+def verify_unprovable_callable_capture_rejected(
+    own hook: Callable[[str], Result[None, SubscriptionError]],
+) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        return hook(event)
+
+    result: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(handler)
+    return result
+
+def verify_retained_handler_reuse_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seed: str = "reuse"
+
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        assert seed != ""
+        return None
+
+    first: Result[Subscription, SubscriptionError | RustPanicError] = subscribe(handler)
+    return subscribe(handler)
+
+def verify_mutating_capture_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    counter: int = 0
+
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        nonlocal counter
+        counter = counter + 1
+        return None
+
+    return subscribe(handler)
+
+def verify_transitive_mutating_capture_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    counter: int = 0
+
+    def bump(event: str) -> Result[None, SubscriptionError]:
+        nonlocal counter
+        counter = counter + 1
+        return None
+
+    def handler(event: str) -> Result[None, SubscriptionError]:
+        return bump(event)
+
+    return subscribe(handler)
+
+def verify_mutating_nonsend_target_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    state: LocalState = LocalState(0)
+
+    def state_write_handler(event: str) -> Result[None, SubscriptionError]:
+        state.value = 1
+        return None
+
+    return subscribe(state_write_handler)
+
+def verify_container_subscript_mutation_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seen: dict[str, int] = {}
+
+    def subscript_handler(event: str) -> Result[None, SubscriptionError]:
+        seen[event] = 1
+        return None
+
+    return subscribe(subscript_handler)
+
+def verify_mutating_method_capture_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seen: dict[str, int] = {}
+
+    def method_handler(event: str) -> Result[None, SubscriptionError]:
+        _value: int = seen.setdefault(event, 1)
+        return None
+
+    return subscribe(method_handler)
+
+def verify_mixed_capture_mutation_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    label: str = "mixed"
+    seen: list[str] = [""]
+
+    def mixed_handler(event: str) -> Result[None, SubscriptionError]:
+        assert label == "mixed"
+        seen[0] = event
+        return None
+
+    return subscribe(mixed_handler)
+
+def verify_transitive_target_mutation_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    seen: dict[str, int] = {}
+
+    def record(event: str) -> Result[None, SubscriptionError]:
+        seen[event] = 1
+        return None
+
+    def target_handler(event: str) -> Result[None, SubscriptionError]:
+        return record(event)
+
+    return subscribe(target_handler)
+
+def verify_inner_function_mutation_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    counter: int = 0
+
+    def inner_mutation_handler(event: str) -> Result[None, SubscriptionError]:
+        def bump() -> None:
+            nonlocal counter
+            counter = counter + 1
+            return None
+
+        bump()
+        return None
+
+    return subscribe(inner_mutation_handler)
+
+def verify_inner_function_nonsend_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    state: LocalState = LocalState(0)
+
+    def inner_nonsend_handler(event: str) -> Result[None, SubscriptionError]:
+        def peek() -> int:
+            return state.value
+
+        _value: int = peek()
+        return None
+
+    return subscribe(inner_nonsend_handler)
+
+def verify_sibling_inner_mutation_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    counter: int = 0
+
+    def mutation_helper(event: str) -> Result[None, SubscriptionError]:
+        def bump() -> None:
+            nonlocal counter
+            counter = counter + 1
+            return None
+
+        bump()
+        return None
+
+    def sibling_mutation_handler(event: str) -> Result[None, SubscriptionError]:
+        return mutation_helper(event)
+
+    return subscribe(sibling_mutation_handler)
+
+def verify_sibling_inner_nonsend_rejected() -> Result[Subscription, SubscriptionError | RustPanicError]:
+    state: LocalState = LocalState(0)
+
+    def nonsend_helper(event: str) -> Result[None, SubscriptionError]:
+        def peek() -> int:
+            return state.value
+
+        _value: int = peek()
+        return None
+
+    def sibling_nonsend_handler(event: str) -> Result[None, SubscriptionError]:
+        return nonsend_helper(event)
+
+    return subscribe(sibling_nonsend_handler)
+
+def verify_fstring_nonsend_capture_rejected(
+    state: LocalState,
+) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    def fstring_nonsend_handler(event: str) -> Result[None, SubscriptionError]:
+        _message: str = f"value={state.value}"
+        return None
+
+    return subscribe(fstring_nonsend_handler)
+
+def verify_lambda_nonsend_capture_rejected(
+    state: LocalState,
+) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    def lambda_nonsend_handler(event: str) -> Result[None, SubscriptionError]:
+        _value: int = apply_int(lambda: state.value)
+        return None
+
+    return subscribe(lambda_nonsend_handler)
+
+def verify_lambda_callable_capture_rejected(
+    own hook: Callable[[], int],
+) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    def lambda_callable_handler(event: str) -> Result[None, SubscriptionError]:
+        _value: int = apply_int(lambda: hook())
+        return None
+
+    return subscribe(lambda_callable_handler)

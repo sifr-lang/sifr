@@ -956,7 +956,7 @@ Thread-safe callback registration:
 @rust(bridge.kafka.on_message)
 def on_message(
     consumer: KafkaConsumer,
-    callback: Callable[[Message], Result[None, KafkaError]],
+    own callback: Callable[[Message], Result[None, KafkaError]],
 ) -> Result[Subscription, KafkaError | RustPanicError]: ...
 ```
 
@@ -988,15 +988,67 @@ package-bridge mapping.
 
 `@rust.callback(...)` selects the separate thread-safe contract. It requires
 named `backpressure=`, `overflow=`, and `shutdown=` policy, rejects malformed
-or duplicate contracts with `SIFR-RUST-CB-0001`, and applies uniformly to all
-top-level callback parameters on that declaration. Per-parameter policy,
-nested callback containers, callback returns, cross-thread capture enforcement,
-and `tokio-tungstenite`/`redis`/`notify` ecosystem certification are
-future-owned by
-[`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md)
-through the `callback_subscription_ecosystem` compatibility row. The supported
-`callback_subscription_core` and `callbacks_threadsafe` rows remain
-contract-only; they do not claim subscription lifecycle execution.
+or duplicate contracts with `SIFR-RUST-CB-0001`, requires an unwind-capable
+target and Cargo profile, and applies uniformly to all top-level callback
+parameters on either a function or method declaration. The lowering capture
+check uses the declaration's callable parameter indices for both forms, and
+generated method signatures retain the same `Send + Sync + 'static` backstop.
+Valid directly declared nested handlers are emitted as owning `move` closures
+so the generated adapter can satisfy the retained `'static` contract. Each
+verified non-`Copy` capture is first cloned into an isolated
+closure-construction block; the closure owns that clone while the enclosing
+binding remains available after attachment and across loop iterations. The
+clone is a declaration-time snapshot: rebinding the enclosing name after the
+nested handler declaration does not change the retained callback's value.
+Successful retained attachment consumes the nested handler binding itself;
+second attachment, direct invocation after attachment, and attachment of one
+outer handler across loop iterations are ownership errors.
+Capture validation walks dependencies on sibling nested functions
+transitively. Capture types are taken from the lowered lexical binding at
+attachment, so annotated or inferred attribute and method results and
+user-defined types shadowing builtin inference names retain their actual type;
+a genuinely unresolved capture is rejected as unverifiable rather than
+exposed as an internal `Unknown`. Callable-valued captures without
+compiler-known nested-function provenance are rejected because their own
+captures cannot be proven thread-safe. Capture discovery includes assignment
+and deletion targets. Mutation analysis is restricted to actual captured
+bindings and walks ordinary `nonlocal` rebinding, attribute or subscript
+writes, collection-mutating methods, structured control flow, sibling nested
+functions, and functions nested further inside the handler. Nested traversal
+removes every positional, keyword-only, and variadic parameter plus locals
+declared by each inner scope, retaining only free captured bindings. Both
+capture and mutation analysis traverse comprehensions with their lexical
+targets, lambda bodies and defaults, f-string/t-string interpolation and
+nested format specifications, slice bounds, starred expressions, and nested
+function defaults and decorators. Mutating-method classification consults the
+receiver type, so interior synchronization through `RwLock.write()` remains an
+`Fn` operation while list, dict, set, and buffer mutations require `FnMut`. A
+handler that mutates a capture is rejected because the retained bridge requires
+`Fn`, not `FnMut`. Walrus rebinding of a declared `nonlocal` is rejected with
+`SIFR-FLOW-0003` rather than emitted as a shadowing Rust `let`. Retained
+callback parameter indices are exported through project-module metadata for
+direct imports, aliases, re-exports, and imported methods. This keeps
+`SIFR-RUST-CB-0001` enforcement identical at same-module and cross-module
+attachment sites.
+Per-parameter policy, nested callback containers, and callback returns remain
+outside the supported contract. The `callback_subscription_ecosystem` row
+certifies the retained
+form through an explicit package bridge:
+`ThreadsafeCallbackBridge<Args, Output>` owns a `Send + Sync + 'static`
+adapter, carries the exact declaration policy, and contains each invocation
+behind stable panic redaction. The compiler requires an owned callback and an
+opaque subscription handle result, rejects mutable or borrowed retained
+callbacks, and checks named nested captures for sendability, share safety, and
+clone-capable owned transfer plus the immutable `Fn` call contract before
+Cargo probing. Locked runtime evidence uses raw loopback WebSocket
+frames through `tokio-tungstenite`, Redis Pub/Sub RESP, and a real `notify`
+watcher to observe foreign-thread invocation, bounded overflow-as-error,
+callback errors, policy-driven close-time drain shutdown, cancellation of a
+scheduled callback delivery before invocation, consuming async close, bounded
+joins, temporary-directory removal, and zero harness-owned active work. The
+supported `callback_subscription_core` and `callbacks_threadsafe` rows remain
+contract-only; only `callback_subscription_ecosystem` carries the subscription
+lifecycle runtime claim.
 
 ## Trust Policy
 

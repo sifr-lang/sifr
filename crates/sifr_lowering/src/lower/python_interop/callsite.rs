@@ -144,15 +144,23 @@ pub(in crate::lower) fn callback_method_arg_ranges(
     let ranges =
         crate::lower::method_call_args::resolved_method_arg_ranges(object_ty, method_name, call);
     if let sifr_type_system::Type::Class { name, .. } = object_ty.resolve_alias() {
+        let callable = format!("{name}.{method_name}");
         let receiver_name = match object {
             HirExpr::Name { name, .. } => Some(name.as_str()),
             _ => None,
         };
         validate_callback_call_captures(
-            &format!("{name}.{method_name}"),
+            &callable,
             args,
             &ranges.iter().copied().map(Some).collect::<Vec<_>>(),
             receiver_name,
+            call.range,
+            ctx,
+        );
+        crate::lower::rust_callback_callsite::validate_threadsafe_callback_captures(
+            &callable,
+            args,
+            &ranges.iter().copied().map(Some).collect::<Vec<_>>(),
             call.range,
             ctx,
         );

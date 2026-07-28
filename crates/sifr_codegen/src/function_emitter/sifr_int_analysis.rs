@@ -122,7 +122,7 @@ pub(super) fn collect_nested_sifr_int_result_function_returns(
         let mut available_result_returns = inherited_result_function_returns.clone();
         available_result_returns.extend(nested_returns.iter().cloned());
         let mut on_stmt = |stmt: &HirStmt| {
-            if let HirStmt::NestedFunction { func } = stmt {
+            if let HirStmt::NestedFunction { func, .. } = stmt {
                 if function_returns_result_sifr_int(
                     func,
                     &available_result_returns,
@@ -612,7 +612,7 @@ pub(super) fn collect_nested_sifr_int_function_returns(
     let nested_functions = body
         .iter()
         .filter_map(|stmt| match stmt {
-            HirStmt::NestedFunction { func } => Some(func),
+            HirStmt::NestedFunction { func, .. } => Some(func),
             _ => None,
         })
         .collect::<Vec<_>>();
@@ -732,7 +732,7 @@ pub(super) fn collect_captured_outer_names_transitively(
 
     let mut captured = collect_captured_outer_names(func, &visible_outer_names);
     for nested in func.body.iter().filter_map(|stmt| match stmt {
-        HirStmt::NestedFunction { func } => Some(func),
+        HirStmt::NestedFunction { func, .. } => Some(func),
         _ => None,
     }) {
         captured.extend(collect_captured_outer_names_transitively(

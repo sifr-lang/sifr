@@ -49,6 +49,9 @@ pub struct ExternalDefs {
         String,
         std::collections::HashMap<String, Vec<sifr_ir::PythonParameterKind>>,
     >,
+    /// Map of `module_name` -> (`callable_name` -> retained callback parameter indices).
+    pub rust_threadsafe_callback_targets:
+        std::collections::HashMap<String, std::collections::HashMap<String, Vec<usize>>>,
     /// Map of `module_name` -> (`callable_name` -> workload label)
     pub function_workloads:
         std::collections::HashMap<String, std::collections::HashMap<String, String>>,

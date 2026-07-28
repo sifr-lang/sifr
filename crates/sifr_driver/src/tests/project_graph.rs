@@ -476,6 +476,117 @@ def get() -> int:
 }
 
 #[test]
+fn test_project_lowering_preserves_retained_callback_contract_through_reexports() {
+    let mut parsed_modules = HashMap::new();
+    parsed_modules.insert(
+        "subscriptions".to_string(),
+        parse_suite(
+            r#"
+class SubscriptionError(Error):
+    message: str
+
+class Subscription:
+    lifecycle_token: int
+
+@rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+@rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+def subscribe(
+    own handler: Callable[[str], None],
+) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    ...
+"#,
+        ),
+    );
+    parsed_modules.insert(
+        "api".to_string(),
+        parse_suite(
+            r#"
+from subscriptions import subscribe as retained_subscribe
+"#,
+        ),
+    );
+    parsed_modules.insert(
+        "main".to_string(),
+        parse_suite(
+            r#"
+from api import retained_subscribe as subscribe
+
+class LocalState(NonSend):
+    value: int
+
+def attach(state: LocalState):
+    def handler(event: str):
+        _value: int = state.value
+
+    _subscription = subscribe(handler)
+"#,
+        ),
+    );
+
+    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
+        .err()
+        .expect("retained callback capture should be rejected across module reexports");
+
+    assert!(errors.iter().any(|error| {
+        error.code == DiagnosticCode::RUST_CALLBACK_CONTRACT.code()
+            && error.message.contains("handler `handler` capture `state`")
+            && error.message.contains("not sendable")
+    }));
+}
+
+#[test]
+fn test_project_lowering_preserves_imported_method_callback_contract() {
+    let mut parsed_modules = HashMap::new();
+    parsed_modules.insert(
+        "subscriptions".to_string(),
+        parse_suite(
+            r#"
+class Subscription:
+    lifecycle_token: int
+
+class Registrar:
+    @rust.callback(backpressure=bounded(2), overflow=error, shutdown=drain)
+    @rust(bridge.events.subscribe, panic=map_error(bridge.events.map_panic))
+    def subscribe(
+        self,
+        own handler: Callable[[str], None],
+    ) -> Subscription:
+        ...
+"#,
+        ),
+    );
+    parsed_modules.insert(
+        "main".to_string(),
+        parse_suite(
+            r#"
+from subscriptions import Registrar
+
+class LocalState(NonSend):
+    value: int
+
+def attach(registrar: Registrar, state: LocalState):
+    def handler(event: str):
+        _value: int = state.value
+
+    _subscription = registrar.subscribe(handler)
+"#,
+        ),
+    );
+
+    let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
+    let errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
+        .err()
+        .expect("imported method callback capture should be rejected");
+
+    assert!(errors.iter().any(|error| {
+        error.code == DiagnosticCode::RUST_CALLBACK_CONTRACT.code()
+            && error.message.contains("handler `handler` capture `state`")
+            && error.message.contains("not sendable")
+    }));
+}
+
+#[test]
 fn test_collect_project_modules_cycle_reports_error() {
     let mut parsed_modules = HashMap::new();
     parsed_modules.insert(
