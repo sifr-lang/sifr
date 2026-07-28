@@ -217,6 +217,33 @@ class Resource:
 }
 
 #[test]
+fn emitted_opaque_self_method_maps_poison_to_plain_declared_error() {
+    let source = r"
+class ResourceError(Error):
+    message: str
+
+@rust.opaque(type=bridge.resources.Resource)
+class Resource:
+    @rust(Self.ping, panic=trusted_no_panic)
+    def ping(self) -> Result[str, ResourceError]:
+        ...
+";
+    let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
+    let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
+    let generated = generate_rust_with_metadata(&lowered.module).rust_source;
+
+    assert!(
+        generated.contains("HandleStateError::Poisoned(__sifr_stored_panic)"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("message: __sifr_stored_panic.to_string()"),
+        "{generated}"
+    );
+    assert!(!generated.contains("__SifrRustPanicError"), "{generated}");
+}
+
+#[test]
 fn emitted_sync_opaque_self_method_checks_state_outside_panic_boundary() {
     let source = r"
 class ResourceError(Error):

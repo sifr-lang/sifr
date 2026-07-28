@@ -4,15 +4,18 @@
 # execution-kind: cargo-probe
 # expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-TYPE-0001
+class TokenError(Error):
+    message: str
+
 @rust.opaque(type=bridge.tokenizer.Tokenizer, send=True, sync=True, clone=copy, close=close)
 class Tokenizer:
-    @rust(Self.encode, panic=trusted_no_panic)
-    def encode(self, text: str) -> bytes: ...
+    @rust(Self.encode, panic=map_error(bridge.tokenizer.map_panic))
+    def encode(self, text: str) -> Result[list[uint32], TokenError | RustPanicError]: ...
 
-    @rust(bridge.tokenizer.close, panic=trusted_no_panic)
-    def close(own self) -> None: ...
+    @rust(bridge.tokenizer.close, panic=map_error(bridge.tokenizer.map_panic))
+    def close(own self) -> Result[None, TokenError | RustPanicError]: ...
 
-def verify_unsatisfied_send_or_copy_rejected(resource: Tokenizer) -> bytes:
-    encode_result: bytes = resource.encode("sifr-rust")
-    resource.close()
+def verify_unsatisfied_send_or_copy_rejected(own resource: Tokenizer) -> Result[list[uint32], TokenError | RustPanicError]:
+    encode_result: Result[list[uint32], TokenError | RustPanicError] = resource.encode("sifr-rust")
+    close_result: Result[None, TokenError | RustPanicError] = resource.close()
     return encode_result

@@ -4,15 +4,18 @@
 # execution-kind: runtime-observed
 # expected-result: runtime-error-state
 # expected-runtime-state: poisoned
+class FileHandleError(Error):
+    message: str
+
 @rust.opaque(type=sifr_stdlib.fs.FileHandle, send=False, sync=False, clone=none, close=close)
 class StdlibFileHandle:
-    @rust(sifr_stdlib.fs.file_close, panic=trusted_no_panic)
-    def close(self) -> None: ...
+    @rust(sifr_stdlib.fs.file_close, panic=map_error(sifr_stdlib.fs.map_panic))
+    def close(own self) -> Result[None, FileHandleError | RustPanicError]: ...
 
-    @rust(Self.read_text, panic=trusted_no_panic)
-    def read_text(self) -> str: ...
+    @rust(Self.read_text, panic=map_error(sifr_stdlib.fs.map_panic))
+    def read_text(self) -> Result[str, FileHandleError | RustPanicError]: ...
 
-def verify_stdlib_handle_double_close_poisoned_access(handle: StdlibFileHandle) -> None:
-    handle.close()
-    _ = handle.read_text()
-    return None
+def verify_stdlib_handle_double_close_poisoned_access(own handle: StdlibFileHandle) -> Result[None, FileHandleError | RustPanicError]:
+    read_result: Result[str, FileHandleError | RustPanicError] = handle.read_text()
+    close_result: Result[None, FileHandleError | RustPanicError] = handle.close()
+    return close_result
