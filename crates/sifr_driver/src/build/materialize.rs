@@ -1,6 +1,10 @@
+use super::cargo_invocation_trace::record_cargo_invocation;
 use super::cargo_manifest::{
     generate_dependency_cargo_toml_with_interop, sysroot_cargo_config_args,
     try_generate_sysroot_dependency_plan,
+};
+use super::cargo_resolution::{
+    cargo_lock_mode_diagnostic, prepare_cargo_resolution, CargoResolutionPolicy,
 };
 use super::project_codegen::GeneratedBinaryProject;
 use super::report::BuildSysrootReport;
@@ -28,6 +32,7 @@ pub(super) fn materialize_binary_project_with_report(
     project_name: &str,
     generated_project: GeneratedBinaryProject,
     requested_vendor_mode: CargoVendorMode,
+    cargo_resolution: &CargoResolutionPolicy,
 ) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
     let project_path = output_dir.join(project_name);
     let dependency_plan = try_generate_sysroot_dependency_plan(
@@ -42,6 +47,7 @@ pub(super) fn materialize_binary_project_with_report(
         project_name,
         generated_project,
         &dependency_plan,
+        cargo_resolution,
     )
     .map(|mut report| {
         report.binary_path = cached_binary_path(output_dir, project_name);
@@ -55,6 +61,7 @@ pub(super) fn materialize_cached_binary_project_with_report(
     project_name: &str,
     generated_project: GeneratedBinaryProject,
     requested_vendor_mode: CargoVendorMode,
+    cargo_resolution: &CargoResolutionPolicy,
 ) -> Result<
     (
         CachedArtifactEntry,
@@ -88,6 +95,7 @@ pub(super) fn materialize_cached_binary_project_with_report(
                 project_name,
                 generated_project,
                 &dependency_plan,
+                cargo_resolution,
             )?;
             pending
                 .commit(&required_refs)
@@ -117,6 +125,7 @@ fn materialize_binary_project_at_path(
     project_name: &str,
     generated_project: GeneratedBinaryProject,
     dependency_plan: &SysrootDependencyPlan,
+    cargo_resolution: &CargoResolutionPolicy,
 ) -> Result<MaterializedBinaryProject, Vec<RenderedDiagnostic>> {
     let python_interpreter = generated_project
         .python_runtime
@@ -135,13 +144,18 @@ fn materialize_binary_project_at_path(
     let materialize_elapsed = materialize_start.elapsed();
 
     let cargo_start = std::time::Instant::now();
+    let cargo_prefix_args = sysroot_cargo_config_args(dependency_plan);
+    let prepared_resolution =
+        prepare_cargo_resolution(project_path, cargo_resolution, &cargo_prefix_args)?;
     run_cargo_build(
         project_path,
         python_interpreter.as_deref(),
         validate_native_links,
         &trusted_native_links,
         dependency_plan,
+        cargo_resolution,
     )?;
+    prepared_resolution.assert_unchanged()?;
     let cargo_elapsed = cargo_start.elapsed();
 
     Ok(MaterializedBinaryProject {
@@ -245,6 +259,7 @@ fn run_cargo_build(
     validate_native_links: bool,
     trusted_native_links: &BTreeSet<String>,
     dependency_plan: &SysrootDependencyPlan,
+    cargo_resolution: &CargoResolutionPolicy,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
     let mut command = Command::new("cargo");
     command.args(sysroot_cargo_config_args(dependency_plan));
@@ -256,6 +271,9 @@ fn run_cargo_build(
             "--message-format=json-render-diagnostics",
         ])
         .current_dir(project_path);
+    if let Some(argument) = cargo_resolution.lock_mode.cargo_arg() {
+        command.arg(argument);
+    }
     // Generated projects are materialized and cached with their own `target/`
     // directory. Inheriting an outer CARGO_TARGET_DIR moves binaries away from
     // the reported artifact paths and breaks cache completeness checks.
@@ -263,6 +281,7 @@ fn run_cargo_build(
     if let Some(python_interpreter) = python_interpreter {
         command.env("PYO3_PYTHON", python_interpreter);
     }
+    record_cargo_invocation("final-build", cargo_resolution.lock_mode, &command);
     let output = command.output().map_err(|error| {
         vec![cargo_build_error(format!(
             "failed to run cargo build: {error}"
@@ -275,6 +294,9 @@ fn run_cargo_build(
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
+        if let Some(diagnostic) = cargo_lock_mode_diagnostic("cargo build", &stderr) {
+            return Err(vec![diagnostic]);
+        }
         return Err(vec![cargo_build_error(format!(
             "cargo build failed:\n{stderr}"
         ))]);

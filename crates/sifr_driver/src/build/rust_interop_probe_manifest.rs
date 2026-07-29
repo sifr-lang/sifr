@@ -24,6 +24,21 @@ pub(super) fn probe_cargo_toml(
     cargo_toml
 }
 
+pub(super) fn probe_cargo_vendor_args(vendor_dir: Option<&Path>) -> Vec<String> {
+    let Some(vendor_dir) = vendor_dir else {
+        return Vec::new();
+    };
+    vec![
+        "--config".to_string(),
+        "source.crates-io.replace-with=\"sifr-vendor\"".to_string(),
+        "--config".to_string(),
+        format!(
+            "source.sifr-vendor.directory={}",
+            toml_quote_string(&vendor_dir.display().to_string())
+        ),
+    ]
+}
+
 fn dependency_line(
     dependency_name: &str,
     cargo_package_name: &str,

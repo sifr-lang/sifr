@@ -1,16 +1,17 @@
 use super::build_output::{render_build_success, BuildOutputOptions};
+use super::cargo_diagnostics::{bounded_excerpt, cargo_failure_diagnostic};
 use super::check_and_package_commands::{
-    bounded_excerpt, build_run_artifact, cmd_check, compile_entrypoint_report,
-    compile_package_entrypoint_report, load_package_graph_context, package_compiler_context,
-    redacted_args,
+    build_run_artifact, cmd_check, compile_entrypoint_report, compile_package_entrypoint_report,
+    package_compiler_context,
 };
 use super::cli_model_and_entrypoint::{
     diagnostic_exit_code, diagnostic_with_code, package_diagnostic, run_with_panic_boundary,
     DiagnosticFormat, PackageGraphContext, EXIT_INTERNAL_COMPILER_FAILURE, EXIT_SUCCESS,
     EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC, SIFR_BUILD_VERSION,
 };
+use super::package_graph_context::load_package_graph_context;
 use super::workspace_run_selection::resolve_run_session;
-use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
+use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_driver::{
     apply_diagnostic_recovery_limits, build_cached_package_project, CachedBinaryArtifact,
     PackageEntrypoint,
@@ -54,6 +55,8 @@ pub(super) fn render_diagnostic_output(
 }
 
 pub(crate) fn render_diagnostics(errors: &[RenderedDiagnostic], format: DiagnosticFormat) -> i32 {
+    #[cfg(test)]
+    crate::diagnostic_test_sink::record(&canonical_diagnostic_stream(errors));
     match render_diagnostic_output(errors, format) {
         Ok(output) => {
             let _ = write!(io::stderr(), "{output}");
@@ -72,16 +75,17 @@ pub(crate) fn render_diagnostics(errors: &[RenderedDiagnostic], format: Diagnost
 pub(super) fn cmd_build(
     file: &Path,
     output: &Path,
+    lock_mode: sifr_package::CargoLockMode,
     quiet: bool,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
-    match package_session_for_cwd(sifr_package::CargoLockMode::Normal) {
+    match package_session_for_cwd(lock_mode) {
         Ok(session) if !session.manifest_less_mode => {
             match compile_package_entrypoint_report(
                 file,
                 output,
                 &session,
-                sifr_package::CargoLockMode::Normal,
+                lock_mode,
                 diagnostic_format,
             ) {
                 Ok(Some(report)) => return emit_build_result(&report, quiet, diagnostic_format),
@@ -94,6 +98,15 @@ pub(super) fn cmd_build(
             render_diagnostics(&[package_diagnostic(error)], diagnostic_format);
             return EXIT_USAGE_OR_CONFIG;
         }
+    }
+
+    if lock_mode != sifr_package::CargoLockMode::Normal {
+        return render_diagnostics(
+            &[super::cli_lock_modes::lock_mode_requires_package(
+                "build", lock_mode,
+            )],
+            diagnostic_format,
+        );
     }
 
     let result = match run_with_panic_boundary(
@@ -210,6 +223,15 @@ pub(super) fn cmd_run_with_options(options: &RunCommandOptions<'_>) -> i32 {
                 return EXIT_USAGE_OR_CONFIG;
             }
         };
+    if session.manifest_less_mode && options.lock_mode != sifr_package::CargoLockMode::Normal {
+        return render_diagnostics(
+            &[super::cli_lock_modes::lock_mode_requires_package(
+                "run",
+                options.lock_mode,
+            )],
+            options.diagnostic_format,
+        );
+    }
     let session = match resolve_run_session(
         session,
         options.target,
@@ -447,6 +469,7 @@ pub(super) fn cmd_run_package_file(
         graph: context.graph,
         source_map: context.source_map,
         python_runtime: context.python_runtime,
+        lock_mode,
     };
     let result = match run_with_panic_boundary(
         "internal compiler panic during package run command compilation",
@@ -838,50 +861,4 @@ pub(super) fn execute_cargo_plan(
     );
     render_diagnostics(&[diagnostic], diagnostic_format);
     EXIT_USER_DIAGNOSTIC
-}
-
-pub(super) fn cargo_failure_diagnostic(
-    plan: &sifr_package::CargoCommandPlan,
-    lock_mode: sifr_package::CargoLockMode,
-    exit_status: Option<i32>,
-    excerpt: &str,
-) -> RenderedDiagnostic {
-    let stderr_redacted = sifr_package::cargo::errors::redact_cargo_stderr(excerpt);
-    let package = sifr_package::map_cargo_failure(plan.action, &stderr_redacted);
-    let mut diagnostic = package_diagnostic(package);
-    diagnostic.args.insert(
-        "action".to_string(),
-        DiagnosticArg::String(plan.action.as_str().to_string()),
-    );
-    diagnostic.args.insert(
-        "current_dir".to_string(),
-        DiagnosticArg::String(plan.current_dir.display().to_string()),
-    );
-    diagnostic.args.insert(
-        "args_redacted".to_string(),
-        DiagnosticArg::String(redacted_args(&plan.args).join(" ")),
-    );
-    diagnostic.args.insert(
-        "lock_mode".to_string(),
-        DiagnosticArg::String(format!("{lock_mode:?}").to_ascii_lowercase()),
-    );
-    diagnostic.args.insert(
-        "network_mode".to_string(),
-        DiagnosticArg::String(if lock_mode.is_network_disallowed() {
-            "offline".to_string()
-        } else {
-            "online".to_string()
-        }),
-    );
-    diagnostic.args.insert(
-        "stderr_redacted".to_string(),
-        DiagnosticArg::String(stderr_redacted),
-    );
-    if let Some(status) = exit_status {
-        diagnostic.args.insert(
-            "exit_status".to_string(),
-            DiagnosticArg::String(status.to_string()),
-        );
-    }
-    diagnostic
 }

@@ -20,6 +20,10 @@ from _scenario_callback_subscriptions import (
     run_callback_subscription_self_test,
     validate_callback_subscription_scenario,
 )
+from _scenario_cargo_locked import (
+    run_cargo_locked_self_test,
+    validate_cargo_locked_scenario,
+)
 from _scenario_lock_checks import read_root_lock, require_root_lock_subset
 from _scenario_native_build import (
     run_native_build_self_test,
@@ -299,6 +303,13 @@ def run_self_test() -> tuple[int, str | None]:
     if proc_macro_error is not None:
         return cases, proc_macro_error
 
+    cargo_locked_cases, cargo_locked_error = run_cargo_locked_self_test(
+        AREA_ROOT, validate_scenario_examples
+    )
+    cases += cargo_locked_cases
+    if cargo_locked_error is not None:
+        return cases, cargo_locked_error
+
     return cases, None
 
 
@@ -500,11 +511,14 @@ def _validate_scenario_manifests(
         _require_path_dependency(failures, fixture_id, raw_path, dependencies, "sifr_shared_hash_bridge", "rust/sifr_shared_hash_bridge")
         _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-no-panic", ["sifr_shared_hash_bridge.digest", "sifr_shared_hash_bridge.digest_hex"])
     elif fixture_id == "cargo_locked_offline":
-        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "locked_bridge", "rust/locked_bridge")
-        if not (example_dir / "Cargo.lock").is_file():
-            failures.append(f"{fixture_id}: {raw_path}/Cargo.lock is required")
-        _read_toml(failures, fixture_id, raw_path, example_dir / "Cargo.lock")
-        _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-no-panic", ["locked_bridge.cached_hash", "locked_bridge.lockfile_generation"])
+        validate_cargo_locked_scenario(
+            failures,
+            fixture_id,
+            raw_path,
+            dependencies,
+            trust,
+            example_dir,
+        )
     elif fixture_id == "bridge_version_mismatch":
         _require_path_dependency(failures, fixture_id, raw_path, dependencies, "version_bridge", "rust/version_bridge")
         _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-no-panic", ["version_bridge.accepted", "version_bridge.schema"])

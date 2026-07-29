@@ -1,13 +1,13 @@
 # fixture: cargo_locked_offline
 # evidence: negative/lockfile_feature_drift_rejected
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: cargo-probe
-# expected-result: future-owned-diagnostic
+# expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-CARGO-0001
-# fixture-cargo: lockfile omits requested feature
-@rust(bridge.locked.feature_drift, panic=trusted_no_panic)
-def feature_drift() -> uint32: ...
+# fixture-cargo: indexmap feature policy requires a lockfile update
+@rust(locked_bridge.cached_hash, panic=trusted_no_panic)
+def cached_hash(input: bytes) -> uint32: ...
 
 def verify_lockfile_feature_drift_rejected() -> uint32:
-    feature_drift_result: uint32 = feature_drift()
+    feature_drift_result: uint32 = cached_hash(b"feature-drift")
     return feature_drift_result

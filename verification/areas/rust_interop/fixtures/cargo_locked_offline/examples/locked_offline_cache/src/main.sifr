@@ -10,7 +10,10 @@ def cached_hash(input: bytes) -> uint32: ...
 def lockfile_generation() -> uint32: ...
 
 def verify_locked_offline_cache() -> uint32:
-    hash_result: uint32 = cached_hash(b"sifr-rust-interop")
     generation_result: uint32 = lockfile_generation()
-    verified_result: uint32 = hash_result + generation_result
-    return verified_result
+    cached_result: uint32 = cached_hash(b"sifr-rust-interop")
+    print(generation_result)
+    return cached_result
+
+def main() -> None:
+    print(verify_locked_offline_cache())

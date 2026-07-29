@@ -15,6 +15,10 @@ pub use crate::cargo::commands::{
     CargoPackageSelection, CargoPublishOptions, CargoVendorOptions,
 };
 pub use crate::cargo::errors::{map_cargo_failure, CargoAction};
+#[doc(hidden)]
+pub use crate::cargo::invocation_trace::{
+    capture_cargo_invocations, record_cargo_invocation, CargoInvocation,
+};
 pub use crate::cargo::load::{
     load_package_graph_snapshot, PackageGraphLoadFailure, PackageGraphLoadFailureKind,
     PackageGraphSnapshot,
@@ -28,6 +32,7 @@ pub use crate::cargo::package::{
     package_dry_run_plan, required_archive_entries, validate_package_archive, CargoPackageRole,
     PackageArchiveEntry, PackageArchiveValidation, PackageDryRunPlan,
 };
+pub use crate::cargo::package_lock_drift_reason;
 pub use crate::cargo::trust::{validate_backend_trust, BackendTrustSummary};
 pub use crate::diag::{PackageDiagnostic, PackageDiagnosticOrigin};
 pub use crate::graph::changed::{

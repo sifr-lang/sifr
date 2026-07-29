@@ -446,15 +446,34 @@
     {
       "id": "cargo_locked_offline",
       "fixture": "cargo_locked_offline",
-      "category": "future-owned-by-separate-phase",
-      "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
+      "category": "supported",
       "tier": 3,
       "capability": "locked/offline/frozen Cargo behavior",
       "execution_kind": "cargo-probe",
-      "required_crates": [],
-      "positive_evidence": {"id": "locked_offline_cache_hit", "status": "planned"},
-      "negative_evidence": {"id": "lockfile_feature_drift_rejected", "status": "planned"},
-      "notes": "Locked, offline, and frozen Cargo cache behavior remains future-owned until positive and drift evidence pass."
+      "required_crates": ["indexmap"],
+      "positive_evidence": {
+        "id": "locked_offline_cache_hit",
+        "status": "passing",
+        "validation": {
+          "suite_id": "sifr_cli_generated_builds",
+          "profile": "merge",
+          "step": "crate_tests",
+          "test_file": "crates/sifr/src/cargo_lock_mode_certification_tests.rs",
+          "test_name": "test_locked_offline_sifr_commands_and_warm_cache"
+        }
+      },
+      "negative_evidence": {
+        "id": "lockfile_feature_drift_rejected",
+        "status": "passing",
+        "validation": {
+          "suite_id": "sifr_cli_generated_builds",
+          "profile": "merge",
+          "step": "crate_tests",
+          "test_file": "crates/sifr/src/cargo_lock_mode_certification_tests.rs",
+          "test_name": "test_lockfile_feature_and_frozen_drift_rejected_without_network"
+        }
+      },
+      "notes": "Package check/build/run preserve locked, offline, and frozen resolution through Rust probes and generated builds for exact-pinned indexmap with default features disabled; generated locks are authority-validated and immutable; warm constrained probes reuse their cache; and missing, stale, checksum, source, or feature drift is rejected without network access as SIFR-RUST-CARGO-0001."
     }
   ]
 }

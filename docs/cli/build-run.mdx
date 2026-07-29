@@ -74,6 +74,9 @@ sifr build hello.sifr -o dist/
 | Flag | Description |
 |---|---|
 | `-o <DIR>` / `--output <DIR>` | Write the binary to this directory. Defaults to `.` (current directory). |
+| `--locked` | Require the package `Cargo.lock` and generated Rust resolution to remain unchanged. |
+| `--offline` | Disable network access while resolving and building package Rust dependencies. |
+| `--frozen` | Combine `--locked` and `--offline`. |
 | `--quiet` | Suppress build phase details. Only the final `Finished` and `Binary:` lines are printed. |
 
 ### Build output
@@ -110,12 +113,21 @@ sifr build app.sifr
 # Build to a specific output directory
 sifr build app.sifr -o ./out
 
+# Build a package without changing its Cargo resolution or using the network
+sifr build src/main.sifr --frozen
+
 # Build with minimal output
 sifr build app.sifr --quiet
 
 # Build and emit JSON diagnostics for a CI script
 sifr --diagnostic-format json build app.sifr
 ```
+
+The `check`, `build`, and `run` lock flags require package context and an
+authoritative `Cargo.lock`; Sifr rejects every constrained manifestless command
+instead of silently falling back to normal resolution. For Rust interop
+packages, the selected mode also governs signature probes and the generated
+Cargo build.
 
 ## Single-file mode vs project mode
 

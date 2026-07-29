@@ -2,7 +2,9 @@
 
 ## Status
 
-Active follow-up created by Phase 39 closeout.
+Active Track A follow-up created by Phase 39 closeout. Certifications 1
+through 10 are merged; `certification_11` is in progress and later items remain
+strictly sequential.
 
 The verification-hardening dependency is complete through
 [`hardening_4`](../archive/rust-interop-verification-matrix-hardening.md#hardening_4-replace-lexical-rejection-context):
@@ -10,9 +12,8 @@ The verification-hardening dependency is complete through
 [#3019](https://github.com/sifr-lang/sifr/pull/3019),
 [#3020](https://github.com/sifr-lang/sifr/pull/3020),
 [#3022](https://github.com/sifr-lang/sifr/pull/3022), and
-[#3023](https://github.com/sifr-lang/sifr/pull/3023) are merged.
-`certification_0` may start. The row implementation sequence remains blocked
-until `certification_0` completes the remaining pre-row entry criteria below.
+[#3023](https://github.com/sifr-lang/sifr/pull/3023) are merged. The
+`certification_0` prerequisite and certifications 1 through 10 are also merged.
 
 This issue has two tracks:
 
@@ -153,8 +154,8 @@ normative and must not be broadened.
 | `certification_7` | merged; retrospective performance rerun pending | [PR #3053](https://github.com/sifr-lang/sifr/pull/3053); crate-backed zero-copy lifecycle and compiler rejection contract |
 | `certification_8` | merged | [PR #3067](https://github.com/sifr-lang/sifr/pull/3067); crate-backed Arrow/tensor generated package and compiler mismatch rejection |
 | `certification_9` | merged | [PR #3069](https://github.com/sifr-lang/sifr/pull/3069); exact-pinned native build-script package, deterministic artifacts, and fail-closed direct/transitive trust rejection |
-| `certification_10` | in progress | exact-pinned proc-macro/codegen package, deterministic prost output, and package-wide pre-execution trust rejection |
-| `certification_11` | blocked | starts after `certification_10` merges |
+| `certification_10` | merged | [PR #3071](https://github.com/sifr-lang/sifr/pull/3071); exact-pinned proc-macro/codegen package, deterministic prost output, and package-wide pre-execution trust rejection |
+| `certification_11` | in progress | locked/offline/frozen Sifr command propagation, cache reuse, and deterministic drift rejection |
 | `certification_12` | blocked | starts after `certification_11` merges |
 | `certification_13` | blocked | starts after `certification_12` merges |
 | `certification_14` | blocked | starts after `certification_13` merges |
@@ -1135,7 +1136,7 @@ Implementation checklist:
   promote only `proc_macro_trust`, and update structured claims,
   public/internal docs, provenance, counts, cache-identity assertions, and
   mutation-tested scenario policy.
-- [ ] Extract scenario dispatch before growing the current 891-line module,
+- [x] Extract scenario dispatch before growing the current 891-line module,
   run focused and authoritative local gates, complete Opus review rounds to
   satisfaction, merge the PR, and unblock only `certification_11`.
 
@@ -1207,6 +1208,102 @@ Validation evidence to date:
   compatibility matrix in an exported tree with the backend hunk absent,
   reran the mandatory and focused gates, and reported `SATISFIED` with no
   actionable findings.
+- [Merge-readiness round 4](../../reviews/active/rust-interop-certification-10-review-round-4.md)
+  found no repository defect at head
+  `60512845062501d85b6a908c50b3ca9d97cecea1`, but correctly returned
+  `NOT SATISFIED` because PR #3071 was still a draft.
+- After the PR was marked ready and its body updated,
+  [round 5](../../reviews/active/rust-interop-certification-10-review-round-5.md)
+  reconfirmed the unchanged head, clean merge state, committed matrix
+  exclusion, and review history, then returned `SATISFIED` with no actionable
+  findings.
+- PR #3071 merged on 2026-07-29 as
+  `3c9601d268747b4543fbdca864f6a8ba50c44656`; only
+  `certification_11` is unblocked.
+
+#### certification_11: Locked, Offline, and Frozen Cargo
+
+Implementation checklist:
+
+- [x] Replace the planning scaffold with a generated package whose dependency,
+  feature policy, and checked-in `Cargo.lock` are exact and root-lock-backed.
+- [x] Exercise Sifr `check`, `build`, and `run` with `--locked`, `--offline`,
+  and `--frozen`, proving every package/Cargo subprocess preserves the
+  requested resolution mode.
+- [x] Prove a cold prepared build followed by a network-disabled warm cache hit
+  reuses the same deterministic package and artifact identity without registry
+  access or lockfile writes.
+- [x] Independently reject missing/stale lock entries, checksum/source drift,
+  feature drift, and frozen-mode mutations with stable
+  `SIFR-RUST-CARGO-0001` diagnostics and no silent resolver fallback.
+- [x] Bind both evidence directions to mandatory generated-package tests,
+  promote only `cargo_locked_offline`, and update structured claims,
+  public/internal docs, provenance, counts, and cache-identity assertions.
+- [x] Add exact scenario-policy and mutation coverage for flags, lock identity,
+  feature policy, network denial, cache evidence, and each negative drift
+  direction without growing a maintained module past the file-size cap.
+- [ ] Run focused and authoritative local gates, complete Opus review rounds to
+  satisfaction, merge the PR, and unblock only `certification_12`.
+
+Validation evidence to date:
+
+- The mandatory positive test executes a cold prepared frozen build, a warm
+  cache hit with the identical binary path, and direct `sifr check`, `sifr
+  build`, and `sifr run` operations under frozen, locked, and offline modes.
+  The exact-pinned `indexmap 2.14.0` bridge returns its version marker and
+  deterministic hash. An exact Cargo-argv sink observes package metadata,
+  generated resolution, Rust probes, and final builds; the final current-code
+  run passed in 65.01 seconds.
+- The mandatory negative test runs five independent no-network mutations
+  through the Sifr check command: missing lock, stale selected version,
+  checksum drift, source drift, and real registry feature drift. Every case
+  reports the observed `SIFR-RUST-CARGO-0001` diagnostic with a distinct reason,
+  leaves the lock absent or byte-identical, and the focused test passed in 0.36
+  seconds. The Rust declaration lives in an imported non-entry module, so the
+  diagnostic is classified from parsed package state rather than source text.
+- Package-owned signature probes now preserve package Cargo source ownership
+  instead of forcing the sysroot vendor used by `SysrootOnly` builds. Generated
+  locks are prepared from authoritative package/sysroot locks, registry
+  identities and checksums are validated, constrained probes use frozen
+  strength, normal and constrained probe cache entries are isolated, and
+  prepared-lock cache publication is atomic. Package-lock pins take precedence
+  over sysroot pins, and prepared-lock cache identities normalize ephemeral
+  path roots while retaining manifest and authority digests.
+- The fixture inventory passes with 36 rows, 44 crate aliases, 61 package
+  examples, and 18 scenarios. All 190 meaningful mutation cases, tier checks,
+  and 34 structured stable claims pass. On the clean committed matrix baseline this
+  item yields 68 passing and 4 planned evidence directions with 21 supported,
+  12 bridge-supported, 1 unsupported-by-design, and 2 future-owned rows.
+- The shared worktree compatibility command still stops only on the preserved
+  parallel-agent `ecosystem_backend_certification` category edit, whose two
+  evidence directions remain planned. This item will not stage or claim that
+  unrelated hunk.
+- The exact lock-argument, combined locked/offline normalization, Cargo failure
+  classification, package-owned source selection, formatting, stable-claim,
+  and 900-line file-size guards pass.
+- [Opus round 1](../../reviews/active/rust-interop-certification-11-review-round-1.md)
+  reproduced the mandatory paths and core architecture, then returned
+  `NOT SATISFIED` for lint failures, entry-file lexical classification, and a
+  negative test that asserted a directly invoked classifier rather than the
+  command's emitted diagnostic. Its non-blocking findings covered exact argv
+  evidence, package/sysroot authority precedence, grouped drift reasons,
+  manifestless fallback, file-size headroom, and prepared-lock cache growth.
+- The round-1 corrections make all three commands reject constrained
+  manifestless operation; capture actual CLI diagnostics and every relevant
+  Cargo subprocess; prioritize and test the package lock; distinguish all five
+  drift reasons without retrying or mutating Cargo resolution; normalize
+  prepared-cache path identities; and split command, diagnostic, entrypoint,
+  probe, and generated-package test responsibilities below the 900-line cap.
+  Production `sifr`, `sifr_package`, and `sifr_driver` Clippy, 142 package
+  tests, 435 non-generated driver tests, rustfmt, HIR maintainability,
+  TypeScript-Go transfer inventory, file-size, and diff-hygiene gates pass.
+- [Opus round 2](../../reviews/active/rust-interop-certification-11-review-round-2.md)
+  independently re-ran both mandatory tests, package/driver tests, workspace
+  and production Clippy, every Rust-interop inventory, formatting, transfer,
+  maintainability, file-size, and diff-hygiene gates. It re-inspected B1-B3
+  and N1-N8 individually, validated the cert-11 matrix with only the unrelated
+  backend hunk removed, recomputed the documented counts exactly, and returned
+  `SATISFIED` with no blocking findings.
 
 ### certification_14: Track A Closeout and Stable Gate
 

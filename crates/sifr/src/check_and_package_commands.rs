@@ -1,13 +1,13 @@
 use super::cli_model_and_entrypoint::{
     diagnostic_with_code, package_diagnostic, read_source, resolve_compilation_mode,
     run_with_panic_boundary, CompilationMode, DiagnosticFormat, PackageCompilerContext,
-    PackageGraphContext, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
+    EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, EXIT_USER_DIAGNOSTIC,
 };
 use super::diagnostic_rendering_and_run::{
-    cargo_failure_diagnostic, current_session_package_id, execute_cargo_plan,
-    package_session_for_cwd, render_diagnostics,
+    current_session_package_id, execute_cargo_plan, package_session_for_cwd, render_diagnostics,
 };
 use super::formatter_cli::FmtArgs;
+use super::package_graph_context::load_package_graph_context_for_entrypoint;
 use super::python_runtime_context::{package_python_runtime, package_python_runtime_for_check};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
@@ -25,22 +25,6 @@ use std::fs;
 use std::hash::{Hash as _, Hasher as _};
 use std::io::{self, IsTerminal as _, Read as _, Write as _};
 use std::path::{Path, PathBuf};
-pub(super) fn redacted_args(args: &[String]) -> Vec<String> {
-    args.iter()
-        .map(|arg| sifr_package::cargo::errors::redact_cargo_stderr(arg))
-        .collect()
-}
-
-pub(super) fn bounded_excerpt(text: &str) -> String {
-    const MAX_LINES: usize = 12;
-    const MAX_BYTES: usize = 4096;
-    let mut excerpt = text.lines().take(MAX_LINES).collect::<Vec<_>>().join("\n");
-    if excerpt.len() > MAX_BYTES {
-        excerpt.truncate(MAX_BYTES);
-    }
-    excerpt
-}
-
 pub(super) fn cmd_check(
     file: Option<&Path>,
     message_format: Option<&str>,
@@ -55,6 +39,14 @@ pub(super) fn cmd_check(
             return EXIT_USAGE_OR_CONFIG;
         }
     };
+    if session.manifest_less_mode && lock_mode != sifr_package::CargoLockMode::Normal {
+        return render_diagnostics(
+            &[super::cli_lock_modes::lock_mode_requires_package(
+                "check", lock_mode,
+            )],
+            diagnostic_format,
+        );
+    }
     let mut plan = match session.plan_check(
         file,
         &sifr_package::CargoFeatureSelection::default(),
@@ -171,6 +163,7 @@ pub(super) fn package_entrypoint_for_file(
         graph: context.graph,
         source_map: context.source_map,
         python_runtime: context.python_runtime,
+        lock_mode,
     }))
 }
 
@@ -181,7 +174,9 @@ pub(super) fn package_compiler_context(
     entry_file: Option<&Path>,
     allow_python_deferral: bool,
 ) -> Result<Option<PackageCompilerContext>, i32> {
-    let Some(context) = load_package_graph_context(session, lock_mode, diagnostic_format)? else {
+    let Some(context) =
+        load_package_graph_context_for_entrypoint(session, lock_mode, diagnostic_format)?
+    else {
         return Ok(None);
     };
     let Some(package_id) = current_session_package_id(session, &context.graph) else {
@@ -323,73 +318,6 @@ fn dotted_root(expression: &Expr) -> Option<String> {
         Expr::Attribute(attribute) => dotted_root(&attribute.value),
         _ => None,
     }
-}
-
-pub(super) fn load_package_graph_context(
-    session: &sifr_package::PackageSession,
-    lock_mode: sifr_package::CargoLockMode,
-    diagnostic_format: DiagnosticFormat,
-) -> Result<Option<PackageGraphContext>, i32> {
-    if session.manifest_less_mode {
-        return Ok(None);
-    }
-    load_package_graph_context_from_root(&session.workspace_root, lock_mode, diagnostic_format)
-        .map(Some)
-}
-
-pub(super) fn load_package_graph_context_from_root(
-    workspace_root: &Path,
-    lock_mode: sifr_package::CargoLockMode,
-    diagnostic_format: DiagnosticFormat,
-) -> Result<PackageGraphContext, i32> {
-    let snapshot = match sifr_package::load_package_graph_snapshot(workspace_root, lock_mode) {
-        Ok(snapshot) => snapshot,
-        Err(failure) => {
-            let exit = match &failure.kind {
-                sifr_package::PackageGraphLoadFailureKind::Spawn { message } => {
-                    let diagnostic =
-                        cargo_failure_diagnostic(&failure.plan, lock_mode, None, message);
-                    render_diagnostics(&[diagnostic], diagnostic_format);
-                    EXIT_USAGE_OR_CONFIG
-                }
-                sifr_package::PackageGraphLoadFailureKind::Command {
-                    exit_status,
-                    output,
-                } => {
-                    let diagnostic = cargo_failure_diagnostic(
-                        &failure.plan,
-                        lock_mode,
-                        *exit_status,
-                        &bounded_excerpt(output),
-                    );
-                    render_diagnostics(&[diagnostic], diagnostic_format);
-                    EXIT_USER_DIAGNOSTIC
-                }
-                sifr_package::PackageGraphLoadFailureKind::Package {
-                    diagnostics,
-                    usage_error,
-                } => {
-                    let diagnostics = diagnostics
-                        .iter()
-                        .cloned()
-                        .map(package_diagnostic)
-                        .collect::<Vec<_>>();
-                    render_diagnostics(&diagnostics, diagnostic_format);
-                    if *usage_error {
-                        EXIT_USAGE_OR_CONFIG
-                    } else {
-                        EXIT_USER_DIAGNOSTIC
-                    }
-                }
-            };
-            return Err(exit);
-        }
-    };
-    Ok(PackageGraphContext {
-        metadata: snapshot.metadata,
-        graph: snapshot.graph,
-        source_map: snapshot.source_map,
-    })
 }
 
 pub(super) fn cmd_fmt(

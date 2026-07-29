@@ -4,22 +4,46 @@
   "evidence": {
     "negative": {
       "expected_diagnostic": "SIFR-RUST-CARGO-0001",
-      "expected_result": "future-owned-diagnostic",
+      "expected_result": "diagnostic",
       "id": "lockfile_feature_drift_rejected",
       "path": "negative/lockfile_feature_drift_rejected.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_cli_generated_builds",
+        "test_file": "crates/sifr/src/cargo_lock_mode_certification_tests.rs",
+        "test_name": "test_lockfile_feature_and_frozen_drift_rejected_without_network"
+      }
     },
     "positive": {
-      "expected_result": "future-owned",
+      "expected_result": "pass",
       "id": "locked_offline_cache_hit",
       "path": "positive/locked_offline_cache_hit.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_cli_generated_builds",
+        "test_file": "crates/sifr/src/cargo_lock_mode_certification_tests.rs",
+        "test_name": "test_locked_offline_sifr_commands_and_warm_cache"
+      }
     }
   },
   "execution_kind": "cargo-probe",
-  "features": {},
+  "features": {
+    "indexmap": {
+      "default_features": false,
+      "features": []
+    }
+  },
   "id": "cargo_locked_offline",
-  "required_crates": [],
+  "package_examples": {
+    "indexmap": "examples/indexmap.sifr"
+  },
+  "required_crates": [
+    "indexmap"
+  ],
   "scenario_examples": {
     "locked_offline_cache": "examples/locked_offline_cache"
   },

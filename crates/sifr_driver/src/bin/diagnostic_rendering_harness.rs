@@ -389,6 +389,7 @@ fn package_diagnostics(package: &Path) -> Result<Vec<RenderedDiagnostic>, String
         graph,
         source_map,
         python_runtime: None,
+        lock_mode: sifr_package::CargoLockMode::Normal,
     };
     Ok(check_package_project(&entrypoint))
 }
