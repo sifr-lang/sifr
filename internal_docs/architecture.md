@@ -1465,7 +1465,11 @@ owner and those three operations, requires a real `stable-release` approval,
 is pinned by digest, prefers a distinct reviewer when one approved, and binds
 the selected approval policy plus initiator into retained evidence; normal and
 incident operations remain distinct-reviewer-only. The
-offline fixture core mirrors generation burning, exact resume, site
+post-index bootstrap recovery path revalidates the failed mutation and site
+attempts, both protected approvals, the already-live generation-1 bytes, and
+the reproducible site inputs before retrying only site publication and public
+smoke; it cannot create a release, allocate a generation, or replace the
+index. The offline fixture core mirrors generation burning, exact resume, site
 reconciliation, range eligibility, downgrade consent, and incident sign-off
 evidence, as specified in
 `internal_docs/stable_incident_response.md`.

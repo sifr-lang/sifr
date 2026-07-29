@@ -508,6 +508,7 @@ def test_materializer() -> None:
             *,
             final_alpha_record: Path = alpha_record_path,
             final_alpha_source: str = COMMIT,
+            use_attested_legacy: bool = False,
         ) -> dict[str, object]:
             return materialize_bootstrap_evidence(
                 stage="alpha-assets",
@@ -520,12 +521,18 @@ def test_materializer() -> None:
                 },
                 approvers=["alpha-reviewer"],
                 prepare_summary_path=prepare_summary,
-                legacy_index_path=legacy_path,
+                legacy_index_path=None if use_attested_legacy else legacy_path,
                 alpha_version=alpha_version,
                 alpha_source_commit=final_alpha_source,
                 alpha_record_path=final_alpha_record,
                 alpha_assets_dir=alpha_assets,
                 out=out,
+                legacy_index_sha256=(
+                    LEGACY_INDEX_SHA256 if use_attested_legacy else None
+                ),
+                legacy_index_size_bytes=(
+                    LEGACY_INDEX_SIZE_BYTES if use_attested_legacy else None
+                ),
             )
 
         def materialize_final(
@@ -534,6 +541,10 @@ def test_materializer() -> None:
             final_beta_record: Path = beta_record_path,
             final_smoke_dir: Path = smoke_dir,
             final_alpha_evidence: Path = alpha_evidence_path,
+            use_attested_legacy: bool = False,
+            include_attested_legacy_with_bytes: bool = False,
+            attested_legacy_sha256: str = LEGACY_INDEX_SHA256,
+            attested_legacy_size_bytes: int = LEGACY_INDEX_SIZE_BYTES,
         ) -> dict[str, object]:
             return materialize_bootstrap_evidence(
                 stage="preview-index",
@@ -546,7 +557,7 @@ def test_materializer() -> None:
                 },
                 approvers=["beta-reviewer", "second-reviewer"],
                 prepare_summary_path=prepare_summary,
-                legacy_index_path=legacy_path,
+                legacy_index_path=None if use_attested_legacy else legacy_path,
                 alpha_version=alpha_version,
                 alpha_source_commit=COMMIT,
                 alpha_record_path=alpha_record_path,
@@ -559,6 +570,16 @@ def test_materializer() -> None:
                 index_path=index_path,
                 smoke_dir=final_smoke_dir,
                 alpha_evidence_path=final_alpha_evidence,
+                legacy_index_sha256=(
+                    attested_legacy_sha256
+                    if use_attested_legacy or include_attested_legacy_with_bytes
+                    else None
+                ),
+                legacy_index_size_bytes=(
+                    attested_legacy_size_bytes
+                    if use_attested_legacy or include_attested_legacy_with_bytes
+                    else None
+                ),
             )
 
         with patch.object(
@@ -567,8 +588,46 @@ def test_materializer() -> None:
             return_value=LEGACY_INDEX_SHA256,
         ):
             materialize_alpha(alpha_evidence_path)
+            expect_failure(
+                lambda: materialize_alpha(
+                    root / "attested-alpha-evidence.json",
+                    use_attested_legacy=True,
+                ),
+                "alpha stage rejects the post-index recovery identity path",
+            )
             final = materialize_final(final_evidence_path)
             assert final["alpha_evidence"]["run_id"] == 41
+            recovered = materialize_final(
+                root / "recovered-final-evidence.json",
+                use_attested_legacy=True,
+            )
+            assert recovered["legacy_index"] == {
+                "sha256": LEGACY_INDEX_SHA256,
+                "size_bytes": LEGACY_INDEX_SIZE_BYTES,
+            }
+            expect_failure(
+                lambda: materialize_final(
+                    root / "drifted-recovery-sha-evidence.json",
+                    use_attested_legacy=True,
+                    attested_legacy_sha256=SHA_A,
+                ),
+                "recovery rejects a drifted attested legacy digest",
+            )
+            expect_failure(
+                lambda: materialize_final(
+                    root / "drifted-recovery-size-evidence.json",
+                    use_attested_legacy=True,
+                    attested_legacy_size_bytes=LEGACY_INDEX_SIZE_BYTES - 1,
+                ),
+                "recovery rejects a drifted attested legacy size",
+            )
+            expect_failure(
+                lambda: materialize_final(
+                    root / "ambiguous-recovery-identity-evidence.json",
+                    include_attested_legacy_with_bytes=True,
+                ),
+                "recovery rejects simultaneous legacy bytes and identity",
+            )
             withdrawn_record = copy.deepcopy(alpha_record)
             withdrawn_record["release"]["status"] = "withdrawn"
             withdrawn_record["release"]["incident_id"] = "inc-2026-001"

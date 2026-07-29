@@ -316,7 +316,7 @@ def materialize_bootstrap_evidence(
     approval_policy: dict[str, str],
     approvers: list[str],
     prepare_summary_path: Path,
-    legacy_index_path: Path,
+    legacy_index_path: Path | None,
     alpha_version: str,
     alpha_source_commit: str,
     alpha_record_path: Path,
@@ -329,11 +329,22 @@ def materialize_bootstrap_evidence(
     index_path: Path | None = None,
     smoke_dir: Path | None = None,
     alpha_evidence_path: Path | None = None,
+    legacy_index_sha256: str | None = None,
+    legacy_index_size_bytes: int | None = None,
 ) -> dict[str, Any]:
-    legacy_bytes = legacy_index_path.read_bytes()
+    if legacy_index_path is None and stage != "preview-index":
+        fail(
+            "legacy channels.json",
+            "attested recovery identity is allowed only for final preview-index evidence",
+        )
+    legacy_sha256, legacy_size_bytes = _resolve_legacy_identity(
+        legacy_index_path=legacy_index_path,
+        legacy_index_sha256=legacy_index_sha256,
+        legacy_index_size_bytes=legacy_index_size_bytes,
+    )
     require_opaque_legacy_identity(
-        sha256=sha256_bytes(legacy_bytes),
-        size_bytes=len(legacy_bytes),
+        sha256=legacy_sha256,
+        size_bytes=legacy_size_bytes,
     )
     payload: dict[str, Any] = {
         "schema_version": 2,
@@ -346,8 +357,8 @@ def materialize_bootstrap_evidence(
         "approvers": approvers,
         "prepare_summary_sha256": sha256_file(prepare_summary_path),
         "legacy_index": {
-            "sha256": sha256_bytes(legacy_bytes),
-            "size_bytes": len(legacy_bytes),
+            "sha256": legacy_sha256,
+            "size_bytes": legacy_size_bytes,
         },
         "alpha": _materialize_release_evidence(
             version=alpha_version,
@@ -433,6 +444,35 @@ def materialize_bootstrap_evidence(
     evidence = validate_bootstrap_evidence(payload)
     write_canonical_json(out, evidence, refuse_existing=True)
     return evidence
+
+
+def _resolve_legacy_identity(
+    *,
+    legacy_index_path: Path | None,
+    legacy_index_sha256: str | None,
+    legacy_index_size_bytes: int | None,
+) -> tuple[str, int]:
+    if legacy_index_path is not None:
+        if legacy_index_sha256 is not None or legacy_index_size_bytes is not None:
+            fail(
+                "legacy channels.json",
+                "must use either exact bytes or an attested identity, not both",
+            )
+        legacy_bytes = legacy_index_path.read_bytes()
+        return sha256_bytes(legacy_bytes), len(legacy_bytes)
+    if legacy_index_sha256 is None or legacy_index_size_bytes is None:
+        fail(
+            "legacy channels.json",
+            "recovery requires its exact attested SHA-256 and byte size",
+        )
+    require_sha256(legacy_index_sha256, "legacy channels.json.sha256")
+    if (
+        isinstance(legacy_index_size_bytes, bool)
+        or not isinstance(legacy_index_size_bytes, int)
+        or legacy_index_size_bytes < 1
+    ):
+        fail("legacy channels.json.size_bytes", "must be a positive integer")
+    return legacy_index_sha256, legacy_index_size_bytes
 
 
 def _require_exact_bootstrap_membership(
