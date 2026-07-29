@@ -20,7 +20,7 @@
     "owner_login": {"const": "yaseralnajjar"},
     "allowed_operations": {
       "type": "array",
-      "minItems": 1,
+      "minItems": 3,
       "maxItems": 3,
       "uniqueItems": true,
       "items": {

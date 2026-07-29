@@ -35,6 +35,7 @@ def write_fixture_release_signoff(
         "schema_version": 2,
         "version": version,
         "plan_sha256": mutation.successor_plan_sha256,
+        "initiator": "fixture-initiator",
         "approval_policy": {
             "mode": "distinct-reviewer",
             "waiver_sha256": "none",

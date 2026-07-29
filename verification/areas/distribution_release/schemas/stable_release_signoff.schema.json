@@ -8,6 +8,7 @@
     "schema_version",
     "version",
     "plan_sha256",
+    "initiator",
     "approval_policy",
     "attempts",
     "published_assets",
@@ -21,6 +22,7 @@
     "schema_version": {"const": 2},
     "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
     "plan_sha256": {"$ref": "#/$defs/sha256"},
+    "initiator": {"type": "string", "minLength": 1},
     "approval_policy": {"$ref": "#/$defs/approval_policy"},
     "attempts": {
       "type": "array",

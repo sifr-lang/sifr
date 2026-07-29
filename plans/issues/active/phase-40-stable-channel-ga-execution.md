@@ -676,6 +676,28 @@ Review and upstream coordination ledger:
   incident operations remain ineligible. Restoration of a distinct reviewer is
   isolated in the non-blocking ad hoc follow-up rather than weakening future
   stable releases.
+- The exception is under review in
+  [PR #3060](https://github.com/sifr-lang/sifr/pull/3060). Claude Opus review
+  pass 1 is archived at
+  `plans/reviews/archive/phase-40-single-maintainer-approval-review-pass-1-not-satisfied.md`.
+  Its five findings are remediated before pass 2: the branch is rebased on
+  current `main` without reverting corrected issue links; bootstrap and GA pin
+  the canonical waiver digest; approval resolution prefers a real distinct
+  reviewer and derives the retained mode from the actual approval set before
+  publication; stable sign-off binds the initiator and rejects mode/approver
+  mismatch; and direct tests validate the real canonical waiver, its expiry,
+  all three allowed operations, all forbidden stable/incident operations, and
+  the incident workflow's absence of waiver arguments.
+- Post-remediation validation passed the complete distribution area 125/125,
+  all focused governance and workflow contracts, the file-size guardrail, and
+  every authoritative create-PR blocking lane before Python interop. The
+  unchanged interop lane reproduced the separately indexed
+  `readonly-check-doctor` 120-second timeout in both an isolated replay and the
+  profile, then hit a 180-second `binding-authoring` timeout under concurrent
+  worktree compilation while later interop cases passed. This host-variance
+  evidence is recorded in
+  [`adhoc_performance_budget_host_variance.md`](./adhoc_performance_budget_host_variance.md);
+  no timeout, threshold, waiver, baseline, or Phase 40 source was changed.
 - The next protected-publication wave adds a credential-free stable prepare
   path for `ga-activation` and `normal`. It binds an exact evidence commit,
   canonical candidate directory and plan digest, a separate clean exact source

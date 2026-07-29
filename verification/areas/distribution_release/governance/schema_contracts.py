@@ -759,6 +759,7 @@ def release_signoff() -> dict[str, Any]:
         "schema_version": 2,
         "version": "0.1.0",
         "plan_sha256": SHA_A,
+        "initiator": "release-initiator",
         "approval_policy": {
             "mode": "distinct-reviewer",
             "waiver_sha256": "none",

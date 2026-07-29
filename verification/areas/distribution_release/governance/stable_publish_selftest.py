@@ -82,6 +82,7 @@ def test_stage_and_signoff() -> None:
             site_run_path=site_run,
             smoke_root=smoke,
             run_id=99,
+            initiator="release-initiator",
             approver="release-reviewer",
             approval_policy={
                 "mode": "distinct-reviewer",
@@ -150,6 +151,7 @@ def test_signoff_rejects_public_drift() -> None:
             "site_run_path": site_run,
             "smoke_root": smoke,
             "run_id": 99,
+            "initiator": "release-initiator",
             "approver": "release-reviewer",
             "approval_policy": {
                 "mode": "distinct-reviewer",
@@ -455,6 +457,8 @@ def test_cli_producer() -> None:
                 str(smoke),
                 "--run-id",
                 "99",
+                "--initiator",
+                "release-initiator",
                 "--approver",
                 "release-reviewer",
                 "--approval-mode",

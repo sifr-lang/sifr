@@ -94,11 +94,27 @@ def resolve_distinct_approvers(
     environment: str = PROTECTED_ENVIRONMENT,
     allowed_self_approver: str | None = None,
 ) -> list[str]:
+    return resolve_approval_decision(
+        approvals,
+        initiator=initiator,
+        environment=environment,
+        allowed_self_approver=allowed_self_approver,
+    )["approvers"]
+
+
+def resolve_approval_decision(
+    approvals: Any,
+    *,
+    initiator: str,
+    environment: str = PROTECTED_ENVIRONMENT,
+    allowed_self_approver: str | None = None,
+) -> dict[str, Any]:
     require_nonempty_string(initiator, "initiator")
     require_nonempty_string(environment, "environment")
     normalized_initiator = initiator.casefold()
     values = require_array(approvals, "approval history")
-    approved: dict[str, str] = {}
+    distinct: dict[str, str] = {}
+    owner_approval: str | None = None
     for index, raw in enumerate(values):
         location = f"approval history[{index}]"
         review = require_object(raw, location)
@@ -115,18 +131,29 @@ def resolve_distinct_approvers(
         user = require_object(review.get("user"), f"{location}.user")
         login = require_nonempty_string(user.get("login"), f"{location}.user.login")
         normalized_login = login.casefold()
-        self_approval_allowed = (
+        if normalized_login != normalized_initiator:
+            distinct.setdefault(normalized_login, login)
+        elif (
             allowed_self_approver is not None
             and normalized_login == allowed_self_approver.casefold()
-        )
-        if normalized_login != normalized_initiator or self_approval_allowed:
-            approved.setdefault(normalized_login, login)
-    if not approved:
+        ):
+            owner_approval = login
+    if distinct:
+        return {
+            "approvers": [distinct[key] for key in sorted(distinct)],
+            "mode": "distinct-reviewer",
+        }
+    if owner_approval is not None:
+        return {
+            "approvers": [owner_approval],
+            "mode": SINGLE_MAINTAINER_WAIVER,
+        }
+    if not distinct:
         fail(
             "approval history",
             f"requires an authorized {environment} approval for {initiator}",
         )
-    return [approved[key] for key in sorted(approved)]
+    raise AssertionError("unreachable approval decision")
 
 
 def validate_bootstrap_evidence(payload: Any) -> dict[str, Any]:

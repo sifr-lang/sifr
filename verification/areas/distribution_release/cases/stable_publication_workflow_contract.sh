@@ -81,6 +81,11 @@ assert "channels.json" in orchestrator
 assert "resolve-publication-approvers" in orchestrator
 assert "--environment stable-release" in orchestrator
 assert "--single-maintainer-waiver" in orchestrator
+assert 'if [[ "${operation}" == "ga-activation" ]]; then' in orchestrator
+assert 'elif [[ -n "${approval_waiver}" ]]; then' in orchestrator
+assert "--expected-waiver-sha256" in orchestrator
+assert "--include-policy" in orchestrator
+assert "'.approval_policy.mode'" in orchestrator
 assert "--approval-mode" in orchestrator
 assert "--approval-waiver-sha256" in orchestrator
 assert '"${workflow_ref}" = "refs/heads/main"' in orchestrator

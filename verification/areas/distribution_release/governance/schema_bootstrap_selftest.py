@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from . import schema_bootstrap as bootstrap_module
 from .approval_waiver import validate_single_maintainer_waiver
+from .approval_waiver_selftest import validate_repository_waiver
 from .common import GovernanceError
 from .common import write_canonical_json
 from .schema_bootstrap import (
@@ -19,6 +20,7 @@ from .schema_bootstrap import (
     build_preview_epoch,
     expected_asset_names,
     materialize_bootstrap_evidence,
+    resolve_approval_decision,
     resolve_distinct_approvers,
     validate_bootstrap_evidence,
 )
@@ -91,6 +93,15 @@ def main() -> int:
         initiator="release-initiator",
         allowed_self_approver="release-initiator",
     ) == ["release-initiator"]
+    mixed_approval = [*self_approval, *approvals]
+    assert resolve_approval_decision(
+        mixed_approval,
+        initiator="release-initiator",
+        allowed_self_approver="release-initiator",
+    ) == {
+        "approvers": ["release-reviewer"],
+        "mode": "distinct-reviewer",
+    }
     waived_evidence = valid_evidence()
     waived_evidence["initiator"] = "release-owner"
     waived_evidence["approvers"] = ["release-owner"]
@@ -100,6 +111,7 @@ def main() -> int:
     }
     assert validate_bootstrap_evidence(waived_evidence) == waived_evidence
     test_single_maintainer_waiver()
+    validate_repository_waiver()
     expect_failure(
         lambda: build_preview_epoch(
             legacy_index_sha256="f" * 64,

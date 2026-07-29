@@ -690,8 +690,11 @@ waiver under `plans/releases/`. It authorizes only `bootstrap-alpha`,
 `bootstrap-index`, and first `ga-activation`; the protected job must still
 pause for a GitHub-recorded `stable-release` approval by the named owner and
 admin bypass remains disabled. Bootstrap evidence and stable sign-off record
-the approval mode and waiver SHA-256. `normal`, `rollback`, and
-`incident-roll-forward` cannot select the waiver.
+the approval mode and waiver SHA-256. The workflow pins the checked-in waiver
+digest, prefers any distinct environment reviewer over owner self-approval,
+and derives the retained mode from that selected approval set before
+publication. `normal`, `rollback`, and `incident-roll-forward` cannot select
+the waiver.
 
 `rollback` and `incident-roll-forward` enter the same protected `publish` job
 from an exact incident evidence commit. The read-only prepare path verifies the
@@ -735,8 +738,10 @@ Both bootstrap stages run in the `stable-release` environment. Publish reads
 the workflow run's GitHub approval history and fails unless it contains an
 authorized environment approver. The default requires a login distinct from
 `GITHUB_TRIGGERING_ACTOR`; the canonical unexpired single-maintainer waiver
-allows the named owner only for the two bootstrap stages. The final evidence
-binds the approval mode and waiver digest, plus the alpha-stage evidence
+allows the named owner only for the two bootstrap stages. Its checked-in digest
+is pinned by the protected workflow, and any distinct reviewer takes precedence
+over the waiver. The final evidence binds the selected approval mode and waiver
+digest, plus the alpha-stage evidence
 digest, run/attempt, initiator, approvers, and prepare-summary digest as well as
 the final stage's own prepare-summary digest. The final stage
 reserves `channels-generation-1.json`, replaces only `channels.json`,

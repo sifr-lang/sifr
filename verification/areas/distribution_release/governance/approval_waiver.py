@@ -19,6 +19,7 @@ DISTINCT_REVIEWER = "distinct-reviewer"
 SINGLE_MAINTAINER_WAIVER = "single-maintainer-waiver"
 APPROVAL_MODES = {DISTINCT_REVIEWER, SINGLE_MAINTAINER_WAIVER}
 WAIVED_OPERATIONS = {"bootstrap-alpha", "bootstrap-index", "ga-activation"}
+CANONICAL_WAIVER_EXPIRY = "2026-08-27T00:00:00Z"
 
 
 def validate_single_maintainer_waiver(
@@ -84,6 +85,28 @@ def validate_single_maintainer_waiver(
         if expiry <= current:
             fail("$.expires_at", "single-maintainer approval waiver has expired")
     require_nonempty_string(waiver["reason"], "$.reason")
+    return waiver
+
+
+def validate_repository_approval_waiver(
+    payload: Any,
+    *,
+    require_unexpired: bool,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    waiver = validate_single_maintainer_waiver(
+        payload,
+        repository="sifr-lang/sifr",
+        environment="stable-release",
+        operation=None,
+        initiator="yaseralnajjar",
+        require_unexpired=require_unexpired,
+        now=now,
+    )
+    if set(waiver["allowed_operations"]) != WAIVED_OPERATIONS:
+        fail("$.allowed_operations", "must authorize exactly the three bootstrap/GA operations")
+    if waiver["expires_at"] != CANONICAL_WAIVER_EXPIRY:
+        fail("$.expires_at", f"must be {CANONICAL_WAIVER_EXPIRY}")
     return waiver
 
 

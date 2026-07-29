@@ -79,6 +79,11 @@ fi
                 REPO_ROOT
                 / "plans/releases/single-maintainer-approval-waiver.json"
             ),
+            "--expected-approval-waiver-sha256",
+            sha256_file(
+                REPO_ROOT
+                / "plans/releases/single-maintainer-approval-waiver.json"
+            ),
             "--site-repository",
             "sifr-lang/sifr-website",
             "--site-workflow",
