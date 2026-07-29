@@ -772,6 +772,15 @@ successful recovered site run. That record is required for the attested
 post-index path and forbidden when the original opaque legacy bytes are
 available.
 
+Complete this recovery and retain
+`schema-v2-bootstrap-generation-1.json` before dispatching `ga-activation`.
+Activation advances the live index to generation 2; doing that first
+intentionally makes the generation-1 recovery precondition fail and forfeits
+the one-time bootstrap evidence. For candidate `0.1.0`, protected GA prepare
+must begin before `2026-08-21T02:17:30Z` so the qualification still has the
+required seven full days remaining. The later single-maintainer-waiver expiry
+does not extend that candidate deadline.
+
 Run the protected bootstrap and incident-specific suites, plus the capability
 demo, with:
 

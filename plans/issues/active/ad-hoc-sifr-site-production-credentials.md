@@ -60,6 +60,11 @@ longer a recovery dependency: its exact canonical bytes are retained at
 and the workflow verifies the digest above. The temporary single-maintainer
 approval waiver expires earlier, at `2026-08-27T00:00:00Z`; the protected
 recovery must complete before then unless a distinct reviewer is configured.
+Recovery must finish before `ga-activation` advances the live index beyond
+generation 1. Separately, the qualified `0.1.0` GA prepare must begin before
+`2026-08-21T02:17:30Z` to preserve the required seven full days before its
+`2026-08-28T02:17:30Z` qualification expiry; the waiver deadline does not
+extend that candidate window.
 
 ## Required action
 
