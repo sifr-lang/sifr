@@ -16,5 +16,5 @@ direct-crate-bindings = true
 
 [trust]
 rust-proc-macros = ["serde_derive"]
-rust-build-scripts = ["prost-build"]
-unsafe-rust-bridges = ["src/bridges/generated.rs"]
+rust-build-scripts = ["prost_build"]
+rust-no-panic = ["bridge.generated.decode"]

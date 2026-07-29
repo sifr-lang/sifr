@@ -354,8 +354,8 @@
       "required_crates": ["serde_derive", "prost-build"],
       "features": {"prost-build": {"generated_output": "deterministic"}},
       "execution_kind": "cargo-probe",
-      "positive_evidence": {"id": "trusted_proc_macro", "status": "planned"},
-      "negative_evidence": {"id": "untrusted_proc_macro_rejected_pre_execution", "status": "planned"}
+      "positive_evidence": {"id": "trusted_proc_macro", "status": "passing"},
+      "negative_evidence": {"id": "untrusted_proc_macro_rejected_pre_execution", "status": "passing"}
     },
     {
       "id": "cargo_locked_offline",

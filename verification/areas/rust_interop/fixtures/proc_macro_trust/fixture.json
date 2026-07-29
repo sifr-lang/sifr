@@ -4,16 +4,30 @@
   "evidence": {
     "negative": {
       "expected_diagnostic": "SIFR-RUST-TRUST-0001",
-      "expected_result": "future-owned-diagnostic",
+      "expected_result": "diagnostic",
       "id": "untrusted_proc_macro_rejected_pre_execution",
       "path": "negative/untrusted_proc_macro_rejected_pre_execution.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+        "test_name": "test_check_untrusted_proc_macro_rejected_pre_execution"
+      }
     },
     "positive": {
-      "expected_result": "future-owned",
+      "expected_result": "pass",
       "id": "trusted_proc_macro",
       "path": "positive/trusted_proc_macro.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+        "test_name": "test_build_trusted_proc_macro_and_deterministic_codegen"
+      }
     }
   },
   "execution_kind": "cargo-probe",

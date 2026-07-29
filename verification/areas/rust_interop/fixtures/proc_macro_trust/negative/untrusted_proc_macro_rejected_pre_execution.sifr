@@ -1,12 +1,12 @@
 # fixture: proc_macro_trust
 # evidence: negative/untrusted_proc_macro_rejected_pre_execution
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: cargo-probe
-# expected-result: future-owned-diagnostic
+# expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-TRUST-0001
 @rust(bridge.generated.decode, panic=trusted_no_panic)
-def decode_without_proc_macro_trust(input: bytes) -> bytes: ...
+def decode_without_proc_macro_trust(input: bytes) -> str: ...
 
-def verify_untrusted_proc_macro_rejected_pre_execution() -> bytes:
-    decode_without_proc_macro_trust_result: bytes = decode_without_proc_macro_trust(b"sifr-rust-interop")
+def verify_untrusted_proc_macro_rejected_pre_execution() -> str:
+    decode_without_proc_macro_trust_result: str = decode_without_proc_macro_trust(b"sifr-rust-interop")
     return decode_without_proc_macro_trust_result

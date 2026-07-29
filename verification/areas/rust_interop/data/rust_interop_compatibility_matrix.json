@@ -434,15 +434,14 @@
     {
       "id": "proc_macro_trust",
       "fixture": "proc_macro_trust",
-      "category": "future-owned-by-separate-phase",
-      "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
+      "category": "supported",
       "tier": 3,
       "capability": "build-script and proc-macro trust",
       "execution_kind": "cargo-probe",
       "required_crates": ["serde_derive", "prost-build"],
-      "positive_evidence": {"id": "trusted_proc_macro", "status": "planned"},
-      "negative_evidence": {"id": "untrusted_proc_macro_rejected_pre_execution", "status": "planned"},
-      "notes": "Representative proc-macro and codegen trust fixtures are pending."
+      "positive_evidence": {"id": "trusted_proc_macro", "status": "passing"},
+      "negative_evidence": {"id": "untrusted_proc_macro_rejected_pre_execution", "status": "passing"},
+      "notes": "Generated package evidence compiles exact-pinned upstream serde_derive plus the direct derive and prost-build wrappers under locked/offline/frozen Cargo, compares byte-identical prost output from two fresh builds, runtime-observes the wrapper-macro execution and generated schema markers, binds proc-macro trust into cache identity, and rejects missing direct proc-macro or build-script trust before either armed sentinel executes."
     },
     {
       "id": "cargo_locked_offline",

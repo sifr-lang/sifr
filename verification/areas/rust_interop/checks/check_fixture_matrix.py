@@ -296,6 +296,91 @@ def _run_self_test() -> int:
             return 1
         cases += 1
 
+    proc_macro_example = """# fixture: proc_macro_trust
+# package-example: serde_derive
+# required-crate: serde_derive
+# execution-kind: cargo-probe
+# expected-result: package-example
+class PackageExampleError(Error):
+    message: str
+@rust(bridge.generated.decode, panic=trusted_no_panic)
+def decode(input: bytes) -> str: ...
+def verify_serde_derive_package() -> str:
+    marker: str = decode(b"sifr")
+    assert "serde_derive=1.0.228;upstream=compiled;sifr_wrapper_macro=executed" in marker
+    return marker
+"""
+    proc_macro_failures: list[str] = []
+    _validate_package_example_text(
+        proc_macro_failures,
+        "proc_macro_trust",
+        "examples/serde_derive.sifr",
+        proc_macro_example,
+        "serde_derive",
+        "cargo-probe",
+    )
+    if proc_macro_failures:
+        print(
+            "rust interop fixture matrix self-test error: "
+            f"valid proc-macro bridge example failed: {proc_macro_failures}",
+            file=sys.stderr,
+        )
+        return 1
+    cases += 1
+
+    proc_macro_marker_failures: list[str] = []
+    _validate_package_example_text(
+        proc_macro_marker_failures,
+        "proc_macro_trust",
+        "examples/serde_derive.sifr",
+        proc_macro_example.replace(
+            "serde_derive=1.0.228;upstream=compiled;sifr_wrapper_macro=executed",
+            "missing",
+        ),
+        "serde_derive",
+        "cargo-probe",
+    )
+    if not any(
+        "must observe the generated serde_derive marker" in failure
+        for failure in proc_macro_marker_failures
+    ):
+        print(
+            "rust interop fixture matrix self-test error: "
+            "proc-macro marker mutation passed",
+            file=sys.stderr,
+        )
+        return 1
+    cases += 1
+
+    negative_proc_macro_source = (
+        FIXTURES_ROOT
+        / "proc_macro_trust"
+        / "negative"
+        / "untrusted_proc_macro_rejected_pre_execution.sifr"
+    ).read_text(encoding="utf-8")
+    negative_signature_failures: list[str] = []
+    _validate_evidence_example_text(
+        negative_signature_failures,
+        "proc_macro_trust",
+        "negative/untrusted_proc_macro_rejected_pre_execution.sifr",
+        negative_proc_macro_source.replace(
+            "decode_without_proc_macro_trust(input: bytes) -> str",
+            "decode_without_proc_macro_trust(input: bytes) -> bytes",
+        ),
+        "untrusted_proc_macro_rejected_pre_execution",
+    )
+    if not any(
+        "must match the scenario bridge `str` return" in failure
+        for failure in negative_signature_failures
+    ):
+        print(
+            "rust interop fixture matrix self-test error: "
+            "negative proc-macro signature mutation passed",
+            file=sys.stderr,
+        )
+        return 1
+    cases += 1
+
     feature_failures: list[str] = []
     _validate_feature_policies(
         feature_failures,
@@ -630,10 +715,26 @@ def _validate_package_example_text(
     if _contains_empty_pass_body(text):
         failures.append(f"{fixture_id}: {raw_path} must not use empty placeholder class bodies")
     crate_token = crate.replace("-", "_")
-    bound_functions = _rust_bound_function_names(text, crate_token)
+    binding_token = "bridge.generated" if fixture_id == "proc_macro_trust" else crate_token
+    bound_functions = _rust_bound_function_names(text, binding_token)
     if not bound_functions:
-        failures.append(f"{fixture_id}: {raw_path} must declare a Rust binding for crate {crate}")
+        failures.append(
+            f"{fixture_id}: {raw_path} must declare a Rust binding for "
+            f"{binding_token}"
+        )
         return
+    if fixture_id == "proc_macro_trust":
+        marker = {
+            "serde_derive": (
+                "serde_derive=1.0.228;"
+                "upstream=compiled;sifr_wrapper_macro=executed"
+            ),
+            "prost-build": "prost-build=0.14.4;message=sifr.probe.Probe",
+        }.get(crate)
+        if marker is None or marker not in text:
+            failures.append(
+                f"{fixture_id}: {raw_path} must observe the generated {crate} marker"
+            )
 
     verifier_marker = f"def verify_{crate_token}_package("
     async_verifier_marker = f"async def verify_{crate_token}_package("
@@ -762,6 +863,17 @@ def _validate_evidence_example_text(
         failures.append(f"{fixture_id}: {raw_path} must include a binding and concrete verifier call site")
     if _contains_empty_pass_body(text):
         failures.append(f"{fixture_id}: {raw_path} must not use empty placeholder class bodies")
+    if (
+        fixture_id == "proc_macro_trust"
+        and raw_path == "negative/untrusted_proc_macro_rejected_pre_execution.sifr"
+        and (
+            "decode_without_proc_macro_trust(input: bytes) -> str" not in text
+            or "decode_without_proc_macro_trust_result: str" not in text
+        )
+    ):
+        failures.append(
+            f"{fixture_id}: {raw_path} binding must match the scenario bridge `str` return"
+        )
 
     verifier_markers = (
         f"def verify_{evidence_id}(",

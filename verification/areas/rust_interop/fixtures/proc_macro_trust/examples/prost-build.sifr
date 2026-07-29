@@ -6,13 +6,15 @@
 class PackageExampleError(Error):
     message: str
 
-class ProstConfig:
-    proto: str
-    out_dir: str
+@rust(bridge.generated.decode, panic=trusted_no_panic)
+def decode_generated_schema(input: bytes) -> str: ...
 
-@rust(prost_build.Config.new, panic=map_error(bridge.prost_build.map_panic))
-def prost_build_config(proto: str) -> Result[ProstConfig, PackageExampleError | RustPanicError]: ...
-
-def verify_prost_build_package() -> Result[ProstConfig, PackageExampleError | RustPanicError]:
-    sample_result: Result[ProstConfig, PackageExampleError | RustPanicError] = prost_build_config("schema.proto")
-    return sample_result
+def verify_prost_build_package() -> Result[str, PackageExampleError | RustPanicError]:
+    try:
+        marker: str = decode_generated_schema(b"sifr-rust-interop")
+        assert "prost-build=0.14.4;message=sifr.probe.Probe" in marker
+        return marker
+    except PackageExampleError as error:
+        raise error
+    except RustPanicError as error:
+        raise error

@@ -13,155 +13,37 @@ from _scenario_async_reqwest import (
     validate_async_reqwest_scenario,
 )
 from _scenario_advanced_data import (
-    ADVANCED_DATA_SCENARIO_TOKENS,
     run_advanced_data_self_test,
     validate_advanced_data_scenario,
 )
 from _scenario_callback_subscriptions import (
-    CALLBACK_SUBSCRIPTION_SCENARIO_TOKENS,
     run_callback_subscription_self_test,
     validate_callback_subscription_scenario,
 )
 from _scenario_lock_checks import read_root_lock, require_root_lock_subset
 from _scenario_native_build import (
-    NATIVE_BUILD_SCENARIO_TOKENS,
     run_native_build_self_test,
     validate_native_build_scenario,
 )
 from _scenario_opaque_resources import (
-    OPAQUE_RESOURCE_SCENARIO_TOKENS,
     run_opaque_resource_self_test,
     validate_opaque_resource_scenario,
 )
+from _scenario_proc_macro import (
+    run_proc_macro_self_test,
+    validate_proc_macro_scenario,
+)
+from _scenario_registry import REQUIRED_SCENARIO_EXAMPLES
 from _scenario_source_checks import (
     read_scenario_text as _read_scenario_text,
     reject_generated_bridge_imports as _reject_generated_bridge_imports,
     validate_scenario_sifr_source as _validate_scenario_sifr_source,
 )
 from _scenario_zero_copy import (
-    ZERO_COPY_SCENARIO_TOKENS,
     reject_unsafe_rust,
     run_zero_copy_self_test,
     validate_zero_copy_scenario,
 )
-
-REQUIRED_SCENARIO_EXAMPLES = {
-    "advanced_data_runtime_matrix": {
-        "advanced_data_runtime": {
-            "tokens": ADVANCED_DATA_SCENARIO_TOKENS,
-        },
-    },
-    "async_runtime_reqwest": {
-        "reqwest_loopback_runtime": {
-            "tokens": (
-                "reqwest::Client",
-                ".no_proxy()",
-                "127.0.0.1",
-                "task.timeout",
-                "runtime_reused",
-                "handle.id()",
-                "ring_core_0_17_14_",
-            ),
-        },
-    },
-    "bridge_type_matrix": {
-        "bridge_type_roundtrip": {
-            "tokens": (
-                "serde_json_roundtrip",
-                "bytes_roundtrip",
-                "indexmap_roundtrip",
-                "nested_indexmap_roundtrip",
-                "indexmap_list_roundtrip",
-                "thiserror",
-            ),
-        },
-    },
-    "bridge_version_mismatch": {
-        "bridge_version_package": {
-            "tokens": ("bridge-version = 1", "version_bridge"),
-        },
-    },
-    "callbacks_call_scoped": {
-        "call_scoped_callback_runtime": {
-            "tokens": (
-                "CallScopedCallbackBridge",
-                "bridge.callbacks.visit",
-                "Rust bridge panicked",
-            ),
-        },
-    },
-    "callback_subscription_ecosystem": {
-        "subscription_lifecycle_runtime": {
-            "tokens": CALLBACK_SUBSCRIPTION_SCENARIO_TOKENS,
-        },
-    },
-    "cargo_locked_offline": {
-        "locked_offline_cache": {
-            "tokens": ("locked_bridge", "Cargo.lock", "--locked", "--offline", "--frozen"),
-        },
-    },
-    "local_bridge_blake3": {
-        "local_blake3_bridge": {
-            "tokens": ("bridge.blake3.hash_bytes", "src/bridges", "blake3"),
-        },
-    },
-    "opaque_resource_matrix": {
-        "resource_lifecycle_runtime": {
-            "tokens": OPAQUE_RESOURCE_SCENARIO_TOKENS,
-        },
-    },
-    "panic_abort_profile": {
-        "abort_profile_package": {
-            "tokens": ("rust-panic-abort", "panic = \"abort\"", "legacy_backend"),
-        },
-    },
-    "panic_boundary_wrapper_emission": {
-        "panic_wrapper_runtime": {
-            "tokens": (
-                "RustPanicErrorBridge",
-                "mapper_panics",
-                "--locked",
-                "--offline",
-                "--frozen",
-            ),
-        },
-    },
-    "proc_macro_trust": {
-        "proc_macro_trust_package": {
-            "tokens": ("rust-proc-macros", "rust-build-scripts", "serde_derive", "prost-build"),
-        },
-    },
-    "same_workspace_crate": {
-        "workspace_hash_crate": {
-            "tokens": ("workspace_hash", "path = \"rust/workspace_hash\"", "members = ["),
-        },
-    },
-    "shared_bridge_crate": {
-        "shared_hash_bridge": {
-            "tokens": ("sifr_shared_hash_bridge", "digest_hex", "crate::__sifr_bridge"),
-        },
-    },
-    "zero_copy_runtime_matrix": {
-        "crate_backed_view_runtime": {
-            "tokens": ZERO_COPY_SCENARIO_TOKENS,
-        },
-    },
-    "native_build_script": {
-        "native_trust_package": {
-            "tokens": NATIVE_BUILD_SCENARIO_TOKENS,
-        },
-    },
-    "ecosystem_backend_certification": {
-        "backend_feature_package": {
-            "tokens": ("runtime-tokio-rustls", "postgres", "macros", "tower-http"),
-        },
-    },
-    "ecosystem_cli_certification": {
-        "cli_feature_package": {
-            "tokens": ("env-filter", "tracing-subscriber", "clap"),
-        },
-    },
-}
 
 AREA_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = AREA_ROOT.parents[2]
@@ -410,6 +292,13 @@ def run_self_test() -> tuple[int, str | None]:
     if native_build_error is not None:
         return cases, native_build_error
 
+    proc_macro_cases, proc_macro_error = run_proc_macro_self_test(
+        AREA_ROOT, validate_scenario_examples
+    )
+    cases += proc_macro_cases
+    if proc_macro_error is not None:
+        return cases, proc_macro_error
+
     return cases, None
 
 
@@ -454,6 +343,7 @@ def _validate_scenario_example_dir(
     if fixture_id in {
         "advanced_data_runtime_matrix",
         "native_build_script",
+        "proc_macro_trust",
         "zero_copy_runtime_matrix",
     }:
         reject_unsafe_rust(failures, fixture_id, rust_sources, example_dir)
@@ -629,12 +519,15 @@ def _validate_scenario_manifests(
         _require_path_dependency(failures, fixture_id, raw_path, dependencies, "blake3", "rust/blake3_backend")
         _require_trust_targets(failures, fixture_id, raw_path, trust, "unsafe-rust-bridges", ["src/bridges/blake3.rs"])
     elif fixture_id == "proc_macro_trust":
-        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "serde_derive", "rust/serde_derive")
-        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "prost-build", "rust/prost_build")
-        _require_proc_macro_lib(failures, fixture_id, raw_path, example_dir, "rust/serde_derive")
-        _require_build_script(failures, fixture_id, raw_path, example_dir, "rust/prost_build")
-        _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-proc-macros", ["serde_derive"])
-        _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-build-scripts", ["prost-build"])
+        validate_proc_macro_scenario(
+            failures,
+            fixture_id,
+            raw_path,
+            cargo,
+            dependencies,
+            trust,
+            example_dir,
+        )
     elif fixture_id == "native_build_script":
         validate_native_build_scenario(
             failures,
@@ -819,45 +712,6 @@ def _require_member(
 ) -> None:
     if not isinstance(members, list) or expected_member not in members:
         failures.append(f"{fixture_id}: {raw_path}/Cargo.toml workspace must include {expected_member}")
-
-
-def _require_proc_macro_lib(
-    failures: list[str],
-    fixture_id: str,
-    raw_path: str,
-    example_dir: Path,
-    crate_path: str,
-) -> None:
-    manifest = _read_toml(failures, fixture_id, raw_path, example_dir / crate_path / "Cargo.toml")
-    if not isinstance(manifest, dict) or manifest.get("lib", {}).get("proc-macro") is not True:
-        failures.append(f"{fixture_id}: {raw_path}/{crate_path}/Cargo.toml must declare [lib] proc-macro = true")
-
-
-def _require_build_script(
-    failures: list[str],
-    fixture_id: str,
-    raw_path: str,
-    example_dir: Path,
-    crate_path: str,
-) -> None:
-    manifest = _read_toml(failures, fixture_id, raw_path, example_dir / crate_path / "Cargo.toml")
-    if not isinstance(manifest, dict) or manifest.get("package", {}).get("build") != "build.rs":
-        failures.append(f"{fixture_id}: {raw_path}/{crate_path}/Cargo.toml must declare package build = \"build.rs\"")
-    if not (example_dir / crate_path / "build.rs").is_file():
-        failures.append(f"{fixture_id}: {raw_path}/{crate_path}/build.rs is required")
-
-
-def _require_native_links(
-    failures: list[str],
-    fixture_id: str,
-    raw_path: str,
-    example_dir: Path,
-    crate_path: str,
-    expected_links: str,
-) -> None:
-    manifest = _read_toml(failures, fixture_id, raw_path, example_dir / crate_path / "Cargo.toml")
-    if not isinstance(manifest, dict) or manifest.get("package", {}).get("links") != expected_links:
-        failures.append(f"{fixture_id}: {raw_path}/{crate_path}/Cargo.toml must declare links = {expected_links!r}")
 
 
 def _require_dependency_features(

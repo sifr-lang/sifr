@@ -58,7 +58,7 @@ mod zero_copy_validation;
 use bridge_aliases::inject_package_bridge_aliases;
 use target_resolution::{
     backend_for_root, canonical_sifr_target_path, canonical_trust_target_path, declaration_paths,
-    trust_kind_name, uses_bridge_root,
+    uses_bridge_root,
 };
 
 #[derive(Clone, Debug)]
@@ -169,6 +169,7 @@ impl<'a> RustInteropResolver<'a> {
         if !self.diagnostics.is_empty() {
             return Err(std::mem::take(&mut self.diagnostics));
         }
+        self.validate_package_dependency_trust(&generated.interop.rust.declarations);
         for declaration in generated.interop.rust.declarations.clone() {
             self.resolve_declaration(&declaration);
         }
@@ -652,52 +653,6 @@ impl<'a> RustInteropResolver<'a> {
             | EffectivePanicPolicy::InvalidSysrootImplicitTarget => {}
         }
         self.record_declared_native_links(declaration, package);
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    fn require_trust(
-        &mut self,
-        declaration: &sifr_codegen::RustInteropPlanDeclaration,
-        canonical_target_path: &str,
-        kind: RustInteropTrustRequirementKind,
-        trusted_entries: &[String],
-        required_entry: &str,
-        evidence: String,
-        trusted_by_sysroot_policy: bool,
-    ) {
-        let key = (
-            canonical_target_path.to_string(),
-            trust_kind_name(&kind).to_string(),
-            required_entry.to_string(),
-        );
-        if !self.seen_trust_requirements.insert(key) {
-            return;
-        }
-        let trusted = trusted_by_sysroot_policy
-            || trusted_entries.iter().any(|entry| entry == required_entry);
-        self.trust_requirements.push(RustInteropTrustRequirement {
-            canonical_target_path: canonical_target_path.to_string(),
-            kind,
-            trusted,
-            required_entry: required_entry.to_string(),
-            evidence: evidence.clone(),
-        });
-        if trusted {
-            return;
-        }
-        self.push_diagnostic(
-            declaration,
-            declaration.declaration.span,
-            DiagnosticCode::RUST_TRUST_MISSING,
-            "missing Rust interop trust declaration for `{target}`",
-            vec![
-                ("target", canonical_target_path.to_string()),
-                ("required_trust", required_entry.to_string()),
-                ("evidence", evidence),
-            ],
-            vec![format!("add `{required_entry}` to the matching `[trust]` Rust interop allow-list before Cargo executes this dependency")],
-            None,
-        );
     }
 
     fn push_probe(&mut self, declaration: &sifr_codegen::RustInteropPlanDeclaration) {

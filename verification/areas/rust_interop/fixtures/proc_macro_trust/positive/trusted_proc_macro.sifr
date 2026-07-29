@@ -1,20 +1,23 @@
 # fixture: proc_macro_trust
 # evidence: positive/trusted_proc_macro
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: cargo-probe
-# expected-result: future-owned
+# expected-result: pass
 # fixture-trust: rust-proc-macros = ["serde_derive"]
-# fixture-trust: rust-build-scripts = ["prost-build"]
+# fixture-trust: rust-build-scripts = ["prost_build"]
+# fixture-trust: rust-no-panic = ["bridge.generated.decode"]
 class DecodeError(Error):
     message: str
 
-class GeneratedMessage:
-    id: uint64
-    payload: bytes
+@rust(bridge.generated.decode, panic=trusted_no_panic)
+def decode(input: bytes) -> str: ...
 
-@rust(bridge.generated.decode, panic=map_error(bridge.generated.map_panic))
-def decode(input: bytes) -> Result[GeneratedMessage, DecodeError | RustPanicError]: ...
-
-def verify_trusted_proc_macro() -> Result[GeneratedMessage, DecodeError | RustPanicError]:
-    decode_result: Result[GeneratedMessage, DecodeError | RustPanicError] = decode(b"sifr-rust-interop")
-    return decode_result
+def verify_trusted_proc_macro() -> Result[str, DecodeError | RustPanicError]:
+    try:
+        decoded: str = decode(b"sifr-rust-interop")
+        assert decoded == "id=1404|payload=sifr-rust-interop|serde_derive=1.0.228;upstream=compiled;sifr_wrapper_macro=executed|prost-build=0.14.4;message=sifr.probe.Probe"
+        return decoded
+    except DecodeError as error:
+        raise error
+    except RustPanicError as error:
+        raise error

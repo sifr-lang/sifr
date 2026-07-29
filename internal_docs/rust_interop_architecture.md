@@ -979,6 +979,33 @@ Executing the bindgen and native compilation probes requires a working C/C++
 compiler and a `libclang` installation discoverable by bindgen; locked/offline
 Cargo does not package those host-toolchain components.
 
+## Proc Macros and Build-Time Codegen
+
+`proc_macro_trust` is the tier-3 `cargo-probe` claim for proc-macro and
+build-script execution. Its locked scenario uses direct wrapper crates whose
+Cargo metadata exposes a proc-macro target and a custom build target before
+execution. The wrappers compile exact root-lock `serde_derive = 1.0.228` and
+`prost-build = 0.14.4`; the latter consumes an in-memory protobuf descriptor
+set through `Config::compile_fds`, so the proof does not depend on `protoc`.
+The direct derive wrapper executes its own `SifrGenerated` macro and reports
+that separately from compilation of its exact upstream `serde_derive`
+dependency; the upstream derive itself is not invoked through the wrapper.
+Generated Rust and versioned evidence stay under `OUT_DIR`, compile as part of
+the wrapper, and must be byte-identical across two fresh
+`--locked --offline --frozen` builds.
+
+Pre-execution validation is package-wide rather than target-local. Every
+direct backend dependency with a proc-macro target, custom build target, or
+native `links` identity is checked before direct probes or final package
+materialization, including dependencies used only by package-local bridge
+code. Cargo normalizes the `prost-build` dependency alias to the Rust
+identifier `prost_build`, so that exact normalized alias is the build-script
+trust entry. Negative evidence arms both wrapper execution paths, proves both
+sentinels execute under trusted Cargo, then independently removes each
+permission and requires a kind-specific `SIFR-RUST-TRUST-0001` while both
+sentinels remain absent. Proc-macro trust is included in the deterministic
+interop cache identity.
+
 ## Callbacks
 
 Callbacks are supported only with declared lifetime and threading policy.

@@ -20,6 +20,9 @@ use sifr_stdlib_manifest::StdlibFeature;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::PathBuf;
 
+#[path = "rust_interop_trust_tests.rs"]
+mod trust_tests;
+
 #[test]
 fn package_rust_interop_requires_cargo_context() {
     let generated = base_project(vec![declaration_entry(
@@ -63,34 +66,6 @@ fn package_rust_interop_rejects_unknown_target_root() {
         diagnostics[0].spans[0].file.as_deref(),
         Some("/ws/app/sifr/app.sifr")
     );
-}
-
-#[test]
-fn package_rust_interop_rejects_untrusted_build_script() {
-    let generated = base_project(vec![declaration_entry(
-        "native.hash",
-        RustInteropDecoratorKind::Function,
-    )]);
-    let context = package_context(
-        TrustPolicy::default(),
-        vec![BackendCrateMetadata {
-            cargo_package_id: CargoPackageId("path+file:///ws/native#native@0.1.0".to_string()),
-            dependency_name: "native".to_string(),
-            dependency_kind: None,
-            cargo_package_name: "native".to_string(),
-            cargo_version: "0.1.0".to_string(),
-            cargo_source: None,
-            cargo_manifest_path: PathBuf::from("/ws/native/Cargo.toml"),
-            links: None,
-            has_build_script: true,
-            has_proc_macro: false,
-        }],
-    );
-
-    let diagnostics = interop_errors(generated, Some(context), "untrusted build script must fail");
-
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
-    assert!(diagnostics[0].message.contains("app.hash"));
 }
 
 #[test]
@@ -370,66 +345,6 @@ fn package_rust_interop_rejects_self_method_root_without_opaque_class() {
         .children
         .iter()
         .any(|child| child.message.contains("@rust.opaque")));
-}
-
-#[test]
-fn package_rust_interop_rejects_untrusted_proc_macro() {
-    let generated = base_project(vec![declaration_entry(
-        "native.hash",
-        RustInteropDecoratorKind::Function,
-    )]);
-    let context = package_context(
-        TrustPolicy::default(),
-        vec![backend_custom("native", false, true, None)],
-    );
-
-    let diagnostics = interop_errors(generated, Some(context), "untrusted proc-macro must fail");
-
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
-}
-
-#[test]
-fn package_rust_interop_rejects_untrusted_native_links() {
-    let generated = base_project(vec![declaration_entry(
-        "native.hash",
-        RustInteropDecoratorKind::Function,
-    )]);
-    let context = package_context(
-        TrustPolicy::default(),
-        vec![backend_custom(
-            "native",
-            false,
-            false,
-            Some("ssl".to_string()),
-        )],
-    );
-
-    let diagnostics = interop_errors(generated, Some(context), "untrusted native link must fail");
-
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
-}
-
-#[test]
-fn package_rust_interop_rejects_untrusted_unsafe_bridge_file() {
-    let root = temp_package_root("rust_interop_unsafe_bridge");
-    let bridge_dir = root.join("src/bridges");
-    std::fs::create_dir_all(&bridge_dir).expect("create bridge dir");
-    std::fs::write(bridge_dir.join("hash.rs"), "pub unsafe fn hash() {}\n")
-        .expect("write unsafe bridge");
-    let generated = base_project(vec![declaration_entry(
-        "bridge.hash",
-        RustInteropDecoratorKind::Function,
-    )]);
-    let mut context = package_context_with_root(TrustPolicy::default(), Vec::new(), root.clone());
-    set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
-
-    let diagnostics = interop_errors(
-        generated,
-        Some(context),
-        "untrusted unsafe bridge must fail",
-    );
-
-    assert_eq!(diagnostics[0].code, "SIFR-RUST-TRUST-0001");
 }
 
 #[test]
