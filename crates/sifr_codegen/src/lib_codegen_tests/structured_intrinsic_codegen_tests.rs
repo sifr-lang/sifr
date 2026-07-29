@@ -62,6 +62,8 @@ fn structured_intrinsic_supports_typed_method_call_arguments() {
             method: "lower".to_string(),
             args: vec![],
             receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+            receiver_target: None,
+            mutable_arg_places: Vec::new(),
             source: None,
             ty: Type::Str,
         }],

@@ -1,0 +1,19 @@
+# expect-error[col=32]: SIFR-OWN-0002
+class Inner:
+    items: list[int]
+
+
+class Helper:
+    inner: Inner
+
+
+class Owner:
+    helper: Helper
+
+
+def mutate(mut inner: Inner, helper: Helper) -> None:
+    inner.items.append(len(helper.inner.items))
+
+
+def conflict(mut owner: Owner) -> None:
+    mutate(owner.helper.inner, owner.helper)

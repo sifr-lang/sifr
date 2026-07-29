@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-OWN-0014 verification/areas/diagnostics/fixtures/diagnostics/e2e_unsupported_narrowed_optional_mutating_receiver/main.sifr:13:9 mutable method receiver maybe is not a supported storage place

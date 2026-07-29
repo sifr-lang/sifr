@@ -1,0 +1,19 @@
+# expect-error[col=9]: SIFR-PROTO-0006
+class Counter:
+    value: int
+
+    def __eq__(self, other: Counter) -> bool:
+        self.value += 1
+        return self.value == other.value
+
+
+class DelegatingCounter:
+    value: int
+
+    def bump(self) -> None:
+        self.value += 1
+
+    # expect-error[col=9]: SIFR-PROTO-0006
+    def __eq__(self, other: DelegatingCounter) -> bool:
+        self.bump()
+        return self.value == other.value

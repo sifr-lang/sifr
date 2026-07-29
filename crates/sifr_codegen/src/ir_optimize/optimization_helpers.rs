@@ -151,7 +151,8 @@ mod tests {
             is_async: false,
         }];
 
-        let removed = remove_unneeded_mutability_in_items(&mut items);
+        let removed =
+            remove_unneeded_mutability_in_items(&mut items, &std::collections::HashSet::new());
         assert_eq!(removed, 0);
 
         let RustItem::Fn { body, .. } = &items[0] else {
@@ -165,6 +166,86 @@ mod tests {
                 ..
             }) if name == "apply"
         ));
+    }
+
+    #[test]
+    fn source_only_method_names_require_checked_place_protection() {
+        let make_items = || {
+            vec![RustItem::Fn {
+                name: "demo".to_string(),
+                visibility: Visibility::Private,
+                type_params: vec![],
+                params: vec![],
+                ret: None,
+                body: vec![
+                    RustStmt::Let {
+                        mutable: true,
+                        name: "items".to_string(),
+                        ty: None,
+                        value: RustExpr::Vec(vec![]),
+                    },
+                    RustStmt::Expr(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("items".to_string())),
+                        method: "source_mutation".to_string(),
+                        args: vec![],
+                    }),
+                ],
+                is_async: false,
+            }]
+        };
+
+        let mut unprotected = make_items();
+        assert_eq!(
+            remove_unneeded_mutability_in_items(
+                &mut unprotected,
+                &std::collections::HashSet::new()
+            ),
+            1
+        );
+
+        let mut protected = make_items();
+        let protected_names = std::collections::HashSet::from(["items".to_string()]);
+        assert_eq!(
+            remove_unneeded_mutability_in_items(&mut protected, &protected_names),
+            0
+        );
+    }
+
+    #[test]
+    fn compiler_generated_method_names_preserve_unproven_ir_locals() {
+        let mut items = vec![
+            compiler_generated_mutating_method_item("__writer", "write"),
+            compiler_generated_mutating_method_item("__items", "append"),
+        ];
+
+        assert_eq!(
+            remove_unneeded_mutability_in_items(&mut items, &std::collections::HashSet::new()),
+            0
+        );
+    }
+
+    fn compiler_generated_mutating_method_item(name: &str, method: &str) -> RustItem {
+        RustItem::Fn {
+            name: format!("exercise_{method}"),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![
+                RustStmt::Let {
+                    mutable: true,
+                    name: name.to_string(),
+                    ty: None,
+                    value: RustExpr::Verbatim(format!("make_{name}()")),
+                },
+                RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident(name.to_string())),
+                    method: method.to_string(),
+                    args: vec![],
+                }),
+            ],
+            is_async: false,
+        }
     }
 
     #[test]

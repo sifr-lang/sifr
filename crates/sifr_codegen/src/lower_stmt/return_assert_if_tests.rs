@@ -145,6 +145,7 @@ fn does_not_lower_assert_with_non_leaf_not_bool_test() {
         test: HirExpr::UnaryOp {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "is_ok".to_string(),
                 args: vec![],
                 ty: Type::Bool,
@@ -163,6 +164,7 @@ fn does_not_lower_assert_with_non_leaf_not_option_truthiness_test() {
         test: HirExpr::UnaryOp {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "maybe_x".to_string(),
                 args: vec![],
                 ty: Type::Union(vec![Type::Int, Type::None]),
@@ -180,6 +182,7 @@ fn does_not_lower_assert_with_non_leaf_option_is_none_compare_test() {
     let stmt = HirStmt::Assert {
         test: HirExpr::Compare {
             left: Box::new(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "maybe_x".to_string(),
                 args: vec![],
                 ty: Type::Union(vec![Type::Int, Type::None]),
@@ -198,6 +201,7 @@ fn does_not_lower_assert_with_non_leaf_option_is_none_compare_test() {
 fn does_not_lower_assert_with_non_leaf_option_truthiness_test() {
     let stmt = HirStmt::Assert {
         test: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "maybe_x".to_string(),
             args: vec![],
             ty: Type::Union(vec![Type::Int, Type::None]),
@@ -259,6 +263,7 @@ fn does_not_lower_assert_with_non_leaf_option_msg() {
     let stmt = HirStmt::Assert {
         test: HirExpr::BoolLiteral(true),
         msg: Some(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "maybe_msg".to_string(),
             args: vec![],
             ty: Type::Union(vec![Type::Str, Type::None]),
@@ -350,6 +355,7 @@ fn does_not_lower_if_with_non_leaf_not_bool_condition() {
         condition: HirExpr::UnaryOp {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "ok".to_string(),
                 args: vec![],
                 ty: Type::Bool,
@@ -570,6 +576,7 @@ fn does_not_lower_if_with_non_leaf_option_is_none_compare_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::Compare {
             left: Box::new(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "maybe_x".to_string(),
                 args: vec![],
                 ty: Type::Union(vec![Type::Int, Type::None]),
@@ -592,6 +599,7 @@ fn does_not_lower_if_with_non_leaf_not_option_truthiness_condition() {
         condition: HirExpr::UnaryOp {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "maybe_x".to_string(),
                 args: vec![],
                 ty: Type::Union(vec![Type::Int, Type::None]),
@@ -767,6 +775,7 @@ fn does_not_lower_if_with_non_leaf_elif_condition() {
         then_body: vec![HirStmt::Pass],
         elif_clauses: vec![(
             HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "flag".to_string(),
                 args: vec![],
                 ty: Type::Bool,

@@ -1,0 +1,15 @@
+# expect-error[col=31]: SIFR-OWN-0002
+class Helper:
+    items: list[int]
+
+    def absorb_items(self, mut items: list[int]) -> None:
+        self.items.append(1)
+        items.append(2)
+
+
+class Owner:
+    helper: Helper
+
+
+def conflict(mut owner: Owner) -> None:
+    owner.helper.absorb_items(owner.helper.items)

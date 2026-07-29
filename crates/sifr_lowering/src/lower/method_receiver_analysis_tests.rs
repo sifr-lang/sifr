@@ -1,4 +1,7 @@
-use crate::{lower_module, HirExpr, HirFunction, HirModule, HirStmt};
+use crate::{
+    lower_module, HirExpr, HirFunction, HirModule, HirStmt, MutableReceiverTarget, PlaceProjection,
+};
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 use sifr_type_system::ReceiverConvention;
 
@@ -32,6 +35,31 @@ fn expression_method_call(function: &HirFunction) -> &HirExpr {
             _ => None,
         })
         .expect("method should contain an expression statement")
+}
+
+#[test]
+fn constructor_self_use_requires_materialized_storage() {
+    let source = r#"
+class Deferred:
+    value: int
+
+    def __init__(self, flag: bool):
+        if flag:
+            self.value = 1
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("constructor should be rejected"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE)
+            && error
+                .message
+                .contains("before constructor storage initialization")
+            && error.message.contains("value")
+    }));
 }
 
 #[test]
@@ -218,7 +246,7 @@ def invoke(own mut entity: Mutable) -> None:
 }
 
 #[test]
-fn final_inferred_receivers_refresh_protocol_implementation_membership() {
+fn inferred_mutable_receiver_rejects_shared_protocol_conformance() {
     let source = r#"
 class Shared(Protocol):
     def update(self) -> None:
@@ -234,20 +262,37 @@ class SharedImplementation:
     def update(self) -> None:
         pass
 "#;
-    let module = lower(source);
-    let mutable = module
-        .classes
-        .iter()
-        .find(|class| class.name == "MutableImplementation")
-        .expect("mutable implementation should exist");
-    let shared = module
-        .classes
-        .iter()
-        .find(|class| class.name == "SharedImplementation")
-        .expect("shared implementation should exist");
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("receiver mismatch must be rejected"),
+        Err(errors) => errors,
+    };
+    assert!(errors.iter().any(|error| {
+        error.code == Some(sifr_diagnostics::DiagnosticCode::PROTO_RECEIVER_CONVENTION_MISMATCH)
+    }));
+}
 
-    assert!(!mutable.implements_protocols.contains(&"Shared".to_string()));
-    assert!(shared.implements_protocols.contains(&"Shared".to_string()));
+#[test]
+fn fixed_trait_receiver_rejects_transitive_receiver_mutation() {
+    let source = r#"
+class Counter:
+    value: int
+
+    def bump(self) -> None:
+        self.value += 1
+
+    def __eq__(self, other: Counter) -> bool:
+        self.bump()
+        return self.value == other.value
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("fixed receiver mutation must fail"),
+        Err(errors) => errors,
+    };
+    assert!(errors.iter().any(|error| {
+        error.code == Some(sifr_diagnostics::DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION)
+    }));
 }
 
 #[test]
@@ -364,4 +409,87 @@ def invoke() -> None:
         panic!("instance-syntax static call should remain annotated");
     };
     assert_eq!(*receiver_convention, Some(ReceiverConvention::SharedBorrow));
+}
+
+#[test]
+fn nested_receiver_and_regular_mut_argument_share_checked_place_metadata() {
+    let source = r#"
+class Leaf:
+    value: int
+
+    def bump(self) -> None:
+        self.value += 1
+
+class Mid:
+    leaf: Leaf
+
+class Root:
+    mid: Mid
+
+def bump_leaf(mut leaf: Leaf) -> None:
+    leaf.bump()
+
+def mutate(mut root: Root) -> None:
+    root.mid.leaf.bump()
+    bump_leaf(root.mid.leaf)
+"#;
+    let module = lower(source);
+    let function = &module.functions[1];
+    let HirStmt::Expr {
+        expr:
+            HirExpr::MethodCall {
+                object,
+                receiver_target: Some(MutableReceiverTarget::Place(receiver_place)),
+                ..
+            },
+    } = &function.body[0]
+    else {
+        panic!("nested mutable receiver should carry a checked place");
+    };
+    let HirExpr::FieldAccess {
+        object: middle_object,
+        ..
+    } = object.as_ref()
+    else {
+        panic!("receiver should have a leaf projection");
+    };
+    let HirExpr::FieldAccess {
+        object: root_object,
+        ..
+    } = middle_object.as_ref()
+    else {
+        panic!("receiver should have a middle projection");
+    };
+    let HirExpr::Name {
+        binding_id: Some(root_id),
+        ..
+    } = root_object.as_ref()
+    else {
+        panic!("nested receiver should retain its root binding id");
+    };
+    assert_eq!(receiver_place.root, *root_id);
+    assert_eq!(receiver_place.projections.len(), 2);
+    let projection_fields = receiver_place
+        .projections
+        .iter()
+        .map(|projection| match projection {
+            PlaceProjection::Field(identity) => identity.field.as_str(),
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(projection_fields, ["mid", "leaf"]);
+
+    let HirStmt::Expr {
+        expr: HirExpr::Call {
+            mutable_arg_places, ..
+        },
+    } = &function.body[1]
+    else {
+        panic!("regular mutable call should carry checked argument places");
+    };
+    let Some(sifr_ir::MutableArgumentTarget::Place(argument_place)) =
+        mutable_arg_places[0].as_ref()
+    else {
+        panic!("mutable field argument should carry a checked place");
+    };
+    assert_eq!(argument_place, receiver_place);
 }

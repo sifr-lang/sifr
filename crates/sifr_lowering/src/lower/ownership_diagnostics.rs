@@ -217,6 +217,30 @@ pub(in crate::lower) fn immutable_parameter_mutation(
     );
 }
 
+pub(in crate::lower) fn same_call_place_conflict(
+    ctx: &mut LowerCtx,
+    place: &str,
+    range: TextRange,
+) {
+    ctx.error_with_code_at(
+        DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW,
+        format!("borrow conflict for {place} in the same call"),
+        range,
+    );
+}
+
+pub(in crate::lower) fn unsupported_mutable_receiver_place(
+    ctx: &mut LowerCtx,
+    place: &str,
+    range: TextRange,
+) {
+    ctx.error_with_code_at(
+        DiagnosticCode::OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE,
+        format!("mutable method receiver {place} is not a supported storage place"),
+        range,
+    );
+}
+
 pub(in crate::lower) fn immutable_parameter_reassignment(
     ctx: &mut LowerCtx,
     name: &str,

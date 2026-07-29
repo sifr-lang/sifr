@@ -102,9 +102,10 @@ impl RustEmitter {
                 continue;
             }
 
-            let mut handler_body = Vec::new();
             let handler_name = handler.name.as_deref().unwrap_or("_e");
-            if handler_name != "_" {
+            let handler_binding = if handler_name == "_" {
+                None
+            } else {
                 let cloned_error = RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Ident(err_ident.to_string())),
                     method: "clone".to_string(),
@@ -156,18 +157,23 @@ impl RustEmitter {
                             }
                         },
                     );
+                Some(binding_value)
+            };
+            let lowered_handler_body = match self.try_lower_stmt_block_for_ir(&handler.body) {
+                Ok(Some(lowered_handler_body)) => lowered_handler_body,
+                Ok(None) => return Ok(None),
+                Err(err) => return Err(err),
+            };
+            let mut handler_body = Vec::new();
+            if let Some(binding_value) = handler_binding {
                 handler_body.push(RustStmt::Let {
-                    mutable: false,
+                    mutable: self.protected_mutable_place_roots.contains(handler_name),
                     name: handler_name.to_string(),
                     ty: None,
                     value: binding_value,
                 });
             }
-            match self.try_lower_stmt_block_for_ir(&handler.body) {
-                Ok(Some(lowered_handler_body)) => handler_body.extend(lowered_handler_body),
-                Ok(None) => return Ok(None),
-                Err(err) => return Err(err),
-            }
+            handler_body.extend(lowered_handler_body);
 
             let cond_expr = match condition {
                 HandlerMatchCondition::Always => None,

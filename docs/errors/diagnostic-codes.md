@@ -135,6 +135,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-OWN-0011`](SIFR-OWN-0011.mdx) | Error | Non-sendable value is sent through a channel. |
 | [`SIFR-OWN-0012`](SIFR-OWN-0012.mdx) | Error | Non-share-safe value is wrapped in sync.Shared. |
 | [`SIFR-OWN-0013`](SIFR-OWN-0013.mdx) | Error | Non-IPC-serializable value is used as a typed IPC payload. |
+| [`SIFR-OWN-0014`](SIFR-OWN-0014.mdx) | Error | Unsupported mutable receiver place. |
 | [`SIFR-FLOW-0001`](SIFR-FLOW-0001.mdx) | Error | Break outside a loop. |
 | [`SIFR-FLOW-0002`](SIFR-FLOW-0002.mdx) | Error | Continue outside a loop. |
 | [`SIFR-FLOW-0003`](SIFR-FLOW-0003.mdx) | Error | Invalid nonlocal or nested-function flow. |
@@ -152,6 +153,8 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-PROTO-0002`](SIFR-PROTO-0002.mdx) | Error | Invalid iterator or reversible protocol signature. |
 | [`SIFR-PROTO-0003`](SIFR-PROTO-0003.mdx) | Error | Context-manager protocol is missing. |
 | [`SIFR-PROTO-0004`](SIFR-PROTO-0004.mdx) | Error | Hashable or comparable protocol is required. |
+| [`SIFR-PROTO-0005`](SIFR-PROTO-0005.mdx) | Error | Protocol receiver convention mismatch. |
+| [`SIFR-PROTO-0006`](SIFR-PROTO-0006.mdx) | Error | Fixed Rust trait receiver mutation is unsupported. |
 | [`SIFR-CLASS-0001`](SIFR-CLASS-0001.mdx) | Error | Class fields require an initializer or super initializer. |
 | [`SIFR-CLASS-0002`](SIFR-CLASS-0002.mdx) | Error | Required field declared after a defaulted field. |
 | [`SIFR-CLASS-0003`](SIFR-CLASS-0003.mdx) | Error | Duplicate enum or class value, or invalid variant. |

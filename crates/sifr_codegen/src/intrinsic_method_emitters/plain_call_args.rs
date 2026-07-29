@@ -10,6 +10,15 @@ impl RustEmitter {
         func: &str,
         args: &[HirExpr],
     ) -> Option<crate::RustExpr> {
+        self.try_lower_registry_plain_call_with_places(func, args, &[])
+    }
+
+    pub(crate) fn try_lower_registry_plain_call_with_places(
+        &mut self,
+        func: &str,
+        args: &[HirExpr],
+        mutable_arg_places: &[Option<sifr_ir::MutableArgumentTarget>],
+    ) -> Option<crate::RustExpr> {
         let param_info = self.resolve_plain_call_param_info(func, args.len())?;
         if param_info.len() != args.len() {
             return None;
@@ -21,7 +30,11 @@ impl RustEmitter {
             let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
             let effective_arg_ty = self.effective_registry_expr_ty(arg);
             let arg_is_option = crate::helpers::is_option_type(&effective_arg_ty);
-            let mut lowered_arg = self.try_lower_registry_expr_strict(arg)?;
+            let mut lowered_arg = self.lower_method_argument_place_for_registry(
+                arg,
+                *convention,
+                mutable_arg_places.get(idx).and_then(Option::as_ref),
+            )?;
             if let Type::AsyncCallable(params, _, _) = resolved_param {
                 lowered_arg = Self::send_async_callable_adapter(lowered_arg, params.len());
             }

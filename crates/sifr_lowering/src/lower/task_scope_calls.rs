@@ -141,6 +141,8 @@ fn lower_task_scope_spawn_from_object_impl(
             vec![coroutine]
         },
         receiver_convention: Some(receiver_convention),
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
         source: Some(source),
         ty: Type::Task(task_ok_ty, task_err_ty),
     })

@@ -1,0 +1,12 @@
+# expect-error[col=13]: SIFR-OWN-0014
+class Helper:
+    items: list[int]
+
+    def bump(self) -> None:
+        self.items.append(1)
+
+
+def mutate(value: Helper) -> None:
+    match value:
+        case captured:
+            captured.bump()

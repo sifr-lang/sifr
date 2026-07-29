@@ -19,6 +19,7 @@ fn test_error_type(name: &str) -> Type {
 fn collect_mutated_vars_marks_mutborrow_call_argument() {
     let stmts = vec![HirStmt::Expr {
         expr: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "touch".to_string(),
             args: vec![HirExpr::Name {
                 name: "items".to_string(),
@@ -69,6 +70,8 @@ fn collect_mutated_vars_marks_method_mutborrow_argument() {
                 ty: crate_ty.clone(),
             }],
             receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+            receiver_target: None,
+            mutable_arg_places: Vec::new(),
             source: None,
             ty: Type::None,
         },
@@ -120,6 +123,8 @@ fn collect_mutated_vars_marks_method_mutborrow_field_argument_root() {
                 ty: crate_ty.clone(),
             }],
             receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+            receiver_target: None,
+            mutable_arg_places: Vec::new(),
             source: None,
             ty: Type::None,
         },
@@ -157,6 +162,8 @@ fn collect_mutated_vars_marks_local_nested_function_mutborrow_call_argument() {
                 method: "append".to_string(),
                 args: vec![HirExpr::IntLiteral(1)],
                 receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+                receiver_target: None,
+                mutable_arg_places: Vec::new(),
                 source: None,
                 ty: Type::None,
             },
@@ -179,6 +186,7 @@ fn collect_mutated_vars_marks_local_nested_function_mutborrow_call_argument() {
         },
         HirStmt::Expr {
             expr: HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "touch_local".to_string(),
                 args: vec![HirExpr::Name {
                     name: "items".to_string(),
@@ -219,6 +227,7 @@ fn collect_mutated_vars_marks_iterator_next_argument() {
                 binding_id: None,
                 ty: iterator_ty,
             }],
+            mutable_arg_places: Vec::new(),
             ty: Type::Union(vec![Type::Int, Type::None]),
         },
     }];
@@ -231,6 +240,7 @@ fn collect_mutated_vars_marks_iterator_next_argument() {
 fn collect_mutated_vars_marks_anext_argument() {
     let stmts = vec![HirStmt::Expr {
         expr: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "anext".to_string(),
             args: vec![HirExpr::Name {
                 name: "agen".to_string(),
@@ -262,6 +272,7 @@ fn body_calls_function_ignores_nested_function_scope() {
         return_type: Type::Int,
         body: vec![HirStmt::Return {
             value: Some(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "target".to_string(),
                 args: vec![HirExpr::Name {
                     name: "n".to_string(),
@@ -404,6 +415,7 @@ fn collect_mutated_vars_handles_nested_exprs() {
         name: "x".to_string(),
         ty: Type::List(Box::new(Type::Int)),
         value: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "id".to_string(),
             args: vec![HirExpr::MethodCall {
                 object: Box::new(HirExpr::Name {
@@ -414,6 +426,8 @@ fn collect_mutated_vars_handles_nested_exprs() {
                 method: "append".to_string(),
                 args: vec![HirExpr::IntLiteral(1)],
                 receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+                receiver_target: None,
+                mutable_arg_places: Vec::new(),
                 source: None,
                 ty: Type::None,
             }],
@@ -505,6 +519,8 @@ fn collect_mutated_vars_marks_captured_outer_mutation_from_nested_function() {
                 method: "append".to_string(),
                 args: vec![HirExpr::IntLiteral(1)],
                 receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+                receiver_target: None,
+                mutable_arg_places: Vec::new(),
                 source: None,
                 ty: Type::None,
             },
@@ -545,6 +561,8 @@ fn collect_mutated_vars_marks_dict_setdefault_receiver() {
                 HirExpr::IntLiteral(1),
             ],
             receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+            receiver_target: None,
+            mutable_arg_places: Vec::new(),
             source: None,
             ty: Type::Int,
         },
@@ -569,6 +587,8 @@ fn collect_mutated_vars_marks_set_update_receiver() {
                 ty: Type::List(Box::new(Type::Int)),
             }],
             receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+            receiver_target: None,
+            mutable_arg_places: Vec::new(),
             source: None,
             ty: Type::None,
         },
@@ -610,6 +630,8 @@ fn collect_mutated_vars_marks_self_for_delegated_field_class_method_call() {
             method: "writerow".to_string(),
             args: vec![],
             receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+            receiver_target: None,
+            mutable_arg_places: Vec::new(),
             source: None,
             ty: Type::None,
         },
@@ -695,6 +717,7 @@ fn block_control_flow_effect_reports_always_exits_for_mixed_return_raise() {
             name: Some("e".to_string()),
             body: vec![HirStmt::Raise {
                 value: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "ValueError".to_string(),
                     args: vec![HirExpr::StringLiteral("bad".to_string())],
                     ty: Type::Unknown,
@@ -727,6 +750,7 @@ fn body_contains_return_ignores_unreachable_return() {
     let stmts = vec![
         HirStmt::Raise {
             value: HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "ValueError".to_string(),
                 args: vec![HirExpr::StringLiteral("bad".to_string())],
                 ty: Type::Unknown,
@@ -790,6 +814,7 @@ fn try_body_has_value_return_ignores_unreachable_value_return() {
     let stmts = vec![
         HirStmt::Raise {
             value: HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "ValueError".to_string(),
                 args: vec![HirExpr::StringLiteral("bad".to_string())],
                 ty: Type::Unknown,
@@ -800,88 +825,4 @@ fn try_body_has_value_return_ignores_unreachable_value_return() {
         },
     ];
     assert!(!try_body_has_value_return(&stmts));
-}
-
-#[test]
-fn collect_typevar_operator_requirements_detects_add_and_sub() {
-    let stmts = vec![
-        HirStmt::Expr {
-            expr: HirExpr::BinOp {
-                left: Box::new(HirExpr::Name {
-                    name: "a".to_string(),
-                    binding_id: None,
-                    ty: Type::TypeVar("T".to_string()),
-                }),
-                op: "+".to_string(),
-                right: Box::new(HirExpr::Name {
-                    name: "b".to_string(),
-                    binding_id: None,
-                    ty: Type::TypeVar("T".to_string()),
-                }),
-                ty: Type::TypeVar("T".to_string()),
-            },
-        },
-        HirStmt::Expr {
-            expr: HirExpr::BinOp {
-                left: Box::new(HirExpr::Name {
-                    name: "a".to_string(),
-                    binding_id: None,
-                    ty: Type::TypeVar("T".to_string()),
-                }),
-                op: "-".to_string(),
-                right: Box::new(HirExpr::Name {
-                    name: "b".to_string(),
-                    binding_id: None,
-                    ty: Type::TypeVar("T".to_string()),
-                }),
-                ty: Type::TypeVar("T".to_string()),
-            },
-        },
-    ];
-
-    let req = collect_typevar_operator_requirements(&stmts, "T");
-    assert!(req.needs_add);
-    assert!(req.needs_sub);
-}
-
-#[test]
-fn collect_typevar_operator_requirements_detects_equality() {
-    let stmts = vec![HirStmt::Expr {
-        expr: HirExpr::Compare {
-            left: Box::new(HirExpr::Name {
-                name: "a".to_string(),
-                binding_id: None,
-                ty: Type::TypeVar("T".to_string()),
-            }),
-            ops: vec!["==".to_string()],
-            comparators: vec![HirExpr::Name {
-                name: "b".to_string(),
-                binding_id: None,
-                ty: Type::TypeVar("T".to_string()),
-            }],
-            ty: Type::Bool,
-        },
-    }];
-
-    let req = collect_typevar_operator_requirements(&stmts, "T");
-    assert!(req.needs_partial_eq);
-}
-
-#[test]
-fn collect_let_declared_types_covers_nested_blocks() {
-    let stmts = vec![HirStmt::If {
-        condition: HirExpr::BoolLiteral(true),
-        then_body: vec![HirStmt::Let {
-            name: "x".to_string(),
-            ty: Type::Union(vec![Type::Int, Type::Str]),
-            value: HirExpr::IntLiteral(1),
-            is_mutable: true,
-        }],
-        elif_clauses: vec![],
-        else_body: None,
-    }];
-
-    let declared = collect_let_declared_types(&stmts);
-    assert_eq!(declared.len(), 1);
-    assert!(matches!(declared[0], Type::Union(_)));
 }

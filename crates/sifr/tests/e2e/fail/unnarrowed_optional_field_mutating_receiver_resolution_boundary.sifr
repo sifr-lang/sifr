@@ -1,0 +1,13 @@
+# expect-error[col=21]: SIFR-STDLIB-0001
+class Helper:
+    values: list[int]
+
+    def bump(self) -> None:
+        self.values.append(1)
+
+
+class Owner:
+    helper: Helper | None
+
+    def mutate(self) -> None:
+        self.helper.bump()

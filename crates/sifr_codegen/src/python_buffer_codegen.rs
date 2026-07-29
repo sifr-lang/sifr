@@ -120,15 +120,41 @@ pub(crate) fn lower_python_buffer_method(
     object: &HirExpr,
     method: &str,
     args: &[HirExpr],
+    places: crate::place_emitter::MethodCallPlaces<'_>,
     result_type: &Type,
 ) -> Option<RustExpr> {
     if !matches!(object.ty().resolve_alias(), Type::PythonBuffer(_)) {
         return None;
     }
+    let method_params = emitter.resolve_registry_method_params(object.ty(), method);
+    let mut lowered_args = Vec::with_capacity(args.len());
+    for (index, argument) in args.iter().enumerate() {
+        let convention = method_params
+            .as_ref()
+            .and_then(|params| params.get(index))
+            .map_or(
+                sifr_type_system::ParamConvention::default(),
+                |(_, convention)| *convention,
+            );
+        lowered_args.push(
+            emitter.lower_method_argument_place_for_registry(
+                argument,
+                convention,
+                places
+                    .mutable_arg_places
+                    .get(index)
+                    .and_then(Option::as_ref),
+            )?,
+        );
+    }
     let call = RustExpr::MethodCall {
-        receiver: Box::new(emitter.try_lower_registry_expr_strict(object)?),
+        receiver: Box::new(emitter.lower_method_receiver_place_for_registry(
+            object,
+            places.receiver_convention,
+            places.receiver_target,
+        )?),
         method: method.to_string(),
-        args: emitter.try_lower_registry_exprs_strict(args)?,
+        args: lowered_args,
     };
     let Type::Result(_, error_type) = result_type.resolve_alias() else {
         return Some(call);

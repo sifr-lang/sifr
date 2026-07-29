@@ -57,6 +57,7 @@ pub(in crate::lower) fn lower_zip_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
     Some(HirExpr::IteratorCall {
         op: HirIteratorOp::Zip,
         args,
+        mutable_arg_places: Vec::new(),
         ty: result_ty,
     })
 }
@@ -91,6 +92,7 @@ pub(in crate::lower) fn lower_any_all_call(
         }
     }
     Some(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: builtin_name.to_string(),
         args: vec![arg],
         ty: Type::Bool,
@@ -178,6 +180,7 @@ pub(in crate::lower) fn lower_map_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
     Some(HirExpr::IteratorCall {
         op: HirIteratorOp::Map,
         args: std::iter::once(func_arg).chain(iter_args).collect(),
+        mutable_arg_places: Vec::new(),
         ty: result_ty,
     })
 }
@@ -254,6 +257,7 @@ pub(in crate::lower) fn lower_filter_call(call: &ExprCall, ctx: &mut LowerCtx) -
     Some(HirExpr::IteratorCall {
         op: HirIteratorOp::Filter,
         args: vec![func_arg, iter_arg],
+        mutable_arg_places: Vec::new(),
         ty: Type::Iterator(Box::new(elem_ty)),
     })
 }

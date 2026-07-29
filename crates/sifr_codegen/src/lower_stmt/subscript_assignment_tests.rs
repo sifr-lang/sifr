@@ -159,6 +159,7 @@ fn does_not_lower_attribute_subscript_assign_with_non_leaf_index() {
         object: "self".to_string(),
         field: "items".to_string(),
         index: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "next_idx".to_string(),
             args: vec![],
             ty: Type::Int,
@@ -326,6 +327,7 @@ fn does_not_lower_subscript_assign_with_non_leaf_index() {
     let stmt = HirStmt::SubscriptAssign {
         object: "items".to_string(),
         index: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "next_idx".to_string(),
             args: vec![],
             ty: Type::Int,
@@ -628,6 +630,7 @@ fn does_not_lower_nested_subscript_assign_with_non_leaf_inner_index() {
         object: "matrix".to_string(),
         outer_index: HirExpr::IntLiteral(0),
         inner_index: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "inner_idx".to_string(),
             args: vec![],
             ty: Type::Int,

@@ -19,7 +19,7 @@ use super::{
 };
 use crate::error_refs::collect_referenced_builtin_error_classes;
 use crate::ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
-use crate::ir_optimize::remove_trivial_clones_in_items;
+use crate::ir_optimize::{remove_trivial_clones_in_items, remove_unneeded_mutability_in_items};
 use crate::ir_validate::validate_items;
 use crate::stdlib_filter::{
     absolutize_external_crate_paths, collect_and_strip_shared_prelude, dedup_rust_items,
@@ -625,6 +625,10 @@ pub fn generate_rust_with_stdlib_for_module(
         scope_async_main_cancellation(&mut assembled_body_items);
     }
     remove_trivial_clones_in_items(&mut assembled_body_items);
+    remove_unneeded_mutability_in_items(
+        &mut assembled_body_items,
+        &emitter.protected_mutable_place_roots,
+    );
     let has_async_main_entrypoint = annotate_async_main_entrypoint(&mut assembled_body_items);
     let uses_task_sleep = module_uses_task_sleep(module);
     let body_import_needs = collect_import_needs_from_items(&assembled_body_items);

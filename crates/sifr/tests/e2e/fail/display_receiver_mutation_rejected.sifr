@@ -1,0 +1,23 @@
+# expect-error[col=9]: SIFR-PROTO-0006
+class Counter:
+    values: list[int]
+
+    def __str__(self) -> str:
+        self.values.append(1)
+        return str(len(self.values))
+
+
+class Helper:
+    values: list[int]
+
+    def bump(self) -> None:
+        self.values.append(1)
+
+
+class DelegatingDisplay:
+    helper: Helper
+
+    # expect-error[col=9]: SIFR-PROTO-0006
+    def __str__(self) -> str:
+        self.helper.bump()
+        return "display"

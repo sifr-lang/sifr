@@ -143,6 +143,8 @@ impl RustEmitter {
             object,
             method,
             args,
+            receiver_target:
+                Some(sifr_ir::MutableReceiverTarget::SpecializedIndexedStorage(base_place)),
             ..
         } = expr
         else {
@@ -172,7 +174,7 @@ impl RustEmitter {
             return None;
         }
 
-        let lowered_object = self.try_lower_dict_indexed_list_mutation_object(index_object)?;
+        let lowered_object = self.emit_checked_place(index_object, base_place)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
         let lowered_arg = self.try_lower_registry_expr_strict(&args[0])?;
         let key_arg = Self::list_indexed_dict_lookup_key_arg(index, lowered_index);
@@ -404,6 +406,8 @@ impl RustEmitter {
             object,
             method,
             args,
+            receiver_target:
+                Some(sifr_ir::MutableReceiverTarget::SpecializedIndexedStorage(base_place)),
             ..
         } = expr
         else {
@@ -433,7 +437,7 @@ impl RustEmitter {
             return None;
         }
 
-        let lowered_object = self.try_lower_dict_indexed_list_mutation_object(index_object)?;
+        let lowered_object = self.emit_checked_place(index_object, base_place)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
         let key_arg = Self::list_indexed_dict_lookup_key_arg(index, lowered_index);
         let option_pop_expr = RustExpr::MethodCall {
@@ -735,27 +739,10 @@ impl RustEmitter {
         expr: &HirExpr,
     ) -> Option<RustExpr> {
         if let HirExpr::FieldAccess { object, field, .. } = expr {
-            let lowered_object = self.try_lower_registry_expr_strict(object)?;
-            return Some(RustExpr::Field {
-                expr: Box::new(lowered_object),
-                field: field.clone(),
-            });
+            let lowered_object = self.emit_storage_path(object)?;
+            return Some(self.lower_field_storage_access(object, field, lowered_object));
         }
-        let suppress_self_field_clone = matches!(expr, HirExpr::FieldAccess { .. })
-            && self.method_call_needs_field_clone_suppression(
-                expr,
-                Some(sifr_type_system::ReceiverConvention::MutableBorrow),
-            );
-        let suppression_prev = self.pending_self_field_clone_suppression;
-        if suppress_self_field_clone {
-            self.pending_self_field_clone_suppression += 1;
-        }
-        let lowered = self.try_lower_registry_expr_strict(expr);
-        if suppress_self_field_clone && self.pending_self_field_clone_suppression > suppression_prev
-        {
-            self.pending_self_field_clone_suppression -= 1;
-        }
-        lowered
+        self.try_lower_registry_expr_strict(expr)
     }
 }
 

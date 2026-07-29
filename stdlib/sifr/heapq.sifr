@@ -190,7 +190,8 @@ def _heapreplace_max[T: Comparable](mut heap: list[T], own item: T) -> T | None:
         return None
     top: T | None = heap[0]
     heap[0] = item
-    _sift_down_max(heap, 0, len(heap))
+    heap_len: int = len(heap)
+    _sift_down_max(heap, 0, heap_len)
     return top
 
 def _heappushpop_max[T: Comparable](mut heap: list[T], item: T) -> T | None:
@@ -235,7 +236,8 @@ def heapreplace[T: Comparable](mut heap: list[T], own item: T) -> T | None:
         return None
     top: T | None = heap[0]
     heap[0] = item
-    _sift_down(heap, 0, len(heap))
+    heap_len: int = len(heap)
+    _sift_down(heap, 0, heap_len)
     return top
 
 def heappushpop[T: Comparable](mut heap: list[T], item: T) -> T | None:

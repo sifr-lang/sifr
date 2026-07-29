@@ -2,6 +2,7 @@ class Crate:
     items: list[int]
 
     def merge(self, mut other: Crate) -> None:
+        self.items.append(5)
         other.items.append(7)
 
 
@@ -24,11 +25,14 @@ def main() -> None:
     inferred: Depot = Depot(Crate([1]), Crate([]))
     inferred.refill()
     assert inferred.stock.items == [1, 7]
+    assert inferred.helper.items == [5]
 
     explicit: Depot = Depot(Crate([2]), Crate([]))
     explicit.refill_explicit()
     assert explicit.stock.items == [2, 7]
+    assert explicit.helper.items == [5]
 
     forwarded: Depot = Depot(Crate([3]), Crate([]))
     relay(forwarded)
     assert forwarded.stock.items == [3, 7]
+    assert forwarded.helper.items == [5]

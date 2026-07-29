@@ -370,6 +370,7 @@ mod tests {
             condition: HirExpr::BoolLiteral(true),
             then_body: vec![HirStmt::Raise {
                 value: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "ValueError".to_string(),
                     args: vec![HirExpr::StringLiteral("bad".to_string())],
                     ty: Type::Unknown,
@@ -378,6 +379,7 @@ mod tests {
             elif_clauses: vec![],
             else_body: Some(vec![HirStmt::Raise {
                 value: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "ValueError".to_string(),
                     args: vec![HirExpr::StringLiteral("also bad".to_string())],
                     ty: Type::Unknown,
@@ -482,6 +484,7 @@ mod tests {
                     name: Some("e".to_string()),
                     body: vec![HirStmt::Raise {
                         value: HirExpr::Call {
+                            mutable_arg_places: Vec::new(),
                             func: "ValueError".to_string(),
                             args: vec![HirExpr::StringLiteral("bad".to_string())],
                             ty: Type::Unknown,
@@ -512,6 +515,7 @@ mod tests {
                     HirExpr::BoolLiteral(false),
                     vec![HirStmt::Raise {
                         value: HirExpr::Call {
+                            mutable_arg_places: Vec::new(),
                             func: "ValueError".to_string(),
                             args: vec![HirExpr::StringLiteral("bad".to_string())],
                             ty: Type::Unknown,
@@ -549,6 +553,7 @@ mod tests {
             vec![
                 HirStmt::Raise {
                     value: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "ValueError".to_string(),
                         args: vec![HirExpr::StringLiteral("x".to_string())],
                         ty: Type::Unknown,

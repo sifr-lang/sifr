@@ -1,0 +1,71 @@
+class Helper:
+    values: list[int]
+    count: int
+
+    def __init__(self):
+        self.values = []
+        self.count = 0
+        self.values.append(1)
+
+    def bump(self) -> None:
+        self.values.append(1)
+
+
+class Owner:
+    helper: Helper
+
+    def __init__(self):
+        self.helper = Helper()
+        self.helper.bump()
+        self.helper.count = 7
+        self.finish()
+
+    def finish(self) -> None:
+        self.helper.bump()
+
+    def total(self) -> int:
+        return len(self.helper.values) + self.helper.count
+
+
+class BaseOwner:
+    helper: Helper
+
+    def __init__(self, helper: Helper):
+        self.helper = helper
+
+
+class ChildOwner(BaseOwner):
+    def __init__(self):
+        super().__init__(Helper())
+        self.helper.bump()
+
+    def total(self) -> int:
+        return len(self.helper.values)
+
+
+class OrderedOwner:
+    values: list[int]
+    count: int
+
+    def __init__(self, flag: bool, initial: int):
+        self.values = []
+        self.count = initial
+        self.values.append(1)
+        n: int = 0
+        if flag:
+            self.values.append(2)
+            n = n + 1
+        assert n == 1
+        doubled: int = self.count * 2
+        assert doubled == initial * 2
+        self.count = n
+
+
+def main() -> None:
+    owner = Owner()
+    assert owner.total() == 10
+    child = ChildOwner()
+    assert child.total() == 2
+    ordered = OrderedOwner(True, 4)
+    assert ordered.values == [1, 2]
+    assert ordered.count == 1

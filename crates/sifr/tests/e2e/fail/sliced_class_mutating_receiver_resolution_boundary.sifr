@@ -1,0 +1,10 @@
+# expect-error[col=17]: SIFR-STDLIB-0001
+class Helper:
+    values: list[int]
+
+    def bump(self) -> None:
+        self.values.append(1)
+
+
+def mutate_slice(values: list[Helper]) -> None:
+    values[0:1].bump()

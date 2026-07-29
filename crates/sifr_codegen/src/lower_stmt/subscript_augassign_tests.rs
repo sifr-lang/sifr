@@ -104,6 +104,7 @@ fn does_not_lower_subscript_augassign_with_non_leaf_value() {
         index: HirExpr::IntLiteral(0),
         op: "+=".to_string(),
         value: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "next_value".to_string(),
             args: vec![],
             ty: Type::Int,

@@ -55,10 +55,14 @@ impl RustEmitter {
         func: &str,
         args: &[HirExpr],
         result_ty: Option<&Type>,
+        mutable_arg_places: &[Option<sifr_ir::MutableArgumentTarget>],
     ) -> Option<crate::RustExpr> {
-        if let Some(lowered) =
-            self.try_lower_registry_collection_builtin_call_expr(func, args, result_ty)
-        {
+        if let Some(lowered) = self.try_lower_registry_collection_builtin_call_expr(
+            func,
+            args,
+            result_ty,
+            mutable_arg_places,
+        ) {
             return Some(lowered);
         }
         if let Some(lowered) =
@@ -76,6 +80,7 @@ impl RustEmitter {
         func: &str,
         args: &[HirExpr],
         result_ty: Option<&Type>,
+        mutable_arg_places: &[Option<sifr_ir::MutableArgumentTarget>],
     ) -> Option<crate::RustExpr> {
         match func {
             name if crate::intrinsics::is_defaultdict_storage_alias(name) && args.is_empty() => {
@@ -168,7 +173,11 @@ impl RustEmitter {
                 }
             }
             "next" if args.len() == 1 => {
-                let lowered_arg = self.try_lower_registry_expr_strict(&args[0])?;
+                let lowered_arg = self.lower_method_argument_place_for_registry(
+                    &args[0],
+                    sifr_type_system::ParamConvention::mut_borrow(),
+                    mutable_arg_places.first().and_then(Option::as_ref),
+                )?;
                 match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
                     Type::Class { methods, .. } if registry_class_has_next(methods) => {
                         Some(RustExpr::MethodCall {
@@ -183,6 +192,18 @@ impl RustEmitter {
                         args: vec![],
                     }),
                 }
+            }
+            "anext" if args.len() == 1 => {
+                let lowered_arg = self.lower_method_argument_place_for_registry(
+                    &args[0],
+                    sifr_type_system::ParamConvention::mut_borrow(),
+                    mutable_arg_places.first().and_then(Option::as_ref),
+                )?;
+                Some(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_arg),
+                    method: "anext".to_string(),
+                    args: vec![],
+                })
             }
             "sum" if args.len() == 1 => {
                 let elem_ty =

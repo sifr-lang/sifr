@@ -8,7 +8,16 @@ implementation-readiness pass 7 returned `SATISFIED`. Item 1, canonical
 receiver metadata and inference, merged in
 [#3065](https://github.com/sifr-lang/sifr/pull/3065) after implementation
 review pass 2 returned `SATISFIED`. Item 2, checked place semantics and defect
-closure, remains.
+closure, is ready for its authoritative merge gate and PR after implementation
+review pass 5 returned `SATISFIED`; implementation review passes 1 through 4
+returned `NOT SATISFIED`. The remediation
+restores non-cloning shared field receivers, checks delegated fixed-trait
+mutation after receiver convergence, makes owned temporary proof exhaustive,
+rejects storage-selecting conditionals and re-materialized module constants,
+closes shared-receiver/mutable-argument overlap, restores mutable-borrow flow
+effects, applies the protected-root optimizer contract to production codegen,
+and migrates the LRU compatibility fixture to snapshot `self.head` before a
+mutable `self` call as required by same-call exclusivity.
 
 The defect predates M10 and was not introduced by the buffer implementation,
 but it violates Sifr's core guarantee: a program can compile and silently lose
@@ -385,7 +394,9 @@ All generic method-call emitters select their receiver path only from
 `HirExpr::MethodCall.receiver_convention`:
 
 - `MutableBorrow` uses the checked place emitter;
-- `SharedBorrow` keeps the ordinary expression/value path;
+- `SharedBorrow` uses a structural shared-receiver borrow path, preserving the
+  pre-existing non-cloning behavior of calls such as `self.items.len()`
+  without acquiring mutable-place authority;
 - `Owned` uses the existing consuming receiver path.
 
 For `MutableReceiverTarget::OwnedTemporary`, emit the already-proved owned
@@ -413,10 +424,11 @@ convention after `SIFR-PROTO-0006` validation. Delete the independent
 `body_contains_field_assign_codegen` and hard-coded immutable-self decisions at
 those sites.
 
-Shared receiver calls and standalone field reads retain the ordinary clone
-path. For example, a read-only `self.helper.peek()` may continue to call
-`peek()` on the ordinary value-path result, but the enclosing method must be
-emitted as `&self`, not `&mut self`.
+Shared receiver calls borrow their original receiver storage and standalone
+field-value reads retain the ordinary clone path. For example, a read-only
+`self.helper.peek()` calls `peek()` on `self.helper` without cloning the
+receiver, while `value = self.helper` remains an ordinary value read; the
+enclosing method is emitted as `&self`, not `&mut self`.
 
 ### 6. HIR flow and Rust local mutability
 
@@ -446,7 +458,8 @@ checked `MutableBorrow` place emission. Pass that protected-local set into
 demote a protected mutable-place root. The optimizer's current method-name
 mutation table is then limited to compiler-generated Rust patterns that lack
 HIR provenance and is exported from one module rather than duplicated. User
-class receiver mutability never depends on that string table.
+class receiver mutability never depends on that string table. Run the same pass
+in production and test-module assembly.
 
 ## Implementation shape
 
@@ -757,6 +770,29 @@ scripts/run_all_tests.sh
 
 CI is confirmatory; do not wait on CI instead of running the local gates.
 
+Current Item 2 validation evidence:
+
+- focused lowering, codegen, scope, optimizer, pass-fixture, and fail-fixture
+  checks pass;
+- full lowering tests pass (`889 passed`, `1 ignored`), full codegen tests pass
+  (`933 passed`), the E2E pass suite passes (`680/680`, report signature
+  `8871ba51135353a4`), and the E2E fail test
+  passes with the complete annotated fail corpus;
+- formatting, workspace clippy with warnings denied, HIR maintainability,
+  file-size, diagnostic-doc links, and diff checks pass;
+- the representative performance suite has an official isolated green run
+  (`8/8`) with `CARGO_BUILD_JOBS=1`;
+- merge-gate attempts pass every reached functional lane. One attempt passed
+  the representative performance lane and exposed only the LRU fixture's
+  now-migrated `self.head` overlap; the migrated fixture compiles, runs, and
+  passes the complete 12-case representative algorithmic suite;
+- subsequent unchanged merge-gate attempts are blocked only by fluctuating
+  local fixed-threshold performance medians. Interleaved measurements of this
+  tree and exact base `b3495318dc59a79c678fe874619f993fed5deb4b` are
+  indistinguishable (both approximately `1.29-1.35s` for the arithmetic
+  check), and the exact base also fails the same representative thresholds.
+  No budget, baseline, sample count, or waiver was changed.
+
 ## Acceptance criteria
 
 - Every accepted `MutableBorrow` receiver and `mut` argument is lowered through
@@ -852,3 +888,52 @@ CI is confirmatory; do not wait on CI instead of running the local gates.
   [`ad-hoc-class-field-mutating-receiver-place-semantics-item1-claude-opus-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item1-claude-opus-review-pass-2.md)
   returned `SATISFIED`; Item 1 merged in
   [#3065](https://github.com/sifr-lang/sifr/pull/3065).
+- Item 2 implementation review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-1.md)
+  returned `NOT SATISFIED`; remediation addresses shared-receiver clone
+  regressions, transitive fixed-trait mutation, conditional and chained owned
+  temporaries, full-gate evidence, operator protocol traversal, mutable borrow
+  flow effects, optimizer fallback scope, tracking state, and the retained
+  plain file-handle fixture.
+- Item 2 implementation review pass 2:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-2.md)
+  returned `NOT SATISFIED`; remediation closes shared-receiver/mutable-argument
+  overlap, rejects re-materialized module constants as mutable roots, accepts
+  fresh slice temporaries while explicitly rejecting walrus bindings, deletes
+  the final dead codegen receiver helper, documents guarded indexed-storage
+  behavior, restores production optimizer execution and compiler-generated
+  fallback coverage, and requires an uncontended green authoritative gate.
+- The fail-suite CFG panic-hook observation from review pass 2 is pre-existing:
+  the exact detached base `b3495318dc59a79c678fe874619f993fed5deb4b`
+  emits the same two `cfg.rs:300` incomplete-branch panics while its 537-fixture
+  fail lane exits successfully. Item 2 neither introduced nor widened that
+  masked internal error; it remains separate compiler-health debt.
+- Item 2 implementation review pass 3:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-3.md)
+  returned `NOT SATISFIED`; remediation makes constructor `self` a checked
+  fresh mutable root and materializes a synthetic post-initialization Rust
+  instance, ships the LRU migration through upstream corpus
+  [#40](https://github.com/sifr-lang/leetcode/pull/40), pins the
+  `append(len(...))` snapshot boundary and user guidance, adds string-literal
+  membership narrowing to the already-live plain-dict indexed-storage path,
+  and restores the full compiler-generated optimizer fallback union with
+  unprotected `write`/`append` coverage.
+- LRU corpus milestone review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-lru-corpus-pr-40-claude-opus-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-lru-corpus-pr-40-claude-opus-review-pass-1.md)
+  returned `SATISFIED`; the exact reviewed head merged in
+  [sifr-lang/leetcode#40](https://github.com/sifr-lang/leetcode/pull/40), and
+  this Item 2 tree records merged corpus pointer `7772857`.
+- Item 2 implementation review pass 4:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-4.md)
+  returned `NOT SATISFIED`; remediation replaces the constructor statement
+  partition with a source-order materialization boundary, evaluates field
+  initializers at their source positions, preserves dependencies and effects
+  across that boundary, structurally rewrites statement-carried `self` storage
+  roots as well as expression roots, and rejects receiver use before complete
+  own/inherited storage with check-time `SIFR-OWN-0014`.
+- Item 2 implementation review pass 5:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-5.md)
+  returned `SATISFIED`; both pass-4 blocking findings are closed, all claimed
+  validation evidence was independently reproduced, and no material
+  correctness, ownership, constructor-initialization, codegen, optimizer,
+  diagnostic, submodule, or test gap remains.

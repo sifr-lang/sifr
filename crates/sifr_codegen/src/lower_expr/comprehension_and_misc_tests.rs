@@ -159,6 +159,7 @@ pub(super) fn lowers_regular_super_call_with_self_receiver() {
 #[test]
 pub(super) fn does_not_lower_non_path_call_with_leaf_args() {
     let expr = HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "compute".to_string(),
         args: vec![
             HirExpr::IntLiteral(1),
@@ -177,6 +178,7 @@ pub(super) fn does_not_lower_non_path_call_with_leaf_args() {
 #[test]
 pub(super) fn does_not_lower_simple_path_call_with_leaf_args() {
     let expr = HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "pkg::helper".to_string(),
         args: vec![HirExpr::BoolLiteral(true)],
         ty: Type::Int,
@@ -188,6 +190,7 @@ pub(super) fn does_not_lower_simple_path_call_with_leaf_args() {
 #[test]
 pub(super) fn does_not_lower_special_builtin_call() {
     let expr = HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "print".to_string(),
         args: vec![HirExpr::StringLiteral("x".to_string())],
         ty: Type::None,
@@ -198,6 +201,7 @@ pub(super) fn does_not_lower_special_builtin_call() {
 #[test]
 pub(super) fn lowers_hash_builtin_call_with_leaf_arg() {
     let expr = HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "hash".to_string(),
         args: vec![HirExpr::Name {
             name: "item".to_string(),
@@ -219,6 +223,7 @@ pub(super) fn lowers_hash_builtin_call_with_leaf_arg() {
 #[test]
 pub(super) fn lowers_divmod_builtin_call_with_leaf_args() {
     let expr = HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "divmod".to_string(),
         args: vec![HirExpr::IntLiteral(17), HirExpr::IntLiteral(5)],
         ty: Type::Tuple(vec![Type::Int, Type::Int]),
@@ -229,6 +234,7 @@ pub(super) fn lowers_divmod_builtin_call_with_leaf_args() {
 #[test]
 pub(super) fn lowers_map_builtin_call_with_typed_lambda() {
     let expr = HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "map".to_string(),
         args: vec![
             HirExpr::Lambda {
@@ -278,6 +284,7 @@ pub(super) fn lowers_map_named_callable_with_optional_widening_closure() {
     };
     let optional_node_ty = Type::Union(vec![node_ty.clone(), Type::None]);
     let expr = HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "map".to_string(),
         args: vec![
             HirExpr::Name {
@@ -336,6 +343,7 @@ pub(super) fn lowers_map_named_callable_with_optional_widening_closure() {
 #[test]
 pub(super) fn does_not_lower_call_with_non_leaf_arg() {
     let expr = HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "compute".to_string(),
         args: vec![HirExpr::ListComp {
             expr: Box::new(HirExpr::Name {
@@ -370,6 +378,8 @@ pub(super) fn does_not_lower_method_call_on_any_with_leaf_args() {
         method: "work".to_string(),
         args: vec![HirExpr::IntLiteral(2)],
         receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
         source: None,
         ty: Type::Any,
     };
@@ -387,6 +397,8 @@ pub(super) fn does_not_lower_method_call_on_typed_object() {
         method: "append".to_string(),
         args: vec![HirExpr::IntLiteral(1)],
         receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
         source: None,
         ty: Type::None,
     };
@@ -404,6 +416,8 @@ pub(super) fn does_not_lower_len_method_call_on_any_object() {
         method: "len".to_string(),
         args: vec![],
         receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
         source: None,
         ty: Type::Int,
     };

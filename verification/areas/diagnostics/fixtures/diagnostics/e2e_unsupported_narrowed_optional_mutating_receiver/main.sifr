@@ -1,0 +1,13 @@
+# expect-error: SIFR-OWN-0014
+
+class Helper:
+    items: list[int]
+
+    def bump(self) -> None:
+        self.items.append(1)
+
+
+def mutate() -> None:
+    maybe: Helper | None = Helper([])
+    if maybe is not None:
+        maybe.bump()

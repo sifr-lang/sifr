@@ -793,6 +793,7 @@ mod tests {
     fn fallible_buffer_value(target_ty: Type) -> HirExpr {
         HirExpr::QuestionMark {
             expr: Box::new(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "make_buffer".to_string(),
                 args: Vec::new(),
                 ty: Type::Result(

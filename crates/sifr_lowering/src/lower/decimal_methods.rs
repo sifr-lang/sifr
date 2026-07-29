@@ -201,6 +201,7 @@ pub(in crate::lower) fn lower_decimal_constructor_call(
         }
     };
     Some(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "Decimal".to_string(),
         args: vec![arg],
         ty: result_ty,
@@ -269,6 +270,7 @@ pub(in crate::lower) fn lower_bigdecimal_constructor_call(
         }
     }
     Some(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "BigDecimal".to_string(),
         args: vec![arg],
         ty: Type::BigDecimal,

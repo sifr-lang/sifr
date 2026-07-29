@@ -168,16 +168,11 @@ impl RustEmitter {
         object: &HirExpr,
         index: &HirExpr,
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
-        let suppress_field_clone = matches!(object, HirExpr::FieldAccess { .. });
-        let suppression_prev = self.pending_self_field_clone_suppression;
-        if suppress_field_clone {
-            self.pending_self_field_clone_suppression += 1;
-        }
-        let lowered_object_result = self.lower_stmt_expr_for_ir(object);
-        if suppress_field_clone && self.pending_self_field_clone_suppression > suppression_prev {
-            self.pending_self_field_clone_suppression -= 1;
-        }
-        let lowered_object = lowered_object_result?;
+        let lowered_object = if matches!(object, HirExpr::FieldAccess { .. }) {
+            self.emit_storage_path(object)
+        } else {
+            self.lower_stmt_expr_for_ir(object)?
+        };
         let Some(lowered_object) = lowered_object else {
             return Ok(None);
         };

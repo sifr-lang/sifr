@@ -446,11 +446,60 @@ Sifr uses **borrow-by-default** semantics for function parameters. Move-type arg
   - `own x: list[int]` -> owned immutable -> `x: Vec<SifrInt>` under the integer-model amendment
   - `own mut x: list[int]` -> owned mutable -> `mut x: Vec<SifrInt>` under the integer-model amendment
   Scalar value-semantic types (`int`, fixed-width integers, `float`, `bool`) remain reusable after calls regardless of annotation; `mut` on those parameters only affects local rebinding/mutation semantics, not observable ownership transfer.
-- **Method receivers:** auto-borrow based on method body analysis:
-  - If the method only reads `self` fields: `&self`
-  - If the method mutates `self` fields: `&mut self`
-  - If the method consumes `self` (e.g., builder pattern): `self` (move)
-  - Self inference is unchanged by borrow-by-default (it already uses body analysis)
+- **Method receivers:** lowering owns one canonical `ReceiverConvention`
+  (`SharedBorrow`, `MutableBorrow`, or `Owned`) and stores it in method
+  signatures, `HirFunction`, and every resolved method call. User class
+  methods infer `SharedBorrow` or `MutableBorrow` to a fixed point across
+  delegation, fields, generics, protocols, and inheritance; declaration-first
+  foreign methods may explicitly use `Owned`. Codegen and flow analysis consume
+  this metadata and do not re-infer receiver mutability. Constructor `self` is
+  fresh mutable storage even though the Rust constructor is a static `new`
+  function. Constructor field values and self-independent statements are
+  evaluated in source order. At the first statement that needs `self`, codegen
+  materializes a mutable synthetic instance from the already-initialized
+  fields, structurally re-roots expression and statement storage names to that
+  instance, and emits every remaining statement in source order before
+  returning it. A constructor that reaches `self` before all declared fields
+  (or inherited storage through `super().__init__`) exist is rejected with
+  `SIFR-OWN-0014` during checking rather than leaking partial Rust
+  initialization.
+- **Mutable receiver and argument places:** lowering proves mutable storage as
+  a `BindingId` root plus nominal field projections. Stable owned locals,
+  mutable/`own mut` parameters, inferred mutable `self`, and supported
+  non-optional/non-recursive field paths are accepted. Indexes, slices,
+  optional/recursive projections, callable fields, loop/comprehension
+  elements, and match captures are rejected before codegen. Owned receiver
+  temporaries and owned temporaries passed to mutable arguments carry separate
+  explicit proofs. Conditional expressions qualify only when both result
+  branches are themselves proven owned rvalues; storage-selecting expressions
+  such as `a if flag else b` are not treated as temporaries. Slices produce
+  fresh owned values and may be mutated as temporaries; walrus expressions are
+  binding expressions, not temporary proofs, and are rejected as mutable
+  receivers. Module constants are also rejected as mutable roots because
+  codegen re-materializes their values on every access.
+- **Audited indexed-storage exception:** general mutable indexing remains
+  unsupported. The existing membership-guarded/narrowed `dict[K, list[V]]`
+  `bucket[key].append(...)` and zero-argument `bucket[key].pop()` lowering,
+  plus the typed `defaultdict` list/set aliases' indexed `append`/`add`, are
+  compiler-owned exceptions. Unguarded plain-dict indexing retains its
+  optional value type and is rejected by ordinary type checking. Matching
+  stable expression keys and literal string keys both retain their guard fact.
+  Lowering proves the dictionary base place and codegen accepts only the
+  dedicated indexed-storage target, so these paths cannot become a generic
+  mutable index fallback.
+- **Same-call exclusivity:** mutable receiver and `mut` argument places use one
+  prefix-overlap rule. Equal or ancestor/descendant places conflict with every
+  overlapping read, borrow, or move in the same call; sibling fields and
+  different binding identities remain disjoint.
+- **Checked place emission:** mutable receivers, mutable arguments, and
+  canonical iterator advancement emit directly from the proven root through
+  every field hop. This path never enters ordinary field-value cloning.
+  Shared receiver calls use a separate structural borrow path so an operation
+  such as `self.items.len()` does not clone the collection; standalone field
+  value reads retain ordinary clone semantics. The late Rust mutability
+  optimizer runs on production and test-module assembly and preserves roots
+  recorded by checked place emission. Its method-name fallback exists only for
+  compiler-synthesized IR locals without HIR place provenance.
 - **Closure captures (generics):** inferred from usage inside the closure body:
   - Read-only access: capture by `&T`
   - Mutation: capture by `&mut T`

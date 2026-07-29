@@ -1,0 +1,7 @@
+# expect-error[col=9]: SIFR-OWN-0014
+class Deferred:
+    value: int
+
+    def __init__(self, flag: bool):
+        if flag:
+            self.value = 1

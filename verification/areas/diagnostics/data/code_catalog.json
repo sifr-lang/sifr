@@ -1505,6 +1505,22 @@
       "suggestion_applicability": "none"
     },
     {
+      "code": "SIFR-OWN-0014",
+      "constant": "OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE",
+      "docs_link": "docs/errors/SIFR-OWN-0014.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/unsupported_narrowed_optional_mutating_receiver.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
       "code": "SIFR-PACKAGE-0001",
       "constant": "PACKAGE_MISSING_OR_INVALID_CARGO_METADATA",
       "docs_link": "docs/errors/SIFR-PACKAGE-0001.mdx",
@@ -2236,6 +2252,38 @@
         "compact"
       ],
       "representative_fixture": "crates/sifr/tests/e2e/fail/unhashable_dict_key.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PROTO-0005",
+      "constant": "PROTO_RECEIVER_CONVENTION_MISMATCH",
+      "docs_link": "docs/errors/SIFR-PROTO-0005.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/protocol_receiver_mutability_mismatch.sifr",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-PROTO-0006",
+      "constant": "PROTO_FIXED_RECEIVER_MUTATION",
+      "docs_link": "docs/errors/SIFR-PROTO-0006.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr/tests/e2e/fail/operator_receiver_mutation_rejected.sifr",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"

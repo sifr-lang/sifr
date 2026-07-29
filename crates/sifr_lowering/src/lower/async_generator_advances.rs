@@ -53,13 +53,32 @@ pub(in crate::lower) fn lower_anext_call(call: &ExprCall, ctx: &mut LowerCtx) ->
             begin_async_generator_advance(ctx, name, call.arguments.args[0].range());
         }
     }
+    let result_ty = Type::Awaitable(Box::new(Type::Result(
+        Box::new(Type::Union(vec![item_ty, Type::None])),
+        Box::new(err_ty),
+    )));
+    let signature = sifr_type_system::FunctionType {
+        receiver: None,
+        params: vec![(
+            "iterator".to_string(),
+            iterator.ty().clone(),
+            sifr_type_system::ParamConvention::mut_borrow(),
+        )],
+        return_type: Box::new(result_ty.clone()),
+    };
+    let mutable_arg_places = super::method_receiver_places::validate_regular_call_arguments(
+        std::slice::from_ref(&iterator),
+        &signature,
+        &[Some(call.arguments.args[0].range())],
+        call.range(),
+        "anext",
+        ctx,
+    );
     Some(HirExpr::Call {
+        mutable_arg_places,
         func: "anext".to_string(),
         args: vec![iterator],
-        ty: Type::Awaitable(Box::new(Type::Result(
-            Box::new(Type::Union(vec![item_ty, Type::None])),
-            Box::new(err_ty),
-        ))),
+        ty: result_ty,
     })
 }
 

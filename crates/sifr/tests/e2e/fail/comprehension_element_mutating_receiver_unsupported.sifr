@@ -1,0 +1,10 @@
+# expect-error[col=28]: SIFR-OWN-0014
+class Helper:
+    items: list[int]
+
+    def bump(self) -> None:
+        self.items.append(1)
+
+
+def mutate(values: list[Helper]) -> None:
+    ignored: list[None] = [value.bump() for value in values]

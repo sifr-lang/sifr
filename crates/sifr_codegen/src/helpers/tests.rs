@@ -310,6 +310,7 @@ fn body_calls_function_detects_calls_in_for_else() {
         body: vec![HirStmt::Pass],
         else_body: Some(vec![HirStmt::Expr {
             expr: HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "rec".to_string(),
                 args: vec![HirExpr::IntLiteral(1)],
                 ty: Type::Int,
@@ -334,6 +335,7 @@ fn body_calls_function_ignores_nested_function_scope() {
         return_type: Type::Int,
         body: vec![HirStmt::Return {
             value: Some(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "target".to_string(),
                 args: vec![HirExpr::Name {
                     name: "n".to_string(),
@@ -479,46 +481,6 @@ fn body_contains_return_ignores_nested_function_scope() {
 }
 
 #[test]
-fn body_contains_field_assign_detects_delegated_self_field_class_mutation() {
-    let writer_ty = Type::Class {
-        identity: None,
-        type_args: Vec::new(),
-        name: "writer".to_string(),
-        fields: vec![],
-        methods: vec![],
-        parent_class: None,
-    };
-    let holder_ty = Type::Class {
-        identity: None,
-        type_args: Vec::new(),
-        name: "DictWriter".to_string(),
-        fields: vec![("_writer".to_string(), writer_ty.clone())],
-        methods: vec![],
-        parent_class: None,
-    };
-    let stmts = vec![HirStmt::Expr {
-        expr: HirExpr::MethodCall {
-            object: Box::new(HirExpr::FieldAccess {
-                object: Box::new(HirExpr::Name {
-                    name: "self".to_string(),
-                    binding_id: None,
-                    ty: holder_ty,
-                }),
-                field: "_writer".to_string(),
-                ty: writer_ty,
-            }),
-            method: "writerow".to_string(),
-            args: vec![],
-            receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
-            source: None,
-            ty: Type::None,
-        },
-    }];
-
-    assert!(body_contains_field_assign_codegen(&stmts));
-}
-
-#[test]
 fn try_body_has_value_return_detects_loop_else_and_try_handler_returns() {
     let stmts = vec![HirStmt::TryExcept {
         body: vec![HirStmt::For {
@@ -567,6 +529,7 @@ fn module_uses_bigint_detects_try_handler_branches() {
                 name: "n".to_string(),
                 ty: Type::BigInt,
                 value: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "bigint".to_string(),
                     args: vec![HirExpr::IntLiteral(3)],
                     ty: Type::BigInt,

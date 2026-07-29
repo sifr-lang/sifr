@@ -203,6 +203,7 @@ fn lower_task_spawn_cpu_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLow
         worker_error_type("WorkerError", ctx)
     };
     TaskCallLowering::Lowered(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: result_func.to_string(),
         args: vec![worker],
         ty: Type::BlockingTask(Box::new(ok_ty), Box::new(task_error_ty)),
@@ -328,6 +329,7 @@ fn lower_task_spawn_blocking_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCa
     }
 
     TaskCallLowering::Lowered(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: result_func.to_string(),
         args: vec![worker],
         ty: Type::BlockingTask(Box::new(ok_ty), Box::new(err_ty)),
@@ -390,6 +392,7 @@ fn lower_task_gather_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLoweri
     let result_err_ty = err_ty.clone();
     mark_task_handle_names_moved(&handles, ctx);
     TaskCallLowering::Lowered(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "__sifr_task_gather".to_string(),
         args: vec![handles],
         ty: Type::Awaitable(Box::new(Type::TaskResult(
@@ -492,6 +495,7 @@ fn lower_task_select_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLoweri
     let first_result_ty = Type::TaskResult(first_ok_ty, first_err_ty);
     let second_result_ty = Type::TaskResult(second_ok_ty, second_err_ty);
     TaskCallLowering::Lowered(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "__sifr_task_select".to_string(),
         args: vec![first, second],
         ty: Type::Awaitable(Box::new(Type::Select2(
@@ -557,6 +561,7 @@ fn lower_task_race_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLowering
     let result_err_ty = err_ty.clone();
     mark_task_handle_names_moved(&handles, ctx);
     TaskCallLowering::Lowered(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "__sifr_task_race".to_string(),
         args: vec![handles],
         ty: Type::Awaitable(Box::new(Type::TaskResult(result_ok_ty, result_err_ty))),
@@ -603,6 +608,7 @@ fn lower_task_sleep_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLowerin
         return TaskCallLowering::Rejected;
     }
     TaskCallLowering::Lowered(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "__sifr_task_sleep".to_string(),
         args: vec![duration],
         ty: Type::Awaitable(Box::new(Type::None)),
@@ -677,6 +683,8 @@ fn lower_task_timeout_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLower
         method: "__sifr_timeout".to_string(),
         args: vec![duration],
         receiver_convention: Some(receiver_convention),
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
         source: Some(
             super::method_call_metadata::source_call_with_first_arg_as_receiver(
                 call,

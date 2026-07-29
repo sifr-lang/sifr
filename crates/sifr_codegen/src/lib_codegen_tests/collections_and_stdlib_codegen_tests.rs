@@ -20,15 +20,25 @@ class Store:
 
     def total(self, key: int) -> int:
         return len(self.items) + self.lookup.get(key, 0) + head(self.items)
+
+    def first(self) -> int | None:
+        return self.items[0]
+
+def borrowed_total(store: Store) -> int:
+    return len(store.items)
 "#,
     );
 
-    assert!(generated.contains("self.items.len() as i64"));
-    assert!(generated.contains("self.lookup.get(&key)"));
+    assert!(generated.contains("self.items.len() as i64"), "{generated}");
+    assert!(generated.contains("self.lookup.get(&key)"), "{generated}");
     assert!(generated.contains("head(&self.items)"));
     assert!(!generated.contains("self.items.clone().len()"));
     assert!(!generated.contains("self.lookup.clone().get"));
     assert!(!generated.contains("head(&self.items.clone())"));
+    assert!(generated.contains("let __sifr_index_list = &self.items"));
+    assert!(!generated.contains("&self.items.clone()"));
+    assert!(generated.contains("store.items.len() as i64"));
+    assert!(!generated.contains("store.items.clone().len()"));
 }
 
 #[test]
@@ -162,6 +172,8 @@ fn test_structured_stmt_path_lowers_option_call_truthiness_to_bool_condition() {
                 ty: Type::Int,
             }],
             receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+            receiver_target: None,
+            mutable_arg_places: Vec::new(),
             source: None,
             ty: Type::Union(vec![Type::Int, Type::None]),
         },
@@ -292,6 +304,7 @@ fn test_list_builtin_uses_owned_collection_for_unknown_set_with_list_hint() {
             return_type: Type::List(Box::new(Type::Str)),
             body: vec![HirStmt::Return {
                 value: Some(HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "list".to_string(),
                     args: vec![HirExpr::Name {
                         name: "result".to_string(),
@@ -327,6 +340,7 @@ fn test_list_builtin_uses_owned_collection_for_unknown_set_with_list_hint() {
 fn test_set_builtin_with_generator_lowers_to_collect_not_plain_set_call() {
     let generator = HirExpr::GeneratorExpr {
         expr: Box::new(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "str".to_string(),
             args: vec![HirExpr::Name {
                 name: "i".to_string(),
@@ -352,6 +366,7 @@ fn test_set_builtin_with_generator_lowers_to_collect_not_plain_set_call() {
             return_type: Type::Set(Box::new(Type::Str)),
             body: vec![HirStmt::Return {
                 value: Some(HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "set".to_string(),
                     args: vec![generator],
                     ty: Type::Set(Box::new(Type::Str)),

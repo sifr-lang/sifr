@@ -127,21 +127,20 @@ impl RustEmitter {
             return Ok(None);
         };
 
-        let suppress_self_field_clone = matches!(object, HirExpr::FieldAccess { object: inner, .. }
-            if matches!(inner.as_ref(), HirExpr::Name { name, .. } if name == "self"))
-            && self.pending_self_field_clone_suppression == 0;
-        if suppress_self_field_clone {
-            self.pending_self_field_clone_suppression += 1;
-        }
-
         let lowered = (|| -> Result<Option<crate::RustExpr>, crate::CodegenError> {
-            let lowered_object = if let HirExpr::FieldAccess {
-                object: inner,
-                field,
-                ty,
-            } = object
-            {
-                self.try_lower_structured_field_access_expr(inner, field, ty)?
+            let lowered_object = if matches!(object, HirExpr::FieldAccess { .. }) {
+                if let Some(path) = self.emit_shared_receiver_path(object) {
+                    Some(path)
+                } else if let HirExpr::FieldAccess {
+                    object: inner,
+                    field,
+                    ty,
+                } = object
+                {
+                    self.try_lower_structured_field_access_expr(inner, field, ty)?
+                } else {
+                    unreachable!("field access match is exhaustive")
+                }
             } else {
                 crate::try_lower_leaf_or_name_expr_result(object)?
             };
@@ -583,9 +582,6 @@ impl RustEmitter {
             }
         })();
 
-        if suppress_self_field_clone && self.pending_self_field_clone_suppression > 0 {
-            self.pending_self_field_clone_suppression -= 1;
-        }
         lowered
     }
 }

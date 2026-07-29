@@ -25,16 +25,28 @@ impl RustEmitter {
             return Ok(self.try_lower_registry_intrinsic_call_expr(*intrinsic, args, expr.ty()));
         }
         if let Some((func, args)) = call_expr_parts(expr) {
+            let mutable_arg_places = match expr {
+                HirExpr::Call {
+                    mutable_arg_places, ..
+                }
+                | HirExpr::IteratorCall {
+                    mutable_arg_places, ..
+                } => mutable_arg_places.as_slice(),
+                _ => &[],
+            };
             if func == "print" {
                 return self.lower_print_call_expr_for_ir(args);
             }
-            if let Some(lowered_builtin) =
-                self.try_lower_registry_builtin_call_expr(func, args, Some(expr.ty()))
-            {
+            if let Some(lowered_builtin) = self.try_lower_registry_builtin_call_expr(
+                func,
+                args,
+                Some(expr.ty()),
+                mutable_arg_places,
+            ) {
                 return Ok(Some(lowered_builtin));
             }
             if let Some(lowered_plain) =
-                self.try_lower_registry_plain_call_with_signature(func, args)
+                self.try_lower_registry_plain_call_with_places(func, args, mutable_arg_places)
             {
                 return Ok(Some(lowered_plain));
             }
@@ -62,8 +74,12 @@ impl RustEmitter {
                 }));
             }
             let mut lowered_args = Vec::with_capacity(args.len());
-            for arg in args {
-                let Some(lowered_arg) = self.lower_stmt_expr_for_ir(arg)? else {
+            for (index, arg) in args.iter().enumerate() {
+                let Some(lowered_arg) = self.lower_call_argument_for_stmt(
+                    arg,
+                    mutable_arg_places.get(index).and_then(Option::as_ref),
+                )?
+                else {
                     return Ok(None);
                 };
                 lowered_args.push(self.rewrite_stdlib_constant_idents_in_expr(lowered_arg));
@@ -96,26 +112,20 @@ impl RustEmitter {
                 method,
                 args,
                 receiver_convention,
+                receiver_target,
+                mutable_arg_places,
                 ..
-            } => {
-                let needs_self_field_clone_suppression =
-                    self.method_call_needs_field_clone_suppression(object, *receiver_convention);
-                let suppression_prev = self.pending_self_field_clone_suppression;
-                if needs_self_field_clone_suppression {
-                    self.pending_self_field_clone_suppression += 1;
-                }
-
-                let lowered =
-                    self.try_lower_registry_method_call_expr(object, method, args, expr.ty());
-
-                if needs_self_field_clone_suppression
-                    && self.pending_self_field_clone_suppression > suppression_prev
-                {
-                    self.pending_self_field_clone_suppression -= 1;
-                }
-
-                Ok(lowered)
-            }
+            } => Ok(self.try_lower_registry_method_call_expr(
+                object,
+                method,
+                args,
+                crate::place_emitter::MethodCallPlaces::new(
+                    *receiver_convention,
+                    receiver_target.as_ref(),
+                    mutable_arg_places,
+                ),
+                expr.ty(),
+            )),
             _ => Ok(None),
         }
     }

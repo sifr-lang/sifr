@@ -602,13 +602,25 @@ macro_rules! stmt_expr_literals_and_calls {
             ));
         }
         if let Some((func, args)) = call_expr_parts($expr) {
-            if let Some(lowered_builtin) =
-                $emitter.try_lower_registry_builtin_call_expr(func, args, Some($expr.ty()))
-            {
+            let mutable_arg_places = match $expr {
+                HirExpr::Call {
+                    mutable_arg_places, ..
+                }
+                | HirExpr::IteratorCall {
+                    mutable_arg_places, ..
+                } => mutable_arg_places.as_slice(),
+                _ => &[],
+            };
+            if let Some(lowered_builtin) = $emitter.try_lower_registry_builtin_call_expr(
+                func,
+                args,
+                Some($expr.ty()),
+                mutable_arg_places,
+            ) {
                 return Ok(Some(lowered_builtin));
             }
             if let Some(lowered_plain) =
-                $emitter.try_lower_registry_plain_call_with_signature(func, args)
+                $emitter.try_lower_registry_plain_call_with_places(func, args, mutable_arg_places)
             {
                 return Ok(Some(lowered_plain));
             }
@@ -692,8 +704,12 @@ macro_rules! stmt_expr_literals_and_calls {
                 }));
             }
             let mut lowered_args = Vec::with_capacity(args.len());
-            for arg in args {
-                let Some(mut lowered_arg) = $emitter.lower_stmt_expr_for_ir(arg)? else {
+            for (index, arg) in args.iter().enumerate() {
+                let Some(mut lowered_arg) = $emitter.lower_call_argument_for_stmt(
+                    arg,
+                    mutable_arg_places.get(index).and_then(Option::as_ref),
+                )?
+                else {
                     return Ok(None);
                 };
                 if matches!(func, "py_local_callback" | "py_threadsafe_callback")

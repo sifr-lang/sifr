@@ -305,7 +305,7 @@ fn collect_expr(expr: &HirExpr, path: &str, facts: &mut NameFacts) {
             "name": name,
             "ty": type_name(ty),
         })),
-        HirExpr::Call { func, args, ty } => {
+        HirExpr::Call { func, args, ty, .. } => {
             facts.calls.push(json!({
                 "kind": "Call",
                 "path": path,

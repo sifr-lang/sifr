@@ -11,6 +11,8 @@ macro_rules! stmt_expr_method_call {
             method,
             args,
             receiver_convention,
+            receiver_target,
+            mutable_arg_places,
             ..
         } = $expr
         {
@@ -18,6 +20,8 @@ macro_rules! stmt_expr_method_call {
                 object,
                 method,
                 args,
+                *receiver_convention,
+                receiver_target.as_ref(),
                 $expr.ty(),
             ) {
                 return Ok(Some(lowered));
@@ -38,7 +42,12 @@ macro_rules! stmt_expr_method_call {
                     Type::Str | Type::LiteralStr(_)
                 )
             {
-                let Some(lowered_object) = $emitter.lower_stmt_expr_for_ir(object)? else {
+                let Some(lowered_object) = $emitter.lower_method_receiver_place_for_stmt(
+                    object,
+                    *receiver_convention,
+                    receiver_target.as_ref(),
+                )?
+                else {
                     return Ok(None);
                 };
                 return Ok(Some($emitter.lower_string_len_with_cache(object, lowered_object)));
@@ -82,7 +91,13 @@ macro_rules! stmt_expr_method_call {
                     }
                 }
             }
-            if method == "append" && args.len() == 1 {
+            if method == "append"
+                && args.len() == 1
+                && matches!(
+                    receiver_target.as_ref(),
+                    Some(sifr_ir::MutableReceiverTarget::SpecializedIndexedStorage(_))
+                )
+            {
                 if let HirExpr::Index {
                     object: index_object,
                     index,
@@ -96,7 +111,16 @@ macro_rules! stmt_expr_method_call {
                             crate::resolve_alias_type_for_plain_call(value_ty.as_ref()),
                             Type::List(_)
                         ) {
-                            let Some(lowered_object) = $emitter.lower_stmt_expr_for_ir(index_object)?
+                            let Some(
+                                sifr_ir::MutableReceiverTarget::SpecializedIndexedStorage(
+                                    base_place,
+                                ),
+                            ) = receiver_target.as_ref()
+                            else {
+                                return Ok(None);
+                            };
+                            let Some(lowered_object) =
+                                $emitter.emit_checked_place(index_object, base_place)
                             else {
                                 return Ok(None);
                             };
@@ -136,25 +160,26 @@ macro_rules! stmt_expr_method_call {
                     }
                 }
             }
-            let needs_field_clone_suppression =
-                $emitter
-                    .method_call_needs_field_clone_suppression(object, *receiver_convention);
-            let suppression_prev = $emitter.pending_self_field_clone_suppression;
-            if needs_field_clone_suppression {
-                $emitter.pending_self_field_clone_suppression += 1;
-            }
-            let lowered_registry =
-                $emitter.try_lower_registry_method_call_expr(object, method, args, $expr.ty());
-            if needs_field_clone_suppression
-                && $emitter.pending_self_field_clone_suppression > suppression_prev
-            {
-                $emitter.pending_self_field_clone_suppression -= 1;
-            }
+            let lowered_registry = $emitter.try_lower_registry_method_call_expr(
+                object,
+                method,
+                args,
+                crate::place_emitter::MethodCallPlaces::new(
+                    *receiver_convention,
+                    receiver_target.as_ref(),
+                    mutable_arg_places,
+                ),
+                $expr.ty(),
+            );
             if let Some(lowered_registry) = lowered_registry {
                 return Ok(Some(lowered_registry));
             }
 
-            let Some(lowered_object) = $emitter.lower_stmt_expr_for_ir(object)? else {
+            let Some(lowered_object) = $emitter.lower_method_receiver_place_for_stmt(
+                object,
+                *receiver_convention,
+                receiver_target.as_ref(),
+            )? else {
                 return Ok(None);
             };
             let effective_object_ty = $emitter.effective_method_object_ty(object);
@@ -168,19 +193,11 @@ macro_rules! stmt_expr_method_call {
                     .map_or(sifr_type_system::ParamConvention::default(), |(_, convention)| {
                         *convention
                     });
-                let suppress =
-                    $emitter.method_mut_arg_needs_field_clone_suppression(arg, convention);
-                let suppression_prev = $emitter.pending_self_field_clone_suppression;
-                if suppress {
-                    $emitter.pending_self_field_clone_suppression += 1;
-                }
-                let lowered_arg = $emitter.lower_stmt_expr_for_ir(arg);
-                if suppress
-                    && $emitter.pending_self_field_clone_suppression > suppression_prev
-                {
-                    $emitter.pending_self_field_clone_suppression -= 1;
-                }
-                let Some(lowered_arg) = lowered_arg? else {
+                let Some(lowered_arg) = $emitter.lower_method_argument_place_for_stmt(
+                    arg,
+                    convention,
+                    mutable_arg_places.get(idx).and_then(Option::as_ref),
+                )? else {
                     return Ok(None);
                 };
                 lowered_args.push(lowered_arg);

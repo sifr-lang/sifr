@@ -1,0 +1,26 @@
+class Helper:
+    items: list[int]
+
+    def bump_and_count(self) -> int:
+        self.items.append(1)
+        return len(self.items)
+
+
+def main() -> None:
+    assert Helper([]).bump_and_count() == 1
+    popped: int | None = [3, 4].pop()
+    assert popped == 4
+    split_tail: str | None = "a,b,c".split(",").pop()
+    assert split_tail == "c"
+    copied_tail: int | None = [1, 2, 3].copy().pop()
+    assert copied_tail == 3
+    combined_tail: int | None = ([1] + [2]).pop()
+    assert combined_tail == 2
+    comprehension_tail: int | None = [value for value in [4, 5]].pop()
+    assert comprehension_tail == 5
+    values: list[int] = [6, 7, 8]
+    sliced_tail: int | None = values[1:].pop()
+    assert sliced_tail == 8
+    assert values == [6, 7, 8]
+    flag: bool = True
+    assert (Helper([]) if flag else Helper([])).bump_and_count() == 1

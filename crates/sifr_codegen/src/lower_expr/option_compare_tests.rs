@@ -412,6 +412,7 @@ pub(super) fn lowers_simple_chained_compare_variants() {
 pub(super) fn does_not_lower_option_is_none_compare_with_non_leaf_left() {
     let cmp = HirExpr::Compare {
         left: Box::new(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "maybe_x".to_string(),
             args: vec![],
             ty: Type::Union(vec![Type::Int, Type::None]),

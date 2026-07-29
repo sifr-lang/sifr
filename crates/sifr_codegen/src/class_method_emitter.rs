@@ -272,198 +272,251 @@ impl RustEmitter {
         class: &HirClass,
         uses_python_error_bridge: bool,
     ) -> Vec<RustStmt> {
-        let has_super = method.body.iter().any(|stmt| {
-            if let HirStmt::Expr { expr } = stmt {
-                matches!(expr, HirExpr::SuperCall { .. })
-            } else {
-                false
-            }
-        });
-
+        let inheritance_parent = method
+            .body
+            .iter()
+            .any(|stmt| {
+                matches!(
+                    stmt,
+                    HirStmt::Expr {
+                        expr: HirExpr::SuperCall { .. }
+                    }
+                )
+            })
+            .then_some(class.parent_class.as_ref())
+            .flatten();
         let mut body = Vec::new();
-        let inheritance_parent = if has_super {
-            class.parent_class.as_ref()
-        } else {
-            None
-        };
+        let mut field_inits = Vec::<(String, RustExpr)>::new();
+        let mut instance_materialized = false;
 
-        if let Some(parent_name) = inheritance_parent {
-            let parent_rust_type = class.parent_type.as_ref().map_or_else(
-                || sifr_type_system::source_class_rust_name(parent_name),
-                sifr_type_system::Type::rust_type,
-            );
-            let mut field_inits: Vec<(&str, &HirExpr)> = Vec::new();
+        for stmt in &method.body {
+            if instance_materialized {
+                let rewritten = Self::rewrite_constructor_self(stmt);
+                body.extend(self.lower_class_stmt_strict(
+                    &rewritten,
+                    "class constructor post-initialization statement lowering",
+                ));
+                continue;
+            }
 
-            for stmt in &method.body {
-                if let HirStmt::Expr {
-                    expr: HirExpr::SuperCall { args, .. },
-                } = stmt
-                {
-                    let parent_args = args
+            if let HirStmt::Expr {
+                expr: HirExpr::SuperCall { args, .. },
+            } = stmt
+            {
+                let Some(parent_name) = inheritance_parent else {
+                    continue;
+                };
+                let parent_rust_type = class.parent_type.as_ref().map_or_else(
+                    || sifr_type_system::source_class_rust_name(parent_name),
+                    sifr_type_system::Type::rust_type,
+                );
+                let parent_args = args
+                    .iter()
+                    .map(|arg| {
+                        self.lower_class_expr_strict(
+                            arg,
+                            "class constructor super-call arg lowering",
+                        )
+                    })
+                    .collect();
+                body.push(RustStmt::Let {
+                    mutable: false,
+                    name: "__sifr_parent".to_string(),
+                    ty: None,
+                    value: RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![parent_rust_type, "new".to_string()])),
+                        args: parent_args,
+                    },
+                });
+                continue;
+            }
+
+            if let HirStmt::FieldAssign {
+                object,
+                field,
+                value,
+                ..
+            } = stmt
+            {
+                let is_uninitialized_own_field = object == "self"
+                    && class.fields.iter().any(|(name, _)| name == field)
+                    && !field_inits.iter().any(|(name, _)| name == field)
+                    && !Self::constructor_body_references_self(&[HirStmt::Expr {
+                        expr: value.clone(),
+                    }]);
+                if is_uninitialized_own_field {
+                    let field_ty = class
+                        .fields
                         .iter()
-                        .map(|arg| {
-                            self.lower_class_expr_strict(
-                                arg,
-                                "class constructor super-call arg lowering",
-                            )
-                        })
-                        .collect();
+                        .find(|(name, _)| name == field)
+                        .map(|(_, ty)| ty);
+                    let temp_ty =
+                        field_ty.map(|ty| self.class_struct_field_rust_type(class, field, ty));
+                    let lowered_value = self.lower_constructor_field_value(class, field, value);
+                    let lowered_value = field_ty.map_or(lowered_value.clone(), |ty| {
+                        self.wrap_recursive_constructor_field_value(
+                            class,
+                            method,
+                            field,
+                            ty,
+                            value,
+                            lowered_value,
+                        )
+                    });
+                    let final_value = field_ty.map_or(lowered_value.clone(), |ty| {
+                        Self::box_constructor_callable_value(ty, lowered_value)
+                    });
+                    let temp_name = format!("__sifr_field_init_{}", field_inits.len());
                     body.push(RustStmt::Let {
                         mutable: false,
-                        name: "__sifr_parent".to_string(),
-                        ty: None,
-                        value: RustExpr::FnCall {
-                            func: Box::new(RustExpr::Path(vec![
-                                parent_rust_type.clone(),
-                                "new".to_string(),
-                            ])),
-                            args: parent_args,
-                        },
+                        name: temp_name.clone(),
+                        ty: temp_ty,
+                        value: final_value,
                     });
-                } else if let HirStmt::FieldAssign { field, value, .. } = stmt {
-                    field_inits.push((field, value));
-                } else {
-                    body.extend(self.lower_class_stmt_strict(
-                        stmt,
-                        "class constructor non-field statement lowering",
-                    ));
+                    field_inits.push((field.clone(), RustExpr::Ident(temp_name)));
+                    continue;
                 }
             }
 
-            let mut fields = Vec::new();
-            fields.push((
-                parent_name.to_lowercase(),
-                RustExpr::Ident("__sifr_parent".to_string()),
-            ));
-
-            for (field_name, value) in &field_inits {
-                let field_ty = class
-                    .fields
-                    .iter()
-                    .find(|(name, _)| name == field_name)
-                    .map(|(_, ty)| ty);
-                let lowered_value = self.lower_class_expr_strict(
-                    value,
-                    "class constructor field assignment value lowering",
+            if Self::constructor_body_references_self(std::slice::from_ref(stmt)) {
+                let fields = self.constructor_instance_fields(
+                    class,
+                    method,
+                    inheritance_parent,
+                    &field_inits,
+                    uses_python_error_bridge,
                 );
-                let lowered_value = field_ty.map_or(lowered_value.clone(), |ty| {
-                    self.wrap_recursive_constructor_field_value(
-                        class,
-                        method,
-                        field_name,
-                        ty,
-                        value,
-                        lowered_value,
-                    )
+                body.push(RustStmt::Let {
+                    mutable: true,
+                    name: "__sifr_self".to_string(),
+                    ty: None,
+                    value: RustExpr::StructInit {
+                        name: "Self".to_string(),
+                        fields,
+                    },
                 });
-                fields.push((
-                    (*field_name).to_string(),
-                    field_ty.map_or(lowered_value.clone(), |ty| {
-                        Self::box_constructor_callable_value(ty, lowered_value)
-                    }),
+                instance_materialized = true;
+                let rewritten = Self::rewrite_constructor_self(stmt);
+                body.extend(self.lower_class_stmt_strict(
+                    &rewritten,
+                    "class constructor post-initialization statement lowering",
                 ));
+                continue;
             }
 
-            Self::append_class_phantom_initializer(class, &mut fields);
+            body.extend(self.lower_class_stmt_strict(
+                stmt,
+                "class constructor pre-initialization statement lowering",
+            ));
+        }
 
-            if uses_python_error_bridge {
-                fields.push((
-                    "__sifr_python_error".to_string(),
-                    RustExpr::Literal(RustLiteral::None),
-                ));
-            }
-
+        if instance_materialized {
+            body.push(RustStmt::Return(Some(RustExpr::Ident(
+                "__sifr_self".to_string(),
+            ))));
+        } else {
+            let fields = self.constructor_instance_fields(
+                class,
+                method,
+                inheritance_parent,
+                &field_inits,
+                uses_python_error_bridge,
+            );
             body.push(RustStmt::Return(Some(RustExpr::StructInit {
                 name: "Self".to_string(),
                 fields,
             })));
-            return body;
         }
+        body
+    }
 
-        let mut field_inits: Vec<(&str, &HirExpr)> = Vec::new();
-        let mut other_stmts: Vec<&HirStmt> = Vec::new();
-        for stmt in &method.body {
-            if let HirStmt::FieldAssign { field, value, .. } = stmt {
-                field_inits.push((field, value));
-            } else {
-                other_stmts.push(stmt);
+    fn constructor_body_references_self(stmts: &[HirStmt]) -> bool {
+        let mut probe = stmts.to_vec();
+        let mut references_self = false;
+        sifr_ir::visit_hir_stmts_exprs_mut(&mut probe, &mut |expr| {
+            if matches!(expr, HirExpr::Name { name, .. } if name == "self") {
+                references_self = true;
             }
-        }
+        });
+        sifr_ir::visit_hir_stmts_storage_roots_mut(&mut probe, &mut |root| {
+            if root == "self" {
+                references_self = true;
+            }
+        });
+        references_self
+    }
 
-        for stmt in &other_stmts {
-            body.extend(
-                self.lower_class_stmt_strict(
-                    stmt,
-                    "class constructor non-field statement lowering",
-                ),
-            );
-        }
-
-        let mut fields = Vec::new();
-        for (field_name, value) in &field_inits {
-            let field_ty = class
-                .fields
-                .iter()
-                .find(|(name, _)| name == field_name)
-                .map(|(_, ty)| ty);
-            let lowered_value = if class.name == "deque" && *field_name == "_data" {
-                if let HirExpr::ListLiteral { elements, .. } = value {
-                    if elements.is_empty() {
-                        RustExpr::FnCall {
-                            func: Box::new(RustExpr::Path(vec![
-                                "VecDeque".to_string(),
-                                "new".to_string(),
-                            ])),
-                            args: vec![],
-                        }
-                    } else {
-                        RustExpr::FnCall {
-                            func: Box::new(RustExpr::Path(vec![
-                                "VecDeque".to_string(),
-                                "from".to_string(),
-                            ])),
-                            args: vec![self.lower_class_expr_strict(
-                                value,
-                                "deque constructor _data field value lowering",
-                            )],
-                        }
-                    }
-                } else {
-                    RustExpr::FnCall {
-                        func: Box::new(RustExpr::Path(vec![
-                            "VecDeque".to_string(),
-                            "from".to_string(),
-                        ])),
-                        args: vec![self.lower_class_expr_strict(
-                            value,
-                            "deque constructor _data field value lowering",
-                        )],
-                    }
+    fn rewrite_constructor_self(stmt: &HirStmt) -> HirStmt {
+        let mut rewritten = vec![stmt.clone()];
+        sifr_ir::visit_hir_stmts_exprs_mut(&mut rewritten, &mut |expr| {
+            if let HirExpr::Name { name, .. } = expr {
+                if name == "self" {
+                    *name = "__sifr_self".to_string();
                 }
-            } else {
-                self.lower_class_expr_strict(value, "class constructor field value lowering")
-            };
-            let lowered_value = field_ty.map_or(lowered_value.clone(), |ty| {
-                self.wrap_recursive_constructor_field_value(
-                    class,
-                    method,
-                    field_name,
-                    ty,
-                    value,
-                    lowered_value,
-                )
-            });
-            let final_value = field_ty.map_or(lowered_value.clone(), |ty| {
-                Self::box_constructor_callable_value(ty, lowered_value)
-            });
-            fields.push(((*field_name).to_string(), final_value));
-        }
-
-        for (field_name, field_ty) in &class.fields {
-            if field_inits.iter().any(|(name, _)| name == field_name) {
-                continue;
             }
-            if !method.params.iter().any(|param| &param.name == field_name) {
+        });
+        sifr_ir::visit_hir_stmts_storage_roots_mut(&mut rewritten, &mut |root| {
+            if root == "self" {
+                *root = "__sifr_self".to_string();
+            }
+        });
+        let mut rewritten = rewritten.into_iter();
+        match rewritten.next() {
+            Some(statement) => statement,
+            None => unreachable!("constructor statement rewrite preserves one statement"),
+        }
+    }
+
+    fn lower_constructor_field_value(
+        &mut self,
+        class: &HirClass,
+        field_name: &str,
+        value: &HirExpr,
+    ) -> RustExpr {
+        if class.name == "deque" && field_name == "_data" {
+            let constructor = if matches!(value, HirExpr::ListLiteral { elements, .. } if elements.is_empty())
+            {
+                "new"
+            } else {
+                "from"
+            };
+            let args = if constructor == "new" {
+                Vec::new()
+            } else {
+                vec![self
+                    .lower_class_expr_strict(value, "deque constructor _data field value lowering")]
+            };
+            return RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "VecDeque".to_string(),
+                    constructor.to_string(),
+                ])),
+                args,
+            };
+        }
+        self.lower_class_expr_strict(value, "class constructor field value lowering")
+    }
+
+    fn constructor_instance_fields(
+        &self,
+        class: &HirClass,
+        method: &HirFunction,
+        inheritance_parent: Option<&String>,
+        field_inits: &[(String, RustExpr)],
+        uses_python_error_bridge: bool,
+    ) -> Vec<(String, RustExpr)> {
+        let mut fields = Vec::new();
+        if let Some(parent_name) = inheritance_parent {
+            fields.push((
+                parent_name.to_lowercase(),
+                RustExpr::Ident("__sifr_parent".to_string()),
+            ));
+        }
+        fields.extend(field_inits.iter().cloned());
+        for (field_name, field_ty) in &class.fields {
+            if field_inits.iter().any(|(name, _)| name == field_name)
+                || !method.params.iter().any(|param| &param.name == field_name)
+            {
                 continue;
             }
             let value = if matches!(field_ty, Type::Callable(..) | Type::AsyncCallable(..)) {
@@ -484,21 +537,14 @@ impl RustEmitter {
             };
             fields.push((field_name.clone(), value));
         }
-
         Self::append_class_phantom_initializer(class, &mut fields);
-
         if uses_python_error_bridge {
             fields.push((
                 "__sifr_python_error".to_string(),
                 RustExpr::Literal(RustLiteral::None),
             ));
         }
-
-        body.push(RustStmt::Return(Some(RustExpr::StructInit {
-            name: "Self".to_string(),
-            fields,
-        })));
-        body
+        fields
     }
 
     fn box_constructor_callable_value(field_ty: &Type, value: RustExpr) -> RustExpr {

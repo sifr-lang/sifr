@@ -66,6 +66,8 @@ fn lower_scope_spawn_blocking(
         method: method.to_string(),
         args: vec![worker],
         receiver_convention: Some(receiver_convention),
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
         source: Some(super::method_call_metadata::source_method_call(call)),
         ty: Type::Task(Box::new(ok_ty), Box::new(err_ty)),
     })
@@ -107,6 +109,8 @@ fn lower_scope_spawn_cpu(object: HirExpr, call: &ExprCall, ctx: &mut LowerCtx) -
         method: method.to_string(),
         args: vec![worker],
         receiver_convention: Some(receiver_convention),
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
         source: Some(super::method_call_metadata::source_method_call(call)),
         ty: Type::Task(Box::new(ok_ty), Box::new(task_err_ty)),
     })
@@ -165,6 +169,8 @@ fn lower_scope_spawn_process(
         method: "__sifr_scope_spawn_process".to_string(),
         args: vec![command],
         receiver_convention: Some(receiver_convention),
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
         source: Some(super::method_call_metadata::source_method_call(call)),
         ty: Type::Result(
             Box::new(process_class_type("ProcessHandle", ctx)),

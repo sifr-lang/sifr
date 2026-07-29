@@ -110,6 +110,7 @@ pub(in crate::lower) fn lower_sum_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
         _ => elem_ty,
     };
     Some(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "sum".to_string(),
         args: vec![arg],
         ty: result_ty,
@@ -338,6 +339,7 @@ pub(in crate::lower) fn lower_sorted_call(call: &ExprCall, ctx: &mut LowerCtx) -
         args.push(reverse_arg);
     }
     Some(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "sorted".to_string(),
         args,
         ty: list_ty,

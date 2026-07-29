@@ -59,6 +59,7 @@ pub(in crate::lower) fn lower_task_join_set_constructor(
     let ok_ty = resolve_annotation_expr(&tuple.elts[0], ctx);
     let err_ty = resolve_annotation_expr(&tuple.elts[1], ctx);
     JoinSetConstructorLowering::Lowered(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "__sifr_join_set_new".to_string(),
         args: vec![],
         ty: Type::JoinSet(Box::new(ok_ty), Box::new(err_ty)),
@@ -184,6 +185,8 @@ fn lower_join_set_add(
         method: method.to_string(),
         args: vec![handle],
         receiver_convention: Some(receiver_convention),
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
         source: Some(super::method_call_metadata::source_method_call(call)),
         ty: join_item_id_type(),
     })
@@ -222,6 +225,8 @@ fn lower_join_set_spawn_blocking(
         method: "__sifr_spawn_blocking".to_string(),
         args: vec![worker],
         receiver_convention: Some(receiver_convention),
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
         source: Some(super::method_call_metadata::source_method_call(call)),
         ty: join_item_id_type(),
     })
@@ -282,6 +287,8 @@ fn lower_join_set_spawn_cpu(
         method: "__sifr_spawn_cpu".to_string(),
         args: vec![worker],
         receiver_convention: Some(receiver_convention),
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
         source: Some(super::method_call_metadata::source_method_call(call)),
         ty: join_item_id_type(),
     })
@@ -303,6 +310,8 @@ fn lower_join_set_terminal(
         method: method.to_string(),
         args: vec![],
         receiver_convention: Some(receiver_convention),
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
         source: Some(super::method_call_metadata::source_method_call(call)),
         ty,
     })

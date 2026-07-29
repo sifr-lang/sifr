@@ -18,6 +18,15 @@ pub(super) fn lower_module_bodies(
         .collect();
     generic_method_requirements::close_generic_method_requirements(ctx);
     super::method_receiver_analysis::infer_and_annotate_class_receivers(&mut classes, ctx);
+    for class in &mut classes {
+        for method in class
+            .methods
+            .iter_mut()
+            .chain(class.operator_impls.iter_mut().map(|(_, method)| method))
+        {
+            super::method_receiver_places::validate_function_method_places(method, ctx);
+        }
+    }
 
     let mut functions: Vec<HirFunction> = stmts
         .iter()
@@ -38,6 +47,7 @@ pub(super) fn lower_module_bodies(
         .collect();
     for function in &mut functions {
         super::method_receiver_analysis::annotate_and_verify_function_calls(function, ctx);
+        super::method_receiver_places::validate_function_method_places(function, ctx);
     }
     (functions, classes)
 }

@@ -22,7 +22,10 @@ pub use lowering_outcome::LoweringOutcome;
 pub use lowering_result::LoweringResult;
 pub use python_interop::*;
 pub use rust_interop::*;
-pub use type_visit::{transform_hir_function_types, visit_hir_function_exprs_mut};
+pub use type_visit::{
+    transform_hir_function_types, visit_hir_function_exprs_mut, visit_hir_stmts_exprs_mut,
+    visit_hir_stmts_storage_roots_mut,
+};
 
 #[cfg(test)]
 mod tests {
@@ -106,6 +109,8 @@ mod tests {
             method: "append".to_string(),
             args: vec![HirExpr::IntLiteral(1)],
             receiver_convention: Some(ReceiverConvention::MutableBorrow),
+            receiver_target: None,
+            mutable_arg_places: Vec::new(),
             source: Some(MethodCallSource {
                 call_range: range,
                 receiver_range: range,

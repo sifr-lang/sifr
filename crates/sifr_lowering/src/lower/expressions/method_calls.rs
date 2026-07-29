@@ -313,6 +313,8 @@ pub(in crate::lower) fn lower_method_call(
         method: method_name,
         args,
         receiver_convention: Some(receiver_convention),
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
         source: Some(MethodCallSource {
             call_range: call.range(),
             receiver_range: attr.value.range(),

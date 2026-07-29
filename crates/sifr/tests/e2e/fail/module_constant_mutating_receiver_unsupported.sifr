@@ -1,0 +1,16 @@
+# expect-error[col=5]: SIFR-OWN-0014
+# expect-error[col=5]: SIFR-OWN-0014
+class Helper:
+    items: list[int]
+
+    def bump(self) -> None:
+        self.items.append(1)
+
+
+GLOBAL_HELPER: Helper = Helper([])
+COUNTS: list[int] = []
+
+
+def mutate_globals() -> None:
+    GLOBAL_HELPER.bump()
+    COUNTS.append(1)

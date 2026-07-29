@@ -64,6 +64,7 @@ pub(in crate::lower) fn lower_abs_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
         ty
     };
     Some(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "abs".to_string(),
         args: vec![arg],
         ty,

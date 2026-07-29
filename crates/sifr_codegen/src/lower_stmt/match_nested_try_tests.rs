@@ -256,6 +256,7 @@ fn lowers_recursive_nested_function_without_captures_to_local_fn() {
             return_type: Type::Int,
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "inner".to_string(),
                     args: vec![],
                     ty: Type::Int,

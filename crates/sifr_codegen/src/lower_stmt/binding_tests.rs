@@ -451,6 +451,7 @@ fn does_not_lower_option_let_option_non_leaf_rhs_passthrough() {
         name: "x".to_string(),
         ty: option_ty.clone(),
         value: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "maybe_value".to_string(),
             args: vec![],
             ty: option_ty,
@@ -468,6 +469,7 @@ fn does_not_lower_option_let_non_leaf_rhs_to_some() {
         name: "x".to_string(),
         ty: option_ty,
         value: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "value".to_string(),
             args: vec![],
             ty: Type::Int,
@@ -540,6 +542,7 @@ fn does_not_lower_option_let_non_leaf_none_typed_rhs_to_none() {
         name: "x".to_string(),
         ty: option_ty,
         value: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "none_value".to_string(),
             args: vec![],
             ty: Type::None,

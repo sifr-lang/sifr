@@ -24,6 +24,7 @@ fn lowers_simple_raise_with_leaf_expr() {
 fn does_not_lower_raise_with_non_leaf_expr() {
     let stmt = HirStmt::Raise {
         value: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "err".to_string(),
             args: vec![],
             ty: Type::Int,
@@ -117,6 +118,7 @@ fn lowers_simple_assert_with_name_msg() {
 fn does_not_lower_assert_with_non_leaf_test() {
     let stmt = HirStmt::Assert {
         test: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "is_ok".to_string(),
             args: vec![],
             ty: Type::Bool,

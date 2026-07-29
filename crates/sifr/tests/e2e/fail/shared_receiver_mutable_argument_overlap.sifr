@@ -1,0 +1,19 @@
+class Crate:
+    items: list[int]
+
+    def observe(self, mut other: Crate) -> int:
+        other.items.append(1)
+        return len(self.items)
+
+
+class Owner:
+    stock: Crate
+
+    def conflict(self) -> None:
+        # expect-error[col=28]: SIFR-OWN-0002
+        self.stock.observe(self.stock)
+
+
+def conflict(mut crate: Crate) -> None:
+    # expect-error[col=19]: SIFR-OWN-0002
+    crate.observe(crate)

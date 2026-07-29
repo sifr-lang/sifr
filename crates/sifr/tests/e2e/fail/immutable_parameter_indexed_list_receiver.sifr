@@ -1,0 +1,4 @@
+def push(values: dict[str, list[int]], key: str) -> None:
+    if key in values:
+        # expect-error[col=9]: SIFR-OWN-0005
+        values[key].append(1)

@@ -215,6 +215,7 @@ pub(in crate::lower) fn lower_module_impl(
                             (
                                 index,
                                 HirExpr::Call {
+                                    mutable_arg_places: Vec::new(),
                                     func: "__sifr_python_omitted_argument".to_string(),
                                     args: Vec::new(),
                                     ty: ty.clone(),

@@ -63,6 +63,7 @@ fn middle_with_inner_returning_name(name: &str) -> HirFunction {
             },
             HirStmt::Return {
                 value: Some(HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "helper".to_string(),
                     args: vec![],
                     ty: Type::Int,
@@ -146,6 +147,7 @@ fn nested_helper_captures_outer_shadow_without_promoting_return_to_sifr_int() {
             },
             HirStmt::Return {
                 value: Some(HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "helper".to_string(),
                     args: vec![],
                     ty: Type::Int,
@@ -180,6 +182,7 @@ fn multilevel_nested_helper_captures_outer_shadow_without_promoting_return_to_si
             },
             HirStmt::Return {
                 value: Some(HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "middle".to_string(),
                     args: vec![],
                     ty: Type::Int,

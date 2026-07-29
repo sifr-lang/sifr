@@ -83,26 +83,7 @@ impl RustEmitter {
             } else {
                 field_name.clone()
             };
-            let ty = if self
-                .recursive_fields
-                .contains(&(class.name.clone(), field_name.clone()))
-            {
-                RustType::Named(
-                    self.recursive_field_rust_types
-                        .get(&(class.name.clone(), field_name.clone()))
-                        .cloned()
-                        .unwrap_or_else(|| field_ty.rust_type()),
-                )
-            } else if class.name == "deque" && field_name == "_data" {
-                self.collection_needs.needs_vecdeque = true;
-                if let Type::List(elem) = field_ty {
-                    RustType::Named(format!("VecDeque<{}>", self.rust_type_with_generics(elem)))
-                } else {
-                    RustType::Named(self.rust_struct_field_type_with_generics(field_ty))
-                }
-            } else {
-                RustType::Named(self.rust_struct_field_type_with_generics(field_ty))
-            };
+            let ty = self.class_struct_field_rust_type(class, field_name, field_ty);
             fields.push((name, ty));
         }
         if Self::class_needs_phantom_marker(class) {
@@ -128,6 +109,35 @@ impl RustEmitter {
             ));
         }
         fields
+    }
+
+    pub(crate) fn class_struct_field_rust_type(
+        &mut self,
+        class: &HirClass,
+        field_name: &str,
+        field_ty: &Type,
+    ) -> RustType {
+        if self
+            .recursive_fields
+            .contains(&(class.name.clone(), field_name.to_string()))
+        {
+            return RustType::Named(
+                self.recursive_field_rust_types
+                    .get(&(class.name.clone(), field_name.to_string()))
+                    .cloned()
+                    .unwrap_or_else(|| field_ty.rust_type()),
+            );
+        }
+        if class.name == "deque" && field_name == "_data" {
+            self.collection_needs.needs_vecdeque = true;
+            if let Type::List(elem) = field_ty {
+                return RustType::Named(format!(
+                    "VecDeque<{}>",
+                    self.rust_type_with_generics(elem)
+                ));
+            }
+        }
+        RustType::Named(self.rust_struct_field_type_with_generics(field_ty))
     }
 
     fn class_phantom_tuple(class: &HirClass) -> String {

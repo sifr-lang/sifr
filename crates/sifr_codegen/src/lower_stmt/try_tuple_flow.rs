@@ -53,6 +53,11 @@ pub(super) fn try_lower_simple_try_except_stmt(
         args: vec![RustExpr::Literal(RustLiteral::Unit)],
     })));
     let handler_name = handler.name.clone().unwrap_or_else(|| "_e".to_string());
+    let handler_pattern = if bindings.mutated_vars.contains(&handler_name) {
+        format!("Err(mut {handler_name})")
+    } else {
+        format!("Err({handler_name})")
+    };
 
     Some(vec![
         RustStmt::Let {
@@ -73,7 +78,7 @@ pub(super) fn try_lower_simple_try_except_stmt(
             },
         },
         RustStmt::IfLet {
-            pattern: format!("Err({handler_name})"),
+            pattern: handler_pattern,
             expr: RustExpr::Ident("__sifr_try_res".to_string()),
             then_body: lowered_handler_body,
             else_body: None,

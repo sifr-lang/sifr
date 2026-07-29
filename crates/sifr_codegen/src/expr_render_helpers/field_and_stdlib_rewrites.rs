@@ -6,69 +6,9 @@ use super::{
 use crate::helpers::needs_clone_for_type;
 use crate::RustEmitter;
 use sifr_ir::HirExpr;
-use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
+use sifr_type_system::Type;
 
 impl RustEmitter {
-    pub(crate) fn method_mut_arg_needs_field_clone_suppression(
-        &self,
-        arg: &HirExpr,
-        convention: ParamConvention,
-    ) -> bool {
-        convention.is_mut_borrow()
-            && matches!(arg, HirExpr::FieldAccess { .. })
-            && field_receiver_root_name(arg).is_some_and(|name| {
-                name == "self"
-                    || self.borrowed_params.contains(name)
-                    || self.mut_borrowed_params.contains(name)
-            })
-    }
-
-    pub(crate) fn method_call_needs_field_clone_suppression(
-        &self,
-        object: &HirExpr,
-        receiver_convention: Option<ReceiverConvention>,
-    ) -> bool {
-        let HirExpr::FieldAccess {
-            object: parent,
-            field,
-            ..
-        } = object
-        else {
-            return false;
-        };
-
-        let receiver_root_name = field_receiver_root_name(object);
-        if !matches!(
-            receiver_convention,
-            Some(ReceiverConvention::SharedBorrow | ReceiverConvention::MutableBorrow)
-        ) {
-            return false;
-        }
-
-        if matches!(
-            crate::resolve_alias_type_for_plain_call(object.ty()),
-            Type::Class { .. }
-        ) {
-            return true;
-        }
-
-        if receiver_root_name.is_some_and(|name| {
-            name == "self"
-                || self.borrowed_params.contains(name)
-                || self.mut_borrowed_params.contains(name)
-        }) {
-            return true;
-        }
-
-        let parent_class_name = match crate::resolve_alias_type_for_plain_call(parent.ty()) {
-            Type::Class { name, .. } => Some(name.clone()),
-            _ => None,
-        };
-
-        parent_class_name
-            .is_some_and(|class_name| self.recursive_fields.contains(&(class_name, field.clone())))
-    }
-
     pub(crate) fn lower_field_access_expr_with_lowered_object(
         &mut self,
         object: &HirExpr,
@@ -168,17 +108,7 @@ impl RustEmitter {
                 if self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name)
         );
 
-        let suppress_field_clone = if self.pending_self_field_clone_suppression > 0
-            && (is_self_access || is_recursive_field || is_borrowed_parameter)
-        {
-            self.pending_self_field_clone_suppression -= 1;
-            true
-        } else {
-            false
-        };
-        let needs_clone = (is_self_access || is_borrowed_parameter)
-            && needs_clone_for_type(ty)
-            && !suppress_field_clone;
+        let needs_clone = (is_self_access || is_borrowed_parameter) && needs_clone_for_type(ty);
 
         let lowered_base = if let Some(ref class_name) = class_name_for_parent {
             if let Some((parent_name, parent_field_names)) = self.parent_fields.get(class_name) {
@@ -203,9 +133,6 @@ impl RustEmitter {
         };
 
         if is_recursive_field {
-            if suppress_field_clone {
-                return lowered_field;
-            }
             if crate::helpers::is_option_type(ty) {
                 if self.recursive_option_field_can_move(object) {
                     let moved_field = crate::RustExpr::MethodCall {
@@ -267,14 +194,6 @@ impl RustEmitter {
         name != "self"
             && !self.borrowed_params.contains(name)
             && !self.mut_borrowed_params.contains(name)
-    }
-}
-
-fn field_receiver_root_name(expr: &HirExpr) -> Option<&str> {
-    match expr {
-        HirExpr::Name { name, .. } => Some(name),
-        HirExpr::FieldAccess { object, .. } => field_receiver_root_name(object),
-        _ => None,
     }
 }
 

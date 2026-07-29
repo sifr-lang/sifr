@@ -156,7 +156,7 @@ pub fn generate_rust_test(module: &HirModule) -> CodegenResult {
     file_items.extend(import_items);
     file_items.extend(emitted_items);
     remove_trivial_clones_in_items(&mut file_items);
-    remove_unneeded_mutability_in_items(&mut file_items);
+    remove_unneeded_mutability_in_items(&mut file_items, &emitter.protected_mutable_place_roots);
     let file_issues = validate_items(&file_items);
     assert!(
         file_issues.is_empty(),
