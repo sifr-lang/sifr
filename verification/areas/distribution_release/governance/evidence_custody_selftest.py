@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
@@ -13,9 +16,12 @@ from .evidence_custody import (
     validate_candidate_directory,
     validate_changed_path_set,
 )
+from .planner import stage_stable_support_claims, validate_staged_support_claims
 from .qualification_fixture import stable_claims
 from .qualification_rust_fixture import rust_candidate_result
 from .schema_contracts import qualification_index
+
+REPO_ROOT = Path(__file__).resolve().parents[4]
 
 
 def run_evidence_custody_mutations(
@@ -26,6 +32,7 @@ def run_evidence_custody_mutations(
     retained_digest: str,
 ) -> None:
     _test_changed_paths()
+    _test_stable_support_claim_staging()
     with tempfile.TemporaryDirectory() as directory:
         candidate_dir = Path(directory) / "0.1.0"
         candidate_dir.mkdir()
@@ -111,6 +118,99 @@ def run_evidence_custody_mutations(
             raise AssertionError("candidate report digest mismatch passed custody")
 
 
+def _test_stable_support_claim_staging() -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        source_root = root / "source"
+        source_path = (
+            source_root
+            / "verification/areas/rust_interop/data/stable_support_claims.json"
+        )
+        source_path.parent.mkdir(parents=True)
+        payload = stable_claims(variant="baseline")
+        source_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        output = root / "evidence/stable-support-claims.json"
+        stage_stable_support_claims(
+            source_root=source_root,
+            output_path=output,
+        )
+        if output.read_bytes() != canonical_json_bytes(payload):
+            raise AssertionError("stable support claims staging was not canonical")
+        cli_output = root / "evidence/cli-stable-support-claims.json"
+        cli = subprocess.run(
+            [
+                sys.executable,
+                str(REPO_ROOT / "scripts/distribution/release_governance.py"),
+                "stage-stable-support-claims",
+                "--source-root",
+                str(source_root),
+                "--out",
+                str(cli_output),
+            ],
+            cwd=REPO_ROOT,
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+        if cli.returncode != 0 or cli_output.read_bytes() != canonical_json_bytes(
+            payload
+        ):
+            raise AssertionError(
+                f"stable support claims CLI staging failed: {cli.stderr}"
+            )
+        try:
+            stage_stable_support_claims(
+                source_root=source_root,
+                output_path=output,
+            )
+        except GovernanceError:
+            pass
+        else:
+            raise AssertionError("stable support claims staging overwrote evidence")
+        output.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+        _require_governance_rejection(
+            lambda: validate_staged_support_claims(output, source_root=source_root),
+            "noncanonical staged stable support claims passed",
+        )
+        output.write_bytes(canonical_json_bytes(payload))
+        source_path.write_bytes(
+            canonical_json_bytes(stable_claims(variant="rust-claims"))
+        )
+        _require_governance_rejection(
+            lambda: validate_staged_support_claims(output, source_root=source_root),
+            "source-drifted stable support claims passed",
+        )
+        in_source = source_root / "candidate-claims.json"
+        _require_governance_rejection(
+            lambda: stage_stable_support_claims(
+                source_root=source_root,
+                output_path=in_source,
+            ),
+            "in-source stable support claims output passed",
+        )
+        source_path.unlink()
+        linked_source = root / "linked-source-claims.json"
+        linked_source.write_bytes(canonical_json_bytes(payload))
+        source_path.symlink_to(linked_source)
+        _require_governance_rejection(
+            lambda: stage_stable_support_claims(
+                source_root=source_root,
+                output_path=root / "evidence/symlink-source-claims.json",
+            ),
+            "symlinked source stable support claims passed",
+        )
+        _require_governance_rejection(
+            lambda: validate_staged_support_claims(
+                output,
+                source_root=source_root,
+            ),
+            "validator accepted symlinked source stable support claims",
+        )
+
+
 def _test_changed_paths() -> None:
     try:
         require_comparison_base("", base_ref="missing")
@@ -131,3 +231,11 @@ def _test_changed_paths() -> None:
         except GovernanceError:
             continue
         raise AssertionError(f"invalid evidence custody paths passed: {paths}")
+
+
+def _require_governance_rejection(action: Callable[[], Any], message: str) -> None:
+    try:
+        action()
+    except GovernanceError:
+        return
+    raise AssertionError(message)

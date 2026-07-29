@@ -213,6 +213,32 @@ python3 scripts/distribution/qualify_stable_documentation.py \
 
 Pass that exact report to the planner's `--documentation-report` argument.
 
+Stage the source commit's certified Rust support claims into canonical candidate
+custody bytes from the clean source checkout used for the release. The command
+validates the claims contract, refuses an in-checkout or existing output, and
+the planner later verifies source cleanliness and requires the staged bytes to
+equal the canonical representation of the exact source file:
+
+```bash
+python3 scripts/distribution/release_governance.py \
+  stage-stable-support-claims \
+  --source-root <clean-source-checkout> \
+  --out <release-work-dir>/stable-support-claims.json
+```
+
+The release-profile evidence writer similarly canonicalizes the exact
+Rust-interop result emitted by that release run before hashing it into
+`release-profile-report.json`. Candidate custody copies that same result file;
+a standalone Rust-suite rerun is not interchangeable evidence:
+
+```bash
+cp \
+  <clean-source-checkout>/target/verification/areas/rust-interop-release-results.json \
+  <release-work-dir>/rust-validation-report.json
+```
+
+Pass that copied result to the planner's `--rust-validation-report` argument.
+
 The final collector reads the current workflow run's artifact API, verifies
 source/run attribution, and writes canonical
 `qualification-artifact-index.json`. The index binds recursive submodules,
