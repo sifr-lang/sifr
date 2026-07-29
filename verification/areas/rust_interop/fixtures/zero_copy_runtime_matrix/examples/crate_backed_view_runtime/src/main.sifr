@@ -1,8 +1,7 @@
 # fixture: zero_copy_runtime_matrix
-# evidence: positive/crate_backed_view_lifecycle
-# evidence-status: passing
+# scenario-example: crate_backed_view_runtime
 # execution-kind: runtime-observed
-# expected-result: pass
+# expected-result: zero-copy-runtime-clean
 
 class ViewError(Error):
     message: str
@@ -24,7 +23,7 @@ def crate_backed_view_lifecycle(own data: bytes) -> Result[CrateBackedView, View
 @rust(bridge.zero_copy.release_observation, panic=trusted_no_panic)
 def release_observation() -> Result[str, ViewError]: ...
 
-def verify_crate_backed_view_lifecycle() -> Result[str, ViewError]:
+def verify_crate_backed_view_runtime() -> Result[str, ViewError]:
     try:
         view: CrateBackedView = crate_backed_view_lifecycle(b"sifr-zero-copy")
         summary: str = view.observe()
@@ -35,3 +34,10 @@ def verify_crate_backed_view_lifecycle() -> Result[str, ViewError]:
         return verified
     except ViewError as error:
         raise error
+
+def main() -> Result[None, ViewError]:
+    try:
+        print(verify_crate_backed_view_runtime())
+    except ViewError as error:
+        raise error
+    return None

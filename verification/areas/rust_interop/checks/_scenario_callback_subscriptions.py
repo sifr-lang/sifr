@@ -18,6 +18,23 @@ ScenarioValidator = Callable[
     int,
 ]
 
+CALLBACK_SUBSCRIPTION_SCENARIO_TOKENS = (
+    "ThreadsafeCallbackBridge",
+    "backpressure=bounded(2)",
+    "CallbackQueue::from_policy(callback.policy())",
+    "policy.backpressure",
+    "CallbackOverflow::Error",
+    "CallbackShutdown::Drain",
+    "WebSocketStream::from_raw_socket",
+    ".get_async_pubsub()",
+    "notify::recommended_watcher",
+    "std::thread::current().id() != owner_thread",
+    "OPERATION_TIMEOUT",
+    "impl Drop for Subscription",
+    "Rust bridge panicked",
+    "active=0;temp-removed=true",
+)
+
 
 def validate_callback_subscription_scenario(
     failures: list[str],

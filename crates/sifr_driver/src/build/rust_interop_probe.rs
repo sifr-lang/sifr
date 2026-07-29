@@ -35,6 +35,7 @@ pub(super) struct PendingRustBridgeProbe {
     pub(super) source_prefix: Option<String>,
     pub(super) signature: Option<RustBridgeSignatureContract>,
     pub(super) async_thread_affinity: AsyncThreadAffinity,
+    pub(super) zero_copy_obligations: (bool, bool),
     pub(super) sysroot_runtime_crate: PathBuf,
     pub(super) sysroot_vendor_dir: Option<PathBuf>,
 }
@@ -198,9 +199,11 @@ fn probe_source(probe: &PendingRustBridgeProbe) -> String {
         RustInteropDecoratorKind::Callback => {
             unreachable!("callback metadata is targetless and never enters probe planning")
         }
+        RustInteropDecoratorKind::ZeroCopy => {
+            zero_copy_type_probe_source(probe.zero_copy_obligations, &rust_path)
+        }
         RustInteropDecoratorKind::Function
         | RustInteropDecoratorKind::Async
-        | RustInteropDecoratorKind::ZeroCopy
         | RustInteropDecoratorKind::View => {
             if let Some(signature) = &probe.signature {
                 signature_probe_source(probe, signature, &rust_path)
@@ -215,6 +218,26 @@ fn probe_source(probe: &PendingRustBridgeProbe) -> String {
         return body;
     };
     prefixed_probe_source(prefix, &body)
+}
+
+pub(super) fn zero_copy_type_probe_source(obligations: (bool, bool), rust_path: &str) -> String {
+    let (requires_send, requires_sync) = obligations;
+    let mut out = format!("#![allow(dead_code)]\ntype __SifrView = {rust_path};\n");
+    if requires_send {
+        out.push_str("fn __sifr_assert_send<T: Send>() {}\n");
+    }
+    if requires_sync {
+        out.push_str("fn __sifr_assert_sync<T: Sync>() {}\n");
+    }
+    out.push_str("fn __sifr_probe() {\n");
+    if requires_send {
+        out.push_str("    __sifr_assert_send::<__SifrView>();\n");
+    }
+    if requires_sync {
+        out.push_str("    __sifr_assert_sync::<__SifrView>();\n");
+    }
+    out.push_str("}\n");
+    out
 }
 
 fn panic_mapper_probe_source(mapper: &super::rust_interop_panic_probe::PanicMapperProbe) -> String {

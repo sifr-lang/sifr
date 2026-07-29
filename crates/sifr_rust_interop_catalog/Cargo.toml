@@ -51,7 +51,7 @@ tower-http = { version = "=0.7.0", default-features = true, optional = true }
 tracing = { version = "=0.1.44", default-features = true, optional = true }
 tracing-subscriber = { version = "=0.3.23", default-features = true, features = ["env-filter"], optional = true }
 uuid = { version = "=1.23.1", default-features = true, optional = true }
-zerocopy = { version = "=0.8.48", default-features = true, optional = true }
+zerocopy = { version = "=0.8.48", default-features = true, features = ["derive"], optional = true }
 zstd = { version = "=0.13.3", default-features = true, optional = true }
 
 [package.metadata.sifr-rust-interop]

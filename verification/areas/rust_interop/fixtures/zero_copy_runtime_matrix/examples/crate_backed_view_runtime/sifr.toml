@@ -1,0 +1,23 @@
+# fixture: zero_copy_runtime_matrix
+# scenario-example: crate_backed_view_runtime
+
+[package]
+name = "crate-backed-view-runtime"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[rust]
+bridge-version = 1
+bridges = ["src/bridges"]
+direct-crate-bindings = true
+
+[trust]
+rust-no-panic = [
+  "bridge.zero_copy.close",
+  "bridge.zero_copy.create",
+  "bridge.zero_copy.observe",
+  "bridge.zero_copy.release_observation",
+]

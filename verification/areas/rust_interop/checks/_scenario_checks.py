@@ -13,10 +13,12 @@ from _scenario_async_reqwest import (
     validate_async_reqwest_scenario,
 )
 from _scenario_callback_subscriptions import (
+    CALLBACK_SUBSCRIPTION_SCENARIO_TOKENS,
     run_callback_subscription_self_test,
     validate_callback_subscription_scenario,
 )
 from _scenario_opaque_resources import (
+    OPAQUE_RESOURCE_SCENARIO_TOKENS,
     run_opaque_resource_self_test,
     validate_opaque_resource_scenario,
 )
@@ -24,6 +26,12 @@ from _scenario_source_checks import (
     read_scenario_text as _read_scenario_text,
     reject_generated_bridge_imports as _reject_generated_bridge_imports,
     validate_scenario_sifr_source as _validate_scenario_sifr_source,
+)
+from _scenario_zero_copy import (
+    ZERO_COPY_SCENARIO_TOKENS,
+    reject_unsafe_rust,
+    run_zero_copy_self_test,
+    validate_zero_copy_scenario,
 )
 
 REQUIRED_SCENARIO_EXAMPLES = {
@@ -68,22 +76,7 @@ REQUIRED_SCENARIO_EXAMPLES = {
     },
     "callback_subscription_ecosystem": {
         "subscription_lifecycle_runtime": {
-            "tokens": (
-                "ThreadsafeCallbackBridge",
-                "backpressure=bounded(2)",
-                "CallbackQueue::from_policy(callback.policy())",
-                "policy.backpressure",
-                "CallbackOverflow::Error",
-                "CallbackShutdown::Drain",
-                "WebSocketStream::from_raw_socket",
-                ".get_async_pubsub()",
-                "notify::recommended_watcher",
-                "std::thread::current().id() != owner_thread",
-                "OPERATION_TIMEOUT",
-                "impl Drop for Subscription",
-                "Rust bridge panicked",
-                "active=0;temp-removed=true",
-            ),
+            "tokens": CALLBACK_SUBSCRIPTION_SCENARIO_TOKENS,
         },
     },
     "cargo_locked_offline": {
@@ -98,30 +91,7 @@ REQUIRED_SCENARIO_EXAMPLES = {
     },
     "opaque_resource_matrix": {
         "resource_lifecycle_runtime": {
-            "tokens": (
-                "resource_contract",
-                "reqwest::Client",
-                ".no_proxy()",
-                "Connection::open",
-                "redis::Client",
-                "tokio_postgres::Config",
-                'TcpListener::bind(("127.0.0.1", 0))',
-                "OPERATION_TIMEOUT",
-                "ACTIVE_TASKS.load(Ordering::SeqCst) != 0",
-                "bridge.resources.aclose",
-                "bridge.resources.close_observation",
-                "bridge.resources.invalid_aliasing",
-                "close=async_close,\n    borrow=exclusive",
-                "impl Drop for TemporaryDatabase",
-                "impl Drop for TrackedTask",
-                "let activity = TaskActivity::new();",
-                ".set_skip_set_lib_name()",
-                "serve_redis_malformed",
-                "PostgreSQL early-close shutdown",
-                "catch_unwind_silently",
-                "PoisonOnPanic::new(",
-                "Rust bridge panicked",
-            ),
+            "tokens": OPAQUE_RESOURCE_SCENARIO_TOKENS,
         },
     },
     "panic_abort_profile": {
@@ -153,6 +123,11 @@ REQUIRED_SCENARIO_EXAMPLES = {
     "shared_bridge_crate": {
         "shared_hash_bridge": {
             "tokens": ("sifr_shared_hash_bridge", "digest_hex", "crate::__sifr_bridge"),
+        },
+    },
+    "zero_copy_runtime_matrix": {
+        "crate_backed_view_runtime": {
+            "tokens": ZERO_COPY_SCENARIO_TOKENS,
         },
     },
     "native_build_script": {
@@ -398,6 +373,13 @@ def run_self_test() -> tuple[int, str | None]:
     if callback_error is not None:
         return cases, callback_error
 
+    zero_copy_cases, zero_copy_error = run_zero_copy_self_test(
+        AREA_ROOT, validate_scenario_examples
+    )
+    cases += zero_copy_cases
+    if zero_copy_error is not None:
+        return cases, zero_copy_error
+
     return cases, None
 
 
@@ -439,6 +421,8 @@ def _validate_scenario_example_dir(
             failures.append(f"{fixture_id}: {raw_path} missing scenario token {token!r}")
     if fixture_id == "shared_bridge_crate":
         _reject_generated_bridge_imports(failures, fixture_id, raw_path, rust_sources)
+    if fixture_id == "zero_copy_runtime_matrix":
+        reject_unsafe_rust(failures, fixture_id, rust_sources, example_dir)
     for source in sifr_sources:
         text = source.read_text(encoding="utf-8")
         raw_source_path = source.relative_to(example_dir).as_posix()
@@ -565,6 +549,10 @@ def _validate_scenario_manifests(
         )
     elif fixture_id == "callback_subscription_ecosystem":
         validate_callback_subscription_scenario(
+            failures, fixture_id, raw_path, rust, dependencies, trust
+        )
+    elif fixture_id == "zero_copy_runtime_matrix":
+        validate_zero_copy_scenario(
             failures, fixture_id, raw_path, rust, dependencies, trust
         )
     elif fixture_id == "same_workspace_crate":

@@ -4,8 +4,7 @@
   "source_compatibility_matrix": "verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json",
   "public_document": "docs/rust-interop.mdx",
   "runtime_deferrals": [
-    "advanced_data_runtime_matrix",
-    "zero_copy_runtime_matrix"
+    "advanced_data_runtime_matrix"
   ],
   "claims": [
     {
@@ -163,6 +162,12 @@
       "category": "supported",
       "execution_kind": "contract-only",
       "capability": "core zero-copy views"
+    },
+    {
+      "id": "zero_copy_runtime_matrix",
+      "category": "supported-through-bridge",
+      "execution_kind": "runtime-observed",
+      "capability": "crate-backed zero-copy view lifecycle"
     },
     {
       "id": "arrow_record_batch",

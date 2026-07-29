@@ -79,9 +79,9 @@ The following table is validated against
 only public stable-claim inventory. Its execution scope is part of every claim.
 In particular, `zero_copy_bytes`, `zero_copy_view_matrix`,
 `arrow_record_batch`, `tensor_dlpack_bridge`, and `advanced_data_matrix` are
-contract-only. The remaining runtime-observed deferrals
-`advanced_data_runtime_matrix` and `zero_copy_runtime_matrix` are future-owned,
-planned, and unadvertised until their runtime evidence passes.
+contract-only. The remaining runtime-observed deferral,
+`advanced_data_runtime_matrix`, is future-owned, planned, and unadvertised
+until its runtime evidence passes.
 
 `bridge_type_matrix` is cargo-probed through generated package glue. Its
 certified bridge covers nested Serde/JSON values, display-mapped `thiserror`
@@ -161,6 +161,21 @@ calling that same nested handler again is an ownership error. This certifies
 only the exercised local protocol frames and package bridge, not general
 WebSocket, Redis, or filesystem event semantics.
 
+`zero_copy_runtime_matrix` executes generated package glue for `bytes`,
+`memmap2`, `bytemuck`, and `zerocopy`. The owned buffer received by the bridge
+is moved into `bytes::Bytes` without changing its allocation, and a sliced
+alias remains valid after the original Rust owner binding is dropped. The same package
+mutates an anonymous mapping only while it is exclusive, seals it read-only
+without changing its address, and observes pointer-identical `bytemuck` and
+`zerocopy` views. For opaque crate-backed returns, the compiler binds `view=`
+to the exact returned Rust handle type and directly probes its declared
+`Send` and `Sync` obligations. Contract-only generated-record views retain
+their metadata-specific validation. The compiler rejects mutable
+views from shared owners, rejects returned call-lifetime views, and rejects
+owner-lifetime views across async suspension. Consuming close drops the view
+and the scenario requires one release with zero active views. This claim is
+limited to the generated bridge and those exact crate-backed transitions.
+
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |
 | --- | --- | --- |
@@ -190,6 +205,7 @@ WebSocket, Redis, or filesystem event semantics.
 | `callback_subscription_ecosystem` | `supported-through-bridge` | `runtime-observed` |
 | `zero_copy_bytes` | `supported` | `contract-only` |
 | `zero_copy_view_matrix` | `supported` | `contract-only` |
+| `zero_copy_runtime_matrix` | `supported-through-bridge` | `runtime-observed` |
 | `arrow_record_batch` | `supported-through-bridge` | `contract-only` |
 | `tensor_dlpack_bridge` | `supported-through-bridge` | `contract-only` |
 | `advanced_data_matrix` | `supported-through-bridge` | `contract-only` |

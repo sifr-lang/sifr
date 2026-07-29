@@ -95,6 +95,13 @@ impl RustInteropResolver<'_> {
             source_prefix: Some(format!("use {dependency_name}::bridges as bridge;")),
             signature,
             async_thread_affinity,
+            zero_copy_obligations: self
+                .zero_copy_probe_obligations
+                .get(&super::target_resolution::canonical_sifr_target_path(
+                    declaration,
+                ))
+                .copied()
+                .unwrap_or((false, false)),
             sysroot_runtime_crate,
             sysroot_vendor_dir: sysroot_trust.map(|trust| trust.vendor_dir.clone()),
         });

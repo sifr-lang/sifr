@@ -150,7 +150,7 @@ normative and must not be broadened.
 | `certification_4` | merged | [PR #3036](https://github.com/sifr-lang/sifr/pull/3036); async reqwest loopback, runtime reuse, cancellation/drop, timeout cleanup, and hidden blocking rejection |
 | `certification_5` | merged | [PR #3042](https://github.com/sifr-lang/sifr/pull/3042); opaque resource lifecycle matrix with HTTP/Redis/PostgreSQL loopbacks and a temporary SQLite database |
 | `certification_6` | merged | [PR #3046](https://github.com/sifr-lang/sifr/pull/3046); retained callback subscription lifecycle and capture contract |
-| `certification_7` | in progress | zero-copy runtime matrix starts after `certification_6` |
+| `certification_7` | in review | [PR #3053](https://github.com/sifr-lang/sifr/pull/3053); crate-backed zero-copy lifecycle and compiler rejection contract |
 | `certification_8` | blocked | starts after `certification_7` merges |
 | `certification_9` | blocked | starts after `certification_8` merges |
 | `certification_10` | blocked | starts after `certification_9` merges |
@@ -779,6 +779,130 @@ Focused implementation evidence:
   verified the exact [PR #3046](https://github.com/sifr-lang/sifr/pull/3046)
   head, the authoritative create-PR report, all mandatory and focused
   evidence, and the complete inventory, and reported `SATISFIED`.
+
+#### certification_7: Crate-Backed Zero-Copy Runtime
+
+Implementation checklist:
+
+- [x] Bind opaque crate-backed `@rust.zero_copy(view=...)` to the exact Rust
+  handle type carried by the function return, preserve contract-only generated
+  record views, and reject annotation/return mismatches with
+  `SIFR-RUST-ZC-0001`.
+- [x] Carry the paired `@rust.view(...)` Send/Sync obligations onto the direct
+  zero-copy type probe, treat `view=` as a type rather than a value, and map
+  failed obligations to the zero-copy diagnostic family.
+- [x] Add a locked/offline `crate_backed_view_runtime` generated package using
+  exact root-lock versions of `bytes`, `memmap2`, `bytemuck`, and `zerocopy`
+  with only safe Rust.
+- [x] Observe moved-allocation identity for the owned buffer received by the
+  bridge and retained owner lifetime for `bytes::Bytes`, exclusive mutation
+  followed by read-only sealing for
+  `memmap2`, pointer-identical `bytemuck` and `zerocopy` views, and consuming
+  release with exactly one drop and zero active views.
+- [x] Reject mutable views from shared owners, returned call-lifetime escape,
+  and owner-lifetime async suspension before Cargo; independently mutate the
+  package view to non-Send/non-Sync and require the direct probe to reject it.
+- [x] Bind both evidence directions to distinct mandatory generated-build
+  tests, promote only `zero_copy_runtime_matrix`, and update structured
+  claims, public/internal docs, provenance, counts, and validator self-tests.
+- [ ] Run focused and authoritative local gates, Opus review rounds to
+  satisfaction, merge the PR, and unblock only `certification_8`.
+
+Post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 60 passing and 12 planned evidence directions;
+- categories: 18 `supported`, 11 `supported-through-bridge`, 1
+  `unsupported-by-design`, and 6 `future-owned-by-separate-phase`;
+- execution kinds remain 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+- 60 package examples and 17 scenario examples; and
+- 30 structured stable claims.
+
+Focused implementation evidence:
+
+- [Opus review round 1](../../reviews/active/rust-interop-certification-7-review-round-1.md)
+  independently passed the mandatory packages, the full Rust-interop area,
+  Clippy, formatting, and maintainability checks, then found six actionable
+  gaps. The remediation replaces substring matching with exact Ok-slot opaque
+  handle identity and prefix/container regressions, classifies view-trait
+  failures without renderer-dependent raw rustc leakage, unit-tests all four
+  Send/Sync probe forms, freezes `zerocopy[derive]` across both zero-copy rows
+  and the catalog, reinterprets a mutated sealed mmap through bytemuck and
+  zerocopy, expands scenario mutations, and decomposes scenario/probe tests so
+  all maintained files remain below the 900-line cap.
+- [Opus review round 2](../../reviews/active/rust-interop-certification-7-review-round-2.md)
+  confirmed every round-1 finding closed and all focused gates green, then
+  found one diagnostic-ordering regression and two robustness gaps. The
+  follow-up preserves the bridge-type diagnostic for propagated unsupported
+  Result slots, asserts the actual Send/Sync probe invocations, and moves
+  callback/resource token inventories into their scenario-owned modules to
+  restore durable file-size headroom.
+- [Opus review round 3](../../reviews/active/rust-interop-certification-7-review-round-3.md)
+  confirmed all earlier findings closed, then exposed full-driver regressions
+  from applying opaque-handle identity to contract-only generated records, a
+  new Clippy violation, and duplicated canonical target rendering. The
+  follow-up scopes exact identity to opaque crate-backed handles while
+  preserving generated-record metadata validation, reuses codegen's canonical
+  handle renderer, adds a generated-record regression, and uses the
+  Clippy-approved diagnostic note branch.
+- [Opus review round 4](../../reviews/active/rust-interop-certification-7-review-round-4.md)
+  reproduced the full driver and area gates and confirmed all earlier findings
+  closed, then found two supported positive fixture sources still returned
+  `bytes` instead of their declared opaque views and that the driver locally
+  parsed codegen's generated bridge paths. The follow-up makes the manifest-
+  bound tests lower and validate those exact checked-in fixtures, gives both
+  fixtures opaque handle returns, and moves canonical/legacy generated-path
+  recognition and its malformed-path regressions into codegen.
+- [Opus review round 5](../../reviews/active/rust-interop-certification-7-review-round-5.md)
+  confirmed the positive fixture and shared codegen-policy fixes, then found
+  both contract-only negative provenance tests still used synthetic sources;
+  the bytes fixture also omitted the copy-fallback contract it advertised.
+  The follow-up gives that fixture a complete paired opaque view with explicit
+  `copy_fallback=True` and makes both manifest-bound tests lower and validate
+  their exact checked-in negative sources.
+- [Opus review round 6](../../reviews/active/rust-interop-certification-7-review-round-6.md)
+  confirmed direct provenance for all four contract-only directions and every
+  earlier remediation, then found the copy-fallback test could not distinguish
+  that key from any other unsupported key. The follow-up includes the exact
+  rejected key in zero-copy and view diagnostics and pins the `copy_fallback`
+  and legacy `mutable` assertions to their source tokens.
+- [Opus review round 7](../../reviews/active/rust-interop-certification-7-review-round-7.md)
+  independently reproduced the full driver, all three mandatory generated
+  builds, Clippy, the Rust-interop area, guardrails, counts, and safe-Rust
+  audit; confirmed every round-1 through round-6 remediation and unrelated-
+  path preservation; and reported `SATISFIED` with no actionable finding.
+- [Integrated-head Opus review round 8](../../reviews/active/rust-interop-certification-7-review-round-8.md)
+  verified the current-main merge changed no Rust or Rust-interop file, the
+  authoritative create-PR failure's three transfer-inventory anchors now match
+  the exact probe reads and both transfer gates pass, all earlier findings
+  remain closed, and the exact head is `SATISFIED`.
+- [Integrated-head Opus review round 9](../../reviews/active/rust-interop-certification-7-review-round-9.md)
+  confirmed the implementation remained sound after the next Phase 40
+  integration, then found one low-severity import-order/spacing regression and
+  required fresh exact-head lane evidence before closure. The follow-up
+  restores the scenario-check module boundary and discards every stale lane
+  report after the shared target was cleaned.
+- [Integrated-head Opus review round 10](../../reviews/active/rust-interop-certification-7-review-round-10.md)
+  independently rebuilt all three mandatory zero-copy packages, passed the
+  full driver and codegen Rust-interop suites, the complete Rust-interop area,
+  Clippy, formatting, file-size and maintainability guardrails, confirmed all
+  earlier findings closed, and reported the implementation `SATISFIED`.
+- The exact [PR #3053](https://github.com/sifr-lang/sifr/pull/3053) head passed
+  the create-PR profile on 2026-07-29: all blocking steps were green, including
+  all 10 Rust-interop variants, the smoke performance budget, 428 passing
+  driver tests with 55 intentional generated-build ignores, and all 131 E2E
+  fixtures. The warm wall-time advisory reflects cold artifact groups and a
+  parallel release corpus; no blocking step exceeded its budget.
+- [Final PR-head review](../../reviews/active/rust-interop-certification-7-review-round-11.md)
+  re-derived the implementation and every prior finding against the exact
+  published PR head, independently verified all inventories and create-PR
+  evidence, found no blocking issue, and reported `SATISFIED`. Its one
+  low-severity parser-robustness note affects only the wording of an
+  already-invalid tuple-handle rejection and cannot accept an unsupported
+  surface or introduce a panic path.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

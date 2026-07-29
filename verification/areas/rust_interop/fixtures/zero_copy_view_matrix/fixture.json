@@ -31,7 +31,13 @@
     }
   },
   "execution_kind": "contract-only",
-  "features": {},
+  "features": {
+    "zerocopy": {
+      "features": [
+        "derive"
+      ]
+    }
+  },
   "id": "zero_copy_view_matrix",
   "package_examples": {
     "bytemuck": "examples/bytemuck.sifr",

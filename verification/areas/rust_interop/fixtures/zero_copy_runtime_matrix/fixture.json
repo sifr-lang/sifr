@@ -4,20 +4,40 @@
   "evidence": {
     "negative": {
       "expected_diagnostic": "SIFR-RUST-ZC-0001",
-      "expected_result": "future-owned-diagnostic",
+      "expected_result": "diagnostic",
       "id": "borrow_escape_and_invalid_mutability_rejected",
       "path": "negative/borrow_escape_and_invalid_mutability_rejected.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_zero_copy_support.rs",
+        "test_name": "test_check_zero_copy_borrow_escape_and_invalid_mutability_rejected"
+      }
     },
     "positive": {
-      "expected_result": "future-owned",
+      "expected_result": "pass",
       "id": "crate_backed_view_lifecycle",
       "path": "positive/crate_backed_view_lifecycle.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_zero_copy_support.rs",
+        "test_name": "test_build_zero_copy_crate_backed_view_lifecycle"
+      }
     }
   },
   "execution_kind": "runtime-observed",
-  "features": {},
+  "features": {
+    "zerocopy": {
+      "features": [
+        "derive"
+      ]
+    }
+  },
   "id": "zero_copy_runtime_matrix",
   "package_examples": {
     "bytemuck": "examples/bytemuck.sifr",
@@ -32,5 +52,8 @@
     "zerocopy"
   ],
   "schema_version": 2,
+  "scenario_examples": {
+    "crate_backed_view_runtime": "examples/crate_backed_view_runtime"
+  },
   "tier": 2
 }

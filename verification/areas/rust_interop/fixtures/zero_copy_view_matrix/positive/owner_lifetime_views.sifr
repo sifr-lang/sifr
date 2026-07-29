@@ -3,11 +3,18 @@
 # evidence-status: passing
 # execution-kind: contract-only
 # expected-result: pass
+class SliceViewError(Error):
+    message: str
+
+@rust.opaque(type=bridge.views.SliceView, send=True, sync=True, clone=none, close=drop)
+class SliceView:
+    ptr: int
+
 @rust.zero_copy(owner=input, view=bridge.views.SliceView)
 @rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True)
-@rust(bridge.views.slice_view, panic=trusted_no_panic)
-def slice_view(input: bytes) -> bytes: ...
+@rust(bridge.views.slice_view, panic=map_error(bridge.views.map_panic))
+def slice_view(input: bytes) -> Result[SliceView, SliceViewError | RustPanicError]: ...
 
-def verify_owner_lifetime_views() -> bytes:
-    slice_view_result: bytes = slice_view(b"sifr-rust-interop")
+def verify_owner_lifetime_views() -> Result[SliceView, SliceViewError | RustPanicError]:
+    slice_view_result: Result[SliceView, SliceViewError | RustPanicError] = slice_view(b"sifr-rust-interop")
     return slice_view_result

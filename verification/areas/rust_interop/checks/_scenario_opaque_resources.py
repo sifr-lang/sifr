@@ -18,6 +18,31 @@ ScenarioValidator = Callable[
     int,
 ]
 
+OPAQUE_RESOURCE_SCENARIO_TOKENS = (
+    "resource_contract",
+    "reqwest::Client",
+    ".no_proxy()",
+    "Connection::open",
+    "redis::Client",
+    "tokio_postgres::Config",
+    'TcpListener::bind(("127.0.0.1", 0))',
+    "OPERATION_TIMEOUT",
+    "ACTIVE_TASKS.load(Ordering::SeqCst) != 0",
+    "bridge.resources.aclose",
+    "bridge.resources.close_observation",
+    "bridge.resources.invalid_aliasing",
+    "close=async_close,\n    borrow=exclusive",
+    "impl Drop for TemporaryDatabase",
+    "impl Drop for TrackedTask",
+    "let activity = TaskActivity::new();",
+    ".set_skip_set_lib_name()",
+    "serve_redis_malformed",
+    "PostgreSQL early-close shutdown",
+    "catch_unwind_silently",
+    "PoisonOnPanic::new(",
+    "Rust bridge panicked",
+)
+
 
 def validate_opaque_resource_scenario(
     failures: list[str],

@@ -1,12 +1,13 @@
 use super::{canonical_sifr_target_path, RustInteropResolver};
 use sifr_codegen::{RustBridgeParamConvention, RustBridgeSignatureContract};
 use sifr_diagnostics::DiagnosticCode;
-use sifr_ir::{RustInteropDecoratorKind, RustInteropValue};
+use sifr_ir::{RustInteropDecoratorKind, RustInteropValue, RustTargetPath};
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct ZeroCopyContract {
     owner: String,
+    view: RustTargetPath,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -118,6 +119,10 @@ impl RustInteropResolver<'_> {
             }
             return;
         };
+        self.zero_copy_probe_obligations.insert(
+            canonical_sifr_target_path(declarations[0]),
+            (view.send, view.sync),
+        );
 
         if view.lifetime == ViewLifetime::Call {
             let Some(view_declaration) = declarations
@@ -148,7 +153,7 @@ impl RustInteropResolver<'_> {
             );
         }
 
-        if let Some(zero_copy) = zero_copy {
+        if let Some(zero_copy) = &zero_copy {
             if zero_copy.owner != view.owner {
                 let Some(zero_copy_declaration) = declarations.iter().find(|declaration| {
                     declaration.declaration.kind == RustInteropDecoratorKind::ZeroCopy
@@ -168,6 +173,9 @@ impl RustInteropResolver<'_> {
         };
         if signature_has_unsupported_type(&signature) {
             return;
+        }
+        if let Some(zero_copy) = zero_copy {
+            self.validate_view_return(&signature, declarations, &zero_copy.view);
         }
         self.validate_view_owner(&signature, declarations, &view);
     }
@@ -205,17 +213,47 @@ impl RustInteropResolver<'_> {
         }
     }
 
+    fn validate_view_return(
+        &mut self,
+        signature: &RustBridgeSignatureContract,
+        declarations: &[&sifr_codegen::RustInteropPlanDeclaration],
+        view_type: &RustTargetPath,
+    ) {
+        let Some(zero_copy_declaration) = declarations
+            .iter()
+            .find(|declaration| declaration.declaration.kind == RustInteropDecoratorKind::ZeroCopy)
+        else {
+            return;
+        };
+        let Some(return_type) = returned_ok_type(signature) else {
+            self.push_zero_copy_diagnostic(
+                zero_copy_declaration,
+                "`view=` requires a concrete Rust view type in the function return value",
+            );
+            return;
+        };
+        let expected = sifr_codegen::rust_opaque_handle_type(&view_type.dotted());
+        if return_type != expected && !sifr_codegen::is_rust_generated_bridge_type_path(return_type)
+        {
+            self.push_zero_copy_diagnostic(
+                zero_copy_declaration,
+                "`view=` must name the Rust type carried by the function return value",
+            );
+        }
+    }
+
     fn push_zero_copy_diagnostic(
         &mut self,
         declaration: &sifr_codegen::RustInteropPlanDeclaration,
-        reason: &'static str,
+        reason: impl Into<String>,
     ) {
+        let reason = reason.into();
         self.push_diagnostic(
             declaration,
             declaration.declaration.span,
             DiagnosticCode::RUST_ZERO_COPY_CONTRACT,
             "invalid Rust zero-copy/view contract: {reason}",
-            vec![("reason", reason.to_string())],
+            vec![("reason", reason)],
             Vec::new(),
             None,
         );
@@ -224,36 +262,34 @@ impl RustInteropResolver<'_> {
 
 fn parse_zero_copy_contract(
     declaration: &sifr_codegen::RustInteropPlanDeclaration,
-) -> Result<ZeroCopyContract, &'static str> {
+) -> Result<ZeroCopyContract, String> {
     let mut owner = None;
-    let mut saw_view = false;
+    let mut view = None;
     for argument in &declaration.declaration.arguments {
         let Some(name) = argument.name.as_deref() else {
-            return Err("`@rust.zero_copy(...)` requires named arguments");
+            return Err("`@rust.zero_copy(...)` requires named arguments".to_string());
         };
         match name {
             "owner" => match &argument.value {
                 RustInteropValue::Symbol(symbol) => owner = Some(symbol.clone()),
-                _ => return Err("`owner=` must name a Sifr parameter"),
+                _ => return Err("`owner=` must name a Sifr parameter".to_string()),
             },
             "view" => match &argument.value {
-                RustInteropValue::TargetPath(_) => saw_view = true,
-                _ => return Err("`view=` must be a dotted Rust target path"),
+                RustInteropValue::TargetPath(path) => view = Some(path.clone()),
+                _ => return Err("`view=` must be a dotted Rust target path".to_string()),
             },
-            _ => return Err("unsupported `@rust.zero_copy(...)` key"),
+            _ => return Err(format!("unsupported `@rust.zero_copy(...)` key `{name}`")),
         }
     }
-    if !saw_view {
-        return Err("`@rust.zero_copy(...)` requires `view=`");
-    }
     Ok(ZeroCopyContract {
-        owner: owner.ok_or("`@rust.zero_copy(...)` requires `owner=`")?,
+        owner: owner.ok_or_else(|| "`@rust.zero_copy(...)` requires `owner=`".to_string())?,
+        view: view.ok_or_else(|| "`@rust.zero_copy(...)` requires `view=`".to_string())?,
     })
 }
 
 fn parse_view_contract(
     declaration: &sifr_codegen::RustInteropPlanDeclaration,
-) -> Result<ViewContract, &'static str> {
+) -> Result<ViewContract, String> {
     let mut owner = None;
     let mut lifetime = None;
     let mut mutability = None;
@@ -261,44 +297,35 @@ fn parse_view_contract(
     let mut sync = None;
     for argument in &declaration.declaration.arguments {
         let Some(name) = argument.name.as_deref() else {
-            return Err("`@rust.view(...)` requires named arguments");
+            return Err("`@rust.view(...)` requires named arguments".to_string());
         };
         match name {
             "owner" => match &argument.value {
                 RustInteropValue::Symbol(symbol) => owner = Some(symbol.clone()),
-                _ => return Err("`owner=` must name a Sifr parameter"),
+                _ => return Err("`owner=` must name a Sifr parameter".to_string()),
             },
             "lifetime" => lifetime = Some(view_lifetime(&argument.value)?),
             "mutability" => mutability = Some(view_mutability(&argument.value)?),
             "send" => match &argument.value {
                 RustInteropValue::Boolean(value) => send = Some(*value),
-                _ => return Err("`send=` must be True or False"),
+                _ => return Err("`send=` must be True or False".to_string()),
             },
             "sync" => match &argument.value {
                 RustInteropValue::Boolean(value) => sync = Some(*value),
-                _ => return Err("`sync=` must be True or False"),
+                _ => return Err("`sync=` must be True or False".to_string()),
             },
             _ if super::advanced_data_validation::is_advanced_view_key(name) => {}
-            _ => return Err("unsupported `@rust.view(...)` key"),
+            _ => return Err(format!("unsupported `@rust.view(...)` key `{name}`")),
         }
     }
     Ok(ViewContract {
-        owner: owner.ok_or("`@rust.view(...)` requires `owner=`")?,
-        lifetime: lifetime.ok_or("`@rust.view(...)` requires `lifetime=`")?,
-        mutability: mutability.ok_or("`@rust.view(...)` requires `mutability=`")?,
-        send: send.ok_or("`@rust.view(...)` requires `send=`")?,
-        sync: sync.ok_or("`@rust.view(...)` requires `sync=`")?,
+        owner: owner.ok_or_else(|| "`@rust.view(...)` requires `owner=`".to_string())?,
+        lifetime: lifetime.ok_or_else(|| "`@rust.view(...)` requires `lifetime=`".to_string())?,
+        mutability: mutability
+            .ok_or_else(|| "`@rust.view(...)` requires `mutability=`".to_string())?,
+        send: send.ok_or_else(|| "`@rust.view(...)` requires `send=`".to_string())?,
+        sync: sync.ok_or_else(|| "`@rust.view(...)` requires `sync=`".to_string())?,
     })
-}
-
-pub(super) fn view_probe_obligations(
-    declaration: &sifr_codegen::RustInteropPlanDeclaration,
-) -> (bool, bool) {
-    if declaration.declaration.kind != RustInteropDecoratorKind::View {
-        return (false, false);
-    }
-    parse_view_contract(declaration)
-        .map_or((false, false), |contract| (contract.send, contract.sync))
 }
 
 fn view_lifetime(value: &RustInteropValue) -> Result<ViewLifetime, &'static str> {
@@ -320,8 +347,29 @@ fn view_mutability(value: &RustInteropValue) -> Result<ViewMutability, &'static 
 
 fn signature_has_unsupported_type(signature: &RustBridgeSignatureContract) -> bool {
     signature.return_type.kind == sifr_codegen::RustBridgeTypeKind::Unsupported
-        || signature
-            .params
-            .iter()
-            .any(|param| param.ty.kind == sifr_codegen::RustBridgeTypeKind::Unsupported)
+        || signature.return_type.unsupported_reason.is_some()
+        || signature.params.iter().any(|param| {
+            param.ty.kind == sifr_codegen::RustBridgeTypeKind::Unsupported
+                || param.ty.unsupported_reason.is_some()
+        })
+}
+
+fn returned_ok_type(signature: &RustBridgeSignatureContract) -> Option<&str> {
+    let rendered = signature.return_type.rust_return_type.as_deref()?.trim();
+    if signature.return_type.kind != sifr_codegen::RustBridgeTypeKind::Result {
+        return Some(rendered);
+    }
+    let inner = rendered
+        .strip_prefix("Result<")
+        .and_then(|value| value.strip_suffix('>'))?;
+    let mut depth = 0_u32;
+    for (index, ch) in inner.char_indices() {
+        match ch {
+            '<' => depth = depth.saturating_add(1),
+            '>' => depth = depth.saturating_sub(1),
+            ',' if depth == 0 => return Some(inner[..index].trim()),
+            _ => {}
+        }
+    }
+    None
 }

@@ -134,4 +134,5 @@ EXPECTED_FEATURE_POLICIES = {
     "tokio-postgres": {"default_features": False, "features": ["runtime"]},
     "tokio-tungstenite": {"default_features": False},
     "tracing-subscriber": {"features": ["env-filter"]},
+    "zerocopy": {"features": ["derive"]},
 }
