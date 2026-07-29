@@ -41,6 +41,38 @@ pub(super) fn lowers_leaf_expr_variants() {
 }
 
 #[test]
+pub(super) fn lowers_concrete_empty_list_with_explicit_rust_type() {
+    let concrete = try_lower_leaf_expr(&HirExpr::ListLiteral {
+        elements: Vec::new(),
+        ty: Type::List(Box::new(Type::List(Box::new(Type::Int)))),
+    })
+    .expect("concrete empty list lowered");
+    let unresolved = try_lower_leaf_expr(&HirExpr::ListLiteral {
+        elements: Vec::new(),
+        ty: Type::List(Box::new(Type::Any)),
+    })
+    .expect("unresolved empty list lowered");
+    let nested_unresolved = try_lower_leaf_expr(&HirExpr::ListLiteral {
+        elements: Vec::new(),
+        ty: Type::List(Box::new(Type::List(Box::new(Type::Unknown)))),
+    })
+    .expect("nested unresolved empty list lowered");
+    let union_unresolved = try_lower_leaf_expr(&HirExpr::ListLiteral {
+        elements: Vec::new(),
+        ty: Type::List(Box::new(Type::Union(vec![Type::None, Type::Any]))),
+    })
+    .expect("union unresolved empty list lowered");
+
+    assert_eq!(
+        crate::render_expr(&concrete),
+        "{\n    let __sifr_empty_list_literal: Vec<Vec<i64>> = vec![];\n    __sifr_empty_list_literal\n}"
+    );
+    assert_eq!(unresolved, RustExpr::Vec(Vec::new()));
+    assert_eq!(nested_unresolved, RustExpr::Vec(Vec::new()));
+    assert_eq!(union_unresolved, RustExpr::Vec(Vec::new()));
+}
+
+#[test]
 pub(super) fn lowers_fixed_width_literal_for_target_type() {
     assert_eq!(
         fixed_width_literal_expr_for_target(

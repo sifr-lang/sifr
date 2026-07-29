@@ -14,6 +14,7 @@ mod algorithmic_corpus_regressions;
 mod basics_and_literals;
 mod callable_and_builtin_diagnostics;
 mod collections_and_generics;
+mod contextual_empty_list_equality;
 mod control_flow_and_strings;
 mod exact_int_and_fixed_width;
 mod iteration_and_protocols;
