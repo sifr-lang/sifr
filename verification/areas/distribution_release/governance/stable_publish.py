@@ -138,6 +138,7 @@ def materialize_stable_signoff(
     smoke_root: Path,
     run_id: int,
     approver: str,
+    approval_policy: dict[str, str],
 ) -> dict[str, Any]:
     """Build completed write-once sign-off evidence from verified public bytes."""
     summary = validate_stable_prepare_summary(
@@ -170,6 +171,7 @@ def materialize_stable_signoff(
         "schema_version": 2,
         "version": summary["version"],
         "plan_sha256": summary["evidence"]["plan_sha256"],
+        "approval_policy": approval_policy,
         "attempts": [
             {
                 "run_id": run_id,

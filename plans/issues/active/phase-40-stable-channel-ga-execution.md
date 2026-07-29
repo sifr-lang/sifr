@@ -13,9 +13,17 @@ validated, merged PR.
 - Release owner: `release/distribution`.
 - Incident owner: `release/distribution`.
 - Protected GitHub environment: `stable-release`.
-- Protected review policy: at least one non-initiating
-  `release/distribution` reviewer; self-review is forbidden. Initial and resume
-  attempts each require a fresh approval recorded in sign-off.
+- Protected review policy: each initial and resume attempt requires a fresh
+  GitHub-recorded `stable-release` approval retained in sign-off. The default
+  requires a non-initiating `release/distribution` reviewer and forbids
+  self-review. The user-directed temporary single-maintainer exception in
+  `plans/releases/single-maintainer-approval-waiver.json` authorizes only
+  `bootstrap-alpha`, `bootstrap-index`, and `ga-activation` through
+  2026-08-27. It still requires the named owner to approve the protected
+  environment, disables admin bypass, binds the waiver digest into retained
+  evidence, and cannot authorize normal or incident publication. Distinct
+  reviewer restoration is tracked by
+  [`ad-hoc-distinct-release-reviewer-restoration.md`](./ad-hoc-distinct-release-reviewer-restoration.md).
 - Supported standalone targets:
   - `aarch64-apple-darwin`
   - `x86_64-apple-darwin`
@@ -647,6 +655,27 @@ Review and upstream coordination ledger:
   canonical evidence artifacts, the cancelled pending rollback dispatch, and
   the successful standalone redispatch, then returned `VERDICT: SATISFIED`
   with no actionable finding.
+- The documentation-only drill closeout
+  [PR #3057](https://github.com/sifr-lang/sifr/pull/3057) merged as
+  `649334330ce4f9c682b5aa8453ddad6ada737d40`. Its exact-head review is
+  archived at
+  `plans/reviews/archive/phase-40-protected-drill-closeout-review-pass-1-satisfied.md`;
+  it returned `SATISFIED` with no actionable finding.
+- The pre-exception approval-boundary audit is archived at
+  `plans/reviews/archive/phase-40-protected-approval-boundary-audit-pass-1-external-reviewer-required.md`.
+  It correctly proved that no compliant single-maintainer path existed under
+  the then-frozen distinct-reviewer policy. The later user direction explicitly
+  authorized the narrow, expiring exception recorded below; the audit remains
+  historical evidence rather than a current blocker.
+- The user directed Phase 40 to proceed without a second human reviewer while
+  the repository has one maintainer. The in-review single-maintainer approval
+  exception keeps a real `stable-release` environment approval mandatory,
+  rejects admin bypass, expires on 2026-08-27, and is limited to the two
+  bootstrap stages plus first GA. Canonical bootstrap and stable sign-off
+  evidence record the approval mode and exact waiver digest; normal and
+  incident operations remain ineligible. Restoration of a distinct reviewer is
+  isolated in the non-blocking ad hoc follow-up rather than weakening future
+  stable releases.
 - The next protected-publication wave adds a credential-free stable prepare
   path for `ga-activation` and `normal`. It binds an exact evidence commit,
   canonical candidate directory and plan digest, a separate clean exact source

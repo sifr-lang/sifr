@@ -12,6 +12,7 @@ Usage: scripts/distribution/run_stable_publication.sh \
   --prepare-summary PATH --expected-summary-sha256 SHA256 \
   --workflow-ref REF --workflow-commit COMMIT \
   --run-id ID --run-attempt N --initiator LOGIN \
+  [--approval-waiver PATH] \
   --site-repository OWNER/REPO --site-workflow FILE --site-workflow-ref REF \
   --site-ruleset-id ID --site-ruleset-updated-at TIMESTAMP \
   --site-workflow-sha256 SHA256
@@ -34,6 +35,7 @@ workflow_commit=""
 run_id=""
 run_attempt=""
 initiator=""
+approval_waiver=""
 site_repository=""
 site_workflow=""
 site_workflow_ref=""
@@ -57,6 +59,7 @@ while [[ $# -gt 0 ]]; do
     --run-id) run_id="${2:-}"; shift 2 ;;
     --run-attempt) run_attempt="${2:-}"; shift 2 ;;
     --initiator) initiator="${2:-}"; shift 2 ;;
+    --approval-waiver) approval_waiver="${2:-}"; shift 2 ;;
     --site-repository) site_repository="${2:-}"; shift 2 ;;
     --site-workflow) site_workflow="${2:-}"; shift 2 ;;
     --site-workflow-ref) site_workflow_ref="${2:-}"; shift 2 ;;
@@ -88,6 +91,11 @@ done
 for path in "${evidence_root}" "${source_root}"; do
   [[ -d "${path}" && ! -L "${path}" ]] || usage
 done
+if [[ "${operation}" == "ga-activation" ]]; then
+  [[ -f "${approval_waiver}" && ! -L "${approval_waiver}" ]] || usage
+elif [[ -n "${approval_waiver}" ]]; then
+  usage
+fi
 [[ -f "${prepare_summary}" && ! -L "${prepare_summary}" ]] || usage
 [[ -n "${SITE_TOKEN:-}" ]] || {
   echo "stable-publication: SITE_TOKEN is required" >&2
@@ -216,11 +224,24 @@ revalidate "${work}/governance-initial"
 
 gh api "repos/${repository}/actions/runs/${run_id}/approvals" \
   >"${work}/approvals.json"
+approval_mode="distinct-reviewer"
+approval_waiver_sha256="none"
+approval_waiver_args=()
+if [[ "${operation}" == "ga-activation" ]]; then
+  approval_mode="single-maintainer-waiver"
+  approval_waiver_sha256="$(sha256sum "${approval_waiver}" | awk '{print $1}')"
+  approval_waiver_args=(
+    --repository "${repository}"
+    --operation "${operation}"
+    --single-maintainer-waiver "${approval_waiver}"
+  )
+fi
 approvers="$(
   scripts/distribution/release_governance.py resolve-publication-approvers \
     --approvals "${work}/approvals.json" \
     --initiator "${initiator}" \
-    --environment stable-release
+    --environment stable-release \
+    "${approval_waiver_args[@]}"
 )"
 approver="$(jq -er '.[0]' <<<"${approvers}")"
 
@@ -369,6 +390,8 @@ python3 scripts/distribution/materialize_stable_publication.py signoff \
   --smoke "${work}/stable-smoke" \
   --run-id "${run_id}" \
   --approver "${approver}" \
+  --approval-mode "${approval_mode}" \
+  --approval-waiver-sha256 "${approval_waiver_sha256}" \
   --out "${work}/stable-release-signoff-${version}-attempt-${publication_attempt}.json"
 cp \
   "${work}/staged/stable-site-release-facts.json" \

@@ -8,6 +8,7 @@ from typing import Any
 
 from verification.json_schema_202012 import JsonSchemaError, validate_instance
 
+from .approval_waiver_selftest import approval_waiver_fixture
 from .common import TARGETS, canonical_json_bytes, sha256_bytes
 from .schema_bootstrap import (
     BOOTSTRAP_GENERATION,
@@ -177,6 +178,9 @@ def schema_fixtures() -> dict[str, Any]:
         "release_index.schema.json": index,
         "release_profile_report.schema.json": release_report(),
         "schema_epoch_bootstrap_evidence.schema.json": schema_bootstrap_evidence(),
+        "single_maintainer_approval_waiver.schema.json": (
+            approval_waiver_fixture()
+        ),
         "self_update_install_receipt.schema.json": install_receipt(),
         "self_update_plan.schema.json": self_update_plan(),
         "self_version.schema.json": self_version(),
@@ -360,6 +364,10 @@ def schema_bootstrap_evidence() -> dict[str, Any]:
         "run_id": 42,
         "run_attempt": 1,
         "initiator": "release-initiator",
+        "approval_policy": {
+            "mode": "distinct-reviewer",
+            "waiver_sha256": "none",
+        },
         "approvers": ["release-reviewer"],
         "prepare_summary_sha256": SHA_A,
         "legacy_index": {
@@ -372,6 +380,10 @@ def schema_bootstrap_evidence() -> dict[str, Any]:
             "run_id": 41,
             "run_attempt": 1,
             "initiator": "alpha-initiator",
+            "approval_policy": {
+                "mode": "distinct-reviewer",
+                "waiver_sha256": "none",
+            },
             "approvers": ["alpha-reviewer"],
             "prepare_summary_sha256": SHA_C,
         },
@@ -747,6 +759,10 @@ def release_signoff() -> dict[str, Any]:
         "schema_version": 2,
         "version": "0.1.0",
         "plan_sha256": SHA_A,
+        "approval_policy": {
+            "mode": "distinct-reviewer",
+            "waiver_sha256": "none",
+        },
         "attempts": [attempt()],
         "published_assets": {"sifr-installer-0.1.0": SHA_A},
         "marketplace": {

@@ -80,6 +80,9 @@ assert orchestrator.count("--clobber") == 1
 assert "channels.json" in orchestrator
 assert "resolve-publication-approvers" in orchestrator
 assert "--environment stable-release" in orchestrator
+assert "--single-maintainer-waiver" in orchestrator
+assert "--approval-mode" in orchestrator
+assert "--approval-waiver-sha256" in orchestrator
 assert '"${workflow_ref}" = "refs/heads/main"' in orchestrator
 assert "stable mutation must run from protected main HEAD" in orchestrator
 assert "candidate source:${candidate_source_commit}" in orchestrator

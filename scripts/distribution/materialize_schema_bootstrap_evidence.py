@@ -24,6 +24,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-id", required=True, type=int)
     parser.add_argument("--run-attempt", required=True, type=int)
     parser.add_argument("--initiator", required=True)
+    parser.add_argument(
+        "--approval-mode",
+        required=True,
+        choices=("distinct-reviewer", "single-maintainer-waiver"),
+    )
+    parser.add_argument("--approval-waiver-sha256", required=True)
     parser.add_argument("--approvers-json", required=True)
     parser.add_argument("--prepare-summary", required=True)
     parser.add_argument("--legacy-index", required=True)
@@ -53,6 +59,10 @@ def main() -> int:
             run_id=args.run_id,
             run_attempt=args.run_attempt,
             initiator=args.initiator,
+            approval_policy={
+                "mode": args.approval_mode,
+                "waiver_sha256": args.approval_waiver_sha256,
+            },
             approvers=approvers,
             prepare_summary_path=Path(args.prepare_summary),
             legacy_index_path=Path(args.legacy_index),

@@ -74,6 +74,11 @@ fi
             "1",
             "--initiator",
             "initiator",
+            "--approval-waiver",
+            str(
+                REPO_ROOT
+                / "plans/releases/single-maintainer-approval-waiver.json"
+            ),
             "--site-repository",
             "sifr-lang/sifr-website",
             "--site-workflow",

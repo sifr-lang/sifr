@@ -1459,6 +1459,11 @@ Generation reservation, exact resume, site reconciliation, public
 install/update/recovery smoke, Marketplace verification, and release/incident
 sign-off remain fail-closed. The one-time schema-epoch bootstrap is separately
 bound to the exact opaque pre-epoch asset identity and protected approval. The
+user-directed single-maintainer exception for that bootstrap and first GA is
+itself a canonical, expiring governance artifact. It permits only the named
+owner and those three operations, requires a real `stable-release` approval,
+and is digest-bound into retained evidence; normal and incident operations
+remain distinct-reviewer-only. The
 offline fixture core mirrors generation burning, exact resume, site
 reconciliation, range eligibility, downgrade consent, and incident sign-off
 evidence, as specified in

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .approval_waiver import validate_approval_policy
 from .common import (
     BUILDERS,
     TARGETS,
@@ -323,6 +324,7 @@ def validate_release_signoff(payload: Any) -> dict[str, Any]:
             "schema_version",
             "version",
             "plan_sha256",
+            "approval_policy",
             "attempts",
             "published_assets",
             "marketplace",
@@ -337,6 +339,7 @@ def validate_release_signoff(payload: Any) -> dict[str, Any]:
     if version_channel(signoff["version"], "$.version") != "stable":
         fail("$.version", "must be an exact stable version")
     require_sha256(signoff["plan_sha256"], "$.plan_sha256")
+    validate_approval_policy(signoff["approval_policy"], "$.approval_policy")
     validate_attempts(signoff["attempts"], "$.attempts")
     assets = require_object(signoff["published_assets"], "$.published_assets")
     if not assets:

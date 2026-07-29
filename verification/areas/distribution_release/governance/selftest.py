@@ -559,6 +559,10 @@ def test_signoff_mutations() -> None:
         "schema_version": 2,
         "version": "0.1.0",
         "plan_sha256": SHA_A,
+        "approval_policy": {
+            "mode": "distinct-reviewer",
+            "waiver_sha256": "none",
+        },
         "attempts": [valid_attempt()],
         "published_assets": {"sifr-installer-0.1.0": SHA_A},
         "marketplace": {
@@ -581,6 +585,34 @@ def test_signoff_mutations() -> None:
         ],
     }
     validate_release_signoff(release_signoff)
+    expect_rejected(
+        validate_release_signoff,
+        mutate(
+            release_signoff,
+            lambda item: item.update(
+                {
+                    "approval_policy": {
+                        "mode": "distinct-reviewer",
+                        "waiver_sha256": SHA_A,
+                    }
+                }
+            ),
+        ),
+    )
+    expect_rejected(
+        validate_release_signoff,
+        mutate(
+            release_signoff,
+            lambda item: item.update(
+                {
+                    "approval_policy": {
+                        "mode": "single-maintainer-waiver",
+                        "waiver_sha256": "none",
+                    }
+                }
+            ),
+        ),
+    )
     expect_rejected(
         validate_release_signoff,
         mutate(

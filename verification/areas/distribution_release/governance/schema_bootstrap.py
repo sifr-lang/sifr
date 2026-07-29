@@ -5,6 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from .approval_waiver import (
+    SINGLE_MAINTAINER_WAIVER,
+    validate_approval_policy,
+)
 from .common import (
     TARGETS,
     fail,
@@ -88,6 +92,7 @@ def resolve_distinct_approvers(
     *,
     initiator: str,
     environment: str = PROTECTED_ENVIRONMENT,
+    allowed_self_approver: str | None = None,
 ) -> list[str]:
     require_nonempty_string(initiator, "initiator")
     require_nonempty_string(environment, "environment")
@@ -110,12 +115,16 @@ def resolve_distinct_approvers(
         user = require_object(review.get("user"), f"{location}.user")
         login = require_nonempty_string(user.get("login"), f"{location}.user.login")
         normalized_login = login.casefold()
-        if normalized_login != normalized_initiator:
+        self_approval_allowed = (
+            allowed_self_approver is not None
+            and normalized_login == allowed_self_approver.casefold()
+        )
+        if normalized_login != normalized_initiator or self_approval_allowed:
             approved.setdefault(normalized_login, login)
     if not approved:
         fail(
             "approval history",
-            f"requires a {environment} approval by someone other than {initiator}",
+            f"requires an authorized {environment} approval for {initiator}",
         )
     return [approved[key] for key in sorted(approved)]
 
@@ -130,6 +139,7 @@ def validate_bootstrap_evidence(payload: Any) -> dict[str, Any]:
         "run_id",
         "run_attempt",
         "initiator",
+        "approval_policy",
         "approvers",
         "prepare_summary_sha256",
         "legacy_index",
@@ -145,7 +155,16 @@ def validate_bootstrap_evidence(payload: Any) -> dict[str, Any]:
     require_positive_int(evidence["run_id"], "$.run_id")
     require_positive_int(evidence["run_attempt"], "$.run_attempt")
     initiator = require_nonempty_string(evidence["initiator"], "$.initiator")
-    _validate_approvers(evidence["approvers"], initiator, "$.approvers")
+    approval_policy = validate_approval_policy(
+        evidence["approval_policy"],
+        "$.approval_policy",
+    )
+    _validate_approvers(
+        evidence["approvers"],
+        initiator,
+        "$.approvers",
+        approval_policy=approval_policy,
+    )
     require_sha256(
         evidence["prepare_summary_sha256"],
         "$.prepare_summary_sha256",
@@ -171,6 +190,7 @@ def validate_bootstrap_evidence(payload: Any) -> dict[str, Any]:
             "run_id",
             "run_attempt",
             "initiator",
+            "approval_policy",
             "approvers",
             "prepare_summary_sha256",
         },
@@ -186,10 +206,15 @@ def validate_bootstrap_evidence(payload: Any) -> dict[str, Any]:
         alpha_evidence["initiator"],
         "$.alpha_evidence.initiator",
     )
+    alpha_approval_policy = validate_approval_policy(
+        alpha_evidence["approval_policy"],
+        "$.alpha_evidence.approval_policy",
+    )
     _validate_approvers(
         alpha_evidence["approvers"],
         alpha_initiator,
         "$.alpha_evidence.approvers",
+        approval_policy=alpha_approval_policy,
     )
     require_sha256(
         alpha_evidence["prepare_summary_sha256"],
@@ -223,7 +248,13 @@ def validate_bootstrap_evidence(payload: Any) -> dict[str, Any]:
     return evidence
 
 
-def _validate_approvers(payload: Any, initiator: str, location: str) -> list[str]:
+def _validate_approvers(
+    payload: Any,
+    initiator: str,
+    location: str,
+    *,
+    approval_policy: dict[str, str],
+) -> list[str]:
     values = require_array(payload, location)
     if not values:
         fail(location, "must contain at least one protected-environment approver")
@@ -233,12 +264,19 @@ def _validate_approvers(payload: Any, initiator: str, location: str) -> list[str
     for index, raw in enumerate(values):
         approver = require_nonempty_string(raw, f"{location}[{index}]")
         normalized = approver.casefold()
-        if normalized == normalized_initiator:
+        if (
+            normalized == normalized_initiator
+            and approval_policy["mode"] != SINGLE_MAINTAINER_WAIVER
+        ):
             fail(f"{location}[{index}]", "must differ from the workflow initiator")
         if normalized in seen:
             fail(f"{location}[{index}]", "must be a unique GitHub login")
         seen.add(normalized)
         approvers.append(approver)
+    if approval_policy["mode"] == SINGLE_MAINTAINER_WAIVER and (
+        len(approvers) != 1 or approvers[0].casefold() != normalized_initiator
+    ):
+        fail(location, "single-maintainer waiver requires only the initiating owner")
     return approvers
 
 
@@ -248,6 +286,7 @@ def materialize_bootstrap_evidence(
     run_id: int,
     run_attempt: int,
     initiator: str,
+    approval_policy: dict[str, str],
     approvers: list[str],
     prepare_summary_path: Path,
     legacy_index_path: Path,
@@ -276,6 +315,7 @@ def materialize_bootstrap_evidence(
         "run_id": run_id,
         "run_attempt": run_attempt,
         "initiator": initiator,
+        "approval_policy": approval_policy,
         "approvers": approvers,
         "prepare_summary_sha256": sha256_file(prepare_summary_path),
         "legacy_index": {
@@ -336,6 +376,7 @@ def materialize_bootstrap_evidence(
                     "run_id": staged_alpha["run_id"],
                     "run_attempt": staged_alpha["run_attempt"],
                     "initiator": staged_alpha["initiator"],
+                    "approval_policy": staged_alpha["approval_policy"],
                     "approvers": staged_alpha["approvers"],
                     "prepare_summary_sha256": staged_alpha[
                         "prepare_summary_sha256"

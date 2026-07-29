@@ -1003,6 +1003,15 @@ evidence are complete.
   the same mutation adds the first governed stable channel mapping.
 - Require a recorded `publish` approval distinct from the workflow initiator.
   Grant write permissions only to that job and only after approval.
+- User-directed temporary exception: while the repository has one maintainer,
+  the canonical `plans/releases/single-maintainer-approval-waiver.json` may
+  authorize the initiating owner to approve only `bootstrap-alpha`,
+  `bootstrap-index`, and first `ga-activation`. The exception expires on
+  2026-08-27, still requires a GitHub-recorded `stable-release` approval,
+  disables admin bypass, and binds its digest into retained evidence. It never
+  authorizes normal, rollback, or incident roll-forward publication. Restoring
+  a distinct reviewer is owned by
+  [`ad-hoc-distinct-release-reviewer-restoration.md`](../issues/active/ad-hoc-distinct-release-reviewer-restoration.md).
 - Revalidate the release-plan digest, source SHA, release-profile report,
   artifacts, installer, live stable predecessor, index schema, docs, Rust
   claims, and VSIX before mutation.
