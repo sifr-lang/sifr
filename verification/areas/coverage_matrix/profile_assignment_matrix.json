@@ -75,12 +75,30 @@
       }
     },
     {
-      "surface_id": "generated_code_quality",
+      "surface_id": "codegen_merge_blocking",
       "profiles": {
         "create-pr": ["generated_code_quality:smoke"],
         "merge": ["generated_code_quality:representative"],
         "nightly": ["generated_code_quality:full"],
-        "release": ["generated_code_quality:full"]
+        "release": ["generated_code_quality:release-full"]
+      }
+    },
+    {
+      "surface_id": "generated_rust_toolchain_survival",
+      "profiles": {
+        "create-pr": ["generated_code_quality:smoke"],
+        "merge": ["generated_code_quality:representative"],
+        "nightly": ["generated_code_quality:full"],
+        "release": ["generated_code_quality:release-full"]
+      }
+    },
+    {
+      "surface_id": "codegen_snapshots",
+      "profiles": {
+        "create-pr": ["generated_code_quality:smoke"],
+        "merge": ["generated_code_quality:representative"],
+        "nightly": ["generated_code_quality:full"],
+        "release": ["generated_code_quality:release-full"]
       }
     },
     {

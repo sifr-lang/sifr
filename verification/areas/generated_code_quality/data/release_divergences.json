@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "record_id": "GENC-NAN",
+      "gate": "clippy",
+      "entry_ids": [
+        "e2e-018-cpython-math-semantic-corrections",
+        "e2e-027-error-mixed-builtin-stdlib",
+        "stdlib-007-math"
+      ],
+      "expires_on": "2026-10-31",
+      "expected_lints": [
+        "clippy::zero_divided_by_zero"
+      ]
+    }
+  ]
+}

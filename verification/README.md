@@ -83,7 +83,9 @@ lanes.
   sanitizer-full, ecosystem-broader, and module-full stdlib parity suites.
   Nightly also runs the complete pinned algorithm corpus. Release runs its
   blocking representative subset and taxonomy self-test under the temporary,
-  owner- and expiry-bound policy in `policy/profile_policy.md`.
+  owner- and expiry-bound policy in `policy/profile_policy.md`. Release also
+  uses the exact, expiry-bound `GENC-NAN` expected-failure record while nightly
+  retains unmodified full generated-code Clippy coverage.
 
 Crate test membership is data-owned by `crate_test_membership.suites` in each
 profile. The coverage matrix cross-checks that first-party compiler crates with
