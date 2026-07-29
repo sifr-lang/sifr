@@ -98,7 +98,10 @@ all 24 lane steps, including performance 8/8, Python interop 25/25, consumed
 Rust interop 10/10, generated-code release-full, all crate suites, 674 E2E
 cases, 290 hardening variants, and sequential/parallel report equivalence.
 Every blocking budget and functional gate passed. The 7,610.91-second cold
-wall time produced only the declared warm-target advisory.
+wall time produced the declared warm-target advisory; the lane report also
+recorded the nonblocking group-skew advisory (largest fixture group 16,
+median 1). Both advisories are observational and every blocking functional
+gate passed.
 
 - Canonical release-profile report:
   `/tmp/sifr-phase40-release-work-c9d611fb7c/release-profile-report.json`

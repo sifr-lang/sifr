@@ -1409,5 +1409,6 @@ updating or deleting that exact tag with no bypass actors.
   `faa6844410de98cb6ebe40d740ab6b1edc9aeb176ee0301e4ec181937eeb6e03`;
   its exact canonical Rust result has SHA-256
   `be24b69a7afc0f2f7061657258d9c367946496bf745b3cc17b1cd15e00bba87a`.
-  The only advisory was the already indexed warm wall-time target; every
-  blocking gate and budget passed.
+  The lane report recorded two nonblocking advisories: the already indexed
+  warm wall-time target and group skew (largest fixture group 16, median 1).
+  Every blocking functional gate passed.
