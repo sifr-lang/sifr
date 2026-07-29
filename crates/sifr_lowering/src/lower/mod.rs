@@ -28,6 +28,7 @@ mod compiler_intrinsics;
 mod compiler_intrinsics_tests;
 mod container_literal_diagnostics;
 mod container_literal_specialization;
+mod contextual_list_literal_specialization;
 mod control_flow_conditions;
 mod decimal_methods;
 mod default_args;

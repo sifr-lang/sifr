@@ -30,6 +30,28 @@ use collections_and_comprehensions::{
     try_lower_simple_set_comp_expr, try_lower_simple_set_literal_expr, try_lower_simple_slice_expr,
 };
 
+pub(crate) fn typed_empty_list_expr(ty: &Type) -> Option<RustExpr> {
+    let Type::List(element) = ty.resolve_alias() else {
+        return None;
+    };
+    if element.contains_unknown_or_any() {
+        return None;
+    }
+
+    let binding = "__sifr_empty_list_literal".to_string();
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: binding.clone(),
+            ty: Some(RustType::Vec(Box::new(crate::sifr_type_to_rust_type(
+                element,
+            )))),
+            value: RustExpr::Vec(Vec::new()),
+        }],
+        expr: Some(Box::new(RustExpr::Ident(binding))),
+    })
+}
+
 #[cfg(test)]
 mod comprehension_and_misc_tests;
 #[cfg(test)]

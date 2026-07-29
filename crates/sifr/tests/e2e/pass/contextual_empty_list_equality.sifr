@@ -1,0 +1,13 @@
+def main():
+    empty: list[int] = []
+    values: list[int] = [1, 2]
+    nested: list[list[int]] = [[1], []]
+
+    assert empty == []
+    assert [] == empty
+    assert values != []
+    assert [] != values
+    assert nested == [[1], []]
+    assert [[1], []] == nested
+    assert nested != [[], [1]]
+    assert [[], [1]] != nested

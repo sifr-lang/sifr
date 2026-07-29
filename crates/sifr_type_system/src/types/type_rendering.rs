@@ -408,52 +408,80 @@ impl Type {
         }
     }
 
+    /// Whether this type transitively contains an unresolved `Unknown` or an
+    /// explicitly unchecked `Any` slot.
+    #[must_use]
+    pub fn contains_unknown_or_any(&self) -> bool {
+        self.contains_dynamic_slot(true)
+    }
+
+    fn contains_any(&self) -> bool {
+        self.contains_dynamic_slot(false)
+    }
+
+    fn contains_dynamic_slot(&self, include_unknown: bool) -> bool {
+        match self {
+            Self::Any => true,
+            Self::Unknown => include_unknown,
+            Self::List(element)
+            | Self::Set(element)
+            | Self::Iterable(element)
+            | Self::Iterator(element)
+            | Self::Awaitable(element)
+            | Self::Failure(element)
+            | Self::TimeoutResult(element) => element.contains_dynamic_slot(include_unknown),
+            Self::Dict(key, value)
+            | Self::Result(key, value)
+            | Self::Coroutine(key, value)
+            | Self::Task(key, value)
+            | Self::TaskResult(key, value)
+            | Self::Select2(key, value)
+            | Self::BlockingTask(key, value)
+            | Self::JoinSet(key, value)
+            | Self::AsyncIterator(key, value)
+            | Self::AsyncGenerator(key, value) => {
+                key.contains_dynamic_slot(include_unknown)
+                    || value.contains_dynamic_slot(include_unknown)
+            }
+            Self::Tuple(elements) | Self::Union(elements) | Self::Intersection(elements) => {
+                elements
+                    .iter()
+                    .any(|element| element.contains_dynamic_slot(include_unknown))
+            }
+            Self::Callable(params, _, result) | Self::AsyncCallable(params, _, result) => {
+                params
+                    .iter()
+                    .any(|param| param.contains_dynamic_slot(include_unknown))
+                    || result.contains_dynamic_slot(include_unknown)
+            }
+            Self::Alias { body, .. } => body.contains_dynamic_slot(include_unknown),
+            Self::Function(function) | Self::AsyncFunction(function) => {
+                function
+                    .params
+                    .iter()
+                    .any(|(_, ty, _)| ty.contains_dynamic_slot(include_unknown))
+                    || function.return_type.contains_dynamic_slot(include_unknown)
+            }
+            Self::Class {
+                fields, methods, ..
+            } => {
+                fields
+                    .iter()
+                    .any(|(_, ty)| ty.contains_dynamic_slot(include_unknown))
+                    || methods.iter().any(|(_, function)| {
+                        function
+                            .params
+                            .iter()
+                            .any(|(_, ty, _)| ty.contains_dynamic_slot(include_unknown))
+                            || function.return_type.contains_dynamic_slot(include_unknown)
+                    })
+            }
+            _ => false,
+        }
+    }
+
     /// Check if a value of type `self` can be assigned to a target of type `target`.
     pub fn is_assignable_to(&self, target: &Type) -> bool {
-        fn contains_any(ty: &Type) -> bool {
-            match ty {
-                Type::Any => true,
-                Type::List(elem)
-                | Type::Set(elem)
-                | Type::Iterable(elem)
-                | Type::Iterator(elem) => contains_any(elem),
-                Type::Dict(key, value) => contains_any(key) || contains_any(value),
-                Type::Tuple(elems) | Type::Union(elems) | Type::Intersection(elems) => {
-                    elems.iter().any(contains_any)
-                }
-                Type::Callable(params, _, ret) | Type::AsyncCallable(params, _, ret) => {
-                    params.iter().any(contains_any) || contains_any(ret)
-                }
-                Type::Result(ok, err)
-                | Type::Coroutine(ok, err)
-                | Type::Task(ok, err)
-                | Type::TaskResult(ok, err)
-                | Type::Select2(ok, err)
-                | Type::BlockingTask(ok, err)
-                | Type::JoinSet(ok, err)
-                | Type::AsyncIterator(ok, err)
-                | Type::AsyncGenerator(ok, err) => contains_any(ok) || contains_any(err),
-                Type::Failure(err) => contains_any(err),
-                Type::TimeoutResult(err) => contains_any(err),
-                Type::Awaitable(result) => contains_any(result),
-                Type::Alias { body, .. } => contains_any(body),
-                Type::Function(ft) | Type::AsyncFunction(ft) => {
-                    ft.params.iter().any(|(_, ty, _)| contains_any(ty))
-                        || contains_any(&ft.return_type)
-                }
-                Type::Class {
-                    fields, methods, ..
-                } => {
-                    fields.iter().any(|(_, ty)| contains_any(ty))
-                        || methods.iter().any(|(_, ft)| {
-                            ft.params.iter().any(|(_, ty, _)| contains_any(ty))
-                                || contains_any(&ft.return_type)
-                        })
-                }
-                _ => false,
-            }
-        }
-
         fn same_alias_identity(left: &Type, right: &Type) -> bool {
             match (left, right) {
                 (
@@ -475,8 +503,8 @@ impl Type {
         fn invariant_slot_compatible(left: &Type, right: &Type) -> bool {
             left == right
                 || same_alias_identity(left, right)
-                || contains_any(left)
-                || contains_any(right)
+                || left.contains_any()
+                || right.contains_any()
                 || (left.is_assignable_to(right) && right.is_assignable_to(left))
         }
 

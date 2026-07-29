@@ -821,6 +821,11 @@ impl RustEmitter {
                 self.try_lower_registry_dict_literal_expr(keys, values)
             }
             HirExpr::ListLiteral { elements, ty } => {
+                if elements.is_empty() {
+                    if let Some(lowered) = crate::lower_expr::typed_empty_list_expr(ty) {
+                        return Some(lowered);
+                    }
+                }
                 let list_ty = crate::resolve_alias_type_for_plain_call(ty);
                 let mut lowered = elements
                     .iter()

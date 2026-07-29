@@ -1,4 +1,5 @@
 use super::arithmetic_warnings::check_int_overflow_risk;
+use super::contextual_list_literal_specialization::specialize_empty_list_literal;
 use super::empty_collection_refinement::{
     refine_empty_dict_index_comparison_expr, refine_empty_dict_membership_expr,
     refine_empty_set_binding_expr,
@@ -598,6 +599,10 @@ pub(in crate::lower) fn lower_compare(cmp: &ExprCompare, ctx: &mut LowerCtx) -> 
         left = refine_empty_dict_index_comparison_expr(left, &right_ty, ctx);
         let left_ty = left.ty().clone();
         right = refine_empty_dict_index_comparison_expr(right, &left_ty, ctx);
+        if matches!(op_str, "==" | "!=") {
+            right = specialize_empty_list_literal(right, left.ty());
+            left = specialize_empty_list_literal(left, right.ty());
+        }
 
         if let Some(borrowed) = super::python_interop::python_context_borrow_reference(&left, ctx)
             .or_else(|| super::python_interop::python_context_borrow_reference(&right, ctx))

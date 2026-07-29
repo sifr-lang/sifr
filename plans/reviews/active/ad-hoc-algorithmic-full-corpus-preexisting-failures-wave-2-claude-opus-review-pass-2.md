@@ -1,0 +1,38 @@
+# APPROVED — zero actionable findings
+
+Independent re-verification of Wave 2 against `main` in the current worktree. All three pass-1 findings are genuinely resolved, and I found no new correctness, regression, scope, test, generated-Rust, file-size, or ledger issue.
+
+## Re-evaluation of the three pass-1 findings
+
+**1 — Genuine left-side empty-leading coverage + inner HIR assertions: FIXED.**
+`contextual_empty_list_equality.rs:22` now binds `left_nested_leading: bool = [[], [1]] != nested` (empty-*leading* left literal, the case that previously bailed) and keeps `left_nested_trailing`. Crucially, the assertions are no longer outer-only: `assert_first_nested_element_type` (`:13-18`, used at `:38,43`) and the explicit `elements[1].ty()` check at `:51` assert the *inner* element type is `list[int]` — on `main` those inner literals are `list[Any]`, so the assertions do distinguish specialization from ordinary first-element inference. The e2e fixture adds the matching `assert [[], [1]] != nested` (`contextual_empty_list_equality.sifr:13`). I confirmed via `sifr emit` that **all four** nested asserts (lines 10–13) now emit `__sifr_empty_list_literal` typed blocks — including trailing-empty `nested == [[1], []]`, which emitted a bare `vec![]` at pass 1 — and `sifr run` on the fixture is green.
+
+**2 — Recursion into already-concrete outer literals, without unsafe widening: FIXED, and the trap is avoided.**
+`contextual_list_literal_specialization.rs:8` replaces the summary-type bail with `contains_unresolved_list_literal`, which recurses through nested list-literal elements, so `[[1], []]` (concrete outer `list[list[int]]`, unresolved inner) now enters the recursive branch and its trailing `[]` is specialized (unit assertion at `:51`; emit block for fixture line 11). Unchanged elements go through `has_exact_resolved_type` (`:11-13`) — exact `resolve_alias()` equality, **not** `is_assignable_to` — so the Int→Float hazard pass 1 warned about cannot fire. Probes:
+- `ff: list[list[float]] == [[], [1]]` → rejected (`SIFR-TYPE-0002 'list[list[float]]' and 'list[list[Any]]'`), i.e. the partial-failure `collect::<Option<Vec<_>>>()?` at `:49` abandons specialization wholesale rather than widening.
+- `b: list[float] == [1]` → still `cannot compare 'list[float]' and 'list[int]'`; by construction (non-empty, no unresolved list literal) this shape returns `None` and is byte-identical to `main`.
+- Named-variable operands untouched: `specialize_empty_list_literal` is pure, matches only `HirExpr::ListLiteral`, never writes `LowerCtx`; the `list[Any]` variable negative at `:78-92` still asserts the structural-equality diagnostic.
+
+**3 — One canonical, sufficiently recursive query: FIXED; both wave duplicates removed.**
+`Type::contains_unknown_or_any` (`type_rendering.rs:414`) is the single query, consumed by lowering (`contextual_list_literal_specialization.rs:8,12,29,37`) and codegen (`lower_expr.rs:37`); the two byte-identical partial copies from pass 1 are gone. It shares `contains_dynamic_slot` with `is_assignable_to`'s `contains_any`, so the variant coverage is now identical to the pre-existing assignability helper (Union/Intersection, Iterable/Iterator, Result/Coroutine/Task family, Failure/TimeoutResult/Awaitable, Callable, Function, Class, Alias bodies). I diffed the refactor arm-by-arm against the deleted nested `contains_any`: the variant set is identical and `Self::Unknown => include_unknown` keeps `is_assignable_to` on the old `Unknown → false` behavior, so the refactor is semantics-preserving. `type_capability_identity_tests.rs:54-71` pins alias/`Result`/`Union`/`Iterable`-carried `Any`/`Unknown` plus a concrete-union negative, and `leaves_and_compound_tests.rs:59-72` pins `list[Union[None, Any]]` and `list[list[Unknown]]` back to bare `vec![]`.
+
+Also worth stating: the guard is now *strictly more conservative* than the version pass 1 validated end-to-end. New detection is a superset of the old partial helper's, so the set of empty literals that receive a typed block is a **subset** of pass 1's — no empty list can newly become typed by the type-system change alone.
+
+## New-code review (beyond the findings)
+
+- **Gate untouched.** No change under `crates/sifr_type_system/src/check*`; only `type_rendering.rs` (refactor + new query) and its test file.
+- **Generated Rust valid across shapes.** Probed concrete empty literals in every reachable position — annotated let, nested `list[list[int]]`, dict value, tuple element, call argument, `return []`, class field via `Holder(items=[])`, `for` iteration, and `[[], []]` — all build and run correctly. `RustExpr::Block` is an established IR node and renders parenthesized in expression position (`assert!(empty == ({ … }))`), so the new second call site in `intrinsic_method_emitters/recursive_exprs.rs:824-828` introduces no statement-start parse hazard.
+- **Regression sweep for the new recursion.** The only fixture outside the wave's six matching "nested literal with an inner empty in `==`/`!=`" is `2215_find_the_difference_of_two_arrays.sifr:31` (`== [[3], []]`), whose codegen genuinely changes under the recursion fix. It builds and runs green.
+- **Recursive aliases terminate.** `type Node = Branch; type Branch = list[Node]` with `n == []` returns a diagnostic promptly — no stack overflow in the new recursion. That comparison is unspecialized, but it is unspecialized on `main` too (pre-existing alias-resolution limitation, not a wave regression).
+- **Gates I re-ran.** `cargo fmt --check` clean; `sifr_type_system` 119/119; the three new lowering tests pass (883 filtered); the two codegen empty-list assertions pass (930 filtered); HIR maintainability guardrail PASS.
+- **File sizes.** All touched files under 900 — largest is `leaves_and_plain_calls.rs` at 881, then `recursive_exprs.rs` 862, `leaves_and_compound_tests.rs` 843, `type_rendering.rs` 756.
+- **Scope.** Nothing staged; `third_party/ruff` and the leetcode corpus gitlinks are byte-identical to `main` (`git diff main` on both paths is empty) and dirty only from untracked `.DS_Store` files.
+- **Ledger.** `ad-hoc-algorithmic-full-corpus-preexisting-failures.md:301` honestly states "pass 2 and PR pending", the `Waves 3-8` successor row is correct, and every capability it claims is one I verified.
+- **E2E fixture convention.** Assert-only pass fixtures carry no `# expect-stdout:` marker (0 of 676 use one); the new fixture matches the `assert_basic.sifr` pattern and needs no registration.
+
+## Non-blocking observations (not actionable for this wave)
+
+- Two **pre-existing** partial `type_contains_unknown_or_any` free functions remain on `main` at `container_literal_specialization.rs:8` and `nested_function_inference/expression_inference.rs:869`. They are untouched by this wave and consolidating them would change unrelated inference behavior — correctly left alone. The ledger phrase "canonical recursive `Unknown`/`Any` query" could be misread as claiming full repo-wide consolidation; it accurately describes the wave's own query.
+- Literal-vs-literal propagation is one-directional (`right` then `left`, `expression_operators.rs:602-604`), so in `[[], [1]] == [[1], []]` the right literal's inner empty stays untyped and relies on rustc sibling inference. Compiles and runs; symmetric coverage exists for the variable-operand cases that matter.
+- The unit test has no right-side *trailing*-empty positive (`nested == [[1], []]`); e2e line 10 covers it and the code path is shared.
+- Pass 1's cosmetic nit stands: `typed_empty_list_expr` renders a column-0 `let` block in `sifr emit` output where `Vec::<T>::new()` would be a single expression. Purely presentational.
