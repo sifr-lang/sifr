@@ -57,7 +57,7 @@ $ grep -rn "incident mutation|retained release bytes|reuse one retained|add exac
 - Local-only adapter boundary: temp-root confinement (`validate_fixture_root`, `require_fixture_path`), symlink rejection, credential refusal, non-deploying site marker, and `test_no_production_adapter_surface` asserting no `socket`/`urllib`/`requests`/`subprocess` in the harness and no rollback/roll-forward dispatch input in `release-publication.yml`.
 - Withdrawn-version selection: exact pins excluded via `active_installers` (`crates/sifr/src/self_update_metadata.rs:259-276`), covered by the pre-existing `install_withdrawn_stable_rejected.sh`; `validate_release_index` forbids a channel pointing at a non-active release.
 - Downgrade consent + out-of-band recovery, extension/Marketplace range check correctly skipped for `incident-roll-forward`, clean external work directory for `generate-incident-request`, demo filename is capability-based (`stable_incident_recovery_demo.sh`), no Rust-interop implementation touched.
-- The create-PR host-timing shortfall is disclosed honestly in a pre-existing follow-up (`plans/phases/adhoc_performance_budget_host_variance.md:40-47`) with no baseline or waiver change.
+- The create-PR host-timing shortfall is disclosed honestly in a pre-existing follow-up (`plans/issues/active/adhoc_performance_budget_host_variance.md:40-47`) with no baseline or waiver change.
 
 ### Verdict
 

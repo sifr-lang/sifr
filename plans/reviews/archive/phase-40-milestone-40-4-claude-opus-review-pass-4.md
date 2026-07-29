@@ -42,7 +42,7 @@ The pass-3 reword now reads "Install the qualified `sifr-vscode-0.2.0.vsix` supp
 - `TARGET_TRIPLE_RE` (`check_ga_release_docs.py:47-49`) only matches triples beginning `aarch64`/`x86_64`; a `riscv64-…` claim would evade the new allowlist. Narrow residual class.
 - `qualify_stable_editor.py` writes canonical JSON with default `ensure_ascii=True` while `governance.common.canonical_json_bytes` uses `ensure_ascii=False`; inert while every field is ASCII.
 - `stable_site_release_facts.json` remains a synthetic fixture (`aaaa…`/`ffff…`); real plan/index binding arrives with the `milestone_40_5` site adapter, as designed.
-- The extension still contributes `sifr.showGeneratedRust` while GA docs place generated Rust outside the qualified surface — consistent with the recorded, user-authorized `adhoc_packaged_candidate_generated_rust.md` deferral.
+- The extension still contributes `sifr.showGeneratedRust` while GA docs place generated Rust outside the qualified surface — consistent with the recorded, user-authorized `plans/issues/active/adhoc_packaged_candidate_generated_rust.md` deferral.
 - The demo requires a clean checkout then dirties the submodule via `npm ci`/`npm run package`; benign because `dist/` and `node_modules/` are ignored.
 
 Findings 1–3 are actionable.

@@ -47,7 +47,7 @@ Separately, the last recorded review (pass 6, `:361-364`) is at `f28b9d8fa`; com
 
 ### 6. LOW — New plan file fails the whitespace check and is missing from the phase index
 
-`plans/phases/adhoc_performance_budget_host_variance.md:53` has a trailing blank line at EOF; `git diff --check <base>..HEAD` exits 2. Review pass 5 flagged exactly this defect class in two case files and the tracker records it as closed, but this file still carries it. The file is also absent from `plans/phases/index.md`, which the file itself declares is "a maintained navigation index."
+`plans/issues/active/adhoc_performance_budget_host_variance.md:53` has a trailing blank line at EOF; `git diff --check <base>..HEAD` exits 2. Review pass 5 flagged exactly this defect class in two case files and the tracker records it as closed, but this file still carries it. The file is also absent from `plans/phases/index.md`, which the file itself declares is "a maintained navigation index."
 
 ---
 
