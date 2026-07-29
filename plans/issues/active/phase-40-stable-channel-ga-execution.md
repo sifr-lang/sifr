@@ -624,6 +624,20 @@ Review and upstream coordination ledger:
 - [PR #3041](https://github.com/sifr-lang/sifr/pull/3041) merged the protected
   credential-free drill and stable index planning wave as
   `f9837adb105f048ed56624c148ee83ecbd2a3d03`.
+- The real main-branch protected drill workflow passed all three
+  credential-free modes at exact source
+  `476a2983003f9fec74ac15584a576f79495f7482`:
+  [publication #30427276373](https://github.com/sifr-lang/sifr/actions/runs/30427276373),
+  [first-GA #30427280203](https://github.com/sifr-lang/sifr/actions/runs/30427280203),
+  and [rollback #30427342590](https://github.com/sifr-lang/sifr/actions/runs/30427342590).
+  Each retained canonical schema-v2 evidence with status `pass`, environment
+  `stable-release-drill`, external network `blocked`, and production
+  credentials `absent`. The rollback evidence exercised burned-generation and
+  site-timeout resume; first-GA exercised incident roll-forward; publication
+  exercised GA activation, normal successor, identity, transition, CLI
+  producer, and evidence contracts. The first queued rollback dispatch was
+  cancelled before execution when a third run replaced the pending
+  concurrency slot; the standalone redispatch above passed.
 - The next protected-publication wave adds a credential-free stable prepare
   path for `ga-activation` and `normal`. It binds an exact evidence commit,
   canonical candidate directory and plan digest, a separate clean exact source
