@@ -1,16 +1,43 @@
 # fixture: native_build_script
 # evidence: positive/trusted_build_script_native_evidence
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: cargo-probe
-# expected-result: future-owned
-# fixture-trust: rust-build-scripts = ["zstd", "cc", "bindgen", "cxx"]
-# fixture-trust: native-links = ["zstd"]
+# expected-result: pass
+# fixture-trust: rust-build-scripts = ["cc", "bindgen", "cxx", "zstd"]
+# fixture-trust: native-links = ["c++", "cxxbridge1", "link-cplusplus", "sifr_cc_probe", "sifr_zstd_probe", "stdc++", "zstd"]
+# fixture-trust: rust-no-panic = ["bindgen.artifact", "bridge.native.compress", "bridge.native.decompress", "cc.artifact", "cxx.artifact", "zstd.artifact"]
 class NativeError(Error):
     message: str
 
-@rust(bridge.native.compress, panic=map_error(bridge.native.map_panic))
+@rust(bindgen.artifact, panic=trusted_no_panic)
+def bindgen_artifact() -> str: ...
+
+@rust(cc.artifact, panic=trusted_no_panic)
+def cc_artifact() -> str: ...
+
+@rust(cxx.artifact, panic=trusted_no_panic)
+def cxx_artifact() -> str: ...
+
+@rust(zstd.artifact, panic=trusted_no_panic)
+def zstd_artifact() -> str: ...
+
+@rust(bridge.native.compress, panic=trusted_no_panic)
 def compress(input: bytes) -> Result[bytes, NativeError | RustPanicError]: ...
 
-def verify_trusted_build_script_native_evidence() -> Result[bytes, NativeError | RustPanicError]:
-    compress_result: Result[bytes, NativeError | RustPanicError] = compress(b"sifr-rust-interop")
-    return compress_result
+@rust(bridge.native.decompress, panic=trusted_no_panic)
+def decompress(input: bytes) -> Result[bytes, NativeError | RustPanicError]: ...
+
+def verify_trusted_build_script_native_evidence() -> Result[str, NativeError | RustPanicError]:
+    try:
+        compressed: bytes = compress(b"sifr-rust-interop")
+        decoded: bytes = decompress(compressed)
+        assert decoded == b"sifr-rust-interop"
+        cc_evidence: str = cc_artifact()
+        bindgen_evidence: str = bindgen_artifact()
+        cxx_evidence: str = cxx_artifact()
+        zstd_evidence: str = zstd_artifact()
+        return cc_evidence + "|" + bindgen_evidence + "|" + cxx_evidence + "|" + zstd_evidence + "|compressed=zstd-roundtrip"
+    except NativeError as error:
+        raise error
+    except RustPanicError as error:
+        raise error

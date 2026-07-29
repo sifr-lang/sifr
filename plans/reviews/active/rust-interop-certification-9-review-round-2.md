@@ -1,0 +1,56 @@
+All independent verification is complete. Both mandatory tests pass on this host, the area run reproduces exactly one out-of-scope failure, and every round-1 finding has been re-inspected against the current worktree.
+
+# Rust-Interop `certification_9` (`native_build_script`) — Review Round 2
+
+Scope: current worktree on `agent/rust-interop-certification-9`. Excluded from judgement exactly as specified: `editor_integrations`, the leetcode corpus submodule, `.cert5probe/`, `.claude/`, the two stray `*.webp` files, `plans/phases/43_interoperability.md`, `*.claude.log`, and the `ecosystem_backend_certification` `category`/`future_owner` hunk in `rust_interop_compatibility_matrix.json:396-400`. No files were modified by this review.
+
+## Independent verification performed
+
+- **Both mandatory tests executed green here**: `cargo test -p sifr_driver --lib -- --ignored --test-threads=1 native_build` → `2 passed; 0 failed` in 75.56s (warm caches; consistent with the reported 63.74s + 27.66s cold splits). These are the exact test names bound in `fixtures/native_build_script/fixture.json`.
+- **Suite binding is real, not nominal**: `verification/profiles/merge.json:73` runs `sifr_driver_generated_builds` as `cargo test -p sifr_driver --lib -- --ignored --test-threads=1`, `modes: ["full"]`, `status: blocking`, `executed_in_merge: true`. Both `#[ignore]`d tests are therefore executed by the merge gate, and `crates/sifr_driver/src/tests/package_rust_interop_build_tests.rs:7-8` wires the new module in.
+- **Area run reproduced**: `variants=10, blocking_failures=1`; the sole failure is `ecosystem_backend_certification: supported rows require passing positive and negative fixture evidence` — the explicitly out-of-scope hunk. All other suites green: `fixtures=36 diagnostics=10 crates=44 package_examples=60 scenario_examples=18`, matrix self-test `cases=166`, tiers `tiers=5 fixtures=36`, stale-draft self-test `cases=20`, `claims=32` + self-test `cases=33`.
+- **Inventory recomputed from data, discounting the excluded hunk**: 36 compatibility rows, 36 fixture rows; categories 19 `supported` / 12 `supported-through-bridge` / 1 `unsupported-by-design` / 4 `future-owned-by-separate-phase`; execution kinds 13 `cargo-probe` / 4 `compiler-diagnostic` / 10 `contract-only` / 9 `runtime-observed`; evidence 64 `passing` / 8 `planned`; 32 structured claims. Every figure matches the plan's new "Expected post-item inventory" block (`plans/issues/active/rust-interop-runtime-ecosystem-certification.md:1055-1066`) and the sysroot-doc counts (`internal_docs/sifr_sysroot_and_stdlib_architecture.md:155-161`) exactly.
+- **Pin agreement re-checked end to end**: root `Cargo.lock` resolves exactly one each of `cc 1.2.63`, `bindgen 0.72.1`, `cxx 1.0.198`, `zstd 0.13.3`; identical in the scenario `Cargo.toml:6-9`, in `_scenario_native_build.py:14-17,94-111`, in the four `build.rs` artifact literals, and in the test's asserted evidence strings.
+- **Gates rerun locally**: `cargo fmt --check` clean; `cargo clippy --workspace -- -D warnings` clean; scenario `cargo clippy --workspace --locked --offline -- -D warnings` clean; `scripts/check_file_size_guardrails.py` → `PASS (2978 files, limit 900 lines)`; `git diff --check` clean. (`cargo clippy --workspace --all-targets` fails in `sifr_ipc` on pre-existing `expect_used` lints unrelated to this branch and outside the project's documented clippy command.)
+- **New/untracked files are not gitignored**: `git check-ignore` returns non-zero for `rust/cc/native/probe.c`, `package_rust_interop_native_build_support.rs`, and `_scenario_native_build.py`, so all three will be picked up by `git add`. Only the fixture-local `target/` dir is ignored (`.gitignore:26`).
+
+## Round-1 findings — disposition
+
+**MEDIUM 1 (post-build allowlist had no rejection evidence) — RESOLVED.** `package_rust_interop_native_build_support.rs:225-259` adds `assert_untrusted_transitive_native_link_rejected`, which drops `"zstd"` from `native-links` and requires `build_cached_package_project` to fail with `RUST_TRUST_MISSING` + `"untrusted native link evidence"` + `"zstd"`. I confirmed that message string exists only in the post-build path (`crates/sifr_driver/src/build/materialize.rs:355`, inside `validate_native_link_evidence`, which parses `build-script-executed`/`linked_libs` JSON), and that `"zstd"` is unreachable from the pre-Cargo direct check because the wrapper declares `links = "sifr_zstd_probe"` (`_scenario_native_build.py:66-70`; wrapper `Cargo.toml`). The case therefore proves the emitted envelope is non-empty, actually inspected, and fail-closed — and it makes a regression of `should_validate_native_link_evidence` to `false` test-visible, which was the specific hole called out. The accept-half is exercised by the positive test, which builds and runs through the same `materialize.rs` path with the full seven-name envelope.
+
+**MEDIUM 2 (zstd observation invariant to the encoder) — RESOLVED.** `positive/trusted_build_script_native_evidence.sifr:31-33` and `examples/.../src/main.sifr:29-31` now do `compress` → `decompress` → `assert decoded == b"sifr-rust-interop"`, surfaced as `compressed=zstd-roundtrip` in the asserted stdout (`package_rust_interop_native_build_support.rs:80`). This is no longer encoder-invariant: `decompress` is real `zstd_upstream::stream::decode_all` (`rust/zstd/src/lib.rs:9-11` via `src/bridges/native.rs:21-23`), which errors on non-zstd input, so a stubbed or `rev()`-style encoder now surfaces as `NativeError` and a stdout mismatch. Replacing both sides is separately blocked by the token requirements on `encode_all`/`decode_all` (`_scenario_native_build.py:370-373`) plus the `zstd execution drift` mutation case (`:258-264`).
+
+**LOW 3 (version provenance self-asserted) — RESOLVED with a residual, non-blocking.** `_validate_build_sources` now pins each artifact literal against its build script (`_scenario_native_build.py:352,359,363,368`) and the `artifact version drift` mutation case (`:265-271`) proves the check fires. The literals are still independent constants from the pin dict rather than derived from it, so a hypothetical future bump that edits `Cargo.toml:6-9`, `NATIVE_BUILD_SCENARIO_TOKENS`, `expected_workspace_dependencies`, and the mutation token but misses lines 352/359/363/368 would still leave stale artifact versions green. I judge this non-blocking: all four pins currently agree across five locations, the drift surface shrank from zero enforced sites to four, the failure mode is a cosmetically wrong evidence string rather than a false support claim, and round-1 itself classified this as drift-hardening with no present inaccuracy. Carried forward below.
+
+**LOW 4 (build-script negative case did not pin the trust kind) — RESOLVED.** Each case now carries a kind-specific `required_evidence` string — `"build script in Cargo dependency \`zstd\`"` and `"native links \`sifr_zstd_probe\` declared by Cargo dependency \`zstd\`"` (`:104,:111`) — asserted alongside `"before Cargo executes this dependency"` at `:161-166`, on top of `errors.len() == 1` and the `RUST_TRUST_MISSING` code check. The two diagnostics are now distinguishable.
+
+**LOW 5 (`probe.c` unvalidated and untracked) — RESOLVED.** `_scenario_native_build.py:374-377` requires `rust/cc/native/probe.c` to contain `unsigned int sifr_cc_probe(void)` and `return 1263U;`; the file exists with exactly that content and is not gitignored. The `rust/cc/native/` directory is untracked only because nothing on this branch is committed yet.
+
+**LOW 6 (undeclared host-toolchain requirement) — RESOLVED.** The C/C++-compiler and discoverable-`libclang` prerequisite is now documented in all three places a reader would look: `docs/rust-interop.mdx:206-208`, `internal_docs/rust_interop_architecture.md:974-978`, and `fixtures/native_build_script/examples/native_trust_package/README.md:17-20`. Informational: `.github/workflows/local-first-validation.yml` still has no explicit toolchain install step and relies on the GitHub `ubuntu-24.04` image's preinstalled clang/llvm and gcc; that is a CI-image assumption shared with the existing `cc`-dependent `cargo-probe` rows, not a certification_9 regression.
+
+**LOW 7 (claim not platform-scoped) — RESOLVED.** `docs/rust-interop.mdx:204-208` scopes the claim to "the checked-in Apple/GNU arm64 and x86_64 host envelope" and states it "does not advertise an MSVC build-script envelope", matching the `advanced_data_runtime_matrix` precedent. The scoping is echoed in the matrix note (`rust_interop_compatibility_matrix.json:431`), `internal_docs/rust_interop_architecture.md:970-973`, and both READMEs.
+
+**LOW 8 (plan bookkeeping) — RESOLVED.** `plans/issues/.../rust-interop-runtime-ecosystem-certification.md:1020-1053` now checks the six implementation items and correctly leaves only the merge/gates item open; `:1055-1066` adds the "Expected post-item inventory" block (verified numerically above); `:1068-1090` adds "Review and validation notes" with the round-1 link; `:154-155` updates `certification_8` to `merged` and `certification_9` to `in progress`. The round-1 review file is no longer empty (12,059 bytes).
+
+**LOW 9 (`# fixture-trust:` header parity) — RESOLVED.** `positive/trusted_build_script_native_evidence.sifr:6-8` now mirrors all three lists, byte-identical to `sifr.toml:22-24` including `rust-no-panic`. The headers remain unenforced prose, which round-1 noted but did not make the ask.
+
+**LOW 10 (`_scenario_checks.py` headroom) — ACKNOWLEDGED, correctly deferred.** Still 891/900; guardrail passes. The plan records the extraction as certification_10 work. Round-1 scoped this to "the next row", so it is not actionable here.
+
+**LOW 11 (no in-test control for sentinel arming) — RESOLVED.** `assert_armed_build_script_writes_sentinel` (`:174-206`) is invoked first (`:97`), compiles and runs the armed workspace under `--locked --offline --frozen`, and asserts the sentinel exists; the two rejection cases then assert it stays absent (`:149`, `:167-170`). The mutation is shared through `arm_zstd_build_script_sentinel` (`:208-223`), so the control cannot drift from the cases it validates.
+
+## Findings
+
+None. No actionable findings remain.
+
+## Merge preconditions (mechanical, outside the code under review)
+
+- Write this round-2 review into `plans/reviews/active/rust-interop-certification-9-review-round-2.md`, which is currently a 0-byte placeholder, and link it from the plan's "Review and validation notes"; per round-1 finding 8 it must not be committed empty.
+- Check the final `certification_9` checklist item and flip the status-table row at merge time.
+- Stage only certification_9 files: the six shared-worktree exclusions and the `ecosystem_backend_certification` category/`future_owner` hunk must stay out of the commit. That hunk remains the sole, unrelated reason the full area checker is not all-green.
+
+## Carry-forward for certification_10 (non-blocking)
+
+- Extract the `REQUIRED_SCENARIO_EXAMPLES` / per-fixture dispatch table out of `_scenario_checks.py` before adding to it (9 lines of headroom).
+- Derive the artifact evidence literals in `_scenario_native_build.py` from the pin constants instead of restating them, closing the residual under finding 3.
+
+SATISFIED

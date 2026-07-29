@@ -2,16 +2,22 @@
 members = ["rust/cc", "rust/bindgen", "rust/cxx", "rust/zstd"]
 resolver = "2"
 
+[workspace.dependencies]
+bindgen_upstream = { package = "bindgen", version = "=0.72.1", default-features = true }
+cc_upstream = { package = "cc", version = "=1.2.63", default-features = true }
+cxx = { version = "=1.0.198", default-features = true }
+zstd_upstream = { package = "zstd", version = "=0.13.3", default-features = true }
+
 [package]
 name = "native-trust-package"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-cc = { path = "rust/cc" }
-bindgen = { path = "rust/bindgen" }
-cxx = { path = "rust/cxx" }
-zstd = { path = "rust/zstd" }
+bindgen = { package = "sifr-bindgen-probe", path = "rust/bindgen" }
+cc = { package = "sifr-cc-probe", path = "rust/cc" }
+cxx = { package = "sifr-cxx-probe", path = "rust/cxx" }
+zstd = { package = "sifr-zstd-probe", path = "rust/zstd" }
 
 [package.metadata.sifr]
 manifest = "sifr.toml"

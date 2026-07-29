@@ -3,11 +3,13 @@
 This fixture family tracks build-script and native-link trust evidence for
 `cc`, `bindgen`, `cxx`, and `zstd`.
 
-- Positive evidence: `trusted_build_script_native_evidence` remains planned for
-  a fixture proving trusted build-script output and native links are recorded
-  before final artifact acceptance.
-- Negative evidence: `untrusted_native_link_rejected` remains planned for a
-  fixture proving untrusted native links fail with `SIFR-RUST-TRUST-*`.
-- Compatibility category: `future-owned-by-separate-phase`. Trust policy
-  plumbing is implemented, but representative native-link ecosystem
-  certification is not listed as verified support.
+- Positive evidence: `trusted_build_script_native_evidence` builds exact-pinned
+  wrapper dependencies twice with locked/offline/frozen Cargo, compares their
+  deterministic artifacts, and observes those artifacts plus a zstd
+  encode/decode roundtrip through generated Sifr package glue.
+- Negative evidence: `untrusted_native_link_rejected` independently removes
+  the zstd wrapper's build-script and native-link permissions and requires
+  `SIFR-RUST-TRUST-0001` before an armed build script can write its sentinel.
+- Compatibility category: `supported` for this exact `cargo-probe` package and
+  portable native-link envelope. Undeclared build scripts and links remain
+  rejected; no general host-library fallback is implied.

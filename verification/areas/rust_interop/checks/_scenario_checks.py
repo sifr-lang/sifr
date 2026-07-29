@@ -23,6 +23,11 @@ from _scenario_callback_subscriptions import (
     validate_callback_subscription_scenario,
 )
 from _scenario_lock_checks import read_root_lock, require_root_lock_subset
+from _scenario_native_build import (
+    NATIVE_BUILD_SCENARIO_TOKENS,
+    run_native_build_self_test,
+    validate_native_build_scenario,
+)
 from _scenario_opaque_resources import (
     OPAQUE_RESOURCE_SCENARIO_TOKENS,
     run_opaque_resource_self_test,
@@ -143,7 +148,7 @@ REQUIRED_SCENARIO_EXAMPLES = {
     },
     "native_build_script": {
         "native_trust_package": {
-            "tokens": ("rust-build-scripts", "native-links", "zstd", "bindgen", "cxx"),
+            "tokens": NATIVE_BUILD_SCENARIO_TOKENS,
         },
     },
     "ecosystem_backend_certification": {
@@ -398,6 +403,13 @@ def run_self_test() -> tuple[int, str | None]:
     if advanced_data_error is not None:
         return cases, advanced_data_error
 
+    native_build_cases, native_build_error = run_native_build_self_test(
+        AREA_ROOT, validate_scenario_examples
+    )
+    cases += native_build_cases
+    if native_build_error is not None:
+        return cases, native_build_error
+
     return cases, None
 
 
@@ -419,9 +431,9 @@ def _validate_scenario_example_dir(
     if not cargo_manifest_path.is_file():
         failures.append(f"{fixture_id}: {raw_path}/Cargo.toml is required")
 
-    sifr_sources = sorted(example_dir.rglob("*.sifr"))
-    cargo_manifests = sorted(example_dir.rglob("Cargo.toml"))
-    rust_sources = sorted(example_dir.rglob("*.rs"))
+    sifr_sources = _scenario_files(example_dir, "*.sifr")
+    cargo_manifests = _scenario_files(example_dir, "Cargo.toml")
+    rust_sources = _scenario_files(example_dir, "*.rs")
     if not sifr_sources:
         failures.append(f"{fixture_id}: {raw_path} must include a Sifr source file")
     if not cargo_manifests:
@@ -439,12 +451,24 @@ def _validate_scenario_example_dir(
             failures.append(f"{fixture_id}: {raw_path} missing scenario token {token!r}")
     if fixture_id == "shared_bridge_crate":
         _reject_generated_bridge_imports(failures, fixture_id, raw_path, rust_sources)
-    if fixture_id in {"advanced_data_runtime_matrix", "zero_copy_runtime_matrix"}:
+    if fixture_id in {
+        "advanced_data_runtime_matrix",
+        "native_build_script",
+        "zero_copy_runtime_matrix",
+    }:
         reject_unsafe_rust(failures, fixture_id, rust_sources, example_dir)
     for source in sifr_sources:
         text = source.read_text(encoding="utf-8")
         raw_source_path = source.relative_to(example_dir).as_posix()
         _validate_scenario_sifr_source(failures, fixture_id, example, f"{raw_path}/{raw_source_path}", text)
+
+
+def _scenario_files(example_dir: Path, pattern: str) -> list[Path]:
+    return sorted(
+        path
+        for path in example_dir.rglob(pattern)
+        if "target" not in path.relative_to(example_dir).parts
+    )
 
 
 def _validate_scenario_manifests(
@@ -612,12 +636,15 @@ def _validate_scenario_manifests(
         _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-proc-macros", ["serde_derive"])
         _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-build-scripts", ["prost-build"])
     elif fixture_id == "native_build_script":
-        for dependency in ("cc", "bindgen", "cxx", "zstd"):
-            _require_path_dependency(failures, fixture_id, raw_path, dependencies, dependency, f"rust/{dependency}")
-            _require_build_script(failures, fixture_id, raw_path, example_dir, f"rust/{dependency}")
-        _require_native_links(failures, fixture_id, raw_path, example_dir, "rust/zstd", "zstd")
-        _require_trust_targets(failures, fixture_id, raw_path, trust, "rust-build-scripts", ["cc", "bindgen", "cxx", "zstd"])
-        _require_trust_targets(failures, fixture_id, raw_path, trust, "native-links", ["zstd"])
+        validate_native_build_scenario(
+            failures,
+            fixture_id,
+            raw_path,
+            cargo,
+            dependencies,
+            trust,
+            example_dir,
+        )
     elif fixture_id == "ecosystem_backend_certification":
         _require_path_dependency(failures, fixture_id, raw_path, dependencies, "axum", "rust/axum")
         _require_path_dependency(failures, fixture_id, raw_path, dependencies, "tower-http", "rust/tower_http")

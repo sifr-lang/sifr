@@ -344,8 +344,8 @@
       "capability": "build-script and native-link trust",
       "required_crates": ["cc", "bindgen", "cxx", "zstd"],
       "execution_kind": "cargo-probe",
-      "positive_evidence": {"id": "trusted_build_script_native_evidence", "status": "planned"},
-      "negative_evidence": {"id": "untrusted_native_link_rejected", "status": "planned"}
+      "positive_evidence": {"id": "trusted_build_script_native_evidence", "status": "passing"},
+      "negative_evidence": {"id": "untrusted_native_link_rejected", "status": "passing"}
     },
     {
       "id": "proc_macro_trust",

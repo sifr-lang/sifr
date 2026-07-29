@@ -954,6 +954,31 @@ arm64/x86_64 native-output envelope declared by this locked graph. The
 `arrow_record_batch`, `tensor_dlpack_bridge`, and `advanced_data_matrix` rows
 remain contract-only and cannot satisfy a crate-backed runtime exchange claim.
 
+## Native Build Scripts and Links
+
+`native_build_script` is the tier-3 `cargo-probe` claim for build-script and
+native-link trust. Its locked scenario uses four direct wrapper crates whose
+Cargo metadata exposes build scripts before execution. Those wrappers compile
+the exact root-lock `cc = 1.2.63`, `bindgen = 0.72.1`, `cxx = 1.0.198`, and
+`zstd = 0.13.3` graph, keep generated evidence under `OUT_DIR`, and expose the
+versioned artifacts through safe Rust functions. Two fresh
+`--locked --offline --frozen` builds must produce byte-identical evidence,
+and generated Sifr package glue must observe every artifact plus a real zstd
+encode/decode roundtrip.
+
+Direct wrapper identities (`sifr_cc_probe` and `sifr_zstd_probe`), the zstd
+link, `cxxbridge1`, `link-cplusplus`, and the platform C++ runtime names form
+an exact portable allowlist. Cargo metadata trust rejects a missing direct
+build-script or native-link entry before direct probing; the negative evidence
+arms the rejected zstd build script with a sentinel and requires the sentinel
+to remain absent. Post-build Cargo messages remain fail-closed for any emitted
+native link outside the declared envelope. This claim covers the checked-in
+hermetic probe package on the certified Apple/GNU arm64 and x86_64 host
+envelope, not arbitrary build scripts, MSVC, or undeclared host libraries.
+Executing the bindgen and native compilation probes requires a working C/C++
+compiler and a `libclang` installation discoverable by bindgen; locked/offline
+Cargo does not package those host-toolchain components.
+
 ## Callbacks
 
 Callbacks are supported only with declared lifetime and threading policy.
