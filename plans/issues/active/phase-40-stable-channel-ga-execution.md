@@ -1611,11 +1611,13 @@ updating or deleting that exact tag with no bypass actors.
   suite passed 8/8. An earlier fresh-parent authoritative release profile then
   passed all 24 lane steps in 7,610.91 seconds: generated-code release-full,
   all crate suites, Python interop 25/25, consumed Rust interop 10/10, 674 E2E
-  cases, and 290 hardening variants all had zero blocking failures. Canonical
-  report `release-c9d611fb7c7c-fa3d95c04f8a` has SHA-256
+  cases, and 290 hardening variants all had zero blocking failures. That
+  earlier run's report `release-c9d611fb7c7c-fa3d95c04f8a` has SHA-256
   `faa6844410de98cb6ebe40d740ab6b1edc9aeb176ee0301e4ec181937eeb6e03`;
   its exact canonical Rust result has SHA-256
   `be24b69a7afc0f2f7061657258d9c367946496bf745b3cc17b1cd15e00bba87a`.
+  Those report bytes were superseded by the committed candidate bytes recorded
+  below.
   The lane report recorded two nonblocking advisories: the already indexed
   warm wall-time target and group skew (largest fixture group 16, median 1).
   Every blocking functional gate passed.
