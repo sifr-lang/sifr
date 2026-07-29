@@ -1412,3 +1412,15 @@ updating or deleting that exact tag with no bypass actors.
   The lane report recorded two nonblocking advisories: the already indexed
   warm wall-time target and group skew (largest fixture group 16, median 1).
   Every blocking functional gate passed.
+- Exact PR-head qualification-evidence review pass 1 is archived at
+  `plans/reviews/archive/phase-40-final-exact-source-qualification-review-pass-1-not-satisfied.md`.
+  It independently reconciled the workflow, custody, source, report, Rust
+  result, checklist, and public bootstrap boundary, then found the ledger
+  incorrectly described the warm wall-time advisory as the only advisory. The
+  evidence now records both nonblocking lane advisories: warm wall time and
+  fixture-group skew.
+- Exact PR-head review pass 2 is satisfied and archived at
+  `plans/reviews/archive/phase-40-final-exact-source-qualification-review-pass-2-satisfied.md`.
+  It revalidated every preserved digest and count at head `340a40b10`,
+  confirmed the pass-1 wording correction, found no actionable issue at any
+  severity, and returned `VERDICT: SATISFIED`.
