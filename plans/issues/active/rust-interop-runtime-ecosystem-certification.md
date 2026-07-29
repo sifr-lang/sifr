@@ -1083,6 +1083,11 @@ Review and validation notes:
   validated the committed matrix blob independently, confirmed the unrelated
   backend hunk is absent, re-derived every inventory, and reported
   `SATISFIED` with no actionable findings.
+- [Merge-readiness round 4](../../reviews/active/rust-interop-certification-9-review-round-4.md)
+  verified the doc-only round-3 recording commit at PR head
+  `1d66d90b0014c7218ebe1eac9b46f5a6dd37a772`, reconfirmed the backend hunk
+  remains excluded and the PR is mergeable/clean, and reported `SATISFIED`
+  with no actionable findings.
 - Focused revalidation passes both mandatory generated-package tests: the
   positive proof executes two fresh byte-identical locked/offline/frozen
   builds plus generated Sifr check/build/run in 63.74 seconds, while the
