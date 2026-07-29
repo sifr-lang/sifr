@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
+from verification.json_schema_202012 import JsonSchemaError, validate_instance
+
 from . import schema_bootstrap as bootstrap_module
 from .approval_waiver import validate_single_maintainer_waiver
 from .approval_waiver_selftest import validate_repository_waiver
@@ -42,6 +44,14 @@ def main() -> int:
     assert "stable" not in index["channels"]
     evidence = valid_evidence()
     assert validate_bootstrap_evidence(evidence) == evidence
+    recovered_evidence = copy.deepcopy(evidence)
+    recovered_evidence["recovery"] = recovery_evidence()
+    assert validate_bootstrap_evidence(recovered_evidence) == recovered_evidence
+    evidence_schema = (
+        Path(__file__).resolve().parents[1]
+        / "schemas/schema_epoch_bootstrap_evidence.schema.json"
+    )
+    validate_instance(recovered_evidence, evidence_schema)
     stage = copy.deepcopy(evidence)
     stage["stage"] = "alpha-assets"
     for key in ("alpha_evidence", "beta", "index", "public_smoke"):
@@ -53,6 +63,18 @@ def main() -> int:
         lambda: validate_bootstrap_evidence(stage_with_beta),
         "alpha stage with beta evidence",
     )
+    stage_with_recovery = copy.deepcopy(stage)
+    stage_with_recovery["recovery"] = recovery_evidence()
+    expect_failure(
+        lambda: validate_bootstrap_evidence(stage_with_recovery),
+        "alpha stage with recovery provenance",
+    )
+    try:
+        validate_instance(stage_with_recovery, evidence_schema)
+    except JsonSchemaError:
+        pass
+    else:
+        raise AssertionError("evidence schema accepted alpha-stage recovery")
     invalid_stage = copy.deepcopy(stage)
     invalid_stage["stage"] = "unknown-stage"
     expect_failure(
@@ -66,10 +88,9 @@ def main() -> int:
             "user": {"login": "release-reviewer"},
         }
     ]
-    assert (
-        resolve_distinct_approvers(approvals, initiator="release-initiator")
-        == ["release-reviewer"]
-    )
+    assert resolve_distinct_approvers(approvals, initiator="release-initiator") == [
+        "release-reviewer"
+    ]
     multi_approvals = approvals + [
         {
             "state": "approved",
@@ -272,15 +293,13 @@ def main() -> int:
         lambda value: value["alpha_evidence"].update(
             {"prepare_summary_sha256": "not-a-digest"}
         ),
-        lambda value: value.update({"approvers": ["Release-Reviewer", "release-reviewer"]}),
-        lambda value: value["alpha"].update({"unexpected": True}),
         lambda value: value.update(
-            {"alpha": release_evidence("0.1.0-beta.15")}
+            {"approvers": ["Release-Reviewer", "release-reviewer"]}
         ),
+        lambda value: value["alpha"].update({"unexpected": True}),
+        lambda value: value.update({"alpha": release_evidence("0.1.0-beta.15")}),
         lambda value: value["alpha"].update({"source_commit": "not-a-commit"}),
-        lambda value: value["alpha"].update(
-            {"release_record_sha256": "not-a-digest"}
-        ),
+        lambda value: value["alpha"].update({"release_record_sha256": "not-a-digest"}),
         lambda value: value["alpha"]["published_assets"].update(
             {
                 next(iter(value["alpha"]["published_assets"])): "not-a-digest",
@@ -293,13 +312,9 @@ def main() -> int:
             {"published_assets": release_evidence("0.1.0-alpha.99")["published_assets"]}
         ),
         lambda value: value["beta"].update({"unexpected": True}),
-        lambda value: value.update(
-            {"beta": release_evidence("0.1.0-alpha.7")}
-        ),
+        lambda value: value.update({"beta": release_evidence("0.1.0-alpha.7")}),
         lambda value: value["beta"].update({"source_commit": "not-a-commit"}),
-        lambda value: value["beta"].update(
-            {"release_record_sha256": "not-a-digest"}
-        ),
+        lambda value: value["beta"].update({"release_record_sha256": "not-a-digest"}),
         lambda value: value["beta"]["published_assets"].update(
             {
                 next(iter(value["beta"]["published_assets"])): "not-a-digest",
@@ -334,6 +349,36 @@ def main() -> int:
         expect_failure(
             lambda changed=changed: validate_bootstrap_evidence(changed),
             f"evidence mutation {index_value}",
+        )
+    recovery_mutations = (
+        lambda value: value["recovery"].update({"unexpected": True}),
+        lambda value: value["recovery"].update({"run_id": 0}),
+        lambda value: value["recovery"].update({"run_attempt": 0}),
+        lambda value: value["recovery"].update({"initiator": ""}),
+        lambda value: value["recovery"].update(
+            {
+                "approval_policy": {
+                    "mode": "distinct-reviewer",
+                    "waiver_sha256": SHA_A,
+                }
+            }
+        ),
+        lambda value: value["recovery"].update({"approvers": []}),
+        lambda value: value["recovery"].update(
+            {"approvers": [value["recovery"]["initiator"]]}
+        ),
+        lambda value: value["recovery"].update({"failed_site_run_id": 0}),
+        lambda value: value["recovery"].update({"site_run_id": 0}),
+        lambda value: value["recovery"].update(
+            {"site_run_id": value["recovery"]["failed_site_run_id"]}
+        ),
+    )
+    for index_value, mutation in enumerate(recovery_mutations):
+        changed = copy.deepcopy(recovered_evidence)
+        mutation(changed)
+        expect_failure(
+            lambda changed=changed: validate_bootstrap_evidence(changed),
+            f"recovery evidence mutation {index_value}",
         )
     test_materializer()
     print("schema-v2 preview epoch bootstrap self-test: PASS")
@@ -456,6 +501,21 @@ def release_evidence(version: str) -> dict[str, object]:
     }
 
 
+def recovery_evidence() -> dict[str, object]:
+    return {
+        "run_id": 43,
+        "run_attempt": 2,
+        "initiator": "recovery-initiator",
+        "approval_policy": {
+            "mode": "distinct-reviewer",
+            "waiver_sha256": "none",
+        },
+        "approvers": ["recovery-reviewer"],
+        "failed_site_run_id": 100,
+        "site_run_id": 101,
+    }
+
+
 def test_materializer() -> None:
     alpha_version = "0.1.0-alpha.2"
     beta_version = "0.1.0-beta.15"
@@ -508,6 +568,7 @@ def test_materializer() -> None:
             *,
             final_alpha_record: Path = alpha_record_path,
             final_alpha_source: str = COMMIT,
+            use_attested_legacy: bool = False,
         ) -> dict[str, object]:
             return materialize_bootstrap_evidence(
                 stage="alpha-assets",
@@ -520,12 +581,18 @@ def test_materializer() -> None:
                 },
                 approvers=["alpha-reviewer"],
                 prepare_summary_path=prepare_summary,
-                legacy_index_path=legacy_path,
+                legacy_index_path=None if use_attested_legacy else legacy_path,
                 alpha_version=alpha_version,
                 alpha_source_commit=final_alpha_source,
                 alpha_record_path=final_alpha_record,
                 alpha_assets_dir=alpha_assets,
                 out=out,
+                legacy_index_sha256=(
+                    LEGACY_INDEX_SHA256 if use_attested_legacy else None
+                ),
+                legacy_index_size_bytes=(
+                    LEGACY_INDEX_SIZE_BYTES if use_attested_legacy else None
+                ),
             )
 
         def materialize_final(
@@ -534,6 +601,12 @@ def test_materializer() -> None:
             final_beta_record: Path = beta_record_path,
             final_smoke_dir: Path = smoke_dir,
             final_alpha_evidence: Path = alpha_evidence_path,
+            use_attested_legacy: bool = False,
+            include_attested_legacy_with_bytes: bool = False,
+            attested_legacy_sha256: str | None = LEGACY_INDEX_SHA256,
+            attested_legacy_size_bytes: int | None = LEGACY_INDEX_SIZE_BYTES,
+            include_recovery: bool = True,
+            recovery_with_bytes: bool = False,
         ) -> dict[str, object]:
             return materialize_bootstrap_evidence(
                 stage="preview-index",
@@ -546,7 +619,7 @@ def test_materializer() -> None:
                 },
                 approvers=["beta-reviewer", "second-reviewer"],
                 prepare_summary_path=prepare_summary,
-                legacy_index_path=legacy_path,
+                legacy_index_path=None if use_attested_legacy else legacy_path,
                 alpha_version=alpha_version,
                 alpha_source_commit=COMMIT,
                 alpha_record_path=alpha_record_path,
@@ -559,6 +632,21 @@ def test_materializer() -> None:
                 index_path=index_path,
                 smoke_dir=final_smoke_dir,
                 alpha_evidence_path=final_alpha_evidence,
+                legacy_index_sha256=(
+                    attested_legacy_sha256
+                    if use_attested_legacy or include_attested_legacy_with_bytes
+                    else None
+                ),
+                legacy_index_size_bytes=(
+                    attested_legacy_size_bytes
+                    if use_attested_legacy or include_attested_legacy_with_bytes
+                    else None
+                ),
+                recovery=(
+                    recovery_evidence()
+                    if (use_attested_legacy and include_recovery) or recovery_with_bytes
+                    else None
+                ),
             )
 
         with patch.object(
@@ -567,8 +655,81 @@ def test_materializer() -> None:
             return_value=LEGACY_INDEX_SHA256,
         ):
             materialize_alpha(alpha_evidence_path)
+            expect_failure(
+                lambda: materialize_alpha(
+                    root / "attested-alpha-evidence.json",
+                    use_attested_legacy=True,
+                ),
+                "alpha stage rejects the post-index recovery identity path",
+            )
             final = materialize_final(final_evidence_path)
             assert final["alpha_evidence"]["run_id"] == 41
+            recovered = materialize_final(
+                root / "recovered-final-evidence.json",
+                use_attested_legacy=True,
+            )
+            assert recovered["legacy_index"] == {
+                "sha256": LEGACY_INDEX_SHA256,
+                "size_bytes": LEGACY_INDEX_SIZE_BYTES,
+            }
+            assert recovered["recovery"] == recovery_evidence()
+            expect_failure(
+                lambda: materialize_final(
+                    root / "missing-recovery-provenance-evidence.json",
+                    use_attested_legacy=True,
+                    include_recovery=False,
+                ),
+                "attested recovery requires durable provenance",
+            )
+            expect_failure(
+                lambda: materialize_final(
+                    root / "recovery-with-legacy-bytes-evidence.json",
+                    recovery_with_bytes=True,
+                ),
+                "recovery provenance is forbidden with exact legacy bytes",
+            )
+            expect_failure(
+                lambda: materialize_final(
+                    root / "drifted-recovery-sha-evidence.json",
+                    use_attested_legacy=True,
+                    attested_legacy_sha256=SHA_A,
+                ),
+                "recovery rejects a drifted attested legacy digest",
+            )
+            expect_failure(
+                lambda: materialize_final(
+                    root / "drifted-recovery-size-evidence.json",
+                    use_attested_legacy=True,
+                    attested_legacy_size_bytes=LEGACY_INDEX_SIZE_BYTES - 1,
+                ),
+                "recovery rejects a drifted attested legacy size",
+            )
+            expect_failure(
+                lambda: materialize_final(
+                    root / "ambiguous-recovery-identity-evidence.json",
+                    include_attested_legacy_with_bytes=True,
+                ),
+                "recovery rejects simultaneous legacy bytes and identity",
+            )
+            for suffix, attested_sha256, attested_size in (
+                ("sha-only", LEGACY_INDEX_SHA256, None),
+                ("size-only", None, LEGACY_INDEX_SIZE_BYTES),
+                ("neither", None, None),
+                ("zero-size", LEGACY_INDEX_SHA256, 0),
+                ("negative-size", LEGACY_INDEX_SHA256, -1),
+                ("bool-size", LEGACY_INDEX_SHA256, True),
+            ):
+                expect_failure(
+                    lambda suffix=suffix,
+                    attested_sha256=attested_sha256,
+                    attested_size=attested_size: materialize_final(
+                        root / f"{suffix}-recovery-identity-evidence.json",
+                        use_attested_legacy=True,
+                        attested_legacy_sha256=attested_sha256,
+                        attested_legacy_size_bytes=attested_size,
+                    ),
+                    f"recovery rejects {suffix} attested legacy identity",
+                )
             withdrawn_record = copy.deepcopy(alpha_record)
             withdrawn_record["release"]["status"] = "withdrawn"
             withdrawn_record["release"]["incident_id"] = "inc-2026-001"

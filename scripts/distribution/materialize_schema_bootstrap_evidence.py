@@ -12,7 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 AREA_ROOT = REPO_ROOT / "verification" / "areas" / "distribution_release"
 sys.path.insert(0, str(AREA_ROOT))
 
-from governance.common import GovernanceError  # noqa: E402
+from governance.common import GovernanceError, load_json_strict  # noqa: E402
 from governance.schema_bootstrap import materialize_bootstrap_evidence  # noqa: E402
 
 
@@ -32,7 +32,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--approval-waiver-sha256", required=True)
     parser.add_argument("--approvers-json", required=True)
     parser.add_argument("--prepare-summary", required=True)
-    parser.add_argument("--legacy-index", required=True)
+    parser.add_argument("--legacy-index")
+    parser.add_argument("--legacy-index-sha256")
+    parser.add_argument("--legacy-index-size-bytes", type=int)
+    parser.add_argument("--recovery-json")
     parser.add_argument("--alpha-version", required=True)
     parser.add_argument("--alpha-source-commit", required=True)
     parser.add_argument("--alpha-record", required=True)
@@ -65,7 +68,7 @@ def main() -> int:
             },
             approvers=approvers,
             prepare_summary_path=Path(args.prepare_summary),
-            legacy_index_path=Path(args.legacy_index),
+            legacy_index_path=Path(args.legacy_index) if args.legacy_index else None,
             alpha_version=args.alpha_version,
             alpha_source_commit=args.alpha_source_commit,
             alpha_record_path=Path(args.alpha_record),
@@ -79,6 +82,13 @@ def main() -> int:
             smoke_dir=Path(args.smoke_dir) if args.smoke_dir else None,
             alpha_evidence_path=(
                 Path(args.alpha_evidence) if args.alpha_evidence else None
+            ),
+            legacy_index_sha256=args.legacy_index_sha256,
+            legacy_index_size_bytes=args.legacy_index_size_bytes,
+            recovery=(
+                load_json_strict(Path(args.recovery_json), require_canonical=True)
+                if args.recovery_json
+                else None
             ),
         )
     except (GovernanceError, OSError, json.JSONDecodeError) as exc:

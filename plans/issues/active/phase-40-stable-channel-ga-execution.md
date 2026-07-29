@@ -712,6 +712,95 @@ Review and upstream coordination ledger:
   reran distribution 125/125, the runner self-test, and the file-size
   guardrail, spot-reverified the full waiver boundary, and returned
   `SATISFIED` with zero actionable finding.
+- [PR #3060](https://github.com/sifr-lang/sifr/pull/3060) merged the temporary
+  single-maintainer approval boundary as
+  `94a5fec67b7bef51cae0034c84386c57d9ff1785`. The live `stable-release`
+  environment now requires reviewer `yaseralnajjar`, allows the reviewed
+  expiring self-approval path, and has admin bypass disabled.
+- Protected bootstrap-alpha run
+  [`30442990238`](https://github.com/sifr-lang/sifr/actions/runs/30442990238)
+  succeeded for `0.1.0-alpha.2`. Its write-once evidence SHA-256 is
+  `e6ee4f9ac7808799838ec2653b81c5b8533b8bde094f1fcb3df82306bef2cd8e`
+  and retains source `94a5fec67b7b`, approver/initiator `yaseralnajjar`,
+  waiver SHA-256 `b9630cc060ca281946da76a9cb9bc67564759c8d5446b6a33157a7d138080008`,
+  prepare SHA-256
+  `bfca99484db957557f2c569db4a28bf395149c64714d371f156d689444bd5477`,
+  and all nine published asset identities.
+- Protected bootstrap-index run
+  [`30443929353`](https://github.com/sifr-lang/sifr/actions/runs/30443929353)
+  published `0.1.0-beta.15`, reserved immutable
+  `channels-generation-1.json`, and activated canonical preview generation 1
+  at SHA-256
+  `04edacb8ef64706e2285ec241fc23f7d5f2b80199bb1c2bac5889c48e8485964`.
+  The exact correlated website run
+  [`30445065348`](https://github.com/sifr-lang/sifr-website/actions/runs/30445065348)
+  passed all identity, generation, build, dispatcher, and pre-deploy checks,
+  then failed because the `sifr.sh-production` environment had neither
+  `CLOUDFLARE_API_TOKEN` nor `CLOUDFLARE_ACCOUNT_ID`. The final bootstrap
+  evidence was correctly not uploaded.
+- The live failure also exposed that the one-time bootstrap path lacked the
+  phase-required post-index resume. The focused recovery milestone adds a
+  credential-free exact-state prepare and a protected site-only completion
+  workflow. It binds the original failed mutation/site runs, approvals,
+  prepare/plan/site facts, public alpha/beta releases, and exact generation-1
+  bytes; prohibits every release/index mutation; reruns public smoke; and
+  retains final evidence from the original mutation identities. The external
+  credential prerequisite is tracked in
+  [`ad-hoc-sifr-site-production-credentials.md`](./ad-hoc-sifr-site-production-credentials.md).
+- The recovery implementation reproduced the live failed-run prepare, release
+  records, generation-1 bytes, plan, dispatchers, and site facts from public
+  custody, then passed the complete distribution area 125/125, workflow/YAML
+  contracts, schema mutations, file-size and diff guardrails. Its authoritative
+  create-PR profile passed every pre-interop blocking lane and then reproduced
+  only the already indexed `readonly-check-doctor` 120-second host timeout; no
+  interop source, timeout, threshold, or waiver changed.
+- The exact recovery dispatch ledger is publication attempt
+  `30443929353-1`, failed site run `30445065348`, source
+  `94a5fec67b7bef51cae0034c84386c57d9ff1785`, plan
+  `979d469cb21675e4df6943220deb0f6453d4d1f8c3fb2056c108b8b7ec98f43f`,
+  generation/index `1` /
+  `04edacb8ef64706e2285ec241fc23f7d5f2b80199bb1c2bac5889c48e8485964`,
+  site base `ff472f2af59255c8031b1a6f9b9b294c4b820496`, dispatchers index
+  `93a40ff1224a038402ed4952d968404ee503368d368b43166809db86ec562cc4`,
+  stable
+  `4dc2fde3dcc5deb8aa390900c3e8ef606e9ef46f6c1c3b2471a1caa3c29a73ae`,
+  alpha
+  `afbe013b87273e8b7aa0f676ff658ad82159434cfe5339369b1ae9ad63a69bac`,
+  beta
+  `5885601276c1aa157146b5262ea505ba57c3081513dbe4338b09df2477d35481`,
+  default `beta`, publication facts
+  `f3f03dd9366d61269d83f06d43c7d29b89edbe756207a40af0895ddb9ccf8dc1`,
+  and stable site facts `none`. The original summary digest is
+  `f45c012c17d2908bc2ef227f202e1037343c63d1f1881ca7913f22628f62a086`.
+  Its exact canonical bytes are now durable under
+  `plans/releases/schema-bootstrap-recovery/`; recovery no longer depends on
+  the source artifact that expires `2026-08-28T10:46:13Z`. The approval waiver
+  expires `2026-08-27T00:00:00Z`, which remains the binding completion deadline
+  unless a distinct reviewer is configured.
+- Recovery review pass 1 is archived at
+  `plans/reviews/archive/phase-40-schema-bootstrap-recovery-review-pass-1-not-satisfied.md`.
+  Its `NOT SATISFIED` findings were remediated by embedding validated recovery
+  run/approval/site provenance in final evidence, retaining the exact original
+  prepare summary canonically in-repository, recording every dispatch identity
+  and deadline, covering all partial attested-identity combinations, and
+  pinning the original exact-bytes versus recovery-only attestation boundary
+  in the workflow contract.
+- Exact implementation-head recovery review pass 2 is archived at
+  `plans/reviews/archive/phase-40-schema-bootstrap-recovery-review-pass-2-satisfied.md`.
+  At pushed PR head
+  `ddcd7e3d656e39a2b00727a7ce6ac775fa823f1e`, Opus independently reran
+  the bootstrap self-test, workflow contract, 67-variant distribution `full`
+  suite, YAML/shell and file-size checks; compared the durable summary
+  byte-for-byte with the original artifact; checked the live failed run log
+  and generation-1 assets; found every pass-1 finding closed; and returned
+  `SATISFIED` with zero actionable finding.
+- Final exact-head review pass 3 is archived at
+  `plans/reviews/archive/phase-40-schema-bootstrap-recovery-review-pass-3-not-satisfied.md`.
+  It confirmed the post-pass-2 commit was tracking-only and the full recovery
+  implementation remained clean, then found that the new ledger entry
+  inaccurately called the filtered 67-variant `full` suite the complete area.
+  The wording above now names the suite exactly; the reviewer also independently
+  ran the unfiltered complete distribution area at 125/125.
 - The next protected-publication wave adds a credential-free stable prepare
   path for `ga-activation` and `normal`. It binds an exact evidence commit,
   canonical candidate directory and plan digest, a separate clean exact source

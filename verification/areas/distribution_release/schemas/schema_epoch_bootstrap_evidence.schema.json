@@ -113,6 +113,9 @@
           "maxContains": 1
         }
       ]
+    },
+    "recovery": {
+      "$ref": "#/$defs/recovery"
     }
   },
   "allOf": [
@@ -124,7 +127,8 @@
           {"not": {"required": ["alpha_evidence"]}},
           {"not": {"required": ["beta"]}},
           {"not": {"required": ["index"]}},
-          {"not": {"required": ["public_smoke"]}}
+          {"not": {"required": ["public_smoke"]}},
+          {"not": {"required": ["recovery"]}}
         ]
       }
     }
@@ -162,6 +166,28 @@
           }
         }
       ]
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "run_attempt",
+        "initiator",
+        "approval_policy",
+        "approvers",
+        "failed_site_run_id",
+        "site_run_id"
+      ],
+      "properties": {
+        "run_id": {"type": "integer", "minimum": 1},
+        "run_attempt": {"type": "integer", "minimum": 1},
+        "initiator": {"type": "string", "minLength": 1},
+        "approval_policy": {"$ref": "#/$defs/approval_policy"},
+        "approvers": {"$ref": "#/$defs/approvers"},
+        "failed_site_run_id": {"type": "integer", "minimum": 1},
+        "site_run_id": {"type": "integer", "minimum": 1}
+      }
     },
     "alpha_assets": {
       "type": "object",

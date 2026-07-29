@@ -751,6 +751,27 @@ and installed `self update --dry-run` without
 `SIFR_TEST_CHANNEL_METADATA_PATH`. Only after those checks does it upload the
 write-once generation-1 bootstrap evidence.
 
+If the one-time `bootstrap-index` attempt fails after generation 1 replaces
+the opaque pre-epoch asset, `schema-bootstrap-recovery.yml` is the only
+supported completion path. Its credential-free prepare job binds the failed
+mutation run/attempt, failed correlated site run, original prepare summary,
+already-published alpha/beta releases, exact generation-1 snapshot/live bytes,
+reproducible publication plan, dispatchers, and site facts. Its protected job
+revalidates both the original mutation approval and a new `stable-release`
+approval, proves the final evidence is still absent, and retries only the
+exact pinned site workflow. It performs no tag, release, snapshot, generation,
+or `channels.json` mutation. After site convergence it runs the real public
+bootstrap smoke and materializes the final evidence from the original
+approval/prepare identities plus the attested opaque legacy digest and size.
+The original prepare summary is retained canonically under
+`plans/releases/schema-bootstrap-recovery/` and verified by its pinned digest,
+so recovery does not depend on the failed run's expiring workflow artifact.
+Final evidence also embeds a validated `recovery` record with the recovery
+run/attempt, initiator, approval policy and approvers, failed site run, and
+successful recovered site run. That record is required for the attested
+post-index path and forbidden when the original opaque legacy bytes are
+available.
+
 Run the protected bootstrap and incident-specific suites, plus the capability
 demo, with:
 

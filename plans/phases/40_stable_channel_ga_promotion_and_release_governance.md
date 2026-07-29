@@ -1012,6 +1012,28 @@ evidence are complete.
   authorizes normal, rollback, or incident roll-forward publication. Restoring
   a distinct reviewer is owned by
   [`ad-hoc-distinct-release-reviewer-restoration.md`](../issues/active/ad-hoc-distinct-release-reviewer-restoration.md).
+- The live schema-bootstrap recovery is pinned to publication attempt
+  `30443929353-1`, failed site run `30445065348`, source
+  `94a5fec67b7bef51cae0034c84386c57d9ff1785`, generation-1 index
+  `04edacb8ef64706e2285ec241fc23f7d5f2b80199bb1c2bac5889c48e8485964`,
+  plan
+  `979d469cb21675e4df6943220deb0f6453d4d1f8c3fb2056c108b8b7ec98f43f`,
+  site facts
+  `f3f03dd9366d61269d83f06d43c7d29b89edbe756207a40af0895ddb9ccf8dc1`,
+  site base `ff472f2af59255c8031b1a6f9b9b294c4b820496`, default channel `beta`,
+  stable site facts `none`, and dispatcher index/stable/alpha/beta digests
+  `93a40ff1224a038402ed4952d968404ee503368d368b43166809db86ec562cc4`,
+  `4dc2fde3dcc5deb8aa390900c3e8ef606e9ef46f6c1c3b2471a1caa3c29a73ae`,
+  `afbe013b87273e8b7aa0f676ff658ad82159434cfe5339369b1ae9ad63a69bac`,
+  and
+  `5885601276c1aa157146b5262ea505ba57c3081513dbe4338b09df2477d35481`.
+  Its original prepare summary is retained canonically in-repository with
+  SHA-256
+  `f45c012c17d2908bc2ef227f202e1037343c63d1f1881ca7913f22628f62a086`;
+  the source artifact expiry `2026-08-28T10:46:13Z` is therefore no longer a
+  recovery dependency. The temporary approval waiver expires
+  `2026-08-27T00:00:00Z`, so protected completion must precede that deadline
+  unless a distinct reviewer is configured.
 - Revalidate the release-plan digest, source SHA, release-profile report,
   artifacts, installer, live stable predecessor, index schema, docs, Rust
   claims, and VSIX before mutation.

@@ -14,6 +14,12 @@ publication = (root / ".github/workflows/release-publication.yml").read_text(enc
 prepare = (root / ".github/workflows/release-publication-prepare.yml").read_text(
     encoding="utf-8"
 )
+recovery = (
+    root / ".github/workflows/schema-bootstrap-recovery.yml"
+).read_text(encoding="utf-8")
+recovery_prepare = (
+    root / "scripts/distribution/prepare_schema_bootstrap_recovery.sh"
+).read_text(encoding="utf-8")
 bootstrap = (
     root
     / "verification/areas/distribution_release/governance/schema_bootstrap.py"
@@ -27,6 +33,9 @@ smoke = (
 ).read_text(encoding="utf-8")
 alpha = (
     root / "scripts/distribution/fetch_schema_bootstrap_alpha.sh"
+).read_text(encoding="utf-8")
+beta = (
+    root / "scripts/distribution/fetch_schema_bootstrap_beta.sh"
 ).read_text(encoding="utf-8")
 assets = (
     root / "scripts/distribution/verify_release_publication_assets.sh"
@@ -106,6 +115,77 @@ for fragment in (
 ):
     assert fragment in prepare, fragment
 for fragment in (
+    "concurrency:",
+    "group: sifr-release-index",
+    "prepare exact bootstrap recovery",
+    "recover site and retain bootstrap evidence",
+    "environment:",
+    "name: stable-release",
+    "plans/releases/schema-bootstrap-recovery/prepare-summary-${{ inputs.original_run_id }}-${{ inputs.original_run_attempt }}.json",
+    "actions/runs/${ORIGINAL_RUN_ID}/approvals",
+    "actions/runs/${GITHUB_RUN_ID}/approvals",
+    "--operation bootstrap-index",
+    "--expected-waiver-sha256 \"${WAIVER_SHA256}\"",
+    "failed site run identity/status drifted",
+    'gh run view "${FAILED_SITE_RUN_ID}"',
+    "failed site run inputs drifted",
+    "DISPATCHER_INDEX_SHA256:",
+    "DISPATCHER_BETA_SHA256:",
+    "STABLE_SITE_FACTS_SHA256: none",
+    "prepare_schema_bootstrap_recovery.sh",
+    "cmp protected-prepare/summary.json publication/summary.json",
+    "final generation-1 bootstrap evidence already exists",
+    "Dispatch exact site recovery without another index mutation",
+    "run_schema_bootstrap_public_smoke.sh",
+    "--legacy-index-sha256",
+    "--legacy-index-size-bytes 105",
+    "--recovery-json publication/recovery.json",
+    "recovery-approval-decision.json",
+    "publication/site-run.json",
+    "schema-v2-bootstrap-generation-1.json",
+):
+    assert fragment in recovery, fragment
+assert publication.count("--legacy-index publication/current-channels.json") == 2
+assert "--legacy-index-sha256" not in publication
+assert "--legacy-index-size-bytes" not in publication
+assert recovery.count("--legacy-index-sha256") == 1
+assert recovery.count("--legacy-index-size-bytes") == 1
+assert recovery.index("prepare exact bootstrap recovery") < recovery.index(
+    "recover site and retain bootstrap evidence"
+)
+assert recovery.index(
+    "Dispatch exact site recovery without another index mutation"
+) < recovery.index("Run protected public schema-bootstrap smoke")
+assert recovery.index("Run protected public schema-bootstrap smoke") < recovery.index(
+    "Retain final protected schema-bootstrap evidence"
+)
+for forbidden in (
+    "--clobber",
+    "gh release create",
+    "channels-generation-${",
+    "Replace only canonical channels.json",
+    "publication-prepare-${{ inputs.original_run_id }}-${{ inputs.original_run_attempt }}",
+):
+    assert forbidden not in recovery
+for fragment in (
+    "original prepare summary digest drifted",
+    "generation 1 snapshot and live index drifted",
+    "generation 1 digest drifted",
+    "alpha evidence digest drifted",
+    "published beta assets drifted from prepare",
+    "original release plan is not reproducible",
+    "site publication facts are not reproducible",
+    'operation: "schema-bootstrap-index-recovery"',
+):
+    assert fragment in recovery_prepare, fragment
+for fragment in (
+    "tag source mismatch",
+    "immutable asset set drifted",
+    "checksum drifted",
+    "public release disagrees with generation 1",
+):
+    assert fragment in beta, fragment
+for fragment in (
     "LEGACY_INDEX_SHA256",
     "LEGACY_INDEX_SIZE_BYTES",
     "BOOTSTRAP_GENERATION = 1",
@@ -136,7 +216,14 @@ assert smoke.index('test -z "${SIFR_TEST_CHANNEL_METADATA_PATH:-}"') < smoke.ind
     "download_until_matches()"
 )
 legacy_digest = "71b3243925670f56dc510b8f45b6614a622f58097a0fea9492f61d20dc4bf9ef"
-for surface in (prepare, publication, bootstrap, evidence_schema):
+for surface in (
+    prepare,
+    publication,
+    recovery,
+    recovery_prepare,
+    bootstrap,
+    evidence_schema,
+):
     assert legacy_digest in surface
 for surface, size_fragment in (
     (prepare, '= "105"'),
@@ -145,6 +232,13 @@ for surface, size_fragment in (
     (evidence_schema, '"size_bytes": {"const": 105}'),
 ):
     assert size_fragment in surface
+for fragment in (
+    '"recovery": {',
+    '"failed_site_run_id"',
+    '"site_run_id"',
+    '{"not": {"required": ["recovery"]}}',
+):
+    assert fragment in evidence_schema, fragment
 for fragment in (
     "immutable asset set drifted",
     "asset digest drifted",
@@ -156,6 +250,6 @@ for forbidden in (
     "migrate",
     "fallback",
 ):
-    for surface in (prepare, publication, bootstrap):
+    for surface in (prepare, publication, recovery, recovery_prepare, bootstrap):
         assert forbidden not in surface.lower()
 PY

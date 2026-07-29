@@ -1,0 +1,509 @@
+name: schema-bootstrap-recovery
+run-name: Recover schema bootstrap ${{ inputs.original_run_id }}-${{ inputs.original_run_attempt }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      original_run_id:
+        description: Failed bootstrap-index workflow run ID
+        required: true
+        type: string
+      original_run_attempt:
+        description: Failed bootstrap-index workflow run attempt
+        required: true
+        type: string
+      failed_site_run_id:
+        description: Exact failed correlated website workflow run ID
+        required: true
+        type: string
+      alpha_version:
+        description: Published bootstrap alpha version
+        required: true
+        type: string
+      beta_version:
+        description: Published bootstrap beta version
+        required: true
+        type: string
+      source_commit:
+        description: Exact merged source commit used by both preview releases
+        required: true
+        type: string
+      site_base_commit:
+        description: Exact merged website commit used by the failed dispatch
+        required: true
+        type: string
+      expected_prepare_summary_sha256:
+        description: Failed run's read-only prepare summary digest
+        required: true
+        type: string
+      expected_index_sha256:
+        description: Already-activated generation-1 index digest
+        required: true
+        type: string
+      expected_plan_sha256:
+        description: Failed run's canonical publication plan digest
+        required: true
+        type: string
+      expected_site_facts_sha256:
+        description: Failed run's canonical site-publication facts digest
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: sifr-release-index
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: prepare exact bootstrap recovery
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      summary_sha256: ${{ steps.summary.outputs.summary_sha256 }}
+      summary_artifact_name: ${{ steps.summary.outputs.summary_artifact_name }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ORIGINAL_RUN_ID: ${{ inputs.original_run_id }}
+      ORIGINAL_RUN_ATTEMPT: ${{ inputs.original_run_attempt }}
+      FAILED_SITE_RUN_ID: ${{ inputs.failed_site_run_id }}
+      ALPHA_VERSION: ${{ inputs.alpha_version }}
+      BETA_VERSION: ${{ inputs.beta_version }}
+      SOURCE_COMMIT: ${{ inputs.source_commit }}
+      SITE_BASE_COMMIT: ${{ inputs.site_base_commit }}
+      EXPECTED_PREPARE_SUMMARY_SHA256: ${{ inputs.expected_prepare_summary_sha256 }}
+      EXPECTED_INDEX_SHA256: ${{ inputs.expected_index_sha256 }}
+      EXPECTED_PLAN_SHA256: ${{ inputs.expected_plan_sha256 }}
+      EXPECTED_SITE_FACTS_SHA256: ${{ inputs.expected_site_facts_sha256 }}
+      ORIGINAL_PREPARE_SUMMARY: plans/releases/schema-bootstrap-recovery/prepare-summary-${{ inputs.original_run_id }}-${{ inputs.original_run_attempt }}.json
+      WAIVER_SHA256: b9630cc060ca281946da76a9cb9bc67564759c8d5446b6a33157a7d138080008
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate failed mutation run and exact source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "${ORIGINAL_RUN_ID}" =~ ^[1-9][0-9]*$ &&
+            "${ORIGINAL_RUN_ATTEMPT}" =~ ^[1-9][0-9]*$ &&
+            "${FAILED_SITE_RUN_ID}" =~ ^[1-9][0-9]*$ &&
+            "${SOURCE_COMMIT}" =~ ^[0-9a-f]{40}$ &&
+            "${SITE_BASE_COMMIT}" =~ ^[0-9a-f]{40}$ &&
+            "${EXPECTED_PREPARE_SUMMARY_SHA256}" =~ ^[0-9a-f]{64}$ &&
+            "${EXPECTED_INDEX_SHA256}" =~ ^[0-9a-f]{64}$ &&
+            "${EXPECTED_PLAN_SHA256}" =~ ^[0-9a-f]{64}$ &&
+            "${EXPECTED_SITE_FACTS_SHA256}" =~ ^[0-9a-f]{64}$ ]] || {
+            echo "::error::bootstrap recovery requires exact immutable identities"
+            exit 2
+          }
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          git merge-base --is-ancestor "${SOURCE_COMMIT}" refs/remotes/origin/main || {
+            echo "::error::bootstrap recovery source must be reachable from main"
+            exit 2
+          }
+          gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${ORIGINAL_RUN_ID}" \
+            >original-run.json
+          jq -e \
+            --arg source "${SOURCE_COMMIT}" \
+            --argjson attempt "${ORIGINAL_RUN_ATTEMPT}" \
+            '
+              .event == "workflow_dispatch"
+              and .path == ".github/workflows/preview-release.yml"
+              and .head_sha == $source
+              and .run_attempt == $attempt
+              and .status == "completed"
+              and .conclusion == "failure"
+              and (.triggering_actor.login | type == "string" and length > 0)
+            ' original-run.json >/dev/null || {
+            echo "::error::original bootstrap run identity/status drifted"
+            exit 2
+          }
+          original_initiator="$(jq -r '.triggering_actor.login' original-run.json)"
+          gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${ORIGINAL_RUN_ID}/approvals" \
+            >original-approvals.json
+          scripts/distribution/release_governance.py \
+            resolve-publication-approvers \
+            --approvals original-approvals.json \
+            --initiator "${original_initiator}" \
+            --environment stable-release \
+            --repository "${GITHUB_REPOSITORY}" \
+            --operation bootstrap-index \
+            --single-maintainer-waiver \
+              plans/releases/single-maintainer-approval-waiver.json \
+            --expected-waiver-sha256 "${WAIVER_SHA256}" \
+            --include-policy >mutation-approval-decision.json
+
+      - name: Reconstruct exact post-index recovery proposal
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir recovery
+          scripts/distribution/prepare_schema_bootstrap_recovery.sh \
+            --repository "${GITHUB_REPOSITORY}" \
+            --original-run-id "${ORIGINAL_RUN_ID}" \
+            --original-run-attempt "${ORIGINAL_RUN_ATTEMPT}" \
+            --failed-site-run-id "${FAILED_SITE_RUN_ID}" \
+            --alpha-version "${ALPHA_VERSION}" \
+            --beta-version "${BETA_VERSION}" \
+            --source-commit "${SOURCE_COMMIT}" \
+            --site-commit "${SITE_BASE_COMMIT}" \
+            --prepare-summary "${ORIGINAL_PREPARE_SUMMARY}" \
+            --mutation-approval-decision mutation-approval-decision.json \
+            --expected-prepare-summary-sha256 \
+              "${EXPECTED_PREPARE_SUMMARY_SHA256}" \
+            --expected-index-sha256 "${EXPECTED_INDEX_SHA256}" \
+            --expected-plan-sha256 "${EXPECTED_PLAN_SHA256}" \
+            --expected-site-facts-sha256 "${EXPECTED_SITE_FACTS_SHA256}" \
+            --work-dir recovery/work \
+            --summary-out recovery/summary.json
+
+      - name: Bind reviewer-visible recovery summary
+        id: summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          summary_sha256="$(sha256sum recovery/summary.json | awk '{print $1}')"
+          artifact_name="bootstrap-recovery-prepare-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          {
+            echo "summary_sha256=${summary_sha256}"
+            echo "summary_artifact_name=${artifact_name}"
+          } >>"${GITHUB_OUTPUT}"
+          {
+            echo "## Schema bootstrap recovery prepare"
+            echo
+            echo "- original run: \`${ORIGINAL_RUN_ID}-${ORIGINAL_RUN_ATTEMPT}\`"
+            echo "- failed site run: \`${FAILED_SITE_RUN_ID}\`"
+            echo "- source commit: \`${SOURCE_COMMIT}\`"
+            echo "- generation/index: \`1\` / \`${EXPECTED_INDEX_SHA256}\`"
+            echo "- release plan: \`${EXPECTED_PLAN_SHA256}\`"
+            echo "- site facts: \`${EXPECTED_SITE_FACTS_SHA256}\`"
+            echo "- recovery summary: \`${summary_sha256}\`"
+            echo
+            echo "This recovery performs no release, tag, snapshot, or index mutation."
+          } >>"${GITHUB_STEP_SUMMARY}"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ steps.summary.outputs.summary_artifact_name }}
+          path: recovery/summary.json
+          if-no-files-found: error
+          retention-days: 30
+
+  recover:
+    name: recover site and retain bootstrap evidence
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    environment:
+      name: stable-release
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ORIGINAL_RUN_ID: ${{ inputs.original_run_id }}
+      ORIGINAL_RUN_ATTEMPT: ${{ inputs.original_run_attempt }}
+      FAILED_SITE_RUN_ID: ${{ inputs.failed_site_run_id }}
+      ALPHA_VERSION: ${{ inputs.alpha_version }}
+      BETA_VERSION: ${{ inputs.beta_version }}
+      SOURCE_COMMIT: ${{ inputs.source_commit }}
+      SITE_BASE_COMMIT: ${{ inputs.site_base_commit }}
+      EXPECTED_PREPARE_SUMMARY_SHA256: ${{ inputs.expected_prepare_summary_sha256 }}
+      EXPECTED_INDEX_SHA256: ${{ inputs.expected_index_sha256 }}
+      EXPECTED_PLAN_SHA256: ${{ inputs.expected_plan_sha256 }}
+      EXPECTED_SITE_FACTS_SHA256: ${{ inputs.expected_site_facts_sha256 }}
+      EXPECTED_RECOVERY_SUMMARY_SHA256: ${{ needs.prepare.outputs.summary_sha256 }}
+      ORIGINAL_PREPARE_SUMMARY: plans/releases/schema-bootstrap-recovery/prepare-summary-${{ inputs.original_run_id }}-${{ inputs.original_run_attempt }}.json
+      SITE_REPOSITORY: sifr-lang/sifr-website
+      SITE_WORKFLOW: release-site.yml
+      SITE_WORKFLOW_REF: sifr-release-site-stable-facts
+      SITE_WORKFLOW_RULESET_ID: "19899766"
+      SITE_WORKFLOW_RULESET_UPDATED_AT: "2026-07-28T13:22:41.496Z"
+      SITE_WORKFLOW_SHA256: a9360c82395f6e9d9822f201e56cc0f2eabab1bacda01c31e4e9f22d0202b3af
+      WAIVER_SHA256: b9630cc060ca281946da76a9cb9bc67564759c8d5446b6a33157a7d138080008
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ needs.prepare.outputs.summary_artifact_name }}
+          path: protected-prepare
+
+      - name: Revalidate both protected approvals and failed site identity
+        shell: bash
+        env:
+          SITE_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}
+        run: |
+          set -euo pipefail
+          test "$(sha256sum protected-prepare/summary.json | awk '{print $1}')" = \
+            "${EXPECTED_RECOVERY_SUMMARY_SHA256}" || {
+            echo "::error::reviewed recovery summary digest drifted"
+            exit 2
+          }
+          gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${ORIGINAL_RUN_ID}" \
+            >original-run.json
+          original_initiator="$(jq -er '.triggering_actor.login' original-run.json)"
+          gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${ORIGINAL_RUN_ID}/approvals" \
+            >original-approvals.json
+          scripts/distribution/release_governance.py \
+            resolve-publication-approvers \
+            --approvals original-approvals.json \
+            --initiator "${original_initiator}" \
+            --environment stable-release \
+            --repository "${GITHUB_REPOSITORY}" \
+            --operation bootstrap-index \
+            --single-maintainer-waiver \
+              plans/releases/single-maintainer-approval-waiver.json \
+            --expected-waiver-sha256 "${WAIVER_SHA256}" \
+            --include-policy >mutation-approval-decision.json
+          jq -e \
+            --slurpfile decision mutation-approval-decision.json \
+            '.mutation_approval == $decision[0]' \
+            protected-prepare/summary.json >/dev/null || {
+            echo "::error::original mutation approval drifted after prepare"
+            exit 2
+          }
+
+          gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/approvals" \
+            >recovery-approvals.json
+          scripts/distribution/release_governance.py \
+            resolve-publication-approvers \
+            --approvals recovery-approvals.json \
+            --initiator "${GITHUB_TRIGGERING_ACTOR}" \
+            --environment stable-release \
+            --repository "${GITHUB_REPOSITORY}" \
+            --operation bootstrap-index \
+            --single-maintainer-waiver \
+              plans/releases/single-maintainer-approval-waiver.json \
+            --expected-waiver-sha256 "${WAIVER_SHA256}" \
+            --include-policy >recovery-approval-decision.json
+
+          [[ -n "${SITE_TOKEN}" ]] || {
+            echo "::error::website actions token is required"
+            exit 2
+          }
+          GH_TOKEN="${SITE_TOKEN}" gh api \
+            "repos/${SITE_REPOSITORY}/actions/runs/${FAILED_SITE_RUN_ID}" \
+            >failed-site-run.json
+          jq -e \
+            --arg site "${SITE_BASE_COMMIT}" \
+            --arg title \
+              "Sifr site release ${ORIGINAL_RUN_ID}-${ORIGINAL_RUN_ATTEMPT}" \
+            '
+              .event == "workflow_dispatch"
+              and .path == ".github/workflows/release-site.yml"
+              and .head_sha == $site
+              and .display_title == $title
+              and .status == "completed"
+              and .conclusion == "failure"
+            ' failed-site-run.json >/dev/null || {
+            echo "::error::failed site run identity/status drifted"
+            exit 2
+          }
+          GH_TOKEN="${SITE_TOKEN}" gh run view "${FAILED_SITE_RUN_ID}" \
+            --repo "${SITE_REPOSITORY}" --log >failed-site-run.log
+          while IFS= read -r expected; do
+            grep -Fq "${expected}" failed-site-run.log || {
+              echo "::error::failed site run inputs drifted: ${expected%%:*}"
+              exit 2
+            }
+          done <<EOF
+          SIFR_SOURCE_COMMIT: ${SOURCE_COMMIT}
+          RELEASE_PLAN_SHA256: ${EXPECTED_PLAN_SHA256}
+          PUBLICATION_ATTEMPT: ${ORIGINAL_RUN_ID}-${ORIGINAL_RUN_ATTEMPT}
+          RELEASE_INDEX_GENERATION: 1
+          RELEASE_INDEX_SHA256: ${EXPECTED_INDEX_SHA256}
+          SITE_BASE_COMMIT: ${SITE_BASE_COMMIT}
+          DISPATCHER_INDEX_SHA256: $(jq -r '.dispatchers.index' protected-prepare/summary.json)
+          DISPATCHER_STABLE_SHA256: $(jq -r '.dispatchers.stable' protected-prepare/summary.json)
+          DISPATCHER_ALPHA_SHA256: $(jq -r '.dispatchers.alpha' protected-prepare/summary.json)
+          DISPATCHER_BETA_SHA256: $(jq -r '.dispatchers.beta' protected-prepare/summary.json)
+          PUBLICATION_FACTS_SHA256: ${EXPECTED_SITE_FACTS_SHA256}
+          STABLE_SITE_FACTS_SHA256: none
+          EOF
+
+      - name: Reconstruct and compare exact recovery bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir publication
+          scripts/distribution/prepare_schema_bootstrap_recovery.sh \
+            --repository "${GITHUB_REPOSITORY}" \
+            --original-run-id "${ORIGINAL_RUN_ID}" \
+            --original-run-attempt "${ORIGINAL_RUN_ATTEMPT}" \
+            --failed-site-run-id "${FAILED_SITE_RUN_ID}" \
+            --alpha-version "${ALPHA_VERSION}" \
+            --beta-version "${BETA_VERSION}" \
+            --source-commit "${SOURCE_COMMIT}" \
+            --site-commit "${SITE_BASE_COMMIT}" \
+            --prepare-summary "${ORIGINAL_PREPARE_SUMMARY}" \
+            --mutation-approval-decision mutation-approval-decision.json \
+            --expected-prepare-summary-sha256 \
+              "${EXPECTED_PREPARE_SUMMARY_SHA256}" \
+            --expected-index-sha256 "${EXPECTED_INDEX_SHA256}" \
+            --expected-plan-sha256 "${EXPECTED_PLAN_SHA256}" \
+            --expected-site-facts-sha256 "${EXPECTED_SITE_FACTS_SHA256}" \
+            --work-dir publication/work \
+            --summary-out publication/summary.json
+          cmp protected-prepare/summary.json publication/summary.json || {
+            echo "::error::reconstructed recovery summary drifted after approval"
+            exit 2
+          }
+          asset_names="$(
+            gh release view channels \
+              --repo "${GITHUB_REPOSITORY}" \
+              --json assets --jq '.assets[].name'
+          )"
+          ! grep -Fxq schema-v2-bootstrap-generation-1.json <<<"${asset_names}" || {
+            echo "::error::final generation-1 bootstrap evidence already exists"
+            exit 2
+          }
+
+      - name: Dispatch exact site recovery without another index mutation
+        shell: bash
+        env:
+          SITE_TOKEN: ${{ secrets.SIFR_WEBSITE_ACTIONS_TOKEN }}
+        run: |
+          set -euo pipefail
+          scripts/distribution/dispatch_stable_site_publication.sh \
+            --repository "${SITE_REPOSITORY}" \
+            --workflow "${SITE_WORKFLOW}" \
+            --workflow-ref "${SITE_WORKFLOW_REF}" \
+            --ruleset-id "${SITE_WORKFLOW_RULESET_ID}" \
+            --ruleset-updated-at "${SITE_WORKFLOW_RULESET_UPDATED_AT}" \
+            --workflow-sha256 "${SITE_WORKFLOW_SHA256}" \
+            --source-commit "${SOURCE_COMMIT}" \
+            --site-commit "${SITE_BASE_COMMIT}" \
+            --release-plan-sha256 "${EXPECTED_PLAN_SHA256}" \
+            --publication-attempt \
+              "${ORIGINAL_RUN_ID}-${ORIGINAL_RUN_ATTEMPT}" \
+            --generation 1 \
+            --index-sha256 "${EXPECTED_INDEX_SHA256}" \
+            --default-channel beta \
+            --dispatcher-index-sha256 "$(
+              jq -r '.dispatchers.index' publication/summary.json
+            )" \
+            --dispatcher-stable-sha256 "$(
+              jq -r '.dispatchers.stable' publication/summary.json
+            )" \
+            --dispatcher-alpha-sha256 "$(
+              jq -r '.dispatchers.alpha' publication/summary.json
+            )" \
+            --dispatcher-beta-sha256 "$(
+              jq -r '.dispatchers.beta' publication/summary.json
+            )" \
+            --publication-facts-sha256 "${EXPECTED_SITE_FACTS_SHA256}" \
+            --stable-site-facts-sha256 none \
+            --result-out publication/site-run.json
+
+      - name: Run protected public schema-bootstrap smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          scripts/distribution/run_schema_bootstrap_public_smoke.sh \
+            --repository "${GITHUB_REPOSITORY}" \
+            --version "${BETA_VERSION}" \
+            --index publication/work/channels/channels.json \
+            --dispatchers publication/work/dispatchers \
+            --out publication/bootstrap-smoke
+
+      - name: Retain final protected schema-bootstrap evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          original_initiator="$(jq -er '.triggering_actor.login' original-run.json)"
+          approval_mode="$(
+            jq -er '.approval_policy.mode' mutation-approval-decision.json
+          )"
+          approval_waiver_sha256="$(
+            jq -er '.approval_policy.waiver_sha256' \
+              mutation-approval-decision.json
+          )"
+          approvers_json="$(
+            jq -c '.approvers' mutation-approval-decision.json
+          )"
+          jq -cnS \
+            --argjson run_id "${GITHUB_RUN_ID}" \
+            --argjson run_attempt "${GITHUB_RUN_ATTEMPT}" \
+            --arg initiator "${GITHUB_TRIGGERING_ACTOR}" \
+            --argjson failed_site_run_id "${FAILED_SITE_RUN_ID}" \
+            --slurpfile decision recovery-approval-decision.json \
+            --slurpfile site_run publication/site-run.json \
+            '{
+              run_id: $run_id,
+              run_attempt: $run_attempt,
+              initiator: $initiator,
+              approval_policy: $decision[0].approval_policy,
+              approvers: $decision[0].approvers,
+              failed_site_run_id: $failed_site_run_id,
+              site_run_id: $site_run[0].run_id
+            }' >publication/recovery.json
+          alpha_source="$(
+            jq -er '.alpha.source_commit' \
+              "publication/work/channels/schema-v2-bootstrap-alpha-${ALPHA_VERSION}.json"
+          )"
+          evidence="publication/schema-v2-bootstrap-generation-1.json"
+          scripts/distribution/materialize_schema_bootstrap_evidence.py \
+            --stage preview-index \
+            --run-id "${ORIGINAL_RUN_ID}" \
+            --run-attempt "${ORIGINAL_RUN_ATTEMPT}" \
+            --initiator "${original_initiator}" \
+            --approval-mode "${approval_mode}" \
+            --approval-waiver-sha256 "${approval_waiver_sha256}" \
+            --approvers-json "${approvers_json}" \
+            --prepare-summary "${ORIGINAL_PREPARE_SUMMARY}" \
+            --legacy-index-sha256 \
+              71b3243925670f56dc510b8f45b6614a622f58097a0fea9492f61d20dc4bf9ef \
+            --legacy-index-size-bytes 105 \
+            --recovery-json publication/recovery.json \
+            --alpha-version "${ALPHA_VERSION}" \
+            --alpha-source-commit "${alpha_source}" \
+            --alpha-record publication/work/release-records/alpha.json \
+            --alpha-assets publication/work/alpha-assets \
+            --beta-version "${BETA_VERSION}" \
+            --beta-source-commit "${SOURCE_COMMIT}" \
+            --beta-record publication/work/release-records/beta.json \
+            --beta-assets publication/work/beta-assets \
+            --index publication/work/channels/channels.json \
+            --smoke-dir publication/bootstrap-smoke \
+            --alpha-evidence \
+              "publication/work/channels/schema-v2-bootstrap-alpha-${ALPHA_VERSION}.json" \
+            --out "${evidence}"
+          gh release upload channels "${evidence}" \
+            --repo "${GITHUB_REPOSITORY}"
+          verify_dir="$(mktemp -d)"
+          gh release download channels \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern "$(basename "${evidence}")" \
+            --dir "${verify_dir}"
+          cmp "${evidence}" "${verify_dir}/$(basename "${evidence}")" || {
+            echo "::error::recovered bootstrap evidence drifted after upload"
+            exit 2
+          }
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: bootstrap-recovery-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            publication/summary.json
+            publication/site-run.json
+            publication/recovery.json
+            publication/bootstrap-smoke
+            publication/schema-v2-bootstrap-generation-1.json
+            recovery-approval-decision.json
+          if-no-files-found: error
+          retention-days: 30
