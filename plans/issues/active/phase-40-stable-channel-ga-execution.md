@@ -789,11 +789,18 @@ Review and upstream coordination ledger:
   `plans/reviews/archive/phase-40-schema-bootstrap-recovery-review-pass-2-satisfied.md`.
   At pushed PR head
   `ddcd7e3d656e39a2b00727a7ce6ac775fa823f1e`, Opus independently reran
-  the bootstrap self-test, workflow contract, complete 67-variant distribution
-  area, YAML/shell and file-size checks; compared the durable summary
+  the bootstrap self-test, workflow contract, 67-variant distribution `full`
+  suite, YAML/shell and file-size checks; compared the durable summary
   byte-for-byte with the original artifact; checked the live failed run log
   and generation-1 assets; found every pass-1 finding closed; and returned
   `SATISFIED` with zero actionable finding.
+- Final exact-head review pass 3 is archived at
+  `plans/reviews/archive/phase-40-schema-bootstrap-recovery-review-pass-3-not-satisfied.md`.
+  It confirmed the post-pass-2 commit was tracking-only and the full recovery
+  implementation remained clean, then found that the new ledger entry
+  inaccurately called the filtered 67-variant `full` suite the complete area.
+  The wording above now names the suite exactly; the reviewer also independently
+  ran the unfiltered complete distribution area at 125/125.
 - The next protected-publication wave adds a credential-free stable prepare
   path for `ga-activation` and `normal`. It binds an exact evidence commit,
   canonical candidate directory and plan digest, a separate clean exact source
