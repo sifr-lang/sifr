@@ -953,6 +953,18 @@ Review and validation notes:
   step within its blocking budget, confirmed scenario locks remain freshly
   mutation-tested and subset enforcement is unchanged, rechecked the complete
   milestone, and reported `SATISFIED`.
+- [Published-head review](../../reviews/active/rust-interop-certification-8-review-round-5.md)
+  independently re-derived the native-link envelope, lifecycle and no-copy
+  evidence, inventories, claims, docs, and provenance against the exact
+  [PR #3067](https://github.com/sifr-lang/sifr/pull/3067) head; reran both
+  mandatory generated builds and all focused gates; and reported `SATISFIED`
+  with no actionable finding.
+- [Exact PR-head round 5](../../reviews/active/rust-interop-certification-8-review-round-5.md)
+  independently rebuilt both mandatory generated packages, reran the complete
+  Rust-interop area, all driver tests, Clippy, formatting, and guardrails,
+  re-derived the native-link envelope and all inventories, and reported
+  `SATISFIED` with no actionable finding against PR #3067 head
+  `3bd82793a9652b30f23c08c4f54d11c5aa0e298a`.
 - Focused revalidation passes the positive generated-package runtime test, the
   exact three-diagnostic negative test, locked/offline scenario Clippy, 429
   non-generated driver tests, all 10 Rust-interop area variants, 152 fixture
