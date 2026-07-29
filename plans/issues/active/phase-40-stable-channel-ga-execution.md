@@ -638,6 +638,15 @@ Review and upstream coordination ledger:
   producer, and evidence contracts. The first queued rollback dispatch was
   cancelled before execution when a third run replaced the pending
   concurrency slot; the standalone redispatch above passed.
+- [PR #3056](https://github.com/sifr-lang/sifr/pull/3056) merged the protected
+  drill evidence as
+  `edb7d302a7b145787b1762180654671637de0123`. Its exact-head Opus review is
+  archived at
+  `plans/reviews/archive/phase-40-protected-drill-evidence-review-pass-1-satisfied.md`;
+  it independently reconciled all four workflow runs, the three retained
+  canonical evidence artifacts, the cancelled pending rollback dispatch, and
+  the successful standalone redispatch, then returned `VERDICT: SATISFIED`
+  with no actionable finding.
 - The next protected-publication wave adds a credential-free stable prepare
   path for `ga-activation` and `normal`. It binds an exact evidence commit,
   canonical candidate directory and plan digest, a separate clean exact source
@@ -1447,3 +1456,9 @@ updating or deleting that exact tag with no bypass actors.
 - [PR #3054](https://github.com/sifr-lang/sifr/pull/3054) merged the final
   exact-source qualification-evidence wave as
   `15c384d958340d7545370f9249d58ac46e202797`.
+- The documentation-only final-qualification closeout
+  [PR #3055](https://github.com/sifr-lang/sifr/pull/3055) merged as
+  `476a2983003f9fec74ac15584a576f79495f7482`. Its exact-head Opus review is
+  archived at
+  `plans/reviews/archive/phase-40-final-qualification-closeout-review-pass-1-satisfied.md`;
+  it returned `VERDICT: SATISFIED` with no actionable finding.
