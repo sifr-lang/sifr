@@ -59,8 +59,12 @@ the governed index are rejected.
 
 Stable publication requires a locally passing release profile, an immutable
 candidate plan, exact artifact digests, and protected approval by a reviewer
-other than the workflow initiator. Publication verifies the same candidate
-bytes before changing the index. `rc` is not a public channel.
+other than the workflow initiator. During the repository's temporary
+single-maintainer period, the schema-v2 bootstrap and first GA may instead use
+the checked-in, expiring approval waiver. That exception still requires a
+GitHub-recorded protected approval, binds the waiver digest into retained
+evidence, and cannot authorize later normal or incident publication.
+Publication verifies the same candidate bytes before changing the index. `rc` is not a public channel.
 
 If a release is withdrawn, fresh installs and exact pins fail closed. Sifr can
 roll back only to an active predecessor already named by the approved release

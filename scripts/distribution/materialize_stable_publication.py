@@ -38,7 +38,14 @@ def parse_args() -> argparse.Namespace:
     signoff.add_argument("--site-run", type=Path, required=True)
     signoff.add_argument("--smoke", type=Path, required=True)
     signoff.add_argument("--run-id", type=int, required=True)
+    signoff.add_argument("--initiator", required=True)
     signoff.add_argument("--approver", required=True)
+    signoff.add_argument(
+        "--approval-mode",
+        required=True,
+        choices=("distinct-reviewer", "single-maintainer-waiver"),
+    )
+    signoff.add_argument("--approval-waiver-sha256", required=True)
     signoff.add_argument("--out", type=Path, required=True)
     return parser.parse_args()
 
@@ -63,7 +70,12 @@ def main() -> int:
                 site_run_path=args.site_run,
                 smoke_root=args.smoke,
                 run_id=args.run_id,
+                initiator=args.initiator,
                 approver=args.approver,
+                approval_policy={
+                    "mode": args.approval_mode,
+                    "waiver_sha256": args.approval_waiver_sha256,
+                },
             )
             write_canonical_json(args.out, signoff, refuse_existing=True)
     except GovernanceError as exc:

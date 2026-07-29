@@ -685,6 +685,17 @@ and deployed commit. Each protected run retains its own
 `stable-release-signoff-<version>-attempt-<run>-<attempt>.json`, so a completed
 sign-off never has to be rewritten and a later resume remains convergent.
 
+The temporary initial-stable single-maintainer exception is a canonical, expiring
+waiver under `plans/releases/`. It authorizes only `bootstrap-alpha`,
+`bootstrap-index`, and first `ga-activation`; the protected job must still
+pause for a GitHub-recorded `stable-release` approval by the named owner and
+admin bypass remains disabled. Bootstrap evidence and stable sign-off record
+the approval mode and waiver SHA-256. The workflow pins the checked-in waiver
+digest, prefers any distinct environment reviewer over owner self-approval,
+and derives the retained mode from that selected approval set before
+publication. `normal`, `rollback`, and `incident-roll-forward` cannot select
+the waiver.
+
 `rollback` and `incident-roll-forward` enter the same protected `publish` job
 from an exact incident evidence commit. The read-only prepare path verifies the
 request and withdrawal-evidence bytes against `HEAD`, the affected and
@@ -724,9 +735,13 @@ and 105-byte size; no code parses its fields and no pre-epoch fixture,
 migration, or fallback is retained.
 
 Both bootstrap stages run in the `stable-release` environment. Publish reads
-the workflow run's GitHub approval history and fails unless the recorded
-environment approvers include at least one login distinct from
-`GITHUB_TRIGGERING_ACTOR`. The final evidence binds the alpha-stage evidence
+the workflow run's GitHub approval history and fails unless it contains an
+authorized environment approver. The default requires a login distinct from
+`GITHUB_TRIGGERING_ACTOR`; the canonical unexpired single-maintainer waiver
+allows the named owner only for the two bootstrap stages. Its checked-in digest
+is pinned by the protected workflow, and any distinct reviewer takes precedence
+over the waiver. The final evidence binds the selected approval mode and waiver
+digest, plus the alpha-stage evidence
 digest, run/attempt, initiator, approvers, and prepare-summary digest as well as
 the final stage's own prepare-summary digest. The final stage
 reserves `channels-generation-1.json`, replaces only `channels.json`,

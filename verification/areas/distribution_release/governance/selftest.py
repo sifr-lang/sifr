@@ -25,10 +25,10 @@ from .release_index import (
 from .release_plan import (
     generate_site_release_facts,
     validate_release_plan,
-    validate_release_signoff,
     validate_site_release_facts,
 )
 from .release_report import validate_release_profile_report
+from .release_signoff_selftest import test_release_signoff_mutations
 from .schema_contracts import qualification_index, validate_schema_contracts
 from .surface_contracts import (
     validate_install_receipt,
@@ -555,51 +555,7 @@ def test_incident_mutations() -> None:
 
 
 def test_signoff_mutations() -> None:
-    release_signoff = {
-        "schema_version": 2,
-        "version": "0.1.0",
-        "plan_sha256": SHA_A,
-        "attempts": [valid_attempt()],
-        "published_assets": {"sifr-installer-0.1.0": SHA_A},
-        "marketplace": {
-            "publisher": "sifr",
-            "extension": "sifr",
-            "version": "0.1.0",
-            "vsix_sha256": SHA_B,
-        },
-        "channel_generation": 8,
-        "site_publication": {
-            "repository": "sifr-lang/sifr-website",
-            "workflow": "release-site.yml",
-            "run_id": 11,
-            "deployed_commit": COMMIT,
-        },
-        "site_facts_sha256": SHA_C,
-        "post_publication_smoke": [
-            {"id": f"smoke-{index}", "status": "pass", "sha256": SHA_D}
-            for index in range(4)
-        ],
-    }
-    validate_release_signoff(release_signoff)
-    expect_rejected(
-        validate_release_signoff,
-        mutate(
-            release_signoff,
-            lambda item: item.update({"version": "0.1.0-alpha.1"}),
-        ),
-    )
-    expect_rejected(
-        validate_release_signoff,
-        mutate(release_signoff, lambda item: item["attempts"][0].update({"mutations": []})),
-    )
-    expect_rejected(
-        validate_release_signoff,
-        mutate(release_signoff, lambda item: item["attempts"][0].update({"mode": []})),
-    )
-    expect_rejected(
-        validate_release_signoff,
-        mutate(release_signoff, lambda item: item["attempts"][0].update({"status": []})),
-    )
+    test_release_signoff_mutations()
     incident_signoff = {
         "schema_version": 2,
         "incident_id": "inc-2026-001",

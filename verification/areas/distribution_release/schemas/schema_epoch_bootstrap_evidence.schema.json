@@ -11,6 +11,7 @@
     "run_id",
     "run_attempt",
     "initiator",
+    "approval_policy",
     "approvers",
     "prepare_summary_sha256",
     "legacy_index",
@@ -23,6 +24,7 @@
     "run_id": {"type": "integer", "minimum": 1},
     "run_attempt": {"type": "integer", "minimum": 1},
     "initiator": {"type": "string", "minLength": 1},
+    "approval_policy": {"$ref": "#/$defs/approval_policy"},
     "approvers": {"$ref": "#/$defs/approvers"},
     "prepare_summary_sha256": {"$ref": "#/$defs/sha256"},
     "legacy_index": {
@@ -43,6 +45,7 @@
         "run_id",
         "run_attempt",
         "initiator",
+        "approval_policy",
         "approvers",
         "prepare_summary_sha256"
       ],
@@ -51,6 +54,7 @@
         "run_id": {"type": "integer", "minimum": 1},
         "run_attempt": {"type": "integer", "minimum": 1},
         "initiator": {"type": "string", "minLength": 1},
+        "approval_policy": {"$ref": "#/$defs/approval_policy"},
         "approvers": {"$ref": "#/$defs/approvers"},
         "prepare_summary_sha256": {"$ref": "#/$defs/sha256"}
       }
@@ -136,6 +140,28 @@
       "minItems": 1,
       "uniqueItems": true,
       "items": {"type": "string", "minLength": 1}
+    },
+    "approval_policy": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "waiver_sha256"],
+          "properties": {
+            "mode": {"const": "distinct-reviewer"},
+            "waiver_sha256": {"const": "none"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "waiver_sha256"],
+          "properties": {
+            "mode": {"const": "single-maintainer-waiver"},
+            "waiver_sha256": {"$ref": "#/$defs/sha256"}
+          }
+        }
+      ]
     },
     "alpha_assets": {
       "type": "object",

@@ -69,6 +69,17 @@ Python-interop implementation or verification, so this remains follow-up
 evidence rather than a stable-release-governance prerequisite or a reason to
 weaken the timeout.
 
+During the Phase 40 single-maintainer approval-boundary review on 2026-07-29,
+the unchanged Python-interop lane again reproduced the
+`readonly-check-doctor` 120-second subprocess timeout. An exact isolated replay
+failed at the same command and boundary. The subsequent authoritative
+create-PR profile passed every preceding blocking lane, then reproduced that
+timeout and a separate 180-second `binding-authoring` runtime timeout while
+other worktrees were compiling concurrently; the following declaration,
+tier-1, and callback cases passed immediately. The approval-boundary diff does
+not modify compiler or Python-interop sources. No timeout, threshold, waiver,
+baseline, or profile selection was changed.
+
 During final candidate qualification on exact source
 `7242e4737b1ee89f9f02a3b4793d5cdb13d372ea`, the canonical release profile
 passed coverage, core, diagnostics, CPython differential, all 25 selected

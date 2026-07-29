@@ -76,6 +76,8 @@ ordered = (
 positions = [runner.index(fragment) for fragment in ordered]
 assert positions == sorted(positions)
 assert runner.count("--clobber") == 1
+assert "--single-maintainer-waiver" not in runner
+assert "--expected-waiver-sha256" not in runner
 for fragment in (
     '"${workflow_ref}" = "refs/heads/main"',
     "mutation must run from protected main HEAD",

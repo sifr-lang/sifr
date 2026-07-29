@@ -48,6 +48,10 @@ from governance.common import (  # noqa: E402
     sha256_file,
     write_canonical_json,
 )
+from governance.approval_waiver import (  # noqa: E402
+    validate_repository_approval_waiver,
+    validate_single_maintainer_waiver,
+)
 from governance.incident_evidence import validate_incident_evidence_commit  # noqa: E402
 from governance.incident_planner import materialize_incident_mutation  # noqa: E402
 from governance.planner import (  # noqa: E402
@@ -60,7 +64,7 @@ from governance.release_index import (  # noqa: E402
 )
 from governance.schema_bootstrap import (  # noqa: E402
     build_preview_epoch,
-    resolve_distinct_approvers,
+    resolve_approval_decision,
 )
 from governance.stable_planner import materialize_stable_mutation  # noqa: E402
 
@@ -77,6 +81,7 @@ def parse_args() -> argparse.Namespace:
             "release-index",
             "protected-drill-evidence",
             "schema-bootstrap-evidence",
+            "single-maintainer-approval-waiver",
             "release-plan",
             "release-signoff",
             "site-facts",
@@ -248,6 +253,11 @@ def parse_args() -> argparse.Namespace:
     approvers.add_argument("--approvals", required=True)
     approvers.add_argument("--initiator", required=True)
     approvers.add_argument("--environment", default="stable-release")
+    approvers.add_argument("--repository", default="sifr-lang/sifr")
+    approvers.add_argument("--operation", default="")
+    approvers.add_argument("--single-maintainer-waiver")
+    approvers.add_argument("--expected-waiver-sha256")
+    approvers.add_argument("--include-policy", action="store_true")
     return parser.parse_args()
 
 
@@ -303,6 +313,11 @@ def validate_command(args: argparse.Namespace) -> None:
         "release-index": validate_release_index,
         "protected-drill-evidence": validate_drill_evidence,
         "schema-bootstrap-evidence": validate_bootstrap_evidence,
+        "single-maintainer-approval-waiver": (
+            lambda payload: validate_repository_approval_waiver(
+                payload, require_unexpired=True
+            )
+        ),
         "release-plan": validate_release_plan,
         "release-signoff": validate_release_signoff,
         "site-facts": validate_site_release_facts,
@@ -629,12 +644,49 @@ def prepare_incident_publication(args: argparse.Namespace) -> None:
 
 
 def resolve_publication_approvers(args: argparse.Namespace) -> None:
-    approvers = resolve_distinct_approvers(
+    waiver_path = None
+    waiver_sha256 = "none"
+    if args.single_maintainer_waiver:
+        waiver_path = Path(args.single_maintainer_waiver)
+        if args.expected_waiver_sha256 is None:
+            raise GovernanceError(
+                "expected waiver SHA-256 is required with a waiver path"
+            )
+        require_sha256(args.expected_waiver_sha256, "expected waiver SHA-256")
+        waiver_sha256 = sha256_file(waiver_path)
+        if waiver_sha256 != args.expected_waiver_sha256:
+            raise GovernanceError("single-maintainer approval waiver digest drifted")
+    decision = resolve_approval_decision(
         load_json_strict(Path(args.approvals)),
         initiator=args.initiator,
         environment=args.environment,
+        allowed_self_approver=args.initiator if waiver_path else None,
     )
-    print(json.dumps(approvers, separators=(",", ":")))
+    if decision["mode"] == "single-maintainer-waiver":
+        waiver = validate_single_maintainer_waiver(
+            load_json_strict(waiver_path, require_canonical=True),
+            repository=args.repository,
+            environment=args.environment,
+            operation=args.operation,
+            initiator=args.initiator,
+            require_unexpired=True,
+        )
+        if waiver["owner_login"].casefold() != decision["approvers"][0].casefold():
+            raise GovernanceError("waiver owner does not match the recorded approver")
+    policy = {
+        "mode": decision["mode"],
+        "waiver_sha256": (
+            waiver_sha256
+            if decision["mode"] == "single-maintainer-waiver"
+            else "none"
+        ),
+    }
+    output: Any = (
+        {"approvers": decision["approvers"], "approval_policy": policy}
+        if args.include_policy
+        else decision["approvers"]
+    )
+    print(json.dumps(output, separators=(",", ":")))
 
 
 def _require_clean_external_incident_directory(

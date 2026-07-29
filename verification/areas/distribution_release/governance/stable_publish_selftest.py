@@ -82,7 +82,12 @@ def test_stage_and_signoff() -> None:
             site_run_path=site_run,
             smoke_root=smoke,
             run_id=99,
+            initiator="release-initiator",
             approver="release-reviewer",
+            approval_policy={
+                "mode": "distinct-reviewer",
+                "waiver_sha256": "none",
+            },
         )
         assert signoff["version"] == "0.1.0"
         assert signoff["attempts"][0]["run_id"] == 99
@@ -146,7 +151,12 @@ def test_signoff_rejects_public_drift() -> None:
             "site_run_path": site_run,
             "smoke_root": smoke,
             "run_id": 99,
+            "initiator": "release-initiator",
             "approver": "release-reviewer",
+            "approval_policy": {
+                "mode": "distinct-reviewer",
+                "waiver_sha256": "none",
+            },
         }
         asset = next((staged / "release-assets").iterdir())
         asset_bytes = asset.read_bytes()
@@ -447,8 +457,14 @@ def test_cli_producer() -> None:
                 str(smoke),
                 "--run-id",
                 "99",
+                "--initiator",
+                "release-initiator",
                 "--approver",
                 "release-reviewer",
+                "--approval-mode",
+                "distinct-reviewer",
+                "--approval-waiver-sha256",
+                "none",
                 "--out",
                 str(signoff),
             ]

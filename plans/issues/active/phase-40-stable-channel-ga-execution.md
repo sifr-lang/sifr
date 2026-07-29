@@ -13,9 +13,17 @@ validated, merged PR.
 - Release owner: `release/distribution`.
 - Incident owner: `release/distribution`.
 - Protected GitHub environment: `stable-release`.
-- Protected review policy: at least one non-initiating
-  `release/distribution` reviewer; self-review is forbidden. Initial and resume
-  attempts each require a fresh approval recorded in sign-off.
+- Protected review policy: each initial and resume attempt requires a fresh
+  GitHub-recorded `stable-release` approval retained in sign-off. The default
+  requires a non-initiating `release/distribution` reviewer and forbids
+  self-review. The user-directed temporary single-maintainer exception in
+  `plans/releases/single-maintainer-approval-waiver.json` authorizes only
+  `bootstrap-alpha`, `bootstrap-index`, and `ga-activation` through
+  2026-08-27. It still requires the named owner to approve the protected
+  environment, disables admin bypass, binds the waiver digest into retained
+  evidence, and cannot authorize normal or incident publication. Distinct
+  reviewer restoration is tracked by
+  [`ad-hoc-distinct-release-reviewer-restoration.md`](./ad-hoc-distinct-release-reviewer-restoration.md).
 - Supported standalone targets:
   - `aarch64-apple-darwin`
   - `x86_64-apple-darwin`
@@ -647,6 +655,63 @@ Review and upstream coordination ledger:
   canonical evidence artifacts, the cancelled pending rollback dispatch, and
   the successful standalone redispatch, then returned `VERDICT: SATISFIED`
   with no actionable finding.
+- The documentation-only drill closeout
+  [PR #3057](https://github.com/sifr-lang/sifr/pull/3057) merged as
+  `649334330ce4f9c682b5aa8453ddad6ada737d40`. Its exact-head review is
+  archived at
+  `plans/reviews/archive/phase-40-protected-drill-closeout-review-pass-1-satisfied.md`;
+  it returned `SATISFIED` with no actionable finding.
+- The pre-exception approval-boundary audit is archived at
+  `plans/reviews/archive/phase-40-protected-approval-boundary-audit-pass-1-external-reviewer-required.md`.
+  It correctly proved that no compliant single-maintainer path existed under
+  the then-frozen distinct-reviewer policy. The later user direction explicitly
+  authorized the narrow, expiring exception recorded below; the audit remains
+  historical evidence rather than a current blocker.
+- The user directed Phase 40 to proceed without a second human reviewer while
+  the repository has one maintainer. The in-review single-maintainer approval
+  exception keeps a real `stable-release` environment approval mandatory,
+  rejects admin bypass, expires on 2026-08-27, and is limited to the two
+  bootstrap stages plus first GA. Canonical bootstrap and stable sign-off
+  evidence record the approval mode and exact waiver digest; normal and
+  incident operations remain ineligible. Restoration of a distinct reviewer is
+  isolated in the non-blocking ad hoc follow-up rather than weakening future
+  stable releases.
+- The exception is under review in
+  [PR #3060](https://github.com/sifr-lang/sifr/pull/3060). Claude Opus review
+  pass 1 is archived at
+  `plans/reviews/archive/phase-40-single-maintainer-approval-review-pass-1-not-satisfied.md`.
+  Its five findings are remediated before pass 2: the branch is rebased on
+  current `main` without reverting corrected issue links; bootstrap and GA pin
+  the canonical waiver digest; approval resolution prefers a real distinct
+  reviewer and derives the retained mode from the actual approval set before
+  publication; stable sign-off binds the initiator and rejects mode/approver
+  mismatch; and direct tests validate the real canonical waiver, its expiry,
+  all three allowed operations, all forbidden stable/incident operations, and
+  the incident workflow's absence of waiver arguments.
+- Post-remediation validation passed the complete distribution area 125/125,
+  all focused governance and workflow contracts, the file-size guardrail, and
+  every authoritative create-PR blocking lane before Python interop. The
+  unchanged interop lane reproduced the separately indexed
+  `readonly-check-doctor` 120-second timeout in both an isolated replay and the
+  profile, then hit a 180-second `binding-authoring` timeout under concurrent
+  worktree compilation while later interop cases passed. This host-variance
+  evidence is recorded in
+  [`adhoc_performance_budget_host_variance.md`](./adhoc_performance_budget_host_variance.md);
+  no timeout, threshold, waiver, baseline, or Phase 40 source was changed.
+- Exact PR-head Opus review pass 2 is archived at
+  `plans/reviews/archive/phase-40-single-maintainer-approval-review-pass-2-satisfied.md`.
+  At remote head `2b2f613fd522184c65ce1cc4bce755406ac8b360`,
+  it independently reran the complete distribution area 125/125, the release
+  runner self-test, and the file-size guardrail; verified all five pass-1
+  findings closed; found the PR cleanly based on current `main`; and returned
+  `SATISFIED` with no actionable finding.
+- Final exact-head Opus review pass 3 is archived at
+  `plans/reviews/archive/phase-40-single-maintainer-approval-review-pass-3-final-satisfied.md`.
+  It reviewed remote head `36a71dc467ae1bc2a82c7bce33348edec5d7dbc5`,
+  proved the pass-2 archive/ledger delta was tracking-only, independently
+  reran distribution 125/125, the runner self-test, and the file-size
+  guardrail, spot-reverified the full waiver boundary, and returned
+  `SATISFIED` with zero actionable finding.
 - The next protected-publication wave adds a credential-free stable prepare
   path for `ga-activation` and `normal`. It binds an exact evidence commit,
   canonical candidate directory and plan digest, a separate clean exact source

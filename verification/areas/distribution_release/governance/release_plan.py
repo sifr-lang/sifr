@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .approval_waiver import validate_approval_policy
 from .common import (
     BUILDERS,
     TARGETS,
@@ -323,6 +324,8 @@ def validate_release_signoff(payload: Any) -> dict[str, Any]:
             "schema_version",
             "version",
             "plan_sha256",
+            "initiator",
+            "approval_policy",
             "attempts",
             "published_assets",
             "marketplace",
@@ -337,7 +340,17 @@ def validate_release_signoff(payload: Any) -> dict[str, Any]:
     if version_channel(signoff["version"], "$.version") != "stable":
         fail("$.version", "must be an exact stable version")
     require_sha256(signoff["plan_sha256"], "$.plan_sha256")
+    initiator = require_nonempty_string(signoff["initiator"], "$.initiator")
+    policy = validate_approval_policy(signoff["approval_policy"], "$.approval_policy")
     validate_attempts(signoff["attempts"], "$.attempts")
+    for index, attempt in enumerate(signoff["attempts"]):
+        approver = attempt["approver"]
+        is_self = approver.casefold() == initiator.casefold()
+        if is_self != (policy["mode"] == "single-maintainer-waiver"):
+            fail(
+                f"$.attempts[{index}].approver",
+                "does not match the retained approval policy",
+            )
     assets = require_object(signoff["published_assets"], "$.published_assets")
     if not assets:
         fail("$.published_assets", "must contain published asset evidence")

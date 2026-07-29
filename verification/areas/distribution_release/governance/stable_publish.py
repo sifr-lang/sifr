@@ -137,13 +137,16 @@ def materialize_stable_signoff(
     site_run_path: Path,
     smoke_root: Path,
     run_id: int,
+    initiator: str,
     approver: str,
+    approval_policy: dict[str, str],
 ) -> dict[str, Any]:
     """Build completed write-once sign-off evidence from verified public bytes."""
     summary = validate_stable_prepare_summary(
         load_json_strict(prepare_summary_path, require_canonical=True)
     )
     run_id = require_positive_int(run_id, "run_id")
+    initiator = require_nonempty_string(initiator, "initiator")
     approver = require_nonempty_string(approver, "approver")
     published_assets = _published_asset_digests(summary, release_assets_root)
 
@@ -170,6 +173,8 @@ def materialize_stable_signoff(
         "schema_version": 2,
         "version": summary["version"],
         "plan_sha256": summary["evidence"]["plan_sha256"],
+        "initiator": initiator,
+        "approval_policy": approval_policy,
         "attempts": [
             {
                 "run_id": run_id,

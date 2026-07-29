@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import copy
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
 from . import schema_bootstrap as bootstrap_module
+from .approval_waiver import validate_single_maintainer_waiver
+from .approval_waiver_selftest import validate_repository_waiver
 from .common import GovernanceError
 from .common import write_canonical_json
 from .schema_bootstrap import (
@@ -17,6 +20,7 @@ from .schema_bootstrap import (
     build_preview_epoch,
     expected_asset_names,
     materialize_bootstrap_evidence,
+    resolve_approval_decision,
     resolve_distinct_approvers,
     validate_bootstrap_evidence,
 )
@@ -77,6 +81,37 @@ def main() -> int:
         multi_approvals,
         initiator="release-initiator",
     ) == ["release-reviewer", "second-reviewer"]
+    self_approval = [
+        {
+            "state": "approved",
+            "environments": [{"name": "stable-release"}],
+            "user": {"login": "release-initiator"},
+        }
+    ]
+    assert resolve_distinct_approvers(
+        self_approval,
+        initiator="release-initiator",
+        allowed_self_approver="release-initiator",
+    ) == ["release-initiator"]
+    mixed_approval = [*self_approval, *approvals]
+    assert resolve_approval_decision(
+        mixed_approval,
+        initiator="release-initiator",
+        allowed_self_approver="release-initiator",
+    ) == {
+        "approvers": ["release-reviewer"],
+        "mode": "distinct-reviewer",
+    }
+    waived_evidence = valid_evidence()
+    waived_evidence["initiator"] = "release-owner"
+    waived_evidence["approvers"] = ["release-owner"]
+    waived_evidence["approval_policy"] = {
+        "mode": "single-maintainer-waiver",
+        "waiver_sha256": SHA_A,
+    }
+    assert validate_bootstrap_evidence(waived_evidence) == waived_evidence
+    test_single_maintainer_waiver()
+    validate_repository_waiver()
     expect_failure(
         lambda: build_preview_epoch(
             legacy_index_sha256="f" * 64,
@@ -193,6 +228,22 @@ def main() -> int:
         lambda value: value.update({"run_id": 0}),
         lambda value: value.update({"run_attempt": 0}),
         lambda value: value.update({"initiator": ""}),
+        lambda value: value.update(
+            {
+                "approval_policy": {
+                    "mode": "distinct-reviewer",
+                    "waiver_sha256": SHA_A,
+                }
+            }
+        ),
+        lambda value: value.update(
+            {
+                "approval_policy": {
+                    "mode": "single-maintainer-waiver",
+                    "waiver_sha256": "none",
+                }
+            }
+        ),
         lambda value: value.update({"approvers": []}),
         lambda value: value.update({"approvers": "abc"}),
         lambda value: value.update({"approvers": [""]}),
@@ -209,6 +260,14 @@ def main() -> int:
         lambda value: value["alpha_evidence"].update({"run_id": 0}),
         lambda value: value["alpha_evidence"].update({"run_attempt": 0}),
         lambda value: value["alpha_evidence"].update({"initiator": ""}),
+        lambda value: value["alpha_evidence"].update(
+            {
+                "approval_policy": {
+                    "mode": "single-maintainer-waiver",
+                    "waiver_sha256": SHA_A,
+                }
+            }
+        ),
         lambda value: value["alpha_evidence"].update({"approvers": []}),
         lambda value: value["alpha_evidence"].update(
             {"prepare_summary_sha256": "not-a-digest"}
@@ -281,6 +340,60 @@ def main() -> int:
     return 0
 
 
+def test_single_maintainer_waiver() -> None:
+    waiver = {
+        "schema_version": 2,
+        "repository": "sifr-lang/sifr",
+        "environment": "stable-release",
+        "owner_login": "release-owner",
+        "allowed_operations": [
+            "bootstrap-alpha",
+            "bootstrap-index",
+            "ga-activation",
+        ],
+        "expires_at": "2026-08-27T00:00:00Z",
+        "reason": "Temporary single-maintainer release approval.",
+    }
+    now = datetime(2026, 7, 29, tzinfo=timezone.utc)
+    assert (
+        validate_single_maintainer_waiver(
+            waiver,
+            repository="sifr-lang/sifr",
+            environment="stable-release",
+            operation="bootstrap-alpha",
+            initiator="release-owner",
+            require_unexpired=True,
+            now=now,
+        )
+        == waiver
+    )
+    for label, mutation in (
+        ("wrong owner", lambda value: value.update({"owner_login": "other"})),
+        (
+            "unauthorized operation",
+            lambda value: value.update({"allowed_operations": ["bootstrap-alpha"]}),
+        ),
+        (
+            "expired waiver",
+            lambda value: value.update({"expires_at": "2026-07-28T00:00:00Z"}),
+        ),
+    ):
+        changed = copy.deepcopy(waiver)
+        mutation(changed)
+        expect_failure(
+            lambda changed=changed: validate_single_maintainer_waiver(
+                changed,
+                repository="sifr-lang/sifr",
+                environment="stable-release",
+                operation="ga-activation",
+                initiator="release-owner",
+                require_unexpired=True,
+                now=now,
+            ),
+            label,
+        )
+
+
 def wrapper(version: str, channel: str) -> dict[str, object]:
     record = release_record(channel)
     record["source_commit"] = COMMIT
@@ -295,6 +408,10 @@ def valid_evidence() -> dict[str, object]:
         "run_id": 42,
         "run_attempt": 1,
         "initiator": "release-initiator",
+        "approval_policy": {
+            "mode": "distinct-reviewer",
+            "waiver_sha256": "none",
+        },
         "approvers": ["release-reviewer"],
         "prepare_summary_sha256": SHA_A,
         "legacy_index": {
@@ -307,6 +424,10 @@ def valid_evidence() -> dict[str, object]:
             "run_id": 41,
             "run_attempt": 1,
             "initiator": "alpha-initiator",
+            "approval_policy": {
+                "mode": "distinct-reviewer",
+                "waiver_sha256": "none",
+            },
             "approvers": ["alpha-reviewer"],
             "prepare_summary_sha256": SHA_B,
         },
@@ -393,6 +514,10 @@ def test_materializer() -> None:
                 run_id=41,
                 run_attempt=1,
                 initiator="alpha-initiator",
+                approval_policy={
+                    "mode": "distinct-reviewer",
+                    "waiver_sha256": "none",
+                },
                 approvers=["alpha-reviewer"],
                 prepare_summary_path=prepare_summary,
                 legacy_index_path=legacy_path,
@@ -415,6 +540,10 @@ def test_materializer() -> None:
                 run_id=42,
                 run_attempt=1,
                 initiator="beta-initiator",
+                approval_policy={
+                    "mode": "distinct-reviewer",
+                    "waiver_sha256": "none",
+                },
                 approvers=["beta-reviewer", "second-reviewer"],
                 prepare_summary_path=prepare_summary,
                 legacy_index_path=legacy_path,
@@ -469,6 +598,10 @@ def test_materializer() -> None:
                     run_id=43,
                     run_attempt=1,
                     initiator="beta-initiator",
+                    approval_policy={
+                        "mode": "distinct-reviewer",
+                        "waiver_sha256": "none",
+                    },
                     approvers=["beta-reviewer"],
                     prepare_summary_path=prepare_summary,
                     legacy_index_path=legacy_path,
@@ -515,6 +648,10 @@ def test_materializer() -> None:
                 run_id=44,
                 run_attempt=1,
                 initiator="other-alpha-initiator",
+                approval_policy={
+                    "mode": "distinct-reviewer",
+                    "waiver_sha256": "none",
+                },
                 approvers=["other-alpha-reviewer"],
                 prepare_summary_path=prepare_summary,
                 legacy_index_path=legacy_path,

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sifr.sh/schemas/single-maintainer-approval-waiver-v2.json",
+  "title": "Sifr temporary single-maintainer publication approval waiver",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "repository",
+    "environment",
+    "owner_login",
+    "allowed_operations",
+    "expires_at",
+    "reason"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "repository": {"const": "sifr-lang/sifr"},
+    "environment": {"const": "stable-release"},
+    "owner_login": {"const": "yaseralnajjar"},
+    "allowed_operations": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "enum": ["bootstrap-alpha", "bootstrap-index", "ga-activation"]
+      }
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reason": {"type": "string", "minLength": 1}
+  }
+}
