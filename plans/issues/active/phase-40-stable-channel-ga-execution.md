@@ -1326,3 +1326,32 @@ updating or deleting that exact tag with no bypass actors.
   `e42bb9a3d4fb48ae3ba50fc9209aa2e8cd5c10d7`.
 - Main-repository [PR #3032](https://github.com/sifr-lang/sifr/pull/3032)
   merged as `97df4acb4656ee55754ec87d4c2d982b13df740e`.
+
+### canonical_candidate_evidence_remediation
+
+- Final qualification-evidence review pass 1 is archived at
+  `plans/reviews/archive/phase-40-final-qualification-evidence-review-pass-1-not-satisfied.md`.
+  The reviewer confirmed the transport and retention evidence, then found that
+  pretty-printed Rust results and stable-support claims could not satisfy the
+  candidate custody contract's canonical-JSON requirement. It also found that
+  the staged Rust report had to be the exact release-profile result rather than
+  a standalone rerun.
+- Release-report generation now canonicalizes that exact release-run Rust
+  result before hashing it. Stable-support claims are staged deterministically
+  from the exact source checkout into custody, and both the source and staged
+  bytes are validated as canonical JSON. The planner rejects noncanonical,
+  drifted, symlinked, duplicate-key, and wrong-area inputs.
+- Reviewer passes 2 and 3 are archived at
+  `plans/reviews/archive/phase-40-canonical-candidate-evidence-review-pass-2-satisfied.md`
+  and
+  `plans/reviews/archive/phase-40-canonical-candidate-evidence-review-pass-3-satisfied.md`.
+  Both returned `SATISFIED`; pass 3 independently reran the complete
+  distribution area (125/125) and found no blocking issue.
+- The authoritative create-PR profile passed at implementation commit
+  `8048de4343`, including Python interop 19/19, consumed Rust interop 10/10,
+  and E2E 131/131 (`report_signature=7c39b8c1dd4fec7c`). A preceding cold
+  attempt hit only the already indexed `PERF-HOST` timeout in
+  `readonly-check-doctor`; an isolated replay passed 1/1 in 160.114 seconds.
+- Main-repository [PR #3051](https://github.com/sifr-lang/sifr/pull/3051)
+  carries the focused Phase 40 remediation from implementation commit
+  `8048de4343`. Its exact pushed-head review follows after this tracking update.
