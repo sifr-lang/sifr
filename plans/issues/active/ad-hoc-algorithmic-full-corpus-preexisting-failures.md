@@ -43,11 +43,13 @@ also includes the area-level `full-corpus-taxonomy-smoke` policy/runner
 variant. The 20 failing fixture slugs are set-identical across all three
 evidence sources.
 
-Those figures describe the corpus's check-only lane. Diagnosis on 2026-07-29
-also found a disjoint set of 20 fixtures that pass `sifr check` but fail
-`sifr build`/`sifr run` through the same owned recursive-field extraction
-codegen defect. That latent set is recorded separately below and is included
-in the remediation acceptance gate; it is not added to or substituted for the
+Those figures describe the corpus's check-only lane. A complete native-build
+audit on 2026-07-29 also found a disjoint set of 23 fixtures that pass
+`sifr check` but fail `sifr build`, partitioned across three root causes:
+21 owned optional-class destructure failures, one empty-dictionary
+specialization failure, and one recursive optional-class constructor-coercion
+failure. That latent set is recorded separately below and is included in the
+remediation acceptance gate; it is not added to or substituted for the
 preserved 20 blocking check failures.
 
 The failing fixture slugs are:
@@ -101,7 +103,8 @@ uv run --project verification --locked python -m sifr_verify areas run \
 
 The run checked all 411 pinned fixtures and reproduced exactly the preserved
 20 blocking failures. Direct checks of all 20 fixtures established six
-root-cause groups keyed to each fixture's first blocking diagnostic. Some
+root-cause groups keyed to each fixture's first blocking diagnostic; the table
+below adds two further root causes found only by the native-build audit. Some
 fixtures can expose follow-on diagnostics after their first blocker is fixed,
 so this is not permission to stop after one diagnostic disappears.
 
@@ -109,9 +112,11 @@ so this is not permission to stop after one diagnostic disappears.
 | --- | --- | ---: | --- |
 | Recursive `list[T]` total-order capability is omitted even though generated `Vec<T>` has lexicographic `Ord` when `T: Ord` | lowering type-capability query | 6 | admit `list[T]` recursively for `list.sort()` while continuing to reject non-total-order element types; keep sets and dictionaries excluded because their language semantics are not total orders, regardless of incidental generated representation |
 | Empty list literals in equality comparisons retain `list[Any]`, including nested empty literals | comparison lowering and literal specialization | 6 | specialize literal HIR recursively from the concrete opposite operand before structural-equality checks; do not weaken the type-system capability gate |
+| An empty plain-dictionary declaration retains an `Any` value despite a later concrete subscript write | order-independent declaration-site inference | 1 latent build failure | infer compatible plain-dictionary writes within the enclosing function before lowering the declaration; preserve ordinary missing-key access and augassign semantics |
 | `defaultdict(int)` subscript augassign preserves an `Any` key in HIR | container specialization at the augassign target | 4 | specialize the alias key from the concrete subscript while preserving defaultdict codegen semantics |
 | `defaultdict(set)` is read before its first textual write, so forward-only refinement cannot establish its key/value types | order-independent declaration-site inference | 1 | infer compatible defaultdict access shapes within the enclosing function before lowering the declaration; reject conflicting shapes deterministically |
-| Consuming recursive linked-list traversal is declared as a mutable borrow, and generated owned optional-class destructures omit required Rust mutability | fixture ownership plus optional-class codegen | 2 check failures plus 20 latent build failures | use `own mut` in the two check-failing fixtures and fix the generated owned optional-class destructure in codegen so it emits a mutable binding; the shared `helpers/list_node` module and its two local copies need no source change, and all 22 affected fixtures must build and run, not merely check |
+| Consuming recursive linked-list traversal is declared as a mutable borrow, and generated owned optional-class destructures omit required Rust mutability | fixture ownership plus optional-class codegen | 2 check failures plus 21 latent build failures | use `own mut` in the two check-failing fixtures and fix the generated owned optional-class destructure in codegen so it emits a mutable binding; the shared `helpers/list_node` module and its two local copies need no source change, and all 23 affected fixtures must build and run, not merely check |
+| Recursive optional-class locals passed to constructors are emitted as `Option<T>` instead of the required `Option<Box<T>>` | recursive-class constructor argument codegen | 1 latent build failure | apply the same recursive-field storage coercion used by direct recursive constructor arguments to typed optional-class locals, with focused positive and non-recursive negative coverage |
 | Unreachable, unannotated nested `dfs` remains after the live iterative solution returns | fixture surface | 1 | remove the dead Sifr-only porting residue; continue type-checking reachable and unreachable declarations normally |
 
 The fixture membership of those groups is:
@@ -127,22 +132,35 @@ The fixture membership of those groups is:
   `0442_find_all_duplicates_in_an_array`,
   `1203_sort_items_by_groups_respecting_dependencies`, and
   `1489_find_critical_and_pseudo_critical_edges_in_minimum_spanning_tree`.
+- Empty plain-dictionary declaration refinement: `0001_two_sum`.
 - `defaultdict(int)` augassign specialization:
   `0350_intersection_of_two_arrays_ii`, `0621_task_scheduler`,
   `0767_reorganize_string`, and
   `1481_least_number_of_unique_integers_after_k_removals`.
 - Order-independent `defaultdict(set)` inference: `0036_valid_sudoku`.
 - Ownership and owned optional-class codegen: `0002_add_two_numbers` and
-  `0086_partition_list`.
+  `0086_partition_list` are the check-failing members; the 21 latent
+  build-failing members are enumerated in the native-build audit below.
+- Recursive optional-class constructor argument coercion:
+  `0894_all_possible_full_binary_trees`.
 - Dead invalid fixture surface: `0377_combination_sum_iv`.
 
-The distinct latent build-failure set contains 20 fixtures that currently pass
-the corpus check lane but fail build/run with the generated Rust error
-`E0596` because `node.next.take()` is emitted from an owned destructure whose
-binding is not mutable:
+The complete native-build audit checked every pinned fixture and then built
+each of the 391 check-passing fixtures:
 
-- Eighteen of the 20 shared `helpers/list_node.nodeNext` importers (the other
-  two are the preserved check failures `0002` and `0086`):
+```bash
+target/debug/sifr check --isolated <fixture>
+target/debug/sifr build --quiet --isolated -o <unique-output-dir> <fixture>
+```
+
+It produced exactly 411 terminal records: 20 `CHECK_FAIL`, 23 `BUILD_FAIL`,
+and 368 `BUILD_PASS`. The 20 check failures are set-identical to the preserved
+corpus lane. The 23 distinct latent build failures are:
+
+- Twenty linked-list fixtures that fail with generated Rust `E0596` because
+  `node.next.take()` is emitted from an owned destructure whose binding is not
+  mutable. Eighteen import the shared `helpers/list_node.nodeNext` helper (the
+  other two importers are the preserved check failures `0002` and `0086`):
   `0019_remove_nth_node_from_end_of_list`,
   `0021_merge_two_sorted_lists`, `0023_merge_k_sorted_lists`,
   `0024_swap_nodes_in_pairs`, `0025_reverse_nodes_in_k_group`,
@@ -154,9 +172,20 @@ binding is not mutable:
   `1669_merge_in_between_linked_lists`,
   `1721_swapping_nodes_in_a_linked_list`, and
   `2130_maximum_twin_sum_of_a_linked_list`.
-- Local copies of the same owned `nodeNext` helper:
+- The remaining two linked-list fixtures contain local copies of the same
+  owned `nodeNext` helper:
   `0141_linked_list_cycle` and
   `0160_intersection_of_two_linked_lists`.
+- `0617_merge_two_binary_trees`, which fails with the same generated Rust
+  `E0596` mechanism for owned `TreeNode | None` parameters whose recursive
+  fields are consumed after optional destructuring.
+- `0001_two_sum`, whose empty `prevMap = {}` remains
+  `dict[int, Any]` despite the later `prevMap[n] = i`; generated Rust then
+  fails with `E0277`/`E0308` around `Box<dyn Any>`.
+- `0894_all_possible_full_binary_trees`, whose typed
+  `TreeNode | None` locals are passed to a recursive-class constructor as
+  `Option<TreeNode>` instead of `Option<Box<TreeNode>>`, producing generated
+  Rust `E0308`.
 
 The original issue record was reviewed to satisfaction in passes 1-3. Claude
 Opus then independently reproduced the current 20 failures and conditionally
@@ -170,6 +199,20 @@ and
 After the pass-7 findings were addressed, the complete diagnosis was approved
 with zero actionable findings in
 [`review pass 11`](../../reviews/active/ad-hoc-algorithmic-full-corpus-preexisting-failures-claude-opus-review-pass-11.md).
+Passes 8 and 9 were interrupted before producing reviewable output, and pass
+10 failed at the reviewer API certificate boundary before producing a report;
+their zero-byte outputs were discarded and are not evidence. A final rebased
+audit then found the incomplete native-build inventory in
+[`review pass 12`](../../reviews/active/ad-hoc-algorithmic-full-corpus-preexisting-failures-claude-opus-review-pass-12.md);
+the complete 411-fixture native-build audit, expanded waves, and explicit
+passes-8-to-10 disposition above are the responses to both requested changes.
+[`Review pass 13`](../../reviews/active/ad-hoc-algorithmic-full-corpus-preexisting-failures-claude-opus-review-pass-13.md)
+independently verified the audit counts and technical partition, then requested
+the group-count, membership-map, progress-state, and evidence-continuity
+corrections now recorded here.
+[`Review pass 14`](../../reviews/active/ad-hoc-algorithmic-full-corpus-preexisting-failures-claude-opus-review-pass-14.md)
+rechecked every pass-13 correction and the full sweep ledger, then approved the
+corrected diagnosis with zero actionable findings.
 
 ## Focused Remediation Waves
 
@@ -179,18 +222,26 @@ and recorded here before the next wave starts:
 1. Recursive list total-order support and positive/negative compiler coverage.
 2. Contextual empty-list equality specialization, including nested literals
    plus mismatched-literal and variable-operand negative coverage.
-3. `defaultdict(int)` subscript-augassign specialization with runtime counting
+3. Order-independent empty plain-dictionary declaration refinement, including
+   the `0001_two_sum` native build/run and deterministic conflicting-write
    coverage.
-4. Order-independent `defaultdict` declaration inference with the existing
+4. `defaultdict(int)` subscript-augassign specialization with runtime counting
+   coverage.
+5. Order-independent `defaultdict` declaration inference with the existing
    deterministic `TYPE_CONTAINER_ELEMENT_CONFLICT` diagnostic and the
    resulting `0036_valid_sudoku` pass, with no fixture-side change.
-5. Removal of the dead invalid `0377` Sifr fixture block while deliberately
+6. Removal of the dead invalid `0377` Sifr fixture block while deliberately
    leaving the Python reference sibling unchanged as the upstream parity
    source.
-6. Owned linked-list traversal fixture corrections plus the generated optional
-   recursive-class extraction fix and build/run coverage for all 22 affected
-   fixtures: the 20 shared-helper importers plus the two local helper copies.
-7. Full-corpus closeout: capability-named demo, complete nightly lane,
+7. Owned linked-list traversal fixture corrections plus the generated optional
+   recursive-class extraction fix and build/run coverage for all 23 affected
+   fixtures: the 22 linked-list fixtures plus
+   `0617_merge_two_binary_trees`.
+8. Recursive optional-class constructor argument coercion with focused
+   compiler coverage and the `0894_all_possible_full_binary_trees` native
+   build/run.
+9. Full-corpus closeout: capability-named demo, a complete 411-fixture native
+   build/run audit, complete nightly lane,
    restoration of `leetcode-full` to release qualification, complete release
    lane, final local merge gate, and full-implementation review.
 
@@ -241,8 +292,8 @@ rather than worked around here.
 
 | Item | Status | Evidence |
 | --- | --- | --- |
-| Failure diagnosis and root-cause grouping | satisfied; pending merge | exact current-main 411/20 check reproduction plus the distinct 20-fixture latent build-failure set; six first-diagnostic groups; Opus pass 11 approved the complete diagnosis with zero actionable findings after independently reproducing every count and inventory |
-| Focused remediation PR waves | ready | seven sequential waves are defined above; starts after the satisfied diagnosis is merged |
+| Failure diagnosis and root-cause grouping | approved; pending PR | exact current-main 411/20 check reproduction plus a complete 411-fixture native-build audit: 20 check failures, 23 distinct latent build failures, and 368 native-build passes; pass 14 approved the corrected diagnosis with zero actionable findings |
+| Focused remediation PR waves | ready after diagnosis merge | nine sequential waves are defined above; starts after the approved diagnosis is merged |
 | Full-corpus closeout | blocked | starts after every remediation wave merges; includes restoring `leetcode-full` to the release profile |
 
 ## Acceptance Criteria
@@ -256,8 +307,13 @@ rather than worked around here.
   profile and the release lane passes locally.
 - [ ] Focused compiler tests cover each corrected root-cause category.
 - [ ] Focused e2e tests build and run every corrected generated-Rust surface;
-      all 22 corpus fixtures exercising the affected owned recursive-field
-      extraction pattern build and run after the ownership/codegen fix.
+      all 23 corpus fixtures exercising the affected owned optional-class
+      extraction pattern build and run after the ownership/codegen fix, and
+      `0894_all_possible_full_binary_trees` builds and runs after recursive
+      constructor coercion is corrected.
+- [ ] All 411 pinned corpus fixtures pass a complete native build/run audit at
+      closeout; the check-only corpus lane is not sufficient evidence for this
+      criterion.
 - [ ] Every associated demo uses a capability-based name containing no phase
   number or phase name.
 - [ ] The authoritative create-PR and merge profiles, Clippy, rustfmt,
