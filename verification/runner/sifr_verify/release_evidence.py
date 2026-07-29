@@ -17,6 +17,8 @@ sys.path.insert(0, str(GOVERNANCE_ROOT))
 
 from governance.common import (  # noqa: E402
     GovernanceError,
+    canonical_json_bytes,
+    load_json_strict,
     sha256_file,
     write_canonical_json,
 )
@@ -86,6 +88,8 @@ def write_release_profile_report(
 ) -> None:
     if status != 0:
         raise GovernanceError("cannot write release evidence for a failing profile")
+    result_root = REPO_ROOT / "target" / "verification" / "areas"
+    canonicalize_custodied_results(result_root)
     profile = load_profile("release")
     profile_path = REPO_ROOT / "verification" / "profiles" / "release.json"
     profile_digest = canonical_profile_digest(profile_path)
@@ -103,7 +107,7 @@ def write_release_profile_report(
             "uv": command_version("uv", "--version"),
             "python": command_version(sys.executable, "--version"),
         },
-        result_root=REPO_ROOT / "target" / "verification" / "areas",
+        result_root=result_root,
         artifact_root=REPO_ROOT,
     )
     validate_release_profile_report(
@@ -121,6 +125,19 @@ def write_release_profile_report(
         verify_artifacts=True,
     )
     print(f"release_profile_report={output_path}")
+
+
+def canonicalize_custodied_results(result_root: Path) -> None:
+    """Canonicalize exact result bytes that enter candidate evidence custody."""
+    path = result_root / CRITICAL_RESULTS["rust_interop"]
+    if not path.is_file():
+        raise GovernanceError(
+            "release profile emitted no critical area result: rust_interop"
+        )
+    payload = load_json_strict(path)
+    if not isinstance(payload, dict) or payload.get("area") != "rust_interop":
+        raise GovernanceError(f"critical area result identity mismatch: {path}")
+    path.write_bytes(canonical_json_bytes(payload))
 
 
 def build_release_profile_payload(

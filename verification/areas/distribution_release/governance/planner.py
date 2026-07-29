@@ -10,8 +10,9 @@ from typing import Any
 
 from .artifact_index import validate_qualification_artifact_index
 from .common import (
-    GovernanceError,
     TARGETS,
+    GovernanceError,
+    canonical_json_bytes,
     fail,
     load_json_strict,
     require_array,
@@ -33,6 +34,9 @@ from .release_report import (
 RELEASE_PROFILE = Path("verification/profiles/release.json")
 COMPATIBILITY_MATRIX = Path(
     "verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json"
+)
+STABLE_SUPPORT_CLAIMS = Path(
+    "verification/areas/rust_interop/data/stable_support_claims.json"
 )
 SITE_FACTS_SCHEMA = Path(
     "verification/areas/distribution_release/schemas/stable_site_release_facts.schema.json"
@@ -146,11 +150,14 @@ def materialize_stable_plan(
         "$.rust_interop.validation_report_sha256",
     )
     validate_rust_candidate_result(
-        load_json_strict(rust_validation_report_path),
+        load_json_strict(rust_validation_report_path, require_canonical=True),
         expected_digest=plan["rust_interop"]["validation_report_sha256"],
         release_report=report,
     )
-    claim_ids = stable_claim_ids(load_json_strict(stable_support_claims_path))
+    claim_ids = validate_staged_support_claims(
+        stable_support_claims_path,
+        source_root=source_root,
+    )
     if plan["rust_interop"]["advertised_claim_ids"] != claim_ids:
         fail(
             "$.rust_interop.advertised_claim_ids",
@@ -183,6 +190,47 @@ def materialize_stable_plan(
         "$.site.facts_generator_sha256",
     )
     return plan
+
+
+def stage_stable_support_claims(*, source_root: Path, output_path: Path) -> None:
+    """Stage the exact source claims in canonical candidate-custody form."""
+    source_root = source_root.resolve()
+    output_path = output_path.resolve()
+    if output_path == source_root or output_path.is_relative_to(source_root):
+        fail("--out", "stable support claims evidence must be outside the source checkout")
+    if output_path.exists():
+        fail("--out", "refusing to overwrite stable support claims evidence")
+    source_path = source_root / STABLE_SUPPORT_CLAIMS
+    if not source_path.is_file() or source_path.is_symlink():
+        fail(
+            "stable_support_claims.json",
+            "exact source claims must be a regular non-symlink file",
+        )
+    claims = load_json_strict(source_path)
+    stable_claim_ids(claims)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_bytes(canonical_json_bytes(claims))
+
+
+def validate_staged_support_claims(
+    path: Path,
+    *,
+    source_root: Path,
+) -> list[str]:
+    if not path.is_file() or path.is_symlink():
+        fail(
+            "stable_support_claims.json",
+            "staged claims must be a regular non-symlink file",
+        )
+    claims = load_json_strict(path, require_canonical=True)
+    source_claims = load_json_strict(source_root / STABLE_SUPPORT_CLAIMS)
+    expected = canonical_json_bytes(source_claims)
+    if path.read_bytes() != expected:
+        fail(
+            "stable_support_claims.json",
+            "does not match the canonical bytes of the exact source claims",
+        )
+    return stable_claim_ids(claims)
 
 
 def resolve_source_once(source_root: Path, source_ref: str) -> str:

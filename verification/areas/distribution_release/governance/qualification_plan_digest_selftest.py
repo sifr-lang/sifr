@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import shutil
 import subprocess
 import tempfile
@@ -27,6 +28,7 @@ def run_plan_digest_sensitivity_test(
             result_root=result_root,
         )
         baseline = run_planner(bundle, baseline_root / "plan.json")
+        baseline_plan = json.loads(baseline)
         baseline_digest = hashlib.sha256(baseline).hexdigest()
         fresh_control_root = root / "fresh-control"
         fresh_control_source = create_fixture_source(
@@ -62,7 +64,6 @@ def run_plan_digest_sensitivity_test(
             "nochange",
             "target-artifact",
             "sysroot",
-            "rust-claims",
             "vsix",
         ):
             variant_root = root / variant
@@ -81,7 +82,7 @@ def run_plan_digest_sensitivity_test(
                 raise AssertionError(
                     f"planner input variant {variant} did not change the plan digest"
                 )
-        for variant in ("source", "submodule", "lock"):
+        for variant in ("source", "submodule", "lock", "rust-claims"):
             variant_root = root / variant
             variant_source = create_fixture_source(variant_root, variant=variant)
             variant_bundle = build_evidence_bundle(
@@ -97,3 +98,16 @@ def run_plan_digest_sensitivity_test(
                 raise AssertionError(
                     f"planner input variant {variant} did not change the plan digest"
                 )
+            if variant == "rust-claims":
+                changed_plan = json.loads(changed)
+                baseline_rust = baseline_plan["rust_interop"]
+                changed_rust = changed_plan["rust_interop"]
+                if (
+                    changed_rust["stable_support_claims_sha256"]
+                    == baseline_rust["stable_support_claims_sha256"]
+                    or changed_rust["advertised_claim_ids"]
+                    == baseline_rust["advertised_claim_ids"]
+                ):
+                    raise AssertionError(
+                        "Rust-claim source change did not alter its plan bindings"
+                    )

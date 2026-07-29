@@ -22,7 +22,6 @@ from .common import (
     write_canonical_json,
 )
 from .planner import RUST_CLAIMS_SCHEMA_VERSION, stable_claim_ids
-from .qualification_rust_fixture import rust_candidate_result
 from .qualification_fixture_support import (
     command_output,
     configure_git,
@@ -30,6 +29,7 @@ from .qualification_fixture_support import (
     git,
     git_output,
 )
+from .qualification_rust_fixture import rust_candidate_result
 from .release_report import canonical_profile_digest, collect_submodules
 from .schema_contracts import preview_index, release_plan, release_report
 
@@ -69,7 +69,7 @@ def create_fixture_source(root: Path, *, variant: str = "baseline") -> Path:
         f"# fixture lock {variant if variant == 'lock' else 'baseline'}\n",
         encoding="utf-8",
     )
-    write_source_contracts(source_root)
+    write_source_contracts(source_root, variant=variant)
     git(
         source_root,
         "-c",
@@ -94,7 +94,7 @@ def create_fixture_source(root: Path, *, variant: str = "baseline") -> Path:
     return source_root
 
 
-def write_source_contracts(source_root: Path) -> None:
+def write_source_contracts(source_root: Path, *, variant: str) -> None:
     profile = {
         "schema_version": PROFILE_SCHEMA_VERSION,
         "name": "release",
@@ -138,6 +138,9 @@ def write_source_contracts(source_root: Path) -> None:
         ): canonical_json_bytes(
             {"schema_version": RUST_CLAIMS_SCHEMA_VERSION, "rows": []}
         ),
+        (
+            "verification/areas/rust_interop/data/stable_support_claims.json"
+        ): canonical_json_bytes(stable_claims(variant=variant)),
         (
             "verification/areas/distribution_release/schemas/"
             "stable_site_release_facts.schema.json"

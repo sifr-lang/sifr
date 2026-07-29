@@ -332,6 +332,55 @@ Review and upstream coordination ledger:
   and returned `VERDICT: SATISFIED`. The release-divergence slice merged
   through [PR #3049](https://github.com/sifr-lang/sifr/pull/3049) as
   `bae42ba47d4c1324b2d34dc654effaef2d39576e`.
+- Fresh exact-source qualification run
+  [#30406842210](https://github.com/sifr-lang/sifr/actions/runs/30406842210)
+  passed at source `53cc9c4bf36762d39a0b372402d202589f920c2e`: all four
+  targets, aggregate installer/checksums, editor/VSIX qualification, and the
+  collector succeeded. Independent custody replay verified the canonical index,
+  all six unexpired uploads, and all 20 transported payloads by exact size and
+  SHA-256.
+- Final qualification-evidence review pass 1 is archived at
+  `plans/reviews/archive/phase-40-final-qualification-evidence-review-pass-1-not-satisfied.md`.
+  It returned `VERDICT: NOT SATISFIED` after proving a real supporting-evidence
+  incompatibility: the release report hashed the Rust runner's pretty-printed
+  result while candidate custody required canonical JSON, the certified stable
+  claims source also needed deterministic canonical staging, and the staged
+  Rust report had come from a standalone rerun instead of the release-profile
+  invocation. The qualification transport itself passed the full independent
+  audit.
+- The remediation stays within Phase 40 release custody: the passing release
+  evidence writer canonicalizes the exact consumed Rust result before binding
+  its digest; a governed staging command derives canonical stable-claims bytes
+  from the exact source file; and the planner requires those staged bytes to
+  match that source-derived representation. No Rust-interop capability,
+  compatibility claim, suite selection, or implementation changes.
+- Canonical candidate-evidence review pass 2 is archived at
+  `plans/reviews/archive/phase-40-canonical-candidate-evidence-review-pass-2-satisfied.md`.
+  It independently reproduced all three blocker closures, ran the complete
+  distribution area at 125/125, and returned `VERDICT: SATISFIED` with no
+  blocking finding. Its recommended hardening is included before the next
+  review: Rust-claim digest sensitivity now asserts both changed claim digest
+  and ids despite the necessarily changed source commit; mutation tests cover
+  noncanonical, drifted, in-checkout, missing, duplicate-key, wrong-area, and
+  symlink evidence; the real CLI wiring is exercised; and the planner requires
+  canonical Rust report bytes at its earliest load.
+- Hardened-tree review pass 3 is archived at
+  `plans/reviews/archive/phase-40-canonical-candidate-evidence-review-pass-3-satisfied.md`.
+  It mutation-tested every new guard, independently reran the complete
+  distribution area at 125/125 plus runner, qualification, custody, formatting,
+  diff, and file-size gates, found no blocking issue, and returned
+  `VERDICT: SATISFIED`. The reviewed diff touches no Rust-interop implementation
+  or demo.
+- The first authoritative create-PR attempt passed every case around the
+  pre-existing `readonly-check-doctor` command, which hit its fixed 120-second
+  subprocess limit under host contention. Its exact isolated suite immediately
+  passed with one variant and zero failures. The warmed authoritative rerun then
+  passed every blocking lane: Python interop 19/19, consumed Rust interop 10/10,
+  generated-code and performance gates, all selected crates and runtime checks,
+  and E2E 131/131 with `report_signature=7c39b8c1dd4fec7c`. Every enforced
+  per-step budget passed; only the indexed nonblocking warm wall-time advisory
+  remained. No timeout, threshold, baseline, waiver, or profile selection
+  changed.
 - Milestone evidence-closure Claude Opus review passes 1 through 4 are archived
   at
   `plans/reviews/archive/phase-40-milestone-40-4-evidence-closure-review-pass-{1,2,3,4}.md`.

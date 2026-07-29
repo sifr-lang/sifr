@@ -23,10 +23,10 @@ from governance import (  # noqa: E402
     materialize_stable_prepare,
     validate_bootstrap_evidence,
     validate_drill_evidence,
-    validate_incident_request,
-    validate_incident_signoff,
     validate_incident_mutation_evidence,
     validate_incident_prepare_summary,
+    validate_incident_request,
+    validate_incident_signoff,
     validate_install_receipt,
     validate_qualification_artifact_index,
     validate_release_index,
@@ -50,8 +50,14 @@ from governance.common import (  # noqa: E402
 )
 from governance.incident_evidence import validate_incident_evidence_commit  # noqa: E402
 from governance.incident_planner import materialize_incident_mutation  # noqa: E402
-from governance.planner import materialize_stable_plan  # noqa: E402
-from governance.release_index import propose_preview_release, validate_release_record  # noqa: E402
+from governance.planner import (  # noqa: E402
+    materialize_stable_plan,
+    stage_stable_support_claims,
+)
+from governance.release_index import (  # noqa: E402
+    propose_preview_release,
+    validate_release_record,
+)
 from governance.schema_bootstrap import (  # noqa: E402
     build_preview_epoch,
     resolve_distinct_approvers,
@@ -141,6 +147,10 @@ def parse_args() -> argparse.Namespace:
     stable_plan.add_argument("--documentation-report", required=True)
     stable_plan.add_argument("--release-notes", required=True)
     stable_plan.add_argument("--out", required=True)
+
+    stage_claims = commands.add_parser("stage-stable-support-claims")
+    stage_claims.add_argument("--source-root", default=str(REPO_ROOT))
+    stage_claims.add_argument("--out", required=True)
 
     record = commands.add_parser("build-release-record")
     record.add_argument("--version", required=True)
@@ -256,6 +266,8 @@ def main() -> int:
             generate_release_plan(args)
         elif args.command == "plan-stable-release":
             plan_stable_release(args)
+        elif args.command == "stage-stable-support-claims":
+            stage_support_claims(args)
         elif args.command == "generate-site-facts":
             generate_site_facts(args)
         elif args.command == "generate-incident-request":
@@ -406,6 +418,14 @@ def plan_stable_release(args: argparse.Namespace) -> None:
         release_notes_path=Path(args.release_notes),
     )
     write_canonical_json(output, payload, refuse_existing=True)
+
+
+def stage_support_claims(args: argparse.Namespace) -> None:
+    stage_stable_support_claims(
+        source_root=Path(args.source_root),
+        output_path=Path(args.out),
+    )
+    print(f"stable support claims evidence staged: {Path(args.out)}")
 
 
 def build_release_record(args: argparse.Namespace) -> None:
