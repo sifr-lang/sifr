@@ -150,7 +150,7 @@ normative and must not be broadened.
 | `certification_4` | merged | [PR #3036](https://github.com/sifr-lang/sifr/pull/3036); async reqwest loopback, runtime reuse, cancellation/drop, timeout cleanup, and hidden blocking rejection |
 | `certification_5` | merged | [PR #3042](https://github.com/sifr-lang/sifr/pull/3042); opaque resource lifecycle matrix with HTTP/Redis/PostgreSQL loopbacks and a temporary SQLite database |
 | `certification_6` | merged | [PR #3046](https://github.com/sifr-lang/sifr/pull/3046); retained callback subscription lifecycle and capture contract |
-| `certification_7` | in progress | zero-copy runtime matrix starts after `certification_6` |
+| `certification_7` | in review | [PR #3053](https://github.com/sifr-lang/sifr/pull/3053); crate-backed zero-copy lifecycle and compiler rejection contract |
 | `certification_8` | blocked | starts after `certification_7` merges |
 | `certification_9` | blocked | starts after `certification_8` merges |
 | `certification_10` | blocked | starts after `certification_9` merges |
@@ -879,6 +879,23 @@ Focused implementation evidence:
   authoritative create-PR failure's three transfer-inventory anchors now match
   the exact probe reads and both transfer gates pass, all earlier findings
   remain closed, and the exact head is `SATISFIED`.
+- [Integrated-head Opus review round 9](../../reviews/active/rust-interop-certification-7-review-round-9.md)
+  confirmed the implementation remained sound after the next Phase 40
+  integration, then found one low-severity import-order/spacing regression and
+  required fresh exact-head lane evidence before closure. The follow-up
+  restores the scenario-check module boundary and discards every stale lane
+  report after the shared target was cleaned.
+- [Integrated-head Opus review round 10](../../reviews/active/rust-interop-certification-7-review-round-10.md)
+  independently rebuilt all three mandatory zero-copy packages, passed the
+  full driver and codegen Rust-interop suites, the complete Rust-interop area,
+  Clippy, formatting, file-size and maintainability guardrails, confirmed all
+  earlier findings closed, and reported the implementation `SATISFIED`.
+- The exact [PR #3053](https://github.com/sifr-lang/sifr/pull/3053) head passed
+  the create-PR profile on 2026-07-29: all blocking steps were green, including
+  all 10 Rust-interop variants, the smoke performance budget, 428 passing
+  driver tests with 55 intentional generated-build ignores, and all 131 E2E
+  fixtures. The warm wall-time advisory reflects cold artifact groups and a
+  parallel release corpus; no blocking step exceeded its budget.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 
