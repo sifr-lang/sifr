@@ -1201,6 +1201,12 @@ Validation evidence to date:
   `ecosystem_backend_certification` category/planned-evidence mismatch; all
   certification-10 matrix, mutation, tier, stale-draft, and stable-candidate
   variants passed.
+- [Exact-head round 3](../../reviews/active/rust-interop-certification-10-review-round-3.md)
+  audited PR #3071 head
+  `4e73e3cddbe6b4ef5875bd2ea697713f4730a866`, validated the committed
+  compatibility matrix in an exported tree with the backend hunk absent,
+  reran the mandatory and focused gates, and reported `SATISFIED` with no
+  actionable findings.
 
 ### certification_14: Track A Closeout and Stable Gate
 
