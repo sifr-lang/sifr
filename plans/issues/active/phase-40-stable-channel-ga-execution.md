@@ -705,6 +705,13 @@ Review and upstream coordination ledger:
   runner self-test, and the file-size guardrail; verified all five pass-1
   findings closed; found the PR cleanly based on current `main`; and returned
   `SATISFIED` with no actionable finding.
+- Final exact-head Opus review pass 3 is archived at
+  `plans/reviews/archive/phase-40-single-maintainer-approval-review-pass-3-final-satisfied.md`.
+  It reviewed remote head `36a71dc467ae1bc2a82c7bce33348edec5d7dbc5`,
+  proved the pass-2 archive/ledger delta was tracking-only, independently
+  reran distribution 125/125, the runner self-test, and the file-size
+  guardrail, spot-reverified the full waiver boundary, and returned
+  `SATISFIED` with zero actionable finding.
 - The next protected-publication wave adds a credential-free stable prepare
   path for `ga-activation` and `normal`. It binds an exact evidence commit,
   canonical candidate directory and plan digest, a separate clean exact source
