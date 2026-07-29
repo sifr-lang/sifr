@@ -24,6 +24,10 @@ validated, merged PR.
   evidence, and cannot authorize normal or incident publication. Distinct
   reviewer restoration is tracked by
   [`ad-hoc-distinct-release-reviewer-restoration.md`](./ad-hoc-distinct-release-reviewer-restoration.md).
+- The `0.1.0` qualification expires at `2026-08-28T02:17:30Z`, but protected
+  GA prepare requires seven full days of remaining lifetime. Its effective
+  start deadline is therefore `2026-08-21T02:17:30Z`; the waiver's later
+  expiry does not extend the candidate.
 - Supported standalone targets:
   - `aarch64-apple-darwin`
   - `x86_64-apple-darwin`
@@ -646,6 +650,23 @@ Review and upstream coordination ledger:
   producer, and evidence contracts. The first queued rollback dispatch was
   cancelled before execution when a third run replaced the pending
   concurrency slot; the standalone redispatch above passed.
+- A fresh current-main replay at exact source
+  `1a90170dbe878b60cf644c63d28d3076f31e6320` passed the same three protected
+  credential-free modes:
+  [publication #30496849280](https://github.com/sifr-lang/sifr/actions/runs/30496849280),
+  [first-GA #30496852409](https://github.com/sifr-lang/sifr/actions/runs/30496852409),
+  and [rollback #30496911507](https://github.com/sifr-lang/sifr/actions/runs/30496911507).
+  Their retained canonical evidence SHA-256 values are respectively
+  `3450ca33248e3d846c3dadc092a02e1e6bd5100b8777f095a484f157a79e9c9f`,
+  `2e3d6f520279da697becad2a561aed9159c80946c46a3774db81c204298d03ae`,
+  and
+  `be8b24b4a16c3da0e0ff3288327b9b573274e6adf0478e3a6eb8d31d5ce91822`.
+  Each validated with status `pass`, environment `stable-release-drill`,
+  external network `blocked`, and production credentials `absent`. The
+  initially queued rollback
+  [#30496850896](https://github.com/sifr-lang/sifr/actions/runs/30496850896)
+  was cancelled when the newer pending dispatch replaced GitHub's single
+  concurrency slot; the standalone rollback redispatch above succeeded.
 - [PR #3056](https://github.com/sifr-lang/sifr/pull/3056) merged the protected
   drill evidence as
   `edb7d302a7b145787b1762180654671637de0123`. Its exact-head Opus review is
@@ -775,8 +796,13 @@ Review and upstream coordination ledger:
   Its exact canonical bytes are now durable under
   `plans/releases/schema-bootstrap-recovery/`; recovery no longer depends on
   the source artifact that expires `2026-08-28T10:46:13Z`. The approval waiver
-  expires `2026-08-27T00:00:00Z`, which remains the binding completion deadline
-  unless a distinct reviewer is configured.
+  expires `2026-08-27T00:00:00Z`, which remains the recovery completion
+  deadline unless a distinct reviewer is configured. Recovery must complete
+  and retain generation-1 bootstrap evidence before `ga-activation` is
+  dispatched; activation would advance the live index to generation 2 and
+  intentionally make the one-time recovery precondition fail. The qualified
+  GA prepare has the earlier `2026-08-21T02:17:30Z` start deadline recorded
+  above.
 - Recovery review pass 1 is archived at
   `plans/reviews/archive/phase-40-schema-bootstrap-recovery-review-pass-1-not-satisfied.md`.
   Its `NOT SATISFIED` findings were remediated by embedding validated recovery
@@ -1683,3 +1709,31 @@ updating or deleting that exact tag with no bypass actors.
   [PR #3070](https://github.com/sifr-lang/sifr/pull/3070) merged the immutable
   candidate evidence as
   `2e203136f864f132499095d7d68884c3ecc1ec2e`.
+- Candidate-evidence tracking
+  [PR #3072](https://github.com/sifr-lang/sifr/pull/3072) merged as
+  `b5f4d0673e8c77ae9fcebe47f377f9d45ae3c842`. Its two exact-head Opus reviews
+  are archived at
+  `plans/reviews/archive/phase-40-candidate-evidence-closeout-pr-3072-review-pass-1-satisfied.md`
+  and
+  `plans/reviews/archive/phase-40-candidate-evidence-closeout-pr-3072-review-pass-2-final-satisfied.md`;
+  the second confirmed the pass-1 wording observation was closed and returned
+  no actionable finding.
+- The pre-GA full-implementation Opus audit is archived at
+  `plans/reviews/archive/phase-40-pre-ga-full-implementation-review-pass-1-satisfied.md`.
+  It independently reproduced distribution release 125/125, documentation
+  2/2, evidence custody, workflow shell parsing, file-size guardrails, all
+  pinned custody digests, and the complete recovery/publication boundary at
+  source `1a90170dbe878b60cf644c63d28d3076f31e6320`; it returned
+  `VERDICT: SATISFIED` with zero actionable implementation findings.
+- Pre-GA documentation-closure review pass 2 is archived at
+  `plans/reviews/archive/phase-40-pre-ga-full-implementation-review-pass-2-doc-closure-not-satisfied.md`.
+  It verified the deadline, recovery ordering, drill evidence, and review
+  archives, then found that the first exit-gate rewrite incorrectly attributed
+  fresh install and self-update to the four-target qualification matrix.
+- Pre-GA documentation-closure review pass 3 is archived at
+  `plans/reviews/archive/phase-40-pre-ga-full-implementation-review-pass-3-doc-closure-satisfied.md`.
+  It independently mapped every corrected proof clause to the native-target
+  qualification, isolated installed-sysroot certification, all-target
+  post-publication digest verification, and protected-runner live smoke;
+  confirmed all four pass-1 observations closed; and returned
+  `VERDICT: SATISFIED` with zero actionable findings.

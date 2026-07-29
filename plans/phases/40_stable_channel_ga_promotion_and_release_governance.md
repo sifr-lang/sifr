@@ -887,7 +887,10 @@ install/update guidance, Rust interop claims, and the VS Code extension.
 - Evidence approval and protected publication must begin with at least seven
   full days remaining in the 30-day artifact-retention window. Falling below
   that floor invalidates the candidate and requires a new qualification run and
-  evidence review; artifact identity is never substituted.
+  evidence review; artifact identity is never substituted. For the `0.1.0`
+  candidate, whose qualification expires at `2026-08-28T02:17:30Z`, protected
+  GA prepare must therefore begin before `2026-08-21T02:17:30Z`; the later
+  temporary-waiver expiry does not extend that candidate deadline.
 - Open the evidence-only candidate PR containing the exact plan and canonical
   profile report. Its checks prohibit source changes, validate all referenced
   artifacts/digests, and display the source commit, plan digest, report id, and
@@ -1032,8 +1035,14 @@ evidence are complete.
   `f45c012c17d2908bc2ef227f202e1037343c63d1f1881ca7913f22628f62a086`;
   the source artifact expiry `2026-08-28T10:46:13Z` is therefore no longer a
   recovery dependency. The temporary approval waiver expires
-  `2026-08-27T00:00:00Z`, so protected completion must precede that deadline
-  unless a distinct reviewer is configured.
+  `2026-08-27T00:00:00Z`, so protected recovery must precede that deadline
+  unless a distinct reviewer is configured. Recovery must complete and retain
+  the generation-1 bootstrap evidence before `ga-activation` is dispatched:
+  advancing the live index to generation 2 first intentionally invalidates the
+  recovery precondition and cannot be repaired by another recovery attempt.
+  The qualified `0.1.0` GA activation has the earlier effective start deadline
+  `2026-08-21T02:17:30Z` because prepare requires seven full days of remaining
+  qualification lifetime.
 - Revalidate the release-plan digest, source SHA, release-profile report,
   artifacts, installer, live stable predecessor, index schema, docs, Rust
   claims, and VSIX before mutation.
@@ -1090,8 +1099,16 @@ evidence are complete.
 - `https://sifr.sh/install`, `/install/stable`, stable exact pinning, stable
   self-update, public docs, GitHub release, release index, and Marketplace
   extension all agree.
-- Post-publication fresh-install and self-update smoke pass on every supported
-  target.
+- Pre-publication qualification builds, packages, and verifies each of the four
+  supported targets on its native runner: exact-archive checksum and archive
+  verification, extraction into a clean root, `sifr --version`, a compile
+  smoke, and `sifr self version` receipt validation. Installed-sysroot
+  self-update is certified separately against an isolated schema-v2 fixture in
+  the authoritative local release profile. Post-publication verification
+  downloads and digest-checks every published target asset against those
+  qualified bytes, while live installer fresh-install and
+  `sifr self update --dry-run` execute on the protected workflow runner's
+  matching target.
 - The rollback drill remains green against the published workflow contract.
 - A protected non-production drill proves rollback/site reconciliation with two
   stable fixture versions. A separate first-GA drill proves the public incident
@@ -1216,8 +1233,9 @@ Phase 40 closes only when:
 - protected sign-off publishes or verifies write-once assets, activates the
   stable index only after artifact and Marketplace qualification, and then
   verifies the pinned site deployment;
-- public stable fresh install and self-update pass on all four supported
-  targets;
+- public stable assets for all four supported targets are byte-identical to the
+  per-target qualified artifacts, and live public installer fresh-install and
+  self-update smoke pass on the protected workflow runner's matching target;
 - exact pins accept only active governed releases and all installer/artifact
   digests are verified;
 - rollback, withdrawal, stale-generation rejection, and out-of-band recovery
