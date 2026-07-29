@@ -1,0 +1,42 @@
+## Independent milestone review — `certification_8`, round 2
+
+Re-reviewed the full uncommitted tree against `origin/main`, including all 13 untracked scenario files under `examples/advanced_data_runtime/`, the new driver test module, and `_scenario_advanced_data.py`. No files modified.
+
+### Prior blocking findings — re-evaluated
+
+**B1 (arm64-only native-link allowlist) — resolved.** `sifr.toml:29-37` now declares the seven-entry union `blake3_avx512_assembly, blake3_neon, blake3_sse2_sse41_avx2_assembly, lzma, onig, psm_s, zstd`. I re-read the enforcement: `validate_native_link_evidence` (`crates/sifr_driver/src/build/materialize.rs:329-363`) iterates *observed* `linked_libs` and rejects any name not in the trusted set — there is no reciprocal "every declared entry must be observed" check, so a cross-host superset is accepted on each host without weakening fail-closed post-build checking. Verified against the pinned build script: `blake3-1.8.5/build.rs:344-361` emits exactly `blake3_sse2_sse41_avx2_assembly` + `blake3_avx512_assembly` on x86_64 with a C compiler (the `NoCompiler`/`NoAVX512` paths emit strict subsets; the `blake3_avx512_intrinsics` name is reachable only via the non-default `prefer_intrinsics` env feature), and `build.rs:367-372` emits `blake3_neon` on little-endian aarch64. Both legs are in the envelope, and the merge/create-pr `sifr_driver_generated_builds` step does run the `#[ignore]`d tests (`verification/profiles/merge.json:73` passes `-- --ignored`), so the Ubuntu x86_64 lane is genuinely covered. Also confirmed the checker enforces the new list exactly (`_scenario_advanced_data.py:55-63`, `_require_exact_trust`) and all three blake3 names are token-pinned (`_scenario_advanced_data.py:36-38`).
+
+**B2 (Polars evidence not derived from crossed data) — resolved.** `record_batch.rs:90` derives `polars_values` from `array.values().to_vec()` after the allocation-identity check at line 87, `record_batch.rs:108` sizes the frame from `record_batch.num_rows()` (so `polars.height() != num_rows` at line 141 is now a real cross-check, not two coincidentally-equal literals), the runtime label is `polars-copy=explicit` (`record_batch.rs:147`), and the drift is mutation-covered (`_scenario_advanced_data.py:253-259`). The no-zero-copy disclaimer is present in all four places: `docs/rust-interop.mdx:186-187`, `internal_docs/rust_interop_architecture.md:945-947`, fixture `README.md:9-11`, and the matrix notes. Evidence honesty holds.
+
+**B3 (cleanup attribution) — resolved.** `src/main.sifr:66-69` and `positive/crate_backed_arrow_tensor_roundtrips.sifr` sample both owners *after* `transfer_dlpack` and *before* either close, asserting `arrow-released=0;active=1` / `tensor-released=0;active=1`, then re-sample after close for `released=1;active=0`. I traced the mechanism: `transfer_state` (`dlpack.rs:54-68`) destructures `TensorView` and moves the `OwnerGuard` out via `.take()` into `DlpackRuntimeState._owner`, so no `Drop` fires during transfer — the pre-close observation now distinguishes transfer-release from close-release. Pinned by mutation case `pre-close owner observation drift` (`_scenario_advanced_data.py:288-295`) and tokens at lines 34-35. Attribution is real.
+
+Also confirmed resolved: N3 (all three `state` fields are now plain, no always-`Ok` wrappers — `record_batch.rs:28`, `tensor.rs:23`, `dlpack.rs:11`) and N1's public-doc caveat (`docs/rust-interop.mdx:187-188`). N5 is correctly not repeatable — `_scenario_checks.py:479-501` already requires the scenario `Cargo.lock` and runs `_require_root_lock_subset` generically.
+
+Independently recomputed the inventory: 36/36 rows, 36 fixture manifests, `18 supported / 12 supported-through-bridge / 1 unsupported-by-design / 5 future-owned`, `13/4/10/9` execution kinds, `62 passing / 10 planned`, 31 claims, 18 scenario examples, `runtime_deferrals: []`, 31 doc table rows. Every number matches the plan. `uses_bridge_root` is still live at `trust_validation.rs:43` and `rust_interop.rs:250`, so the rename introduces no dead code.
+
+---
+
+### Blocking finding
+
+**B4 — the scenario README states a native-link count that the B1 fix falsified.** (severity: low-medium — evidence honesty; regression introduced this round)
+
+`examples/advanced_data_runtime/README.md:17-19`:
+
+> The package manifest names the exact **five** native libraries emitted by this locked default-feature graph; Sifr's post-build audit rejects any additional build-script link output.
+
+The manifest now names **seven** (`sifr.toml:29-37`), and by design they are not all "emitted by this locked graph" on any single host — three are the mutually exclusive arm64/x86_64 blake3 variants. This is the one document that describes the trust surface directly next to the manifest it describes, it is a checked-in evidence artifact for a `passing` claim, and nothing validates it (`_validate_scenario_example_dir` only checks the README's existence and header/token presence, `_scenario_checks.py:411-438`). The parent fixture `README.md:16-19` was correctly updated to the cross-host wording; this one was missed. One-line fix.
+
+---
+
+### Optional observations (non-blocking)
+
+- **x86_64 leg is derived, not executed.** The recorded `passing` merge-profile evidence comes from an arm64 host; the x86_64 half of the envelope is established by reading `blake3-1.8.5/build.rs` (which I did verify). Because enforcement is subset-based, a wrong x86_64 entry would surface as a fail-closed build error rather than a false certification, so this is a lane-risk not an honesty defect — but fixture `README.md:18-19` ("outputs **observed** from the locked default-feature graph across the supported arm64 and x86_64 validation hosts") and `docs/rust-interop.mdx:189-191` ("the **exact** architecture-specific native-link envelope") both read as stronger than "union covering both arches." Tightening to "declared envelope covering" would be more precise.
+- **N4 unchanged.** `record_declared_native_links` still computes `canonical_target_path` (`trust_validation.rs:16`) while `trusted_native_links` (`materialize.rs:289-298`) flattens to a bare name set. Dropping the `uses_bridge_root` gate means a Sifr *dependency* using only direct-crate bindings now contributes its own manifest's `native-links` to the whole build's allowlist. The manifest remains the sole authorization and the pattern predates this change for bridge-root declarations, so it is not a new bypass — but the recorded path precision is still unused.
+- **N1/N2 unchanged.** `dlpack::Capsule` (`dlpack.rs:7`) and `sifr_arrow_bridge::schema::RecordBatch` (`lib.rs:3-6`) remain never-constructed markers that only satisfy the validator's crate-name-prefix check; the `"…was already transferred"` branches (`dlpack.rs:58,62`) stay unreachable because `own` consumes the handle.
+- **Duplicated evidence source.** `positive/crate_backed_arrow_tensor_roundtrips.sifr` and `examples/advanced_data_runtime/src/main.sifr` are byte-identical apart from the entry function name, but the mutation-tested token policy inspects `main.sifr` while the driver test executes the `positive/` copy; nothing enforces agreement. This exactly matches the `zero_copy_runtime_matrix` precedent, so it is convention, not a new defect.
+- **Cap proximity is not a violation here.** `_scenario_checks.py` went 864 → 891 lines, but the milestone's logic was correctly extracted into the new `_scenario_advanced_data.py` (398 lines) and only registration/dispatch was added — the right decomposition. `rust_interop.rs` (898) changed by one identifier. Minor: the `_scenario_advanced_data` import is placed after `_scenario_async_reqwest` (`_scenario_checks.py:12-16`), breaking the file's alphabetical import block.
+- **Plan/tree hygiene.** Six of seven checklist boxes are now `[x]`; the inventory block is still titled "Expected" though it matches actuals. The tree still carries items that must not enter this PR: the `editor_integrations` submodule bump, the dirty `algorithmic_compatibility/corpora/leetcode` submodule, untracked `plans/phases/43_interoperability.md`, `.cert5probe/`, `.claude/`, and two stray `.webp` files. `.DS_Store` and `target/` inside the fixture are correctly ignored — `git status -uall` shows exactly the 13 intended new scenario files.
+
+All three round-1 blockers are genuinely closed. The only thing standing in the way is a single stale sentence in the scenario README that the B1 fix itself made false.
+
+NOT SATISFIED

@@ -1,0 +1,38 @@
+# fixture: advanced_data_runtime_matrix
+# scenario-example: advanced_data_runtime
+
+[package]
+name = "advanced-data-runtime"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[rust]
+bridge-version = 1
+direct-crate-bindings = true
+
+[trust]
+rust-no-panic = [
+  "sifr_arrow_bridge.record_batch.close",
+  "sifr_arrow_bridge.record_batch.create",
+  "sifr_arrow_bridge.record_batch.observe",
+  "sifr_arrow_bridge.record_batch.release_observation",
+  "sifr_tensor_bridge.dlpack.close",
+  "sifr_tensor_bridge.dlpack.observe",
+  "sifr_tensor_bridge.dlpack.transfer",
+  "sifr_tensor_bridge.tensor.close",
+  "sifr_tensor_bridge.tensor.create",
+  "sifr_tensor_bridge.tensor.observe",
+  "sifr_tensor_bridge.tensor.release_observation",
+]
+native-links = [
+  "blake3_avx512_assembly",
+  "blake3_neon",
+  "blake3_sse2_sse41_avx2_assembly",
+  "lzma",
+  "onig",
+  "psm_s",
+  "zstd",
+]

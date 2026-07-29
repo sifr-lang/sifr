@@ -935,13 +935,22 @@ bridge crate root; tensor and DLPack views require dtype/shape/layout/strides
 and CPU-only device metadata plus the `sifr_tensor_bridge` shared bridge crate
 root. DLPack handoff must declare `ownership=transfer`, an owned owner
 parameter, and `protocol=` explicitly. Runtime-observed crate-backed
-certification for `arrow`, `datafusion`, `polars`, `ndarray`, and `candle` is
-future-owned by
-[`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md)
-until both evidence directions pass.
-
-The runtime deferral is modeled independently as
-`advanced_data_runtime_matrix`, a tier-4 `runtime-observed` row. The
+certification for `arrow`, `datafusion`, `polars`, `ndarray`, and CPU-only
+`candle` is modeled independently as `advanced_data_runtime_matrix`, a tier-4
+`runtime-observed` row. Its generated package moves an owned vector into Arrow
+without allocation change, registers the resulting record batch with
+DataFusion, derives the corresponding Polars dataframe from the Arrow values
+through an explicit copy without claiming Arrow-to-Polars zero-copy, moves
+owned vectors into ndarray and Candle without allocation change, and observes
+dtype, rank, shape, contiguous layout, strides, and CPU device identity. It
+then consumes the ndarray owner into a safe, one-shot DLPack-style managed
+capsule without copying and observes the owner active before consuming close
+and released exactly once afterward. This models DLPack ownership and metadata
+without exposing its unsafe C ABI.
+Schema-root, rank/shape, and non-CPU device mismatches reject before Cargo.
+Package-scoped `native-links` trust applies to both package-local and direct
+shared-crate declarations, so the post-build audit accepts only the exact
+arm64/x86_64 native-output envelope declared by this locked graph. The
 `arrow_record_batch`, `tensor_dlpack_bridge`, and `advanced_data_matrix` rows
 remain contract-only and cannot satisfy a crate-backed runtime exchange claim.
 
@@ -1243,7 +1252,7 @@ verification/areas/rust_interop/
     arrow_record_batch/
     tensor_dlpack_bridge/         # contract-only DLPack ownership handoff
     advanced_data_matrix/         # datafusion, polars, ndarray, candle
-    advanced_data_runtime_matrix/ # future Arrow/tensor runtime exchange
+    advanced_data_runtime_matrix/ # Arrow/DataFusion/Polars/ndarray/Candle runtime exchange
     ecosystem_backend_certification/ # axum, tower-http, sqlx
     ecosystem_cli_certification/  # clap, tracing, tracing-subscriber, anyhow
     native_build_script/

@@ -3,9 +3,7 @@
   "role": "compatibility-derived-release-plan-input",
   "source_compatibility_matrix": "verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json",
   "public_document": "docs/rust-interop.mdx",
-  "runtime_deferrals": [
-    "advanced_data_runtime_matrix"
-  ],
+  "runtime_deferrals": [],
   "claims": [
     {
       "id": "direct_crate_crc32",
@@ -186,6 +184,12 @@
       "category": "supported-through-bridge",
       "execution_kind": "contract-only",
       "capability": "advanced data and tensor ecosystems"
+    },
+    {
+      "id": "advanced_data_runtime_matrix",
+      "category": "supported-through-bridge",
+      "execution_kind": "runtime-observed",
+      "capability": "crate-backed Arrow and tensor runtime exchange"
     }
   ]
 }

@@ -1,0 +1,10 @@
+[package]
+name = "sifr_arrow_bridge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+arrow.workspace = true
+datafusion.workspace = true
+polars.workspace = true
+sifr_runtime.workspace = true

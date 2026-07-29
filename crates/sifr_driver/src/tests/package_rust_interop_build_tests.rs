@@ -1,5 +1,7 @@
 use super::*;
 
+#[path = "package_rust_interop_advanced_data_support.rs"]
+mod advanced_data_support;
 #[path = "package_rust_interop_callback_subscription_support.rs"]
 mod callback_subscription_support;
 #[path = "package_rust_interop_zero_copy_support.rs"]

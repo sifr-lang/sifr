@@ -315,8 +315,8 @@
       "required_crates": ["arrow", "datafusion", "polars", "ndarray", "candle"],
       "features": {"candle": {"backend": "cpu-only", "default_features": false}},
       "execution_kind": "runtime-observed",
-      "positive_evidence": {"id": "crate_backed_arrow_tensor_roundtrips", "status": "planned"},
-      "negative_evidence": {"id": "schema_shape_device_mismatch_rejected", "status": "planned"}
+      "positive_evidence": {"id": "crate_backed_arrow_tensor_roundtrips", "status": "passing"},
+      "negative_evidence": {"id": "schema_shape_device_mismatch_rejected", "status": "passing"}
     },
     {
       "id": "ecosystem_backend_certification",

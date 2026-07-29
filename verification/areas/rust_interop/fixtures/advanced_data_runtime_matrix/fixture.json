@@ -4,16 +4,30 @@
   "evidence": {
     "negative": {
       "expected_diagnostic": "SIFR-RUST-ZC-0001",
-      "expected_result": "future-owned-diagnostic",
+      "expected_result": "diagnostic",
       "id": "schema_shape_device_mismatch_rejected",
       "path": "negative/schema_shape_device_mismatch_rejected.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_advanced_data_support.rs",
+        "test_name": "test_check_advanced_data_schema_shape_device_mismatch_rejected"
+      }
     },
     "positive": {
-      "expected_result": "future-owned",
+      "expected_result": "pass",
       "id": "crate_backed_arrow_tensor_roundtrips",
       "path": "positive/crate_backed_arrow_tensor_roundtrips.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_advanced_data_support.rs",
+        "test_name": "test_build_advanced_data_crate_backed_arrow_tensor_roundtrips"
+      }
     }
   },
   "execution_kind": "runtime-observed",
@@ -39,5 +53,8 @@
     "candle"
   ],
   "schema_version": 2,
+  "scenario_examples": {
+    "advanced_data_runtime": "examples/advanced_data_runtime"
+  },
   "tier": 4
 }
