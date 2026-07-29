@@ -261,8 +261,12 @@ codegen and can silently produce incorrect counts.
 Diagnosis exposed pre-existing behavior outside the preserved 20-fixture set:
 plain `dict` missing-key augassign can silently no-op instead of preserving the
 approved error behavior; reverse sorting has an equal-element stability gap;
-`min`/`max` list ordering remains intentionally narrower than `list.sort()` for
-this issue; `.values()` uses an over-broad unknown-key capability guard; and
+`sorted(..., key=lambda ...)` can lower and then fail generated Rust name
+resolution even for flat integer lists; `list[None]` literals can lower and
+then emit a generated Rust option/unit mismatch even without sorting;
+`min`/`max` list ordering has separate generated-Rust failure paths and remains
+outside this issue's sort-specific Wave 1; `.values()` uses an over-broad
+unknown-key capability guard; and
 there is no standalone unreachable-code diagnostic. These findings are not
 used as fallbacks or exclusions for this issue and do not broaden its focused
 remediation waves. Wave 1 widens the element types that can reach the
@@ -293,7 +297,8 @@ rather than worked around here.
 | Item | Status | Evidence |
 | --- | --- | --- |
 | Failure diagnosis and root-cause grouping | approved; [PR #3064](https://github.com/sifr-lang/sifr/pull/3064) | exact current-main 411/20 check reproduction plus a complete 411-fixture native-build audit: 20 check failures, 23 distinct latent build failures, and 368 native-build passes; pass 14 approved the corrected diagnosis with zero actionable findings |
-| Focused remediation PR waves | ready after diagnosis merge | nine sequential waves are defined above; starts after the approved diagnosis is merged |
+| Wave 1: recursive list total order | approved; PR pending | recursive `list[T]` generated-Rust `Ord` capability; focused nested positive/negative lowering tests including a list-returning `sorted` key; capability e2e; all six affected corpus fixtures build and run; [Opus pass 1](../../reviews/active/ad-hoc-algorithmic-full-corpus-preexisting-failures-wave-1-claude-opus-review-pass-1.md) requested the added `sorted` coverage and [Opus pass 2](../../reviews/active/ad-hoc-algorithmic-full-corpus-preexisting-failures-wave-1-claude-opus-review-pass-2.md) approved the completed wave with zero actionable findings |
+| Waves 2-8 | pending | start sequentially after Wave 1 merges |
 | Full-corpus closeout | blocked | starts after every remediation wave merges; includes restoring `leetcode-full` to the release profile |
 
 ## Acceptance Criteria

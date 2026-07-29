@@ -217,6 +217,7 @@ fn supports_total_order(ty: &Type) -> bool {
         | Type::BigInt
         | Type::Decimal
         | Type::BigDecimal => true,
+        Type::List(element) => supports_total_order(element),
         Type::Tuple(elements) => elements.iter().all(supports_total_order),
         Type::TypeVar(_) => false,
         _ => false,

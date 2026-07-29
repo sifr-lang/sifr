@@ -10,6 +10,7 @@ pub(crate) use support::{
     lower_source_with_stdlib_collections, range_for, range_for_after, range_for_after_anchor,
 };
 
+mod algorithmic_corpus_regressions;
 mod basics_and_literals;
 mod callable_and_builtin_diagnostics;
 mod collections_and_generics;
