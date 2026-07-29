@@ -332,6 +332,55 @@ Review and upstream coordination ledger:
   and returned `VERDICT: SATISFIED`. The release-divergence slice merged
   through [PR #3049](https://github.com/sifr-lang/sifr/pull/3049) as
   `bae42ba47d4c1324b2d34dc654effaef2d39576e`.
+- Fresh exact-source qualification run
+  [#30406842210](https://github.com/sifr-lang/sifr/actions/runs/30406842210)
+  passed at source `53cc9c4bf36762d39a0b372402d202589f920c2e`: all four
+  targets, aggregate installer/checksums, editor/VSIX qualification, and the
+  collector succeeded. Independent custody replay verified the canonical index,
+  all six unexpired uploads, and all 20 transported payloads by exact size and
+  SHA-256.
+- Final qualification-evidence review pass 1 is archived at
+  `plans/reviews/archive/phase-40-final-qualification-evidence-review-pass-1-not-satisfied.md`.
+  It returned `VERDICT: NOT SATISFIED` after proving a real supporting-evidence
+  incompatibility: the release report hashed the Rust runner's pretty-printed
+  result while candidate custody required canonical JSON, the certified stable
+  claims source also needed deterministic canonical staging, and the staged
+  Rust report had come from a standalone rerun instead of the release-profile
+  invocation. The qualification transport itself passed the full independent
+  audit.
+- The remediation stays within Phase 40 release custody: the passing release
+  evidence writer canonicalizes the exact consumed Rust result before binding
+  its digest; a governed staging command derives canonical stable-claims bytes
+  from the exact source file; and the planner requires those staged bytes to
+  match that source-derived representation. No Rust-interop capability,
+  compatibility claim, suite selection, or implementation changes.
+- Canonical candidate-evidence review pass 2 is archived at
+  `plans/reviews/archive/phase-40-canonical-candidate-evidence-review-pass-2-satisfied.md`.
+  It independently reproduced all three blocker closures, ran the complete
+  distribution area at 125/125, and returned `VERDICT: SATISFIED` with no
+  blocking finding. Its recommended hardening is included before the next
+  review: Rust-claim digest sensitivity now asserts both changed claim digest
+  and ids despite the necessarily changed source commit; mutation tests cover
+  noncanonical, drifted, in-checkout, missing, duplicate-key, wrong-area, and
+  symlink evidence; the real CLI wiring is exercised; and the planner requires
+  canonical Rust report bytes at its earliest load.
+- Hardened-tree review pass 3 is archived at
+  `plans/reviews/archive/phase-40-canonical-candidate-evidence-review-pass-3-satisfied.md`.
+  It mutation-tested every new guard, independently reran the complete
+  distribution area at 125/125 plus runner, qualification, custody, formatting,
+  diff, and file-size gates, found no blocking issue, and returned
+  `VERDICT: SATISFIED`. The reviewed diff touches no Rust-interop implementation
+  or demo.
+- The first authoritative create-PR attempt passed every case around the
+  pre-existing `readonly-check-doctor` command, which hit its fixed 120-second
+  subprocess limit under host contention. Its exact isolated suite immediately
+  passed with one variant and zero failures. The warmed authoritative rerun then
+  passed every blocking lane: Python interop 19/19, consumed Rust interop 10/10,
+  generated-code and performance gates, all selected crates and runtime checks,
+  and E2E 131/131 with `report_signature=7c39b8c1dd4fec7c`. Every enforced
+  per-step budget passed; only the indexed nonblocking warm wall-time advisory
+  remained. No timeout, threshold, baseline, waiver, or profile selection
+  changed.
 - Milestone evidence-closure Claude Opus review passes 1 through 4 are archived
   at
   `plans/reviews/archive/phase-40-milestone-40-4-evidence-closure-review-pass-{1,2,3,4}.md`.
@@ -1277,3 +1326,44 @@ updating or deleting that exact tag with no bypass actors.
   `e42bb9a3d4fb48ae3ba50fc9209aa2e8cd5c10d7`.
 - Main-repository [PR #3032](https://github.com/sifr-lang/sifr/pull/3032)
   merged as `97df4acb4656ee55754ec87d4c2d982b13df740e`.
+
+### canonical_candidate_evidence_remediation
+
+- Final qualification-evidence review pass 1 is archived at
+  `plans/reviews/archive/phase-40-final-qualification-evidence-review-pass-1-not-satisfied.md`.
+  The reviewer confirmed the transport and retention evidence, then found that
+  pretty-printed Rust results and stable-support claims could not satisfy the
+  candidate custody contract's canonical-JSON requirement. It also found that
+  the staged Rust report had to be the exact release-profile result rather than
+  a standalone rerun.
+- Release-report generation now canonicalizes that exact release-run Rust
+  result before hashing it. Stable-support claims are staged deterministically
+  from the exact source checkout into custody; the staged bytes must be
+  canonical JSON and exactly equal the source claims' canonical
+  representation. The release evidence writer rejects a wrong-area Rust
+  result, while the writer and planner reject applicable noncanonical,
+  drifted, symlinked, and duplicate-key inputs.
+- Reviewer passes 2 and 3 are archived at
+  `plans/reviews/archive/phase-40-canonical-candidate-evidence-review-pass-2-satisfied.md`
+  and
+  `plans/reviews/archive/phase-40-canonical-candidate-evidence-review-pass-3-satisfied.md`.
+  Both returned `SATISFIED`; pass 3 independently reran the complete
+  distribution area (125/125) and found no blocking issue.
+- The authoritative create-PR profile passed at implementation commit
+  `8048de4343`, including Python interop 19/19, consumed Rust interop 10/10,
+  and E2E 131/131 (`report_signature=7c39b8c1dd4fec7c`). A preceding cold
+  attempt hit only the already indexed `PERF-HOST` timeout in
+  `readonly-check-doctor`; an isolated replay passed 1/1 in 160.114 seconds.
+- Main-repository [PR #3051](https://github.com/sifr-lang/sifr/pull/3051)
+  carries the focused Phase 40 remediation from implementation commit
+  `8048de4343`. Its exact pushed-head review follows after this tracking update.
+- Exact PR-head reviewer pass 4 is archived at
+  `plans/reviews/archive/phase-40-canonical-candidate-evidence-review-pass-4-pr-head.md`.
+  It independently verified remote head `1841576ce`, reran the complete
+  distribution area 125/125 and the isolated `readonly-check-doctor` case 1/1,
+  closed blockers A-C, and returned `SATISFIED`. Its four low-severity
+  observations are also resolved: release-result and source-claims symlinks
+  now fail closed, operator documentation names the exact Rust result copy,
+  and this ledger precisely distinguishes source JSON from canonical staged
+  bytes. The focused qualification/custody selection, runner self-tests, both
+  guardrails, and diff checks pass after that hardening.
