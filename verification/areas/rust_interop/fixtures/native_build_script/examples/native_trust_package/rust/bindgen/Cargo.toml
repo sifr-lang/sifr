@@ -1,8 +1,11 @@
 [package]
-name = "bindgen"
+name = "sifr-bindgen-probe"
 version = "0.1.0"
 edition = "2021"
 build = "build.rs"
 
 [lib]
 path = "src/lib.rs"
+
+[build-dependencies]
+bindgen_upstream = { workspace = true }

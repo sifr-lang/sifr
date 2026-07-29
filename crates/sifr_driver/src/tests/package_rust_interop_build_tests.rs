@@ -4,6 +4,8 @@ use super::*;
 mod advanced_data_support;
 #[path = "package_rust_interop_callback_subscription_support.rs"]
 mod callback_subscription_support;
+#[path = "package_rust_interop_native_build_support.rs"]
+mod native_build_support;
 #[path = "package_rust_interop_zero_copy_support.rs"]
 mod zero_copy_support;
 

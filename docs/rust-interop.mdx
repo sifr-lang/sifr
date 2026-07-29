@@ -192,6 +192,22 @@ package declares the architecture-specific native-link envelope covering the
 locked default-feature graph on arm64 and x86_64. Compiler diagnostics
 reject schema-root, shape/rank, and non-CPU device mismatches before Cargo.
 
+`native_build_script` is a locked `cargo-probe` claim for exact-pinned
+`cc`, `bindgen`, `cxx`, and `zstd`. Four direct wrapper crates expose their
+build-script and native identities through Cargo metadata before execution,
+write versioned artifacts only beneath `OUT_DIR`, and are built twice under
+`--locked --offline --frozen` to prove byte-identical evidence. Generated
+Sifr package glue observes all four artifacts and proves a zstd encode/decode
+roundtrip.
+The manifest declares the portable `cxxbridge1`, `link-cplusplus`,
+`c++`/`stdc++`, wrapper, and zstd native-link envelope; post-build evidence
+outside it is rejected. Removing either the zstd wrapper's build-script
+permission or its native-link permission produces `SIFR-RUST-TRUST-0001`
+before an armed build script can create its sentinel. This claim is certified
+for the checked-in Apple/GNU arm64 and x86_64 host envelope and requires a
+working C/C++ compiler plus a `libclang` installation discoverable by bindgen;
+it does not advertise an MSVC build-script envelope.
+
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |
 | --- | --- | --- |
@@ -226,6 +242,7 @@ reject schema-root, shape/rank, and non-CPU device mismatches before Cargo.
 | `tensor_dlpack_bridge` | `supported-through-bridge` | `contract-only` |
 | `advanced_data_matrix` | `supported-through-bridge` | `contract-only` |
 | `advanced_data_runtime_matrix` | `supported-through-bridge` | `runtime-observed` |
+| `native_build_script` | `supported` | `cargo-probe` |
 <!-- rust-interop-stable-claims:end -->
 
 ## Direct Bindings

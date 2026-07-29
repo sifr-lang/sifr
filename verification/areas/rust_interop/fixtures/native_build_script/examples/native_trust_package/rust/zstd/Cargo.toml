@@ -1,9 +1,12 @@
 [package]
-name = "zstd"
+name = "sifr-zstd-probe"
 version = "0.1.0"
 edition = "2021"
-links = "zstd"
 build = "build.rs"
+links = "sifr_zstd_probe"
 
 [lib]
 path = "src/lib.rs"
+
+[dependencies]
+zstd_upstream = { workspace = true }

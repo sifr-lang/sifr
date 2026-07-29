@@ -422,15 +422,14 @@
     {
       "id": "native_build_script",
       "fixture": "native_build_script",
-      "category": "future-owned-by-separate-phase",
-      "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
+      "category": "supported",
       "tier": 3,
       "capability": "build-script and native-link trust",
       "execution_kind": "cargo-probe",
       "required_crates": ["cc", "bindgen", "cxx", "zstd"],
-      "positive_evidence": {"id": "trusted_build_script_native_evidence", "status": "planned"},
-      "negative_evidence": {"id": "untrusted_native_link_rejected", "status": "planned"},
-      "notes": "Native-link evidence for representative crates is pending until build-script output fixtures pass."
+      "positive_evidence": {"id": "trusted_build_script_native_evidence", "status": "passing"},
+      "negative_evidence": {"id": "untrusted_native_link_rejected", "status": "passing"},
+      "notes": "Generated package evidence compiles exact-pinned cc, bindgen, cxx, and zstd wrappers with locked/offline/frozen Cargo; compares byte-identical fresh-build artifacts; executes the artifacts and a zstd encode/decode roundtrip through generated Sifr package glue; validates the exact Apple/GNU arm64/x86_64 native-link envelope after Cargo; and rejects missing direct native-link trust before an armed build script can create its sentinel."
     },
     {
       "id": "proc_macro_trust",

@@ -151,8 +151,8 @@ normative and must not be broadened.
 | `certification_5` | merged | [PR #3042](https://github.com/sifr-lang/sifr/pull/3042); opaque resource lifecycle matrix with HTTP/Redis/PostgreSQL loopbacks and a temporary SQLite database |
 | `certification_6` | merged | [PR #3046](https://github.com/sifr-lang/sifr/pull/3046); retained callback subscription lifecycle and capture contract |
 | `certification_7` | merged; retrospective performance rerun pending | [PR #3053](https://github.com/sifr-lang/sifr/pull/3053); crate-backed zero-copy lifecycle and compiler rejection contract |
-| `certification_8` | in review | [PR #3067](https://github.com/sifr-lang/sifr/pull/3067); crate-backed Arrow/tensor generated package and compiler mismatch rejection |
-| `certification_9` | blocked | starts after `certification_8` merges |
+| `certification_8` | merged | [PR #3067](https://github.com/sifr-lang/sifr/pull/3067); crate-backed Arrow/tensor generated package and compiler mismatch rejection |
+| `certification_9` | in progress | exact-pinned native build-script package, deterministic artifacts, and pre-execution trust rejection |
 | `certification_10` | blocked | starts after `certification_9` merges |
 | `certification_11` | blocked | starts after `certification_10` merges |
 | `certification_12` | blocked | starts after `certification_11` merges |
@@ -928,7 +928,7 @@ Implementation checklist:
   tests, promote only `advanced_data_runtime_matrix`, retain all three
   narrower contract-only rows, and update structured claims, public/internal
   docs, provenance, counts, and mutation-tested scenario policy.
-- [ ] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, Opus review rounds to
   satisfaction, merge the PR, and unblock only `certification_9`.
 
 Review and validation notes:
@@ -1016,6 +1016,81 @@ Native/proc-macro trust tests must prove rejection happens before the
 untrusted script or macro can create a sentinel file. Ecosystem tests must use
 checked-in lockfile resolution and temp packages; fetching during a validation
 lane is a failure.
+
+#### certification_9: Native Build-Script Trust
+
+Implementation checklist:
+
+- [x] Replace the planning scaffold's local `0.1.0` stand-ins with a
+  locked/offline generated package whose direct wrapper crates compile exact
+  root-lock `cc = 1.2.63`, `bindgen = 0.72.1`, `cxx = 1.0.198`, and
+  `zstd = 0.13.3` dependencies.
+- [x] Make each direct wrapper carry an actual build script so Cargo metadata
+  exposes the pre-execution trust requirement; exercise cc compilation,
+  bindgen generation, cxx bridge expansion, and zstd compression through safe
+  generated-package calls.
+- [x] Emit and runtime-observe deterministic versioned artifacts from every
+  build script, compare fresh-build evidence, and bind the complete package to
+  the checked-in lockfile with exact feature/default-feature policy.
+- [x] Declare the exact direct and transitive native-link envelope, prove the
+  post-build allowlist accepts only that envelope, and keep all build-script,
+  native-link, and artifact paths hermetic to temporary package/target
+  directories.
+- [x] Turn the checked-in negative evidence into a pre-Cargo trust rejection:
+  remove a required declared native link/build-script permission, arm an
+  untrusted build script with a sentinel write, and prove
+  `SIFR-RUST-TRUST-0001` is emitted while the sentinel remains absent.
+- [x] Bind positive and negative evidence to distinct mandatory generated
+  package tests, promote only `native_build_script`, and update structured
+  claims, public/internal docs, provenance, counts, and mutation-tested
+  scenario policy.
+- [ ] Run focused and authoritative local gates, Opus review rounds to
+  satisfaction, merge the PR, and unblock only `certification_10`.
+
+Expected post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 64 passing and 8 planned evidence directions;
+- categories: 19 `supported`, 12 `supported-through-bridge`, 1
+  `unsupported-by-design`, and 4 `future-owned-by-separate-phase`;
+- execution kinds remain 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+- 60 package examples and 18 scenario examples; and
+- 32 structured stable claims.
+
+Review and validation notes:
+
+- [Opus round 1](../../reviews/active/rust-interop-certification-9-review-round-1.md)
+  independently reproduced the locked graph, deterministic artifacts,
+  sentinel effectiveness, native-link envelope, area inventory, and safety
+  constraints. It reported two medium and nine low findings before returning
+  `NOT SATISFIED`.
+- The round-1 fixes add a post-build rejection for undeclared transitive
+  `zstd` evidence, an armed-script positive control, kind-specific
+  pre-execution diagnostics, a real zstd encode/decode roundtrip, version
+  literal mutation coverage, and checked `probe.c` identity. Documentation
+  now scopes the claim to the Apple/GNU arm64/x86_64 host envelope and records
+  the C/C++ compiler plus libclang prerequisites.
+- [Opus round 2](../../reviews/active/rust-interop-certification-9-review-round-2.md)
+  independently reran both mandatory tests, all area inventories, pin
+  agreement, suite binding, lint, formatting, and guardrails; re-inspected all
+  eleven round-1 findings; and reported `SATISFIED` with no actionable
+  findings.
+- Focused revalidation passes both mandatory generated-package tests: the
+  positive proof executes two fresh byte-identical locked/offline/frozen
+  builds plus generated Sifr check/build/run in 63.74 seconds, while the
+  negative proof executes the sentinel control, both pre-execution trust
+  removals, and the transitive post-build rejection in 27.66 seconds.
+- Fixture-matrix self-tests pass all 166 mutation cases. Workspace Clippy,
+  scenario Clippy, rustfmt, 429 non-generated driver tests, HIR
+  maintainability, file-size, and diff-hygiene gates passed before the
+  round-1 fixes and are rerun as part of the final authoritative gate.
+- The shared worktree's full Rust-interop area currently has one unrelated
+  failure: a parallel `ecosystem_backend_certification` category edit promotes
+  that row while its evidence remains planned. Certification 9 does not stage
+  or claim that hunk.
 
 ### certification_14: Track A Closeout and Stable Gate
 

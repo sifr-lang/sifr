@@ -1,8 +1,12 @@
 [package]
-name = "cc"
+name = "sifr-cc-probe"
 version = "0.1.0"
 edition = "2021"
 build = "build.rs"
+links = "sifr_cc_probe"
 
 [lib]
 path = "src/lib.rs"
+
+[build-dependencies]
+cc_upstream = { workspace = true }

@@ -190,6 +190,12 @@
       "category": "supported-through-bridge",
       "execution_kind": "runtime-observed",
       "capability": "crate-backed Arrow and tensor runtime exchange"
+    },
+    {
+      "id": "native_build_script",
+      "category": "supported",
+      "execution_kind": "cargo-probe",
+      "capability": "build-script and native-link trust"
     }
   ]
 }

@@ -1,3 +1,3 @@
-pub fn probe() -> Vec<u8> {
-    b"bindgen".to_vec()
+pub fn artifact() -> String {
+    include_str!(concat!(env!("OUT_DIR"), "/sifr-bindgen-evidence.txt")).to_owned()
 }

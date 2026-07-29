@@ -16,5 +16,5 @@ direct-crate-bindings = true
 
 [trust]
 rust-build-scripts = ["cc", "bindgen", "cxx", "zstd"]
-native-links = ["zstd"]
-unsafe-rust-bridges = ["src/bridges/native.rs"]
+native-links = ["c++", "cxxbridge1", "link-cplusplus", "sifr_cc_probe", "sifr_zstd_probe", "stdc++", "zstd"]
+rust-no-panic = ["bindgen.artifact", "bridge.native.compress", "bridge.native.decompress", "cc.artifact", "cxx.artifact", "zstd.artifact"]

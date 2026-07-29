@@ -6,9 +6,35 @@
 class NativeError(Error):
     message: str
 
-@rust(bridge.native.compress, panic=map_error(bridge.native.map_panic))
+@rust(bindgen.artifact, panic=trusted_no_panic)
+def bindgen_artifact() -> str: ...
+
+@rust(cc.artifact, panic=trusted_no_panic)
+def cc_artifact() -> str: ...
+
+@rust(cxx.artifact, panic=trusted_no_panic)
+def cxx_artifact() -> str: ...
+
+@rust(zstd.artifact, panic=trusted_no_panic)
+def zstd_artifact() -> str: ...
+
+@rust(bridge.native.compress, panic=trusted_no_panic)
 def compress(input: bytes) -> Result[bytes, NativeError | RustPanicError]: ...
 
-def verify_native_trust_package() -> Result[bytes, NativeError | RustPanicError]:
-    compressed_result: Result[bytes, NativeError | RustPanicError] = compress(b"sifr-rust-interop")
-    return compressed_result
+@rust(bridge.native.decompress, panic=trusted_no_panic)
+def decompress(input: bytes) -> Result[bytes, NativeError | RustPanicError]: ...
+
+def verify_native_trust_package() -> Result[str, NativeError | RustPanicError]:
+    try:
+        compressed: bytes = compress(b"sifr-rust-interop")
+        decoded: bytes = decompress(compressed)
+        assert decoded == b"sifr-rust-interop"
+        cc_evidence: str = cc_artifact()
+        bindgen_evidence: str = bindgen_artifact()
+        cxx_evidence: str = cxx_artifact()
+        zstd_evidence: str = zstd_artifact()
+        return cc_evidence + "|" + bindgen_evidence + "|" + cxx_evidence + "|" + zstd_evidence + "|compressed=zstd-roundtrip"
+    except NativeError as error:
+        raise error
+    except RustPanicError as error:
+        raise error

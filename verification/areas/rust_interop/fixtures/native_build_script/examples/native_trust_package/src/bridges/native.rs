@@ -1,17 +1,22 @@
+use std::fmt;
+
+#[derive(Debug)]
 pub struct NativeErrorBridge {
     pub message: String,
 }
 
-pub fn compress(input: &[u8]) -> Result<Vec<u8>, NativeErrorBridge> {
-    let mut output = zstd::encode(input);
-    output.extend_from_slice(&cc::probe());
-    output.extend_from_slice(&bindgen::probe());
-    output.extend_from_slice(&cxx::probe());
-    Ok(output)
+impl fmt::Display for NativeErrorBridge {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(&self.message)
+    }
 }
 
-pub fn map_panic(message: &str) -> NativeErrorBridge {
-    NativeErrorBridge {
-        message: message.to_owned(),
-    }
+impl std::error::Error for NativeErrorBridge {}
+
+pub fn compress(input: &[u8]) -> Result<Vec<u8>, NativeErrorBridge> {
+    zstd::encode(input).map_err(|message| NativeErrorBridge { message })
+}
+
+pub fn decompress(input: &[u8]) -> Result<Vec<u8>, NativeErrorBridge> {
+    zstd::decode(input).map_err(|message| NativeErrorBridge { message })
 }
