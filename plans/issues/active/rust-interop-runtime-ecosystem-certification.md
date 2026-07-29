@@ -965,6 +965,13 @@ Review and validation notes:
   re-derived the native-link envelope and all inventories, and reported
   `SATISFIED` with no actionable finding against PR #3067 head
   `3bd82793a9652b30f23c08c4f54d11c5aa0e298a`.
+- [Merge-readiness round 6](../../reviews/active/rust-interop-certification-8-review-round-6.md)
+  audited the repeated full merge-lane performance-only failures, proved the
+  four affected benchmark fixtures cannot reach package Rust-interop or the
+  changed native-link trust path, identified pre-existing main-branch LSP
+  baseline drift, matched the established `certification_2` environmental
+  timing precedent, and reported `SATISFIED TO MERGE` with no PR-attributable
+  blocker.
 - Focused revalidation passes the positive generated-package runtime test, the
   exact three-diagnostic negative test, locked/offline scenario Clippy, 429
   non-generated driver tests, all 10 Rust-interop area variants, 152 fixture
@@ -974,6 +981,17 @@ Review and validation notes:
   tests, and all 131 E2E fixtures. Its total warm wall-time advisory reflects
   cold artifact groups and shared-host contention; every blocking step stayed
   within budget.
+- Repeated full merge profiles pass every functional step: Python interop
+  `25/25`, Rust interop `10/10`, developer tooling `32/32`, all guardrails,
+  and the representative benchmark runner itself. Their only blocking result
+  is the budget comparison for unchanged `check-project-004-project-graph`,
+  `check-single-file-001-arithmetic`,
+  `diagnostic-non-regression-002-json-diagnostic-schema`, and intermittently
+  `lsp-query-003-diagnostics` under concurrent shared-host validation. Round 6
+  statically confirms none can execute this PR's package-only Rust-interop
+  trust path; this is accepted under the same environmental-drift policy used
+  for `certification_2`. Repository-wide baseline recalibration remains a
+  `certification_14` retrospective item and does not block `certification_9`.
 
 Expected post-item inventory:
 
