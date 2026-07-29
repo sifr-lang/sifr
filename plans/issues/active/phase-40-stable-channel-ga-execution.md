@@ -785,6 +785,15 @@ Review and upstream coordination ledger:
   and deadline, covering all partial attested-identity combinations, and
   pinning the original exact-bytes versus recovery-only attestation boundary
   in the workflow contract.
+- Exact implementation-head recovery review pass 2 is archived at
+  `plans/reviews/archive/phase-40-schema-bootstrap-recovery-review-pass-2-satisfied.md`.
+  At pushed PR head
+  `ddcd7e3d656e39a2b00727a7ce6ac775fa823f1e`, Opus independently reran
+  the bootstrap self-test, workflow contract, complete 67-variant distribution
+  area, YAML/shell and file-size checks; compared the durable summary
+  byte-for-byte with the original artifact; checked the live failed run log
+  and generation-1 assets; found every pass-1 finding closed; and returned
+  `SATISFIED` with zero actionable finding.
 - The next protected-publication wave adds a credential-free stable prepare
   path for `ga-activation` and `normal`. It binds an exact evidence commit,
   canonical candidate directory and plan digest, a separate clean exact source
