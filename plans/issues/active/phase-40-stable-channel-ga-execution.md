@@ -1367,3 +1367,11 @@ updating or deleting that exact tag with no bypass actors.
   and this ledger precisely distinguishes source JSON from canonical staged
   bytes. The focused qualification/custody selection, runner self-tests, both
   guardrails, and diff checks pass after that hardening.
+- Final exact-head reviewer pass 5 is archived at
+  `plans/reviews/archive/phase-40-canonical-candidate-evidence-review-pass-5-final-pr-head.md`.
+  It independently reran the complete distribution area 125/125 and runner
+  self-tests at remote head `90cda61b9`, verified all four pass-4 observations
+  closed with discriminating mutation coverage, and returned `SATISFIED` with
+  no actionable finding.
+- Main-repository [PR #3051](https://github.com/sifr-lang/sifr/pull/3051)
+  merged as `7034c4c69bf3fa7e2c36ddc002f6389d6f3511a9`.
