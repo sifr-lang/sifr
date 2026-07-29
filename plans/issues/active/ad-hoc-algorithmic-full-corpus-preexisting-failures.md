@@ -292,7 +292,7 @@ rather than worked around here.
 
 | Item | Status | Evidence |
 | --- | --- | --- |
-| Failure diagnosis and root-cause grouping | approved; pending PR | exact current-main 411/20 check reproduction plus a complete 411-fixture native-build audit: 20 check failures, 23 distinct latent build failures, and 368 native-build passes; pass 14 approved the corrected diagnosis with zero actionable findings |
+| Failure diagnosis and root-cause grouping | approved; [PR #3064](https://github.com/sifr-lang/sifr/pull/3064) open | exact current-main 411/20 check reproduction plus a complete 411-fixture native-build audit: 20 check failures, 23 distinct latent build failures, and 368 native-build passes; pass 14 approved the corrected diagnosis with zero actionable findings |
 | Focused remediation PR waves | ready after diagnosis merge | nine sequential waves are defined above; starts after the approved diagnosis is merged |
 | Full-corpus closeout | blocked | starts after every remediation wave merges; includes restoring `leetcode-full` to the release profile |
 
