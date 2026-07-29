@@ -1078,6 +1078,11 @@ Review and validation notes:
   agreement, suite binding, lint, formatting, and guardrails; re-inspected all
   eleven round-1 findings; and reported `SATISFIED` with no actionable
   findings.
+- [Exact-head round 3](../../reviews/active/rust-interop-certification-9-review-round-3.md)
+  audited PR #3069 head `b5497901d4d7c7d90a65d03402708f6642e913ea`,
+  validated the committed matrix blob independently, confirmed the unrelated
+  backend hunk is absent, re-derived every inventory, and reported
+  `SATISFIED` with no actionable findings.
 - Focused revalidation passes both mandatory generated-package tests: the
   positive proof executes two fresh byte-identical locked/offline/frozen
   builds plus generated Sifr check/build/run in 63.74 seconds, while the
