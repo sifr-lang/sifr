@@ -14,7 +14,7 @@ use ruff_text_size::TextRange;
 use sequence_guards::SequenceGuard;
 use sequence_pointers::SequencePointerFact;
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
-use sifr_ir::{CompilerIntrinsicId, FlowEffect, LoweringResult, PythonCleanupPolicy};
+use sifr_ir::{BindingId, CompilerIntrinsicId, FlowEffect, LoweringResult, PythonCleanupPolicy};
 use sifr_python_ast::Stmt;
 use sifr_type_system::{make_union, FunctionType, Type};
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -38,6 +38,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) class_instance_methods: HashSet<String>,
     /// Nearest defining class for each flattened `Class.method` surface.
     pub(in crate::lower) class_method_origins: HashMap<String, String>,
+    /// Stable receiver binding assigned while each instance method scope is live.
+    pub(in crate::lower) method_receiver_bindings: HashMap<String, BindingId>,
     /// Class name -> declaration metadata for sealed Python-backed identities.
     pub(in crate::lower) python_opaque_classes: HashMap<String, sifr_ir::PythonInteropDeclaration>,
     /// General affine must-use obligations keyed by their current owning binding.
@@ -187,6 +189,7 @@ impl LowerCtx {
             class_types: HashMap::new(),
             class_instance_methods: HashSet::new(),
             class_method_origins: HashMap::new(),
+            method_receiver_bindings: HashMap::new(),
             python_opaque_classes: HashMap::new(),
             live_must_use_bindings: HashMap::new(),
             python_consuming_methods: HashSet::new(),
@@ -556,6 +559,7 @@ pub(in crate::lower) fn substitute_type_vars(ty: &Type, bindings: &HashMap<Strin
             .collect();
         let return_type = Box::new(substitute_type_vars(&ft.return_type, bindings));
         FunctionType {
+            receiver: ft.receiver,
             params,
             return_type,
         }

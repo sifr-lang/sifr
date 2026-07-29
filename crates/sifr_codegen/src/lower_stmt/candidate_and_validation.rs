@@ -61,7 +61,7 @@ pub(super) fn try_lower_expr_stmt_with_bindings(
         ..
     } = expr
     {
-        if let HirExpr::Name { name, ty } = object.as_ref() {
+        if let HirExpr::Name { name, ty, .. } = object.as_ref() {
             if matches!(resolve_alias_type(ty), Type::Any | Type::Unknown) {
                 if let Some(bound_ty) = local_binding_types.get(name) {
                     let lowered_object = try_lower_leaf_or_name_expr(object)?;

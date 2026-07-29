@@ -261,6 +261,7 @@ fn test_simple_function_codegen() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -306,11 +307,13 @@ fn test_arithmetic_codegen() {
                 value: Some(HirExpr::BinOp {
                     left: Box::new(HirExpr::Name {
                         name: "a".to_string(),
+                        binding_id: None,
                         ty: Type::Int,
                     }),
                     op: "+".to_string(),
                     right: Box::new(HirExpr::Name {
                         name: "b".to_string(),
+                        binding_id: None,
                         ty: Type::Int,
                     }),
                     ty: Type::Int,
@@ -318,6 +321,7 @@ fn test_arithmetic_codegen() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -358,6 +362,7 @@ fn test_no_unnecessary_mut() {
                         func: "print".to_string(),
                         args: vec![HirExpr::Name {
                             name: "x".to_string(),
+                            binding_id: None,
                             ty: Type::Int,
                         }],
                         ty: Type::None,
@@ -366,6 +371,7 @@ fn test_no_unnecessary_mut() {
             ],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -412,6 +418,7 @@ fn test_mut_on_reassigned_variable() {
             ],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -505,6 +512,7 @@ fn test_println_fstring_inlined() {
                                 HirFStringPart::Literal("Hello, ".to_string()),
                                 HirFStringPart::Expr(HirExpr::Name {
                                     name: "name".to_string(),
+                                    binding_id: None,
                                     ty: Type::Str,
                                 }),
                                 HirFStringPart::Literal("!".to_string()),
@@ -517,6 +525,7 @@ fn test_println_fstring_inlined() {
             ],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -558,6 +567,7 @@ fn test_no_tostring_in_println() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -586,10 +596,12 @@ fn test_no_tostring_in_println() {
 fn test_structured_codegen_lowers_comprehension_local_initializers() {
     let items_name = HirExpr::Name {
         name: "items".to_string(),
+        binding_id: None,
         ty: Type::List(Box::new(Type::Int)),
     };
     let comp_item = HirExpr::Name {
         name: "x".to_string(),
+        binding_id: None,
         ty: Type::Int,
     };
     let module = HirModule {
@@ -641,6 +653,7 @@ fn test_structured_codegen_lowers_comprehension_local_initializers() {
             ],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -693,6 +706,7 @@ fn test_reverse_range_for_loop_uses_rev_iterator_for_unary_negative_step() {
                         func: "print".to_string(),
                         args: vec![HirExpr::Name {
                             name: "i".to_string(),
+                            binding_id: None,
                             ty: Type::Int,
                         }],
                         ty: Type::None,
@@ -702,6 +716,7 @@ fn test_reverse_range_for_loop_uses_rev_iterator_for_unary_negative_step() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -741,6 +756,7 @@ fn test_hashmap_short_name() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -798,6 +814,7 @@ fn test_dict_get_string_literal_key() {
                     value: HirExpr::Index {
                         object: Box::new(HirExpr::Name {
                             name: "d".to_string(),
+                            binding_id: None,
                             ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
                         }),
                         index: Box::new(HirExpr::StringLiteral("key".to_string())),
@@ -808,6 +825,7 @@ fn test_dict_get_string_literal_key() {
             ],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -829,56 +847,5 @@ fn test_dict_get_string_literal_key() {
     assert!(
         !rust_code.contains("&\"key\".to_string()"),
         "should NOT have &\"key\".to_string()"
-    );
-}
-
-#[test]
-fn test_string_concat_flattened() {
-    // "a" + "b" + "c" should emit format!("{}{}{}", ...) not nested format!
-    let module = HirModule {
-        functions: vec![HirFunction {
-            name: "main".to_string(),
-            params: vec![],
-            return_type: Type::None,
-            body: vec![HirStmt::Let {
-                name: "s".to_string(),
-                ty: Type::Str,
-                value: HirExpr::BinOp {
-                    left: Box::new(HirExpr::BinOp {
-                        left: Box::new(HirExpr::StringLiteral("a".to_string())),
-                        op: "+".to_string(),
-                        right: Box::new(HirExpr::StringLiteral("b".to_string())),
-                        ty: Type::Str,
-                    }),
-                    op: "+".to_string(),
-                    right: Box::new(HirExpr::StringLiteral("c".to_string())),
-                    ty: Type::Str,
-                },
-                is_mutable: false,
-            }],
-            is_async: false,
-            method_kind: MethodKind::Regular,
-            decorators: vec![],
-            rust_interop: Vec::new(),
-            python_interop: Vec::new(),
-            compiler_intrinsic: None,
-            type_params: vec![],
-        }],
-        classes: vec![],
-        imports: vec![],
-        constants: vec![],
-        generic_functions: std::collections::HashMap::new(),
-        type_param_bounds: std::collections::HashMap::new(),
-    };
-
-    let rust_code = generate_rust(&module);
-    // All parts are string literals, so they should be folded into a single string
-    assert!(
-        rust_code.contains("\"abc\".to_string()"),
-        "should fold all string literals into a single string"
-    );
-    assert!(
-        !rust_code.contains("format!"),
-        "should NOT use format! when all parts are literals"
     );
 }

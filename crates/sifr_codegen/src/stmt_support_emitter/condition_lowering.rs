@@ -182,7 +182,7 @@ impl RustEmitter {
             )
         }
 
-        if let HirExpr::Name { name, ty } = condition {
+        if let HirExpr::Name { name, ty, .. } = condition {
             if is_collection_truthy_type(ty) {
                 return Some(crate::RustExpr::UnaryOp {
                     op: "!".to_string(),
@@ -197,7 +197,7 @@ impl RustEmitter {
 
         if let HirExpr::UnaryOp { op, operand, .. } = condition {
             if op == "not" {
-                if let HirExpr::Name { name, ty } = operand.as_ref() {
+                if let HirExpr::Name { name, ty, .. } = operand.as_ref() {
                     if is_collection_truthy_type(ty) {
                         return Some(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::Ident(name.clone())),
@@ -216,7 +216,7 @@ impl RustEmitter {
         condition: &HirExpr,
     ) -> Option<crate::RustExpr> {
         match condition {
-            HirExpr::Name { name, ty } => Some(crate::RustExpr::BinOp {
+            HirExpr::Name { name, ty, .. } => Some(crate::RustExpr::BinOp {
                 left: Box::new(crate::RustExpr::Ident(name.clone())),
                 op: "!=".to_string(),
                 right: Box::new(Self::zero_literal_for_numeric_truthiness_type_for_ir(ty)?),
@@ -226,6 +226,7 @@ impl RustEmitter {
                 method,
                 args,
                 ty,
+                ..
             } if method == "len" && args.is_empty() => {
                 let HirExpr::Name { name, .. } = object.as_ref() else {
                     return None;
@@ -245,7 +246,7 @@ impl RustEmitter {
                 })
             }
             HirExpr::UnaryOp { op, operand, .. } if op == "not" => match operand.as_ref() {
-                HirExpr::Name { name, ty } => Some(crate::RustExpr::BinOp {
+                HirExpr::Name { name, ty, .. } => Some(crate::RustExpr::BinOp {
                     left: Box::new(crate::RustExpr::Ident(name.clone())),
                     op: "==".to_string(),
                     right: Box::new(Self::zero_literal_for_numeric_truthiness_type_for_ir(ty)?),
@@ -255,6 +256,7 @@ impl RustEmitter {
                     method,
                     args,
                     ty,
+                    ..
                 } if method == "len" && args.is_empty() => {
                     let HirExpr::Name { name, .. } = object.as_ref() else {
                         return None;

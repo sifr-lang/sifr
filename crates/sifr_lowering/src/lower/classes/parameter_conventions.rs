@@ -2,8 +2,46 @@ use super::{
     typing_and_functions::ast_convention_to_param, FunctionType, HirExpr, HirParam, LowerCtx,
 };
 use crate::lower::{expressions::lower_expr, python_interop::is_python_omit};
-use sifr_python_ast::{AstParamConvention, Expr};
-use sifr_type_system::{ParamConvention, Type};
+use sifr_python_ast::{AstParamConvention, Expr, Parameters};
+use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
+
+pub(in crate::lower) fn declared_receiver_convention(
+    parameters: &Parameters,
+) -> ReceiverConvention {
+    let convention = parameters
+        .args
+        .first()
+        .map_or_else(AstParamConvention::borrow, |parameter| {
+            parameter.parameter.convention
+        });
+    if convention.is_mutable() {
+        ReceiverConvention::MutableBorrow
+    } else {
+        ReceiverConvention::SharedBorrow
+    }
+}
+
+pub(in crate::lower) fn fixed_trait_receiver_convention(
+    method: &str,
+) -> Option<ReceiverConvention> {
+    match method {
+        "__eq__" | "__lt__" | "__str__" | "__repr__" | "__getitem__" => {
+            Some(ReceiverConvention::SharedBorrow)
+        }
+        "__add__" | "__sub__" | "__mul__" | "__truediv__" | "__mod__" | "__neg__" => {
+            Some(ReceiverConvention::Owned)
+        }
+        _ => None,
+    }
+}
+
+pub(in crate::lower) fn declared_method_receiver_convention(
+    method: &str,
+    parameters: &Parameters,
+) -> ReceiverConvention {
+    fixed_trait_receiver_convention(method)
+        .unwrap_or_else(|| declared_receiver_convention(parameters))
+}
 
 pub(in crate::lower) fn class_method_param_convention(
     syntax: AstParamConvention,

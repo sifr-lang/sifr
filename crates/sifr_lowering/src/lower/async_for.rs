@@ -219,7 +219,11 @@ pub(in crate::lower) fn lower_async_for(
     let (target, _) = simple_for_target_name(&for_stmt.target, ctx)?;
     let moved_before_loop = ctx.scope.save_moved_state();
     ctx.scope.push();
-    ctx.scope.define(target.clone(), target_ty.clone());
+    ctx.scope.define_ephemeral(
+        target.clone(),
+        target_ty.clone(),
+        crate::scope::EphemeralOrigin::Iteration,
+    );
     ctx.loop_depth += 1;
     let body = lower_stmts(&for_stmt.body, func_type, ctx);
     ctx.loop_depth -= 1;

@@ -43,7 +43,7 @@ impl RustEmitter {
 
         let value_is_option = if crate::helpers::is_option_type(value.ty()) {
             true
-        } else if let HirExpr::Name { name, ty } = value {
+        } else if let HirExpr::Name { name, ty, .. } = value {
             matches!(
                 crate::resolve_alias_type_for_plain_call(ty),
                 Type::Any | Type::Unknown
@@ -75,7 +75,7 @@ impl RustEmitter {
             if crate::helpers::is_option_type(expr.ty()) {
                 return true;
             }
-            if let HirExpr::Name { name, ty } = expr {
+            if let HirExpr::Name { name, ty, .. } = expr {
                 return matches!(
                     crate::resolve_alias_type_for_plain_call(ty),
                     Type::Any | Type::Unknown
@@ -258,7 +258,7 @@ impl RustEmitter {
             if crate::helpers::is_option_type(expr.ty()) {
                 return true;
             }
-            if let HirExpr::Name { name, ty } = expr {
+            if let HirExpr::Name { name, ty, .. } = expr {
                 return matches!(
                     crate::resolve_alias_type_for_plain_call(ty),
                     Type::Any | Type::Unknown
@@ -422,7 +422,7 @@ impl RustEmitter {
 
         let value_is_option = if crate::helpers::is_option_type(value.ty()) {
             true
-        } else if let HirExpr::Name { name, ty } = value {
+        } else if let HirExpr::Name { name, ty, .. } = value {
             matches!(
                 crate::resolve_alias_type_for_plain_call(ty),
                 Type::Any | Type::Unknown
@@ -458,7 +458,7 @@ impl RustEmitter {
             if crate::helpers::is_option_type(expr.ty()) {
                 return true;
             }
-            if let HirExpr::Name { name, ty } = expr {
+            if let HirExpr::Name { name, ty, .. } = expr {
                 return matches!(
                     crate::resolve_alias_type_for_plain_call(ty),
                     Type::Any | Type::Unknown
@@ -646,7 +646,7 @@ impl RustEmitter {
             if crate::helpers::is_option_type(expr.ty()) {
                 return true;
             }
-            if let HirExpr::Name { name, ty } = expr {
+            if let HirExpr::Name { name, ty, .. } = expr {
                 return matches!(
                     crate::resolve_alias_type_for_plain_call(ty),
                     Type::Any | Type::Unknown

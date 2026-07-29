@@ -24,6 +24,7 @@ fn function_type_from_params_preserves_named_conventions() {
     assert_eq!(
         function_type,
         FunctionType {
+            receiver: None,
             params: vec![
                 ("value".to_string(), Type::Int, ParamConvention::borrow()),
                 ("count".to_string(), Type::Int, ParamConvention::own()),
@@ -42,6 +43,7 @@ fn function_type_from_hir_exports_async_functions_as_coroutines() {
         body: Vec::new(),
         is_async: true,
         method_kind: sifr_ir::MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -52,6 +54,7 @@ fn function_type_from_hir_exports_async_functions_as_coroutines() {
     assert_eq!(
         function_type_from_hir(&function),
         FunctionType {
+            receiver: None,
             params: vec![("value".to_string(), Type::Int, ParamConvention::borrow())],
             return_type: Box::new(Type::Coroutine(Box::new(Type::Bool), Box::new(Type::Str))),
         }

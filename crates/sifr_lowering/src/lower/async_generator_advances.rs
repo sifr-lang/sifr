@@ -130,7 +130,7 @@ fn async_generator_anext_source(value: &HirExpr) -> Option<String> {
     if func != "anext" || args.len() != 1 {
         return None;
     }
-    let HirExpr::Name { name, ty } = &args[0] else {
+    let HirExpr::Name { name, ty, .. } = &args[0] else {
         return None;
     };
     if matches!(ty.resolve_alias(), Type::AsyncGenerator(_, _)) {

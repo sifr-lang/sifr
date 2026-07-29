@@ -46,7 +46,11 @@ pub(in crate::lower) fn lower_generator_expr(
 
     let moved_before_loop = ctx.scope.save_moved_state();
     let lowered = ctx.with_pushed_scope(|ctx| {
-        ctx.scope.define(var_name.clone(), elem_ty.clone());
+        ctx.scope.define_ephemeral(
+            var_name.clone(),
+            elem_ty.clone(),
+            crate::scope::EphemeralOrigin::Comprehension,
+        );
         let expr = lower_expr(&gen.elt, ctx)?;
         let expr_ty = expr.ty().clone();
         if statement_diagnostics::reject_affine_comprehension_value(ctx, &expr_ty, gen.elt.range())

@@ -219,6 +219,7 @@ impl RustEmitter {
                     let walrus_compare_expr = HirExpr::Compare {
                         left: Box::new(HirExpr::Name {
                             name: name.clone(),
+                            binding_id: None,
                             ty: ty.clone(),
                         }),
                         ops: ops.clone(),

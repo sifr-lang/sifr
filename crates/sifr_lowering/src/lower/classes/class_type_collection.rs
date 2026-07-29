@@ -8,12 +8,14 @@ use std::collections::HashMap;
 
 use super::async_await::coroutine_result_type;
 use super::class_field_inference::collect_constructor_self_field_assignments;
+use super::class_type_helpers::option_member_type;
 use super::diagnostics::{
     collect_enum_variants, get_newtype_inner, get_parent_class, has_decorator, is_enum_class,
     is_error_class, is_protocol_class,
 };
 use super::parameter_conventions::{
-    class_declared_method_param_convention, class_method_param_convention, inherit_class_methods,
+    class_declared_method_param_convention, class_method_param_convention,
+    declared_method_receiver_convention, inherit_class_methods,
     record_declared_class_method_metadata, replace_method_signature,
 };
 use super::protocol_diagnostics;
@@ -45,25 +47,6 @@ pub(super) fn method_signature_return_type(
         coroutine_result_type(&return_ty)
     } else {
         return_ty
-    }
-}
-
-pub(super) fn option_member_type(ty: &Type) -> Option<Type> {
-    let Type::Union(members) = ty.resolve_alias() else {
-        return None;
-    };
-    let has_none = members
-        .iter()
-        .any(|member| matches!(member.resolve_alias(), Type::None));
-    let non_none: Vec<Type> = members
-        .iter()
-        .filter(|member| !matches!(member.resolve_alias(), Type::None))
-        .cloned()
-        .collect();
-    if has_none && non_none.len() == 1 {
-        non_none.first().cloned()
-    } else {
-        None
     }
 }
 
@@ -401,6 +384,10 @@ pub(in crate::lower) fn collect_class_type(
                     Type::None
                 };
                 let ft = FunctionType {
+                    receiver: Some(declared_method_receiver_convention(
+                        &method_name,
+                        &func.parameters,
+                    )),
                     params,
                     return_type: Box::new(method_signature_return_type(func, return_ty)),
                 };
@@ -446,9 +433,11 @@ pub(in crate::lower) fn collect_class_type(
                 } else {
                     Type::None
                 };
+                let receiver = declared_method_receiver_convention(&method_name, &func.parameters);
                 methods.push((
                     method_name,
                     FunctionType {
+                        receiver: Some(receiver),
                         params,
                         return_type: Box::new(method_signature_return_type(func, return_ty)),
                     },
@@ -596,6 +585,7 @@ pub(in crate::lower) fn collect_class_type(
                     }
                     // Constructor return type is registered after field collection.
                     let constructor_ft = FunctionType {
+                        receiver: None,
                         params,
                         return_type: Box::new(Type::None),
                     };
@@ -754,10 +744,14 @@ pub(in crate::lower) fn collect_class_type(
                         ctx.function_workload_annotations
                             .insert(format!("{class_name}.{method_name}"), workload);
                     }
+                    let receiver = (!is_static && !is_class).then(|| {
+                        declared_method_receiver_convention(&method_name, &func.parameters)
+                    });
                     replace_method_signature(
                         &mut methods,
                         method_name,
                         FunctionType {
+                            receiver,
                             params,
                             return_type: Box::new(method_signature_return_type(func, return_ty)),
                         },

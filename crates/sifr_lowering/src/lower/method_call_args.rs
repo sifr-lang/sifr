@@ -54,7 +54,36 @@ pub(in crate::lower) fn resolved_method_arg_ranges(
     object_ty: &Type,
     method: &str,
     call: &ExprCall,
+    signature: Option<&FunctionType>,
+    arg_count: usize,
 ) -> Vec<TextRange> {
+    if let Some(signature) = signature {
+        let mut ranges = signature
+            .params
+            .iter()
+            .take(arg_count)
+            .enumerate()
+            .map(|(index, (param_name, _, _))| {
+                call.arguments
+                    .args
+                    .get(index)
+                    .map(Ranged::range)
+                    .or_else(|| {
+                        call.arguments.keywords.iter().find_map(|keyword| {
+                            keyword
+                                .arg
+                                .as_ref()
+                                .is_some_and(|name| name == param_name)
+                                .then(|| keyword.value.range())
+                        })
+                    })
+                    .unwrap_or_else(|| call.func.range())
+            })
+            .collect::<Vec<_>>();
+        ranges.resize(arg_count, call.func.range());
+        return ranges;
+    }
+
     let mut ranges: Vec<TextRange> = call.arguments.args.iter().map(Ranged::range).collect();
     match object_ty.resolve_alias() {
         Type::List(_) if method == "sort" => {
@@ -123,6 +152,8 @@ pub(in crate::lower) fn resolved_method_arg_ranges(
         }
         _ => {}
     }
+    ranges.resize(arg_count, call.func.range());
+    ranges.truncate(arg_count);
     ranges
 }
 

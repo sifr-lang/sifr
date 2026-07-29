@@ -42,11 +42,15 @@ pub(in crate::lower) fn lower_task_handle_method_call(
         Type::Task(ok_ty, err_ty) | Type::BlockingTask(ok_ty, err_ty) => (ok_ty, err_ty),
         _ => return None,
     };
+    let receiver_convention =
+        super::mutating_methods::receiver_convention_for_non_class_method(object.ty(), method_name);
     if method_name == "cancel" {
         return Some(HirExpr::MethodCall {
             object: Box::new(object),
             method: method_name.to_string(),
             args: vec![],
+            receiver_convention: Some(receiver_convention),
+            source: Some(super::method_call_metadata::source_method_call(call)),
             ty: Type::None,
         });
     }
@@ -60,6 +64,8 @@ pub(in crate::lower) fn lower_task_handle_method_call(
         object: Box::new(object),
         method: method_name.to_string(),
         args: vec![],
+        receiver_convention: Some(receiver_convention),
+        source: Some(super::method_call_metadata::source_method_call(call)),
         ty: Type::Awaitable(Box::new(Type::TaskResult(result_ok_ty, result_err_ty))),
     })
 }

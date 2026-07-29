@@ -9,7 +9,7 @@ use super::{
 };
 impl RustEmitter {
     pub(crate) fn effective_method_object_ty(&self, object: &HirExpr) -> Type {
-        if let HirExpr::Name { name, ty } = object {
+        if let HirExpr::Name { name, ty, .. } = object {
             if self.none_widened_local_bindings.contains(name) {
                 if let Some(bound_ty) = self.local_binding_types.get(name) {
                     return bound_ty.clone();
@@ -28,7 +28,7 @@ impl RustEmitter {
     }
 
     pub(crate) fn effective_registry_expr_ty(&self, expr: &HirExpr) -> Type {
-        if let HirExpr::Name { name, ty } = expr {
+        if let HirExpr::Name { name, ty, .. } = expr {
             if self.none_widened_local_bindings.contains(name) {
                 if let Some(bound_ty) = self.local_binding_types.get(name) {
                     return bound_ty.clone();
@@ -210,7 +210,7 @@ impl RustEmitter {
 
         if matches!(object_ty, Type::List(_)) && method == "insert" && args.len() >= 2 {
             // Clone borrowed/mut-borrowed move-owned values.
-            let needs_clone = if let HirExpr::Name { name, ty } = &args[1] {
+            let needs_clone = if let HirExpr::Name { name, ty, .. } = &args[1] {
                 (self.borrowed_params.contains(name.as_str())
                     || self.mut_borrowed_params.contains(name.as_str()))
                     && ty.ownership() != sifr_type_system::OwnershipKind::Copy
@@ -623,7 +623,7 @@ impl RustEmitter {
         ) {
             return None;
         }
-        let HirExpr::Name { name, ty } = &args[0] else {
+        let HirExpr::Name { name, ty, .. } = &args[0] else {
             return None;
         };
         if self.borrowed_params.contains(name)

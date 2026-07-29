@@ -105,6 +105,7 @@ fn imported_alias_call_preserves_identity_and_source_ranges() {
         .insert(
             "assert_eq".to_string(),
             sifr_type_system::FunctionType {
+                receiver: None,
                 params: vec![
                     (
                         "actual".to_string(),
@@ -164,6 +165,7 @@ fn source_declared_intrinsic_is_not_a_first_class_value() {
         .insert(
             "assert_true".to_string(),
             sifr_type_system::FunctionType {
+                receiver: None,
                 params: vec![(
                     "value".to_string(),
                     sifr_type_system::Type::Bool,
@@ -197,6 +199,7 @@ fn imported_former_intrinsic_name_without_metadata_remains_an_ordinary_call() {
         .insert(
             "assert_eq".to_string(),
             sifr_type_system::FunctionType {
+                receiver: None,
                 params: vec![
                     (
                         "left".to_string(),
@@ -229,6 +232,7 @@ fn local_function_declaration_shadows_unaliased_imported_intrinsic_identity() {
     let parsed = parse_module(source).expect("source should parse");
     let mut externals = ExternalDefs::default();
     let signature = sifr_type_system::FunctionType {
+        receiver: None,
         params: vec![
             (
                 "actual".to_string(),

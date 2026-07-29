@@ -6,6 +6,7 @@ fn lowers_simple_assert_with_not_option_truthiness_name_test() {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
+                binding_id: None,
                 ty: Type::Union(vec![Type::Int, Type::None]),
             }),
             ty: Type::Bool,
@@ -40,6 +41,7 @@ fn lowers_simple_assert_with_option_truthiness_name_test() {
     let stmt = HirStmt::Assert {
         test: HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::Union(vec![Type::Int, Type::None]),
         },
         msg: None,
@@ -73,6 +75,7 @@ fn lowers_simple_assert_with_option_is_none_compare_test() {
         test: HirExpr::Compare {
             left: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
+                binding_id: None,
                 ty: Type::Union(vec![Type::Int, Type::None]),
             }),
             ops: vec!["is".to_string()],
@@ -107,6 +110,7 @@ fn lowers_simple_assert_with_option_is_not_none_compare_test() {
         test: HirExpr::Compare {
             left: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
+                binding_id: None,
                 ty: Type::Union(vec![Type::Int, Type::None]),
             }),
             ops: vec!["is not".to_string()],
@@ -210,6 +214,7 @@ fn lowers_simple_assert_with_option_name_msg() {
         test: HirExpr::BoolLiteral(true),
         msg: Some(HirExpr::Name {
             name: "msg".to_string(),
+            binding_id: None,
             ty: Type::Union(vec![Type::Str, Type::None]),
         }),
     };
@@ -232,6 +237,7 @@ fn lowers_simple_assert_with_alias_option_name_msg() {
         test: HirExpr::BoolLiteral(true),
         msg: Some(HirExpr::Name {
             name: "msg".to_string(),
+            binding_id: None,
             ty: Type::alias("MaybeStr", Type::Union(vec![Type::Str, Type::None])),
         }),
     };
@@ -286,6 +292,7 @@ fn lowers_simple_if_with_name_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::Name {
             name: "ok".to_string(),
+            binding_id: None,
             ty: Type::Bool,
         },
         then_body: vec![HirStmt::Pass],
@@ -312,6 +319,7 @@ fn lowers_simple_if_with_not_bool_name_condition() {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Name {
                 name: "ok".to_string(),
+                binding_id: None,
                 ty: Type::Bool,
             }),
             ty: Type::Bool,
@@ -363,6 +371,7 @@ fn lowers_simple_if_with_not_option_truthiness_name_condition() {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
+                binding_id: None,
                 ty: Type::Union(vec![Type::Int, Type::None]),
             }),
             ty: Type::Bool,
@@ -399,6 +408,7 @@ fn lowers_simple_if_with_option_is_none_compare_condition() {
         condition: HirExpr::Compare {
             left: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
+                binding_id: None,
                 ty: Type::Union(vec![Type::Int, Type::None]),
             }),
             ops: vec!["is".to_string()],
@@ -434,6 +444,7 @@ fn lowers_option_is_none_if_with_exiting_body_to_let_else_without_unwrap() {
         condition: HirExpr::Compare {
             left: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
+                binding_id: None,
                 ty: Type::Union(vec![Type::Int, Type::None]),
             }),
             ops: vec!["is".to_string()],
@@ -482,6 +493,7 @@ fn lowers_simple_if_with_option_is_not_none_compare_condition() {
         condition: HirExpr::Compare {
             left: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
+                binding_id: None,
                 ty: Type::Union(vec![Type::Int, Type::None]),
             }),
             ops: vec!["is not".to_string()],
@@ -515,6 +527,7 @@ fn lowers_simple_if_with_option_and_not_none_chain_condition() {
                 HirExpr::Compare {
                     left: Box::new(HirExpr::Name {
                         name: "a".to_string(),
+                        binding_id: None,
                         ty: Type::Union(vec![Type::Int, Type::None]),
                     }),
                     ops: vec!["is not".to_string()],
@@ -524,6 +537,7 @@ fn lowers_simple_if_with_option_and_not_none_chain_condition() {
                 HirExpr::Compare {
                     left: Box::new(HirExpr::Name {
                         name: "b".to_string(),
+                        binding_id: None,
                         ty: Type::Union(vec![Type::Int, Type::None]),
                     }),
                     ops: vec!["is not".to_string()],
@@ -597,6 +611,7 @@ fn lowers_simple_if_with_option_truthiness_name_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::Union(vec![Type::Int, Type::None]),
         },
         then_body: vec![HirStmt::Pass],
@@ -623,6 +638,7 @@ fn lowers_simple_if_with_alias_option_truthiness_name_condition() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None])),
         },
         then_body: vec![HirStmt::Pass],
@@ -649,6 +665,7 @@ fn lowers_if_option_truthiness_with_elif() {
     let if_stmt = HirStmt::If {
         condition: HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::Union(vec![Type::Int, Type::None]),
         },
         then_body: vec![HirStmt::Pass],
@@ -679,6 +696,7 @@ fn lowers_if_with_option_truthiness_elif_clause() {
         elif_clauses: vec![(
             HirExpr::Name {
                 name: "maybe_x".to_string(),
+                binding_id: None,
                 ty: Type::Union(vec![Type::Int, Type::None]),
             },
             vec![HirStmt::Pass],

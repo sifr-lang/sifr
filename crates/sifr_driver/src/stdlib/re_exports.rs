@@ -158,6 +158,7 @@ mod tests {
             .insert(
                 "verify".to_string(),
                 FunctionType {
+                    receiver: None,
                     params: vec![],
                     return_type: Box::new(Type::None),
                 },

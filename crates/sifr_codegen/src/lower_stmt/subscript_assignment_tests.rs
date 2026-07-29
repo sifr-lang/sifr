@@ -6,10 +6,12 @@ fn lowers_simple_attribute_list_subscript_assign_stmt() {
         field: "items".to_string(),
         index: HirExpr::Name {
             name: "i".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         value: HirExpr::Name {
             name: "v".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         field_ty: Type::List(Box::new(Type::Int)),
@@ -87,10 +89,12 @@ fn lowers_simple_attribute_dict_subscript_assign_stmt() {
         field: "mapping".to_string(),
         index: HirExpr::Name {
             name: "key".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         value: HirExpr::Name {
             name: "val".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         field_ty: Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
@@ -139,6 +143,7 @@ fn does_not_lower_attribute_dict_subscript_assign_with_string_name_key() {
         field: "mapping".to_string(),
         index: HirExpr::Name {
             name: "k".to_string(),
+            binding_id: None,
             ty: Type::Str,
         },
         value: HirExpr::IntLiteral(1),
@@ -171,10 +176,12 @@ fn lowers_simple_list_subscript_assign_stmt() {
         object: "items".to_string(),
         index: HirExpr::Name {
             name: "i".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         value: HirExpr::Name {
             name: "v".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         object_ty: Type::List(Box::new(Type::Int)),
@@ -254,10 +261,12 @@ fn lowers_simple_dict_subscript_assign_stmt() {
         object: "mapping".to_string(),
         index: HirExpr::Name {
             name: "key".to_string(),
+            binding_id: None,
             ty: Type::Str,
         },
         value: HirExpr::Name {
             name: "val".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         object_ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
@@ -285,10 +294,12 @@ fn lowers_simple_dict_subscript_assign_clones_non_copy_name_value() {
         object: "mapping".to_string(),
         index: HirExpr::Name {
             name: "key".to_string(),
+            binding_id: None,
             ty: Type::Str,
         },
         value: HirExpr::Name {
             name: "val".to_string(),
+            binding_id: None,
             ty: Type::Str,
         },
         object_ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Str)),
@@ -331,10 +342,12 @@ fn lowers_simple_list_delete_stmt() {
     let stmt = HirStmt::Delete {
         object: HirExpr::Name {
             name: "items".to_string(),
+            binding_id: None,
             ty: Type::List(Box::new(Type::Int)),
         },
         index: HirExpr::Name {
             name: "i".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
     };
@@ -383,6 +396,7 @@ fn lowers_simple_dict_delete_with_string_literal_key_stmt() {
     let stmt = HirStmt::Delete {
         object: HirExpr::Name {
             name: "mapping".to_string(),
+            binding_id: None,
             ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
         },
         index: HirExpr::StringLiteral("key".to_string()),
@@ -420,10 +434,12 @@ fn does_not_lower_dict_delete_with_name_key() {
     let stmt = HirStmt::Delete {
         object: HirExpr::Name {
             name: "mapping".to_string(),
+            binding_id: None,
             ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
         },
         index: HirExpr::Name {
             name: "k".to_string(),
+            binding_id: None,
             ty: Type::Str,
         },
     };
@@ -437,14 +453,17 @@ fn lowers_simple_nested_subscript_assign_stmt() {
         object: "matrix".to_string(),
         outer_index: HirExpr::Name {
             name: "i".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         inner_index: HirExpr::Name {
             name: "j".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         value: HirExpr::Name {
             name: "v".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         object_ty: Type::List(Box::new(Type::List(Box::new(Type::Int)))),
@@ -547,14 +566,17 @@ fn lowers_simple_nested_subscript_assign_stmt_with_optional_indices() {
         object: "matrix".to_string(),
         outer_index: HirExpr::Name {
             name: "oi".to_string(),
+            binding_id: None,
             ty: Type::Union(vec![Type::Int, Type::None]),
         },
         inner_index: HirExpr::Name {
             name: "ii".to_string(),
+            binding_id: None,
             ty: Type::Union(vec![Type::Int, Type::None]),
         },
         value: HirExpr::Name {
             name: "v".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         object_ty: Type::List(Box::new(Type::List(Box::new(Type::Int)))),

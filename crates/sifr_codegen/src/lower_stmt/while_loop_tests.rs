@@ -29,6 +29,7 @@ fn lowers_simple_while_with_name_condition() {
     let while_stmt = HirStmt::While {
         condition: HirExpr::Name {
             name: "ready".to_string(),
+            binding_id: None,
             ty: Type::Bool,
         },
         body: vec![HirStmt::Pass],
@@ -52,6 +53,7 @@ fn lowers_simple_while_with_int_truthiness_name_condition() {
     let while_stmt = HirStmt::While {
         condition: HirExpr::Name {
             name: "count".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         body: vec![HirStmt::Pass],
@@ -75,6 +77,7 @@ fn lowers_simple_while_with_bigint_truthiness_name_condition() {
     let while_stmt = HirStmt::While {
         condition: HirExpr::Name {
             name: "count".to_string(),
+            binding_id: None,
             ty: Type::BigInt,
         },
         body: vec![HirStmt::Pass],
@@ -100,6 +103,7 @@ fn lowers_simple_while_with_not_bool_name_condition() {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Name {
                 name: "ready".to_string(),
+                binding_id: None,
                 ty: Type::Bool,
             }),
             ty: Type::Bool,
@@ -130,6 +134,7 @@ fn lowers_simple_while_with_not_int_truthiness_name_condition() {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Name {
                 name: "count".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             }),
             ty: Type::Bool,
@@ -157,6 +162,7 @@ fn lowers_simple_while_with_not_bigint_truthiness_name_condition() {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Name {
                 name: "count".to_string(),
+                binding_id: None,
                 ty: Type::BigInt,
             }),
             ty: Type::Bool,
@@ -184,6 +190,7 @@ fn lowers_simple_while_with_not_option_truthiness_name_condition() {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
+                binding_id: None,
                 ty: Type::Union(vec![Type::Int, Type::None]),
             }),
             ty: Type::Bool,
@@ -219,6 +226,7 @@ fn lowers_simple_while_with_option_is_none_compare_condition() {
         condition: HirExpr::Compare {
             left: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
+                binding_id: None,
                 ty: Type::Union(vec![Type::Int, Type::None]),
             }),
             ops: vec!["is".to_string()],
@@ -253,6 +261,7 @@ fn lowers_simple_while_with_option_is_not_none_compare_condition() {
         condition: HirExpr::Compare {
             left: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
+                binding_id: None,
                 ty: Type::Union(vec![Type::Int, Type::None]),
             }),
             ops: vec!["is not".to_string()],
@@ -286,6 +295,7 @@ fn lowers_simple_while_with_option_truthiness_name_condition() {
     let while_stmt = HirStmt::While {
         condition: HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::Union(vec![Type::Int, Type::None]),
         },
         body: vec![HirStmt::Pass],
@@ -318,6 +328,7 @@ fn lowers_simple_while_with_alias_option_truthiness_name_condition() {
     let while_stmt = HirStmt::While {
         condition: HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None])),
         },
         body: vec![HirStmt::Pass],

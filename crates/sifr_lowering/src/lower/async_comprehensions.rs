@@ -74,7 +74,11 @@ pub(in crate::lower) fn lower_list_comp(
 
     let moved_before_loop = ctx.scope.save_moved_state();
     ctx.scope.push();
-    ctx.scope.define(var_name.clone(), elem_ty);
+    ctx.scope.define_ephemeral(
+        var_name.clone(),
+        elem_ty,
+        crate::scope::EphemeralOrigin::Comprehension,
+    );
     let result = (|| {
         let filter = if generator.ifs.is_empty() {
             None
@@ -135,7 +139,11 @@ pub(in crate::lower) fn lower_set_comp(
         return Some(None);
     }
     ctx.scope.push();
-    ctx.scope.define(var_name.clone(), elem_ty);
+    ctx.scope.define_ephemeral(
+        var_name.clone(),
+        elem_ty,
+        crate::scope::EphemeralOrigin::Comprehension,
+    );
     let result = (|| {
         let expr = lower_expr(&comp.elt, ctx)?;
         let expr_ty = expr.ty().clone();
@@ -182,7 +190,11 @@ pub(in crate::lower) fn lower_dict_comp(
         return Some(None);
     }
     ctx.scope.push();
-    ctx.scope.define(var_name.clone(), elem_ty);
+    ctx.scope.define_ephemeral(
+        var_name.clone(),
+        elem_ty,
+        crate::scope::EphemeralOrigin::Comprehension,
+    );
     let result = (|| {
         let key_expr = lower_expr(&comp.key, ctx)?;
         let val_expr = lower_expr(&comp.value, ctx)?;
@@ -272,7 +284,11 @@ fn lower_single_async_generator(
 
     let moved_before_loop = ctx.scope.save_moved_state();
     ctx.scope.push();
-    ctx.scope.define(var_name.clone(), elem_ty);
+    ctx.scope.define_ephemeral(
+        var_name.clone(),
+        elem_ty,
+        crate::scope::EphemeralOrigin::Comprehension,
+    );
     let filter = if generator.ifs.is_empty() {
         None
     } else {

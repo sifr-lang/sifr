@@ -94,6 +94,7 @@ fn test_structured_stmt_path_lowers_collection_truthiness_inside_boolop_conditio
             values: vec![
                 HirExpr::Name {
                     name: "stack".to_string(),
+                    binding_id: None,
                     ty: Type::List(Box::new(tuple_ty.clone())),
                 },
                 HirExpr::Compare {
@@ -101,6 +102,7 @@ fn test_structured_stmt_path_lowers_collection_truthiness_inside_boolop_conditio
                         object: Box::new(HirExpr::Index {
                             object: Box::new(HirExpr::Name {
                                 name: "stack".to_string(),
+                                binding_id: None,
                                 ty: Type::List(Box::new(tuple_ty.clone())),
                             }),
                             index: Box::new(HirExpr::UnaryOp {
@@ -116,6 +118,7 @@ fn test_structured_stmt_path_lowers_collection_truthiness_inside_boolop_conditio
                     ops: vec![">".to_string()],
                     comparators: vec![HirExpr::Name {
                         name: "h".to_string(),
+                        binding_id: None,
                         ty: Type::Int,
                     }],
                     ty: Type::Bool,
@@ -149,13 +152,17 @@ fn test_structured_stmt_path_lowers_option_call_truthiness_to_bool_condition() {
         condition: HirExpr::MethodCall {
             object: Box::new(HirExpr::Name {
                 name: "nums".to_string(),
+                binding_id: None,
                 ty: Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
             }),
             method: "get".to_string(),
             args: vec![HirExpr::Name {
                 name: "i".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             }],
+            receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+            source: None,
             ty: Type::Union(vec![Type::Int, Type::None]),
         },
         then_body: vec![HirStmt::Pass],
@@ -186,6 +193,7 @@ fn test_structured_stmt_path_lowers_nested_string_augassign_to_push_str() {
                 op: "+=".to_string(),
                 value: HirExpr::Name {
                     name: "part".to_string(),
+                    binding_id: None,
                     ty: Type::Str,
                 },
             }],
@@ -236,10 +244,12 @@ fn test_structured_stmt_path_string_contains_avoids_double_borrow_pattern_arg() 
                 value: Some(HirExpr::ContainsOp {
                     element: Box::new(HirExpr::Name {
                         name: "s".to_string(),
+                        binding_id: None,
                         ty: Type::Str,
                     }),
                     collection: Box::new(HirExpr::Name {
                         name: "text".to_string(),
+                        binding_id: None,
                         ty: Type::Str,
                     }),
                     ty: Type::Bool,
@@ -247,6 +257,7 @@ fn test_structured_stmt_path_string_contains_avoids_double_borrow_pattern_arg() 
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -284,6 +295,7 @@ fn test_list_builtin_uses_owned_collection_for_unknown_set_with_list_hint() {
                     func: "list".to_string(),
                     args: vec![HirExpr::Name {
                         name: "result".to_string(),
+                        binding_id: None,
                         ty: Type::Set(Box::new(Type::Any)),
                     }],
                     ty: Type::List(Box::new(Type::Str)),
@@ -291,6 +303,7 @@ fn test_list_builtin_uses_owned_collection_for_unknown_set_with_list_hint() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -317,6 +330,7 @@ fn test_set_builtin_with_generator_lowers_to_collect_not_plain_set_call() {
             func: "str".to_string(),
             args: vec![HirExpr::Name {
                 name: "i".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             }],
             ty: Type::Str,
@@ -345,6 +359,7 @@ fn test_set_builtin_with_generator_lowers_to_collect_not_plain_set_call() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -387,6 +402,7 @@ fn test_list_repeat_lowers_without_vec_mul_shape() {
                     op: "*".to_string(),
                     right: Box::new(HirExpr::Name {
                         name: "n".to_string(),
+                        binding_id: None,
                         ty: Type::Int,
                     }),
                     ty: Type::List(Box::new(Type::Int)),
@@ -394,6 +410,7 @@ fn test_list_repeat_lowers_without_vec_mul_shape() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -439,11 +456,13 @@ fn test_compare_lowers_int_float_mixed_operands_with_cast() {
                 value: Some(HirExpr::Compare {
                     left: Box::new(HirExpr::Name {
                         name: "coins".to_string(),
+                        binding_id: None,
                         ty: Type::Float,
                     }),
                     ops: vec![">".to_string()],
                     comparators: vec![HirExpr::Name {
                         name: "n".to_string(),
+                        binding_id: None,
                         ty: Type::Int,
                     }],
                     ty: Type::Bool,
@@ -451,6 +470,7 @@ fn test_compare_lowers_int_float_mixed_operands_with_cast() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -473,10 +493,12 @@ fn test_bool_typed_boolop_coerces_optional_operand_to_condition_bool() {
     let optional_index = HirExpr::Index {
         object: Box::new(HirExpr::Name {
             name: "grid2".to_string(),
+            binding_id: None,
             ty: Type::List(Box::new(Type::Int)),
         }),
         index: Box::new(HirExpr::Name {
             name: "i".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         ty: Type::Union(vec![Type::Int, Type::None]),
@@ -510,6 +532,7 @@ fn test_bool_typed_boolop_coerces_optional_operand_to_condition_bool() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),

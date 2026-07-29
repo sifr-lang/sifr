@@ -754,6 +754,7 @@ pub(in crate::lower) fn extract_function_type(
     };
 
     FunctionType {
+        receiver: None,
         params,
         return_type: Box::new(return_type),
     }

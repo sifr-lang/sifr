@@ -54,6 +54,7 @@ fn lowers_simple_star_unpack_from_name() {
         after: vec![("tail".to_string(), Type::Int)],
         value: HirExpr::Name {
             name: "xs".to_string(),
+            binding_id: None,
             ty: Type::List(Box::new(Type::Int)),
         },
     };
@@ -79,6 +80,7 @@ fn lowers_simple_with_without_context_manager_protocol() {
         body: vec![HirStmt::Expr {
             expr: HirExpr::Name {
                 name: "x".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             },
         }],

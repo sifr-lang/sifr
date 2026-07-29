@@ -38,6 +38,7 @@ fn lowers_simple_raise_with_name_expr() {
     let stmt = HirStmt::Raise {
         value: HirExpr::Name {
             name: "e".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
     };
@@ -95,6 +96,7 @@ fn lowers_simple_assert_with_name_msg() {
         test: HirExpr::BoolLiteral(true),
         msg: Some(HirExpr::Name {
             name: "msg".to_string(),
+            binding_id: None,
             ty: Type::Str,
         }),
     };
@@ -130,6 +132,7 @@ fn lowers_simple_assert_with_bool_name_test() {
     let stmt = HirStmt::Assert {
         test: HirExpr::Name {
             name: "ok".to_string(),
+            binding_id: None,
             ty: Type::Bool,
         },
         msg: None,
@@ -155,6 +158,7 @@ fn lowers_simple_assert_with_not_bool_name_test() {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Name {
                 name: "ok".to_string(),
+                binding_id: None,
                 ty: Type::Bool,
             }),
             ty: Type::Bool,

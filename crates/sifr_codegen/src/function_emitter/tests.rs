@@ -5,6 +5,7 @@ fn int_binop_name(name: &str) -> HirExpr {
     HirExpr::BinOp {
         left: Box::new(HirExpr::Name {
             name: name.to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         op: "+".to_string(),
@@ -21,6 +22,7 @@ fn regular_int_function(params: Vec<HirParam>, body: Vec<HirStmt>) -> HirFunctio
         body,
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: vec![],
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -39,6 +41,7 @@ fn helper_returning_name(name: &str) -> HirFunction {
         }],
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: vec![],
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -68,6 +71,7 @@ fn middle_with_inner_returning_name(name: &str) -> HirFunction {
         ],
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: vec![],
         rust_interop: Vec::new(),
         python_interop: Vec::new(),

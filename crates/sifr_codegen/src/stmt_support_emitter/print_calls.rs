@@ -95,10 +95,11 @@ impl RustEmitter {
                 object,
                 method,
                 args,
+                receiver_convention,
                 ..
             } => {
                 let needs_self_field_clone_suppression =
-                    self.method_call_needs_field_clone_suppression(object, method);
+                    self.method_call_needs_field_clone_suppression(object, *receiver_convention);
                 let suppression_prev = self.pending_self_field_clone_suppression;
                 if needs_self_field_clone_suppression {
                     self.pending_self_field_clone_suppression += 1;

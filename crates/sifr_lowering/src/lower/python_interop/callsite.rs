@@ -139,10 +139,16 @@ pub(in crate::lower) fn callback_method_arg_ranges(
     method_name: &str,
     call: &ExprCall,
     args: &[HirExpr],
+    signature: Option<&sifr_type_system::FunctionType>,
     ctx: &mut LowerCtx,
 ) -> Vec<TextRange> {
-    let ranges =
-        crate::lower::method_call_args::resolved_method_arg_ranges(object_ty, method_name, call);
+    let ranges = crate::lower::method_call_args::resolved_method_arg_ranges(
+        object_ty,
+        method_name,
+        call,
+        signature,
+        args.len(),
+    );
     if let sifr_type_system::Type::Class { name, .. } = object_ty.resolve_alias() {
         let callable = format!("{name}.{method_name}");
         let receiver_name = match object {

@@ -639,11 +639,13 @@ fn async_python_error_converts_to_an_active_error_supertype() {
         body: vec![HirStmt::Raise {
             value: HirExpr::Name {
                 name: "python_error".to_string(),
+                binding_id: None,
                 ty: python_error_type(),
             },
         }],
         is_async: true,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -702,6 +704,7 @@ fn function(
         body: Vec::new(),
         is_async: true,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: Vec::new(),
         python_interop: vec![declaration],

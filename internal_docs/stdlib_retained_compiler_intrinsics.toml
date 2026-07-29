@@ -79,7 +79,7 @@ declaration_files = ["stdlib/_sifr/encoding.sifr"]
 reason = "UTF-8 encode/decode result glue is tied to first-class bytes/string wrapper behavior and shared runtime error shaping."
 registry_files = ["encoding.rs"]
 lowering_files = [
-  "crates/sifr_lowering/src/lower/expressions/methods_lambdas_and_comprehensions.rs",
+  "crates/sifr_lowering/src/lower/expressions/method_calls.rs",
 ]
 codegen_files = [
   "crates/sifr_codegen/src/intrinsics/registry/requirements.rs",

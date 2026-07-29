@@ -67,6 +67,8 @@ mod patterns_and_assignments;
 pub(in crate::lower) use patterns_and_assignments::*;
 mod control_flow;
 pub(in crate::lower) use control_flow::*;
+mod while_loop;
+pub(in crate::lower) use while_loop::lower_while;
 
 fn record_try_error_types(ctx: &mut LowerCtx, error_type: &Type) {
     match error_type.resolve_alias() {

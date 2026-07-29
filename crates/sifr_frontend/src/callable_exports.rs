@@ -10,6 +10,7 @@ pub(crate) fn exported_function_type(
     local_classes: &HashMap<String, String>,
 ) -> FunctionType {
     let function_type = FunctionType {
+        receiver: function.receiver,
         params: function
             .params
             .iter()

@@ -54,6 +54,7 @@ fn lowers_simple_for_with_name_iter_using_copy_mode() {
         target_ty: Type::Int,
         iter: HirExpr::Name {
             name: "items".to_string(),
+            binding_id: None,
             ty: Type::List(Box::new(Type::Int)),
         },
         body: vec![HirStmt::Pass],
@@ -97,6 +98,7 @@ fn lowers_simple_for_over_task_handle_list_by_value() {
         target_ty: handle_ty.clone(),
         iter: HirExpr::Name {
             name: "handles".to_string(),
+            binding_id: None,
             ty: Type::List(Box::new(handle_ty)),
         },
         body: vec![HirStmt::Pass],
@@ -130,6 +132,7 @@ fn lowers_simple_for_with_dict_iter_to_keys_cloned() {
         target_ty: Type::Str,
         iter: HirExpr::Name {
             name: "m".to_string(),
+            binding_id: None,
             ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
         },
         body: vec![HirStmt::Pass],
@@ -209,6 +212,7 @@ fn lowers_simple_for_with_else_and_name_iter() {
         target_ty: Type::Int,
         iter: HirExpr::Name {
             name: "items".to_string(),
+            binding_id: None,
             ty: Type::List(Box::new(Type::Int)),
         },
         body: vec![HirStmt::Pass],

@@ -210,6 +210,7 @@ fn buffer_function(
         body: Vec::new(),
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: Vec::new(),
         python_interop: vec![PythonInteropDeclaration {

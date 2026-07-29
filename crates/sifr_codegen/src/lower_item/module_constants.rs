@@ -139,7 +139,7 @@ pub(super) fn try_lower_simple_module_constant_item_result_impl(
     if is_simple_module_none_const_type(ty) {
         let lowered_value = if matches!(value, HirExpr::NoneLiteral) {
             RustExpr::Literal(RustLiteral::Unit)
-        } else if let HirExpr::Name { name, ty } = value {
+        } else if let HirExpr::Name { name, ty, .. } = value {
             if !is_simple_module_none_const_type(ty) {
                 return Ok(None);
             }
@@ -347,7 +347,7 @@ pub fn try_lower_simple_module_none_const_item(
     }
     let lowered_value = if matches!(value, HirExpr::NoneLiteral) {
         RustExpr::Literal(RustLiteral::Unit)
-    } else if let HirExpr::Name { name, ty } = value {
+    } else if let HirExpr::Name { name, ty, .. } = value {
         if !is_simple_module_none_const_type(ty) {
             return None;
         }

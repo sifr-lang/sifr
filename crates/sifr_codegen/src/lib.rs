@@ -88,6 +88,7 @@ mod operator_protocol_emitters;
 mod operator_type_rendering;
 mod output_helpers;
 mod preamble;
+mod protocol_bridge_emitter;
 pub use preamble::*;
 mod python_arrow_codegen;
 #[cfg(test)]

@@ -652,7 +652,7 @@ pub(super) fn try_lower_option_none_compare_expr(
     } else {
         return None;
     };
-    let HirExpr::Name { name, ty } = name_expr else {
+    let HirExpr::Name { name, ty, .. } = name_expr else {
         return None;
     };
     if !is_option_like_simple(ty) {
@@ -768,7 +768,7 @@ pub(super) fn try_lower_guarded_option_compare_expr(
 }
 
 pub(super) fn try_lower_simple_range_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
-    if let HirExpr::Name { name, ty } = expr {
+    if let HirExpr::Name { name, ty, .. } = expr {
         if is_int_like_simple(ty) {
             return Some(RustExpr::Ident(name.clone()));
         }
@@ -793,7 +793,7 @@ pub(super) fn try_lower_mixed_float_operand_expr(expr: &HirExpr) -> Option<RustE
 
 pub(super) fn try_lower_promoted_integer_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     let lowered = match expr {
-        HirExpr::Name { name, ty }
+        HirExpr::Name { name, ty, .. }
             if is_int_like_simple(ty) || is_fixed_width_int_like_simple(ty) =>
         {
             RustExpr::Ident(name.clone())
@@ -810,7 +810,7 @@ pub(super) fn try_lower_promoted_integer_operand_expr(expr: &HirExpr) -> Option<
 }
 
 pub(super) fn try_lower_simple_binop_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
-    if let HirExpr::Name { name, ty } = expr {
+    if let HirExpr::Name { name, ty, .. } = expr {
         if is_numeric_simple(ty) {
             return Some(RustExpr::Ident(name.clone()));
         }
@@ -819,7 +819,7 @@ pub(super) fn try_lower_simple_binop_operand_expr(expr: &HirExpr) -> Option<Rust
 }
 
 pub(super) fn try_lower_simple_compare_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
-    if let HirExpr::Name { name, ty } = expr {
+    if let HirExpr::Name { name, ty, .. } = expr {
         if normalize_simple_compare_scalar_type(ty).is_some()
             || is_enum_like_simple(ty)
             || matches!(resolve_alias_type(ty), Type::TypeVar(_))

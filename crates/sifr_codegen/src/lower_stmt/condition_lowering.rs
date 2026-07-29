@@ -229,7 +229,7 @@ pub(super) fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Opt
     }
 
     match expr {
-        HirExpr::Name { name, ty } => Some(RustExpr::BinOp {
+        HirExpr::Name { name, ty, .. } => Some(RustExpr::BinOp {
             left: Box::new(RustExpr::Ident(name.clone())),
             op: "!=".to_string(),
             right: Box::new(zero_literal_for_type(ty)?),
@@ -239,6 +239,7 @@ pub(super) fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Opt
             method,
             args,
             ty,
+            ..
         } if method == "len" && args.is_empty() => {
             let receiver = try_lower_leaf_expr(object.as_ref())?;
             let lhs = RustExpr::Cast {
@@ -256,7 +257,7 @@ pub(super) fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Opt
             })
         }
         HirExpr::UnaryOp { op, operand, .. } if op == "not" => match operand.as_ref() {
-            HirExpr::Name { name, ty } => Some(RustExpr::BinOp {
+            HirExpr::Name { name, ty, .. } => Some(RustExpr::BinOp {
                 left: Box::new(RustExpr::Ident(name.clone())),
                 op: "==".to_string(),
                 right: Box::new(zero_literal_for_type(ty)?),
@@ -266,6 +267,7 @@ pub(super) fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Opt
                 method,
                 args,
                 ty,
+                ..
             } if method == "len" && args.is_empty() => {
                 let receiver = try_lower_leaf_expr(object.as_ref())?;
                 let lhs = RustExpr::Cast {

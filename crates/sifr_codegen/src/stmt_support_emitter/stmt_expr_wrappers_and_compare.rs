@@ -500,7 +500,7 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                         }
                     } else if let HirExpr::StringLiteral(value) = element.as_ref() {
                         crate::RustExpr::Literal(crate::RustLiteral::Str(value.clone()))
-                    } else if let HirExpr::Name { name, ty } = element.as_ref() {
+                    } else if let HirExpr::Name { name, ty, .. } = element.as_ref() {
                         if $emitter.borrowed_params.contains(name)
                             || $emitter.mut_borrowed_params.contains(name)
                         {
@@ -697,7 +697,7 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                     let Some(lowered_right) = $emitter.lower_stmt_expr_for_ir(rhs_expr)? else {
                         return Ok(None);
                     };
-                    let lowered_left = if matches!(lhs_expr, HirExpr::Name { name, ty }
+                    let lowered_left = if matches!(lhs_expr, HirExpr::Name { name, ty, .. }
                         if ($emitter.borrowed_params.contains(name) || $emitter.mut_borrowed_params.contains(name))
                             && ty.ownership() != sifr_type_system::OwnershipKind::Copy)
                     {
@@ -705,7 +705,7 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                     } else {
                         lowered_left
                     };
-                    let lowered_right = if matches!(rhs_expr, HirExpr::Name { name, ty }
+                    let lowered_right = if matches!(rhs_expr, HirExpr::Name { name, ty, .. }
                         if ($emitter.borrowed_params.contains(name) || $emitter.mut_borrowed_params.contains(name))
                             && ty.ownership() != sifr_type_system::OwnershipKind::Copy)
                     {

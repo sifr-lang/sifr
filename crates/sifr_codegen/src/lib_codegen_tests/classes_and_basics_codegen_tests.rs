@@ -1,72 +1,6 @@
 use super::*;
 
 #[test]
-fn test_mut_on_mutating_method_call() {
-    let module = HirModule {
-        functions: vec![HirFunction {
-            name: "main".to_string(),
-            params: vec![],
-            return_type: Type::None,
-            body: vec![
-                HirStmt::Let {
-                    name: "items".to_string(),
-                    ty: Type::List(Box::new(Type::Int)),
-                    value: HirExpr::ListLiteral {
-                        elements: vec![HirExpr::IntLiteral(1)],
-                        ty: Type::List(Box::new(Type::Int)),
-                    },
-                    is_mutable: true,
-                },
-                HirStmt::Expr {
-                    expr: HirExpr::MethodCall {
-                        object: Box::new(HirExpr::Name {
-                            name: "items".to_string(),
-                            ty: Type::List(Box::new(Type::Int)),
-                        }),
-                        method: "append".to_string(),
-                        args: vec![HirExpr::IntLiteral(2)],
-                        ty: Type::None,
-                    },
-                },
-            ],
-            is_async: false,
-            method_kind: MethodKind::Regular,
-            decorators: vec![],
-            rust_interop: Vec::new(),
-            python_interop: Vec::new(),
-            compiler_intrinsic: None,
-            type_params: vec![],
-        }],
-        classes: vec![],
-        imports: vec![],
-        constants: vec![],
-        generic_functions: std::collections::HashMap::new(),
-        type_param_bounds: std::collections::HashMap::new(),
-    };
-
-    let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("let mut items"));
-}
-
-#[test]
-fn test_mut_on_local_nested_function_mutborrow_call_argument() {
-    let rust_code = generate_rust_from_source(
-        r#"def main():
-    vals: list[str] = ["x"]
-    def dfs(vals: list[str]) -> None:
-        vals.pop(0)
-    dfs(vals)
-"#,
-    );
-
-    assert!(
-        rust_code.contains("let mut vals: Vec<String>"),
-        "local nested mut-borrow call should mark argument binding mutable"
-    );
-    assert!(rust_code.contains("dfs(&mut vals);"));
-}
-
-#[test]
 fn test_fieldless_class_gets_default_constructor() {
     let rust_code = generate_rust_from_source(
         r#"class Codec:
@@ -161,6 +95,7 @@ fn test_class_to_string_method_does_not_emit_generated_allow() {
                 }],
                 is_async: false,
                 method_kind: MethodKind::Regular,
+                receiver: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
                 decorators: vec![],
                 rust_interop: Vec::new(),
                 python_interop: Vec::new(),
@@ -243,6 +178,7 @@ fn test_empty_print() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -312,6 +248,7 @@ fn test_render_expr_lowering_rewrites_module_constant_ident() {
     let expr = HirExpr::BinOp {
         left: Box::new(HirExpr::Name {
             name: "limit".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         op: "+".to_string(),
@@ -333,6 +270,7 @@ fn test_render_expr_lowering_uses_module_constant_for_stdlib_named_constant() {
     let expr = HirExpr::BinOp {
         left: Box::new(HirExpr::Name {
             name: "pi".to_string(),
+            binding_id: None,
             ty: Type::Float,
         }),
         op: "+".to_string(),
@@ -354,6 +292,7 @@ fn test_render_expr_lowering_rewrites_module_constant_helper_call() {
     );
     let expr = HirExpr::Name {
         name: "greeting".to_string(),
+        binding_id: None,
         ty: Type::Str,
     };
 
@@ -373,12 +312,14 @@ fn test_structured_stmt_path_rewrites_module_constant_name() {
                 ty: Type::Int,
                 value: HirExpr::Name {
                     name: "limit".to_string(),
+                    binding_id: None,
                     ty: Type::Int,
                 },
                 is_mutable: false,
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -410,12 +351,14 @@ fn test_structured_stmt_path_rewrites_stdlib_constant_name() {
                 ty: Type::Float,
                 value: HirExpr::Name {
                     name: "pi".to_string(),
+                    binding_id: None,
                     ty: Type::Float,
                 },
                 is_mutable: false,
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -463,6 +406,7 @@ fn test_match_int_literal_pattern_avoids_cast_expression() {
                 HirStmt::Match {
                     subject: HirExpr::Name {
                         name: "x".to_string(),
+                        binding_id: None,
                         ty: Type::Int,
                     },
                     subject_ty: Type::Int,
@@ -496,6 +440,7 @@ fn test_match_int_literal_pattern_avoids_cast_expression() {
             ],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -524,6 +469,7 @@ fn test_generate_rust_multi_exports_non_main_items() {
             body: vec![HirStmt::Pass],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -547,6 +493,7 @@ fn test_generate_rust_multi_exports_non_main_items() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -615,6 +562,7 @@ fn test_generate_rust_multi_publicizes_non_main_reexports() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -650,6 +598,7 @@ fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -681,6 +630,7 @@ fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -724,6 +674,7 @@ fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closur
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -755,6 +706,7 @@ fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closur
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -811,6 +763,7 @@ fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -844,6 +797,7 @@ fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),

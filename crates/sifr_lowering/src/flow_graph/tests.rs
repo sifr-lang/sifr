@@ -59,6 +59,7 @@ fn statement_graph_tracks_branches_loops_mutations_and_exits() {
             condition: HirExpr::Compare {
                 left: Box::new(HirExpr::Name {
                     name: "x".to_string(),
+                    binding_id: None,
                     ty: Type::Union(vec![Type::Int, Type::None]),
                 }),
                 ops: vec!["is".to_string()],
@@ -73,10 +74,13 @@ fn statement_graph_tracks_branches_loops_mutations_and_exits() {
             expr: HirExpr::MethodCall {
                 object: Box::new(HirExpr::Name {
                     name: "items".to_string(),
+                    binding_id: None,
                     ty: Type::List(Box::new(Type::Int)),
                 }),
                 method: "pop".to_string(),
                 args: vec![],
+                receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+                source: None,
                 ty: Type::Int,
             },
         },
@@ -88,6 +92,27 @@ fn statement_graph_tracks_branches_loops_mutations_and_exits() {
     assert!(trace.contains("join"));
     assert!(trace.contains("mutate items via method pop"));
     assert!(trace.contains("exit Return"));
+}
+
+#[test]
+fn shared_method_receiver_does_not_emit_mutation_effect() {
+    let stmts = vec![HirStmt::Expr {
+        expr: HirExpr::MethodCall {
+            object: Box::new(HirExpr::Name {
+                name: "items".to_string(),
+                binding_id: None,
+                ty: Type::List(Box::new(Type::Int)),
+            }),
+            method: "len".to_string(),
+            args: vec![],
+            receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+            source: None,
+            ty: Type::Int,
+        },
+    }];
+
+    let trace = build_statement_flow_graph(&stmts).debug_trace();
+    assert!(!trace.contains("mutate items"));
 }
 
 #[test]

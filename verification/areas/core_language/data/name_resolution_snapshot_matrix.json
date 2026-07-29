@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name_snapshots": [
     {
       "id": "parameter_shadows_module_constant",
@@ -152,7 +152,12 @@
                   "name": "items"
                 },
                 "ty": "int",
-                "args": []
+                "args": [],
+                "receiver_convention": "SharedBorrow",
+                "source_range": [
+                  54,
+                  64
+                ]
               }
             ],
             "nested_functions": []

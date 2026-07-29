@@ -792,6 +792,7 @@ mod tests {
             Type::Str,
         ));
         let owned = Type::AsyncFunction(FunctionType {
+            receiver: None,
             params: vec![(
                 "value".to_string(),
                 Type::Str,

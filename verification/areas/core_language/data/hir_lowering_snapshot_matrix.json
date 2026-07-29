@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "hir_snapshots": [
     {
       "id": "basic_function_arithmetic",
@@ -20,6 +20,7 @@
               }
             ],
             "return_type": "int",
+            "receiver": null,
             "body": [
               {
                 "kind": "Let",
@@ -32,12 +33,14 @@
                   "left": {
                     "kind": "Name",
                     "ty": "int",
-                    "name": "a"
+                    "name": "a",
+                    "binding_id": 0
                   },
                   "right": {
                     "kind": "Name",
                     "ty": "int",
-                    "name": "b"
+                    "name": "b",
+                    "binding_id": 1
                   }
                 }
               },
@@ -46,7 +49,8 @@
                 "value": {
                   "kind": "Name",
                   "ty": "int",
-                  "name": "total"
+                  "name": "total",
+                  "binding_id": 2
                 }
               }
             ]
@@ -69,6 +73,7 @@
               }
             ],
             "return_type": "int",
+            "receiver": null,
             "body": [
               {
                 "kind": "Let",
@@ -91,7 +96,8 @@
                     {
                       "kind": "Name",
                       "ty": "list[int]",
-                      "name": "items"
+                      "name": "items",
+                      "binding_id": 0
                     }
                   ]
                 },
@@ -107,7 +113,8 @@
                       "left": {
                         "kind": "Name",
                         "ty": "int",
-                        "name": "value"
+                        "name": "value",
+                        "binding_id": 2
                       },
                       "comparators": [
                         {
@@ -124,7 +131,8 @@
                         "value": {
                           "kind": "Name",
                           "ty": "int",
-                          "name": "value"
+                          "name": "value",
+                          "binding_id": 2
                         }
                       }
                     ],
@@ -139,7 +147,98 @@
                 "value": {
                   "kind": "Name",
                   "ty": "int",
-                  "name": "total"
+                  "name": "total",
+                  "binding_id": 1
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "method_receiver_conventions_and_source_ranges",
+      "owner": "compiler/hir",
+      "source": "def touch(mut items: list[int], text: str) -> None:\n    items.append(1)\n    text.upper()\n",
+      "expected_hir_snapshot": {
+        "functions": [
+          {
+            "name": "touch",
+            "params": [
+              {
+                "name": "items",
+                "ty": "list[int]"
+              },
+              {
+                "name": "text",
+                "ty": "str"
+              }
+            ],
+            "return_type": "None",
+            "receiver": null,
+            "body": [
+              {
+                "kind": "Expr",
+                "expr": {
+                  "kind": "MethodCall",
+                  "ty": "None",
+                  "object": {
+                    "kind": "Name",
+                    "ty": "list[int]",
+                    "name": "items",
+                    "binding_id": 0
+                  },
+                  "method": "append",
+                  "args": [
+                    {
+                      "kind": "IntLiteral",
+                      "ty": "int"
+                    }
+                  ],
+                  "receiver_convention": "MutableBorrow",
+                  "source": {
+                    "call": [
+                      56,
+                      71
+                    ],
+                    "receiver": [
+                      56,
+                      61
+                    ],
+                    "args": [
+                      [
+                        69,
+                        70
+                      ]
+                    ]
+                  }
+                }
+              },
+              {
+                "kind": "Expr",
+                "expr": {
+                  "kind": "MethodCall",
+                  "ty": "str",
+                  "object": {
+                    "kind": "Name",
+                    "ty": "str",
+                    "name": "text",
+                    "binding_id": 1
+                  },
+                  "method": "upper",
+                  "args": [],
+                  "receiver_convention": "SharedBorrow",
+                  "source": {
+                    "call": [
+                      76,
+                      88
+                    ],
+                    "receiver": [
+                      76,
+                      80
+                    ],
+                    "args": []
+                  }
                 }
               }
             ]

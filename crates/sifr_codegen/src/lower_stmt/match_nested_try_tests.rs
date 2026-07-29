@@ -15,6 +15,7 @@ fn lowers_simple_match_with_literal_and_wildcard_patterns() {
     let stmt = HirStmt::Match {
         subject: HirExpr::Name {
             name: "n".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         subject_ty: Type::Int,
@@ -55,6 +56,7 @@ fn lowers_match_with_class_patterns_and_captures() {
     let stmt = HirStmt::Match {
         subject: HirExpr::Name {
             name: "p".to_string(),
+            binding_id: None,
             ty: point_ty.clone(),
         },
         subject_ty: point_ty.clone(),
@@ -163,6 +165,7 @@ fn lowers_match_with_string_literal_patterns() {
     let stmt = HirStmt::Match {
         subject: HirExpr::Name {
             name: "method".to_string(),
+            binding_id: None,
             ty: Type::Str,
         },
         subject_ty: Type::Str,
@@ -221,6 +224,7 @@ fn lowers_simple_nested_function_to_closure_block() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -259,6 +263,7 @@ fn lowers_recursive_nested_function_without_captures_to_local_fn() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -290,6 +295,7 @@ fn lowers_mutating_capture_nested_function_to_mutable_closure_binding() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -321,6 +327,7 @@ fn lowers_simple_try_except_catch_all_with_result_flow() {
             expr: HirExpr::QuestionMark {
                 expr: Box::new(HirExpr::Name {
                     name: "res".to_string(),
+                    binding_id: None,
                     ty: Type::Result(Box::new(Type::Int), Box::new(Type::Any)),
                 }),
                 ty: Type::Int,
@@ -362,6 +369,7 @@ fn does_not_lower_try_except_with_typed_handler() {
             expr: HirExpr::QuestionMark {
                 expr: Box::new(HirExpr::Name {
                     name: "res".to_string(),
+                    binding_id: None,
                     ty: Type::Result(Box::new(Type::Int), Box::new(Type::Any)),
                 }),
                 ty: Type::Int,

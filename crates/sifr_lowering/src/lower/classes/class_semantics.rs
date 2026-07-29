@@ -5,27 +5,37 @@ pub(in crate::lower) fn is_hashable_type(ty: &Type) -> bool {
     ty.supports_hash_key()
 }
 
-/// Check if a method body contains any field assignments (self.field = ...).
-pub(in crate::lower) fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
-    fn stmt_contains_field_assign(stmt: &HirStmt) -> bool {
+/// Check if a method body directly mutates receiver-owned storage.
+pub(in crate::lower) fn body_contains_receiver_mutation(stmts: &[HirStmt]) -> bool {
+    fn stmt_contains_receiver_mutation(stmt: &HirStmt) -> bool {
         match stmt {
-            HirStmt::FieldAssign { .. } | HirStmt::NestedFieldAssign { .. } => true,
-            HirStmt::TupleUnpack { targets, .. } => targets
-                .iter()
-                .any(|target| matches!(target.binding, HirTupleTargetBinding::Field { .. })),
+            HirStmt::FieldAssign { object, .. }
+            | HirStmt::NestedFieldAssign { object, .. }
+            | HirStmt::SubscriptAssign { object, .. }
+            | HirStmt::NestedSubscriptAssign { object, .. }
+            | HirStmt::AttributeNestedSubscriptAssign { object, .. }
+            | HirStmt::SubscriptAugAssign { object, .. }
+            | HirStmt::AttributeAugAssign { object, .. }
+            | HirStmt::AttributeSubscriptAssign { object, .. } => object == "self",
+            HirStmt::TupleUnpack { targets, .. } => targets.iter().any(|target| {
+                matches!(
+                    &target.binding,
+                    HirTupleTargetBinding::Field { object, .. } if object == "self"
+                )
+            }),
             HirStmt::If {
                 then_body,
                 elif_clauses,
                 else_body,
                 ..
             } => {
-                body_contains_field_assign(then_body)
+                body_contains_receiver_mutation(then_body)
                     || elif_clauses
                         .iter()
-                        .any(|(_, body)| body_contains_field_assign(body))
+                        .any(|(_, body)| body_contains_receiver_mutation(body))
                     || else_body
                         .as_ref()
-                        .is_some_and(|body| body_contains_field_assign(body))
+                        .is_some_and(|body| body_contains_receiver_mutation(body))
             }
             HirStmt::While {
                 body, else_body, ..
@@ -36,31 +46,31 @@ pub(in crate::lower) fn body_contains_field_assign(stmts: &[HirStmt]) -> bool {
             | HirStmt::AsyncFor {
                 body, else_body, ..
             } => {
-                body_contains_field_assign(body)
+                body_contains_receiver_mutation(body)
                     || else_body
                         .as_ref()
-                        .is_some_and(|body| body_contains_field_assign(body))
+                        .is_some_and(|body| body_contains_receiver_mutation(body))
             }
             HirStmt::TryExcept { body, handlers, .. } => {
-                body_contains_field_assign(body)
+                body_contains_receiver_mutation(body)
                     || handlers
                         .iter()
-                        .any(|handler| body_contains_field_assign(&handler.body))
+                        .any(|handler| body_contains_receiver_mutation(&handler.body))
             }
             HirStmt::TryFinally { body, finalbody } => {
-                body_contains_field_assign(body) || body_contains_field_assign(finalbody)
+                body_contains_receiver_mutation(body) || body_contains_receiver_mutation(finalbody)
             }
             HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => {
-                body_contains_field_assign(body)
+                body_contains_receiver_mutation(body)
             }
-            HirStmt::Match { arms, .. } => {
-                arms.iter().any(|arm| body_contains_field_assign(&arm.body))
-            }
+            HirStmt::Match { arms, .. } => arms
+                .iter()
+                .any(|arm| body_contains_receiver_mutation(&arm.body)),
             _ => false,
         }
     }
 
-    stmts.iter().any(stmt_contains_field_assign)
+    stmts.iter().any(stmt_contains_receiver_mutation)
 }
 
 pub(in crate::lower) fn collect_literal_coverage(

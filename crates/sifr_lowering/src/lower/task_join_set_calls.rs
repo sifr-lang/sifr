@@ -177,10 +177,14 @@ fn lower_join_set_add(
     };
     mark_join_set_live(&object, ctx);
     mark_handle_consumed(&handle, ctx);
+    let receiver_convention =
+        super::mutating_methods::receiver_convention_for_non_class_method(object.ty(), method);
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: method.to_string(),
         args: vec![handle],
+        receiver_convention: Some(receiver_convention),
+        source: Some(super::method_call_metadata::source_method_call(call)),
         ty: join_item_id_type(),
     })
 }
@@ -209,10 +213,16 @@ fn lower_join_set_spawn_blocking(
         "JoinSet.spawn_blocking()",
     )?;
     mark_join_set_live(&object, ctx);
+    let receiver_convention = super::mutating_methods::receiver_convention_for_non_class_method(
+        object.ty(),
+        "__sifr_spawn_blocking",
+    );
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: "__sifr_spawn_blocking".to_string(),
         args: vec![worker],
+        receiver_convention: Some(receiver_convention),
+        source: Some(super::method_call_metadata::source_method_call(call)),
         ty: join_item_id_type(),
     })
 }
@@ -263,10 +273,16 @@ fn lower_join_set_spawn_cpu(
         }
     }
     mark_join_set_live(&object, ctx);
+    let receiver_convention = super::mutating_methods::receiver_convention_for_non_class_method(
+        object.ty(),
+        "__sifr_spawn_cpu",
+    );
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: "__sifr_spawn_cpu".to_string(),
         args: vec![worker],
+        receiver_convention: Some(receiver_convention),
+        source: Some(super::method_call_metadata::source_method_call(call)),
         ty: join_item_id_type(),
     })
 }
@@ -280,10 +296,14 @@ fn lower_join_set_terminal(
 ) -> Option<HirExpr> {
     validate_no_keywords(call, ctx, "JoinSet terminal method")?;
     validate_exact_arg_count(call, ctx, "JoinSet terminal method", 0)?;
+    let receiver_convention =
+        super::mutating_methods::receiver_convention_for_non_class_method(object.ty(), method);
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: method.to_string(),
         args: vec![],
+        receiver_convention: Some(receiver_convention),
+        source: Some(super::method_call_metadata::source_method_call(call)),
         ty,
     })
 }

@@ -61,6 +61,7 @@ fn kind(active_error_type: Type) -> sifr_ir::HirAsyncWithKind {
     sifr_ir::HirAsyncWithKind::Python {
         context: HirExpr::Name {
             name: "manager".to_string(),
+            binding_id: None,
             ty: class_type("Manager"),
         },
         manager_class: "Manager".to_string(),

@@ -59,10 +59,14 @@ fn lower_scope_spawn_blocking(
     };
     validate_sendable_result(&ok_ty, &err_ty, call, ctx, "scope.spawn_blocking()")?;
     enforce_group_rules(&object, &err_ty, call, ctx)?;
+    let receiver_convention =
+        super::mutating_methods::receiver_convention_for_non_class_method(object.ty(), method);
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: method.to_string(),
         args: vec![worker],
+        receiver_convention: Some(receiver_convention),
+        source: Some(super::method_call_metadata::source_method_call(call)),
         ty: Type::Task(Box::new(ok_ty), Box::new(err_ty)),
     })
 }
@@ -96,10 +100,14 @@ fn lower_scope_spawn_cpu(object: HirExpr, call: &ExprCall, ctx: &mut LowerCtx) -
     };
     validate_sendable_result(&ok_ty, &source_err_ty, call, ctx, "scope.spawn_cpu()")?;
     enforce_group_rules(&object, &task_err_ty, call, ctx)?;
+    let receiver_convention =
+        super::mutating_methods::receiver_convention_for_non_class_method(object.ty(), method);
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: method.to_string(),
         args: vec![worker],
+        receiver_convention: Some(receiver_convention),
+        source: Some(super::method_call_metadata::source_method_call(call)),
         ty: Type::Task(Box::new(ok_ty), Box::new(task_err_ty)),
     })
 }
@@ -148,10 +156,16 @@ fn lower_scope_spawn_process(
     if is_task_group_type(object.ty()) {
         enforce_task_group_is_open(&object, call, ctx)?;
     }
+    let receiver_convention = super::mutating_methods::receiver_convention_for_non_class_method(
+        object.ty(),
+        "__sifr_scope_spawn_process",
+    );
     Some(HirExpr::MethodCall {
         object: Box::new(object),
         method: "__sifr_scope_spawn_process".to_string(),
         args: vec![command],
+        receiver_convention: Some(receiver_convention),
+        source: Some(super::method_call_metadata::source_method_call(call)),
         ty: Type::Result(
             Box::new(process_class_type("ProcessHandle", ctx)),
             Box::new(process_error_type(ctx)),

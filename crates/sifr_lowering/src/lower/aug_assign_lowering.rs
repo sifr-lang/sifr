@@ -103,6 +103,7 @@ pub(in crate::lower) fn lower_aug_assign(
                         obj_ty.clone(),
                         HirExpr::Name {
                             name: n.id.to_string(),
+                            binding_id: ctx.scope.lookup(&n.id).map(|info| info.binding_id),
                             ty: obj_ty,
                         },
                     )
@@ -380,6 +381,7 @@ pub(in crate::lower) fn lower_aug_assign(
                         name: name.clone(),
                         value: HirExpr::BinOp {
                             left: Box::new(HirExpr::Name {
+                                binding_id: ctx.scope.lookup(&name).map(|info| info.binding_id),
                                 name,
                                 ty: var_ty.clone(),
                             }),
@@ -409,6 +411,7 @@ pub(in crate::lower) fn lower_aug_assign(
                 name: name.clone(),
                 value: HirExpr::BinOp {
                     left: Box::new(HirExpr::Name {
+                        binding_id: ctx.scope.lookup(&name).map(|info| info.binding_id),
                         name,
                         ty: var_ty.clone(),
                     }),

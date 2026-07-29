@@ -742,7 +742,10 @@ impl RustEmitter {
             });
         }
         let suppress_self_field_clone = matches!(expr, HirExpr::FieldAccess { .. })
-            && self.method_call_needs_field_clone_suppression(expr, "append");
+            && self.method_call_needs_field_clone_suppression(
+                expr,
+                Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+            );
         let suppression_prev = self.pending_self_field_clone_suppression;
         if suppress_self_field_clone {
             self.pending_self_field_clone_suppression += 1;

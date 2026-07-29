@@ -11,6 +11,7 @@ fn mk_function(name: &str, body: Vec<HirStmt>) -> HirFunction {
         body,
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: vec![],
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -45,11 +46,13 @@ fn test_error_type(name: &str) -> Type {
 fn classify_value_category_marks_names_and_fields_as_places() {
     let name_expr = HirExpr::Name {
         name: "xs".to_string(),
+        binding_id: None,
         ty: Type::List(Box::new(Type::Int)),
     };
     let field_expr = HirExpr::FieldAccess {
         object: Box::new(HirExpr::Name {
             name: "self".to_string(),
+            binding_id: None,
             ty: Type::Class {
                 identity: None,
                 type_args: Vec::new(),
@@ -81,10 +84,12 @@ fn classify_value_category_treats_copy_tuple_literal_of_places_as_place() {
         elements: vec![
             HirExpr::Name {
                 name: "a".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             },
             HirExpr::Name {
                 name: "b".to_string(),
+                binding_id: None,
                 ty: Type::Bool,
             },
         ],
@@ -100,10 +105,12 @@ fn classify_value_category_treats_move_tuple_literal_as_temporary() {
         elements: vec![
             HirExpr::Name {
                 name: "a".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             },
             HirExpr::Name {
                 name: "b".to_string(),
+                binding_id: None,
                 ty: Type::Str,
             },
         ],
@@ -120,6 +127,7 @@ fn classify_value_category_treats_move_tuple_literal_as_temporary() {
 fn iterator_plan_preserves_named_copy_element_collection() {
     let source = HirExpr::Name {
         name: "xs".to_string(),
+        binding_id: None,
         ty: Type::List(Box::new(Type::Int)),
     };
     let plan = plan_iterator_ownership(&source);
@@ -134,6 +142,7 @@ fn iterator_plan_preserves_named_copy_element_collection() {
 fn iterator_plan_clones_named_move_element_collection() {
     let source = HirExpr::Name {
         name: "strings".to_string(),
+        binding_id: None,
         ty: Type::List(Box::new(Type::Str)),
     };
     let plan = plan_iterator_ownership(&source);
@@ -162,6 +171,7 @@ fn iterator_plan_consumes_temporary_collection() {
 fn iterator_plan_defaults_to_borrow_for_conservative_unknown_elements() {
     let source = HirExpr::Name {
         name: "unknown".to_string(),
+        binding_id: None,
         ty: Type::Class {
             identity: None,
             type_args: Vec::new(),
@@ -195,6 +205,7 @@ fn option_projection_method_prefers_copy_for_copy_types() {
 fn iterator_plan_copy_hint_does_not_force_unknown_source_to_copy() {
     let source = HirExpr::Name {
         name: "x".to_string(),
+        binding_id: None,
         ty: Type::Any,
     };
     let plan = plan_iterator_ownership_with_element_hint(&source, Some(&Type::Int));
@@ -208,6 +219,7 @@ fn iterator_plan_copy_hint_does_not_force_unknown_source_to_copy() {
 fn iterator_plan_preserved_list_any_uses_borrow_not_clone() {
     let source = HirExpr::Name {
         name: "items".to_string(),
+        binding_id: None,
         ty: Type::List(Box::new(Type::Any)),
     };
     let plan = plan_iterator_ownership(&source);
@@ -221,6 +233,7 @@ fn iterator_plan_preserved_list_any_uses_borrow_not_clone() {
 fn iterator_plan_typevar_hint_stays_conservative() {
     let source = HirExpr::Name {
         name: "xs".to_string(),
+        binding_id: None,
         ty: Type::TypeVar("T".to_string()),
     };
     let plan = plan_iterator_ownership_with_element_hint(&source, Some(&Type::Int));
@@ -234,6 +247,7 @@ fn iterator_plan_typevar_hint_stays_conservative() {
 fn iterator_plan_uses_hint_for_collection_with_unknown_elements() {
     let source = HirExpr::Name {
         name: "items".to_string(),
+        binding_id: None,
         ty: Type::Set(Box::new(Type::Any)),
     };
     let plan = plan_iterator_ownership_with_element_hint(&source, Some(&Type::Str));
@@ -247,6 +261,7 @@ fn iterator_plan_uses_hint_for_collection_with_unknown_elements() {
 fn iterator_plan_list_typevar_uses_clone_yield() {
     let source = HirExpr::Name {
         name: "xs".to_string(),
+        binding_id: None,
         ty: Type::List(Box::new(Type::TypeVar("T".to_string()))),
     };
     let plan = plan_iterator_ownership(&source);
@@ -260,6 +275,7 @@ fn iterator_plan_list_typevar_uses_clone_yield() {
 fn iterator_plan_copies_tuple_of_copy_elements() {
     let source = HirExpr::Name {
         name: "pairs".to_string(),
+        binding_id: None,
         ty: Type::List(Box::new(Type::Tuple(vec![Type::Int, Type::Int]))),
     };
     let plan = plan_iterator_ownership(&source);
@@ -272,6 +288,7 @@ fn iterator_plan_copies_tuple_of_copy_elements() {
 fn iterator_plan_consumes_range_without_clone_rules() {
     let source = HirExpr::Name {
         name: "r".to_string(),
+        binding_id: None,
         ty: Type::Range,
     };
     let plan = plan_iterator_ownership(&source);
@@ -320,6 +337,7 @@ fn body_calls_function_ignores_nested_function_scope() {
                 func: "target".to_string(),
                 args: vec![HirExpr::Name {
                     name: "n".to_string(),
+                    binding_id: None,
                     ty: Type::Int,
                 }],
                 ty: Type::Int,
@@ -327,6 +345,7 @@ fn body_calls_function_ignores_nested_function_scope() {
         }],
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: vec![],
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -443,6 +462,7 @@ fn body_contains_return_ignores_nested_function_scope() {
         }],
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: vec![],
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -481,6 +501,7 @@ fn body_contains_field_assign_detects_delegated_self_field_class_mutation() {
             object: Box::new(HirExpr::FieldAccess {
                 object: Box::new(HirExpr::Name {
                     name: "self".to_string(),
+                    binding_id: None,
                     ty: holder_ty,
                 }),
                 field: "_writer".to_string(),
@@ -488,6 +509,8 @@ fn body_contains_field_assign_detects_delegated_self_field_class_mutation() {
             }),
             method: "writerow".to_string(),
             args: vec![],
+            receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+            source: None,
             ty: Type::None,
         },
     }];

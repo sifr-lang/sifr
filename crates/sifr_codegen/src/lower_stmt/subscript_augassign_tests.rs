@@ -7,6 +7,7 @@ fn lowers_simple_list_subscript_augassign_floor_div_equal_stmt() {
         op: "//=".to_string(),
         value: HirExpr::Name {
             name: "d".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         object_ty: Type::List(Box::new(Type::Int)),
@@ -45,6 +46,7 @@ fn lowers_simple_list_subscript_augassign_power_equal_stmt() {
         op: "**=".to_string(),
         value: HirExpr::Name {
             name: "p".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         object_ty: Type::List(Box::new(Type::Int)),

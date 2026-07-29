@@ -104,12 +104,20 @@ fn test_task_spawn_scoped_lowers_with_sifr_context() {
     let HirStmt::Let { value, .. } = &body[0] else {
         panic!("expected handle assignment");
     };
-    let HirExpr::MethodCall { method, args, .. } = value else {
+    let HirExpr::MethodCall {
+        method,
+        args,
+        source: Some(call_source),
+        ..
+    } = value
+    else {
         panic!("expected spawn_scoped to lower as owner method call");
     };
     assert_eq!(method, "__sifr_spawn_infallible_with_context");
     assert_eq!(args.len(), 2);
     assert!(matches!(&args[0], HirExpr::Name { name, .. } if name == "ctx"));
+    assert_eq!(u32::from(call_source.arg_ranges[0].len()), 3);
+    assert_eq!(u32::from(call_source.arg_ranges[1].len()), 8);
 }
 
 #[test]

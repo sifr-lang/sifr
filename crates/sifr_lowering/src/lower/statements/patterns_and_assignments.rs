@@ -249,7 +249,11 @@ pub(in crate::lower) fn pattern_narrowed_type(
 pub(in crate::lower) fn bind_pattern_vars(pattern: &HirPattern, ctx: &mut LowerCtx) {
     match pattern {
         HirPattern::Capture { name, ty } => {
-            ctx.scope.define(name.clone(), ty.clone());
+            ctx.scope.define_ephemeral(
+                name.clone(),
+                ty.clone(),
+                crate::scope::EphemeralOrigin::MatchCapture,
+            );
         }
         HirPattern::Class { fields, .. } => {
             for (_, field_pat) in fields {
@@ -441,6 +445,7 @@ pub(in crate::lower) fn lower_ann_assign(
     if let HirExpr::Name {
         name: ref src_name,
         ref ty,
+        ..
     } = value
     {
         if ty.ownership() == sifr_type_system::OwnershipKind::Move {
@@ -583,6 +588,7 @@ pub(in crate::lower) fn lower_chained_assign(
                 };
                 let name_expr = HirExpr::Name {
                     name: prev_target.clone(),
+                    binding_id: ctx.scope.lookup(&prev_target).map(|info| info.binding_id),
                     ty: val_ty.clone(),
                 };
                 let existing = ctx.scope.lookup(&name);

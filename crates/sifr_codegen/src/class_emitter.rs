@@ -747,7 +747,7 @@ impl RustEmitter {
                         visibility: Visibility::Private,
                         type_params: Vec::new(),
                         params: vec![
-                            RustParam::SelfParam { mutable: false },
+                            Self::rust_receiver_param(str_func),
                             RustParam::Named {
                                 name: "f".to_string(),
                                 ty: RustType::Ref {

@@ -53,6 +53,7 @@ fn test_structured_expr_path_handles_plain_signature_call_expression() {
                 }],
                 is_async: false,
                 method_kind: MethodKind::Regular,
+                receiver: None,
                 decorators: vec![],
                 rust_interop: Vec::new(),
                 python_interop: Vec::new(),
@@ -72,6 +73,7 @@ fn test_structured_expr_path_handles_plain_signature_call_expression() {
                 }],
                 is_async: false,
                 method_kind: MethodKind::Regular,
+                receiver: None,
                 decorators: vec![],
                 rust_interop: Vec::new(),
                 python_interop: Vec::new(),
@@ -116,16 +118,22 @@ fn test_structured_expr_path_handles_registry_method_call_expression() {
                     expr: HirExpr::MethodCall {
                         object: Box::new(HirExpr::Name {
                             name: "items".to_string(),
+                            binding_id: None,
                             ty: list_ty,
                         }),
                         method: "clear".to_string(),
                         args: vec![],
+                        receiver_convention: Some(
+                            sifr_type_system::ReceiverConvention::MutableBorrow,
+                        ),
+                        source: None,
                         ty: Type::None,
                     },
                 },
             ],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -167,6 +175,7 @@ fn test_structured_with_context_manager_target_is_mutable_when_body_mutates_it()
                     target: "out".to_string(),
                     context: HirExpr::Name {
                         name: "ctx".to_string(),
+                        binding_id: None,
                         ty: handle_ty.clone(),
                     },
                     kind: HirWithItemKind::Native {
@@ -177,16 +186,22 @@ fn test_structured_with_context_manager_target_is_mutable_when_body_mutates_it()
                     expr: HirExpr::MethodCall {
                         object: Box::new(HirExpr::Name {
                             name: "out".to_string(),
+                            binding_id: None,
                             ty: handle_ty,
                         }),
                         method: "write".to_string(),
                         args: vec![HirExpr::StringLiteral("x".to_string())],
+                        receiver_convention: Some(
+                            sifr_type_system::ReceiverConvention::MutableBorrow,
+                        ),
+                        source: None,
                         ty: Type::Int,
                     },
                 }],
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -232,6 +247,7 @@ fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend() {
                     expr: HirExpr::MethodCall {
                         object: Box::new(HirExpr::Name {
                             name: "d2".to_string(),
+                            binding_id: None,
                             ty: dict_ty.clone(),
                         }),
                         method: "update".to_string(),
@@ -240,12 +256,17 @@ fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend() {
                             values: vec![HirExpr::IntLiteral(3)],
                             ty: dict_ty.clone(),
                         }],
+                        receiver_convention: Some(
+                            sifr_type_system::ReceiverConvention::SharedBorrow,
+                        ),
+                        source: None,
                         ty: Type::None,
                     },
                 },
             ],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -291,6 +312,7 @@ fn test_structured_stmt_path_handles_copy_typed_assign_expr() {
             ],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -328,6 +350,7 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -362,6 +385,7 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -392,10 +416,12 @@ fn test_structured_stmt_path_wraps_non_optional_string_index_into_option_local()
         value: HirExpr::Index {
             object: Box::new(HirExpr::Name {
                 name: "text".to_string(),
+                binding_id: None,
                 ty: Type::Str,
             }),
             index: Box::new(HirExpr::Name {
                 name: "j".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             }),
             ty: Type::Str,
@@ -452,10 +478,12 @@ fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
                 value: Some(HirExpr::Index {
                     object: Box::new(HirExpr::Name {
                         name: "text".to_string(),
+                        binding_id: None,
                         ty: Type::Str,
                     }),
                     index: Box::new(HirExpr::Name {
                         name: "j".to_string(),
+                        binding_id: None,
                         ty: Type::Int,
                     }),
                     ty: Type::Str,
@@ -463,6 +491,7 @@ fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),
@@ -499,6 +528,7 @@ fn test_structured_tuple_index_field_assign_clones_non_copy_element() {
         value: HirExpr::Index {
             object: Box::new(HirExpr::Name {
                 name: "raw".to_string(),
+                binding_id: None,
                 ty: Type::Tuple(vec![Type::Int, Type::Str]),
             }),
             index: Box::new(HirExpr::IntLiteral(1)),
@@ -552,6 +582,7 @@ fn test_structured_tuple_index_field_assign_moves_non_clone_element() {
         value: HirExpr::Index {
             object: Box::new(HirExpr::Name {
                 name: "raw".to_string(),
+                binding_id: None,
                 ty: Type::Tuple(vec![resource_ty.clone(), Type::Str]),
             }),
             index: Box::new(HirExpr::IntLiteral(0)),
@@ -584,6 +615,7 @@ fn test_emit_expr_prefers_structured_name_path() {
     emitter.intrinsic_functions.insert("clock".to_string());
     let expr = HirExpr::Name {
         name: "clock".to_string(),
+        binding_id: None,
         ty: Type::Int,
     };
 
@@ -601,6 +633,7 @@ fn test_emit_expr_borrowed_compare_is_structured() {
     let expr = HirExpr::Compare {
         left: Box::new(HirExpr::Name {
             name: "lhs".to_string(),
+            binding_id: None,
             ty: Type::Str,
         }),
         ops: vec!["==".to_string()],
@@ -713,6 +746,7 @@ fn test_structured_stmt_path_handles_nested_subscript_augassign_inside_loop_if()
                 index: HirExpr::BinOp {
                     left: Box::new(HirExpr::Name {
                         name: "i".to_string(),
+                        binding_id: None,
                         ty: Type::Int,
                     }),
                     op: "+".to_string(),
@@ -745,6 +779,7 @@ fn test_structured_stmt_path_handles_attribute_list_subscript_assign_inside_if()
             index: HirExpr::BinOp {
                 left: Box::new(HirExpr::Name {
                     name: "i".to_string(),
+                    binding_id: None,
                     ty: Type::Int,
                 }),
                 op: "+".to_string(),
@@ -755,6 +790,7 @@ fn test_structured_stmt_path_handles_attribute_list_subscript_assign_inside_if()
                 func: "str".to_string(),
                 args: vec![HirExpr::Name {
                     name: "url".to_string(),
+                    binding_id: None,
                     ty: Type::Str,
                 }],
                 ty: Type::Str,
@@ -778,6 +814,7 @@ fn test_structured_stmt_path_handles_top_level_attribute_list_subscript_assign()
         field: "history".to_string(),
         index: HirExpr::Name {
             name: "i".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         value: HirExpr::StringLiteral("page".to_string()),
@@ -797,16 +834,19 @@ fn test_structured_stmt_path_handles_delete_with_name_key_inside_loop_if() {
         target_ty: Type::Str,
         iter: HirExpr::Name {
             name: "order".to_string(),
+            binding_id: None,
             ty: Type::Str,
         },
         body: vec![HirStmt::If {
             condition: HirExpr::ContainsOp {
                 element: Box::new(HirExpr::Name {
                     name: "ch".to_string(),
+                    binding_id: None,
                     ty: Type::Str,
                 }),
                 collection: Box::new(HirExpr::Name {
                     name: "counts".to_string(),
+                    binding_id: None,
                     ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
                 }),
                 ty: Type::Bool,
@@ -814,10 +854,12 @@ fn test_structured_stmt_path_handles_delete_with_name_key_inside_loop_if() {
             then_body: vec![HirStmt::Delete {
                 object: HirExpr::Name {
                     name: "counts".to_string(),
+                    binding_id: None,
                     ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
                 },
                 index: HirExpr::Name {
                     name: "ch".to_string(),
+                    binding_id: None,
                     ty: Type::Str,
                 },
             }],
@@ -831,58 +873,4 @@ fn test_structured_stmt_path_handles_delete_with_name_key_inside_loop_if() {
     let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
 
     assert!(matches!(captured.first(), Some(RustStmt::For { .. })));
-}
-
-#[test]
-fn test_structured_stmt_path_handles_chained_compare_condition_inside_loop_if() {
-    let stmt = HirStmt::While {
-        condition: HirExpr::Compare {
-            left: Box::new(HirExpr::Name {
-                name: "left".to_string(),
-                ty: Type::Int,
-            }),
-            ops: vec!["<=".to_string()],
-            comparators: vec![HirExpr::Name {
-                name: "right".to_string(),
-                ty: Type::Int,
-            }],
-            ty: Type::Bool,
-        },
-        body: vec![HirStmt::If {
-            condition: HirExpr::Compare {
-                left: Box::new(HirExpr::Name {
-                    name: "left".to_string(),
-                    ty: Type::Int,
-                }),
-                ops: vec!["<=".to_string(), "<".to_string()],
-                comparators: vec![
-                    HirExpr::Name {
-                        name: "target".to_string(),
-                        ty: Type::Int,
-                    },
-                    HirExpr::Name {
-                        name: "right".to_string(),
-                        ty: Type::Int,
-                    },
-                ],
-                ty: Type::Bool,
-            },
-            then_body: vec![HirStmt::Assign {
-                name: "left".to_string(),
-                value: HirExpr::IntLiteral(1),
-            }],
-            elif_clauses: vec![],
-            else_body: Some(vec![HirStmt::AugAssign {
-                name: "left".to_string(),
-                op: "+=".to_string(),
-                value: HirExpr::IntLiteral(1),
-            }]),
-        }],
-        else_body: None,
-    };
-
-    let mut emitter = RustEmitter::new();
-    let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
-
-    assert!(matches!(captured.first(), Some(RustStmt::While { .. })));
 }

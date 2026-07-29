@@ -247,7 +247,8 @@ fn builtin_open_preserves_an_aliased_imported_text_handle_identity() {
                 fields: Vec::new(),
                 methods: vec![(
                     "close".to_string(),
-                    FunctionType::all_borrow(Vec::new(), Type::None),
+                    FunctionType::all_borrow(Vec::new(), Type::None)
+                        .with_receiver(sifr_type_system::ReceiverConvention::MutableBorrow),
                 )],
                 parent_class: None,
             },
@@ -274,7 +275,8 @@ fn builtin_open_preserves_an_aliased_imported_binary_handle_identity() {
                 fields: Vec::new(),
                 methods: vec![(
                     "close".to_string(),
-                    FunctionType::all_borrow(Vec::new(), Type::None),
+                    FunctionType::all_borrow(Vec::new(), Type::None)
+                        .with_receiver(sifr_type_system::ReceiverConvention::MutableBorrow),
                 )],
                 parent_class: None,
             },
