@@ -24,6 +24,43 @@ local Wrangler OAuth credential is expired and cannot refresh
 non-interactively. No secret value is present in the Phase 40 worktree or
 process environment.
 
+## Exact recovery inputs and deadlines
+
+The reviewed recovery must use these immutable inputs:
+
+- original publication run/attempt: `30443929353-1`
+- failed correlated site run: `30445065348`
+- alpha/beta versions: `0.1.0-alpha.2` / `0.1.0-beta.15`
+- Sifr source commit:
+  `94a5fec67b7bef51cae0034c84386c57d9ff1785`
+- release-plan SHA-256:
+  `979d469cb21675e4df6943220deb0f6453d4d1f8c3fb2056c108b8b7ec98f43f`
+- generation/index: `1` /
+  `04edacb8ef64706e2285ec241fc23f7d5f2b80199bb1c2bac5889c48e8485964`
+- site base commit:
+  `ff472f2af59255c8031b1a6f9b9b294c4b820496`
+- dispatcher SHA-256 values: index
+  `93a40ff1224a038402ed4952d968404ee503368d368b43166809db86ec562cc4`,
+  stable
+  `4dc2fde3dcc5deb8aa390900c3e8ef606e9ef46f6c1c3b2471a1caa3c29a73ae`,
+  alpha
+  `afbe013b87273e8b7aa0f676ff658ad82159434cfe5339369b1ae9ad63a69bac`,
+  and beta
+  `5885601276c1aa157146b5262ea505ba57c3081513dbe4338b09df2477d35481`
+- dispatcher default channel: `beta`
+- publication-facts SHA-256:
+  `f3f03dd9366d61269d83f06d43c7d29b89edbe756207a40af0895ddb9ccf8dc1`
+- stable-site-facts SHA-256: `none`
+- original prepare-summary SHA-256:
+  `f45c012c17d2908bc2ef227f202e1037343c63d1f1881ca7913f22628f62a086`
+
+The original prepare artifact expires at `2026-08-28T10:46:13Z`, but it is no
+longer a recovery dependency: its exact canonical bytes are retained at
+`plans/releases/schema-bootstrap-recovery/prepare-summary-30443929353-1.json`
+and the workflow verifies the digest above. The temporary single-maintainer
+approval waiver expires earlier, at `2026-08-27T00:00:00Z`; the protected
+recovery must complete before then unless a distinct reviewer is configured.
+
 ## Required action
 
 - Create or obtain a least-privilege Cloudflare API token authorized to deploy

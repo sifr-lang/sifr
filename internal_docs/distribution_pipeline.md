@@ -763,6 +763,14 @@ exact pinned site workflow. It performs no tag, release, snapshot, generation,
 or `channels.json` mutation. After site convergence it runs the real public
 bootstrap smoke and materializes the final evidence from the original
 approval/prepare identities plus the attested opaque legacy digest and size.
+The original prepare summary is retained canonically under
+`plans/releases/schema-bootstrap-recovery/` and verified by its pinned digest,
+so recovery does not depend on the failed run's expiring workflow artifact.
+Final evidence also embeds a validated `recovery` record with the recovery
+run/attempt, initiator, approval policy and approvers, failed site run, and
+successful recovered site run. That record is required for the attested
+post-index path and forbidden when the original opaque legacy bytes are
+available.
 
 Run the protected bootstrap and incident-specific suites, plus the capability
 demo, with:

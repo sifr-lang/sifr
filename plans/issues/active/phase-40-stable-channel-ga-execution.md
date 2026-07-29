@@ -754,6 +754,37 @@ Review and upstream coordination ledger:
   create-PR profile passed every pre-interop blocking lane and then reproduced
   only the already indexed `readonly-check-doctor` 120-second host timeout; no
   interop source, timeout, threshold, or waiver changed.
+- The exact recovery dispatch ledger is publication attempt
+  `30443929353-1`, failed site run `30445065348`, source
+  `94a5fec67b7bef51cae0034c84386c57d9ff1785`, plan
+  `979d469cb21675e4df6943220deb0f6453d4d1f8c3fb2056c108b8b7ec98f43f`,
+  generation/index `1` /
+  `04edacb8ef64706e2285ec241fc23f7d5f2b80199bb1c2bac5889c48e8485964`,
+  site base `ff472f2af59255c8031b1a6f9b9b294c4b820496`, dispatchers index
+  `93a40ff1224a038402ed4952d968404ee503368d368b43166809db86ec562cc4`,
+  stable
+  `4dc2fde3dcc5deb8aa390900c3e8ef606e9ef46f6c1c3b2471a1caa3c29a73ae`,
+  alpha
+  `afbe013b87273e8b7aa0f676ff658ad82159434cfe5339369b1ae9ad63a69bac`,
+  beta
+  `5885601276c1aa157146b5262ea505ba57c3081513dbe4338b09df2477d35481`,
+  default `beta`, publication facts
+  `f3f03dd9366d61269d83f06d43c7d29b89edbe756207a40af0895ddb9ccf8dc1`,
+  and stable site facts `none`. The original summary digest is
+  `f45c012c17d2908bc2ef227f202e1037343c63d1f1881ca7913f22628f62a086`.
+  Its exact canonical bytes are now durable under
+  `plans/releases/schema-bootstrap-recovery/`; recovery no longer depends on
+  the source artifact that expires `2026-08-28T10:46:13Z`. The approval waiver
+  expires `2026-08-27T00:00:00Z`, which remains the binding completion deadline
+  unless a distinct reviewer is configured.
+- Recovery review pass 1 is archived at
+  `plans/reviews/archive/phase-40-schema-bootstrap-recovery-review-pass-1-not-satisfied.md`.
+  Its `NOT SATISFIED` findings were remediated by embedding validated recovery
+  run/approval/site provenance in final evidence, retaining the exact original
+  prepare summary canonically in-repository, recording every dispatch identity
+  and deadline, covering all partial attested-identity combinations, and
+  pinning the original exact-bytes versus recovery-only attestation boundary
+  in the workflow contract.
 - The next protected-publication wave adds a credential-free stable prepare
   path for `ga-activation` and `normal`. It binds an exact evidence commit,
   canonical candidate directory and plan digest, a separate clean exact source

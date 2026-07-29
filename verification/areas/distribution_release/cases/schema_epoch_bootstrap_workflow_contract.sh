@@ -121,7 +121,7 @@ for fragment in (
     "recover site and retain bootstrap evidence",
     "environment:",
     "name: stable-release",
-    "publication-prepare-${{ inputs.original_run_id }}-${{ inputs.original_run_attempt }}",
+    "plans/releases/schema-bootstrap-recovery/prepare-summary-${{ inputs.original_run_id }}-${{ inputs.original_run_attempt }}.json",
     "actions/runs/${ORIGINAL_RUN_ID}/approvals",
     "actions/runs/${GITHUB_RUN_ID}/approvals",
     "--operation bootstrap-index",
@@ -131,6 +131,7 @@ for fragment in (
     "failed site run inputs drifted",
     "DISPATCHER_INDEX_SHA256:",
     "DISPATCHER_BETA_SHA256:",
+    "STABLE_SITE_FACTS_SHA256: none",
     "prepare_schema_bootstrap_recovery.sh",
     "cmp protected-prepare/summary.json publication/summary.json",
     "final generation-1 bootstrap evidence already exists",
@@ -138,9 +139,17 @@ for fragment in (
     "run_schema_bootstrap_public_smoke.sh",
     "--legacy-index-sha256",
     "--legacy-index-size-bytes 105",
+    "--recovery-json publication/recovery.json",
+    "recovery-approval-decision.json",
+    "publication/site-run.json",
     "schema-v2-bootstrap-generation-1.json",
 ):
     assert fragment in recovery, fragment
+assert publication.count("--legacy-index publication/current-channels.json") == 2
+assert "--legacy-index-sha256" not in publication
+assert "--legacy-index-size-bytes" not in publication
+assert recovery.count("--legacy-index-sha256") == 1
+assert recovery.count("--legacy-index-size-bytes") == 1
 assert recovery.index("prepare exact bootstrap recovery") < recovery.index(
     "recover site and retain bootstrap evidence"
 )
@@ -155,6 +164,7 @@ for forbidden in (
     "gh release create",
     "channels-generation-${",
     "Replace only canonical channels.json",
+    "publication-prepare-${{ inputs.original_run_id }}-${{ inputs.original_run_attempt }}",
 ):
     assert forbidden not in recovery
 for fragment in (
@@ -222,6 +232,13 @@ for surface, size_fragment in (
     (evidence_schema, '"size_bytes": {"const": 105}'),
 ):
     assert size_fragment in surface
+for fragment in (
+    '"recovery": {',
+    '"failed_site_run_id"',
+    '"site_run_id"',
+    '{"not": {"required": ["recovery"]}}',
+):
+    assert fragment in evidence_schema, fragment
 for fragment in (
     "immutable asset set drifted",
     "asset digest drifted",

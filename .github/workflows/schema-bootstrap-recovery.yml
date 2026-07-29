@@ -78,6 +78,7 @@ jobs:
       EXPECTED_INDEX_SHA256: ${{ inputs.expected_index_sha256 }}
       EXPECTED_PLAN_SHA256: ${{ inputs.expected_plan_sha256 }}
       EXPECTED_SITE_FACTS_SHA256: ${{ inputs.expected_site_facts_sha256 }}
+      ORIGINAL_PREPARE_SUMMARY: plans/releases/schema-bootstrap-recovery/prepare-summary-${{ inputs.original_run_id }}-${{ inputs.original_run_attempt }}.json
       WAIVER_SHA256: b9630cc060ca281946da76a9cb9bc67564759c8d5446b6a33157a7d138080008
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -140,13 +141,6 @@ jobs:
             --expected-waiver-sha256 "${WAIVER_SHA256}" \
             --include-policy >mutation-approval-decision.json
 
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: publication-prepare-${{ inputs.original_run_id }}-${{ inputs.original_run_attempt }}
-          path: original-prepare
-          github-token: ${{ github.token }}
-          run-id: ${{ inputs.original_run_id }}
-
       - name: Reconstruct exact post-index recovery proposal
         shell: bash
         run: |
@@ -161,7 +155,7 @@ jobs:
             --beta-version "${BETA_VERSION}" \
             --source-commit "${SOURCE_COMMIT}" \
             --site-commit "${SITE_BASE_COMMIT}" \
-            --prepare-summary original-prepare/summary.json \
+            --prepare-summary "${ORIGINAL_PREPARE_SUMMARY}" \
             --mutation-approval-decision mutation-approval-decision.json \
             --expected-prepare-summary-sha256 \
               "${EXPECTED_PREPARE_SUMMARY_SHA256}" \
@@ -227,6 +221,7 @@ jobs:
       EXPECTED_PLAN_SHA256: ${{ inputs.expected_plan_sha256 }}
       EXPECTED_SITE_FACTS_SHA256: ${{ inputs.expected_site_facts_sha256 }}
       EXPECTED_RECOVERY_SUMMARY_SHA256: ${{ needs.prepare.outputs.summary_sha256 }}
+      ORIGINAL_PREPARE_SUMMARY: plans/releases/schema-bootstrap-recovery/prepare-summary-${{ inputs.original_run_id }}-${{ inputs.original_run_attempt }}.json
       SITE_REPOSITORY: sifr-lang/sifr-website
       SITE_WORKFLOW: release-site.yml
       SITE_WORKFLOW_REF: sifr-release-site-stable-facts
@@ -244,13 +239,6 @@ jobs:
         with:
           name: ${{ needs.prepare.outputs.summary_artifact_name }}
           path: protected-prepare
-
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: publication-prepare-${{ inputs.original_run_id }}-${{ inputs.original_run_attempt }}
-          path: original-prepare
-          github-token: ${{ github.token }}
-          run-id: ${{ inputs.original_run_id }}
 
       - name: Revalidate both protected approvals and failed site identity
         shell: bash
@@ -345,6 +333,7 @@ jobs:
           DISPATCHER_ALPHA_SHA256: $(jq -r '.dispatchers.alpha' protected-prepare/summary.json)
           DISPATCHER_BETA_SHA256: $(jq -r '.dispatchers.beta' protected-prepare/summary.json)
           PUBLICATION_FACTS_SHA256: ${EXPECTED_SITE_FACTS_SHA256}
+          STABLE_SITE_FACTS_SHA256: none
           EOF
 
       - name: Reconstruct and compare exact recovery bytes
@@ -361,7 +350,7 @@ jobs:
             --beta-version "${BETA_VERSION}" \
             --source-commit "${SOURCE_COMMIT}" \
             --site-commit "${SITE_BASE_COMMIT}" \
-            --prepare-summary original-prepare/summary.json \
+            --prepare-summary "${ORIGINAL_PREPARE_SUMMARY}" \
             --mutation-approval-decision mutation-approval-decision.json \
             --expected-prepare-summary-sha256 \
               "${EXPECTED_PREPARE_SUMMARY_SHA256}" \
@@ -447,6 +436,22 @@ jobs:
           approvers_json="$(
             jq -c '.approvers' mutation-approval-decision.json
           )"
+          jq -cnS \
+            --argjson run_id "${GITHUB_RUN_ID}" \
+            --argjson run_attempt "${GITHUB_RUN_ATTEMPT}" \
+            --arg initiator "${GITHUB_TRIGGERING_ACTOR}" \
+            --argjson failed_site_run_id "${FAILED_SITE_RUN_ID}" \
+            --slurpfile decision recovery-approval-decision.json \
+            --slurpfile site_run publication/site-run.json \
+            '{
+              run_id: $run_id,
+              run_attempt: $run_attempt,
+              initiator: $initiator,
+              approval_policy: $decision[0].approval_policy,
+              approvers: $decision[0].approvers,
+              failed_site_run_id: $failed_site_run_id,
+              site_run_id: $site_run[0].run_id
+            }' >publication/recovery.json
           alpha_source="$(
             jq -er '.alpha.source_commit' \
               "publication/work/channels/schema-v2-bootstrap-alpha-${ALPHA_VERSION}.json"
@@ -460,10 +465,11 @@ jobs:
             --approval-mode "${approval_mode}" \
             --approval-waiver-sha256 "${approval_waiver_sha256}" \
             --approvers-json "${approvers_json}" \
-            --prepare-summary original-prepare/summary.json \
+            --prepare-summary "${ORIGINAL_PREPARE_SUMMARY}" \
             --legacy-index-sha256 \
               71b3243925670f56dc510b8f45b6614a622f58097a0fea9492f61d20dc4bf9ef \
             --legacy-index-size-bytes 105 \
+            --recovery-json publication/recovery.json \
             --alpha-version "${ALPHA_VERSION}" \
             --alpha-source-commit "${alpha_source}" \
             --alpha-record publication/work/release-records/alpha.json \
@@ -495,6 +501,7 @@ jobs:
           path: |
             publication/summary.json
             publication/site-run.json
+            publication/recovery.json
             publication/bootstrap-smoke
             publication/schema-v2-bootstrap-generation-1.json
             recovery-approval-decision.json
