@@ -86,6 +86,7 @@ fn lower_task_spawn_scoped_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCall
         return TaskCallLowering::Rejected;
     };
     let owner = HirExpr::Name {
+        binding_id: ctx.scope.lookup(&owner_name).map(|info| info.binding_id),
         name: owner_name,
         ty: owner_ty,
     };
@@ -667,10 +668,21 @@ fn lower_task_timeout_call(call: &ExprCall, ctx: &mut LowerCtx) -> TaskCallLower
         mark_task_handle_observed(name, ctx);
         ctx.mark_moved_with_flow(name);
     }
+    let receiver_convention = super::mutating_methods::receiver_convention_for_non_class_method(
+        handle.ty(),
+        "__sifr_timeout",
+    );
     TaskCallLowering::Lowered(HirExpr::MethodCall {
         object: Box::new(handle),
         method: "__sifr_timeout".to_string(),
         args: vec![duration],
+        receiver_convention: Some(receiver_convention),
+        source: Some(
+            super::method_call_metadata::source_call_with_first_arg_as_receiver(
+                call,
+                call.arguments.args[0].range(),
+            ),
+        ),
         ty: Type::Awaitable(Box::new(Type::TaskResult(
             ok_ty,
             Box::new(Type::TimeoutResult(err_ty)),

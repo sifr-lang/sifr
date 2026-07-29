@@ -89,7 +89,7 @@ fn stmt_mutates_iter_source(stmt: &HirStmt, source_name: &str) -> bool {
 fn expr_mutates_iter_source(expr: &HirExpr, source_name: &str) -> bool {
     match expr {
         HirExpr::MethodCall { object, method, .. } => {
-            if let HirExpr::Name { name, ty } = object.as_ref() {
+            if let HirExpr::Name { name, ty, .. } = object.as_ref() {
                 if name == source_name && is_collection_mutating_method(ty, method) {
                     return true;
                 }

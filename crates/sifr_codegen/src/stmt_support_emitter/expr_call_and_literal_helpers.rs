@@ -298,7 +298,7 @@ macro_rules! stmt_expr_constructor {
                 let Some(lowered_arg) = $emitter.lower_stmt_expr_for_ir(arg)? else {
                     return Ok(None);
                 };
-                let adapted_arg = if let HirExpr::Name { name, ty } = arg {
+                let adapted_arg = if let HirExpr::Name { name, ty, .. } = arg {
                     if ($emitter.borrowed_params.contains(name)
                         || $emitter.mut_borrowed_params.contains(name))
                         && ty.ownership() != sifr_type_system::OwnershipKind::Copy

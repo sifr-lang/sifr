@@ -35,6 +35,7 @@ fn test_nested_break_without_inner_else_does_not_set_outer_broke_flag() {
             }],
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: vec![],
             rust_interop: Vec::new(),
             python_interop: Vec::new(),

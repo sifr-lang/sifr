@@ -36,6 +36,7 @@ fn walk_stmts_covers_try_handlers_loop_else_and_match_patterns() {
         }],
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: vec![],
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -68,6 +69,7 @@ fn walk_stmts_covers_try_handlers_loop_else_and_match_patterns() {
                 body: vec![HirStmt::Match {
                     subject: HirExpr::Name {
                         name: "value".to_string(),
+                        binding_id: None,
                         ty: Type::Int,
                     },
                     subject_ty: Type::Int,
@@ -139,6 +141,7 @@ fn walk_stmts_respects_nested_function_scope_boundary() {
         }],
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: vec![],
         rust_interop: Vec::new(),
         python_interop: Vec::new(),

@@ -7,9 +7,20 @@ use crate::{
     Visibility,
 };
 use sifr_ir::{HirClass, HirExpr, HirFunction, HirStmt, MethodKind};
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
 
 impl RustEmitter {
+    pub(crate) fn rust_receiver_param(method: &HirFunction) -> RustParam {
+        let Some(receiver) = method.receiver else {
+            panic!("regular instance method is missing receiver convention");
+        };
+        match receiver {
+            ReceiverConvention::SharedBorrow => RustParam::SelfParam { mutable: false },
+            ReceiverConvention::MutableBorrow => RustParam::SelfParam { mutable: true },
+            ReceiverConvention::Owned => RustParam::SelfValue,
+        }
+    }
+
     pub(crate) fn is_some_call_expr(expr: &RustExpr) -> bool {
         matches!(
             expr,
@@ -465,6 +476,7 @@ impl RustEmitter {
                     field_ty,
                     &HirExpr::Name {
                         name: field_name.clone(),
+                        binding_id: None,
                         ty: field_ty.clone(),
                     },
                     RustExpr::Ident(field_name.clone()),
@@ -655,23 +667,7 @@ impl RustEmitter {
         let mut params = Vec::new();
         match method.method_kind {
             MethodKind::Regular if method.name != "new" => {
-                let consumes_python_receiver = method
-                    .python_interop
-                    .first()
-                    .is_some_and(|declaration| declaration.consumes_receiver);
-                let consumes_rust_close_receiver = class.rust_interop.iter().any(|declaration| {
-                    declaration.kind == sifr_ir::RustInteropDecoratorKind::Opaque
-                }) && method
-                    .rust_interop
-                    .first()
-                    .is_some_and(|declaration| declaration.consumes_receiver);
-                if consumes_python_receiver || consumes_rust_close_receiver {
-                    params.push(RustParam::SelfValue);
-                } else {
-                    params.push(RustParam::SelfParam {
-                        mutable: self.class_method_requires_mutable_self(class, method),
-                    });
-                }
+                params.push(Self::rust_receiver_param(method));
             }
             _ => {}
         }

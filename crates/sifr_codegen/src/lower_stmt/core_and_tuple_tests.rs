@@ -105,6 +105,7 @@ fn simple_let_declines_non_optional_list_index_to_allow_structured_lowering() {
         value: HirExpr::Index {
             object: Box::new(HirExpr::Name {
                 name: "values".to_string(),
+                binding_id: None,
                 ty: Type::List(Box::new(Type::Int)),
             }),
             index: Box::new(HirExpr::IntLiteral(0)),
@@ -127,10 +128,12 @@ fn simple_return_declines_non_optional_string_index_to_allow_structured_lowering
         value: Some(HirExpr::Index {
             object: Box::new(HirExpr::Name {
                 name: "text".to_string(),
+                binding_id: None,
                 ty: Type::Str,
             }),
             index: Box::new(HirExpr::Name {
                 name: "j".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             }),
             ty: Type::Str,
@@ -160,10 +163,12 @@ fn simple_compare_condition_wraps_proven_list_index_without_double_option() {
         left: Box::new(HirExpr::Index {
             object: Box::new(HirExpr::Name {
                 name: "actual".to_string(),
+                binding_id: None,
                 ty: Type::List(Box::new(Type::Bool)),
             }),
             index: Box::new(HirExpr::Name {
                 name: "i".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             }),
             ty: Type::Bool,
@@ -172,10 +177,12 @@ fn simple_compare_condition_wraps_proven_list_index_without_double_option() {
         comparators: vec![HirExpr::Index {
             object: Box::new(HirExpr::Name {
                 name: "expected".to_string(),
+                binding_id: None,
                 ty: Type::List(Box::new(Type::Bool)),
             }),
             index: Box::new(HirExpr::Name {
                 name: "i".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             }),
             ty: Type::Union(vec![Type::Bool, Type::None]),
@@ -212,6 +219,7 @@ fn lowers_simple_field_assign_for_non_self_target() {
         field_ty: Type::Int,
         value: HirExpr::Name {
             name: "next_value".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
     };
@@ -265,6 +273,7 @@ fn does_not_lower_field_assign_with_mismatched_value_type() {
         field_ty: Type::Union(vec![Type::Int, Type::None]),
         value: HirExpr::Name {
             name: "next_value".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
     };

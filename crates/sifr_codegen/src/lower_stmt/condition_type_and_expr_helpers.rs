@@ -20,7 +20,7 @@ pub(super) fn is_option_like_type(ty: &Type) -> bool {
 }
 
 pub(super) fn detect_option_truthiness_alias(expr: &HirExpr) -> Option<String> {
-    if let HirExpr::Name { name, ty } = expr {
+    if let HirExpr::Name { name, ty, .. } = expr {
         if is_option_like_type(ty) {
             return Some(name.clone());
         }

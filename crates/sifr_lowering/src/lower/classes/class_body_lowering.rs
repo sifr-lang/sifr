@@ -1,8 +1,9 @@
+use super::is_hashable_type;
 use super::parameter_conventions::{
-    class_method_param_convention, class_method_param_default, prepare_method_param_ownership,
+    class_method_param_convention, class_method_param_default, declared_method_receiver_convention,
+    prepare_method_param_ownership,
 };
 use super::rust_opaque_validation::validate_rust_opaque_close_method;
-use super::{body_contains_field_assign, is_hashable_type};
 use super::{
     collect_enum_variants, function_body_contains_yield, get_newtype_inner, get_parent_class,
     has_decorator, is_enum_class, is_operator_dunder, is_protocol_class, lower_function_stmts,
@@ -57,6 +58,7 @@ pub(in crate::lower) fn lower_class(
                     body: vec![], // Protocol methods have no body
                     is_async: false,
                     method_kind: MethodKind::Regular,
+                    receiver: ft.receiver,
                     decorators: vec![],
                     rust_interop: Vec::new(),
                     python_interop: Vec::new(),
@@ -102,7 +104,12 @@ pub(in crate::lower) fn lower_class(
             if let Stmt::FunctionDef(func) = stmt {
                 let method_name = func.name.to_string();
                 ctx.scope.push();
-                ctx.scope.define("self".to_string(), class_ty.clone());
+                let receiver = declared_method_receiver_convention(&method_name, &func.parameters);
+                let receiver_id =
+                    ctx.scope
+                        .define_receiver("self".to_string(), class_ty.clone(), receiver);
+                ctx.method_receiver_bindings
+                    .insert(format!("{class_name}.{method_name}"), receiver_id);
 
                 // Define method parameters (skip `self`)
                 let mut params = Vec::new();
@@ -113,13 +120,16 @@ pub(in crate::lower) fn lower_class(
                     } else {
                         Type::Any
                     };
-                    ctx.scope.define(param_name.clone(), param_ty.clone());
+                    let convention =
+                        class_method_param_convention(param.parameter.convention, &param_ty, ctx);
+                    ctx.scope
+                        .define_parameter(param_name.clone(), param_ty.clone(), convention);
                     params.push(HirParam {
                         name: param_name,
                         ty: param_ty,
                         default: None,
                         keyword_only: false,
-                        convention: ParamConvention::default(),
+                        convention,
                     });
                 }
 
@@ -129,13 +139,14 @@ pub(in crate::lower) fn lower_class(
                     Type::None
                 };
 
-                let method_ft = FunctionType::new(
+                let mut method_ft = FunctionType::new(
                     params
                         .iter()
                         .map(|p| (p.name.clone(), p.ty.clone()))
                         .collect(),
                     return_ty.clone(),
                 );
+                method_ft.receiver = Some(receiver);
 
                 let rust_interop = collect_rust_interop_declarations(
                     &func.decorator_list,
@@ -180,6 +191,7 @@ pub(in crate::lower) fn lower_class(
                     body,
                     is_async: func.is_async,
                     method_kind: MethodKind::Regular,
+                    receiver: method_ft.receiver,
                     decorators: vec![],
                     rust_interop,
                     python_interop: Vec::new(),
@@ -230,7 +242,12 @@ pub(in crate::lower) fn lower_class(
                 } // Skip __init__ for newtypes
                 ctx.current_class = Some(class_name.clone());
                 ctx.scope.push();
-                ctx.scope.define("self".to_string(), class_ty.clone());
+                let receiver = declared_method_receiver_convention(&method_name, &func.parameters);
+                let receiver_id =
+                    ctx.scope
+                        .define_receiver("self".to_string(), class_ty.clone(), receiver);
+                ctx.method_receiver_bindings
+                    .insert(format!("{class_name}.{method_name}"), receiver_id);
                 let mut params = Vec::new();
                 for param in func.parameters.args.iter().skip(1) {
                     let param_name = param.parameter.name.to_string();
@@ -246,13 +263,16 @@ pub(in crate::lower) fn lower_class(
                         );
                         Type::Any
                     };
-                    ctx.scope.define(param_name.clone(), param_ty.clone());
+                    let convention =
+                        class_method_param_convention(param.parameter.convention, &param_ty, ctx);
+                    ctx.scope
+                        .define_parameter(param_name.clone(), param_ty.clone(), convention);
                     params.push(HirParam {
                         name: param_name,
                         ty: param_ty,
                         default: None,
                         keyword_only: false,
-                        convention: ParamConvention::default(),
+                        convention,
                     });
                 }
                 let return_ty = if let Some(ref ret_ann) = func.returns {
@@ -260,13 +280,14 @@ pub(in crate::lower) fn lower_class(
                 } else {
                     Type::None
                 };
-                let method_ft = FunctionType::new(
+                let mut method_ft = FunctionType::new(
                     params
                         .iter()
                         .map(|p| (p.name.clone(), p.ty.clone()))
                         .collect(),
                     return_ty.clone(),
                 );
+                method_ft.receiver = Some(receiver);
                 let rust_interop = collect_rust_interop_declarations(
                     &func.decorator_list,
                     RustInteropOwner::Method,
@@ -310,6 +331,7 @@ pub(in crate::lower) fn lower_class(
                     body,
                     is_async: func.is_async,
                     method_kind: MethodKind::Regular,
+                    receiver: method_ft.receiver,
                     decorators: vec![],
                     rust_interop,
                     python_interop: Vec::new(),
@@ -396,6 +418,8 @@ pub(in crate::lower) fn lower_class(
             } else {
                 MethodKind::Regular
             };
+            let declared_receiver = (method_kind == MethodKind::Regular)
+                .then(|| declared_method_receiver_convention(&method_name, &func.parameters));
 
             // Set current class context for `self` resolution
             ctx.current_class = Some(class_name.clone());
@@ -412,7 +436,14 @@ pub(in crate::lower) fn lower_class(
 
             // Define `self` in scope (for regular methods)
             if !is_staticmethod && !is_classmethod {
-                ctx.scope.define("self".to_string(), class_ty.clone());
+                let Some(receiver) = declared_receiver else {
+                    unreachable!("regular method must have a receiver convention");
+                };
+                let receiver_id =
+                    ctx.scope
+                        .define_receiver("self".to_string(), class_ty.clone(), receiver);
+                ctx.method_receiver_bindings
+                    .insert(format!("{class_name}.{method_name}"), receiver_id);
             }
 
             // Define method parameters (skip `self`/`cls`)
@@ -427,11 +458,8 @@ pub(in crate::lower) fn lower_class(
                 };
                 let convention =
                     class_method_param_convention(param.parameter.convention, &param_ty, ctx);
-                ctx.scope.define_parameter(
-                    param_name.clone(),
-                    param_ty.clone(),
-                    convention.is_mutable(),
-                );
+                ctx.scope
+                    .define_parameter(param_name.clone(), param_ty.clone(), convention);
                 params.push(HirParam {
                     name: param_name,
                     ty: param_ty,
@@ -453,11 +481,8 @@ pub(in crate::lower) fn lower_class(
                 };
                 let convention =
                     class_method_param_convention(param.parameter.convention, &param_ty, ctx);
-                ctx.scope.define_parameter(
-                    param_name.clone(),
-                    param_ty.clone(),
-                    convention.is_mutable(),
-                );
+                ctx.scope
+                    .define_parameter(param_name.clone(), param_ty.clone(), convention);
                 params.push(HirParam {
                     name: param_name,
                     ty: param_ty,
@@ -480,13 +505,14 @@ pub(in crate::lower) fn lower_class(
             };
 
             // Create a dummy function type for lower_stmts
-            let method_ft = FunctionType::new(
+            let mut method_ft = FunctionType::new(
                 params
                     .iter()
                     .map(|p| (p.name.clone(), p.ty.clone()))
                     .collect(),
                 return_ty.clone(),
             );
+            method_ft.receiver = declared_receiver;
 
             let mut rust_interop = collect_rust_interop_declarations(
                 &func.decorator_list,
@@ -496,8 +522,9 @@ pub(in crate::lower) fn lower_class(
                 has_decorator(func, "cpu_heavy"),
                 func.is_async,
             );
-            let consumes_rust_receiver =
-                method_kind == MethodKind::Regular && receiver_is_owned(&func.parameters);
+            let consumes_rust_receiver = !rust_interop.is_empty()
+                && method_kind == MethodKind::Regular
+                && receiver_is_owned(&func.parameters);
             for declaration in &mut rust_interop {
                 declaration.consumes_receiver = consumes_rust_receiver;
             }
@@ -507,6 +534,13 @@ pub(in crate::lower) fn lower_class(
                 func.is_async,
                 ctx,
             );
+            if consumes_rust_receiver
+                || python_interop
+                    .iter()
+                    .any(|declaration| declaration.consumes_receiver)
+            {
+                method_ft.receiver = Some(sifr_type_system::ReceiverConvention::Owned);
+            }
             if !python_interop.is_empty() && !is_python_opaque {
                 ctx.error_with_code_at(
                     sifr_diagnostics::DiagnosticCode::PYIMP_INVALID_TARGET,
@@ -584,9 +618,6 @@ pub(in crate::lower) fn lower_class(
             ctx.current_method = previous_method;
             ctx.current_owner = previous_owner;
 
-            // Determine receiver mutability: if any statement assigns to self.field, it's &mut self
-            let _is_mutating = method_name == "__init__" || body_contains_field_assign(&body);
-
             ctx.scope.pop();
             ctx.current_class = None;
             ctx.current_parent_class = None;
@@ -621,6 +652,9 @@ pub(in crate::lower) fn lower_class(
                 body,
                 is_async: func.is_async,
                 method_kind,
+                receiver: (method_kind == MethodKind::Regular && method_name != "__init__")
+                    .then_some(method_ft.receiver)
+                    .flatten(),
                 decorators: method_decorators,
                 rust_interop,
                 python_interop,

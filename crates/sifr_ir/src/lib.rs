@@ -22,15 +22,17 @@ pub use lowering_outcome::LoweringOutcome;
 pub use lowering_result::LoweringResult;
 pub use python_interop::*;
 pub use rust_interop::*;
-pub use type_visit::transform_hir_function_types;
+pub use type_visit::{transform_hir_function_types, visit_hir_function_exprs_mut};
 
 #[cfg(test)]
 mod tests {
     use super::{
         CfgBlock, CfgBlockLabel, CfgTerminator, ControlFlowGraph, FlowEdge, FlowEdgeKind,
         FlowEffect, FlowExitEffect, FlowExitKind, FlowFacts, FlowGraph, FlowNode, FlowNodeKind,
+        HirExpr, MethodCallSource,
     };
-    use sifr_type_system::Type;
+    use ruff_text_size::{TextRange, TextSize};
+    use sifr_type_system::{ReceiverConvention, Type};
 
     #[test]
     fn cfg_reachability_and_fingerprint_are_stable() {
@@ -90,6 +92,38 @@ mod tests {
             error.to_string().contains("invalid successor 3"),
             "unexpected error: {error}"
         );
+    }
+
+    #[test]
+    fn method_call_schema_retains_receiver_and_source_metadata() {
+        let range = TextRange::new(TextSize::new(2), TextSize::new(6));
+        let call = HirExpr::MethodCall {
+            object: Box::new(HirExpr::Name {
+                name: "items".to_string(),
+                binding_id: Some(crate::BindingId(7)),
+                ty: Type::List(Box::new(Type::Int)),
+            }),
+            method: "append".to_string(),
+            args: vec![HirExpr::IntLiteral(1)],
+            receiver_convention: Some(ReceiverConvention::MutableBorrow),
+            source: Some(MethodCallSource {
+                call_range: range,
+                receiver_range: range,
+                arg_ranges: vec![range],
+            }),
+            ty: Type::None,
+        };
+
+        let HirExpr::MethodCall {
+            receiver_convention,
+            source: Some(source),
+            ..
+        } = call
+        else {
+            panic!("method call should retain its schema");
+        };
+        assert_eq!(receiver_convention, Some(ReceiverConvention::MutableBorrow));
+        assert_eq!(source.arg_ranges, vec![range]);
     }
 
     #[test]

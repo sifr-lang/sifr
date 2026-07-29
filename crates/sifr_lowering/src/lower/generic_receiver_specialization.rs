@@ -9,7 +9,12 @@ pub(in crate::lower) fn refine_generic_class_binding_expr(
     args: &[HirExpr],
     ctx: &mut LowerCtx,
 ) -> HirExpr {
-    let HirExpr::Name { name, ty } = &expr else {
+    let HirExpr::Name {
+        name,
+        binding_id,
+        ty,
+    } = &expr
+    else {
         return expr;
     };
     let Type::Class { methods, .. } = ty.resolve_alias() else {
@@ -50,6 +55,7 @@ pub(in crate::lower) fn refine_generic_class_binding_expr(
     );
     HirExpr::Name {
         name: name.clone(),
+        binding_id: *binding_id,
         ty: refined_ty,
     }
 }

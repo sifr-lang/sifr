@@ -112,7 +112,7 @@ impl RustEmitter {
                 visibility: Visibility::Private,
                 type_params: Vec::new(),
                 params: vec![
-                    RustParam::SelfValue,
+                    Self::rust_receiver_param(func),
                     RustParam::Named {
                         name: rhs_name,
                         ty: RustType::Named(rhs_ty.clone()),
@@ -154,7 +154,7 @@ impl RustEmitter {
                 name: method_name.to_string(),
                 visibility: Visibility::Private,
                 type_params: Vec::new(),
-                params: vec![RustParam::SelfValue],
+                params: vec![Self::rust_receiver_param(func)],
                 ret: Some(RustType::Named("Self::Output".to_string())),
                 body,
                 is_async: false,
@@ -191,7 +191,7 @@ impl RustEmitter {
             visibility: Visibility::Private,
             type_params: Vec::new(),
             params: vec![
-                RustParam::SelfParam { mutable: false },
+                Self::rust_receiver_param(func),
                 RustParam::Named {
                     name: other_name,
                     ty: RustType::Ref {
@@ -234,7 +234,7 @@ impl RustEmitter {
             visibility: Visibility::Private,
             type_params: Vec::new(),
             params: vec![
-                RustParam::SelfParam { mutable: false },
+                Self::rust_receiver_param(func),
                 RustParam::Named {
                     name: other_name.clone(),
                     ty: RustType::Ref {
@@ -342,72 +342,6 @@ impl RustEmitter {
         });
     }
 
-    pub(crate) fn emit_protocol_impls(&mut self, class: &HirClass, module: &HirModule) {
-        for proto_name in &class.implements_protocols {
-            let proto_class = module
-                .classes
-                .iter()
-                .find(|c| c.name == *proto_name && c.is_protocol());
-            let proto_method_names: Vec<String> = proto_class
-                .map(|pc| pc.methods.iter().map(|m| m.name.clone()).collect())
-                .unwrap_or_default();
-            if proto_method_names.is_empty() {
-                continue;
-            }
-
-            let mut impl_items = Vec::new();
-            for method in &class.methods {
-                if !proto_method_names.contains(&method.name) {
-                    continue;
-                }
-                let mut params = Vec::with_capacity(method.params.len() + 1);
-                params.push(RustParam::SelfParam { mutable: false });
-                let mut call_args = Vec::with_capacity(method.params.len() + 1);
-                call_args.push(RustExpr::Ident("self".to_string()));
-                for param in &method.params {
-                    params.push(RustParam::Named {
-                        name: param.name.clone(),
-                        ty: crate::sifr_type_to_rust_type(&param.ty),
-                    });
-                    call_args.push(RustExpr::Ident(param.name.clone()));
-                }
-                let delegated_call = RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        source_class_rust_name(&class.name),
-                        method.name.clone(),
-                    ])),
-                    args: call_args,
-                };
-                impl_items.push(RustItem::Fn {
-                    name: method.name.clone(),
-                    visibility: Visibility::Private,
-                    type_params: Vec::new(),
-                    params,
-                    ret: if method.return_type == Type::None {
-                        None
-                    } else {
-                        Some(crate::sifr_type_to_rust_type(&method.return_type))
-                    },
-                    body: if method.return_type == Type::None {
-                        vec![RustStmt::Expr(delegated_call)]
-                    } else {
-                        vec![RustStmt::Return(Some(delegated_call))]
-                    },
-                    is_async: false,
-                });
-            }
-
-            if !impl_items.is_empty() {
-                self.body_items.push(RustItem::Impl {
-                    target: source_class_rust_name(&class.name),
-                    type_params: Vec::new(),
-                    trait_: Some(source_class_rust_name(proto_name)),
-                    items: impl_items,
-                });
-            }
-        }
-    }
-
     pub(crate) fn lower_operator_method_body(&mut self, func: &HirFunction) -> Vec<RustStmt> {
         self.lower_function_like_body(
             func,
@@ -445,7 +379,7 @@ impl RustEmitter {
             HirStmt::Return { value } => {
                 let lowered = value.as_ref().map(|expr| {
                     self.lower_operator_expr_ir(expr).map(|lowered| match expr {
-                        HirExpr::Name { name, ty }
+                        HirExpr::Name { name, ty, .. }
                             if (self.borrowed_params.contains(name)
                                 || self.mut_borrowed_params.contains(name))
                                 && ty.ownership() != sifr_type_system::OwnershipKind::Copy =>
@@ -729,7 +663,7 @@ impl RustEmitter {
     }
 
     pub(crate) fn detect_option_truthiness_alias_for_operator(expr: &HirExpr) -> Option<String> {
-        let HirExpr::Name { name, ty } = expr else {
+        let HirExpr::Name { name, ty, .. } = expr else {
             return None;
         };
         if Self::is_option_like_for_operator(ty) {

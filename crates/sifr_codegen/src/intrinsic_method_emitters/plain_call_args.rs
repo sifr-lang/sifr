@@ -36,7 +36,7 @@ impl RustEmitter {
                 lowered_args.push(lowered_arg);
                 continue;
             }
-            let borrowed_name_arg = matches!(arg, HirExpr::Name { name, ty }
+            let borrowed_name_arg = matches!(arg, HirExpr::Name { name, ty, .. }
                 if self.borrowed_params.contains(name)
                     || self.mut_borrowed_params.contains(name)
                     || ty.rust_type().starts_with('&'));
@@ -415,14 +415,8 @@ impl RustEmitter {
                     .iter()
                     .find(|(method_name, _)| method_name == method)
                     .map(|(_, fty)| {
-                        let self_offset = usize::from(
-                            fty.params
-                                .first()
-                                .is_some_and(|(param_name, _, _)| param_name == "self"),
-                        );
                         fty.params
                             .iter()
-                            .skip(self_offset)
                             .map(|(_, ty, conv)| (ty.clone(), *conv))
                             .collect::<Vec<_>>()
                     })

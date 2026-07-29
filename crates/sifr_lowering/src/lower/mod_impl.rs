@@ -818,7 +818,7 @@ pub(in crate::lower) fn lower_module_impl(
     );
     python_interop::validate_retained_callback_owner_errors(&functions, &classes, &mut ctx);
     if ctx.errors.is_empty() {
-        let module = HirModule {
+        let mut module = HirModule {
             functions,
             classes,
             imports,
@@ -826,6 +826,20 @@ pub(in crate::lower) fn lower_module_impl(
             generic_functions: ctx.generic_functions.clone(),
             type_param_bounds: ctx.type_param_bounds.clone(),
         };
+        for violation in super::method_call_verifier::verify_module_method_calls(
+            &mut module,
+            &ctx.class_types,
+            &ctx.functions,
+        ) {
+            ctx.error_with_code_at(
+                sifr_diagnostics::DiagnosticCode::INTERNAL_COMPILER_PANIC,
+                violation.message,
+                violation.range,
+            );
+        }
+        if !ctx.errors.is_empty() {
+            return Err(ctx.errors);
+        }
         let flow_graph = crate::flow_graph::build_module_flow_graph(&module, &ctx.flow_effects);
         Ok(LoweringResult {
             module,

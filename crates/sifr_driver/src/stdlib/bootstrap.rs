@@ -635,6 +635,7 @@ fn canonicalize_stdlib_hir_function(
 
 fn function_type_from_params(params: &[HirParam], return_type: &Type) -> FunctionType {
     FunctionType {
+        receiver: None,
         params: named_params(params),
         return_type: Box::new(return_type.clone()),
     }
@@ -646,7 +647,9 @@ fn function_type_from_hir(function: &HirFunction) -> FunctionType {
     } else {
         function.return_type.clone()
     };
-    function_type_from_params(&function.params, &return_type)
+    let mut signature = function_type_from_params(&function.params, &return_type);
+    signature.receiver = function.receiver;
+    signature
 }
 
 fn method_type_from_hir(method: &HirFunction) -> FunctionType {
@@ -655,7 +658,9 @@ fn method_type_from_hir(method: &HirFunction) -> FunctionType {
     } else {
         method.return_type.clone()
     };
-    function_type_from_params(&method.params, &return_type)
+    let mut signature = function_type_from_params(&method.params, &return_type);
+    signature.receiver = method.receiver;
+    signature
 }
 
 fn coroutine_type_from_surface_return(surface_return_type: &Type) -> Type {

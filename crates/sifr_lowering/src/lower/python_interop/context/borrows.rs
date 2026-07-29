@@ -80,6 +80,7 @@ pub(in crate::lower) fn python_context_borrow_in_owned_expr(
             method,
             args,
             ty,
+            ..
         } => python_context_borrow_in_call_args(
             args,
             type_can_hold_python_opaque(ty, ctx) || method_stores_arguments(method),

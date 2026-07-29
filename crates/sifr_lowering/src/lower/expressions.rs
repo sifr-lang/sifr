@@ -71,6 +71,7 @@ use super::{
 mod core_and_calls;
 pub(in crate::lower) use core_and_calls::*;
 mod affine_resources;
+mod literals;
 pub(in crate::lower) use affine_resources::affine_value_references_name;
 use affine_resources::consume_affine_collection_method_arguments;
 mod generator_expression;
@@ -84,6 +85,8 @@ use call_shadowable_builtins::lower_shadowable_builtin_call;
 mod regular_calls;
 use regular_calls::lower_regular_call;
 mod method_call_arguments;
+mod method_calls;
+pub(in crate::lower) use method_calls::{lower_method_call, resolve_method_type};
 mod methods_lambdas_and_comprehensions;
 pub(in crate::lower) use methods_lambdas_and_comprehensions::*;
 mod method_argument_ownership;

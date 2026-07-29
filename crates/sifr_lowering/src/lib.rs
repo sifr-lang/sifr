@@ -10,6 +10,8 @@ pub mod cfg;
 pub mod flow_graph;
 mod hir_nodes;
 #[cfg(test)]
+mod hir_snapshot_expr_projection;
+#[cfg(test)]
 mod hir_snapshot_tests;
 mod lower;
 #[cfg(test)]

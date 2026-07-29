@@ -5,7 +5,7 @@ use crate::hir_analysis::{
 };
 use crate::RustExpr;
 use sifr_ir::{HirExpr, HirFunction, HirModule, HirStmt};
-use sifr_type_system::{OwnershipKind, ParamConvention, Type};
+use sifr_type_system::{OwnershipKind, ParamConvention, ReceiverConvention, Type};
 use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -217,7 +217,7 @@ pub(crate) fn is_option_type(ty: &Type) -> bool {
 
 /// Detect truthiness check on an Option variable: `if x:` where x has type T | None.
 pub(crate) fn detect_option_truthiness(expr: &HirExpr) -> Option<String> {
-    if let HirExpr::Name { name, ty } = expr {
+    if let HirExpr::Name { name, ty, .. } = expr {
         if is_option_type(ty) {
             return Some(name.clone());
         }
@@ -248,7 +248,7 @@ pub(crate) fn detect_is_not_none_var(expr: &HirExpr) -> Option<String> {
             && (ops[0] == "is not" || ops[0] == "!=")
             && matches!(comparators[0], HirExpr::NoneLiteral)
         {
-            if let HirExpr::Name { name, ty } = left.as_ref() {
+            if let HirExpr::Name { name, ty, .. } = left.as_ref() {
                 if is_option_type(ty) {
                     return Some(name.clone());
                 }
@@ -311,7 +311,7 @@ pub(crate) fn detect_or_is_none_vars(expr: &HirExpr) -> Option<Vec<String>> {
 pub(crate) fn detect_isinstance_union(expr: &HirExpr) -> Option<IsinstanceUnionMatch> {
     if let HirExpr::Call { func, args, .. } = expr {
         if func == "isinstance" && args.len() == 2 {
-            if let HirExpr::Name { name, ty } = &args[0] {
+            if let HirExpr::Name { name, ty, .. } = &args[0] {
                 let resolved_ty = crate::resolve_alias_type_for_plain_call(ty);
                 if let Type::Union(members) = resolved_ty {
                     if !is_option_type(resolved_ty) {
@@ -436,7 +436,7 @@ pub(crate) fn detect_is_none_var(expr: &HirExpr) -> Option<String> {
             && (ops[0] == "is" || ops[0] == "==")
             && matches!(comparators[0], HirExpr::NoneLiteral)
         {
-            if let HirExpr::Name { name, ty } = left.as_ref() {
+            if let HirExpr::Name { name, ty, .. } = left.as_ref() {
                 if is_option_type(ty) {
                     return Some(name.clone());
                 }
@@ -457,7 +457,7 @@ pub(crate) fn detect_is_none_union_var(expr: &HirExpr) -> Option<IsNoneUnionMatc
     } = expr
     {
         if ops.len() == 1 && ops[0] == "is" && matches!(comparators[0], HirExpr::NoneLiteral) {
-            if let HirExpr::Name { name, ty } = left.as_ref() {
+            if let HirExpr::Name { name, ty, .. } = left.as_ref() {
                 if let Type::Union(members) = ty {
                     let has_none = members.iter().any(|m| matches!(m, Type::None));
                     let non_none: Vec<&Type> = members
@@ -638,15 +638,14 @@ pub(crate) fn expr_contains_self_field_mutation(expr: &HirExpr) -> bool {
 
 pub(crate) fn is_self_field_mutating_method_call(expr: &HirExpr) -> bool {
     match expr {
-        HirExpr::MethodCall { object, method, .. } => {
+        HirExpr::MethodCall {
+            object,
+            receiver_convention,
+            ..
+        } => {
             let is_self_field = matches!(object.as_ref(), HirExpr::FieldAccess { .. })
                 && field_access_root_name(object) == Some("self");
-            is_self_field
-                && (MUTATING_METHODS.contains(&method.as_str())
-                    || matches!(
-                        crate::resolve_alias_type_for_plain_call(object.ty()),
-                        Type::Class { .. }
-                    ))
+            is_self_field && *receiver_convention == Some(ReceiverConvention::MutableBorrow)
         }
         _ => false,
     }
@@ -765,9 +764,6 @@ pub(crate) fn body_contains_yield_inner(stmts: &[HirStmt]) -> bool {
 pub(crate) fn needs_clone_for_type(ty: &Type) -> bool {
     ty.ownership() == sifr_type_system::OwnershipKind::Move
 }
-
-/// Mutating methods that require the receiver variable to be `mut`.
-pub(crate) const MUTATING_METHODS: &[&str] = queries::MUTATING_METHODS;
 
 /// Collect the set of variable names that are mutated in a function body.
 /// A variable is mutated if it appears in:

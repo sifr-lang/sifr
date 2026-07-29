@@ -60,6 +60,7 @@ fn lowers_simple_augassign_plus_equal_numeric_name() {
         op: "+=".to_string(),
         value: HirExpr::Name {
             name: "delta".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
     };
@@ -84,6 +85,7 @@ fn lowers_simple_augassign_plus_equal_alias_numeric_name() {
         op: "+=".to_string(),
         value: HirExpr::Name {
             name: "delta".to_string(),
+            binding_id: None,
             ty: Type::alias("Meters", Type::Int),
         },
     };
@@ -108,6 +110,7 @@ fn does_not_lower_augassign_plus_equal_string_name() {
         op: "+=".to_string(),
         value: HirExpr::Name {
             name: "suffix".to_string(),
+            binding_id: None,
             ty: Type::Str,
         },
     };
@@ -143,6 +146,7 @@ fn lowers_simple_augassign_floor_div_equal_alias_numeric_name() {
         op: "//=".to_string(),
         value: HirExpr::Name {
             name: "step".to_string(),
+            binding_id: None,
             ty: Type::alias("Step", Type::Int),
         },
     };
@@ -185,6 +189,7 @@ fn lowers_simple_augassign_bitwise_and_shift_ops() {
             op: op.to_string(),
             value: HirExpr::Name {
                 name: "delta".to_string(),
+                binding_id: None,
                 ty: Type::alias("Bits", Type::Int),
             },
         };
@@ -210,6 +215,7 @@ fn does_not_lower_augassign_bitwise_for_float() {
         op: "&=".to_string(),
         value: HirExpr::Name {
             name: "mask".to_string(),
+            binding_id: None,
             ty: Type::Float,
         },
     };

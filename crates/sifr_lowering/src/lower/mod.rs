@@ -79,7 +79,12 @@ mod len_aliases;
 mod match_diagnostics;
 mod match_lowering;
 mod method_call_args;
+mod method_call_metadata;
+mod method_call_verifier;
 mod method_diagnostics;
+mod method_receiver_analysis;
+#[cfg(test)]
+mod method_receiver_analysis_tests;
 mod min_max_validation;
 mod mod_impl;
 mod module_body_lowering;

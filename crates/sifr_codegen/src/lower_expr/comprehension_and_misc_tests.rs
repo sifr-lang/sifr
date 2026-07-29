@@ -29,6 +29,7 @@ pub(super) fn lowers_contains_for_string_collection_with_borrowed_arg() {
         element: Box::new(HirExpr::StringLiteral("T".to_string())),
         collection: Box::new(HirExpr::Name {
             name: "current_iso".to_string(),
+            binding_id: None,
             ty: Type::Str,
         }),
         ty: Type::Bool,
@@ -52,6 +53,7 @@ pub(super) fn lowers_question_mark_ok_err_wrap_variants() {
     let q = HirExpr::QuestionMark {
         expr: Box::new(HirExpr::Name {
             name: "res".to_string(),
+            binding_id: None,
             ty: Type::Result(Box::new(Type::Int), Box::new(Type::Any)),
         }),
         ty: Type::Int,
@@ -162,6 +164,7 @@ pub(super) fn does_not_lower_non_path_call_with_leaf_args() {
             HirExpr::IntLiteral(1),
             HirExpr::Name {
                 name: "n".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             },
         ],
@@ -198,6 +201,7 @@ pub(super) fn lowers_hash_builtin_call_with_leaf_arg() {
         func: "hash".to_string(),
         args: vec![HirExpr::Name {
             name: "item".to_string(),
+            binding_id: None,
             ty: Type::Class {
                 identity: None,
                 type_args: Vec::new(),
@@ -238,6 +242,7 @@ pub(super) fn lowers_map_builtin_call_with_typed_lambda() {
                 body: Box::new(HirExpr::BinOp {
                     left: Box::new(HirExpr::Name {
                         name: "x".to_string(),
+                        binding_id: None,
                         ty: Type::Int,
                     }),
                     op: "*".to_string(),
@@ -252,6 +257,7 @@ pub(super) fn lowers_map_builtin_call_with_typed_lambda() {
             },
             HirExpr::Name {
                 name: "nums".to_string(),
+                binding_id: None,
                 ty: Type::List(Box::new(Type::Int)),
             },
         ],
@@ -276,7 +282,9 @@ pub(super) fn lowers_map_named_callable_with_optional_widening_closure() {
         args: vec![
             HirExpr::Name {
                 name: "format_node".to_string(),
+                binding_id: None,
                 ty: Type::Function(sifr_type_system::FunctionType {
+                    receiver: None,
                     params: vec![(
                         "node".to_string(),
                         optional_node_ty,
@@ -287,6 +295,7 @@ pub(super) fn lowers_map_named_callable_with_optional_widening_closure() {
             },
             HirExpr::Name {
                 name: "nodes".to_string(),
+                binding_id: None,
                 ty: Type::List(Box::new(node_ty)),
             },
         ],
@@ -331,12 +340,14 @@ pub(super) fn does_not_lower_call_with_non_leaf_arg() {
         args: vec![HirExpr::ListComp {
             expr: Box::new(HirExpr::Name {
                 name: "x".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             }),
             generators: vec![(
                 "x".to_string(),
                 HirExpr::Name {
                     name: "items".to_string(),
+                    binding_id: None,
                     ty: Type::List(Box::new(Type::Int)),
                 },
                 None,
@@ -353,10 +364,13 @@ pub(super) fn does_not_lower_method_call_on_any_with_leaf_args() {
     let expr = HirExpr::MethodCall {
         object: Box::new(HirExpr::Name {
             name: "obj".to_string(),
+            binding_id: None,
             ty: Type::Any,
         }),
         method: "work".to_string(),
         args: vec![HirExpr::IntLiteral(2)],
+        receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+        source: None,
         ty: Type::Any,
     };
     assert!(try_lower_leaf_expr(&expr).is_none());
@@ -367,10 +381,13 @@ pub(super) fn does_not_lower_method_call_on_typed_object() {
     let expr = HirExpr::MethodCall {
         object: Box::new(HirExpr::Name {
             name: "items".to_string(),
+            binding_id: None,
             ty: Type::List(Box::new(Type::Int)),
         }),
         method: "append".to_string(),
         args: vec![HirExpr::IntLiteral(1)],
+        receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+        source: None,
         ty: Type::None,
     };
     assert!(try_lower_leaf_expr(&expr).is_none());
@@ -381,10 +398,13 @@ pub(super) fn does_not_lower_len_method_call_on_any_object() {
     let expr = HirExpr::MethodCall {
         object: Box::new(HirExpr::Name {
             name: "obj".to_string(),
+            binding_id: None,
             ty: Type::Any,
         }),
         method: "len".to_string(),
         args: vec![],
+        receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+        source: None,
         ty: Type::Int,
     };
     assert!(try_lower_leaf_expr(&expr).is_none());
@@ -416,6 +436,7 @@ pub(super) fn lowers_simple_index_on_any_with_leaf_index() {
     let expr = HirExpr::Index {
         object: Box::new(HirExpr::Name {
             name: "data".to_string(),
+            binding_id: None,
             ty: Type::Any,
         }),
         index: Box::new(HirExpr::IntLiteral(0)),
@@ -436,6 +457,7 @@ pub(super) fn does_not_lower_index_on_typed_object() {
     let expr = HirExpr::Index {
         object: Box::new(HirExpr::Name {
             name: "items".to_string(),
+            binding_id: None,
             ty: Type::List(Box::new(Type::Int)),
         }),
         index: Box::new(HirExpr::IntLiteral(0)),
@@ -449,6 +471,7 @@ pub(super) fn lowers_dict_index_to_optional_projection_for_optional_hir_type() {
     let expr = HirExpr::Index {
         object: Box::new(HirExpr::Name {
             name: "table".to_string(),
+            binding_id: None,
             ty: Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
         }),
         index: Box::new(HirExpr::IntLiteral(1)),
@@ -467,6 +490,7 @@ pub(super) fn lowers_dict_index_to_proven_some_block_for_non_optional_hir_type()
     let expr = HirExpr::Index {
         object: Box::new(HirExpr::Name {
             name: "table".to_string(),
+            binding_id: None,
             ty: Type::Dict(Box::new(Type::Int), Box::new(Type::Int)),
         }),
         index: Box::new(HirExpr::IntLiteral(1)),
@@ -506,6 +530,7 @@ pub(super) fn lowers_simple_slice_on_any_without_step() {
     let expr = HirExpr::Slice {
         object: Box::new(HirExpr::Name {
             name: "values".to_string(),
+            binding_id: None,
             ty: Type::Any,
         }),
         start: Some(Box::new(HirExpr::IntLiteral(1))),
@@ -529,6 +554,7 @@ pub(super) fn does_not_lower_slice_with_step_on_any() {
     let expr = HirExpr::Slice {
         object: Box::new(HirExpr::Name {
             name: "values".to_string(),
+            binding_id: None,
             ty: Type::Any,
         }),
         start: None,
@@ -544,6 +570,7 @@ pub(super) fn does_not_lower_slice_on_typed_object() {
     let expr = HirExpr::Slice {
         object: Box::new(HirExpr::Name {
             name: "items".to_string(),
+            binding_id: None,
             ty: Type::List(Box::new(Type::Int)),
         }),
         start: Some(Box::new(HirExpr::IntLiteral(1))),
@@ -578,12 +605,14 @@ pub(super) fn lowers_dict_literal_with_nested_lowerable_entry() {
         values: vec![HirExpr::ListComp {
             expr: Box::new(HirExpr::Name {
                 name: "x".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             }),
             generators: vec![(
                 "x".to_string(),
                 HirExpr::Name {
                     name: "items".to_string(),
+                    binding_id: None,
                     ty: Type::List(Box::new(Type::Int)),
                 },
                 None,
@@ -632,12 +661,14 @@ pub(super) fn lowers_set_literal_with_nested_lowerable_entry() {
         elements: vec![HirExpr::ListComp {
             expr: Box::new(HirExpr::Name {
                 name: "x".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             }),
             generators: vec![(
                 "x".to_string(),
                 HirExpr::Name {
                     name: "items".to_string(),
+                    binding_id: None,
                     ty: Type::List(Box::new(Type::Int)),
                 },
                 None,
@@ -668,12 +699,14 @@ pub(super) fn lowers_simple_list_comp_with_single_generator() {
     let expr = HirExpr::ListComp {
         expr: Box::new(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         generators: vec![(
             "x".to_string(),
             HirExpr::Name {
                 name: "items".to_string(),
+                binding_id: None,
                 ty: Type::List(Box::new(Type::Int)),
             },
             None,
@@ -696,6 +729,7 @@ pub(super) fn lowers_list_comp_with_multiple_generators() {
     let expr = HirExpr::ListComp {
         expr: Box::new(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         generators: vec![
@@ -703,6 +737,7 @@ pub(super) fn lowers_list_comp_with_multiple_generators() {
                 "x".to_string(),
                 HirExpr::Name {
                     name: "items".to_string(),
+                    binding_id: None,
                     ty: Type::List(Box::new(Type::Int)),
                 },
                 None,
@@ -711,6 +746,7 @@ pub(super) fn lowers_list_comp_with_multiple_generators() {
                 "y".to_string(),
                 HirExpr::Name {
                     name: "other".to_string(),
+                    binding_id: None,
                     ty: Type::List(Box::new(Type::Int)),
                 },
                 None,
@@ -726,12 +762,14 @@ pub(super) fn lowers_list_comp_on_typed_list() {
     let expr = HirExpr::ListComp {
         expr: Box::new(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         generators: vec![(
             "x".to_string(),
             HirExpr::Name {
                 name: "items".to_string(),
+                binding_id: None,
                 ty: Type::List(Box::new(Type::Int)),
             },
             None,
@@ -746,16 +784,19 @@ pub(super) fn lowers_simple_dict_comp_with_single_generator() {
     let expr = HirExpr::DictComp {
         key_expr: Box::new(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         val_expr: Box::new(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         generators: vec![(
             "x".to_string(),
             HirExpr::Name {
                 name: "items".to_string(),
+                binding_id: None,
                 ty: Type::List(Box::new(Type::Int)),
             },
             None,
@@ -778,10 +819,12 @@ pub(super) fn does_not_lower_dict_comp_with_multiple_generators() {
     let expr = HirExpr::DictComp {
         key_expr: Box::new(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         val_expr: Box::new(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         generators: vec![
@@ -789,6 +832,7 @@ pub(super) fn does_not_lower_dict_comp_with_multiple_generators() {
                 "x".to_string(),
                 HirExpr::Name {
                     name: "items".to_string(),
+                    binding_id: None,
                     ty: Type::List(Box::new(Type::Int)),
                 },
                 None,
@@ -797,6 +841,7 @@ pub(super) fn does_not_lower_dict_comp_with_multiple_generators() {
                 "y".to_string(),
                 HirExpr::Name {
                     name: "other".to_string(),
+                    binding_id: None,
                     ty: Type::List(Box::new(Type::Int)),
                 },
                 None,
@@ -812,16 +857,19 @@ pub(super) fn lowers_dict_comp_on_typed_dict() {
     let expr = HirExpr::DictComp {
         key_expr: Box::new(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         val_expr: Box::new(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         generators: vec![(
             "x".to_string(),
             HirExpr::Name {
                 name: "items".to_string(),
+                binding_id: None,
                 ty: Type::List(Box::new(Type::Int)),
             },
             None,

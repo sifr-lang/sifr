@@ -6,7 +6,7 @@ use super::{
 use crate::helpers::needs_clone_for_type;
 use crate::RustEmitter;
 use sifr_ir::HirExpr;
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
 
 impl RustEmitter {
     pub(crate) fn method_mut_arg_needs_field_clone_suppression(
@@ -26,7 +26,7 @@ impl RustEmitter {
     pub(crate) fn method_call_needs_field_clone_suppression(
         &self,
         object: &HirExpr,
-        method: &str,
+        receiver_convention: Option<ReceiverConvention>,
     ) -> bool {
         let HirExpr::FieldAccess {
             object: parent,
@@ -37,6 +37,14 @@ impl RustEmitter {
             return false;
         };
 
+        let receiver_root_name = field_receiver_root_name(object);
+        if !matches!(
+            receiver_convention,
+            Some(ReceiverConvention::SharedBorrow | ReceiverConvention::MutableBorrow)
+        ) {
+            return false;
+        }
+
         if matches!(
             crate::resolve_alias_type_for_plain_call(object.ty()),
             Type::Class { .. }
@@ -44,17 +52,10 @@ impl RustEmitter {
             return true;
         }
 
-        let receiver_root_name = field_receiver_root_name(object);
-        if receiver_root_name == Some("self") {
-            return true;
-        }
-
-        if !crate::helpers::MUTATING_METHODS.contains(&method) {
-            return false;
-        }
-
         if receiver_root_name.is_some_and(|name| {
-            self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name)
+            name == "self"
+                || self.borrowed_params.contains(name)
+                || self.mut_borrowed_params.contains(name)
         }) {
             return true;
         }
@@ -85,7 +86,7 @@ impl RustEmitter {
             };
         }
 
-        let effective_object_ty = if let HirExpr::Name { name, ty } = object {
+        let effective_object_ty = if let HirExpr::Name { name, ty, .. } = object {
             if matches!(
                 crate::resolve_alias_type_for_plain_call(ty),
                 Type::Any | Type::Unknown

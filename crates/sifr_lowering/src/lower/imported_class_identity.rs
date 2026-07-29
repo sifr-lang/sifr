@@ -10,6 +10,7 @@ pub(super) fn imported_constructor_function_type(class_ty: &Type) -> Option<Func
     };
     if let Some((_, constructor)) = methods.iter().find(|(name, _)| name == "new") {
         return Some(FunctionType {
+            receiver: None,
             params: constructor.params.clone(),
             return_type: Box::new(class_ty.clone()),
         });
@@ -29,6 +30,7 @@ pub(super) fn imported_constructor_function_type(class_ty: &Type) -> Option<Func
         })
         .collect();
     Some(FunctionType {
+        receiver: None,
         params,
         return_type: Box::new(class_ty.clone()),
     })
@@ -137,6 +139,7 @@ fn rename_function_type(
     class_aliases: &HashMap<String, String>,
 ) -> FunctionType {
     FunctionType {
+        receiver: function.receiver,
         params: function
             .params
             .iter()
@@ -327,6 +330,7 @@ pub(super) fn canonicalize_export_function_type(
     local_classes: &HashMap<String, String>,
 ) -> FunctionType {
     FunctionType {
+        receiver: function.receiver,
         params: function
             .params
             .iter()

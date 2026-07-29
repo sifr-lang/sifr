@@ -191,6 +191,13 @@ pub(super) fn lower_regular_call(
             object: Box::new(object),
             method: "__call__".to_string(),
             args,
+            receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+            source: Some(
+                super::super::method_call_metadata::source_call_with_receiver(
+                    call,
+                    call.func.range(),
+                ),
+            ),
             ty: *call_ft.return_type.clone(),
         });
     }
@@ -414,7 +421,7 @@ pub(super) fn lower_regular_call(
         let mut mut_borrowed: Vec<String> = Vec::new();
         let mut immut_borrowed: Vec<String> = Vec::new();
         for (i, arg) in args.iter().enumerate() {
-            if let HirExpr::Name { name, ty } = arg {
+            if let HirExpr::Name { name, ty, .. } = arg {
                 if ty.ownership() == sifr_type_system::OwnershipKind::Move {
                     let primary_range = arg_ranges
                         .get(i)

@@ -9,7 +9,7 @@ pub(super) fn lower_module_bodies(
     function_names: &mut ModuleFunctionRegistry,
     ctx: &mut LowerCtx,
 ) -> (Vec<HirFunction>, Vec<HirClass>) {
-    let classes = stmts
+    let mut classes: Vec<HirClass> = stmts
         .iter()
         .filter_map(|stmt| match stmt {
             Stmt::ClassDef(class) => lower_class(class, ctx),
@@ -17,8 +17,9 @@ pub(super) fn lower_module_bodies(
         })
         .collect();
     generic_method_requirements::close_generic_method_requirements(ctx);
+    super::method_receiver_analysis::infer_and_annotate_class_receivers(&mut classes, ctx);
 
-    let functions = stmts
+    let mut functions: Vec<HirFunction> = stmts
         .iter()
         .filter_map(|stmt| {
             let Stmt::FunctionDef(function) = stmt else {
@@ -35,5 +36,8 @@ pub(super) fn lower_module_bodies(
             Some(lowered)
         })
         .collect();
+    for function in &mut functions {
+        super::method_receiver_analysis::annotate_and_verify_function_calls(function, ctx);
+    }
     (functions, classes)
 }

@@ -39,7 +39,7 @@ fn test_nested_function_is_predeclared_as_typed_callable_for_forward_local_use()
     let HirExpr::Call { args, .. } = value else {
         panic!("expected first outer statement to lower as a call");
     };
-    let HirExpr::Name { name, ty } = &args[0] else {
+    let HirExpr::Name { name, ty, .. } = &args[0] else {
         panic!("expected helper to lower as a local callable binding");
     };
 

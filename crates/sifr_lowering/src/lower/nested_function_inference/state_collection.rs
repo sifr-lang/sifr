@@ -47,6 +47,7 @@ pub(super) struct LocalFunctionState<'a> {
 impl LocalFunctionState<'_> {
     pub(super) fn function_type(&self) -> FunctionType {
         FunctionType {
+            receiver: None,
             params: self
                 .params
                 .iter()

@@ -1,6 +1,6 @@
 use crate::{HirAsyncWithKind, HirExpr, HirStmt, HirTupleTargetBinding};
 use sifr_ir::{FlowEffect, FlowExitKind};
-use sifr_type_system::{OwnershipKind, Type};
+use sifr_type_system::{OwnershipKind, ReceiverConvention, Type};
 
 pub(super) fn stmt_label(stmt: &HirStmt) -> &'static str {
     match stmt {
@@ -267,7 +267,7 @@ pub(super) fn stmt_effects(stmt: &HirStmt) -> Vec<FlowEffect> {
 
 fn expr_effects(expr: &HirExpr, effects: &mut Vec<FlowEffect>) {
     match expr {
-        HirExpr::Name { name, ty } if ty.ownership() == OwnershipKind::Move => {
+        HirExpr::Name { name, ty, .. } if ty.ownership() == OwnershipKind::Move => {
             effects.push(FlowEffect::Borrow {
                 binding: name.clone(),
                 mutable: false,
@@ -295,16 +295,19 @@ fn expr_effects(expr: &HirExpr, effects: &mut Vec<FlowEffect>) {
             object,
             method,
             args,
+            receiver_convention,
             ..
         } => {
             let target = expr_target_name(object).unwrap_or_else(|| "<expr>".to_string());
             effects.push(FlowEffect::Call {
                 callee: format!("{target}.{method}"),
             });
-            effects.push(FlowEffect::Mutation {
-                target,
-                operation: format!("method {method}"),
-            });
+            if *receiver_convention == Some(ReceiverConvention::MutableBorrow) {
+                effects.push(FlowEffect::Mutation {
+                    target,
+                    operation: format!("method {method}"),
+                });
+            }
             expr_effects(object, effects);
             for arg in args {
                 expr_effects(arg, effects);
@@ -501,7 +504,7 @@ fn condition_narrowing_effects(condition: &HirExpr, is_true: bool) -> Vec<FlowEf
                 .flat_map(|value| condition_narrowing_effects(value, is_true))
                 .collect()
         }
-        HirExpr::Name { name, ty } => vec![FlowEffect::Narrow {
+        HirExpr::Name { name, ty, .. } => vec![FlowEffect::Narrow {
             binding: name.clone(),
             narrowed_type: if is_true {
                 remove_none_from_type(ty)

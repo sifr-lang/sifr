@@ -8,6 +8,7 @@ pub(super) fn lowers_leaf_expr_variants() {
     let bool_expr = try_lower_leaf_expr(&HirExpr::BoolLiteral(true)).expect("bool lowered");
     let bool_name_expr = try_lower_leaf_expr(&HirExpr::Name {
         name: "ok".to_string(),
+        binding_id: None,
         ty: Type::Bool,
     })
     .expect("bool name lowered");
@@ -84,21 +85,25 @@ pub(super) fn leaf_expr_result_reports_invalid_compare_shape() {
 pub(super) fn lowers_numeric_name_leaf_expr_variants() {
     let int_name_expr = try_lower_leaf_expr(&HirExpr::Name {
         name: "count".to_string(),
+        binding_id: None,
         ty: Type::Int,
     })
     .expect("int name lowered");
     let float_name_expr = try_lower_leaf_expr(&HirExpr::Name {
         name: "ratio".to_string(),
+        binding_id: None,
         ty: Type::Float,
     })
     .expect("float name lowered");
     let alias_int_name_expr = try_lower_leaf_expr(&HirExpr::Name {
         name: "index".to_string(),
+        binding_id: None,
         ty: Type::alias("Index", Type::Int),
     })
     .expect("alias-int name lowered");
     let alias_float_name_expr = try_lower_leaf_expr(&HirExpr::Name {
         name: "weight".to_string(),
+        binding_id: None,
         ty: Type::alias("Weight", Type::Float),
     })
     .expect("alias-float name lowered");
@@ -113,6 +118,7 @@ pub(super) fn lowers_numeric_name_leaf_expr_variants() {
 pub(super) fn lowers_bool_and_enum_name_leaf_expr_variants() {
     let alias_bool_name_expr = try_lower_leaf_expr(&HirExpr::Name {
         name: "ready".to_string(),
+        binding_id: None,
         ty: Type::alias("ReadyFlag", Type::Bool),
     })
     .expect("alias-bool name lowered");
@@ -122,11 +128,13 @@ pub(super) fn lowers_bool_and_enum_name_leaf_expr_variants() {
     };
     let enum_name_expr = try_lower_leaf_expr(&HirExpr::Name {
         name: "mode".to_string(),
+        binding_id: None,
         ty: enum_ty.clone(),
     })
     .expect("enum name lowered");
     let alias_enum_name_expr = try_lower_leaf_expr(&HirExpr::Name {
         name: "mode_alias".to_string(),
+        binding_id: None,
         ty: Type::alias("ModeAlias", enum_ty),
     })
     .expect("alias-enum name lowered");
@@ -140,11 +148,13 @@ pub(super) fn lowers_bool_and_enum_name_leaf_expr_variants() {
 pub(super) fn lowers_string_name_leaf_expr_variants() {
     let string_name_expr = try_lower_leaf_expr(&HirExpr::Name {
         name: "label".to_string(),
+        binding_id: None,
         ty: Type::Str,
     })
     .expect("string name lowered");
     let alias_string_name_expr = try_lower_leaf_expr(&HirExpr::Name {
         name: "title".to_string(),
+        binding_id: None,
         ty: Type::alias("Title", Type::Str),
     })
     .expect("alias-string name lowered");
@@ -210,11 +220,13 @@ pub(super) fn lowers_simple_numeric_binop_with_name_operands() {
     let bin = HirExpr::BinOp {
         left: Box::new(HirExpr::Name {
             name: "lhs".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         op: "+".to_string(),
         right: Box::new(HirExpr::Name {
             name: "rhs".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         ty: Type::Int,
@@ -235,11 +247,13 @@ pub(super) fn lowers_simple_mixed_int_float_division_with_name_operands() {
     let bin = HirExpr::BinOp {
         left: Box::new(HirExpr::Name {
             name: "lhs".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         op: "/".to_string(),
         right: Box::new(HirExpr::Name {
             name: "rhs".to_string(),
+            binding_id: None,
             ty: Type::Float,
         }),
         ty: Type::Float,
@@ -267,11 +281,13 @@ pub(super) fn lowers_alias_wrapped_numeric_binop_with_name_operands() {
     let bin = HirExpr::BinOp {
         left: Box::new(HirExpr::Name {
             name: "lhs".to_string(),
+            binding_id: None,
             ty: alias_int.clone(),
         }),
         op: "+".to_string(),
         right: Box::new(HirExpr::Name {
             name: "rhs".to_string(),
+            binding_id: None,
             ty: alias_int.clone(),
         }),
         ty: alias_int,
@@ -293,11 +309,13 @@ pub(super) fn lowers_simple_alias_base_int_binop_with_name_operands() {
     let bin = HirExpr::BinOp {
         left: Box::new(HirExpr::Name {
             name: "lhs".to_string(),
+            binding_id: None,
             ty: alias_int,
         }),
         op: "+".to_string(),
         right: Box::new(HirExpr::Name {
             name: "rhs".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         ty: Type::Int,
@@ -320,11 +338,13 @@ pub(super) fn lowers_alias_wrapped_mixed_int_float_division_with_name_operands()
     let bin = HirExpr::BinOp {
         left: Box::new(HirExpr::Name {
             name: "lhs".to_string(),
+            binding_id: None,
             ty: alias_int,
         }),
         op: "/".to_string(),
         right: Box::new(HirExpr::Name {
             name: "rhs".to_string(),
+            binding_id: None,
             ty: alias_float.clone(),
         }),
         ty: alias_float,
@@ -352,11 +372,13 @@ pub(super) fn lowers_simple_alias_base_float_division_with_name_operands() {
     let bin = HirExpr::BinOp {
         left: Box::new(HirExpr::Name {
             name: "lhs".to_string(),
+            binding_id: None,
             ty: alias_float,
         }),
         op: "/".to_string(),
         right: Box::new(HirExpr::Name {
             name: "rhs".to_string(),
+            binding_id: None,
             ty: Type::Float,
         }),
         ty: Type::Float,
@@ -580,6 +602,7 @@ pub(super) fn guarded_non_option_compare_does_not_wrap_rhs_in_some() {
             HirExpr::Compare {
                 left: Box::new(HirExpr::Name {
                     name: "first".to_string(),
+                    binding_id: None,
                     ty: Type::Str,
                 }),
                 ops: vec!["is not".to_string()],
@@ -589,6 +612,7 @@ pub(super) fn guarded_non_option_compare_does_not_wrap_rhs_in_some() {
             HirExpr::Compare {
                 left: Box::new(HirExpr::Name {
                     name: "first".to_string(),
+                    binding_id: None,
                     ty: Type::Str,
                 }),
                 ops: vec!["==".to_string()],
@@ -619,6 +643,7 @@ pub(super) fn lowers_unary_not_with_bool_name_operand() {
         op: "not".to_string(),
         operand: Box::new(HirExpr::Name {
             name: "ok".to_string(),
+            binding_id: None,
             ty: Type::Bool,
         }),
         ty: Type::Bool,
@@ -640,6 +665,7 @@ pub(super) fn lowers_unary_not_with_option_name_operand() {
         op: "not".to_string(),
         operand: Box::new(HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::Union(vec![Type::Int, Type::None]),
         }),
         ty: Type::Bool,
@@ -664,6 +690,7 @@ pub(super) fn lowers_unary_not_with_alias_option_name_operand() {
         op: "not".to_string(),
         operand: Box::new(HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None])),
         }),
         ty: Type::Bool,
@@ -689,6 +716,7 @@ pub(super) fn lowers_unary_not_with_alias_bool_name_operand() {
         op: "not".to_string(),
         operand: Box::new(HirExpr::Name {
             name: "ok".to_string(),
+            binding_id: None,
             ty: alias_bool,
         }),
         ty: Type::Bool,
@@ -729,6 +757,7 @@ pub(super) fn lowers_unary_bitwise_invert_with_alias_int_name_operand() {
         op: "~".to_string(),
         operand: Box::new(HirExpr::Name {
             name: "mask".to_string(),
+            binding_id: None,
             ty: alias_int,
         }),
         ty: Type::Int,
@@ -760,6 +789,7 @@ pub(super) fn lowers_option_is_none_compare_with_name_operand() {
     let cmp = HirExpr::Compare {
         left: Box::new(HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::Union(vec![Type::Int, Type::None]),
         }),
         ops: vec!["is".to_string()],

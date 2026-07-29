@@ -149,7 +149,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::StringLiteral(s) => Some(RustExpr::Literal(RustLiteral::Str(s.clone()))),
         HirExpr::BoolLiteral(v) => Some(RustExpr::Literal(RustLiteral::Bool(*v))),
         HirExpr::NoneLiteral => Some(RustExpr::Literal(RustLiteral::None)),
-        HirExpr::Name { name, ty }
+        HirExpr::Name { name, ty, .. }
             if is_bool_like_simple(ty)
                 || is_numeric_simple(ty)
                 || is_string_like_simple(ty)

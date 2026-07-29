@@ -6,7 +6,7 @@ use crate::{
 
 impl RustEmitter {
     pub(crate) fn lower_borrowed_string_name_for_compare(expr: &HirExpr) -> Option<RustExpr> {
-        let HirExpr::Name { name, ty } = expr else {
+        let HirExpr::Name { name, ty, .. } = expr else {
             return None;
         };
         if !matches!(

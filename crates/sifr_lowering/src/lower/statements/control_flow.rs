@@ -2,22 +2,21 @@ use super::{
     apply_narrowing, body_always_leaves_current_path, callable_builtin_element_type,
     detect_false_exit_sequence_guards, detect_false_nonzero_integer_guards,
     detect_narrowing_condition, detect_range_sequence_guards, detect_true_nonzero_integer_guards,
-    detect_true_sequence_guards, detect_while_sequence_guards, ensure_mutable_parameter_binding,
-    failed_initializer_taint, finish_async_generator_advance_for_expr,
-    invalidate_rebound_binding_facts, is_collection_backed_iter_source,
-    loop_body_mutates_iter_source, lower_expr, lower_star_unpack_assign, lower_stmts,
-    lower_tuple_unpack_assign, maybe_record_dict_assignment_guard,
-    merge_exhaustive_branch_sequence_guards, name_diagnostics, numeric_domain_for_type,
-    numeric_sentinel_kind, ownership_diagnostics, predeclare_exhaustive_if_assigned_names,
-    reconcile_optional_reassignment, record_async_generator_advance_binding,
-    record_const_integer_binding, record_len_alias_fact, record_sequence_pointer_fact,
-    resolve_field_type_from_type, resolve_object_field_type,
+    detect_true_sequence_guards, ensure_mutable_parameter_binding, failed_initializer_taint,
+    finish_async_generator_advance_for_expr, invalidate_rebound_binding_facts,
+    is_collection_backed_iter_source, loop_body_mutates_iter_source, lower_expr,
+    lower_star_unpack_assign, lower_stmts, lower_tuple_unpack_assign,
+    maybe_record_dict_assignment_guard, merge_exhaustive_branch_sequence_guards, name_diagnostics,
+    numeric_domain_for_type, numeric_sentinel_kind, ownership_diagnostics,
+    predeclare_exhaustive_if_assigned_names, reconcile_optional_reassignment,
+    record_async_generator_advance_binding, record_const_integer_binding, record_len_alias_fact,
+    record_sequence_pointer_fact, resolve_field_type_from_type, resolve_object_field_type,
     restore_const_integer_state_after_branches, seed_binding_after_failed_initializer,
     seed_exhaustive_if_bindings, sequence_shape_fact, should_adopt_inferred_binding_hint,
     should_rebind_simple_name, statement_diagnostics, str, task_group_spawn_owner,
     then_body_always_exits, validate_control_flow_condition, validate_subscript_assignment_target,
     DiagnosticCode, Expr, FunctionType, HirExpr, HirIteratorOp, HirStmt, LowerCtx,
-    NarrowingCondition, Ranged, StmtAssign, StmtFor, StmtIf, StmtWhile, TextRange, Type,
+    NarrowingCondition, Ranged, StmtAssign, StmtFor, StmtIf, TextRange, Type,
 };
 use crate::lower::expressions::{consume_affine_value_name, consume_owned_value};
 use crate::lower::must_use_obligations;
@@ -638,70 +637,6 @@ pub(in crate::lower) fn lower_if(
     })
 }
 
-pub(in crate::lower) fn lower_while(
-    while_stmt: &StmtWhile,
-    func_type: &FunctionType,
-    ctx: &mut LowerCtx,
-) -> Option<HirStmt> {
-    let narrowing_cond = detect_narrowing_condition(&while_stmt.test, ctx);
-    let condition = lower_expr(&while_stmt.test, ctx)?;
-    validate_control_flow_condition(&condition, "while", while_stmt.test.range(), ctx);
-    let saved_narrowing_state = ctx.scope.save_narrowing_state();
-    let saved_const_integer_state = ctx.scope.save_const_integer_state();
-    let saved_sequence_guards = ctx.save_sequence_guards();
-    let saved_nonzero_integer_bindings = ctx.save_proven_nonzero_integer_bindings();
-    if let Some(ref cond) = narrowing_cond {
-        apply_narrowing(ctx, cond, true);
-    }
-    for guard in detect_while_sequence_guards(while_stmt, ctx) {
-        ctx.add_sequence_guard(guard);
-    }
-    for name in detect_true_nonzero_integer_guards(&while_stmt.test, ctx) {
-        ctx.add_proven_nonzero_integer_binding(name);
-    }
-
-    // Snapshot moved state before loop to detect moves inside the body
-    let moved_before_loop = ctx.scope.save_moved_state();
-
-    ctx.scope.push();
-    ctx.loop_depth += 1;
-    let body = lower_stmts(&while_stmt.body, func_type, ctx);
-    ctx.loop_depth -= 1;
-    ctx.scope.pop();
-    let body_const_integer_state = ctx.scope.save_const_integer_state();
-    ctx.scope.restore_narrowing_state(&saved_narrowing_state);
-    restore_const_integer_state_after_branches(
-        ctx,
-        &saved_const_integer_state,
-        &[(body_const_integer_state, false)],
-    );
-    ctx.restore_sequence_guards(&saved_sequence_guards);
-    ctx.restore_proven_nonzero_integer_bindings(&saved_nonzero_integer_bindings);
-
-    // Check for outer-scope variables moved inside the loop body
-    let newly_moved = ctx.scope.moved_since(&moved_before_loop);
-    for var_name in &newly_moved {
-        ownership_diagnostics::moved_across_loop(ctx, var_name, while_stmt.range());
-    }
-
-    let else_body = if while_stmt.orelse.is_empty() {
-        None
-    } else {
-        ctx.scope.push();
-        let else_stmts = lower_stmts(&while_stmt.orelse, func_type, ctx);
-        ctx.scope.pop();
-        Some(else_stmts)
-    };
-
-    ctx.clear_sequence_pointers();
-
-    Some(HirStmt::While {
-        condition,
-        body,
-        else_body,
-    })
-}
-
 pub(in crate::lower) fn lower_for(
     for_stmt: &StmtFor,
     func_type: &FunctionType,
@@ -825,7 +760,11 @@ pub(in crate::lower) fn lower_for(
             }
             for (i, name) in names.iter().enumerate() {
                 let ty = elem_types[i].clone();
-                ctx.scope.define((*name).to_string(), ty);
+                ctx.scope.define_ephemeral(
+                    (*name).to_string(),
+                    ty,
+                    crate::scope::EphemeralOrigin::Iteration,
+                );
             }
         } else {
             ctx.error_with_code_at(
@@ -840,7 +779,11 @@ pub(in crate::lower) fn lower_for(
             return None;
         }
     } else {
-        ctx.scope.define(target_name.clone(), elem_ty.clone());
+        ctx.scope.define_ephemeral(
+            target_name.clone(),
+            elem_ty.clone(),
+            crate::scope::EphemeralOrigin::Iteration,
+        );
     }
     for guard in detect_range_sequence_guards(for_stmt, &target_name, ctx) {
         ctx.add_sequence_guard(guard);

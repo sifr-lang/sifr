@@ -308,7 +308,7 @@ impl ModuleCatalog {
                     ModuleFunction {
                         params: method.params.clone(),
                         return_type: method.return_type.clone(),
-                        method_kind: Some(method.method_kind.clone()),
+                        method_kind: Some(method.method_kind),
                         consumes_receiver: method
                             .rust_interop
                             .first()

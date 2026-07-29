@@ -25,7 +25,7 @@ impl RustEmitter {
         };
         let borrowed_string_literal_operand =
             |operand: &HirExpr, emitter: &Self| -> Option<crate::RustExpr> {
-                let HirExpr::Name { name, ty } = operand else {
+                let HirExpr::Name { name, ty, .. } = operand else {
                     return None;
                 };
                 if !emitter.borrowed_params.contains(name)
@@ -73,7 +73,7 @@ impl RustEmitter {
             _ => {}
         }
         let effective_name_ty = |operand: &HirExpr, emitter: &Self| -> Option<Type> {
-            let HirExpr::Name { name, ty } = operand else {
+            let HirExpr::Name { name, ty, .. } = operand else {
                 return None;
             };
             if matches!(
@@ -512,7 +512,7 @@ impl RustEmitter {
             {
                 return None;
             }
-            let HirExpr::Name { name, ty } = left.as_ref() else {
+            let HirExpr::Name { name, ty, .. } = left.as_ref() else {
                 return None;
             };
             let option_like = crate::helpers::is_option_type(ty)

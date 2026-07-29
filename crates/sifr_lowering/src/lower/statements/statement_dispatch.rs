@@ -708,7 +708,7 @@ pub(in crate::lower) fn lower_stmt(
                         ast_convention_to_param(param_def.parameter.convention, &ty)
                     });
                 ctx.scope
-                    .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
+                    .define_parameter(name.clone(), ty.clone(), convention);
                 let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
                 params.push(HirParam {
                     name,
@@ -734,7 +734,7 @@ pub(in crate::lower) fn lower_stmt(
                     .map(|(_, _, convention)| *convention)
                     .unwrap_or_else(|| ast_convention_to_param(vararg.convention, &ty));
                 ctx.scope
-                    .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
+                    .define_parameter(name.clone(), ty.clone(), convention);
                 params.push(HirParam {
                     name,
                     ty,
@@ -762,7 +762,7 @@ pub(in crate::lower) fn lower_stmt(
                         ast_convention_to_param(param_def.parameter.convention, &ty)
                     });
                 ctx.scope
-                    .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
+                    .define_parameter(name.clone(), ty.clone(), convention);
                 let default = param_def.default.as_ref().and_then(|d| lower_expr(d, ctx));
                 params.push(HirParam {
                     name,
@@ -855,6 +855,7 @@ pub(in crate::lower) fn lower_stmt(
                     body,
                     is_async: func.is_async,
                     method_kind: MethodKind::Regular,
+                    receiver: None,
                     decorators,
                     rust_interop,
                     python_interop: Vec::new(),

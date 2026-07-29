@@ -124,7 +124,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
         }
         HirStmt::Return { value: Some(value) } => {
             let mut lowered = try_lower_simple_return_stmt(value, ctx)?;
-            if matches!(value, HirExpr::Name { name, ty }
+            if matches!(value, HirExpr::Name { name, ty, .. }
                 if bindings.borrowed_params.contains(name)
                     && ty.ownership() != sifr_type_system::OwnershipKind::Copy)
             {

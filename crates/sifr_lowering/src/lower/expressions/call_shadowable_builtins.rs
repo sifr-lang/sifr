@@ -5,6 +5,7 @@ use super::{
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::CompilerIntrinsicId;
 use sifr_python_ast::Expr;
+use sifr_type_system::ReceiverConvention;
 
 const TEXT_FILE_HANDLE_IDENTITY: &str = "sifr.io.TextFileHandle";
 const FILE_HANDLE_IDENTITY: &str = "sifr.io.FileHandle";
@@ -22,6 +23,26 @@ fn class_surface_score(ty: &Type) -> (usize, usize) {
             fields, methods, ..
         } => (methods.len(), fields.len()),
         _ => (0, 0),
+    }
+}
+
+fn fill_file_handle_receiver_conventions(ty: &mut Type) {
+    let Type::Class { methods, .. } = ty else {
+        return;
+    };
+    for (name, signature) in methods {
+        if signature.receiver.is_some() {
+            continue;
+        }
+        let receiver = if matches!(
+            name.as_str(),
+            "write" | "write_bytes" | "close" | "__exit__"
+        ) {
+            ReceiverConvention::MutableBorrow
+        } else {
+            ReceiverConvention::SharedBorrow
+        };
+        signature.receiver = Some(receiver);
     }
 }
 
@@ -275,10 +296,11 @@ pub(super) fn lower_shadowable_builtin_call(
             // Preserve an explicitly imported stdlib handle even when it is aliased.
             // A local same-basename class is a distinct declaration and must never be
             // selected for the compiler-special `open()` result.
-            let text_handle_ty = prefer_complete_class_surface(
+            let mut text_handle_ty = prefer_complete_class_surface(
                 text_handle_ty,
                 class_type_with_identity(ctx, TEXT_FILE_HANDLE_IDENTITY),
             );
+            fill_file_handle_receiver_conventions(&mut text_handle_ty);
             if let Some(error_ty) = ctx.class_types.get("IOError") {
                 ctx.try_block_error_types.insert(error_ty.clone());
             }
@@ -396,10 +418,11 @@ pub(super) fn lower_shadowable_builtin_call(
             ],
             parent_class: None,
         };
-        let file_handle_ty = prefer_complete_class_surface(
+        let mut file_handle_ty = prefer_complete_class_surface(
             file_handle_ty,
             class_type_with_identity(ctx, FILE_HANDLE_IDENTITY),
         );
+        fill_file_handle_receiver_conventions(&mut file_handle_ty);
         // Register IOError as a possible exception from this call
         if let Some(error_ty) = ctx.class_types.get("IOError") {
             ctx.try_block_error_types.insert(error_ty.clone());

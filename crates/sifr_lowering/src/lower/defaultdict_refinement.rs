@@ -17,7 +17,12 @@ pub(in crate::lower) fn refine_defaultdict_binding_expr(
     let HirExpr::Index { object, index, .. } = expr else {
         return None;
     };
-    let HirExpr::Name { name, ty } = object.as_ref() else {
+    let HirExpr::Name {
+        name,
+        binding_id,
+        ty,
+    } = object.as_ref()
+    else {
         return None;
     };
     let Type::Alias {
@@ -68,6 +73,7 @@ pub(in crate::lower) fn refine_defaultdict_binding_expr(
     Some(HirExpr::Index {
         object: Box::new(HirExpr::Name {
             name: name.clone(),
+            binding_id: *binding_id,
             ty: refined_ty,
         }),
         index,

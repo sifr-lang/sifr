@@ -159,6 +159,15 @@ fn named_sequence(tag: &str, name: &str, values: &[Type]) -> String {
 
 fn function_key(tag: &str, function: &FunctionType) -> String {
     let mut key = component("function_kind", tag);
+    append(
+        &mut key,
+        match function.receiver {
+            None => "receiver:none",
+            Some(super::ReceiverConvention::SharedBorrow) => "receiver:shared",
+            Some(super::ReceiverConvention::MutableBorrow) => "receiver:mutable",
+            Some(super::ReceiverConvention::Owned) => "receiver:owned",
+        },
+    );
     append(&mut key, &function.params.len().to_string());
     for (name, parameter, convention) in &function.params {
         append(&mut key, name);

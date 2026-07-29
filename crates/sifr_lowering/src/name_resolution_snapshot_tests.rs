@@ -300,7 +300,7 @@ fn collect_nested_block(stmts: &[HirStmt], path: &str, facts: &mut NameFacts) {
 
 fn collect_expr(expr: &HirExpr, path: &str, facts: &mut NameFacts) {
     match expr {
-        HirExpr::Name { name, ty } => facts.name_references.push(json!({
+        HirExpr::Name { name, ty, .. } => facts.name_references.push(json!({
             "path": path,
             "name": name,
             "ty": type_name(ty),
@@ -402,6 +402,8 @@ fn collect_expr(expr: &HirExpr, path: &str, facts: &mut NameFacts) {
             object,
             method,
             args,
+            receiver_convention,
+            source,
             ..
         } => {
             facts.calls.push(json!({
@@ -411,6 +413,10 @@ fn collect_expr(expr: &HirExpr, path: &str, facts: &mut NameFacts) {
                 "receiver": expr_summary(object),
                 "ty": type_name(expr.ty()),
                 "args": args.iter().map(expr_summary).collect::<Vec<_>>(),
+                "receiver_convention": receiver_convention.map(|receiver| format!("{receiver:?}")),
+                "source_range": source.as_ref().map(|source| {
+                    [u32::from(source.call_range.start()), u32::from(source.call_range.end())]
+                }),
             }));
             collect_expr(object, &format!("{path}/object"), facts);
             for (index, arg) in args.iter().enumerate() {

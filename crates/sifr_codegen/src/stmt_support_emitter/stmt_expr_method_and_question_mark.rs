@@ -10,6 +10,7 @@ macro_rules! stmt_expr_method_call {
             object,
             method,
             args,
+            receiver_convention,
             ..
         } = $expr
         {
@@ -136,7 +137,8 @@ macro_rules! stmt_expr_method_call {
                 }
             }
             let needs_field_clone_suppression =
-                $emitter.method_call_needs_field_clone_suppression(object, method);
+                $emitter
+                    .method_call_needs_field_clone_suppression(object, *receiver_convention);
             let suppression_prev = $emitter.pending_self_field_clone_suppression;
             if needs_field_clone_suppression {
                 $emitter.pending_self_field_clone_suppression += 1;

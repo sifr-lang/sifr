@@ -34,7 +34,7 @@ impl RustEmitter {
                 continue;
             }
             let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
-            let effective_arg_ty = if let HirExpr::Name { name, ty } = hir_arg {
+            let effective_arg_ty = if let HirExpr::Name { name, ty, .. } = hir_arg {
                 if self.none_widened_local_bindings.contains(name) {
                     self.local_binding_types
                         .get(name)
@@ -58,7 +58,7 @@ impl RustEmitter {
                 lowered_arg = Self::send_async_callable_adapter(lowered_arg, params.len());
             }
             let arg_is_option = crate::helpers::is_option_type(&effective_arg_ty);
-            let borrowed_name_arg = matches!(hir_arg, HirExpr::Name { name, ty }
+            let borrowed_name_arg = matches!(hir_arg, HirExpr::Name { name, ty, .. }
                 if self.borrowed_params.contains(name)
                     || self.mut_borrowed_params.contains(name)
                     || ty.rust_type().starts_with('&'));

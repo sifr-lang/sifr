@@ -321,6 +321,7 @@ mod tests {
                     body: Vec::new(),
                     is_async: false,
                     method_kind: MethodKind::Regular,
+                    receiver: None,
                     decorators: Vec::new(),
                     rust_interop: vec![declaration(RustInteropDecoratorKind::Function)],
                     python_interop: Vec::new(),

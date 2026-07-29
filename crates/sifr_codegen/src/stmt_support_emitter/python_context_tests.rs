@@ -28,6 +28,7 @@ fn python_item(target: &str, manager: &str) -> HirWithItem {
         target: target.to_string(),
         context: sifr_ir::HirExpr::Name {
             name: manager.to_string(),
+            binding_id: None,
             ty: class_type("Manager"),
         },
         kind: HirWithItemKind::Python {
@@ -79,6 +80,7 @@ fn python_context_emits_enter_outcome_and_replay_aware_exit() {
             &[HirStmt::Expr {
                 expr: sifr_ir::HirExpr::Name {
                     name: "entered".to_string(),
+                    binding_id: None,
                     ty: class_type("Entered"),
                 },
             }],
@@ -224,6 +226,7 @@ fn sync_python_context_uses_async_closure_when_nested_body_awaits() {
                 expr: sifr_ir::HirExpr::Await {
                     value: Box::new(sifr_ir::HirExpr::Name {
                         name: "pending".to_string(),
+                        binding_id: None,
                         ty: Type::Unknown,
                     }),
                     ty: Type::Unknown,

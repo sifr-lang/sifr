@@ -145,7 +145,10 @@ pub(in crate::lower) fn maybe_resolve_numeric_sentinel_name_from_type(
 }
 
 pub(in crate::lower) fn retag_numeric_sentinel_name_expr(expr: HirExpr, ctx: &LowerCtx) -> HirExpr {
-    let HirExpr::Name { name, .. } = &expr else {
+    let HirExpr::Name {
+        name, binding_id, ..
+    } = &expr
+    else {
         return expr;
     };
     let Some(domain) = ctx.numeric_sentinel_domain(name) else {
@@ -153,6 +156,7 @@ pub(in crate::lower) fn retag_numeric_sentinel_name_expr(expr: HirExpr, ctx: &Lo
     };
     HirExpr::Name {
         name: name.clone(),
+        binding_id: *binding_id,
         ty: domain_type(domain),
     }
 }

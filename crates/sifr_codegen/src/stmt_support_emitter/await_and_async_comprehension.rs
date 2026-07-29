@@ -129,7 +129,7 @@ impl RustEmitter {
                     value.ty()
                 }
             }
-            HirExpr::Name { name, ty }
+            HirExpr::Name { name, ty, .. }
                 if self.none_widened_local_bindings.contains(name)
                     || matches!(
                         crate::resolve_alias_type_for_plain_call(ty),

@@ -466,6 +466,7 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                                         (
                                             n.clone(),
                                             FunctionType {
+                                                receiver: ft.receiver,
                                                 params: subst_params,
                                                 return_type: Box::new(subst_ret),
                                             },
@@ -523,7 +524,7 @@ pub(in crate::lower) fn lower_function(
             .unwrap_or(Type::Any);
         let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
         ctx.scope
-            .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
+            .define_parameter(name.clone(), ty.clone(), convention);
 
         let default = param_def.default.as_ref().and_then(|d| {
             (!has_python_interop || !is_python_omit(d))
@@ -551,7 +552,7 @@ pub(in crate::lower) fn lower_function(
             .unwrap_or(Type::Any);
         let convention = ast_convention_to_param(vararg.convention, &ty);
         ctx.scope
-            .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
+            .define_parameter(name.clone(), ty.clone(), convention);
         params.push(HirParam {
             name,
             ty,
@@ -572,7 +573,7 @@ pub(in crate::lower) fn lower_function(
             .unwrap_or(Type::Any);
         let convention = ast_convention_to_param(param_def.parameter.convention, &ty);
         ctx.scope
-            .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
+            .define_parameter(name.clone(), ty.clone(), convention);
 
         let default = param_def.default.as_ref().and_then(|d| {
             (!has_python_interop || !is_python_omit(d))
@@ -599,7 +600,7 @@ pub(in crate::lower) fn lower_function(
             .unwrap_or(Type::Any);
         let convention = ast_convention_to_param(kwarg.convention, &ty);
         ctx.scope
-            .define_parameter(name.clone(), ty.clone(), convention.is_mutable());
+            .define_parameter(name.clone(), ty.clone(), convention);
         params.push(HirParam {
             name,
             ty,
@@ -873,6 +874,7 @@ pub(in crate::lower) fn lower_function(
         body,
         is_async: effective_is_async,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators,
         rust_interop,
         python_interop,

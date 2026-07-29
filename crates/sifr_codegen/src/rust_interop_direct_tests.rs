@@ -24,6 +24,7 @@ fn rust_interop_function_body_emits_package_bridge_root() {
         body: Vec::new(),
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: vec![declaration(
             RustInteropDecoratorKind::Function,
@@ -70,6 +71,7 @@ fn rust_interop_function_body_emits_owned_threadsafe_callback_policy() {
         body: Vec::new(),
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: vec![
             declaration(
@@ -116,6 +118,7 @@ fn rust_interop_method_callback_parameter_is_send_sync_static() {
         body: Vec::new(),
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: vec![
             declaration(
@@ -183,6 +186,7 @@ fn rust_interop_method_body_emits_self_handle_call() {
         body: Vec::new(),
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: vec![declaration(
             RustInteropDecoratorKind::Function,
@@ -227,6 +231,7 @@ fn non_opaque_rust_bound_method_does_not_inject_receiver_argument() {
         body: Vec::new(),
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: vec![declaration(
             RustInteropDecoratorKind::Function,
@@ -247,7 +252,7 @@ fn non_opaque_rust_bound_method_does_not_inject_receiver_argument() {
 }
 
 #[test]
-fn emitted_non_opaque_owned_rust_method_preserves_borrowed_receiver_shape() {
+fn emitted_non_opaque_owned_rust_method_preserves_owned_receiver_shape() {
     let source = r"
 class BridgeError(Error):
     message: str
@@ -262,7 +267,7 @@ class Plain:
     let generated = generate_rust_with_metadata(&lowered.module).rust_source;
 
     assert!(
-        generated.contains("fn consume(&self) -> Result<String, BridgeError>"),
+        generated.contains("fn consume(self) -> Result<String, BridgeError>"),
         "{generated}"
     );
     assert!(generated.contains("bridge::consume()"), "{generated}");
@@ -447,6 +452,7 @@ fn emitted_direct_result_none_interop_does_not_append_ok_tail() {
             body: Vec::new(),
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: Vec::new(),
             rust_interop: vec![declaration(
                 RustInteropDecoratorKind::Function,
@@ -540,6 +546,7 @@ fn rust_interop_function_body_maps_python_error_fields_without_parent_metadata()
         body: Vec::new(),
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: vec![declaration(
             RustInteropDecoratorKind::Function,
@@ -615,6 +622,7 @@ fn rust_interop_function_body_adapts_sealed_python_object_callback_parameter() {
         body: Vec::new(),
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: vec![declaration(
             RustInteropDecoratorKind::Function,
@@ -683,6 +691,7 @@ fn rust_interop_function_body_converts_python_int_dict_return() {
         body: Vec::new(),
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: vec![declaration(
             RustInteropDecoratorKind::Function,

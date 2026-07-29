@@ -242,9 +242,12 @@ impl EditorSemanticCollector {
 
     fn expr(&mut self, expr: &Expr, hir: &HirExpr) {
         match (expr, hir) {
-            (Expr::Name(name), HirExpr::Name { name: hir_name, ty })
-                if name.id.as_str() == hir_name =>
-            {
+            (
+                Expr::Name(name),
+                HirExpr::Name {
+                    name: hir_name, ty, ..
+                },
+            ) if name.id.as_str() == hir_name => {
                 self.entry(
                     name.range(),
                     hir_name.clone(),
@@ -593,6 +596,7 @@ fn callable_signatures(
     for function in &module.functions {
         signatures.entry(function.name.clone()).or_insert_with(|| {
             let function_type = FunctionType {
+                receiver: function.receiver,
                 params: function
                     .params
                     .iter()

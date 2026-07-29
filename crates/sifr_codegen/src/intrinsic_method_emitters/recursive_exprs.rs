@@ -74,6 +74,8 @@ impl RustEmitter {
                 method,
                 args,
                 ty,
+                receiver_convention,
+                ..
             } => {
                 if let Some(lowered) = crate::python_buffer_codegen::lower_python_buffer_method(
                     self, object, method, args, ty,
@@ -146,47 +148,20 @@ impl RustEmitter {
                 if let Some(lowered) = self.try_lower_dict_indexed_list_len_expr(expr) {
                     return Some(lowered);
                 }
-                let needs_self_field_clone_suppression =
-                    self.method_call_needs_field_clone_suppression(object, method);
-                let suppression_prev = self.pending_self_field_clone_suppression;
-                if needs_self_field_clone_suppression {
-                    self.pending_self_field_clone_suppression += 1;
-                }
-                let object_expr = self.try_lower_registry_expr_strict(object)?;
-                if needs_self_field_clone_suppression
-                    && self.pending_self_field_clone_suppression > suppression_prev
-                {
-                    self.pending_self_field_clone_suppression -= 1;
-                }
-                let effective_object_ty = self.effective_method_object_ty(object);
+                let (object_expr, effective_object_ty, mut arg_exprs) = self
+                    .lower_recursive_method_receiver_and_args(
+                        object,
+                        method,
+                        args,
+                        *receiver_convention,
+                    )?;
                 let method_params =
                     self.resolve_registry_method_params(&effective_object_ty, method);
-                let mut arg_exprs = Vec::with_capacity(args.len());
-                for (idx, arg) in args.iter().enumerate() {
-                    let convention = method_params
-                        .as_ref()
-                        .and_then(|params| params.get(idx))
-                        .map_or(
-                            sifr_type_system::ParamConvention::default(),
-                            |(_, convention)| *convention,
-                        );
-                    let suppress =
-                        self.method_mut_arg_needs_field_clone_suppression(arg, convention);
-                    let suppression_prev = self.pending_self_field_clone_suppression;
-                    if suppress {
-                        self.pending_self_field_clone_suppression += 1;
-                    }
-                    let lowered = self.try_lower_registry_expr_strict(arg);
-                    if suppress && self.pending_self_field_clone_suppression > suppression_prev {
-                        self.pending_self_field_clone_suppression -= 1;
-                    }
-                    arg_exprs.push(lowered?);
-                }
                 if let Type::List(element_ty) =
                     crate::resolve_alias_type_for_plain_call(&effective_object_ty)
                 {
                     if method == "append" && arg_exprs.len() == 1 && args.len() == 1 {
-                        let arg_ty = if let HirExpr::Name { name, ty } = &args[0] {
+                        let arg_ty = if let HirExpr::Name { name, ty, .. } = &args[0] {
                             self.local_binding_types
                                 .get(name)
                                 .cloned()

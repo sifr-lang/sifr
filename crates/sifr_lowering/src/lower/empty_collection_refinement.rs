@@ -9,7 +9,12 @@ pub(in crate::lower) fn refine_empty_set_binding_expr(
     inferred_elem_ty: Type,
     ctx: &mut LowerCtx,
 ) -> HirExpr {
-    let HirExpr::Name { name, ty } = &expr else {
+    let HirExpr::Name {
+        name,
+        binding_id,
+        ty,
+    } = &expr
+    else {
         return expr;
     };
     let Type::Set(inner) = ty.resolve_alias() else {
@@ -28,6 +33,7 @@ pub(in crate::lower) fn refine_empty_set_binding_expr(
     );
     HirExpr::Name {
         name: name.clone(),
+        binding_id: *binding_id,
         ty: refined_ty,
     }
 }
@@ -41,7 +47,12 @@ pub(in crate::lower) fn refine_empty_dict_membership_expr(
     if matches!(inferred_key_ty.resolve_alias(), Type::Any | Type::Unknown) || !supports_hash {
         return expr;
     }
-    let HirExpr::Name { name, ty } = &expr else {
+    let HirExpr::Name {
+        name,
+        binding_id,
+        ty,
+    } = &expr
+    else {
         return expr;
     };
     let Type::Dict(key, value) = ty.resolve_alias() else {
@@ -54,6 +65,7 @@ pub(in crate::lower) fn refine_empty_dict_membership_expr(
     record_empty_dict_refinement(name, &refined_ty, ctx);
     HirExpr::Name {
         name: name.clone(),
+        binding_id: *binding_id,
         ty: refined_ty,
     }
 }
@@ -76,6 +88,7 @@ pub(in crate::lower) fn refine_empty_dict_index_comparison_expr(
     }
     let HirExpr::Name {
         name,
+        binding_id,
         ty: object_ty,
     } = object.as_ref()
     else {
@@ -92,6 +105,7 @@ pub(in crate::lower) fn refine_empty_dict_index_comparison_expr(
     HirExpr::Index {
         object: Box::new(HirExpr::Name {
             name: name.clone(),
+            binding_id: *binding_id,
             ty: refined_object_ty,
         }),
         index,
@@ -131,7 +145,12 @@ pub(in crate::lower) fn refine_empty_list_binding_expr(
     if matches!(inferred_elem_ty.resolve_alias(), Type::Any | Type::Unknown) {
         return expr;
     }
-    let HirExpr::Name { name, ty } = &expr else {
+    let HirExpr::Name {
+        name,
+        binding_id,
+        ty,
+    } = &expr
+    else {
         return expr;
     };
     let Type::List(inner) = ty.resolve_alias() else {
@@ -152,6 +171,7 @@ pub(in crate::lower) fn refine_empty_list_binding_expr(
         .insert(name.clone(), refined_ty.clone());
     HirExpr::Name {
         name: name.clone(),
+        binding_id: *binding_id,
         ty: refined_ty,
     }
 }

@@ -4,13 +4,23 @@
 //! differs from their `declared_type` within control flow branches.
 
 use num_bigint::BigInt;
-use sifr_type_system::{OwnershipKind, Type};
+use sifr_ir::BindingId;
+use sifr_type_system::{OwnershipKind, ParamConvention, ReceiverConvention, Type};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum EphemeralOrigin {
+    Iteration,
+    Comprehension,
+    MatchCapture,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BindingKind {
     Local,
     Parameter,
+    Receiver,
+    EphemeralLocal(EphemeralOrigin),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -37,6 +47,8 @@ impl ErrorTaint {
 /// Tracks variable state for ownership and narrowing.
 #[derive(Debug, Clone)]
 pub struct VarInfo {
+    /// Stable identity for this binding.
+    pub binding_id: BindingId,
     /// The declared type (from annotation or inference).
     pub ty: Type,
     /// The narrowed type (from control flow analysis). None means not narrowed.
@@ -52,12 +64,26 @@ pub struct VarInfo {
     pub mutability: BindingMutability,
     /// Whether this binding originated from a function parameter.
     pub binding_kind: BindingKind,
+    /// Parameter convention, when this binding is an ordinary parameter.
+    pub parameter_convention: Option<ParamConvention>,
+    /// Final receiver convention, when this binding is an instance receiver.
+    pub receiver_convention: Option<ReceiverConvention>,
     /// Whether the binding type was provided explicitly (annotation/parameter).
     pub type_source: BindingTypeSource,
     /// Compile-time exact integer value known for this binding, if any.
     pub const_integer_value: Option<BigInt>,
     /// Proof that this binding only exists to suppress cascades after an emitted error.
     error_taint: Option<ErrorTaint>,
+}
+
+/// Immutable binding facts retained after the defining scope frame is popped.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RetainedBindingFact {
+    pub name: String,
+    pub binding_kind: BindingKind,
+    pub mutability: BindingMutability,
+    pub parameter_convention: Option<ParamConvention>,
+    pub receiver_convention: Option<ReceiverConvention>,
 }
 
 impl VarInfo {
@@ -108,6 +134,8 @@ pub struct Scope {
     type_aliases: HashMap<String, Type>,
     /// Generic type alias registry: name -> (`type_params`, `body_type`).
     generic_type_aliases: HashMap<String, (Vec<String>, Type)>,
+    next_binding_id: u32,
+    retained_bindings: HashMap<BindingId, RetainedBindingFact>,
 }
 
 impl Scope {
@@ -127,6 +155,8 @@ impl Scope {
             frames: vec![HashMap::new()],
             type_aliases: HashMap::new(),
             generic_type_aliases: HashMap::new(),
+            next_binding_id: 0,
+            retained_bindings: HashMap::new(),
         }
     }
 
@@ -174,6 +204,11 @@ impl Scope {
         self.define_binding(name, ty, true, BindingKind::Local, true);
     }
 
+    /// Define a short-lived iteration, comprehension, or pattern binding.
+    pub fn define_ephemeral(&mut self, name: String, ty: Type, origin: EphemeralOrigin) {
+        self.define_binding(name, ty, true, BindingKind::EphemeralLocal(origin), false);
+    }
+
     pub(crate) fn define_poisoned_local(
         &mut self,
         name: String,
@@ -192,8 +227,34 @@ impl Scope {
     }
 
     /// Define a function parameter in the current (innermost) scope.
-    pub fn define_parameter(&mut self, name: String, ty: Type, is_mutable_binding: bool) {
-        self.define_binding(name, ty, is_mutable_binding, BindingKind::Parameter, true);
+    pub fn define_parameter(&mut self, name: String, ty: Type, convention: ParamConvention) {
+        self.define_binding_with_convention(
+            name,
+            ty,
+            convention.is_mutable(),
+            BindingKind::Parameter,
+            true,
+            Some(convention),
+            None,
+        );
+    }
+
+    /// Define the implicit receiver binding for a regular instance method.
+    pub fn define_receiver(
+        &mut self,
+        name: String,
+        ty: Type,
+        convention: ReceiverConvention,
+    ) -> BindingId {
+        self.define_binding_with_convention(
+            name,
+            ty,
+            matches!(convention, ReceiverConvention::MutableBorrow),
+            BindingKind::Receiver,
+            true,
+            None,
+            Some(convention),
+        )
     }
 
     fn define_binding(
@@ -222,13 +283,76 @@ impl Scope {
         binding_kind: BindingKind,
         has_explicit_type: bool,
         error_taint: Option<ErrorTaint>,
-    ) {
+    ) -> BindingId {
+        self.define_binding_with_convention_and_taint(
+            name,
+            ty,
+            is_mutable_binding,
+            binding_kind,
+            has_explicit_type,
+            None,
+            None,
+            error_taint,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn define_binding_with_convention(
+        &mut self,
+        name: String,
+        ty: Type,
+        is_mutable_binding: bool,
+        binding_kind: BindingKind,
+        has_explicit_type: bool,
+        parameter_convention: Option<ParamConvention>,
+        receiver_convention: Option<ReceiverConvention>,
+    ) -> BindingId {
+        self.define_binding_with_convention_and_taint(
+            name,
+            ty,
+            is_mutable_binding,
+            binding_kind,
+            has_explicit_type,
+            parameter_convention,
+            receiver_convention,
+            None,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn define_binding_with_convention_and_taint(
+        &mut self,
+        name: String,
+        ty: Type,
+        is_mutable_binding: bool,
+        binding_kind: BindingKind,
+        has_explicit_type: bool,
+        parameter_convention: Option<ParamConvention>,
+        receiver_convention: Option<ReceiverConvention>,
+        error_taint: Option<ErrorTaint>,
+    ) -> BindingId {
+        let binding_id = BindingId(self.next_binding_id);
+        assert!(
+            self.next_binding_id < u32::MAX,
+            "binding id space exhausted"
+        );
+        self.next_binding_id += 1;
+        let mutability = if is_mutable_binding {
+            BindingMutability::Mutable
+        } else {
+            BindingMutability::Immutable
+        };
+        self.retained_bindings.insert(
+            binding_id,
+            RetainedBindingFact {
+                name: name.clone(),
+                binding_kind,
+                mutability,
+                parameter_convention,
+                receiver_convention,
+            },
+        );
         if let Some(frame) = self.frames.last_mut() {
-            let mutability = if is_mutable_binding {
-                BindingMutability::Mutable
-            } else {
-                BindingMutability::Immutable
-            };
             let type_source = if has_explicit_type {
                 BindingTypeSource::Explicit
             } else {
@@ -237,6 +361,7 @@ impl Scope {
             frame.insert(
                 name,
                 VarInfo {
+                    binding_id,
                     ty,
                     narrowed_type: None,
                     is_moved: false,
@@ -244,11 +369,41 @@ impl Scope {
                     is_mut_borrowed: false,
                     mutability,
                     binding_kind,
+                    parameter_convention,
+                    receiver_convention,
                     type_source,
                     const_integer_value: None,
                     error_taint,
                 },
             );
+        }
+        binding_id
+    }
+
+    pub fn retained_binding(&self, id: BindingId) -> Option<&RetainedBindingFact> {
+        self.retained_bindings.get(&id)
+    }
+
+    pub fn patch_receiver_convention(&mut self, id: BindingId, convention: ReceiverConvention) {
+        if let Some(fact) = self.retained_bindings.get_mut(&id) {
+            fact.receiver_convention = Some(convention);
+            fact.mutability = if matches!(convention, ReceiverConvention::MutableBorrow) {
+                BindingMutability::Mutable
+            } else {
+                BindingMutability::Immutable
+            };
+        }
+        for frame in &mut self.frames {
+            for info in frame.values_mut() {
+                if info.binding_id == id {
+                    info.receiver_convention = Some(convention);
+                    info.mutability = if matches!(convention, ReceiverConvention::MutableBorrow) {
+                        BindingMutability::Mutable
+                    } else {
+                        BindingMutability::Immutable
+                    };
+                }
+            }
         }
     }
 
@@ -528,6 +683,53 @@ mod tests {
         scope.pop();
         assert!(scope.lookup("x").is_some());
         assert!(scope.lookup("y").is_none()); // no longer visible
+    }
+
+    #[test]
+    fn binding_ids_distinguish_shadowed_names_and_outlive_frames() {
+        let mut scope = Scope::new();
+        scope.define("value".to_string(), Type::Int);
+        let outer = scope.lookup("value").unwrap().binding_id;
+
+        scope.push();
+        scope.define("value".to_string(), Type::Str);
+        let inner = scope.lookup("value").unwrap().binding_id;
+        assert_ne!(outer, inner);
+        scope.pop();
+
+        assert_eq!(scope.lookup("value").unwrap().binding_id, outer);
+        assert_eq!(scope.retained_binding(inner).unwrap().name, "value");
+        assert_eq!(
+            scope.retained_binding(inner).unwrap().binding_kind,
+            BindingKind::Local
+        );
+    }
+
+    #[test]
+    fn retained_receiver_and_ephemeral_facts_keep_final_conventions() {
+        let mut scope = Scope::new();
+        scope.push();
+        let receiver = scope.define_receiver(
+            "self".to_string(),
+            Type::Any,
+            ReceiverConvention::SharedBorrow,
+        );
+        scope.define_ephemeral("item".to_string(), Type::Int, EphemeralOrigin::Iteration);
+        let item = scope.lookup("item").unwrap().binding_id;
+        scope.pop();
+
+        scope.patch_receiver_convention(receiver, ReceiverConvention::MutableBorrow);
+        let receiver_fact = scope.retained_binding(receiver).unwrap();
+        assert_eq!(receiver_fact.binding_kind, BindingKind::Receiver);
+        assert_eq!(
+            receiver_fact.receiver_convention,
+            Some(ReceiverConvention::MutableBorrow)
+        );
+        assert_eq!(receiver_fact.mutability, BindingMutability::Mutable);
+        assert_eq!(
+            scope.retained_binding(item).unwrap().binding_kind,
+            BindingKind::EphemeralLocal(EphemeralOrigin::Iteration)
+        );
     }
 
     #[test]

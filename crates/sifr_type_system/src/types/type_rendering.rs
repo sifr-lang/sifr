@@ -677,6 +677,13 @@ impl Type {
             ) => proto_methods.iter().all(|(pname, pft)| {
                 class_methods.iter().any(|(cname, cft)| {
                     cname == pname
+                        && match (cft.receiver, pft.receiver) {
+                            (Some(implementation), Some(protocol)) => {
+                                implementation.satisfies_protocol(protocol)
+                            }
+                            (None, None) => true,
+                            _ => false,
+                        }
                         && cft.params.len() == pft.params.len()
                         && cft
                             .params

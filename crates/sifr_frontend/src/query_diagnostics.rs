@@ -331,6 +331,7 @@ pub fn collect_module_exports(
                     (
                         m.name.clone(),
                         FunctionType {
+                            receiver: m.receiver,
                             params,
                             return_type: Box::new(m.return_type.clone()),
                         },
@@ -346,6 +347,7 @@ pub fn collect_module_exports(
                 methods.push((
                     dunder_name.clone(),
                     FunctionType {
+                        receiver: op_func.receiver,
                         params,
                         return_type: Box::new(op_func.return_type.clone()),
                     },

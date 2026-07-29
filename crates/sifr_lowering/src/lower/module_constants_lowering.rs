@@ -216,6 +216,7 @@ fn lower_module_integer_const_expr(expr: &Expr, ctx: &LowerCtx) -> Option<HirExp
             }
             Some(HirExpr::Name {
                 name: name.id.to_string(),
+                binding_id: Some(ctx.scope.lookup(name.id.as_str())?.binding_id),
                 ty: Type::Int,
             })
         }

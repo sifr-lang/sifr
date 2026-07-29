@@ -22,6 +22,7 @@ fn collect_mutated_vars_marks_mutborrow_call_argument() {
             func: "touch".to_string(),
             args: vec![HirExpr::Name {
                 name: "items".to_string(),
+                binding_id: None,
                 ty: Type::List(Box::new(Type::Int)),
             }],
             ty: Type::None,
@@ -58,13 +59,17 @@ fn collect_mutated_vars_marks_method_mutborrow_argument() {
         expr: HirExpr::MethodCall {
             object: Box::new(HirExpr::Name {
                 name: "receiver".to_string(),
+                binding_id: None,
                 ty: crate_ty.clone(),
             }),
             method: "merge".to_string(),
             args: vec![HirExpr::Name {
                 name: "other".to_string(),
+                binding_id: None,
                 ty: crate_ty.clone(),
             }],
+            receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+            source: None,
             ty: Type::None,
         },
     }];
@@ -101,17 +106,21 @@ fn collect_mutated_vars_marks_method_mutborrow_field_argument_root() {
         expr: HirExpr::MethodCall {
             object: Box::new(HirExpr::Name {
                 name: "receiver".to_string(),
+                binding_id: None,
                 ty: crate_ty.clone(),
             }),
             method: "merge".to_string(),
             args: vec![HirExpr::FieldAccess {
                 object: Box::new(HirExpr::Name {
                     name: "depot".to_string(),
+                    binding_id: None,
                     ty: depot_ty,
                 }),
                 field: "stock".to_string(),
                 ty: crate_ty.clone(),
             }],
+            receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+            source: None,
             ty: Type::None,
         },
     }];
@@ -142,15 +151,19 @@ fn collect_mutated_vars_marks_local_nested_function_mutborrow_call_argument() {
             expr: HirExpr::MethodCall {
                 object: Box::new(HirExpr::Name {
                     name: "xs".to_string(),
+                    binding_id: None,
                     ty: Type::List(Box::new(Type::Int)),
                 }),
                 method: "append".to_string(),
                 args: vec![HirExpr::IntLiteral(1)],
+                receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+                source: None,
                 ty: Type::None,
             },
         }],
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: vec![],
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -169,6 +182,7 @@ fn collect_mutated_vars_marks_local_nested_function_mutborrow_call_argument() {
                 func: "touch_local".to_string(),
                 args: vec![HirExpr::Name {
                     name: "items".to_string(),
+                    binding_id: None,
                     ty: Type::List(Box::new(Type::Int)),
                 }],
                 ty: Type::None,
@@ -190,6 +204,7 @@ fn collect_mutated_vars_marks_iterator_next_argument() {
         methods: vec![(
             "__next__".to_string(),
             sifr_type_system::FunctionType {
+                receiver: None,
                 params: vec![],
                 return_type: Box::new(Type::Union(vec![Type::Int, Type::None])),
             },
@@ -201,6 +216,7 @@ fn collect_mutated_vars_marks_iterator_next_argument() {
             op: HirIteratorOp::Next,
             args: vec![HirExpr::Name {
                 name: "it".to_string(),
+                binding_id: None,
                 ty: iterator_ty,
             }],
             ty: Type::Union(vec![Type::Int, Type::None]),
@@ -218,6 +234,7 @@ fn collect_mutated_vars_marks_anext_argument() {
             func: "anext".to_string(),
             args: vec![HirExpr::Name {
                 name: "agen".to_string(),
+                binding_id: None,
                 ty: Type::AsyncGenerator(Box::new(Type::Int), Box::new(Type::Never)),
             }],
             ty: Type::Awaitable(Box::new(Type::Result(
@@ -248,6 +265,7 @@ fn body_calls_function_ignores_nested_function_scope() {
                 func: "target".to_string(),
                 args: vec![HirExpr::Name {
                     name: "n".to_string(),
+                    binding_id: None,
                     ty: Type::Int,
                 }],
                 ty: Type::Int,
@@ -255,6 +273,7 @@ fn body_calls_function_ignores_nested_function_scope() {
         }],
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: vec![],
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -309,6 +328,7 @@ fn collect_try_error_carriers_descends_into_nested_functions() {
         }],
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -359,6 +379,7 @@ fn collect_locally_defined_vars_ignores_nested_function_body_bindings() {
         }],
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: vec![],
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -387,10 +408,13 @@ fn collect_mutated_vars_handles_nested_exprs() {
             args: vec![HirExpr::MethodCall {
                 object: Box::new(HirExpr::Name {
                     name: "x".to_string(),
+                    binding_id: None,
                     ty: Type::List(Box::new(Type::Int)),
                 }),
                 method: "append".to_string(),
                 args: vec![HirExpr::IntLiteral(1)],
+                receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+                source: None,
                 ty: Type::None,
             }],
             ty: Type::None,
@@ -414,6 +438,7 @@ fn collect_mutated_vars_ignores_nested_function_scope() {
         }],
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: vec![],
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -445,6 +470,7 @@ fn collect_mutated_vars_includes_captured_rebinds_from_nested_functions() {
         }],
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: vec![],
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -473,15 +499,19 @@ fn collect_mutated_vars_marks_captured_outer_mutation_from_nested_function() {
             expr: HirExpr::MethodCall {
                 object: Box::new(HirExpr::Name {
                     name: "items".to_string(),
+                    binding_id: None,
                     ty: Type::List(Box::new(Type::Int)),
                 }),
                 method: "append".to_string(),
                 args: vec![HirExpr::IntLiteral(1)],
+                receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+                source: None,
                 ty: Type::None,
             },
         }],
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: vec![],
         rust_interop: Vec::new(),
         python_interop: Vec::new(),
@@ -506,6 +536,7 @@ fn collect_mutated_vars_marks_dict_setdefault_receiver() {
         expr: HirExpr::MethodCall {
             object: Box::new(HirExpr::Name {
                 name: "data".to_string(),
+                binding_id: None,
                 ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
             }),
             method: "setdefault".to_string(),
@@ -513,6 +544,8 @@ fn collect_mutated_vars_marks_dict_setdefault_receiver() {
                 HirExpr::StringLiteral("k".to_string()),
                 HirExpr::IntLiteral(1),
             ],
+            receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+            source: None,
             ty: Type::Int,
         },
     }];
@@ -527,6 +560,7 @@ fn collect_mutated_vars_marks_set_update_receiver() {
         expr: HirExpr::MethodCall {
             object: Box::new(HirExpr::Name {
                 name: "seen".to_string(),
+                binding_id: None,
                 ty: Type::Set(Box::new(Type::Int)),
             }),
             method: "intersection_update".to_string(),
@@ -534,6 +568,8 @@ fn collect_mutated_vars_marks_set_update_receiver() {
                 elements: vec![HirExpr::IntLiteral(1), HirExpr::IntLiteral(2)],
                 ty: Type::List(Box::new(Type::Int)),
             }],
+            receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+            source: None,
             ty: Type::None,
         },
     }];
@@ -565,6 +601,7 @@ fn collect_mutated_vars_marks_self_for_delegated_field_class_method_call() {
             object: Box::new(HirExpr::FieldAccess {
                 object: Box::new(HirExpr::Name {
                     name: "self".to_string(),
+                    binding_id: None,
                     ty: holder_ty,
                 }),
                 field: "_writer".to_string(),
@@ -572,6 +609,8 @@ fn collect_mutated_vars_marks_self_for_delegated_field_class_method_call() {
             }),
             method: "writerow".to_string(),
             args: vec![],
+            receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+            source: None,
             ty: Type::None,
         },
     }];
@@ -600,6 +639,7 @@ fn collect_typed_refs_in_expr_includes_fstring_interpolations() {
             sifr_ir::HirFStringPart::Literal("value=".to_string()),
             sifr_ir::HirFStringPart::Expr(HirExpr::Name {
                 name: "n".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             }),
         ],
@@ -714,6 +754,7 @@ fn python_async_context_suppression_keeps_following_return_reachable() {
             kind: sifr_ir::HirAsyncWithKind::Python {
                 context: HirExpr::Name {
                     name: "manager".to_string(),
+                    binding_id: None,
                     ty: Type::Unknown,
                 },
                 manager_class: "Manager".to_string(),
@@ -727,6 +768,7 @@ fn python_async_context_suppression_keeps_following_return_reachable() {
             body: vec![HirStmt::Raise {
                 value: HirExpr::Name {
                     name: "error".to_string(),
+                    binding_id: None,
                     ty: Type::Unknown,
                 },
             }],
@@ -767,11 +809,13 @@ fn collect_typevar_operator_requirements_detects_add_and_sub() {
             expr: HirExpr::BinOp {
                 left: Box::new(HirExpr::Name {
                     name: "a".to_string(),
+                    binding_id: None,
                     ty: Type::TypeVar("T".to_string()),
                 }),
                 op: "+".to_string(),
                 right: Box::new(HirExpr::Name {
                     name: "b".to_string(),
+                    binding_id: None,
                     ty: Type::TypeVar("T".to_string()),
                 }),
                 ty: Type::TypeVar("T".to_string()),
@@ -781,11 +825,13 @@ fn collect_typevar_operator_requirements_detects_add_and_sub() {
             expr: HirExpr::BinOp {
                 left: Box::new(HirExpr::Name {
                     name: "a".to_string(),
+                    binding_id: None,
                     ty: Type::TypeVar("T".to_string()),
                 }),
                 op: "-".to_string(),
                 right: Box::new(HirExpr::Name {
                     name: "b".to_string(),
+                    binding_id: None,
                     ty: Type::TypeVar("T".to_string()),
                 }),
                 ty: Type::TypeVar("T".to_string()),
@@ -804,11 +850,13 @@ fn collect_typevar_operator_requirements_detects_equality() {
         expr: HirExpr::Compare {
             left: Box::new(HirExpr::Name {
                 name: "a".to_string(),
+                binding_id: None,
                 ty: Type::TypeVar("T".to_string()),
             }),
             ops: vec!["==".to_string()],
             comparators: vec![HirExpr::Name {
                 name: "b".to_string(),
+                binding_id: None,
                 ty: Type::TypeVar("T".to_string()),
             }],
             ty: Type::Bool,

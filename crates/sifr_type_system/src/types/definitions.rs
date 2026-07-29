@@ -299,6 +299,8 @@ impl IterationMetadata {
 /// Represents a function's type signature.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct FunctionType {
+    /// Instance receiver convention. Free/static/class functions have no receiver.
+    pub receiver: Option<ReceiverConvention>,
     /// Parameter names, types, and conventions
     pub params: Vec<(String, Type, ParamConvention)>,
     /// Return type
@@ -306,6 +308,13 @@ pub struct FunctionType {
 }
 
 impl FunctionType {
+    /// Attach an instance-receiver convention to this method signature.
+    #[must_use]
+    pub fn with_receiver(mut self, receiver: ReceiverConvention) -> Self {
+        self.receiver = Some(receiver);
+        self
+    }
+
     /// Create a `FunctionType` where all parameters use the default convention
     /// (Borrow for Move types, Own for Copy/TypeVar types).
     pub fn new(params: Vec<(String, Type)>, return_type: Type) -> Self {
@@ -322,6 +331,7 @@ impl FunctionType {
             })
             .collect();
         FunctionType {
+            receiver: None,
             params,
             return_type: Box::new(return_type),
         }
@@ -334,9 +344,37 @@ impl FunctionType {
             .map(|(name, ty)| (name, ty, ParamConvention::borrow()))
             .collect();
         FunctionType {
+            receiver: None,
             params,
             return_type: Box::new(return_type),
         }
+    }
+}
+
+/// How an instance method receives its receiver.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ReceiverConvention {
+    /// Borrow the receiver immutably.
+    SharedBorrow,
+    /// Borrow the receiver mutably.
+    MutableBorrow,
+    /// Consume the receiver.
+    Owned,
+}
+
+impl ReceiverConvention {
+    /// Whether an implementation receiver can satisfy a protocol declaration.
+    ///
+    /// A shared implementation is valid for a mutable protocol because it
+    /// requires less access. Consuming receivers remain invariant.
+    #[must_use]
+    pub const fn satisfies_protocol(self, protocol: Self) -> bool {
+        matches!(
+            (self, protocol),
+            (Self::SharedBorrow, Self::SharedBorrow | Self::MutableBorrow)
+                | (Self::MutableBorrow, Self::MutableBorrow)
+                | (Self::Owned, Self::Owned)
+        )
     }
 }
 
@@ -439,4 +477,45 @@ pub enum OwnershipKind {
     Copy,
     /// Value is moved on assignment (str, compound types, classes)
     Move,
+}
+
+#[cfg(test)]
+mod receiver_tests {
+    use super::*;
+
+    #[test]
+    fn function_receiver_is_separate_from_ordinary_parameters() {
+        let signature = FunctionType::new(vec![("value".to_string(), Type::Int)], Type::None)
+            .with_receiver(ReceiverConvention::MutableBorrow);
+
+        assert_eq!(signature.receiver, Some(ReceiverConvention::MutableBorrow));
+        assert_eq!(signature.params.len(), 1);
+        assert_eq!(signature.params[0].0, "value");
+    }
+
+    #[test]
+    fn free_function_constructors_do_not_invent_receivers() {
+        assert_eq!(
+            FunctionType::all_borrow(Vec::new(), Type::None).receiver,
+            None
+        );
+        assert_eq!(FunctionType::new(Vec::new(), Type::None).receiver, None);
+    }
+
+    #[test]
+    fn protocol_receiver_variance_allows_only_no_stronger_access() {
+        assert!(
+            ReceiverConvention::SharedBorrow.satisfies_protocol(ReceiverConvention::SharedBorrow)
+        );
+        assert!(
+            ReceiverConvention::SharedBorrow.satisfies_protocol(ReceiverConvention::MutableBorrow)
+        );
+        assert!(
+            ReceiverConvention::MutableBorrow.satisfies_protocol(ReceiverConvention::MutableBorrow)
+        );
+        assert!(
+            !ReceiverConvention::MutableBorrow.satisfies_protocol(ReceiverConvention::SharedBorrow)
+        );
+        assert!(ReceiverConvention::Owned.satisfies_protocol(ReceiverConvention::Owned));
+    }
 }

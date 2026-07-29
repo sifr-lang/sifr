@@ -1,4 +1,3 @@
-use crate::helpers::body_contains_field_assign_codegen;
 use crate::{
     RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
     Visibility,
@@ -18,7 +17,7 @@ impl RustEmitter {
                 name: method.name.clone(),
                 params: {
                     let mut params = Vec::with_capacity(method.params.len() + 1);
-                    params.push(RustParam::SelfParam { mutable: false });
+                    params.push(Self::rust_receiver_param(method));
                     for param in &method.params {
                         params.push(RustParam::Named {
                             name: param.name.clone(),
@@ -284,10 +283,7 @@ impl RustEmitter {
         };
         let mut params = Vec::new();
         if method.method_kind == MethodKind::Regular && method.name != "new" {
-            let self_mutable = body_contains_field_assign_codegen(&method.body);
-            params.push(RustParam::SelfParam {
-                mutable: self_mutable,
-            });
+            params.push(Self::rust_receiver_param(method));
         }
         for param in &method.params {
             let mut ty = crate::sifr_type_to_rust_type(&param.ty);

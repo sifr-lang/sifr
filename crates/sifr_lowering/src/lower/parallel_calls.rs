@@ -208,7 +208,7 @@ fn validate_parallel_map_like_call(
         }
     }
 
-    if let HirExpr::Name { name, ty } = &items {
+    if let HirExpr::Name { name, ty, .. } = &items {
         if ty.ownership() == OwnershipKind::Move {
             ctx.mark_moved_with_flow(name);
         }

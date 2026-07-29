@@ -7,6 +7,7 @@ fn lowers_simple_attribute_augassign_floor_div_equal_alias_numeric_name() {
         op: "//=".to_string(),
         value: HirExpr::Name {
             name: "step".to_string(),
+            binding_id: None,
             ty: Type::alias("Step", Type::Int),
         },
     };
@@ -35,6 +36,7 @@ fn does_not_lower_attribute_augassign_plus_equal_string_name() {
         op: "+=".to_string(),
         value: HirExpr::Name {
             name: "suffix".to_string(),
+            binding_id: None,
             ty: Type::Str,
         },
     };
@@ -69,6 +71,7 @@ fn lowers_simple_attribute_augassign_bitwise_and_shift_ops() {
             op: op.to_string(),
             value: HirExpr::Name {
                 name: "delta".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             },
         };

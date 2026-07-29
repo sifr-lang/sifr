@@ -106,7 +106,7 @@ impl RustEmitter {
                 | CompilerIntrinsicId::TestAssertAlmostEqual
         ) {
             for (idx, arg) in args.iter().enumerate() {
-                let HirExpr::Name { name, ty } = arg else {
+                let HirExpr::Name { name, ty, .. } = arg else {
                     continue;
                 };
                 if !(self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name))

@@ -6,11 +6,13 @@ fn lowers_simple_list_subscript_augassign_plus_equal_stmt() {
         object: "items".to_string(),
         index: HirExpr::Name {
             name: "i".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         op: "+=".to_string(),
         value: HirExpr::Name {
             name: "delta".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         object_ty: Type::List(Box::new(Type::Int)),
@@ -50,6 +52,7 @@ fn lowers_simple_string_list_subscript_augassign_plus_equal_stmt() {
         op: "+=".to_string(),
         value: HirExpr::Name {
             name: "c".to_string(),
+            binding_id: None,
             ty: Type::Str,
         },
         object_ty: Type::List(Box::new(Type::Str)),
@@ -103,6 +106,7 @@ fn lowers_simple_list_subscript_augassign_bitwise_and_shift_ops() {
             op: op.to_string(),
             value: HirExpr::Name {
                 name: "rhs".to_string(),
+                binding_id: None,
                 ty: Type::Int,
             },
             object_ty: Type::List(Box::new(Type::Int)),
@@ -140,11 +144,13 @@ fn lowers_simple_dict_subscript_augassign_with_name_key() {
         object: "mapping".to_string(),
         index: HirExpr::Name {
             name: "key".to_string(),
+            binding_id: None,
             ty: Type::Str,
         },
         op: "+=".to_string(),
         value: HirExpr::Name {
             name: "delta".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         object_ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
@@ -214,6 +220,7 @@ fn lowers_simple_alias_dict_subscript_augassign_stmt() {
         object: "mapping".to_string(),
         index: HirExpr::Name {
             name: "key".to_string(),
+            binding_id: None,
             ty: Type::Str,
         },
         op: "|=".to_string(),

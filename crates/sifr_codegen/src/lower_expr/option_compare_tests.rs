@@ -4,6 +4,7 @@ pub(super) fn lowers_option_is_none_compare_with_alias_option_name_operand() {
     let cmp = HirExpr::Compare {
         left: Box::new(HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None])),
         }),
         ops: vec!["is".to_string()],
@@ -29,6 +30,7 @@ pub(super) fn lowers_option_is_not_none_compare_with_name_operand() {
     let cmp = HirExpr::Compare {
         left: Box::new(HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::Union(vec![Type::Int, Type::None]),
         }),
         ops: vec!["is not".to_string()],
@@ -54,6 +56,7 @@ pub(super) fn lowers_option_is_not_none_compare_with_alias_option_name_operand()
     let cmp = HirExpr::Compare {
         left: Box::new(HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None])),
         }),
         ops: vec!["is not".to_string()],
@@ -81,6 +84,7 @@ pub(super) fn lowers_option_is_none_compare_with_reversed_name_operand() {
         ops: vec!["is".to_string()],
         comparators: vec![HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::Union(vec![Type::Int, Type::None]),
         }],
         ty: Type::Bool,
@@ -106,6 +110,7 @@ pub(super) fn lowers_option_is_not_none_compare_with_reversed_alias_option_name_
         ops: vec!["is not".to_string()],
         comparators: vec![HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::alias("MaybeInt", Type::Union(vec![Type::Int, Type::None])),
         }],
         ty: Type::Bool,
@@ -162,11 +167,13 @@ pub(super) fn lowers_bool_compare_with_literal_bool_name_operands() {
     let cmp = HirExpr::Compare {
         left: Box::new(HirExpr::Name {
             name: "lhs".to_string(),
+            binding_id: None,
             ty: Type::LiteralBool(true),
         }),
         ops: vec!["==".to_string()],
         comparators: vec![HirExpr::Name {
             name: "rhs".to_string(),
+            binding_id: None,
             ty: Type::Bool,
         }],
         ty: Type::Bool,
@@ -338,11 +345,13 @@ pub(super) fn lowers_alias_wrapped_scalar_compare() {
     let cmp = HirExpr::Compare {
         left: Box::new(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: alias_int.clone(),
         }),
         ops: vec!["==".to_string()],
         comparators: vec![HirExpr::Name {
             name: "y".to_string(),
+            binding_id: None,
             ty: alias_int,
         }],
         ty: Type::Bool,
@@ -362,11 +371,13 @@ pub(super) fn does_not_lower_mismatched_alias_wrapped_scalar_compare() {
     let cmp = HirExpr::Compare {
         left: Box::new(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: int_alias,
         }),
         ops: vec!["==".to_string()],
         comparators: vec![HirExpr::Name {
             name: "ok".to_string(),
+            binding_id: None,
             ty: bool_alias,
         }],
         ty: Type::Bool,
@@ -443,6 +454,7 @@ pub(super) fn lowers_none_identity_compare_with_none_typed_left() {
     let is_cmp = HirExpr::Compare {
         left: Box::new(HirExpr::Name {
             name: "n".to_string(),
+            binding_id: None,
             ty: Type::None,
         }),
         ops: vec!["is".to_string()],
@@ -452,6 +464,7 @@ pub(super) fn lowers_none_identity_compare_with_none_typed_left() {
     let is_not_cmp = HirExpr::Compare {
         left: Box::new(HirExpr::Name {
             name: "n".to_string(),
+            binding_id: None,
             ty: Type::None,
         }),
         ops: vec!["is not".to_string()],
@@ -478,6 +491,7 @@ pub(super) fn lowers_none_identity_compare_with_alias_none_typed_left() {
     let is_cmp = HirExpr::Compare {
         left: Box::new(HirExpr::Name {
             name: "n".to_string(),
+            binding_id: None,
             ty: alias_none.clone(),
         }),
         ops: vec!["is".to_string()],
@@ -487,6 +501,7 @@ pub(super) fn lowers_none_identity_compare_with_alias_none_typed_left() {
     let is_not_cmp = HirExpr::Compare {
         left: Box::new(HirExpr::Name {
             name: "n".to_string(),
+            binding_id: None,
             ty: alias_none,
         }),
         ops: vec!["is not".to_string()],
@@ -515,6 +530,7 @@ pub(super) fn lowers_none_identity_compare_with_none_typed_right() {
         ops: vec!["is".to_string()],
         comparators: vec![HirExpr::Name {
             name: "n".to_string(),
+            binding_id: None,
             ty: Type::None,
         }],
         ty: Type::Bool,
@@ -524,6 +540,7 @@ pub(super) fn lowers_none_identity_compare_with_none_typed_right() {
         ops: vec!["is not".to_string()],
         comparators: vec![HirExpr::Name {
             name: "n".to_string(),
+            binding_id: None,
             ty: Type::None,
         }],
         ty: Type::Bool,
@@ -551,6 +568,7 @@ pub(super) fn lowers_none_identity_compare_with_alias_none_typed_right() {
         ops: vec!["is".to_string()],
         comparators: vec![HirExpr::Name {
             name: "n".to_string(),
+            binding_id: None,
             ty: alias_none.clone(),
         }],
         ty: Type::Bool,
@@ -560,6 +578,7 @@ pub(super) fn lowers_none_identity_compare_with_alias_none_typed_right() {
         ops: vec!["is not".to_string()],
         comparators: vec![HirExpr::Name {
             name: "n".to_string(),
+            binding_id: None,
             ty: alias_none,
         }],
         ty: Type::Bool,
@@ -584,10 +603,12 @@ pub(super) fn lowers_range_literal_with_name_bounds() {
     let range = HirExpr::RangeLiteral {
         start: Box::new(HirExpr::Name {
             name: "start".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         end: Box::new(HirExpr::Name {
             name: "end".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         step: None,
@@ -610,6 +631,7 @@ pub(super) fn lowers_range_literal_with_name_step() {
         end: Box::new(HirExpr::IntLiteral(10)),
         step: Some(Box::new(HirExpr::Name {
             name: "step".to_string(),
+            binding_id: None,
             ty: Type::Int,
         })),
         ty: Type::Range,
@@ -635,10 +657,12 @@ pub(super) fn lowers_range_literal_with_alias_name_bounds() {
     let range = HirExpr::RangeLiteral {
         start: Box::new(HirExpr::Name {
             name: "start".to_string(),
+            binding_id: None,
             ty: alias_int.clone(),
         }),
         end: Box::new(HirExpr::Name {
             name: "end".to_string(),
+            binding_id: None,
             ty: alias_int,
         }),
         step: None,
@@ -662,6 +686,7 @@ pub(super) fn lowers_range_literal_with_alias_name_step() {
         end: Box::new(HirExpr::IntLiteral(10)),
         step: Some(Box::new(HirExpr::Name {
             name: "step".to_string(),
+            binding_id: None,
             ty: alias_int,
         })),
         ty: Type::Range,
@@ -686,6 +711,7 @@ pub(super) fn does_not_lower_range_literal_with_non_int_name_operand() {
     let range = HirExpr::RangeLiteral {
         start: Box::new(HirExpr::Name {
             name: "start".to_string(),
+            binding_id: None,
             ty: Type::Bool,
         }),
         end: Box::new(HirExpr::IntLiteral(10)),
@@ -701,6 +727,7 @@ pub(super) fn does_not_lower_field_access_for_non_self_name() {
     let expr = HirExpr::FieldAccess {
         object: Box::new(HirExpr::Name {
             name: "point".to_string(),
+            binding_id: None,
             ty: Type::Class {
                 identity: None,
                 type_args: Vec::new(),
@@ -722,6 +749,7 @@ pub(super) fn does_not_lower_self_field_access() {
     let expr = HirExpr::FieldAccess {
         object: Box::new(HirExpr::Name {
             name: "self".to_string(),
+            binding_id: None,
             ty: Type::Class {
                 identity: None,
                 type_args: Vec::new(),
@@ -743,6 +771,7 @@ pub(super) fn does_not_lower_subclass_field_access() {
     let expr = HirExpr::FieldAccess {
         object: Box::new(HirExpr::Name {
             name: "dog".to_string(),
+            binding_id: None,
             ty: Type::Class {
                 identity: None,
                 type_args: Vec::new(),
@@ -764,10 +793,12 @@ pub(super) fn lowers_contains_for_list_name_collection() {
     let expr = HirExpr::ContainsOp {
         element: Box::new(HirExpr::Name {
             name: "needle".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
         collection: Box::new(HirExpr::Name {
             name: "haystack".to_string(),
+            binding_id: None,
             ty: Type::List(Box::new(Type::Int)),
         }),
         ty: Type::Bool,

@@ -8,6 +8,7 @@ fn lowers_simple_let_with_not_bool_name_rhs() {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Name {
                 name: "ok".to_string(),
+                binding_id: None,
                 ty: Type::Bool,
             }),
             ty: Type::Bool,
@@ -41,6 +42,7 @@ fn lowers_simple_assign_with_not_bool_name_rhs() {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Name {
                 name: "ok".to_string(),
+                binding_id: None,
                 ty: Type::Bool,
             }),
             ty: Type::Bool,
@@ -73,6 +75,7 @@ fn lowers_simple_let_with_not_option_name_rhs() {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
+                binding_id: None,
                 ty: Type::Union(vec![Type::Int, Type::None]),
             }),
             ty: Type::Bool,
@@ -108,6 +111,7 @@ fn lowers_simple_assign_with_not_option_name_rhs() {
             op: "not".to_string(),
             operand: Box::new(HirExpr::Name {
                 name: "maybe_x".to_string(),
+                binding_id: None,
                 ty: Type::Union(vec![Type::Int, Type::None]),
             }),
             ty: Type::Bool,
@@ -140,6 +144,7 @@ fn lowers_simple_let_name_rhs() {
         ty: Type::Int,
         value: HirExpr::Name {
             name: "y".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         is_mutable: false,
@@ -195,6 +200,7 @@ fn lowers_simple_let_alias_enum_name_rhs() {
         ty: alias_enum.clone(),
         value: HirExpr::Name {
             name: "selected".to_string(),
+            binding_id: None,
             ty: alias_enum,
         },
         is_mutable: false,
@@ -265,6 +271,7 @@ fn lowers_simple_let_none_name_rhs() {
         ty: Type::None,
         value: HirExpr::Name {
             name: "n".to_string(),
+            binding_id: None,
             ty: Type::None,
         },
         is_mutable: false,
@@ -291,6 +298,7 @@ fn lowers_simple_let_alias_none_name_rhs() {
         ty: alias_none.clone(),
         value: HirExpr::Name {
             name: "n".to_string(),
+            binding_id: None,
             ty: alias_none,
         },
         is_mutable: false,
@@ -363,6 +371,7 @@ fn lowers_simple_option_let_name_rhs_to_some() {
         ty: option_ty,
         value: HirExpr::Name {
             name: "y".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
         is_mutable: false,
@@ -416,6 +425,7 @@ fn lowers_simple_option_let_option_name_rhs_passthrough() {
         ty: option_ty.clone(),
         value: HirExpr::Name {
             name: "maybe_y".to_string(),
+            binding_id: None,
             ty: option_ty,
         },
         is_mutable: false,
@@ -476,6 +486,7 @@ fn lowers_simple_option_let_none_name_rhs_to_none() {
         ty: option_ty,
         value: HirExpr::Name {
             name: "none_value".to_string(),
+            binding_id: None,
             ty: Type::None,
         },
         is_mutable: false,
@@ -503,6 +514,7 @@ fn lowers_simple_option_let_alias_none_name_rhs_to_none() {
         ty: option_ty,
         value: HirExpr::Name {
             name: "none_value".to_string(),
+            binding_id: None,
             ty: alias_none,
         },
         is_mutable: false,
@@ -544,6 +556,7 @@ fn lowers_simple_assign_name_rhs() {
         name: "x".to_string(),
         value: HirExpr::Name {
             name: "y".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
     };
@@ -565,6 +578,7 @@ fn does_not_lower_assign_borrowed_typevar_name() {
         name: "dst".to_string(),
         value: HirExpr::Name {
             name: "param".to_string(),
+            binding_id: None,
             ty: Type::TypeVar("T".to_string()),
         },
     };

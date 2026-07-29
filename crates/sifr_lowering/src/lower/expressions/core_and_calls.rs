@@ -6,7 +6,7 @@ use super::container_literal_diagnostics::{
 use super::expression_diagnostics;
 use super::expression_operators::{lower_binop, lower_compare, lower_unaryop};
 use super::fstring_support::lower_fstring_expr;
-use super::integer_literals::canonical_large_int_literal_text;
+use super::literals::{lower_bytes_literal, lower_number_literal};
 use super::name_diagnostics;
 use super::ownership_diagnostics;
 use super::sequence_guard_detection::{
@@ -32,8 +32,8 @@ use crate::lower::task_join_set_calls::{
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{
-    BoolOp, Expr, ExprAttribute, ExprBoolOp, ExprBytesLiteral, ExprCall, ExprDict, ExprList,
-    ExprName, ExprNumberLiteral, ExprSet, ExprSubscript, ExprTuple, Number,
+    BoolOp, Expr, ExprAttribute, ExprBoolOp, ExprCall, ExprDict, ExprList, ExprName, ExprSet,
+    ExprSubscript, ExprTuple,
 };
 use sifr_type_system::{make_union, type_check_bool_op, FunctionType, ParamConvention, Type};
 pub(in crate::lower) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<HirExpr> {
@@ -97,33 +97,6 @@ pub(in crate::lower) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<Hi
     }?;
     reject_python_context_borrow_created_value(&lowered, expr.range(), ctx);
     Some(lowered)
-}
-pub(in crate::lower) fn lower_number_literal(num: &ExprNumberLiteral) -> Option<HirExpr> {
-    match &num.value {
-        Number::Int(i) => {
-            if let Some(val) = i.as_i64() {
-                Some(HirExpr::IntLiteral(val))
-            } else {
-                Some(HirExpr::LargeIntLiteral(canonical_large_int_literal_text(
-                    i,
-                )))
-            }
-        }
-        Number::Float(f) => Some(HirExpr::FloatLiteral(*f)),
-        Number::Complex { .. } => None, // Not supported.
-    }
-}
-pub(in crate::lower) fn lower_bytes_literal(bytes: &ExprBytesLiteral) -> HirExpr {
-    let mut elements = Vec::new();
-    for part in &bytes.value {
-        for value in part.as_slice() {
-            elements.push(HirExpr::IntLiteral(i64::from(*value)));
-        }
-    }
-    HirExpr::ListLiteral {
-        elements,
-        ty: Type::Bytes,
-    }
 }
 pub(in crate::lower) fn callable_signature(
     expr: &HirExpr,
@@ -191,6 +164,7 @@ pub(super) fn canonicalize_class_surface_type(ty: &Type) -> Type {
             Box::new(canonicalize_class_surface_type(ret)),
         ),
         Type::Function(ft) => Type::Function(FunctionType {
+            receiver: ft.receiver,
             params: ft
                 .params
                 .iter()
@@ -233,10 +207,15 @@ pub(in crate::lower) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Optio
     if let Some(info) = ctx.scope.lookup(&var_name) {
         let is_moved = info.is_moved;
         let ty = info.effective_type().clone();
+        let binding_id = info.binding_id;
         if is_moved {
             ownership_diagnostics::use_after_move(ctx, &var_name, name.range());
         }
-        return Some(HirExpr::Name { name: var_name, ty });
+        return Some(HirExpr::Name {
+            name: var_name,
+            binding_id: Some(binding_id),
+            ty,
+        });
     }
     if let Some(ft) = ctx.functions.get(&var_name) {
         let ft = ft.clone();
@@ -247,7 +226,11 @@ pub(in crate::lower) fn lower_name(name: &ExprName, ctx: &mut LowerCtx) -> Optio
         } else {
             Type::Function(ft)
         };
-        return Some(HirExpr::Name { name: var_name, ty });
+        return Some(HirExpr::Name {
+            name: var_name,
+            binding_id: None,
+            ty,
+        });
     }
     match var_name.as_str() {
         "True" => return Some(HirExpr::BoolLiteral(true)),
@@ -593,7 +576,7 @@ pub(in crate::lower) fn consume_owned_value(
     range: ruff_text_size::TextRange,
     ctx: &mut LowerCtx,
 ) {
-    if let HirExpr::Name { name, ty } = expr {
+    if let HirExpr::Name { name, ty, .. } = expr {
         if ty.ownership() == sifr_type_system::OwnershipKind::Move {
             if ty.contains_affine_resource() && ctx.borrowed_params.contains(name) {
                 ownership_diagnostics::borrowed_affine_parameter_escape(

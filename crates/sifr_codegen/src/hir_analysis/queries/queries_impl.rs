@@ -1,33 +1,9 @@
 use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 use crate::ModuleFuncSignatures;
 use sifr_ir::{HirExpr, HirIteratorOp, HirPattern, HirStmt};
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-
-pub(crate) const MUTATING_METHODS: &[&str] = &[
-    "write",
-    "append",
-    "appendleft",
-    "extend",
-    "insert",
-    "clear",
-    "reverse",
-    "sort",
-    "pop",
-    "popleft",
-    "remove",
-    "push_str",
-    "update",
-    "setdefault",
-    "add",
-    "intersection_update",
-    "difference_update",
-    "symmetric_difference_update",
-    "discard",
-    "anext",
-    "aclose",
-];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ControlFlowEffect {
@@ -476,12 +452,11 @@ pub(crate) fn collect_mutated_vars(
             object,
             method,
             args,
+            receiver_convention,
             ..
         } => {
             let root_name = expression_root_name(object).map(str::to_string);
-            if MUTATING_METHODS.contains(&method.as_str())
-                || matches!(object.ty(), Type::Class { .. })
-            {
+            if *receiver_convention == Some(ReceiverConvention::MutableBorrow) {
                 if let Some(name) = root_name {
                     mutated.borrow_mut().insert(name);
                 }
@@ -590,7 +565,7 @@ pub(crate) fn collect_referenced_vars_with_types(stmts: &[HirStmt]) -> Vec<(Stri
     let mut refs: HashMap<String, Type> = HashMap::new();
     let mut on_stmt = |_stmt: &HirStmt| {};
     let mut on_expr = |expr: &HirExpr| {
-        if let HirExpr::Name { name, ty } = expr {
+        if let HirExpr::Name { name, ty, .. } = expr {
             refs.entry(name.clone()).or_insert_with(|| ty.clone());
         }
     };
@@ -605,7 +580,7 @@ pub(crate) fn collect_referenced_vars_with_types(stmts: &[HirStmt]) -> Vec<(Stri
 
 pub(crate) fn collect_typed_refs_in_expr(expr: &HirExpr, refs: &mut HashMap<String, Type>) {
     traversal::walk_expr(expr, &mut |node| {
-        if let HirExpr::Name { name, ty } = node {
+        if let HirExpr::Name { name, ty, .. } = node {
             refs.entry(name.clone()).or_insert_with(|| ty.clone());
         }
     });

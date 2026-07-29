@@ -90,6 +90,7 @@ fn lowers_simple_return_name_in_plain_context() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
     };
@@ -137,6 +138,7 @@ fn lowers_return_name_with_option_return_context() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
     };
@@ -168,6 +170,7 @@ fn lowers_return_option_name_in_plain_context_without_unwrap() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::Union(vec![Type::Int, Type::None]),
         }),
     };
@@ -196,6 +199,7 @@ fn lowers_option_name_return_with_option_return_context() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: Type::Union(vec![Type::Int, Type::None]),
         }),
     };
@@ -226,6 +230,7 @@ fn lowers_option_name_return_with_alias_option_return_context() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Name {
             name: "maybe_x".to_string(),
+            binding_id: None,
             ty: alias_option.clone(),
         }),
     };
@@ -305,6 +310,7 @@ fn lowers_return_none_name_with_option_return_context() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Name {
             name: "none_value".to_string(),
+            binding_id: None,
             ty: Type::None,
         }),
     };
@@ -335,6 +341,7 @@ fn lowers_return_alias_none_name_with_option_return_context() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Name {
             name: "none_value".to_string(),
+            binding_id: None,
             ty: alias_none,
         }),
     };
@@ -443,6 +450,7 @@ fn lowers_return_name_with_non_option_union_return_context() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
     };
@@ -505,6 +513,7 @@ fn lowers_return_name_with_alias_non_option_union_return_context() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         }),
     };
@@ -584,6 +593,7 @@ fn lowers_self_return_in_class_scope_with_clone() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Name {
             name: "self".to_string(),
+            binding_id: None,
             ty: Type::Class {
                 identity: None,
                 type_args: Vec::new(),

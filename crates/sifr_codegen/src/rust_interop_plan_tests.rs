@@ -125,6 +125,7 @@ fn interop_build_plan_records_bridge_signature_and_generated_types() {
             body: Vec::new(),
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: Vec::new(),
             rust_interop: vec![declaration(
                 RustInteropDecoratorKind::Function,
@@ -188,6 +189,7 @@ fn interop_build_plan_accepts_tuple_result_with_error_class_flag() {
             body: Vec::new(),
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: Vec::new(),
             rust_interop: vec![declaration(
                 RustInteropDecoratorKind::Function,
@@ -253,6 +255,7 @@ fn interop_bridge_resolves_imported_opaque_type_to_declared_rust_target() {
             body: Vec::new(),
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: Vec::new(),
             rust_interop: vec![declaration(
                 RustInteropDecoratorKind::Function,
@@ -309,6 +312,7 @@ fn interop_bridge_includes_owned_receiver_for_opaque_close_method() {
         body: Vec::new(),
         is_async: true,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: vec![close_declaration],
         python_interop: Vec::new(),
@@ -391,6 +395,7 @@ fn interop_bridge_distinguishes_call_scoped_and_threadsafe_callbacks() {
         body: Vec::new(),
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: vec![declaration(
             RustInteropDecoratorKind::Function,
@@ -464,6 +469,7 @@ fn interop_bridge_rejects_nested_and_returned_call_scoped_callbacks() {
             body: Vec::new(),
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: Vec::new(),
             rust_interop: vec![declaration(
                 RustInteropDecoratorKind::Function,
@@ -488,6 +494,7 @@ fn interop_bridge_rejects_nested_and_returned_call_scoped_callbacks() {
         body: Vec::new(),
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: vec![declaration(
             RustInteropDecoratorKind::Function,
@@ -524,6 +531,7 @@ fn interop_bridge_rejects_mutable_callback_argument_conventions() {
         body: Vec::new(),
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: vec![declaration(
             RustInteropDecoratorKind::Function,
@@ -574,6 +582,7 @@ fn interop_bridge_generated_field_paths_use_declaring_module() {
             body: Vec::new(),
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: Vec::new(),
             rust_interop: vec![declaration(
                 RustInteropDecoratorKind::Function,
@@ -625,6 +634,7 @@ fn interop_bridge_rejects_enum_discriminants_outside_repr_u32() {
             body: Vec::new(),
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: Vec::new(),
             rust_interop: vec![declaration(
                 RustInteropDecoratorKind::Function,
@@ -688,6 +698,7 @@ fn interop_bridge_keeps_same_basename_canonical_records_distinct() {
             body: Vec::new(),
             is_async: false,
             method_kind: MethodKind::Regular,
+            receiver: None,
             decorators: Vec::new(),
             rust_interop: vec![declaration(
                 RustInteropDecoratorKind::Function,
@@ -743,6 +754,7 @@ fn function_with_declaration(
         body: Vec::new(),
         is_async: false,
         method_kind: MethodKind::Regular,
+        receiver: None,
         decorators: Vec::new(),
         rust_interop: vec![declaration(kind, target)],
         python_interop: Vec::new(),

@@ -114,22 +114,34 @@ fn lower_task_scope_spawn_from_object_impl(
         return None;
     }
 
+    let mut source = super::method_call_metadata::source_method_call(call);
+    source.arg_ranges = vec![call.arguments.args[0].range()];
+    if explicit_context.is_some() {
+        if let Some(context) = call.arguments.keywords.first() {
+            source.arg_ranges.insert(0, context.value.range());
+        }
+    }
+    let method = match (
+        matches!(task_err_ty.resolve_alias(), Type::Never),
+        explicit_context.is_some(),
+    ) {
+        (true, true) => "__sifr_spawn_infallible_with_context",
+        (true, false) => "__sifr_spawn_infallible",
+        (false, true) => "__sifr_spawn_result_with_context",
+        (false, false) => "__sifr_spawn_result",
+    };
+    let receiver_convention =
+        super::mutating_methods::receiver_convention_for_non_class_method(object.ty(), method);
     Some(HirExpr::MethodCall {
         object: Box::new(object),
-        method: match (
-            matches!(task_err_ty.resolve_alias(), Type::Never),
-            explicit_context.is_some(),
-        ) {
-            (true, true) => "__sifr_spawn_infallible_with_context".to_string(),
-            (true, false) => "__sifr_spawn_infallible".to_string(),
-            (false, true) => "__sifr_spawn_result_with_context".to_string(),
-            (false, false) => "__sifr_spawn_result".to_string(),
-        },
+        method: method.to_string(),
         args: if let Some(context) = explicit_context {
             vec![context, coroutine]
         } else {
             vec![coroutine]
         },
+        receiver_convention: Some(receiver_convention),
+        source: Some(source),
         ty: Type::Task(task_ok_ty, task_err_ty),
     })
 }
@@ -161,7 +173,7 @@ fn borrowed_task_boundary_argument(args: &[HirExpr], ctx: &LowerCtx) -> Option<S
 
 fn borrowed_task_boundary_argument_in_expr(expr: &HirExpr, ctx: &LowerCtx) -> Option<String> {
     match expr {
-        HirExpr::Name { name, ty }
+        HirExpr::Name { name, ty, .. }
             if ctx.borrowed_params.contains(name.as_str())
                 && matches!(ty.ownership(), sifr_type_system::OwnershipKind::Move) =>
         {
@@ -489,7 +501,7 @@ pub(in crate::lower) fn task_group_spawn_owner(expr: &HirExpr) -> Option<String>
     ) {
         return None;
     }
-    let HirExpr::Name { name, ty } = object.as_ref() else {
+    let HirExpr::Name { name, ty, .. } = object.as_ref() else {
         return None;
     };
     is_task_group_type(ty).then(|| name.clone())

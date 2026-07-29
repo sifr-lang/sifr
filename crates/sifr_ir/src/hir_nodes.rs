@@ -2,7 +2,7 @@
 
 use crate::{PythonInteropDeclaration, RustInteropDeclaration};
 use ruff_text_size::TextRange;
-use sifr_type_system::{ParamConvention, Type};
+use sifr_type_system::{ParamConvention, ReceiverConvention, Type};
 
 /// A complete HIR module (the top-level compilation unit).
 #[derive(Debug, Clone)]
@@ -116,11 +116,23 @@ impl HirClass {
 }
 
 /// Method kind: regular, classmethod, or staticmethod
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MethodKind {
     Regular,
     ClassMethod,
     StaticMethod,
+}
+
+/// Stable identity assigned to a resolved source binding during lowering.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct BindingId(pub u32);
+
+/// Source ranges retained for ownership diagnostics on source method calls.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MethodCallSource {
+    pub call_range: TextRange,
+    pub receiver_range: TextRange,
+    pub arg_ranges: Vec<TextRange>,
 }
 
 /// A function definition with resolved types.
@@ -134,6 +146,8 @@ pub struct HirFunction {
     pub is_async: bool,
     /// Method kind: Regular, `ClassMethod`, or `StaticMethod`
     pub method_kind: MethodKind,
+    /// Receiver convention for regular instance methods.
+    pub receiver: Option<ReceiverConvention>,
     /// User-defined decorators (excluding classmethod/staticmethod)
     pub decorators: Vec<String>,
     /// Structured Rust interop declarations attached to this function.
@@ -567,7 +581,11 @@ pub enum HirExpr {
     /// None literal
     NoneLiteral,
     /// Variable reference
-    Name { name: String, ty: Type },
+    Name {
+        name: String,
+        binding_id: Option<BindingId>,
+        ty: Type,
+    },
     /// Binary operation (a + b, a - b, etc.)
     BinOp {
         left: Box<HirExpr>,
@@ -661,6 +679,8 @@ pub enum HirExpr {
         object: Box<HirExpr>,
         method: String,
         args: Vec<HirExpr>,
+        receiver_convention: Option<ReceiverConvention>,
+        source: Option<MethodCallSource>,
         ty: Type,
     },
     /// Contains check: x in collection

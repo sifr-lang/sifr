@@ -105,6 +105,7 @@ fn lowers_simple_module_name_const_item() {
         &Type::Int,
         &HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
     )
@@ -210,6 +211,7 @@ fn dispatcher_lowers_alias_primitive_module_const_as_const_item() {
         &alias_bool,
         &HirExpr::Name {
             name: "flag".to_string(),
+            binding_id: None,
             ty: alias_bool.clone(),
         },
     )
@@ -286,6 +288,7 @@ fn dispatcher_lowers_alias_string_module_const_as_string_item() {
         &alias_str,
         &HirExpr::Name {
             name: "msg".to_string(),
+            binding_id: None,
             ty: alias_str.clone(),
         },
     )
@@ -325,6 +328,7 @@ fn lowers_simple_module_string_name_const_item() {
         &Type::Str,
         &HirExpr::Name {
             name: "msg".to_string(),
+            binding_id: None,
             ty: Type::Str,
         },
     )
@@ -424,6 +428,7 @@ fn lowers_simple_module_none_name_const_item() {
         &Type::None,
         &HirExpr::Name {
             name: "n".to_string(),
+            binding_id: None,
             ty: Type::None,
         },
     )
@@ -450,6 +455,7 @@ fn lowers_simple_module_alias_none_name_const_item() {
         &alias_none,
         &HirExpr::Name {
             name: "n".to_string(),
+            binding_id: None,
             ty: alias_none.clone(),
         },
     )
@@ -494,6 +500,7 @@ fn dispatcher_lowers_alias_none_name_module_const_as_none_item() {
         &alias_none,
         &HirExpr::Name {
             name: "n".to_string(),
+            binding_id: None,
             ty: alias_none.clone(),
         },
     )
@@ -529,6 +536,7 @@ fn does_not_lower_non_none_name_module_none_const_item() {
         &Type::None,
         &HirExpr::Name {
             name: "x".to_string(),
+            binding_id: None,
             ty: Type::Int,
         },
     )
@@ -572,6 +580,7 @@ fn lowers_simple_module_helper_name_const_item() {
     let ty = Type::List(Box::new(Type::Int));
     let value = HirExpr::Name {
         name: "nums".to_string(),
+        binding_id: None,
         ty: ty.clone(),
     };
     let (item, rust_name_call) = try_lower_simple_module_helper_const_item("data", &ty, &value)
