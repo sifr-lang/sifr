@@ -1,0 +1,14 @@
+def nested_key(value: int) -> list[int]:
+    return [value % 10, value]
+
+def main():
+    intervals: list[list[int]] = [[3, 4], [1, 2], [1, 1]]
+    intervals.sort()
+    assert intervals == [[1, 1], [1, 2], [3, 4]]
+
+    words: list[list[list[str]]] = [[["b"]], [["a"]], [["c"]]]
+    ordered: list[list[list[str]]] = sorted(words, reverse=True)
+    assert ordered == [[["c"]], [["b"]], [["a"]]]
+
+    keyed: list[int] = sorted([21, 12, 11], key=nested_key)
+    assert keyed == [11, 21, 12]
