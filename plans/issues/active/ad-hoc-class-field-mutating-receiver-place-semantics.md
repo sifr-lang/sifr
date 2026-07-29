@@ -2,10 +2,13 @@
 
 ## Status
 
-Implementation-ready urgent correctness follow-up identified during the M10
-declaration-first Python interop milestone review. Claude Opus
-implementation-readiness pass 7 returned `SATISFIED`; implementation has not
-started.
+Implementation in progress for the urgent correctness follow-up identified
+during the M10 declaration-first Python interop milestone review. Claude Opus
+implementation-readiness pass 7 returned `SATISFIED`. Item 1, canonical
+receiver metadata and inference, merged in
+[#3065](https://github.com/sifr-lang/sifr/pull/3065) after implementation
+review pass 2 returned `SATISFIED`. Item 2, checked place semantics and defect
+closure, remains.
 
 The defect predates M10 and was not introduced by the buffer implementation,
 but it violates Sifr's core guarantee: a program can compile and silently lose
@@ -135,12 +138,11 @@ convention as an internal compiler error; codegen must not default it.
 
 Add the invariant check as a focused lowering post-pass before
 `LoweringResult` construction. Missing convention/range metadata for a
-source-originated resolved method call triggers an `assert!` as a programmer
-invariant; the existing driver panic boundary owns rendering
-`SIFR-INTERNAL-0001`. It is not emitted directly from lowering, so the
-diagnostic registry owner remains `sifr_driver::diagnostics`. Focused tests
-exercise the invariant with compiler-authored malformed HIR. No new general
-HIR verifier framework is assumed.
+source-originated resolved method call emits the centralized internal compiler
+diagnostic through `LowerCtx`, preserving a precise source range without
+allowing malformed HIR to reach codegen. Focused tests exercise the invariant
+with compiler-authored malformed HIR. No new general HIR verifier framework is
+assumed.
 
 ### 2. Receiver convention inference
 
@@ -449,6 +451,11 @@ class receiver mutability never depends on that string table.
 ## Implementation shape
 
 ### Item 1: Canonical receiver metadata and inference
+
+Status: **Merged** in
+[#3065](https://github.com/sifr-lang/sifr/pull/3065). Claude Opus review pass 1
+returned `NOT SATISFIED`; all material findings were addressed, and pass 2
+returned `SATISFIED`. The create-PR gate passed with 131/131 E2E fixtures.
 
 1. Add `BindingId`/retained binding facts to `Scope`/`VarInfo`, attach ids to
    lowered names, and capture source ranges while each function scope is live.
@@ -836,3 +843,12 @@ CI is confirmatory; do not wait on CI instead of running the local gates.
   returned `SATISFIED`; no material semantic/design ambiguity, infeasible
   sequencing, silent fallback, unchecked fixed-receiver or method-call path,
   diagnostic mismatch, or acceptance/test contradiction remains.
+- Item 1 implementation review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item1-claude-opus-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item1-claude-opus-review-pass-1.md)
+  returned `NOT SATISFIED`; the implementation was corrected for owned-local
+  clone preservation, source-range alignment, non-class receiver contracts,
+  protocol consistency, final HIR verification, and missing coverage.
+- Item 1 implementation review pass 2:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item1-claude-opus-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item1-claude-opus-review-pass-2.md)
+  returned `SATISFIED`; Item 1 merged in
+  [#3065](https://github.com/sifr-lang/sifr/pull/3065).
