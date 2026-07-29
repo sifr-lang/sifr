@@ -152,7 +152,7 @@ normative and must not be broadened.
 | `certification_6` | merged | [PR #3046](https://github.com/sifr-lang/sifr/pull/3046); retained callback subscription lifecycle and capture contract |
 | `certification_7` | merged; retrospective performance rerun pending | [PR #3053](https://github.com/sifr-lang/sifr/pull/3053); crate-backed zero-copy lifecycle and compiler rejection contract |
 | `certification_8` | merged | [PR #3067](https://github.com/sifr-lang/sifr/pull/3067); crate-backed Arrow/tensor generated package and compiler mismatch rejection |
-| `certification_9` | in progress | exact-pinned native build-script package, deterministic artifacts, and pre-execution trust rejection |
+| `certification_9` | in review | [PR #3069](https://github.com/sifr-lang/sifr/pull/3069); exact-pinned native build-script package, deterministic artifacts, and fail-closed direct/transitive trust rejection |
 | `certification_10` | blocked | starts after `certification_9` merges |
 | `certification_11` | blocked | starts after `certification_10` merges |
 | `certification_12` | blocked | starts after `certification_11` merges |
@@ -1091,6 +1091,11 @@ Review and validation notes:
   failure: a parallel `ecosystem_backend_certification` category edit promotes
   that row while its evidence remains planned. Certification 9 does not stage
   or claim that hunk.
+- The authoritative create-PR profile passed every step before Rust interop,
+  including all 19 Python-interop variants. Rust interop passed 9 of 10
+  variants and stopped only on that same unstaged backend category/evidence
+  mismatch; all certification-9 matrix, mutation, tier, stale-draft, and
+  stable-candidate variants passed.
 
 ### certification_14: Track A Closeout and Stable Gate
 
