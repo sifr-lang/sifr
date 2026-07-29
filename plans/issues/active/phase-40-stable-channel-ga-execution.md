@@ -698,6 +698,13 @@ Review and upstream coordination ledger:
   evidence is recorded in
   [`adhoc_performance_budget_host_variance.md`](./adhoc_performance_budget_host_variance.md);
   no timeout, threshold, waiver, baseline, or Phase 40 source was changed.
+- Exact PR-head Opus review pass 2 is archived at
+  `plans/reviews/archive/phase-40-single-maintainer-approval-review-pass-2-satisfied.md`.
+  At remote head `2b2f613fd522184c65ce1cc4bce755406ac8b360`,
+  it independently reran the complete distribution area 125/125, the release
+  runner self-test, and the file-size guardrail; verified all five pass-1
+  findings closed; found the PR cleanly based on current `main`; and returned
+  `SATISFIED` with no actionable finding.
 - The next protected-publication wave adds a credential-free stable prepare
   path for `ga-activation` and `normal`. It binds an exact evidence commit,
   canonical candidate directory and plan digest, a separate clean exact source
