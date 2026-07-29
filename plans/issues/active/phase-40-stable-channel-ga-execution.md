@@ -801,6 +801,17 @@ Review and upstream coordination ledger:
   inaccurately called the filtered 67-variant `full` suite the complete area.
   The wording above now names the suite exactly; the reviewer also independently
   ran the unfiltered complete distribution area at 125/125.
+- Final exact-PR-head review pass 4 is archived at
+  `plans/reviews/archive/phase-40-schema-bootstrap-recovery-review-pass-4-final-satisfied.md`.
+  At local, remote, and PR head
+  `cd92c820611d0f7c3fcd657ccdd46b05283057b7`, Opus verified pass 3's sole
+  ledger finding closed, independently reran both the filtered 67-variant
+  `full` suite and complete unfiltered distribution area at 125/125, rechecked
+  the full recovery boundary and live generation-1 state, and returned
+  `SATISFIED` with zero actionable finding.
+- [PR #3061](https://github.com/sifr-lang/sifr/pull/3061) merged the reviewed
+  schema-bootstrap recovery implementation as
+  `3ce906c8445569039ebd762de0f346587464742a`.
 - The next protected-publication wave adds a credential-free stable prepare
   path for `ga-activation` and `normal`. It binds an exact evidence commit,
   canonical candidate directory and plan digest, a separate clean exact source
