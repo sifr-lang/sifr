@@ -140,8 +140,8 @@ Artifacts mapped to the Phase 40 exit gate:
   rules in the same main PR.
 - [x] Add GA documentation checks and stable public documentation.
 - [x] Qualify the exact VSIX and Marketplace identity without publication.
-- [ ] Materialize the reviewed `0.1.0` candidate evidence.
-- [ ] Record review rounds, PR, validation, and merge.
+- [x] Materialize the reviewed `0.1.0` candidate evidence.
+- [x] Record review rounds, PR, validation, and merge.
 
 Review and upstream coordination ledger:
 
@@ -821,6 +821,16 @@ Review and upstream coordination ledger:
   diff, spot-checked recovery citations, digests, and live run state, the
   complete distribution area at 125/125, and returned `SATISFIED` with no
   actionable finding.
+- The recovery-tracking closeout
+  [PR #3063](https://github.com/sifr-lang/sifr/pull/3063) merged as
+  `cef1c55bdd63215704d8564e764fe876508b4b8b`. Its exact-head Opus reviews
+  are archived at
+  `plans/reviews/archive/phase-40-bootstrap-recovery-closeout-review-pass-1-not-satisfied.md`
+  and
+  `plans/reviews/archive/phase-40-bootstrap-recovery-closeout-review-pass-2-satisfied.md`.
+  Pass 1 found one over-broad review-attribution sentence; pass 2 verified the
+  precise tracking-only correction at head
+  `483a0c563c1ea451446d6acb06a4bcfa53b928f9` and returned `SATISFIED`.
 - The next protected-publication wave adds a credential-free stable prepare
   path for `ga-activation` and `normal`. It binds an exact evidence commit,
   canonical candidate directory and plan digest, a separate clean exact source
@@ -1598,7 +1608,7 @@ updating or deleting that exact tag with no bypass actors.
   changed. Exact commands and custody paths are archived in
   `plans/reviews/archive/phase-40-final-exact-source-qualification-evidence.md`.
 - After the competing checkout completed, the unchanged isolated performance
-  suite passed 8/8. The final fresh-parent authoritative release profile then
+  suite passed 8/8. An earlier fresh-parent authoritative release profile then
   passed all 24 lane steps in 7,610.91 seconds: generated-code release-full,
   all crate suites, Python interop 25/25, consumed Rust interop 10/10, 674 E2E
   cases, and 290 hardening variants all had zero blocking failures. Canonical
@@ -1636,3 +1646,38 @@ updating or deleting that exact tag with no bypass actors.
   archived at
   `plans/reviews/archive/phase-40-final-qualification-closeout-review-pass-1-satisfied.md`;
   it returned `VERDICT: SATISFIED` with no actionable finding.
+- The final candidate release pass used the same clean exact source and
+  unchanged release profile after coordinating an uncontended performance
+  window. All 24 blocking lane steps passed, including the full performance
+  budget, 674/674 E2E fixtures, the complete crate surface, generated-code
+  release checks, and 290 hardening variants. Canonical report
+  `release-c9d611fb7c7c-fa3d95c04f8a` has SHA-256
+  `e5200229dfdacb2503190d4c3784cdfb3085088f7ad687e49659f54f3a11de98`;
+  its exact canonical release-run Rust result has SHA-256
+  `95176b5937b4ed0e1c9843ef6c3896969f6336431bc8a0d08350cc2db9b9555e`.
+  The 7,976.92-second wall time produced the same two nonblocking advisories:
+  the warm wall-time target and fixture-group skew.
+- Release-note Opus review pass 1 found seven missing or over-broad public
+  claims covering receipt integrity, platform floors, install-time
+  verification, install/update commands, generated-Rust scope, Rust-interop
+  evidence scope, and preview-channel context. The corrected notes closed all
+  findings, and pass 2 returned `SATISFIED`. Both reviews are archived at
+  `plans/reviews/archive/phase-40-candidate-release-notes-review-pass-1-not-satisfied.md`
+  and
+  `plans/reviews/archive/phase-40-candidate-release-notes-review-pass-2-satisfied.md`.
+- The canonical candidate plan has SHA-256
+  `3e4c7b7c50691eb360b031cebec734ae89bdef253f1a138e706038962b7ded27`.
+  Focused qualification plus evidence custody passed 2/2; the unfiltered
+  distribution area passed 125/125; canonical plan, release-report, and
+  qualification-index validation passed; and the source checkout remained
+  clean at `c9d611fb7c7c5d05421d784d53a2b78c1a7dcae9`.
+- Exact-head Opus review of candidate
+  [PR #3070](https://github.com/sifr-lang/sifr/pull/3070) is archived at
+  `plans/reviews/archive/phase-40-canonical-candidate-evidence-pr-3070-review-pass-1-satisfied.md`.
+  At head `74c5dd02f1ca692c0fb1f9c8b50004827028cdfb`, it independently
+  reproduced all seven artifact digests, custody, source/submodule/toolchain
+  provenance, qualification expiry, Rust claims, release-note truthfulness,
+  and first-GA semantics, found no blocking issue, and returned `SATISFIED`.
+  [PR #3070](https://github.com/sifr-lang/sifr/pull/3070) merged the immutable
+  candidate evidence as
+  `2e203136f864f132499095d7d68884c3ecc1ec2e`.
