@@ -818,8 +818,9 @@ Review and upstream coordination ledger:
   `plans/reviews/archive/phase-40-schema-bootstrap-recovery-tracking-review-pass-1-satisfied.md`;
   it verified remote head
   `14b66c82f49ad58c4aaa79df5a79f9b78c800b59`, the tracking-only two-file
-  diff, every recovery identity and digest above, the complete distribution
-  area at 125/125, and returned `SATISFIED` with no actionable finding.
+  diff, spot-checked recovery citations, digests, and live run state, the
+  complete distribution area at 125/125, and returned `SATISFIED` with no
+  actionable finding.
 - The next protected-publication wave adds a credential-free stable prepare
   path for `ga-activation` and `normal`. It binds an exact evidence commit,
   canonical candidate directory and plan digest, a separate clean exact source
