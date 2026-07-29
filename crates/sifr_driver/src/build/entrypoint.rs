@@ -1,3 +1,5 @@
+use super::cargo_resolution::CargoResolutionPolicy;
+use super::entrypoint_artifact::CachedBinaryArtifact;
 use super::entrypoint_stages::{import_closure_label, measure_stage, module_analysis_label};
 use super::materialize::{
     cached_binary_path, materialize_binary_project_with_report,
@@ -11,9 +13,7 @@ use super::python_bridges::apply_package_python_bridge_metadata;
 use super::python_bridges::package_bridge_lowering_options;
 use super::python_runtime::PackagePythonRuntime;
 use super::report::{BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport};
-use super::rust_interop::{
-    apply_package_rust_interop_metadata, PackageRustInteropContext, RustInteropModuleSource,
-};
+use super::rust_interop::{PackageRustInteropContext, RustInteropModuleSource};
 use super::single_file_interop_cache::{resolve_single_file_metadata, CompiledSingleFileMetadata};
 use super::sysroot_interop::attach_stdlib_rust_interop;
 use crate::diagnostics::{run_codegen_with_boundary, CompileResult, RenderedDiagnostic};
@@ -32,7 +32,6 @@ use sifr_frontend::{FrontendDiagnosticStyle, FrontendSourceContext};
 use sifr_ir::LoweringResult;
 use sifr_lowering::LoweringOptions;
 use sifr_package::{PackageSourceMap, SifrPackageGraph, SifrPackageId};
-use sifr_stdlib_manifest::CargoVendorMode;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -82,21 +81,7 @@ pub struct PackageEntrypoint {
     pub graph: SifrPackageGraph,
     pub source_map: PackageSourceMap,
     pub python_runtime: Option<PackagePythonRuntime>,
-}
-
-pub struct CachedBinaryArtifact {
-    binary_path: PathBuf,
-    build_report: BuildReport,
-}
-
-impl CachedBinaryArtifact {
-    pub fn binary_path(&self) -> &Path {
-        &self.binary_path
-    }
-
-    pub fn build_report(&self) -> &BuildReport {
-        &self.build_report
-    }
+    pub lock_mode: sifr_package::CargoLockMode,
 }
 
 pub(crate) struct RootedEntrypointPlan {
@@ -106,6 +91,7 @@ pub(crate) struct RootedEntrypointPlan {
     python_runtime: Option<PackagePythonRuntime>,
     python_bridges: Option<sifr_package::ResolvedPythonBridgeGraph>,
     rust_interop_context: Option<PackageRustInteropContext>,
+    cargo_resolution: CargoResolutionPolicy,
 }
 
 pub(crate) fn compile_single_file_frontend(
@@ -191,15 +177,17 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
     let (plan, mode, entrypoint_path) =
         RootedEntrypointPlan::from_entrypoint_with_stages(entrypoint, &mut stages)?;
     let frontend_diagnostics = plan.frontend_diagnostics();
+    let cargo_resolution = plan.cargo_resolution.clone();
     let generated_project = measure_stage(&mut stages, "Generating Rust project", || {
         plan.into_generated_binary_project()
     })?;
-    let requested_vendor_mode = requested_vendor_mode_for_build(mode);
+    let requested_vendor_mode = super::entrypoint_resolution::requested_vendor_mode_for_build(mode);
     let materialized = materialize_binary_project_with_report(
         output_dir,
         "sifr_output",
         generated_project,
         requested_vendor_mode,
+        &cargo_resolution,
     )?;
     stages.push(BuildStageReport::new(
         "Materializing Cargo project",
@@ -267,16 +255,18 @@ fn build_cached_rooted_entrypoint_binary(
     let (plan, mode, entrypoint_path) =
         RootedEntrypointPlan::from_entrypoint_with_stages(entrypoint, &mut stages)?;
     let frontend_diagnostics = plan.frontend_diagnostics();
+    let cargo_resolution = plan.cargo_resolution.clone();
     let generated_project = measure_stage(&mut stages, "Generating Rust project", || {
         plan.into_generated_binary_project()
     })?;
-    let requested_vendor_mode = requested_vendor_mode_for_build(mode);
+    let requested_vendor_mode = super::entrypoint_resolution::requested_vendor_mode_for_build(mode);
     let (cache_entry, native_report, sysroot) = materialize_cached_binary_project_with_report(
         cache_namespace,
         cache_scope,
         "sifr_output",
         generated_project,
         requested_vendor_mode,
+        &cargo_resolution,
     )?;
     if let Some(native_report) = native_report {
         stages.push(BuildStageReport::new(
@@ -305,15 +295,6 @@ fn build_cached_rooted_entrypoint_binary(
     })
 }
 
-fn requested_vendor_mode_for_build(mode: BuildCompilationMode) -> CargoVendorMode {
-    match mode {
-        BuildCompilationMode::SingleFile | BuildCompilationMode::Project => {
-            CargoVendorMode::SysrootOnly
-        }
-        BuildCompilationMode::PackageProject => CargoVendorMode::PackageOwned,
-    }
-}
-
 impl RootedEntrypointPlan {
     fn from_entrypoint(entrypoint: &RootedEntrypoint<'_>) -> Result<Self, Vec<RenderedDiagnostic>> {
         let mut stages = Vec::new();
@@ -326,6 +307,14 @@ impl RootedEntrypointPlan {
         stages: &mut Vec<BuildStageReport>,
     ) -> Result<(Self, BuildCompilationMode, PathBuf), Vec<RenderedDiagnostic>> {
         let stdlib = measure_stage(stages, "Loading Sifr standard library", compile_stdlib)?;
+        let package_entrypoint = match entrypoint {
+            RootedEntrypoint::PackageProject { entrypoint } => Some(*entrypoint),
+            RootedEntrypoint::SingleFile { .. } | RootedEntrypoint::Project { .. } => None,
+        };
+        let cargo_resolution = super::entrypoint_resolution::package_cargo_resolution_policy(
+            package_entrypoint,
+            &stdlib,
+        );
         let resolved = match entrypoint {
             RootedEntrypoint::SingleFile {
                 source,
@@ -500,6 +489,7 @@ impl RootedEntrypointPlan {
                 python_runtime,
                 python_bridges,
                 rust_interop_context,
+                cargo_resolution,
             },
             mode,
             entrypoint_path,
@@ -596,6 +586,7 @@ impl RootedEntrypointPlan {
         let python_runtime = self.python_runtime.clone();
         let python_bridges = self.python_bridges.clone();
         let rust_interop_context = self.rust_interop_context.clone();
+        let cargo_resolution = self.cargo_resolution.clone();
         let stdlib_interop = self.stdlib.interop.clone();
         let generated = match self.shape {
             RootedEntrypointShape::SingleFile => {
@@ -608,7 +599,11 @@ impl RootedEntrypointPlan {
         };
         let (generated, rust_interop_context) =
             attach_stdlib_rust_interop(generated, rust_interop_context, &stdlib_interop);
-        let generated = apply_package_rust_interop_metadata(generated, rust_interop_context)?;
+        let generated = super::rust_interop::apply_package_rust_interop_metadata_with_resolution(
+            generated,
+            rust_interop_context,
+            &cargo_resolution,
+        )?;
         let generated = apply_package_python_bridge_metadata(generated, python_bridges.as_ref());
         if allow_deferred_python_probes {
             let generated = super::python_interop::apply_python_interop_metadata_for_check(

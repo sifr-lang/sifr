@@ -1,5 +1,6 @@
 use super::rust_interop_digest::{digest_file, digest_path, fnv1a64_hex, push_cache_bytes};
-use super::rust_interop_probe::{normalize_cargo_target_dir, PendingRustBridgeProbe};
+use super::rust_interop_probe::PendingRustBridgeProbe;
+use super::rust_interop_probe_paths::normalize_cargo_target_dir;
 use super::workspace::artifact_cache_root;
 use std::collections::BTreeMap;
 use std::ffi::OsString;
@@ -53,10 +54,21 @@ pub(super) fn probe_cache_key(
         &probe.path.dotted(),
         probe_manifest,
         probe_source,
+        if probe.cargo_resolution.lock_mode == sifr_package::CargoLockMode::Normal {
+            "normal"
+        } else {
+            "lock-constrained"
+        },
         &cached_digest_path(backend_root),
         &nearest_lock_digest(backend_root),
         &cached_digest_path(&probe.sysroot_runtime_crate),
-        &optional_vendor_identity(probe.sysroot_vendor_dir.as_deref()),
+        &optional_vendor_identity(
+            probe
+                .cargo_resolution
+                .uses_sysroot_vendor()
+                .then_some(probe.sysroot_vendor_dir.as_deref())
+                .flatten(),
+        ),
     ] {
         push_cache_bytes(&mut input, value);
     }

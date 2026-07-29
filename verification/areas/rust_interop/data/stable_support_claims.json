@@ -202,6 +202,12 @@
       "category": "supported",
       "execution_kind": "cargo-probe",
       "capability": "build-script and proc-macro trust"
+    },
+    {
+      "id": "cargo_locked_offline",
+      "category": "supported",
+      "execution_kind": "cargo-probe",
+      "capability": "locked/offline/frozen Cargo behavior"
     }
   ]
 }

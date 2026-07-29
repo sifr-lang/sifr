@@ -41,16 +41,27 @@ def require_root_lock_subset(
 ) -> None:
     """Require every external scenario package identity in the root lock."""
     root_packages = {
-        (str(package.get("name")), str(package.get("version")))
+        (
+            str(package.get("name")),
+            str(package.get("version")),
+            str(package.get("source")),
+            str(package.get("checksum")),
+        )
         for package in root_lock.get("package", [])
         if isinstance(package, dict) and package.get("source")
     }
     for package in scenario_lock.get("package", []):
         if not isinstance(package, dict) or not package.get("source"):
             continue
-        identity = (str(package.get("name")), str(package.get("version")))
+        identity = (
+            str(package.get("name")),
+            str(package.get("version")),
+            str(package.get("source")),
+            str(package.get("checksum")),
+        )
         if identity not in root_packages:
             failures.append(
                 f"{fixture_id}: {raw_path}/Cargo.lock package "
-                f"{identity[0]} {identity[1]} is not present in root Cargo.lock"
+                f"{identity[0]} {identity[1]} is not present in root Cargo.lock "
+                "with the same source/checksum identity"
             )

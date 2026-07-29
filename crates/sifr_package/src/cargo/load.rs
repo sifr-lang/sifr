@@ -1,6 +1,7 @@
 use crate::{
-    derive_package_graph, map_cargo_failure, parse_metadata_json, CargoCommandPlan, CargoLockMode,
-    NormalizedCargoMetadata, PackageDiagnostic, PackageSourceMap, SifrPackageGraph,
+    derive_package_graph, map_cargo_failure, parse_metadata_json, record_cargo_invocation,
+    CargoCommandPlan, CargoLockMode, NormalizedCargoMetadata, PackageDiagnostic, PackageSourceMap,
+    SifrPackageGraph,
 };
 use std::path::Path;
 use std::process::Command;
@@ -56,16 +57,15 @@ pub fn load_package_graph_snapshot(
     lock_mode: CargoLockMode,
 ) -> Result<PackageGraphSnapshot, PackageGraphLoadFailure> {
     let plan = CargoCommandPlan::metadata(workspace_root.to_path_buf(), lock_mode);
-    let output = Command::new(&plan.program)
-        .args(&plan.args)
-        .current_dir(&plan.current_dir)
-        .output()
-        .map_err(|error| PackageGraphLoadFailure {
-            plan: plan.clone(),
-            kind: PackageGraphLoadFailureKind::Spawn {
-                message: error.to_string(),
-            },
-        })?;
+    let mut command = Command::new(&plan.program);
+    command.args(&plan.args).current_dir(&plan.current_dir);
+    record_cargo_invocation("package-metadata", lock_mode, &command);
+    let output = command.output().map_err(|error| PackageGraphLoadFailure {
+        plan: plan.clone(),
+        kind: PackageGraphLoadFailureKind::Spawn {
+            message: error.to_string(),
+        },
+    })?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         let stdout = String::from_utf8_lossy(&output.stdout);

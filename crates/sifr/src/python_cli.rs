@@ -1,6 +1,4 @@
-use super::check_and_package_commands::{
-    declaration_python_requirements, load_package_graph_context,
-};
+use super::check_and_package_commands::declaration_python_requirements;
 use super::cli_model_and_entrypoint::{
     diagnostic_with_code, package_diagnostic, DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG,
     EXIT_USER_DIAGNOSTIC,
@@ -8,6 +6,7 @@ use super::cli_model_and_entrypoint::{
 use super::diagnostic_rendering_and_run::{
     current_session_package_id, package_session_for_cwd, render_diagnostics,
 };
+use super::package_graph_context::load_package_graph_context;
 use super::python_runtime_context::{
     package_python_authoring_context, package_python_runtime_for_check,
 };
@@ -306,6 +305,7 @@ fn run_python_read_only_plan(
             graph: context.graph.clone(),
             source_map: context.source_map.clone(),
             python_runtime: context.runtime.clone(),
+            lock_mode: sifr_package::CargoLockMode::Normal,
         })?;
         declarations.extend(report.declarations.into_iter().map(|declaration| {
             PythonDeclarationReport {

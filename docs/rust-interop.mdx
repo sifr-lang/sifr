@@ -221,6 +221,16 @@ when the Sifr declaration targets a local bridge. Removing either
 build-script trust produces `SIFR-RUST-TRUST-0001` before either armed
 sentinel can execute. No `protoc` installation is required.
 
+The `cargo_locked_offline` evidence executes package `sifr check`, `sifr build`,
+and `sifr run` as a `cargo-probe`. The scenario uses exact-pinned
+`indexmap 2.14.0` with default features disabled under `--locked`, `--offline`,
+and `--frozen`, preserves the authoritative package lock, and observes a cold
+probe cache miss followed by a warm cache hit. Generated lock preparation
+admits only exact package identities and checksums found in authoritative locks
+or trusted vendor sources; constrained probes cannot reuse a normal-mode cache
+entry. Missing locks and selected version, source, checksum, or feature drift
+are rejected without network access as `SIFR-RUST-CARGO-0001`.
+
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |
 | --- | --- | --- |
@@ -257,6 +267,7 @@ sentinel can execute. No `protoc` installation is required.
 | `advanced_data_runtime_matrix` | `supported-through-bridge` | `runtime-observed` |
 | `native_build_script` | `supported` | `cargo-probe` |
 | `proc_macro_trust` | `supported` | `cargo-probe` |
+| `cargo_locked_offline` | `supported` | `cargo-probe` |
 <!-- rust-interop-stable-claims:end -->
 
 ## Direct Bindings

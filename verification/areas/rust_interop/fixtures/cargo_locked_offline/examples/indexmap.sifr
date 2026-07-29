@@ -1,0 +1,14 @@
+# fixture: cargo_locked_offline
+# package-example: indexmap
+# required-crate: indexmap
+# execution-kind: cargo-probe
+# expected-result: package-example
+class LockedIndexError(Error):
+    message: str
+
+@rust(indexmap.IndexMap.insert, panic=map_error(bridge.indexmap.map_panic))
+def locked_indexmap_insert(key: str, value: int32) -> Result[int32, LockedIndexError | RustPanicError]: ...
+
+def verify_indexmap_package() -> Result[int32, LockedIndexError | RustPanicError]:
+    locked_result: Result[int32, LockedIndexError | RustPanicError] = locked_indexmap_insert("generation", 2140)
+    return locked_result

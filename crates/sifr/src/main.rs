@@ -13,14 +13,19 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used, dead_code))]
 
 mod bridge_cli;
+mod cargo_diagnostics;
+mod cli_lock_modes;
 mod cli_model_and_entrypoint;
 pub(crate) use cli_model_and_entrypoint::main;
 mod build_output;
 mod check_and_package_commands;
 mod diagnostic_rendering_and_run;
+#[cfg(test)]
+mod diagnostic_test_sink;
 mod explain_cli;
 mod formatter_cli;
 mod lint_cli;
+mod package_graph_context;
 mod package_python_certifications;
 mod python_binding_cli;
 mod python_dlpack_certification_cli;
@@ -36,6 +41,8 @@ mod workspace_run_selection;
 
 #[cfg(test)]
 mod bridge_cli_tests;
+#[cfg(test)]
+mod cargo_lock_mode_certification_tests;
 #[cfg(test)]
 mod diagnostics_and_packages_tests;
 #[cfg(test)]

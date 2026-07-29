@@ -10,7 +10,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-locked_bridge = { path = "rust/locked_bridge", features = ["stable"] }
+locked_bridge = { path = "rust/locked_bridge" }
 
 [package.metadata.sifr]
 manifest = "sifr.toml"

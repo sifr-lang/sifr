@@ -1,6 +1,10 @@
 mod api;
+mod cargo_invocation_trace;
 mod cargo_manifest;
+mod cargo_resolution;
 mod entrypoint;
+mod entrypoint_artifact;
+mod entrypoint_resolution;
 mod entrypoint_stages;
 mod materialize;
 mod project_codegen;
@@ -38,7 +42,10 @@ mod rust_interop_panic_probe;
 mod rust_interop_probe;
 mod rust_interop_probe_cache;
 mod rust_interop_probe_diagnostics;
+mod rust_interop_probe_features;
 mod rust_interop_probe_manifest;
+mod rust_interop_probe_nonce;
+mod rust_interop_probe_paths;
 #[cfg(test)]
 mod rust_interop_probe_tests;
 #[cfg(test)]
@@ -60,11 +67,14 @@ pub use api::{
     check_package_project, check_package_python_interop, check_project, check_single_file,
     emit_project,
 };
+#[doc(hidden)]
+pub use cargo_invocation_trace::{capture_cargo_invocations, CargoInvocation};
 pub use cargo_manifest::{
     generate_dependency_cargo_toml, sysroot_cargo_config_args,
     try_generate_standalone_dependency_plan,
 };
-pub use entrypoint::{CachedBinaryArtifact, PackageEntrypoint};
+pub use entrypoint::PackageEntrypoint;
+pub use entrypoint_artifact::CachedBinaryArtifact;
 pub use python_certification::{
     validate_binding_distributions, validate_certification_distributions,
     validate_protocol_certifications_for_plan,

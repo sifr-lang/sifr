@@ -1,9 +1,15 @@
+use super::cargo_invocation_trace::record_cargo_invocation;
+use super::cargo_resolution::{prepare_cargo_resolution, CargoResolutionPolicy};
 use super::rust_interop_digest::fnv1a64_hex;
 use super::rust_interop_panic_probe::panic_mapper_probe;
 use super::rust_interop_probe_cache::{mark_probe_cache_hit, probe_cache_file, probe_cache_key};
-use super::rust_interop_probe_diagnostics::classify_probe_failure;
-use super::rust_interop_probe_manifest::{probe_cargo_toml, toml_quote_string};
-use super::workspace::artifact_cache_root;
+use super::rust_interop_probe_diagnostics::{
+    classify_probe_failure, probe_cargo_resolution_failure, probe_resolution_diagnostics,
+};
+use super::rust_interop_probe_features::dependency_features;
+use super::rust_interop_probe_manifest::{probe_cargo_toml, probe_cargo_vendor_args};
+use super::rust_interop_probe_nonce::unique_probe_nonce;
+use super::rust_interop_probe_paths::probe_cargo_target_dir;
 use sifr_codegen::{
     RustBridgeParamConvention, RustBridgeSignatureContract, RustInteropPlanDeclaration,
 };
@@ -11,14 +17,9 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{RustInteropDecoratorKind, RustInteropValue, RustTargetPath};
 use sifr_package::BackendCrateMetadata;
 use std::collections::{BTreeMap, BTreeSet};
-use std::ffi::OsString;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::{env, fs};
-
-static PROBE_NONCE_COUNTER: AtomicU64 = AtomicU64::new(0);
-const RUST_BRIDGE_PROBE_TARGET_DIR: &str = "rust_bridge_probe_target";
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(super) enum AsyncThreadAffinity {
@@ -38,6 +39,7 @@ pub(super) struct PendingRustBridgeProbe {
     pub(super) zero_copy_obligations: (bool, bool),
     pub(super) sysroot_runtime_crate: PathBuf,
     pub(super) sysroot_vendor_dir: Option<PathBuf>,
+    pub(super) cargo_resolution: CargoResolutionPolicy,
 }
 
 pub(super) struct ProbeExecutionFailure {
@@ -51,6 +53,13 @@ pub(super) fn execute_direct_cargo_probe(
     probe: &PendingRustBridgeProbe,
 ) -> Result<(), ProbeExecutionFailure> {
     if !probe.backend.cargo_manifest_path.is_file() {
+        if probe.cargo_resolution.lock_mode != sifr_package::CargoLockMode::Normal {
+            return Err(probe_cargo_resolution_failure(format!(
+                "Rust probe Cargo manifest '{}' is missing in {} mode",
+                probe.backend.cargo_manifest_path.display(),
+                probe.cargo_resolution.lock_mode.as_str()
+            )));
+        }
         return Ok(());
     }
     let Some(backend_root) = probe.backend.cargo_manifest_path.parent() else {
@@ -98,98 +107,53 @@ pub(super) fn execute_direct_cargo_probe(
     fs::write(probe_root.join("src/lib.rs"), probe_source)
         .map_err(|error| probe_io_failure(format!("failed to write Rust probe source: {error}")))?;
 
+    let vendor_dir = probe
+        .cargo_resolution
+        .uses_sysroot_vendor()
+        .then(|| {
+            probe.sysroot_vendor_dir.as_deref().or_else(|| {
+                probe
+                    .cargo_resolution
+                    .trusted_vendor_dirs
+                    .first()
+                    .map(PathBuf::as_path)
+            })
+        })
+        .flatten();
+    let cargo_prefix_args = probe_cargo_vendor_args(vendor_dir);
+    let prepared_resolution =
+        prepare_cargo_resolution(&probe_root, &probe.cargo_resolution, &cargo_prefix_args)
+            .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics))?;
     let mut command = Command::new("cargo");
     command
-        .args(cargo_vendor_args(probe.sysroot_vendor_dir.as_deref()))
+        .args(&cargo_prefix_args)
         .args(["check", "--quiet"])
         .current_dir(&probe_root);
+    if let Some(argument) = probe.cargo_resolution.lock_mode.cargo_arg() {
+        command.arg(argument);
+    }
+    if !matches!(
+        probe.cargo_resolution.lock_mode,
+        sifr_package::CargoLockMode::Normal | sifr_package::CargoLockMode::Frozen
+    ) {
+        command.arg("--frozen");
+    }
     command.env("CARGO_TARGET_DIR", probe_cargo_target_dir(&invocation_cwd));
+    record_cargo_invocation("rust-probe", probe.cargo_resolution.lock_mode, &command);
     let output = command
         .output()
         .map_err(|error| probe_io_failure(format!("failed to run Rust probe: {error}")))?;
+    let unchanged = prepared_resolution
+        .assert_unchanged()
+        .map_err(|diagnostics| probe_resolution_diagnostics(&diagnostics));
     let _ = fs::remove_dir_all(&probe_root);
+    unchanged?;
     if output.status.success() {
         mark_probe_cache_hit(&cache_file);
         return Ok(());
     }
     let stderr = String::from_utf8_lossy(&output.stderr);
     Err(classify_probe_failure(probe, &stderr))
-}
-
-fn dependency_features(
-    _dependency_name: &str,
-    backend_root: &Path,
-    path: &RustTargetPath,
-) -> Vec<String> {
-    let Some(feature) = path.segments.get(1) else {
-        return Vec::new();
-    };
-    if crate_feature_exists(backend_root, feature) {
-        return vec![feature.clone()];
-    }
-    let cargo_feature = feature.replace('_', "-");
-    crate_feature_exists(backend_root, &cargo_feature)
-        .then_some(cargo_feature)
-        .into_iter()
-        .collect()
-}
-
-/// Return whether `feature` is declared by the probed crate. This deliberately
-/// treats undeclared path segments as no feature so sysroot-interop tests can use
-/// minimal temp crates and future flat targets can still probe without a feature.
-fn crate_feature_exists(backend_root: &Path, feature: &str) -> bool {
-    let Ok(manifest) = fs::read_to_string(backend_root.join("Cargo.toml")) else {
-        return false;
-    };
-    let Ok(value) = manifest.parse::<toml::Table>() else {
-        return false;
-    };
-    value
-        .get("features")
-        .and_then(toml::Value::as_table)
-        .is_some_and(|features| features.contains_key(feature))
-}
-
-fn cargo_vendor_args(vendor_dir: Option<&Path>) -> Vec<String> {
-    let Some(vendor_dir) = vendor_dir else {
-        return Vec::new();
-    };
-    vec![
-        "--config".to_string(),
-        "source.crates-io.replace-with=\"sifr-vendor\"".to_string(),
-        "--config".to_string(),
-        format!(
-            "source.sifr-vendor.directory={}",
-            toml_quote_string(&vendor_dir.display().to_string())
-        ),
-    ]
-}
-
-fn probe_cargo_target_dir(invocation_cwd: &Path) -> PathBuf {
-    probe_cargo_target_dir_with_env(env::var_os("CARGO_TARGET_DIR"), invocation_cwd)
-}
-
-fn probe_cargo_target_dir_with_env(configured: Option<OsString>, invocation_cwd: &Path) -> PathBuf {
-    configured.map_or_else(
-        || artifact_cache_root().join(RUST_BRIDGE_PROBE_TARGET_DIR),
-        |target_dir| normalize_cargo_target_dir(invocation_cwd, PathBuf::from(target_dir)),
-    )
-}
-
-pub(super) fn normalize_cargo_target_dir(invocation_cwd: &Path, target_dir: PathBuf) -> PathBuf {
-    if target_dir.is_absolute() {
-        target_dir
-    } else {
-        invocation_cwd.join(target_dir)
-    }
-}
-
-fn unique_probe_nonce() -> String {
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(0, |duration| duration.as_nanos());
-    let counter = PROBE_NONCE_COUNTER.fetch_add(1, Ordering::Relaxed);
-    format!("{timestamp}_{counter}")
 }
 
 fn probe_source(probe: &PendingRustBridgeProbe) -> String {
@@ -631,11 +595,13 @@ pub(super) fn canonical_sifr_target_path(declaration: &RustInteropPlanDeclaratio
 
 #[cfg(test)]
 mod tests {
+    use super::super::rust_interop_probe_paths::{
+        normalize_cargo_target_dir, probe_cargo_target_dir_with_env, RUST_BRIDGE_PROBE_TARGET_DIR,
+    };
+    use super::super::workspace::artifact_cache_root;
     use super::{
-        artifact_cache_root, cargo_vendor_args, dependency_features, generated_bridge_type_stubs,
-        normalize_cargo_target_dir, prefixed_probe_source, probe_cargo_target_dir_with_env,
-        probe_cargo_toml, python_raw_callback_probe_source, signature_return_probe_type,
-        RUST_BRIDGE_PROBE_TARGET_DIR,
+        dependency_features, generated_bridge_type_stubs, prefixed_probe_source, probe_cargo_toml,
+        probe_cargo_vendor_args, python_raw_callback_probe_source, signature_return_probe_type,
     };
     use ruff_text_size::TextRange;
     use sifr_codegen::{
@@ -841,7 +807,7 @@ mod tests {
 
     #[test]
     fn sysroot_probe_vendor_args_use_invocation_scoped_config() {
-        let args = cargo_vendor_args(Some(Path::new("/opt/sifr sysroot/vendor")));
+        let args = probe_cargo_vendor_args(Some(Path::new("/opt/sifr sysroot/vendor")));
 
         assert_eq!(
             args,

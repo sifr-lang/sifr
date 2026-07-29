@@ -2,6 +2,7 @@
 
 from _scenario_advanced_data import ADVANCED_DATA_SCENARIO_TOKENS
 from _scenario_callback_subscriptions import CALLBACK_SUBSCRIPTION_SCENARIO_TOKENS
+from _scenario_cargo_locked import CARGO_LOCKED_SCENARIO_TOKENS
 from _scenario_native_build import NATIVE_BUILD_SCENARIO_TOKENS
 from _scenario_opaque_resources import OPAQUE_RESOURCE_SCENARIO_TOKENS
 from _scenario_zero_copy import ZERO_COPY_SCENARIO_TOKENS
@@ -56,13 +57,7 @@ REQUIRED_SCENARIO_EXAMPLES = {
     },
     "cargo_locked_offline": {
         "locked_offline_cache": {
-            "tokens": (
-                "locked_bridge",
-                "Cargo.lock",
-                "--locked",
-                "--offline",
-                "--frozen",
-            ),
+            "tokens": CARGO_LOCKED_SCENARIO_TOKENS,
         },
     },
     "ecosystem_backend_certification": {

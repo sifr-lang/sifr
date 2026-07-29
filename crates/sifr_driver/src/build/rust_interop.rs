@@ -1,3 +1,4 @@
+use super::cargo_resolution::CargoResolutionPolicy;
 use super::project_codegen::GeneratedBinaryProject;
 use super::rust_interop_bridge_audit::unsafe_bridge_files;
 use super::rust_interop_cargo_inputs::{
@@ -88,8 +89,20 @@ impl RustInteropModuleSource {
 }
 
 pub(super) fn apply_package_rust_interop_metadata(
+    generated: GeneratedBinaryProject,
+    context: Option<PackageRustInteropContext>,
+) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
+    apply_package_rust_interop_metadata_with_resolution(
+        generated,
+        context,
+        &CargoResolutionPolicy::normal(),
+    )
+}
+
+pub(super) fn apply_package_rust_interop_metadata_with_resolution(
     mut generated: GeneratedBinaryProject,
     context: Option<PackageRustInteropContext>,
+    cargo_resolution: &CargoResolutionPolicy,
 ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
     if generated.interop.rust.declarations.is_empty() {
         return Ok(generated);
@@ -102,13 +115,14 @@ pub(super) fn apply_package_rust_interop_metadata(
         )]);
     };
 
-    let mut resolver = RustInteropResolver::new(&context);
+    let mut resolver = RustInteropResolver::new(&context, cargo_resolution);
     resolver.resolve_plan(&mut generated)?;
     Ok(generated)
 }
 
 struct RustInteropResolver<'a> {
     context: &'a PackageRustInteropContext,
+    cargo_resolution: &'a CargoResolutionPolicy,
     diagnostics: Vec<RenderedDiagnostic>,
     resolved_targets: Vec<RustInteropResolvedTarget>,
     generated_bridge_modules: BTreeSet<RustGeneratedBridgeModule>,
@@ -125,9 +139,13 @@ struct RustInteropResolver<'a> {
 }
 
 impl<'a> RustInteropResolver<'a> {
-    fn new(context: &'a PackageRustInteropContext) -> Self {
+    fn new(
+        context: &'a PackageRustInteropContext,
+        cargo_resolution: &'a CargoResolutionPolicy,
+    ) -> Self {
         Self {
             context,
+            cargo_resolution,
             diagnostics: Vec::new(),
             resolved_targets: Vec::new(),
             generated_bridge_modules: BTreeSet::new(),
@@ -446,6 +464,7 @@ impl<'a> RustInteropResolver<'a> {
                     sysroot_vendor_dir: sysroot_trust
                         .as_ref()
                         .map(|trust| trust.vendor_dir.clone()),
+                    cargo_resolution: self.cargo_resolution.clone(),
                 });
                 if let Some(trust) = &sysroot_trust {
                     resolved_sysroot_crate_root(&backend.dependency_name, backend, trust)

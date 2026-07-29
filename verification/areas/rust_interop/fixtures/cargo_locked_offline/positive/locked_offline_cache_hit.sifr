@@ -1,12 +1,12 @@
 # fixture: cargo_locked_offline
 # evidence: positive/locked_offline_cache_hit
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: cargo-probe
-# expected-result: future-owned
+# expected-result: pass
 # fixture-cargo: --locked --offline --frozen
-@rust(bridge.locked.cached, panic=trusted_no_panic)
-def cached() -> uint32: ...
+@rust(locked_bridge.cached_hash, panic=trusted_no_panic)
+def cached_hash(input: bytes) -> uint32: ...
 
 def verify_locked_offline_cache_hit() -> uint32:
-    cached_result: uint32 = cached()
+    cached_result: uint32 = cached_hash(b"sifr-rust-interop")
     return cached_result

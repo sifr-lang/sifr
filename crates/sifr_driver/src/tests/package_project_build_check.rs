@@ -239,6 +239,7 @@ fn package_entrypoint(
         graph: graph.clone(),
         source_map: source_map.clone(),
         python_runtime: None,
+        lock_mode: sifr_package::CargoLockMode::Normal,
     }
 }
 

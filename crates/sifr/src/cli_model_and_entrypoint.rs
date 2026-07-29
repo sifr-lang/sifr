@@ -1,5 +1,6 @@
 pub(crate) use super::bridge_cli::BridgeCommands;
 use super::check_and_package_commands::{cmd_check, cmd_emit, cmd_fmt, cmd_test};
+use super::cli_lock_modes::lock_mode_from_flags;
 use super::diagnostic_rendering_and_run::{
     cmd_build, cmd_fetch, cmd_package, cmd_publish, cmd_run_with_options, cmd_tree, cmd_vendor,
     render_diagnostics, RunCommandOptions,
@@ -78,6 +79,15 @@ pub(crate) enum Commands {
         /// Suppress build phase details
         #[arg(long)]
         quiet: bool,
+        /// Require Cargo.lock to be unchanged
+        #[arg(long)]
+        locked: bool,
+        /// Disable network access
+        #[arg(long)]
+        offline: bool,
+        /// Combine --locked and --offline
+        #[arg(long)]
+        frozen: bool,
     },
     /// Compile and run a .sifr file
     Run {
@@ -418,7 +428,16 @@ fn run_cli(cli: Cli) -> i32 {
             file,
             output,
             quiet,
-        } => cmd_build(&file, &output, quiet, diagnostic_format),
+            locked,
+            offline,
+            frozen,
+        } => cmd_build(
+            &file,
+            &output,
+            lock_mode_from_flags(locked, offline, frozen),
+            quiet,
+            diagnostic_format,
+        ),
         Commands::Run {
             target,
             packages,
@@ -674,22 +693,6 @@ pub(super) fn package_diagnostic(
     diagnostic: sifr_package::PackageDiagnostic,
 ) -> RenderedDiagnostic {
     sifr_driver::render_package_diagnostic(diagnostic)
-}
-
-pub(super) fn lock_mode_from_flags(
-    locked: bool,
-    offline: bool,
-    frozen: bool,
-) -> sifr_package::CargoLockMode {
-    if frozen {
-        sifr_package::CargoLockMode::Frozen
-    } else if offline {
-        sifr_package::CargoLockMode::Offline
-    } else if locked {
-        sifr_package::CargoLockMode::Locked
-    } else {
-        sifr_package::CargoLockMode::Normal
-    }
 }
 
 pub(super) fn cmd_lsp(stdio: bool, parent_pid: Option<u32>) -> i32 {

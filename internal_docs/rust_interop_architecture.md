@@ -1184,6 +1184,35 @@ Package-local bridges compile with `#![deny(unsafe_code)]` by default. Files lis
 
 Cargo remains the source of truth for Rust dependency resolution. Sifr must preserve Cargo flags such as `--locked`, `--offline`, and `--frozen`.
 
+Package entrypoints carry one `CargoLockMode` from CLI parsing through package
+selection, Rust signature probing, generated project materialization, and the
+final Cargo command. `--locked --offline` is normalized to `Frozen`; constrained
+manifestless check, build, and run commands are rejected because they have no
+authoritative lock.
+
+Generated projects do not copy an arbitrary workspace lock and hope Cargo
+accepts it. Sifr seeds a generated resolution from the package lock when one is
+present, otherwise from the sysroot lock, then runs metadata to prune it to the
+generated graph. A package lock is the sole version/source/checksum authority
+for every registry package name it contains; the sysroot lock may authorize
+only remaining names. Trusted vendor directories may authorize remaining exact
+manifest identities with matching `.cargo-checksum.json`.
+The prepared generated lock is cached by a generated-manifest identity that
+normalizes ephemeral path roots to their dependency-manifest digests, Cargo
+prefix arguments, authority lock digests, and vendor roots. Every non-normal
+probe and final generated build verifies that this lock remains byte-identical.
+
+The user-requested flag is present on every final generated build. Internal
+Rust signature probes add frozen strength for all non-normal modes. Therefore
+normal probe cache entries are isolated from constrained entries, while locked,
+offline, and frozen probes can share one constrained entry without weakening
+their contract. Probe source replacement follows the final build:
+`PackageOwned` probes preserve package Cargo sources, while `SysrootOnly`
+probes use the sysroot vendor. Offline preparation and execution deny the network. Cargo
+messages for missing or stale locks, selected version/source/checksum drift,
+feature drift, and unavailable offline sources are classified before ordinary
+Rust target/type resolution and reported as `SIFR-RUST-CARGO-0001`.
+
 The workspace member `sifr_rust_interop_catalog` pins the 44 canonical matrix
 crate aliases as exact optional dependencies. This keeps the certification
 graph in the checked-in root lockfile and makes it available to

@@ -6,16 +6,25 @@ use super::rust_interop_probe::{
     async_future_requires_send, canonical_sifr_target_path, PendingRustBridgeProbe,
     ProbeExecutionFailure,
 };
+use crate::diagnostics::RenderedDiagnostic;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::RustInteropDecoratorKind;
+use sifr_package::cargo::lock_modes::cargo_lock_failure_reason;
 
 pub(super) fn classify_probe_failure(
     probe: &PendingRustBridgeProbe,
     stderr: &str,
 ) -> ProbeExecutionFailure {
-    let (code, message_template, args, include_stderr) = if stderr_reports_resolution_failure(
-        stderr,
-    ) {
+    let (code, message_template, args, include_stderr) = if let Some(reason) =
+        cargo_lock_failure_reason(stderr)
+    {
+        (
+            DiagnosticCode::RUST_CARGO_METADATA,
+            "Rust bridge Cargo resolution failed for `{reason}`",
+            vec![("reason", reason.to_string())],
+            true,
+        )
+    } else if stderr_reports_resolution_failure(stderr) {
         (
             DiagnosticCode::RUST_RESOLVE_TARGET_ROOT,
             "Rust bridge probe failed for `{target}`",
@@ -91,6 +100,29 @@ pub(super) fn classify_probe_failure(
         } else {
             Vec::new()
         },
+    }
+}
+
+pub(super) fn probe_resolution_diagnostics(
+    diagnostics: &[RenderedDiagnostic],
+) -> ProbeExecutionFailure {
+    let message = diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.message.as_str())
+        .collect::<Vec<_>>()
+        .join("; ");
+    probe_cargo_resolution_failure(message)
+}
+
+pub(super) fn probe_cargo_resolution_failure(message: String) -> ProbeExecutionFailure {
+    ProbeExecutionFailure {
+        code: DiagnosticCode::RUST_CARGO_METADATA,
+        message_template: "Rust bridge Cargo resolution failed for `{reason}`",
+        args: vec![("reason", message)],
+        notes: vec![
+            "prepare the package lockfile and dependency cache before retrying locked, offline, or frozen compilation"
+                .to_string(),
+        ],
     }
 }
 

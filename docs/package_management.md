@@ -199,6 +199,32 @@ Sifr delegates lock and network semantics to Cargo:
 - `--offline` asks Cargo to avoid network access and requires selected package sources to be locally available.
 - `--frozen` combines locked and offline semantics.
 
+`sifr check`, `sifr build`, and `sifr run` carry the selected mode through
+Rust interop signature probes and the final generated Cargo build. Before a
+constrained generated build, Sifr derives a generated lockfile from the
+authoritative package/sysroot locks, validates every registry package identity
+and checksum against those locks or trusted vendored sources, and caches that
+prepared lock by manifest and authority digest. The actual Cargo probe/build
+still runs with the requested flag; internal probes additionally use frozen
+strength so a constrained cache entry can never depend on a lockfile write.
+Sifr verifies that the prepared generated lock remains byte-identical.
+Those three commands reject lock-constrained manifestless operation because
+there is no package `Cargo.lock` that can serve as the resolution authority.
+
+Package-owned builds and their probes preserve the package's Cargo source
+selection; they do not replace crates.io with the Sifr sysroot vendor.
+Sysroot-only builds continue to use the sysroot vendor. In either mode,
+`--offline` and `--frozen` require every selected source to be present in the
+applicable Cargo cache or vendor tree.
+
+Normal and lock-constrained probe results use separate cache identities. All
+constrained probe modes may share an entry because each internal probe executes
+with frozen strength; final build behavior still preserves the requested
+`--locked`, `--offline`, or `--frozen` mode. Missing locks, stale selections,
+source/checksum drift, feature drift, or unavailable offline sources produce
+`SIFR-RUST-CARGO-0001` for Rust interop rather than falling back to normal
+resolution.
+
 ## Cargo Failure Diagnostics
 
 Sifr wraps Cargo process failures in [`SIFR-PACKAGE-0101`](/errors/SIFR-PACKAGE-0101). The wrapper carries the Cargo action, working directory, redacted argument vector, lock/network mode, exit status when available, and a bounded redacted Cargo output excerpt. Credential-looking Cargo failures, including private registry and Git credential failures, use the same wrapper rather than a separate Sifr credential taxonomy.
