@@ -30,7 +30,7 @@ Local `HEAD` = `939e69083e3e8d8c5cb98efe6e1d3e90bc3753e9`; `gh pr view 3030` rep
 Sufficient, and I verified the substance rather than accepting the decision on its face:
 - **No baseline, budget, threshold, or waiver file is touched anywhere in the diff** — the only path matching that grep is the `PERF-HOST` follow-up plan itself.
 - **The milestone cannot plausibly move the failing medians.** The overruns are on check/diagnostic/LSP benchmarks. The only compiled-source changes are four self-update modules reachable solely through the `self-update` subcommand, plus a `sha2` edge — and `sha2 0.10.9` was **already in `Cargo.lock`**, so this adds no crate, only a dependency edge. Nothing in the compile/check/diagnostic/LSP hot path changed.
-- Independent parent-main reproduction is documented in `adhoc_performance_budget_host_variance.md`, the retry overruns (0.55%/0.69%) sit inside the 0.5–2.0% band that doc records for host variance, and `PERF-HOST` is indexed as a deferred non-prerequisite by explicit project/user decision.
+- Independent parent-main reproduction is documented in `plans/issues/active/adhoc_performance_budget_host_variance.md`, the retry overruns (0.55%/0.69%) sit inside the 0.5–2.0% band that doc records for host variance, and `PERF-HOST` is indexed as a deferred non-prerequisite by explicit project/user decision.
 
 This is host variance routed to an indexed follow-up, not a milestone regression. The two tracker counts I could reproduce exactly matched, which raises my confidence in the run records I could not rerun in reasonable time.
 

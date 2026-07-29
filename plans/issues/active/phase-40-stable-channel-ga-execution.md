@@ -120,7 +120,7 @@ Artifacts mapped to the Phase 40 exit gate:
   its deterministic bound through both `sifr emit` and
   `sifr.server.showGeneratedRust`. That independently repairable compiler
   startup/performance defect is recorded in
-  [`adhoc_packaged_candidate_generated_rust.md`](../../phases/adhoc_packaged_candidate_generated_rust.md);
+  [`adhoc_packaged_candidate_generated_rust.md`](./adhoc_packaged_candidate_generated_rust.md);
   stable public docs explicitly record the affected capability as outside the
   packaged `0.1.0` GA-qualified surface.
 - The editor report records a Marketplace publication plan with status
@@ -189,7 +189,7 @@ Review and upstream coordination ledger:
   `readonly-check-doctor` host timeout. The separately invoked documentation
   structure/GA-release, editor-release, and distribution qualification/full
   gates all passed. Exact create-PR evidence is appended to
-  `plans/phases/adhoc_performance_budget_host_variance.md` and is not a Phase
+  `plans/issues/active/adhoc_performance_budget_host_variance.md` and is not a Phase
   40 prerequisite. No timeout or validation waiver was added.
 - Post-merge qualification run
   [#30270476093](https://github.com/sifr-lang/sifr/actions/runs/30270476093)
@@ -559,7 +559,7 @@ Review and upstream coordination ledger:
   took 690.10 seconds against 600 seconds. Two preceding wave runs completed
   the same functional step within budget at 456.79 and 455.79 seconds. This
   unrelated host variance is recorded in
-  `plans/phases/adhoc_performance_budget_host_variance.md`; no performance
+  `plans/issues/active/adhoc_performance_budget_host_variance.md`; no performance
   baseline or waiver changed, and it is not a Phase 40 prerequisite.
 - Schema-v2 preview epoch bootstrap implementation is under review in
   [PR #3040](https://github.com/sifr-lang/sifr/pull/3040).
@@ -1155,7 +1155,7 @@ modifying its Rust-interop implementation.
   - the representative retry failed a changed benchmark set, and the identical
     suite also failed on immediate parent `082988df1f`; the unrelated
     host/budget-stability work is deferred to
-    `plans/phases/adhoc_performance_budget_host_variance.md`
+    `plans/issues/active/adhoc_performance_budget_host_variance.md`
 
 ### milestone_40_2
 
@@ -1320,7 +1320,7 @@ updating or deleting that exact tag with no bypass actors.
   including 19/19 Python-interop variants, but exited on the host timing budget
   after that passing step took 788.45 seconds against 600 seconds. This
   unrelated host variance is recorded in
-  `plans/phases/adhoc_performance_budget_host_variance.md` and is not a Phase
+  `plans/issues/active/adhoc_performance_budget_host_variance.md` and is not a Phase
   40 prerequisite; no baseline or waiver changed.
 - Claude Opus review pass 2 was not approved and is archived at
   `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-2.md`.
