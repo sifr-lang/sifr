@@ -1195,6 +1195,12 @@ Validation evidence to date:
   tests, the 184 mutation cases, inventories, claims, lint, formatting, and
   guardrails; re-inspected every round-1 finding; and returned `SATISFIED`
   with no actionable findings.
+- The authoritative create-PR profile passed every step before Rust interop,
+  including all 19 Python-interop variants. Rust interop passed 9 of 10
+  variants and stopped only on the same unstaged parallel
+  `ecosystem_backend_certification` category/planned-evidence mismatch; all
+  certification-10 matrix, mutation, tier, stale-draft, and stable-candidate
+  variants passed.
 
 ### certification_14: Track A Closeout and Stable Gate
 
