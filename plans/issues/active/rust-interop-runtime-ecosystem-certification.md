@@ -1310,6 +1310,20 @@ Validation evidence to date:
   promotion is absent from the commit, re-ran the mandatory and focused gates,
   validated every provenance/link and the exported committed matrix, and
   returned `SATISFIED` with no blocking findings.
+- The final uncontended `scripts/run_all_tests.sh --profile create-pr` run
+  passed every lane except the live-worktree Rust-interop compatibility check.
+  That check stopped only on the preserved unstaged parallel-agent promotion
+  of `ecosystem_backend_certification` while its evidence remains planned.
+  The exported committed PR head passes the same checker with the documented
+  68 passing / 4 planned evidence directions and exact category counts.
+- [Merge-readiness round 4](../../reviews/active/rust-interop-certification-11-review-round-4.md)
+  independently audited ready-for-review PR #3075 at
+  `68c5f1a43091ddac40aa230d76d76bca308dc7fc`, reproduced the mandatory
+  positive/negative tests, package and driver tests, workspace Clippy,
+  committed-matrix counts, file-size and guardrail checks, and additionally
+  proved stale-lock rejection for `check`, `build`, and `run`. It returned
+  `SATISFIED` with no blocking findings and confirmed the sole live-tree gate
+  failure is absent from the PR.
 
 ### certification_14: Track A Closeout and Stable Gate
 
