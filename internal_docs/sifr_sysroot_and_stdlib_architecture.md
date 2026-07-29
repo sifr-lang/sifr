@@ -153,12 +153,12 @@ only. Remaining compiler-native stdlib glue is explicitly allowlisted in
 
 Rust interop ecosystem certification is not fully complete. The active matrix
 `verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json`
-currently has 19 supported rows, 12 bridge-supported rows, 1
-unsupported-by-design row, and 4 rows owned by separate certification work.
+currently has 20 supported rows, 12 bridge-supported rows, 1
+unsupported-by-design row, and 3 rows owned by separate certification work.
 The separately owned rows are `ecosystem_backend_certification`,
-`ecosystem_cli_certification`, `proc_macro_trust`, and `cargo_locked_offline`.
-Resource migrations must not claim stable support for any row that remains
-separately owned by certification work.
+`ecosystem_cli_certification`, and `cargo_locked_offline`. Resource migrations
+must not claim stable support for any row that remains separately owned by
+certification work.
 
 ## Stdlib Rust Interop Adapter Policy
 

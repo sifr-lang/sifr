@@ -2,14 +2,20 @@
 members = ["rust/serde_derive", "rust/prost_build"]
 resolver = "2"
 
+[workspace.dependencies]
+prost = { version = "=0.14.4", default-features = true }
+prost_build_upstream = { package = "prost-build", version = "=0.14.4", default-features = true }
+prost_types = { package = "prost-types", version = "=0.14.4", default-features = true }
+serde_derive_upstream = { package = "serde_derive", version = "=1.0.228", default-features = true }
+
 [package]
 name = "proc-macro-trust-package"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-serde_derive = { path = "rust/serde_derive" }
-prost-build = { path = "rust/prost_build" }
+prost-build = { package = "sifr-prost-build-probe", path = "rust/prost_build" }
+serde_derive = { package = "sifr-serde-derive-probe", path = "rust/serde_derive" }
 
 [package.metadata.sifr]
 manifest = "sifr.toml"

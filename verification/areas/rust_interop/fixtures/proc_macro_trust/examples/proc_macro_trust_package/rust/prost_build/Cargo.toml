@@ -1,8 +1,15 @@
 [package]
-name = "prost-build"
+name = "sifr-prost-build-probe"
 version = "0.1.0"
 edition = "2021"
 build = "build.rs"
 
 [lib]
 path = "src/lib.rs"
+
+[dependencies]
+prost = { workspace = true }
+
+[build-dependencies]
+prost_build_upstream = { workspace = true }
+prost_types = { workspace = true }

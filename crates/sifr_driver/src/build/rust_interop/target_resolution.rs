@@ -94,3 +94,15 @@ pub(super) fn trust_kind_name(kind: &RustInteropTrustRequirementKind) -> &'stati
         RustInteropTrustRequirementKind::PanicAbort => "panic_abort",
     }
 }
+
+pub(super) fn trust_allowlist_name(kind: &RustInteropTrustRequirementKind) -> &'static str {
+    match kind {
+        RustInteropTrustRequirementKind::BuildScript => "rust-build-scripts",
+        RustInteropTrustRequirementKind::ProcMacro => "rust-proc-macros",
+        RustInteropTrustRequirementKind::NativeLinks => "native-links",
+        RustInteropTrustRequirementKind::BuildEnv => "build-env",
+        RustInteropTrustRequirementKind::UnsafeBridge => "unsafe-rust-bridges",
+        RustInteropTrustRequirementKind::NoPanic => "rust-no-panic",
+        RustInteropTrustRequirementKind::PanicAbort => "rust-panic-abort",
+    }
+}

@@ -6,13 +6,15 @@
 class PackageExampleError(Error):
     message: str
 
-class SerdeRecord:
-    name: str
-    version: uint32
+@rust(bridge.generated.decode, panic=trusted_no_panic)
+def decode_generated_record(input: bytes) -> str: ...
 
-@rust(serde_derive.Deserialize, panic=map_error(bridge.serde_derive.map_panic))
-def serde_derive_decode(input: bytes) -> Result[SerdeRecord, PackageExampleError | RustPanicError]: ...
-
-def verify_serde_derive_package() -> Result[SerdeRecord, PackageExampleError | RustPanicError]:
-    sample_result: Result[SerdeRecord, PackageExampleError | RustPanicError] = serde_derive_decode(b"sifr-rust-interop")
-    return sample_result
+def verify_serde_derive_package() -> Result[str, PackageExampleError | RustPanicError]:
+    try:
+        marker: str = decode_generated_record(b"sifr-rust-interop")
+        assert "serde_derive=1.0.228;upstream=compiled;sifr_wrapper_macro=executed" in marker
+        return marker
+    except PackageExampleError as error:
+        raise error
+    except RustPanicError as error:
+        raise error

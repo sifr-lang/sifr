@@ -208,6 +208,19 @@ for the checked-in Apple/GNU arm64 and x86_64 host envelope and requires a
 working C/C++ compiler plus a `libclang` installation discoverable by bindgen;
 it does not advertise an MSVC build-script envelope.
 
+`proc_macro_trust` is a locked `cargo-probe` claim for exact-pinned
+`serde_derive 1.0.228` and `prost-build 0.14.4`. A trusted direct derive
+wrapper executes its own `SifrGenerated` macro in generated package code and
+separately proves its exact upstream `serde_derive` dependency compiled. A
+trusted build-script wrapper runs prost-build over an in-memory descriptor
+set, compiles the generated message, and exposes a versioned schema marker. Two fresh
+`--locked --offline --frozen` builds must produce byte-identical generated
+Rust. Package-wide trust validation covers direct build-time dependencies even
+when the Sifr declaration targets a local bridge. Removing either
+`serde_derive` proc-macro trust or the normalized `prost_build` Cargo-alias
+build-script trust produces `SIFR-RUST-TRUST-0001` before either armed
+sentinel can execute. No `protoc` installation is required.
+
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |
 | --- | --- | --- |
@@ -243,6 +256,7 @@ it does not advertise an MSVC build-script envelope.
 | `advanced_data_matrix` | `supported-through-bridge` | `contract-only` |
 | `advanced_data_runtime_matrix` | `supported-through-bridge` | `runtime-observed` |
 | `native_build_script` | `supported` | `cargo-probe` |
+| `proc_macro_trust` | `supported` | `cargo-probe` |
 <!-- rust-interop-stable-claims:end -->
 
 ## Direct Bindings

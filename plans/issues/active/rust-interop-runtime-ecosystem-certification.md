@@ -152,8 +152,8 @@ normative and must not be broadened.
 | `certification_6` | merged | [PR #3046](https://github.com/sifr-lang/sifr/pull/3046); retained callback subscription lifecycle and capture contract |
 | `certification_7` | merged; retrospective performance rerun pending | [PR #3053](https://github.com/sifr-lang/sifr/pull/3053); crate-backed zero-copy lifecycle and compiler rejection contract |
 | `certification_8` | merged | [PR #3067](https://github.com/sifr-lang/sifr/pull/3067); crate-backed Arrow/tensor generated package and compiler mismatch rejection |
-| `certification_9` | in review | [PR #3069](https://github.com/sifr-lang/sifr/pull/3069); exact-pinned native build-script package, deterministic artifacts, and fail-closed direct/transitive trust rejection |
-| `certification_10` | blocked | starts after `certification_9` merges |
+| `certification_9` | merged | [PR #3069](https://github.com/sifr-lang/sifr/pull/3069); exact-pinned native build-script package, deterministic artifacts, and fail-closed direct/transitive trust rejection |
+| `certification_10` | in progress | exact-pinned proc-macro/codegen package, deterministic prost output, and package-wide pre-execution trust rejection |
 | `certification_11` | blocked | starts after `certification_10` merges |
 | `certification_12` | blocked | starts after `certification_11` merges |
 | `certification_13` | blocked | starts after `certification_12` merges |
@@ -1044,7 +1044,7 @@ Implementation checklist:
   package tests, promote only `native_build_script`, and update structured
   claims, public/internal docs, provenance, counts, and mutation-tested
   scenario policy.
-- [ ] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, Opus review rounds to
   satisfaction, merge the PR, and unblock only `certification_10`.
 
 Expected post-item inventory:
@@ -1106,6 +1106,95 @@ Review and validation notes:
   variants and stopped only on that same unstaged backend category/evidence
   mismatch; all certification-9 matrix, mutation, tier, stale-draft, and
   stable-candidate variants passed.
+- PR #3069 merged on 2026-07-29 as
+  `afd25c3920a646fb0eea273c6899010baa7e94b7`; only
+  `certification_10` is unblocked.
+
+#### certification_10: Proc-Macro and Codegen Trust
+
+Implementation checklist:
+
+- [x] Replace the local `0.1.0` stand-ins with direct wrapper crates that
+  compile exact root-lock `serde_derive = 1.0.228` and
+  `prost-build = 0.14.4` under locked/offline/frozen Cargo.
+- [x] Execute a real wrapper derive macro in generated package code, expose a
+  deterministic marker through safe bridge glue, and make the macro capable
+  of writing an explicitly armed sentinel for the negative proof.
+- [x] Run `prost-build` over an in-memory descriptor set without `protoc`,
+  keep generated files under `OUT_DIR`, compare two fresh builds
+  byte-for-byte, and runtime-observe the generated schema artifact.
+- [x] Close the package-wide trust gap so every direct proc-macro,
+  build-script, and native-link dependency that Cargo can execute is validated
+  before any direct probe or final package build, including package-local
+  bridge targets.
+- [x] Independently remove proc-macro and build-script permissions, prove
+  kind-specific `SIFR-RUST-TRUST-0001` diagnostics before their armed
+  sentinels, and include positive controls proving both sentinels execute when
+  trust is present.
+- [x] Bind both evidence directions to mandatory generated-package tests,
+  promote only `proc_macro_trust`, and update structured claims,
+  public/internal docs, provenance, counts, cache-identity assertions, and
+  mutation-tested scenario policy.
+- [ ] Extract scenario dispatch before growing the current 891-line module,
+  run focused and authoritative local gates, complete Opus review rounds to
+  satisfaction, merge the PR, and unblock only `certification_11`.
+
+Expected post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 66 passing and 6 planned evidence directions;
+- categories: 20 `supported`, 12 `supported-through-bridge`, 1
+  `unsupported-by-design`, and 3 `future-owned-by-separate-phase`;
+- execution kinds remain 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+- 60 package examples and 18 scenario examples; and
+- 33 structured stable claims.
+
+Validation evidence to date:
+
+- The positive mandatory test passes two fresh locked/offline/frozen builds,
+  compares byte-identical generated Rust and version evidence, then checks,
+  builds, and runs the generated Sifr package in 32.89 seconds after the
+  round-1 fixes.
+- The negative mandatory test passes its armed-sentinel control and both
+  independent pre-execution trust removals, and now also proves the checked-in
+  negative fixture is valid with trust present, in 16.83 seconds.
+- All 432 non-generated driver tests pass; the seven focused trust tests,
+  including direct/local proc-macro coverage, declaration attribution, and
+  proc-macro trust cache identity, also pass.
+- The fixture inventory passes with 36 rows, 44 crate aliases, 60 package
+  examples, and 18 scenarios; all 184 mutation cases pass. Tier,
+  compatibility, stale-draft, stable-candidate, formatting, HIR
+  maintainability, scenario Clippy, and production `sifr_driver` Clippy gates
+  pass.
+- The full shared-worktree Rust-interop area passes 9 of 10 variants. Its sole
+  failure is the preserved unrelated
+  `ecosystem_backend_certification` category edit, which promotes that row
+  while both evidence directions remain planned. This item does not stage or
+  claim that parallel-agent hunk.
+- Workspace/all-target Clippy is currently blocked by unrelated parallel
+  changes in `sifr_stdlib_manifest`, `sifr_ipc`, `sifr_lowering`, and existing
+  `sifr_driver` test-only lint findings. The production `sifr_driver` library
+  and this scenario pass `-D warnings`.
+- [Opus round 1](../../reviews/active/rust-interop-certification-10-review-round-1.md)
+  independently reproduced exact pins, both mandatory tests, deterministic
+  codegen, sentinel behavior, package-wide trust, inventories, claims, and
+  guardrails. It reported one medium and five low findings before returning
+  `NOT SATISFIED`.
+- The round-1 fixes make the negative fixture type-correct with trust present
+  and add both an executable valid control and a mutation guard. Trust
+  diagnostics now select a declaration that actually targets the dependency,
+  name the exact `[trust]` allow-list in user-visible guidance, and retain both
+  direct-root and local-bridge proc-macro unit coverage. Evidence now labels
+  upstream `serde_derive` compilation separately from execution of the
+  wrapper's `SifrGenerated` macro.
+- [Opus round 2](../../reviews/active/rust-interop-certification-10-review-round-2.md)
+  independently re-ran both mandatory tests, all 432 non-generated driver
+  tests, the 184 mutation cases, inventories, claims, lint, formatting, and
+  guardrails; re-inspected every round-1 finding; and returned `SATISFIED`
+  with no actionable findings.
 
 ### certification_14: Track A Closeout and Stable Gate
 

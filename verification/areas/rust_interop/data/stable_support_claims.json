@@ -196,6 +196,12 @@
       "category": "supported",
       "execution_kind": "cargo-probe",
       "capability": "build-script and native-link trust"
+    },
+    {
+      "id": "proc_macro_trust",
+      "category": "supported",
+      "execution_kind": "cargo-probe",
+      "capability": "build-script and proc-macro trust"
     }
   ]
 }
