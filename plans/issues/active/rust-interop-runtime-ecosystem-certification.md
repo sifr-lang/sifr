@@ -1304,6 +1304,12 @@ Validation evidence to date:
   and N1-N8 individually, validated the cert-11 matrix with only the unrelated
   backend hunk removed, recomputed the documented counts exactly, and returned
   `SATISFIED` with no blocking findings.
+- [Exact-head round 3](../../reviews/active/rust-interop-certification-11-review-round-3.md)
+  audited PR #3075 head
+  `4c1fdeae6e774460ab4c4cb3ddbe19c1016c1471`, proved the unrelated backend
+  promotion is absent from the commit, re-ran the mandatory and focused gates,
+  validated every provenance/link and the exported committed matrix, and
+  returned `SATISFIED` with no blocking findings.
 
 ### certification_14: Track A Closeout and Stable Gate
 
