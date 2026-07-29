@@ -223,7 +223,13 @@ def validate_staged_support_claims(
             "staged claims must be a regular non-symlink file",
         )
     claims = load_json_strict(path, require_canonical=True)
-    source_claims = load_json_strict(source_root / STABLE_SUPPORT_CLAIMS)
+    source_path = source_root / STABLE_SUPPORT_CLAIMS
+    if not source_path.is_file() or source_path.is_symlink():
+        fail(
+            "stable_support_claims.json",
+            "exact source claims must be a regular non-symlink file",
+        )
+    source_claims = load_json_strict(source_path)
     expected = canonical_json_bytes(source_claims)
     if path.read_bytes() != expected:
         fail(

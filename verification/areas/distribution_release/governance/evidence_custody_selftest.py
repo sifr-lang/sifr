@@ -202,6 +202,13 @@ def _test_stable_support_claim_staging() -> None:
             ),
             "symlinked source stable support claims passed",
         )
+        _require_governance_rejection(
+            lambda: validate_staged_support_claims(
+                output,
+                source_root=source_root,
+            ),
+            "validator accepted symlinked source stable support claims",
+        )
 
 
 def _test_changed_paths() -> None:

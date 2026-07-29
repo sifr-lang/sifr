@@ -200,6 +200,18 @@ def _assert_canonicalization_rejections(root: Path) -> None:
             ),
             expected,
         )
+    symlink_root = root / "symlink"
+    symlink_root.mkdir()
+    symlink_target = root / "outside-rust-result.json"
+    symlink_bytes = b'{"area":"rust_interop"}\n'
+    symlink_target.write_bytes(symlink_bytes)
+    (symlink_root / CRITICAL_RESULTS["rust_interop"]).symlink_to(symlink_target)
+    _require_governance_rejection(
+        lambda: canonicalize_custodied_results(symlink_root),
+        "no critical area result",
+    )
+    if symlink_target.read_bytes() != symlink_bytes:
+        raise AssertionError("release custody rewrote a symlink target")
 
 
 def _require_governance_rejection(

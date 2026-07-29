@@ -229,7 +229,15 @@ python3 scripts/distribution/release_governance.py \
 The release-profile evidence writer similarly canonicalizes the exact
 Rust-interop result emitted by that release run before hashing it into
 `release-profile-report.json`. Candidate custody copies that same result file;
-a standalone Rust-suite rerun is not interchangeable evidence.
+a standalone Rust-suite rerun is not interchangeable evidence:
+
+```bash
+cp \
+  <clean-source-checkout>/target/verification/areas/rust-interop-release-results.json \
+  <release-work-dir>/rust-validation-report.json
+```
+
+Pass that copied result to the planner's `--rust-validation-report` argument.
 
 The final collector reads the current workflow run's artifact API, verifies
 source/run attribution, and writes canonical

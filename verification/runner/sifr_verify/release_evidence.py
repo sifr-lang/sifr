@@ -130,7 +130,7 @@ def write_release_profile_report(
 def canonicalize_custodied_results(result_root: Path) -> None:
     """Canonicalize exact result bytes that enter candidate evidence custody."""
     path = result_root / CRITICAL_RESULTS["rust_interop"]
-    if not path.is_file():
+    if not path.is_file() or path.is_symlink():
         raise GovernanceError(
             "release profile emitted no critical area result: rust_interop"
         )

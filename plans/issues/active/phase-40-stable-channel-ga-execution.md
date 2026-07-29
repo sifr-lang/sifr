@@ -1338,9 +1338,11 @@ updating or deleting that exact tag with no bypass actors.
   a standalone rerun.
 - Release-report generation now canonicalizes that exact release-run Rust
   result before hashing it. Stable-support claims are staged deterministically
-  from the exact source checkout into custody, and both the source and staged
-  bytes are validated as canonical JSON. The planner rejects noncanonical,
-  drifted, symlinked, duplicate-key, and wrong-area inputs.
+  from the exact source checkout into custody; the staged bytes must be
+  canonical JSON and exactly equal the source claims' canonical
+  representation. The release evidence writer rejects a wrong-area Rust
+  result, while the writer and planner reject applicable noncanonical,
+  drifted, symlinked, and duplicate-key inputs.
 - Reviewer passes 2 and 3 are archived at
   `plans/reviews/archive/phase-40-canonical-candidate-evidence-review-pass-2-satisfied.md`
   and
@@ -1355,3 +1357,13 @@ updating or deleting that exact tag with no bypass actors.
 - Main-repository [PR #3051](https://github.com/sifr-lang/sifr/pull/3051)
   carries the focused Phase 40 remediation from implementation commit
   `8048de4343`. Its exact pushed-head review follows after this tracking update.
+- Exact PR-head reviewer pass 4 is archived at
+  `plans/reviews/archive/phase-40-canonical-candidate-evidence-review-pass-4-pr-head.md`.
+  It independently verified remote head `1841576ce`, reran the complete
+  distribution area 125/125 and the isolated `readonly-check-doctor` case 1/1,
+  closed blockers A-C, and returned `SATISFIED`. Its four low-severity
+  observations are also resolved: release-result and source-claims symlinks
+  now fail closed, operator documentation names the exact Rust result copy,
+  and this ledger precisely distinguishes source JSON from canonical staged
+  bytes. The focused qualification/custody selection, runner self-tests, both
+  guardrails, and diff checks pass after that hardening.
