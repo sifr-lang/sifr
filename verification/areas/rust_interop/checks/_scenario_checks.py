@@ -22,17 +22,18 @@ from _scenario_opaque_resources import (
     run_opaque_resource_self_test,
     validate_opaque_resource_scenario,
 )
+from _scenario_source_checks import (
+    read_scenario_text as _read_scenario_text,
+    reject_generated_bridge_imports as _reject_generated_bridge_imports,
+    validate_scenario_sifr_source as _validate_scenario_sifr_source,
+)
 from _scenario_zero_copy import (
     ZERO_COPY_SCENARIO_TOKENS,
     reject_unsafe_rust,
     run_zero_copy_self_test,
     validate_zero_copy_scenario,
 )
-from _scenario_source_checks import (
-    read_scenario_text as _read_scenario_text,
-    reject_generated_bridge_imports as _reject_generated_bridge_imports,
-    validate_scenario_sifr_source as _validate_scenario_sifr_source,
-)
+
 REQUIRED_SCENARIO_EXAMPLES = {
     "async_runtime_reqwest": {
         "reqwest_loopback_runtime": {
