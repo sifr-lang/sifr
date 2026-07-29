@@ -651,7 +651,7 @@ impl<'a> RustInteropResolver<'a> {
             | EffectivePanicPolicy::Invalid
             | EffectivePanicPolicy::InvalidSysrootImplicitTarget => {}
         }
-        self.record_declared_bridge_native_links(declaration, package);
+        self.record_declared_native_links(declaration, package);
     }
 
     #[allow(clippy::too_many_arguments)]

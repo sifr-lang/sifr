@@ -1,12 +1,30 @@
 # fixture: advanced_data_runtime_matrix
 # evidence: negative/schema_shape_device_mismatch_rejected
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: runtime-observed
-# expected-result: future-owned-diagnostic
+# expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-ZC-0001
-@rust(bridge.data.invalid_runtime_metadata, panic=trusted_no_panic)
-def invalid_runtime_metadata(shape: list[int64], device: str) -> bytes: ...
 
-def verify_schema_shape_device_mismatch_rejected() -> bytes:
-    observed: bytes = invalid_runtime_metadata([2, 3], "cuda:0")
-    return observed
+class ArrowView:
+    ptr: int
+
+class TensorView:
+    ptr: int
+
+@rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=arrow_record_batch, schema=sifr_tensor_bridge.schema.RecordBatch, ownership=owned)
+@rust(sifr_arrow_bridge.record_batch.create, panic=trusted_no_panic)
+def wrong_schema(own input: list[float]) -> ArrowView: ...
+
+@rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=tensor, dtype=f64, rank=3, shape=[2, 3], layout=contiguous, strides=[3, 1], device=cpu, ownership=owned)
+@rust(sifr_tensor_bridge.tensor.create, panic=trusted_no_panic)
+def wrong_shape(own input: list[float]) -> TensorView: ...
+
+@rust.view(owner=input, lifetime=owner, mutability=immutable, send=True, sync=True, data=tensor, dtype=f64, rank=2, shape=[2, 3], layout=contiguous, strides=[3, 1], device=cuda, ownership=owned)
+@rust(sifr_tensor_bridge.tensor.create, panic=trusted_no_panic)
+def wrong_device(own input: list[float]) -> TensorView: ...
+
+def verify_schema_shape_device_mismatch_rejected() -> None:
+    arrow_values: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    _wrong_schema: ArrowView = wrong_schema(arrow_values)
+    _wrong_shape: TensorView = wrong_shape([1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+    _wrong_device: TensorView = wrong_device([1.0, 2.0, 3.0, 4.0, 5.0, 6.0])

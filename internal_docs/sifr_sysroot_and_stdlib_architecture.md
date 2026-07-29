@@ -151,18 +151,14 @@ generated-program implementation lives in `crates/sifr_stdlib` and
 only. Remaining compiler-native stdlib glue is explicitly allowlisted in
 `internal_docs/stdlib_retained_compiler_intrinsics.toml`.
 
-Rust interop runtime certification is not fully complete for resource-shaped
-surfaces. The active matrix
+Rust interop ecosystem certification is not fully complete. The active matrix
 `verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json`
-currently has 18 supported rows, 8 bridge-supported rows, 1
-unsupported-by-design row, and 9 rows owned by separate certification work. The
-separately owned rows are `opaque_resource_matrix`,
-`callback_subscription_ecosystem`, `zero_copy_runtime_matrix`,
-`advanced_data_runtime_matrix`,
-`ecosystem_backend_certification`, `ecosystem_cli_certification`,
-`native_build_script`, `proc_macro_trust`, and `cargo_locked_offline`. Resource
-migrations must not claim stable support for any row that remains separately
-owned by certification work.
+currently has 18 supported rows, 12 bridge-supported rows, 1
+unsupported-by-design row, and 5 rows owned by separate certification work.
+The separately owned rows are `ecosystem_backend_certification`,
+`ecosystem_cli_certification`, `native_build_script`, `proc_macro_trust`, and
+`cargo_locked_offline`. Resource migrations must not claim stable support for
+any row that remains separately owned by certification work.
 
 ## Stdlib Rust Interop Adapter Policy
 

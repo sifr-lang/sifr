@@ -1,0 +1,27 @@
+[workspace]
+members = [
+  "rust/sifr_arrow_bridge",
+  "rust/sifr_tensor_bridge",
+]
+resolver = "2"
+
+[workspace.dependencies]
+arrow = { version = "=58.3.0", default-features = true }
+candle = { package = "candle-core", version = "=0.11.0", default-features = false }
+datafusion = { version = "=54.1.0", default-features = true }
+ndarray = { version = "=0.17.2", default-features = true }
+polars = { version = "=0.54.4", default-features = true }
+sifr_runtime = { path = "../../../../../../../crates/sifr_runtime" }
+
+[package]
+name = "advanced-data-runtime"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sifr_arrow_bridge = { path = "rust/sifr_arrow_bridge" }
+sifr_runtime.workspace = true
+sifr_tensor_bridge = { path = "rust/sifr_tensor_bridge" }
+
+[package.metadata.sifr]
+manifest = "sifr.toml"

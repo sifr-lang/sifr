@@ -79,9 +79,9 @@ The following table is validated against
 only public stable-claim inventory. Its execution scope is part of every claim.
 In particular, `zero_copy_bytes`, `zero_copy_view_matrix`,
 `arrow_record_batch`, `tensor_dlpack_bridge`, and `advanced_data_matrix` are
-contract-only. The remaining runtime-observed deferral,
-`advanced_data_runtime_matrix`, is future-owned, planned, and unadvertised
-until its runtime evidence passes.
+contract-only. `advanced_data_runtime_matrix` is the distinct generated-package
+runtime claim for the five listed data crates; it does not widen those
+contract-only rows.
 
 `bridge_type_matrix` is cargo-probed through generated package glue. Its
 certified bridge covers nested Serde/JSON values, display-mapped `thiserror`
@@ -176,6 +176,22 @@ owner-lifetime views across async suspension. Consuming close drops the view
 and the scenario requires one release with zero active views. This claim is
 limited to the generated bridge and those exact crate-backed transitions.
 
+`advanced_data_runtime_matrix` executes a locked generated package through
+shared `sifr_arrow_bridge` and `sifr_tensor_bridge` crates. An owned Sifr
+floating-point vector is moved into an Arrow array without changing its
+allocation, retained in a record batch registered with DataFusion, and checked
+against a Polars dataframe derived from those Arrow values by an explicit copy
+with the same field, dtype, and row count; no Arrow-to-Polars zero-copy claim
+is made. Separate owned vectors are moved without allocation change into
+ndarray and CPU-only Candle, where rank, shape, contiguous layout, strides,
+dtype, and device are observed. The ndarray owner is then consumed into a
+one-shot DLPack-style managed capsule without copying and is observed active
+before consuming close and released exactly once afterward. This safe bridge
+models DLPack ownership and metadata without exposing the unsafe C ABI. The
+package declares the architecture-specific native-link envelope covering the
+locked default-feature graph on arm64 and x86_64. Compiler diagnostics
+reject schema-root, shape/rank, and non-CPU device mismatches before Cargo.
+
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |
 | --- | --- | --- |
@@ -209,6 +225,7 @@ limited to the generated bridge and those exact crate-backed transitions.
 | `arrow_record_batch` | `supported-through-bridge` | `contract-only` |
 | `tensor_dlpack_bridge` | `supported-through-bridge` | `contract-only` |
 | `advanced_data_matrix` | `supported-through-bridge` | `contract-only` |
+| `advanced_data_runtime_matrix` | `supported-through-bridge` | `runtime-observed` |
 <!-- rust-interop-stable-claims:end -->
 
 ## Direct Bindings

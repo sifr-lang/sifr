@@ -1,8 +1,7 @@
 # fixture: advanced_data_runtime_matrix
-# evidence: positive/crate_backed_arrow_tensor_roundtrips
-# evidence-status: passing
+# scenario-example: advanced_data_runtime
 # execution-kind: runtime-observed
-# expected-result: pass
+# expected-result: advanced-data-runtime-clean
 
 class DataExchangeError(Error):
     message: str
@@ -52,7 +51,7 @@ def arrow_release_observation() -> str: ...
 @rust(sifr_tensor_bridge.tensor.release_observation, panic=trusted_no_panic)
 def tensor_release_observation() -> str: ...
 
-def verify_crate_backed_arrow_tensor_roundtrips() -> Result[str, DataExchangeError]:
+def verify_advanced_data_runtime() -> Result[str, DataExchangeError]:
     try:
         arrow_values: list[float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
         arrow: RecordBatchView = arrow_roundtrip(arrow_values)
@@ -77,3 +76,10 @@ def verify_crate_backed_arrow_tensor_roundtrips() -> Result[str, DataExchangeErr
         return summary
     except DataExchangeError as error:
         raise error
+
+def main() -> Result[None, DataExchangeError]:
+    try:
+        print(verify_advanced_data_runtime())
+    except DataExchangeError as error:
+        raise error
+    return None

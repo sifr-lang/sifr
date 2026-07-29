@@ -150,8 +150,8 @@ normative and must not be broadened.
 | `certification_4` | merged | [PR #3036](https://github.com/sifr-lang/sifr/pull/3036); async reqwest loopback, runtime reuse, cancellation/drop, timeout cleanup, and hidden blocking rejection |
 | `certification_5` | merged | [PR #3042](https://github.com/sifr-lang/sifr/pull/3042); opaque resource lifecycle matrix with HTTP/Redis/PostgreSQL loopbacks and a temporary SQLite database |
 | `certification_6` | merged | [PR #3046](https://github.com/sifr-lang/sifr/pull/3046); retained callback subscription lifecycle and capture contract |
-| `certification_7` | in review | [PR #3053](https://github.com/sifr-lang/sifr/pull/3053); crate-backed zero-copy lifecycle and compiler rejection contract |
-| `certification_8` | blocked | starts after `certification_7` merges |
+| `certification_7` | merged; retrospective performance rerun pending | [PR #3053](https://github.com/sifr-lang/sifr/pull/3053); crate-backed zero-copy lifecycle and compiler rejection contract |
+| `certification_8` | in review | [PR #3067](https://github.com/sifr-lang/sifr/pull/3067); crate-backed Arrow/tensor generated package and compiler mismatch rejection |
 | `certification_9` | blocked | starts after `certification_8` merges |
 | `certification_10` | blocked | starts after `certification_9` merges |
 | `certification_11` | blocked | starts after `certification_10` merges |
@@ -903,6 +903,108 @@ Focused implementation evidence:
   low-severity parser-robustness note affects only the wording of an
   already-invalid tuple-handle rejection and cannot accept an unsupported
   surface or introduce a panic path.
+
+#### certification_8: Crate-Backed Advanced Data Runtime
+
+Implementation checklist:
+
+- [x] Add a locked/offline generated package with shared
+  `sifr_arrow_bridge` and `sifr_tensor_bridge` crates using the exact root-lock
+  versions and default-feature policies for Arrow, DataFusion, Polars,
+  ndarray, and CPU-only Candle.
+- [x] Make package-scoped native-link trust apply to direct/shared-crate Rust
+  bindings as well as package-local `bridge.*` targets, with a focused
+  resolver regression and an exact post-build native-link allowlist.
+- [x] Move owned generated-package vectors into Arrow, ndarray, and Candle
+  without allocation changes; register the Arrow record batch with
+  DataFusion; and observe matching Polars schema, dtype, row count, rank,
+  shape, layout, strides, and CPU device.
+- [x] Consume the ndarray owner into a safe one-shot DLPack-style managed
+  capsule without copying, then prove consuming close releases exactly one
+  owner and leaves zero active owners.
+- [x] Reject schema-root, rank/shape, and non-CPU device mismatches before
+  Cargo through the checked-in negative fixture.
+- [x] Bind both evidence directions to distinct mandatory generated-build
+  tests, promote only `advanced_data_runtime_matrix`, retain all three
+  narrower contract-only rows, and update structured claims, public/internal
+  docs, provenance, counts, and mutation-tested scenario policy.
+- [ ] Run focused and authoritative local gates, Opus review rounds to
+  satisfaction, merge the PR, and unblock only `certification_9`.
+
+Review and validation notes:
+
+- [Round 1](../../reviews/active/rust-interop-certification-8-review-round-1.md)
+  found three blocking evidence gaps: an arm64-only native-link allowlist,
+  independently constructed Polars values, and cleanup sampled only after
+  close. The implementation now declares the exact arm64/x86_64 locked-graph
+  envelope, derives Polars input from the crossed Arrow buffer with an
+  explicitly reported copy, and asserts owners active before close plus
+  released exactly once afterward.
+- [Round 2](../../reviews/active/rust-interop-certification-8-review-round-2.md)
+  independently confirmed those three fixes and found one stale scenario
+  README count after the native-link envelope expanded from five emitted
+  host-local names to seven cross-host entries.
+- [Round 3](../../reviews/active/rust-interop-certification-8-review-round-3.md)
+  re-derived the full milestone, the pinned build-script architecture outputs,
+  and every evidence claim after that correction, found no actionable issue,
+  and reported `SATISFIED`.
+- [Round 4](../../reviews/active/rust-interop-certification-8-review-round-4.md)
+  audited the root-lock parse cache added to keep the Rust-interop validation
+  step within its blocking budget, confirmed scenario locks remain freshly
+  mutation-tested and subset enforcement is unchanged, rechecked the complete
+  milestone, and reported `SATISFIED`.
+- [Published-head review](../../reviews/active/rust-interop-certification-8-review-round-5.md)
+  independently re-derived the native-link envelope, lifecycle and no-copy
+  evidence, inventories, claims, docs, and provenance against the exact
+  [PR #3067](https://github.com/sifr-lang/sifr/pull/3067) head; reran both
+  mandatory generated builds and all focused gates; and reported `SATISFIED`
+  with no actionable finding.
+- [Exact PR-head round 5](../../reviews/active/rust-interop-certification-8-review-round-5.md)
+  independently rebuilt both mandatory generated packages, reran the complete
+  Rust-interop area, all driver tests, Clippy, formatting, and guardrails,
+  re-derived the native-link envelope and all inventories, and reported
+  `SATISFIED` with no actionable finding against PR #3067 head
+  `3bd82793a9652b30f23c08c4f54d11c5aa0e298a`.
+- [Merge-readiness round 6](../../reviews/active/rust-interop-certification-8-review-round-6.md)
+  audited the repeated full merge-lane performance-only failures, proved the
+  four affected benchmark fixtures cannot reach package Rust-interop or the
+  changed native-link trust path, identified pre-existing main-branch LSP
+  baseline drift, matched the established `certification_2` environmental
+  timing precedent, and reported `SATISFIED TO MERGE` with no PR-attributable
+  blocker.
+- Focused revalidation passes the positive generated-package runtime test, the
+  exact three-diagnostic negative test, locked/offline scenario Clippy, 429
+  non-generated driver tests, all 10 Rust-interop area variants, 152 fixture
+  mutation cases, and the file-size/HIR/diff guardrails.
+- The authoritative create-PR profile passes all blocking steps, including the
+  Rust-interop check at 6.8 seconds against its 10-second budget, 429 driver
+  tests, and all 131 E2E fixtures. Its total warm wall-time advisory reflects
+  cold artifact groups and shared-host contention; every blocking step stayed
+  within budget.
+- Repeated full merge profiles pass every functional step: Python interop
+  `25/25`, Rust interop `10/10`, developer tooling `32/32`, all guardrails,
+  and the representative benchmark runner itself. Their only blocking result
+  is the budget comparison for unchanged `check-project-004-project-graph`,
+  `check-single-file-001-arithmetic`,
+  `diagnostic-non-regression-002-json-diagnostic-schema`, and intermittently
+  `lsp-query-003-diagnostics` under concurrent shared-host validation. Round 6
+  statically confirms none can execute this PR's package-only Rust-interop
+  trust path; this is accepted under the same environmental-drift policy used
+  for `certification_2`. Repository-wide baseline recalibration remains a
+  `certification_14` retrospective item and does not block `certification_9`.
+
+Expected post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 62 passing and 10 planned evidence directions;
+- categories: 18 `supported`, 12 `supported-through-bridge`, 1
+  `unsupported-by-design`, and 5 `future-owned-by-separate-phase`;
+- execution kinds remain 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+- 60 package examples and 18 scenario examples; and
+- 31 structured stable claims.
 
 ### certification_9 through certification_13: Cargo and Ecosystem
 

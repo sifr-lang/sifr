@@ -8,14 +8,11 @@ use sifr_codegen::{
 use sifr_package::SifrPackageMetadata;
 
 impl RustInteropResolver<'_> {
-    pub(super) fn record_declared_bridge_native_links(
+    pub(super) fn record_declared_native_links(
         &mut self,
         declaration: &RustInteropPlanDeclaration,
         package: &SifrPackageMetadata,
     ) {
-        if !uses_bridge_root(&declaration.declaration) {
-            return;
-        }
         let canonical_target_path = canonical_trust_target_path(declaration);
         for native_link in &package.manifest.trust.native_links {
             let key = (
@@ -32,7 +29,7 @@ impl RustInteropResolver<'_> {
                 trusted: true,
                 required_entry: native_link.clone(),
                 evidence: format!(
-                    "manifest-declared transitive native link `{native_link}` for package-local Rust bridge"
+                    "manifest-declared transitive native link `{native_link}` for Rust interop package"
                 ),
             });
         }

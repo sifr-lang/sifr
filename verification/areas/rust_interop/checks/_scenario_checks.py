@@ -12,11 +12,17 @@ from _scenario_async_reqwest import (
     run_async_reqwest_self_test,
     validate_async_reqwest_scenario,
 )
+from _scenario_advanced_data import (
+    ADVANCED_DATA_SCENARIO_TOKENS,
+    run_advanced_data_self_test,
+    validate_advanced_data_scenario,
+)
 from _scenario_callback_subscriptions import (
     CALLBACK_SUBSCRIPTION_SCENARIO_TOKENS,
     run_callback_subscription_self_test,
     validate_callback_subscription_scenario,
 )
+from _scenario_lock_checks import read_root_lock, require_root_lock_subset
 from _scenario_opaque_resources import (
     OPAQUE_RESOURCE_SCENARIO_TOKENS,
     run_opaque_resource_self_test,
@@ -35,6 +41,11 @@ from _scenario_zero_copy import (
 )
 
 REQUIRED_SCENARIO_EXAMPLES = {
+    "advanced_data_runtime_matrix": {
+        "advanced_data_runtime": {
+            "tokens": ADVANCED_DATA_SCENARIO_TOKENS,
+        },
+    },
     "async_runtime_reqwest": {
         "reqwest_loopback_runtime": {
             "tokens": (
@@ -380,6 +391,13 @@ def run_self_test() -> tuple[int, str | None]:
     if zero_copy_error is not None:
         return cases, zero_copy_error
 
+    advanced_data_cases, advanced_data_error = run_advanced_data_self_test(
+        AREA_ROOT, validate_scenario_examples
+    )
+    cases += advanced_data_cases
+    if advanced_data_error is not None:
+        return cases, advanced_data_error
+
     return cases, None
 
 
@@ -421,7 +439,7 @@ def _validate_scenario_example_dir(
             failures.append(f"{fixture_id}: {raw_path} missing scenario token {token!r}")
     if fixture_id == "shared_bridge_crate":
         _reject_generated_bridge_imports(failures, fixture_id, raw_path, rust_sources)
-    if fixture_id == "zero_copy_runtime_matrix":
+    if fixture_id in {"advanced_data_runtime_matrix", "zero_copy_runtime_matrix"}:
         reject_unsafe_rust(failures, fixture_id, rust_sources, example_dir)
     for source in sifr_sources:
         text = source.read_text(encoding="utf-8")
@@ -468,14 +486,9 @@ def _validate_scenario_manifests(
         raw_path,
         scenario_lock_path,
     )
-    root_lock = _read_toml(
-        failures,
-        fixture_id,
-        "repository root",
-        REPO_ROOT / "Cargo.lock",
-    )
+    root_lock = read_root_lock(failures, fixture_id, REPO_ROOT / "Cargo.lock")
     if isinstance(scenario_lock, dict) and isinstance(root_lock, dict):
-        _require_root_lock_subset(
+        require_root_lock_subset(
             failures,
             fixture_id,
             raw_path,
@@ -554,6 +567,16 @@ def _validate_scenario_manifests(
     elif fixture_id == "zero_copy_runtime_matrix":
         validate_zero_copy_scenario(
             failures, fixture_id, raw_path, rust, dependencies, trust
+        )
+    elif fixture_id == "advanced_data_runtime_matrix":
+        validate_advanced_data_scenario(
+            failures,
+            fixture_id,
+            raw_path,
+            cargo,
+            dependencies,
+            trust,
+            example_dir,
         )
     elif fixture_id == "same_workspace_crate":
         _require_path_dependency(failures, fixture_id, raw_path, dependencies, "workspace_hash", "rust/workspace_hash")
@@ -758,29 +781,6 @@ def _require_exact_dependency(
             f"{fixture_id}: {raw_path}/Cargo.toml dependency {dependency} "
             f"must pin {expected_version}"
         )
-
-
-def _require_root_lock_subset(
-    failures: list[str],
-    fixture_id: str,
-    raw_path: str,
-    scenario_lock: dict[str, Any],
-    root_lock: dict[str, Any],
-) -> None:
-    root_packages = {
-        (str(package.get("name")), str(package.get("version")))
-        for package in root_lock.get("package", [])
-        if isinstance(package, dict) and package.get("source")
-    }
-    for package in scenario_lock.get("package", []):
-        if not isinstance(package, dict) or not package.get("source"):
-            continue
-        identity = (str(package.get("name")), str(package.get("version")))
-        if identity not in root_packages:
-            failures.append(
-                f"{fixture_id}: {raw_path}/Cargo.lock package "
-                f"{identity[0]} {identity[1]} is not present in root Cargo.lock"
-            )
 
 
 def _require_member(

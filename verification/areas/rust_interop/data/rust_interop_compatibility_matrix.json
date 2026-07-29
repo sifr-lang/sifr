@@ -384,15 +384,14 @@
     {
       "id": "advanced_data_runtime_matrix",
       "fixture": "advanced_data_runtime_matrix",
-      "category": "future-owned-by-separate-phase",
-      "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
+      "category": "supported-through-bridge",
       "tier": 4,
       "capability": "crate-backed Arrow and tensor runtime exchange",
       "execution_kind": "runtime-observed",
       "required_crates": ["arrow", "datafusion", "polars", "ndarray", "candle"],
-      "positive_evidence": {"id": "crate_backed_arrow_tensor_roundtrips", "status": "planned"},
-      "negative_evidence": {"id": "schema_shape_device_mismatch_rejected", "status": "planned"},
-      "notes": "Crate-backed schema, dtype, rank, shape, layout, stride, device, DLPack ownership, cleanup, and no-copy behavior remain future-owned pending runtime evidence."
+      "positive_evidence": {"id": "crate_backed_arrow_tensor_roundtrips", "status": "passing"},
+      "negative_evidence": {"id": "schema_shape_device_mismatch_rejected", "status": "passing"},
+      "notes": "Generated package evidence executes exact-pinned Arrow, DataFusion, Polars, ndarray, and CPU-only Candle bridges; observes Arrow schema plus a Polars dataframe derived from the Arrow values by an explicit copy, tensor dtype/rank/shape/layout/stride/device identity, allocation-preserving Sifr-to-Arrow/ndarray/Candle inputs, a safe DLPack-style ownership-and-metadata transfer without the unsafe C ABI, and the owner active before consuming close and released exactly once afterward; and rejects schema, shape/rank, and device mismatches before Cargo."
     },
     {
       "id": "ecosystem_backend_certification",

@@ -413,6 +413,37 @@ fn package_rust_interop_records_declared_transitive_bridge_native_links() {
         }));
 }
 
+#[test]
+fn package_rust_interop_records_declared_native_links_for_direct_crate_bindings() {
+    let declaration = declaration_entry("native.hash", RustInteropDecoratorKind::Function);
+    let generated = base_project_with_contracts(vec![declaration], Vec::new());
+    let trust = TrustPolicy {
+        native_links: vec!["psm_s".to_string()],
+        ..TrustPolicy::default()
+    };
+    let context = package_context(
+        trust,
+        vec![backend_with_manifest(
+            "native",
+            PathBuf::from("/ws/native/Cargo.toml"),
+        )],
+    );
+
+    let generated = apply_package_rust_interop_metadata(generated, Some(context))
+        .expect("package-scoped native-link trust should cover direct crate bindings");
+
+    assert!(generated
+        .interop
+        .rust
+        .trust_requirements
+        .iter()
+        .any(|requirement| {
+            requirement.kind == RustInteropTrustRequirementKind::NativeLinks
+                && requirement.required_entry == "psm_s"
+                && requirement.trusted
+        }));
+}
+
 pub(super) fn base_project_with_contracts(
     declarations: Vec<RustInteropPlanDeclaration>,
     signatures: Vec<RustBridgeSignatureContract>,

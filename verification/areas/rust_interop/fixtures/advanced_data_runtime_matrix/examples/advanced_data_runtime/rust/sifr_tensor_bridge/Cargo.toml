@@ -1,0 +1,9 @@
+[package]
+name = "sifr_tensor_bridge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+candle.workspace = true
+ndarray.workspace = true
+sifr_runtime.workspace = true
