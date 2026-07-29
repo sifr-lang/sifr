@@ -126,12 +126,12 @@ Artifacts mapped to the Phase 40 exit gate:
 - The editor report records a Marketplace publication plan with status
   `planned`, not a synthetic dry-run pass. The credentialed dry run and exact
   no-rebuild workflow binding are realized in `milestone_40_5`.
-- [ ] Use the coordinated upstream-first exception for editor release:
+- [x] Use the coordinated upstream-first exception for editor release:
   merge the `sifr-vscode` package PR, merge the `editor-integrations` pointer
   PR, then update the main-repository submodule pointer and matching consumer
   rules in the same main PR.
-- [ ] Add GA documentation checks and stable public documentation.
-- [ ] Qualify the exact VSIX and Marketplace identity without publication.
+- [x] Add GA documentation checks and stable public documentation.
+- [x] Qualify the exact VSIX and Marketplace identity without publication.
 - [ ] Materialize the reviewed `0.1.0` candidate evidence.
 - [ ] Record review rounds, PR, validation, and merge.
 
@@ -404,7 +404,7 @@ Review and upstream coordination ledger:
 - [ ] Publish a protected, truthful one-time schema-v2 preview epoch with fresh
   qualified alpha/beta records and no stable mapping; retain no v1 migration
   or fallback path.
-- [ ] Isolate installed-sysroot self-update qualification from mutable public
+- [x] Isolate installed-sysroot self-update qualification from mutable public
   network state while retaining separate protected public-endpoint smoke.
 - Qualification-isolation wave validation passed the complete installed
   release smoke from a schema-v2 fixture, including self-update dry run,
@@ -933,7 +933,10 @@ Review and upstream coordination ledger:
   incident-publication implementation, independently reproduced 68 focused
   variants with zero failures plus the malformed-input CLI matrix, found no
   actionable issue, and returned `VERDICT: SATISFIED`.
-- [ ] Merge the protected rollback and incident roll-forward production wiring.
+- [x] Merge the protected rollback and incident roll-forward production wiring.
+- [PR #3047](https://github.com/sifr-lang/sifr/pull/3047) merged the protected
+  rollback and incident roll-forward production wiring as
+  `8a23f90869a68438a7b4ae3b8f9623531d1ce68f`.
 - [ ] Publish or verify write-once assets, Marketplace version, governed index
   activation, site facts, and post-publication smoke.
 - [ ] Exercise resume, stale generation, burned generation, rollback, and
@@ -1375,3 +1378,49 @@ updating or deleting that exact tag with no bypass actors.
   no actionable finding.
 - Main-repository [PR #3051](https://github.com/sifr-lang/sifr/pull/3051)
   merged as `7034c4c69bf3fa7e2c36ddc002f6389d6f3511a9`.
+- The documentation-only closeout
+  [PR #3052](https://github.com/sifr-lang/sifr/pull/3052) merged as
+  `c9d611fb7c7c5d05421d784d53a2b78c1a7dcae9`. Its independent Opus review is
+  archived at
+  `plans/reviews/archive/phase-40-canonical-evidence-closeout-review-pass-1-satisfied.md`;
+  it returned `SATISFIED` with no actionable finding.
+- Fresh exact-source qualification run
+  [#30416219284](https://github.com/sifr-lang/sifr/actions/runs/30416219284)
+  passed at source `c9d611fb7c7c5d05421d784d53a2b78c1a7dcae9`.
+  Exact-ID custody replay verified six candidate uploads and all 20 indexed
+  payloads (533,998,429 bytes) by name, size, and SHA-256. The canonical index
+  SHA-256 is
+  `503f4fcc0dcf4843e0476fbbd1aaa02994c431fac3e7aebb89fb5565bba04703`.
+- Documentation qualification and canonical source-derived support-claims
+  staging passed on that same clean source. The cold local release attempt
+  exposed only Python-environment initialization order; the unchanged warm
+  attempt passed Python interop 25/25, consumed Rust interop 10/10, developer
+  tooling 48/48, and documentation 2/2 before reproducing indexed
+  `PERF-HOST` median variance under concurrent load from another checkout.
+  No threshold, baseline, waiver, profile selection, or interop implementation
+  changed. Exact commands and custody paths are archived in
+  `plans/reviews/archive/phase-40-final-exact-source-qualification-evidence.md`.
+- After the competing checkout completed, the unchanged isolated performance
+  suite passed 8/8. The final fresh-parent authoritative release profile then
+  passed all 24 lane steps in 7,610.91 seconds: generated-code release-full,
+  all crate suites, Python interop 25/25, consumed Rust interop 10/10, 674 E2E
+  cases, and 290 hardening variants all had zero blocking failures. Canonical
+  report `release-c9d611fb7c7c-fa3d95c04f8a` has SHA-256
+  `faa6844410de98cb6ebe40d740ab6b1edc9aeb176ee0301e4ec181937eeb6e03`;
+  its exact canonical Rust result has SHA-256
+  `be24b69a7afc0f2f7061657258d9c367946496bf745b3cc17b1cd15e00bba87a`.
+  The lane report recorded two nonblocking advisories: the already indexed
+  warm wall-time target and group skew (largest fixture group 16, median 1).
+  Every blocking functional gate passed.
+- Exact PR-head qualification-evidence review pass 1 is archived at
+  `plans/reviews/archive/phase-40-final-exact-source-qualification-review-pass-1-not-satisfied.md`.
+  It independently reconciled the workflow, custody, source, report, Rust
+  result, checklist, and public bootstrap boundary, then found the ledger
+  incorrectly described the warm wall-time advisory as the only advisory. The
+  evidence now records both nonblocking lane advisories: warm wall time and
+  fixture-group skew.
+- Exact PR-head review pass 2 is satisfied and archived at
+  `plans/reviews/archive/phase-40-final-exact-source-qualification-review-pass-2-satisfied.md`.
+  It revalidated every preserved digest and count at head `340a40b10`,
+  confirmed the pass-1 wording correction, found no actionable issue at any
+  severity, and returned `VERDICT: SATISFIED`.
