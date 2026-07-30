@@ -1903,6 +1903,12 @@ Closeout validation evidence on 2026-07-30:
   E2E passed 131/131 fixtures with 42/42 cache hits and report signature
   `7c39b8c1dd4fec7c`. Only the nonblocking aggregate warm-wall advisory
   remained.
+- [Draft closure PR #3084](https://github.com/sifr-lang/sifr/pull/3084)
+  published the final four-document tracking update, whole-phase review, and
+  closure validation from `agent/rust-interop-phase-closure`. Its first
+  published head was
+  `224d8d22e8188ec01e0e2e6631d0de3d71f17f58`, exactly current with
+  `origin/main`; the final published-head review follows on the PR.
 - The authoritative `create-pr` profile passed every blocking step on the
   reviewed closeout state. Python interop passed 19/19 variants in
   557.53/600 seconds; Rust interop passed 10/10 in 8.72/10 seconds; developer
