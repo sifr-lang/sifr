@@ -102,6 +102,7 @@ def validate_cli_scenario(
             "clap::Command::new",
             "tracing_subscriber::EnvFilter::try_new",
             'target: "sifr_cli_probe"',
+            'target: "sifr_cli_noise"',
             'trace.contains("cli bridge event")',
             '!trace.contains("excluded bridge event")',
             ".context(\"clap parse failed\")",
@@ -243,6 +244,13 @@ def run_cli_self_test(
                 'trace.contains("cli bridge event")',
                 'trace.contains("other event")',
                 'must contain trace.contains("cli bridge event")',
+            ),
+            (
+                "tracing excluded emission drift",
+                "examples/cli_feature_package/src/bridges/cli.rs",
+                'target: "sifr_cli_noise"',
+                'target: "sifr_cli_probe"',
+                'must contain target: "sifr_cli_noise"',
             ),
             (
                 "tracing exclusion drift",

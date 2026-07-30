@@ -1375,7 +1375,7 @@ Validation evidence to date:
   selected transitive identities rather than locally newest compatible
   versions.
 - The fixture inventory passes with 36 rows, 44 crate aliases, 61 package
-  examples, and 18 scenarios. All 208 meaningful scenario/matrix mutation
+  examples, and 18 scenarios. All 209 meaningful scenario/matrix mutation
   cases pass. On the exact staged tree this item yields 70 passing and 2
   planned evidence directions with 21 supported, 13 bridge-supported, 1
   unsupported-by-design, and 1 future-owned row; all four compatibility
@@ -1385,6 +1385,19 @@ Validation evidence to date:
   planned. The staged certification-12 tree retains that row as future-owned
   and passes the fixture, compatibility, tier, and 35-claim stable-support
   checkers.
+- [Opus round 1](../../reviews/active/rust-interop-certification-12-review-round-1.md)
+  reproduced the full CLI/tooling contract and both mandatory tests, then
+  returned `NOT SATISFIED` because the generic fixture checker had grown from
+  899 to 904 lines. The correction moved fixture-specific binding-token policy
+  into `_binding_helpers.py`, restored the checker below the hard cap, and
+  added load-bearing exclusion plus direct-binding policy mutations.
+- [Opus round 2](../../reviews/active/rust-interop-certification-12-review-round-2.md)
+  audited integrated head
+  `e2c321a788142bdf0da02967efee076c985a3d7c`, proved the certification patch
+  survived the current-main merge byte-for-byte, re-ran both mandatory tests
+  and the exact exported Rust-interop area, and returned `SATISFIED` with no
+  blocking findings. Its filter-durability observation is closed by requiring
+  and mutation-testing the excluded-target emission itself.
 
 ### certification_14: Track A Closeout and Stable Gate
 
