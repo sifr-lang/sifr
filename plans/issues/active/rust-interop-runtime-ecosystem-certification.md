@@ -1893,6 +1893,16 @@ Closeout validation evidence on 2026-07-30:
   checked cross-milestone safety, trust, hermeticity, stable-claim,
   performance-policy, identity, and dormant-Track-B boundaries, found no
   actionable issue, and returned `SATISFIED`.
+- The closure head
+  `c2f7e13f8cf7dc67b0736b0ee840bdd1cfbabcb2` passed the authoritative
+  `create-pr` profile with every blocking step green. Python interop passed
+  19/19 variants in 587.077/600 seconds; Rust interop passed 10/10; developer
+  tooling passed 18/18; performance smoke passed 7/7; the crate matrix
+  included 450 passing driver tests with 65 intentional smoke exclusions;
+  runtime platform passed 28 variants with one declared capability skip; and
+  E2E passed 131/131 fixtures with 42/42 cache hits and report signature
+  `7c39b8c1dd4fec7c`. Only the nonblocking aggregate warm-wall advisory
+  remained.
 - The authoritative `create-pr` profile passed every blocking step on the
   reviewed closeout state. Python interop passed 19/19 variants in
   557.53/600 seconds; Rust interop passed 10/10 in 8.72/10 seconds; developer
