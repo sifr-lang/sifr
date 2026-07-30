@@ -1841,6 +1841,33 @@ Closeout validation evidence on 2026-07-30:
   399.02/600 seconds. The only lane result outside its target was the
   nonblocking aggregate warm-wall advisory after rebuilding all 42 E2E cache
   groups.
+- The exact integrated head `017c1df411f78ffb786775fdf4bd60e52424f839`
+  ran the authoritative merge profile on 2026-07-30. Coverage, all core and
+  resource guardrails, diagnostics, CPython differential 2/2, Python interop
+  25/25, Rust interop 10/10 in 7.59 seconds, frontend/cache guardrails, and
+  developer tooling 32/32 all passed. Every representative benchmark executed
+  successfully, but the unchanged repository-wide budget comparison stopped
+  the profile on four host-sensitive checks: project-graph median
+  1358.717/1357.524 ms, arithmetic median 1366.015/1334.139 ms, JSON-diagnostic
+  median 1354.814/1335.954 ms, and LSP diagnostics median/p95
+  5.962/5.91 ms and 11.664/10.933 ms. Earlier unchanged retries moved among
+  these cases, including project-graph 1719.712 ms in one run and arithmetic
+  1586.939 ms in another; the exact diff contains no compiler, frontend,
+  diagnostic, or LSP implementation change. The run also observed repeated
+  Cargo package-cache lock waits from concurrent repository work.
+- The same head then resumed every merge-profile step after performance through
+  the unmodified profile runner. All steps passed: verification hardening and
+  runner self-tests; fuzz/property 25/25; algorithmic compatibility 12/12;
+  distribution 66/66; sysroot release 2/2 including installed/source boundary
+  equivalence; generated-code quality 7/7; the complete crate matrix, including
+  6/6 CLI and 65/65 driver generated builds; core/project validation matrices
+  4/4 and 2/2; runtime platform 30 variants with zero failures and three
+  declared capability/toolchain skips; E2E 678/678 with report signature
+  `5e45a6a7b96f2688`; diagnostics baselines 175/175; project baselines 17/17;
+  regressions 5/5; and ecosystem compatibility 20/20. This preserves the
+  governed performance failure instead of changing a baseline or adding a
+  waiver, while proving that no functional merge step hidden behind the
+  fail-fast comparison is omitted.
 
 ## Completed Stdlib Native-Boundary Handoff
 
