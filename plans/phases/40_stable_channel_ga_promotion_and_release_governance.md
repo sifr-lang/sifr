@@ -54,9 +54,10 @@ Phase 40 consumes these completed or canonical upstream contracts:
   `plans/issues/archive/rust-interop-verification-matrix-hardening.md`
   (`hardening_1` through `hardening_4`) and
   `plans/issues/active/rust-interop-runtime-ecosystem-certification.md`
-  (`certification_0`). The hardening items are consumed by
-  `milestone_40_0`. Before stable qualification in `milestone_40_1`,
-  `certification_0` must have created
+  (merged Track A certifications 0 through 14, completed by
+  [PR #3083](https://github.com/sifr-lang/sifr/pull/3083)). The hardening items are consumed
+  by `milestone_40_0`. Before stable qualification in `milestone_40_1`,
+  `certification_0` created
   `verification/areas/rust_interop/data/stable_support_claims.json` plus its
   stable-candidate validator. `certification_0` also registers that validator
   as the `rust_interop` `stable-candidate` suite and selects it in create-PR,
@@ -69,12 +70,15 @@ Phase 40 consumes these completed or canonical upstream contracts:
   [PR #3023](https://github.com/sifr-lang/sifr/pull/3023);
   certification prerequisites and the stable claims contract are merged through
   [PR #3026](https://github.com/sifr-lang/sifr/pull/3026);
-  `certification_0` must create and validate the stable-claim artifacts before
-  qualification, but does not block the architecture-and-gate-lock milestone.
+  the remaining Track A certifications subsequently resolved every current
+  deferred row with passing evidence and completed the final stable-gate
+  closeout. Track B remains dormant until an
+  external bridge-version 2 package-resource substrate exists and is not a
+  Phase 40 blocker while absent and unadvertised.
 
-Phase 40 does not complete deferred Rust ecosystem certification. It may
-advertise only the exact Rust interop surfaces whose current compatibility
-matrix entries support the published claim.
+Phase 40 does not infer Rust ecosystem support from prose. It may advertise
+only the exact Rust interop surfaces accepted by the current compatibility
+matrix, `stable_support_claims.json`, and the stable-candidate validator.
 
 ## Canonical Cutover Policy
 

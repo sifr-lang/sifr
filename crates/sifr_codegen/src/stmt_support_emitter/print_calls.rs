@@ -115,7 +115,7 @@ impl RustEmitter {
                 receiver_target,
                 mutable_arg_places,
                 ..
-            } => Ok(self.try_lower_registry_method_call_expr(
+            } => self.try_lower_registry_method_call_expr(
                 object,
                 method,
                 args,
@@ -125,7 +125,7 @@ impl RustEmitter {
                     mutable_arg_places,
                 ),
                 expr.ty(),
-            )),
+            ),
             _ => Ok(None),
         }
     }

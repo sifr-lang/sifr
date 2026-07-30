@@ -10,6 +10,12 @@ use sifr_ir::{
 };
 use sifr_type_system::{FunctionType, ParamConvention, ReceiverConvention, Type};
 
+mod indexed_storage;
+
+use indexed_storage::{
+    indexed_storage_borrow_follows_argument_evaluation, specialized_indexed_storage_base,
+};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum InvalidPlace {
     ImmutableParameter,
@@ -26,6 +32,7 @@ enum Footprint {
 struct ReceiverOverlap<'a> {
     target: Option<&'a MutableReceiverTarget>,
     object: Option<(&'a HirExpr, Option<ReceiverConvention>)>,
+    borrow_follows_argument_evaluation: bool,
 }
 
 pub(super) fn validate_function_method_places(function: &mut HirFunction, ctx: &mut LowerCtx) {
@@ -114,6 +121,8 @@ pub(super) fn validate_function_method_places(function: &mut HirFunction, ctx: &
             ReceiverOverlap {
                 target: receiver_target.as_ref(),
                 object: Some((object, *receiver_convention)),
+                borrow_follows_argument_evaluation:
+                    indexed_storage_borrow_follows_argument_evaluation(object, method),
             },
             args,
             mutable_arg_places,
@@ -147,6 +156,7 @@ pub(super) fn validate_regular_call_arguments(
         ReceiverOverlap {
             target: None,
             object: None,
+            borrow_follows_argument_evaluation: false,
         },
         args,
         &places,
@@ -213,10 +223,12 @@ fn validate_call_overlaps(
             }
         }
     }
-    if let Some(MutableReceiverTarget::SpecializedIndexedStorage(base)) = receiver.target {
-        for (index, arg) in args.iter().enumerate() {
-            if expression_overlaps(arg, base, ctx) {
-                report_overlap(base, index, arg_ranges, ctx);
+    if !receiver.borrow_follows_argument_evaluation {
+        if let Some(MutableReceiverTarget::SpecializedIndexedStorage(base)) = receiver.target {
+            for (index, arg) in args.iter().enumerate() {
+                if expression_overlaps(arg, base, ctx) {
+                    report_overlap(base, index, arg_ranges, ctx);
+                }
             }
         }
     }
@@ -398,29 +410,6 @@ fn prove_mutable_place(
             }
         }
     }
-}
-
-fn specialized_indexed_storage_base<'a>(expr: &'a HirExpr, method: &str) -> Option<&'a HirExpr> {
-    let HirExpr::Index { object, .. } = expr else {
-        return None;
-    };
-    if let Type::Alias { name, .. } = object.ty() {
-        let supported = (name == "__sifr_defaultdict_list" && method == "append")
-            || (name == "__sifr_defaultdict_set" && method == "add");
-        if supported {
-            return Some(object);
-        }
-    }
-    if !matches!(method, "append" | "pop") {
-        return None;
-    }
-    let Type::Dict(_, value_ty) = object.ty().resolve_alias() else {
-        return None;
-    };
-    if !matches!(value_ty.as_ref().resolve_alias(), Type::List(_)) {
-        return None;
-    }
-    Some(object)
 }
 
 fn extract_place(expr: &HirExpr, ctx: &LowerCtx) -> Result<Place, InvalidPlace> {

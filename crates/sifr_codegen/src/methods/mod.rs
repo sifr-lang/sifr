@@ -18,6 +18,28 @@ pub(crate) struct LoweredMethod {
     pub(crate) expr: RustExpr,
 }
 
+pub(crate) fn is_in_place_collection_method(object_ty: &Type, method: &str) -> bool {
+    match object_ty.resolve_alias() {
+        Type::List(_) => matches!(
+            method,
+            "append" | "extend" | "insert" | "clear" | "reverse" | "sort" | "pop" | "remove"
+        ),
+        Type::Set(_) => matches!(
+            method,
+            "add"
+                | "update"
+                | "intersection_update"
+                | "difference_update"
+                | "symmetric_difference_update"
+                | "remove"
+                | "discard"
+                | "clear"
+                | "pop"
+        ),
+        _ => false,
+    }
+}
+
 pub(crate) fn lower_method(
     object_ty: &Type,
     method: &str,

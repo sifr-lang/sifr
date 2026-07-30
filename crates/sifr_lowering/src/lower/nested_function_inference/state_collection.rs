@@ -2,9 +2,11 @@ use super::capture_collection::collect_nested_function_captures;
 use super::mutation_collection::{collect_mutated_binding_names, MutationCandidate};
 use super::{
     analyze_assign, analyze_match_stmt, analyze_try_stmt, analyze_with_stmt,
-    collect_compound_local_bindings, collect_compound_nonlocals, function_has_value_return,
-    infer_expr_type, inference_stmt_always_exits, merge_env_types, refine_name_with_binary_context,
-    str, type_contains_unknown_or_any, unify_function_return, unify_name_binding, unify_types,
+    collect_compound_local_bindings, collect_compound_nonlocals,
+    defaultdict_shape_expr_is_lowering_exact, function_has_value_return, infer_expr_type,
+    inference_stmt_always_exits, is_unresolved_defaultdict_inference_type, merge_env_types,
+    refine_name_with_binary_context, replace_inference_holes_with_any, str,
+    type_contains_unknown_or_any, unify_function_return, unify_name_binding, unify_types,
 };
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
@@ -89,11 +91,14 @@ pub(super) struct FunctionEnv {
     pub(super) vars: HashMap<String, Type>,
     pub(super) call_return_origins: HashMap<String, String>,
     pub(super) exact_dict_write_shapes: HashMap<String, Option<(Type, Type)>>,
+    pub(super) lowering_inexact_bindings: HashSet<String>,
 }
 
 impl FunctionEnv {
     pub(super) fn bind_var(&mut self, name: &str, ty: Type) {
-        let ty = if let Some(existing) = self.vars.get(name) {
+        let ty = if is_unresolved_defaultdict_inference_type(&ty) {
+            ty
+        } else if let Some(existing) = self.vars.get(name) {
             if type_contains_unknown_or_any(&ty) {
                 unify_types(existing.clone(), ty)
             } else {
@@ -108,7 +113,9 @@ impl FunctionEnv {
     }
 
     pub(super) fn bind_call_result(&mut self, name: String, ty: Type, callee: String) {
-        let ty = if let Some(existing) = self.vars.get(&name) {
+        let ty = if is_unresolved_defaultdict_inference_type(&ty) {
+            ty
+        } else if let Some(existing) = self.vars.get(&name) {
             if type_contains_unknown_or_any(&ty) {
                 unify_types(existing.clone(), ty)
             } else {
@@ -136,6 +143,12 @@ impl FunctionEnv {
 
     pub(super) fn disqualify_exact_dict_writes(&mut self, name: &str) {
         self.exact_dict_write_shapes.insert(name.to_string(), None);
+    }
+
+    pub(super) fn record_lowering_inference_exactness(&mut self, name: &str, is_exact: bool) {
+        if !is_exact {
+            self.lowering_inexact_bindings.insert(name.to_string());
+        }
     }
 
     pub(super) fn merge_exact_dict_writes(&mut self, source: &Self) {
@@ -198,6 +211,7 @@ fn infer_function_types(
             vars: outer_bindings,
             call_return_origins: HashMap::new(),
             exact_dict_write_shapes: HashMap::new(),
+            lowering_inexact_bindings: HashSet::new(),
         };
         analyze_block(stmts, &mut env, &mut states, None, ctx);
         return NestedFunctionInference {
@@ -221,6 +235,7 @@ fn infer_function_types(
             vars: binding_hints.clone(),
             call_return_origins: HashMap::new(),
             exact_dict_write_shapes: HashMap::new(),
+            lowering_inexact_bindings: HashSet::new(),
         };
         analyze_block(stmts, &mut env, &mut states, None, ctx);
         binding_hints = env.vars;
@@ -233,6 +248,7 @@ fn infer_function_types(
         vars: binding_hints,
         call_return_origins: HashMap::new(),
         exact_dict_write_shapes: HashMap::new(),
+        lowering_inexact_bindings: HashSet::new(),
     };
     analyze_block(stmts, &mut env, &mut states, None, ctx);
     let function_captures = collect_nested_function_captures(stmts, &env, &states);
@@ -379,7 +395,8 @@ pub(super) fn finalize_nested_function_types(
                 state.inference_failed = true;
             }
             state.return_type = finalize_return_type(state);
-            if state.return_type.is_unknown() {
+            if state.return_type.contains_unknown_or_any() {
+                let recovery_type = replace_inference_holes_with_any(state.return_type.clone());
                 state.inference_failed = true;
                 ctx.error_with_code_at(
                     DiagnosticCode::TYPE_MISSING_ANNOTATION,
@@ -389,7 +406,7 @@ pub(super) fn finalize_nested_function_types(
                     ),
                     state.func.name.range(),
                 );
-                state.return_type = Type::Any;
+                state.return_type = recovery_type;
             }
         }
 
@@ -541,8 +558,11 @@ pub(super) fn analyze_stmt(
         Stmt::AnnAssign(assign) => {
             if let Expr::Name(name) = assign.target.as_ref() {
                 if let Some(value) = &assign.value {
+                    let inference_is_exact =
+                        defaultdict_shape_expr_is_lowering_exact(value, env, states, ctx);
                     let value_ty = infer_expr_type(value, env, states, current_function, ctx);
                     env.bind_var(name.id.as_str(), value_ty);
+                    env.record_lowering_inference_exactness(name.id.as_str(), inference_is_exact);
                 }
             }
         }
@@ -707,6 +727,9 @@ pub(super) fn analyze_stmt(
             let mut nonlocal_names = HashSet::new();
             collect_nonlocal_names(&func.body, &mut nonlocal_names);
             let mut nested_env = env.clone();
+            for local_name in local_bindings.iter().chain(param_names.iter()) {
+                nested_env.lowering_inexact_bindings.remove(local_name);
+            }
             for param in &state.params {
                 nested_env.bind_var(param.name.as_str(), param.ty.clone());
             }
@@ -727,7 +750,12 @@ pub(super) fn analyze_stmt(
                 if local_bindings.contains(&name) && !nonlocal_names.contains(&name) {
                     continue;
                 }
+                let lowering_is_inexact =
+                    nested_env.lowering_inexact_bindings.contains(name.as_str());
                 unify_name_binding(name.as_str(), refined_ty, env, states, current_function);
+                if lowering_is_inexact {
+                    env.lowering_inexact_bindings.insert(name);
+                }
             }
         }
         _ => {}

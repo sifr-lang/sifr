@@ -350,7 +350,11 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             let list_ty = resolve_alias_type(ty);
             let mut lowered = elements
                 .iter()
-                .map(try_lower_leaf_expr)
+                .map(|element| {
+                    try_lower_leaf_expr(element).map(|lowered| {
+                        crate::RustEmitter::clone_non_copy_name_expr_for_ir(element, lowered)
+                    })
+                })
                 .collect::<Option<Vec<_>>>()?;
             if matches!(list_ty, Type::Bytes) {
                 lowered = lowered

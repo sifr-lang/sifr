@@ -161,6 +161,34 @@ def run_self_test() -> tuple[int, str | None]:
                 "[trust].unsafe-rust-bridges missing src/bridges/types.rs",
             ),
             (
+                "bridge serde build-script trust drift",
+                "examples/bridge_type_roundtrip/sifr.toml",
+                'rust-build-scripts = ["serde", "serde_json", "thiserror"]',
+                'rust-build-scripts = ["serde_json", "thiserror"]',
+                "[trust].rust-build-scripts must equal",
+            ),
+            (
+                "bridge serde-json build-script trust drift",
+                "examples/bridge_type_roundtrip/sifr.toml",
+                'rust-build-scripts = ["serde", "serde_json", "thiserror"]',
+                'rust-build-scripts = ["serde", "thiserror"]',
+                "[trust].rust-build-scripts must equal",
+            ),
+            (
+                "bridge thiserror build-script trust drift",
+                "examples/bridge_type_roundtrip/sifr.toml",
+                'rust-build-scripts = ["serde", "serde_json", "thiserror"]',
+                'rust-build-scripts = ["serde", "serde_json"]',
+                "[trust].rust-build-scripts must equal",
+            ),
+            (
+                "bridge build-script trust over-declaration",
+                "examples/bridge_type_roundtrip/sifr.toml",
+                'rust-build-scripts = ["serde", "serde_json", "thiserror"]',
+                'rust-build-scripts = ["serde", "serde_json", "syn", "thiserror"]',
+                "[trust].rust-build-scripts must equal",
+            ),
+            (
                 "root lock drift",
                 "examples/bridge_type_roundtrip/Cargo.lock",
                 'version = "2.8.0"',
@@ -472,6 +500,14 @@ def _validate_scenario_manifests(
             trust,
             "unsafe-rust-bridges",
             ["src/bridges/types.rs"],
+        )
+        _require_exact_trust_targets(
+            failures,
+            fixture_id,
+            raw_path,
+            trust,
+            "rust-build-scripts",
+            ["serde", "serde_json", "thiserror"],
         )
     elif fixture_id == "panic_boundary_wrapper_emission":
         if rust.get("bridges") != ["src/bridges"]:
@@ -785,3 +821,19 @@ def _require_trust_targets(
     missing = [target for target in expected_targets if not isinstance(targets, list) or target not in targets]
     for target in missing:
         failures.append(f"{fixture_id}: {raw_path}/sifr.toml [trust].{key} missing {target}")
+
+
+def _require_exact_trust_targets(
+    failures: list[str],
+    fixture_id: str,
+    raw_path: str,
+    trust: Any,
+    key: str,
+    expected_targets: list[str],
+) -> None:
+    targets = trust.get(key) if isinstance(trust, dict) else None
+    if targets != expected_targets:
+        failures.append(
+            f"{fixture_id}: {raw_path}/sifr.toml [trust].{key} "
+            f"must equal {expected_targets!r}"
+        )

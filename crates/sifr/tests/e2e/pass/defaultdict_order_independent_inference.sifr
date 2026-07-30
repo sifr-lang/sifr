@@ -1,0 +1,213 @@
+from sifr.collections import defaultdict
+
+
+def unique_rows(cells: list[tuple[int, str]]) -> bool:
+    rows = defaultdict(set)
+    for row, cell in cells:
+        if cell in rows[row]:
+            return False
+        rows[row].add(cell)
+    return True
+
+
+def grouped_words(words: list[str]) -> int:
+    groups = defaultdict(list)
+    for word in words:
+        groups[len(word)].append(word)
+    return len(groups[3])
+
+
+def grouped_indexed_values(values: list[int]) -> int:
+    groups = defaultdict(list)
+    groups[1].append(values[0])
+    return len(groups[1])
+
+
+def unique_indexed_values(values: list[str]) -> int:
+    groups = defaultdict(set)
+    groups[1].add(values[0])
+    return len(groups[1])
+
+
+def grouped_optional_lookup(values: dict[int, int]) -> int:
+    groups = defaultdict(list)
+    groups[1].append(values.get(5))
+    return len(groups[1])
+
+
+def grouped_list_slice(values: list[int]) -> int:
+    groups = defaultdict(list)
+    groups[1].append(values[0:2])
+    assert len(groups[1]) == 1
+    return len(groups[1][0])
+
+
+def grouped_list_slice_after_other_key(values: list[int]) -> int:
+    groups = defaultdict(list)
+    groups[2].append([9])
+    groups[1].append(values[0:2])
+    return len(groups[1])
+
+
+def borrowed_string_set_membership(text: str) -> int:
+    groups = defaultdict(set)
+    groups[1].add(text)
+    if text in groups[1]:
+        return 1
+    return 0
+
+
+def extend_list_bucket_before_later_type_evidence() -> int:
+    groups = defaultdict(list)
+    groups[1].extend([3, 1, 2])
+    assert groups[1] == [3, 1, 2]
+    groups[1].sort()
+    assert groups[1] == [1, 2, 3]
+    groups[1].reverse()
+    assert groups[1] == [3, 2, 1]
+    groups[1].insert(0, 4)
+    assert groups[1] == [4, 3, 2, 1]
+    groups[1].remove(2)
+    assert groups[1] == [4, 3, 1]
+    groups[1].clear()
+    assert len(groups[1]) == 0
+    groups[1].append(5)
+    groups[2].append(7)
+    return len(groups[1])
+
+
+def update_set_bucket_before_later_type_evidence(values: list[int]) -> int:
+    groups = defaultdict(set)
+    groups[1].update({7, 8})
+    assert len(groups[1]) == 2
+    groups[1].intersection_update({8, 9})
+    assert len(groups[1]) == 1
+    assert 8 in groups[1]
+    groups[1].symmetric_difference_update({8, 10})
+    assert len(groups[1]) == 1
+    assert 10 in groups[1]
+    groups[1].difference_update({10})
+    assert len(groups[1]) == 0
+    groups[1].update({10, 12})
+    groups[1].discard(99)
+    assert len(groups[1]) == 2
+    groups[1].remove(10)
+    assert len(groups[1]) == 1
+    groups[1].clear()
+    assert len(groups[1]) == 0
+    groups[1].add(13)
+    groups[2].add(len(values))
+    return len(groups[1])
+
+
+def extend_with_general_iterables(values: list[int]) -> int:
+    groups = defaultdict(list)
+    groups[1].extend(values[0:2])
+    groups[2].extend(values + [9])
+    groups[3].extend(values[0:2] if len(values) > 1 else [1])
+    groups[4].extend([value for value in values[0:2]])
+    groups[5].append(7)
+    assert len(groups[1]) == 2
+    assert len(groups[2]) == 4
+    assert len(groups[3]) == 2
+    assert len(groups[4]) == 2
+    return len(groups[1]) + len(groups[2]) + len(groups[3]) + len(groups[4])
+
+
+def materialized_cross_bucket_iterables(values: list[int]) -> int:
+    lists = defaultdict(list)
+    lists[2].append(7)
+    lists[1].extend(lists[2])
+    sets = defaultdict(set)
+    sets[2].add(len(values))
+    sets[1].update(sets[2])
+    sets[3].update(values[0:2])
+    assert len(lists[1]) == 1
+    assert len(sets[1]) == 1
+    assert len(sets[3]) == 2
+    return len(lists[1]) + len(sets[1]) + len(sets[3])
+
+
+def borrowed_string_iterables(text: str) -> int:
+    chunk = [text]
+    lists = defaultdict(list)
+    lists[1].extend(chunk)
+    lists[2].append("later")
+    sets = defaultdict(set)
+    sets[1].update({text})
+    sets[2].add("later")
+    assert lists[1] == [text]
+    assert text in sets[1]
+    return len(lists[1]) + len(sets[1])
+
+
+def variadic_set_bucket_updates() -> int:
+    groups = defaultdict(set)
+    groups[1].update({1, 2})
+    groups[1].intersection_update({1, 2, 3}, {2, 3})
+    assert len(groups[1]) == 1
+    assert 2 in groups[1]
+    groups[1].update({1, 2, 3})
+    groups[1].difference_update({1}, {2})
+    assert len(groups[1]) == 1
+    assert 3 in groups[1]
+    groups[2].add(7)
+    return len(groups[1])
+
+
+def record_defaultdict_key(mut log: list[str]) -> int:
+    log.append("key")
+    return 1
+
+
+def record_defaultdict_items(mut log: list[str]) -> list[int]:
+    log.append("items")
+    return [7]
+
+
+def iterable_mutation_evaluation_order() -> int:
+    log: list[str] = []
+    groups = defaultdict(list)
+    groups[record_defaultdict_key(log)].extend(record_defaultdict_items(log))
+    groups[2].append(9)
+    assert log == ["key", "items"]
+    return len(groups[1])
+
+
+def default_insertion_precedes_iterable_arguments() -> int:
+    groups = defaultdict(list)
+    groups[1].extend([len(groups)])
+    groups[2].append(9)
+    assert groups[1] == [1]
+    return len(groups[1])
+
+
+def default_set_insertion_precedes_iterable_arguments() -> int:
+    groups = defaultdict(set)
+    groups[5].add(9)
+    groups[1].update({len(groups)}, {1})
+    assert len(groups[1]) == 2
+    assert 1 in groups[1]
+    assert 2 in groups[1]
+    return len(groups[1])
+
+
+def main():
+    assert unique_rows([(0, "a"), (0, "b"), (1, "a")])
+    assert not unique_rows([(0, "a"), (0, "a")])
+    assert grouped_words(["one", "two", "three"]) == 2
+    assert grouped_indexed_values([7]) == 1
+    assert unique_indexed_values(["value"]) == 1
+    assert grouped_optional_lookup({5: 7}) == 1
+    assert grouped_list_slice([3, 4, 5]) == 2
+    assert grouped_list_slice_after_other_key([3, 4, 5]) == 1
+    assert borrowed_string_set_membership("value") == 1
+    assert extend_list_bucket_before_later_type_evidence() == 1
+    assert update_set_bucket_before_later_type_evidence([1, 2]) == 1
+    assert extend_with_general_iterables([1, 2, 3]) == 10
+    assert materialized_cross_bucket_iterables([1, 2]) == 4
+    assert borrowed_string_iterables("value") == 2
+    assert variadic_set_bucket_updates() == 1
+    assert iterable_mutation_evaluation_order() == 1
+    assert default_insertion_precedes_iterable_arguments() == 1
+    assert default_set_insertion_precedes_iterable_arguments() == 2

@@ -132,7 +132,7 @@
       "required_crates": [],
       "positive_evidence": {"id": "stdlib_handle_close_poison_lifecycle", "status": "passing"},
       "negative_evidence": {"id": "stdlib_handle_double_close_poisoned_access", "status": "passing"},
-      "notes": "Stdlib-owned resource migrations may use the shared handle substrate for close poisoning, double-close stability, and panic-boundary poisoning; ecosystem resources remain future-owned by opaque_resource_matrix."
+      "notes": "Stdlib-owned resource migrations may use the shared handle substrate for close poisoning, double-close stability, and panic-boundary poisoning; ecosystem resources are certified separately by opaque_resource_matrix."
     },
     {
       "id": "opaque_resource_matrix",
@@ -228,7 +228,7 @@
       "required_crates": [],
       "positive_evidence": {"id": "stdlib_async_resource_lifecycle", "status": "passing"},
       "negative_evidence": {"id": "stdlib_async_hidden_blocking_rejected", "status": "passing"},
-      "notes": "Contract-only stdlib async declarations have checked async-close, current-thread affinity, and hidden-blocking contracts. This row does not claim runtime execution; runtime cancellation/drop and reqwest loopback evidence remain future-owned."
+      "notes": "Contract-only stdlib async declarations have checked async-close, current-thread affinity, and hidden-blocking contracts. This row does not claim runtime execution; runtime cancellation/drop and reqwest loopback evidence are certified separately by async_runtime_reqwest."
     },
     {
       "id": "async_ecosystem_matrix",
@@ -293,7 +293,7 @@
       "required_crates": [],
       "positive_evidence": {"id": "signal_subscription_cancel_shutdown", "status": "passing"},
       "negative_evidence": {"id": "invalid_subscription_callback_policy_rejected", "status": "passing"},
-      "notes": "Contract-only stdlib subscription declarations have checked backpressure, overflow, shutdown, and async-close contracts. Runtime subscription lifecycle and ecosystem behavior remain future-owned."
+      "notes": "Contract-only stdlib subscription declarations have checked backpressure, overflow, shutdown, and async-close contracts. Runtime subscription lifecycle and ecosystem behavior are certified separately by callback_subscription_ecosystem."
     },
     {
       "id": "callback_subscription_ecosystem",

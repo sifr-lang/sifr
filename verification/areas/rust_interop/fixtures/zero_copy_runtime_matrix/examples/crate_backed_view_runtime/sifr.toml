@@ -15,6 +15,7 @@ bridges = ["src/bridges"]
 direct-crate-bindings = true
 
 [trust]
+rust-build-scripts = ["zerocopy"]
 rust-no-panic = [
   "bridge.zero_copy.close",
   "bridge.zero_copy.create",

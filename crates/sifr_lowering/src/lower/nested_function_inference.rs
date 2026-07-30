@@ -1,3 +1,4 @@
+use super::builtin_calls::{DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS};
 use super::{infer_type_var_bindings, substitute_type_vars, LowerCtx};
 use super::{str, typing_and_functions};
 use sifr_python_ast::{CmpOp, Expr, ExprCall, Operator};
@@ -8,8 +9,19 @@ mod state_collection;
 pub(in crate::lower) use state_collection::*;
 mod expression_inference;
 use expression_inference::{
-    analyze_assign, infer_expr_type, merge_env_types, refine_name_with_binary_context,
-    type_contains_unknown_or_any, unify_name_binding, unify_types,
+    analyze_assign, infer_expr_type, lookup_name_type, merge_env_types,
+    refine_name_with_binary_context, unify_name_binding,
+};
+mod defaultdict_inference;
+use defaultdict_inference::{
+    defaultdict_shape_expr_is_lowering_exact, infer_defaultdict_call_type,
+    is_unresolved_defaultdict_inference_type, refine_defaultdict_method_call,
+    refine_defaultdict_subscript, unify_matching_defaultdict_aliases, DefaultdictMethodCall,
+};
+mod type_unification;
+use type_unification::{
+    has_conflicting_inference, replace_inference_holes_with_any, type_contains_unknown_or_any,
+    unify_types,
 };
 mod generic_call_inference;
 use generic_call_inference::infer_registered_call;

@@ -480,17 +480,22 @@ Sifr uses **borrow-by-default** semantics for function parameters. Move-type arg
 - **Audited indexed-storage exception:** general mutable indexing remains
   unsupported. The existing membership-guarded/narrowed `dict[K, list[V]]`
   `bucket[key].append(...)` and zero-argument `bucket[key].pop()` lowering,
-  plus the typed `defaultdict` list/set aliases' indexed `append`/`add`, are
-  compiler-owned exceptions. Unguarded plain-dict indexing retains its
-  optional value type and is rejected by ordinary type checking. Matching
-  stable expression keys and literal string keys both retain their guard fact.
-  Lowering proves the dictionary base place and codegen accepts only the
-  dedicated indexed-storage target, so these paths cannot become a generic
-  mutable index fallback.
+  plus the typed `defaultdict` list/set aliases' supported in-place bucket
+  methods, are compiler-owned exceptions. Unguarded plain-dict indexing
+  retains its optional value type and is rejected by ordinary type checking.
+  Matching stable expression keys and literal string keys both retain their
+  guard fact. Lowering proves the dictionary base place and codegen accepts
+  only the dedicated indexed-storage target plus the resolved value type's
+  in-place-method set, so these paths cannot become a generic mutable index
+  fallback.
 - **Same-call exclusivity:** mutable receiver and `mut` argument places use one
   prefix-overlap rule. Equal or ancestor/descendant places conflict with every
   overlapping read, borrow, or move in the same call; sibling fields and
-  different binding identities remain disjoint.
+  different binding identities remain disjoint. The only evaluation-order
+  exception is typed `defaultdict` list `extend` and set update-family
+  lowering: codegen inserts the entry, materializes every argument, and only
+  then borrows the destination bucket. Lowering records this exact
+  compiler-owned order and otherwise retains conservative overlap rejection.
 - **Checked place emission:** mutable receivers, mutable arguments, and
   canonical iterator advancement emit directly from the proven root through
   every field hop. This path never enters ordinary field-value cloning.

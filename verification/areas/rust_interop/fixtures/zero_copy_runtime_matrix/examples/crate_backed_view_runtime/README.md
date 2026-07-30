@@ -11,4 +11,5 @@ deterministic release.
 
 The package uses only safe Rust. Mutation happens before immutable aliases are
 published, so the scenario's executable state transition mirrors the compiler
-contract's exclusivity requirement.
+contract's exclusivity requirement. Its manifest explicitly trusts the build
+script shipped by the direct `zerocopy` dependency.

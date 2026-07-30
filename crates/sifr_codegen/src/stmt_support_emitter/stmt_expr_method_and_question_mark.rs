@@ -170,7 +170,7 @@ macro_rules! stmt_expr_method_call {
                     mutable_arg_places,
                 ),
                 $expr.ty(),
-            );
+            )?;
             if let Some(lowered_registry) = lowered_registry {
                 return Ok(Some(lowered_registry));
             }

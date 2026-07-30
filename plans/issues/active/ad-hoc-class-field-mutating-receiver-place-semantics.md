@@ -374,6 +374,15 @@ footprint of every explicit argument, including nested calls and field reads:
 - an unsupported/dynamic projection under the same root is conservatively
   treated as overlapping.
 
+The sole compiler-owned evaluation-order exception is a typed `defaultdict`
+list `extend` or set update-family call. Those lowerings insert the destination
+entry, materialize all arguments, and only then take the bucket borrow, so a
+same-map argument such as `groups[1].extend(groups[2])` is accepted. Lowering
+still proves the backing-map place and codegen still requires the dedicated
+indexed-storage target plus an in-place method on the resolved bucket type.
+Every other specialized indexed mutation retains the conservative overlap
+rule.
+
 The same place-overlap function replaces the existing bare-name-only
 same-call check for regular functions and is also used for method arguments.
 This closes receiver-versus-argument, argument-versus-argument, bare-root, and
@@ -783,8 +792,8 @@ Current Item 2 validation evidence:
 
 - focused lowering, codegen, scope, optimizer, pass-fixture, and fail-fixture
   checks pass;
-- full lowering tests pass (`922 passed`, `1 ignored`), full codegen tests pass
-  (`941 passed`), the E2E pass suite passes (`680/680`, report signature
+- full lowering tests pass (`936 passed`, `1 ignored`), full codegen tests pass
+  (`953 passed`), the E2E pass suite passes (`680/680`, report signature
   `8871ba51135353a4`), and the E2E fail test
   passes with the complete annotated fail corpus;
 - formatting, workspace clippy with warnings denied, HIR maintainability,
@@ -843,7 +852,9 @@ Current Item 2 validation evidence:
 - Shared-receiver calls do not spuriously make the enclosing method mutable,
   and ordinary field reads retain existing clone semantics.
 - Place-prefix conflict analysis accepts sibling fields and rejects every
-  overlapping receiver/argument/read/move shape at Sifr check time.
+  overlapping receiver/argument/read/move shape at Sifr check time except the
+  audited typed-`defaultdict` iterable mutators whose arguments are explicitly
+  materialized before the destination bucket borrow.
 - Immutable parameter roots report `SIFR-OWN-0005`; overlapping places report
   `SIFR-OWN-0002`; unsupported mutable receiver shapes report
   `SIFR-OWN-0014`.
@@ -1015,3 +1026,22 @@ Current Item 2 validation evidence:
   head `4fdb439` merged in
   [sifr-lang/leetcode#41](https://github.com/sifr-lang/leetcode/pull/41) as
   merge commit `e75af095`.
+- Item 2 exact-head PR review pass 10:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-10.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-10.md)
+  returned `SATISFIED` with zero actionable findings. It independently
+  confirmed the merged corpus pin, lexical plain-call verifier correction,
+  checked-place fail-closed behavior, constructor materialization,
+  protocol/optimizer contracts, full library counts, and candidate-versus-base
+  corpus attribution.
+- Item 2 final merge-evidence review pass 11:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-11.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-11.md)
+  returned `NOT SATISFIED`. It accepted the representative benchmark misses
+  as host variance, but correctly found that upstream PR #3081 made the branch
+  unmergeable in the defaultdict mutable-bucket path and that the lowering
+  count was stale. The reconciliation retains upstream's resolved in-place
+  method gate and fallible propagation together with Item 2's
+  `MethodCallPlaces` and `emit_checked_place` proof. Merged-tree testing then
+  exposed and closed two further integration requirements: all typed
+  `defaultdict` in-place bucket methods now carry the checked backing-storage
+  target, and only the explicitly materialized `extend`/set-update family may
+  evaluate same-map arguments before taking the bucket borrow.
