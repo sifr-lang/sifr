@@ -118,6 +118,7 @@ pub(in crate::lower) fn lower_thread_pool_submit_call(
     }
 
     Some(Some(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: submit_func.to_string(),
         args: vec![worker],
         ty: Type::BlockingTask(Box::new(ok_ty), Box::new(err_ty)),

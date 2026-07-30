@@ -314,10 +314,13 @@ fn test_round_parenthesizes_cast_receiver() {
             return_type: Type::None,
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "print".to_string(),
                     args: vec![HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "round".to_string(),
                         args: vec![HirExpr::Call {
+                            mutable_arg_places: Vec::new(),
                             func: "float".to_string(),
                             args: vec![HirExpr::IntLiteral(3)],
                             ty: Type::Float,
@@ -357,11 +360,13 @@ fn test_round_parenthesizes_cast_receiver() {
 #[test]
 fn test_float_min_max_parenthesize_cast_receivers() {
     let float_one = HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "float".to_string(),
         args: vec![HirExpr::IntLiteral(1)],
         ty: Type::Float,
     };
     let float_two = HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "float".to_string(),
         args: vec![HirExpr::IntLiteral(2)],
         ty: Type::Float,
@@ -375,8 +380,10 @@ fn test_float_min_max_parenthesize_cast_receivers() {
             body: vec![
                 HirStmt::Expr {
                     expr: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "print".to_string(),
                         args: vec![HirExpr::Call {
+                            mutable_arg_places: Vec::new(),
                             func: "min".to_string(),
                             args: vec![float_one.clone(), float_two.clone()],
                             ty: Type::Float,
@@ -386,8 +393,10 @@ fn test_float_min_max_parenthesize_cast_receivers() {
                 },
                 HirStmt::Expr {
                     expr: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "print".to_string(),
                         args: vec![HirExpr::Call {
+                            mutable_arg_places: Vec::new(),
                             func: "max".to_string(),
                             args: vec![float_one, float_two],
                             ty: Type::Float,
@@ -437,8 +446,10 @@ fn test_variadic_min_max_lower_to_nested_calls() {
             body: vec![
                 HirStmt::Expr {
                     expr: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "print".to_string(),
                         args: vec![HirExpr::Call {
+                            mutable_arg_places: Vec::new(),
                             func: "min".to_string(),
                             args: vec![
                                 HirExpr::IntLiteral(3),
@@ -452,8 +463,10 @@ fn test_variadic_min_max_lower_to_nested_calls() {
                 },
                 HirStmt::Expr {
                     expr: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "print".to_string(),
                         args: vec![HirExpr::Call {
+                            mutable_arg_places: Vec::new(),
                             func: "max".to_string(),
                             args: vec![
                                 HirExpr::IntLiteral(1),

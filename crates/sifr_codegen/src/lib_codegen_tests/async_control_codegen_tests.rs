@@ -88,6 +88,9 @@ fn async_callable_class_field_uses_a_boxed_future_adapter() {
     );
 
     assert!(rust_code.contains("Box<dyn Fn(i64) -> ::std::pin::Pin<Box<dyn ::std::future::Future<Output = i64> + Send>> + Send + Sync>"));
+    assert!(rust_code.contains(
+        "let __sifr_field_init_0: Box<dyn Fn(i64) -> ::std::pin::Pin<Box<dyn ::std::future::Future<Output = i64> + Send>> + Send + Sync>"
+    ));
     assert!(rust_code.contains("move |__sifr_async_arg_0|"));
     assert!(rust_code.contains("::std::sync::Arc::clone(&__sifr_async_callable)"));
     assert!(rust_code.contains("__sifr_async_callable(__sifr_async_arg_0).await"));
@@ -254,6 +257,7 @@ fn test_simple_function_codegen() {
             return_type: Type::None,
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "print".to_string(),
                     args: vec![HirExpr::StringLiteral("Hello, World!".to_string())],
                     ty: Type::None,
@@ -359,6 +363,7 @@ fn test_no_unnecessary_mut() {
                 },
                 HirStmt::Expr {
                     expr: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "print".to_string(),
                         args: vec![HirExpr::Name {
                             name: "x".to_string(),
@@ -506,6 +511,7 @@ fn test_println_fstring_inlined() {
                 },
                 HirStmt::Expr {
                     expr: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "print".to_string(),
                         args: vec![HirExpr::FString {
                             parts: vec![
@@ -560,6 +566,7 @@ fn test_no_tostring_in_println() {
             return_type: Type::None,
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "print".to_string(),
                     args: vec![HirExpr::StringLiteral("hello".to_string())],
                     ty: Type::None,
@@ -703,6 +710,7 @@ fn test_reverse_range_for_loop_uses_rev_iterator_for_unary_negative_step() {
                 },
                 body: vec![HirStmt::Expr {
                     expr: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "print".to_string(),
                         args: vec![HirExpr::Name {
                             name: "i".to_string(),

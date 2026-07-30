@@ -163,6 +163,7 @@ pub(super) fn try_lower_class_method_call(
     };
     consume_owned_method_arguments(&args, call, &function_type, ctx);
     Some(Some(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: format!("{class_name}::{method_name}"),
         args,
         ty: *function_type.return_type,

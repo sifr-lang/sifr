@@ -29,6 +29,7 @@ fn walk_stmts_covers_try_handlers_loop_else_and_match_patterns() {
         return_type: Type::None,
         body: vec![HirStmt::Expr {
             expr: HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "nested_only".to_string(),
                 args: vec![],
                 ty: Type::None,
@@ -56,6 +57,7 @@ fn walk_stmts_covers_try_handlers_loop_else_and_match_patterns() {
                 body: vec![HirStmt::Pass],
                 else_body: Some(vec![HirStmt::Expr {
                     expr: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "loop_else_call".to_string(),
                         args: vec![],
                         ty: Type::None,
@@ -76,18 +78,21 @@ fn walk_stmts_covers_try_handlers_loop_else_and_match_patterns() {
                     arms: vec![HirMatchArm {
                         pattern: HirPattern::Literal {
                             value: HirExpr::Call {
+                                mutable_arg_places: Vec::new(),
                                 func: "pattern_expr".to_string(),
                                 args: vec![],
                                 ty: Type::Int,
                             },
                         },
                         guard: Some(HirExpr::Call {
+                            mutable_arg_places: Vec::new(),
                             func: "guard_expr".to_string(),
                             args: vec![],
                             ty: Type::Bool,
                         }),
                         body: vec![HirStmt::Expr {
                             expr: HirExpr::Call {
+                                mutable_arg_places: Vec::new(),
                                 func: "arm_body_call".to_string(),
                                 args: vec![],
                                 ty: Type::None,
@@ -134,6 +139,7 @@ fn walk_stmts_respects_nested_function_scope_boundary() {
         return_type: Type::None,
         body: vec![HirStmt::Expr {
             expr: HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "nested_only".to_string(),
                 args: vec![],
                 ty: Type::None,
@@ -179,11 +185,13 @@ fn walk_expr_until_stops_at_first_match() {
     let expr = HirExpr::TupleLiteral {
         elements: vec![
             HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "first".to_string(),
                 args: vec![],
                 ty: Type::None,
             },
             HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "second".to_string(),
                 args: vec![],
                 ty: Type::None,
@@ -215,6 +223,7 @@ fn walk_stmts_until_stops_before_later_statements() {
         },
         HirStmt::Expr {
             expr: HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "later".to_string(),
                 args: vec![],
                 ty: Type::None,

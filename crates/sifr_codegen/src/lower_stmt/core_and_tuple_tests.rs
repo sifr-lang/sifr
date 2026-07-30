@@ -256,6 +256,7 @@ fn does_not_lower_field_assign_with_non_leaf_value() {
         field: "value".to_string(),
         field_ty: Type::Int,
         value: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "compute".to_string(),
             args: vec![],
             ty: Type::Int,
@@ -362,6 +363,7 @@ fn does_not_lower_tuple_unpack_with_non_leaf_value() {
             },
         ],
         value: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "pair".to_string(),
             args: vec![],
             ty: Type::Tuple(vec![Type::Int, Type::Bool]),

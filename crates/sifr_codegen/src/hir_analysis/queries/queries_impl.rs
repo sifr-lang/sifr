@@ -516,15 +516,15 @@ pub(crate) fn collect_mutated_vars(
                 }
             }
             if canonical_func == "anext" {
-                if let Some(HirExpr::Name { name, .. }) = args.first() {
-                    mutated.borrow_mut().insert(name.clone());
+                if let Some(name) = args.first().and_then(expression_root_name) {
+                    mutated.borrow_mut().insert(name.to_string());
                 }
             }
         }
         HirExpr::IteratorCall { op, args, .. } => {
             if *op == HirIteratorOp::Next {
-                if let Some(HirExpr::Name { name, .. }) = args.first() {
-                    mutated.borrow_mut().insert(name.clone());
+                if let Some(name) = args.first().and_then(expression_root_name) {
+                    mutated.borrow_mut().insert(name.to_string());
                 }
             }
         }

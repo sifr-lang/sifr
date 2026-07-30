@@ -32,6 +32,7 @@ fn test_stmt_path_handles_nested_function() {
                 },
                 HirStmt::Expr {
                     expr: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "inner".to_string(),
                         args: vec![],
                         ty: Type::Int,
@@ -179,6 +180,7 @@ fn test_expr_path_handles_call_expression() {
             return_type: Type::None,
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "print".to_string(),
                     args: vec![HirExpr::StringLiteral("marker".to_string())],
                     ty: Type::None,

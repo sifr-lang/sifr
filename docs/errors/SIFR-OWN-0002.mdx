@@ -18,28 +18,43 @@ Use `sifr --explain SIFR-OWN-0002` locally to see the renderer's exact message t
 
 ## Erroneous Code
 
-```python
-def consume(own values: list[int]) -> int:
-    return len(values)
+An overlapping field read, shared borrow, mutable borrow, or owned move cannot
+occur in the same call as a mutable receiver or mutable argument.
 
-items: list[int] = [1, 2]
-taken: int = consume(items)
-count: int = len(items)
+```python
+class Buffer:
+    values: list[int]
+
+    def replace_from(self, own other: Buffer) -> None:
+        self.values = other.values
+
+def replace_with_self(mut buffer: Buffer) -> None:
+    buffer.replace_from(buffer)
 ```
 
 ## How To Fix It
 
-Move ownership only after the last use, keep mutable borrows scoped, and send only owned sendable values across task or channel boundaries.
+Use a disjoint place for every other argument while a mutable receiver or
+argument is active. If an argument only needs a value derived from the same
+place, snapshot that value in a local before the call. For example, rewrite
+`values.append(len(values))` as:
+
+```python
+count = len(values)
+values.append(count)
+```
 
 ## Fixed Code
 
 ```python
-def consume(own values: list[int]) -> int:
-    return len(values)
+class Buffer:
+    values: list[int]
 
-items: list[int] = [1, 2]
-count: int = len(items)
-taken: int = consume(items)
+    def replace_from(self, own other: Buffer) -> None:
+        self.values = other.values
+
+def replace(mut target: Buffer, own source: Buffer) -> None:
+    target.replace_from(source)
 ```
 
 ## Details

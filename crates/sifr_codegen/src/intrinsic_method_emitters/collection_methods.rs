@@ -7,7 +7,8 @@ use super::{
     registry_iterable_to_owned_iter_expr, registry_iterable_to_set_expr, HirExpr, RustEmitter,
     RustExpr, Type,
 };
-
+use crate::place_emitter::MethodCallPlaces;
+use sifr_ir::MutableReceiverTarget;
 impl RustEmitter {
     pub(crate) fn effective_method_object_ty(&self, object: &HirExpr) -> Type {
         if let HirExpr::Name { name, ty, .. } = object {
@@ -52,6 +53,7 @@ impl RustEmitter {
         object: &HirExpr,
         method: &str,
         args: &[HirExpr],
+        places: MethodCallPlaces<'_>,
         method_return_ty: &Type,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
         let is_defaultdict_bucket_mutator = match object {
@@ -69,6 +71,7 @@ impl RustEmitter {
                     object,
                     method,
                     args,
+                    places,
                     method_return_ty,
                 )
                 .map(Some)
@@ -83,6 +86,7 @@ impl RustEmitter {
             object,
             method,
             args,
+            places,
             method_return_ty,
         ))
     }
@@ -92,6 +96,7 @@ impl RustEmitter {
         object: &HirExpr,
         method: &str,
         args: &[HirExpr],
+        places: MethodCallPlaces<'_>,
         method_return_ty: &Type,
     ) -> Option<crate::RustExpr> {
         let effective_object_ty = self.effective_method_object_ty(object);
@@ -101,6 +106,7 @@ impl RustEmitter {
             object,
             method,
             args,
+            places,
             method_return_ty,
         ) {
             return Some(lowered);
@@ -110,6 +116,7 @@ impl RustEmitter {
             object,
             method,
             args,
+            places,
             method_return_ty,
         ) {
             return Some(lowered);
@@ -119,6 +126,7 @@ impl RustEmitter {
             object,
             method,
             args,
+            places,
             method_return_ty,
         ) {
             return Some(lowered);
@@ -135,8 +143,12 @@ impl RustEmitter {
                     Type::Dict(_, _)
                 ) && matches!(object_ty, Type::List(_))
                 {
-                    let lowered_object =
-                        self.try_lower_dict_indexed_list_mutation_object(index_object)?;
+                    let MutableReceiverTarget::SpecializedIndexedStorage(base_place) =
+                        places.receiver_target?
+                    else {
+                        return None;
+                    };
+                    let lowered_object = self.emit_checked_place(index_object, base_place)?;
                     let lowered_index = self.try_lower_registry_expr_strict(index)?;
                     let lowered_arg = self.try_lower_registry_expr_strict(&args[0])?;
                     let key_arg = Self::build_dict_lookup_key_arg_for_ir(
@@ -216,14 +228,38 @@ impl RustEmitter {
             }
         }
         let is_deque_data_field = self.is_deque_data_field(object);
-        let object_expr = self.try_lower_registry_expr_strict(object)?;
+        let object_expr = self.lower_method_receiver_place_for_registry(
+            object,
+            places.receiver_convention,
+            places.receiver_target,
+        )?;
         if method == "len"
             && args.is_empty()
             && matches!(object_ty, Type::Str | Type::LiteralStr(_))
         {
             return Some(self.lower_string_len_with_cache(object, object_expr));
         }
-        let mut arg_exprs = self.try_lower_registry_exprs_strict(args)?;
+        let method_params = self.resolve_registry_method_params(&effective_object_ty, method);
+        let mut arg_exprs = Vec::with_capacity(args.len());
+        for (index, argument) in args.iter().enumerate() {
+            let convention = method_params
+                .as_ref()
+                .and_then(|params| params.get(index))
+                .map_or(
+                    sifr_type_system::ParamConvention::default(),
+                    |(_, convention)| *convention,
+                );
+            arg_exprs.push(
+                self.lower_method_argument_place_for_registry(
+                    argument,
+                    convention,
+                    places
+                        .mutable_arg_places
+                        .get(index)
+                        .and_then(Option::as_ref),
+                )?,
+            );
+        }
 
         if matches!(object_ty, Type::List(_))
             && matches!(method, "append" | "appendleft")
@@ -550,6 +586,7 @@ impl RustEmitter {
         object: &HirExpr,
         method: &str,
         args: &[HirExpr],
+        places: MethodCallPlaces<'_>,
         method_return_ty: &Type,
     ) -> Option<crate::RustExpr> {
         let HirExpr::Index {
@@ -564,7 +601,11 @@ impl RustEmitter {
         if !methods::is_in_place_collection_method(value_ty, method) {
             return None;
         }
-        let lowered_object = self.try_lower_registry_expr_strict(base_object)?;
+        let MutableReceiverTarget::SpecializedIndexedStorage(base_place) = places.receiver_target?
+        else {
+            return None;
+        };
+        let lowered_object = self.emit_checked_place(base_object, base_place)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
         let lowered_key_arg = registry_defaultdict_key_arg(index, lowered_index, key_ty);
         let is_iterable_bucket_mutator = (alias_name == "__sifr_defaultdict_list"
@@ -756,6 +797,8 @@ impl RustEmitter {
             object,
             method,
             args,
+            receiver_convention,
+            receiver_target,
             ..
         } = expr
         else {
@@ -800,7 +843,11 @@ impl RustEmitter {
             return None;
         }
         Some(crate::RustExpr::MethodCall {
-            receiver: Box::new(self.try_lower_registry_expr_strict(object)?),
+            receiver: Box::new(self.lower_method_receiver_place_for_registry(
+                object,
+                *receiver_convention,
+                receiver_target.as_ref(),
+            )?),
             method: "insert".to_string(),
             args: vec![crate::RustExpr::Ident(name.clone())],
         })

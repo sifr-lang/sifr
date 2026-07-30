@@ -43,7 +43,8 @@ fn collect_annotated_constant(
     else {
         return;
     };
-    ctx.scope.define(var_name.clone(), ty.clone());
+    ctx.scope
+        .define_module_constant(var_name.clone(), ty.clone());
     constants.push((var_name, ty, hir_value));
 }
 
@@ -189,7 +190,8 @@ fn collect_bare_constant(
     {
         hir_value = folded;
     }
-    ctx.scope.define(var_name.clone(), ty.clone());
+    ctx.scope
+        .define_module_constant(var_name.clone(), ty.clone());
     constants.push((var_name, ty, hir_value));
 }
 

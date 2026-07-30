@@ -5,12 +5,14 @@ use super::parameter_conventions::{
 };
 use super::rust_opaque_validation::validate_rust_opaque_close_method;
 use super::{
-    collect_enum_variants, function_body_contains_yield, get_newtype_inner, get_parent_class,
-    has_decorator, is_enum_class, is_operator_dunder, is_protocol_class, lower_function_stmts,
+    collect_enum_variants, constructor_uninitialized_storage_at_first_self_use,
+    function_body_contains_yield, get_newtype_inner, get_parent_class, has_decorator,
+    is_enum_class, is_operator_dunder, is_protocol_class, lower_function_stmts,
     missing_method_param_annotation, resolve_annotation_expr, unsupported_class_declaration, Expr,
     FunctionType, HirClass, HirClassKind, HirFunction, HirParam, LowerCtx, MethodKind,
     ParamConvention, Ranged, Stmt, StmtClassDef, Type,
 };
+use crate::lower::ownership_diagnostics;
 use crate::lower::python_interop::{
     classify_python_interop_stub_body, collect_python_method_declarations,
     has_python_interop_decorator_syntax, receiver_is_owned, validate_context_class_methods,
@@ -20,6 +22,8 @@ use crate::lower::rust_interop::{
     classify_rust_interop_stub_body, collect_rust_interop_declarations,
     has_rust_interop_decorator_syntax, RustInteropOwner,
 };
+use sifr_type_system::ReceiverConvention;
+
 /// Second pass: lower class method bodies into `HirClass`.
 pub(in crate::lower) fn lower_class(
     class_def: &StmtClassDef,
@@ -420,6 +424,8 @@ pub(in crate::lower) fn lower_class(
             };
             let declared_receiver = (method_kind == MethodKind::Regular)
                 .then(|| declared_method_receiver_convention(&method_name, &func.parameters));
+            ctx.method_source_ranges
+                .insert(format!("{class_name}.{method_name}"), func.name.range());
 
             // Set current class context for `self` resolution
             ctx.current_class = Some(class_name.clone());
@@ -436,9 +442,16 @@ pub(in crate::lower) fn lower_class(
 
             // Define `self` in scope (for regular methods)
             if !is_staticmethod && !is_classmethod {
-                let Some(receiver) = declared_receiver else {
+                let Some(mut receiver) = declared_receiver else {
                     unreachable!("regular method must have a receiver convention");
                 };
+                // Constructors are emitted as static Rust `new` functions, so
+                // their HIR function has no Rust receiver. Their local `self`
+                // is nevertheless fresh mutable storage and must remain a
+                // valid root for mutating calls during initialization.
+                if method_name == "__init__" {
+                    receiver = ReceiverConvention::MutableBorrow;
+                }
                 let receiver_id =
                     ctx.scope
                         .define_receiver("self".to_string(), class_ty.clone(), receiver);
@@ -592,6 +605,27 @@ pub(in crate::lower) fn lower_class(
             } else {
                 lower_function_stmts(&func.body, &method_ft, ctx)
             };
+            if method_name == "__init__" {
+                if let Some(gap) = constructor_uninitialized_storage_at_first_self_use(
+                    &body,
+                    &own_fields,
+                    &params,
+                    parent_class_name
+                        .as_deref()
+                        .is_some_and(|parent| parent != "NonSend"),
+                ) {
+                    let range = func
+                        .body
+                        .get(gap.statement_index)
+                        .map_or_else(|| func.name.range(), Ranged::range);
+                    ownership_diagnostics::constructor_storage_unavailable(
+                        ctx,
+                        &gap.missing_fields,
+                        gap.missing_parent,
+                        range,
+                    );
+                }
+            }
             let mut live_must_use = ctx
                 .live_must_use_bindings
                 .iter()

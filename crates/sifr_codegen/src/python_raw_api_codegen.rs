@@ -131,6 +131,8 @@ impl RustEmitter {
         object: &HirExpr,
         method: &str,
         args: &[HirExpr],
+        receiver_convention: Option<sifr_type_system::ReceiverConvention>,
+        receiver_target: Option<&sifr_ir::MutableReceiverTarget>,
         result_type: &Type,
     ) -> Option<RustExpr> {
         // Dynamic method selection below is limited to the audited generated
@@ -150,7 +152,10 @@ impl RustEmitter {
             ("call_method", 3) => "py_call_attr_keyed",
             _ => return None,
         };
-        let lowered_object = self.lower_stmt_expr_for_ir(object).ok().flatten()?;
+        let lowered_object = self
+            .lower_method_receiver_place_for_stmt(object, receiver_convention, receiver_target)
+            .ok()
+            .flatten()?;
         let mut call_args = vec![reference(lowered_object)];
         for arg in args {
             let lowered = self.lower_stmt_expr_for_ir(arg).ok().flatten()?;

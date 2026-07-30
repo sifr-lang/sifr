@@ -1,0 +1,14 @@
+# expect-error[col=5]: SIFR-OWN-0005
+class Helper:
+    items: list[int]
+
+    def bump(self) -> None:
+        self.items.append(1)
+
+
+class Owner:
+    helper: Helper
+
+
+def mutate(owner: Owner) -> None:
+    owner.helper.bump()

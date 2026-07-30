@@ -473,24 +473,16 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
             ) {
                 return Ok(Some(lowered));
             }
-            let suppress_collection_clone = matches!(collection.as_ref(), HirExpr::FieldAccess { .. });
-            let suppression_prev = $emitter.pending_self_field_clone_suppression;
-            if suppress_collection_clone {
-                $emitter.pending_self_field_clone_suppression += 1;
-            }
-            let Some(lowered_collection) = $emitter.lower_stmt_expr_for_ir(collection)? else {
-                if suppress_collection_clone
-                    && $emitter.pending_self_field_clone_suppression > suppression_prev
-                {
-                    $emitter.pending_self_field_clone_suppression -= 1;
-                }
+            // Membership only borrows the collection. Emit field storage directly
+            // instead of lowering it as an owned field value and cloning it.
+            let lowered_collection = if matches!(collection.as_ref(), HirExpr::FieldAccess { .. }) {
+                $emitter.emit_storage_path(collection)
+            } else {
+                $emitter.lower_stmt_expr_for_ir(collection)?
+            };
+            let Some(lowered_collection) = lowered_collection else {
                 return Ok(None);
             };
-            if suppress_collection_clone
-                && $emitter.pending_self_field_clone_suppression > suppression_prev
-            {
-                $emitter.pending_self_field_clone_suppression -= 1;
-            }
             let lowered = match crate::resolve_alias_type_for_plain_call(collection.ty()) {
                 Type::Dict(_, _) => {
                     let key_arg = if element_was_union_wrapped {

@@ -1,5 +1,6 @@
 use crate::{
-    HirAsyncWithKind, HirExpr, HirFStringPart, HirFunction, HirPattern, HirStmt, HirWithItemKind,
+    HirAsyncWithKind, HirExpr, HirFStringPart, HirFunction, HirPattern, HirStmt,
+    HirTupleTargetBinding, HirWithItemKind,
 };
 use sifr_type_system::Type;
 
@@ -20,6 +21,112 @@ where
     F: FnMut(&mut HirExpr),
 {
     transform_hir_function(function, &mut |_| {}, visit);
+}
+
+/// Visit every expression in a statement body mutably.
+pub fn visit_hir_stmts_exprs_mut<F>(statements: &mut [HirStmt], visit: &mut F)
+where
+    F: FnMut(&mut HirExpr),
+{
+    transform_stmts(statements, &mut |_| {}, visit);
+}
+
+/// Visit every storage-root name carried directly by statements.
+///
+/// Expression-root names are intentionally excluded; combine this with
+/// [`visit_hir_stmts_exprs_mut`] when a rewrite must cover both representations.
+pub fn visit_hir_stmts_storage_roots_mut<F>(statements: &mut [HirStmt], visit: &mut F)
+where
+    F: FnMut(&mut String),
+{
+    visit_stmt_storage_roots(statements, visit);
+}
+
+fn visit_stmt_storage_roots<F>(statements: &mut [HirStmt], visit: &mut F)
+where
+    F: FnMut(&mut String),
+{
+    for statement in statements {
+        match statement {
+            HirStmt::FieldAssign { object, .. }
+            | HirStmt::NestedFieldAssign { object, .. }
+            | HirStmt::SubscriptAssign { object, .. }
+            | HirStmt::NestedSubscriptAssign { object, .. }
+            | HirStmt::AttributeNestedSubscriptAssign { object, .. }
+            | HirStmt::SubscriptAugAssign { object, .. }
+            | HirStmt::AttributeAugAssign { object, .. }
+            | HirStmt::AttributeSubscriptAssign { object, .. } => visit(object),
+            HirStmt::TupleUnpack { targets, .. } => {
+                for target in targets {
+                    if let HirTupleTargetBinding::Field { object, .. } = &mut target.binding {
+                        visit(object);
+                    }
+                }
+            }
+            HirStmt::If {
+                then_body,
+                elif_clauses,
+                else_body,
+                ..
+            } => {
+                visit_stmt_storage_roots(then_body, visit);
+                for (_, body) in elif_clauses {
+                    visit_stmt_storage_roots(body, visit);
+                }
+                if let Some(body) = else_body {
+                    visit_stmt_storage_roots(body, visit);
+                }
+            }
+            HirStmt::While {
+                body, else_body, ..
+            }
+            | HirStmt::For {
+                body, else_body, ..
+            }
+            | HirStmt::AsyncFor {
+                body, else_body, ..
+            } => {
+                visit_stmt_storage_roots(body, visit);
+                if let Some(body) = else_body {
+                    visit_stmt_storage_roots(body, visit);
+                }
+            }
+            HirStmt::TryExcept { body, handlers, .. } => {
+                visit_stmt_storage_roots(body, visit);
+                for handler in handlers {
+                    visit_stmt_storage_roots(&mut handler.body, visit);
+                }
+            }
+            HirStmt::TryFinally { body, finalbody } => {
+                visit_stmt_storage_roots(body, visit);
+                visit_stmt_storage_roots(finalbody, visit);
+            }
+            HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => {
+                visit_stmt_storage_roots(body, visit);
+            }
+            HirStmt::NestedFunction { func, .. } => {
+                visit_stmt_storage_roots(&mut func.body, visit);
+            }
+            HirStmt::Match { arms, .. } => {
+                for arm in arms {
+                    visit_stmt_storage_roots(&mut arm.body, visit);
+                }
+            }
+            HirStmt::Let { .. }
+            | HirStmt::Assign { .. }
+            | HirStmt::AugAssign { .. }
+            | HirStmt::Return { .. }
+            | HirStmt::Expr { .. }
+            | HirStmt::StarUnpack { .. }
+            | HirStmt::Pass
+            | HirStmt::Assert { .. }
+            | HirStmt::Raise { .. }
+            | HirStmt::Delete { .. }
+            | HirStmt::Yield { .. }
+            | HirStmt::Break
+            | HirStmt::Continue => {}
+        }
+    }
 }
 
 fn transform_hir_function<F, G>(function: &mut HirFunction, transform: &mut F, visit: &mut G)

@@ -50,6 +50,8 @@ pub(in crate::lower) fn lower_task_handle_method_call(
             method: method_name.to_string(),
             args: vec![],
             receiver_convention: Some(receiver_convention),
+            receiver_target: None,
+            mutable_arg_places: Vec::new(),
             source: Some(super::method_call_metadata::source_method_call(call)),
             ty: Type::None,
         });
@@ -65,6 +67,8 @@ pub(in crate::lower) fn lower_task_handle_method_call(
         method: method_name.to_string(),
         args: vec![],
         receiver_convention: Some(receiver_convention),
+        receiver_target: None,
+        mutable_arg_places: Vec::new(),
         source: Some(super::method_call_metadata::source_method_call(call)),
         ty: Type::Awaitable(Box::new(Type::TaskResult(result_ok_ty, result_err_ty))),
     })

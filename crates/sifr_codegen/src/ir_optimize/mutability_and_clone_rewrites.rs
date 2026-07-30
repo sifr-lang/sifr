@@ -1,52 +1,8 @@
 use super::{is_copy_type, not_expr, string_key_loop_rewrite::rewrite_string_key_loop_iter};
 use crate::{RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType};
+use std::collections::HashSet;
 
-const MUTATING_METHODS: &[&str] = &[
-    "write",
-    "append",
-    "aclose",
-    "anext",
-    "by_index",
-    "by_name",
-    "clear",
-    "entry",
-    "extend",
-    "flush",
-    "get_mut",
-    "insert",
-    "kill",
-    "increment",
-    "merge_from",
-    "next",
-    "pop",
-    "push",
-    "push_str",
-    "read_string",
-    "remove",
-    "reverse",
-    "rotate",
-    "seek",
-    "set",
-    "set_bool",
-    "set_level",
-    "set_list",
-    "setstate",
-    "sort",
-    "sort_by",
-    "take",
-    "try_wait",
-    "write",
-    "write_all",
-    "writerow",
-    "writerows",
-    "writeln",
-    "__aenter__",
-    "__aexit__",
-    "__next__",
-    "__sifr_join_all",
-    "__sifr_spawn_infallible",
-    "__sifr_spawn_result",
-];
+use super::compiler_generated_mutating_methods::COMPILER_GENERATED_MUTATING_METHODS;
 
 /// Remove conservatively-trivial `.clone()` expressions from IR items.
 ///
@@ -60,40 +16,50 @@ pub(crate) fn remove_trivial_clones_in_items(items: &mut [RustItem]) -> usize {
     removed
 }
 
-pub(crate) fn remove_unneeded_mutability_in_items(items: &mut [RustItem]) -> usize {
+pub(crate) fn remove_unneeded_mutability_in_items(
+    items: &mut [RustItem],
+    protected_names: &HashSet<String>,
+) -> usize {
     let mut removed = 0usize;
     for item in items {
-        removed += remove_unneeded_mutability_in_item(item);
+        removed += remove_unneeded_mutability_in_item(item, protected_names);
     }
     removed
 }
 
-pub(super) fn remove_unneeded_mutability_in_item(item: &mut RustItem) -> usize {
+pub(super) fn remove_unneeded_mutability_in_item(
+    item: &mut RustItem,
+    protected_names: &HashSet<String>,
+) -> usize {
     match item {
         RustItem::Impl { items, .. } => items
             .iter_mut()
-            .map(remove_unneeded_mutability_in_item)
+            .map(|item| remove_unneeded_mutability_in_item(item, protected_names))
             .sum(),
         RustItem::Trait { methods, .. } => methods
             .iter_mut()
-            .map(remove_unneeded_mutability_in_item)
+            .map(|item| remove_unneeded_mutability_in_item(item, protected_names))
             .sum(),
-        RustItem::Fn { body, .. } => remove_unneeded_mutability_in_block(body),
+        RustItem::Fn { body, .. } => remove_unneeded_mutability_in_block(body, protected_names),
         _ => 0,
     }
 }
 
-pub(super) fn remove_unneeded_mutability_in_block(body: &mut [RustStmt]) -> usize {
-    remove_unneeded_mutability_in_block_with_tail_expr(body, None)
+pub(super) fn remove_unneeded_mutability_in_block(
+    body: &mut [RustStmt],
+    protected_names: &HashSet<String>,
+) -> usize {
+    remove_unneeded_mutability_in_block_with_tail_expr(body, None, protected_names)
 }
 
 pub(super) fn remove_unneeded_mutability_in_block_with_tail_expr(
     body: &mut [RustStmt],
     tail_expr: Option<&RustExpr>,
+    protected_names: &HashSet<String>,
 ) -> usize {
     let mut removed = 0usize;
     for stmt in body.iter_mut() {
-        removed += remove_nested_unneeded_mutability(stmt);
+        removed += remove_nested_unneeded_mutability(stmt, protected_names);
     }
 
     for idx in 0..body.len() {
@@ -106,6 +72,7 @@ pub(super) fn remove_unneeded_mutability_in_block_with_tail_expr(
                 value,
                 ..
             } if !is_callable_binding_value(value)
+                && !protected_names.contains(name)
                 && !stmts_mutate_name(tail, name)
                 && !tail_expr.is_some_and(|expr| expr_mutates_name(expr, name)) =>
             {
@@ -130,28 +97,33 @@ pub(super) fn remove_unneeded_mutability_in_block_with_tail_expr(
     removed
 }
 
-pub(super) fn remove_nested_unneeded_mutability(stmt: &mut RustStmt) -> usize {
+pub(super) fn remove_nested_unneeded_mutability(
+    stmt: &mut RustStmt,
+    protected_names: &HashSet<String>,
+) -> usize {
     match stmt {
         RustStmt::Verbatim(_) => 0,
         RustStmt::Let { value, .. } | RustStmt::LetPattern { value, .. } => {
-            remove_expr_unneeded_mutability(value)
+            remove_expr_unneeded_mutability(value, protected_names)
         }
         RustStmt::LetElse {
             value, else_body, ..
         } => {
-            remove_expr_unneeded_mutability(value) + remove_unneeded_mutability_in_block(else_body)
+            remove_expr_unneeded_mutability(value, protected_names)
+                + remove_unneeded_mutability_in_block(else_body, protected_names)
         }
         RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
-            remove_expr_unneeded_mutability(target) + remove_expr_unneeded_mutability(value)
+            remove_expr_unneeded_mutability(target, protected_names)
+                + remove_expr_unneeded_mutability(value, protected_names)
         }
         RustStmt::Expr(expr) | RustStmt::TailExpr(expr) | RustStmt::Return(Some(expr)) => {
-            remove_expr_unneeded_mutability(expr)
+            remove_expr_unneeded_mutability(expr, protected_names)
         }
         RustStmt::Assert { cond, msg } => {
-            remove_expr_unneeded_mutability(cond)
+            remove_expr_unneeded_mutability(cond, protected_names)
                 + msg
                     .as_mut()
-                    .map(remove_expr_unneeded_mutability)
+                    .map(|expr| remove_expr_unneeded_mutability(expr, protected_names))
                     .unwrap_or(0)
         }
         RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => 0,
@@ -160,11 +132,11 @@ pub(super) fn remove_nested_unneeded_mutability(stmt: &mut RustStmt) -> usize {
             then_body,
             else_body,
         } => {
-            remove_expr_unneeded_mutability(cond)
-                + remove_unneeded_mutability_in_block(then_body)
+            remove_expr_unneeded_mutability(cond, protected_names)
+                + remove_unneeded_mutability_in_block(then_body, protected_names)
                 + else_body
                     .as_mut()
-                    .map(|body| remove_unneeded_mutability_in_block(body))
+                    .map(|body| remove_unneeded_mutability_in_block(body, protected_names))
                     .unwrap_or(0)
         }
         RustStmt::IfLet {
@@ -173,51 +145,59 @@ pub(super) fn remove_nested_unneeded_mutability(stmt: &mut RustStmt) -> usize {
             else_body,
             ..
         } => {
-            remove_expr_unneeded_mutability(expr)
-                + remove_unneeded_mutability_in_block(then_body)
+            remove_expr_unneeded_mutability(expr, protected_names)
+                + remove_unneeded_mutability_in_block(then_body, protected_names)
                 + else_body
                     .as_mut()
-                    .map(|body| remove_unneeded_mutability_in_block(body))
+                    .map(|body| remove_unneeded_mutability_in_block(body, protected_names))
                     .unwrap_or(0)
         }
         RustStmt::Match { expr, arms } => {
-            let mut removed = remove_expr_unneeded_mutability(expr);
+            let mut removed = remove_expr_unneeded_mutability(expr, protected_names);
             for arm in arms {
                 if let Some(guard) = &mut arm.guard {
-                    removed += remove_expr_unneeded_mutability(guard);
+                    removed += remove_expr_unneeded_mutability(guard, protected_names);
                 }
-                removed += remove_unneeded_mutability_in_block(&mut arm.body);
+                removed += remove_unneeded_mutability_in_block(&mut arm.body, protected_names);
             }
             removed
         }
         RustStmt::For { iter, body, .. } => {
-            remove_expr_unneeded_mutability(iter) + remove_unneeded_mutability_in_block(body)
+            remove_expr_unneeded_mutability(iter, protected_names)
+                + remove_unneeded_mutability_in_block(body, protected_names)
         }
         RustStmt::With { items, body } => {
             let mut removed = 0usize;
             for item in items {
-                removed += remove_expr_unneeded_mutability(&mut item.value);
+                removed += remove_expr_unneeded_mutability(&mut item.value, protected_names);
             }
-            removed + remove_unneeded_mutability_in_block(body)
+            removed + remove_unneeded_mutability_in_block(body, protected_names)
         }
         RustStmt::While { cond, body } => {
-            remove_expr_unneeded_mutability(cond) + remove_unneeded_mutability_in_block(body)
+            remove_expr_unneeded_mutability(cond, protected_names)
+                + remove_unneeded_mutability_in_block(body, protected_names)
         }
         RustStmt::Loop { body } | RustStmt::Block(body) | RustStmt::LocalFn { body, .. } => {
-            remove_unneeded_mutability_in_block(body)
+            remove_unneeded_mutability_in_block(body, protected_names)
         }
     }
 }
 
-pub(super) fn remove_expr_unneeded_mutability(expr: &mut RustExpr) -> usize {
+pub(super) fn remove_expr_unneeded_mutability(
+    expr: &mut RustExpr,
+    protected_names: &HashSet<String>,
+) -> usize {
     match expr {
         RustExpr::Block { stmts, expr } => {
-            let removed =
-                remove_unneeded_mutability_in_block_with_tail_expr(stmts, expr.as_deref());
+            let removed = remove_unneeded_mutability_in_block_with_tail_expr(
+                stmts,
+                expr.as_deref(),
+                protected_names,
+            );
             removed
                 + expr
                     .as_mut()
-                    .map(|expr| remove_expr_unneeded_mutability(expr))
+                    .map(|expr| remove_expr_unneeded_mutability(expr, protected_names))
                     .unwrap_or(0)
         }
         RustExpr::If {
@@ -225,47 +205,51 @@ pub(super) fn remove_expr_unneeded_mutability(expr: &mut RustExpr) -> usize {
             then_expr,
             else_expr,
         } => {
-            remove_expr_unneeded_mutability(cond)
-                + remove_expr_unneeded_mutability(then_expr)
+            remove_expr_unneeded_mutability(cond, protected_names)
+                + remove_expr_unneeded_mutability(then_expr, protected_names)
                 + else_expr
                     .as_mut()
-                    .map(|expr| remove_expr_unneeded_mutability(expr))
+                    .map(|expr| remove_expr_unneeded_mutability(expr, protected_names))
                     .unwrap_or(0)
         }
         RustExpr::Match { expr, arms } => {
-            let mut removed = remove_expr_unneeded_mutability(expr);
+            let mut removed = remove_expr_unneeded_mutability(expr, protected_names);
             for arm in arms {
                 if let Some(guard) = &mut arm.guard {
-                    removed += remove_expr_unneeded_mutability(guard);
+                    removed += remove_expr_unneeded_mutability(guard, protected_names);
                 }
-                removed += remove_unneeded_mutability_in_block(&mut arm.body);
+                removed += remove_unneeded_mutability_in_block(&mut arm.body, protected_names);
             }
             removed
         }
         RustExpr::ClosureBlock { body, .. } | RustExpr::AsyncBlock { body, .. } => {
-            remove_unneeded_mutability_in_block(body)
+            remove_unneeded_mutability_in_block(body, protected_names)
         }
         RustExpr::MethodCall { receiver, args, .. } => {
-            remove_expr_unneeded_mutability(receiver)
+            remove_expr_unneeded_mutability(receiver, protected_names)
                 + args
                     .iter_mut()
-                    .map(remove_expr_unneeded_mutability)
+                    .map(|expr| remove_expr_unneeded_mutability(expr, protected_names))
                     .sum::<usize>()
         }
         RustExpr::FnCall { func, args } => {
-            remove_expr_unneeded_mutability(func)
+            remove_expr_unneeded_mutability(func, protected_names)
                 + args
                     .iter_mut()
-                    .map(remove_expr_unneeded_mutability)
+                    .map(|expr| remove_expr_unneeded_mutability(expr, protected_names))
                     .sum::<usize>()
         }
         RustExpr::MacroCall { args, .. }
         | RustExpr::FormatMacro { args, .. }
         | RustExpr::Tuple(args)
         | RustExpr::Array(args)
-        | RustExpr::Vec(args) => args.iter_mut().map(remove_expr_unneeded_mutability).sum(),
+        | RustExpr::Vec(args) => args
+            .iter_mut()
+            .map(|expr| remove_expr_unneeded_mutability(expr, protected_names))
+            .sum(),
         RustExpr::BinOp { left, right, .. } => {
-            remove_expr_unneeded_mutability(left) + remove_expr_unneeded_mutability(right)
+            remove_expr_unneeded_mutability(left, protected_names)
+                + remove_expr_unneeded_mutability(right, protected_names)
         }
         RustExpr::UnaryOp { operand, .. }
         | RustExpr::Deref(operand)
@@ -273,40 +257,42 @@ pub(super) fn remove_expr_unneeded_mutability(expr: &mut RustExpr) -> usize {
         | RustExpr::Cast { expr: operand, .. }
         | RustExpr::Try(operand)
         | RustExpr::Await(operand)
-        | RustExpr::Paren(operand) => remove_expr_unneeded_mutability(operand),
-        RustExpr::Field { expr, .. } => remove_expr_unneeded_mutability(expr),
+        | RustExpr::Paren(operand) => remove_expr_unneeded_mutability(operand, protected_names),
+        RustExpr::Field { expr, .. } => remove_expr_unneeded_mutability(expr, protected_names),
         RustExpr::Index { expr, index } => {
-            remove_expr_unneeded_mutability(expr) + remove_expr_unneeded_mutability(index)
+            remove_expr_unneeded_mutability(expr, protected_names)
+                + remove_expr_unneeded_mutability(index, protected_names)
         }
         RustExpr::Slice { expr, start, stop } => {
-            remove_expr_unneeded_mutability(expr)
+            remove_expr_unneeded_mutability(expr, protected_names)
                 + start
                     .as_mut()
-                    .map(|expr| remove_expr_unneeded_mutability(expr))
+                    .map(|expr| remove_expr_unneeded_mutability(expr, protected_names))
                     .unwrap_or(0)
                 + stop
                     .as_mut()
-                    .map(|expr| remove_expr_unneeded_mutability(expr))
+                    .map(|expr| remove_expr_unneeded_mutability(expr, protected_names))
                     .unwrap_or(0)
         }
-        RustExpr::Ref { expr, .. } => remove_expr_unneeded_mutability(expr),
+        RustExpr::Ref { expr, .. } => remove_expr_unneeded_mutability(expr, protected_names),
         RustExpr::StructInit { fields, .. } => fields
             .iter_mut()
-            .map(|(_, value)| remove_expr_unneeded_mutability(value))
+            .map(|(_, value)| remove_expr_unneeded_mutability(value, protected_names))
             .sum(),
         RustExpr::TimeoutAwait {
             duration,
             future,
             error,
         } => {
-            remove_expr_unneeded_mutability(duration)
-                + remove_expr_unneeded_mutability(future)
-                + remove_expr_unneeded_mutability(error)
+            remove_expr_unneeded_mutability(duration, protected_names)
+                + remove_expr_unneeded_mutability(future, protected_names)
+                + remove_expr_unneeded_mutability(error, protected_names)
         }
         RustExpr::Range { start, end } => {
-            remove_expr_unneeded_mutability(start) + remove_expr_unneeded_mutability(end)
+            remove_expr_unneeded_mutability(start, protected_names)
+                + remove_expr_unneeded_mutability(end, protected_names)
         }
-        RustExpr::Closure { body, .. } => remove_expr_unneeded_mutability(body),
+        RustExpr::Closure { body, .. } => remove_expr_unneeded_mutability(body, protected_names),
         RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) | RustExpr::Verbatim(_) => 0,
     }
 }
@@ -336,7 +322,12 @@ pub(super) fn stmts_mutate_name(stmts: &[RustStmt], name: &str) -> bool {
 
 pub(super) fn stmt_mutates_name(stmt: &RustStmt, name: &str) -> bool {
     match stmt {
-        RustStmt::Verbatim(_) => false,
+        // Verbatim is an explicit IR boundary. If it names the local, retain
+        // mutability conservatively because structured mutation analysis
+        // cannot inspect the operation.
+        RustStmt::Verbatim(source) => source
+            .split(|character: char| !(character.is_ascii_alphanumeric() || character == '_'))
+            .any(|token| token == name),
         RustStmt::Assign { target, value } => {
             assignment_target_mutates_name(target, name) || expr_mutates_name(value, name)
         }
@@ -444,7 +435,8 @@ pub(super) fn expr_mutates_name(expr: &RustExpr, name: &str) -> bool {
             method,
             args,
         } => {
-            (root_expr_is_name(receiver, name) && MUTATING_METHODS.contains(&method.as_str()))
+            (root_expr_is_name(receiver, name)
+                && COMPILER_GENERATED_MUTATING_METHODS.contains(&method.as_str()))
                 || expr_mutates_name(receiver, name)
                 || args.iter().any(|arg| expr_mutates_name(arg, name))
         }

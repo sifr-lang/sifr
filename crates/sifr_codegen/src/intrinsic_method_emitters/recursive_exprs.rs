@@ -3,6 +3,7 @@ use super::{
     registry_defaultdict_key_arg, registry_iterator_op_func_name, registry_option_inner_type,
     registry_uses_debug_display_format, HirExpr, HirFStringPart, RustEmitter, Type,
 };
+use crate::place_emitter::MethodCallPlaces;
 use crate::stmt_support_emitter::canonical_constructor_class_name;
 impl RustEmitter {
     pub(crate) fn try_lower_registry_expr_recursive(
@@ -35,11 +36,19 @@ impl RustEmitter {
                     lowered_object,
                 ))
             }
-            HirExpr::IteratorCall { op, args, .. } => {
+            HirExpr::IteratorCall {
+                op,
+                args,
+                mutable_arg_places,
+                ..
+            } => {
                 let func = registry_iterator_op_func_name(op);
-                if let Some(lowered) =
-                    self.try_lower_registry_builtin_call_expr(func, args, Some(expr.ty()))
-                {
+                if let Some(lowered) = self.try_lower_registry_builtin_call_expr(
+                    func,
+                    args,
+                    Some(expr.ty()),
+                    mutable_arg_places,
+                ) {
                     return Some(lowered);
                 }
                 if let Some(lowered) = self.try_lower_registry_plain_call_with_signature(func, args)
@@ -54,13 +63,22 @@ impl RustEmitter {
             HirExpr::IntrinsicCall {
                 intrinsic, args, ..
             } => self.try_lower_registry_intrinsic_call_expr(*intrinsic, args, expr.ty()),
-            HirExpr::Call { func, args, .. } => {
-                if let Some(lowered) =
-                    self.try_lower_registry_builtin_call_expr(func, args, Some(expr.ty()))
-                {
+            HirExpr::Call {
+                func,
+                args,
+                mutable_arg_places,
+                ..
+            } => {
+                if let Some(lowered) = self.try_lower_registry_builtin_call_expr(
+                    func,
+                    args,
+                    Some(expr.ty()),
+                    mutable_arg_places,
+                ) {
                     return Some(lowered);
                 }
-                if let Some(lowered) = self.try_lower_registry_plain_call_with_signature(func, args)
+                if let Some(lowered) =
+                    self.try_lower_registry_plain_call_with_places(func, args, mutable_arg_places)
                 {
                     return Some(lowered);
                 }
@@ -75,69 +93,37 @@ impl RustEmitter {
                 args,
                 ty,
                 receiver_convention,
+                receiver_target,
+                mutable_arg_places,
                 ..
             } => {
+                let places = MethodCallPlaces::new(
+                    *receiver_convention,
+                    receiver_target.as_ref(),
+                    mutable_arg_places,
+                );
                 if let Some(lowered) = crate::python_buffer_codegen::lower_python_buffer_method(
-                    self, object, method, args, ty,
+                    self, object, method, args, places, ty,
                 ) {
                     return Some(lowered);
                 }
                 if let Some(lowered) = crate::python_arrow_codegen::lower_python_arrow_method(
-                    self, object, method, args, ty,
+                    self, object, method, args, places, ty,
                 ) {
                     return Some(lowered);
                 }
                 if let Some(lowered) = crate::python_dlpack_codegen::lower_python_dlpack_method(
-                    self, object, method, args, ty,
+                    self, object, method, args, places, ty,
                 ) {
                     return Some(lowered);
                 }
-                if method == "append" && args.len() == 1 {
-                    if let HirExpr::Index {
-                        object: index_object,
-                        index,
-                        ..
-                    } = object.as_ref()
-                    {
-                        if matches!(
-                            crate::resolve_alias_type_for_plain_call(object.ty()),
-                            Type::List(_)
-                        ) && matches!(
-                            crate::resolve_alias_type_for_plain_call(index_object.ty()),
-                            Type::Dict(_, _)
-                        ) {
-                            let lowered_object =
-                                self.try_lower_dict_indexed_list_mutation_object(index_object)?;
-                            let lowered_index = self.try_lower_registry_expr_strict(index)?;
-                            let lowered_arg = self.try_lower_registry_expr_strict(&args[0])?;
-                            let key_arg = Self::build_dict_lookup_key_arg_for_ir(
-                                Self::clone_non_copy_name_expr_for_ir(index, lowered_index),
-                            );
-                            let pushed_arg =
-                                Self::clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
-                            return Some(crate::RustExpr::Block {
-                                stmts: vec![crate::RustStmt::IfLet {
-                                    pattern: "Some(__elem)".to_string(),
-                                    expr: crate::RustExpr::MethodCall {
-                                        receiver: Box::new(lowered_object),
-                                        method: "get_mut".to_string(),
-                                        args: vec![key_arg],
-                                    },
-                                    then_body: vec![crate::RustStmt::Expr(
-                                        crate::RustExpr::MethodCall {
-                                            receiver: Box::new(crate::RustExpr::Ident(
-                                                "__elem".to_string(),
-                                            )),
-                                            method: "push".to_string(),
-                                            args: vec![pushed_arg],
-                                        },
-                                    )],
-                                    else_body: None,
-                                }],
-                                expr: None,
-                            });
-                        }
-                    }
+                if let Some(lowered) = self.try_lower_recursive_indexed_list_append(
+                    object,
+                    method,
+                    args,
+                    receiver_target.as_ref(),
+                ) {
+                    return Some(lowered);
                 }
                 if let Some(lowered) = self.try_lower_dict_indexed_list_append_expr(expr) {
                     return Some(lowered);
@@ -154,6 +140,8 @@ impl RustEmitter {
                         method,
                         args,
                         *receiver_convention,
+                        receiver_target.as_ref(),
+                        mutable_arg_places,
                     )?;
                 let method_params =
                     self.resolve_registry_method_params(&effective_object_ty, method);

@@ -31,6 +31,7 @@ pub(in crate::lower) fn lower_reversed_call(
     Some(HirExpr::IteratorCall {
         op: HirIteratorOp::Reversed,
         args: vec![arg],
+        mutable_arg_places: Vec::new(),
         ty: Type::Iterator(Box::new(elem_ty)),
     })
 }
@@ -141,6 +142,7 @@ pub(in crate::lower) fn lower_enumerate_call(
     Some(HirExpr::IteratorCall {
         op: HirIteratorOp::Enumerate,
         args,
+        mutable_arg_places: Vec::new(),
         ty: result_ty,
     })
 }

@@ -1,5 +1,5 @@
 use crate::{HirAsyncWithKind, HirExpr, HirStmt, HirTupleTargetBinding};
-use sifr_ir::{FlowEffect, FlowExitKind};
+use sifr_ir::{FlowEffect, FlowExitKind, MutableArgumentTarget};
 use sifr_type_system::{OwnershipKind, ReceiverConvention, Type};
 
 pub(super) fn stmt_label(stmt: &HirStmt) -> &'static str {
@@ -273,7 +273,32 @@ fn expr_effects(expr: &HirExpr, effects: &mut Vec<FlowEffect>) {
                 mutable: false,
             });
         }
-        HirExpr::Call { func, args, .. } | HirExpr::PythonCall { func, args, .. } => {
+        HirExpr::Call {
+            func,
+            args,
+            mutable_arg_places,
+            ..
+        } => {
+            effects.push(FlowEffect::Call {
+                callee: func.clone(),
+            });
+            if func == "anext" {
+                if let Some(target) = args.first().and_then(expr_target_name) {
+                    effects.push(FlowEffect::Mutation {
+                        target,
+                        operation: "async iterator next".to_string(),
+                    });
+                }
+            }
+            for (index, arg) in args.iter().enumerate() {
+                argument_effects(
+                    arg,
+                    mutable_arg_places.get(index).and_then(Option::as_ref),
+                    effects,
+                );
+            }
+        }
+        HirExpr::PythonCall { func, args, .. } => {
             effects.push(FlowEffect::Call {
                 callee: func.clone(),
             });
@@ -296,6 +321,7 @@ fn expr_effects(expr: &HirExpr, effects: &mut Vec<FlowEffect>) {
             method,
             args,
             receiver_convention,
+            mutable_arg_places,
             ..
         } => {
             let target = expr_target_name(object).unwrap_or_else(|| "<expr>".to_string());
@@ -309,8 +335,37 @@ fn expr_effects(expr: &HirExpr, effects: &mut Vec<FlowEffect>) {
                 });
             }
             expr_effects(object, effects);
-            for arg in args {
-                expr_effects(arg, effects);
+            for (index, arg) in args.iter().enumerate() {
+                argument_effects(
+                    arg,
+                    mutable_arg_places.get(index).and_then(Option::as_ref),
+                    effects,
+                );
+            }
+        }
+        HirExpr::IteratorCall {
+            op,
+            args,
+            mutable_arg_places,
+            ..
+        } => {
+            effects.push(FlowEffect::Call {
+                callee: format!("compiler::{op:?}"),
+            });
+            if *op == crate::hir_nodes::HirIteratorOp::Next {
+                if let Some(target) = args.first().and_then(expr_target_name) {
+                    effects.push(FlowEffect::Mutation {
+                        target,
+                        operation: "iterator next".to_string(),
+                    });
+                }
+            }
+            for (index, arg) in args.iter().enumerate() {
+                argument_effects(
+                    arg,
+                    mutable_arg_places.get(index).and_then(Option::as_ref),
+                    effects,
+                );
             }
         }
         HirExpr::BinOp { left, right, .. }
@@ -348,7 +403,6 @@ fn expr_effects(expr: &HirExpr, effects: &mut Vec<FlowEffect>) {
         | HirExpr::TupleLiteral {
             elements: values, ..
         }
-        | HirExpr::IteratorCall { args: values, .. }
         | HirExpr::ConstructorCall { args: values, .. }
         | HirExpr::SuperCall { args: values, .. } => {
             for value in values {
@@ -459,6 +513,23 @@ fn expr_effects(expr: &HirExpr, effects: &mut Vec<FlowEffect>) {
         | HirExpr::Name { .. }
         | HirExpr::EnumVariant { .. } => {}
     }
+}
+
+fn argument_effects(
+    argument: &HirExpr,
+    target: Option<&MutableArgumentTarget>,
+    effects: &mut Vec<FlowEffect>,
+) {
+    if matches!(target, Some(MutableArgumentTarget::Place(_))) {
+        if let Some(binding) = expr_target_name(argument) {
+            effects.push(FlowEffect::Borrow {
+                binding,
+                mutable: true,
+            });
+            return;
+        }
+    }
+    expr_effects(argument, effects);
 }
 
 fn condition_narrowing_effects(condition: &HirExpr, is_true: bool) -> Vec<FlowEffect> {

@@ -1,0 +1,48 @@
+class MutableCounter(Protocol):
+    def update(mut self) -> None:
+        pass
+
+    def get(self) -> int:
+        pass
+
+
+class MutableImplementation:
+    value: int
+
+    def update(self) -> None:
+        self.value += 1
+
+    def get(self) -> int:
+        return self.value
+
+
+class SharedImplementation:
+    value: int
+
+    def update(self) -> None:
+        pass
+
+    def get(self) -> int:
+        return self.value
+
+
+class SharedCounter(Protocol):
+    def get(self) -> int:
+        pass
+
+
+def update_and_read(own mut entity: MutableCounter) -> int:
+    entity.update()
+    return entity.get()
+
+
+def read_shared(own entity: SharedCounter) -> int:
+    return entity.get()
+
+
+def main() -> None:
+    mutable: MutableImplementation = MutableImplementation(4)
+    shared: SharedImplementation = SharedImplementation(7)
+    assert update_and_read(mutable) == 5
+    assert update_and_read(shared) == 7
+    assert read_shared(MutableImplementation(9)) == 9

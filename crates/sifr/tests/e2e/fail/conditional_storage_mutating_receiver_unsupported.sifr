@@ -1,0 +1,12 @@
+class Helper:
+    items: list[int]
+
+    def bump(self) -> None:
+        self.items.append(1)
+
+
+def mutate(flag: bool) -> None:
+    a = Helper([])
+    b = Helper([])
+    # expect-error[col=5]: SIFR-OWN-0014
+    (a if flag else b).bump()

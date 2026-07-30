@@ -30,7 +30,7 @@ fn field_read_from_borrowed_parameter_clones_move_value() {
 }
 
 #[test]
-fn mutating_field_receiver_from_mut_borrowed_parameter_does_not_clone() {
+fn checked_mutating_field_receiver_does_not_clone() {
     let class = Type::Class {
         identity: None,
         type_args: Vec::new(),
@@ -41,7 +41,7 @@ fn mutating_field_receiver_from_mut_borrowed_parameter_does_not_clone() {
     };
     let object = HirExpr::Name {
         name: "item".to_string(),
-        binding_id: None,
+        binding_id: Some(sifr_ir::BindingId(7)),
         ty: class,
     };
     let mut emitter = RustEmitter::new();
@@ -51,25 +51,21 @@ fn mutating_field_receiver_from_mut_borrowed_parameter_does_not_clone() {
         field: "items".to_string(),
         ty: Type::List(Box::new(Type::Int)),
     };
-    assert!(emitter.method_call_needs_field_clone_suppression(
-        &field,
-        Some(sifr_type_system::ReceiverConvention::MutableBorrow),
-    ));
-    emitter.pending_self_field_clone_suppression = 1;
-
-    let lowered = emitter.lower_field_access_expr_with_lowered_object(
-        &object,
-        "items",
-        &Type::List(Box::new(Type::Int)),
-        RustExpr::Ident("item".to_string()),
-    );
+    let place = sifr_ir::Place {
+        root: sifr_ir::BindingId(7),
+        projections: vec![sifr_ir::PlaceProjection::Field(sifr_ir::FieldIdentity {
+            declaring_class: "Crate".to_string(),
+            field: "items".to_string(),
+        })],
+    };
+    let lowered = emitter.emit_checked_place(&field, &place).unwrap();
 
     assert_eq!(crate::render_expr(&lowered), "item.items");
-    assert_eq!(emitter.pending_self_field_clone_suppression, 0);
+    assert!(emitter.protected_mutable_place_roots.contains("item"));
 }
 
 #[test]
-fn nested_mutating_field_receiver_uses_borrowed_root_for_clone_suppression() {
+fn checked_nested_mutating_field_receiver_preserves_every_hop() {
     let inner = Type::Class {
         identity: None,
         type_args: Vec::new(),
@@ -90,7 +86,7 @@ fn nested_mutating_field_receiver_uses_borrowed_root_for_clone_suppression() {
         object: Box::new(HirExpr::FieldAccess {
             object: Box::new(HirExpr::Name {
                 name: "outer".to_string(),
-                binding_id: None,
+                binding_id: Some(sifr_ir::BindingId(9)),
                 ty: outer,
             }),
             field: "inner".to_string(),
@@ -100,47 +96,21 @@ fn nested_mutating_field_receiver_uses_borrowed_root_for_clone_suppression() {
         ty: Type::List(Box::new(Type::Int)),
     };
     let mut emitter = RustEmitter::new();
-    emitter.mut_borrowed_params.insert("outer".to_string());
-
-    assert!(emitter.method_call_needs_field_clone_suppression(
-        &receiver,
-        Some(sifr_type_system::ReceiverConvention::MutableBorrow),
-    ));
-}
-
-#[test]
-fn borrowed_class_field_receiver_from_owned_local_does_not_clone() {
-    let helper = Type::Class {
-        identity: None,
-        type_args: Vec::new(),
-        name: "Helper".to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
-        parent_class: None,
+    let place = sifr_ir::Place {
+        root: sifr_ir::BindingId(9),
+        projections: vec![
+            sifr_ir::PlaceProjection::Field(sifr_ir::FieldIdentity {
+                declaring_class: "Outer".to_string(),
+                field: "inner".to_string(),
+            }),
+            sifr_ir::PlaceProjection::Field(sifr_ir::FieldIdentity {
+                declaring_class: "Inner".to_string(),
+                field: "items".to_string(),
+            }),
+        ],
     };
-    let owner = Type::Class {
-        identity: None,
-        type_args: Vec::new(),
-        name: "Owner".to_string(),
-        fields: vec![("helper".to_string(), helper.clone())],
-        methods: Vec::new(),
-        parent_class: None,
-    };
-    let receiver = HirExpr::FieldAccess {
-        object: Box::new(HirExpr::Name {
-            name: "local".to_string(),
-            binding_id: None,
-            ty: owner,
-        }),
-        field: "helper".to_string(),
-        ty: helper,
-    };
-    let emitter = RustEmitter::new();
-
-    assert!(emitter.method_call_needs_field_clone_suppression(
-        &receiver,
-        Some(sifr_type_system::ReceiverConvention::SharedBorrow),
-    ));
+    let lowered = emitter.emit_checked_place(&receiver, &place).unwrap();
+    assert_eq!(crate::render_expr(&lowered), "outer.inner.items");
 }
 
 fn emitter_with_large_int_const() -> RustEmitter {

@@ -27,6 +27,7 @@ fn test_nested_break_without_inner_else_does_not_set_outer_broke_flag() {
                 }],
                 else_body: Some(vec![HirStmt::Expr {
                     expr: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "print".to_string(),
                         args: vec![HirExpr::StringLiteral("outer else".to_string())],
                         ty: Type::None,
@@ -50,7 +51,8 @@ fn test_nested_break_without_inner_else_does_not_set_outer_broke_flag() {
     };
 
     let rust_code = generate_rust(&module);
-    assert_eq!(rust_code.matches("let mut _broke = false;").count(), 1);
+    assert_eq!(rust_code.matches("let _broke = false;").count(), 1);
+    assert!(!rust_code.contains("let mut _broke = false;"));
     assert!(rust_code.contains("if !_broke {"));
     assert!(!rust_code.contains("_broke = true;"));
 }

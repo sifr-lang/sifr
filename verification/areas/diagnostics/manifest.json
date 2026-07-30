@@ -1262,6 +1262,33 @@
           ]
         },
         {
+          "id": "e2e_unsupported_narrowed_optional_mutating_receiver",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_unsupported_narrowed_optional_mutating_receiver/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_protocol_receiver_mutability_mismatch",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_protocol_receiver_mutability_mismatch/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
+          "id": "e2e_operator_receiver_mutation_rejected",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_operator_receiver_mutation_rejected/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "e2e_unknown_except_error_type",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_unknown_except_error_type/main.sifr",
           "command": "check",

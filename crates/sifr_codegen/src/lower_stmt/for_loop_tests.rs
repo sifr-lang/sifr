@@ -172,6 +172,7 @@ fn does_not_lower_for_with_non_leaf_iter() {
         target: "i".to_string(),
         target_ty: Type::Int,
         iter: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "items".to_string(),
             args: vec![],
             ty: Type::List(Box::new(Type::Int)),
@@ -253,6 +254,7 @@ fn does_not_lower_for_with_else_and_non_leaf_iter() {
         target: "i".to_string(),
         target_ty: Type::Int,
         iter: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "items".to_string(),
             args: vec![],
             ty: Type::List(Box::new(Type::Int)),

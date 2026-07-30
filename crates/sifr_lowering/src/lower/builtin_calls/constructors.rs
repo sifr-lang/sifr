@@ -212,6 +212,7 @@ pub(in crate::lower) fn lower_list_constructor_call(
                 return None;
             }
             Some(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "list".to_string(),
                 args: vec![iterable],
                 ty: list_ty,
@@ -352,6 +353,7 @@ pub(in crate::lower) fn lower_dict_constructor_call(
 
     match &call.arguments.args[..] {
         [] if keyword_dict.is_none() => Some(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "dict".to_string(),
             args: Vec::new(),
             ty: Type::Dict(Box::new(Type::Any), Box::new(Type::Any)),
@@ -390,6 +392,7 @@ pub(in crate::lower) fn lower_dict_constructor_call(
                 return None;
             }
             Some(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "dict".to_string(),
                 args: vec![arg],
                 ty: dict_ty,
@@ -439,6 +442,7 @@ pub(in crate::lower) fn lower_dict_constructor_call(
                 Box::new(make_union(vec![(*value_ty).clone(), keyword_value_ty])),
             );
             Some(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "dict".to_string(),
                 args: vec![arg, keyword_dict?],
                 ty: merged_ty,
@@ -491,6 +495,7 @@ pub(in crate::lower) fn lower_ord_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
         return None;
     }
     Some(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "ord".to_string(),
         args: vec![arg],
         ty: Type::Result(
@@ -578,6 +583,7 @@ pub(in crate::lower) fn lower_chr_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
         return None;
     }
     Some(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "chr".to_string(),
         args: vec![arg],
         ty: Type::Result(
@@ -749,6 +755,7 @@ pub(in crate::lower) fn lower_defaultdict_constructor_call(
     };
 
     Some(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: alias_name.to_string(),
         args,
         ty: Type::Alias {
@@ -767,6 +774,7 @@ pub(in crate::lower) fn lower_set_constructor_call(
 
     match arg {
         OptionalIterableArg::Missing => Some(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "set".to_string(),
             args: Vec::new(),
             ty: Type::Set(Box::new(Type::Any)),
@@ -792,6 +800,7 @@ pub(in crate::lower) fn lower_set_constructor_call(
                 return None;
             }
             Some(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "set".to_string(),
                 args: vec![iterable],
                 ty: Type::Set(Box::new(elem_ty)),

@@ -18,6 +18,7 @@ pub enum EphemeralOrigin {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BindingKind {
     Local,
+    ModuleConstant,
     Parameter,
     Receiver,
     EphemeralLocal(EphemeralOrigin),
@@ -80,6 +81,7 @@ pub struct VarInfo {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RetainedBindingFact {
     pub name: String,
+    pub ty: Type,
     pub binding_kind: BindingKind,
     pub mutability: BindingMutability,
     pub parameter_convention: Option<ParamConvention>,
@@ -197,6 +199,11 @@ impl Scope {
     /// Define a variable in the current (innermost) scope.
     pub fn define(&mut self, name: String, ty: Type) {
         self.define_binding(name, ty, true, BindingKind::Local, false);
+    }
+
+    /// Define an immutable module-level value that codegen re-materializes on access.
+    pub fn define_module_constant(&mut self, name: String, ty: Type) {
+        self.define_binding(name, ty, false, BindingKind::ModuleConstant, true);
     }
 
     /// Define an explicitly-typed local variable in the current scope.
@@ -346,6 +353,7 @@ impl Scope {
             binding_id,
             RetainedBindingFact {
                 name: name.clone(),
+                ty: ty.clone(),
                 binding_kind,
                 mutability,
                 parameter_convention,
@@ -409,13 +417,17 @@ impl Scope {
 
     /// Update the declared type for an existing variable.
     pub fn set_type(&mut self, name: &str, ty: Type) -> bool {
-        if let Some(info) = self.lookup_var_mut(name) {
-            info.ty = ty;
-            info.narrowed_type = None;
-            info.const_integer_value = None;
-            return true;
+        let Some(info) = self.lookup_var_mut(name) else {
+            return false;
+        };
+        let binding_id = info.binding_id;
+        info.ty = ty.clone();
+        info.narrowed_type = None;
+        info.const_integer_value = None;
+        if let Some(fact) = self.retained_bindings.get_mut(&binding_id) {
+            fact.ty = ty;
         }
-        false
+        true
     }
 
     pub(crate) fn set_const_integer_value(&mut self, name: &str, value: BigInt) -> bool {
@@ -702,6 +714,23 @@ mod tests {
         assert_eq!(
             scope.retained_binding(inner).unwrap().binding_kind,
             BindingKind::Local
+        );
+    }
+
+    #[test]
+    fn module_constants_have_distinct_immutable_binding_facts() {
+        let mut scope = Scope::new();
+        scope.define_module_constant("VALUES".to_string(), Type::List(Box::new(Type::Int)));
+
+        let info = scope.lookup("VALUES").unwrap();
+        assert_eq!(info.binding_kind, BindingKind::ModuleConstant);
+        assert_eq!(info.mutability, BindingMutability::Immutable);
+        assert_eq!(
+            scope
+                .retained_binding(info.binding_id)
+                .unwrap()
+                .binding_kind,
+            BindingKind::ModuleConstant
         );
     }
 

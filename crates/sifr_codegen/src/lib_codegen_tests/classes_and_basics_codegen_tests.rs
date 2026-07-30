@@ -171,6 +171,7 @@ fn test_empty_print() {
             return_type: Type::None,
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "print".to_string(),
                     args: vec![],
                     ty: Type::None,
@@ -418,6 +419,7 @@ fn test_match_int_literal_pattern_avoids_cast_expression() {
                             guard: None,
                             body: vec![HirStmt::Expr {
                                 expr: HirExpr::Call {
+                                    mutable_arg_places: Vec::new(),
                                     func: "print".to_string(),
                                     args: vec![HirExpr::StringLiteral("one".to_string())],
                                     ty: Type::None,
@@ -429,6 +431,7 @@ fn test_match_int_literal_pattern_avoids_cast_expression() {
                             guard: None,
                             body: vec![HirStmt::Expr {
                                 expr: HirExpr::Call {
+                                    mutable_arg_places: Vec::new(),
                                     func: "print".to_string(),
                                     args: vec![HirExpr::StringLiteral("other".to_string())],
                                     ty: Type::None,
@@ -591,6 +594,7 @@ fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
             return_type: Type::None,
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "helper".to_string(),
                     args: vec![],
                     ty: Type::Float,
@@ -623,6 +627,7 @@ fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
             return_type: Type::Float,
             body: vec![HirStmt::Return {
                 value: Some(HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "sqrt".to_string(),
                     args: vec![HirExpr::FloatLiteral(9.0)],
                     ty: Type::Float,
@@ -667,6 +672,7 @@ fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closur
             return_type: Type::None,
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "helper".to_string(),
                     args: vec![],
                     ty: Type::BigInt,
@@ -699,6 +705,7 @@ fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closur
             return_type: Type::BigInt,
             body: vec![HirStmt::Return {
                 value: Some(HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "bigint".to_string(),
                     args: vec![HirExpr::IntLiteral(1)],
                     ty: Type::BigInt,
@@ -756,6 +763,7 @@ fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
             return_type: Type::None,
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "helper".to_string(),
                     args: vec![],
                     ty: Type::None,
@@ -788,6 +796,7 @@ fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
             return_type: Type::None,
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "loads".to_string(),
                     args: vec![HirExpr::StringLiteral(
                         "name = \"fixture-five\"\nvalue = 5".to_string(),

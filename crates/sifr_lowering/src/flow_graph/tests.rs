@@ -10,6 +10,7 @@ fn lower_source(source: &str) -> crate::LoweringResult {
 fn call_stmt(callee: &str) -> HirStmt {
     HirStmt::Expr {
         expr: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: callee.to_string(),
             args: vec![],
             ty: Type::None,
@@ -80,6 +81,8 @@ fn statement_graph_tracks_branches_loops_mutations_and_exits() {
                 method: "pop".to_string(),
                 args: vec![],
                 receiver_convention: Some(sifr_type_system::ReceiverConvention::MutableBorrow),
+                receiver_target: None,
+                mutable_arg_places: Vec::new(),
                 source: None,
                 ty: Type::Int,
             },
@@ -106,6 +109,8 @@ fn shared_method_receiver_does_not_emit_mutation_effect() {
             method: "len".to_string(),
             args: vec![],
             receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+            receiver_target: None,
+            mutable_arg_places: Vec::new(),
             source: None,
             ty: Type::Int,
         },
@@ -113,6 +118,17 @@ fn shared_method_receiver_does_not_emit_mutation_effect() {
 
     let trace = build_statement_flow_graph(&stmts).debug_trace();
     assert!(!trace.contains("mutate items"));
+}
+
+#[test]
+fn mutable_argument_metadata_emits_mutable_borrow_effect() {
+    let result = lower_source(
+        "def fill(mut values: list[int]) -> None:\n    values.append(1)\n\n\
+         def main(mut items: list[int]) -> None:\n    fill(items)\n",
+    );
+
+    let trace = result.flow_graph.debug_trace();
+    assert!(trace.contains("mut-borrow items"), "{trace}");
 }
 
 #[test]

@@ -78,6 +78,7 @@ fn lower_parallel_pool_map_like_call(
     let mut args = vec![object.clone(), items, worker];
     let ty = parallel_result_type(ok_ty, expects_result, ctx);
     Some(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: helper.to_string(),
         args: std::mem::take(&mut args),
         ty,
@@ -95,6 +96,7 @@ fn lower_parallel_map_like_call(
         validate_parallel_map_like_call(api_name, expects_result, call, ctx)?;
     let ty = parallel_result_type(ok_ty, expects_result, ctx);
     Some(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: helper.to_string(),
         args: vec![items, worker],
         ty,

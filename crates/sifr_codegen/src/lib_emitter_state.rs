@@ -86,9 +86,8 @@ pub struct RustEmitter {
     pub(crate) imported_stdlib_names: HashMap<String, HashSet<String>>,
     /// Local names imported from first-party project modules.
     pub(crate) imported_project_functions: HashSet<String>,
-    /// Number of upcoming `self.field` reads that should suppress auto-clone.
-    /// This avoids temporal coupling from a sticky bool flag.
-    pub(crate) pending_self_field_clone_suppression: usize,
+    /// Rust locals that checked mutable places require to remain mutable.
+    pub(crate) protected_mutable_place_roots: HashSet<String>,
     /// Whether we're inside a generator closure (yield -> return Some(val))
     pub(crate) emission_ctx: EmissionContext,
     /// Whether we're inside a `Display::fmt` implementation (for __str__ methods)
@@ -235,7 +234,7 @@ impl RustEmitter {
             generator_functions: HashSet::new(),
             imported_stdlib_names: HashMap::new(),
             imported_project_functions: HashSet::new(),
-            pending_self_field_clone_suppression: 0,
+            protected_mutable_place_roots: HashSet::new(),
             emission_ctx: EmissionContext::default(),
             try_enum_counter: 0,
             try_closure_depth: 0,

@@ -1,0 +1,73 @@
+class Helper:
+    items: list[int]
+
+    def bump(self, value: int) -> None:
+        self.items.append(value)
+
+
+class Mid:
+    inner: Helper
+
+
+class Owner:
+    direct: Helper
+    mid: Mid
+
+    def mutate(self) -> None:
+        self.direct.bump(1)
+        self.mid.inner.bump(2)
+
+
+class BaseOwner:
+    inherited: Helper
+
+
+class ChildOwner(BaseOwner):
+    def __init__(self, inherited: Helper):
+        super().__init__(inherited)
+
+    def mutate_inherited(self) -> None:
+        self.inherited.bump(3)
+
+
+class Holder[T]:
+    value: T
+
+    def replace(self, own value: T) -> None:
+        self.value = value
+
+def mutate_borrowed(mut owner: Owner) -> None:
+    owner.direct.bump(4)
+
+
+def mutate_owned(own mut owner: Owner) -> Owner:
+    owner.direct.bump(5)
+    return owner
+
+
+def mutate_local() -> Owner:
+    owner: Owner = Owner(Helper([]), Mid(Helper([])))
+    owner.direct.bump(6)
+    return owner
+
+
+def main() -> None:
+    owner: Owner = Owner(Helper([]), Mid(Helper([])))
+    owner.mutate()
+    mutate_borrowed(owner)
+    assert owner.direct.items == [1, 4]
+    assert owner.mid.inner.items == [2]
+
+    owned: Owner = mutate_owned(Owner(Helper([]), Mid(Helper([]))))
+    assert owned.direct.items == [5]
+
+    local: Owner = mutate_local()
+    assert local.direct.items == [6]
+
+    inherited: ChildOwner = ChildOwner(Helper([]))
+    inherited.mutate_inherited()
+    assert inherited.inherited.items == [3]
+
+    generic: Holder[int] = Holder(0)
+    generic.replace(9)
+    assert generic.value == 9

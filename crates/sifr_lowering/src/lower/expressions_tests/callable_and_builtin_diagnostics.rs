@@ -366,18 +366,17 @@ pub(super) fn test_constructor_assigned_fields_infer_class_instance_types() {
 }
 
 #[test]
-pub(super) fn test_constructor_branch_assignments_register_all_fields() {
-    let module = lower_source(
+pub(super) fn test_constructor_branch_assignments_require_materialized_storage() {
+    let errors = lower_source(
         "class Pair:\n    def __init__(self, flag: bool):\n        if flag:\n            self.left = 1\n        else:\n            self.right = 2\n",
     )
-    .expect("constructor field registration should succeed");
-    let pair = module
-        .classes
-        .iter()
-        .find(|class| class.name == "Pair")
-        .expect("Pair class should lower");
-    assert!(pair.fields.iter().any(|(name, _)| name == "left"));
-    assert!(pair.fields.iter().any(|(name, _)| name == "right"));
+    .expect_err("branch-only field initialization should be rejected before codegen");
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE)
+            && error
+                .message
+                .contains("field storage is initialized: self.left, self.right")
+    }));
 }
 
 #[test]
@@ -522,8 +521,7 @@ pub(super) fn test_tuple_slice_errors_have_type_codes() {
                 == Some(range_for_after_anchor(out_of_range_source, "pair[", "0:3"))
     }));
 
-    let dynamic_source =
-        "def main():\n    pair: tuple[int, str] = (1, \"x\")\n    start: int = 0\n    _bad = pair[start:2]\n";
+    let dynamic_source = "def main():\n    pair: tuple[int, str] = (1, \"x\")\n    start: int = 0\n    _bad = pair[start:2]\n";
     let dynamic_result = lower_source(dynamic_source);
     let dynamic_errors = dynamic_result.expect_err("expected tuple dynamic slice error");
     assert!(dynamic_errors.iter().any(|error| {
@@ -629,8 +627,7 @@ pub(super) fn test_bytes_augmented_subscript_assignment_has_ownership_code() {
 
 #[test]
 pub(super) fn test_bytes_index_and_iteration_expose_uint8() {
-    let source =
-        "def main() -> None:\n    payload: bytes = b\"abc\"\n    first = payload[0]\n    for value in payload:\n        seen: uint8 = value\n";
+    let source = "def main() -> None:\n    payload: bytes = b\"abc\"\n    first = payload[0]\n    for value in payload:\n        seen: uint8 = value\n";
     let module = lower_source(source).expect("bytes uint8 lowering should succeed");
     let function = module
         .functions
@@ -731,8 +728,7 @@ pub(super) fn test_list_subscript_augassign_type_error_keeps_code() {
 
 #[test]
 pub(super) fn test_dict_subscript_augassign_type_error_keeps_code() {
-    let source =
-        "def bad(mut data: dict[str, int]) -> None:\n    data[\"x\"] = 1\n    data[\"x\"] += \"x\"\n";
+    let source = "def bad(mut data: dict[str, int]) -> None:\n    data[\"x\"] = 1\n    data[\"x\"] += \"x\"\n";
     let result = lower_source(source);
     let errors = result.expect_err("expected dict subscript augassign type error");
 
@@ -835,9 +831,12 @@ pub(super) fn test_invalid_subscript_receiver_has_type_code() {
     let errors = result.expect_err("expected invalid subscript receiver error");
 
     assert!(
-        errors.iter().any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)
-            && error.message == "cannot index type 'int' with 'int'"
-            && error.primary_range == Some(range_for_after_anchor(source, "bad: int = ", "value[0]"))),
+        errors
+            .iter()
+            .any(|error| error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error.message == "cannot index type 'int' with 'int'"
+                && error.primary_range
+                    == Some(range_for_after_anchor(source, "bad: int = ", "value[0]"))),
         "invalid subscript receiver diagnostic should preserve type code and subscript range: {errors:?}"
     );
 }

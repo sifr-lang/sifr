@@ -716,6 +716,7 @@ pub(in crate::lower) fn lower_for(
     let iter_expr = HirExpr::IteratorCall {
         op: HirIteratorOp::Iter,
         args: vec![iterable_expr],
+        mutable_arg_places: Vec::new(),
         ty: Type::Iterator(Box::new(elem_ty.clone())),
     };
     let consumes_task_handle_collection = iter_source_name.is_some()

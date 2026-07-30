@@ -1,0 +1,8 @@
+# expect-error: SIFR-PROTO-0006
+
+class Counter:
+    value: int
+
+    def __eq__(self, other: Counter) -> bool:
+        self.value += 1
+        return self.value == other.value

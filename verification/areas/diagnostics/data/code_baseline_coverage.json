@@ -955,6 +955,16 @@
       "suggestion_rendering_fixture": null
     },
     {
+      "baseline_fixture_id": "e2e_unsupported_narrowed_optional_mutating_receiver",
+      "code": "SIFR-OWN-0014",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
       "baseline_fixture_id": "package_library_diagnostic_rules_cases",
       "code": "SIFR-PACKAGE-0001",
       "deferral": null,
@@ -1423,6 +1433,26 @@
     {
       "baseline_fixture_id": "e2e_unhashable_dict_key",
       "code": "SIFR-PROTO-0004",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "e2e_protocol_receiver_mutability_mismatch",
+      "code": "SIFR-PROTO-0005",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "e2e_operator_receiver_mutation_rejected",
+      "code": "SIFR-PROTO-0006",
       "deferral": null,
       "multi_error_recovery_fixture": null,
       "renderer_formats": [

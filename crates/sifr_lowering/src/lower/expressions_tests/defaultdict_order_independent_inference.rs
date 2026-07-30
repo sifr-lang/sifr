@@ -1,5 +1,6 @@
-use super::{lower_source_with_stdlib_collections, DiagnosticCode, HirStmt, Type};
+use super::{lower_source_with_stdlib_collections, DiagnosticCode, HirExpr, HirStmt, Type};
 use crate::lower::builtin_calls::{DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS};
+use crate::MutableReceiverTarget;
 
 fn binding_and_constructor_types(source: &str, binding: &str) -> (Type, Type) {
     let module = lower_source_with_stdlib_collections(source).expect("source should lower");
@@ -22,6 +23,42 @@ fn binding_and_constructor_types(source: &str, binding: &str) -> (Type, Type) {
 
 fn defaultdict_type(alias: &str, key: Type, value: Type) -> Type {
     Type::alias(alias, Type::Dict(Box::new(key), Box::new(value)))
+}
+
+#[test]
+fn defaultdict_iterable_mutators_carry_checked_backing_storage_places() {
+    let source = "from sifr.collections import defaultdict\n\ndef solve() -> int:\n    lists = defaultdict(list)\n    lists[2].append(7)\n    lists[1].extend(lists[2])\n    sets = defaultdict(set)\n    sets[2].add(7)\n    sets[1].update(sets[2])\n    return len(lists[1]) + len(sets[1])\n";
+    let module = lower_source_with_stdlib_collections(source).expect("source should lower");
+    let function = module
+        .functions
+        .iter()
+        .find(|function| function.name == "solve")
+        .expect("solve should lower");
+    let mut checked_methods = Vec::new();
+    for statement in &function.body {
+        let HirStmt::Expr {
+            expr:
+                HirExpr::MethodCall {
+                    method,
+                    receiver_target,
+                    ..
+                },
+        } = statement
+        else {
+            continue;
+        };
+        if matches!(method.as_str(), "extend" | "update") {
+            assert!(
+                matches!(
+                    receiver_target,
+                    Some(MutableReceiverTarget::SpecializedIndexedStorage(_))
+                ),
+                "{method} should retain a checked defaultdict backing-storage place"
+            );
+            checked_methods.push(method.as_str());
+        }
+    }
+    assert_eq!(checked_methods, ["extend", "update"]);
 }
 
 #[test]

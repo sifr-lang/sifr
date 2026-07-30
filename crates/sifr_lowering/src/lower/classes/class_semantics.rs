@@ -1,4 +1,5 @@
-use super::{HirExpr, HirPattern, HirStmt, HirTupleTargetBinding, Type};
+use super::{HirExpr, HirParam, HirPattern, HirStmt, HirTupleTargetBinding, Type};
+use std::collections::HashSet;
 
 /// Check if a type is hashable (can derive Hash + Eq).
 pub(in crate::lower) fn is_hashable_type(ty: &Type) -> bool {
@@ -71,6 +72,97 @@ pub(in crate::lower) fn body_contains_receiver_mutation(stmts: &[HirStmt]) -> bo
     }
 
     stmts.iter().any(stmt_contains_receiver_mutation)
+}
+
+fn body_references_receiver(stmts: &[HirStmt]) -> bool {
+    let mut body = stmts.to_vec();
+    let mut references_receiver = false;
+    sifr_ir::visit_hir_stmts_exprs_mut(&mut body, &mut |expr| {
+        if matches!(expr, HirExpr::Name { name, .. } if name == "self") {
+            references_receiver = true;
+        }
+    });
+    sifr_ir::visit_hir_stmts_storage_roots_mut(&mut body, &mut |root| {
+        if root == "self" {
+            references_receiver = true;
+        }
+    });
+    references_receiver
+}
+
+/// Storage that is still unavailable when constructor code first needs a
+/// materialized `self` place.
+pub(in crate::lower) struct ConstructorStorageGap {
+    pub(in crate::lower) missing_fields: Vec<String>,
+    pub(in crate::lower) missing_parent: bool,
+    pub(in crate::lower) statement_index: usize,
+}
+
+pub(in crate::lower) fn constructor_uninitialized_storage_at_first_self_use(
+    stmts: &[HirStmt],
+    own_fields: &[(String, Type)],
+    params: &[HirParam],
+    requires_parent: bool,
+) -> Option<ConstructorStorageGap> {
+    let required = own_fields
+        .iter()
+        .map(|(name, _)| name.clone())
+        .collect::<HashSet<_>>();
+    let mut initialized = params
+        .iter()
+        .filter(|param| required.contains(&param.name))
+        .map(|param| param.name.clone())
+        .collect::<HashSet<_>>();
+    let mut explicit_initializers = HashSet::new();
+    let mut parent_initialized = !requires_parent;
+
+    for (statement_index, stmt) in stmts.iter().enumerate() {
+        if matches!(
+            stmt,
+            HirStmt::Expr {
+                expr: HirExpr::SuperCall { .. }
+            }
+        ) {
+            parent_initialized = true;
+            continue;
+        }
+
+        if let HirStmt::FieldAssign {
+            object,
+            field,
+            value,
+            ..
+        } = stmt
+        {
+            if object == "self"
+                && required.contains(field)
+                && !explicit_initializers.contains(field)
+                && !body_references_receiver(&[HirStmt::Expr {
+                    expr: value.clone(),
+                }])
+            {
+                initialized.insert(field.clone());
+                explicit_initializers.insert(field.clone());
+                continue;
+            }
+        }
+
+        if body_references_receiver(std::slice::from_ref(stmt)) {
+            let mut missing = required
+                .difference(&initialized)
+                .cloned()
+                .collect::<Vec<_>>();
+            missing.sort();
+            let missing_parent = !parent_initialized;
+            return (!missing.is_empty() || missing_parent).then_some(ConstructorStorageGap {
+                missing_fields: missing,
+                missing_parent,
+                statement_index,
+            });
+        }
+    }
+
+    None
 }
 
 pub(in crate::lower) fn collect_literal_coverage(

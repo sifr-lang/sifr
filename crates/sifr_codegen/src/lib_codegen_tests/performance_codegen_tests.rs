@@ -266,7 +266,7 @@ def count_marks(words: list[str]) -> int:
     );
 
     assert!(
-        generated.contains("let mut __sifr_chars_word: Vec<char> = word.chars().collect"),
+        generated.contains("let __sifr_chars_word: Vec<char> = word.chars().collect"),
         "{generated}"
     );
     assert!(generated.contains("__sifr_chars_word.len()"), "{generated}");

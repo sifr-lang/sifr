@@ -360,6 +360,7 @@ fn lowers_simple_while_with_alias_option_truthiness_name_condition() {
 fn does_not_lower_while_with_non_leaf_condition() {
     let while_stmt = HirStmt::While {
         condition: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "ready".to_string(),
             args: vec![],
             ty: Type::Bool,
@@ -375,6 +376,7 @@ fn does_not_lower_while_with_non_leaf_condition() {
 fn does_not_lower_while_with_non_leaf_option_truthiness_condition() {
     let while_stmt = HirStmt::While {
         condition: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "maybe_x".to_string(),
             args: vec![],
             ty: Type::Union(vec![Type::Int, Type::None]),
@@ -391,6 +393,7 @@ fn does_not_lower_while_with_non_leaf_option_is_none_compare_condition() {
     let while_stmt = HirStmt::While {
         condition: HirExpr::Compare {
             left: Box::new(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "maybe_x".to_string(),
                 args: vec![],
                 ty: Type::Union(vec![Type::Int, Type::None]),

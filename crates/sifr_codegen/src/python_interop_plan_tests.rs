@@ -113,6 +113,7 @@ fn raw_coroutine_call_requires_the_owned_async_loop() {
         "main",
         vec![HirStmt::Expr {
             expr: HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "run_coroutine_blocking".to_string(),
                 args: Vec::new(),
                 ty: Type::None,
@@ -140,6 +141,7 @@ fn aliased_raw_coroutine_call_requires_the_owned_async_loop() {
         "main",
         vec![HirStmt::Expr {
             expr: HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "run_owned".to_string(),
                 args: Vec::new(),
                 ty: Type::None,

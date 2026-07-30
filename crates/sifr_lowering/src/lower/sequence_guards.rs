@@ -255,6 +255,7 @@ pub(in crate::lower) fn hir_sequence_guard_target_name(expr: &HirExpr) -> Option
 pub(in crate::lower) fn key_guard_token(expr: &Expr) -> Option<String> {
     match expr {
         Expr::Name(name) => Some(format!("name:{}", name.id)),
+        Expr::StringLiteral(value) => Some(format!("str:{:?}", value.value.to_str())),
         Expr::BooleanLiteral(value) => Some(format!("bool:{}", value.value)),
         Expr::NumberLiteral(num) => match &num.value {
             Number::Int(value) => Some(format!("int:{value}")),

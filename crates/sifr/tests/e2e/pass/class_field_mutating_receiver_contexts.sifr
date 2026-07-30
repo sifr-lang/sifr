@@ -1,0 +1,129 @@
+class Accumulator:
+    values: list[int]
+
+    def push(self, value: int) -> None:
+        self.values.append(value)
+
+    def push_count(self, value: int) -> int:
+        self.values.append(value)
+        return len(self.values)
+
+    def push_result(self, value: int) -> Result[int, ValueError]:
+        self.values.append(value)
+        return len(self.values)
+
+    def peek(self) -> int:
+        return len(self.values)
+
+
+class Pair:
+    left: Accumulator
+    right: Accumulator
+
+    def mutate_in_expression_contexts(self) -> int:
+        self.left.push(1)
+        assigned: int = self.left.push_count(2)
+        assert assigned == 2
+        print(self.left.push_count(3))
+        for value in [4]:
+            self.left.push(value)
+        return self.left.push_count(5)
+
+    def mutate_with_shared_sibling_read(self) -> None:
+        self.left.push(self.right.peek())
+
+    def read_only_field_receiver(self) -> int:
+        return self.right.peek()
+
+
+class MutableFailure(Error):
+    message: str
+    notes: list[int]
+
+    def note(self, value: int) -> None:
+        self.notes.append(value)
+
+
+class SetOwner:
+    values: set[str]
+
+    def add_last_use(self) -> None:
+        item: str = "added"
+        self.values.add(item)
+
+
+class IteratorOwner:
+    values: Iterator[int]
+
+    def take(self) -> int | None:
+        return next(self.values)
+
+
+class WithResource:
+    values: list[int]
+
+    def __enter__(self) -> WithResource:
+        return self
+
+    def __exit__(self) -> None:
+        pass
+
+    def push(self, value: int) -> None:
+        self.values.append(value)
+
+
+def fail_with_mutable_error() -> Result[None, MutableFailure]:
+    raise MutableFailure("expected", [])
+
+
+def mutate_tuple_unpack_local() -> Accumulator:
+    first, second = (Accumulator([]), Accumulator([9]))
+    first.push(second.peek())
+    return first
+
+
+def mutate_chained_assignment_local() -> Accumulator:
+    first = second = Accumulator([])
+    first.push(7)
+    return first
+
+
+def main() -> None:
+    pair: Pair = Pair(Accumulator([]), Accumulator([8, 9]))
+    assert pair.mutate_in_expression_contexts() == 5
+    assert pair.left.values == [1, 2, 3, 4, 5]
+
+    try:
+        result_count: int = pair.left.push_result(6)
+        assert result_count == 6
+    except ValueError as error:
+        assert False
+    assert pair.left.values == [1, 2, 3, 4, 5, 6]
+
+    pair.mutate_with_shared_sibling_read()
+    assert pair.left.values == [1, 2, 3, 4, 5, 6, 2]
+    assert pair.read_only_field_receiver() == 2
+
+    unpacked: Accumulator = mutate_tuple_unpack_local()
+    assert unpacked.values == [1]
+
+    chained: Accumulator = mutate_chained_assignment_local()
+    assert chained.values == [7]
+
+    try:
+        _value: None = fail_with_mutable_error()
+    except MutableFailure as error:
+        error.note(8)
+        assert error.notes == [8]
+
+    set_owner: SetOwner = SetOwner(set())
+    set_owner.add_last_use()
+    assert "added" in set_owner.values
+
+    iterator_owner: IteratorOwner = IteratorOwner(iter([10, 11]))
+    assert iterator_owner.take() == 10
+    assert iterator_owner.take() == 11
+
+    with WithResource([]) as resource:
+        resource.push(12)
+        assert resource.values == [12]

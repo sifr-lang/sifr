@@ -9,6 +9,7 @@ fn test_generate_rust_multi_with_metadata_infers_fs_feature_from_private_stdlib_
             return_type: Type::None,
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "read_text".to_string(),
                     args: vec![HirExpr::StringLiteral("fixture.txt".to_string())],
                     ty: Type::Result(Box::new(Type::Str), Box::new(Type::Any)),
@@ -128,6 +129,7 @@ fn public_stdlib_reexport_uses_transitive_private_signature_for_call_borrowing()
                 },
                 HirStmt::Expr {
                     expr: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "remove_file".to_string(),
                         args: vec![HirExpr::Name {
                             name: "path".to_string(),

@@ -2,7 +2,7 @@ use super::{
     classes::{body_contains_receiver_mutation, fixed_trait_receiver_convention},
     LowerCtx,
 };
-use crate::hir_nodes::{HirClass, HirClassKind, HirExpr, HirFunction, MethodKind};
+use crate::hir_nodes::{HirClass, HirClassKind, HirExpr, HirFunction, HirIteratorOp, MethodKind};
 use crate::scope::BindingKind;
 use sifr_ir::visit_hir_function_exprs_mut;
 use sifr_type_system::{FunctionType, ReceiverConvention, Type};
@@ -17,13 +17,31 @@ struct MethodKey {
 pub(super) fn infer_and_annotate_class_receivers(classes: &mut [HirClass], ctx: &mut LowerCtx) {
     let mut mutable = HashSet::new();
     let mut dependencies: HashMap<MethodKey, HashSet<MethodKey>> = HashMap::new();
+    let mut fixed_receivers = HashSet::new();
 
     for class in classes.iter_mut() {
         if matches!(class.kind, HirClassKind::Protocol) {
             continue;
         }
         for method in &mut class.methods {
-            collect_method_facts(&class.name, method, ctx, &mut mutable, &mut dependencies);
+            collect_method_facts(
+                &class.name,
+                method,
+                ctx,
+                &mut mutable,
+                &mut dependencies,
+                &mut fixed_receivers,
+            );
+        }
+        for (_, method) in &mut class.operator_impls {
+            collect_method_facts(
+                &class.name,
+                method,
+                ctx,
+                &mut mutable,
+                &mut dependencies,
+                &mut fixed_receivers,
+            );
         }
     }
 
@@ -40,6 +58,7 @@ pub(super) fn infer_and_annotate_class_receivers(classes: &mut [HirClass], ctx: 
         }
         mutable.extend(newly_mutable);
     }
+    validate_fixed_receiver_mutations(&fixed_receivers, &mutable, ctx);
 
     for class in classes.iter_mut() {
         for method in &mut class.methods {
@@ -61,6 +80,7 @@ pub(super) fn infer_and_annotate_class_receivers(classes: &mut [HirClass], ctx: 
         }
     }
     propagate_inherited_receiver_metadata(ctx);
+    validate_protocol_receiver_conventions(classes, ctx);
     refresh_protocol_implementations(classes, ctx);
 
     let final_types = ctx.class_types.clone();
@@ -103,28 +123,13 @@ fn refresh_protocol_implementations(classes: &mut [HirClass], ctx: &LowerCtx) {
 fn collect_method_facts(
     class_name: &str,
     method: &mut HirFunction,
-    ctx: &LowerCtx,
+    ctx: &mut LowerCtx,
     mutable: &mut HashSet<MethodKey>,
     dependencies: &mut HashMap<MethodKey, HashSet<MethodKey>>,
+    fixed_receivers: &mut HashSet<MethodKey>,
 ) {
-    if method.method_kind != MethodKind::Regular
-        || method.receiver == Some(ReceiverConvention::Owned)
-        || fixed_trait_receiver_convention(&method.name).is_some()
-    {
-        return;
-    }
-    let key = MethodKey {
-        class: class_name.to_string(),
-        method: method.name.clone(),
-    };
-    if method.receiver == Some(ReceiverConvention::MutableBorrow)
-        || body_contains_receiver_mutation(&method.body)
-    {
-        mutable.insert(key.clone());
-    }
-
     let mut calls = HashSet::new();
-    let mut mutates_receiver = false;
+    let mut call_mutates_receiver = false;
     visit_hir_function_exprs_mut(method, &mut |expr| match expr {
         HirExpr::MethodCall {
             object,
@@ -135,7 +140,7 @@ fn collect_method_facts(
         } => {
             if receiver_rooted(object, ctx) {
                 if *receiver_convention == Some(ReceiverConvention::MutableBorrow) {
-                    mutates_receiver = true;
+                    call_mutates_receiver = true;
                 }
                 if let Some(target) = method_key_for_type(object.ty(), method, ctx) {
                     calls.insert(target);
@@ -150,10 +155,13 @@ fn collect_method_facts(
                         })
                 },
             ) {
-                mutates_receiver = true;
+                call_mutates_receiver = true;
             }
         }
         HirExpr::Call { func, args, .. } => {
+            if func == "anext" && args.first().is_some_and(|arg| receiver_rooted(arg, ctx)) {
+                call_mutates_receiver = true;
+            }
             if ctx.functions.get(func).is_some_and(|signature| {
                 args.iter()
                     .zip(&signature.params)
@@ -161,15 +169,131 @@ fn collect_method_facts(
                         convention.is_mut_borrow() && receiver_rooted(arg, ctx)
                     })
             }) {
-                mutates_receiver = true;
+                call_mutates_receiver = true;
+            }
+        }
+        HirExpr::IteratorCall {
+            op: HirIteratorOp::Next,
+            args,
+            ..
+        } => {
+            if args.first().is_some_and(|arg| receiver_rooted(arg, ctx)) {
+                call_mutates_receiver = true;
             }
         }
         _ => {}
     });
-    if mutates_receiver {
+    let directly_mutates_receiver = body_contains_receiver_mutation(&method.body);
+    let key = MethodKey {
+        class: class_name.to_string(),
+        method: method.name.clone(),
+    };
+    if fixed_trait_receiver_convention(&method.name).is_some() {
+        fixed_receivers.insert(key.clone());
+    } else if method.method_kind != MethodKind::Regular
+        || method.receiver == Some(ReceiverConvention::Owned)
+    {
+        return;
+    }
+    if method.receiver == Some(ReceiverConvention::MutableBorrow)
+        || directly_mutates_receiver
+        || call_mutates_receiver
+    {
         mutable.insert(key.clone());
     }
     dependencies.insert(key, calls);
+}
+
+fn validate_fixed_receiver_mutations(
+    fixed_receivers: &HashSet<MethodKey>,
+    mutable: &HashSet<MethodKey>,
+    ctx: &mut LowerCtx,
+) {
+    for key in fixed_receivers {
+        if !mutable.contains(key) {
+            continue;
+        }
+        let trait_name = fixed_trait_name(&key.method);
+        let range = ctx
+            .method_source_ranges
+            .get(&format!("{}.{}", key.class, key.method))
+            .copied()
+            .unwrap_or_default();
+        ctx.error_with_code_at(
+            sifr_diagnostics::DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION,
+            format!(
+                "method '{}' cannot mutate its receiver because Rust trait '{}' fixes the receiver convention",
+                key.method, trait_name
+            ),
+            range,
+        );
+    }
+}
+
+fn fixed_trait_name(method: &str) -> &'static str {
+    match method {
+        "__eq__" => "PartialEq",
+        "__lt__" => "PartialOrd",
+        "__add__" | "__sub__" | "__mul__" | "__truediv__" | "__mod__" | "__neg__" => {
+            "operator trait"
+        }
+        "__str__" | "__repr__" => "Display",
+        "__getitem__" => "Index",
+        _ => "Rust trait",
+    }
+}
+
+fn validate_protocol_receiver_conventions(classes: &[HirClass], ctx: &mut LowerCtx) {
+    let mut mismatches = Vec::new();
+    for class in classes {
+        if matches!(class.kind, HirClassKind::Protocol) {
+            continue;
+        }
+        for protocol_name in &class.implements_protocols {
+            let Some(Type::Protocol {
+                methods: protocol_methods,
+                ..
+            }) = ctx.class_types.get(protocol_name).map(Type::resolve_alias)
+            else {
+                continue;
+            };
+            for method in class
+                .methods
+                .iter()
+                .chain(class.operator_impls.iter().map(|(_, method)| method))
+            {
+                let Some((_, protocol_signature)) = protocol_methods
+                    .iter()
+                    .find(|(candidate, _)| candidate == &method.name)
+                else {
+                    continue;
+                };
+                if method.receiver == Some(ReceiverConvention::MutableBorrow)
+                    && protocol_signature.receiver == Some(ReceiverConvention::SharedBorrow)
+                {
+                    let range = ctx
+                        .method_source_ranges
+                        .get(&format!("{}.{}", class.name, method.name))
+                        .copied()
+                        .unwrap_or_default();
+                    mismatches.push((
+                        format!(
+                            "class '{}' method '{}' requires a mutable receiver but protocol '{}' declares a shared receiver",
+                            class.name, method.name, protocol_name
+                        ),
+                        range,
+                    ));
+                }
+            }
+        }
+    }
+    for (message, range) in mismatches {
+        ctx.error_with_code_at(
+            sifr_diagnostics::DiagnosticCode::PROTO_RECEIVER_CONVENTION_MISMATCH,
+            message,
+            range,
+        );
+    }
 }
 
 fn method_key_for_type(ty: &Type, method: &str, ctx: &LowerCtx) -> Option<MethodKey> {

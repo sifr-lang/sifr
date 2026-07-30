@@ -138,6 +138,7 @@ fn does_not_lower_non_leaf_module_const_item() {
         "answer",
         &Type::Int,
         &HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "compute_answer".to_string(),
             args: vec![],
             ty: Type::Int,
@@ -625,6 +626,7 @@ fn does_not_lower_non_leaf_module_helper_const_item() {
     let ty = Type::List(Box::new(Type::Int));
     let value = HirExpr::ListLiteral {
         elements: vec![HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "build".to_string(),
             args: vec![],
             ty: Type::Int,

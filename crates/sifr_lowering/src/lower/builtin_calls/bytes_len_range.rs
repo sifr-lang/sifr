@@ -135,6 +135,8 @@ pub(in crate::lower) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
             method: "len".to_string(),
             args: vec![],
             receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+            receiver_target: None,
+            mutable_arg_places: Vec::new(),
             source: Some(
                 super::super::method_call_metadata::source_call_with_first_arg_as_receiver(
                     call,
@@ -149,6 +151,8 @@ pub(in crate::lower) fn lower_len_call(call: &ExprCall, ctx: &mut LowerCtx) -> O
                 method: "len".to_string(),
                 args: vec![],
                 receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+                receiver_target: None,
+                mutable_arg_places: Vec::new(),
                 source: Some(
                     super::super::method_call_metadata::source_call_with_first_arg_as_receiver(
                         call,
@@ -198,6 +202,7 @@ pub(in crate::lower) fn lower_isinstance_call(
         _ => "unknown".to_string(),
     };
     Some(HirExpr::Call {
+        mutable_arg_places: Vec::new(),
         func: "isinstance".to_string(),
         args: vec![arg, HirExpr::StringLiteral(type_name)],
         ty: Type::Bool,

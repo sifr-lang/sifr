@@ -1,0 +1,11 @@
+# expect-error[col=9]: SIFR-PROTO-0005
+class Shared(Protocol):
+    def update(self) -> None:
+        pass
+
+
+class MutableImplementation:
+    value: int
+
+    def update(self) -> None:
+        self.value += 1

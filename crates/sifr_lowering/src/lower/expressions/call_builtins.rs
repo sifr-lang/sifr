@@ -130,6 +130,7 @@ pub(super) fn lower_unshadowed_builtin_call(
         return Some(CallLowering::Lowered(HirExpr::IteratorCall {
             op: HirIteratorOp::Iter,
             args: vec![iterable],
+            mutable_arg_places: Vec::new(),
             ty: Type::Iterator(Box::new(elem_ty)),
         }));
     }
@@ -175,10 +176,30 @@ pub(super) fn lower_unshadowed_builtin_call(
         ) {
             return None;
         }
+        let result_ty = Type::Union(vec![elem_ty, Type::None]);
+        let signature = sifr_type_system::FunctionType {
+            receiver: None,
+            params: vec![(
+                "iterator".to_string(),
+                iterator.ty().clone(),
+                sifr_type_system::ParamConvention::mut_borrow(),
+            )],
+            return_type: Box::new(result_ty.clone()),
+        };
+        let mutable_arg_places =
+            super::super::method_receiver_places::validate_regular_call_arguments(
+                std::slice::from_ref(&iterator),
+                &signature,
+                &[Some(call.arguments.args[0].range())],
+                call.range(),
+                "next",
+                ctx,
+            );
         return Some(CallLowering::Lowered(HirExpr::IteratorCall {
             op: HirIteratorOp::Next,
             args: vec![iterator],
-            ty: Type::Union(vec![elem_ty, Type::None]),
+            mutable_arg_places,
+            ty: result_ty,
         }));
     }
 
@@ -216,6 +237,7 @@ pub(super) fn lower_unshadowed_builtin_call(
                 return None;
             }
             return Some(CallLowering::Lowered(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "str".to_string(),
                 args: vec![arg],
                 ty: Type::Str,
@@ -249,6 +271,7 @@ pub(super) fn lower_unshadowed_builtin_call(
             Type::Float
         };
         return Some(CallLowering::Lowered(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "pow".to_string(),
             args: vec![base, exp],
             ty: result_ty,
@@ -294,6 +317,7 @@ pub(super) fn lower_unshadowed_builtin_call(
             return None;
         }
         return Some(CallLowering::Lowered(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "hash".to_string(),
             args: vec![arg],
             ty: Type::Int,
@@ -336,12 +360,14 @@ pub(super) fn lower_unshadowed_builtin_call(
         if call.arguments.args.len() == 2 {
             let ndigits = lower_expr(&call.arguments.args[1], ctx)?;
             return Some(CallLowering::Lowered(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "round".to_string(),
                 args: vec![arg, ndigits],
                 ty: Type::Float,
             }));
         }
         return Some(CallLowering::Lowered(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "round".to_string(),
             args: vec![arg],
             ty: Type::Int,
@@ -382,6 +408,7 @@ pub(super) fn lower_unshadowed_builtin_call(
             return None;
         }
         return Some(CallLowering::Lowered(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "repr".to_string(),
             args: vec![arg],
             ty: Type::Str,
@@ -462,6 +489,7 @@ pub(super) fn lower_unshadowed_builtin_call(
             Type::Int
         };
         return Some(CallLowering::Lowered(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "int".to_string(),
             args: vec![arg],
             ty: result_ty,
@@ -507,6 +535,7 @@ pub(super) fn lower_unshadowed_builtin_call(
             return None;
         }
         return Some(CallLowering::Lowered(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "bigint".to_string(),
             args: vec![arg],
             ty: Type::BigInt,
@@ -572,6 +601,7 @@ pub(super) fn lower_unshadowed_builtin_call(
             Type::Float
         };
         return Some(CallLowering::Lowered(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "float".to_string(),
             args: vec![arg],
             ty: result_ty,
@@ -601,6 +631,7 @@ pub(super) fn lower_unshadowed_builtin_call(
         }
         let arg = lower_expr(&call.arguments.args[0], ctx)?;
         return Some(CallLowering::Lowered(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "bool".to_string(),
             args: vec![arg],
             ty: Type::Bool,
@@ -640,6 +671,7 @@ pub(super) fn lower_unshadowed_builtin_call(
                 return None;
             }
             return Some(CallLowering::Lowered(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "min".to_string(),
                 args,
                 ty: result_ty,
@@ -666,6 +698,7 @@ pub(super) fn lower_unshadowed_builtin_call(
                 return None;
             }
             return Some(CallLowering::Lowered(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "min".to_string(),
                 args: vec![arg],
                 ty: Type::Union(vec![elem_ty, Type::None]),
@@ -711,6 +744,7 @@ pub(super) fn lower_unshadowed_builtin_call(
                 return None;
             }
             return Some(CallLowering::Lowered(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "max".to_string(),
                 args,
                 ty: result_ty,
@@ -737,6 +771,7 @@ pub(super) fn lower_unshadowed_builtin_call(
                 return None;
             }
             return Some(CallLowering::Lowered(HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "max".to_string(),
                 args: vec![arg],
                 ty: Type::Union(vec![elem_ty, Type::None]),

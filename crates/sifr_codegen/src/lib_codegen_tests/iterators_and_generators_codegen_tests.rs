@@ -35,6 +35,7 @@ fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
                     body: vec![HirStmt::Break],
                     else_body: Some(vec![HirStmt::Expr {
                         expr: HirExpr::Call {
+                            mutable_arg_places: Vec::new(),
                             func: "print".to_string(),
                             args: vec![HirExpr::StringLiteral("empty".to_string())],
                             ty: Type::None,
@@ -56,6 +57,7 @@ fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
                 return_type: Type::None,
                 body: vec![HirStmt::Expr {
                     expr: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "iterate".to_string(),
                         args: vec![HirExpr::ListLiteral {
                             elements: vec![],
@@ -127,12 +129,14 @@ fn test_generate_rust_generator_try_except_materializes_without_shape_panic() {
                     target: "v".to_string(),
                     target_ty: Type::Int,
                     iter: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "gen".to_string(),
                         args: vec![],
                         ty: Type::Iterator(Box::new(Type::Int)),
                     },
                     body: vec![HirStmt::Expr {
                         expr: HirExpr::Call {
+                            mutable_arg_places: Vec::new(),
                             func: "print".to_string(),
                             args: vec![HirExpr::Name {
                                 name: "v".to_string(),
@@ -196,7 +200,7 @@ fn test_generate_rust_generator_expression_without_filter_lowers_to_map_chain() 
         "def main():\n    xs: list[int] = [1, 2, 3]\n    squares: Iterator[int] = (x * x for x in xs)\n    print(list(squares))\n",
     );
 
-    assert!(rust_code.contains("let mut squares: Box<dyn Iterator<Item = i64>>"));
+    assert!(rust_code.contains("let squares: Box<dyn Iterator<Item = i64>>"));
     assert!(rust_code.contains("iter().copied().map(|x| x * x)"));
 }
 
@@ -206,7 +210,7 @@ fn test_generate_rust_filter_over_list_lowers_to_lazy_boxed_iterator() {
         "def main():\n    nums: list[int] = [1, 2, 3, 4]\n    evens: Iterator[int] = filter(lambda x: x % 2 == 0, nums)\n    print(list(evens))\n",
     );
 
-    assert!(rust_code.contains("let mut evens: Box<dyn Iterator<Item = i64>>"));
+    assert!(rust_code.contains("let evens: Box<dyn Iterator<Item = i64>>"));
     assert!(rust_code.contains("Box::new("));
     assert!(rust_code.contains(".iter().copied().filter("));
 }
@@ -533,6 +537,7 @@ fn test_generate_rust_test_emits_local_module_import_uses() {
             return_type: Type::None,
             body: vec![HirStmt::Expr {
                 expr: HirExpr::Call {
+                    mutable_arg_places: Vec::new(),
                     func: "helper".to_string(),
                     args: vec![],
                     ty: Type::Int,
@@ -568,7 +573,7 @@ fn test_generate_rust_test_emits_local_module_import_uses() {
 }
 
 #[test]
-fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
+fn test_checked_field_mutation_is_explicit_and_non_sticky() {
     let items_ty = Type::List(Box::new(Type::Int));
     let table_ty = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
     let label_ty = Type::Str;
@@ -611,7 +616,7 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
                             object: Box::new(HirExpr::FieldAccess {
                                 object: Box::new(HirExpr::Name {
                                     name: "self".to_string(),
-                                    binding_id: None,
+                                    binding_id: Some(sifr_ir::BindingId(1)),
                                     ty: class_ty.clone(),
                                 }),
                                 field: "items".to_string(),
@@ -624,8 +629,20 @@ fn test_self_field_clone_suppression_is_scoped_and_non_sticky() {
                                 ty: Type::Int,
                             }],
                             receiver_convention: Some(
-                                sifr_type_system::ReceiverConvention::SharedBorrow,
+                                sifr_type_system::ReceiverConvention::MutableBorrow,
                             ),
+                            receiver_target: Some(sifr_ir::MutableReceiverTarget::Place(
+                                sifr_ir::Place {
+                                    root: sifr_ir::BindingId(1),
+                                    projections: vec![sifr_ir::PlaceProjection::Field(
+                                        sifr_ir::FieldIdentity {
+                                            declaring_class: "Bucket".to_string(),
+                                            field: "items".to_string(),
+                                        },
+                                    )],
+                                },
+                            )),
+                            mutable_arg_places: vec![None],
                             source: None,
                             ty: Type::None,
                         },

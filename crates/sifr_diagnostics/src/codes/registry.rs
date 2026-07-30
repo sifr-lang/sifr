@@ -123,6 +123,8 @@ impl DiagnosticCode {
     pub const OWN_NON_SEND_CHANNEL_ELEMENT: Self = Self::new("SIFR-OWN-0011", Severity::Error);
     pub const OWN_NON_SHARE_SAFE_SHARED_VALUE: Self = Self::new("SIFR-OWN-0012", Severity::Error);
     pub const OWN_NON_IPC_SERIALIZABLE_PAYLOAD: Self = Self::new("SIFR-OWN-0013", Severity::Error);
+    pub const OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE: Self =
+        Self::new("SIFR-OWN-0014", Severity::Error);
 
     pub const FLOW_BREAK_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0001", Severity::Error);
     pub const FLOW_CONTINUE_OUTSIDE_LOOP: Self = Self::new("SIFR-FLOW-0002", Severity::Error);
@@ -158,6 +160,9 @@ impl DiagnosticCode {
     pub const PROTO_CONTEXT_MANAGER_MISSING: Self = Self::new("SIFR-PROTO-0003", Severity::Error);
     pub const PROTO_HASHABLE_OR_COMPARABLE_REQUIRED: Self =
         Self::new("SIFR-PROTO-0004", Severity::Error);
+    pub const PROTO_RECEIVER_CONVENTION_MISMATCH: Self =
+        Self::new("SIFR-PROTO-0005", Severity::Error);
+    pub const PROTO_FIXED_RECEIVER_MUTATION: Self = Self::new("SIFR-PROTO-0006", Severity::Error);
 
     pub const CLASS_MISSING_INITIALIZER: Self = Self::new("SIFR-CLASS-0001", Severity::Error);
     pub const CLASS_REQUIRED_FIELD_AFTER_DEFAULT: Self =
@@ -752,6 +757,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::OWN_NON_SEND_CHANNEL_ELEMENT,
     DiagnosticCode::OWN_NON_SHARE_SAFE_SHARED_VALUE,
     DiagnosticCode::OWN_NON_IPC_SERIALIZABLE_PAYLOAD,
+    DiagnosticCode::OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE,
     DiagnosticCode::FLOW_BREAK_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_CONTINUE_OUTSIDE_LOOP,
     DiagnosticCode::FLOW_INVALID_NONLOCAL,
@@ -778,6 +784,8 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::PROTO_INVALID_ITERATOR_SIGNATURE,
     DiagnosticCode::PROTO_CONTEXT_MANAGER_MISSING,
     DiagnosticCode::PROTO_HASHABLE_OR_COMPARABLE_REQUIRED,
+    DiagnosticCode::PROTO_RECEIVER_CONVENTION_MISMATCH,
+    DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION,
     DiagnosticCode::CLASS_MISSING_INITIALIZER,
     DiagnosticCode::CLASS_REQUIRED_FIELD_AFTER_DEFAULT,
     DiagnosticCode::CLASS_DUPLICATE_OR_INVALID_VALUE,

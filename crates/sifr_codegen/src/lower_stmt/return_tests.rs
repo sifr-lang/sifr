@@ -258,6 +258,7 @@ fn lowers_option_name_return_with_alias_option_return_context() {
 fn does_not_lower_non_leaf_option_return_passthrough_context() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "maybe_x".to_string(),
             args: vec![],
             ty: Type::Union(vec![Type::Int, Type::None]),
@@ -370,6 +371,7 @@ fn lowers_return_alias_none_name_with_option_return_context() {
 fn does_not_lower_non_leaf_none_typed_return_with_option_return_context() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "produce_none".to_string(),
             args: vec![],
             ty: Type::None,
@@ -396,6 +398,7 @@ fn does_not_lower_non_leaf_alias_none_typed_return_with_option_return_context() 
     let alias_none = Type::alias("Nothing", Type::None);
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "produce_none".to_string(),
             args: vec![],
             ty: alias_none,
@@ -547,6 +550,7 @@ fn lowers_return_name_with_alias_non_option_union_return_context() {
 fn does_not_lower_non_leaf_return_with_non_option_union_return_context() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "value".to_string(),
             args: vec![],
             ty: Type::Int,
@@ -639,6 +643,7 @@ fn lowers_self_return_in_class_scope_with_clone() {
 fn does_not_lower_non_leaf_return_with_option_return_context() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Call {
+            mutable_arg_places: Vec::new(),
             func: "value".to_string(),
             args: vec![],
             ty: Type::Int,

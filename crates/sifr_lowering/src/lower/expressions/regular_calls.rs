@@ -153,7 +153,41 @@ pub(super) fn lower_regular_call(
             }
             // Borrow/MutBorrow: no move, variable remains usable
         }
+        let signature = sifr_type_system::FunctionType {
+            receiver: None,
+            params: param_types
+                .iter()
+                .enumerate()
+                .map(|(index, ty)| {
+                    (
+                        format!("arg{index}"),
+                        ty.clone(),
+                        conventions
+                            .get(index)
+                            .copied()
+                            .unwrap_or(ParamConvention::borrow()),
+                    )
+                })
+                .collect(),
+            return_type: Box::new(ret_type.clone()),
+        };
+        let ranges = call
+            .arguments
+            .args
+            .iter()
+            .map(|arg| Some(arg.range()))
+            .collect::<Vec<_>>();
+        let mutable_arg_places =
+            super::super::method_receiver_places::validate_regular_call_arguments(
+                &args,
+                &signature,
+                &ranges,
+                call.range(),
+                &func_name,
+                ctx,
+            );
         return Some(HirExpr::Call {
+            mutable_arg_places,
             func: func_name,
             args,
             ty: if is_async_callable {
@@ -192,6 +226,8 @@ pub(super) fn lower_regular_call(
             method: "__call__".to_string(),
             args,
             receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+            receiver_target: None,
+            mutable_arg_places: Vec::new(),
             source: Some(
                 super::super::method_call_metadata::source_call_with_receiver(
                     call,
@@ -275,6 +311,7 @@ pub(super) fn lower_regular_call(
             vec![HirExpr::NoneLiteral, lowered_arg]
         } else if matches!(lowered_arg.ty().resolve_alias(), Type::Str) {
             let iterable_arg = HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "list".to_string(),
                 args: vec![lowered_arg],
                 ty: Type::List(Box::new(Type::Str)),
@@ -334,6 +371,7 @@ pub(super) fn lower_regular_call(
             let ty = argument.ty().clone();
             let value = std::mem::replace(argument, HirExpr::NoneLiteral);
             *argument = HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "__sifr_python_present_argument".to_string(),
                 args: vec![value],
                 ty,
@@ -415,66 +453,14 @@ pub(super) fn lower_regular_call(
         }
     }
 
-    // Exclusivity check: enforce that the same variable is not passed as mut twice,
-    // or as both mut and immutable borrow in the same call.
-    {
-        let mut mut_borrowed: Vec<String> = Vec::new();
-        let mut immut_borrowed: Vec<String> = Vec::new();
-        for (i, arg) in args.iter().enumerate() {
-            if let HirExpr::Name { name, ty, .. } = arg {
-                if ty.ownership() == sifr_type_system::OwnershipKind::Move {
-                    let primary_range = arg_ranges
-                        .get(i)
-                        .copied()
-                        .flatten()
-                        .unwrap_or_else(|| call.range());
-                    let convention = ft
-                        .params
-                        .get(i)
-                        .map(|(_, _, c)| *c)
-                        .unwrap_or(ParamConvention::borrow());
-                    if convention.is_mut_borrow() {
-                        ctx.record_flow_effect(sifr_ir::FlowEffect::Borrow {
-                            binding: name.clone(),
-                            mutable: true,
-                        });
-                        if mut_borrowed.contains(name) {
-                            ownership_diagnostics::double_mutable_borrow(
-                                ctx,
-                                name,
-                                &func_name,
-                                primary_range,
-                            );
-                        } else if immut_borrowed.contains(name) {
-                            ownership_diagnostics::mutable_borrow_after_immutable(
-                                ctx,
-                                name,
-                                &func_name,
-                                primary_range,
-                            );
-                        }
-                        mut_borrowed.push(name.clone());
-                    } else if convention.is_shared_borrow() {
-                        ctx.record_flow_effect(sifr_ir::FlowEffect::Borrow {
-                            binding: name.clone(),
-                            mutable: false,
-                        });
-                        if mut_borrowed.contains(name) {
-                            ownership_diagnostics::immutable_borrow_after_mutable(
-                                ctx,
-                                name,
-                                &func_name,
-                                primary_range,
-                            );
-                        }
-                        immut_borrowed.push(name.clone());
-                    } else {
-                        // Ownership transfer, including `own mut`, does not create a borrow conflict.
-                    }
-                }
-            }
-        }
-    }
+    let mutable_arg_places = super::super::method_receiver_places::validate_regular_call_arguments(
+        &args,
+        &ft,
+        &arg_ranges,
+        call.range(),
+        &func_name,
+        ctx,
+    );
 
     // Track ownership: only mark arguments as moved when the parameter convention is Own
     // and the argument type is Move. Borrow and MutBorrow do not consume the value.
@@ -696,6 +682,7 @@ pub(super) fn lower_regular_call(
         })
     } else {
         Some(HirExpr::Call {
+            mutable_arg_places,
             func: func_name,
             args,
             ty: call_type,

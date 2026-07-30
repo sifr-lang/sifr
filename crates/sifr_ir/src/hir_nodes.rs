@@ -135,6 +135,43 @@ pub struct MethodCallSource {
     pub arg_ranges: Vec<TextRange>,
 }
 
+/// Stable identity of a field projection used by ownership-place analysis.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct FieldIdentity {
+    pub declaring_class: String,
+    pub field: String,
+}
+
+/// A projection from a binding root to checked storage.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum PlaceProjection {
+    Field(FieldIdentity),
+}
+
+/// A checked source storage place.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Place {
+    pub root: BindingId,
+    pub projections: Vec<PlaceProjection>,
+}
+
+/// Proven target shape for a mutable method receiver.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MutableReceiverTarget {
+    Place(Place),
+    OwnedTemporary,
+    /// Compiler-owned indexed container mutation with a separately audited
+    /// lowering. The base place is retained for exclusivity checks.
+    SpecializedIndexedStorage(Place),
+}
+
+/// Proven target shape for a mutable call argument.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MutableArgumentTarget {
+    Place(Place),
+    OwnedTemporary,
+}
+
 /// A function definition with resolved types.
 #[derive(Debug, Clone)]
 pub struct HirFunction {
@@ -616,6 +653,7 @@ pub enum HirExpr {
     Call {
         func: String,
         args: Vec<HirExpr>,
+        mutable_arg_places: Vec<Option<MutableArgumentTarget>>,
         ty: Type,
     },
     /// A typed call to a declaration-first Python wrapper.
@@ -640,6 +678,7 @@ pub enum HirExpr {
     IteratorCall {
         op: HirIteratorOp,
         args: Vec<HirExpr>,
+        mutable_arg_places: Vec<Option<MutableArgumentTarget>>,
         ty: Type,
     },
     /// Conditional expression (x if cond else y)
@@ -680,6 +719,8 @@ pub enum HirExpr {
         method: String,
         args: Vec<HirExpr>,
         receiver_convention: Option<ReceiverConvention>,
+        receiver_target: Option<MutableReceiverTarget>,
+        mutable_arg_places: Vec<Option<MutableArgumentTarget>>,
         source: Option<MethodCallSource>,
         ty: Type,
     },

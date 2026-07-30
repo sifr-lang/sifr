@@ -1,0 +1,14 @@
+# expect-error[col=31]: SIFR-OWN-0002
+class Helper:
+    items: list[int]
+
+    def append_count(self, count: int) -> None:
+        self.items.append(count)
+
+
+class Owner:
+    helper: Helper
+
+
+def conflict(mut owner: Owner) -> None:
+    owner.helper.append_count(len(owner.helper.items))

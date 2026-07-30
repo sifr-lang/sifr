@@ -1,0 +1,4 @@
+# expect-error[col=19]: SIFR-OWN-0002
+def main() -> None:
+    values: list[int] = [1, 2]
+    values.append(len(values))

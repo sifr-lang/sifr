@@ -212,6 +212,17 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             ["value", "type_name", "reason"]
         ),
     active_entry!(
+            "SIFR-OWN-0014",
+            "OWN",
+            "Unsupported mutable receiver place.",
+            Severity::Error,
+            "crates/sifr/tests/e2e/fail/unsupported_narrowed_optional_mutating_receiver.sifr",
+            "mutable method receiver {place} is not a supported storage place",
+            "sifr_lowering::lower::method_receiver_places",
+            [arg!("place")],
+            ["place"]
+        ),
+    active_entry!(
             "SIFR-FLOW-0001",
             "FLOW",
             "Break outside a loop.",
@@ -397,6 +408,28 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "sifr_lowering::lower::expressions",
             [arg!("type_name")],
             ["type_name"]
+        ),
+    active_entry!(
+            "SIFR-PROTO-0005",
+            "PROTO",
+            "Protocol receiver convention mismatch.",
+            Severity::Error,
+            "crates/sifr/tests/e2e/fail/protocol_receiver_mutability_mismatch.sifr",
+            "class '{class_name}' method '{method}' requires a mutable receiver but protocol '{protocol}' declares a shared receiver",
+            "sifr_lowering::lower::method_receiver_analysis",
+            [arg!("class_name"), arg!("method"), arg!("protocol")],
+            ["class_name", "method", "protocol"]
+        ),
+    active_entry!(
+            "SIFR-PROTO-0006",
+            "PROTO",
+            "Fixed Rust trait receiver mutation is unsupported.",
+            Severity::Error,
+            "crates/sifr/tests/e2e/fail/operator_receiver_mutation_rejected.sifr",
+            "method '{method}' cannot mutate its receiver because Rust trait '{trait_name}' fixes the receiver convention",
+            "sifr_lowering::lower::method_receiver_analysis",
+            [arg!("method"), arg!("trait_name")],
+            ["method", "trait_name"]
         ),
     active_entry!(
             "SIFR-CLASS-0001",

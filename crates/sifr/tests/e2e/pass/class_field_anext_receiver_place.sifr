@@ -1,0 +1,34 @@
+class StreamError(Error):
+    pass
+
+
+class CounterStream:
+    current: int
+    stop: int
+
+    async def anext(self) -> Result[Option[int], StreamError]:
+        if self.current >= self.stop:
+            return None
+        value: int = self.current
+        self.current += 1
+        item: Option[int] = value
+        return item
+
+
+class StreamOwner:
+    stream: CounterStream
+
+    async def take(self) -> Result[Option[int], StreamError]:
+        return await anext(self.stream)
+
+
+async def main() -> None:
+    owner: StreamOwner = StreamOwner(CounterStream(0, 2))
+    try:
+        first: Option[int] = await owner.take()
+        second: Option[int] = await owner.take()
+        assert first == 0
+        assert second == 1
+        assert owner.stream.current == 2
+    except StreamError:
+        assert False

@@ -46,6 +46,7 @@ fn test_structured_expr_path_handles_plain_signature_call_expression() {
                 return_type: Type::None,
                 body: vec![HirStmt::Expr {
                     expr: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "print".to_string(),
                         args: vec![HirExpr::StringLiteral("inner".to_string())],
                         ty: Type::None,
@@ -66,6 +67,7 @@ fn test_structured_expr_path_handles_plain_signature_call_expression() {
                 return_type: Type::None,
                 body: vec![HirStmt::Expr {
                     expr: HirExpr::Call {
+                        mutable_arg_places: Vec::new(),
                         func: "helper".to_string(),
                         args: vec![],
                         ty: Type::None,
@@ -118,7 +120,7 @@ fn test_structured_expr_path_handles_registry_method_call_expression() {
                     expr: HirExpr::MethodCall {
                         object: Box::new(HirExpr::Name {
                             name: "items".to_string(),
-                            binding_id: None,
+                            binding_id: Some(sifr_ir::BindingId(1)),
                             ty: list_ty,
                         }),
                         method: "clear".to_string(),
@@ -126,6 +128,13 @@ fn test_structured_expr_path_handles_registry_method_call_expression() {
                         receiver_convention: Some(
                             sifr_type_system::ReceiverConvention::MutableBorrow,
                         ),
+                        receiver_target: Some(sifr_ir::MutableReceiverTarget::Place(
+                            sifr_ir::Place {
+                                root: sifr_ir::BindingId(1),
+                                projections: Vec::new(),
+                            },
+                        )),
+                        mutable_arg_places: Vec::new(),
                         source: None,
                         ty: Type::None,
                     },
@@ -186,7 +195,7 @@ fn test_structured_with_context_manager_target_is_mutable_when_body_mutates_it()
                     expr: HirExpr::MethodCall {
                         object: Box::new(HirExpr::Name {
                             name: "out".to_string(),
-                            binding_id: None,
+                            binding_id: Some(sifr_ir::BindingId(2)),
                             ty: handle_ty,
                         }),
                         method: "write".to_string(),
@@ -194,6 +203,13 @@ fn test_structured_with_context_manager_target_is_mutable_when_body_mutates_it()
                         receiver_convention: Some(
                             sifr_type_system::ReceiverConvention::MutableBorrow,
                         ),
+                        receiver_target: Some(sifr_ir::MutableReceiverTarget::Place(
+                            sifr_ir::Place {
+                                root: sifr_ir::BindingId(2),
+                                projections: Vec::new(),
+                            },
+                        )),
+                        mutable_arg_places: vec![None],
                         source: None,
                         ty: Type::Int,
                     },
@@ -259,6 +275,8 @@ fn test_registry_dict_update_with_typed_literal_arg_lowers_to_extend() {
                         receiver_convention: Some(
                             sifr_type_system::ReceiverConvention::SharedBorrow,
                         ),
+                        receiver_target: None,
+                        mutable_arg_places: vec![None],
                         source: None,
                         ty: Type::None,
                     },
@@ -508,7 +526,7 @@ fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
     let generated = generate_rust_with_metadata(&module);
     assert!(generated
         .rust_source
-        .contains("let mut __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();"));
+        .contains("let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();"));
     assert!(generated
         .rust_source
         .contains("let Some(__indexed_char) = __sifr_chars_text.get(j as usize).map(|c| c.to_string()) else {"));
@@ -787,6 +805,7 @@ fn test_structured_stmt_path_handles_attribute_list_subscript_assign_inside_if()
                 ty: Type::Int,
             },
             value: HirExpr::Call {
+                mutable_arg_places: Vec::new(),
                 func: "str".to_string(),
                 args: vec![HirExpr::Name {
                     name: "url".to_string(),

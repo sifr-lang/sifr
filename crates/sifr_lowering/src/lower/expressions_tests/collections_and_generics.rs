@@ -532,7 +532,7 @@ pub(super) fn test_for_loop_lowers_through_iter_protocol_call() {
     };
     assert!(matches!(
         iter,
-        HirExpr::IteratorCall { op, args, ty }
+        HirExpr::IteratorCall { op, args, ty, .. }
             if op == &crate::hir_nodes::HirIteratorOp::Iter
                 && args.len() == 1
                 && matches!(ty, Type::Iterator(_))

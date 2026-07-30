@@ -428,6 +428,17 @@ mod tests {
     }
 
     #[test]
+    fn test_dict_string_literal_index_narrows_after_membership_guard() {
+        let result = lower_source(
+            "def main():\n    table: dict[str, list[int]] = {}\n    table[\"a\"] = [1, 2]\n    if \"a\" in table:\n        table[\"a\"].append(3)\n        table[\"a\"].pop()\n",
+        );
+        assert!(
+            result.is_ok(),
+            "string-literal dict indexes should narrow under the matching membership guard"
+        );
+    }
+
+    #[test]
     fn test_dict_index_narrows_after_keys_membership_guard_with_expression_key() {
         let result = lower_source(
             "def main():\n    table: dict[int, int] = {1: 10}\n    base: int = 0\n    if base + 1 in table.keys():\n        value: int = table[base + 1]\n",

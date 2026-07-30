@@ -590,41 +590,6 @@ pub(crate) fn collect_string_concat_parts<'a>(expr: &'a HirExpr, parts: &mut Vec
     parts.push(expr);
 }
 
-/// Check if a method body contains any field assignments or attribute augmented assignments (self.field = ... or self.field += ...).
-pub(crate) fn body_contains_field_assign_codegen(stmts: &[HirStmt]) -> bool {
-    let found = std::cell::Cell::new(false);
-    let mut on_stmt = |stmt: &HirStmt| {
-        if matches!(
-            stmt,
-            HirStmt::FieldAssign { .. }
-                | HirStmt::NestedFieldAssign { .. }
-                | HirStmt::AttributeAugAssign { .. }
-                | HirStmt::AttributeNestedSubscriptAssign { .. }
-                | HirStmt::AttributeSubscriptAssign { .. }
-        ) {
-            found.set(true);
-        } else if let HirStmt::TupleUnpack { targets, .. } = stmt {
-            if targets.iter().any(|target| {
-                matches!(target.binding, sifr_ir::HirTupleTargetBinding::Field { .. })
-            }) {
-                found.set(true);
-            }
-        }
-    };
-    let mut on_expr = |expr: &HirExpr| {
-        if !found.get() && is_self_field_mutating_method_call(expr) {
-            found.set(true);
-        }
-    };
-    traversal::walk_stmts(
-        stmts,
-        TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
-        &mut on_stmt,
-        &mut on_expr,
-    );
-    found.get()
-}
-
 /// Check if an expression contains a mutating method call on a self field (e.g., self.items.append(...)).
 pub(crate) fn expr_contains_self_field_mutation(expr: &HirExpr) -> bool {
     let mut found = false;

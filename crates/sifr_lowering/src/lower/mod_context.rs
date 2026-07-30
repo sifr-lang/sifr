@@ -40,6 +40,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) class_method_origins: HashMap<String, String>,
     /// Stable receiver binding assigned while each instance method scope is live.
     pub(in crate::lower) method_receiver_bindings: HashMap<String, BindingId>,
+    /// Source range of each locally declared class method name.
+    pub(in crate::lower) method_source_ranges: HashMap<String, TextRange>,
     /// Class name -> declaration metadata for sealed Python-backed identities.
     pub(in crate::lower) python_opaque_classes: HashMap<String, sifr_ir::PythonInteropDeclaration>,
     /// General affine must-use obligations keyed by their current owning binding.
@@ -192,6 +194,7 @@ impl LowerCtx {
             class_instance_methods: HashSet::new(),
             class_method_origins: HashMap::new(),
             method_receiver_bindings: HashMap::new(),
+            method_source_ranges: HashMap::new(),
             python_opaque_classes: HashMap::new(),
             live_must_use_bindings: HashMap::new(),
             python_consuming_methods: HashSet::new(),
