@@ -1641,6 +1641,25 @@ Validation evidence to date:
   tests pass with 65 generated-build tests intentionally ignored. The
   implementation remains responsibility-split at 665 lines for offline policy,
   219 for cfg-aware visitation, and 200 for module-graph traversal.
+- [Opus round 6](../../reviews/active/rust-interop-certification-13-review-round-6.md)
+  confirmed the literal round-5 inline-path fix and all optional hardening,
+  independently reproduced 449/65 driver tests, both mandatory tests, the
+  10/10 area, and every lint/guardrail gate. It returned `NOT SATISFIED`
+  because explicit paths declared from a non-`mod.rs` file incorrectly used
+  that file module's pending relative directory as their base.
+- The round-6 fix models Rust module lookup with a declaration directory plus
+  an optional pending flat-module-relative component. Ordinary child lookup
+  consumes both pieces, while explicit `#[path]` lookup deliberately ignores
+  the pending component. Unit coverage proves all three affected layouts in
+  both directions: a redirected file module, a redirected inline module, and
+  children of a path-loaded file. The mandatory generated backend installs
+  the same three layouts in its real `backend.rs`; their never-compiled
+  default-directory queries are ignored and the clean control reaches Cargo.
+- After the round-6 fixes, 13 focused SQLx tests, all 450 non-generated driver
+  tests, and the strengthened `.env`-armed negative pass; 65 generated-build
+  tests remain intentionally ignored. The implementation remains
+  responsibility-split at 665 lines for offline policy, 219 for cfg-aware
+  visitation, and 235 for module-graph traversal.
 
 ### certification_14: Track A Closeout and Stable Gate
 

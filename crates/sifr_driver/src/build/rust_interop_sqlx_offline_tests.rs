@@ -278,6 +278,65 @@ mod redirected_gated;
 }
 
 #[test]
+fn explicit_paths_from_file_modules_follow_rust_directory_rules() {
+    let fixture = SqlxFixture::new();
+    fixture.write_source("mod outer;\n");
+    fixture.write_rust_file(
+        "src/outer.rs",
+        r#"
+#[path = "direct.rs"]
+mod direct;
+
+#[path = "alt_inline"]
+mod inline_redirected {
+    mod child;
+}
+
+#[path = "loaded.rs"]
+mod loaded;
+"#,
+    );
+
+    fixture.write_rust_file(
+        "src/direct.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 13\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/outer/direct.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 90\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/alt_inline/child.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 14\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/outer/alt_inline/child.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 91\"); }\n",
+    );
+    fixture.write_rust_file("src/loaded.rs", "mod child;\n");
+    fixture.write_rust_file(
+        "src/child.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 15\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/loaded/child.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 92\"); }\n",
+    );
+
+    let crate_names = sqlx_dependency_crate_names(&fixture.0).expect("manifest should parse");
+    let expected = vec![
+        "SELECT 13".to_string(),
+        "SELECT 14".to_string(),
+        "SELECT 15".to_string(),
+    ];
+    assert_eq!(collect_sqlx_queries(&fixture.0, &crate_names), expected);
+    for query in expected {
+        fixture.write_metadata_for(&query, &query);
+    }
+    assert_eq!(validate_sqlx_offline_metadata(&fixture.0), Ok(()));
+}
+
+#[test]
 fn cargo_entrypoint_selection_follows_lib_path_then_main_fallback() {
     let library_fixture = SqlxFixture::new();
     library_fixture.write_manifest(

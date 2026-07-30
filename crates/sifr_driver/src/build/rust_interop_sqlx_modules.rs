@@ -13,12 +13,15 @@ pub(super) fn reachable_rust_modules(backend_root: &Path) -> Vec<syn::File> {
     let Some(canonical_root) = fs::canonicalize(backend_root).ok() else {
         return Vec::new();
     };
-    let entry_module_dir = entry_path
+    let entry_dir_path = entry_path
         .parent()
         .map_or_else(|| backend_root.to_path_buf(), Path::to_path_buf);
     let mut pending = vec![PendingModule {
         source_path: entry_path,
-        module_dir: entry_module_dir,
+        directory: ModuleDirectory {
+            dir_path: entry_dir_path,
+            relative: None,
+        },
     }];
     let mut visited = BTreeSet::new();
     let mut modules = Vec::new();
@@ -39,7 +42,7 @@ pub(super) fn reachable_rust_modules(backend_root: &Path) -> Vec<syn::File> {
         if has_conditional_compilation_attribute(&syntax.attrs) {
             continue;
         }
-        collect_declared_modules(&syntax.items, &module.module_dir, &mut pending);
+        collect_declared_modules(&syntax.items, &module.directory, &mut pending);
         modules.push(syntax);
     }
     modules
@@ -47,7 +50,21 @@ pub(super) fn reachable_rust_modules(backend_root: &Path) -> Vec<syn::File> {
 
 struct PendingModule {
     source_path: PathBuf,
-    module_dir: PathBuf,
+    directory: ModuleDirectory,
+}
+
+struct ModuleDirectory {
+    dir_path: PathBuf,
+    relative: Option<PathBuf>,
+}
+
+impl ModuleDirectory {
+    fn plain_base(&self) -> PathBuf {
+        self.relative.as_ref().map_or_else(
+            || self.dir_path.clone(),
+            |relative| self.dir_path.join(relative),
+        )
+    }
 }
 
 fn crate_entry_path(backend_root: &Path) -> Option<PathBuf> {
@@ -86,7 +103,11 @@ fn is_regular_file(path: &Path) -> bool {
         .is_ok_and(|metadata| metadata.is_file() && !metadata.file_type().is_symlink())
 }
 
-fn collect_declared_modules(items: &[Item], module_dir: &Path, pending: &mut Vec<PendingModule>) {
+fn collect_declared_modules(
+    items: &[Item],
+    directory: &ModuleDirectory,
+    pending: &mut Vec<PendingModule>,
+) {
     for item in items {
         let Item::Mod(module) = item else {
             continue;
@@ -95,39 +116,64 @@ fn collect_declared_modules(items: &[Item], module_dir: &Path, pending: &mut Vec
             continue;
         }
         if let Some((_, nested_items)) = &module.content {
-            let nested_module_dir = declared_path(module).map_or_else(
-                || module_dir.join(module.ident.to_string()),
-                |path| module_dir.join(path),
+            let dir_path = declared_path(module).map_or_else(
+                || directory.plain_base().join(module.ident.to_string()),
+                |path| directory.dir_path.join(path),
             );
-            collect_declared_modules(nested_items, &nested_module_dir, pending);
+            collect_declared_modules(
+                nested_items,
+                &ModuleDirectory {
+                    dir_path,
+                    relative: None,
+                },
+                pending,
+            );
             continue;
         }
-        if let Some(module) = resolve_declared_module(module, module_dir) {
+        if let Some(module) = resolve_declared_module(module, directory) {
             pending.push(module);
         }
     }
 }
 
-fn resolve_declared_module(module: &ItemMod, module_dir: &Path) -> Option<PendingModule> {
+fn resolve_declared_module(module: &ItemMod, directory: &ModuleDirectory) -> Option<PendingModule> {
     if let Some(path) = declared_path(module) {
-        let source_path = module_dir.join(path);
-        let child_dir = module_dir_for_explicit_path(&source_path);
+        let source_path = directory.dir_path.join(path);
+        let dir_path = source_path
+            .parent()
+            .map_or_else(PathBuf::new, Path::to_path_buf);
         return Some(PendingModule {
             source_path,
-            module_dir: child_dir,
+            directory: ModuleDirectory {
+                dir_path,
+                relative: None,
+            },
         });
     }
     let module_name = module.ident.to_string();
-    let flat = module_dir.join(format!("{module_name}.rs"));
-    let nested = module_dir.join(&module_name).join("mod.rs");
-    let source_path = match (is_regular_file(&flat), is_regular_file(&nested)) {
-        (true, false) => flat,
-        (false, true) => nested,
+    let base = directory.plain_base();
+    let flat = base.join(format!("{module_name}.rs"));
+    let nested = base.join(&module_name).join("mod.rs");
+    let (source_path, directory) = match (is_regular_file(&flat), is_regular_file(&nested)) {
+        (true, false) => (
+            flat,
+            ModuleDirectory {
+                dir_path: base,
+                relative: Some(PathBuf::from(module_name)),
+            },
+        ),
+        (false, true) => (
+            nested,
+            ModuleDirectory {
+                dir_path: base.join(module_name),
+                relative: None,
+            },
+        ),
         _ => return None,
     };
     Some(PendingModule {
         source_path,
-        module_dir: module_dir.join(module_name),
+        directory,
     })
 }
 
@@ -147,17 +193,6 @@ fn declared_path(module: &ItemMod) -> Option<PathBuf> {
         };
         Some(PathBuf::from(path.value()))
     })
-}
-
-fn module_dir_for_explicit_path(source_path: &Path) -> PathBuf {
-    let parent = source_path.parent().unwrap_or_else(|| Path::new(""));
-    if source_path.file_name().is_some_and(|name| name == "mod.rs") {
-        return parent.to_path_buf();
-    }
-    let stem = source_path
-        .file_stem()
-        .map_or_else(PathBuf::new, PathBuf::from);
-    parent.join(stem)
 }
 
 pub(super) fn has_conditional_compilation_attribute(attrs: &[Attribute]) -> bool {

@@ -9,6 +9,7 @@ const BACKEND_NEGATIVE: &str = include_str!(
 const SQLX_QUERY_FILE: &str =
     ".sqlx/query-f2d6fe08dd19c716c98c45307c0649a03c0bf6d52c5d16c2375913d7a0f2f508.json";
 const BACKEND_MODULE_SOURCE: &str = "src/bridges/mod.rs";
+const BACKEND_IMPLEMENTATION_SOURCE: &str = "src/bridges/backend.rs";
 const CFG_GATED_QUERY_SOURCE: &str = "src/bridges/cfg_gated_sqlx_regression.rs";
 const INLINE_PATH_COMPILED_SOURCE: &str = "src/bridges/alt_inline/child.rs";
 const INLINE_PATH_DEFAULT_SOURCE: &str = "src/bridges/inline_redirected/child.rs";
@@ -197,6 +198,65 @@ fn query_without_offline_metadata() {
         "fn query_never_compiled() { let _ = sqlx::query!(\"SELECT 98::INT4 AS value\"); }\n",
     )
     .expect("never-compiled inline module sibling should be installed");
+
+    let backend_path = package_root.join(BACKEND_IMPLEMENTATION_SOURCE);
+    let mut backend =
+        std::fs::read_to_string(&backend_path).expect("backend source should be readable");
+    backend.push_str(
+        r#"
+
+#[path = "direct_path_regression.rs"]
+mod direct_path_regression;
+
+#[path = "file_inline_alt"]
+mod file_inline_redirected {
+    mod child;
+}
+
+#[path = "loaded_path_regression.rs"]
+mod loaded_path_regression;
+"#,
+    );
+    std::fs::write(backend_path, backend).expect("file-module path regressions should be declared");
+    for (relative_path, source) in [
+        (
+            "src/bridges/direct_path_regression.rs",
+            "pub fn compiled_direct() {}\n",
+        ),
+        (
+            "src/bridges/backend/direct_path_regression.rs",
+            "fn query_never_compiled() { let _ = sqlx::query!(\"SELECT 97::INT4 AS value\"); }\n",
+        ),
+        (
+            "src/bridges/file_inline_alt/child.rs",
+            "pub fn compiled_inline_child() {}\n",
+        ),
+        (
+            "src/bridges/backend/file_inline_alt/child.rs",
+            "fn query_never_compiled() { let _ = sqlx::query!(\"SELECT 96::INT4 AS value\"); }\n",
+        ),
+        (
+            "src/bridges/loaded_path_regression.rs",
+            "mod loaded_path_child;\n",
+        ),
+        (
+            "src/bridges/loaded_path_child.rs",
+            "pub fn compiled_loaded_child() {}\n",
+        ),
+        (
+            "src/bridges/loaded_path_regression/loaded_path_child.rs",
+            "fn query_never_compiled() { let _ = sqlx::query!(\"SELECT 95::INT4 AS value\"); }\n",
+        ),
+    ] {
+        let source_path = package_root.join(relative_path);
+        std::fs::create_dir_all(
+            source_path
+                .parent()
+                .expect("path regression source should have a parent"),
+        )
+        .expect("path regression source directory should be installed");
+        std::fs::write(source_path, source).expect("path regression source should be installed");
+    }
 }
 
 fn assert_database_sentinel_unused(listener: &std::net::TcpListener) {

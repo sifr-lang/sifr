@@ -1222,11 +1222,14 @@ dependency-table-aware preflight validates recognized fully qualified,
 crate-aliased, directly imported, inline-literal, and query-file macro forms
 against the same package/workspace search order. Source discovery follows the
 declared module graph from the Cargo library entry (or main entry when no
-library exists), including active `#[path]` redirects; gated file modules and
-orphan targets are not preflighted. `cfg`-gated subtrees, `cfg_attr` that may
-add a `cfg`, `.env`-declared `SQLX_OFFLINE_DIR` policy, and syntax outside that
-conservative recognizer fall through to offline Cargo as the authority instead
-of becoming a false Sifr diagnostic. Workspace-root resolution is memoized
+library exists), including active `#[path]` redirects. Module lookup retains
+Rust's separate declaration-directory and pending flat-module-relative state,
+so explicit paths remain anchored to the declaring file's directory while
+ordinary child modules use the pending module directory. Gated file modules
+and orphan targets are not preflighted. `cfg`-gated subtrees, `cfg_attr` that
+may add a `cfg`, `.env`-declared `SQLX_OFFLINE_DIR` policy, and syntax outside
+that conservative recognizer fall through to offline Cargo as the authority
+instead of becoming a false Sifr diagnostic. Workspace-root resolution is memoized
 outside the subprocess lock with ancestor-manifest fingerprints, so long-lived
 drivers invalidate the memo when workspace declarations change.
 Symlinked or package-escaping module sources and module declarations inside
