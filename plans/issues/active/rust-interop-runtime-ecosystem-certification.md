@@ -1503,7 +1503,7 @@ Validation evidence to date:
   pass. The completion-time resource gate now also accepts zero deferrals
   while retaining the rule that only passing supported stdlib-core rows may
   authorize retained compiler surfaces.
-- All 446 non-generated driver tests pass with 65 generated-build tests
+- All 447 non-generated driver tests pass with 65 generated-build tests
   intentionally ignored. Production `sifr_driver` Clippy, workspace rustfmt,
   TypeScript-Go transfer inventory, HIR/driver maintainability, 900-line
   file-size, and diff-hygiene guardrails pass.
@@ -1546,20 +1546,45 @@ Validation evidence to date:
   workspace-root SQLx caches, and final-build cache identity did not yet
   combine non-entrypoint bridge backend roots.
 - The round-2 fixes arm the database sentinel through the backend package's
-  `.env`, which SQLx reads across path-dependency builds. The valid control and
-  both mutations pass without a connection only because Sifr forces
-  `SQLX_OFFLINE=true`; inherited `DATABASE_URL` removal remains directly
-  asserted on the compiler Cargo command. Metadata resolution now matches
+  `.env`, which SQLx reads across path-dependency builds. The valid control
+  reaches and passes Cargo without a connection because Sifr forces
+  `SQLX_OFFLINE=true`; the missing and stale mutations are rejected by the
+  preflight before Cargo starts. Inherited `DATABASE_URL` removal remains
+  directly asserted on the compiler Cargo command. Metadata resolution matches
   package-root then Cargo-workspace-root lookup, disengages for explicit
-  `SQLX_OFFLINE_DIR`, handles workspace dependency renames, and combines every
-  resolved bridge backend's metadata into a
-  dedicated final-build cache field. The preflight no longer rejects hash
+  `.env`-declared `SQLX_OFFLINE_DIR`, handles workspace dependency renames, and
+  combines every resolved bridge backend's metadata into a dedicated
+  final-build cache field. The preflight no longer rejects hash
   fields that SQLx accepts, stale-query diagnostics name the actual mismatch,
   and null metadata descriptions fail validation without a traceback.
 - After the round-2 fixes, the positive mandatory test passed in 46.39 seconds
   and the real `.env`-armed missing/stale negative passed in 44.78 seconds.
   Nine focused SQLx tests, 932 codegen tests, 446 non-generated driver tests,
   and all 229 fixture mutations pass.
+- [Opus round 3](../../reviews/active/rust-interop-certification-13-review-round-3.md)
+  confirmed every round-2 required fix, including the load-bearing `.env`
+  sentinel counterfactual, workspace-root metadata lookup, multi-backend
+  final-build cache identity, dedicated SQLx digest field, SQLx-compatible
+  hash behavior, and clean null-description validation. It independently
+  reproduced 446/65 driver tests, 932 codegen tests, both mandatory tests, the
+  10/10 area, inventories, lint, formatting, and guardrails. It returned
+  `NOT SATISFIED` because the preflight still demanded metadata for
+  `cfg`-disabled query sites that Cargo never compiles.
+- The round-3 fix makes every `cfg`/`cfg_attr`-gated module, item, associated
+  item, statement, expression, and match arm fall through to offline Cargo.
+  Unit coverage pins test-only modules/functions, a disabled feature, a
+  `cfg_attr`, gated statements, and an associated method; the mandatory
+  `.env`-armed negative test also injects an unprepared `#[cfg(test)]` query
+  and passes end to end. Ambient `SQLX_OFFLINE_DIR` no longer drops default
+  `.sqlx` roots from cache identity, workspace resolution no longer uses a
+  process-lifetime memo, no-SQLx roots avoid `cargo metadata`, sentinel wording
+  now attributes the load-bearing proof only to the valid Cargo control, and
+  the direct-read inventory contains only current references.
+- After the round-3 fixes, 10 focused SQLx tests, 447 non-generated driver
+  tests, the 10/10 Rust-interop area with 229 mutation cases, workspace Clippy,
+  formatting, file-size, TypeScript-Go inventory, resource-gate, and diff
+  checks pass. The cold `.env`-armed negative test, including its cfg-gated
+  regression, passed in 195.61 seconds.
 
 ### certification_14: Track A Closeout and Stable Gate
 

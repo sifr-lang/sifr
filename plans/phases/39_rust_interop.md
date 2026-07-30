@@ -348,11 +348,12 @@ Backend/service certification is implemented as exact-pinned
 macro from checked-in metadata, and completes deterministic shutdown. Sifr
 forces SQLx offline compilation, removes inherited `DATABASE_URL`, and binds
 package/workspace `.sqlx/` directories for every resolved bridge backend into
-probe and final-build cache identities. The fixture supplies no SQLx offline
-override; its negative test deliberately exposes an armed loopback
+probe and final-build cache identities under the default SQLx cache search.
+The fixture supplies no SQLx offline override; its negative test deliberately
+exposes an armed loopback
 `DATABASE_URL` through the backend package `.env`, which makes the compiler's
-offline forcing load-bearing. The valid control and missing/stale mutations
-complete without a connection, and invalid metadata is rejected as
+offline forcing load-bearing when the valid control reaches Cargo. The
+missing/stale mutations are rejected before Cargo is spawned as
 `SIFR-RUST-CARGO-0001`. This remains package-model certification, not
 product-level web framework support.
 

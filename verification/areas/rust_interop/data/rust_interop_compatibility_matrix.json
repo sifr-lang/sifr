@@ -403,7 +403,7 @@
       "required_crates": ["axum", "tower-http", "sqlx"],
       "positive_evidence": {"id": "backend_probe_coverage", "status": "passing"},
       "negative_evidence": {"id": "sqlx_without_offline_artifacts", "status": "passing"},
-      "notes": "Exact-pinned generated package evidence executes a hermetic Axum loopback, observes tower-http response middleware, and compiles a SQLx query macro from checked-in offline metadata. Sifr forces SQLX_OFFLINE, removes inherited DATABASE_URL, includes package/workspace .sqlx roots for every resolved bridge backend in probe and generated-build cache identity, and rejects missing or stale metadata as SIFR-RUST-CARGO-0001. A backend-package .env deliberately exposes an armed DATABASE_URL, making the no-connection proof load-bearing. This bridge-scoped claim does not imply product-level web framework support."
+      "notes": "Exact-pinned generated package evidence executes a hermetic Axum loopback, observes tower-http response middleware, and compiles a SQLx query macro from checked-in offline metadata. Sifr forces SQLX_OFFLINE, removes inherited DATABASE_URL, and under the default SQLx cache search includes package/workspace .sqlx roots for every resolved bridge backend in probe and generated-build cache identity. A backend-package .env deliberately exposes an armed DATABASE_URL; the valid control reaches Cargo without connecting, making the offline forcing load-bearing. Missing or stale metadata is rejected before Cargo starts as SIFR-RUST-CARGO-0001. This bridge-scoped claim does not imply product-level web framework support."
     },
     {
       "id": "ecosystem_cli_certification",

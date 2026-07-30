@@ -8,6 +8,7 @@ const BACKEND_NEGATIVE: &str = include_str!(
 );
 const SQLX_QUERY_FILE: &str =
     ".sqlx/query-f2d6fe08dd19c716c98c45307c0649a03c0bf6d52c5d16c2375913d7a0f2f508.json";
+const BACKEND_RUST_SOURCE: &str = "src/bridges/backend.rs";
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
@@ -49,6 +50,7 @@ fn test_build_backend_loopback_and_sqlx_offline_metadata() {
 #[doc = "sifr-evidence: executes-compiler-diagnostic"]
 fn test_check_missing_and_stale_sqlx_offline_metadata_rejected_before_network() {
     let package_root = copied_backend_scenario("rust_interop_backend_sqlx_negative");
+    install_cfg_gated_query_regression(&package_root);
     let listener = configure_dotenv_database_sentinel(&package_root);
     install_evidence_source(&package_root, BACKEND_NEGATIVE);
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "backend-feature-package");
@@ -142,6 +144,24 @@ fn configure_dotenv_database_sentinel(package_root: &Path) -> std::net::TcpListe
     )
     .expect("database sentinel dotenv should be installed");
     listener
+}
+
+fn install_cfg_gated_query_regression(package_root: &Path) {
+    let source_path = package_root.join(BACKEND_RUST_SOURCE);
+    let mut source =
+        std::fs::read_to_string(&source_path).expect("backend Rust source should be readable");
+    source.push_str(
+        r#"
+
+#[cfg(test)]
+mod cfg_gated_sqlx_regression {
+    fn query_without_offline_metadata() {
+        let _ = sqlx::query!("SELECT 99::INT4 AS value");
+    }
+}
+"#,
+    );
+    std::fs::write(source_path, source).expect("cfg-gated SQLx regression should be installed");
 }
 
 fn assert_database_sentinel_unused(listener: &std::net::TcpListener) {

@@ -8,11 +8,13 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::sync::{Mutex, OnceLock};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::visit::Visit;
-use syn::{Expr, Item, ItemUse, LitStr, Macro, Token, Type, UseTree};
+use syn::{
+    Arm, Attribute, Expr, ForeignItem, ImplItem, Item, ItemUse, LitStr, Macro, Stmt, Token,
+    TraitItem, Type, UseTree,
+};
 
 const INLINE_QUERY_MACROS: &[&str] = &[
     "query",
@@ -199,12 +201,13 @@ fn workspace_dependency_packages(backend_root: &Path) -> BTreeMap<String, String
 }
 
 fn sqlx_metadata_roots(backend_root: &Path) -> Option<Vec<PathBuf>> {
-    if std::env::var_os("SQLX_OFFLINE_DIR").is_some()
-        || dotenv_defines_offline_dir(&backend_root.join(".env"))
-    {
+    if dotenv_defines_offline_dir(&backend_root.join(".env")) {
         return None;
     }
     let mut roots = vec![backend_root.join(".sqlx")];
+    if !backend_may_resolve_sqlx_metadata(backend_root) {
+        return Some(roots);
+    }
     if let Some(workspace_root) = cargo_workspace_root(backend_root) {
         let workspace_metadata = workspace_root.join(".sqlx");
         if !roots.contains(&workspace_metadata) {
@@ -212,6 +215,49 @@ fn sqlx_metadata_roots(backend_root: &Path) -> Option<Vec<PathBuf>> {
         }
     }
     Some(roots)
+}
+
+fn backend_may_resolve_sqlx_metadata(backend_root: &Path) -> bool {
+    if backend_root.join(".sqlx").is_dir() {
+        return true;
+    }
+    let Ok(source) = fs::read_to_string(backend_root.join("Cargo.toml")) else {
+        return false;
+    };
+    let Ok(table) = source.parse::<toml::Table>() else {
+        return false;
+    };
+    if dependency_table_may_resolve_sqlx(table.get("dependencies")) {
+        return true;
+    }
+    table
+        .get("target")
+        .and_then(toml::Value::as_table)
+        .is_some_and(|targets| {
+            targets
+                .values()
+                .filter_map(toml::Value::as_table)
+                .any(|target| dependency_table_may_resolve_sqlx(target.get("dependencies")))
+        })
+}
+
+fn dependency_table_may_resolve_sqlx(dependencies: Option<&toml::Value>) -> bool {
+    dependencies
+        .and_then(toml::Value::as_table)
+        .is_some_and(|dependencies| {
+            dependencies.iter().any(|(alias, specification)| {
+                if alias == "sqlx" {
+                    return true;
+                }
+                specification.as_table().is_some_and(|specification| {
+                    specification.get("package").and_then(toml::Value::as_str) == Some("sqlx")
+                        || specification
+                            .get("workspace")
+                            .and_then(toml::Value::as_bool)
+                            .is_some_and(|workspace| workspace)
+                })
+            })
+        })
 }
 
 fn dotenv_defines_offline_dir(path: &Path) -> bool {
@@ -227,16 +273,6 @@ fn dotenv_defines_offline_dir(path: &Path) -> bool {
 }
 
 fn cargo_workspace_root(backend_root: &Path) -> Option<PathBuf> {
-    static ROOTS: OnceLock<Mutex<BTreeMap<PathBuf, Option<PathBuf>>>> = OnceLock::new();
-    let roots = ROOTS.get_or_init(|| Mutex::new(BTreeMap::new()));
-    if let Ok(mut roots) = roots.lock() {
-        if let Some(root) = roots.get(backend_root) {
-            return root.clone();
-        }
-        let root = resolve_cargo_workspace_root(backend_root);
-        roots.insert(backend_root.to_path_buf(), root.clone());
-        return root;
-    }
     resolve_cargo_workspace_root(backend_root)
 }
 
@@ -332,6 +368,9 @@ fn collect_module_queries(
     let aliases = module_sqlx_aliases(items, sqlx_crates);
     for item in items {
         if let Item::Mod(module) = item {
+            if has_cfg_attribute(&module.attrs) {
+                continue;
+            }
             if let Some((_, nested_items)) = &module.content {
                 collect_module_queries(nested_items, backend_root, sqlx_crates, queries);
                 continue;
@@ -358,6 +397,9 @@ fn module_sqlx_aliases(items: &[Item], sqlx_crates: &BTreeSet<String>) -> SqlxAl
         macro_names: BTreeMap::new(),
     };
     for item in items {
+        if item_has_cfg_attribute(item) {
+            continue;
+        }
         match item {
             Item::ExternCrate(item) if sqlx_crates.contains(&item.ident.to_string()) => {
                 if let Some((_, rename)) = &item.rename {
@@ -436,6 +478,48 @@ struct SqlxQueryVisitor<'a> {
 }
 
 impl<'ast> Visit<'ast> for SqlxQueryVisitor<'_> {
+    fn visit_item(&mut self, node: &'ast Item) {
+        if !item_has_cfg_attribute(node) {
+            syn::visit::visit_item(self, node);
+        }
+    }
+
+    fn visit_stmt(&mut self, node: &'ast Stmt) {
+        if !stmt_has_cfg_attribute(node) {
+            syn::visit::visit_stmt(self, node);
+        }
+    }
+
+    fn visit_expr(&mut self, node: &'ast Expr) {
+        if !expr_has_cfg_attribute(node) {
+            syn::visit::visit_expr(self, node);
+        }
+    }
+
+    fn visit_arm(&mut self, node: &'ast Arm) {
+        if !has_cfg_attribute(&node.attrs) {
+            syn::visit::visit_arm(self, node);
+        }
+    }
+
+    fn visit_impl_item(&mut self, node: &'ast ImplItem) {
+        if !impl_item_has_cfg_attribute(node) {
+            syn::visit::visit_impl_item(self, node);
+        }
+    }
+
+    fn visit_trait_item(&mut self, node: &'ast TraitItem) {
+        if !trait_item_has_cfg_attribute(node) {
+            syn::visit::visit_trait_item(self, node);
+        }
+    }
+
+    fn visit_foreign_item(&mut self, node: &'ast ForeignItem) {
+        if !foreign_item_has_cfg_attribute(node) {
+            syn::visit::visit_foreign_item(self, node);
+        }
+    }
+
     fn visit_macro(&mut self, node: &'ast Macro) {
         if let Some(query) = sqlx_query_text(node, self.aliases, self.backend_root) {
             self.queries.push(query);
@@ -444,6 +528,127 @@ impl<'ast> Visit<'ast> for SqlxQueryVisitor<'_> {
     }
 
     fn visit_item_mod(&mut self, _node: &'ast syn::ItemMod) {}
+}
+
+fn has_cfg_attribute(attrs: &[Attribute]) -> bool {
+    attrs
+        .iter()
+        .any(|attribute| attribute.path().is_ident("cfg") || attribute.path().is_ident("cfg_attr"))
+}
+
+fn item_has_cfg_attribute(item: &Item) -> bool {
+    let attrs = match item {
+        Item::Const(item) => &item.attrs,
+        Item::Enum(item) => &item.attrs,
+        Item::ExternCrate(item) => &item.attrs,
+        Item::Fn(item) => &item.attrs,
+        Item::ForeignMod(item) => &item.attrs,
+        Item::Impl(item) => &item.attrs,
+        Item::Macro(item) => &item.attrs,
+        Item::Mod(item) => &item.attrs,
+        Item::Static(item) => &item.attrs,
+        Item::Struct(item) => &item.attrs,
+        Item::Trait(item) => &item.attrs,
+        Item::TraitAlias(item) => &item.attrs,
+        Item::Type(item) => &item.attrs,
+        Item::Union(item) => &item.attrs,
+        Item::Use(item) => &item.attrs,
+        Item::Verbatim(_) => return false,
+        _ => return true,
+    };
+    has_cfg_attribute(attrs)
+}
+
+fn stmt_has_cfg_attribute(stmt: &Stmt) -> bool {
+    match stmt {
+        Stmt::Local(local) => has_cfg_attribute(&local.attrs),
+        Stmt::Item(item) => item_has_cfg_attribute(item),
+        Stmt::Expr(expr, _) => expr_has_cfg_attribute(expr),
+        Stmt::Macro(stmt) => has_cfg_attribute(&stmt.attrs),
+    }
+}
+
+fn expr_has_cfg_attribute(expr: &Expr) -> bool {
+    let attrs = match expr {
+        Expr::Array(expr) => &expr.attrs,
+        Expr::Assign(expr) => &expr.attrs,
+        Expr::Async(expr) => &expr.attrs,
+        Expr::Await(expr) => &expr.attrs,
+        Expr::Binary(expr) => &expr.attrs,
+        Expr::Block(expr) => &expr.attrs,
+        Expr::Break(expr) => &expr.attrs,
+        Expr::Call(expr) => &expr.attrs,
+        Expr::Cast(expr) => &expr.attrs,
+        Expr::Closure(expr) => &expr.attrs,
+        Expr::Const(expr) => &expr.attrs,
+        Expr::Continue(expr) => &expr.attrs,
+        Expr::Field(expr) => &expr.attrs,
+        Expr::ForLoop(expr) => &expr.attrs,
+        Expr::Group(expr) => &expr.attrs,
+        Expr::If(expr) => &expr.attrs,
+        Expr::Index(expr) => &expr.attrs,
+        Expr::Infer(expr) => &expr.attrs,
+        Expr::Let(expr) => &expr.attrs,
+        Expr::Lit(expr) => &expr.attrs,
+        Expr::Loop(expr) => &expr.attrs,
+        Expr::Macro(expr) => &expr.attrs,
+        Expr::Match(expr) => &expr.attrs,
+        Expr::MethodCall(expr) => &expr.attrs,
+        Expr::Paren(expr) => &expr.attrs,
+        Expr::Path(expr) => &expr.attrs,
+        Expr::Range(expr) => &expr.attrs,
+        Expr::RawAddr(expr) => &expr.attrs,
+        Expr::Reference(expr) => &expr.attrs,
+        Expr::Repeat(expr) => &expr.attrs,
+        Expr::Return(expr) => &expr.attrs,
+        Expr::Struct(expr) => &expr.attrs,
+        Expr::Try(expr) => &expr.attrs,
+        Expr::TryBlock(expr) => &expr.attrs,
+        Expr::Tuple(expr) => &expr.attrs,
+        Expr::Unary(expr) => &expr.attrs,
+        Expr::Unsafe(expr) => &expr.attrs,
+        Expr::Verbatim(_) => return false,
+        Expr::While(expr) => &expr.attrs,
+        Expr::Yield(expr) => &expr.attrs,
+        _ => return true,
+    };
+    has_cfg_attribute(attrs)
+}
+
+fn impl_item_has_cfg_attribute(item: &ImplItem) -> bool {
+    let attrs = match item {
+        ImplItem::Const(item) => &item.attrs,
+        ImplItem::Fn(item) => &item.attrs,
+        ImplItem::Type(item) => &item.attrs,
+        ImplItem::Macro(item) => &item.attrs,
+        ImplItem::Verbatim(_) => return false,
+        _ => return true,
+    };
+    has_cfg_attribute(attrs)
+}
+
+fn trait_item_has_cfg_attribute(item: &TraitItem) -> bool {
+    let attrs = match item {
+        TraitItem::Const(item) => &item.attrs,
+        TraitItem::Fn(item) => &item.attrs,
+        TraitItem::Type(item) => &item.attrs,
+        TraitItem::Macro(item) => &item.attrs,
+        TraitItem::Verbatim(_) => return false,
+        _ => return true,
+    };
+    has_cfg_attribute(attrs)
+}
+
+fn foreign_item_has_cfg_attribute(item: &ForeignItem) -> bool {
+    let attrs = match item {
+        ForeignItem::Fn(item) => &item.attrs,
+        ForeignItem::Static(item) => &item.attrs,
+        ForeignItem::Type(item) => &item.attrs,
+        ForeignItem::Macro(item) => &item.attrs,
+        ForeignItem::Verbatim(_) => return false,
+        _ => return true,
+    };
+    has_cfg_attribute(attrs)
 }
 
 fn sqlx_query_text(node: &Macro, aliases: &SqlxAliases, backend_root: &Path) -> Option<String> {

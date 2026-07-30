@@ -1220,9 +1220,10 @@ directory digests for every resolved bridge backend are combined into both
 direct-probe and final generated-build cache identity. A
 dependency-table-aware preflight validates recognized fully qualified,
 crate-aliased, directly imported, inline-literal, and query-file macro forms
-against the same package/workspace search order. Explicit `SQLX_OFFLINE_DIR`
-policy and syntax outside that conservative recognizer fall through to
-offline Cargo as the authority instead of becoming a false Sifr diagnostic.
+against the same package/workspace search order. `cfg`/`cfg_attr`-gated
+subtrees, `.env`-declared `SQLX_OFFLINE_DIR` policy, and syntax outside that
+conservative recognizer fall through to offline Cargo as the authority instead
+of becoming a false Sifr diagnostic.
 
 ### CLI and Tooling Ecosystem Boundary
 
@@ -1261,10 +1262,11 @@ SHA-256 hash. Sifr forces `SQLX_OFFLINE=true` and removes inherited
 generated binaries; the fixture itself supplies no SQLx offline override. Its
 negative test places the armed loopback `DATABASE_URL` in the backend package
 `.env`, which SQLx reads even when Cargo builds that package as a dependency.
-The valid control and both independent missing-file/stale-query mutations are
-classified or completed without a connection, proving the forced offline
-environment is load-bearing. Package/workspace metadata roots across every
-resolved bridge backend invalidate warm probe/final-build cache identities.
+The valid control reaches Cargo without a connection, proving the forced
+offline environment is load-bearing. Independent missing-file and stale-query
+mutations are rejected by the preflight before Cargo is spawned.
+Package/workspace metadata roots across every resolved bridge backend
+invalidate warm probe/final-build cache identities.
 The supported claim is therefore limited to this bridge, exact crate graph,
 hermetic HTTP loopback, and compile-time SQLx metadata path. It does not claim
 arbitrary framework surfaces, a live database resource, or a Sifr web

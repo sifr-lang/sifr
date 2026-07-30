@@ -120,6 +120,64 @@ fn query() {
 }
 
 #[test]
+fn cfg_gated_queries_fall_through_to_cargo() {
+    let fixture = SqlxFixture::new();
+    fixture.write_source(
+        r#"
+fn active() {
+    let _ = sqlx::query!("SELECT 13");
+}
+
+#[cfg(test)]
+mod tests {
+    fn query() {
+        let _ = sqlx::query!("SELECT 91");
+    }
+}
+
+#[cfg(test)]
+fn test_only_query() {
+    let _ = sqlx::query!("SELECT 92");
+}
+
+#[cfg(feature = "mysql-variant")]
+fn disabled_feature_query() {
+    let _ = sqlx::query!("SELECT 93");
+}
+
+#[cfg_attr(any(), allow(dead_code))]
+fn cfg_attr_query() {
+    let _ = sqlx::query!("SELECT 96");
+}
+
+struct QueryHolder;
+
+impl QueryHolder {
+    #[cfg(test)]
+    fn test_only_query() {
+        let _ = sqlx::query!("SELECT 97");
+    }
+}
+
+fn gated_statements() {
+    #[cfg(test)]
+    let _ = sqlx::query!("SELECT 94");
+
+    #[cfg(feature = "mysql-variant")]
+    sqlx::query!("SELECT 95");
+}
+"#,
+    );
+    let crate_names = sqlx_dependency_crate_names(&fixture.0).expect("manifest should parse");
+    assert_eq!(
+        collect_sqlx_queries(&fixture.0, &crate_names),
+        vec!["SELECT 13".to_string()]
+    );
+    fixture.write_metadata_for(fixture.query(), fixture.query());
+    assert_eq!(validate_sqlx_offline_metadata(&fixture.0), Ok(()));
+}
+
+#[test]
 fn valid_checked_in_query_metadata_passes() {
     let fixture = SqlxFixture::new();
     fixture.write_metadata_for(fixture.query(), fixture.query());
