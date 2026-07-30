@@ -1,6 +1,7 @@
 use crate::{
     lower_module, HirExpr, HirFunction, HirModule, HirStmt, MutableReceiverTarget, PlaceProjection,
 };
+use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_parser::parse_module;
 use sifr_type_system::ReceiverConvention;
@@ -37,6 +38,14 @@ fn expression_method_call(function: &HirFunction) -> &HirExpr {
         .expect("method should contain an expression statement")
 }
 
+fn range_for(source: &str, needle: &str) -> TextRange {
+    let start = source.find(needle).expect("needle should occur");
+    TextRange::new(
+        TextSize::try_from(start).expect("test source offset fits"),
+        TextSize::try_from(start + needle.len()).expect("test source offset fits"),
+    )
+}
+
 #[test]
 fn constructor_self_use_requires_materialized_storage() {
     let source = r#"
@@ -53,12 +62,94 @@ class Deferred:
         Err(errors) => errors,
     };
 
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE)
+                && error
+                    .message
+                    .contains("before field storage is initialized: self.value")
+                && error
+                    .primary_range
+                    .is_some_and(|range| range.start() == range_for(source, "if flag:").start())
+                && matches!(
+                    error.args.get("place"),
+                    Some(sifr_diagnostics::DiagnosticArg::String(place)) if place == "self"
+                )
+        }),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn constructor_missing_parent_diagnostic_is_source_facing_and_statement_anchored() {
+    let source = r#"
+class Base:
+    value: int
+
+class Child(Base):
+    own: int
+
+    def __init__(self, own: int):
+        self.own = own
+        self.own += 1
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("constructor should be rejected"),
+        Err(errors) => errors,
+    };
+
     assert!(errors.iter().any(|error| {
         error.code == Some(DiagnosticCode::OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE)
-            && error
-                .message
-                .contains("before constructor storage initialization")
-            && error.message.contains("value")
+            && error.message.contains("call super().__init__(...) first")
+            && !error.message.contains("__sifr_parent")
+            && error.primary_range == Some(range_for(source, "self.own += 1"))
+            && matches!(
+                error.args.get("place"),
+                Some(sifr_diagnostics::DiagnosticArg::String(place)) if place == "self"
+            )
+    }));
+}
+
+#[test]
+fn constructor_same_named_parameter_remains_seeded_before_explicit_assignment() {
+    let source = r#"
+class Holder:
+    a: int
+    items: list[int]
+
+    def __init__(self, a: int):
+        self.items = []
+        self.items.append(1)
+        self.a = a
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    if let Err(errors) = lower_module(parsed.suite()) {
+        panic!("same-named constructor parameter should seed storage: {errors:?}");
+    }
+}
+
+#[test]
+fn constructor_mid_initialization_read_names_fields_and_statement() {
+    let source = r#"
+class Pair:
+    a: int
+    b: int
+
+    def __init__(self):
+        self.b = self.a + 1
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("constructor should be rejected"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE)
+            && error.message.contains("self.a, self.b")
+            && error.primary_range == Some(range_for(source, "self.b = self.a + 1"))
+            && !error.message.contains("__sifr_")
     }));
 }
 

@@ -8,9 +8,11 @@ implementation-readiness pass 7 returned `SATISFIED`. Item 1, canonical
 receiver metadata and inference, merged in
 [#3065](https://github.com/sifr-lang/sifr/pull/3065) after implementation
 review pass 2 returned `SATISFIED`. Item 2, checked place semantics and defect
-closure, completed authoritative local validation and is ready for its PR
-after implementation review pass 5 returned `SATISFIED`; implementation
-review passes 1 through 4 returned `NOT SATISFIED`. The remediation
+closure, is under PR
+[#3082](https://github.com/sifr-lang/sifr/pull/3082), and is undergoing
+exact-head remediation after PR review pass 6 returned `NOT SATISFIED`;
+implementation review pass 5 returned `SATISFIED` after passes 1 through 4
+returned `NOT SATISFIED`. The remediation
 restores non-cloning shared field receivers, checks delegated fixed-trait
 mutation after receiver convergence, makes owned temporary proof exhaustive,
 rejects storage-selecting conditionals and re-materialized module constants,
@@ -774,8 +776,8 @@ Current Item 2 validation evidence:
 
 - focused lowering, codegen, scope, optimizer, pass-fixture, and fail-fixture
   checks pass;
-- full lowering tests pass (`889 passed`, `1 ignored`), full codegen tests pass
-  (`933 passed`), the E2E pass suite passes (`680/680`, report signature
+- full lowering tests pass (`921 passed`, `1 ignored`), full codegen tests pass
+  (`941 passed`), the E2E pass suite passes (`680/680`, report signature
   `8871ba51135353a4`), and the E2E fail test
   passes with the complete annotated fail corpus;
 - formatting, workspace clippy with warnings denied, HIR maintainability,
@@ -791,10 +793,10 @@ Current Item 2 validation evidence:
   running local compiler, E2E, release, and benchmark jobs. The three affected
   exact-head cases were therefore remeasured in short uncontended windows and
   checked with the repository's official `check_budgets.py --allow-subset`
-  gate: project check `1339.235ms < 1357.524ms`, arithmetic check
-  `1328.513ms < 1334.139ms`, and JSON diagnostics
-  `1317.663ms < 1335.954ms`. The official subset checker passes. No budget,
-  baseline, sample count, threshold, or waiver was changed.
+  gate: project check `1339.235ms < 1357.524ms` (`5` samples), arithmetic
+  check `1328.513ms < 1334.139ms` (`5` samples), and JSON diagnostics
+  `1317.663ms < 1335.954ms` (`5` samples). The official subset checker passes.
+  No budget, baseline, sample count, threshold, or waiver was changed.
 
 ## Acceptance criteria
 
@@ -940,3 +942,10 @@ Current Item 2 validation evidence:
   validation evidence was independently reproduced, and no material
   correctness, ownership, constructor-initialization, codegen, optimizer,
   diagnostic, submodule, or test gap remains.
+- Item 2 exact-head PR review pass 6:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-6.md)
+  returned `NOT SATISFIED`; remediation corrects the validation ledger and
+  sample counts, gives constructor `SIFR-OWN-0014` a structured `place=self`
+  argument with source-facing field/parent guidance and the first offending
+  statement span, and keeps same-named constructor parameters available as
+  materialization seeds even when an explicit field assignment appears later.

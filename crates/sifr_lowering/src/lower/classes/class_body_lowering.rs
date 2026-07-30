@@ -606,19 +606,23 @@ pub(in crate::lower) fn lower_class(
                 lower_function_stmts(&func.body, &method_ft, ctx)
             };
             if method_name == "__init__" {
-                if let Some(missing) = constructor_uninitialized_storage_at_first_self_use(
+                if let Some(gap) = constructor_uninitialized_storage_at_first_self_use(
                     &body,
                     &own_fields,
                     &params,
-                    parent_class_name.is_some(),
+                    parent_class_name
+                        .as_deref()
+                        .is_some_and(|parent| parent != "NonSend"),
                 ) {
-                    ownership_diagnostics::unsupported_mutable_receiver_place(
+                    let range = func
+                        .body
+                        .get(gap.statement_index)
+                        .map_or_else(|| func.name.range(), Ranged::range);
+                    ownership_diagnostics::constructor_storage_unavailable(
                         ctx,
-                        &format!(
-                            "`self` before constructor storage initialization (missing {})",
-                            missing.join(", ")
-                        ),
-                        func.name.range(),
+                        &gap.missing_fields,
+                        gap.missing_parent,
+                        range,
                     );
                 }
             }

@@ -61,6 +61,16 @@ class OrderedOwner:
         self.count = n
 
 
+class ParameterSeededOwner:
+    count: int
+    values: list[int]
+
+    def __init__(self, count: int):
+        self.values = []
+        self.values.append(count)
+        self.count = count
+
+
 def main() -> None:
     owner = Owner()
     assert owner.total() == 10
@@ -69,3 +79,6 @@ def main() -> None:
     ordered = OrderedOwner(True, 4)
     assert ordered.values == [1, 2]
     assert ordered.count == 1
+    parameter_seeded = ParameterSeededOwner(5)
+    assert parameter_seeded.values == [5]
+    assert parameter_seeded.count == 5

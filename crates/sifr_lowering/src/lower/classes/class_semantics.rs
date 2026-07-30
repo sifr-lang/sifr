@@ -90,49 +90,32 @@ fn body_references_receiver(stmts: &[HirStmt]) -> bool {
     references_receiver
 }
 
-/// Return the fields that are still unavailable when constructor code first
-/// needs a materialized `self` place. `__sifr_parent` denotes a missing
-/// `super().__init__` result.
+/// Storage that is still unavailable when constructor code first needs a
+/// materialized `self` place.
+pub(in crate::lower) struct ConstructorStorageGap {
+    pub(in crate::lower) missing_fields: Vec<String>,
+    pub(in crate::lower) missing_parent: bool,
+    pub(in crate::lower) statement_index: usize,
+}
+
 pub(in crate::lower) fn constructor_uninitialized_storage_at_first_self_use(
     stmts: &[HirStmt],
     own_fields: &[(String, Type)],
     params: &[HirParam],
     requires_parent: bool,
-) -> Option<Vec<String>> {
+) -> Option<ConstructorStorageGap> {
     let required = own_fields
         .iter()
         .map(|(name, _)| name.clone())
         .collect::<HashSet<_>>();
-    let explicit_initializers = stmts
-        .iter()
-        .filter_map(|stmt| {
-            let HirStmt::FieldAssign {
-                object,
-                field,
-                value,
-                ..
-            } = stmt
-            else {
-                return None;
-            };
-            (object == "self"
-                && required.contains(field)
-                && !body_references_receiver(&[HirStmt::Expr {
-                    expr: value.clone(),
-                }]))
-            .then_some(field.clone())
-        })
-        .collect::<HashSet<_>>();
     let mut initialized = params
         .iter()
-        .filter(|param| {
-            required.contains(&param.name) && !explicit_initializers.contains(&param.name)
-        })
+        .filter(|param| required.contains(&param.name))
         .map(|param| param.name.clone())
         .collect::<HashSet<_>>();
     let mut parent_initialized = !requires_parent;
 
-    for stmt in stmts {
+    for (statement_index, stmt) in stmts.iter().enumerate() {
         if matches!(
             stmt,
             HirStmt::Expr {
@@ -152,7 +135,6 @@ pub(in crate::lower) fn constructor_uninitialized_storage_at_first_self_use(
         {
             if object == "self"
                 && required.contains(field)
-                && !initialized.contains(field)
                 && !body_references_receiver(&[HirStmt::Expr {
                     expr: value.clone(),
                 }])
@@ -168,10 +150,12 @@ pub(in crate::lower) fn constructor_uninitialized_storage_at_first_self_use(
                 .cloned()
                 .collect::<Vec<_>>();
             missing.sort();
-            if !parent_initialized {
-                missing.push("__sifr_parent".to_string());
-            }
-            return (!missing.is_empty()).then_some(missing);
+            let missing_parent = !parent_initialized;
+            return (!missing.is_empty() || missing_parent).then_some(ConstructorStorageGap {
+                missing_fields: missing,
+                missing_parent,
+                statement_index,
+            });
         }
     }
 

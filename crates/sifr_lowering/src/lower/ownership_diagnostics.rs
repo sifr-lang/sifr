@@ -1,7 +1,8 @@
 use super::LowerCtx;
 use ruff_text_size::TextRange;
-use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_type_system::Type;
+use std::collections::BTreeMap;
 
 pub(in crate::lower) fn use_after_move(ctx: &mut LowerCtx, name: &str, range: TextRange) {
     ctx.error_with_code_at(
@@ -234,9 +235,58 @@ pub(in crate::lower) fn unsupported_mutable_receiver_place(
     place: &str,
     range: TextRange,
 ) {
-    ctx.error_with_code_at(
+    let mut args = BTreeMap::new();
+    args.insert(
+        "place".to_string(),
+        DiagnosticArg::String(place.to_string()),
+    );
+    ctx.error_with_code_args_help_at(
         DiagnosticCode::OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE,
         format!("mutable method receiver {place} is not a supported storage place"),
+        args,
+        None,
+        range,
+    );
+}
+
+pub(in crate::lower) fn constructor_storage_unavailable(
+    ctx: &mut LowerCtx,
+    missing_fields: &[String],
+    missing_parent: bool,
+    range: TextRange,
+) {
+    let field_places = missing_fields
+        .iter()
+        .map(|field| format!("self.{field}"))
+        .collect::<Vec<_>>();
+    let message = match (missing_parent, field_places.is_empty()) {
+        (true, true) => {
+            "constructor uses self before inherited storage is initialized; call super().__init__(...) first"
+                .to_string()
+        }
+        (true, false) => format!(
+            "constructor uses self before storage is initialized; call super().__init__(...) first and initialize {}",
+            field_places.join(", ")
+        ),
+        (false, false) => format!(
+            "constructor uses self before field storage is initialized: {}",
+            field_places.join(", ")
+        ),
+        (false, true) => "constructor uses self before its storage is initialized".to_string(),
+    };
+    let mut args = BTreeMap::new();
+    args.insert(
+        "place".to_string(),
+        DiagnosticArg::String("self".to_string()),
+    );
+    ctx.error_with_code_args_help_at(
+        DiagnosticCode::OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE,
+        message,
+        args,
+        Some(
+            "initialize every declared field and inherited storage before the first statement that reads or mutates self"
+                .to_string(),
+        ),
         range,
     );
 }

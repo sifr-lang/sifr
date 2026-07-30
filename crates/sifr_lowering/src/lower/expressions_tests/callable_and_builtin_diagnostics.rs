@@ -373,7 +373,9 @@ pub(super) fn test_constructor_branch_assignments_require_materialized_storage()
     .expect_err("branch-only field initialization should be rejected before codegen");
     assert!(errors.iter().any(|error| {
         error.code == Some(DiagnosticCode::OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE)
-            && error.message.contains("missing left, right")
+            && error
+                .message
+                .contains("field storage is initialized: self.left, self.right")
     }));
 }
 
