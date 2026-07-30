@@ -156,8 +156,8 @@ normative and must not be broadened.
 | `certification_9` | merged | [PR #3069](https://github.com/sifr-lang/sifr/pull/3069); exact-pinned native build-script package, deterministic artifacts, and fail-closed direct/transitive trust rejection |
 | `certification_10` | merged | [PR #3071](https://github.com/sifr-lang/sifr/pull/3071); exact-pinned proc-macro/codegen package, deterministic prost output, and package-wide pre-execution trust rejection |
 | `certification_11` | merged | [PR #3075](https://github.com/sifr-lang/sifr/pull/3075); locked/offline/frozen Sifr command propagation, cache reuse, and deterministic drift rejection |
-| `certification_12` | in progress | exact-pinned CLI/tooling execution and bridge-safe `anyhow` boundary certification |
-| `certification_13` | blocked | starts after `certification_12` merges |
+| `certification_12` | merged | [PR #3076](https://github.com/sifr-lang/sifr/pull/3076); exact-pinned CLI/tooling execution and bridge-safe `anyhow` boundary certification |
+| `certification_13` | in progress | exact-pinned backend loopback execution and fail-closed SQLx offline metadata certification |
 | `certification_14` | blocked | starts after `certification_13` merges |
 | `certification_pkg_resource_core` | dormant | starts only after Native Pydantic-Sifr `milestone_ps_2` releases bridge version 2 |
 
@@ -1354,7 +1354,7 @@ Implementation checklist:
   `env-filter` feature, bridge dependency ownership, positive/negative
   provenance, and the supported-through-bridge contract without weakening the
   preserved backend row.
-- [ ] Run focused and authoritative local gates, complete Opus review rounds
+- [x] Run focused and authoritative local gates, complete Opus review rounds
   to satisfaction, merge the PR, and unblock only `certification_13`.
 
 Validation evidence to date:
@@ -1420,6 +1420,58 @@ Validation evidence to date:
   the same doctor passed in the main workspace with deferred=1, resolved=3,
   parity=5, and zero mutations. No failing command touches certification-12
   source, and the exact-head Rust-interop area remains 10/10.
+- [Final merge-readiness round 5](../../reviews/active/rust-interop-certification-12-review-round-5.md)
+  independently exported and audited published PR head
+  `96ab24c553d2afc05d24686b591bedd9f6289858`, reproduced the complete 10/10
+  Rust-interop area, mandatory tests, workspace Clippy, committed inventory,
+  guardrails, and shared-worktree gate attribution, and returned `SATISFIED`
+  with no blockers. PR #3076 merged on 2026-07-30 as
+  `ea119724e325b3900ccca81db766114d76eb4efd`; only `certification_13` is
+  unblocked.
+
+#### certification_13: Backend and Service Ecosystem Bridge
+
+Implementation checklist:
+
+- [ ] Replace the planning-only shadow crates with an exact-pinned generated
+  package that compiles real `axum 0.8.9`, `tower-http 0.7.0`, and
+  `sqlx 0.8.6` with only the frozen
+  `runtime-tokio-rustls`/`postgres`/`macros` SQLx feature policy under the
+  checked-in package lock.
+- [ ] Execute a hermetic `127.0.0.1:0` Axum service through a real
+  `tower-http` middleware layer, observe the response and middleware evidence,
+  and shut the listener/task down deterministically without external network
+  access.
+- [ ] Compile a real SQLx query macro from checked-in `.sqlx/` metadata under
+  `SQLX_OFFLINE=true`, bind the query identity and metadata hash into runtime
+  evidence, and prove neither `DATABASE_URL` nor a live database is required.
+- [ ] Turn `sqlx_without_offline_artifacts` into a mandatory generated-package
+  diagnostic: independently remove and stale-mutate the checked-in query
+  metadata, require stable `SIFR-RUST-CARGO-0001`, and prove rejection occurs
+  with database/network access disabled.
+- [ ] Bind positive and negative evidence to distinct mandatory driver tests,
+  promote only `ecosystem_backend_certification` to
+  `supported-through-bridge`, and update scenario policy, structured claims,
+  public/internal docs, provenance, and exact inventory counts.
+- [ ] Add validator self-test mutations for exact versions and features,
+  bridge ownership, loopback/middleware execution, offline environment,
+  metadata identity, both negative directions, evidence provenance, and the
+  supported-through-bridge contract without weakening earlier rows.
+- [ ] Run focused and authoritative local gates, complete Opus review rounds
+  to satisfaction, merge the PR, and unblock only `certification_14`.
+
+Expected post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 72 passing and 0 planned evidence directions;
+- categories: 21 `supported`, 14 `supported-through-bridge`, and 1
+  `unsupported-by-design`;
+- execution kinds remain 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+- 61 package examples and 18 scenario examples; and
+- 36 structured stable claims.
 
 ### certification_14: Track A Closeout and Stable Gate
 
