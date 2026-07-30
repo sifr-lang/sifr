@@ -1683,6 +1683,12 @@ Validation evidence to date:
 - The round-8 documentation fix restores the exact statement that workspace
   Clippy passed with warnings denied; no implementation or test behavior
   changed after the complete round-8 validation.
+- [Opus round 9](../../reviews/active/rust-interop-certification-13-review-round-9.md)
+  returned `SATISFIED` with no finding. It verified the wording repair is
+  byte-identical to the pre-regression sentence, confirmed the round-8
+  chronology is exact and non-contradictory, found no non-Markdown change
+  after round 8, and re-ran the documentation-sensitive resource,
+  maintainability, file-size, and diff-hygiene gates.
 
 ### certification_14: Track A Closeout and Stable Gate
 
