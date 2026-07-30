@@ -38,6 +38,7 @@ mod diagnostic_transport_tests;
 mod diagnostic_types;
 mod diagnostics;
 mod empty_collection_refinement;
+mod empty_plain_dict_inference;
 mod expression_abs;
 mod expression_diagnostics;
 mod expression_functional_builtins;

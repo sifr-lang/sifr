@@ -14,6 +14,7 @@ use sifr_type_system::{make_union, OwnershipKind, ParamConvention, Type};
 use std::collections::{HashMap, HashSet};
 
 mod generator_bodies;
+mod local_binding_registry;
 mod nested_function_block;
 mod python_callback_bounds;
 mod scope_and_function_types;

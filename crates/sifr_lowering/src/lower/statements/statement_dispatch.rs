@@ -46,7 +46,7 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{ExceptHandler, Expr, Stmt};
 use sifr_type_system::{FunctionType, Type};
 
-pub(super) fn empty_collection_literal_kind(expr: &Expr) -> Option<&'static str> {
+pub(in crate::lower) fn empty_collection_literal_kind(expr: &Expr) -> Option<&'static str> {
     match expr {
         Expr::List(list) if list.elts.is_empty() => Some("list"),
         Expr::Dict(dict) if dict.items.is_empty() => Some("dict"),
@@ -94,12 +94,15 @@ pub(super) fn should_adopt_inferred_binding_hint(
     value_ty: &Type,
     hint: &Type,
     allow_empty_collection_hint: bool,
+    allow_empty_plain_dict_hint: bool,
 ) -> bool {
     if !type_contains_unknown_or_any(value_ty) {
         return false;
     }
-    if empty_collection_literal_kind(value_expr).is_some() {
-        return allow_empty_collection_hint
+    let empty_collection_kind = empty_collection_literal_kind(value_expr);
+    if empty_collection_kind.is_some() {
+        return (allow_empty_collection_hint
+            || (allow_empty_plain_dict_hint && empty_collection_kind == Some("dict")))
             && !type_contains_unknown_or_any(hint)
             && hint_matches_empty_collection_shape(value_expr, hint);
     }
@@ -120,9 +123,16 @@ pub(in crate::lower) fn lower_stmts(
     let nested_inference =
         super::nested_function_inference::infer_nested_function_types(stmts, ctx);
     let can_adopt_empty_collection_hints = !nested_inference.function_types.is_empty();
+    let mut empty_plain_dict_hint_names =
+        crate::lower::empty_plain_dict_inference::safe_hint_names_for_block(stmts);
+    empty_plain_dict_hint_names.retain(|name| {
+        nested_inference.binding_hints.get(name)
+            == nested_inference.exact_dict_write_hints.get(name)
+    });
     ctx.inferred_binding_hints
         .push(nested_inference.binding_hints.clone());
     ctx.push_empty_collection_hint_adoption(can_adopt_empty_collection_hints);
+    ctx.push_empty_plain_dict_hint_adoption(empty_plain_dict_hint_names);
     predeclare_nested_function_symbols(stmts, &nested_inference.function_types, ctx);
     let previous_nested_captures =
         push_nested_function_captures(&nested_inference.function_captures, ctx);
@@ -180,6 +190,7 @@ pub(in crate::lower) fn lower_stmts(
     super::function_body::mark_threadsafe_callback_move_handlers(&mut result, ctx);
     let _ = ctx.inferred_binding_hints.pop();
     ctx.pop_empty_collection_hint_adoption();
+    ctx.pop_empty_plain_dict_hint_adoption();
     restore_nested_function_mutations(previous_nested_mutations, ctx);
     restore_nested_function_captures(previous_nested_captures, ctx);
     result

@@ -270,8 +270,11 @@ pub(in crate::lower) fn apply_container_specialization_patches(
     stmts: &mut [HirStmt],
     pending: &mut HashMap<String, Type>,
 ) {
-    for stmt in stmts {
+    for stmt in stmts.iter_mut().rev() {
         patch_stmt_container_specialization(stmt, pending);
+        if pending.is_empty() {
+            break;
+        }
     }
 }
 
@@ -280,7 +283,7 @@ fn patch_stmt_container_specialization(stmt: &mut HirStmt, pending: &mut HashMap
         HirStmt::Let {
             name, ty, value, ..
         } => {
-            let Some(patch_ty) = pending.get(name).cloned() else {
+            let Some(patch_ty) = pending.remove(name) else {
                 return;
             };
             *ty = patch_ty.clone();
