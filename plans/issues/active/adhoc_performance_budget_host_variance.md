@@ -109,6 +109,19 @@ self-update encountered the live schema-v1 preview index. This independently
 separates `PERF-HOST` from the Phase 40 schema-epoch bootstrap and confirms that
 the performance lane can pass without a release waiver.
 
+During Rust-interop Track A closeout on exact source
+`017c1df411f78ffb786775fdf4bd60e52424f839`, every representative benchmark
+command completed, but the merge-profile comparison rejected project-graph,
+arithmetic, JSON-diagnostic, and LSP diagnostic samples at
+1358.717/1357.524 ms, 1366.015/1334.139 ms, 1354.814/1335.954 ms, and
+5.962/5.91 ms median plus 11.664/10.933 ms p95 respectively. The closeout diff
+does not change compiler, frontend, diagnostic, or LSP implementation paths.
+Within minutes, an unrelated class-field branch on the same host failed the
+same four cases much more severely at 3313.437 ms, 4612.439 ms, 17.918 ms, and
+22.939 ms. The cross-branch control and earlier closeout retries that moved
+between affected cases demonstrate the same bimodal shared-host condition; the
+closeout changed no baseline, threshold, waiver, or profile selection.
+
 The timed-out control also showed that `full/budget-subset` can read the prior
 `full.budget.latest.json` after `full/benchmark-subset` fails before replacing
 it. The lane remains failed, so this does not create a false pass, but the stale

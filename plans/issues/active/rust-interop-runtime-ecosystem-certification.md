@@ -1833,6 +1833,16 @@ Closeout validation evidence on 2026-07-30:
   guardrail validator, found no surviving false present-tense deferral, and
   returned `SATISFIED` with no actionable implementation, validation, scope,
   or tracking issue.
+- [Merge-readiness Opus round 8](../../reviews/active/rust-interop-certification-14-review-round-8.md)
+  independently verified the exact performance samples, proved the unchanged
+  failures non-attributable through the branch diff and a same-host unrelated
+  branch control, and accepted the result as the governed `PERF-HOST`
+  exception. It returned `NOT SATISFIED` only for three evidence-record
+  corrections: one lock wait had been pluralized, the cross-branch incident
+  was absent from the governing performance ledger, and three continuation
+  summaries lacked durable output. Those findings are closed by the corrected
+  wording, the performance-ledger incident, and the checked-in
+  [merge-continuation evidence](../../reviews/active/rust-interop-certification-14-merge-continuation-evidence.md).
 - The authoritative `create-pr` profile passed every blocking step on the
   reviewed closeout state. Python interop passed 19/19 variants in
   557.53/600 seconds; Rust interop passed 10/10 in 8.72/10 seconds; developer
@@ -1853,8 +1863,8 @@ Closeout validation evidence on 2026-07-30:
   5.962/5.91 ms and 11.664/10.933 ms. Earlier unchanged retries moved among
   these cases, including project-graph 1719.712 ms in one run and arithmetic
   1586.939 ms in another; the exact diff contains no compiler, frontend,
-  diagnostic, or LSP implementation change. The run also observed repeated
-  Cargo package-cache lock waits from concurrent repository work.
+  diagnostic, or LSP implementation change. The run also observed a Cargo
+  package-cache lock wait from concurrent repository work.
 - The same head then resumed every merge-profile step after performance through
   the unmodified profile runner. All steps passed: verification hardening and
   runner self-tests; fuzz/property 25/25; algorithmic compatibility 12/12;
@@ -1867,7 +1877,12 @@ Closeout validation evidence on 2026-07-30:
   regressions 5/5; and ecosystem compatibility 20/20. This preserves the
   governed performance failure instead of changing a baseline or adding a
   waiver, while proving that no functional merge step hidden behind the
-  fail-fast comparison is omitted.
+  fail-fast comparison is omitted. The overwritten project-matrix output and
+  the generated-build/E2E console summaries were rerun on the unchanged source
+  and captured in the checked-in
+  [merge-continuation evidence](../../reviews/active/rust-interop-certification-14-merge-continuation-evidence.md);
+  the project rerun also has the uniquely named
+  `target/verification/areas/rust-interop-cert14-project-validation-results.json`.
 
 ## Completed Stdlib Native-Boundary Handoff
 
