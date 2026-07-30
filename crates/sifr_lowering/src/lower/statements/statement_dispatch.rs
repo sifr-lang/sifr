@@ -700,6 +700,11 @@ pub(in crate::lower) fn lower_stmt(
 
             // Lower the nested function body
             let declared_nonlocals = collect_declared_nonlocals(&func.body);
+            // Deferred container patches belong to the lexical function that
+            // discovered them. A same-named binding in this nested function
+            // must neither consume nor clear an enclosing function's patch.
+            let enclosing_container_patches =
+                std::mem::take(&mut ctx.pending_container_specialization_patches);
             ctx.enter_function_scope(declared_nonlocals.clone());
 
             // Define parameters in scope
@@ -808,6 +813,7 @@ pub(in crate::lower) fn lower_stmt(
             };
             ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
             ctx.exit_function_scope();
+            ctx.pending_container_specialization_patches = enclosing_container_patches;
 
             if !declared_nonlocals.is_empty() && hir_body_calls_function(&body, func.name.as_str())
             {

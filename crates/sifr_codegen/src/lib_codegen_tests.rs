@@ -57,6 +57,8 @@ mod collections_and_stdlib_codegen_tests;
 #[cfg(test)]
 mod control_flow_codegen_tests;
 #[cfg(test)]
+mod defaultdict_augassign_codegen_tests;
+#[cfg(test)]
 mod empty_plain_dict_codegen_tests;
 #[cfg(test)]
 mod generic_inheritance_codegen_tests;

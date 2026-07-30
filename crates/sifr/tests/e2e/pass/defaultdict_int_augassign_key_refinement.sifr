@@ -1,0 +1,76 @@
+from sifr.collections import defaultdict
+
+
+def count_words(words: list[str]) -> dict[str, int]:
+    counts = defaultdict(int)
+    for word in words:
+        counts[word] += 1
+    return counts
+
+
+def count_numbers(values: list[int]) -> dict[int, int]:
+    counts = defaultdict(int)
+    for value in values:
+        counts[value] += 1
+    return counts
+
+
+def nested_shadow_counts(words: list[str], values: list[int]) -> int:
+    counts = defaultdict(int)
+
+    def numeric_count() -> int:
+        counts = defaultdict(int)
+        for value in values:
+            counts[value] += 1
+        return len(counts)
+
+    for word in words:
+        counts[word] += 1
+    return len(counts) + numeric_count()
+
+
+def scalar_shadow_count(words: list[str]) -> int:
+    counts = defaultdict(int)
+
+    def helper() -> int:
+        counts = 7
+        return counts
+
+    for word in words:
+        counts[word] += 1
+    return len(counts) + helper()
+
+
+def late_nested_shadow_counts(words: list[str], values: list[int]) -> int:
+    counts = defaultdict(int)
+    if len(words) > 0:
+        for word in words:
+            counts[word] += 1
+
+        def numeric_count() -> int:
+            counts = defaultdict(int)
+            for value in values:
+                counts[value] += 1
+            return len(counts)
+
+        return len(counts) + numeric_count()
+    return 0
+
+
+def main():
+    words = count_words(["red", "blue", "red", "green", "red"])
+    assert words["red"] == 3
+    assert words["blue"] == 1
+
+    values = count_numbers([4, 2, 4, 4, 2])
+    assert values[4] == 3
+    assert values[2] == 2
+
+    total = 0
+    for _, count in words.items():
+        total += count
+    assert total == 5
+
+    assert nested_shadow_counts(["x", "y", "x"], [1, 2, 1]) == 4
+    assert scalar_shadow_count(["x", "x", "y"]) == 9
+    assert late_nested_shadow_counts(["x", "y", "x"], [1, 2, 1]) == 4
