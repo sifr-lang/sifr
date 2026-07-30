@@ -42,7 +42,20 @@ pub(in crate::lower) fn resolve_subscript_result_type(
             name.as_str(),
             DEFAULTDICT_INT_ALIAS | DEFAULTDICT_LIST_ALIAS | DEFAULTDICT_SET_ALIAS
         ) {
-            if let Type::Dict(_, value_ty) = body.resolve_alias() {
+            if let Type::Dict(key_ty, value_ty) = body.resolve_alias() {
+                if !matches!(key_ty.resolve_alias(), Type::Any | Type::Unknown)
+                    && !index_ty.is_assignable_to(key_ty)
+                {
+                    ctx.error_with_code_at(
+                        DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT,
+                        format!(
+                            "defaultdict key type conflict: expected '{}', got '{}'",
+                            key_ty.display_name(),
+                            index_ty.display_name()
+                        ),
+                        sub.slice.range(),
+                    );
+                }
                 return *value_ty.clone();
             }
         }

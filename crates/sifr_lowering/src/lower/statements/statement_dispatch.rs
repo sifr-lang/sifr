@@ -129,10 +129,13 @@ pub(in crate::lower) fn lower_stmts(
         nested_inference.binding_hints.get(name)
             == nested_inference.exact_dict_write_hints.get(name)
     });
+    let defaultdict_hint_names =
+        crate::lower::empty_plain_dict_inference::safe_defaultdict_hint_names_for_block(stmts);
     ctx.inferred_binding_hints
         .push(nested_inference.binding_hints.clone());
     ctx.push_empty_collection_hint_adoption(can_adopt_empty_collection_hints);
     ctx.push_empty_plain_dict_hint_adoption(empty_plain_dict_hint_names);
+    ctx.push_defaultdict_hint_adoption(defaultdict_hint_names);
     predeclare_nested_function_symbols(stmts, &nested_inference.function_types, ctx);
     let previous_nested_captures =
         push_nested_function_captures(&nested_inference.function_captures, ctx);
@@ -191,6 +194,7 @@ pub(in crate::lower) fn lower_stmts(
     let _ = ctx.inferred_binding_hints.pop();
     ctx.pop_empty_collection_hint_adoption();
     ctx.pop_empty_plain_dict_hint_adoption();
+    ctx.pop_defaultdict_hint_adoption();
     restore_nested_function_mutations(previous_nested_mutations, ctx);
     restore_nested_function_captures(previous_nested_captures, ctx);
     result

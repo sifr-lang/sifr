@@ -1,7 +1,46 @@
 use super::builtin_calls::{DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS};
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
+use sifr_python_ast::Expr;
 use sifr_type_system::{widen_literal, Type};
+
+pub(in crate::lower) fn order_independent_defaultdict_hint(expr: &Expr, hint: &Type) -> bool {
+    let Expr::Call(call) = expr else {
+        return false;
+    };
+    if call.arguments.args.len() != 1 || !call.arguments.keywords.is_empty() {
+        return false;
+    }
+    let (Expr::Name(function), Some(Expr::Name(factory))) =
+        (call.func.as_ref(), call.arguments.args.first())
+    else {
+        return false;
+    };
+    if function.id != "defaultdict" {
+        return false;
+    }
+    let expected_alias = match factory.id.as_str() {
+        "int" => DEFAULTDICT_INT_ALIAS,
+        "list" => DEFAULTDICT_LIST_ALIAS,
+        "set" => DEFAULTDICT_SET_ALIAS,
+        _ => return false,
+    };
+    let Type::Alias { name, body, .. } = hint else {
+        return false;
+    };
+    name == expected_alias && !defaultdict_type_contains_any(body)
+}
+
+fn defaultdict_type_contains_any(ty: &Type) -> bool {
+    match ty.resolve_alias() {
+        Type::Any | Type::Unknown => true,
+        Type::List(element) | Type::Set(element) => defaultdict_type_contains_any(element),
+        Type::Dict(key, value) => {
+            defaultdict_type_contains_any(key) || defaultdict_type_contains_any(value)
+        }
+        _ => false,
+    }
+}
 
 pub(in crate::lower) fn refine_defaultdict_int_augassign_key(
     object_name: &str,

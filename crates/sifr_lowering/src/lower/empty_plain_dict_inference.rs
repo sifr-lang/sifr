@@ -27,6 +27,44 @@ pub(in crate::lower) fn safe_hint_names_for_block(stmts: &[Stmt]) -> HashSet<Str
     direct_empty_dict_names
 }
 
+pub(in crate::lower) fn safe_defaultdict_hint_names_for_block(stmts: &[Stmt]) -> HashSet<String> {
+    let mut direct_defaultdict_names = HashSet::new();
+    let mut direct_binding_counts = HashMap::<String, usize>::new();
+
+    for stmt in stmts {
+        collect_direct_binding_counts(stmt, &mut direct_binding_counts);
+        if let Stmt::Assign(assign) = stmt {
+            if assign.targets.len() == 1 && is_unseeded_defaultdict_call(&assign.value) {
+                if let Expr::Name(name) = &assign.targets[0] {
+                    direct_defaultdict_names.insert(name.id.to_string());
+                }
+            }
+        }
+    }
+
+    direct_defaultdict_names.retain(|name| {
+        direct_binding_counts.get(name) == Some(&1)
+            && !nested_block_binds_name(stmts, name.as_str())
+    });
+    direct_defaultdict_names
+}
+
+fn is_unseeded_defaultdict_call(expr: &Expr) -> bool {
+    let Expr::Call(call) = expr else {
+        return false;
+    };
+    if call.arguments.args.len() != 1 || !call.arguments.keywords.is_empty() {
+        return false;
+    }
+    let Expr::Name(function) = call.func.as_ref() else {
+        return false;
+    };
+    let Some(Expr::Name(factory)) = call.arguments.args.first() else {
+        return false;
+    };
+    function.id == "defaultdict" && matches!(factory.id.as_str(), "int" | "list" | "set")
+}
+
 fn collect_direct_binding_counts(stmt: &Stmt, counts: &mut HashMap<String, usize>) {
     // This census only needs targets that can lower as a new local `Let`. Imports,
     // classes, exception aliases, and match captures predefine the name, so a later

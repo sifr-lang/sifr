@@ -1,6 +1,8 @@
 use super::{
-    infer_registered_call, str, type_check_binary_op, unify_function_return, CmpOp, Expr, ExprCall,
-    FunctionEnv, HashMap, LocalFunctionState, LowerCtx, Operator, Type,
+    has_conflicting_inference, infer_defaultdict_call_type, infer_registered_call,
+    refine_defaultdict_method_call, refine_defaultdict_subscript, str, type_check_binary_op,
+    unify_function_return, unify_types, CmpOp, Expr, ExprCall, FunctionEnv, HashMap,
+    LocalFunctionState, LowerCtx, Operator, Type,
 };
 pub(super) fn analyze_assign(
     targets: &[Expr],
@@ -301,6 +303,9 @@ pub(super) fn infer_call_type(
                 }
                 return Type::Dict(Box::new(Type::Unknown), Box::new(Type::Unknown));
             }
+            if let Some(defaultdict_ty) = infer_defaultdict_call_type(call) {
+                return defaultdict_ty;
+            }
             if name.id == "sorted" {
                 let elem_ty = call
                     .arguments
@@ -450,6 +455,16 @@ pub(super) fn infer_attribute_call_type(
         .map(|arg| infer_expr_type(arg, env, states, current_function, ctx))
         .collect::<Vec<_>>();
 
+    refine_defaultdict_method_call(
+        object,
+        method,
+        &arg_types,
+        env,
+        states,
+        current_function,
+        ctx,
+    );
+
     if let Expr::Name(name) = object {
         match method {
             "append" => {
@@ -587,6 +602,12 @@ pub(super) fn infer_subscript_type(
             Type::Str => Type::Str,
             other => other,
         };
+    }
+
+    if let Some(value_ty) =
+        refine_defaultdict_subscript(object, &object_ty, &index_ty, env, states, current_function)
+    {
+        return value_ty;
     }
 
     match object_ty {
@@ -813,83 +834,5 @@ pub(super) fn unify_function_param(
         state.inference_failed = true;
     } else {
         param.ty = unify_types(param.ty.clone(), incoming);
-    }
-}
-
-pub(super) fn has_conflicting_inference(current: &Type, incoming: &Type) -> bool {
-    match (current, incoming) {
-        (Type::Unknown, _) | (_, Type::Unknown) => false,
-        (Type::List(current_elem), Type::List(incoming_elem)) => {
-            has_conflicting_inference(current_elem, incoming_elem)
-        }
-        (Type::Dict(current_key, current_value), Type::Dict(incoming_key, incoming_value)) => {
-            has_conflicting_inference(current_key, incoming_key)
-                || has_conflicting_inference(current_value, incoming_value)
-        }
-        _ => !current.is_assignable_to(incoming) && !incoming.is_assignable_to(current),
-    }
-}
-
-pub(super) fn unify_types(current: Type, incoming: Type) -> Type {
-    let current = collapse_literal(current);
-    let incoming = collapse_literal(incoming);
-
-    if current.is_unknown() {
-        return incoming;
-    }
-    if incoming.is_unknown() {
-        return current;
-    }
-    if current == incoming {
-        return current;
-    }
-
-    match (&current, &incoming) {
-        (Type::List(current_elem), Type::List(incoming_elem)) => Type::List(Box::new(unify_types(
-            (**current_elem).clone(),
-            (**incoming_elem).clone(),
-        ))),
-        (Type::Dict(current_key, current_value), Type::Dict(incoming_key, incoming_value)) => {
-            Type::Dict(
-                Box::new(unify_types(
-                    (**current_key).clone(),
-                    (**incoming_key).clone(),
-                )),
-                Box::new(unify_types(
-                    (**current_value).clone(),
-                    (**incoming_value).clone(),
-                )),
-            )
-        }
-        (Type::Float, Type::Int) | (Type::Int, Type::Float) => Type::Float,
-        _ if incoming.is_assignable_to(&current) => current,
-        _ if current.is_assignable_to(&incoming) => incoming,
-        _ => current,
-    }
-}
-
-pub(super) fn type_contains_unknown_or_any(ty: &Type) -> bool {
-    match ty {
-        Type::Unknown | Type::Any => true,
-        Type::List(elem) => type_contains_unknown_or_any(elem),
-        Type::Dict(key, value) => {
-            type_contains_unknown_or_any(key) || type_contains_unknown_or_any(value)
-        }
-        Type::Tuple(elements) => elements.iter().any(type_contains_unknown_or_any),
-        _ => false,
-    }
-}
-
-pub(super) fn collapse_literal(ty: Type) -> Type {
-    match ty {
-        Type::LiteralInt(_) => Type::Int,
-        Type::LiteralStr(_) => Type::Str,
-        Type::LiteralBool(_) => Type::Bool,
-        Type::List(elem_ty) => Type::List(Box::new(collapse_literal(*elem_ty))),
-        Type::Dict(key_ty, value_ty) => Type::Dict(
-            Box::new(collapse_literal(*key_ty)),
-            Box::new(collapse_literal(*value_ty)),
-        ),
-        other => other,
     }
 }

@@ -1,0 +1,23 @@
+from sifr.collections import defaultdict
+
+
+def unique_rows(cells: list[tuple[int, str]]) -> bool:
+    rows = defaultdict(set)
+    for row, cell in cells:
+        if cell in rows[row]:
+            return False
+        rows[row].add(cell)
+    return True
+
+
+def grouped_words(words: list[str]) -> int:
+    groups = defaultdict(list)
+    for word in words:
+        groups[len(word)].append(word)
+    return len(groups[3])
+
+
+def main():
+    assert unique_rows([(0, "a"), (0, "b"), (1, "a")])
+    assert not unique_rows([(0, "a"), (0, "a")])
+    assert grouped_words(["one", "two", "three"]) == 2

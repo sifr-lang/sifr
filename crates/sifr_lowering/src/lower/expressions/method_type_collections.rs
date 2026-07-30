@@ -613,6 +613,20 @@ pub(super) fn resolve_set_method_type(
                 );
                 return None;
             }
+            if !matches!(elem_ty.resolve_alias(), Type::Any | Type::Unknown)
+                && !args[0].ty().is_assignable_to(elem_ty)
+            {
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT,
+                    format!(
+                        "set element type conflict: expected '{}', got '{}'",
+                        elem_ty.display_name(),
+                        args[0].ty().display_name()
+                    ),
+                    arg_ranges[0],
+                );
+                return None;
+            }
             Some(Type::None)
         }
         "remove" | "discard" => {
