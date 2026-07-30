@@ -1,9 +1,10 @@
 use super::{
     codegen_body_always_exits, detect_and_not_none_vars, detect_is_none_var,
     detect_is_not_none_var, detect_option_truthiness_alias, detect_or_is_none_vars, is_none_type,
-    is_option_like_type, lower_if_not_none_chain, resolve_alias_type, try_lower_leaf_expr,
-    try_lower_leaf_or_name_expr, try_lower_simple_stmt_block, HashSet, HirExpr, HirStmt, RustExpr,
-    RustLiteral, RustParam, RustStmt, RustType, SimpleStmtBindings, SimpleStmtLoweringCtx, Type,
+    is_option_like_type, lower_if_not_none_chain, option_binding_pattern, resolve_alias_type,
+    try_lower_leaf_expr, try_lower_leaf_or_name_expr, try_lower_simple_stmt_block, HashSet,
+    HirExpr, HirStmt, RustExpr, RustLiteral, RustParam, RustStmt, RustType, SimpleStmtBindings,
+    SimpleStmtLoweringCtx, Type,
 };
 pub(super) fn try_lower_simple_if_stmt(
     condition: &HirExpr,
@@ -14,13 +15,6 @@ pub(super) fn try_lower_simple_if_stmt(
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
-    let option_binding_pattern = |name: &str| {
-        if bindings.mutated_vars.contains(name) {
-            format!("Some(mut {name})")
-        } else {
-            format!("Some({name})")
-        }
-    };
     if elif_clauses.is_empty() && maybe_else_body.is_none() && codegen_body_always_exits(then_body)
     {
         if let Some(option_vars) = detect_or_is_none_vars(condition) {
@@ -35,7 +29,7 @@ pub(super) fn try_lower_simple_if_stmt(
                 "({})",
                 option_vars
                     .iter()
-                    .map(|option_var| option_binding_pattern(option_var))
+                    .map(|option_var| option_binding_pattern(option_var, bindings))
                     .collect::<Vec<_>>()
                     .join(", ")
             );
@@ -59,7 +53,7 @@ pub(super) fn try_lower_simple_if_stmt(
                 ctx,
             )?;
             return Some(vec![RustStmt::LetElse {
-                pattern: option_binding_pattern(&option_var),
+                pattern: option_binding_pattern(&option_var, bindings),
                 value: RustExpr::Ident(option_var),
                 else_body: lowered_then_body,
             }]);
@@ -107,13 +101,6 @@ pub(super) fn try_lower_simple_if_clause(
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<RustStmt> {
-    let option_binding_pattern = |name: &str| {
-        if bindings.mutated_vars.contains(name) {
-            format!("Some(mut {name})")
-        } else {
-            format!("Some({name})")
-        }
-    };
     let lowered_then_body = try_lower_simple_stmt_block(
         then_body,
         in_loop_with_else,
@@ -124,7 +111,7 @@ pub(super) fn try_lower_simple_if_clause(
 
     if let Some(option_var) = detect_is_not_none_var(condition) {
         return Some(RustStmt::IfLet {
-            pattern: option_binding_pattern(&option_var),
+            pattern: option_binding_pattern(&option_var, bindings),
             expr: RustExpr::Ident(option_var),
             then_body: lowered_then_body,
             else_body: nested_else,
@@ -132,17 +119,12 @@ pub(super) fn try_lower_simple_if_clause(
     }
 
     if let Some(option_vars) = detect_and_not_none_vars(condition) {
-        return lower_if_not_none_chain(
-            &option_vars,
-            lowered_then_body,
-            nested_else,
-            bindings.mutated_vars,
-        );
+        return lower_if_not_none_chain(&option_vars, lowered_then_body, nested_else, bindings);
     }
 
     if let Some(option_var) = detect_option_truthiness_alias(condition) {
         return Some(RustStmt::IfLet {
-            pattern: option_binding_pattern(&option_var),
+            pattern: option_binding_pattern(&option_var, bindings),
             expr: RustExpr::Ident(option_var),
             then_body: lowered_then_body,
             else_body: nested_else,
@@ -154,7 +136,7 @@ pub(super) fn try_lower_simple_if_clause(
             try_lower_simple_condition_test_expr(condition, bindings.borrowed_params)?;
         let lowered_else = nested_else.map(|else_body| {
             vec![RustStmt::IfLet {
-                pattern: option_binding_pattern(&option_var),
+                pattern: option_binding_pattern(&option_var, bindings),
                 expr: RustExpr::Ident(option_var.clone()),
                 then_body: else_body,
                 else_body: None,

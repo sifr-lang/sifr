@@ -484,6 +484,7 @@ impl RustEmitter {
             stmt,
             &self.mutated_vars,
             &self.borrowed_params,
+            &self.mut_borrowed_params,
             &self.local_binding_types,
             &self.stmt_block_scope_context(),
         )

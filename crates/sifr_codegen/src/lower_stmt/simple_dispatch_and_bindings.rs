@@ -28,6 +28,7 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
         in_loop_with_else,
         mutated_vars,
         borrowed_params,
+        &HashSet::new(),
         &HashMap::new(),
         ctx,
     )
@@ -38,12 +39,14 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
     in_loop_with_else: bool,
     mutated_vars: &HashSet<String>,
     borrowed_params: &HashSet<String>,
+    mut_borrowed_params: &HashSet<String>,
     local_binding_types: &HashMap<String, Type>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
     let bindings = SimpleStmtBindings {
         mutated_vars,
         borrowed_params,
+        mut_borrowed_params,
         local_binding_types,
     };
     match stmt {
@@ -549,7 +552,18 @@ pub(super) fn try_lower_simple_nested_function_stmt(
     }
 
     let nested_mutated_vars = collect_mutated_vars(&func.body, None);
-    let nested_borrowed_params: HashSet<String> = HashSet::new();
+    let nested_borrowed_params: HashSet<String> = func
+        .params
+        .iter()
+        .filter(|param| param.convention.is_shared_borrow())
+        .map(|param| param.name.clone())
+        .collect();
+    let nested_mut_borrowed_params: HashSet<String> = func
+        .params
+        .iter()
+        .filter(|param| param.convention.is_mut_borrow())
+        .map(|param| param.name.clone())
+        .collect();
     let is_recursive = body_calls_function(&func.body, &func.name);
     let param_names: HashSet<String> = func.params.iter().map(|param| param.name.clone()).collect();
     let referenced_with_types = collect_referenced_vars_with_types(&func.body);
@@ -577,6 +591,7 @@ pub(super) fn try_lower_simple_nested_function_stmt(
                 in_loop_with_else,
                 &nested_mutated_vars,
                 &nested_borrowed_params,
+                &nested_mut_borrowed_params,
                 &nested_local_binding_types,
                 SimpleStmtLoweringCtx {
                     return_type: Some(&func.return_type),

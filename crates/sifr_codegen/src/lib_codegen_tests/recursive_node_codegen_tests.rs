@@ -147,6 +147,71 @@ def measure(expr: Expr | None) -> int:
 }
 
 #[test]
+fn test_simple_let_else_marks_owned_recursive_option_bindings_mutable() {
+    let rust_code = generate_rust_from_source(
+        r#"class TreeNode:
+    val: int
+    left: TreeNode | None
+    right: TreeNode | None
+
+    def __init__(self, val: int = 0, left: TreeNode | None = None, right: TreeNode | None = None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def mergeChildren(own first: TreeNode | None, own second: TreeNode | None) -> TreeNode | None:
+    if first is None:
+        return second
+    if second is None:
+        return first
+    left: TreeNode | None = mergeChildren(first.left, second.left)
+    right: TreeNode | None = mergeChildren(first.right, second.right)
+    return TreeNode(first.val + second.val, left, right)
+"#,
+    );
+
+    assert!(
+        rust_code.contains("let Some(mut first) = first else"),
+        "simple let-else lowering must make an owned recursive class mutable before taking child fields:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("let Some(mut second) = second else"),
+        "each owned recursive option narrowed by simple lowering needs a mutable binding:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("first.left.take().map(|__sifr_boxed_recursive_value|")
+            && rust_code.contains("second.right.take().map(|__sifr_boxed_recursive_value|"),
+        "recursive child extraction must continue moving boxed fields without cloning:\n{rust_code}"
+    );
+}
+
+#[test]
+fn test_simple_let_else_keeps_non_recursive_option_binding_immutable() {
+    let rust_code = generate_rust_from_source(
+        r#"class Value:
+    number: int
+
+    def __init__(self, number: int):
+        self.number = number
+
+def valueOrZero(own value: Value | None) -> int:
+    if value is None:
+        return 0
+    return value.number
+"#,
+    );
+
+    assert!(
+        rust_code.contains("let Some(value) = value else"),
+        "non-recursive optional classes do not require mutable extraction:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("let Some(mut value) = value else"),
+        "recursive extraction mutability must not broaden to ordinary optional classes:\n{rust_code}"
+    );
+}
+
+#[test]
 fn test_borrowed_optional_wrapper_clones_recursive_node() {
     let rust_code = generate_rust_from_source(
         r#"class TreeNode:
@@ -204,7 +269,43 @@ def nextNode(node: LinkedNode | None) -> LinkedNode | None:
     );
 
     assert!(
+        rust_code.contains("let Some(node) = node else"),
+        "shared recursive options must narrow through an immutable borrowed binding:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("let Some(mut node) = node else"),
+        "shared recursive options must not be moved by a mutable pattern:\n{rust_code}"
+    );
+    assert!(
         rust_code.contains("(node.next).as_deref().cloned()"),
         "borrowed recursive field read must keep cloning semantics:\n{rust_code}"
+    );
+}
+
+#[test]
+fn test_mut_borrowed_recursive_option_binding_stays_immutable() {
+    let rust_code = generate_rust_from_source(
+        r#"class LinkedNode:
+    val: int
+    next: LinkedNode | None
+
+    def __init__(self, val: int = 0, next: LinkedNode | None = None):
+        self.val = val
+        self.next = next
+
+def nextNode(mut node: LinkedNode | None) -> LinkedNode | None:
+    if node is None:
+        return None
+    return node.next
+"#,
+    );
+
+    assert!(
+        rust_code.contains("let Some(node) = node else"),
+        "mutable-borrowed recursive options must narrow without moving through the borrow:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("let Some(mut node)"),
+        "mutable-borrowed recursive options do not own the narrowed class value:\n{rust_code}"
     );
 }
