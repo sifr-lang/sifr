@@ -1863,6 +1863,17 @@ Closeout validation evidence on 2026-07-30:
   399.02/600 seconds. The only lane result outside its target was the
   nonblocking aggregate warm-wall advisory after rebuilding all 42 E2E cache
   groups.
+- The final pre-publication head
+  `e05dd42e9c42ea77a484323247489e25f7edd382` independently repeated the
+  authoritative `create-pr` profile with every blocking step passing. Python
+  interop passed all 19 variants; Rust interop passed all 10 variants;
+  developer tooling passed all 18 variants; performance smoke passed all 7
+  variants; the crate matrix included 450 passing driver tests with 65
+  intentional smoke-profile exclusions; runtime platform passed 28 variants
+  with one declared capability skip; and E2E passed 131/131 fixtures with
+  report signature `7c39b8c1dd4fec7c`. The contended run took 1405.25 seconds,
+  while each blocking step remained within its own budget; its only advisory
+  was the nonblocking aggregate warm-wall target.
 - The exact integrated head `017c1df411f78ffb786775fdf4bd60e52424f839`
   ran the authoritative merge profile on 2026-07-30. Coverage, all core and
   resource guardrails, diagnostics, CPython differential 2/2, Python interop
