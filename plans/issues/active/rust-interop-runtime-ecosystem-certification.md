@@ -1873,6 +1873,12 @@ Closeout validation evidence on 2026-07-30:
   line, and the artifact preamble still described only its original three
   reruns. The evidence now reproduces both literal `ok` lines and distinguishes
   the three recovered outputs from the separately preserved coverage step.
+- [Published-head Opus round 13](../../reviews/active/rust-interop-certification-14-review-round-13.md)
+  reproduced both corrected literal output lines and the repaired evidence
+  accounting, verified the round-12 artifact and ledger entry, re-ran the full
+  Rust-interop area and package-management smoke, rechecked all carried
+  invariants and non-Markdown hunks, found no actionable issue, and returned
+  `SATISFIED`.
 - The authoritative `create-pr` profile passed every blocking step on the
   reviewed closeout state. Python interop passed 19/19 variants in
   557.53/600 seconds; Rust interop passed 10/10 in 8.72/10 seconds; developer
