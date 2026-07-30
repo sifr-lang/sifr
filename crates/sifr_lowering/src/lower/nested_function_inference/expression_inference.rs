@@ -1,8 +1,9 @@
 use super::{
-    has_conflicting_inference, infer_defaultdict_call_type, infer_registered_call,
-    refine_defaultdict_method_call, refine_defaultdict_subscript, str, type_check_binary_op,
-    unify_function_return, unify_types, CmpOp, Expr, ExprCall, FunctionEnv, HashMap,
-    LocalFunctionState, LowerCtx, Operator, Type,
+    defaultdict_shape_expr_is_lowering_exact, has_conflicting_inference,
+    infer_defaultdict_call_type, infer_registered_call, refine_defaultdict_method_call,
+    refine_defaultdict_subscript, str, type_check_binary_op, unify_function_return, unify_types,
+    CmpOp, DefaultdictMethodCall, Expr, ExprCall, FunctionEnv, HashMap, LocalFunctionState,
+    LowerCtx, Operator, Type,
 };
 pub(super) fn analyze_assign(
     targets: &[Expr],
@@ -19,12 +20,14 @@ pub(super) fn analyze_assign(
     let target = &targets[0];
     match target {
         Expr::Name(name) => {
+            let inference_is_exact = defaultdict_shape_expr_is_lowering_exact(value, env);
             let value_ty = infer_expr_type(value, env, states, current_function, ctx);
             if let Some(callee_name) = nested_call_target_name(value, states) {
                 env.bind_call_result(name.id.to_string(), value_ty, callee_name);
             } else {
                 env.bind_var(name.id.as_str(), value_ty);
             }
+            env.record_lowering_inference_exactness(name.id.as_str(), inference_is_exact);
         }
         Expr::Subscript(sub) => {
             let value_ty = infer_expr_type(value, env, states, current_function, ctx);
@@ -54,9 +57,15 @@ pub(super) fn analyze_assign(
             if let Expr::Tuple(values) = value {
                 for (target_expr, value_expr) in tuple.elts.iter().zip(values.elts.iter()) {
                     if let Expr::Name(name) = target_expr {
+                        let inference_is_exact =
+                            defaultdict_shape_expr_is_lowering_exact(value_expr, env);
                         let value_ty =
                             infer_expr_type(value_expr, env, states, current_function, ctx);
                         env.bind_var(name.id.as_str(), value_ty);
+                        env.record_lowering_inference_exactness(
+                            name.id.as_str(),
+                            inference_is_exact,
+                        );
                     }
                 }
             }
@@ -88,6 +97,9 @@ pub(super) fn merge_env_types(target: &mut FunctionEnv, source: &FunctionEnv) {
         );
         target.vars.insert(name.clone(), merged);
     }
+    target
+        .lowering_inexact_bindings
+        .extend(source.lowering_inexact_bindings.iter().cloned());
     target.merge_exact_dict_writes(source);
 }
 
@@ -456,9 +468,12 @@ pub(super) fn infer_attribute_call_type(
         .collect::<Vec<_>>();
 
     refine_defaultdict_method_call(
-        object,
-        method,
-        &arg_types,
+        &DefaultdictMethodCall {
+            object,
+            method,
+            args,
+            arg_types: &arg_types,
+        },
         env,
         states,
         current_function,
@@ -604,9 +619,15 @@ pub(super) fn infer_subscript_type(
         };
     }
 
-    if let Some(value_ty) =
-        refine_defaultdict_subscript(object, &object_ty, &index_ty, env, states, current_function)
-    {
+    if let Some(value_ty) = refine_defaultdict_subscript(
+        object,
+        index,
+        &object_ty,
+        &index_ty,
+        env,
+        states,
+        current_function,
+    ) {
         return value_ty;
     }
 

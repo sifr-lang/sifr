@@ -1,8 +1,29 @@
 use super::builtin_calls::{DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS};
+use super::declaration_hint_safety::safe_direct_assignment_names;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
-use sifr_python_ast::Expr;
+use sifr_python_ast::{Expr, Stmt};
 use sifr_type_system::{widen_literal, Type};
+use std::collections::HashSet;
+
+pub(in crate::lower) fn safe_defaultdict_hint_names_for_block(stmts: &[Stmt]) -> HashSet<String> {
+    safe_direct_assignment_names(stmts, is_unseeded_defaultdict_call)
+}
+
+fn is_unseeded_defaultdict_call(expr: &Expr) -> bool {
+    let Expr::Call(call) = expr else {
+        return false;
+    };
+    if call.arguments.args.len() != 1 || !call.arguments.keywords.is_empty() {
+        return false;
+    }
+    let (Expr::Name(function), Some(Expr::Name(factory))) =
+        (call.func.as_ref(), call.arguments.args.first())
+    else {
+        return false;
+    };
+    function.id == "defaultdict" && matches!(factory.id.as_str(), "int" | "list" | "set")
+}
 
 pub(in crate::lower) fn order_independent_defaultdict_hint(expr: &Expr, hint: &Type) -> bool {
     let Expr::Call(call) = expr else {
@@ -28,18 +49,7 @@ pub(in crate::lower) fn order_independent_defaultdict_hint(expr: &Expr, hint: &T
     let Type::Alias { name, body, .. } = hint else {
         return false;
     };
-    name == expected_alias && !defaultdict_type_contains_any(body)
-}
-
-fn defaultdict_type_contains_any(ty: &Type) -> bool {
-    match ty.resolve_alias() {
-        Type::Any | Type::Unknown => true,
-        Type::List(element) | Type::Set(element) => defaultdict_type_contains_any(element),
-        Type::Dict(key, value) => {
-            defaultdict_type_contains_any(key) || defaultdict_type_contains_any(value)
-        }
-        _ => false,
-    }
+    name == expected_alias && !body.contains_unknown_or_any()
 }
 
 pub(in crate::lower) fn refine_defaultdict_int_augassign_key(

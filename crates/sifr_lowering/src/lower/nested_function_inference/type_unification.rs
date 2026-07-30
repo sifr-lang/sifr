@@ -60,14 +60,56 @@ pub(super) fn unify_types(current: Type, incoming: Type) -> Type {
 }
 
 pub(super) fn type_contains_unknown_or_any(ty: &Type) -> bool {
+    ty.contains_unknown_or_any()
+}
+
+pub(super) fn replace_inference_holes_with_any(ty: Type) -> Type {
     match ty {
-        Type::Unknown | Type::Any => true,
-        Type::List(elem) => type_contains_unknown_or_any(elem),
-        Type::Dict(key, value) => {
-            type_contains_unknown_or_any(key) || type_contains_unknown_or_any(value)
+        Type::Unknown => Type::Any,
+        Type::List(element) => Type::List(Box::new(replace_inference_holes_with_any(*element))),
+        Type::Set(element) => Type::Set(Box::new(replace_inference_holes_with_any(*element))),
+        Type::Dict(key, value) => Type::Dict(
+            Box::new(replace_inference_holes_with_any(*key)),
+            Box::new(replace_inference_holes_with_any(*value)),
+        ),
+        Type::Tuple(elements) => Type::Tuple(
+            elements
+                .into_iter()
+                .map(replace_inference_holes_with_any)
+                .collect(),
+        ),
+        Type::Union(elements) => Type::Union(
+            elements
+                .into_iter()
+                .map(replace_inference_holes_with_any)
+                .collect(),
+        ),
+        Type::Intersection(elements) => Type::Intersection(
+            elements
+                .into_iter()
+                .map(replace_inference_holes_with_any)
+                .collect(),
+        ),
+        Type::Alias {
+            name,
+            type_args,
+            body,
+        } => Type::Alias {
+            name,
+            type_args,
+            body: Box::new(replace_inference_holes_with_any(*body)),
+        },
+        Type::Iterable(element) => {
+            Type::Iterable(Box::new(replace_inference_holes_with_any(*element)))
         }
-        Type::Tuple(elements) => elements.iter().any(type_contains_unknown_or_any),
-        _ => false,
+        Type::Iterator(element) => {
+            Type::Iterator(Box::new(replace_inference_holes_with_any(*element)))
+        }
+        Type::Result(ok, error) => Type::Result(
+            Box::new(replace_inference_holes_with_any(*ok)),
+            Box::new(replace_inference_holes_with_any(*error)),
+        ),
+        other => other,
     }
 }
 

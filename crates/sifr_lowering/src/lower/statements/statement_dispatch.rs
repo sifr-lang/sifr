@@ -130,7 +130,7 @@ pub(in crate::lower) fn lower_stmts(
             == nested_inference.exact_dict_write_hints.get(name)
     });
     let defaultdict_hint_names =
-        crate::lower::empty_plain_dict_inference::safe_defaultdict_hint_names_for_block(stmts);
+        crate::lower::defaultdict_refinement::safe_defaultdict_hint_names_for_block(stmts);
     ctx.inferred_binding_hints
         .push(nested_inference.binding_hints.clone());
     ctx.push_empty_collection_hint_adoption(can_adopt_empty_collection_hints);

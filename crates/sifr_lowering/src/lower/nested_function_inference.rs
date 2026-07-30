@@ -14,11 +14,15 @@ use expression_inference::{
 };
 mod defaultdict_inference;
 use defaultdict_inference::{
-    infer_defaultdict_call_type, refine_defaultdict_method_call, refine_defaultdict_subscript,
-    unify_matching_defaultdict_aliases,
+    defaultdict_shape_expr_is_lowering_exact, infer_defaultdict_call_type,
+    is_unresolved_defaultdict_inference_type, refine_defaultdict_method_call,
+    refine_defaultdict_subscript, unify_matching_defaultdict_aliases, DefaultdictMethodCall,
 };
 mod type_unification;
-use type_unification::{has_conflicting_inference, type_contains_unknown_or_any, unify_types};
+use type_unification::{
+    has_conflicting_inference, replace_inference_holes_with_any, type_contains_unknown_or_any,
+    unify_types,
+};
 mod generic_call_inference;
 use generic_call_inference::infer_registered_call;
 mod return_inference;
