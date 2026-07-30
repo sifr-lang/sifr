@@ -1689,6 +1689,14 @@ Validation evidence to date:
   chronology is exact and non-contradictory, found no non-Markdown change
   after round 8, and re-ran the documentation-sensitive resource,
   maintainability, file-size, and diff-hygiene gates.
+- The authoritative `create-pr` lane first completed all 19 Python-interop
+  variants but exceeded that step's cold timing budget. Its cache-warmed rerun
+  exited successfully: Python interop passed in 527.06/600 seconds, Rust
+  interop passed all 10 variants in 7.62/10 seconds, developer tooling passed
+  in 132.07/180 seconds, all smoke crate suites passed in 144.83/600 seconds
+  including 450/65 driver tests, runtime platform passed in 69.87/120 seconds,
+  and the E2E suite passed 131/131 fixtures in 399.17/600 seconds. Only the
+  lane's nonblocking aggregate warm-time advisory remained.
 
 ### certification_14: Track A Closeout and Stable Gate
 
