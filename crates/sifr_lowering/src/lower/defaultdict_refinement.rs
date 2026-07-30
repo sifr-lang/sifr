@@ -1,7 +1,52 @@
 use super::builtin_calls::{DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS};
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
-use sifr_type_system::Type;
+use sifr_type_system::{widen_literal, Type};
+
+pub(in crate::lower) fn refine_defaultdict_int_augassign_key(
+    object_name: &str,
+    object_ty: Type,
+    index_ty: &Type,
+    ctx: &mut LowerCtx,
+) -> Type {
+    let Type::Alias {
+        name,
+        type_args,
+        body,
+    } = &object_ty
+    else {
+        return object_ty;
+    };
+    if name != DEFAULTDICT_INT_ALIAS {
+        return object_ty;
+    }
+    let Type::Dict(key_ty, value_ty) = body.as_ref() else {
+        return object_ty;
+    };
+    if !matches!(key_ty.as_ref(), Type::Any | Type::Unknown) {
+        return object_ty;
+    }
+    let inferred_key_ty = widen_literal(index_ty);
+    if matches!(inferred_key_ty, Type::Any | Type::Unknown) {
+        return object_ty;
+    }
+
+    let refined_ty = Type::Alias {
+        name: name.clone(),
+        type_args: type_args.clone(),
+        body: Box::new(Type::Dict(Box::new(inferred_key_ty), value_ty.clone())),
+    };
+    let _ = ctx.scope.set_type(object_name, refined_ty.clone());
+    ctx.narrow_var_with_flow(
+        object_name,
+        refined_ty.clone(),
+        "defaultdict-int-augassign-key-refinement".to_string(),
+        true,
+    );
+    ctx.pending_container_specialization_patches
+        .insert(object_name.to_string(), refined_ty.clone());
+    refined_ty
+}
 
 pub(in crate::lower) fn refine_defaultdict_binding_expr(
     expr: HirExpr,

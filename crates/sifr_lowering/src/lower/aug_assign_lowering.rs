@@ -9,6 +9,7 @@ use super::binding_mutability::ensure_mutable_parameter_binding;
 use super::container_literal_specialization::{
     validate_subscript_augassign_target, SubscriptAugAssignTarget,
 };
+use super::defaultdict_refinement::refine_defaultdict_int_augassign_key;
 use super::expressions::{affine_value_references_name, consume_owned_value, lower_expr};
 use super::integer_failure_diagnostics::exact_int_augassign_requires_handling;
 use super::name_diagnostics;
@@ -279,6 +280,7 @@ pub(in crate::lower) fn lower_aug_assign(
         let index = lower_expr(&sub.slice, ctx)?;
         let value = lower_python_context_owned_expr(&aug.value, ctx)?;
         let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
+        let obj_ty = refine_defaultdict_int_augassign_key(&obj_name, obj_ty, index.ty(), ctx);
         let object_ty = validate_subscript_augassign_target(
             ctx,
             SubscriptAugAssignTarget {

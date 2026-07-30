@@ -169,6 +169,7 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) function_scopes: Vec<function_scopes::FunctionScopeState>,
     pub(in crate::lower) inferred_binding_hints: Vec<HashMap<String, Type>>,
     pub(in crate::lower) empty_collection_hint_adoption: Vec<bool>,
+    pub(in crate::lower) empty_plain_dict_hint_adoption: Vec<HashSet<String>>,
     /// Expected type for a specific expression range while lowering a typed initializer.
     pub(in crate::lower) contextual_expr_types: Vec<(TextRange, Type)>,
     pub(in crate::lower) empty_dict_specializations: HashMap<String, Type>,
@@ -259,6 +260,7 @@ impl LowerCtx {
             function_scopes: Vec::new(),
             inferred_binding_hints: Vec::new(),
             empty_collection_hint_adoption: Vec::new(),
+            empty_plain_dict_hint_adoption: Vec::new(),
             contextual_expr_types: Vec::new(),
             empty_dict_specializations: HashMap::new(),
             const_integer_values: HashMap::new(),
@@ -420,6 +422,20 @@ impl LowerCtx {
             .last()
             .copied()
             .unwrap_or(false)
+    }
+
+    pub(in crate::lower) fn push_empty_plain_dict_hint_adoption(&mut self, names: HashSet<String>) {
+        self.empty_plain_dict_hint_adoption.push(names);
+    }
+
+    pub(in crate::lower) fn pop_empty_plain_dict_hint_adoption(&mut self) {
+        let _ = self.empty_plain_dict_hint_adoption.pop();
+    }
+
+    pub(in crate::lower) fn can_adopt_empty_plain_dict_hint(&self, name: &str) -> bool {
+        self.empty_plain_dict_hint_adoption
+            .last()
+            .is_some_and(|names| names.contains(name))
     }
 
     pub(in crate::lower) fn push_contextual_expr_type(&mut self, range: TextRange, ty: Type) {
