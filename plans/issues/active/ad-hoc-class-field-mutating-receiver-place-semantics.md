@@ -9,9 +9,10 @@ receiver metadata and inference, merged in
 [#3065](https://github.com/sifr-lang/sifr/pull/3065) after implementation
 review pass 2 returned `SATISFIED`. Item 2, checked place semantics and defect
 closure, is under PR
-[#3082](https://github.com/sifr-lang/sifr/pull/3082), and is undergoing
-exact-head remediation after PR review pass 6 returned `NOT SATISFIED`;
-implementation review pass 5 returned `SATISFIED` after passes 1 through 4
+[#3082](https://github.com/sifr-lang/sifr/pull/3082), and exact-head PR review
+pass 8 returned `SATISFIED` with zero actionable findings after passes 6 and 7
+identified and drove localized constructor-check and evidence corrections.
+Implementation review pass 5 returned `SATISFIED` after passes 1 through 4
 returned `NOT SATISFIED`. The remediation
 restores non-cloning shared field receivers, checks delegated fixed-trait
 mutation after receiver convergence, makes owned temporary proof exhaustive,
@@ -782,6 +783,10 @@ Current Item 2 validation evidence:
   passes with the complete annotated fail corpus;
 - formatting, workspace clippy with warnings denied, HIR maintainability,
   file-size, diagnostic-doc links, and diff checks pass;
+- the post-review remediation create-PR profile passed its full Python interop
+  lane (`19/19`) and every other blocking lane except one contended LSP
+  `workspace/executeCommand` timeout; the exact `lsp-smoke` suite then passed
+  all `6/6` variants in isolation, including the same protocol smoke;
 - the representative performance suite has an official isolated green run
   (`8/8`) with `CARGO_BUILD_JOBS=1`;
 - merge-profile pass 13 on exact head
@@ -957,3 +962,11 @@ Current Item 2 validation evidence:
   initializers as separate facts, so a repeated field assignment before
   complete storage now reports check-time `SIFR-OWN-0014` instead of leaking
   Rust `E0063`, with focused lowering and annotated fail-fixture coverage.
+- Item 2 exact-head PR review pass 8:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-8.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-8.md)
+  returned `SATISFIED` with zero actionable findings. The reviewer
+  independently reproduced the parameter-seed/explicit-initializer matrix,
+  repeated-field rejection before complete storage, acceptance after complete
+  storage, source-facing constructor diagnostics, full lowering/codegen and
+  fail-corpus results, and the wider checked-place/optimizer/protocol
+  invariants.
