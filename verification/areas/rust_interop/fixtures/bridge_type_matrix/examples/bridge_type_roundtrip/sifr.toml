@@ -16,6 +16,7 @@ direct-crate-bindings = true
 
 [trust]
 unsafe-rust-bridges = ["src/bridges/types.rs"]
+rust-build-scripts = ["serde", "serde_json", "thiserror"]
 rust-no-panic = [
   "bridge.types.serde_json_roundtrip",
   "bridge.types.bytes_roundtrip",

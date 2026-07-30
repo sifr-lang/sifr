@@ -106,6 +106,14 @@ def validate_zero_copy_scenario(
         fixture_id,
         raw_path,
         trust,
+        "rust-build-scripts",
+        ["zerocopy"],
+    )
+    _require_trust(
+        failures,
+        fixture_id,
+        raw_path,
+        trust,
         "rust-no-panic",
         [
             "bridge.zero_copy.close",
@@ -166,6 +174,13 @@ def run_zero_copy_self_test(
                 '  "bridge.zero_copy.observe",',
                 '  "bridge.zero_copy.unobserved",',
                 "trust.rust-no-panic",
+            ),
+            (
+                "zero-copy build-script trust drift",
+                "examples/crate_backed_view_runtime/sifr.toml",
+                'rust-build-scripts = ["zerocopy"]',
+                "rust-build-scripts = []",
+                "trust.rust-build-scripts",
             ),
             (
                 "bytes owner retention drift",

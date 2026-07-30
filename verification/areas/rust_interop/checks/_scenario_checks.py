@@ -161,6 +161,27 @@ def run_self_test() -> tuple[int, str | None]:
                 "[trust].unsafe-rust-bridges missing src/bridges/types.rs",
             ),
             (
+                "bridge serde build-script trust drift",
+                "examples/bridge_type_roundtrip/sifr.toml",
+                'rust-build-scripts = ["serde", "serde_json", "thiserror"]',
+                'rust-build-scripts = ["serde_json", "thiserror"]',
+                "[trust].rust-build-scripts missing serde",
+            ),
+            (
+                "bridge serde-json build-script trust drift",
+                "examples/bridge_type_roundtrip/sifr.toml",
+                'rust-build-scripts = ["serde", "serde_json", "thiserror"]',
+                'rust-build-scripts = ["serde", "thiserror"]',
+                "[trust].rust-build-scripts missing serde_json",
+            ),
+            (
+                "bridge thiserror build-script trust drift",
+                "examples/bridge_type_roundtrip/sifr.toml",
+                'rust-build-scripts = ["serde", "serde_json", "thiserror"]',
+                'rust-build-scripts = ["serde", "serde_json"]',
+                "[trust].rust-build-scripts missing thiserror",
+            ),
+            (
                 "root lock drift",
                 "examples/bridge_type_roundtrip/Cargo.lock",
                 'version = "2.8.0"',
@@ -472,6 +493,14 @@ def _validate_scenario_manifests(
             trust,
             "unsafe-rust-bridges",
             ["src/bridges/types.rs"],
+        )
+        _require_trust_targets(
+            failures,
+            fixture_id,
+            raw_path,
+            trust,
+            "rust-build-scripts",
+            ["serde", "serde_json", "thiserror"],
         )
     elif fixture_id == "panic_boundary_wrapper_emission":
         if rust.get("bridges") != ["src/bridges"]:
