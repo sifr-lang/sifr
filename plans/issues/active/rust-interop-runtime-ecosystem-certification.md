@@ -156,8 +156,8 @@ normative and must not be broadened.
 | `certification_9` | merged | [PR #3069](https://github.com/sifr-lang/sifr/pull/3069); exact-pinned native build-script package, deterministic artifacts, and fail-closed direct/transitive trust rejection |
 | `certification_10` | merged | [PR #3071](https://github.com/sifr-lang/sifr/pull/3071); exact-pinned proc-macro/codegen package, deterministic prost output, and package-wide pre-execution trust rejection |
 | `certification_11` | merged | [PR #3075](https://github.com/sifr-lang/sifr/pull/3075); locked/offline/frozen Sifr command propagation, cache reuse, and deterministic drift rejection |
-| `certification_12` | in progress | exact-pinned CLI/tooling execution and bridge-safe `anyhow` boundary certification |
-| `certification_13` | blocked | starts after `certification_12` merges |
+| `certification_12` | merged | [PR #3076](https://github.com/sifr-lang/sifr/pull/3076); exact-pinned CLI/tooling execution and bridge-safe `anyhow` boundary certification |
+| `certification_13` | in progress | exact-pinned backend loopback execution and fail-closed SQLx offline metadata certification |
 | `certification_14` | blocked | starts after `certification_13` merges |
 | `certification_pkg_resource_core` | dormant | starts only after Native Pydantic-Sifr `milestone_ps_2` releases bridge version 2 |
 
@@ -1354,7 +1354,7 @@ Implementation checklist:
   `env-filter` feature, bridge dependency ownership, positive/negative
   provenance, and the supported-through-bridge contract without weakening the
   preserved backend row.
-- [ ] Run focused and authoritative local gates, complete Opus review rounds
+- [x] Run focused and authoritative local gates, complete Opus review rounds
   to satisfaction, merge the PR, and unblock only `certification_13`.
 
 Validation evidence to date:
@@ -1420,6 +1420,283 @@ Validation evidence to date:
   the same doctor passed in the main workspace with deferred=1, resolved=3,
   parity=5, and zero mutations. No failing command touches certification-12
   source, and the exact-head Rust-interop area remains 10/10.
+- [Final merge-readiness round 5](../../reviews/active/rust-interop-certification-12-review-round-5.md)
+  independently exported and audited published PR head
+  `96ab24c553d2afc05d24686b591bedd9f6289858`, reproduced the complete 10/10
+  Rust-interop area, mandatory tests, workspace Clippy, committed inventory,
+  guardrails, and shared-worktree gate attribution, and returned `SATISFIED`
+  with no blockers. PR #3076 merged on 2026-07-30 as
+  `ea119724e325b3900ccca81db766114d76eb4efd`; only `certification_13` is
+  unblocked.
+
+#### certification_13: Backend and Service Ecosystem Bridge
+
+Implementation checklist:
+
+- [x] Replace the planning-only shadow crates with an exact-pinned generated
+  package that compiles real `axum 0.8.9`, `tower-http 0.7.0`, and
+  `sqlx 0.8.6` with only the frozen
+  `runtime-tokio-rustls`/`postgres`/`macros` SQLx feature policy under the
+  checked-in package lock.
+- [x] Execute a hermetic `127.0.0.1:0` Axum service through a real
+  `tower-http` middleware layer, observe the response and middleware evidence,
+  and shut the listener/task down deterministically without external network
+  access.
+- [x] Compile a real SQLx query macro from checked-in `.sqlx/` metadata under
+  `SQLX_OFFLINE=true`, bind the query identity and metadata hash into runtime
+  evidence, and prove neither `DATABASE_URL` nor a live database is required.
+- [x] Turn `sqlx_without_offline_artifacts` into a mandatory generated-package
+  diagnostic: independently remove and stale-mutate the checked-in query
+  metadata, require stable `SIFR-RUST-CARGO-0001`, and prove rejection occurs
+  with database/network access disabled.
+- [x] Bind positive and negative evidence to distinct mandatory driver tests,
+  promote only `ecosystem_backend_certification` to
+  `supported-through-bridge`, and update scenario policy, structured claims,
+  public/internal docs, provenance, and exact inventory counts.
+- [x] Add validator self-test mutations for exact versions and features,
+  bridge ownership, loopback/middleware execution, offline environment,
+  metadata identity, both negative directions, evidence provenance, and the
+  supported-through-bridge contract without weakening earlier rows.
+- [ ] Run focused and authoritative local gates, complete Opus review rounds
+  to satisfaction, merge the PR, and unblock only `certification_14`.
+
+Expected post-item inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 72 passing and 0 planned evidence directions;
+- categories: 21 `supported`, 14 `supported-through-bridge`, and 1
+  `unsupported-by-design`;
+- execution kinds remain 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+- 61 package examples and 18 scenario examples; and
+- 36 structured stable claims.
+
+Validation evidence to date:
+
+- The mandatory positive test builds the root-lock-backed exact dependency
+  graph, runs generated Sifr package glue, binds Axum to `127.0.0.1:0`,
+  observes a `tower-http 0.7.0` response header and HTTP 200 body, expands the
+  SQLx query metadata for value 13, and completes graceful shutdown. The
+  current cold generated-package run passed in 74.81 seconds.
+- The mandatory negative test first accepts the checked-in metadata, then
+  removes and stale-mutates it on the same package root. A pre-Cargo verifier
+  prevents stable Cargo's incomplete `.sqlx/` input tracking from hiding
+  either mutation behind a warm probe cache. Both cases report
+  `SIFR-RUST-CARGO-0001`; `SQLX_OFFLINE=true` is forced, `DATABASE_URL` is
+  removed from compiler Cargo commands, and the armed database listener
+  observes no connection. The current run passed in 63.34 seconds.
+- The direct scenario package and the full workspace both build with
+  `--locked --offline --frozen`. The scenario lock is a root-lock subset and
+  resolves real `axum 0.8.9`, `tower-http 0.7.0`, `sqlx 0.8.6`, and the frozen
+  SQLx feature set rather than local shadow crates.
+- The fixture inventory passes with 36 rows, 44 crate aliases, 61 package
+  examples, and 18 scenarios. All 229 mutation cases pass. Compatibility has
+  72 passing and zero planned evidence directions across 21 supported, 14
+  bridge-supported, and 1 unsupported-by-design row; 36 stable claims pass
+  and the entire Rust-interop area is green at 10/10 variants.
+- Because this is the final future-owned row, the compatibility checker now
+  permits the declared `future-owned-by-separate-phase` category to be empty
+  while still requiring all three active categories and rejecting unknown
+  categories. Its completed-matrix and missing-active-category self-tests
+  pass. The completion-time resource gate now also accepts zero deferrals
+  while retaining the rule that only passing supported stdlib-core rows may
+  authorize retained compiler surfaces.
+- At that validation checkpoint, all 449 non-generated driver tests passed
+  with 65 generated-build tests
+  intentionally ignored. Production `sifr_driver` Clippy, workspace rustfmt,
+  TypeScript-Go transfer inventory, HIR/driver maintainability, 900-line
+  file-size, and diff-hygiene guardrails pass.
+- The authoritative create-PR lane passed every core, Python-interop, and
+  Rust-interop check, then recorded one shared-worktree LSP smoke timeout after
+  23 successful protocol requests. The exact six-variant `lsp-smoke` suite
+  passed immediately on isolation, including protocol shutdown, marker corpus,
+  transcript replay, and all self-tests. Workspace Clippy passes with warnings
+  denied.
+- [Opus round 1](../../reviews/active/rust-interop-certification-13-review-round-1.md)
+  independently reproduced both mandatory generated-package tests, all driver
+  tests, the 10/10 Rust-interop area, 229 mutation cases, the real dependency
+  graph, matrix/claim counts, validator transitions, lint, formatting, and
+  guardrails. It returned `NOT SATISFIED` for valid trailing-comma and
+  concatenated SQLx macro forms that the initial preflight falsely rejected,
+  imported/aliased and query-file forms that could evade warm-cache
+  invalidation, and substring-based Cargo dependency detection.
+- The round-1 fixes parse actual Cargo dependency tables; recognize fully
+  qualified, dependency-aliased, directly imported, inline-literal, and all
+  query-file SQLx macro families; accept concatenated literals and trailing
+  commas; and let syntax outside the conservative recognizer fall through to
+  offline Cargo. Source traversal is iterative and symlink-safe. The complete
+  `.sqlx/` directory digest now participates in both direct-probe and final
+  generated-build cache identity, including descriptor-only changes.
+- The fixture no longer sets `SQLX_OFFLINE`; Sifr's environment forcing is
+  therefore load-bearing in the positive final build and in the valid control
+  that precedes the armed-database negative mutations. The round-1-fix
+  positive mandatory test passed in 62.52 seconds and the negative test passed
+  in 18.41 seconds. Nine focused SQLx unit tests, all 446 current
+  non-generated driver tests, the 10/10 Rust-interop area, 229 mutation cases,
+  workspace Clippy, file-size/driver maintainability, the TypeScript-Go
+  inventory, and the zero-deferral resource gate pass.
+- [Opus round 2](../../reviews/active/rust-interop-certification-13-review-round-2.md)
+  confirmed the round-1 parser, macro-family, dependency-table, traversal,
+  naming, file-headroom, and diagnostic-classifier fixes, and independently
+  reproduced 446/65 driver tests, both mandatory tests, the 10/10 area, all
+  inventories, lint, formatting, and guardrails. It returned
+  `NOT SATISFIED` because Cargo does not read a path dependency's
+  `.cargo/config.toml`, package-only metadata lookup falsely rejected
+  workspace-root SQLx caches, and final-build cache identity did not yet
+  combine non-entrypoint bridge backend roots.
+- The round-2 fixes arm the database sentinel through the backend package's
+  `.env`, which SQLx reads across path-dependency builds. The valid control
+  reaches and passes Cargo without a connection because Sifr forces
+  `SQLX_OFFLINE=true`; the missing and stale mutations are rejected by the
+  preflight before Cargo starts. Inherited `DATABASE_URL` removal remains
+  directly asserted on the compiler Cargo command. Metadata resolution matches
+  package-root then Cargo-workspace-root lookup, disengages for explicit
+  `.env`-declared `SQLX_OFFLINE_DIR`, handles workspace dependency renames, and
+  combines every resolved bridge backend's metadata into a dedicated
+  final-build cache field. The preflight no longer rejects hash
+  fields that SQLx accepts, stale-query diagnostics name the actual mismatch,
+  and null metadata descriptions fail validation without a traceback.
+- After the round-2 fixes, the positive mandatory test passed in 46.39 seconds
+  and the real `.env`-armed missing/stale negative passed in 44.78 seconds.
+  Nine focused SQLx tests, 932 codegen tests, 446 non-generated driver tests,
+  and all 229 fixture mutations pass.
+- [Opus round 3](../../reviews/active/rust-interop-certification-13-review-round-3.md)
+  confirmed every round-2 required fix, including the load-bearing `.env`
+  sentinel counterfactual, workspace-root metadata lookup, multi-backend
+  final-build cache identity, dedicated SQLx digest field, SQLx-compatible
+  hash behavior, and clean null-description validation. It independently
+  reproduced 446/65 driver tests, 932 codegen tests, both mandatory tests, the
+  10/10 area, inventories, lint, formatting, and guardrails. It returned
+  `NOT SATISFIED` because the preflight still demanded metadata for
+  `cfg`-disabled query sites that Cargo never compiles.
+- The round-3 fix makes inline `cfg`/`cfg_attr`-gated modules, items, associated
+  items, statements, expressions, and match arms fall through to offline
+  Cargo. Unit coverage pins test-only modules/functions, a disabled feature, a
+  `cfg_attr`, gated statements, and an associated method; the mandatory
+  `.env`-armed negative test also injects an unprepared inline `#[cfg(test)]`
+  query and passes end to end. Ambient `SQLX_OFFLINE_DIR` no longer drops
+  default `.sqlx` roots from cache identity, sentinel wording attributes the
+  load-bearing proof only to the valid Cargo control, and the direct-read
+  inventory contains only then-current references. Round 4 re-audited the
+  attempted workspace memo/short-circuit change and found the unguarded
+  preflight path recorded below.
+- After the round-3 fixes, 10 focused SQLx tests, 447 non-generated driver
+  tests, the 10/10 Rust-interop area with 229 mutation cases, workspace Clippy,
+  formatting, file-size, TypeScript-Go inventory, resource-gate, and diff
+  checks pass. The cold `.env`-armed negative test, including its cfg-gated
+  regression, passed in 195.61 seconds.
+- [Opus round 4](../../reviews/active/rust-interop-certification-13-review-round-4.md)
+  confirmed the inline cfg fix, ambient offline-directory behavior, sentinel
+  attribution, and current direct-read inventory, and independently reproduced
+  447/65 driver tests, both mandatory tests, the 10/10 area, lint, formatting,
+  and guardrails. It returned `NOT SATISFIED` because the source glob still
+  scanned file-based gated modules and orphan binaries, and because removing
+  the workspace memo caused 925 Cargo metadata subprocesses in a warm check.
+- The round-4 fix replaces the source glob with a symlink-safe module graph
+  rooted at the Cargo library entry (or main entry when no library exists).
+  It follows active inline, file, nested, and `#[path]` modules; skips gated
+  declarations before loading their files; and never preflights orphan
+  `src/bin` targets. Unit and mandatory generated-package coverage now use
+  file-based `#[cfg(test)]` modules, while an active redirected module remains
+  recognized. Ordinary `cfg_attr` remains recognized unless it can add a
+  disabling `cfg`, and package-scoped diagnostics no longer blame an arbitrary
+  bridge target.
+- Workspace dependency resolution is lazy and reads declared workspace
+  dependency mappings without spawning Cargo. SQLx workspace-root resolution
+  uses an ancestor-manifest-fingerprinted cache whose subprocess work occurs
+  outside the mutex; no-SQLx roots bypass it, and warm probe-cache hits bypass
+  the preflight after the complete backend/metadata cache key is computed. A
+  local traced warm fixture check completed in 2.67 seconds with one SQLx
+  workspace-metadata subprocess instead of 925; an independent environment
+  measured a slower wall clock from pre-existing recursive dependency hashing
+  and one additional general package-resolution metadata invocation.
+- After the round-4 fixes, 11 focused SQLx tests pass. The real
+  `.env`-armed missing/stale negative with a gated file module passes in 27.83
+  seconds, the positive loopback/SQLx build passes in 55.77 seconds, and
+  all 448 non-generated driver tests pass with 65 generated-build tests
+  intentionally ignored. The 10/10 Rust-interop area with all 229 mutations,
+  workspace Clippy, formatting, file-size, driver maintainability,
+  TypeScript-Go inventory, resource gate/self-test, and diff checks pass. The
+  SQLx implementation remains responsibility-split across offline policy,
+  cfg-aware visitation, and module-graph traversal.
+- [Opus round 5](../../reviews/active/rust-interop-certification-13-review-round-5.md)
+  confirmed every round-4 blocker and optional hardening fix, independently
+  reproduced 448/65 driver tests, both mandatory tests, the 10/10 area, all
+  lint/format/guardrail gates, active/gated/orphan module layouts, and the
+  one-spawn SQLx workspace-metadata bound. It returned `NOT SATISFIED` for one
+  narrow Cargo rule: an unconditional `#[path = "dir"]` on an inline module
+  did not redirect resolution of that module's file-based children.
+- The round-5 fix applies an inline module's declared path before resolving its
+  children. Unit coverage proves both directions: the redirected child is
+  recognized and the same child under the default module directory is never
+  scanned. The mandatory `.env`-armed generated-package test also includes a
+  never-compiled default-directory query and reaches Cargo successfully.
+  Parse-tolerance coverage now declares its malformed module, `[lib].path` and
+  `main.rs` fallback selection are pinned, the workspace memo retains only the
+  current fingerprint per backend root, and the architecture records the
+  deliberate symlink/function-body/external-offline-directory opt-outs.
+- At the round-5 checkpoint, 12 focused SQLx tests passed and the real
+  `.env`-armed negative passed in 42.28 seconds. All 449 non-generated driver
+  tests passed with 65 generated-build tests intentionally ignored. The
+  implementation was responsibility-split at 665 lines for offline policy,
+  219 for cfg-aware visitation, and 200 for module-graph traversal.
+- [Opus round 6](../../reviews/active/rust-interop-certification-13-review-round-6.md)
+  confirmed the literal round-5 inline-path fix and all optional hardening,
+  independently reproduced 449/65 driver tests, both mandatory tests, the
+  10/10 area, and every lint/guardrail gate. It returned `NOT SATISFIED`
+  because explicit paths declared from a non-`mod.rs` file incorrectly used
+  that file module's pending relative directory as their base.
+- The round-6 fix models Rust module lookup with a declaration directory plus
+  an optional pending flat-module-relative component. Ordinary child lookup
+  consumes both pieces, while explicit `#[path]` lookup deliberately ignores
+  the pending component. Unit coverage proves all three affected layouts in
+  both directions: a redirected file module, a redirected inline module, and
+  children of a path-loaded file. The mandatory generated backend installs
+  the same three layouts in its real `backend.rs`; their never-compiled
+  default-directory queries are ignored and the clean control reaches Cargo.
+- After the round-6 fixes, 13 focused SQLx tests, all 450 non-generated driver
+  tests, and the strengthened `.env`-armed negative pass; 65 generated-build
+  tests remain intentionally ignored. The implementation remains
+  responsibility-split at 665 lines for offline policy, 219 for cfg-aware
+  visitation, and 235 for module-graph traversal.
+- [Opus round 7](../../reviews/active/rust-interop-certification-13-review-round-7.md)
+  returned `SATISFIED` with no blocking finding. It compared the two-state
+  resolver with rustc 1.94 across 11 module layouts, reproduced all three
+  round-6 layouts in both directions on the real backend fixture, and
+  independently passed 450/65 driver tests, both mandatory tests, the 10/10
+  area, and every lint/guardrail gate.
+- The optional round-7 raw-identifier note is closed rather than retained as
+  a fail-open limitation: module names are unrawed before file lookup, and the
+  file and inline forms both prove the compiled source is recognized while a
+  literal `r#name` decoy is ignored. Documentation now names the declaration
+  directory precisely and older validation bullets are explicitly historical.
+  The final production split is 665 lines for offline policy, 219 for
+  cfg-aware visitation, and 240 for module-graph traversal.
+- [Opus round 8](../../reviews/active/rust-interop-certification-13-review-round-8.md)
+  reconfirmed the round-7 implementation verdict, independently matched raw
+  flat, inline, non-keyword, and nested-module layouts against rustc 1.94,
+  passed 450/65 driver tests, both mandatory tests, the 10/10 area, and all
+  gates. It returned `NOT SATISFIED` only because the nearby historical
+  create-PR evidence sentence had accidentally lost the word `denied`.
+- The round-8 documentation fix restores the exact statement that workspace
+  Clippy passed with warnings denied; no implementation or test behavior
+  changed after the complete round-8 validation.
+- [Opus round 9](../../reviews/active/rust-interop-certification-13-review-round-9.md)
+  returned `SATISFIED` with no finding. It verified the wording repair is
+  byte-identical to the pre-regression sentence, confirmed the round-8
+  chronology is exact and non-contradictory, found no non-Markdown change
+  after round 8, and re-ran the documentation-sensitive resource,
+  maintainability, file-size, and diff-hygiene gates.
+- The authoritative `create-pr` lane first completed all 19 Python-interop
+  variants but exceeded that step's cold timing budget. Its cache-warmed rerun
+  exited successfully: Python interop passed in 527.06/600 seconds, Rust
+  interop passed all 10 variants in 7.62/10 seconds, developer tooling passed
+  in 132.07/180 seconds, all smoke crate suites passed in 144.83/600 seconds
+  including 450/65 driver tests, runtime platform passed in 69.87/120 seconds,
+  and the E2E suite passed 131/131 fixtures in 399.17/600 seconds. Only the
+  lane's nonblocking aggregate warm-time advisory remained.
 
 ### certification_14: Track A Closeout and Stable Gate
 
@@ -1427,14 +1704,13 @@ This PR starts only when `certification_1` through `certification_13` are
 merged.
 
 - Re-run the row/fixture inventory and update documented counts.
-- Replace the completion-time backstop in
+- Confirm the completion-time backstop transition in
   `scripts/check_sysroot_stdlib_resource_certification_gate.py` that currently
-  requires at least one future-owned row, and update the guard's
-  `--self-test` completed-matrix assertion in the same PR. Keep its supported
-  stdlib-core invariants.
-- Change `check_compatibility_matrix.py` so an unused
-  `future-owned-by-separate-phase` category is valid after all current
-  deferrals resolve; still reject unknown categories and invalid rows.
+  accepts zero future-owned rows, and re-run the guard's completed-matrix
+  `--self-test`. Keep its supported stdlib-core invariants.
+- Confirm `check_compatibility_matrix.py` permits an unused
+  `future-owned-by-separate-phase` category after all current deferrals
+  resolve while still rejecting unknown categories and invalid rows.
 - Remove stale `future_owner` fields from promoted rows and confirm no planned
   evidence status remains in Track A rows.
 - Run the Phase 40 stable-candidate check and verify public docs advertise only

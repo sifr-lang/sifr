@@ -50,6 +50,7 @@ pub(super) fn cargo_inputs(
     RustInteropCargoInputs {
         package_id: context.package_id.0.clone(),
         cargo_metadata_digest: None,
+        sqlx_offline_metadata_digest: None,
         package_graph_digest: Some(graph_digest.hex),
         package_source_map_digest: Some(source_map_digest.hex),
         cargo_lock_digest: cargo_lock_digest(&package.package_root),
@@ -73,6 +74,10 @@ pub(super) fn combined_cargo_inputs(
     let digest = combined_cargo_inputs_digest(&primary, &secondary);
     primary.package_id = format!("{}+{}", primary.package_id, secondary.package_id);
     primary.cargo_metadata_digest = Some(digest.clone());
+    primary.sqlx_offline_metadata_digest = combine_optional_digest(
+        primary.sqlx_offline_metadata_digest.take(),
+        secondary.sqlx_offline_metadata_digest,
+    );
     primary.package_graph_digest = Some(digest);
     primary.package_source_map_digest = combine_optional_digest(
         primary.package_source_map_digest.take(),
@@ -104,6 +109,7 @@ fn sysroot_cargo_inputs(
     RustInteropCargoInputs {
         package_id: format!("sifr-sysroot-stdlib@{}", trust.toolchain_id),
         cargo_metadata_digest: Some(sysroot_metadata_digest(trust)),
+        sqlx_offline_metadata_digest: None,
         package_graph_digest: Some(trust.sysroot_content_sha256.clone()),
         package_source_map_digest: Some(digest_path(&trust.stdlib_private_sources)),
         cargo_lock_digest: digest_file(&trust.cargo_lock),
@@ -483,6 +489,14 @@ mod tests {
             primary.cargo_metadata_digest
         );
         assert_ne!(
+            combined.sqlx_offline_metadata_digest,
+            primary.sqlx_offline_metadata_digest
+        );
+        assert_ne!(
+            combined.sqlx_offline_metadata_digest,
+            secondary.sqlx_offline_metadata_digest
+        );
+        assert_ne!(
             combined.package_source_map_digest,
             primary.package_source_map_digest
         );
@@ -499,6 +513,7 @@ mod tests {
         RustInteropCargoInputs {
             package_id: package_id.to_string(),
             cargo_metadata_digest: Some(format!("{package_id}-metadata")),
+            sqlx_offline_metadata_digest: Some(format!("{package_id}-sqlx")),
             package_graph_digest: Some(format!("{package_id}-graph")),
             package_source_map_digest: package_source_map_digest.map(str::to_string),
             cargo_lock_digest: Some(format!("{package_id}-lock")),

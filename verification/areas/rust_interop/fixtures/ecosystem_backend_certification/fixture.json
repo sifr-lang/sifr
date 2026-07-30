@@ -4,16 +4,30 @@
   "evidence": {
     "negative": {
       "expected_diagnostic": "SIFR-RUST-CARGO-0001",
-      "expected_result": "future-owned-diagnostic",
+      "expected_result": "diagnostic",
       "id": "sqlx_without_offline_artifacts",
       "path": "negative/sqlx_without_offline_artifacts.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_backend_ecosystem_support.rs",
+        "test_name": "test_check_missing_and_stale_sqlx_offline_metadata_rejected_before_network"
+      }
     },
     "positive": {
-      "expected_result": "future-owned",
+      "expected_result": "pass",
       "id": "backend_probe_coverage",
       "path": "positive/backend_probe_coverage.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_backend_ecosystem_support.rs",
+        "test_name": "test_build_backend_loopback_and_sqlx_offline_metadata"
+      }
     }
   },
   "execution_kind": "cargo-probe",
@@ -24,6 +38,12 @@
         "runtime-tokio-rustls",
         "postgres",
         "macros"
+      ]
+    },
+    "tower-http": {
+      "default_features": false,
+      "features": [
+        "set-header"
       ]
     }
   },

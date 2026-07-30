@@ -1,13 +1,16 @@
 # fixture: ecosystem_backend_certification
 # evidence: negative/sqlx_without_offline_artifacts
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: cargo-probe
-# expected-result: future-owned-diagnostic
+# expected-result: diagnostic
 # expected-diagnostic: SIFR-RUST-CARGO-0001
-# fixture-cargo: sqlx macros require offline artifacts
-@rust(bridge.backend.query_compile_time, panic=trusted_no_panic)
-def query_compile_time() -> uint32: ...
+# fixture-cargo: SQLX_OFFLINE=true requires matching checked-in query metadata
+class BackendError(Error):
+    message: str
 
-def verify_sqlx_without_offline_artifacts() -> uint32:
-    query_compile_time_result: uint32 = query_compile_time()
+@rust(bridge.backend.query_compile_time, panic=map_error(bridge.backend.map_panic))
+def query_compile_time() -> Result[uint32, BackendError | RustPanicError]: ...
+
+def verify_sqlx_without_offline_artifacts() -> Result[uint32, BackendError | RustPanicError]:
+    query_compile_time_result: Result[uint32, BackendError | RustPanicError] = query_compile_time()
     return query_compile_time_result

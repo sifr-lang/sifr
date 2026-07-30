@@ -20,6 +20,7 @@ from _scenario_callback_subscriptions import (
     run_callback_subscription_self_test,
     validate_callback_subscription_scenario,
 )
+from _scenario_backend import run_backend_self_test, validate_backend_scenario
 from _scenario_cli import run_cli_self_test, validate_cli_scenario
 from _scenario_cargo_locked import (
     run_cargo_locked_self_test,
@@ -316,6 +317,13 @@ def run_self_test() -> tuple[int, str | None]:
     if cli_error is not None:
         return cases, cli_error
 
+    backend_cases, backend_error = run_backend_self_test(
+        AREA_ROOT, validate_scenario_examples
+    )
+    cases += backend_cases
+    if backend_error is not None:
+        return cases, backend_error
+
     return cases, None
 
 
@@ -359,6 +367,7 @@ def _validate_scenario_example_dir(
         _reject_generated_bridge_imports(failures, fixture_id, raw_path, rust_sources)
     if fixture_id in {
         "advanced_data_runtime_matrix",
+        "ecosystem_backend_certification",
         "ecosystem_cli_certification",
         "native_build_script",
         "proc_macro_trust",
@@ -560,10 +569,16 @@ def _validate_scenario_manifests(
             example_dir,
         )
     elif fixture_id == "ecosystem_backend_certification":
-        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "axum", "rust/axum")
-        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "tower-http", "rust/tower_http")
-        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "sqlx", "rust/sqlx")
-        _require_dependency_features(failures, fixture_id, raw_path, dependencies, "sqlx", ["runtime-tokio-rustls", "postgres", "macros"], default_features=False)
+        validate_backend_scenario(
+            failures,
+            fixture_id,
+            raw_path,
+            cargo,
+            dependencies,
+            rust,
+            trust,
+            example_dir,
+        )
     elif fixture_id == "ecosystem_cli_certification":
         validate_cli_scenario(
             failures,

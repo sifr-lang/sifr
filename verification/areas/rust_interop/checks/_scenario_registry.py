@@ -62,7 +62,15 @@ REQUIRED_SCENARIO_EXAMPLES = {
     },
     "ecosystem_backend_certification": {
         "backend_feature_package": {
-            "tokens": ("runtime-tokio-rustls", "postgres", "macros", "tower-http"),
+            "tokens": (
+                "runtime-tokio-rustls",
+                "postgres",
+                "macros",
+                "tower-http",
+                "127.0.0.1:0",
+                "SQLX_OFFLINE",
+                ".sqlx/",
+            ),
         },
     },
     "ecosystem_cli_certification": {

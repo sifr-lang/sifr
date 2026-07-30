@@ -77,12 +77,6 @@ def _validate(matrix: dict[str, Any], manifest: dict[str, Any]) -> list[str]:
                     f"{surface_id}: {row_id} future_owner must remain {CERTIFICATION_ISSUE}"
                 )
 
-    future_runtime_rows = _future_runtime_rows(matrix)
-    if not future_runtime_rows:
-        failures.append(
-            "expected at least one runtime/resource compatibility row to remain future-owned; "
-            "update this guard when resource certification lands"
-        )
     return failures
 
 
@@ -253,13 +247,21 @@ def _self_test() -> int:
 
     completed_matrix = json.loads(json.dumps(base_matrix))
     for row in completed_matrix["rows"]:
-        row["category"] = "supported"
+        row["category"] = (
+            SUPPORTED if row["id"] in SUPPORTED_STDLIB_CORE_ROWS else "supported-through-bridge"
+        )
+        row["positive_evidence"] = {"status": "passing"}
+        row["negative_evidence"] = {"status": "passing"}
         row.pop("future_owner", None)
-    if not any(
-        "expected at least one runtime/resource compatibility row" in failure
-        for failure in _validate(completed_matrix, base_manifest)
-    ):
-        print("self-test missing future-owned backstop was not rejected", file=sys.stderr)
+    completed_manifest = json.loads(json.dumps(base_manifest))
+    for surface in completed_manifest["surface"]:
+        surface["certification_rows"] = [
+            row_id
+            for row_id in surface["certification_rows"]
+            if row_id in SUPPORTED_STDLIB_CORE_ROWS
+        ]
+    if _validate(completed_matrix, completed_manifest):
+        print("self-test completed matrix without deferrals was rejected", file=sys.stderr)
         return 1
 
     bad_manifest = json.loads(json.dumps(base_manifest))

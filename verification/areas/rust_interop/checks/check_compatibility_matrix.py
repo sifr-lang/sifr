@@ -25,6 +25,7 @@ VALID_CATEGORIES = {
     "future-owned-by-separate-phase",
 }
 CLAIMED_SUPPORT_CATEGORIES = {"supported", "supported-through-bridge", "unsupported-by-design"}
+OPTIONAL_EMPTY_CATEGORIES = {"future-owned-by-separate-phase"}
 FUTURE_OWNER_PREFIXES = ("plans/issues/active/", "plans/phases/")
 
 
@@ -91,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     failures.extend(f"missing compatibility row for fixture: {item}" for item in sorted(set(fixtures) - fixture_rows))
-    failures.extend(f"compatibility category is unused: {item}" for item in sorted(VALID_CATEGORIES - seen_categories))
+    failures.extend(_unused_category_failures(seen_categories))
 
     if failures:
         for failure in failures:
@@ -254,6 +255,14 @@ def _evidence_status(fixture: dict[str, Any], field: str) -> str:
     return str(evidence.get("status", ""))
 
 
+def _unused_category_failures(seen_categories: set[str]) -> list[str]:
+    required_categories = VALID_CATEGORIES - OPTIONAL_EMPTY_CATEGORIES
+    return [
+        f"compatibility category is unused: {item}"
+        for item in sorted(required_categories - seen_categories)
+    ]
+
+
 def _run_self_test() -> int:
     rationale = {
         "purpose": "crate APIs supply diagnostic shapes only",
@@ -389,7 +398,27 @@ def _run_self_test() -> int:
                 file=sys.stderr,
             )
             return 1
-    print(f"rust interop compatibility matrix self-test ok: cases={len(cases) + 2}")
+        completed_categories = {
+            "supported",
+            "supported-through-bridge",
+            "unsupported-by-design",
+        }
+        if _unused_category_failures(completed_categories):
+            print(
+                "rust interop compatibility matrix self-test error: "
+                "completed matrix without future-owned rows was rejected",
+                file=sys.stderr,
+            )
+            return 1
+        incomplete_failures = _unused_category_failures({"supported"})
+        if not any("supported-through-bridge" in failure for failure in incomplete_failures):
+            print(
+                "rust interop compatibility matrix self-test error: "
+                "required active category may be unused",
+                file=sys.stderr,
+            )
+            return 1
+    print(f"rust interop compatibility matrix self-test ok: cases={len(cases) + 4}")
     return 0
 
 

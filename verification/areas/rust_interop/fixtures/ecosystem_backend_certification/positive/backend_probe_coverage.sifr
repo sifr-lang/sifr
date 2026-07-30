@@ -1,14 +1,14 @@
 # fixture: ecosystem_backend_certification
 # evidence: positive/backend_probe_coverage
-# evidence-status: planned
+# evidence-status: passing
 # execution-kind: cargo-probe
-# expected-result: future-owned
+# expected-result: pass
 class BackendError(Error):
     message: str
 
-@rust(bridge.backend.route_probe)
-async def route_probe(path: str) -> Result[str, BackendError | RustPanicError]: ...
+@rust(bridge.backend.route_probe, panic=map_error(bridge.backend.map_panic))
+def route_probe(path: str) -> Result[str, BackendError | RustPanicError]: ...
 
-async def verify_backend_probe_coverage() -> Result[str, BackendError | RustPanicError]:
-    route_probe_result: Result[str, BackendError | RustPanicError] = await route_probe("/tmp/sifr-rust-interop.bin")
+def verify_backend_probe_coverage() -> Result[str, BackendError | RustPanicError]:
+    route_probe_result: Result[str, BackendError | RustPanicError] = route_probe("/health")
     return route_probe_result

@@ -1212,6 +1212,32 @@ probes use the sysroot vendor. Offline preparation and execution deny the networ
 messages for missing or stale locks, selected version/source/checksum drift,
 feature drift, and unavailable offline sources are classified before ordinary
 Rust target/type resolution and reported as `SIFR-RUST-CARGO-0001`.
+Rust signature probes and final generated builds also force
+`SQLX_OFFLINE=true` and remove inherited `DATABASE_URL`. SQLx query macros
+therefore cannot contact a database during compilation and must resolve
+matching checked-in `.sqlx/` metadata. Package- and workspace-root `.sqlx/`
+directory digests for every resolved bridge backend are combined into both
+direct-probe and final generated-build cache identity. A
+dependency-table-aware preflight validates recognized fully qualified,
+crate-aliased, directly imported, inline-literal, and query-file macro forms
+against the same package/workspace search order. Source discovery follows the
+declared module graph from the Cargo library entry (or main entry when no
+library exists), including active `#[path]` redirects. Module lookup retains
+Rust's separate declaration-directory and pending flat-module-relative state,
+so explicit paths remain anchored to the declaration directory while
+ordinary child modules use the pending module directory. Gated file modules
+and orphan targets are not preflighted. `cfg`-gated subtrees, `cfg_attr` that
+may add a `cfg`, `.env`-declared `SQLX_OFFLINE_DIR` policy, and syntax outside
+that conservative recognizer fall through to offline Cargo as the authority
+instead of becoming a false Sifr diagnostic. Workspace-root resolution is memoized
+outside the subprocess lock with ancestor-manifest fingerprints, so long-lived
+drivers invalidate the memo when workspace declarations change.
+Symlinked or package-escaping module sources and module declarations inside
+function bodies also fall through to Cargo; they are deliberately outside the
+preflight's containment boundary. A backend `.env` that selects an external
+`SQLX_OFFLINE_DIR` is an explicit preflight and Sifr cache-identity opt-out, so
+the default package/workspace cache search is required for the certified warm
+cache guarantee.
 
 ### CLI and Tooling Ecosystem Boundary
 
@@ -1232,6 +1258,33 @@ arbitrary `clap`, tracing subscriber, or `anyhow` APIs. The package declares
 the exact upstream `anyhow` build-script trust needed by this locked graph,
 while the negative type evidence separately trusts its direct target only to
 isolate the representation diagnostic.
+
+### Backend and Service Ecosystem Boundary
+
+`ecosystem_backend_certification` is a tier-4 `cargo-probe` claim scoped to an
+exact package-local bridge. Its authoritative package lock builds
+`axum 0.8.9`, `tower-http 0.7.0` with only `set-header`, and `sqlx 0.8.6`
+with default features disabled and only
+`runtime-tokio-rustls`/`postgres`/`macros`. Executable evidence binds an Axum
+listener to `127.0.0.1:0`, sends a raw HTTP request, observes the tower-http
+response header and body, and completes graceful shutdown.
+
+The same bridge expands a real SQLx query macro from one checked-in `.sqlx/`
+file. The validator binds the filename, SQL text, PostgreSQL description, and
+SHA-256 hash. Sifr forces `SQLX_OFFLINE=true` and removes inherited
+`DATABASE_URL` from the Cargo processes that compile bridge probes and final
+generated binaries; the fixture itself supplies no SQLx offline override. Its
+negative test places the armed loopback `DATABASE_URL` in the backend package
+`.env`, which SQLx reads even when Cargo builds that package as a dependency.
+The valid control reaches Cargo without a connection, proving the forced
+offline environment is load-bearing. Independent missing-file and stale-query
+mutations are rejected by the preflight before Cargo is spawned.
+Package/workspace metadata roots across every resolved bridge backend
+invalidate warm probe/final-build cache identities.
+The supported claim is therefore limited to this bridge, exact crate graph,
+hermetic HTTP loopback, and compile-time SQLx metadata path. It does not claim
+arbitrary framework surfaces, a live database resource, or a Sifr web
+framework product workflow.
 
 The workspace member `sifr_rust_interop_catalog` pins the 44 canonical matrix
 crate aliases as exact optional dependencies. This keeps the certification
@@ -1417,7 +1470,10 @@ Ecosystem certification fixtures:
 | Backend/service certification | `axum`, `tower-http`, `sqlx` |
 | CLI/tooling certification | `clap`, `tracing`, `tracing-subscriber`, `anyhow` |
 
-Ecosystem certification for `axum`, `tower-http`, and `sqlx` is limited to canonical-package compilation and probe coverage; product-level web framework workflows remain out of the Rust interop scope.
+Ecosystem certification for `axum`, `tower-http`, and `sqlx` is limited to the
+exact-pinned package bridge, hermetic loopback, response middleware, and SQLx
+offline-metadata paths above; product-level web framework workflows remain out
+of the Rust interop scope.
 
 `tokio` runtime behavior is exercised through `async_runtime_reqwest`, `async_ecosystem_matrix`, `opaque_resource_matrix`, and `callback_subscription_ecosystem`; do not add a redundant standalone Tokio fixture unless a future runtime contract requires it.
 
@@ -1429,7 +1485,9 @@ Feature-sensitive fixtures must pin Cargo features in `rust_interop_fixture_matr
 - `redis`: `default-features = false`, `features = ["tokio-comp"]`; pub/sub fixtures use loopback service infrastructure.
 - `tokio-tungstenite`: `default-features = false`; add `features = ["rustls-tls-webpki-roots"]` only for explicit network/TLS coverage.
 - `sqlx`: `default-features = false`, `features = ["runtime-tokio-rustls", "postgres", "macros"]`; query-macro fixtures must use checked-in `.sqlx/` offline artifacts instead of requiring `DATABASE_URL` during Cargo execution.
-- `axum` and `tower-http`: use default feature sets unless a fixture documents a narrower feature requirement.
+- `axum`: the backend certification uses only `http1` and `tokio`.
+- `tower-http`: the backend certification disables defaults and uses only
+  `set-header` so middleware execution is directly observable.
 - `tracing-subscriber`: include `env-filter`.
 - `flate2`: `default-features = false`, `features = ["rust_backend"]`.
 - `candle`: CPU-only default backend; GPU and accelerator backend features are out of scope for Rust interop.

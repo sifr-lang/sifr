@@ -6,6 +6,7 @@ import re
 
 FIXTURE_BINDING_TOKENS = {
     "proc_macro_trust": "bridge.generated",
+    "ecosystem_backend_certification": "bridge.backend",
     "ecosystem_cli_certification": "bridge.cli",
 }
 
