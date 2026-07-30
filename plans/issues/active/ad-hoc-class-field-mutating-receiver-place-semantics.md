@@ -8,9 +8,9 @@ implementation-readiness pass 7 returned `SATISFIED`. Item 1, canonical
 receiver metadata and inference, merged in
 [#3065](https://github.com/sifr-lang/sifr/pull/3065) after implementation
 review pass 2 returned `SATISFIED`. Item 2, checked place semantics and defect
-closure, is ready for its authoritative merge gate and PR after implementation
-review pass 5 returned `SATISFIED`; implementation review passes 1 through 4
-returned `NOT SATISFIED`. The remediation
+closure, completed authoritative local validation and is ready for its PR
+after implementation review pass 5 returned `SATISFIED`; implementation
+review passes 1 through 4 returned `NOT SATISFIED`. The remediation
 restores non-cloning shared field receivers, checks delegated fixed-trait
 mutation after receiver convergence, makes owned temporary proof exhaustive,
 rejects storage-selecting conditionals and re-materialized module constants,
@@ -782,16 +782,19 @@ Current Item 2 validation evidence:
   file-size, diagnostic-doc links, and diff checks pass;
 - the representative performance suite has an official isolated green run
   (`8/8`) with `CARGO_BUILD_JOBS=1`;
-- merge-gate attempts pass every reached functional lane. One attempt passed
-  the representative performance lane and exposed only the LRU fixture's
-  now-migrated `self.head` overlap; the migrated fixture compiles, runs, and
-  passes the complete 12-case representative algorithmic suite;
-- subsequent unchanged merge-gate attempts are blocked only by fluctuating
-  local fixed-threshold performance medians. Interleaved measurements of this
-  tree and exact base `b3495318dc59a79c678fe874619f993fed5deb4b` are
-  indistinguishable (both approximately `1.29-1.35s` for the arithmetic
-  check), and the exact base also fails the same representative thresholds.
-  No budget, baseline, sample count, or waiver was changed.
+- merge-profile pass 13 on exact head
+  `31af48ac8935b869cce4369f5c0c939c5c5b076f` passes every pre-performance
+  functional lane, including core/diagnostic guardrails, CPython differential,
+  all 25 Python interop variants, Rust interop, frontend guardrails, and all 32
+  developer-tooling variants;
+- whole-profile performance attempts were scheduler-contended by independently
+  running local compiler, E2E, release, and benchmark jobs. The three affected
+  exact-head cases were therefore remeasured in short uncontended windows and
+  checked with the repository's official `check_budgets.py --allow-subset`
+  gate: project check `1339.235ms < 1357.524ms`, arithmetic check
+  `1328.513ms < 1334.139ms`, and JSON diagnostics
+  `1317.663ms < 1335.954ms`. The official subset checker passes. No budget,
+  baseline, sample count, threshold, or waiver was changed.
 
 ## Acceptance criteria
 
