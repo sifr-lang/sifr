@@ -104,9 +104,10 @@ fn test_build_local_bridge_blake3_positive_cargo_probe() {
     );
     let pristine_entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "local-blake3-bridge");
+    let pristine_errors = check_package_project(&pristine_entrypoint);
     assert!(
-        check_package_project(&pristine_entrypoint).is_empty(),
-        "checked-in local bridge scenario should pass package checking"
+        pristine_errors.is_empty(),
+        "checked-in local bridge scenario should pass package checking: {pristine_errors:#?}"
     );
     install_evidence_source(
         &package_root,
@@ -170,9 +171,10 @@ fn test_build_bridge_type_matrix_positive_cargo_probe() {
     );
     let pristine_entrypoint =
         package_entrypoint_from_cargo_layout(&package_root, "bridge-type-roundtrip");
+    let pristine_errors = check_package_project(&pristine_entrypoint);
     assert!(
-        check_package_project(&pristine_entrypoint).is_empty(),
-        "checked-in bridge type scenario should pass package checking"
+        pristine_errors.is_empty(),
+        "checked-in bridge type scenario should pass package checking: {pristine_errors:#?}"
     );
     install_evidence_source(&package_root, BRIDGE_TYPE_ROUNDTRIP_EVIDENCE);
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "bridge-type-roundtrip");

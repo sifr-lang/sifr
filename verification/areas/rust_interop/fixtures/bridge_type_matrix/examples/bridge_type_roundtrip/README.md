@@ -11,3 +11,5 @@ key iteration order.
 
 The generated binary is built and executed from a copied fixture tree under
 locked, offline Cargo policy. No external services or network access are used.
+The package manifest explicitly trusts the build scripts shipped by the direct
+dependencies `serde`, `serde_json`, and `thiserror`.

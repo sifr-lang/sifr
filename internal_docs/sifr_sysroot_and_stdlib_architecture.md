@@ -912,8 +912,7 @@ resource migration cannot advance a resource-shaped surface ahead of the
 runtime evidence recorded by the Rust interop matrix. The narrow
 `opaque_resource_core` row covers only the stdlib-owned
 `sifr_runtime::interop::Handle<T>` lifecycle primitive; the broad
-`opaque_resource_matrix` row for package ecosystem resources remains
-future-owned by separate certification work.
+`opaque_resource_matrix` row separately certifies package ecosystem resources.
 The stdlib native intrinsic allowlist guard is also part of core validation:
 it freezes every retained compiler intrinsic identity and its source,
 lowering, dispatch, registry, preamble, codegen, dependency-feature, and direct

@@ -2,9 +2,11 @@
 
 ## Status
 
-Active Track A follow-up created by Phase 39 closeout. Certifications 1
-through 10 are merged; `certification_11` is in progress and later items remain
-strictly sequential.
+Track A closeout is in progress after certifications 0 through 13 merged.
+All 36 current compatibility rows now have passing positive and negative
+evidence; `certification_14` is the final inventory, stable-claim, validation,
+and review closeout. Track B remains dormant until the external bridge-version
+2 package-resource substrate exists.
 
 The verification-hardening dependency is complete through
 [`hardening_4`](../archive/rust-interop-verification-matrix-hardening.md#hardening_4-replace-lexical-rejection-context):
@@ -151,14 +153,14 @@ normative and must not be broadened.
 | `certification_4` | merged | [PR #3036](https://github.com/sifr-lang/sifr/pull/3036); async reqwest loopback, runtime reuse, cancellation/drop, timeout cleanup, and hidden blocking rejection |
 | `certification_5` | merged | [PR #3042](https://github.com/sifr-lang/sifr/pull/3042); opaque resource lifecycle matrix with HTTP/Redis/PostgreSQL loopbacks and a temporary SQLite database |
 | `certification_6` | merged | [PR #3046](https://github.com/sifr-lang/sifr/pull/3046); retained callback subscription lifecycle and capture contract |
-| `certification_7` | merged; retrospective performance rerun pending | [PR #3053](https://github.com/sifr-lang/sifr/pull/3053); crate-backed zero-copy lifecycle and compiler rejection contract |
+| `certification_7` | merged; performance recalibration re-homed | [PR #3053](https://github.com/sifr-lang/sifr/pull/3053); crate-backed zero-copy lifecycle and compiler rejection contract; controlled-host recalibration is owned by the active performance-stability follow-up |
 | `certification_8` | merged | [PR #3067](https://github.com/sifr-lang/sifr/pull/3067); crate-backed Arrow/tensor generated package and compiler mismatch rejection |
 | `certification_9` | merged | [PR #3069](https://github.com/sifr-lang/sifr/pull/3069); exact-pinned native build-script package, deterministic artifacts, and fail-closed direct/transitive trust rejection |
 | `certification_10` | merged | [PR #3071](https://github.com/sifr-lang/sifr/pull/3071); exact-pinned proc-macro/codegen package, deterministic prost output, and package-wide pre-execution trust rejection |
 | `certification_11` | merged | [PR #3075](https://github.com/sifr-lang/sifr/pull/3075); locked/offline/frozen Sifr command propagation, cache reuse, and deterministic drift rejection |
 | `certification_12` | merged | [PR #3076](https://github.com/sifr-lang/sifr/pull/3076); exact-pinned CLI/tooling execution and bridge-safe `anyhow` boundary certification |
-| `certification_13` | in progress | exact-pinned backend loopback execution and fail-closed SQLx offline metadata certification |
-| `certification_14` | blocked | starts after `certification_13` merges |
+| `certification_13` | merged | [PR #3078](https://github.com/sifr-lang/sifr/pull/3078); exact-pinned backend loopback execution and fail-closed SQLx offline metadata certification |
+| `certification_14` | in progress | Track A inventory, stable gate, durable handoff, and final review closeout |
 | `certification_pkg_resource_core` | dormant | starts only after Native Pydantic-Sifr `milestone_ps_2` releases bridge version 2 |
 
 ## Ordered Track A Items
@@ -806,7 +808,7 @@ Implementation checklist:
 - [x] Bind both evidence directions to distinct mandatory generated-build
   tests, promote only `zero_copy_runtime_matrix`, and update structured
   claims, public/internal docs, provenance, counts, and validator self-tests.
-- [ ] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, Opus review rounds to
   satisfaction, merge the PR, and unblock only `certification_8`.
 
 Post-item inventory:
@@ -991,8 +993,11 @@ Review and validation notes:
   `lsp-query-003-diagnostics` under concurrent shared-host validation. Round 6
   statically confirms none can execute this PR's package-only Rust-interop
   trust path; this is accepted under the same environmental-drift policy used
-  for `certification_2`. Repository-wide baseline recalibration remains a
-  `certification_14` retrospective item and does not block `certification_9`.
+  for `certification_2`. `certification_14` later audited this retrospective
+  and re-homed controlled-host baseline recalibration to the active
+  [Representative Performance Budget Stability](./adhoc_performance_budget_host_variance.md)
+  follow-up, whose policy prohibits changing baselines or adding waivers merely
+  to make this noisy shared host pass.
 
 Expected post-item inventory:
 
@@ -1457,7 +1462,7 @@ Implementation checklist:
   bridge ownership, loopback/middleware execution, offline environment,
   metadata identity, both negative directions, evidence provenance, and the
   supported-through-bridge contract without weakening earlier rows.
-- [ ] Run focused and authoritative local gates, complete Opus review rounds
+- [x] Run focused and authoritative local gates, complete Opus review rounds
   to satisfaction, merge the PR, and unblock only `certification_14`.
 
 Expected post-item inventory:
@@ -1697,51 +1702,265 @@ Validation evidence to date:
   including 450/65 driver tests, runtime platform passed in 69.87/120 seconds,
   and the E2E suite passed 131/131 fixtures in 399.17/600 seconds. Only the
   lane's nonblocking aggregate warm-time advisory remained.
+- [Published-head Opus round 10](../../reviews/active/rust-interop-certification-13-review-round-10.md)
+  independently audited exact PR head
+  `f8ab7080cbec82f651476801e989c66449c6c939`, directly reproduced both
+  mandatory backend tests, all 450 non-generated driver tests, the full 10/10
+  Rust-interop area, exact inventories and structured claims, Clippy,
+  formatting, and guardrails, and returned `SATISFIED` with no finding.
+  [PR #3078](https://github.com/sifr-lang/sifr/pull/3078) merged on
+  2026-07-30 as `ca7731aa8e9708e3b2ce28c28cc792aad8e7cf72`; only
+  `certification_14` was unblocked.
 
 ### certification_14: Track A Closeout and Stable Gate
 
 This PR starts only when `certification_1` through `certification_13` are
 merged.
 
-- Re-run the row/fixture inventory and update documented counts.
-- Confirm the completion-time backstop transition in
+- [x] Re-run the row/fixture inventory and update documented counts.
+- [x] Confirm the completion-time backstop transition in
   `scripts/check_sysroot_stdlib_resource_certification_gate.py` that currently
   accepts zero future-owned rows, and re-run the guard's completed-matrix
   `--self-test`. Keep its supported stdlib-core invariants.
-- Confirm `check_compatibility_matrix.py` permits an unused
+- [x] Confirm `check_compatibility_matrix.py` permits an unused
   `future-owned-by-separate-phase` category after all current deferrals
   resolve while still rejecting unknown categories and invalid rows.
-- Remove stale `future_owner` fields from promoted rows and confirm no planned
+- [x] Remove stale `future_owner` fields from promoted rows and confirm no planned
   evidence status remains in Track A rows.
-- Run the Phase 40 stable-candidate check and verify public docs advertise only
+- [x] Run the Phase 40 stable-candidate check and verify public docs advertise only
   the structured stable claims with their exact execution scope.
-- Convert the completed stdlib handoff below to durable historical wording,
-  update Phase 39/Phase 40/roadmap status links, and record the final Opus
-  review.
+- [x] Convert the completed stdlib handoff below to durable historical wording
+  and update Phase 39/Phase 40/roadmap status links.
+- [x] Audit the `certification_7`/`certification_8` performance retrospective
+  and re-home controlled baseline recapture, host-variance investigation, and
+  budget-policy recalibration to the named active performance-stability
+  follow-up. Do not bless shared-host samples into reference baselines.
+- [ ] Pass the authoritative create-PR and merge lanes, complete final Opus
+  review rounds to satisfaction at the published head, merge the closeout PR,
+  and record its immutable PR and merge identities.
 
 Track A is complete only when its inventory, all validator self-tests, the
 entire Rust-interop area, create-PR lane, merge lane, and stable-candidate gate
 pass locally.
 
+Closeout inventory:
+
+- 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
+  manifests;
+- 72 passing and 0 planned evidence directions;
+- categories: 21 `supported`, 14 `supported-through-bridge`, and 1
+  `unsupported-by-design`; the declared
+  `future-owned-by-separate-phase` category is intentionally unused;
+- execution kinds: 13 `cargo-probe`, 4 `compiler-diagnostic`, 10
+  `contract-only`, and 9 `runtime-observed`;
+- 44 required exact-pinned crate aliases in the checked-in root lock graph;
+- 61 package examples and 18 scenario examples; and
+- 36 structured stable claims with no stale `future_owner` field.
+
+Closeout validation evidence on 2026-07-30:
+
+- the resource-certification gate passed with one retained supported stdlib
+  surface and zero future runtime rows; its completed-matrix self-test passed;
+- fixture-matrix, compatibility-matrix, and tier self-tests passed 234, 7, and
+  6 mutation cases respectively;
+- the stable-candidate suite passed both cases, including all 36 claims and 33
+  adversarial mutations that bind public wording to exact matrix execution
+  scope; and
+- the complete Rust-interop area passed all 10 variants with zero blocking or
+  nonblocking failures.
+- The first full merge-lane closeout run found three generated-build failures
+  caused by two stale package trust inventories: the bridge-type package
+  omitted the build scripts shipped by the direct `serde`, `serde_json`, and
+  `thiserror` dependencies, while the zero-copy package omitted the build
+  script shipped by its direct `zerocopy` dependency. The manifests now
+  declare those four exact enforced graph entries, their validators reject
+  each missing entry; an additional bridge mutation rejects over-declared
+  build-script trust, and five new adversarial mutations raise the fixture
+  self-test total from 229 to 234.
+- The three generated-build tests that exposed the stale declarations now
+  pass directly:
+  `test_build_bridge_type_matrix_positive_cargo_probe`,
+  `test_build_zero_copy_crate_backed_view_lifecycle`, and
+  `test_check_zero_copy_view_send_sync_obligations`. Both bridge scenario
+  assertions now retain their complete diagnostic lists on any future
+  pristine-package failure.
+- The deferred `certification_7` performance rerun and the
+  `certification_8` repository-wide baseline recalibration were audited and
+  re-homed to
+  [Representative Performance Budget Stability](./adhoc_performance_budget_host_variance.md).
+  That active follow-up requires five controlled consecutive runs, host/load/
+  thermal evidence, a deterministic stability-rule regression, and documented
+  controlled measurement conditions. Its explicit policy forbids changing
+  baselines or waivers merely to make this shared host pass, so this closeout
+  changes no performance baseline or threshold.
+- [Opus round 1](../../reviews/active/rust-interop-certification-14-review-round-1.md)
+  reproduced all focused gates and found that the first repair over-declared
+  three transitive proc macros that the compiler does not require. The final
+  repair retains only the four necessary direct build-script grants and gives
+  each one an adversarial mutation.
+- [Opus round 2](../../reviews/active/rust-interop-certification-14-review-round-2.md)
+  proved those four grants individually necessary and jointly sufficient,
+  independently passed all 31 ignored Rust-interop generated builds, the full
+  driver and area suites, and every inventory/static gate, then found the
+  historical performance retrospective had not been explicitly closed.
+- [Opus round 3](../../reviews/active/rust-interop-certification-14-review-round-3.md)
+  verified the named performance-stability re-homing, Phase 40 dependency
+  boundary, durable review artifacts, trust-policy scope, complete Track A
+  ledger, and all gates. It returned `SATISFIED`; two remaining low editorial
+  cleanups aligned the re-homing sentence exactly with the follow-up DoD and
+  marked `certification_7`'s historical merge checklist complete.
+- [Opus round 4](../../reviews/active/rust-interop-certification-14-review-round-4.md)
+  confirmed both post-verdict edits, artifact durability, and the complete
+  closeout record with no actionable issue, returning `SATISFIED`.
+- [Integrated-head Opus round 5](../../reviews/active/rust-interop-certification-14-review-round-5.md)
+  re-ran the focused Rust-interop, driver, static, and resource gates after
+  merging current `origin/main`, then found three stale present-tense
+  `future-owned` notes in the canonical compatibility matrix and the matching
+  resource deferral in the durable sysroot/stdlib architecture. The notes now
+  preserve the narrow core-row scopes while delegating the already-certified
+  ecosystem evidence to `opaque_resource_matrix`, `async_runtime_reqwest`, and
+  `callback_subscription_ecosystem`; the architecture uses the same completed
+  resource wording.
+- [Integrated-head Opus round 6](../../reviews/active/rust-interop-certification-14-review-round-6.md)
+  confirmed all four stale-deferral corrections, independently checked every
+  referenced row and the repository-wide remaining `future-owned` vocabulary,
+  and found no implementation or scope issue. It returned `NOT SATISFIED`
+  solely because this closeout ledger had not yet recorded round 5 or its
+  corrections; this bullet and the preceding round-5 record close that
+  artifact-traceability finding.
+- [Integrated-head Opus round 7](../../reviews/active/rust-interop-certification-14-review-round-7.md)
+  verified the round-5 and round-6 ledger records against their artifacts,
+  re-ran every record-sensitive matrix, claims, resource, stale-draft, and
+  guardrail validator, found no surviving false present-tense deferral, and
+  returned `SATISFIED` with no actionable implementation, validation, scope,
+  or tracking issue.
+- [Merge-readiness Opus round 8](../../reviews/active/rust-interop-certification-14-review-round-8.md)
+  independently verified the exact performance samples, proved the unchanged
+  failures non-attributable through the branch diff and a same-host unrelated
+  branch control, and accepted the result as the governed `PERF-HOST`
+  exception. It returned `NOT SATISFIED` only for three evidence-record
+  corrections: one lock wait had been pluralized, the cross-branch incident
+  was absent from the governing performance ledger, and three continuation
+  summaries lacked durable output. Those findings are closed by the corrected
+  wording, the performance-ledger incident, and the checked-in
+  [merge-continuation evidence](../../reviews/active/rust-interop-certification-14-merge-continuation-evidence.md).
+- [Merge-readiness Opus round 9](../../reviews/active/rust-interop-certification-14-review-round-9.md)
+  verified the singular lock-wait correction and every durable project,
+  generated-build, and E2E rerun, then found that the performance ledger had
+  omitted the unrelated control's 4132.029 ms JSON-diagnostic sample and
+  consequently misaligned the LSP values. The ledger now records all four
+  cases and the separate LSP p95 exactly.
+- [Merge-readiness Opus round 10](../../reviews/active/rust-interop-certification-14-review-round-10.md)
+  verified the corrected control mapping, durable continuation evidence,
+  round-9 ledger entry, and complete current diff. It found no actionable
+  implementation, validation, evidence, performance-policy, or tracking issue
+  and returned `SATISFIED`, explicitly approving publication and merge subject
+  to exact PR-head review.
+- [Published-head Opus round 11](../../reviews/active/rust-interop-certification-14-review-round-11.md)
+  independently recomputed every inventory, re-ran the complete Rust-interop
+  area and its self-tests, verified all prior findings closed, accepted the
+  governed `PERF-HOST` exception, and returned `SATISFIED`. Its two
+  nonblocking hardening notes are closed here: the bridge fixture now rejects
+  any extra build-script trust entry with a dedicated mutation, and the
+  already-passing package-management offline merge smoke is explicitly
+  preserved in the merge-continuation evidence.
+- [Published-head Opus round 12](../../reviews/active/rust-interop-certification-14-review-round-12.md)
+  proved both round-11 hardening changes effective, independently reproduced
+  234 fixture mutations and the 2/2 package-management smoke, and found no
+  implementation, inventory, stable-claim, resource, performance-policy, or
+  tracking defect. It returned `NOT SATISFIED` for two evidence-only wording
+  errors: the offline-smoke result paraphrased its second identical output
+  line, and the artifact preamble still described only its original three
+  reruns. The evidence now reproduces both literal `ok` lines and distinguishes
+  the three recovered outputs from the separately preserved coverage step.
+- [Published-head Opus round 13](../../reviews/active/rust-interop-certification-14-review-round-13.md)
+  reproduced both corrected literal output lines and the repaired evidence
+  accounting, verified the round-12 artifact and ledger entry, re-ran the full
+  Rust-interop area and package-management smoke, rechecked all carried
+  invariants and non-Markdown hunks, found no actionable issue, and returned
+  `SATISFIED`.
+- The authoritative `create-pr` profile passed every blocking step on the
+  reviewed closeout state. Python interop passed 19/19 variants in
+  557.53/600 seconds; Rust interop passed 10/10 in 8.72/10 seconds; developer
+  tooling passed 18/18; the smoke crate suites included 450/65 driver tests;
+  runtime platform passed 28 variants; and E2E passed 131/131 fixtures in
+  399.02/600 seconds. The only lane result outside its target was the
+  nonblocking aggregate warm-wall advisory after rebuilding all 42 E2E cache
+  groups.
+- The final pre-publication head
+  `e05dd42e9c42ea77a484323247489e25f7edd382` independently repeated the
+  authoritative `create-pr` profile with every blocking step passing. Python
+  interop passed all 19 variants; Rust interop passed all 10 variants;
+  developer tooling passed all 18 variants; performance smoke passed all 7
+  variants; the crate matrix included 450 passing driver tests with 65
+  intentional smoke-profile exclusions; runtime platform passed 28 variants
+  with one declared capability skip; and E2E passed 131/131 fixtures with
+  report signature `7c39b8c1dd4fec7c`. The contended run took 1405.25 seconds,
+  while each blocking step remained within its own budget; its only advisory
+  was the nonblocking aggregate warm-wall target.
+- [Draft PR #3083](https://github.com/sifr-lang/sifr/pull/3083) published the
+  complete closeout from `agent/rust-interop-certification-14`. Its first
+  published head was
+  `a344d1187575d9f5cb16055e161edd5c2a9763d1`, mergeable and exactly current
+  with `origin/main`; the required published-head Opus review follows after
+  this immutable PR identity is part of the closeout ledger.
+- The exact integrated head `017c1df411f78ffb786775fdf4bd60e52424f839`
+  ran the authoritative merge profile on 2026-07-30. Coverage, all core and
+  resource guardrails, diagnostics, CPython differential 2/2, Python interop
+  25/25, Rust interop 10/10 in 7.59 seconds, frontend/cache guardrails, and
+  developer tooling 32/32 all passed. Every representative benchmark executed
+  successfully, but the unchanged repository-wide budget comparison stopped
+  the profile on four host-sensitive checks: project-graph median
+  1358.717/1357.524 ms, arithmetic median 1366.015/1334.139 ms, JSON-diagnostic
+  median 1354.814/1335.954 ms, and LSP diagnostics median/p95
+  5.962/5.91 ms and 11.664/10.933 ms. Earlier unchanged retries moved among
+  these cases, including project-graph 1719.712 ms in one run and arithmetic
+  1586.939 ms in another; the exact diff contains no compiler, frontend,
+  diagnostic, or LSP implementation change. The run also observed a Cargo
+  package-cache lock wait from concurrent repository work.
+- The same head then resumed every merge-profile step after performance through
+  the unmodified profile runner. All steps passed: verification hardening and
+  runner self-tests; fuzz/property 25/25; algorithmic compatibility 12/12;
+  distribution 66/66; sysroot release 2/2 including installed/source boundary
+  equivalence; package-management offline merge smoke 2/2; generated-code
+  quality 7/7; the complete crate matrix, including 6/6 CLI and 65/65 driver
+  generated builds; core/project validation matrices 4/4 and 2/2; runtime
+  platform 30 variants with zero failures and three declared
+  capability/toolchain skips; E2E 678/678 with report signature
+  `5e45a6a7b96f2688`; diagnostics baselines 175/175; project baselines 17/17;
+  regressions 5/5; and ecosystem compatibility 20/20. This preserves the
+  governed performance failure instead of changing a baseline or adding a
+  waiver, while proving that no functional merge step hidden behind the
+  fail-fast comparison is omitted. The overwritten project-matrix output and
+  the generated-build/E2E console summaries were rerun on the unchanged source
+  and captured in the checked-in
+  [merge-continuation evidence](../../reviews/active/rust-interop-certification-14-merge-continuation-evidence.md);
+  the project rerun also has the uniquely named
+  `target/verification/areas/rust-interop-cert14-project-validation-results.json`.
+
 ## Completed Stdlib Native-Boundary Handoff
 
-The archived stdlib native-boundary phase already split broad ecosystem rows
-rather than claiming them wholesale:
+The archived stdlib native-boundary phase split broad ecosystem rows rather
+than claiming them wholesale. Track A later certified each retained ecosystem
+row independently:
 
 - `opaque_resource_matrix` was split into supported stdlib
-  `opaque_resource_core` plus the retained ecosystem resource row.
+  `opaque_resource_core` plus the ecosystem resource row certified by
+  `certification_5`.
 - `async_runtime_reqwest` was split into the supported contract-only
-  `async_runtime_core` row plus the retained reqwest loopback row. Runtime task
-  cancellation/drop remains part of the downstream row's certification.
+  `async_runtime_core` row plus the reqwest loopback row certified by
+  `certification_4`, including runtime task cancellation and drop.
 - the former subscription matrix was split into the supported contract-only
   `callback_subscription_core` row plus
-  `callback_subscription_ecosystem`; subscription cancellation/shutdown
-  execution remains downstream.
+  `callback_subscription_ecosystem`, whose cancellation and shutdown behavior
+  was certified by `certification_6`.
 - `callbacks_call_scoped` and `panic_boundary_wrapper_emission` were not
-  claimed by stdlib migration and remain owned here.
+  claimed by stdlib migration; they were certified independently by
+  `certification_3` and `certification_2`.
 
-The supported core rows remain regression constraints. Track A must not fold
-service loopbacks or external-package claims into them.
+The supported core rows remain regression constraints. Track A preserved their
+narrow execution scopes instead of folding service loopbacks or
+external-package claims into them.
 
 ## Track B: Native Pydantic-Sifr Package Resource Certification
 
