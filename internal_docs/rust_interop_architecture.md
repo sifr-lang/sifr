@@ -1213,6 +1213,26 @@ messages for missing or stale locks, selected version/source/checksum drift,
 feature drift, and unavailable offline sources are classified before ordinary
 Rust target/type resolution and reported as `SIFR-RUST-CARGO-0001`.
 
+### CLI and Tooling Ecosystem Boundary
+
+`ecosystem_cli_certification` is a tier-4 `cargo-probe` claim scoped to an
+exact package-local bridge. Its authoritative package lock builds
+`clap 4.6.1`, `tracing 0.1.44`, `tracing-subscriber 0.3.23` with the
+`env-filter` feature, and `anyhow 1.0.102`. Executable evidence parses a
+constrained CLI argument, installs a filtered subscriber, emits and captures a
+real tracing event, and returns a versioned observation through generated Sifr
+glue.
+
+The bridge may use `anyhow::Error` internally to attach Rust-side context, but
+must collapse that error into a declared Display error before the Sifr
+boundary. A sibling direct surface deliberately returns `anyhow::Error`; the
+signature probe rejects that unadapted crossing as `SIFR-RUST-TYPE-0001`.
+Consequently the row is `supported-through-bridge`, not direct support for
+arbitrary `clap`, tracing subscriber, or `anyhow` APIs. The package declares
+the exact upstream `anyhow` build-script trust needed by this locked graph,
+while the negative type evidence separately trusts its direct target only to
+isolate the representation diagnostic.
+
 The workspace member `sifr_rust_interop_catalog` pins the 44 canonical matrix
 crate aliases as exact optional dependencies. This keeps the certification
 graph in the checked-in root lockfile and makes it available to

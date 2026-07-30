@@ -4,16 +4,30 @@
   "evidence": {
     "negative": {
       "expected_diagnostic": "SIFR-RUST-TYPE-0001",
-      "expected_result": "future-owned-diagnostic",
+      "expected_result": "diagnostic",
       "id": "unsupported_anyhow_surface",
       "path": "negative/unsupported_anyhow_surface.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_cli_ecosystem_support.rs",
+        "test_name": "test_check_direct_anyhow_surface_rejected"
+      }
     },
     "positive": {
-      "expected_result": "future-owned",
+      "expected_result": "pass",
       "id": "cli_tooling_probe_coverage",
       "path": "positive/cli_tooling_probe_coverage.sifr",
-      "status": "planned"
+      "status": "passing",
+      "validation": {
+        "profile": "merge",
+        "step": "crate_tests",
+        "suite_id": "sifr_driver_generated_builds",
+        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_cli_ecosystem_support.rs",
+        "test_name": "test_build_cli_tooling_probe_and_anyhow_adapter"
+      }
     }
   },
   "execution_kind": "cargo-probe",

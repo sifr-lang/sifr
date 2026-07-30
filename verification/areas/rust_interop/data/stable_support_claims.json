@@ -208,6 +208,12 @@
       "category": "supported",
       "execution_kind": "cargo-probe",
       "capability": "locked/offline/frozen Cargo behavior"
+    },
+    {
+      "id": "ecosystem_cli_certification",
+      "category": "supported-through-bridge",
+      "execution_kind": "cargo-probe",
+      "capability": "CLI/tooling ecosystem certification"
     }
   ]
 }

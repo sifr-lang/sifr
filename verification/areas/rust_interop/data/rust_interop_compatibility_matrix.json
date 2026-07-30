@@ -409,15 +409,14 @@
     {
       "id": "ecosystem_cli_certification",
       "fixture": "ecosystem_cli_certification",
-      "category": "future-owned-by-separate-phase",
-      "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
+      "category": "supported-through-bridge",
       "tier": 4,
       "capability": "CLI/tooling ecosystem certification",
       "execution_kind": "cargo-probe",
       "required_crates": ["clap", "tracing", "tracing-subscriber", "anyhow"],
-      "positive_evidence": {"id": "cli_tooling_probe_coverage", "status": "planned"},
-      "negative_evidence": {"id": "unsupported_anyhow_surface", "status": "planned"},
-      "notes": "Representative CLI/tooling crate certification remains future-owned."
+      "positive_evidence": {"id": "cli_tooling_probe_coverage", "status": "passing"},
+      "negative_evidence": {"id": "unsupported_anyhow_surface", "status": "passing"},
+      "notes": "Exact-pinned generated package evidence executes clap parsing, a tracing event filtered by tracing-subscriber env-filter, and internal anyhow context mapped into a declared CliError bridge; direct anyhow::Error return surfaces are rejected with SIFR-RUST-TYPE-0001."
     },
     {
       "id": "native_build_script",

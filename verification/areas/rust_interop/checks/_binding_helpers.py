@@ -4,6 +4,15 @@ from __future__ import annotations
 
 import re
 
+FIXTURE_BINDING_TOKENS = {
+    "proc_macro_trust": "bridge.generated",
+    "ecosystem_cli_certification": "bridge.cli",
+}
+
+
+def package_example_binding_token(fixture_id: str, crate_token: str) -> str:
+    return FIXTURE_BINDING_TOKENS.get(fixture_id, crate_token)
+
 
 def rust_bound_declarations(text: str) -> list[tuple[str, str]]:
     names: list[str] = []
