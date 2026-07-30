@@ -1,20 +1,18 @@
+use self::cfg_filter::{has_cfg_attribute, item_has_cfg_attribute};
 use super::rust_interop_digest::digest_path;
-use super::rust_interop_probe::{
-    canonical_sifr_target_path, PendingRustBridgeProbe, ProbeExecutionFailure,
-};
+use super::rust_interop_probe::{PendingRustBridgeProbe, ProbeExecutionFailure};
+use super::rust_interop_sqlx_modules::reachable_rust_modules;
 use sha2::{Digest as _, Sha256};
 use sifr_diagnostics::DiagnosticCode;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::{Mutex, OnceLock};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::visit::Visit;
-use syn::{
-    Arm, Attribute, Expr, ForeignItem, ImplItem, Item, ItemUse, LitStr, Macro, Stmt, Token,
-    TraitItem, Type, UseTree,
-};
+use syn::{Expr, Item, ItemUse, LitStr, Macro, Token, Type, UseTree};
 
 const INLINE_QUERY_MACROS: &[&str] = &[
     "query",
@@ -32,6 +30,8 @@ const FILE_QUERY_MACROS: &[&str] = &[
     "query_file_scalar_unchecked",
     "query_file_unchecked",
 ];
+type WorkspaceRootCacheKey = (PathBuf, String);
+type WorkspaceRootCache = Mutex<BTreeMap<WorkspaceRootCacheKey, Option<PathBuf>>>;
 
 pub(super) fn configure_hermetic_build_environment(command: &mut std::process::Command) {
     command.env("SQLX_OFFLINE", "true");
@@ -47,13 +47,10 @@ pub(super) fn validate_probe_sqlx_offline_metadata(
     }
     validate_sqlx_offline_metadata(backend_root).map_err(|reason| ProbeExecutionFailure {
         code: DiagnosticCode::RUST_CARGO_METADATA,
-        message_template: "Rust bridge SQLx offline metadata failed for `{target}`: {reason}",
-        args: vec![
-            ("target", canonical_sifr_target_path(&probe.declaration)),
-            ("reason", reason),
-        ],
+        message_template: "Rust bridge package SQLx offline metadata failed: {reason}",
+        args: vec![("reason", reason)],
         notes: vec![
-            "Sifr validates recognized checked-in SQLx query metadata before Cargo, includes the complete .sqlx directory in cache identity, and never inherits DATABASE_URL for Rust bridge builds"
+            "This preflight is package-scoped. Sifr validates recognized checked-in SQLx query metadata before Cargo, includes the complete .sqlx directory in cache identity, and never inherits DATABASE_URL for Rust bridge builds"
                 .to_string(),
         ],
     })
@@ -120,7 +117,8 @@ fn sqlx_dependency_crate_names(backend_root: &Path) -> Result<BTreeSet<String>, 
             manifest_path.display()
         )
     })?;
-    let workspace_dependencies = workspace_dependency_packages(backend_root);
+    let workspace_aliases = workspace_dependency_aliases(&table);
+    let workspace_dependencies = workspace_dependency_packages(backend_root, &workspace_aliases);
     let mut names = BTreeSet::new();
     collect_sqlx_dependency_table(
         table.get("dependencies"),
@@ -168,8 +166,44 @@ fn collect_sqlx_dependency_table(
     }
 }
 
-fn workspace_dependency_packages(backend_root: &Path) -> BTreeMap<String, String> {
-    let Some(workspace_root) = cargo_workspace_root(backend_root) else {
+fn workspace_dependency_aliases(table: &toml::Table) -> BTreeSet<String> {
+    let mut aliases = BTreeSet::new();
+    collect_workspace_dependency_aliases(table.get("dependencies"), &mut aliases);
+    if let Some(targets) = table.get("target").and_then(toml::Value::as_table) {
+        for target in targets.values().filter_map(toml::Value::as_table) {
+            collect_workspace_dependency_aliases(target.get("dependencies"), &mut aliases);
+        }
+    }
+    aliases
+}
+
+fn collect_workspace_dependency_aliases(
+    dependencies: Option<&toml::Value>,
+    aliases: &mut BTreeSet<String>,
+) {
+    let Some(dependencies) = dependencies.and_then(toml::Value::as_table) else {
+        return;
+    };
+    for (alias, specification) in dependencies {
+        let uses_workspace = specification
+            .as_table()
+            .and_then(|specification| specification.get("workspace"))
+            .and_then(toml::Value::as_bool)
+            .is_some_and(|workspace| workspace);
+        if uses_workspace {
+            aliases.insert(alias.clone());
+        }
+    }
+}
+
+fn workspace_dependency_packages(
+    backend_root: &Path,
+    aliases: &BTreeSet<String>,
+) -> BTreeMap<String, String> {
+    if aliases.is_empty() {
+        return BTreeMap::new();
+    }
+    let Some(workspace_root) = declared_workspace_root(backend_root) else {
         return BTreeMap::new();
     };
     let Ok(source) = fs::read_to_string(workspace_root.join("Cargo.toml")) else {
@@ -188,6 +222,7 @@ fn workspace_dependency_packages(backend_root: &Path) -> BTreeMap<String, String
     };
     dependencies
         .iter()
+        .filter(|(alias, _)| aliases.contains(*alias))
         .map(|(alias, specification)| {
             let package = specification
                 .as_table()
@@ -221,43 +256,7 @@ fn backend_may_resolve_sqlx_metadata(backend_root: &Path) -> bool {
     if backend_root.join(".sqlx").is_dir() {
         return true;
     }
-    let Ok(source) = fs::read_to_string(backend_root.join("Cargo.toml")) else {
-        return false;
-    };
-    let Ok(table) = source.parse::<toml::Table>() else {
-        return false;
-    };
-    if dependency_table_may_resolve_sqlx(table.get("dependencies")) {
-        return true;
-    }
-    table
-        .get("target")
-        .and_then(toml::Value::as_table)
-        .is_some_and(|targets| {
-            targets
-                .values()
-                .filter_map(toml::Value::as_table)
-                .any(|target| dependency_table_may_resolve_sqlx(target.get("dependencies")))
-        })
-}
-
-fn dependency_table_may_resolve_sqlx(dependencies: Option<&toml::Value>) -> bool {
-    dependencies
-        .and_then(toml::Value::as_table)
-        .is_some_and(|dependencies| {
-            dependencies.iter().any(|(alias, specification)| {
-                if alias == "sqlx" {
-                    return true;
-                }
-                specification.as_table().is_some_and(|specification| {
-                    specification.get("package").and_then(toml::Value::as_str) == Some("sqlx")
-                        || specification
-                            .get("workspace")
-                            .and_then(toml::Value::as_bool)
-                            .is_some_and(|workspace| workspace)
-                })
-            })
-        })
+    sqlx_dependency_crate_names(backend_root).is_ok_and(|names| !names.is_empty())
 }
 
 fn dotenv_defines_offline_dir(path: &Path) -> bool {
@@ -273,7 +272,38 @@ fn dotenv_defines_offline_dir(path: &Path) -> bool {
 }
 
 fn cargo_workspace_root(backend_root: &Path) -> Option<PathBuf> {
-    resolve_cargo_workspace_root(backend_root)
+    static ROOTS: OnceLock<WorkspaceRootCache> = OnceLock::new();
+    let key = (
+        backend_root.to_path_buf(),
+        workspace_resolution_fingerprint(backend_root),
+    );
+    let roots = ROOTS.get_or_init(|| Mutex::new(BTreeMap::new()));
+    if let Ok(roots) = roots.lock() {
+        if let Some(root) = roots.get(&key) {
+            return root.clone();
+        }
+    }
+    let resolved = resolve_cargo_workspace_root(backend_root);
+    if let Ok(mut roots) = roots.lock() {
+        roots.insert(key, resolved.clone());
+    }
+    resolved
+}
+
+fn workspace_resolution_fingerprint(backend_root: &Path) -> String {
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(backend_root.to_string_lossy().as_bytes());
+    bytes.push(0);
+    for ancestor in backend_root.ancestors() {
+        let manifest = ancestor.join("Cargo.toml");
+        bytes.extend_from_slice(manifest.to_string_lossy().as_bytes());
+        bytes.push(0);
+        if let Ok(source) = fs::read(&manifest) {
+            bytes.extend_from_slice(&source);
+        }
+        bytes.push(0);
+    }
+    sha256_hex(&bytes)
 }
 
 fn resolve_cargo_workspace_root(backend_root: &Path) -> Option<PathBuf> {
@@ -315,48 +345,28 @@ fn nearest_declared_workspace_root(backend_root: &Path) -> Option<PathBuf> {
     })
 }
 
+fn declared_workspace_root(backend_root: &Path) -> Option<PathBuf> {
+    let source = fs::read_to_string(backend_root.join("Cargo.toml")).ok()?;
+    let table = source.parse::<toml::Table>().ok()?;
+    if let Some(workspace) = table
+        .get("package")
+        .and_then(toml::Value::as_table)
+        .and_then(|package| package.get("workspace"))
+        .and_then(toml::Value::as_str)
+    {
+        return Some(backend_root.join(workspace));
+    }
+    nearest_declared_workspace_root(backend_root)
+}
+
 fn collect_sqlx_queries(backend_root: &Path, sqlx_crates: &BTreeSet<String>) -> Vec<String> {
     let mut queries = Vec::new();
-    for source_path in collect_rust_sources(&backend_root.join("src")) {
-        let Ok(source) = fs::read_to_string(&source_path) else {
-            continue;
-        };
-        let Ok(syntax) = syn::parse_file(&source) else {
-            continue;
-        };
+    for syntax in reachable_rust_modules(backend_root) {
         collect_module_queries(&syntax.items, backend_root, sqlx_crates, &mut queries);
     }
     queries.sort();
     queries.dedup();
     queries
-}
-
-fn collect_rust_sources(source_root: &Path) -> Vec<PathBuf> {
-    let mut pending = vec![source_root.to_path_buf()];
-    let mut sources = Vec::new();
-    while let Some(path) = pending.pop() {
-        let Ok(metadata) = fs::symlink_metadata(&path) else {
-            continue;
-        };
-        if metadata.file_type().is_symlink() {
-            continue;
-        }
-        if metadata.is_file() {
-            if path.extension().is_some_and(|extension| extension == "rs") {
-                sources.push(path);
-            }
-            continue;
-        }
-        if !metadata.is_dir() {
-            continue;
-        }
-        let Ok(entries) = fs::read_dir(&path) else {
-            continue;
-        };
-        pending.extend(entries.filter_map(Result::ok).map(|entry| entry.path()));
-    }
-    sources.sort();
-    sources
 }
 
 fn collect_module_queries(
@@ -475,180 +485,6 @@ struct SqlxQueryVisitor<'a> {
     aliases: &'a SqlxAliases,
     backend_root: &'a Path,
     queries: &'a mut Vec<String>,
-}
-
-impl<'ast> Visit<'ast> for SqlxQueryVisitor<'_> {
-    fn visit_item(&mut self, node: &'ast Item) {
-        if !item_has_cfg_attribute(node) {
-            syn::visit::visit_item(self, node);
-        }
-    }
-
-    fn visit_stmt(&mut self, node: &'ast Stmt) {
-        if !stmt_has_cfg_attribute(node) {
-            syn::visit::visit_stmt(self, node);
-        }
-    }
-
-    fn visit_expr(&mut self, node: &'ast Expr) {
-        if !expr_has_cfg_attribute(node) {
-            syn::visit::visit_expr(self, node);
-        }
-    }
-
-    fn visit_arm(&mut self, node: &'ast Arm) {
-        if !has_cfg_attribute(&node.attrs) {
-            syn::visit::visit_arm(self, node);
-        }
-    }
-
-    fn visit_impl_item(&mut self, node: &'ast ImplItem) {
-        if !impl_item_has_cfg_attribute(node) {
-            syn::visit::visit_impl_item(self, node);
-        }
-    }
-
-    fn visit_trait_item(&mut self, node: &'ast TraitItem) {
-        if !trait_item_has_cfg_attribute(node) {
-            syn::visit::visit_trait_item(self, node);
-        }
-    }
-
-    fn visit_foreign_item(&mut self, node: &'ast ForeignItem) {
-        if !foreign_item_has_cfg_attribute(node) {
-            syn::visit::visit_foreign_item(self, node);
-        }
-    }
-
-    fn visit_macro(&mut self, node: &'ast Macro) {
-        if let Some(query) = sqlx_query_text(node, self.aliases, self.backend_root) {
-            self.queries.push(query);
-        }
-        syn::visit::visit_macro(self, node);
-    }
-
-    fn visit_item_mod(&mut self, _node: &'ast syn::ItemMod) {}
-}
-
-fn has_cfg_attribute(attrs: &[Attribute]) -> bool {
-    attrs
-        .iter()
-        .any(|attribute| attribute.path().is_ident("cfg") || attribute.path().is_ident("cfg_attr"))
-}
-
-fn item_has_cfg_attribute(item: &Item) -> bool {
-    let attrs = match item {
-        Item::Const(item) => &item.attrs,
-        Item::Enum(item) => &item.attrs,
-        Item::ExternCrate(item) => &item.attrs,
-        Item::Fn(item) => &item.attrs,
-        Item::ForeignMod(item) => &item.attrs,
-        Item::Impl(item) => &item.attrs,
-        Item::Macro(item) => &item.attrs,
-        Item::Mod(item) => &item.attrs,
-        Item::Static(item) => &item.attrs,
-        Item::Struct(item) => &item.attrs,
-        Item::Trait(item) => &item.attrs,
-        Item::TraitAlias(item) => &item.attrs,
-        Item::Type(item) => &item.attrs,
-        Item::Union(item) => &item.attrs,
-        Item::Use(item) => &item.attrs,
-        Item::Verbatim(_) => return false,
-        _ => return true,
-    };
-    has_cfg_attribute(attrs)
-}
-
-fn stmt_has_cfg_attribute(stmt: &Stmt) -> bool {
-    match stmt {
-        Stmt::Local(local) => has_cfg_attribute(&local.attrs),
-        Stmt::Item(item) => item_has_cfg_attribute(item),
-        Stmt::Expr(expr, _) => expr_has_cfg_attribute(expr),
-        Stmt::Macro(stmt) => has_cfg_attribute(&stmt.attrs),
-    }
-}
-
-fn expr_has_cfg_attribute(expr: &Expr) -> bool {
-    let attrs = match expr {
-        Expr::Array(expr) => &expr.attrs,
-        Expr::Assign(expr) => &expr.attrs,
-        Expr::Async(expr) => &expr.attrs,
-        Expr::Await(expr) => &expr.attrs,
-        Expr::Binary(expr) => &expr.attrs,
-        Expr::Block(expr) => &expr.attrs,
-        Expr::Break(expr) => &expr.attrs,
-        Expr::Call(expr) => &expr.attrs,
-        Expr::Cast(expr) => &expr.attrs,
-        Expr::Closure(expr) => &expr.attrs,
-        Expr::Const(expr) => &expr.attrs,
-        Expr::Continue(expr) => &expr.attrs,
-        Expr::Field(expr) => &expr.attrs,
-        Expr::ForLoop(expr) => &expr.attrs,
-        Expr::Group(expr) => &expr.attrs,
-        Expr::If(expr) => &expr.attrs,
-        Expr::Index(expr) => &expr.attrs,
-        Expr::Infer(expr) => &expr.attrs,
-        Expr::Let(expr) => &expr.attrs,
-        Expr::Lit(expr) => &expr.attrs,
-        Expr::Loop(expr) => &expr.attrs,
-        Expr::Macro(expr) => &expr.attrs,
-        Expr::Match(expr) => &expr.attrs,
-        Expr::MethodCall(expr) => &expr.attrs,
-        Expr::Paren(expr) => &expr.attrs,
-        Expr::Path(expr) => &expr.attrs,
-        Expr::Range(expr) => &expr.attrs,
-        Expr::RawAddr(expr) => &expr.attrs,
-        Expr::Reference(expr) => &expr.attrs,
-        Expr::Repeat(expr) => &expr.attrs,
-        Expr::Return(expr) => &expr.attrs,
-        Expr::Struct(expr) => &expr.attrs,
-        Expr::Try(expr) => &expr.attrs,
-        Expr::TryBlock(expr) => &expr.attrs,
-        Expr::Tuple(expr) => &expr.attrs,
-        Expr::Unary(expr) => &expr.attrs,
-        Expr::Unsafe(expr) => &expr.attrs,
-        Expr::Verbatim(_) => return false,
-        Expr::While(expr) => &expr.attrs,
-        Expr::Yield(expr) => &expr.attrs,
-        _ => return true,
-    };
-    has_cfg_attribute(attrs)
-}
-
-fn impl_item_has_cfg_attribute(item: &ImplItem) -> bool {
-    let attrs = match item {
-        ImplItem::Const(item) => &item.attrs,
-        ImplItem::Fn(item) => &item.attrs,
-        ImplItem::Type(item) => &item.attrs,
-        ImplItem::Macro(item) => &item.attrs,
-        ImplItem::Verbatim(_) => return false,
-        _ => return true,
-    };
-    has_cfg_attribute(attrs)
-}
-
-fn trait_item_has_cfg_attribute(item: &TraitItem) -> bool {
-    let attrs = match item {
-        TraitItem::Const(item) => &item.attrs,
-        TraitItem::Fn(item) => &item.attrs,
-        TraitItem::Type(item) => &item.attrs,
-        TraitItem::Macro(item) => &item.attrs,
-        TraitItem::Verbatim(_) => return false,
-        _ => return true,
-    };
-    has_cfg_attribute(attrs)
-}
-
-fn foreign_item_has_cfg_attribute(item: &ForeignItem) -> bool {
-    let attrs = match item {
-        ForeignItem::Fn(item) => &item.attrs,
-        ForeignItem::Static(item) => &item.attrs,
-        ForeignItem::Type(item) => &item.attrs,
-        ForeignItem::Macro(item) => &item.attrs,
-        ForeignItem::Verbatim(_) => return false,
-        _ => return true,
-    };
-    has_cfg_attribute(attrs)
 }
 
 fn sqlx_query_text(node: &Macro, aliases: &SqlxAliases, backend_root: &Path) -> Option<String> {
@@ -817,6 +653,9 @@ fn sha256_hex(bytes: &[u8]) -> String {
     }
     hex
 }
+
+#[path = "rust_interop_sqlx_cfg.rs"]
+mod cfg_filter;
 
 #[cfg(test)]
 #[path = "rust_interop_sqlx_offline_tests.rs"]

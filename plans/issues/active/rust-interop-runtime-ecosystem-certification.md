@@ -1503,7 +1503,7 @@ Validation evidence to date:
   pass. The completion-time resource gate now also accepts zero deferrals
   while retaining the rule that only passing supported stdlib-core rows may
   authorize retained compiler surfaces.
-- All 447 non-generated driver tests pass with 65 generated-build tests
+- All 448 non-generated driver tests pass with 65 generated-build tests
   intentionally ignored. Production `sifr_driver` Clippy, workspace rustfmt,
   TypeScript-Go transfer inventory, HIR/driver maintainability, 900-line
   file-size, and diff-hygiene guardrails pass.
@@ -1570,21 +1570,54 @@ Validation evidence to date:
   10/10 area, inventories, lint, formatting, and guardrails. It returned
   `NOT SATISFIED` because the preflight still demanded metadata for
   `cfg`-disabled query sites that Cargo never compiles.
-- The round-3 fix makes every `cfg`/`cfg_attr`-gated module, item, associated
-  item, statement, expression, and match arm fall through to offline Cargo.
-  Unit coverage pins test-only modules/functions, a disabled feature, a
+- The round-3 fix makes inline `cfg`/`cfg_attr`-gated modules, items, associated
+  items, statements, expressions, and match arms fall through to offline
+  Cargo. Unit coverage pins test-only modules/functions, a disabled feature, a
   `cfg_attr`, gated statements, and an associated method; the mandatory
-  `.env`-armed negative test also injects an unprepared `#[cfg(test)]` query
-  and passes end to end. Ambient `SQLX_OFFLINE_DIR` no longer drops default
-  `.sqlx` roots from cache identity, workspace resolution no longer uses a
-  process-lifetime memo, no-SQLx roots avoid `cargo metadata`, sentinel wording
-  now attributes the load-bearing proof only to the valid Cargo control, and
-  the direct-read inventory contains only current references.
+  `.env`-armed negative test also injects an unprepared inline `#[cfg(test)]`
+  query and passes end to end. Ambient `SQLX_OFFLINE_DIR` no longer drops
+  default `.sqlx` roots from cache identity, sentinel wording attributes the
+  load-bearing proof only to the valid Cargo control, and the direct-read
+  inventory contains only then-current references. Round 4 re-audited the
+  attempted workspace memo/short-circuit change and found the unguarded
+  preflight path recorded below.
 - After the round-3 fixes, 10 focused SQLx tests, 447 non-generated driver
   tests, the 10/10 Rust-interop area with 229 mutation cases, workspace Clippy,
   formatting, file-size, TypeScript-Go inventory, resource-gate, and diff
   checks pass. The cold `.env`-armed negative test, including its cfg-gated
   regression, passed in 195.61 seconds.
+- [Opus round 4](../../reviews/active/rust-interop-certification-13-review-round-4.md)
+  confirmed the inline cfg fix, ambient offline-directory behavior, sentinel
+  attribution, and current direct-read inventory, and independently reproduced
+  447/65 driver tests, both mandatory tests, the 10/10 area, lint, formatting,
+  and guardrails. It returned `NOT SATISFIED` because the source glob still
+  scanned file-based gated modules and orphan binaries, and because removing
+  the workspace memo caused 925 Cargo metadata subprocesses in a warm check.
+- The round-4 fix replaces the source glob with a symlink-safe module graph
+  rooted at the Cargo library entry (or main entry when no library exists).
+  It follows active inline, file, nested, and `#[path]` modules; skips gated
+  declarations before loading their files; and never preflights orphan
+  `src/bin` targets. Unit and mandatory generated-package coverage now use
+  file-based `#[cfg(test)]` modules, while an active redirected module remains
+  recognized. Ordinary `cfg_attr` remains recognized unless it can add a
+  disabling `cfg`, and package-scoped diagnostics no longer blame an arbitrary
+  bridge target.
+- Workspace dependency resolution is lazy and reads declared workspace
+  dependency mappings without spawning Cargo. SQLx workspace-root resolution
+  uses an ancestor-manifest-fingerprinted cache whose subprocess work occurs
+  outside the mutex; no-SQLx roots bypass it, and warm probe-cache hits bypass
+  the preflight after the complete backend/metadata cache key is computed. A
+  traced warm fixture check completed in 2.67 seconds with one Cargo metadata
+  subprocess total instead of 925.
+- After the round-4 fixes, 11 focused SQLx tests pass. The real
+  `.env`-armed missing/stale negative with a gated file module passes in 27.83
+  seconds, the positive loopback/SQLx build passes in 55.77 seconds, and
+  all 448 non-generated driver tests pass with 65 generated-build tests
+  intentionally ignored. The 10/10 Rust-interop area with all 229 mutations,
+  workspace Clippy, formatting, file-size, driver maintainability,
+  TypeScript-Go inventory, resource gate/self-test, and diff checks pass. The
+  SQLx implementation remains responsibility-split at 661 lines for offline
+  policy, 221 for cfg-aware visitation, and 200 for module-graph traversal.
 
 ### certification_14: Track A Closeout and Stable Gate
 

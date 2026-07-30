@@ -68,7 +68,6 @@ pub(super) fn execute_direct_cargo_probe(
     let Some(backend_root) = probe.backend.cargo_manifest_path.parent() else {
         return Ok(());
     };
-    validate_probe_sqlx_offline_metadata(probe, backend_root)?;
     let dependency_features =
         dependency_features(&probe.backend.dependency_name, backend_root, &probe.path);
     let probe_manifest = probe_cargo_toml(
@@ -86,6 +85,7 @@ pub(super) fn execute_direct_cargo_probe(
     if cache_file.is_file() {
         return Ok(());
     }
+    validate_probe_sqlx_offline_metadata(probe, backend_root)?;
     let probe_root = std::env::temp_dir().join(format!(
         "sifr_rust_probe_{}_{}_{}",
         std::process::id(),

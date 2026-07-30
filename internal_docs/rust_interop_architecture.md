@@ -1220,10 +1220,15 @@ directory digests for every resolved bridge backend are combined into both
 direct-probe and final generated-build cache identity. A
 dependency-table-aware preflight validates recognized fully qualified,
 crate-aliased, directly imported, inline-literal, and query-file macro forms
-against the same package/workspace search order. `cfg`/`cfg_attr`-gated
-subtrees, `.env`-declared `SQLX_OFFLINE_DIR` policy, and syntax outside that
+against the same package/workspace search order. Source discovery follows the
+declared module graph from the Cargo library entry (or main entry when no
+library exists), including active `#[path]` redirects; gated file modules and
+orphan targets are not preflighted. `cfg`-gated subtrees, `cfg_attr` that may
+add a `cfg`, `.env`-declared `SQLX_OFFLINE_DIR` policy, and syntax outside that
 conservative recognizer fall through to offline Cargo as the authority instead
-of becoming a false Sifr diagnostic.
+of becoming a false Sifr diagnostic. Workspace-root resolution is memoized
+outside the subprocess lock with ancestor-manifest fingerprints, so long-lived
+drivers invalidate the memo when workspace declarations change.
 
 ### CLI and Tooling Ecosystem Boundary
 

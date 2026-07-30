@@ -8,7 +8,8 @@ const BACKEND_NEGATIVE: &str = include_str!(
 );
 const SQLX_QUERY_FILE: &str =
     ".sqlx/query-f2d6fe08dd19c716c98c45307c0649a03c0bf6d52c5d16c2375913d7a0f2f508.json";
-const BACKEND_RUST_SOURCE: &str = "src/bridges/backend.rs";
+const BACKEND_MODULE_SOURCE: &str = "src/bridges/mod.rs";
+const CFG_GATED_QUERY_SOURCE: &str = "src/bridges/cfg_gated_sqlx_regression.rs";
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
@@ -96,7 +97,9 @@ fn assert_sqlx_metadata_mutation_is_rejected(
     assert!(
         errors.iter().any(|error| {
             error.code == DiagnosticCode::RUST_CARGO_METADATA.code()
-                && error.message.contains("main.query_compile_time")
+                && error
+                    .message
+                    .contains("Rust bridge package SQLx offline metadata")
         }),
         "{suffix} SQLx metadata must produce a stable Cargo diagnostic: {errors:#?}"
     );
@@ -147,21 +150,27 @@ fn configure_dotenv_database_sentinel(package_root: &Path) -> std::net::TcpListe
 }
 
 fn install_cfg_gated_query_regression(package_root: &Path) {
-    let source_path = package_root.join(BACKEND_RUST_SOURCE);
+    let source_path = package_root.join(BACKEND_MODULE_SOURCE);
     let mut source =
-        std::fs::read_to_string(&source_path).expect("backend Rust source should be readable");
+        std::fs::read_to_string(&source_path).expect("backend module source should be readable");
     source.push_str(
         r#"
 
 #[cfg(test)]
-mod cfg_gated_sqlx_regression {
-    fn query_without_offline_metadata() {
-        let _ = sqlx::query!("SELECT 99::INT4 AS value");
-    }
-}
+mod cfg_gated_sqlx_regression;
 "#,
     );
-    std::fs::write(source_path, source).expect("cfg-gated SQLx regression should be installed");
+    std::fs::write(source_path, source).expect("cfg-gated SQLx module should be declared");
+    std::fs::write(
+        package_root.join(CFG_GATED_QUERY_SOURCE),
+        r#"
+#[test]
+fn query_without_offline_metadata() {
+    let _ = sqlx::query!("SELECT 99::INT4 AS value");
+}
+"#,
+    )
+    .expect("cfg-gated SQLx regression source should be installed");
 }
 
 fn assert_database_sentinel_unused(listener: &std::net::TcpListener) {

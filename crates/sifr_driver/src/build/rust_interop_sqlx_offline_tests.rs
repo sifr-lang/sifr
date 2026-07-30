@@ -150,6 +150,11 @@ fn cfg_attr_query() {
     let _ = sqlx::query!("SELECT 96");
 }
 
+#[cfg_attr(feature = "conditional-tests", cfg(test))]
+fn conditionally_disabled_query() {
+    let _ = sqlx::query!("SELECT 98");
+}
+
 struct QueryHolder;
 
 impl QueryHolder {
@@ -157,6 +162,20 @@ impl QueryHolder {
     fn test_only_query() {
         let _ = sqlx::query!("SELECT 97");
     }
+}
+
+struct GatedFieldHolder {
+    #[cfg(test)]
+    value: (),
+}
+
+fn gated_field_value() {
+    let _ = GatedFieldHolder {
+        #[cfg(test)]
+        value: {
+            let _ = sqlx::query!("SELECT 99");
+        },
+    };
 }
 
 fn gated_statements() {
@@ -171,9 +190,72 @@ fn gated_statements() {
     let crate_names = sqlx_dependency_crate_names(&fixture.0).expect("manifest should parse");
     assert_eq!(
         collect_sqlx_queries(&fixture.0, &crate_names),
-        vec!["SELECT 13".to_string()]
+        vec!["SELECT 13".to_string(), "SELECT 96".to_string()]
     );
-    fixture.write_metadata_for(fixture.query(), fixture.query());
+    for query in ["SELECT 13", "SELECT 96"] {
+        fixture.write_metadata_for(query, query);
+    }
+    assert_eq!(validate_sqlx_offline_metadata(&fixture.0), Ok(()));
+}
+
+#[test]
+fn crate_module_graph_skips_gated_and_orphan_source_files() {
+    let fixture = SqlxFixture::new();
+    fixture.write_source(
+        r#"
+mod active;
+
+#[path = "redirected/active.rs"]
+mod redirected_active;
+
+#[cfg(test)]
+mod tests;
+
+#[cfg(feature = "mysql-variant")]
+mod variant;
+
+mod inner_gated;
+
+#[cfg(test)]
+#[path = "redirected/gated.rs"]
+mod redirected_gated;
+"#,
+    );
+    fixture.write_rust_file(
+        "src/active.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 13\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/redirected/active.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 14\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/tests.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 91\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/variant.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 92\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/inner_gated.rs",
+        "#![cfg(test)]\nfn query() { let _ = sqlx::query!(\"SELECT 95\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/redirected/gated.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 93\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/bin/tool.rs",
+        "fn main() { let _ = sqlx::query!(\"SELECT 94\"); }\n",
+    );
+
+    let crate_names = sqlx_dependency_crate_names(&fixture.0).expect("manifest should parse");
+    let expected = vec!["SELECT 13".to_string(), "SELECT 14".to_string()];
+    assert_eq!(collect_sqlx_queries(&fixture.0, &crate_names), expected);
+    for query in ["SELECT 13", "SELECT 14"] {
+        fixture.write_metadata_for(query, query);
+    }
     assert_eq!(validate_sqlx_offline_metadata(&fixture.0), Ok(()));
 }
 
@@ -298,6 +380,13 @@ impl SqlxFixture {
 
     fn write_source(&self, source: &str) {
         std::fs::write(self.0.join("src/lib.rs"), source).expect("SQLx source should be written");
+    }
+
+    fn write_rust_file(&self, relative_path: &str, source: &str) {
+        let path = self.0.join(relative_path);
+        std::fs::create_dir_all(path.parent().expect("Rust source should have a parent"))
+            .expect("Rust source directory should be created");
+        std::fs::write(path, source).expect("Rust source should be written");
     }
 
     fn metadata_path(&self, query: &str) -> PathBuf {
