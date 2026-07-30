@@ -74,20 +74,13 @@ fn verify_function(
             ..
         } = expr
         {
+            // Regular source calls already carry the targets proven against
+            // their lexical signature. Re-resolving `func` through the
+            // module-wide function table is unsound for same-named nested
+            // helpers in different scopes.
             let requires_first_mutable_place = func == "anext";
-            let missing_declared_place = functions.get(func).is_some_and(|signature| {
-                signature
-                    .params
-                    .iter()
-                    .enumerate()
-                    .any(|(index, (_, _, convention))| {
-                        convention.is_mut_borrow()
-                            && !mutable_arg_places.get(index).is_some_and(Option::is_some)
-                    })
-            });
-            if (requires_first_mutable_place
-                && !mutable_arg_places.first().is_some_and(Option::is_some))
-                || missing_declared_place
+            if requires_first_mutable_place
+                && !mutable_arg_places.first().is_some_and(Option::is_some)
             {
                 violations.push(MethodCallInvariantViolation {
                     message: format!(

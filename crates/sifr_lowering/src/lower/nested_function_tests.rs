@@ -110,6 +110,17 @@ fn test_recursive_nested_helper_infers_mutable_collection_param_from_usage() {
 }
 
 #[test]
+fn same_named_nested_helpers_keep_lexical_mutable_call_metadata() {
+    let result = lower_source(
+        "class Codec:\n    def serialize(self, root: int | None) -> int:\n        def dfs(node: int | None) -> int:\n            if node is None:\n                return 0\n            return dfs(None)\n        return dfs(root)\n\n    def deserialize(self, data: str) -> int:\n        values: list[str] = data.split(\",\")\n        def dfs(values: list[str]) -> int:\n            if len(values) == 0:\n                return 0\n            values.pop(0)\n            return dfs(values)\n        return dfs(values)\n",
+    );
+    assert!(
+        result.is_ok(),
+        "plain-call verification must use the lexically proven call metadata instead of a module-wide same-name signature: {result:?}"
+    );
+}
+
+#[test]
 fn test_conflicting_nested_helper_call_sites_fail_inference_explicitly() {
     let result = lower_source(
         "def outer(flag: bool) -> None:\n    def helper(value):\n        print(value)\n\n    if flag:\n        helper(1)\n    else:\n        helper(\"x\")\n",

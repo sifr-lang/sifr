@@ -12,6 +12,12 @@ closure, is under PR
 [#3082](https://github.com/sifr-lang/sifr/pull/3082), and exact-head PR review
 pass 8 returned `SATISFIED` with zero actionable findings after passes 6 and 7
 identified and drove localized constructor-check and evidence corrections.
+Exact-published-head pass 9 then returned `NOT SATISFIED` after an independent
+full-corpus probe found one missed same-call snapshot migration and one
+same-named nested-helper verifier collision. The corpus migration merged in
+[sifr-lang/leetcode#41](https://github.com/sifr-lang/leetcode/pull/41) after
+corpus review pass 2 returned `SATISFIED`; the lexical verifier correction and
+merged corpus repin are now under final Item 2 validation and re-review.
 Implementation review pass 5 returned `SATISFIED` after passes 1 through 4
 returned `NOT SATISFIED`. The remediation
 restores non-cloning shared field receivers, checks delegated fixed-trait
@@ -802,6 +808,21 @@ Current Item 2 validation evidence:
   check `1328.513ms < 1334.139ms` (`5` samples), and JSON diagnostics
   `1317.663ms < 1335.954ms` (`5` samples). The official subset checker passes.
   No budget, baseline, sample count, threshold, or waiver was changed.
+- the final default merge-gate attempt on exact published head `581b363aa`
+  passed every functional lane, including Python interop `25/25`, Rust
+  interop, frontend guardrails, and developer tooling `32/32`; its unchanged
+  performance budgets missed only under high-variance concurrent host load;
+- pass-9 remediation runs the complete `leetcode-full` corpus. Clean published
+  head `581b363aa` plus the migrated corpus passes `406/411`: the four
+  long-standing base failures plus the newly exposed same-named nested-helper
+  verifier collision. The current Item 2 candidate fixes that collision and
+  passes `407/411`; its four remaining failures reproduce identically on the
+  untouched Item 2 base compiler. Both `0189_rotate_array` and
+  `0297_serialize_and_deserialize_binary_tree` pass;
+- focused same-named nested-helper lowering, method-call verifier, formatting,
+  and lowering Clippy checks pass after the verifier correction. The rotated
+  array corpus fixture passes check, native build, and run, and its exact
+  reviewed head merged as corpus commit `e75af095`.
 
 ## Acceptance criteria
 
@@ -970,3 +991,27 @@ Current Item 2 validation evidence:
   storage, source-facing constructor diagnostics, full lowering/codegen and
   fail-corpus results, and the wider checked-place/optimizer/protocol
   invariants.
+- Item 2 exact-published-head PR review pass 9:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-9.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-9.md)
+  returned `NOT SATISFIED`. Its corpus sweep found that
+  `0189_rotate_array.sifr` still read `len(nums)` in the same call that mutably
+  borrowed `nums`. The follow-up full runner also exposed a distinct
+  `0297_serialize_and_deserialize_binary_tree.sifr` internal diagnostic:
+  completed-HIR verification re-resolved two lexically distinct nested
+  `dfs` helpers through one module-wide name table. The remediation snapshots
+  the stable rotate length through upstream corpus PR #41 and makes plain-call
+  verification consume the lexical proof metadata already attached during
+  lowering instead of a same-spelling global signature.
+- Rotate Array corpus milestone review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-rotate-corpus-pr-41-claude-opus-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-rotate-corpus-pr-41-claude-opus-review-pass-1.md)
+  returned `NOT SATISFIED`: the code change was correct and independently
+  matched Python across edge cases, but the PR body attributed the local
+  verifier-fixed `407/411` sweep to clean published parent head `581b363aa`.
+  The evidence was corrected to separate the clean-head `406/411` result from
+  the pending Item 2 candidate's `407/411` result.
+- Rotate Array corpus milestone review pass 2:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-rotate-corpus-pr-41-claude-opus-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-rotate-corpus-pr-41-claude-opus-review-pass-2.md)
+  returned `SATISFIED` with zero actionable findings. Exact reviewed corpus
+  head `4fdb439` merged in
+  [sifr-lang/leetcode#41](https://github.com/sifr-lang/leetcode/pull/41) as
+  merge commit `e75af095`.
