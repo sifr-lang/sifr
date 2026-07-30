@@ -77,6 +77,10 @@
     "message": "[main] cannot borrow 'items' as mutable because it is already borrowed as immutable in the same call to 'read_then_mutate'",
     "message_template": "{message}",
     "args": {
+      "binding": {
+        "kind": "string",
+        "value": "items"
+      },
       "message": {
         "kind": "string",
         "value": "[main] cannot borrow 'items' as mutable because it is already borrowed as immutable in the same call to 'read_then_mutate'"

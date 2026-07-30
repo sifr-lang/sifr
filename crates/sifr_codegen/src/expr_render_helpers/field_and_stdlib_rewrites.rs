@@ -110,27 +110,11 @@ impl RustEmitter {
 
         let needs_clone = (is_self_access || is_borrowed_parameter) && needs_clone_for_type(ty);
 
-        let lowered_base = if let Some(ref class_name) = class_name_for_parent {
-            if let Some((parent_name, parent_field_names)) = self.parent_fields.get(class_name) {
-                if parent_field_names.contains(field) {
-                    crate::RustExpr::Field {
-                        expr: Box::new(lowered_object),
-                        field: parent_name.to_lowercase(),
-                    }
-                } else {
-                    lowered_object
-                }
-            } else {
-                lowered_object
-            }
-        } else {
-            lowered_object
-        };
-
-        let lowered_field = crate::RustExpr::Field {
-            expr: Box::new(lowered_base),
-            field: field.to_string(),
-        };
+        let lowered_field = self.lower_field_storage_access_for_class(
+            class_name_for_parent.as_deref(),
+            field,
+            lowered_object,
+        );
 
         if is_recursive_field {
             if crate::helpers::is_option_type(ty) {
