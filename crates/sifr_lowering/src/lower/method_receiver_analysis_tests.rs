@@ -154,6 +154,31 @@ class Pair:
 }
 
 #[test]
+fn constructor_repeated_field_before_complete_storage_is_rejected() {
+    let source = r#"
+class Counter:
+    count: int
+    items: list[int]
+
+    def __init__(self, n: int):
+        self.count = 0
+        self.count = n
+        self.items = []
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("constructor should be rejected"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE)
+            && error.message.contains("self.items")
+            && error.primary_range == Some(range_for(source, "self.count = n"))
+    }));
+}
+
+#[test]
 fn receiver_inference_closes_transitive_delegation_and_attaches_call_metadata() {
     let source = r#"
 class Leaf:

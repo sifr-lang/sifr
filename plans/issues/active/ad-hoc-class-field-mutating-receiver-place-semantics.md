@@ -776,7 +776,7 @@ Current Item 2 validation evidence:
 
 - focused lowering, codegen, scope, optimizer, pass-fixture, and fail-fixture
   checks pass;
-- full lowering tests pass (`921 passed`, `1 ignored`), full codegen tests pass
+- full lowering tests pass (`922 passed`, `1 ignored`), full codegen tests pass
   (`941 passed`), the E2E pass suite passes (`680/680`, report signature
   `8871ba51135353a4`), and the E2E fail test
   passes with the complete annotated fail corpus;
@@ -949,3 +949,11 @@ Current Item 2 validation evidence:
   argument with source-facing field/parent guidance and the first offending
   statement span, and keeps same-named constructor parameters available as
   materialization seeds even when an explicit field assignment appears later.
+- Item 2 exact-head PR review pass 7:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-7.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-7.md)
+  returned `NOT SATISFIED`; pass-6 findings 1 and 2 were independently closed,
+  but the parameter-seed remediation had also removed explicit-initializer
+  deduplication. The follow-up keeps parameter seeds and first explicit
+  initializers as separate facts, so a repeated field assignment before
+  complete storage now reports check-time `SIFR-OWN-0014` instead of leaking
+  Rust `E0063`, with focused lowering and annotated fail-fixture coverage.

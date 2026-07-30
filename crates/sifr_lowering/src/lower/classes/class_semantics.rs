@@ -113,6 +113,7 @@ pub(in crate::lower) fn constructor_uninitialized_storage_at_first_self_use(
         .filter(|param| required.contains(&param.name))
         .map(|param| param.name.clone())
         .collect::<HashSet<_>>();
+    let mut explicit_initializers = HashSet::new();
     let mut parent_initialized = !requires_parent;
 
     for (statement_index, stmt) in stmts.iter().enumerate() {
@@ -135,11 +136,13 @@ pub(in crate::lower) fn constructor_uninitialized_storage_at_first_self_use(
         {
             if object == "self"
                 && required.contains(field)
+                && !explicit_initializers.contains(field)
                 && !body_references_receiver(&[HirStmt::Expr {
                     expr: value.clone(),
                 }])
             {
                 initialized.insert(field.clone());
+                explicit_initializers.insert(field.clone());
                 continue;
             }
         }

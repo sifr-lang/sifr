@@ -1,0 +1,9 @@
+# expect-error[col=9]: SIFR-OWN-0014
+class Counter:
+    count: int
+    items: list[int]
+
+    def __init__(self, n: int):
+        self.count = 0
+        self.count = n
+        self.items = []
