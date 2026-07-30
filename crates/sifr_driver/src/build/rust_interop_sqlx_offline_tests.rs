@@ -100,6 +100,7 @@ fn syntax_outside_preflight_understanding_falls_through_to_cargo() {
         r#"
 const QUERY: &str = "SELECT 13";
 macro_rules! wrapper { ($query:expr) => { $query }; }
+mod unparseable;
 fn query() {
     use sqlx::query;
     let _ = sqlx::query!(QUERY);
@@ -208,6 +209,11 @@ mod active;
 #[path = "redirected/active.rs"]
 mod redirected_active;
 
+#[path = "alt_inline"]
+mod inline_redirected {
+    mod child;
+}
+
 #[cfg(test)]
 mod tests;
 
@@ -228,6 +234,14 @@ mod redirected_gated;
     fixture.write_rust_file(
         "src/redirected/active.rs",
         "fn query() { let _ = sqlx::query!(\"SELECT 14\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/alt_inline/child.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 15\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/inline_redirected/child.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 90\"); }\n",
     );
     fixture.write_rust_file(
         "src/tests.rs",
@@ -251,12 +265,48 @@ mod redirected_gated;
     );
 
     let crate_names = sqlx_dependency_crate_names(&fixture.0).expect("manifest should parse");
-    let expected = vec!["SELECT 13".to_string(), "SELECT 14".to_string()];
+    let expected = vec![
+        "SELECT 13".to_string(),
+        "SELECT 14".to_string(),
+        "SELECT 15".to_string(),
+    ];
     assert_eq!(collect_sqlx_queries(&fixture.0, &crate_names), expected);
-    for query in ["SELECT 13", "SELECT 14"] {
+    for query in ["SELECT 13", "SELECT 14", "SELECT 15"] {
         fixture.write_metadata_for(query, query);
     }
     assert_eq!(validate_sqlx_offline_metadata(&fixture.0), Ok(()));
+}
+
+#[test]
+fn cargo_entrypoint_selection_follows_lib_path_then_main_fallback() {
+    let library_fixture = SqlxFixture::new();
+    library_fixture.write_manifest(
+        "[lib]\npath = \"source/entry.rs\"\n\n[dependencies]\nsqlx = { version = \"0.8\", features = [\"macros\"] }\n",
+    );
+    library_fixture.write_rust_file(
+        "source/entry.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 13\"); }\n",
+    );
+    let library_names =
+        sqlx_dependency_crate_names(&library_fixture.0).expect("library manifest should parse");
+    assert_eq!(
+        collect_sqlx_queries(&library_fixture.0, &library_names),
+        vec!["SELECT 13".to_string()]
+    );
+
+    let main_fixture = SqlxFixture::new();
+    std::fs::remove_file(main_fixture.0.join("src/lib.rs"))
+        .expect("default library entry should be removed");
+    main_fixture.write_rust_file(
+        "src/main.rs",
+        "fn main() { let _ = sqlx::query!(\"SELECT 14\"); }\n",
+    );
+    let main_names =
+        sqlx_dependency_crate_names(&main_fixture.0).expect("main manifest should parse");
+    assert_eq!(
+        collect_sqlx_queries(&main_fixture.0, &main_names),
+        vec!["SELECT 14".to_string()]
+    );
 }
 
 #[test]

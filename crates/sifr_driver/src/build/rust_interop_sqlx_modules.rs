@@ -95,11 +95,11 @@ fn collect_declared_modules(items: &[Item], module_dir: &Path, pending: &mut Vec
             continue;
         }
         if let Some((_, nested_items)) = &module.content {
-            collect_declared_modules(
-                nested_items,
-                &module_dir.join(module.ident.to_string()),
-                pending,
+            let nested_module_dir = declared_path(module).map_or_else(
+                || module_dir.join(module.ident.to_string()),
+                |path| module_dir.join(path),
             );
+            collect_declared_modules(nested_items, &nested_module_dir, pending);
             continue;
         }
         if let Some(module) = resolve_declared_module(module, module_dir) {

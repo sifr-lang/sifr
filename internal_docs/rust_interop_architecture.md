@@ -1229,6 +1229,12 @@ conservative recognizer fall through to offline Cargo as the authority instead
 of becoming a false Sifr diagnostic. Workspace-root resolution is memoized
 outside the subprocess lock with ancestor-manifest fingerprints, so long-lived
 drivers invalidate the memo when workspace declarations change.
+Symlinked or package-escaping module sources and module declarations inside
+function bodies also fall through to Cargo; they are deliberately outside the
+preflight's containment boundary. A backend `.env` that selects an external
+`SQLX_OFFLINE_DIR` is an explicit preflight and Sifr cache-identity opt-out, so
+the default package/workspace cache search is required for the certified warm
+cache guarantee.
 
 ### CLI and Tooling Ecosystem Boundary
 

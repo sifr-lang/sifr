@@ -1503,7 +1503,7 @@ Validation evidence to date:
   pass. The completion-time resource gate now also accepts zero deferrals
   while retaining the rule that only passing supported stdlib-core rows may
   authorize retained compiler surfaces.
-- All 448 non-generated driver tests pass with 65 generated-build tests
+- All 449 non-generated driver tests pass with 65 generated-build tests
   intentionally ignored. Production `sifr_driver` Clippy, workspace rustfmt,
   TypeScript-Go transfer inventory, HIR/driver maintainability, 900-line
   file-size, and diff-hygiene guardrails pass.
@@ -1607,8 +1607,10 @@ Validation evidence to date:
   uses an ancestor-manifest-fingerprinted cache whose subprocess work occurs
   outside the mutex; no-SQLx roots bypass it, and warm probe-cache hits bypass
   the preflight after the complete backend/metadata cache key is computed. A
-  traced warm fixture check completed in 2.67 seconds with one Cargo metadata
-  subprocess total instead of 925.
+  local traced warm fixture check completed in 2.67 seconds with one SQLx
+  workspace-metadata subprocess instead of 925; an independent environment
+  measured a slower wall clock from pre-existing recursive dependency hashing
+  and one additional general package-resolution metadata invocation.
 - After the round-4 fixes, 11 focused SQLx tests pass. The real
   `.env`-armed missing/stale negative with a gated file module passes in 27.83
   seconds, the positive loopback/SQLx build passes in 55.77 seconds, and
@@ -1616,8 +1618,29 @@ Validation evidence to date:
   intentionally ignored. The 10/10 Rust-interop area with all 229 mutations,
   workspace Clippy, formatting, file-size, driver maintainability,
   TypeScript-Go inventory, resource gate/self-test, and diff checks pass. The
-  SQLx implementation remains responsibility-split at 661 lines for offline
-  policy, 221 for cfg-aware visitation, and 200 for module-graph traversal.
+  SQLx implementation remains responsibility-split across offline policy,
+  cfg-aware visitation, and module-graph traversal.
+- [Opus round 5](../../reviews/active/rust-interop-certification-13-review-round-5.md)
+  confirmed every round-4 blocker and optional hardening fix, independently
+  reproduced 448/65 driver tests, both mandatory tests, the 10/10 area, all
+  lint/format/guardrail gates, active/gated/orphan module layouts, and the
+  one-spawn SQLx workspace-metadata bound. It returned `NOT SATISFIED` for one
+  narrow Cargo rule: an unconditional `#[path = "dir"]` on an inline module
+  did not redirect resolution of that module's file-based children.
+- The round-5 fix applies an inline module's declared path before resolving its
+  children. Unit coverage proves both directions: the redirected child is
+  recognized and the same child under the default module directory is never
+  scanned. The mandatory `.env`-armed generated-package test also includes a
+  never-compiled default-directory query and reaches Cargo successfully.
+  Parse-tolerance coverage now declares its malformed module, `[lib].path` and
+  `main.rs` fallback selection are pinned, the workspace memo retains only the
+  current fingerprint per backend root, and the architecture records the
+  deliberate symlink/function-body/external-offline-directory opt-outs.
+- After the round-5 fixes, 12 focused SQLx tests pass and the real
+  `.env`-armed negative passes in 42.28 seconds. All 449 non-generated driver
+  tests pass with 65 generated-build tests intentionally ignored. The
+  implementation remains responsibility-split at 665 lines for offline policy,
+  219 for cfg-aware visitation, and 200 for module-graph traversal.
 
 ### certification_14: Track A Closeout and Stable Gate
 

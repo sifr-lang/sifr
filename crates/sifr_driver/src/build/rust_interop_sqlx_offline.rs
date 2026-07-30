@@ -285,6 +285,9 @@ fn cargo_workspace_root(backend_root: &Path) -> Option<PathBuf> {
     }
     let resolved = resolve_cargo_workspace_root(backend_root);
     if let Ok(mut roots) = roots.lock() {
+        // Retain one fingerprint per backend so long-lived compiler services
+        // invalidate workspace changes without accumulating stale entries.
+        roots.retain(|(root, _), _| root != backend_root);
         roots.insert(key, resolved.clone());
     }
     resolved

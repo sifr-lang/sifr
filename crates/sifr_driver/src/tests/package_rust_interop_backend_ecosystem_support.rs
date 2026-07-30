@@ -10,6 +10,8 @@ const SQLX_QUERY_FILE: &str =
     ".sqlx/query-f2d6fe08dd19c716c98c45307c0649a03c0bf6d52c5d16c2375913d7a0f2f508.json";
 const BACKEND_MODULE_SOURCE: &str = "src/bridges/mod.rs";
 const CFG_GATED_QUERY_SOURCE: &str = "src/bridges/cfg_gated_sqlx_regression.rs";
+const INLINE_PATH_COMPILED_SOURCE: &str = "src/bridges/alt_inline/child.rs";
+const INLINE_PATH_DEFAULT_SOURCE: &str = "src/bridges/inline_redirected/child.rs";
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
@@ -158,6 +160,11 @@ fn install_cfg_gated_query_regression(package_root: &Path) {
 
 #[cfg(test)]
 mod cfg_gated_sqlx_regression;
+
+#[path = "alt_inline"]
+mod inline_redirected {
+    mod child;
+}
 "#,
     );
     std::fs::write(source_path, source).expect("cfg-gated SQLx module should be declared");
@@ -171,6 +178,25 @@ fn query_without_offline_metadata() {
 "#,
     )
     .expect("cfg-gated SQLx regression source should be installed");
+    for relative_path in [INLINE_PATH_COMPILED_SOURCE, INLINE_PATH_DEFAULT_SOURCE] {
+        std::fs::create_dir_all(
+            package_root
+                .join(relative_path)
+                .parent()
+                .expect("inline module source should have a parent"),
+        )
+        .expect("inline module source directory should be installed");
+    }
+    std::fs::write(
+        package_root.join(INLINE_PATH_COMPILED_SOURCE),
+        "pub fn compiled_child() {}\n",
+    )
+    .expect("redirected inline module child should be installed");
+    std::fs::write(
+        package_root.join(INLINE_PATH_DEFAULT_SOURCE),
+        "fn query_never_compiled() { let _ = sqlx::query!(\"SELECT 98::INT4 AS value\"); }\n",
+    )
+    .expect("never-compiled inline module sibling should be installed");
 }
 
 fn assert_database_sentinel_unused(listener: &std::net::TcpListener) {
