@@ -1324,10 +1324,10 @@ Validation evidence to date:
   proved stale-lock rejection for `check`, `build`, and `run`. It returned
   `SATISFIED` with no blocking findings and confirmed the sole live-tree gate
   failure is absent from the PR.
-- [Final exact-head round 5](../../reviews/active/rust-interop-certification-11-review-round-5.md)
-  reviewed published head
-  `4452643a94deb28068ea994780878f540b2e88bf`, returned `SATISFIED`, and
-  recommended merge. PR #3075 merged on 2026-07-30 as
+- A final exact-head confirmation reviewed published head
+  `4452643a94deb28068ea994780878f540b2e88bf`, confirmed the prior
+  `SATISFIED` merge-readiness verdict still applied, and recommended merge.
+  PR #3075 merged on 2026-07-30 as
   `d5a4b294d3d8f88ea332733d74e9505abaedad5d`; only
   `certification_12` is unblocked.
 
@@ -1389,7 +1389,7 @@ Validation evidence to date:
   reproduced the full CLI/tooling contract and both mandatory tests, then
   returned `NOT SATISFIED` because the generic fixture checker had grown from
   899 to 904 lines. The correction moved fixture-specific binding-token policy
-  into `_binding_helpers.py`, restored the checker below the hard cap, and
+  into `_binding_helpers.py`, restored the checker to the hard cap, and
   added load-bearing exclusion plus direct-binding policy mutations.
 - [Opus round 2](../../reviews/active/rust-interop-certification-12-review-round-2.md)
   audited integrated head
@@ -1398,6 +1398,13 @@ Validation evidence to date:
   and the exact exported Rust-interop area, and returned `SATISFIED` with no
   blocking findings. Its filter-durability observation is closed by requiring
   and mutation-testing the excluded-target emission itself.
+- [Published-head round 3](../../reviews/active/rust-interop-certification-12-review-round-3.md)
+  reproduced every certification-12 gate at PR #3076 head
+  `3867b21d56dc961b944c9259c632de2fc1d9d3c4`, then returned
+  `NOT SATISFIED` because the carried certification-11 round-5 file contained
+  only a truncated conversational tail rather than a self-contained review.
+  The stub artifact and its link are removed; the historical confirmation is
+  retained as plain prose instead of overstated provenance.
 
 ### certification_14: Track A Closeout and Stable Gate
 
