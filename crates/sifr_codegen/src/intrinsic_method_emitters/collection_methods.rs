@@ -526,7 +526,13 @@ impl RustEmitter {
         let (alias_name, key_ty, _) = registry_defaultdict_alias_parts(base_object.ty())?;
         let lowered_object = self.try_lower_registry_expr_strict(base_object)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
-        let lowered_args = self.try_lower_registry_exprs_strict(args)?;
+        let [value] = args else {
+            return None;
+        };
+        let lowered_value = self
+            .try_lower_registry_expr_strict(value)
+            .or_else(|| self.lower_stmt_expr_for_ir(value).ok().flatten())?;
+        let owned_value = Self::clone_owned_append_arg_expr_for_ir(value, lowered_value);
         let entry_expr = crate::RustExpr::MethodCall {
             receiver: Box::new(crate::RustExpr::MethodCall {
                 receiver: Box::new(lowered_object),
@@ -536,20 +542,20 @@ impl RustEmitter {
             method: "or_insert".to_string(),
             args: vec![registry_defaultdict_default_expr(alias_name)],
         };
-        match (alias_name, method, lowered_args.as_slice()) {
-            ("__sifr_defaultdict_list", "append", [value]) => Some(crate::RustExpr::Block {
+        match (alias_name, method) {
+            ("__sifr_defaultdict_list", "append") => Some(crate::RustExpr::Block {
                 stmts: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                     receiver: Box::new(entry_expr),
                     method: "push".to_string(),
-                    args: vec![value.clone()],
+                    args: vec![owned_value],
                 })],
                 expr: Some(Box::new(crate::RustExpr::Literal(crate::RustLiteral::Unit))),
             }),
-            ("__sifr_defaultdict_set", "add", [value]) => Some(crate::RustExpr::Block {
+            ("__sifr_defaultdict_set", "add") => Some(crate::RustExpr::Block {
                 stmts: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                     receiver: Box::new(entry_expr),
                     method: "insert".to_string(),
-                    args: vec![value.clone()],
+                    args: vec![owned_value],
                 })],
                 expr: Some(Box::new(crate::RustExpr::Literal(crate::RustLiteral::Unit))),
             }),
@@ -577,6 +583,19 @@ impl RustEmitter {
         let lowered_object = self.try_lower_registry_expr_strict(base_object)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
         let lowered_element = self.lower_stmt_expr_for_ir(element).ok()??;
+        let element_arg = if matches!(
+            element,
+            HirExpr::Name { name, .. }
+                if self.borrowed_params.contains(name)
+                    || self.mut_borrowed_params.contains(name)
+        ) {
+            lowered_element
+        } else {
+            crate::RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
+            }
+        };
         let entry_expr = crate::RustExpr::MethodCall {
             receiver: Box::new(crate::RustExpr::MethodCall {
                 receiver: Box::new(lowered_object),
@@ -589,10 +608,7 @@ impl RustEmitter {
         Some(crate::RustExpr::MethodCall {
             receiver: Box::new(entry_expr),
             method: "contains".to_string(),
-            args: vec![crate::RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
-            }],
+            args: vec![element_arg],
         })
     }
 

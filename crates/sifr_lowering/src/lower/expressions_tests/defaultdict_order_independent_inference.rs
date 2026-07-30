@@ -180,6 +180,17 @@ fn lowering_inexact_call_results_and_rebindings_do_not_force_declaration_hints()
 }
 
 #[test]
+fn nested_nonlocal_inexact_rebinding_does_not_force_declaration_hint() {
+    let source = "from sifr.collections import defaultdict\n\ndef solve(values: list[int]) -> int:\n    d = defaultdict(list)\n    x = 5\n    def inner():\n        nonlocal x\n        x = values[0]\n    inner()\n    d[1].append(x)\n    return len(d[1])\n";
+    let (binding_ty, constructor_ty) = binding_and_constructor_types(source, "d");
+    assert_eq!(binding_ty, constructor_ty);
+    assert!(
+        binding_ty.contains_unknown_or_any(),
+        "nested lowering-inexact rebinding must not become a concrete declaration: {binding_ty:?}"
+    );
+}
+
+#[test]
 fn tuple_key_with_unresolved_member_is_not_adopted() {
     let source = "from sifr.collections import defaultdict\n\nclass Point:\n    x: int\n\ndef solve(p: Point) -> int:\n    d = defaultdict(set)\n    key = (p.x, 1)\n    d[key].add(\"a\")\n    return len(d)\n";
     assert!(lower_source_with_stdlib_collections(source).is_ok());

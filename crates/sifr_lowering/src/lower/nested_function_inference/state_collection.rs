@@ -750,7 +750,12 @@ pub(super) fn analyze_stmt(
                 if local_bindings.contains(&name) && !nonlocal_names.contains(&name) {
                     continue;
                 }
+                let lowering_is_inexact =
+                    nested_env.lowering_inexact_bindings.contains(name.as_str());
                 unify_name_binding(name.as_str(), refined_ty, env, states, current_function);
+                if lowering_is_inexact {
+                    env.lowering_inexact_bindings.insert(name);
+                }
             }
         }
         _ => {}
