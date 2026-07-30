@@ -117,10 +117,11 @@ arithmetic, JSON-diagnostic, and LSP diagnostic samples at
 5.962/5.91 ms median plus 11.664/10.933 ms p95 respectively. The closeout diff
 does not change compiler, frontend, diagnostic, or LSP implementation paths.
 Within minutes, an unrelated class-field branch on the same host failed the
-same four cases much more severely at 3313.437 ms, 4612.439 ms, 17.918 ms, and
-22.939 ms. The cross-branch control and earlier closeout retries that moved
-between affected cases demonstrate the same bimodal shared-host condition; the
-closeout changed no baseline, threshold, waiver, or profile selection.
+same four cases much more severely at 3313.437 ms, 4612.439 ms, 4132.029 ms,
+and 17.918 ms median plus 22.939 ms p95. The cross-branch control and earlier
+closeout retries that moved between affected cases demonstrate the same
+bimodal shared-host condition; the closeout changed no baseline, threshold,
+waiver, or profile selection.
 
 The timed-out control also showed that `full/budget-subset` can read the prior
 `full.budget.latest.json` after `full/benchmark-subset` fails before replacing

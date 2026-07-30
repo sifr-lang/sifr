@@ -1843,6 +1843,12 @@ Closeout validation evidence on 2026-07-30:
   summaries lacked durable output. Those findings are closed by the corrected
   wording, the performance-ledger incident, and the checked-in
   [merge-continuation evidence](../../reviews/active/rust-interop-certification-14-merge-continuation-evidence.md).
+- [Merge-readiness Opus round 9](../../reviews/active/rust-interop-certification-14-review-round-9.md)
+  verified the singular lock-wait correction and every durable project,
+  generated-build, and E2E rerun, then found that the performance ledger had
+  omitted the unrelated control's 4132.029 ms JSON-diagnostic sample and
+  consequently misaligned the LSP values. The ledger now records all four
+  cases and the separate LSP p95 exactly.
 - The authoritative `create-pr` profile passed every blocking step on the
   reviewed closeout state. Python interop passed 19/19 variants in
   557.53/600 seconds; Rust interop passed 10/10 in 8.72/10 seconds; developer

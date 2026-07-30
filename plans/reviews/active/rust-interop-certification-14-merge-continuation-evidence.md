@@ -103,4 +103,4 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured;
 ```
 
 The warmed rerun reproduced the exact report signature from the earlier cold
-merge continuation, which took 801.93 seconds with zero cache hits.
+merge continuation.
