@@ -313,6 +313,16 @@ rather than worked around here.
 | Waves 4-8 | pending | start sequentially after Wave 3 merges |
 | Full-corpus closeout | blocked | starts after every remediation wave merges; includes restoring `leetcode-full` to the release profile |
 
+Wave 3's exact prospective merge `ec5aab945` includes current `main`
+`ea119724e`; the authoritative create-PR profile passed again on that exact
+state with all 131 selected native e2e fixtures. Reviewer pass 10 returned
+only a transient HTTP 529 overload response and is not review evidence.
+[Opus pass 11](../../reviews/active/ad-hoc-algorithmic-full-corpus-preexisting-failures-wave-3-claude-opus-review-pass-11.md)
+then independently compared the published head and base, ran the complete
+677-fixture e2e suite, compared all 411 corpus checks, ran all 58 corpus
+fixtures containing an empty dictionary through the native path, and approved
+the complete Wave 3 implementation with zero actionable findings.
+
 ## Acceptance Criteria
 
 - [ ] Every listed fixture passes the canonical full-corpus algorithmic suite.
