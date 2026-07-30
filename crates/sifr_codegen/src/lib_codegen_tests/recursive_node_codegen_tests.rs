@@ -309,3 +309,141 @@ def nextNode(mut node: LinkedNode | None) -> LinkedNode | None:
         "mutable-borrowed recursive options do not own the narrowed class value:\n{rust_code}"
     );
 }
+
+#[test]
+fn test_mutually_recursive_option_bindings_use_scc_metadata() {
+    let rust_code = generate_rust_from_source(
+        r#"class Branch:
+    value: int
+    leaf: Leaf | None
+
+    def __init__(self, value: int, leaf: Leaf | None):
+        self.value = value
+        self.leaf = leaf
+
+class Leaf:
+    value: int
+    branch: Branch | None
+
+    def __init__(self, value: int, branch: Branch | None):
+        self.value = value
+        self.branch = branch
+
+def detach(own branch: Branch | None, own leaf: Leaf | None) -> int:
+    if branch is None:
+        return 0
+    if leaf is None:
+        return branch.value
+    next_leaf: Leaf | None = branch.leaf
+    next_branch: Branch | None = leaf.branch
+    return branch.value + leaf.value
+"#,
+    );
+
+    assert!(
+        rust_code.contains("let Some(mut branch) = branch else")
+            && rust_code.contains("let Some(mut leaf) = leaf else"),
+        "SCC-recursive owned options must use the same mutable narrowing as self-recursive classes:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("branch.leaf.take().map(|__sifr_boxed_recursive_value|")
+            && rust_code.contains("leaf.branch.take().map(|__sifr_boxed_recursive_value|"),
+        "mutually recursive child fields must move from mutable narrowed bindings:\n{rust_code}"
+    );
+}
+
+#[test]
+fn test_recursive_option_mutability_covers_simple_narrowing_shapes() {
+    let rust_code = generate_rust_from_source(
+        r#"class LinkedNode:
+    val: int
+    next: LinkedNode | None
+
+    def __init__(self, val: int = 0, next: LinkedNode | None = None):
+        self.val = val
+        self.next = next
+
+def fromIfLet(own if_node: LinkedNode | None) -> LinkedNode | None:
+    if if_node is not None:
+        return if_node.next
+    return None
+
+def fromAnd(own and_left: LinkedNode | None, own and_right: LinkedNode | None) -> LinkedNode | None:
+    if and_left is not None and and_right is not None:
+        right_child: LinkedNode | None = and_right.next
+        return and_left.next
+    return None
+
+def fromOr(own or_left: LinkedNode | None, own or_right: LinkedNode | None) -> LinkedNode | None:
+    if or_left is None or or_right is None:
+        return None
+    right_child: LinkedNode | None = or_right.next
+    return or_left.next
+
+def fromTruthiness(own truthy_node: LinkedNode | None) -> LinkedNode | None:
+    if truthy_node:
+        return truthy_node.next
+    return None
+
+def fromNestedFunction(own outer_node: LinkedNode | None) -> LinkedNode | None:
+    def detach(own nested_node: LinkedNode | None) -> LinkedNode | None:
+        if nested_node is None:
+            return None
+        return nested_node.next
+    return detach(outer_node)
+
+def fromNestedBlock(own block_node: LinkedNode | None, enabled: bool) -> LinkedNode | None:
+    if enabled:
+        if block_node is None:
+            return None
+        return block_node.next
+    return None
+"#,
+    );
+
+    assert!(
+        rust_code.contains("if let Some(mut if_node) = if_node"),
+        "if-let recursive narrowing must preserve owned mutability:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("if let Some(mut and_left) = and_left")
+            && rust_code.contains("if let Some(mut and_right) = and_right"),
+        "and-chain recursive narrowing must preserve each owned binding:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("let (Some(mut or_left), Some(mut or_right))"),
+        "or-tuple let-else narrowing must preserve each owned binding:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("if let Some(mut truthy_node) = truthy_node"),
+        "truthiness narrowing must preserve owned recursive mutability:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("let Some(mut nested_node) = nested_node else"),
+        "nested-function lowering must retain recursive field metadata:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("let Some(mut block_node) = block_node else"),
+        "nested simple blocks must retain the complete binding context:\n{rust_code}"
+    );
+}
+
+#[test]
+fn test_nested_copy_parameter_is_not_registered_as_borrowed() {
+    let rust_code = generate_rust_from_source(
+        r#"def outer(value: int) -> int:
+    def addOne(copy_value: int) -> int:
+        return copy_value + 1
+    return addOne(value)
+"#,
+    );
+
+    assert!(
+        rust_code.contains("|copy_value: i64|"),
+        "copy-valued nested parameters must remain direct values:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("|copy_value: &i64|"),
+        "default borrow syntax must not classify Copy nested parameters as borrowed storage:\n{rust_code}"
+    );
+}

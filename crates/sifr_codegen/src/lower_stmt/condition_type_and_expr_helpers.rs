@@ -1,4 +1,3 @@
-use super::simple_dispatch_and_bindings::should_force_mutable_binding;
 use super::{
     try_lower_leaf_expr, HirExpr, RustExpr, RustLiteral, RustParam, RustStmt, RustType,
     SimpleStmtBindings, Type,
@@ -30,37 +29,19 @@ pub(super) fn detect_option_truthiness_alias(expr: &HirExpr) -> Option<String> {
 }
 
 pub(super) fn option_binding_pattern(option_var: &str, bindings: SimpleStmtBindings<'_>) -> String {
-    let requires_mut = !bindings.borrowed_params.contains(option_var)
-        && !bindings.mut_borrowed_params.contains(option_var)
-        && (bindings.mutated_vars.contains(option_var)
-            || bindings
-                .local_binding_types
-                .get(option_var)
-                .and_then(option_inner_type)
-                .is_some_and(should_force_mutable_binding));
+    let requires_mut = crate::option_binding_mutability::option_binding_requires_mut(
+        option_var,
+        bindings.mutated_vars,
+        bindings.borrowed_params,
+        bindings.mut_borrowed_params,
+        bindings.local_binding_types,
+        bindings.recursive_fields,
+    );
     if requires_mut {
         format!("Some(mut {option_var})")
     } else {
         format!("Some({option_var})")
     }
-}
-
-fn option_inner_type(ty: &Type) -> Option<&Type> {
-    let Type::Union(members) = resolve_alias_type(ty) else {
-        return None;
-    };
-    let mut non_none = members
-        .iter()
-        .filter(|member| !matches!(resolve_alias_type(member), Type::None));
-    let inner = non_none.next()?;
-    if non_none.next().is_some()
-        || !members
-            .iter()
-            .any(|member| matches!(resolve_alias_type(member), Type::None))
-    {
-        return None;
-    }
-    Some(inner)
 }
 
 pub(super) fn lower_if_not_none_chain(

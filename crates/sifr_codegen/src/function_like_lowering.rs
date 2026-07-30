@@ -75,6 +75,7 @@ impl RustEmitter {
                     &self.borrowed_params,
                     &self.mut_borrowed_params,
                     &self.local_binding_types,
+                    &self.recursive_fields,
                     &scope_ctx,
                 )
             };

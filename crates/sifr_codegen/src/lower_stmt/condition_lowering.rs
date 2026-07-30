@@ -18,13 +18,8 @@ pub(super) fn try_lower_simple_if_stmt(
     if elif_clauses.is_empty() && maybe_else_body.is_none() && codegen_body_always_exits(then_body)
     {
         if let Some(option_vars) = detect_or_is_none_vars(condition) {
-            let lowered_then_body = try_lower_simple_stmt_block(
-                then_body,
-                in_loop_with_else,
-                bindings.mutated_vars,
-                bindings.borrowed_params,
-                ctx,
-            )?;
+            let lowered_then_body =
+                try_lower_simple_stmt_block(then_body, in_loop_with_else, bindings, ctx)?;
             let pattern = format!(
                 "({})",
                 option_vars
@@ -45,13 +40,8 @@ pub(super) fn try_lower_simple_if_stmt(
             }]);
         }
         if let Some(option_var) = detect_is_none_var(condition) {
-            let lowered_then_body = try_lower_simple_stmt_block(
-                then_body,
-                in_loop_with_else,
-                bindings.mutated_vars,
-                bindings.borrowed_params,
-                ctx,
-            )?;
+            let lowered_then_body =
+                try_lower_simple_stmt_block(then_body, in_loop_with_else, bindings, ctx)?;
             return Some(vec![RustStmt::LetElse {
                 pattern: option_binding_pattern(&option_var, bindings),
                 value: RustExpr::Ident(option_var),
@@ -64,8 +54,7 @@ pub(super) fn try_lower_simple_if_stmt(
         Some(try_lower_simple_stmt_block(
             else_body,
             in_loop_with_else,
-            bindings.mutated_vars,
-            bindings.borrowed_params,
+            bindings,
             ctx,
         )?)
     } else {
@@ -101,13 +90,8 @@ pub(super) fn try_lower_simple_if_clause(
     bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<RustStmt> {
-    let lowered_then_body = try_lower_simple_stmt_block(
-        then_body,
-        in_loop_with_else,
-        bindings.mutated_vars,
-        bindings.borrowed_params,
-        ctx,
-    )?;
+    let lowered_then_body =
+        try_lower_simple_stmt_block(then_body, in_loop_with_else, bindings, ctx)?;
 
     if let Some(option_var) = detect_is_not_none_var(condition) {
         return Some(RustStmt::IfLet {

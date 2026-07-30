@@ -1,7 +1,7 @@
 use super::{
-    try_lower_leaf_or_name_expr, try_lower_simple_stmt_with_ctx, HashSet, HirExceptHandler,
-    HirExpr, HirStmt, RustExpr, RustLiteral, RustStmt, RustType, SimpleStmtBindings,
-    SimpleStmtLoweringCtx, Type,
+    try_lower_leaf_or_name_expr, try_lower_simple_stmt_with_ctx_and_bindings, HashSet,
+    HirExceptHandler, HirExpr, HirStmt, RustExpr, RustLiteral, RustStmt, RustType,
+    SimpleStmtBindings, SimpleStmtLoweringCtx, Type,
 };
 pub(super) fn try_lower_simple_try_except_stmt(
     body: &[HirStmt],
@@ -32,20 +32,9 @@ pub(super) fn try_lower_simple_try_except_stmt(
         return None;
     }
 
-    let lowered_try_body = try_lower_simple_stmt_block(
-        body,
-        in_loop_with_else,
-        bindings.mutated_vars,
-        bindings.borrowed_params,
-        ctx,
-    )?;
-    let lowered_handler_body = try_lower_simple_stmt_block(
-        &handler.body,
-        in_loop_with_else,
-        bindings.mutated_vars,
-        bindings.borrowed_params,
-        ctx,
-    )?;
+    let lowered_try_body = try_lower_simple_stmt_block(body, in_loop_with_else, bindings, ctx)?;
+    let lowered_handler_body =
+        try_lower_simple_stmt_block(&handler.body, in_loop_with_else, bindings, ctx)?;
 
     let mut closure_body = lowered_try_body;
     closure_body.push(RustStmt::Return(Some(RustExpr::FnCall {
@@ -261,17 +250,15 @@ pub(super) fn expr_has_result_flow(expr: &HirExpr) -> bool {
 pub(super) fn try_lower_simple_stmt_block(
     stmts: &[HirStmt],
     in_loop_with_else: bool,
-    mutated_vars: &HashSet<String>,
-    borrowed_params: &HashSet<String>,
+    bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
     let mut lowered = Vec::new();
     for stmt in stmts {
-        lowered.extend(try_lower_simple_stmt_with_ctx(
+        lowered.extend(try_lower_simple_stmt_with_ctx_and_bindings(
             stmt,
             in_loop_with_else,
-            mutated_vars,
-            borrowed_params,
+            bindings,
             ctx,
         )?);
     }

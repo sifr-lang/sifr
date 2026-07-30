@@ -29,9 +29,9 @@ pub use candidate_and_validation::{
 };
 use candidate_and_validation::{try_lower_expr_stmt_with_bindings, SimpleStmtBindings};
 mod simple_dispatch_and_bindings;
-pub(crate) use simple_dispatch_and_bindings::{
-    try_lower_simple_stmt_with_ctx, try_lower_simple_stmt_with_ctx_and_bindings,
-};
+#[cfg(test)]
+use simple_dispatch_and_bindings::try_lower_simple_stmt_with_ctx;
+use simple_dispatch_and_bindings::try_lower_simple_stmt_with_ctx_and_bindings;
 mod try_tuple_flow;
 pub(crate) use try_tuple_flow::{lower_tuple_unpack_targets, tuple_unpack_source_is_borrowed};
 use try_tuple_flow::{
