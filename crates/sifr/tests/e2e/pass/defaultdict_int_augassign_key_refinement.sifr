@@ -41,6 +41,22 @@ def scalar_shadow_count(words: list[str]) -> int:
     return len(counts) + helper()
 
 
+def late_nested_shadow_counts(words: list[str], values: list[int]) -> int:
+    counts = defaultdict(int)
+    if len(words) > 0:
+        for word in words:
+            counts[word] += 1
+
+        def numeric_count() -> int:
+            counts = defaultdict(int)
+            for value in values:
+                counts[value] += 1
+            return len(counts)
+
+        return len(counts) + numeric_count()
+    return 0
+
+
 def main():
     words = count_words(["red", "blue", "red", "green", "red"])
     assert words["red"] == 3
@@ -57,3 +73,4 @@ def main():
 
     assert nested_shadow_counts(["x", "y", "x"], [1, 2, 1]) == 4
     assert scalar_shadow_count(["x", "x", "y"]) == 9
+    assert late_nested_shadow_counts(["x", "y", "x"], [1, 2, 1]) == 4

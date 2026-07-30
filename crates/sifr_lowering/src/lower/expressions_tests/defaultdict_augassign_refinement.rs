@@ -115,6 +115,15 @@ fn nested_function_shadowing_keeps_independent_defaultdict_key_types() {
 }
 
 #[test]
+fn late_nested_shadow_does_not_clear_enclosing_defaultdict_patch() {
+    let source = "from sifr.collections import defaultdict\n\ndef solve(words: list[str], nums: list[int]) -> int:\n    counts = defaultdict(int)\n    if len(words) > 0:\n        for word in words:\n            counts[word] += 1\n        def helper() -> int:\n            counts = defaultdict(int)\n            for value in nums:\n                counts[value] += 1\n            return len(counts)\n        return len(counts) + helper()\n    return 0\n";
+    let (binding_ty, value_ty) = defaultdict_binding_types(source, "counts");
+    let expected = defaultdict_int_type(Type::Str);
+    assert_eq!(binding_ty, expected);
+    assert_eq!(value_ty, expected);
+}
+
+#[test]
 fn defaultdict_list_and_set_aliases_are_not_retyped_by_int_augassign_refiner() {
     let mut ctx = LowerCtx::new();
     for (alias, value_ty) in [
