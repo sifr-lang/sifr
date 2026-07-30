@@ -67,8 +67,9 @@ fn list_extend_mutates_the_defaultdict_entry_without_cloning_the_bucket() {
         "from sifr.collections import defaultdict\n\ndef solve() -> int:\n    groups = defaultdict(list)\n    groups[1].extend([1, 2])\n    groups[2].append(7)\n    return len(groups[1])\n",
     );
 
-    assert!(rust_code
-        .contains("let __sifr_defaultdict_bucket = groups.entry(1_i64).or_insert(Vec::new());"));
+    assert!(rust_code.contains(
+        "let __sifr_defaultdict_bucket = groups.entry(__sifr_defaultdict_key).or_insert(Vec::new());"
+    ));
     assert!(rust_code.contains("__sifr_defaultdict_bucket.extend("));
     assert!(!rust_code.contains(".or_insert(Vec::new()).clone().extend("));
 }
@@ -80,7 +81,7 @@ fn set_update_mutates_the_defaultdict_entry_without_cloning_the_bucket() {
     );
 
     assert!(rust_code.contains(
-        "let __sifr_defaultdict_bucket = groups.entry(1_i64).or_insert(HashSet::new());"
+        "let __sifr_defaultdict_bucket = groups.entry(__sifr_defaultdict_key).or_insert(HashSet::new());"
     ));
     assert!(rust_code.contains("__sifr_defaultdict_bucket.extend("));
     assert!(!rust_code.contains(".or_insert(HashSet::new()).clone().extend("));
@@ -120,4 +121,38 @@ fn iterable_arguments_are_materialized_before_borrowing_the_destination_bucket()
         .map(|offset| set_items + offset)
         .expect("set bucket should be borrowed after materialization");
     assert!(set_items < set_bucket);
+}
+
+#[test]
+fn variadic_set_bucket_updates_never_fall_back_to_cloned_receivers() {
+    let rust_code = generate_rust_from_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef solve() -> int:\n    groups = defaultdict(set)\n    groups[1].update({1, 2})\n    groups[1].intersection_update({1, 2, 3}, {2, 3})\n    groups[1].update({1, 2, 3})\n    groups[1].difference_update({1}, {2})\n    groups[2].add(7)\n    return len(groups[1])\n",
+    );
+
+    assert!(
+        rust_code
+            .matches("__sifr_defaultdict_bucket.retain(")
+            .count()
+            >= 4
+    );
+    assert!(!rust_code.contains(".or_insert(HashSet::new()).clone().retain("));
+}
+
+#[test]
+fn iterable_mutation_evaluates_key_before_arguments_and_bucket_borrow() {
+    let rust_code = generate_rust_from_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef key(mut log: list[str]) -> int:\n    log.append(\"key\")\n    return 1\n\ndef items(mut log: list[str]) -> list[int]:\n    log.append(\"items\")\n    return [7]\n\ndef solve() -> int:\n    log: list[str] = []\n    groups = defaultdict(list)\n    groups[key(log)].extend(items(log))\n    groups[2].append(9)\n    return len(groups[1])\n",
+    );
+
+    let key_binding = rust_code
+        .find("let __sifr_defaultdict_key = key(&mut log).clone();")
+        .expect("key expression should be evaluated into a temporary");
+    let items_binding = rust_code
+        .find("let __sifr_defaultdict_items =")
+        .expect("iterable should be materialized");
+    let bucket_binding = rust_code
+        .find("let __sifr_defaultdict_bucket = groups.entry(__sifr_defaultdict_key)")
+        .expect("bucket should be borrowed with the pre-evaluated key");
+    assert!(key_binding < items_binding);
+    assert!(items_binding < bucket_binding);
 }

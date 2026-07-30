@@ -144,7 +144,7 @@ macro_rules! stmt_expr_method_call {
                 $emitter.pending_self_field_clone_suppression += 1;
             }
             let lowered_registry =
-                $emitter.try_lower_registry_method_call_expr(object, method, args, $expr.ty());
+                $emitter.try_lower_registry_method_call_expr(object, method, args, $expr.ty())?;
             if needs_field_clone_suppression
                 && $emitter.pending_self_field_clone_suppression > suppression_prev
             {

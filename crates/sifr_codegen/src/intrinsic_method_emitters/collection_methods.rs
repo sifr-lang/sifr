@@ -53,6 +53,46 @@ impl RustEmitter {
         method: &str,
         args: &[HirExpr],
         method_return_ty: &Type,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        let is_defaultdict_bucket_mutator = match object {
+            HirExpr::Index {
+                object: base_object,
+                ..
+            } => registry_defaultdict_alias_parts(base_object.ty()).is_some_and(
+                |(_, _, value_ty)| methods::is_in_place_collection_method(value_ty, method),
+            ),
+            _ => false,
+        };
+        if is_defaultdict_bucket_mutator {
+            return self
+                .try_lower_defaultdict_index_method_call_expr(
+                    object,
+                    method,
+                    args,
+                    method_return_ty,
+                )
+                .map(Some)
+                .ok_or_else(|| {
+                    crate::CodegenError::new(format!(
+                        "defaultdict bucket mutator `{method}` could not be lowered safely"
+                    ))
+                });
+        }
+
+        Ok(self.try_lower_registry_method_call_expr_unchecked(
+            object,
+            method,
+            args,
+            method_return_ty,
+        ))
+    }
+
+    fn try_lower_registry_method_call_expr_unchecked(
+        &mut self,
+        object: &HirExpr,
+        method: &str,
+        args: &[HirExpr],
+        method_return_ty: &Type,
     ) -> Option<crate::RustExpr> {
         let effective_object_ty = self.effective_method_object_ty(object);
         let object_ty = crate::resolve_alias_type_for_plain_call(&effective_object_ty);
@@ -76,14 +116,6 @@ impl RustEmitter {
         }
         if let Some(lowered) = crate::python_dlpack_codegen::lower_python_dlpack_method(
             self,
-            object,
-            method,
-            args,
-            method_return_ty,
-        ) {
-            return Some(lowered);
-        }
-        if let Some(lowered) = self.try_lower_defaultdict_index_method_call_expr(
             object,
             method,
             args,
@@ -534,11 +566,27 @@ impl RustEmitter {
         }
         let lowered_object = self.try_lower_registry_expr_strict(base_object)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
+        let lowered_key_arg = registry_defaultdict_key_arg(index, lowered_index, key_ty);
+        let is_iterable_bucket_mutator = (alias_name == "__sifr_defaultdict_list"
+            && method == "extend")
+            || (alias_name == "__sifr_defaultdict_set"
+                && matches!(
+                    method,
+                    "update"
+                        | "intersection_update"
+                        | "difference_update"
+                        | "symmetric_difference_update"
+                ));
+        let entry_key = if is_iterable_bucket_mutator {
+            crate::RustExpr::Ident("__sifr_defaultdict_key".to_string())
+        } else {
+            lowered_key_arg.clone()
+        };
         let entry_expr = crate::RustExpr::MethodCall {
             receiver: Box::new(crate::RustExpr::MethodCall {
                 receiver: Box::new(lowered_object),
                 method: "entry".to_string(),
-                args: vec![registry_defaultdict_key_arg(index, lowered_index, key_ty)],
+                args: vec![entry_key],
             }),
             method: "or_insert".to_string(),
             args: vec![registry_defaultdict_default_expr(alias_name)],
@@ -548,7 +596,12 @@ impl RustEmitter {
             let [iterable] = args else {
                 return None;
             };
-            return self.try_lower_defaultdict_list_extend_expr(entry_expr, iterable, value_ty);
+            return self.try_lower_defaultdict_list_extend_expr(
+                lowered_key_arg,
+                entry_expr,
+                iterable,
+                value_ty,
+            );
         }
 
         if alias_name == "__sifr_defaultdict_set"
@@ -560,7 +613,13 @@ impl RustEmitter {
                     | "symmetric_difference_update"
             )
         {
-            return self.try_lower_defaultdict_set_update_expr(entry_expr, method, args, value_ty);
+            return self.try_lower_defaultdict_set_update_expr(
+                lowered_key_arg,
+                entry_expr,
+                method,
+                args,
+                value_ty,
+            );
         }
 
         let mut lowered_args = Vec::with_capacity(args.len());

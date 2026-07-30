@@ -106,7 +106,7 @@ impl RustEmitter {
                 }
 
                 let lowered =
-                    self.try_lower_registry_method_call_expr(object, method, args, expr.ty());
+                    self.try_lower_registry_method_call_expr(object, method, args, expr.ty())?;
 
                 if needs_self_field_clone_suppression
                     && self.pending_self_field_clone_suppression > suppression_prev

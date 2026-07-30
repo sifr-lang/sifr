@@ -22,6 +22,7 @@ impl RustEmitter {
 
     pub(crate) fn try_lower_defaultdict_list_extend_expr(
         &mut self,
+        key_expr: crate::RustExpr,
         entry_expr: crate::RustExpr,
         iterable: &HirExpr,
         value_ty: &Type,
@@ -33,6 +34,12 @@ impl RustEmitter {
         let bucket_name = "__sifr_defaultdict_bucket".to_string();
         Some(crate::RustExpr::Block {
             stmts: vec![
+                crate::RustStmt::Let {
+                    mutable: false,
+                    name: "__sifr_defaultdict_key".to_string(),
+                    ty: None,
+                    value: key_expr,
+                },
                 crate::RustStmt::Let {
                     mutable: false,
                     name: items_name.clone(),
@@ -65,6 +72,7 @@ impl RustEmitter {
 
     pub(crate) fn try_lower_defaultdict_set_update_expr(
         &mut self,
+        key_expr: crate::RustExpr,
         entry_expr: crate::RustExpr,
         method: &str,
         args: &[HirExpr],
@@ -73,11 +81,17 @@ impl RustEmitter {
         let Type::Set(element_ty) = crate::resolve_alias_type_for_plain_call(value_ty) else {
             return None;
         };
-        if method != "update" && args.len() != 1 {
+        if method == "symmetric_difference_update" && args.len() != 1 {
             return None;
         }
 
-        let mut stmts = Vec::with_capacity(args.len() + 3);
+        let mut stmts = Vec::with_capacity(args.len() + 4);
+        stmts.push(crate::RustStmt::Let {
+            mutable: false,
+            name: "__sifr_defaultdict_key".to_string(),
+            ty: None,
+            value: key_expr,
+        });
         let mut item_names = Vec::with_capacity(args.len());
         for (index, arg) in args.iter().enumerate() {
             let items_name = format!("__sifr_defaultdict_set_items_{index}");
@@ -117,32 +131,33 @@ impl RustEmitter {
                 }
             }
             "intersection_update" | "difference_update" => {
-                let items_name = item_names.into_iter().next()?;
                 let keep_on_match = method == "intersection_update";
-                let contains = crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Ident(items_name)),
-                    method: "contains".to_string(),
-                    args: vec![crate::RustExpr::Ident("__item".to_string())],
-                };
-                stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Ident(bucket_name)),
-                    method: "retain".to_string(),
-                    args: vec![crate::RustExpr::Closure {
-                        params: vec![crate::RustParam::Named {
-                            name: "__item".to_string(),
-                            ty: crate::RustType::Named("_".to_string()),
+                for items_name in item_names {
+                    let contains = crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident(items_name)),
+                        method: "contains".to_string(),
+                        args: vec![crate::RustExpr::Ident("__item".to_string())],
+                    };
+                    stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident(bucket_name.clone())),
+                        method: "retain".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "__item".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(if keep_on_match {
+                                contains
+                            } else {
+                                crate::RustExpr::UnaryOp {
+                                    op: "!".to_string(),
+                                    operand: Box::new(contains),
+                                }
+                            }),
+                            is_move: false,
                         }],
-                        body: Box::new(if keep_on_match {
-                            contains
-                        } else {
-                            crate::RustExpr::UnaryOp {
-                                op: "!".to_string(),
-                                operand: Box::new(contains),
-                            }
-                        }),
-                        is_move: false,
-                    }],
-                }));
+                    }));
+                }
             }
             "symmetric_difference_update" => {
                 let items_name = item_names.into_iter().next()?;
