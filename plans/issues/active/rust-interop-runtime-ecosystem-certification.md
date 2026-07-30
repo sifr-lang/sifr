@@ -1513,6 +1513,7 @@ Validation evidence to date:
   23 successful protocol requests. The exact six-variant `lsp-smoke` suite
   passed immediately on isolation, including protocol shutdown, marker corpus,
   transcript replay, and all self-tests. Workspace Clippy passes with warnings
+  denied.
 - [Opus round 1](../../reviews/active/rust-interop-certification-13-review-round-1.md)
   independently reproduced both mandatory generated-package tests, all driver
   tests, the 10/10 Rust-interop area, 229 mutation cases, the real dependency
@@ -1673,6 +1674,15 @@ Validation evidence to date:
   directory precisely and older validation bullets are explicitly historical.
   The final production split is 665 lines for offline policy, 219 for
   cfg-aware visitation, and 240 for module-graph traversal.
+- [Opus round 8](../../reviews/active/rust-interop-certification-13-review-round-8.md)
+  reconfirmed the round-7 implementation verdict, independently matched raw
+  flat, inline, non-keyword, and nested-module layouts against rustc 1.94,
+  passed 450/65 driver tests, both mandatory tests, the 10/10 area, and all
+  gates. It returned `NOT SATISFIED` only because the nearby historical
+  create-PR evidence sentence had accidentally lost the word `denied`.
+- The round-8 documentation fix restores the exact statement that workspace
+  Clippy passed with warnings denied; no implementation or test behavior
+  changed after the complete round-8 validation.
 
 ### certification_14: Track A Closeout and Stable Gate
 
