@@ -1849,6 +1849,12 @@ Closeout validation evidence on 2026-07-30:
   omitted the unrelated control's 4132.029 ms JSON-diagnostic sample and
   consequently misaligned the LSP values. The ledger now records all four
   cases and the separate LSP p95 exactly.
+- [Merge-readiness Opus round 10](../../reviews/active/rust-interop-certification-14-review-round-10.md)
+  verified the corrected control mapping, durable continuation evidence,
+  round-9 ledger entry, and complete current diff. It found no actionable
+  implementation, validation, evidence, performance-policy, or tracking issue
+  and returned `SATISFIED`, explicitly approving publication and merge subject
+  to exact PR-head review.
 - The authoritative `create-pr` profile passed every blocking step on the
   reviewed closeout state. Python interop passed 19/19 variants in
   557.53/600 seconds; Rust interop passed 10/10 in 8.72/10 seconds; developer
