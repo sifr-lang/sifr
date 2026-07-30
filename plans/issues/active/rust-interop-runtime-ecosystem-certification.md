@@ -1503,7 +1503,8 @@ Validation evidence to date:
   pass. The completion-time resource gate now also accepts zero deferrals
   while retaining the rule that only passing supported stdlib-core rows may
   authorize retained compiler surfaces.
-- All 449 non-generated driver tests pass with 65 generated-build tests
+- At that validation checkpoint, all 449 non-generated driver tests passed
+  with 65 generated-build tests
   intentionally ignored. Production `sifr_driver` Clippy, workspace rustfmt,
   TypeScript-Go transfer inventory, HIR/driver maintainability, 900-line
   file-size, and diff-hygiene guardrails pass.
@@ -1512,7 +1513,6 @@ Validation evidence to date:
   23 successful protocol requests. The exact six-variant `lsp-smoke` suite
   passed immediately on isolation, including protocol shutdown, marker corpus,
   transcript replay, and all self-tests. Workspace Clippy passes with warnings
-  denied.
 - [Opus round 1](../../reviews/active/rust-interop-certification-13-review-round-1.md)
   independently reproduced both mandatory generated-package tests, all driver
   tests, the 10/10 Rust-interop area, 229 mutation cases, the real dependency
@@ -1636,10 +1636,10 @@ Validation evidence to date:
   `main.rs` fallback selection are pinned, the workspace memo retains only the
   current fingerprint per backend root, and the architecture records the
   deliberate symlink/function-body/external-offline-directory opt-outs.
-- After the round-5 fixes, 12 focused SQLx tests pass and the real
-  `.env`-armed negative passes in 42.28 seconds. All 449 non-generated driver
-  tests pass with 65 generated-build tests intentionally ignored. The
-  implementation remains responsibility-split at 665 lines for offline policy,
+- At the round-5 checkpoint, 12 focused SQLx tests passed and the real
+  `.env`-armed negative passed in 42.28 seconds. All 449 non-generated driver
+  tests passed with 65 generated-build tests intentionally ignored. The
+  implementation was responsibility-split at 665 lines for offline policy,
   219 for cfg-aware visitation, and 200 for module-graph traversal.
 - [Opus round 6](../../reviews/active/rust-interop-certification-13-review-round-6.md)
   confirmed the literal round-5 inline-path fix and all optional hardening,
@@ -1660,6 +1660,19 @@ Validation evidence to date:
   tests remain intentionally ignored. The implementation remains
   responsibility-split at 665 lines for offline policy, 219 for cfg-aware
   visitation, and 235 for module-graph traversal.
+- [Opus round 7](../../reviews/active/rust-interop-certification-13-review-round-7.md)
+  returned `SATISFIED` with no blocking finding. It compared the two-state
+  resolver with rustc 1.94 across 11 module layouts, reproduced all three
+  round-6 layouts in both directions on the real backend fixture, and
+  independently passed 450/65 driver tests, both mandatory tests, the 10/10
+  area, and every lint/guardrail gate.
+- The optional round-7 raw-identifier note is closed rather than retained as
+  a fail-open limitation: module names are unrawed before file lookup, and the
+  file and inline forms both prove the compiled source is recognized while a
+  literal `r#name` decoy is ignored. Documentation now names the declaration
+  directory precisely and older validation bullets are explicitly historical.
+  The final production split is 665 lines for offline policy, 219 for
+  cfg-aware visitation, and 240 for module-graph traversal.
 
 ### certification_14: Track A Closeout and Stable Gate
 

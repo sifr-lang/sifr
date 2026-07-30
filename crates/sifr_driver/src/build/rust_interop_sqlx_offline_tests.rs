@@ -294,6 +294,12 @@ mod inline_redirected {
 
 #[path = "loaded.rs"]
 mod loaded;
+
+mod r#async;
+
+mod r#type {
+    mod child;
+}
 "#,
     );
 
@@ -322,12 +328,30 @@ mod loaded;
         "src/loaded/child.rs",
         "fn query() { let _ = sqlx::query!(\"SELECT 92\"); }\n",
     );
+    fixture.write_rust_file(
+        "src/outer/async.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 16\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/outer/r#async.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 93\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/outer/type/child.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 17\"); }\n",
+    );
+    fixture.write_rust_file(
+        "src/outer/r#type/child.rs",
+        "fn query() { let _ = sqlx::query!(\"SELECT 94\"); }\n",
+    );
 
     let crate_names = sqlx_dependency_crate_names(&fixture.0).expect("manifest should parse");
     let expected = vec![
         "SELECT 13".to_string(),
         "SELECT 14".to_string(),
         "SELECT 15".to_string(),
+        "SELECT 16".to_string(),
+        "SELECT 17".to_string(),
     ];
     assert_eq!(collect_sqlx_queries(&fixture.0, &crate_names), expected);
     for query in expected {

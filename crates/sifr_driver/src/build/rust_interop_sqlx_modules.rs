@@ -1,6 +1,7 @@
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
+use syn::ext::IdentExt;
 use syn::parse::Parser;
 use syn::punctuated::Punctuated;
 use syn::Token;
@@ -117,7 +118,11 @@ fn collect_declared_modules(
         }
         if let Some((_, nested_items)) = &module.content {
             let dir_path = declared_path(module).map_or_else(
-                || directory.plain_base().join(module.ident.to_string()),
+                || {
+                    directory
+                        .plain_base()
+                        .join(module.ident.unraw().to_string())
+                },
                 |path| directory.dir_path.join(path),
             );
             collect_declared_modules(
@@ -150,7 +155,7 @@ fn resolve_declared_module(module: &ItemMod, directory: &ModuleDirectory) -> Opt
             },
         });
     }
-    let module_name = module.ident.to_string();
+    let module_name = module.ident.unraw().to_string();
     let base = directory.plain_base();
     let flat = base.join(format!("{module_name}.rs"));
     let nested = base.join(&module_name).join("mod.rs");
