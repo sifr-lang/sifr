@@ -50,3 +50,22 @@ fn recursive_capability_keys_distinguish_concrete_specializations() {
     assert!(outer_specialization.contains_affine_resource());
     assert!(!outer_specialization.supports_derived_clone());
 }
+
+#[test]
+fn unknown_or_any_query_recurses_through_supported_type_shapes() {
+    let optional_any = Type::Union(vec![Type::None, Type::Any]);
+    let nested = Type::Result(
+        Box::new(Type::List(Box::new(optional_any))),
+        Box::new(Type::Tuple(vec![
+            Type::Int,
+            Type::Iterable(Box::new(Type::Unknown)),
+        ])),
+    );
+    let alias = Type::alias("Payload", nested);
+
+    assert!(alias.contains_unknown_or_any());
+    assert!(Type::Iterator(Box::new(Type::Any)).contains_unknown_or_any());
+    assert!(
+        !Type::List(Box::new(Type::Union(vec![Type::None, Type::Int,]))).contains_unknown_or_any()
+    );
+}

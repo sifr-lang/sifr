@@ -342,6 +342,11 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             }
         }
         HirExpr::ListLiteral { elements, ty } => {
+            if elements.is_empty() {
+                if let Some(lowered) = super::typed_empty_list_expr(ty) {
+                    return Some(lowered);
+                }
+            }
             let list_ty = resolve_alias_type(ty);
             let mut lowered = elements
                 .iter()
