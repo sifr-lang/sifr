@@ -49,3 +49,23 @@ fn borrowed_string_defaultdict_set_operations_use_owned_storage_and_direct_looku
     assert!(rust_code.contains(".or_insert(HashSet::new()).contains(text)"));
     assert!(!rust_code.contains(".contains(&(text))"));
 }
+
+#[test]
+fn list_extend_mutates_the_defaultdict_entry_without_cloning_the_bucket() {
+    let rust_code = generate_rust_from_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef solve() -> int:\n    groups = defaultdict(list)\n    groups[1].extend([1, 2])\n    groups[2].append(7)\n    return len(groups[1])\n",
+    );
+
+    assert!(rust_code.contains(".entry(1_i64).or_insert(Vec::new()).extend("));
+    assert!(!rust_code.contains(".or_insert(Vec::new()).clone().extend("));
+}
+
+#[test]
+fn set_update_mutates_the_defaultdict_entry_without_cloning_the_bucket() {
+    let rust_code = generate_rust_from_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef solve(values: list[int]) -> int:\n    groups = defaultdict(set)\n    groups[1].update({7})\n    groups[2].add(len(values))\n    return len(groups[1])\n",
+    );
+
+    assert!(rust_code.contains(".entry(1_i64).or_insert(HashSet::new())"));
+    assert!(!rust_code.contains(".or_insert(HashSet::new()).clone().extend("));
+}
