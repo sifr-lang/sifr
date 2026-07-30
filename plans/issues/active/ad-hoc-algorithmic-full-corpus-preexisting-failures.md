@@ -322,6 +322,10 @@ then independently compared the published head and base, ran the complete
 677-fixture e2e suite, compared all 411 corpus checks, ran all 58 corpus
 fixtures containing an empty dictionary through the native path, and approved
 the complete Wave 3 implementation with zero actionable findings.
+[Opus pass 12](../../reviews/active/ad-hoc-algorithmic-full-corpus-preexisting-failures-wave-3-claude-opus-review-pass-12.md)
+verified the documentation-only published-head delta and requested only that
+the pass-11 report's self-label be corrected from pass 12 to pass 11; the
+report heading now matches its filename and ledger link.
 
 ## Acceptance Criteria
 

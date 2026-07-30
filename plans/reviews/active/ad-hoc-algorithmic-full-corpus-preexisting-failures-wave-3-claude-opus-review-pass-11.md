@@ -1,6 +1,6 @@
 Baseline worktree and all probe files removed; `git status` is byte-identical to the session-start snapshot.
 
-# Wave 3 Review — pass 12 (exact published head `ec5aab945` vs base `ea119724e`)
+# Wave 3 Review — pass 11 (exact published head `ec5aab945` vs base `ea119724e`)
 
 ## Verdict
 
