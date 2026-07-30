@@ -9,7 +9,9 @@ merge-evidence ledger entry).
 The authoritative merge profile is fail-fast and stopped at the governed
 performance comparison. The unmodified profile runner then executed every
 later merge step successfully. This artifact preserves compact reruns for the
-three results whose original console output had no unique durable report.
+three results whose original console output had no unique durable report and
+explicitly records the package-management step that the original closeout
+enumeration omitted.
 
 ## Project Validation Matrices
 
@@ -52,7 +54,7 @@ Result:
 
 ```text
 offline package merge smoke ok
-offline package merge smoke self-test: PASS
+offline package merge smoke ok
 package management verification ok: variants=2, failures=0,
 blocking_failures=0, non_blocking_failures=0
 ```

@@ -1864,6 +1864,15 @@ Closeout validation evidence on 2026-07-30:
   any extra build-script trust entry with a dedicated mutation, and the
   already-passing package-management offline merge smoke is explicitly
   preserved in the merge-continuation evidence.
+- [Published-head Opus round 12](../../reviews/active/rust-interop-certification-14-review-round-12.md)
+  proved both round-11 hardening changes effective, independently reproduced
+  234 fixture mutations and the 2/2 package-management smoke, and found no
+  implementation, inventory, stable-claim, resource, performance-policy, or
+  tracking defect. It returned `NOT SATISFIED` for two evidence-only wording
+  errors: the offline-smoke result paraphrased its second identical output
+  line, and the artifact preamble still described only its original three
+  reruns. The evidence now reproduces both literal `ok` lines and distinguishes
+  the three recovered outputs from the separately preserved coverage step.
 - The authoritative `create-pr` profile passed every blocking step on the
   reviewed closeout state. Python interop passed 19/19 variants in
   557.53/600 seconds; Rust interop passed 10/10 in 8.72/10 seconds; developer
