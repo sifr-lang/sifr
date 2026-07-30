@@ -1405,6 +1405,21 @@ Validation evidence to date:
   only a truncated conversational tail rather than a self-contained review.
   The stub artifact and its link are removed; the historical confirmation is
   retained as plain prose instead of overstated provenance.
+- [Published-head round 4](../../reviews/active/rust-interop-certification-12-review-round-4.md)
+  verified the provenance repair at PR head
+  `eca5abb7d9fca587ad6f31b3310f3e470db693d5`, re-ran the exact committed
+  Rust-interop area and guardrails, confirmed the parallel backend edit remains
+  absent, and returned `SATISFIED` with no blocking findings.
+- The shared-worktree `create-pr` lane stops at the resource-certification
+  backstop because the preserved unstaged backend promotion removes the last
+  future-owned row. An exact-head archive passes that backstop and every
+  certification/core guardrail; its cold diagnostic run exceeded the
+  archive-path timing budget, while the warm rerun passed diagnostics in
+  7.28 seconds. The archive-only Python doctor then exceeded its subprocess
+  limit because its generated package lived under the temporary source root;
+  the same doctor passed in the main workspace with deferred=1, resolved=3,
+  parity=5, and zero mutations. No failing command touches certification-12
+  source, and the exact-head Rust-interop area remains 10/10.
 
 ### certification_14: Track A Closeout and Stable Gate
 
