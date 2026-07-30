@@ -1874,6 +1874,12 @@ Closeout validation evidence on 2026-07-30:
   report signature `7c39b8c1dd4fec7c`. The contended run took 1405.25 seconds,
   while each blocking step remained within its own budget; its only advisory
   was the nonblocking aggregate warm-wall target.
+- [Draft PR #3083](https://github.com/sifr-lang/sifr/pull/3083) published the
+  complete closeout from `agent/rust-interop-certification-14`. Its first
+  published head was
+  `a344d1187575d9f5cb16055e161edd5c2a9763d1`, mergeable and exactly current
+  with `origin/main`; the required published-head Opus review follows after
+  this immutable PR identity is part of the closeout ledger.
 - The exact integrated head `017c1df411f78ffb786775fdf4bd60e52424f839`
   ran the authoritative merge profile on 2026-07-30. Coverage, all core and
   resource guardrails, diagnostics, CPython differential 2/2, Python interop
