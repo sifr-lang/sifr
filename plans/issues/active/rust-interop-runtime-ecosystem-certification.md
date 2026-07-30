@@ -1811,6 +1811,22 @@ Closeout validation evidence on 2026-07-30:
 - [Opus round 4](../../reviews/active/rust-interop-certification-14-review-round-4.md)
   confirmed both post-verdict edits, artifact durability, and the complete
   closeout record with no actionable issue, returning `SATISFIED`.
+- [Integrated-head Opus round 5](../../reviews/active/rust-interop-certification-14-review-round-5.md)
+  re-ran the focused Rust-interop, driver, static, and resource gates after
+  merging current `origin/main`, then found three stale present-tense
+  `future-owned` notes in the canonical compatibility matrix and the matching
+  resource deferral in the durable sysroot/stdlib architecture. The notes now
+  preserve the narrow core-row scopes while delegating the already-certified
+  ecosystem evidence to `opaque_resource_matrix`, `async_runtime_reqwest`, and
+  `callback_subscription_ecosystem`; the architecture uses the same completed
+  resource wording.
+- [Integrated-head Opus round 6](../../reviews/active/rust-interop-certification-14-review-round-6.md)
+  confirmed all four stale-deferral corrections, independently checked every
+  referenced row and the repository-wide remaining `future-owned` vocabulary,
+  and found no implementation or scope issue. It returned `NOT SATISFIED`
+  solely because this closeout ledger had not yet recorded round 5 or its
+  corrections; this bullet and the preceding round-5 record close that
+  artifact-traceability finding.
 - The authoritative `create-pr` profile passed every blocking step on the
   reviewed closeout state. Python interop passed 19/19 variants in
   557.53/600 seconds; Rust interop passed 10/10 in 8.72/10 seconds; developer
