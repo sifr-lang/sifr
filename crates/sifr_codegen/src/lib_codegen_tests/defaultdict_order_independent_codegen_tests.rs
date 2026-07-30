@@ -126,9 +126,24 @@ fn iterable_arguments_are_materialized_before_borrowing_the_destination_bucket()
 #[test]
 fn variadic_set_bucket_updates_never_fall_back_to_cloned_receivers() {
     let rust_code = generate_rust_from_source_with_stdlib_collections(
-        "from sifr.collections import defaultdict\n\ndef solve() -> int:\n    groups = defaultdict(set)\n    groups[1].update({1, 2})\n    groups[1].intersection_update({1, 2, 3}, {2, 3})\n    groups[1].update({1, 2, 3})\n    groups[1].difference_update({1}, {2})\n    groups[2].add(7)\n    return len(groups[1])\n",
+        "from sifr.collections import defaultdict\n\ndef solve() -> int:\n    groups = defaultdict(set)\n    groups[5].add(9)\n    groups[1].update({len(groups)}, {1})\n    groups[1].intersection_update({1, 2, 3}, {2, 3})\n    groups[1].update({1, 2, 3})\n    groups[1].difference_update({1}, {2})\n    return len(groups[1])\n",
     );
 
+    let key_binding = rust_code
+        .find("let __sifr_defaultdict_key = 1_i64;")
+        .expect("set update key should be evaluated into a temporary");
+    let preinsert = rust_code
+        .find("groups.entry(__sifr_defaultdict_key.clone()).or_insert(HashSet::new());")
+        .expect("set bucket should be inserted before arguments are evaluated");
+    let items_binding = rust_code
+        .find("let __sifr_defaultdict_set_items_0 =")
+        .expect("first set argument should be materialized");
+    let bucket_binding = rust_code
+        .find("let __sifr_defaultdict_bucket = groups.entry(__sifr_defaultdict_key)")
+        .expect("set bucket should be re-borrowed after materialization");
+    assert!(key_binding < preinsert);
+    assert!(preinsert < items_binding);
+    assert!(items_binding < bucket_binding);
     assert!(
         rust_code
             .matches("__sifr_defaultdict_bucket.retain(")
