@@ -6,9 +6,9 @@
 class PackageExampleError(Error):
     message: str
 
-@rust(tracing_subscriber.fmt.init, panic=map_error(bridge.tracing_subscriber.map_panic))
-def tracing_subscriber_init(filter: str) -> Result[None, PackageExampleError | RustPanicError]: ...
+@rust(bridge.cli.parse_and_trace, panic=map_error(bridge.cli.map_panic))
+def tracing_subscriber_init(args: list[str]) -> Result[str, PackageExampleError | RustPanicError]: ...
 
-def verify_tracing_subscriber_package() -> Result[None, PackageExampleError | RustPanicError]:
-    sample_result: Result[None, PackageExampleError | RustPanicError] = tracing_subscriber_init("info")
+def verify_tracing_subscriber_package() -> Result[str, PackageExampleError | RustPanicError]:
+    sample_result: Result[str, PackageExampleError | RustPanicError] = tracing_subscriber_init(["sifr", "--mode", "check"])
     return sample_result

@@ -6,9 +6,9 @@
 class PackageExampleError(Error):
     message: str
 
-@rust(anyhow.Error.downcast_ref, panic=map_error(bridge.anyhow.map_panic))
-def anyhow_context(message: str) -> Result[str, PackageExampleError | RustPanicError]: ...
+@rust(bridge.cli.parse_and_trace, panic=map_error(bridge.cli.map_panic))
+def anyhow_context(args: list[str]) -> Result[str, PackageExampleError | RustPanicError]: ...
 
 def verify_anyhow_package() -> Result[str, PackageExampleError | RustPanicError]:
-    sample_result: Result[str, PackageExampleError | RustPanicError] = anyhow_context("sifr error context")
+    sample_result: Result[str, PackageExampleError | RustPanicError] = anyhow_context(["sifr", "--mode", "check"])
     return sample_result

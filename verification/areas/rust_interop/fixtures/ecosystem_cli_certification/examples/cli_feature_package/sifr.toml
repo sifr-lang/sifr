@@ -15,4 +15,5 @@ bridges = ["src/bridges"]
 direct-crate-bindings = true
 
 [trust]
-unsafe-rust-bridges = ["src/bridges/cli.rs"]
+rust-build-scripts = ["anyhow"]
+rust-no-panic = ["anyhow_surface.direct_error"]

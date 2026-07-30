@@ -1,6 +1,12 @@
 [workspace]
-members = ["rust/anyhow", "rust/clap", "rust/tracing", "rust/tracing_subscriber"]
+members = ["rust/anyhow_surface"]
 resolver = "2"
+
+[workspace.dependencies]
+anyhow = { version = "=1.0.102", default-features = true }
+clap = { version = "=4.6.1", default-features = true }
+tracing = { version = "=0.1.44", default-features = true }
+tracing-subscriber = { version = "=0.3.23", default-features = true, features = ["env-filter"] }
 
 [package]
 name = "cli-feature-package"
@@ -8,10 +14,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = { path = "rust/anyhow" }
-clap = { path = "rust/clap" }
-tracing = { path = "rust/tracing" }
-tracing-subscriber = { path = "rust/tracing_subscriber", features = ["env-filter"] }
+anyhow = { workspace = true }
+anyhow_surface = { package = "sifr-anyhow-surface-probe", path = "rust/anyhow_surface" }
+clap = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+sifr_runtime = { path = "../../../../../../../crates/sifr_runtime" }
 
 [package.metadata.sifr]
 manifest = "sifr.toml"

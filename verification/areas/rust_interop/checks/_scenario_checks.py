@@ -20,6 +20,7 @@ from _scenario_callback_subscriptions import (
     run_callback_subscription_self_test,
     validate_callback_subscription_scenario,
 )
+from _scenario_cli import run_cli_self_test, validate_cli_scenario
 from _scenario_cargo_locked import (
     run_cargo_locked_self_test,
     validate_cargo_locked_scenario,
@@ -310,6 +311,11 @@ def run_self_test() -> tuple[int, str | None]:
     if cargo_locked_error is not None:
         return cases, cargo_locked_error
 
+    cli_cases, cli_error = run_cli_self_test(AREA_ROOT, validate_scenario_examples)
+    cases += cli_cases
+    if cli_error is not None:
+        return cases, cli_error
+
     return cases, None
 
 
@@ -353,6 +359,7 @@ def _validate_scenario_example_dir(
         _reject_generated_bridge_imports(failures, fixture_id, raw_path, rust_sources)
     if fixture_id in {
         "advanced_data_runtime_matrix",
+        "ecosystem_cli_certification",
         "native_build_script",
         "proc_macro_trust",
         "zero_copy_runtime_matrix",
@@ -558,10 +565,16 @@ def _validate_scenario_manifests(
         _require_path_dependency(failures, fixture_id, raw_path, dependencies, "sqlx", "rust/sqlx")
         _require_dependency_features(failures, fixture_id, raw_path, dependencies, "sqlx", ["runtime-tokio-rustls", "postgres", "macros"], default_features=False)
     elif fixture_id == "ecosystem_cli_certification":
-        for dependency in ("anyhow", "clap", "tracing"):
-            _require_path_dependency(failures, fixture_id, raw_path, dependencies, dependency, f"rust/{dependency}")
-        _require_path_dependency(failures, fixture_id, raw_path, dependencies, "tracing-subscriber", "rust/tracing_subscriber")
-        _require_dependency_features(failures, fixture_id, raw_path, dependencies, "tracing-subscriber", ["env-filter"])
+        validate_cli_scenario(
+            failures,
+            fixture_id,
+            raw_path,
+            cargo,
+            dependencies,
+            rust,
+            trust,
+            example_dir,
+        )
 
 
 def _validate_negative_overlays(

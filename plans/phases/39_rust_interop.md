@@ -336,6 +336,13 @@ Ecosystem certification fixtures:
 | Backend/service certification | `axum`, `tower-http`, `sqlx` | Prove real Rust-backed service packages can compile and probe through the canonical package model without adding web-framework-specific rules. |
 | CLI/tooling certification | `clap`, `tracing`, `tracing-subscriber`, `anyhow` | Prove common package-author dependencies work with generated bridge crates, diagnostics, and runtime integration. |
 
+CLI/tooling certification is implemented as exact-pinned
+`supported-through-bridge` evidence: the package executes clap parsing and a
+filtered tracing event, maps internal `anyhow::Error` context into a declared
+bridge error, and rejects a direct `anyhow::Error` return with
+`SIFR-RUST-TYPE-0001`. Backend/service certification remains separately owned
+by the next runtime-ecosystem certification item.
+
 Pinned fixture feature policy:
 
 - `reqwest`: `default-features = false`, `features = ["rustls-tls", "json"]`; do not enable `blocking` in async fixtures.
