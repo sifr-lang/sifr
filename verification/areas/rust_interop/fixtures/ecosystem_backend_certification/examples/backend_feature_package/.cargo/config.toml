@@ -1,0 +1,5 @@
+[net]
+offline = true
+
+[env]
+SQLX_OFFLINE = { value = "true", force = true }

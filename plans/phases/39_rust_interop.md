@@ -340,8 +340,16 @@ CLI/tooling certification is implemented as exact-pinned
 `supported-through-bridge` evidence: the package executes clap parsing and a
 filtered tracing event, maps internal `anyhow::Error` context into a declared
 bridge error, and rejects a direct `anyhow::Error` return with
-`SIFR-RUST-TYPE-0001`. Backend/service certification remains separately owned
-by the next runtime-ecosystem certification item.
+`SIFR-RUST-TYPE-0001`.
+
+Backend/service certification is implemented as exact-pinned
+`supported-through-bridge` evidence. The package executes an Axum server on
+`127.0.0.1:0`, observes a tower-http response header, expands a SQLx query
+macro from checked-in metadata, and completes deterministic shutdown. Sifr
+forces SQLx offline compilation and removes `DATABASE_URL`; missing and stale
+metadata are rejected as `SIFR-RUST-CARGO-0001` before the armed database
+sentinel can observe a connection. This remains package-model certification,
+not product-level web framework support.
 
 Pinned fixture feature policy:
 
@@ -351,7 +359,9 @@ Pinned fixture feature policy:
 - `redis`: `default-features = false`, `features = ["tokio-comp"]`; pub/sub fixtures use loopback service infrastructure.
 - `tokio-tungstenite`: `default-features = false`; add `features = ["rustls-tls-webpki-roots"]` only for explicit network/TLS coverage.
 - `sqlx`: `default-features = false`, `features = ["runtime-tokio-rustls", "postgres", "macros"]`; this is ecosystem certification, not the primary opaque-resource fixture, and query-macro fixtures must use checked-in `.sqlx/` offline artifacts instead of requiring `DATABASE_URL` during Cargo execution.
-- `axum` and `tower-http`: use default feature sets unless a fixture documents a narrower feature requirement.
+- `axum`: the backend certification uses only `http1` and `tokio`.
+- `tower-http`: the backend certification disables defaults and uses only
+  `set-header` so middleware execution is directly observable.
 - `tracing-subscriber`: include `env-filter` for the CLI/tooling certification fixture.
 - `flate2`: `default-features = false`, `features = ["rust_backend"]`.
 - `candle`: CPU-only default backend; GPU and accelerator backend features are out of scope for Phase 39.

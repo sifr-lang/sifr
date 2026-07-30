@@ -15,4 +15,6 @@ bridges = ["src/bridges"]
 direct-crate-bindings = true
 
 [trust]
-unsafe-rust-bridges = ["src/bridges/backend.rs"]
+rust-proc-macros = ["sqlx-macros"]
+rust-build-scripts = ["ring"]
+native-links = ["ring_core_0_17_14_", "ring_core_0_17_14__test"]

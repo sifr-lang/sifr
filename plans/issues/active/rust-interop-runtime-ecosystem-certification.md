@@ -1433,27 +1433,27 @@ Validation evidence to date:
 
 Implementation checklist:
 
-- [ ] Replace the planning-only shadow crates with an exact-pinned generated
+- [x] Replace the planning-only shadow crates with an exact-pinned generated
   package that compiles real `axum 0.8.9`, `tower-http 0.7.0`, and
   `sqlx 0.8.6` with only the frozen
   `runtime-tokio-rustls`/`postgres`/`macros` SQLx feature policy under the
   checked-in package lock.
-- [ ] Execute a hermetic `127.0.0.1:0` Axum service through a real
+- [x] Execute a hermetic `127.0.0.1:0` Axum service through a real
   `tower-http` middleware layer, observe the response and middleware evidence,
   and shut the listener/task down deterministically without external network
   access.
-- [ ] Compile a real SQLx query macro from checked-in `.sqlx/` metadata under
+- [x] Compile a real SQLx query macro from checked-in `.sqlx/` metadata under
   `SQLX_OFFLINE=true`, bind the query identity and metadata hash into runtime
   evidence, and prove neither `DATABASE_URL` nor a live database is required.
-- [ ] Turn `sqlx_without_offline_artifacts` into a mandatory generated-package
+- [x] Turn `sqlx_without_offline_artifacts` into a mandatory generated-package
   diagnostic: independently remove and stale-mutate the checked-in query
   metadata, require stable `SIFR-RUST-CARGO-0001`, and prove rejection occurs
   with database/network access disabled.
-- [ ] Bind positive and negative evidence to distinct mandatory driver tests,
+- [x] Bind positive and negative evidence to distinct mandatory driver tests,
   promote only `ecosystem_backend_certification` to
   `supported-through-bridge`, and update scenario policy, structured claims,
   public/internal docs, provenance, and exact inventory counts.
-- [ ] Add validator self-test mutations for exact versions and features,
+- [x] Add validator self-test mutations for exact versions and features,
   bridge ownership, loopback/middleware execution, offline environment,
   metadata identity, both negative directions, evidence provenance, and the
   supported-through-bridge contract without weakening earlier rows.
@@ -1473,20 +1473,60 @@ Expected post-item inventory:
 - 61 package examples and 18 scenario examples; and
 - 36 structured stable claims.
 
+Validation evidence to date:
+
+- The mandatory positive test builds the root-lock-backed exact dependency
+  graph, runs generated Sifr package glue, binds Axum to `127.0.0.1:0`,
+  observes a `tower-http 0.7.0` response header and HTTP 200 body, expands the
+  SQLx query metadata for value 13, and completes graceful shutdown. The
+  current cold generated-package run passed in 74.81 seconds.
+- The mandatory negative test first accepts the checked-in metadata, then
+  removes and stale-mutates it on the same package root. A pre-Cargo verifier
+  prevents stable Cargo's incomplete `.sqlx/` input tracking from hiding
+  either mutation behind a warm probe cache. Both cases report
+  `SIFR-RUST-CARGO-0001`; `SQLX_OFFLINE=true` is forced, `DATABASE_URL` is
+  removed from compiler Cargo commands, and the armed database listener
+  observes no connection. The current run passed in 63.34 seconds.
+- The direct scenario package and the full workspace both build with
+  `--locked --offline --frozen`. The scenario lock is a root-lock subset and
+  resolves real `axum 0.8.9`, `tower-http 0.7.0`, `sqlx 0.8.6`, and the frozen
+  SQLx feature set rather than local shadow crates.
+- The fixture inventory passes with 36 rows, 44 crate aliases, 61 package
+  examples, and 18 scenarios. All 228 mutation cases pass. Compatibility has
+  72 passing and zero planned evidence directions across 21 supported, 14
+  bridge-supported, and 1 unsupported-by-design row; 36 stable claims pass
+  and the entire Rust-interop area is green at 10/10 variants.
+- Because this is the final future-owned row, the compatibility checker now
+  permits the declared `future-owned-by-separate-phase` category to be empty
+  while still requiring all three active categories and rejecting unknown
+  categories. Its completed-matrix and missing-active-category self-tests
+  pass. The completion-time resource gate now also accepts zero deferrals
+  while retaining the rule that only passing supported stdlib-core rows may
+  authorize retained compiler surfaces.
+- All 440 non-generated driver tests pass with 65 generated-build tests
+  intentionally ignored. Production `sifr_driver` Clippy, workspace rustfmt,
+  TypeScript-Go transfer inventory, HIR/driver maintainability, 900-line
+  file-size, and diff-hygiene guardrails pass.
+- The authoritative create-PR lane passed every core, Python-interop, and
+  Rust-interop check, then recorded one shared-worktree LSP smoke timeout after
+  23 successful protocol requests. The exact six-variant `lsp-smoke` suite
+  passed immediately on isolation, including protocol shutdown, marker corpus,
+  transcript replay, and all self-tests. Workspace Clippy passes with warnings
+  denied.
+
 ### certification_14: Track A Closeout and Stable Gate
 
 This PR starts only when `certification_1` through `certification_13` are
 merged.
 
 - Re-run the row/fixture inventory and update documented counts.
-- Replace the completion-time backstop in
+- Confirm the completion-time backstop transition in
   `scripts/check_sysroot_stdlib_resource_certification_gate.py` that currently
-  requires at least one future-owned row, and update the guard's
-  `--self-test` completed-matrix assertion in the same PR. Keep its supported
-  stdlib-core invariants.
-- Change `check_compatibility_matrix.py` so an unused
-  `future-owned-by-separate-phase` category is valid after all current
-  deferrals resolve; still reject unknown categories and invalid rows.
+  accepts zero future-owned rows, and re-run the guard's completed-matrix
+  `--self-test`. Keep its supported stdlib-core invariants.
+- Confirm `check_compatibility_matrix.py` permits an unused
+  `future-owned-by-separate-phase` category after all current deferrals
+  resolve while still rejecting unknown categories and invalid rows.
 - Remove stale `future_owner` fields from promoted rows and confirm no planned
   evidence status remains in Track A rows.
 - Run the Phase 40 stable-candidate check and verify public docs advertise only

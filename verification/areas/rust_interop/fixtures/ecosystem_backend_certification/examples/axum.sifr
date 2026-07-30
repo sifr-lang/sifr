@@ -6,13 +6,9 @@
 class PackageExampleError(Error):
     message: str
 
-class AxumRouter:
-    route: str
-    handler_count: uint64
+@rust(bridge.backend.route_probe, panic=map_error(bridge.backend.map_panic))
+def axum_router(route: str) -> Result[str, PackageExampleError | RustPanicError]: ...
 
-@rust(axum.Router.new, panic=map_error(bridge.axum.map_panic))
-def axum_router(route: str) -> Result[AxumRouter, PackageExampleError | RustPanicError]: ...
-
-def verify_axum_package() -> Result[AxumRouter, PackageExampleError | RustPanicError]:
-    sample_result: Result[AxumRouter, PackageExampleError | RustPanicError] = axum_router("/health")
+def verify_axum_package() -> Result[str, PackageExampleError | RustPanicError]:
+    sample_result: Result[str, PackageExampleError | RustPanicError] = axum_router("/health")
     return sample_result
