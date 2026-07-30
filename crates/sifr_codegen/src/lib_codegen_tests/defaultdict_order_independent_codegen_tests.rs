@@ -147,12 +147,16 @@ fn iterable_mutation_evaluates_key_before_arguments_and_bucket_borrow() {
     let key_binding = rust_code
         .find("let __sifr_defaultdict_key = key(&mut log).clone();")
         .expect("key expression should be evaluated into a temporary");
+    let preinsert = rust_code
+        .find("groups.entry(__sifr_defaultdict_key.clone()).or_insert(Vec::new());")
+        .expect("default bucket should be inserted before arguments are evaluated");
     let items_binding = rust_code
         .find("let __sifr_defaultdict_items =")
         .expect("iterable should be materialized");
     let bucket_binding = rust_code
         .find("let __sifr_defaultdict_bucket = groups.entry(__sifr_defaultdict_key)")
         .expect("bucket should be borrowed with the pre-evaluated key");
-    assert!(key_binding < items_binding);
+    assert!(key_binding < preinsert);
+    assert!(preinsert < items_binding);
     assert!(items_binding < bucket_binding);
 }

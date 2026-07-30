@@ -23,6 +23,7 @@ impl RustEmitter {
     pub(crate) fn try_lower_defaultdict_list_extend_expr(
         &mut self,
         key_expr: crate::RustExpr,
+        preinsert_entry_expr: crate::RustExpr,
         entry_expr: crate::RustExpr,
         iterable: &HirExpr,
         value_ty: &Type,
@@ -40,6 +41,7 @@ impl RustEmitter {
                     ty: None,
                     value: key_expr,
                 },
+                crate::RustStmt::Expr(preinsert_entry_expr),
                 crate::RustStmt::Let {
                     mutable: false,
                     name: items_name.clone(),
@@ -73,6 +75,7 @@ impl RustEmitter {
     pub(crate) fn try_lower_defaultdict_set_update_expr(
         &mut self,
         key_expr: crate::RustExpr,
+        preinsert_entry_expr: crate::RustExpr,
         entry_expr: crate::RustExpr,
         method: &str,
         args: &[HirExpr],
@@ -92,6 +95,7 @@ impl RustEmitter {
             ty: None,
             value: key_expr,
         });
+        stmts.push(crate::RustStmt::Expr(preinsert_entry_expr));
         let mut item_names = Vec::with_capacity(args.len());
         for (index, arg) in args.iter().enumerate() {
             let items_name = format!("__sifr_defaultdict_set_items_{index}");

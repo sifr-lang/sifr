@@ -582,15 +582,25 @@ impl RustEmitter {
         } else {
             lowered_key_arg.clone()
         };
-        let entry_expr = crate::RustExpr::MethodCall {
-            receiver: Box::new(crate::RustExpr::MethodCall {
-                receiver: Box::new(lowered_object),
-                method: "entry".to_string(),
-                args: vec![entry_key],
-            }),
-            method: "or_insert".to_string(),
-            args: vec![registry_defaultdict_default_expr(alias_name)],
-        };
+        let build_entry_expr =
+            |receiver: crate::RustExpr, key: crate::RustExpr| crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(receiver),
+                    method: "entry".to_string(),
+                    args: vec![key],
+                }),
+                method: "or_insert".to_string(),
+                args: vec![registry_defaultdict_default_expr(alias_name)],
+            };
+        let preinsert_entry_expr = is_iterable_bucket_mutator.then(|| {
+            build_entry_expr(
+                lowered_object.clone(),
+                crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
+                    "__sifr_defaultdict_key".to_string(),
+                ))),
+            )
+        });
+        let entry_expr = build_entry_expr(lowered_object, entry_key);
 
         if alias_name == "__sifr_defaultdict_list" && method == "extend" {
             let [iterable] = args else {
@@ -598,6 +608,7 @@ impl RustEmitter {
             };
             return self.try_lower_defaultdict_list_extend_expr(
                 lowered_key_arg,
+                preinsert_entry_expr?,
                 entry_expr,
                 iterable,
                 value_ty,
@@ -615,6 +626,7 @@ impl RustEmitter {
         {
             return self.try_lower_defaultdict_set_update_expr(
                 lowered_key_arg,
+                preinsert_entry_expr?,
                 entry_expr,
                 method,
                 args,
