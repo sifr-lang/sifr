@@ -11,6 +11,7 @@ use super::rust_interop_digest::normalized_path_string;
 use super::rust_interop_probe::{
     execute_direct_cargo_probe, AsyncThreadAffinity, PendingRustBridgeProbe,
 };
+use super::rust_interop_sqlx_offline::combined_sqlx_offline_metadata_digest;
 use super::rust_interop_trust::{
     build_env_trust_entries, effective_panic_policy, EffectivePanicPolicy,
 };
@@ -232,6 +233,16 @@ impl<'a> RustInteropResolver<'a> {
                 }
             }
         }
+        let mut sqlx_backend_roots = BTreeSet::from([package.package_root.clone()]);
+        sqlx_backend_roots.extend(
+            self.pending_direct_probes
+                .iter()
+                .filter_map(|probe| probe.backend.cargo_manifest_path.parent())
+                .map(std::path::Path::to_path_buf),
+        );
+        cargo_input.sqlx_offline_metadata_digest = combined_sqlx_offline_metadata_digest(
+            sqlx_backend_roots.iter().map(std::path::PathBuf::as_path),
+        );
         generated.interop.rust.cargo_inputs = Some(cargo_input);
         inject_package_bridge_aliases(generated);
         Ok(())

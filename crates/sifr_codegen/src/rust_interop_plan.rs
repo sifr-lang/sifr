@@ -225,6 +225,7 @@ pub struct RustBridgeSourceDigest {
 pub struct RustInteropCargoInputs {
     pub package_id: String,
     pub cargo_metadata_digest: Option<String>,
+    pub sqlx_offline_metadata_digest: Option<String>,
     pub package_graph_digest: Option<String>,
     pub package_source_map_digest: Option<String>,
     pub cargo_lock_digest: Option<String>,
@@ -585,6 +586,14 @@ fn push_cargo_inputs(out: &mut String, cargo: &RustInteropCargoInputs) {
     out.push('\n');
     out.push_str("rust.cargo.metadata_digest=");
     out.push_str(cargo.cargo_metadata_digest.as_deref().unwrap_or("<none>"));
+    out.push('\n');
+    out.push_str("rust.cargo.sqlx_offline_metadata_digest=");
+    out.push_str(
+        cargo
+            .sqlx_offline_metadata_digest
+            .as_deref()
+            .unwrap_or("<none>"),
+    );
     out.push('\n');
     out.push_str("rust.cargo.graph_digest=");
     out.push_str(cargo.package_graph_digest.as_deref().unwrap_or("<none>"));

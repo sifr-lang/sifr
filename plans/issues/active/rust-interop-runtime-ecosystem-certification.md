@@ -1492,7 +1492,7 @@ Validation evidence to date:
   resolves real `axum 0.8.9`, `tower-http 0.7.0`, `sqlx 0.8.6`, and the frozen
   SQLx feature set rather than local shadow crates.
 - The fixture inventory passes with 36 rows, 44 crate aliases, 61 package
-  examples, and 18 scenarios. All 228 mutation cases pass. Compatibility has
+  examples, and 18 scenarios. All 229 mutation cases pass. Compatibility has
   72 passing and zero planned evidence directions across 21 supported, 14
   bridge-supported, and 1 unsupported-by-design row; 36 stable claims pass
   and the entire Rust-interop area is green at 10/10 variants.
@@ -1503,7 +1503,7 @@ Validation evidence to date:
   pass. The completion-time resource gate now also accepts zero deferrals
   while retaining the rule that only passing supported stdlib-core rows may
   authorize retained compiler surfaces.
-- All 444 non-generated driver tests pass with 65 generated-build tests
+- All 446 non-generated driver tests pass with 65 generated-build tests
   intentionally ignored. Production `sifr_driver` Clippy, workspace rustfmt,
   TypeScript-Go transfer inventory, HIR/driver maintainability, 900-line
   file-size, and diff-hygiene guardrails pass.
@@ -1515,7 +1515,7 @@ Validation evidence to date:
   denied.
 - [Opus round 1](../../reviews/active/rust-interop-certification-13-review-round-1.md)
   independently reproduced both mandatory generated-package tests, all driver
-  tests, the 10/10 Rust-interop area, 228 mutation cases, the real dependency
+  tests, the 10/10 Rust-interop area, 229 mutation cases, the real dependency
   graph, matrix/claim counts, validator transitions, lint, formatting, and
   guardrails. It returned `NOT SATISFIED` for valid trailing-comma and
   concatenated SQLx macro forms that the initial preflight falsely rejected,
@@ -1532,10 +1532,34 @@ Validation evidence to date:
   therefore load-bearing in the positive final build and in the valid control
   that precedes the armed-database negative mutations. The round-1-fix
   positive mandatory test passed in 62.52 seconds and the negative test passed
-  in 18.41 seconds. Seven focused SQLx unit tests, all 444 current
-  non-generated driver tests, the 10/10 Rust-interop area, 228 mutation cases,
+  in 18.41 seconds. Nine focused SQLx unit tests, all 446 current
+  non-generated driver tests, the 10/10 Rust-interop area, 229 mutation cases,
   workspace Clippy, file-size/driver maintainability, the TypeScript-Go
   inventory, and the zero-deferral resource gate pass.
+- [Opus round 2](../../reviews/active/rust-interop-certification-13-review-round-2.md)
+  confirmed the round-1 parser, macro-family, dependency-table, traversal,
+  naming, file-headroom, and diagnostic-classifier fixes, and independently
+  reproduced 446/65 driver tests, both mandatory tests, the 10/10 area, all
+  inventories, lint, formatting, and guardrails. It returned
+  `NOT SATISFIED` because Cargo does not read a path dependency's
+  `.cargo/config.toml`, package-only metadata lookup falsely rejected
+  workspace-root SQLx caches, and final-build cache identity did not yet
+  combine non-entrypoint bridge backend roots.
+- The round-2 fixes arm the database sentinel through the backend package's
+  `.env`, which SQLx reads across path-dependency builds. The valid control and
+  both mutations pass without a connection only because Sifr forces
+  `SQLX_OFFLINE=true`; inherited `DATABASE_URL` removal remains directly
+  asserted on the compiler Cargo command. Metadata resolution now matches
+  package-root then Cargo-workspace-root lookup, disengages for explicit
+  `SQLX_OFFLINE_DIR`, handles workspace dependency renames, and combines every
+  resolved bridge backend's metadata into a
+  dedicated final-build cache field. The preflight no longer rejects hash
+  fields that SQLx accepts, stale-query diagnostics name the actual mismatch,
+  and null metadata descriptions fail validation without a traceback.
+- After the round-2 fixes, the positive mandatory test passed in 46.39 seconds
+  and the real `.env`-armed missing/stale negative passed in 44.78 seconds.
+  Nine focused SQLx tests, 932 codegen tests, 446 non-generated driver tests,
+  and all 229 fixture mutations pass.
 
 ### certification_14: Track A Closeout and Stable Gate
 

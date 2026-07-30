@@ -245,6 +245,12 @@ def run_backend_self_test(
         for name, before, after, expected in (
             ("metadata query", QUERY, "SELECT 12::INT4 AS value", "query must equal"),
             ("metadata hash", QUERY_HASH, "0" * 64, "hash must equal"),
+            (
+                "metadata describe shape",
+                '"describe": {',
+                '"describe": null,\n  "ignored_describe": {',
+                "metadata describe must be an object",
+            ),
         ):
             error = _run_mutation(
                 query_path,
@@ -310,7 +316,12 @@ def _validate_query_metadata(
         failures.append(
             f"{fixture_id}: {raw_path}/.sqlx hash must equal SHA-256 {QUERY_HASH}"
         )
-    describe = data.get("describe", {})
+    describe = data.get("describe")
+    if not isinstance(describe, dict):
+        failures.append(
+            f"{fixture_id}: {raw_path}/.sqlx metadata describe must be an object"
+        )
+        return
     if data.get("db_name") != "PostgreSQL" or describe.get("nullable") != [None]:
         failures.append(
             f"{fixture_id}: {raw_path}/.sqlx metadata must describe the PostgreSQL query"

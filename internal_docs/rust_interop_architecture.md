@@ -1215,12 +1215,14 @@ Rust target/type resolution and reported as `SIFR-RUST-CARGO-0001`.
 Rust signature probes and final generated builds also force
 `SQLX_OFFLINE=true` and remove inherited `DATABASE_URL`. SQLx query macros
 therefore cannot contact a database during compilation and must resolve
-matching checked-in `.sqlx/` metadata. The full `.sqlx/` directory digest is
-part of both direct-probe and final generated-build cache identity. A
+matching checked-in `.sqlx/` metadata. Package- and workspace-root `.sqlx/`
+directory digests for every resolved bridge backend are combined into both
+direct-probe and final generated-build cache identity. A
 dependency-table-aware preflight validates recognized fully qualified,
-crate-aliased, directly imported, inline-literal, and query-file macro forms;
-syntax outside that conservative recognizer falls through to offline Cargo as
-the language authority instead of becoming a false Sifr diagnostic.
+crate-aliased, directly imported, inline-literal, and query-file macro forms
+against the same package/workspace search order. Explicit `SQLX_OFFLINE_DIR`
+policy and syntax outside that conservative recognizer fall through to
+offline Cargo as the authority instead of becoming a false Sifr diagnostic.
 
 ### CLI and Tooling Ecosystem Boundary
 
@@ -1256,14 +1258,17 @@ The same bridge expands a real SQLx query macro from one checked-in `.sqlx/`
 file. The validator binds the filename, SQL text, PostgreSQL description, and
 SHA-256 hash. Sifr forces `SQLX_OFFLINE=true` and removes inherited
 `DATABASE_URL` from the Cargo processes that compile bridge probes and final
-generated binaries; the fixture itself supplies no SQLx offline override.
-Independent missing-file and stale-query mutations are classified as
-`SIFR-RUST-CARGO-0001`; the complete metadata directory invalidates warm
-probe/final-build cache identities, and a loopback database sentinel observes
-no connection. The supported claim is therefore limited to this bridge,
-exact crate graph, hermetic HTTP loopback, and compile-time SQLx metadata
-path. It does not claim arbitrary framework surfaces, a live database
-resource, or a Sifr web framework product workflow.
+generated binaries; the fixture itself supplies no SQLx offline override. Its
+negative test places the armed loopback `DATABASE_URL` in the backend package
+`.env`, which SQLx reads even when Cargo builds that package as a dependency.
+The valid control and both independent missing-file/stale-query mutations are
+classified or completed without a connection, proving the forced offline
+environment is load-bearing. Package/workspace metadata roots across every
+resolved bridge backend invalidate warm probe/final-build cache identities.
+The supported claim is therefore limited to this bridge, exact crate graph,
+hermetic HTTP loopback, and compile-time SQLx metadata path. It does not claim
+arbitrary framework surfaces, a live database resource, or a Sifr web
+framework product workflow.
 
 The workspace member `sifr_rust_interop_catalog` pins the 44 canonical matrix
 crate aliases as exact optional dependencies. This keeps the certification

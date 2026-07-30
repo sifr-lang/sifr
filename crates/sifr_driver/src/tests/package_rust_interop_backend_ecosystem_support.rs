@@ -49,7 +49,7 @@ fn test_build_backend_loopback_and_sqlx_offline_metadata() {
 #[doc = "sifr-evidence: executes-compiler-diagnostic"]
 fn test_check_missing_and_stale_sqlx_offline_metadata_rejected_before_network() {
     let package_root = copied_backend_scenario("rust_interop_backend_sqlx_negative");
-    let listener = configure_database_sentinel(&package_root);
+    let listener = configure_dotenv_database_sentinel(&package_root);
     install_evidence_source(&package_root, BACKEND_NEGATIVE);
     let entrypoint = package_entrypoint_from_cargo_layout(&package_root, "backend-feature-package");
     let query_path = package_root.join(SQLX_QUERY_FILE);
@@ -100,7 +100,7 @@ fn assert_sqlx_metadata_mutation_is_rejected(
     );
     let expected_detail = match mutation {
         SqlxMetadataMutation::Missing => "there is no cached data for this query",
-        SqlxMetadataMutation::Stale => "hash collision for saved query data",
+        SqlxMetadataMutation::Stale => "saved SQLx query text does not match query identity",
     };
     assert!(
         rendered.contains(expected_detail)
@@ -127,7 +127,7 @@ fn copied_backend_scenario(test_name: &str) -> PathBuf {
     package_root
 }
 
-fn configure_database_sentinel(package_root: &Path) -> std::net::TcpListener {
+fn configure_dotenv_database_sentinel(package_root: &Path) -> std::net::TcpListener {
     let listener =
         std::net::TcpListener::bind("127.0.0.1:0").expect("database sentinel should bind");
     listener
@@ -136,11 +136,11 @@ fn configure_database_sentinel(package_root: &Path) -> std::net::TcpListener {
     let address = listener
         .local_addr()
         .expect("database sentinel address should resolve");
-    let config = format!(
-        "[net]\noffline = true\n\n[env]\nDATABASE_URL = {{ value = \"postgres://sifr:sifr@{address}/sifr\", force = true }}\n"
-    );
-    std::fs::write(package_root.join(".cargo/config.toml"), config)
-        .expect("database sentinel Cargo environment should be installed");
+    std::fs::write(
+        package_root.join(".env"),
+        format!("DATABASE_URL=postgres://sifr:sifr@{address}/sifr\n"),
+    )
+    .expect("database sentinel dotenv should be installed");
     listener
 }
 

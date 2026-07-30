@@ -82,6 +82,25 @@ directory digest now participates in both probe and final-build cache
 identity, and remains in this inventory until a package-aware snapshot owns
 SQLx metadata.
 
+The current direct probes added or shifted by the resolved-backend SQLx cache
+identity are `crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs:146`,
+`crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs:153`,
+`crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs:331`,
+`crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs:341`,
+`crates/sifr_driver/src/build/rust_interop_cargo_inputs.rs:379`,
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:73`,
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:109`,
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:173`,
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:218`,
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:274`,
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:285`,
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:308`,
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:314`,
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:317`,
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:501`,
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:585`, and
+`crates/sifr_driver/src/build/rust_interop_sqlx_offline.rs:589`.
+
 Permitted exceptions for the source-provider workstream:
 
 - CLI stdin reads are not workspace identity until later explicitly modeled.

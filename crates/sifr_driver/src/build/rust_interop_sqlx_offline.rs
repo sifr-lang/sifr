@@ -7,6 +7,8 @@ use sifr_diagnostics::DiagnosticCode;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::sync::{Mutex, OnceLock};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::visit::Visit;
@@ -56,8 +58,36 @@ pub(super) fn validate_probe_sqlx_offline_metadata(
 }
 
 pub(super) fn sqlx_offline_metadata_digest(backend_root: &Path) -> Option<String> {
-    let metadata_root = backend_root.join(".sqlx");
-    metadata_root.is_dir().then(|| digest_path(&metadata_root))
+    combined_sqlx_offline_metadata_digest([backend_root])
+}
+
+pub(super) fn combined_sqlx_offline_metadata_digest<'a>(
+    backend_roots: impl IntoIterator<Item = &'a Path>,
+) -> Option<String> {
+    let mut identities = BTreeMap::new();
+    for backend_root in backend_roots {
+        let Some(metadata_roots) = sqlx_metadata_roots(backend_root) else {
+            continue;
+        };
+        for metadata_root in metadata_roots {
+            if metadata_root.is_dir() {
+                identities
+                    .entry(metadata_root.clone())
+                    .or_insert_with(|| digest_path(&metadata_root));
+            }
+        }
+    }
+    if identities.is_empty() {
+        return None;
+    }
+    let mut bytes = Vec::new();
+    for (path, digest) in identities {
+        bytes.extend_from_slice(path.to_string_lossy().as_bytes());
+        bytes.push(0);
+        bytes.extend_from_slice(digest.as_bytes());
+        bytes.push(0);
+    }
+    Some(sha256_hex(&bytes))
 }
 
 pub(super) fn validate_sqlx_offline_metadata(backend_root: &Path) -> Result<(), String> {
@@ -65,8 +95,11 @@ pub(super) fn validate_sqlx_offline_metadata(backend_root: &Path) -> Result<(), 
     if sqlx_crates.is_empty() {
         return Ok(());
     }
+    let Some(metadata_roots) = sqlx_metadata_roots(backend_root) else {
+        return Ok(());
+    };
     for query in collect_sqlx_queries(backend_root, &sqlx_crates) {
-        validate_query_metadata(backend_root, &query)?;
+        validate_query_metadata(&metadata_roots, &query)?;
     }
     Ok(())
 }
@@ -85,30 +118,165 @@ fn sqlx_dependency_crate_names(backend_root: &Path) -> Result<BTreeSet<String>, 
             manifest_path.display()
         )
     })?;
+    let workspace_dependencies = workspace_dependency_packages(backend_root);
     let mut names = BTreeSet::new();
-    collect_sqlx_dependency_table(table.get("dependencies"), &mut names);
+    collect_sqlx_dependency_table(
+        table.get("dependencies"),
+        &workspace_dependencies,
+        &mut names,
+    );
     if let Some(targets) = table.get("target").and_then(toml::Value::as_table) {
         for target in targets.values().filter_map(toml::Value::as_table) {
-            collect_sqlx_dependency_table(target.get("dependencies"), &mut names);
+            collect_sqlx_dependency_table(
+                target.get("dependencies"),
+                &workspace_dependencies,
+                &mut names,
+            );
         }
     }
     Ok(names)
 }
 
-fn collect_sqlx_dependency_table(dependencies: Option<&toml::Value>, names: &mut BTreeSet<String>) {
+fn collect_sqlx_dependency_table(
+    dependencies: Option<&toml::Value>,
+    workspace_dependencies: &BTreeMap<String, String>,
+    names: &mut BTreeSet<String>,
+) {
     let Some(dependencies) = dependencies.and_then(toml::Value::as_table) else {
         return;
     };
     for (alias, specification) in dependencies {
-        let package_name = specification
-            .as_table()
+        let specification_table = specification.as_table();
+        let package_name = specification_table
             .and_then(|table| table.get("package"))
             .and_then(toml::Value::as_str)
+            .or_else(|| {
+                specification_table
+                    .and_then(|table| table.get("workspace"))
+                    .and_then(toml::Value::as_bool)
+                    .is_some_and(|workspace| workspace)
+                    .then(|| workspace_dependencies.get(alias))
+                    .flatten()
+                    .map(String::as_str)
+            })
             .unwrap_or(alias);
         if package_name == "sqlx" {
             names.insert(alias.replace('-', "_"));
         }
     }
+}
+
+fn workspace_dependency_packages(backend_root: &Path) -> BTreeMap<String, String> {
+    let Some(workspace_root) = cargo_workspace_root(backend_root) else {
+        return BTreeMap::new();
+    };
+    let Ok(source) = fs::read_to_string(workspace_root.join("Cargo.toml")) else {
+        return BTreeMap::new();
+    };
+    let Ok(table) = source.parse::<toml::Table>() else {
+        return BTreeMap::new();
+    };
+    let Some(dependencies) = table
+        .get("workspace")
+        .and_then(toml::Value::as_table)
+        .and_then(|workspace| workspace.get("dependencies"))
+        .and_then(toml::Value::as_table)
+    else {
+        return BTreeMap::new();
+    };
+    dependencies
+        .iter()
+        .map(|(alias, specification)| {
+            let package = specification
+                .as_table()
+                .and_then(|specification| specification.get("package"))
+                .and_then(toml::Value::as_str)
+                .unwrap_or(alias)
+                .to_string();
+            (alias.clone(), package)
+        })
+        .collect()
+}
+
+fn sqlx_metadata_roots(backend_root: &Path) -> Option<Vec<PathBuf>> {
+    if std::env::var_os("SQLX_OFFLINE_DIR").is_some()
+        || dotenv_defines_offline_dir(&backend_root.join(".env"))
+    {
+        return None;
+    }
+    let mut roots = vec![backend_root.join(".sqlx")];
+    if let Some(workspace_root) = cargo_workspace_root(backend_root) {
+        let workspace_metadata = workspace_root.join(".sqlx");
+        if !roots.contains(&workspace_metadata) {
+            roots.push(workspace_metadata);
+        }
+    }
+    Some(roots)
+}
+
+fn dotenv_defines_offline_dir(path: &Path) -> bool {
+    let Ok(source) = fs::read_to_string(path) else {
+        return false;
+    };
+    source.lines().any(|line| {
+        let line = line.trim();
+        let line = line.strip_prefix("export ").unwrap_or(line).trim_start();
+        line.strip_prefix("SQLX_OFFLINE_DIR")
+            .is_some_and(|suffix| suffix.trim_start().starts_with('='))
+    })
+}
+
+fn cargo_workspace_root(backend_root: &Path) -> Option<PathBuf> {
+    static ROOTS: OnceLock<Mutex<BTreeMap<PathBuf, Option<PathBuf>>>> = OnceLock::new();
+    let roots = ROOTS.get_or_init(|| Mutex::new(BTreeMap::new()));
+    if let Ok(mut roots) = roots.lock() {
+        if let Some(root) = roots.get(backend_root) {
+            return root.clone();
+        }
+        let root = resolve_cargo_workspace_root(backend_root);
+        roots.insert(backend_root.to_path_buf(), root.clone());
+        return root;
+    }
+    resolve_cargo_workspace_root(backend_root)
+}
+
+fn resolve_cargo_workspace_root(backend_root: &Path) -> Option<PathBuf> {
+    let manifest_path = backend_root.join("Cargo.toml");
+    let output = Command::new("cargo")
+        .args([
+            "metadata",
+            "--format-version=1",
+            "--no-deps",
+            "--offline",
+            "--manifest-path",
+        ])
+        .arg(&manifest_path)
+        .env("SQLX_OFFLINE", "true")
+        .env_remove("DATABASE_URL")
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return nearest_declared_workspace_root(backend_root);
+    }
+    serde_json::from_slice::<serde_json::Value>(&output.stdout)
+        .ok()
+        .and_then(|metadata| {
+            metadata
+                .get("workspace_root")
+                .and_then(serde_json::Value::as_str)
+                .map(PathBuf::from)
+        })
+        .or_else(|| nearest_declared_workspace_root(backend_root))
+}
+
+fn nearest_declared_workspace_root(backend_root: &Path) -> Option<PathBuf> {
+    backend_root.ancestors().find_map(|ancestor| {
+        let source = fs::read_to_string(ancestor.join("Cargo.toml")).ok()?;
+        let table = source.parse::<toml::Table>().ok()?;
+        table
+            .contains_key("workspace")
+            .then(|| ancestor.to_path_buf())
+    })
 }
 
 fn collect_sqlx_queries(backend_root: &Path, sqlx_crates: &BTreeSet<String>) -> Vec<String> {
@@ -408,11 +576,16 @@ fn parse_bind_arguments(input: ParseStream<'_>) -> syn::Result<()> {
     Ok(())
 }
 
-fn validate_query_metadata(backend_root: &Path, query: &str) -> Result<(), String> {
+fn validate_query_metadata(metadata_roots: &[PathBuf], query: &str) -> Result<(), String> {
     let hash = sha256_hex(query.as_bytes());
-    let metadata_path = backend_root
-        .join(".sqlx")
-        .join(format!("query-{hash}.json"));
+    let file_name = format!("query-{hash}.json");
+    let metadata_path = metadata_roots
+        .iter()
+        .map(|root| root.join(&file_name))
+        .find(|path| path.is_file())
+        .ok_or_else(|| {
+            format!("`SQLX_OFFLINE=true` but there is no cached data for this query: {query}")
+        })?;
     let raw = fs::read_to_string(&metadata_path).map_err(|_| {
         format!("`SQLX_OFFLINE=true` but there is no cached data for this query: {query}")
     })?;
@@ -422,10 +595,10 @@ fn validate_query_metadata(backend_root: &Path, query: &str) -> Result<(), Strin
             metadata_path.display()
         )
     })?;
-    if metadata.get("query").and_then(serde_json::Value::as_str) != Some(query)
-        || metadata.get("hash").and_then(serde_json::Value::as_str) != Some(hash.as_str())
-    {
-        return Err(format!("hash collision for saved query data: {query}"));
+    if metadata.get("query").and_then(serde_json::Value::as_str) != Some(query) {
+        return Err(format!(
+            "saved SQLx query text does not match query identity: {query}"
+        ));
     }
     Ok(())
 }
@@ -441,215 +614,5 @@ fn sha256_hex(bytes: &[u8]) -> String {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{
-        collect_sqlx_queries, configure_hermetic_build_environment, sqlx_dependency_crate_names,
-        sqlx_offline_metadata_digest, validate_sqlx_offline_metadata,
-    };
-    use sha2::{Digest as _, Sha256};
-    use std::path::PathBuf;
-    use std::sync::atomic::{AtomicU64, Ordering};
-
-    static NONCE: AtomicU64 = AtomicU64::new(0);
-
-    #[test]
-    fn hermetic_build_environment_forces_sqlx_offline_without_database_url() {
-        let mut command = std::process::Command::new("cargo");
-        command.env("DATABASE_URL", "postgres://127.0.0.1:1/sifr");
-        configure_hermetic_build_environment(&mut command);
-        let environment = command
-            .get_envs()
-            .map(|(key, value)| {
-                (
-                    key.to_string_lossy().into_owned(),
-                    value.map(|value| value.to_string_lossy().into_owned()),
-                )
-            })
-            .collect::<std::collections::BTreeMap<_, _>>();
-        assert_eq!(
-            environment.get("SQLX_OFFLINE"),
-            Some(&Some("true".to_owned()))
-        );
-        assert_eq!(environment.get("DATABASE_URL"), Some(&None));
-    }
-
-    #[test]
-    fn real_dependency_table_controls_sqlx_preflight() {
-        let fixture = SqlxFixture::new();
-        assert_eq!(
-            sqlx_dependency_crate_names(&fixture.0),
-            Ok(["sqlx".to_string()].into_iter().collect())
-        );
-        fixture.write_manifest("[dependencies]\nother = \"1\"\n# sqlx macros\n");
-        assert_eq!(validate_sqlx_offline_metadata(&fixture.0), Ok(()));
-
-        fixture.write_manifest(
-            "[dependencies]\ndatabase = { package = \"sqlx\", version = \"0.8\" }\n",
-        );
-        fixture.write_source("fn query() { let _ = database::query!(\"SELECT 13\"); }\n");
-        assert!(validate_sqlx_offline_metadata(&fixture.0)
-            .expect_err("renamed SQLx dependency must activate preflight")
-            .contains("there is no cached data"));
-    }
-
-    #[test]
-    fn supported_macro_forms_include_aliases_files_concatenation_and_trailing_commas() {
-        let fixture = SqlxFixture::new();
-        std::fs::create_dir_all(fixture.0.join("queries")).expect("query directory should exist");
-        for value in 21..=26 {
-            std::fs::write(
-                fixture.0.join(format!("queries/value-{value}.sql")),
-                format!("SELECT {value}"),
-            )
-            .expect("query file should be written");
-        }
-        fixture.write_source(
-            r#"
-use sqlx::{query as imported_query, query_file_scalar};
-use sqlx as database;
-struct Row;
-fn queries(value: i32) {
-    let _ = sqlx::query!("SELECT " + "13", value,);
-    let _ = imported_query!("SELECT 14");
-    let _ = database::query_as!(Row, "SELECT 15");
-    let _ = sqlx::query_unchecked!("SELECT 16");
-    let _ = sqlx::query_scalar!("SELECT 17");
-    let _ = sqlx::query_scalar_unchecked!("SELECT 18");
-    let _ = sqlx::query_as_unchecked!(Row, "SELECT 19");
-    let _ = sqlx::query_file!("queries/value-21.sql");
-    let _ = sqlx::query_file_unchecked!("queries/value-22.sql");
-    let _ = query_file_scalar!("queries/value-23.sql",);
-    let _ = sqlx::query_file_scalar_unchecked!("queries/value-24.sql");
-    let _ = sqlx::query_file_as!(Row, "queries/value-25.sql");
-    let _ = sqlx::query_file_as_unchecked!(Row, "queries/value-26.sql");
-}
-"#,
-        );
-        let crate_names = sqlx_dependency_crate_names(&fixture.0).expect("manifest should parse");
-        let expected = (13..=19)
-            .chain(21..=26)
-            .map(|value| format!("SELECT {value}"))
-            .collect::<Vec<_>>();
-        assert_eq!(collect_sqlx_queries(&fixture.0, &crate_names), expected);
-        for query in expected {
-            fixture.write_metadata_for(&query, &query);
-        }
-        assert_eq!(validate_sqlx_offline_metadata(&fixture.0), Ok(()));
-    }
-
-    #[test]
-    fn syntax_outside_preflight_understanding_falls_through_to_cargo() {
-        let fixture = SqlxFixture::new();
-        fixture.write_source(
-            "const QUERY: &str = \"SELECT 13\";\nfn query() { let _ = sqlx::query!(QUERY); }\n",
-        );
-        assert_eq!(validate_sqlx_offline_metadata(&fixture.0), Ok(()));
-        std::fs::write(fixture.0.join("src/unparseable.rs"), "fn unfinished(")
-            .expect("unparseable source should be written");
-        assert_eq!(validate_sqlx_offline_metadata(&fixture.0), Ok(()));
-    }
-
-    #[test]
-    fn valid_checked_in_query_metadata_passes() {
-        let fixture = SqlxFixture::new();
-        fixture.write_metadata_for(fixture.query(), fixture.query());
-
-        assert_eq!(validate_sqlx_offline_metadata(&fixture.0), Ok(()));
-    }
-
-    #[test]
-    fn missing_and_stale_query_metadata_fail_closed() {
-        let fixture = SqlxFixture::new();
-        let missing = validate_sqlx_offline_metadata(&fixture.0)
-            .expect_err("missing SQLx metadata must fail");
-        assert!(missing.contains("there is no cached data for this query"));
-
-        fixture.write_metadata_for(fixture.query(), "SELECT 12");
-        let stale =
-            validate_sqlx_offline_metadata(&fixture.0).expect_err("stale SQLx metadata must fail");
-        assert!(stale.contains("hash collision for saved query data"));
-    }
-
-    #[test]
-    fn complete_metadata_directory_participates_in_cache_identity() {
-        let fixture = SqlxFixture::new();
-        fixture.write_metadata_for(fixture.query(), fixture.query());
-        let before =
-            sqlx_offline_metadata_digest(&fixture.0).expect("metadata digest should exist");
-        let path = fixture.metadata_path(fixture.query());
-        let source = std::fs::read_to_string(&path).expect("metadata should be readable");
-        std::fs::write(
-            &path,
-            source.replace("\"describe\":null", "\"describe\":{\"columns\":[]}"),
-        )
-        .expect("metadata describe mutation should be written");
-        let after =
-            sqlx_offline_metadata_digest(&fixture.0).expect("metadata digest should still exist");
-        assert_ne!(before, after);
-    }
-
-    struct SqlxFixture(PathBuf);
-
-    impl SqlxFixture {
-        fn new() -> Self {
-            let root = std::env::temp_dir().join(format!(
-                "sifr_sqlx_offline_{}_{}",
-                std::process::id(),
-                NONCE.fetch_add(1, Ordering::Relaxed)
-            ));
-            std::fs::create_dir_all(root.join("src")).expect("source directory should exist");
-            let fixture = Self(root);
-            fixture.write_source("fn query() { let _ = sqlx::query!(\"SELECT 13\"); }\n");
-            fixture.write_manifest(
-                "[dependencies]\nsqlx = { version = \"0.8\", features = [\"macros\"] }\n",
-            );
-            fixture
-        }
-
-        const fn query(&self) -> &'static str {
-            "SELECT 13"
-        }
-
-        fn write_manifest(&self, source: &str) {
-            std::fs::write(self.0.join("Cargo.toml"), source)
-                .expect("SQLx manifest should be written");
-        }
-
-        fn write_source(&self, source: &str) {
-            std::fs::write(self.0.join("src/lib.rs"), source)
-                .expect("SQLx source should be written");
-        }
-
-        fn metadata_path(&self, query: &str) -> PathBuf {
-            let hash = hex(&Sha256::digest(query.as_bytes()));
-            self.0.join(".sqlx").join(format!("query-{hash}.json"))
-        }
-
-        fn write_metadata_for(&self, query: &str, stored_query: &str) {
-            let hash = hex(&Sha256::digest(query.as_bytes()));
-            let metadata_root = self.0.join(".sqlx");
-            std::fs::create_dir_all(&metadata_root).expect("metadata directory should be created");
-            let body = serde_json::json!({
-                "db_name": "PostgreSQL",
-                "query": stored_query,
-                "describe": serde_json::Value::Null,
-                "hash": hash,
-            });
-            std::fs::write(
-                metadata_root.join(format!("query-{hash}.json")),
-                serde_json::to_vec(&body).expect("metadata should serialize"),
-            )
-            .expect("metadata should be written");
-        }
-    }
-
-    impl Drop for SqlxFixture {
-        fn drop(&mut self) {
-            let _ = std::fs::remove_dir_all(&self.0);
-        }
-    }
-
-    fn hex(bytes: &[u8]) -> String {
-        bytes.iter().map(|byte| format!("{byte:02x}")).collect()
-    }
-}
+#[path = "rust_interop_sqlx_offline_tests.rs"]
+mod tests;

@@ -9,10 +9,11 @@ This fixture family tracks backend and service-oriented ecosystem probes for
   `.sqlx/` metadata, and shuts the server down deterministically.
 - Negative evidence: `sqlx_without_offline_artifacts` independently removes
   and stale-mutates the query metadata. The fixture supplies no SQLx offline
-  environment override: Sifr forces `SQLX_OFFLINE=true`, removes inherited
-  `DATABASE_URL`, includes the complete metadata directory in cache identity,
-  reports `SIFR-RUST-CARGO-0001`, and never connects to the armed database
-  sentinel.
+  environment override. The test places an armed loopback `DATABASE_URL` in
+  the backend package `.env`, which SQLx reads across path-dependency builds.
+  Sifr forces `SQLX_OFFLINE=true`, removes inherited `DATABASE_URL`, includes
+  package/workspace metadata roots for every backend in cache identity,
+  reports `SIFR-RUST-CARGO-0001`, and never connects to the sentinel.
 - Compatibility category: `supported-through-bridge`. This exact bridge and
   crate graph are certified; product-level web framework workflows and
   arbitrary framework APIs remain outside this claim.

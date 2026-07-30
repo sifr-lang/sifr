@@ -347,11 +347,14 @@ Backend/service certification is implemented as exact-pinned
 `127.0.0.1:0`, observes a tower-http response header, expands a SQLx query
 macro from checked-in metadata, and completes deterministic shutdown. Sifr
 forces SQLx offline compilation, removes inherited `DATABASE_URL`, and binds
-the complete `.sqlx/` directory into probe and final-build cache identities;
-the fixture itself supplies no SQLx offline environment override. Missing and
-stale metadata are rejected as `SIFR-RUST-CARGO-0001` before the armed
-database sentinel can observe a connection. This remains package-model
-certification, not product-level web framework support.
+package/workspace `.sqlx/` directories for every resolved bridge backend into
+probe and final-build cache identities. The fixture supplies no SQLx offline
+override; its negative test deliberately exposes an armed loopback
+`DATABASE_URL` through the backend package `.env`, which makes the compiler's
+offline forcing load-bearing. The valid control and missing/stale mutations
+complete without a connection, and invalid metadata is rejected as
+`SIFR-RUST-CARGO-0001`. This remains package-model certification, not
+product-level web framework support.
 
 Pinned fixture feature policy:
 
