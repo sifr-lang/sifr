@@ -265,6 +265,14 @@ pub(super) fn registry_iterable_to_owned_iter_expr_with_hint(
     element_type_hint: Option<&Type>,
 ) -> Option<RustExpr> {
     let lowered = emitter.try_lower_registry_expr_strict(expr)?;
+    registry_iterable_to_owned_iter_expr_from_lowered(expr, element_type_hint, lowered)
+}
+
+pub(crate) fn registry_iterable_to_owned_iter_expr_from_lowered(
+    expr: &HirExpr,
+    element_type_hint: Option<&Type>,
+    lowered: RustExpr,
+) -> Option<RustExpr> {
     let iter_plan =
         crate::helpers::plan_iterator_ownership_with_element_hint(expr, element_type_hint);
     let apply_copy_clone_yield = |iter_expr: RustExpr| match iter_plan.yield_mode {

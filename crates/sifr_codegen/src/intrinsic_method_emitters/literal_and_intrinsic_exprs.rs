@@ -65,10 +65,11 @@ impl RustEmitter {
         }];
 
         for element in elements {
+            let lowered = self.try_lower_registry_expr_strict(element)?;
             stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::Ident(set_ident.clone())),
                 method: "insert".to_string(),
-                args: vec![self.try_lower_registry_expr_strict(element)?],
+                args: vec![Self::clone_owned_append_arg_expr_for_ir(element, lowered)],
             }));
         }
 
