@@ -1,6 +1,7 @@
 use super::rust_interop_digest::{digest_file, digest_path, fnv1a64_hex, push_cache_bytes};
 use super::rust_interop_probe::PendingRustBridgeProbe;
 use super::rust_interop_probe_paths::normalize_cargo_target_dir;
+use super::rust_interop_sqlx_offline::sqlx_offline_metadata_digest;
 use super::workspace::artifact_cache_root;
 use std::collections::BTreeMap;
 use std::ffi::OsString;
@@ -71,6 +72,10 @@ pub(super) fn probe_cache_key(
         ),
     ] {
         push_cache_bytes(&mut input, value);
+    }
+    if let Some(metadata_digest) = sqlx_offline_metadata_digest(backend_root) {
+        push_cache_bytes(&mut input, "sqlx-offline-metadata");
+        push_cache_bytes(&mut input, &metadata_digest);
     }
     fnv1a64_hex(&input)
 }

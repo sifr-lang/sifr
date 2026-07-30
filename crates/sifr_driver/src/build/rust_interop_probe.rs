@@ -10,6 +10,9 @@ use super::rust_interop_probe_features::dependency_features;
 use super::rust_interop_probe_manifest::{probe_cargo_toml, probe_cargo_vendor_args};
 use super::rust_interop_probe_nonce::unique_probe_nonce;
 use super::rust_interop_probe_paths::probe_cargo_target_dir;
+use super::rust_interop_sqlx_offline::{
+    configure_hermetic_build_environment, validate_probe_sqlx_offline_metadata,
+};
 use sifr_codegen::{
     RustBridgeParamConvention, RustBridgeSignatureContract, RustInteropPlanDeclaration,
 };
@@ -82,6 +85,7 @@ pub(super) fn execute_direct_cargo_probe(
     if cache_file.is_file() {
         return Ok(());
     }
+    validate_probe_sqlx_offline_metadata(probe, backend_root)?;
     let probe_root = std::env::temp_dir().join(format!(
         "sifr_rust_probe_{}_{}_{}",
         std::process::id(),
@@ -139,6 +143,7 @@ pub(super) fn execute_direct_cargo_probe(
         command.arg("--frozen");
     }
     command.env("CARGO_TARGET_DIR", probe_cargo_target_dir(&invocation_cwd));
+    configure_hermetic_build_environment(&mut command);
     record_cargo_invocation("rust-probe", probe.cargo_resolution.lock_mode, &command);
     let output = command
         .output()

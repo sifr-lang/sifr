@@ -6,13 +6,9 @@
 class PackageExampleError(Error):
     message: str
 
-class TraceLayer:
-    name: str
-    target: str
+@rust(bridge.backend.route_probe, panic=map_error(bridge.backend.map_panic))
+def tower_http_response_header(path: str) -> Result[str, PackageExampleError | RustPanicError]: ...
 
-@rust(tower_http.trace.TraceLayer.new, panic=map_error(bridge.tower_http.map_panic))
-def tower_http_trace_layer(name: str) -> Result[TraceLayer, PackageExampleError | RustPanicError]: ...
-
-def verify_tower_http_package() -> Result[TraceLayer, PackageExampleError | RustPanicError]:
-    sample_result: Result[TraceLayer, PackageExampleError | RustPanicError] = tower_http_trace_layer("sifr")
+def verify_tower_http_package() -> Result[str, PackageExampleError | RustPanicError]:
+    sample_result: Result[str, PackageExampleError | RustPanicError] = tower_http_response_header("/health")
     return sample_result

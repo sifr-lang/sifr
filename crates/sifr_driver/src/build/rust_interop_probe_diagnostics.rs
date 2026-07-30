@@ -24,6 +24,13 @@ pub(super) fn classify_probe_failure(
             vec![("reason", reason.to_string())],
             true,
         )
+    } else if stderr_reports_sqlx_offline_metadata_failure(stderr) {
+        (
+            DiagnosticCode::RUST_CARGO_METADATA,
+            "Rust bridge SQLx offline metadata failed for `{target}`",
+            vec![("target", canonical_sifr_target_path(&probe.declaration))],
+            true,
+        )
     } else if stderr_reports_resolution_failure(stderr) {
         (
             DiagnosticCode::RUST_RESOLVE_TARGET_ROOT,
@@ -103,6 +110,14 @@ pub(super) fn classify_probe_failure(
     }
 }
 
+fn stderr_reports_sqlx_offline_metadata_failure(stderr: &str) -> bool {
+    stderr.contains("sqlx_macros::expand_query")
+        && (stderr.contains("there is no cached data for this query")
+            || stderr.contains("set `DATABASE_URL` to use query macros online")
+            || stderr.contains("hash collision for saved query data")
+            || stderr.contains("failed to read saved query path"))
+}
+
 pub(super) fn probe_resolution_diagnostics(
     diagnostics: &[RenderedDiagnostic],
 ) -> ProbeExecutionFailure {
@@ -131,6 +146,35 @@ fn stderr_reports_unsatisfied_view_obligation(stderr: &str) -> bool {
         || stderr.contains("cannot be shared between threads safely")
         || stderr.contains("the trait `Send` is not implemented")
         || stderr.contains("the trait `Sync` is not implemented")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::stderr_reports_sqlx_offline_metadata_failure;
+
+    #[test]
+    fn sqlx_offline_metadata_failures_are_cargo_classified() {
+        for detail in [
+            "`SQLX_OFFLINE=true` but there is no cached data for this query",
+            "set `DATABASE_URL` to use query macros online",
+            "hash collision for saved query data",
+            "failed to read saved query path .sqlx/query.json",
+        ] {
+            let stderr =
+                format!("error: {detail}\nnote: error originates in sqlx_macros::expand_query");
+            assert!(stderr_reports_sqlx_offline_metadata_failure(&stderr));
+        }
+    }
+
+    #[test]
+    fn unrelated_macro_or_hash_failures_remain_type_classified() {
+        assert!(!stderr_reports_sqlx_offline_metadata_failure(
+            "error: hash collision for saved query data"
+        ));
+        assert!(!stderr_reports_sqlx_offline_metadata_failure(
+            "note: error originates in sqlx_macros::expand_query: type mismatch"
+        ));
+    }
 }
 
 pub(super) fn stderr_reports_non_send_future(stderr: &str) -> bool {

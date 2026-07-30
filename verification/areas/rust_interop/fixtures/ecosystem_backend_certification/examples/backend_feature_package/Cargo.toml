@@ -1,6 +1,11 @@
 [workspace]
-members = ["rust/axum", "rust/tower_http", "rust/sqlx"]
 resolver = "2"
+
+[workspace.dependencies]
+axum = { version = "=0.8.9", default-features = false, features = ["http1", "tokio"] }
+sqlx = { version = "=0.8.6", default-features = false, features = ["runtime-tokio-rustls", "postgres", "macros"] }
+tower-http = { version = "=0.7.0", default-features = false, features = ["set-header"] }
+tokio = { version = "=1.52.3", default-features = false, features = ["io-util", "net", "rt", "sync", "time"] }
 
 [package]
 name = "backend-feature-package"
@@ -8,9 +13,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = { path = "rust/axum" }
-tower-http = { path = "rust/tower_http" }
-sqlx = { path = "rust/sqlx", default-features = false, features = ["runtime-tokio-rustls", "postgres", "macros"] }
+axum.workspace = true
+sifr_runtime = { path = "../../../../../../../crates/sifr_runtime" }
+sqlx.workspace = true
+tokio.workspace = true
+tower-http.workspace = true
 
 [package.metadata.sifr]
 manifest = "sifr.toml"

@@ -396,15 +396,14 @@
     {
       "id": "ecosystem_backend_certification",
       "fixture": "ecosystem_backend_certification",
-      "category": "future-owned-by-separate-phase",
-      "future_owner": "plans/issues/active/rust-interop-runtime-ecosystem-certification.md",
+      "category": "supported-through-bridge",
       "tier": 4,
       "capability": "backend/service ecosystem certification",
       "execution_kind": "cargo-probe",
       "required_crates": ["axum", "tower-http", "sqlx"],
-      "positive_evidence": {"id": "backend_probe_coverage", "status": "planned"},
-      "negative_evidence": {"id": "sqlx_without_offline_artifacts", "status": "planned"},
-      "notes": "Compile/probe certification for backend ecosystems remains future-owned and does not imply product-level web framework support."
+      "positive_evidence": {"id": "backend_probe_coverage", "status": "passing"},
+      "negative_evidence": {"id": "sqlx_without_offline_artifacts", "status": "passing"},
+      "notes": "Exact-pinned generated package evidence executes a hermetic Axum loopback, observes tower-http response middleware, and compiles a SQLx query macro from checked-in offline metadata. Sifr forces SQLX_OFFLINE, removes inherited DATABASE_URL, and under the default SQLx cache search includes package/workspace .sqlx roots for every resolved bridge backend in probe and generated-build cache identity. A backend-package .env deliberately exposes an armed DATABASE_URL; the valid control reaches Cargo without connecting, making the offline forcing load-bearing. Missing or stale metadata is rejected before Cargo starts as SIFR-RUST-CARGO-0001. This bridge-scoped claim does not imply product-level web framework support."
     },
     {
       "id": "ecosystem_cli_certification",

@@ -323,10 +323,13 @@
       "tier": 4,
       "capability": "backend/service ecosystem certification",
       "required_crates": ["axum", "tower-http", "sqlx"],
-      "features": {"sqlx": {"default_features": false, "features": ["runtime-tokio-rustls", "postgres", "macros"]}},
+      "features": {
+        "sqlx": {"default_features": false, "features": ["runtime-tokio-rustls", "postgres", "macros"]},
+        "tower-http": {"default_features": false, "features": ["set-header"]}
+      },
       "execution_kind": "cargo-probe",
-      "positive_evidence": {"id": "backend_probe_coverage", "status": "planned"},
-      "negative_evidence": {"id": "sqlx_without_offline_artifacts", "status": "planned"}
+      "positive_evidence": {"id": "backend_probe_coverage", "status": "passing"},
+      "negative_evidence": {"id": "sqlx_without_offline_artifacts", "status": "passing"}
     },
     {
       "id": "ecosystem_cli_certification",

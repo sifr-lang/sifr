@@ -9,6 +9,7 @@ use super::cargo_resolution::{
 use super::project_codegen::GeneratedBinaryProject;
 use super::report::BuildSysrootReport;
 use super::rust_interop_bridge_sources::generated_bridge_sources;
+use super::rust_interop_sqlx_offline::configure_hermetic_build_environment;
 use super::{prepare_cached_artifact, CachedArtifactEntry, PreparedArtifactCache};
 use crate::diagnostics::RenderedDiagnostic;
 use crate::project::{namespace_module_files, rust_module_file_path};
@@ -278,6 +279,7 @@ fn run_cargo_build(
     // directory. Inheriting an outer CARGO_TARGET_DIR moves binaries away from
     // the reported artifact paths and breaks cache completeness checks.
     command.env_remove("CARGO_TARGET_DIR");
+    configure_hermetic_build_environment(&mut command);
     if let Some(python_interpreter) = python_interpreter {
         command.env("PYO3_PYTHON", python_interpreter);
     }
