@@ -1761,7 +1761,7 @@ Closeout validation evidence on 2026-07-30:
 
 - the resource-certification gate passed with one retained supported stdlib
   surface and zero future runtime rows; its completed-matrix self-test passed;
-- fixture-matrix, compatibility-matrix, and tier self-tests passed 233, 7, and
+- fixture-matrix, compatibility-matrix, and tier self-tests passed 234, 7, and
   6 mutation cases respectively;
 - the stable-candidate suite passed both cases, including all 36 claims and 33
   adversarial mutations that bind public wording to exact matrix execution
@@ -1774,8 +1774,9 @@ Closeout validation evidence on 2026-07-30:
   `thiserror` dependencies, while the zero-copy package omitted the build
   script shipped by its direct `zerocopy` dependency. The manifests now
   declare those four exact enforced graph entries, their validators reject
-  each missing entry, and four new adversarial mutations raise the fixture
-  self-test total from 229 to 233.
+  each missing entry; an additional bridge mutation rejects over-declared
+  build-script trust, and five new adversarial mutations raise the fixture
+  self-test total from 229 to 234.
 - The three generated-build tests that exposed the stale declarations now
   pass directly:
   `test_build_bridge_type_matrix_positive_cargo_probe`,
@@ -1855,6 +1856,14 @@ Closeout validation evidence on 2026-07-30:
   implementation, validation, evidence, performance-policy, or tracking issue
   and returned `SATISFIED`, explicitly approving publication and merge subject
   to exact PR-head review.
+- [Published-head Opus round 11](../../reviews/active/rust-interop-certification-14-review-round-11.md)
+  independently recomputed every inventory, re-ran the complete Rust-interop
+  area and its self-tests, verified all prior findings closed, accepted the
+  governed `PERF-HOST` exception, and returned `SATISFIED`. Its two
+  nonblocking hardening notes are closed here: the bridge fixture now rejects
+  any extra build-script trust entry with a dedicated mutation, and the
+  already-passing package-management offline merge smoke is explicitly
+  preserved in the merge-continuation evidence.
 - The authoritative `create-pr` profile passed every blocking step on the
   reviewed closeout state. Python interop passed 19/19 variants in
   557.53/600 seconds; Rust interop passed 10/10 in 8.72/10 seconds; developer
@@ -1898,10 +1907,11 @@ Closeout validation evidence on 2026-07-30:
   the unmodified profile runner. All steps passed: verification hardening and
   runner self-tests; fuzz/property 25/25; algorithmic compatibility 12/12;
   distribution 66/66; sysroot release 2/2 including installed/source boundary
-  equivalence; generated-code quality 7/7; the complete crate matrix, including
-  6/6 CLI and 65/65 driver generated builds; core/project validation matrices
-  4/4 and 2/2; runtime platform 30 variants with zero failures and three
-  declared capability/toolchain skips; E2E 678/678 with report signature
+  equivalence; package-management offline merge smoke 2/2; generated-code
+  quality 7/7; the complete crate matrix, including 6/6 CLI and 65/65 driver
+  generated builds; core/project validation matrices 4/4 and 2/2; runtime
+  platform 30 variants with zero failures and three declared
+  capability/toolchain skips; E2E 678/678 with report signature
   `5e45a6a7b96f2688`; diagnostics baselines 175/175; project baselines 17/17;
   regressions 5/5; and ecosystem compatibility 20/20. This preserves the
   governed performance failure instead of changing a baseline or adding a
