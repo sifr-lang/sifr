@@ -54,8 +54,8 @@ Phase 40 consumes these completed or canonical upstream contracts:
   `plans/issues/archive/rust-interop-verification-matrix-hardening.md`
   (`hardening_1` through `hardening_4`) and
   `plans/issues/active/rust-interop-runtime-ecosystem-certification.md`
-  (merged Track A certifications 0 through 13, plus the in-progress
-  `certification_14` closeout prerequisite). The hardening items are consumed
+  (merged Track A certifications 0 through 14, completed by
+  [PR #3083](https://github.com/sifr-lang/sifr/pull/3083)). The hardening items are consumed
   by `milestone_40_0`. Before stable qualification in `milestone_40_1`,
   `certification_0` created
   `verification/areas/rust_interop/data/stable_support_claims.json` plus its
@@ -71,7 +71,8 @@ Phase 40 consumes these completed or canonical upstream contracts:
   certification prerequisites and the stable claims contract are merged through
   [PR #3026](https://github.com/sifr-lang/sifr/pull/3026);
   the remaining Track A certifications subsequently resolved every current
-  deferred row with passing evidence. Track B remains dormant until an
+  deferred row with passing evidence and completed the final stable-gate
+  closeout. Track B remains dormant until an
   external bridge-version 2 package-resource substrate exists and is not a
   Phase 40 blocker while absent and unadvertised.
 

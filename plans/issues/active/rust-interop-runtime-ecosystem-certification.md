@@ -2,11 +2,12 @@
 
 ## Status
 
-Track A closeout is in progress after certifications 0 through 13 merged.
-All 36 current compatibility rows now have passing positive and negative
-evidence; `certification_14` is the final inventory, stable-claim, validation,
-and review closeout. Track B remains dormant until the external bridge-version
-2 package-resource substrate exists.
+Track A is complete through merged
+[PR #3083](https://github.com/sifr-lang/sifr/pull/3083). All 36 current
+compatibility rows have passing positive and negative evidence, and
+`certification_14` recorded the final inventory, stable-claim, validation,
+published-head review, and immutable merge identities. Track B remains dormant
+until the external bridge-version 2 package-resource substrate exists.
 
 The verification-hardening dependency is complete through
 [`hardening_4`](../archive/rust-interop-verification-matrix-hardening.md#hardening_4-replace-lexical-rejection-context):
@@ -15,7 +16,7 @@ The verification-hardening dependency is complete through
 [#3020](https://github.com/sifr-lang/sifr/pull/3020),
 [#3022](https://github.com/sifr-lang/sifr/pull/3022), and
 [#3023](https://github.com/sifr-lang/sifr/pull/3023) are merged. The
-`certification_0` prerequisite and certifications 1 through 10 are also merged.
+`certification_0` prerequisite and certifications 1 through 14 are also merged.
 
 This issue has two tracks:
 
@@ -160,7 +161,7 @@ normative and must not be broadened.
 | `certification_11` | merged | [PR #3075](https://github.com/sifr-lang/sifr/pull/3075); locked/offline/frozen Sifr command propagation, cache reuse, and deterministic drift rejection |
 | `certification_12` | merged | [PR #3076](https://github.com/sifr-lang/sifr/pull/3076); exact-pinned CLI/tooling execution and bridge-safe `anyhow` boundary certification |
 | `certification_13` | merged | [PR #3078](https://github.com/sifr-lang/sifr/pull/3078); exact-pinned backend loopback execution and fail-closed SQLx offline metadata certification |
-| `certification_14` | in progress | Track A inventory, stable gate, durable handoff, and final review closeout |
+| `certification_14` | merged | [PR #3083](https://github.com/sifr-lang/sifr/pull/3083); Track A inventory, stable gate, durable handoff, repeated published-head review, and final closeout |
 | `certification_pkg_resource_core` | dormant | starts only after Native Pydantic-Sifr `milestone_ps_2` releases bridge version 2 |
 
 ## Ordered Track A Items
@@ -1735,7 +1736,7 @@ merged.
   and re-home controlled baseline recapture, host-variance investigation, and
   budget-policy recalibration to the named active performance-stability
   follow-up. Do not bless shared-host samples into reference baselines.
-- [ ] Pass the authoritative create-PR and merge lanes, complete final Opus
+- [x] Pass the authoritative create-PR and merge lanes, complete final Opus
   review rounds to satisfaction at the published head, merge the closeout PR,
   and record its immutable PR and merge identities.
 
@@ -1879,6 +1880,13 @@ Closeout validation evidence on 2026-07-30:
   Rust-interop area and package-management smoke, rechecked all carried
   invariants and non-Markdown hunks, found no actionable issue, and returned
   `SATISFIED`.
+- The
+  [final immutable-head Opus review](https://github.com/sifr-lang/sifr/pull/3083#issuecomment-5133537029)
+  audited the published PR head
+  `df04bcb83cc0804b4f12a678882992f3586dd777` after the round-13 artifact and
+  ledger commit, independently reproduced the carried invariants, found no
+  actionable issue, and returned `SATISFIED`. PR #3083 merged on 2026-07-30 as
+  `ad205a2bb11d84a3a60e43c0e8c579a93365fca8`, completing Track A.
 - The authoritative `create-pr` profile passed every blocking step on the
   reviewed closeout state. Python interop passed 19/19 variants in
   557.53/600 seconds; Rust interop passed 10/10 in 8.72/10 seconds; developer
