@@ -19,6 +19,7 @@ use super::{
     DiagnosticCode, Expr, FunctionType, HirExpr, HirIteratorOp, HirStmt, LowerCtx,
     NarrowingCondition, Ranged, StmtAssign, StmtFor, StmtIf, TextRange, Type,
 };
+use crate::lower::defaultdict_refinement::order_independent_defaultdict_hint;
 use crate::lower::expressions::{consume_affine_value_name, consume_owned_value};
 use crate::lower::must_use_obligations;
 use crate::lower::python_interop as pyinterop;
@@ -389,18 +390,25 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
         // New variable (type inferred)
         let allow_general_hint = ctx.can_adopt_empty_collection_hints();
         let allow_order_independent_dict_hint = ctx.can_adopt_empty_plain_dict_hint(&name);
-        let adopted_hint_ty = ctx
-            .inferred_binding_hint(&name)
-            .filter(|hint| {
-                should_adopt_inferred_binding_hint(
-                    &assign.value,
-                    &value_ty,
-                    hint,
-                    allow_general_hint,
-                    allow_order_independent_dict_hint,
-                )
-            })
+        let adopted_defaultdict_hint_ty = ctx
+            .can_adopt_defaultdict_hint(&name)
+            .then(|| ctx.inferred_binding_hint(&name))
+            .flatten()
+            .filter(|hint| order_independent_defaultdict_hint(&assign.value, hint))
             .cloned();
+        let adopted_hint_ty = adopted_defaultdict_hint_ty.clone().or_else(|| {
+            ctx.inferred_binding_hint(&name)
+                .filter(|hint| {
+                    should_adopt_inferred_binding_hint(
+                        &assign.value,
+                        &value_ty,
+                        hint,
+                        allow_general_hint,
+                        allow_order_independent_dict_hint,
+                    )
+                })
+                .cloned()
+        });
         let binding_ty = adopted_hint_ty.clone().unwrap_or_else(|| value_ty.clone());
         let inferred_empty_dict_ty = (empty_collection_literal_kind(&assign.value) == Some("dict")
             && allow_order_independent_dict_hint)
@@ -410,6 +418,11 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             (&inferred_empty_dict_ty, &mut value)
         {
             *literal_ty = specialized_ty.clone();
+        }
+        if let (Some(specialized_ty), HirExpr::Call { ty: call_ty, .. }) =
+            (&adopted_defaultdict_hint_ty, &mut value)
+        {
+            *call_ty = specialized_ty.clone();
         }
         ctx.scope.define(name.clone(), binding_ty.clone());
         ctx.record_must_use_binding(&name, &binding_ty);

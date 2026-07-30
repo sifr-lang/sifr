@@ -106,7 +106,10 @@ pub(super) fn try_lower_simple_set_literal_expr(
 ) -> Option<RustExpr> {
     let mut lowered_elements = Vec::with_capacity(elements.len());
     for element in elements {
-        lowered_elements.push(try_lower_leaf_or_name_expr(element)?);
+        let lowered = try_lower_leaf_or_name_expr(element)?;
+        lowered_elements.push(crate::RustEmitter::clone_non_copy_name_expr_for_ir(
+            element, lowered,
+        ));
     }
 
     Some(RustExpr::FnCall {

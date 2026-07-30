@@ -7,6 +7,7 @@ use super::{
     registry_iterable_to_owned_iter_expr, registry_iterable_to_set_expr, HirExpr, RustEmitter,
     RustExpr, Type,
 };
+
 impl RustEmitter {
     pub(crate) fn effective_method_object_ty(&self, object: &HirExpr) -> Type {
         if let HirExpr::Name { name, ty, .. } = object {
@@ -52,6 +53,46 @@ impl RustEmitter {
         method: &str,
         args: &[HirExpr],
         method_return_ty: &Type,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        let is_defaultdict_bucket_mutator = match object {
+            HirExpr::Index {
+                object: base_object,
+                ..
+            } => registry_defaultdict_alias_parts(base_object.ty()).is_some_and(
+                |(_, _, value_ty)| methods::is_in_place_collection_method(value_ty, method),
+            ),
+            _ => false,
+        };
+        if is_defaultdict_bucket_mutator {
+            return self
+                .try_lower_defaultdict_index_method_call_expr(
+                    object,
+                    method,
+                    args,
+                    method_return_ty,
+                )
+                .map(Some)
+                .ok_or_else(|| {
+                    crate::CodegenError::new(format!(
+                        "defaultdict bucket mutator `{method}` could not be lowered safely"
+                    ))
+                });
+        }
+
+        Ok(self.try_lower_registry_method_call_expr_unchecked(
+            object,
+            method,
+            args,
+            method_return_ty,
+        ))
+    }
+
+    fn try_lower_registry_method_call_expr_unchecked(
+        &mut self,
+        object: &HirExpr,
+        method: &str,
+        args: &[HirExpr],
+        method_return_ty: &Type,
     ) -> Option<crate::RustExpr> {
         let effective_object_ty = self.effective_method_object_ty(object);
         let object_ty = crate::resolve_alias_type_for_plain_call(&effective_object_ty);
@@ -80,11 +121,6 @@ impl RustEmitter {
             args,
             method_return_ty,
         ) {
-            return Some(lowered);
-        }
-        if let Some(lowered) =
-            self.try_lower_defaultdict_index_method_call_expr(object, method, args)
-        {
             return Some(lowered);
         }
         if method == "append" && args.len() == 1 {
@@ -514,6 +550,7 @@ impl RustEmitter {
         object: &HirExpr,
         method: &str,
         args: &[HirExpr],
+        method_return_ty: &Type,
     ) -> Option<crate::RustExpr> {
         let HirExpr::Index {
             object: base_object,
@@ -523,37 +560,140 @@ impl RustEmitter {
         else {
             return None;
         };
-        let (alias_name, key_ty, _) = registry_defaultdict_alias_parts(base_object.ty())?;
+        let (alias_name, key_ty, value_ty) = registry_defaultdict_alias_parts(base_object.ty())?;
+        if !methods::is_in_place_collection_method(value_ty, method) {
+            return None;
+        }
         let lowered_object = self.try_lower_registry_expr_strict(base_object)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
-        let lowered_args = self.try_lower_registry_exprs_strict(args)?;
-        let entry_expr = crate::RustExpr::MethodCall {
-            receiver: Box::new(crate::RustExpr::MethodCall {
-                receiver: Box::new(lowered_object),
-                method: "entry".to_string(),
-                args: vec![registry_defaultdict_key_arg(index, lowered_index, key_ty)],
-            }),
-            method: "or_insert".to_string(),
-            args: vec![registry_defaultdict_default_expr(alias_name)],
+        let lowered_key_arg = registry_defaultdict_key_arg(index, lowered_index, key_ty);
+        let is_iterable_bucket_mutator = (alias_name == "__sifr_defaultdict_list"
+            && method == "extend")
+            || (alias_name == "__sifr_defaultdict_set"
+                && matches!(
+                    method,
+                    "update"
+                        | "intersection_update"
+                        | "difference_update"
+                        | "symmetric_difference_update"
+                ));
+        let entry_key = if is_iterable_bucket_mutator {
+            crate::RustExpr::Ident("__sifr_defaultdict_key".to_string())
+        } else {
+            lowered_key_arg.clone()
         };
-        match (alias_name, method, lowered_args.as_slice()) {
-            ("__sifr_defaultdict_list", "append", [value]) => Some(crate::RustExpr::Block {
-                stmts: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
-                    receiver: Box::new(entry_expr),
-                    method: "push".to_string(),
-                    args: vec![value.clone()],
-                })],
-                expr: Some(Box::new(crate::RustExpr::Literal(crate::RustLiteral::Unit))),
-            }),
-            ("__sifr_defaultdict_set", "add", [value]) => Some(crate::RustExpr::Block {
-                stmts: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
-                    receiver: Box::new(entry_expr),
-                    method: "insert".to_string(),
-                    args: vec![value.clone()],
-                })],
-                expr: Some(Box::new(crate::RustExpr::Literal(crate::RustLiteral::Unit))),
-            }),
-            _ => None,
+        let build_entry_expr =
+            |receiver: crate::RustExpr, key: crate::RustExpr| crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(receiver),
+                    method: "entry".to_string(),
+                    args: vec![key],
+                }),
+                method: "or_insert".to_string(),
+                args: vec![registry_defaultdict_default_expr(alias_name)],
+            };
+        let preinsert_entry_expr = is_iterable_bucket_mutator.then(|| {
+            build_entry_expr(
+                lowered_object.clone(),
+                crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
+                    "__sifr_defaultdict_key".to_string(),
+                ))),
+            )
+        });
+        let entry_expr = build_entry_expr(lowered_object, entry_key);
+
+        if alias_name == "__sifr_defaultdict_list" && method == "extend" {
+            let [iterable] = args else {
+                return None;
+            };
+            return self.try_lower_defaultdict_list_extend_expr(
+                lowered_key_arg,
+                preinsert_entry_expr?,
+                entry_expr,
+                iterable,
+                value_ty,
+            );
+        }
+
+        if alias_name == "__sifr_defaultdict_set"
+            && matches!(
+                method,
+                "update"
+                    | "intersection_update"
+                    | "difference_update"
+                    | "symmetric_difference_update"
+            )
+        {
+            return self.try_lower_defaultdict_set_update_expr(
+                lowered_key_arg,
+                preinsert_entry_expr?,
+                entry_expr,
+                method,
+                args,
+                value_ty,
+            );
+        }
+
+        let mut lowered_args = Vec::with_capacity(args.len());
+        for arg in args {
+            lowered_args.push(
+                self.try_lower_registry_expr_strict(arg)
+                    .or_else(|| self.lower_stmt_expr_for_ir(arg).ok().flatten())?,
+            );
+        }
+
+        match (alias_name, method, args, lowered_args.as_mut_slice()) {
+            ("__sifr_defaultdict_list", "append", [value], [lowered_value]) => {
+                let owned_value =
+                    Self::clone_owned_append_arg_expr_for_ir(value, lowered_value.clone());
+                Some(crate::RustExpr::Block {
+                    stmts: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                        receiver: Box::new(entry_expr),
+                        method: "push".to_string(),
+                        args: vec![owned_value],
+                    })],
+                    expr: Some(Box::new(crate::RustExpr::Literal(crate::RustLiteral::Unit))),
+                })
+            }
+            ("__sifr_defaultdict_set", "add", [value], [lowered_value]) => {
+                let owned_value =
+                    Self::clone_owned_append_arg_expr_for_ir(value, lowered_value.clone());
+                Some(crate::RustExpr::Block {
+                    stmts: vec![crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                        receiver: Box::new(entry_expr),
+                        method: "insert".to_string(),
+                        args: vec![owned_value],
+                    })],
+                    expr: Some(Box::new(crate::RustExpr::Literal(crate::RustLiteral::Unit))),
+                })
+            }
+            ("__sifr_defaultdict_list", "insert", [_, value], [_, lowered_value]) => {
+                *lowered_value =
+                    Self::clone_owned_append_arg_expr_for_ir(value, lowered_value.clone());
+                methods::lower_method(value_ty, method, &entry_expr, &lowered_args)
+                    .map(|lowered| lowered.expr)
+            }
+            (
+                "__sifr_defaultdict_list" | "__sifr_defaultdict_set",
+                "remove" | "discard",
+                [value],
+                [lowered_value],
+            ) => {
+                *lowered_value =
+                    Self::clone_owned_append_arg_expr_for_ir(value, lowered_value.clone());
+                methods::lower_method(value_ty, method, &entry_expr, &lowered_args)
+                    .map(|lowered| lowered.expr)
+            }
+            _ => {
+                let lowered = methods::lower_method(value_ty, method, &entry_expr, &lowered_args)?;
+                Some(Self::unwrap_compiler_verified_nonempty_pop_result(
+                    value_ty,
+                    method,
+                    args,
+                    method_return_ty,
+                    lowered.expr,
+                ))
+            }
         }
     }
 
@@ -577,6 +717,19 @@ impl RustEmitter {
         let lowered_object = self.try_lower_registry_expr_strict(base_object)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
         let lowered_element = self.lower_stmt_expr_for_ir(element).ok()??;
+        let element_arg = if matches!(
+            element,
+            HirExpr::Name { name, .. }
+                if self.borrowed_params.contains(name)
+                    || self.mut_borrowed_params.contains(name)
+        ) {
+            lowered_element
+        } else {
+            crate::RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
+            }
+        };
         let entry_expr = crate::RustExpr::MethodCall {
             receiver: Box::new(crate::RustExpr::MethodCall {
                 receiver: Box::new(lowered_object),
@@ -589,10 +742,7 @@ impl RustEmitter {
         Some(crate::RustExpr::MethodCall {
             receiver: Box::new(entry_expr),
             method: "contains".to_string(),
-            args: vec![crate::RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
-            }],
+            args: vec![element_arg],
         })
     }
 
