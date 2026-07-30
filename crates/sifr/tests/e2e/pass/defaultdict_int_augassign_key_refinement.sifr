@@ -1,0 +1,30 @@
+from sifr.collections import defaultdict
+
+
+def count_words(words: list[str]) -> dict[str, int]:
+    counts = defaultdict(int)
+    for word in words:
+        counts[word] += 1
+    return counts
+
+
+def count_numbers(values: list[int]) -> dict[int, int]:
+    counts = defaultdict(int)
+    for value in values:
+        counts[value] += 1
+    return counts
+
+
+def main():
+    words = count_words(["red", "blue", "red", "green", "red"])
+    assert words["red"] == 3
+    assert words["blue"] == 1
+
+    values = count_numbers([4, 2, 4, 4, 2])
+    assert values[4] == 3
+    assert values[2] == 2
+
+    total = 0
+    for _, count in words.items():
+        total += count
+    assert total == 5

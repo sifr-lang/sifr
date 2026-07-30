@@ -293,6 +293,14 @@ fn patch_stmt_container_specialization(stmt: &mut HirStmt, pending: &mut HashMap
                 | (HirExpr::SetLiteral { ty: literal_ty, .. }, Type::Set(_)) => {
                     *literal_ty = patch_ty;
                 }
+                (
+                    HirExpr::Call {
+                        func, ty: call_ty, ..
+                    },
+                    Type::Alias { name, .. },
+                ) if func == name && name.starts_with("__sifr_defaultdict_") => {
+                    *call_ty = patch_ty;
+                }
                 _ => {}
             }
         }
