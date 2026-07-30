@@ -155,8 +155,8 @@ normative and must not be broadened.
 | `certification_8` | merged | [PR #3067](https://github.com/sifr-lang/sifr/pull/3067); crate-backed Arrow/tensor generated package and compiler mismatch rejection |
 | `certification_9` | merged | [PR #3069](https://github.com/sifr-lang/sifr/pull/3069); exact-pinned native build-script package, deterministic artifacts, and fail-closed direct/transitive trust rejection |
 | `certification_10` | merged | [PR #3071](https://github.com/sifr-lang/sifr/pull/3071); exact-pinned proc-macro/codegen package, deterministic prost output, and package-wide pre-execution trust rejection |
-| `certification_11` | in progress | locked/offline/frozen Sifr command propagation, cache reuse, and deterministic drift rejection |
-| `certification_12` | blocked | starts after `certification_11` merges |
+| `certification_11` | merged | [PR #3075](https://github.com/sifr-lang/sifr/pull/3075); locked/offline/frozen Sifr command propagation, cache reuse, and deterministic drift rejection |
+| `certification_12` | in progress | exact-pinned CLI/tooling execution and bridge-safe `anyhow` boundary certification |
 | `certification_13` | blocked | starts after `certification_12` merges |
 | `certification_14` | blocked | starts after `certification_13` merges |
 | `certification_pkg_resource_core` | dormant | starts only after Native Pydantic-Sifr `milestone_ps_2` releases bridge version 2 |
@@ -1242,7 +1242,7 @@ Implementation checklist:
 - [x] Add exact scenario-policy and mutation coverage for flags, lock identity,
   feature policy, network denial, cache evidence, and each negative drift
   direction without growing a maintained module past the file-size cap.
-- [ ] Run focused and authoritative local gates, complete Opus review rounds to
+- [x] Run focused and authoritative local gates, complete Opus review rounds to
   satisfaction, merge the PR, and unblock only `certification_12`.
 
 Validation evidence to date:
@@ -1324,6 +1324,102 @@ Validation evidence to date:
   proved stale-lock rejection for `check`, `build`, and `run`. It returned
   `SATISFIED` with no blocking findings and confirmed the sole live-tree gate
   failure is absent from the PR.
+- A final exact-head confirmation reviewed published head
+  `4452643a94deb28068ea994780878f540b2e88bf`, confirmed the prior
+  `SATISFIED` merge-readiness verdict still applied, and recommended merge.
+  PR #3075 merged on 2026-07-30 as
+  `d5a4b294d3d8f88ea332733d74e9505abaedad5d`; only
+  `certification_12` is unblocked.
+
+#### certification_12: CLI and Tooling Ecosystem Bridge
+
+Implementation checklist:
+
+- [x] Replace the planning-only shadow crates with an exact-pinned generated
+  package that compiles the real `clap`, `tracing`,
+  `tracing-subscriber 0.3.23` with `env-filter`, and `anyhow 1.0.102`
+  dependency graph under the package lock.
+- [x] Execute a deterministic CLI parse and filtered tracing event through a
+  package-local Rust bridge, and prove internal `anyhow::Error` context is
+  collapsed into a declared Sifr-facing error before crossing the bridge.
+- [x] Add a direct Rust surface whose `anyhow::Error` result cannot be
+  represented by the Sifr bridge, then prove the real compiler reports the
+  stable `SIFR-RUST-TYPE-0001` diagnostic while the explicit adapter remains
+  accepted.
+- [x] Bind both evidence directions to mandatory generated-package tests,
+  promote only `ecosystem_cli_certification` to
+  `supported-through-bridge`, and update scenario policy, structured claims,
+  public/internal docs, provenance, and exact inventory counts.
+- [x] Add validator self-test mutations for exact versions, the
+  `env-filter` feature, bridge dependency ownership, positive/negative
+  provenance, and the supported-through-bridge contract without weakening the
+  preserved backend row.
+- [ ] Run focused and authoritative local gates, complete Opus review rounds
+  to satisfaction, merge the PR, and unblock only `certification_13`.
+
+Validation evidence to date:
+
+- The mandatory positive test builds the authoritative package lock, confirms
+  the exact Cargo feature graph, and executes real `clap 4.6.1` parsing plus a
+  captured `tracing 0.1.44` event under
+  `tracing-subscriber 0.3.23` `env-filter`. Its stable marker also proves the
+  internal `anyhow 1.0.102` path returns only the declared `CliError`; the
+  focused run passed.
+- The mandatory negative test first proves the explicit adapter is accepted,
+  then targets a sibling function returning `anyhow::Error` directly. The
+  actual rustc signature evidence names `anyhow::Error` and the compiler
+  reports `SIFR-RUST-TYPE-0001`, with no trust diagnostic masking the type
+  contract; the focused run passed.
+- The generated scenario builds with `cargo build --workspace --locked
+  --offline --frozen`. Its lock is a root-lock subset and contains the exact
+  selected transitive identities rather than locally newest compatible
+  versions.
+- The fixture inventory passes with 36 rows, 44 crate aliases, 61 package
+  examples, and 18 scenarios. All 209 meaningful scenario/matrix mutation
+  cases pass. On the exact staged tree this item yields 70 passing and 2
+  planned evidence directions with 21 supported, 13 bridge-supported, 1
+  unsupported-by-design, and 1 future-owned row; all four compatibility
+  categories remain represented.
+- The preserved unstaged `ecosystem_backend_certification` promotion still
+  fails only the live compatibility command because its evidence remains
+  planned. The staged certification-12 tree retains that row as future-owned
+  and passes the fixture, compatibility, tier, and 35-claim stable-support
+  checkers.
+- [Opus round 1](../../reviews/active/rust-interop-certification-12-review-round-1.md)
+  reproduced the full CLI/tooling contract and both mandatory tests, then
+  returned `NOT SATISFIED` because the generic fixture checker had grown from
+  899 to 904 lines. The correction moved fixture-specific binding-token policy
+  into `_binding_helpers.py`, restored the checker to the hard cap, and
+  added load-bearing exclusion plus direct-binding policy mutations.
+- [Opus round 2](../../reviews/active/rust-interop-certification-12-review-round-2.md)
+  audited integrated head
+  `e2c321a788142bdf0da02967efee076c985a3d7c`, proved the certification patch
+  survived the current-main merge byte-for-byte, re-ran both mandatory tests
+  and the exact exported Rust-interop area, and returned `SATISFIED` with no
+  blocking findings. Its filter-durability observation is closed by requiring
+  and mutation-testing the excluded-target emission itself.
+- [Published-head round 3](../../reviews/active/rust-interop-certification-12-review-round-3.md)
+  reproduced every certification-12 gate at PR #3076 head
+  `3867b21d56dc961b944c9259c632de2fc1d9d3c4`, then returned
+  `NOT SATISFIED` because the carried certification-11 round-5 file contained
+  only a truncated conversational tail rather than a self-contained review.
+  The stub artifact and its link are removed; the historical confirmation is
+  retained as plain prose instead of overstated provenance.
+- [Published-head round 4](../../reviews/active/rust-interop-certification-12-review-round-4.md)
+  verified the provenance repair at PR head
+  `eca5abb7d9fca587ad6f31b3310f3e470db693d5`, re-ran the exact committed
+  Rust-interop area and guardrails, confirmed the parallel backend edit remains
+  absent, and returned `SATISFIED` with no blocking findings.
+- The shared-worktree `create-pr` lane stops at the resource-certification
+  backstop because the preserved unstaged backend promotion removes the last
+  future-owned row. An exact-head archive passes that backstop and every
+  certification/core guardrail; its cold diagnostic run exceeded the
+  archive-path timing budget, while the warm rerun passed diagnostics in
+  7.28 seconds. The archive-only Python doctor then exceeded its subprocess
+  limit because its generated package lived under the temporary source root;
+  the same doctor passed in the main workspace with deferred=1, resolved=3,
+  parity=5, and zero mutations. No failing command touches certification-12
+  source, and the exact-head Rust-interop area remains 10/10.
 
 ### certification_14: Track A Closeout and Stable Gate
 

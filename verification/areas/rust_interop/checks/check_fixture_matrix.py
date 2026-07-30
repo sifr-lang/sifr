@@ -9,6 +9,7 @@ from typing import Any
 
 from _binding_helpers import contains_empty_pass_body as _contains_empty_pass_body
 from _binding_helpers import decorated_function_name as _decorated_function_name
+from _binding_helpers import package_example_binding_token
 from _binding_helpers import rust_bound_declarations as _rust_bound_declarations
 from _binding_helpers import verifier_binds_call as _verifier_binds_call
 from _crate_catalog import validate_crate_catalog
@@ -715,7 +716,7 @@ def _validate_package_example_text(
     if _contains_empty_pass_body(text):
         failures.append(f"{fixture_id}: {raw_path} must not use empty placeholder class bodies")
     crate_token = crate.replace("-", "_")
-    binding_token = "bridge.generated" if fixture_id == "proc_macro_trust" else crate_token
+    binding_token = package_example_binding_token(fixture_id, crate_token)
     bound_functions = _rust_bound_function_names(text, binding_token)
     if not bound_functions:
         failures.append(

@@ -231,6 +231,16 @@ or trusted vendor sources; constrained probes cannot reuse a normal-mode cache
 entry. Missing locks and selected version, source, checksum, or feature drift
 are rejected without network access as `SIFR-RUST-CARGO-0001`.
 
+The `ecosystem_cli_certification` evidence builds and runs an exact-pinned
+generated package with `clap 4.6.1`, `tracing 0.1.44`,
+`tracing-subscriber 0.3.23` using `env-filter`, and `anyhow 1.0.102`.
+The package-local bridge parses a real command and observes a filtered tracing
+event. `anyhow::Error` remains internal: the bridge maps its context chain into
+the declared `CliError`, while a direct function returning `anyhow::Error` is
+rejected as `SIFR-RUST-TYPE-0001`. This is
+`supported-through-bridge` for the exact crate graph and does not imply direct
+support for arbitrary CLI crate APIs or `anyhow::Error` values.
+
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |
 | --- | --- | --- |
@@ -268,6 +278,7 @@ are rejected without network access as `SIFR-RUST-CARGO-0001`.
 | `native_build_script` | `supported` | `cargo-probe` |
 | `proc_macro_trust` | `supported` | `cargo-probe` |
 | `cargo_locked_offline` | `supported` | `cargo-probe` |
+| `ecosystem_cli_certification` | `supported-through-bridge` | `cargo-probe` |
 <!-- rust-interop-stable-claims:end -->
 
 ## Direct Bindings

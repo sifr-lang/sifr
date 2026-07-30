@@ -6,13 +6,9 @@
 class PackageExampleError(Error):
     message: str
 
-class CliCommand:
-    name: str
-    argument_count: uint64
+@rust(bridge.cli.parse_and_trace, panic=map_error(bridge.cli.map_panic))
+def clap_command(args: list[str]) -> Result[str, PackageExampleError | RustPanicError]: ...
 
-@rust(clap.Command.new, panic=map_error(bridge.clap.map_panic))
-def clap_command(name: str) -> Result[CliCommand, PackageExampleError | RustPanicError]: ...
-
-def verify_clap_package() -> Result[CliCommand, PackageExampleError | RustPanicError]:
-    sample_result: Result[CliCommand, PackageExampleError | RustPanicError] = clap_command("sifr")
+def verify_clap_package() -> Result[str, PackageExampleError | RustPanicError]:
+    sample_result: Result[str, PackageExampleError | RustPanicError] = clap_command(["sifr", "--mode", "check"])
     return sample_result

@@ -7,8 +7,8 @@ class CliError(Error):
     message: str
 
 @rust(bridge.cli.parse_and_trace, panic=map_error(bridge.cli.map_panic))
-def parse_and_trace(args: list[str]) -> Result[uint32, CliError | RustPanicError]: ...
+def parse_and_trace(args: list[str]) -> Result[str, CliError | RustPanicError]: ...
 
-def verify_cli_feature_package() -> Result[uint32, CliError | RustPanicError]:
-    parsed_result: Result[uint32, CliError | RustPanicError] = parse_and_trace(["sifr", "--version"])
+def verify_cli_feature_package() -> Result[str, CliError | RustPanicError]:
+    parsed_result: Result[str, CliError | RustPanicError] = parse_and_trace(["sifr", "--mode", "check"])
     return parsed_result

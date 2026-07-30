@@ -335,8 +335,8 @@
       "required_crates": ["clap", "tracing", "tracing-subscriber", "anyhow"],
       "features": {"tracing-subscriber": {"features": ["env-filter"]}},
       "execution_kind": "cargo-probe",
-      "positive_evidence": {"id": "cli_tooling_probe_coverage", "status": "planned"},
-      "negative_evidence": {"id": "unsupported_anyhow_surface", "status": "planned"}
+      "positive_evidence": {"id": "cli_tooling_probe_coverage", "status": "passing"},
+      "negative_evidence": {"id": "unsupported_anyhow_surface", "status": "passing"}
     },
     {
       "id": "native_build_script",
