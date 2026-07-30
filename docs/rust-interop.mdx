@@ -247,12 +247,14 @@ using only `runtime-tokio-rustls`, `postgres`, and `macros` for SQLx. The
 package binds an Axum server to `127.0.0.1:0`, observes a tower-http response
 header through a raw loopback request, and shuts the task down cleanly. Its
 SQLx query macro compiles from a checked-in `.sqlx/` artifact whose query and
-SHA-256 identity are validated. Sifr forces `SQLX_OFFLINE=true` and removes
-`DATABASE_URL` from signature probes and generated builds; missing or stale
-metadata is rejected as `SIFR-RUST-CARGO-0001` without contacting the armed
-database sentinel. This is `supported-through-bridge` for the exact package
-and does not claim arbitrary Axum/tower-http APIs, live SQLx database
-connectivity, or product-level web framework support.
+SHA-256 identity are validated. The complete `.sqlx/` directory participates
+in probe and generated-build cache identity. Sifr—not fixture Cargo
+configuration—forces `SQLX_OFFLINE=true` and removes inherited `DATABASE_URL`
+from signature probes and generated builds; missing or stale metadata is
+rejected as `SIFR-RUST-CARGO-0001` without contacting the armed database
+sentinel. This is `supported-through-bridge` for the exact package and does
+not claim arbitrary Axum/tower-http APIs, live SQLx database connectivity, or
+product-level web framework support.
 
 <!-- rust-interop-stable-claims:start -->
 | Compatibility row | Category | Execution scope |

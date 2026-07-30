@@ -2,6 +2,7 @@ use super::rust_interop::PackageRustInteropContext;
 use super::rust_interop_digest::{
     digest_file, digest_path, fnv1a64_hex, normalized_path_string, push_cache_bytes,
 };
+use super::rust_interop_sqlx_offline::sqlx_offline_metadata_digest;
 use super::sysroot_interop::SysrootRustInteropTrust;
 use sifr_codegen::{RustBridgeSourceDigest, RustInteropCargoInputs};
 use sifr_package::{digest_package_graph, digest_package_source_map, TrustPolicy};
@@ -49,7 +50,7 @@ pub(super) fn cargo_inputs(
     declared_build_env.sort();
     RustInteropCargoInputs {
         package_id: context.package_id.0.clone(),
-        cargo_metadata_digest: None,
+        cargo_metadata_digest: sqlx_offline_metadata_digest(&package.package_root),
         package_graph_digest: Some(graph_digest.hex),
         package_source_map_digest: Some(source_map_digest.hex),
         cargo_lock_digest: cargo_lock_digest(&package.package_root),

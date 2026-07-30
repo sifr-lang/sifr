@@ -137,7 +137,7 @@ fn configure_database_sentinel(package_root: &Path) -> std::net::TcpListener {
         .local_addr()
         .expect("database sentinel address should resolve");
     let config = format!(
-        "[net]\noffline = true\n\n[env]\nSQLX_OFFLINE = {{ value = \"true\", force = true }}\nDATABASE_URL = {{ value = \"postgres://sifr:sifr@{address}/sifr\", force = true }}\n"
+        "[net]\noffline = true\n\n[env]\nDATABASE_URL = {{ value = \"postgres://sifr:sifr@{address}/sifr\", force = true }}\n"
     );
     std::fs::write(package_root.join(".cargo/config.toml"), config)
         .expect("database sentinel Cargo environment should be installed");

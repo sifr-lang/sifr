@@ -11,7 +11,7 @@ use super::rust_interop_probe_manifest::{probe_cargo_toml, probe_cargo_vendor_ar
 use super::rust_interop_probe_nonce::unique_probe_nonce;
 use super::rust_interop_probe_paths::probe_cargo_target_dir;
 use super::rust_interop_sqlx_offline::{
-    configure_hermetic_build_environment, validate_sqlx_offline_metadata,
+    configure_hermetic_build_environment, validate_probe_sqlx_offline_metadata,
 };
 use sifr_codegen::{
     RustBridgeParamConvention, RustBridgeSignatureContract, RustInteropPlanDeclaration,
@@ -68,20 +68,7 @@ pub(super) fn execute_direct_cargo_probe(
     let Some(backend_root) = probe.backend.cargo_manifest_path.parent() else {
         return Ok(());
     };
-    if probe.backend.cargo_source.is_none() {
-        validate_sqlx_offline_metadata(backend_root).map_err(|reason| ProbeExecutionFailure {
-            code: DiagnosticCode::RUST_CARGO_METADATA,
-            message_template: "Rust bridge SQLx offline metadata failed for `{target}`: {reason}",
-            args: vec![
-                ("target", canonical_sifr_target_path(&probe.declaration)),
-                ("reason", reason),
-            ],
-            notes: vec![
-                "Sifr validates checked-in SQLx query metadata before Cargo and never exposes DATABASE_URL to Rust bridge builds"
-                    .to_string(),
-            ],
-        })?;
-    }
+    validate_probe_sqlx_offline_metadata(probe, backend_root)?;
     let dependency_features =
         dependency_features(&probe.backend.dependency_name, backend_root, &probe.path);
     let probe_manifest = probe_cargo_toml(

@@ -1503,7 +1503,7 @@ Validation evidence to date:
   pass. The completion-time resource gate now also accepts zero deferrals
   while retaining the rule that only passing supported stdlib-core rows may
   authorize retained compiler surfaces.
-- All 440 non-generated driver tests pass with 65 generated-build tests
+- All 444 non-generated driver tests pass with 65 generated-build tests
   intentionally ignored. Production `sifr_driver` Clippy, workspace rustfmt,
   TypeScript-Go transfer inventory, HIR/driver maintainability, 900-line
   file-size, and diff-hygiene guardrails pass.
@@ -1513,6 +1513,29 @@ Validation evidence to date:
   passed immediately on isolation, including protocol shutdown, marker corpus,
   transcript replay, and all self-tests. Workspace Clippy passes with warnings
   denied.
+- [Opus round 1](../../reviews/active/rust-interop-certification-13-review-round-1.md)
+  independently reproduced both mandatory generated-package tests, all driver
+  tests, the 10/10 Rust-interop area, 228 mutation cases, the real dependency
+  graph, matrix/claim counts, validator transitions, lint, formatting, and
+  guardrails. It returned `NOT SATISFIED` for valid trailing-comma and
+  concatenated SQLx macro forms that the initial preflight falsely rejected,
+  imported/aliased and query-file forms that could evade warm-cache
+  invalidation, and substring-based Cargo dependency detection.
+- The round-1 fixes parse actual Cargo dependency tables; recognize fully
+  qualified, dependency-aliased, directly imported, inline-literal, and all
+  query-file SQLx macro families; accept concatenated literals and trailing
+  commas; and let syntax outside the conservative recognizer fall through to
+  offline Cargo. Source traversal is iterative and symlink-safe. The complete
+  `.sqlx/` directory digest now participates in both direct-probe and final
+  generated-build cache identity, including descriptor-only changes.
+- The fixture no longer sets `SQLX_OFFLINE`; Sifr's environment forcing is
+  therefore load-bearing in the positive final build and in the valid control
+  that precedes the armed-database negative mutations. The round-1-fix
+  positive mandatory test passed in 62.52 seconds and the negative test passed
+  in 18.41 seconds. Seven focused SQLx unit tests, all 444 current
+  non-generated driver tests, the 10/10 Rust-interop area, 228 mutation cases,
+  workspace Clippy, file-size/driver maintainability, the TypeScript-Go
+  inventory, and the zero-deferral resource gate pass.
 
 ### certification_14: Track A Closeout and Stable Gate
 

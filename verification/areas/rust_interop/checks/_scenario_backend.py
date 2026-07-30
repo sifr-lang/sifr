@@ -183,18 +183,18 @@ def run_backend_self_test(
                 "trust must equal",
             ),
             (
-                "offline env",
-                ".cargo/config.toml",
-                'SQLX_OFFLINE = { value = "true", force = true }',
-                'SQLX_OFFLINE = { value = "false", force = true }',
-                "must force SQLX_OFFLINE=true",
-            ),
-            (
                 "Cargo network",
                 ".cargo/config.toml",
                 "offline = true",
                 "offline = false",
                 "must disable Cargo network access",
+            ),
+            (
+                "fixture SQLx environment",
+                ".cargo/config.toml",
+                "offline = true",
+                'offline = true\n\n[env]\nSQLX_OFFLINE = { value = "true", force = true }',
+                "must leave SQLx environment policy to Sifr",
             ),
             (
                 "loopback bind",
@@ -276,10 +276,9 @@ def _validate_cargo_environment(
         failures.append(
             f"{fixture_id}: {raw_path}/.cargo/config.toml must disable Cargo network access"
         )
-    expected_env = {"SQLX_OFFLINE": {"value": "true", "force": True}}
-    if config.get("env") != expected_env:
+    if "env" in config:
         failures.append(
-            f"{fixture_id}: {raw_path}/.cargo/config.toml must force SQLX_OFFLINE=true"
+            f"{fixture_id}: {raw_path}/.cargo/config.toml must leave SQLx environment policy to Sifr"
         )
 
 

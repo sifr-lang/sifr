@@ -346,10 +346,12 @@ Backend/service certification is implemented as exact-pinned
 `supported-through-bridge` evidence. The package executes an Axum server on
 `127.0.0.1:0`, observes a tower-http response header, expands a SQLx query
 macro from checked-in metadata, and completes deterministic shutdown. Sifr
-forces SQLx offline compilation and removes `DATABASE_URL`; missing and stale
-metadata are rejected as `SIFR-RUST-CARGO-0001` before the armed database
-sentinel can observe a connection. This remains package-model certification,
-not product-level web framework support.
+forces SQLx offline compilation, removes inherited `DATABASE_URL`, and binds
+the complete `.sqlx/` directory into probe and final-build cache identities;
+the fixture itself supplies no SQLx offline environment override. Missing and
+stale metadata are rejected as `SIFR-RUST-CARGO-0001` before the armed
+database sentinel can observe a connection. This remains package-model
+certification, not product-level web framework support.
 
 Pinned fixture feature policy:
 
