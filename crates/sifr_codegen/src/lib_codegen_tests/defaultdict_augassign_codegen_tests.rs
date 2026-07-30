@@ -24,3 +24,24 @@ fn variable_integer_key_defaultdict_counter_keeps_entry_default_codegen() {
     );
     assert!(rust_code.contains("*__elem += 1_i64;"));
 }
+
+#[test]
+fn nested_shadowed_defaultdict_counters_keep_independent_key_types() {
+    let rust_code = generate_rust_from_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef solve(words: list[str], nums: list[int]) -> int:\n    counts = defaultdict(int)\n    def helper() -> int:\n        counts = defaultdict(int)\n        for n in nums:\n            counts[n] += 1\n        return len(counts)\n    for word in words:\n        counts[word] += 1\n    return len(counts) + helper()\n",
+    );
+
+    assert!(rust_code.contains("let mut counts: HashMap<String, i64> = HashMap::new();"));
+    assert!(rust_code.contains("let mut counts: HashMap<i64, i64> = HashMap::new();"));
+}
+
+#[test]
+fn nested_scalar_shadow_is_not_retyped_as_defaultdict() {
+    let rust_code = generate_rust_from_source_with_stdlib_collections(
+        "from sifr.collections import defaultdict\n\ndef solve(words: list[str]) -> int:\n    counts = defaultdict(int)\n    def helper() -> int:\n        counts = 7\n        return counts\n    for word in words:\n        counts[word] += 1\n    return len(counts) + helper()\n",
+    );
+
+    assert!(rust_code.contains("let mut counts: HashMap<String, i64> = HashMap::new();"));
+    assert!(rust_code.contains("let counts: i64 = 7_i64;"));
+    assert!(!rust_code.contains("HashMap<String, i64> = 7_i64"));
+}

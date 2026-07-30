@@ -279,80 +279,35 @@ pub(in crate::lower) fn apply_container_specialization_patches(
 }
 
 fn patch_stmt_container_specialization(stmt: &mut HirStmt, pending: &mut HashMap<String, Type>) {
-    match stmt {
-        HirStmt::Let {
-            name, ty, value, ..
-        } => {
-            let Some(patch_ty) = pending.remove(name) else {
-                return;
-            };
-            *ty = patch_ty.clone();
-            match (value, &patch_ty) {
-                (HirExpr::DictLiteral { ty: literal_ty, .. }, Type::Dict(_, _))
-                | (HirExpr::ListLiteral { ty: literal_ty, .. }, Type::List(_))
-                | (HirExpr::SetLiteral { ty: literal_ty, .. }, Type::Set(_)) => {
-                    *literal_ty = patch_ty;
-                }
-                (
-                    HirExpr::Call {
-                        func, ty: call_ty, ..
-                    },
-                    Type::Alias { name, .. },
-                ) if func == name && name.starts_with("__sifr_defaultdict_") => {
-                    *call_ty = patch_ty;
-                }
-                _ => {}
-            }
+    let HirStmt::Let {
+        name, ty, value, ..
+    } = stmt
+    else {
+        return;
+    };
+    let Some(patch_ty) = pending.get(name).cloned() else {
+        return;
+    };
+    let matches_declaration = match (value, &patch_ty) {
+        (HirExpr::DictLiteral { ty: literal_ty, .. }, Type::Dict(_, _))
+        | (HirExpr::ListLiteral { ty: literal_ty, .. }, Type::List(_))
+        | (HirExpr::SetLiteral { ty: literal_ty, .. }, Type::Set(_)) => {
+            *literal_ty = patch_ty.clone();
+            true
         }
-        HirStmt::If {
-            then_body,
-            elif_clauses,
-            else_body,
-            ..
-        } => {
-            apply_container_specialization_patches(then_body, pending);
-            for (_, body) in elif_clauses {
-                apply_container_specialization_patches(body, pending);
-            }
-            if let Some(body) = else_body {
-                apply_container_specialization_patches(body, pending);
-            }
+        (
+            HirExpr::Call {
+                func, ty: call_ty, ..
+            },
+            Type::Alias { name, .. },
+        ) if func == name && name.starts_with("__sifr_defaultdict_") => {
+            *call_ty = patch_ty.clone();
+            true
         }
-        HirStmt::While {
-            body, else_body, ..
-        }
-        | HirStmt::For {
-            body, else_body, ..
-        }
-        | HirStmt::AsyncFor {
-            body, else_body, ..
-        } => {
-            apply_container_specialization_patches(body, pending);
-            if let Some(body) = else_body {
-                apply_container_specialization_patches(body, pending);
-            }
-        }
-        HirStmt::TryExcept { body, handlers, .. } => {
-            apply_container_specialization_patches(body, pending);
-            for handler in handlers {
-                apply_container_specialization_patches(&mut handler.body, pending);
-            }
-        }
-        HirStmt::TryFinally { body, finalbody } => {
-            apply_container_specialization_patches(body, pending);
-            apply_container_specialization_patches(finalbody, pending);
-        }
-        HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => {
-            apply_container_specialization_patches(body, pending);
-        }
-        HirStmt::NestedFunction { func, .. } => {
-            apply_container_specialization_patches(&mut func.body, pending);
-        }
-        HirStmt::Match { arms, .. } => {
-            for arm in arms {
-                apply_container_specialization_patches(&mut arm.body, pending);
-            }
-        }
-        _ => {}
+        _ => false,
+    };
+    if matches_declaration {
+        *ty = patch_ty;
+        pending.remove(name);
     }
 }
