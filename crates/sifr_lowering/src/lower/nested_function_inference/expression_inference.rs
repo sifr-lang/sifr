@@ -20,7 +20,8 @@ pub(super) fn analyze_assign(
     let target = &targets[0];
     match target {
         Expr::Name(name) => {
-            let inference_is_exact = defaultdict_shape_expr_is_lowering_exact(value, env);
+            let inference_is_exact =
+                defaultdict_shape_expr_is_lowering_exact(value, env, states, ctx);
             let value_ty = infer_expr_type(value, env, states, current_function, ctx);
             if let Some(callee_name) = nested_call_target_name(value, states) {
                 env.bind_call_result(name.id.to_string(), value_ty, callee_name);
@@ -58,7 +59,7 @@ pub(super) fn analyze_assign(
                 for (target_expr, value_expr) in tuple.elts.iter().zip(values.elts.iter()) {
                     if let Expr::Name(name) = target_expr {
                         let inference_is_exact =
-                            defaultdict_shape_expr_is_lowering_exact(value_expr, env);
+                            defaultdict_shape_expr_is_lowering_exact(value_expr, env, states, ctx);
                         let value_ty =
                             infer_expr_type(value_expr, env, states, current_function, ctx);
                         env.bind_var(name.id.as_str(), value_ty);
@@ -603,6 +604,7 @@ pub(super) fn infer_subscript_type(
     current_function: Option<&str>,
     ctx: &LowerCtx,
 ) -> Type {
+    let index_is_lowering_exact = defaultdict_shape_expr_is_lowering_exact(index, env, states, ctx);
     let object_ty = infer_expr_type(object, env, states, current_function, ctx);
     let index_ty = infer_expr_type(index, env, states, current_function, ctx);
     if let Expr::Name(name) = index {
@@ -621,7 +623,7 @@ pub(super) fn infer_subscript_type(
 
     if let Some(value_ty) = refine_defaultdict_subscript(
         object,
-        index,
+        index_is_lowering_exact,
         &object_ty,
         &index_ty,
         env,

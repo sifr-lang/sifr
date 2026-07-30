@@ -156,6 +156,30 @@ fn lowering_inexact_index_elements_do_not_force_declaration_hints() {
 }
 
 #[test]
+fn lowering_inexact_call_results_and_rebindings_do_not_force_declaration_hints() {
+    let get_element_source = "from sifr.collections import defaultdict\n\ndef solve(m: dict[int, int]) -> int:\n    d = defaultdict(list)\n    d[1].append(m.get(5))\n    return len(d[1])\n";
+    let pop_element_source = "from sifr.collections import defaultdict\n\ndef solve(mut values: list[int]) -> int:\n    d = defaultdict(list)\n    d[1].append(values.pop())\n    return len(d[1])\n";
+    let get_key_source = "from sifr.collections import defaultdict\n\ndef solve(m: dict[int, int]) -> int:\n    d = defaultdict(set)\n    k = m.get(5)\n    d[k].add(\"a\")\n    return len(d)\n";
+    let loop_get_key_source = "from sifr.collections import defaultdict\n\ndef solve(m: dict[int, int]) -> int:\n    d = defaultdict(set)\n    for k in m:\n        v = m.get(k)\n        d[v].add(k)\n    return len(d)\n";
+    let rebound_index_source = "from sifr.collections import defaultdict\n\ndef solve(values: list[int]) -> int:\n    d = defaultdict(list)\n    x = values[0]\n    x = 5\n    d[1].append(x)\n    return len(d[1])\n";
+
+    for source in [
+        get_element_source,
+        pop_element_source,
+        get_key_source,
+        loop_get_key_source,
+        rebound_index_source,
+    ] {
+        let (binding_ty, constructor_ty) = binding_and_constructor_types(source, "d");
+        assert_eq!(binding_ty, constructor_ty);
+        assert!(
+            binding_ty.contains_unknown_or_any(),
+            "lowering-inexact shape must not become a concrete declaration: {binding_ty:?}"
+        );
+    }
+}
+
+#[test]
 fn tuple_key_with_unresolved_member_is_not_adopted() {
     let source = "from sifr.collections import defaultdict\n\nclass Point:\n    x: int\n\ndef solve(p: Point) -> int:\n    d = defaultdict(set)\n    key = (p.x, 1)\n    d[key].add(\"a\")\n    return len(d)\n";
     assert!(lower_source_with_stdlib_collections(source).is_ok());

@@ -5,21 +5,30 @@ use super::{
 };
 use sifr_python_ast::visitor::{self, Visitor};
 
-pub(super) fn defaultdict_shape_expr_is_lowering_exact(expr: &Expr, env: &FunctionEnv) -> bool {
-    let mut visitor = LoweringInexactExprVisitor {
+pub(super) fn defaultdict_shape_expr_is_lowering_exact(
+    expr: &Expr,
+    env: &FunctionEnv,
+    states: &HashMap<String, LocalFunctionState<'_>>,
+    ctx: &LowerCtx,
+) -> bool {
+    let mut visitor = LoweringExactExprVisitor {
         inexact_bindings: &env.lowering_inexact_bindings,
+        states,
+        ctx,
         found: false,
     };
     visitor.visit_expr(expr);
     !visitor.found
 }
 
-struct LoweringInexactExprVisitor<'env> {
+struct LoweringExactExprVisitor<'env, 'source> {
     inexact_bindings: &'env std::collections::HashSet<String>,
+    states: &'env HashMap<String, LocalFunctionState<'source>>,
+    ctx: &'env LowerCtx,
     found: bool,
 }
 
-impl<'ast> Visitor<'ast> for LoweringInexactExprVisitor<'_> {
+impl<'ast> Visitor<'ast> for LoweringExactExprVisitor<'_, '_> {
     fn visit_expr(&mut self, expr: &'ast Expr) {
         if self.found {
             return;
@@ -27,15 +36,74 @@ impl<'ast> Visitor<'ast> for LoweringInexactExprVisitor<'_> {
         match expr {
             Expr::Name(name) if self.inexact_bindings.contains(name.id.as_str()) => {
                 self.found = true;
-                return;
             }
-            Expr::Subscript(subscript) if !matches!(subscript.slice.as_ref(), Expr::Slice(_)) => {
+            Expr::Name(_)
+            | Expr::StringLiteral(_)
+            | Expr::BytesLiteral(_)
+            | Expr::NumberLiteral(_)
+            | Expr::BooleanLiteral(_)
+            | Expr::NoneLiteral(_)
+            | Expr::FString(_) => {}
+            Expr::Subscript(subscript) if matches!(subscript.slice.as_ref(), Expr::Slice(_)) => {
+                self.visit_expr(subscript.value.as_ref());
+            }
+            Expr::Call(call) if call_has_stable_return_type(call, self.states, self.ctx) => {}
+            Expr::Tuple(_)
+            | Expr::List(_)
+            | Expr::Set(_)
+            | Expr::Dict(_)
+            | Expr::BinOp(_)
+            | Expr::UnaryOp(_)
+            | Expr::If(_) => {
+                visitor::walk_expr(self, expr);
+            }
+            Expr::Compare(_) | Expr::BoolOp(_) => {}
+            _ => {
                 self.found = true;
-                return;
             }
-            _ => {}
         }
-        visitor::walk_expr(self, expr);
+    }
+}
+
+fn call_has_stable_return_type(
+    call: &ExprCall,
+    states: &HashMap<String, LocalFunctionState<'_>>,
+    ctx: &LowerCtx,
+) -> bool {
+    let Expr::Name(name) = call.func.as_ref() else {
+        return false;
+    };
+    if matches!(
+        name.id.as_str(),
+        "bool" | "float" | "int" | "len" | "range" | "str"
+    ) {
+        return true;
+    }
+    let return_type = states
+        .get(name.id.as_str())
+        .map(|state| &state.return_type)
+        .or_else(|| {
+            ctx.functions
+                .get(name.id.as_str())
+                .map(|function| function.return_type.as_ref())
+        });
+    return_type.is_some_and(|ty| !ty.contains_unknown_or_any() && !type_contains_type_variable(ty))
+}
+
+fn type_contains_type_variable(ty: &Type) -> bool {
+    match ty.resolve_alias() {
+        Type::TypeVar(_) => true,
+        Type::List(element)
+        | Type::Set(element)
+        | Type::Iterable(element)
+        | Type::Iterator(element) => type_contains_type_variable(element),
+        Type::Dict(key, value) | Type::Result(key, value) => {
+            type_contains_type_variable(key) || type_contains_type_variable(value)
+        }
+        Type::Tuple(elements) | Type::Union(elements) | Type::Intersection(elements) => {
+            elements.iter().any(type_contains_type_variable)
+        }
+        _ => false,
     }
 }
 
@@ -88,7 +156,7 @@ pub(super) fn refine_defaultdict_method_call(
     if call
         .args
         .first()
-        .is_some_and(|arg| !defaultdict_shape_expr_is_lowering_exact(arg, env))
+        .is_some_and(|arg| !defaultdict_shape_expr_is_lowering_exact(arg, env, states, ctx))
     {
         return;
     }
@@ -139,14 +207,14 @@ pub(super) fn refine_defaultdict_method_call(
 
 pub(super) fn refine_defaultdict_subscript(
     object: &Expr,
-    index: &Expr,
+    index_is_lowering_exact: bool,
     object_ty: &Type,
     index_ty: &Type,
     env: &mut FunctionEnv,
     states: &mut HashMap<String, LocalFunctionState<'_>>,
     current_function: Option<&str>,
 ) -> Option<Type> {
-    if !defaultdict_shape_expr_is_lowering_exact(index, env) {
+    if !index_is_lowering_exact {
         return None;
     }
     let Expr::Name(name) = object else {

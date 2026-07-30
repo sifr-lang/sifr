@@ -146,9 +146,7 @@ impl FunctionEnv {
     }
 
     pub(super) fn record_lowering_inference_exactness(&mut self, name: &str, is_exact: bool) {
-        if is_exact {
-            self.lowering_inexact_bindings.remove(name);
-        } else {
+        if !is_exact {
             self.lowering_inexact_bindings.insert(name.to_string());
         }
     }
@@ -560,7 +558,8 @@ pub(super) fn analyze_stmt(
         Stmt::AnnAssign(assign) => {
             if let Expr::Name(name) = assign.target.as_ref() {
                 if let Some(value) = &assign.value {
-                    let inference_is_exact = defaultdict_shape_expr_is_lowering_exact(value, env);
+                    let inference_is_exact =
+                        defaultdict_shape_expr_is_lowering_exact(value, env, states, ctx);
                     let value_ty = infer_expr_type(value, env, states, current_function, ctx);
                     env.bind_var(name.id.as_str(), value_ty);
                     env.record_lowering_inference_exactness(name.id.as_str(), inference_is_exact);
@@ -728,6 +727,9 @@ pub(super) fn analyze_stmt(
             let mut nonlocal_names = HashSet::new();
             collect_nonlocal_names(&func.body, &mut nonlocal_names);
             let mut nested_env = env.clone();
+            for local_name in local_bindings.iter().chain(param_names.iter()) {
+                nested_env.lowering_inexact_bindings.remove(local_name);
+            }
             for param in &state.params {
                 nested_env.bind_var(param.name.as_str(), param.ty.clone());
             }

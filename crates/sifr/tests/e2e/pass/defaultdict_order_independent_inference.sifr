@@ -29,9 +29,16 @@ def unique_indexed_values(values: list[str]) -> int:
     return len(groups[1])
 
 
+def grouped_optional_lookup(values: dict[int, int]) -> int:
+    groups = defaultdict(list)
+    groups[1].append(values.get(5))
+    return len(groups[1])
+
+
 def main():
     assert unique_rows([(0, "a"), (0, "b"), (1, "a")])
     assert not unique_rows([(0, "a"), (0, "a")])
     assert grouped_words(["one", "two", "three"]) == 2
     assert grouped_indexed_values([7]) == 1
     assert unique_indexed_values(["value"]) == 1
+    assert grouped_optional_lookup({5: 7}) == 1
