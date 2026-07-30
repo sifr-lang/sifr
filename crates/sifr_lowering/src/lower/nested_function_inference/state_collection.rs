@@ -20,6 +20,7 @@ const MAX_INFERENCE_PASSES: usize = 8;
 pub(in crate::lower) struct NestedFunctionInference {
     pub(in crate::lower) function_types: HashMap<String, FunctionType>,
     pub(in crate::lower) binding_hints: HashMap<String, Type>,
+    pub(in crate::lower) exact_dict_write_hints: HashMap<String, Type>,
     pub(in crate::lower) function_captures: HashMap<String, Vec<(String, Type)>>,
     pub(in crate::lower) function_mutated_captures: HashMap<String, Vec<String>>,
 }
@@ -87,6 +88,7 @@ pub(super) fn inferred_param_convention(param: &ParamState) -> AstParamConventio
 pub(super) struct FunctionEnv {
     pub(super) vars: HashMap<String, Type>,
     pub(super) call_return_origins: HashMap<String, String>,
+    pub(super) exact_dict_write_shapes: HashMap<String, Option<(Type, Type)>>,
 }
 
 impl FunctionEnv {
@@ -102,6 +104,7 @@ impl FunctionEnv {
         };
         self.vars.insert(name.to_string(), ty);
         self.call_return_origins.remove(name);
+        self.exact_dict_write_shapes.remove(name);
     }
 
     pub(super) fn bind_call_result(&mut self, name: String, ty: Type, callee: String) {
@@ -115,7 +118,53 @@ impl FunctionEnv {
             ty
         };
         self.vars.insert(name.clone(), ty);
+        self.exact_dict_write_shapes.remove(&name);
         self.call_return_origins.insert(name, callee);
+    }
+
+    pub(super) fn record_dict_write(&mut self, name: &str, key_ty: Type, value_ty: Type) {
+        let shape = (key_ty, value_ty);
+        self.exact_dict_write_shapes
+            .entry(name.to_string())
+            .and_modify(|exact| {
+                if exact.as_ref() != Some(&shape) {
+                    *exact = None;
+                }
+            })
+            .or_insert(Some(shape));
+    }
+
+    pub(super) fn disqualify_exact_dict_writes(&mut self, name: &str) {
+        self.exact_dict_write_shapes.insert(name.to_string(), None);
+    }
+
+    pub(super) fn merge_exact_dict_writes(&mut self, source: &Self) {
+        // Every inference branch starts from a clone of its parent environment,
+        // so `source` contains every shape already present in `self`.
+        for (name, source_shape) in &source.exact_dict_write_shapes {
+            self.exact_dict_write_shapes
+                .entry(name.clone())
+                .and_modify(|target_shape| {
+                    if target_shape.as_ref() != source_shape.as_ref() {
+                        *target_shape = None;
+                    }
+                })
+                .or_insert_with(|| source_shape.clone());
+        }
+    }
+
+    fn exact_dict_write_hints(&self) -> HashMap<String, Type> {
+        self.exact_dict_write_shapes
+            .iter()
+            .filter_map(|(name, shape)| {
+                shape.as_ref().map(|(key_ty, value_ty)| {
+                    (
+                        name.clone(),
+                        Type::Dict(Box::new(key_ty.clone()), Box::new(value_ty.clone())),
+                    )
+                })
+            })
+            .collect()
     }
 }
 
@@ -148,10 +197,12 @@ fn infer_function_types(
         let mut env = FunctionEnv {
             vars: outer_bindings,
             call_return_origins: HashMap::new(),
+            exact_dict_write_shapes: HashMap::new(),
         };
         analyze_block(stmts, &mut env, &mut states, None, ctx);
         return NestedFunctionInference {
             function_types: HashMap::new(),
+            exact_dict_write_hints: env.exact_dict_write_hints(),
             binding_hints: env.vars,
             function_captures: HashMap::new(),
             function_mutated_captures: HashMap::new(),
@@ -169,6 +220,7 @@ fn infer_function_types(
         let mut env = FunctionEnv {
             vars: binding_hints.clone(),
             call_return_origins: HashMap::new(),
+            exact_dict_write_shapes: HashMap::new(),
         };
         analyze_block(stmts, &mut env, &mut states, None, ctx);
         binding_hints = env.vars;
@@ -180,6 +232,7 @@ fn infer_function_types(
     let mut env = FunctionEnv {
         vars: binding_hints,
         call_return_origins: HashMap::new(),
+        exact_dict_write_shapes: HashMap::new(),
     };
     analyze_block(stmts, &mut env, &mut states, None, ctx);
     let function_captures = collect_nested_function_captures(stmts, &env, &states);
@@ -202,6 +255,7 @@ fn infer_function_types(
 
     NestedFunctionInference {
         function_types: finalize_nested_function_types(&mut states, ctx),
+        exact_dict_write_hints: env.exact_dict_write_hints(),
         binding_hints: env.vars,
         function_captures,
         function_mutated_captures,
@@ -372,7 +426,7 @@ pub(super) fn analyze_block(
     }
 }
 
-pub(super) fn collect_current_function_local_bindings(
+pub(in crate::lower) fn collect_current_function_local_bindings(
     stmts: &[Stmt],
     bindings: &mut HashSet<String>,
 ) {
@@ -502,15 +556,23 @@ pub(super) fn analyze_stmt(
         ),
         Stmt::AugAssign(aug) => {
             let value_ty = infer_expr_type(&aug.value, env, states, current_function, ctx);
-            if let Expr::Name(name) = aug.target.as_ref() {
-                refine_name_with_binary_context(
-                    name.id.as_str(),
-                    &value_ty,
-                    aug.op,
-                    env,
-                    states,
-                    current_function,
-                );
+            match aug.target.as_ref() {
+                Expr::Name(name) => {
+                    refine_name_with_binary_context(
+                        name.id.as_str(),
+                        &value_ty,
+                        aug.op,
+                        env,
+                        states,
+                        current_function,
+                    );
+                }
+                Expr::Subscript(subscript) => {
+                    if let Expr::Name(object_name) = subscript.value.as_ref() {
+                        env.disqualify_exact_dict_writes(object_name.id.as_str());
+                    }
+                }
+                _ => {}
             }
         }
         Stmt::Expr(expr_stmt) => {

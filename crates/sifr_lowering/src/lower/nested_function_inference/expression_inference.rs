@@ -30,6 +30,7 @@ pub(super) fn analyze_assign(
             let Expr::Name(object_name) = sub.value.as_ref() else {
                 return;
             };
+            env.record_dict_write(object_name.id.as_str(), index_ty.clone(), value_ty.clone());
             let current_object_ty = lookup_name_type(object_name.id.as_str(), env, states, ctx);
             let refined_object_ty = match current_object_ty {
                 Type::Dict(key_ty, value_ty_current) => Type::Dict(
@@ -85,6 +86,7 @@ pub(super) fn merge_env_types(target: &mut FunctionEnv, source: &FunctionEnv) {
         );
         target.vars.insert(name.clone(), merged);
     }
+    target.merge_exact_dict_writes(source);
 }
 
 pub(super) fn infer_expr_type(

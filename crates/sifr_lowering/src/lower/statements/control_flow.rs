@@ -2,15 +2,16 @@ use super::{
     apply_narrowing, body_always_leaves_current_path, callable_builtin_element_type,
     detect_false_exit_sequence_guards, detect_false_nonzero_integer_guards,
     detect_narrowing_condition, detect_range_sequence_guards, detect_true_nonzero_integer_guards,
-    detect_true_sequence_guards, ensure_mutable_parameter_binding, failed_initializer_taint,
-    finish_async_generator_advance_for_expr, invalidate_rebound_binding_facts,
-    is_collection_backed_iter_source, loop_body_mutates_iter_source, lower_expr,
-    lower_star_unpack_assign, lower_stmts, lower_tuple_unpack_assign,
-    maybe_record_dict_assignment_guard, merge_exhaustive_branch_sequence_guards, name_diagnostics,
-    numeric_domain_for_type, numeric_sentinel_kind, ownership_diagnostics,
-    predeclare_exhaustive_if_assigned_names, reconcile_optional_reassignment,
-    record_async_generator_advance_binding, record_const_integer_binding, record_len_alias_fact,
-    record_sequence_pointer_fact, resolve_field_type_from_type, resolve_object_field_type,
+    detect_true_sequence_guards, empty_collection_literal_kind, ensure_mutable_parameter_binding,
+    failed_initializer_taint, finish_async_generator_advance_for_expr,
+    invalidate_rebound_binding_facts, is_collection_backed_iter_source,
+    loop_body_mutates_iter_source, lower_expr, lower_star_unpack_assign, lower_stmts,
+    lower_tuple_unpack_assign, maybe_record_dict_assignment_guard,
+    merge_exhaustive_branch_sequence_guards, name_diagnostics, numeric_domain_for_type,
+    numeric_sentinel_kind, ownership_diagnostics, predeclare_exhaustive_if_assigned_names,
+    reconcile_optional_reassignment, record_async_generator_advance_binding,
+    record_const_integer_binding, record_len_alias_fact, record_sequence_pointer_fact,
+    resolve_field_type_from_type, resolve_object_field_type,
     restore_const_integer_state_after_branches, seed_binding_after_failed_initializer,
     seed_exhaustive_if_bindings, sequence_shape_fact, should_adopt_inferred_binding_hint,
     should_rebind_simple_name, statement_diagnostics, str, task_group_spawn_owner,
@@ -285,7 +286,7 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
         ctx.scope.lookup(&name).is_some()
     };
     let error_count_before_initializer = ctx.begin_initializer_lowering();
-    let Some(value) = lower_expr(&assign.value, ctx) else {
+    let Some(mut value) = lower_expr(&assign.value, ctx) else {
         if !should_treat_as_existing_binding {
             let error_taint = failed_initializer_taint(
                 ctx,
@@ -386,18 +387,30 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
         Some(HirStmt::Assign { name, value })
     } else {
         // New variable (type inferred)
-        let binding_ty = ctx
+        let allow_general_hint = ctx.can_adopt_empty_collection_hints();
+        let allow_order_independent_dict_hint = ctx.can_adopt_empty_plain_dict_hint(&name);
+        let adopted_hint_ty = ctx
             .inferred_binding_hint(&name)
             .filter(|hint| {
                 should_adopt_inferred_binding_hint(
                     &assign.value,
                     &value_ty,
                     hint,
-                    ctx.can_adopt_empty_collection_hints(),
+                    allow_general_hint,
+                    allow_order_independent_dict_hint,
                 )
             })
-            .cloned()
-            .unwrap_or_else(|| value_ty.clone());
+            .cloned();
+        let binding_ty = adopted_hint_ty.clone().unwrap_or_else(|| value_ty.clone());
+        let inferred_empty_dict_ty = (empty_collection_literal_kind(&assign.value) == Some("dict")
+            && allow_order_independent_dict_hint)
+            .then_some(adopted_hint_ty)
+            .flatten();
+        if let (Some(specialized_ty), HirExpr::DictLiteral { ty: literal_ty, .. }) =
+            (&inferred_empty_dict_ty, &mut value)
+        {
+            *literal_ty = specialized_ty.clone();
+        }
         ctx.scope.define(name.clone(), binding_ty.clone());
         ctx.record_must_use_binding(&name, &binding_ty);
         if matches!(value.ty(), Type::Int | Type::LiteralInt(_))
@@ -422,8 +435,13 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             ctx.clear_sequence_shape_fact(&name);
         }
         record_len_alias_fact(ctx, &name, &assign.value);
-        ctx.empty_dict_specializations.remove(&name);
         ctx.pending_container_specialization_patches.remove(&name);
+        if let Some(specialized_ty) = inferred_empty_dict_ty {
+            ctx.empty_dict_specializations
+                .insert(name.clone(), specialized_ty);
+        } else {
+            ctx.empty_dict_specializations.remove(&name);
+        }
         record_sequence_pointer_fact(ctx, &name, &assign.value);
         Some(HirStmt::Let {
             name,

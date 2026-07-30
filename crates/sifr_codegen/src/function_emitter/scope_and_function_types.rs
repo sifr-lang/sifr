@@ -9,11 +9,10 @@ use super::{
     collect_sifr_int_result_call_arg_method_params, collect_sifr_int_result_function_param_names,
     collect_sifr_int_result_method_param_names, function_returns_result_sifr_int,
     hir_function_returns_sifr_int_with_extra_forced,
-    hir_function_returns_sifr_int_with_extra_forced_and_shadowed, is_result_int_type, make_union,
+    hir_function_returns_sifr_int_with_extra_forced_and_shadowed, is_result_int_type,
     nested_function_mutates_capture, result_int_return_type_to_sifr_int, result_method_key,
-    traversal, HashMap, HashSet, HirExpr, HirFunction, HirModule, HirParam, HirStmt,
-    NestedFnCapture, OwnershipKind, ParamConvention, RustEmitter, RustExpr, RustParam, RustStmt,
-    RustType, RustTypeParam, TraversalConfig, Type,
+    HashMap, HashSet, HirFunction, HirModule, HirParam, HirStmt, NestedFnCapture, OwnershipKind,
+    ParamConvention, RustEmitter, RustExpr, RustParam, RustStmt, RustType, RustTypeParam, Type,
 };
 impl RustEmitter {
     pub(crate) fn effective_nested_param_convention(
@@ -79,39 +78,6 @@ impl RustEmitter {
                     .insert(param.name.clone());
             }
         }
-    }
-
-    pub(crate) fn register_local_body_binding_types(&mut self, body: &[HirStmt]) {
-        let mut bindings = HashMap::new();
-        let mut widened_bindings = HashSet::new();
-        let mut on_stmt = |stmt: &HirStmt| match stmt {
-            HirStmt::Let { name, ty, .. } => {
-                bindings.entry(name.clone()).or_insert_with(|| ty.clone());
-            }
-            HirStmt::Assign { name, value }
-                if matches!(value, HirExpr::NoneLiteral) || matches!(value.ty(), Type::None) =>
-            {
-                if let Some(existing) = bindings.get(name).cloned() {
-                    if !crate::helpers::is_option_type(&existing) {
-                        bindings.insert(name.clone(), make_union(vec![existing, Type::None]));
-                        widened_bindings.insert(name.clone());
-                    }
-                }
-            }
-            _ => {}
-        };
-        let mut on_expr = |_expr: &HirExpr| {};
-        traversal::walk_stmts(
-            body,
-            TraversalConfig::LOCAL_SCOPE_ONLY,
-            &mut on_stmt,
-            &mut on_expr,
-        );
-        for (name, ty) in bindings {
-            self.local_binding_types.entry(name).or_insert(ty);
-        }
-        self.none_widened_local_bindings.extend(widened_bindings);
-        self.register_sifr_int_forced_local_bindings(body);
     }
 
     pub(crate) fn register_sifr_int_forced_local_bindings(&self, body: &[HirStmt]) {
