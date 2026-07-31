@@ -30,6 +30,41 @@ fn field_read_from_borrowed_parameter_clones_move_value() {
 }
 
 #[test]
+fn inherited_field_value_read_uses_shared_storage_rerooting() {
+    let child = Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "Child".to_string(),
+        fields: vec![("items".to_string(), Type::List(Box::new(Type::Int)))],
+        methods: Vec::new(),
+        parent_class: Some("Base".to_string()),
+    };
+    let object = HirExpr::Name {
+        name: "self".to_string(),
+        binding_id: None,
+        ty: child,
+    };
+    let mut emitter = RustEmitter::new();
+    emitter.current_class_name = Some("Child".to_string());
+    emitter.parent_fields.insert(
+        "Child".to_string(),
+        (
+            "Base".to_string(),
+            ["items".to_string()].into_iter().collect(),
+        ),
+    );
+
+    let lowered = emitter.lower_field_access_expr_with_lowered_object(
+        &object,
+        "items",
+        &Type::List(Box::new(Type::Int)),
+        RustExpr::Ident("self".to_string()),
+    );
+
+    assert_eq!(crate::render_expr(&lowered), "self.base.items.clone()");
+}
+
+#[test]
 fn checked_mutating_field_receiver_does_not_clone() {
     let class = Type::Class {
         identity: None,

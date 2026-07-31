@@ -179,6 +179,38 @@ class Counter:
 }
 
 #[test]
+fn same_call_place_conflict_populates_canonical_binding_argument() {
+    let source = r#"
+class Helper:
+    items: list[int]
+
+    def absorb(self, mut other: Helper) -> None:
+        self.items.append(1)
+        other.items.append(2)
+
+class Owner:
+    helper: Helper
+
+def conflict(mut owner: Owner) -> None:
+    owner.helper.absorb(owner.helper)
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("overlapping receiver and argument should be rejected"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+            && matches!(
+                error.args.get("binding"),
+                Some(sifr_diagnostics::DiagnosticArg::String(binding))
+                    if binding == "owner.helper"
+            )
+    }));
+}
+
+#[test]
 fn receiver_inference_closes_transitive_delegation_and_attaches_call_metadata() {
     let source = r#"
 class Leaf:

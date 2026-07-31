@@ -18,8 +18,9 @@ pub(in crate::lower) fn double_mutable_borrow(
     func_name: &str,
     range: TextRange,
 ) {
-    ctx.error_with_code_at(
-        DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW,
+    same_call_borrow_conflict(
+        ctx,
+        name,
         format!(
             "cannot borrow '{name}' as mutable more than once in the same call to '{func_name}'"
         ),
@@ -33,8 +34,9 @@ pub(in crate::lower) fn mutable_borrow_after_immutable(
     func_name: &str,
     range: TextRange,
 ) {
-    ctx.error_with_code_at(
-        DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW,
+    same_call_borrow_conflict(
+        ctx,
+        name,
         format!(
             "cannot borrow '{name}' as mutable because it is already borrowed as immutable in the same call to '{func_name}'"
         ),
@@ -48,8 +50,9 @@ pub(in crate::lower) fn immutable_borrow_after_mutable(
     func_name: &str,
     range: TextRange,
 ) {
-    ctx.error_with_code_at(
-        DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW,
+    same_call_borrow_conflict(
+        ctx,
+        name,
         format!(
             "cannot borrow '{name}' as immutable because it is already borrowed as mutable in the same call to '{func_name}'"
         ),
@@ -223,9 +226,25 @@ pub(in crate::lower) fn same_call_place_conflict(
     place: &str,
     range: TextRange,
 ) {
-    ctx.error_with_code_at(
-        DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW,
+    same_call_borrow_conflict(
+        ctx,
+        place,
         format!("borrow conflict for {place} in the same call"),
+        range,
+    );
+}
+
+fn same_call_borrow_conflict(ctx: &mut LowerCtx, binding: &str, message: String, range: TextRange) {
+    let mut args = BTreeMap::new();
+    args.insert(
+        "binding".to_string(),
+        DiagnosticArg::String(binding.to_string()),
+    );
+    ctx.error_with_code_args_help_at(
+        DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW,
+        message,
+        args,
+        None,
         range,
     );
 }

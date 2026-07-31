@@ -213,14 +213,27 @@ impl RustEmitter {
                 _ => None,
             }
         };
-        let lowered_base = class_name
-            .as_ref()
+        self.lower_field_storage_access_for_class(class_name.as_deref(), field, lowered_object)
+    }
+
+    pub(crate) fn lower_field_storage_access_for_class(
+        &self,
+        class_name: Option<&str>,
+        field: &str,
+        lowered_object: RustExpr,
+    ) -> RustExpr {
+        let parent_name = class_name
             .and_then(|class_name| self.parent_fields.get(class_name))
             .filter(|(_, parent_fields)| parent_fields.contains(field))
-            .map_or(lowered_object.clone(), |(parent_name, _)| RustExpr::Field {
+            .map(|(parent_name, _)| parent_name);
+        let lowered_base = if let Some(parent_name) = parent_name {
+            RustExpr::Field {
                 expr: Box::new(lowered_object),
                 field: parent_name.to_lowercase(),
-            });
+            }
+        } else {
+            lowered_object
+        };
         RustExpr::Field {
             expr: Box::new(lowered_base),
             field: field.to_string(),
