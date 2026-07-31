@@ -183,6 +183,14 @@ def cloneTree(node: TreeNode | None) -> TreeNode | None:
     nodes: list[TreeNode] = []
     nodes.append(TreeNode(node.value, left_copy))
     return TreeNode(node.value, left_copy)
+
+def wrapBorrowed(node: TreeNode | None) -> TreeNode:
+    return TreeNode(5, node)
+
+def wrapBorrowedNested(node: TreeNode | None) -> list[TreeNode]:
+    nodes: list[TreeNode] = []
+    nodes.append(TreeNode(6, node))
+    return nodes
 "#,
     );
 
@@ -202,6 +210,24 @@ def cloneTree(node: TreeNode | None) -> TreeNode | None:
         !rust_code
             .contains("left_copy.map(|__sifr_option_value| Box::new(__sifr_option_value)).map("),
         "repeated constructor adaptation must not double-box named optional values:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains(
+            "TreeNode::new(5_i64, (node).clone().map(|__sifr_option_value| Box::new(__sifr_option_value)))"
+        ),
+        "borrowed optional parameters must be cloned before recursive constructor boxing:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains(
+            "nodes.push(TreeNode::new(6_i64, (node).clone().map(|__sifr_option_value| Box::new(__sifr_option_value))))"
+        ),
+        "nested constructors must use the same clone-before-map adaptation:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains(
+            "node.map(|__sifr_option_value| Box::new(__sifr_option_value))"
+        ),
+        "borrowed optional parameters must never be moved by mapping before they are cloned:\n{rust_code}"
     );
 }
 

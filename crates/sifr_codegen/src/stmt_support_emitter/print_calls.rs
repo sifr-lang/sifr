@@ -433,9 +433,6 @@ impl RustEmitter {
         if Self::is_some_call_expr_for_ir(&expr) {
             return Self::ensure_some_box_inner_for_ir(expr);
         }
-        if Self::is_option_box_map_expr_for_ir(&expr) {
-            return expr;
-        }
         crate::RustExpr::MethodCall {
             receiver: Box::new(expr),
             method: "map".to_string(),
@@ -454,26 +451,5 @@ impl RustEmitter {
                 is_move: false,
             }],
         }
-    }
-
-    fn is_option_box_map_expr_for_ir(expr: &crate::RustExpr) -> bool {
-        let crate::RustExpr::MethodCall { method, args, .. } = expr else {
-            return false;
-        };
-        if method != "map" || args.len() != 1 {
-            return false;
-        }
-        let crate::RustExpr::Closure { params, body, .. } = &args[0] else {
-            return false;
-        };
-        let [crate::RustParam::Named { name, .. }] = params.as_slice() else {
-            return false;
-        };
-        matches!(
-            body.as_ref(),
-            crate::RustExpr::FnCall { args, .. }
-                if Self::is_box_new_call_expr_for_ir(body)
-                    && matches!(args.as_slice(), [crate::RustExpr::Ident(arg_name)] if arg_name == name)
-        )
     }
 }
