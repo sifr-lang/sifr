@@ -29,7 +29,11 @@ Whole-phase review pass 5 then found missing structured arguments for
 `SIFR-PROTO-0005`, `SIFR-PROTO-0006`, and the phase-adopted
 `SIFR-OWN-0005` helper, plus the absence of a live receiver/place
 registry-to-emitter guardrail. The focused diagnostic-contract remediation is
-in review. Closure PR [#3088](https://github.com/sifr-lang/sifr/pull/3088)
+in review. Its diagnostics-baseline prerequisite merged in
+[#3095](https://github.com/sifr-lang/sifr/pull/3095) after five review rounds
+closed every finding and the terminal Opus verdict returned `SATISFIED` with
+zero actionable findings. Closure PR
+[#3088](https://github.com/sifr-lang/sifr/pull/3088)
 remains draft until this remediation merges, the authoritative integrated
 merge gate exits 0 on an uncontended host, and a terminal whole-phase review
 returns `SATISFIED` with zero findings.
@@ -1183,6 +1187,14 @@ Current Item 2 validation evidence:
   updates the exact baseline, exercises non-alphabetical HIR declaration order,
   distinguishes HIR emission order from recovery-grouped rendered order, and
   adds the diagnostics baselines suite to the recorded evidence.
+- Diagnostics-baseline prerequisite
+  [#3095](https://github.com/sifr-lang/sifr/pull/3095) corrected the unrelated
+  stale bare-`defaultdict` expectation already present on `origin/main`. The
+  terminal pass-5 Opus review returned `SATISFIED` with zero actionable
+  findings. After integrating that merge, the authoritative diagnostics
+  baselines suite passes all `150` cases / `178` variants with zero failures,
+  including both the prerequisite fixture and the widened `SIFR-PROTO-0006`
+  class-identity message.
 
 Focused diagnostic-contract validation includes:
 
