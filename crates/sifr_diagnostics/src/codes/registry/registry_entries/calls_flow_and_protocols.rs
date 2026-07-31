@@ -426,10 +426,10 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "Fixed Rust trait receiver mutation is unsupported.",
             Severity::Error,
             "crates/sifr/tests/e2e/fail/operator_receiver_mutation_rejected.sifr",
-            "method '{method}' cannot mutate its receiver because Rust trait '{trait_name}' fixes the receiver convention",
+            "class '{class_name}' method '{method}' cannot mutate its receiver because Rust trait '{trait_name}' fixes the receiver convention",
             "sifr_lowering::lower::method_receiver_analysis",
-            [arg!("method"), arg!("trait_name")],
-            ["method", "trait_name"]
+            [arg!("class_name"), arg!("method"), arg!("trait_name")],
+            ["class_name", "method", "trait_name"]
         ),
     active_entry!(
             "SIFR-CLASS-0001",

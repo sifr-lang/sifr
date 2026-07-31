@@ -88,6 +88,9 @@ mod method_diagnostics;
 mod method_receiver_analysis;
 #[cfg(test)]
 mod method_receiver_analysis_tests;
+mod method_receiver_diagnostics;
+#[cfg(test)]
+mod method_receiver_diagnostics_tests;
 #[cfg(test)]
 mod method_receiver_footprint_tests;
 mod method_receiver_places;
