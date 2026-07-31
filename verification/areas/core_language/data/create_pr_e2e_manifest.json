@@ -12,6 +12,7 @@
     "class_methods",
     "class_field_mutating_receiver_places",
     "class_field_mutating_receiver_contexts",
+    "class_field_callable_invocation_disjoint_sibling",
     "constructor_mutating_receiver_places",
     "owned_temporary_mutable_receivers",
     "protocol_receiver_conformance_controls",
