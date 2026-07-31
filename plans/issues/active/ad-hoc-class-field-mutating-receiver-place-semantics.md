@@ -29,7 +29,8 @@ Whole-phase review pass 5 then found missing structured arguments for
 `SIFR-PROTO-0005`, `SIFR-PROTO-0006`, and the phase-adopted
 `SIFR-OWN-0005` helper, plus the absence of a live receiver/place
 registry-to-emitter guardrail. The focused diagnostic-contract remediation is
-in review. Its diagnostics-baseline prerequisite merged in
+in review in [#3096](https://github.com/sifr-lang/sifr/pull/3096). Its
+diagnostics-baseline prerequisite merged in
 [#3095](https://github.com/sifr-lang/sifr/pull/3095) after five review rounds
 closed every finding and the terminal Opus verdict returned `SATISFIED` with
 zero actionable findings. Closure PR
@@ -694,8 +695,8 @@ five receiver/place diagnostics owned here: `SIFR-OWN-0002`,
 `SIFR-PROTO-0006`.
 
 The guardrail is deliberately not generalized to every active registry code.
-An exploratory repository-wide run exposed 120 pre-existing missing-argument
-failures across 11 unrelated diagnostic families. Completing that migration
+An exploratory repository-wide run exposed many pre-existing missing-argument
+failures across unrelated diagnostic families. Completing that migration
 belongs to the `diagnostics` owner as a separate diagnostics-program item;
 this receiver/place phase neither waives those failures nor expands into that
 unrelated migration.
@@ -1167,7 +1168,7 @@ Current Item 2 validation evidence:
   [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-1.md)
   independently verified that the pass-5 structured-argument findings and the
   five-code receiver/place emission guardrail were substantively closed, and
-  agreed that the 120 pre-existing unrelated source-fixture argument gaps
+  agreed that the many pre-existing unrelated source-fixture argument gaps
   belong to a separate diagnostics-owner migration. It returned
   `NOT SATISFIED` after finding that `SIFR-PROTO-0006` still emitted from
   randomized `HashSet` order and lacked a class discriminator, so recovery
@@ -1215,6 +1216,14 @@ Current Item 2 validation evidence:
   signature `ac6d879686517f2c`). Its sole advisory is the non-blocking warm
   wall-time target after cold cache population; no budget, threshold, waiver,
   or validation rule changed.
+- Diagnostic-contract remediation published-head review pass 4:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-4.md)
+  independently verified the implementation, exact published head, tests,
+  prerequisite isolation, taxonomy correction, PR metadata, and validation
+  record. It returned `NOT SATISFIED` only because the exact count previously
+  attached to the intentionally scoped live-emitter guardrail was not
+  reproducible at this head. The response removes that brittle count from code
+  and tracking while retaining the verified separate-migration rationale.
 
 Focused diagnostic-contract validation includes:
 
