@@ -48,7 +48,7 @@ successor and is summarized here.
 | 38 | Phase 38: Docs and Documentation | unspecified | [38_docs_and_documentation.md](./38_docs_and_documentation.md) |
 | 39 | Phase 39: Rust Interop | completed, audited (2026-06-22, PRs #2702-#2729) | [39_rust_interop.md](./39_rust_interop.md) |
 | 40 | Phase 40: Stable Channel GA Promotion and Release Governance | in progress | [40_stable_channel_ga_promotion_and_release_governance.md](./40_stable_channel_ga_promotion_and_release_governance.md) |
-| ALG-CORPUS | Ad Hoc Algorithmic Full-Corpus Pre-Existing Failures | active non-blocking follow-up | [../issues/active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md](../issues/active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md) |
+| ALG-CORPUS | Ad Hoc Algorithmic Full-Corpus Pre-Existing Failures | closeout in progress | [../issues/active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md](../issues/active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md) |
 | DICT-AUG | Ad Hoc Dict Missing-Key Augassign Semantics | active non-blocking correctness follow-up; deferral expires 2026-10-31 | [../issues/active/ad-hoc-dict-missing-key-augassign-semantics.md](../issues/active/ad-hoc-dict-missing-key-augassign-semantics.md) |
 | GENC-NAN | Ad Hoc Generated NaN Constant Clippy Quality | active non-blocking follow-up; release divergence expires 2026-10-31 | [adhoc_generated_nan_constant_clippy_quality.md](../issues/active/adhoc_generated_nan_constant_clippy_quality.md) |
 | PKG-RUST | Ad Hoc Packaged Candidate Generated Rust | deferred follow-up | [adhoc_packaged_candidate_generated_rust.md](../issues/active/adhoc_packaged_candidate_generated_rust.md) |

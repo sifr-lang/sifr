@@ -929,17 +929,16 @@ install/update guidance, Rust interop claims, and the VS Code extension.
   packaged candidate is a non-prerequisite tooling follow-up recorded in
   [`adhoc_packaged_candidate_generated_rust.md`](../issues/active/adhoc_packaged_candidate_generated_rust.md); GA docs explicitly record the
   affected action as outside the packaged `0.1.0` qualified surface.
-- The exact-source release profile remains blocking while consuming the
-  indexed, expiry-bound
+- The exact-source release profile remains blocking. The completed
   [`ALG-CORPUS`](../issues/active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md)
-  and
+  remediation restores the complete pinned algorithm corpus plus taxonomy
+  self-test to release qualification, matching nightly. The indexed,
+  expiry-bound
   [`GENC-NAN`](../issues/active/adhoc_generated_nan_constant_clippy_quality.md)
-  non-prerequisite records.
-  Release keeps the representative algorithm subset plus taxonomy self-test,
-  and runs every full generated-code gate and corpus entry while requiring the
-  three `GENC-NAN` entries to reproduce only their recorded Clippy lint.
-  Nightly retains both unmodified full suites; neither record permits a test
-  skip, broad allow, threshold change, or source fallback.
+  non-prerequisite record remains: release runs every generated-code corpus
+  entry while requiring its three entries to reproduce only the recorded
+  Clippy lint. Neither profile permits a test skip, broad allow, threshold
+  change, or source fallback.
 
 **Negative validation:**
 
