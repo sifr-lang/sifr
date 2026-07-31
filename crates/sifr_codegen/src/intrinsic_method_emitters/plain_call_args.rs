@@ -1,8 +1,7 @@
 use super::{
     registry_can_construct_error_from_message, registry_ensure_some_box_inner,
-    registry_is_box_new_ctor, registry_is_some_expr, registry_is_string_like_type,
-    registry_iterable_to_vec_expr, registry_option_inner_type, HirExpr, ParamConvention,
-    RustEmitter, RustExpr, Type,
+    registry_is_box_new_ctor, registry_is_string_like_type, registry_iterable_to_vec_expr,
+    registry_option_inner_type, HirExpr, ParamConvention, RustEmitter, RustExpr, Type,
 };
 impl RustEmitter {
     pub(crate) fn try_lower_registry_plain_call_with_signature(
@@ -151,8 +150,8 @@ impl RustEmitter {
                             args: vec![lowered_arg],
                         }
                     };
-                } else if needs_box_inner && registry_is_some_expr(&lowered_arg) {
-                    lowered_arg = registry_ensure_some_box_inner(lowered_arg);
+                } else if needs_box_inner && arg_is_option {
+                    lowered_arg = Self::ensure_option_box_inner_for_ir(lowered_arg);
                 }
             } else if arg_is_option {
                 if !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty) {
