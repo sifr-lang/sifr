@@ -1,6 +1,6 @@
 use super::{
-    try_lower_leaf_expr, HashSet, HirExpr, RustExpr, RustLiteral, RustParam, RustStmt, RustType,
-    Type,
+    try_lower_leaf_expr, HirExpr, RustExpr, RustLiteral, RustParam, RustStmt, RustType,
+    SimpleStmtBindings, Type,
 };
 pub(super) fn resolve_alias_type(ty: &Type) -> &Type {
     match ty {
@@ -28,21 +28,32 @@ pub(super) fn detect_option_truthiness_alias(expr: &HirExpr) -> Option<String> {
     None
 }
 
+pub(super) fn option_binding_pattern(option_var: &str, bindings: SimpleStmtBindings<'_>) -> String {
+    let requires_mut = crate::option_binding_mutability::option_binding_requires_mut(
+        option_var,
+        bindings.mutated_vars,
+        bindings.borrowed_params,
+        bindings.mut_borrowed_params,
+        bindings.local_binding_types,
+        bindings.recursive_fields,
+    );
+    if requires_mut {
+        format!("Some(mut {option_var})")
+    } else {
+        format!("Some({option_var})")
+    }
+}
+
 pub(super) fn lower_if_not_none_chain(
     option_vars: &[String],
     lowered_then_body: Vec<RustStmt>,
     nested_else: Option<Vec<RustStmt>>,
-    mutated_vars: &HashSet<String>,
+    bindings: SimpleStmtBindings<'_>,
 ) -> Option<RustStmt> {
     let mut chain_then = lowered_then_body;
     for option_var in option_vars.iter().rev() {
-        let pattern = if mutated_vars.contains(option_var) {
-            format!("Some(mut {option_var})")
-        } else {
-            format!("Some({option_var})")
-        };
         chain_then = vec![RustStmt::IfLet {
-            pattern,
+            pattern: option_binding_pattern(option_var, bindings),
             expr: RustExpr::Ident(option_var.clone()),
             then_body: chain_then,
             else_body: None,

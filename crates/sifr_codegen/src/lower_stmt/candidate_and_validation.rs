@@ -124,7 +124,9 @@ pub struct SimpleStmtLoweringCtx<'a> {
 pub(super) struct SimpleStmtBindings<'a> {
     pub(super) mutated_vars: &'a HashSet<String>,
     pub(super) borrowed_params: &'a HashSet<String>,
+    pub(super) mut_borrowed_params: &'a HashSet<String>,
     pub(super) local_binding_types: &'a HashMap<String, Type>,
+    pub(super) recursive_fields: &'a HashSet<(String, String)>,
 }
 
 /// Lowers statement variants that are context-light and safe to convert
@@ -143,7 +145,9 @@ pub fn try_lower_simple_stmt(
         stmt,
         mutated_vars,
         borrowed_params,
+        &HashSet::new(),
         &HashMap::new(),
+        &HashSet::new(),
         &scope_ctx,
     )
 }
@@ -158,7 +162,9 @@ pub(crate) fn try_lower_simple_stmt_with_scope(
         stmt,
         mutated_vars,
         borrowed_params,
+        &HashSet::new(),
         &HashMap::new(),
+        &HashSet::new(),
         scope_ctx,
     )
 }
@@ -167,15 +173,21 @@ pub(crate) fn try_lower_simple_stmt_with_scope_and_bindings(
     stmt: &HirStmt,
     mutated_vars: &HashSet<String>,
     borrowed_params: &HashSet<String>,
+    mut_borrowed_params: &HashSet<String>,
     local_binding_types: &HashMap<String, Type>,
+    recursive_fields: &HashSet<(String, String)>,
     scope_ctx: &ScopeContext,
 ) -> Option<Vec<RustStmt>> {
     try_lower_simple_stmt_with_ctx_and_bindings(
         stmt,
         scope_ctx.in_loop_with_else,
-        mutated_vars,
-        borrowed_params,
-        local_binding_types,
+        SimpleStmtBindings {
+            mutated_vars,
+            borrowed_params,
+            mut_borrowed_params,
+            local_binding_types,
+            recursive_fields,
+        },
         SimpleStmtLoweringCtx {
             return_type: scope_ctx.function_return_type.as_ref(),
             in_display_impl: scope_ctx.in_display_impl,
@@ -195,7 +207,9 @@ pub(crate) fn try_lower_simple_stmt_with_scope_result(
         stmt,
         mutated_vars,
         borrowed_params,
+        &HashSet::new(),
         &HashMap::new(),
+        &HashSet::new(),
         scope_ctx,
     )
 }
@@ -204,7 +218,9 @@ pub(crate) fn try_lower_simple_stmt_with_scope_result_and_bindings(
     stmt: &HirStmt,
     mutated_vars: &HashSet<String>,
     borrowed_params: &HashSet<String>,
+    mut_borrowed_params: &HashSet<String>,
     local_binding_types: &HashMap<String, Type>,
+    recursive_fields: &HashSet<(String, String)>,
     scope_ctx: &ScopeContext,
 ) -> Result<Option<Vec<RustStmt>>, CodegenError> {
     validate_scope_context(scope_ctx)?;
@@ -213,7 +229,9 @@ pub(crate) fn try_lower_simple_stmt_with_scope_result_and_bindings(
         stmt,
         mutated_vars,
         borrowed_params,
+        mut_borrowed_params,
         local_binding_types,
+        recursive_fields,
         scope_ctx,
     ))
 }

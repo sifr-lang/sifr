@@ -17,13 +17,7 @@ pub(super) fn try_lower_simple_while_stmt(
             RustStmt::While {
                 cond: try_lower_simple_condition_test_expr(condition, bindings.borrowed_params)?,
                 // Breaks in the loop body should mark this loop's `_broke`.
-                body: try_lower_simple_stmt_block(
-                    body,
-                    true,
-                    bindings.mutated_vars,
-                    bindings.borrowed_params,
-                    ctx,
-                )?,
+                body: try_lower_simple_stmt_block(body, true, bindings, ctx)?,
             },
             else_body,
             in_loop_with_else,
@@ -35,13 +29,7 @@ pub(super) fn try_lower_simple_while_stmt(
     Some(vec![RustStmt::While {
         cond: try_lower_simple_condition_test_expr(condition, bindings.borrowed_params)?,
         // Entering a nested while without else resets loop-else break marker context.
-        body: try_lower_simple_stmt_block(
-            body,
-            false,
-            bindings.mutated_vars,
-            bindings.borrowed_params,
-            ctx,
-        )?,
+        body: try_lower_simple_stmt_block(body, false, bindings, ctx)?,
     }])
 }
 
@@ -80,13 +68,7 @@ pub(super) fn try_lower_simple_for_stmt(
                 var: parts.target.to_string(),
                 iter,
                 // Breaks in the loop body should mark this loop's `_broke`.
-                body: try_lower_simple_stmt_block(
-                    parts.body,
-                    true,
-                    bindings.mutated_vars,
-                    bindings.borrowed_params,
-                    ctx,
-                )?,
+                body: try_lower_simple_stmt_block(parts.body, true, bindings, ctx)?,
             },
             else_body,
             parts.in_loop_with_else,
@@ -109,13 +91,7 @@ pub(super) fn try_lower_simple_for_stmt(
         var: parts.target.to_string(),
         iter,
         // Entering a nested for without else resets loop-else break marker context.
-        body: try_lower_simple_stmt_block(
-            parts.body,
-            false,
-            bindings.mutated_vars,
-            bindings.borrowed_params,
-            ctx,
-        )?,
+        body: try_lower_simple_stmt_block(parts.body, false, bindings, ctx)?,
     }])
 }
 

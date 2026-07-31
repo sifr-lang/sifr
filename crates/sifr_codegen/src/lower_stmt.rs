@@ -29,9 +29,9 @@ pub use candidate_and_validation::{
 };
 use candidate_and_validation::{try_lower_expr_stmt_with_bindings, SimpleStmtBindings};
 mod simple_dispatch_and_bindings;
-pub(crate) use simple_dispatch_and_bindings::{
-    try_lower_simple_stmt_with_ctx, try_lower_simple_stmt_with_ctx_and_bindings,
-};
+#[cfg(test)]
+use simple_dispatch_and_bindings::try_lower_simple_stmt_with_ctx;
+use simple_dispatch_and_bindings::try_lower_simple_stmt_with_ctx_and_bindings;
 mod try_tuple_flow;
 pub(crate) use try_tuple_flow::{lower_tuple_unpack_targets, tuple_unpack_source_is_borrowed};
 use try_tuple_flow::{
@@ -50,7 +50,7 @@ use condition_lowering::{try_lower_simple_condition_test_expr, try_lower_simple_
 mod condition_type_and_expr_helpers;
 use condition_type_and_expr_helpers::{
     detect_option_truthiness_alias, is_alias_equivalent_type, is_none_type, is_okwrap_none_expr,
-    is_option_like_type, lower_if_not_none_chain, resolve_alias_type,
+    is_option_like_type, lower_if_not_none_chain, option_binding_pattern, resolve_alias_type,
     try_lower_attribute_dict_insert_key_expr, try_lower_leaf_or_name_expr,
     try_lower_name_ident_expr,
 };

@@ -26,26 +26,23 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
     try_lower_simple_stmt_with_ctx_and_bindings(
         stmt,
         in_loop_with_else,
-        mutated_vars,
-        borrowed_params,
-        &HashMap::new(),
+        SimpleStmtBindings {
+            mutated_vars,
+            borrowed_params,
+            mut_borrowed_params: &HashSet::new(),
+            local_binding_types: &HashMap::new(),
+            recursive_fields: &HashSet::new(),
+        },
         ctx,
     )
 }
 
-pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
+pub(super) fn try_lower_simple_stmt_with_ctx_and_bindings(
     stmt: &HirStmt,
     in_loop_with_else: bool,
-    mutated_vars: &HashSet<String>,
-    borrowed_params: &HashSet<String>,
-    local_binding_types: &HashMap<String, Type>,
+    bindings: SimpleStmtBindings<'_>,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
-    let bindings = SimpleStmtBindings {
-        mutated_vars,
-        borrowed_params,
-        local_binding_types,
-    };
     match stmt {
         HirStmt::Expr { expr } => {
             try_lower_expr_stmt_with_bindings(expr, bindings.local_binding_types)
@@ -60,7 +57,10 @@ pub(crate) fn try_lower_simple_stmt_with_ctx_and_bindings(
             let lowered_value = try_lower_simple_let_value(effective_ty, value)?;
             Some(vec![RustStmt::Let {
                 mutable: bindings.mutated_vars.contains(name)
-                    || should_force_mutable_binding(effective_ty),
+                    || crate::stmt_support_emitter::should_force_mutable_binding(
+                        effective_ty,
+                        bindings.recursive_fields,
+                    ),
                 name: name.clone(),
                 ty: if name == "_" || should_omit_local_type_annotation(effective_ty, value) {
                     None
@@ -483,50 +483,6 @@ pub(super) fn is_result_int_division_error_type(ty: &Type) -> bool {
     )
 }
 
-pub(super) fn should_force_mutable_binding(ty: &Type) -> bool {
-    fn class_has_next_protocol(ty: &Type) -> bool {
-        let Type::Class { methods, .. } = ty.resolve_alias() else {
-            return false;
-        };
-        methods.iter().any(|(name, ft)| {
-            name == "__next__"
-                && ft.params.is_empty()
-                && matches!(ft.return_type.as_ref().resolve_alias(), Type::Union(members) if {
-                    let has_none = members
-                        .iter()
-                        .any(|member| matches!(member.resolve_alias(), Type::None));
-                    let non_none = members
-                        .iter()
-                        .filter(|member| !matches!(member.resolve_alias(), Type::None))
-                        .count();
-                    has_none && non_none == 1
-                })
-        })
-    }
-
-    fn class_has_recursive_option_field(ty: &Type) -> bool {
-        let Type::Class { name, fields, .. } = ty.resolve_alias() else {
-            return false;
-        };
-        fields.iter().any(|(_, field_ty)| {
-            let Type::Union(members) = field_ty.resolve_alias() else {
-                return false;
-            };
-            members.iter().any(|member| {
-                matches!(member.resolve_alias(), Type::Class { name: field_name, .. } if field_name == name)
-            })
-        })
-    }
-
-    matches!(
-        ty,
-        Type::Alias { name: alias_name, .. } if alias_name.starts_with("__sifr_defaultdict_")
-    ) || matches!(ty.resolve_alias(), Type::Iterator(_))
-        || matches!(ty.resolve_alias(), Type::JoinSet(_, _))
-        || class_has_next_protocol(ty)
-        || class_has_recursive_option_field(ty)
-}
-
 pub(super) fn try_lower_simple_nested_function_stmt(
     func: &HirFunction,
     move_captures: bool,
@@ -549,7 +505,24 @@ pub(super) fn try_lower_simple_nested_function_stmt(
     }
 
     let nested_mutated_vars = collect_mutated_vars(&func.body, None);
-    let nested_borrowed_params: HashSet<String> = HashSet::new();
+    let nested_borrowed_params: HashSet<String> = func
+        .params
+        .iter()
+        .filter(|param| {
+            param.convention.is_shared_borrow()
+                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+        })
+        .map(|param| param.name.clone())
+        .collect();
+    let nested_mut_borrowed_params: HashSet<String> = func
+        .params
+        .iter()
+        .filter(|param| {
+            param.convention.is_mut_borrow()
+                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+        })
+        .map(|param| param.name.clone())
+        .collect();
     let is_recursive = body_calls_function(&func.body, &func.name);
     let param_names: HashSet<String> = func.params.iter().map(|param| param.name.clone()).collect();
     let referenced_with_types = collect_referenced_vars_with_types(&func.body);
@@ -569,15 +542,20 @@ pub(super) fn try_lower_simple_nested_function_stmt(
         .map(|param| (param.name.clone(), param.ty.clone()))
         .chain(captures.iter().cloned())
         .collect();
+    let nested_bindings = SimpleStmtBindings {
+        mutated_vars: &nested_mutated_vars,
+        borrowed_params: &nested_borrowed_params,
+        mut_borrowed_params: &nested_mut_borrowed_params,
+        local_binding_types: &nested_local_binding_types,
+        recursive_fields: outer_bindings.recursive_fields,
+    };
     let mut lowered_body = crate::with_allowed_plain_calls(&allowed_calls, || {
         let mut lowered = Vec::new();
         for stmt in &func.body {
             lowered.extend(try_lower_simple_stmt_with_ctx_and_bindings(
                 stmt,
                 in_loop_with_else,
-                &nested_mutated_vars,
-                &nested_borrowed_params,
-                &nested_local_binding_types,
+                nested_bindings,
                 SimpleStmtLoweringCtx {
                     return_type: Some(&func.return_type),
                     in_display_impl: false,
