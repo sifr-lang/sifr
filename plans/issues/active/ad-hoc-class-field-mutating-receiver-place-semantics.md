@@ -2,31 +2,34 @@
 
 ## Status
 
-Implementation in progress for the urgent correctness follow-up identified
-during the M10 declaration-first Python interop milestone review. Claude Opus
-implementation-readiness pass 7 returned `SATISFIED`. Item 1, canonical
-receiver metadata and inference, merged in
-[#3065](https://github.com/sifr-lang/sifr/pull/3065) after implementation
-review pass 2 returned `SATISFIED`. Item 2, checked place semantics and defect
-closure, is under PR
-[#3082](https://github.com/sifr-lang/sifr/pull/3082), and exact-head PR review
-pass 8 returned `SATISFIED` with zero actionable findings after passes 6 and 7
-identified and drove localized constructor-check and evidence corrections.
-Exact-published-head pass 9 then returned `NOT SATISFIED` after an independent
-full-corpus probe found one missed same-call snapshot migration and one
-same-named nested-helper verifier collision. The corpus migration merged in
-[sifr-lang/leetcode#41](https://github.com/sifr-lang/leetcode/pull/41) after
-corpus review pass 2 returned `SATISFIED`; the lexical verifier correction and
-merged corpus repin are now under final Item 2 validation and re-review.
-Implementation review pass 5 returned `SATISFIED` after passes 1 through 4
-returned `NOT SATISFIED`. The remediation
-restores non-cloning shared field receivers, checks delegated fixed-trait
-mutation after receiver convergence, makes owned temporary proof exhaustive,
-rejects storage-selecting conditionals and re-materialized module constants,
-closes shared-receiver/mutable-argument overlap, restores mutable-borrow flow
-effects, applies the protected-root optimizer contract to production codegen,
-and migrates the LRU compatibility fixture to snapshot `self.head` before a
-mutable `self` call as required by same-call exclusivity.
+Implementation and compatibility migrations are complete; final correctness
+remediation and closure review remain in progress. Item 1, canonical receiver
+metadata and inference, merged in
+[#3065](https://github.com/sifr-lang/sifr/pull/3065), with tracking follow-up
+[#3066](https://github.com/sifr-lang/sifr/pull/3066). Item 2, checked place
+semantics and defect closure, merged in
+[#3082](https://github.com/sifr-lang/sifr/pull/3082) after terminal exact-head
+review pass 12 returned `SATISFIED` with zero actionable findings. Upstream
+compatibility snapshots merged in
+[sifr-lang/leetcode#40](https://github.com/sifr-lang/leetcode/pull/40) and
+[sifr-lang/leetcode#41](https://github.com/sifr-lang/leetcode/pull/41).
+
+The first whole-phase review found missing structured `binding` arguments on
+`SIFR-OWN-0002` diagnostics and duplicated inherited-field storage rerooting.
+Both were closed in [#3087](https://github.com/sifr-lang/sifr/pull/3087), whose
+exact-head Claude Opus review returned `SATISFIED` with zero actionable
+findings. A later whole-phase review found that unsupported callable and
+recursive field values could still bypass the argument-footprint overlap
+check. Remediation PR [#3090](https://github.com/sifr-lang/sifr/pull/3090)
+closes that gap, gives all five `SIFR-OWN-0002` paths structured arguments,
+adds every native phase pass fixture to the create-PR manifest, and preserves
+precise field identity for statically resolvable unsupported field values.
+Overlap-remediation review pass 1 rejected a root-collapsing implementation;
+pass 2 independently accepted the corrected code and required this plan/status
+ledger refresh before returning `SATISFIED`. Closure PR
+[#3088](https://github.com/sifr-lang/sifr/pull/3088) remains pending until
+#3090 merges, the authoritative merge gate passes on the integrated head, and
+the final whole-phase review returns `SATISFIED`.
 
 The defect predates M10 and was not introduced by the buffer implementation,
 but it violates Sifr's core guarantee: a program can compile and silently lose
@@ -333,6 +336,14 @@ have not been narrowed continue to receive the earlier ordinary
 unknown/optional-method type diagnostic. A narrowed optional/recursive storage
 place reaches the receiver-place validator and receives `SIFR-OWN-0014`.
 
+“Unsupported mutable place” applies to selecting the mutating receiver or a
+mutable argument; it does not discard statically resolved field identity while
+collecting another argument's read/borrow/move footprint. A callable or
+optional/recursive field value whose base is a known place retains its
+declaring-class field projection for overlap comparison. Only genuinely
+unresolvable bases and dynamic index/slice projections collapse to a
+conservative root footprint.
+
 If index, slice, or optional-field typing rejects the expression earlier with
 `SIFR-STDLIB-0001`, that existing diagnostic is the accepted boundary; this
 issue does not bypass ordinary type resolution merely to replace it with
@@ -371,8 +382,10 @@ footprint of every explicit argument, including nested calls and field reads:
 - an overlapping owned move is rejected with `SIFR-OWN-0002`;
 - a disjoint sibling place under the same root is accepted;
 - a non-place expression that contains an overlapping place read is rejected;
-- an unsupported/dynamic projection under the same root is conservatively
-  treated as overlapping.
+- a statically resolvable unsupported field value retains precise field
+  identity, so a disjoint sibling remains accepted;
+- a dynamic index/slice projection or genuinely unresolvable base under the
+  same root is conservatively treated as overlapping.
 
 The sole compiler-owned evaluation-order exception is a typed `defaultdict`
 list `extend` or set update-family call. Those lowerings insert the destination
@@ -514,6 +527,13 @@ counter deletion is claimed by Item 1.
 
 ### Item 2: Place checking, place emission, and defect closure
 
+Status: **Merged** in
+[#3082](https://github.com/sifr-lang/sifr/pull/3082), with whole-phase
+correctness remediations merged in
+[#3087](https://github.com/sifr-lang/sifr/pull/3087) and under review in
+[#3090](https://github.com/sifr-lang/sifr/pull/3090). Closure remains pending
+the integrated merge gate and terminal whole-phase `SATISFIED` review.
+
 1. Add the canonical `Place`/projection extractor, argument footprint
    collector, prefix-overlap check, and receiver/argument validation.
 2. Add `SIFR-OWN-0014`, `SIFR-PROTO-0005`, and `SIFR-PROTO-0006`; reuse
@@ -602,7 +622,8 @@ hand-maintained 900-line cap.
 
 ### Existing codes
 
-- `SIFR-OWN-0002`: use for every same-call overlapping place conflict.
+- `SIFR-OWN-0002`: use for every conflicting borrow, including same-call
+  overlapping place conflicts and pending async-generator advances.
   Populate the existing `binding` argument with the canonical source display
   of the conflicting place and point at the later conflicting receiver or
   argument. Regenerate/update `docs/errors/SIFR-OWN-0002.mdx` so its documented
@@ -1045,3 +1066,36 @@ Current Item 2 validation evidence:
   `defaultdict` in-place bucket methods now carry the checked backing-storage
   target, and only the explicitly materialized `extend`/set-update family may
   evaluate same-map arguments before taking the bucket borrow.
+- Item 2 terminal exact-head review pass 12 returned `SATISFIED` with zero
+  actionable findings after independently reproducing the complete
+  checked-place/diagnostic matrix, upstream reconciliation, corpus ancestry,
+  and exact create-PR evidence. Item 2 merged in
+  [#3082](https://github.com/sifr-lang/sifr/pull/3082) as
+  `fbbb69328ae6fe1e733ce25cb6e710aab75990dc`.
+- Final whole-phase review pass 1 returned `NOT SATISFIED` after finding
+  missing structured `binding` arguments on four `SIFR-OWN-0002` paths,
+  duplicated inherited-field storage rerooting, and stale tracking. Whole-phase
+  remediation review pass 1 then returned `SATISFIED` with zero actionable
+  findings, and the exact reviewed implementation merged in
+  [#3087](https://github.com/sifr-lang/sifr/pull/3087) as
+  `a7a5df414b985cc95a9ad23c5b006caa84101f0d`.
+- Whole-phase review pass 2 returned `NOT SATISFIED` after finding that
+  unsupported callable/recursive field values could bypass footprint
+  collection and leak raw Rust borrow/move errors, that the fifth
+  `SIFR-OWN-0002` path lacked its structured `binding`, and that native
+  phase-fixture/evidence tracking remained incomplete. Remediation is under
+  [#3090](https://github.com/sifr-lang/sifr/pull/3090).
+- Overlap-remediation PR review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-1.md)
+  returned `NOT SATISFIED`: the first conservative fallback closed the missed
+  diagnostics but collapsed all fields under a root and rejected legal
+  callable/recursive sibling fields. The follow-up retains precise
+  `FieldIdentity` projections when the base place resolves statically.
+- Overlap-remediation PR review pass 2:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-2.md)
+  returned `NOT SATISFIED` on documentation of record only. It independently
+  accepted the corrected implementation, ran 21 targeted lowering tests,
+  reproduced both fail fixtures as structured `SIFR-OWN-0002`, and inspected
+  the exact-head create-PR pass at
+  `92b38be705138643b23c37a425892df767beee5d`; this revision aligns the overlap
+  rule and status/review ledger before pass 3.

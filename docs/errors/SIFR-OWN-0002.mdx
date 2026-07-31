@@ -50,6 +50,23 @@ values.append(count)
 For async generators, await the pending `anext()` result before starting the
 next advance.
 
+For example, this starts a second advance while the first one still holds the
+generator:
+
+```python
+agen = numbers()
+first = anext(agen)
+second = anext(agen)
+```
+
+Await each advance before starting the next one:
+
+```python
+agen = numbers()
+first = await anext(agen)
+second = await anext(agen)
+```
+
 ## Fixed Code
 
 ```python
