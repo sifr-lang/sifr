@@ -47,7 +47,17 @@ call, read, or move until Rust compilation. The correction merged in
 fallback, recursively collects both object subtrees, and adds reject/accept
 coverage for unresolved and nested index/slice bases. After seven review
 rounds, terminal published-head pass 7 returned `SATISFIED` with no blocking
-or non-blocking findings. Closure PR
+or non-blocking findings.
+
+Whole-phase review pass 5 then found that the phase's reserved
+`SIFR-PROTO-0005` and `SIFR-PROTO-0006` emit sites omitted every declared
+message/JSON argument, and that the phase's new `SIFR-OWN-0005` path inherited
+an older helper that omitted its declared `binding`. It also required an
+emission-level guardrail so registry declarations cannot silently diverge from
+representative diagnostics again. A focused diagnostic-contract remediation
+is in progress; the pre-existing `SIFR-OWN-0005` helper debt is explicitly
+adopted by this phase because the phase added a new caller and promised the
+structured argument. Closure PR
 [#3088](https://github.com/sifr-lang/sifr/pull/3088) remains draft only until
 the integrated merge gate and a new terminal whole-phase review return green.
 
@@ -1318,6 +1328,15 @@ Closure validation evidence:
   returned `SATISFIED` with no blocking or non-blocking findings, verified all
   prior findings closed, and confirmed PR #3094's implementation and gate
   evidence remained exact through its published record-only head.
+- Final whole-phase review pass 5:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-5.md)
+  returned `NOT SATISFIED`. In addition to carrying the non-green integrated
+  merge gate, it found that `SIFR-PROTO-0005`, `SIFR-PROTO-0006`, and
+  `SIFR-OWN-0005` omitted their declared structured arguments, that no
+  emission-level guardrail prevented registry/emitter drift, and that PR
+  #3088 omitted the exact integrated functional evidence. The PR record is
+  refreshed, and a focused diagnostic-contract remediation owns the remaining
+  code/test/guardrail findings.
 - Pass 4 also recorded a separate pre-existing match-lowering debt: a `match`
   arm containing calls can still leak a native build failure. It is outside
   this receiver-place phase, reproduces independently of its changes, and is
