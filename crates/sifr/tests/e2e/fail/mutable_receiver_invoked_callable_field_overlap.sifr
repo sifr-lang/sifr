@@ -1,0 +1,24 @@
+# expect-error[col=28]: SIFR-OWN-0002
+class Owner:
+    value: int
+    callback: Callable[[int], int]
+
+    def __init__(self, callback: Callable[[int], int]):
+        self.value = 0
+        self.callback = callback
+
+    def update(self, value: int) -> int:
+        self.value = value
+        return self.value
+
+    def conflict(self) -> int:
+        return self.update(self.callback(2))
+
+
+def double(value: int) -> int:
+    return value * 2
+
+
+def main() -> None:
+    owner: Owner = Owner(double)
+    owner.conflict()
