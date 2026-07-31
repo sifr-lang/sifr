@@ -43,4 +43,3 @@ unchecked mutable path, overlap hole, or suppression fallback.
 The two implementation findings were remediated in PR
 [#3087](https://github.com/sifr-lang/sifr/pull/3087). Tracking closure is
 completed by the phase-closure PR before the next whole-phase review.
-

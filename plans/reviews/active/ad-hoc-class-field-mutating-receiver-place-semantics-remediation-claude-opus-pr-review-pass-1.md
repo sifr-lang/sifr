@@ -40,4 +40,3 @@ remediation.
 ## Verdict
 
 `SATISFIED` — zero actionable findings.
-

@@ -31,4 +31,3 @@ or unresolved integration issue.
 ## Verdict
 
 `SATISFIED` — zero actionable findings.
-

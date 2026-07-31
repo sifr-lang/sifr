@@ -2,7 +2,7 @@
 
 ## Status
 
-Implementation closure is in progress under
+The semantic implementation is complete and its closure record is under
 [#3088](https://github.com/sifr-lang/sifr/pull/3088). Item 1, canonical receiver
 metadata and inference, merged in
 [#3065](https://github.com/sifr-lang/sifr/pull/3065), with tracking follow-up
@@ -34,10 +34,21 @@ implementation and exact-record reviews both returned `SATISFIED`. Its
 diagnostics-baseline prerequisite merged in
 [#3095](https://github.com/sifr-lang/sifr/pull/3095) after five review rounds
 closed every finding and the terminal Opus verdict returned `SATISFIED` with
-zero actionable findings. Closure PR
-[#3088](https://github.com/sifr-lang/sifr/pull/3088)
-remains draft until the authoritative integrated merge gate exits 0 and a
-terminal whole-phase review returns `SATISFIED` with zero findings.
+zero actionable findings. All phase-owned implementation and diagnostic
+remediation is therefore merged on `main`. Closure PR
+[#3088](https://github.com/sifr-lang/sifr/pull/3088) contains only the archived
+phase record and review evidence; it becomes ready after a terminal whole-phase
+review returns `SATISFIED` with zero findings.
+
+The final integrated default profile reached and passed every functional lane,
+then failed only in the repository-wide performance area: two checked-in trend
+deferrals expired on 2026-07-31, and the unchanged representative budget showed
+small same-host variance. Those failures are independent of receiver-place
+semantics and are owned by
+[`adhoc_performance_budget_host_variance.md`](../active/adhoc_performance_budget_host_variance.md).
+This closure neither changes nor waives any performance threshold, baseline,
+sample count, trend rule, or deferral. The independent performance task remains
+active and does not expand this phase's scope.
 
 The defect predates M10 and was not introduced by the buffer implementation,
 but it violates Sifr's core guarantee: a program can compile and silently lose
@@ -542,16 +553,12 @@ correctness remediations merged in
 [#3087](https://github.com/sifr-lang/sifr/pull/3087) and
 [#3090](https://github.com/sifr-lang/sifr/pull/3090), with callable-field
 invocation precision merged in
-[#3092](https://github.com/sifr-lang/sifr/pull/3092). Closure remains pending
-the terminal whole-phase `SATISFIED` review.
-
-Whole-phase review pass 4 found one remaining unchecked argument-footprint
-path: an index or slice with a non-name-rooted object could discard the object
-subtree, allowing a nested receiver read or move to escape overlap checking.
-The focused index/slice-footprint remediation is in progress on
-`codex/class-field-index-slice-footprint-remediation`; its implementation
-review pass 4 is `SATISFIED` with zero actionable findings, but it is not
-treated as phase evidence until its authoritative gate, PR, and merge complete.
+[#3092](https://github.com/sifr-lang/sifr/pull/3092), nested index/slice
+footprint traversal merged in
+[#3094](https://github.com/sifr-lang/sifr/pull/3094), and final structured
+diagnostic/guardrail closure merged in
+[#3096](https://github.com/sifr-lang/sifr/pull/3096). Every focused remediation
+reached a terminal zero-finding Opus review before merge.
 
 1. Add the canonical `Place`/projection extractor, argument footprint
    collector, prefix-overlap check, and receiver/argument validation.
@@ -852,6 +859,10 @@ scripts/run_all_tests.sh
 ```
 
 CI is confirmatory; do not wait on CI instead of running the local gates.
+The final integrated invocation is retained below: all phase-relevant
+functional lanes passed, while the independent repository-wide performance
+policy failed. That failure is not converted into a phase waiver, baseline
+change, threshold change, or renewed deferral.
 
 Closure validation evidence:
 
@@ -1014,8 +1025,10 @@ Closure validation evidence:
   canonical receiver-convention query, and the untyped Rust IR mutability pass
   preserves roots recorded by checked place emission.
 - Focused tests, E2E pass/fail fixtures, diagnostic docs checks, HIR/file-size
-  guardrails, formatting, clippy, the create-PR gate, and the authoritative
-  merge gate pass.
+  guardrails, formatting, clippy, and the create-PR gate pass. The integrated
+  default profile passes every phase-relevant functional lane; its independent
+  repository-wide performance-policy failure remains owned by the active
+  performance follow-up and is neither hidden nor waived here.
 - Final independent review finds no silent clone, unchecked receiver path,
   root-only over-rejection, or unresolved implementation choice.
 
@@ -1397,6 +1410,15 @@ Closure validation evidence:
   signature `ac6d879686517f2c`). Its sole advisory is the non-blocking warm
   wall-time target after cold cache population; no budget, threshold, waiver,
   or validation rule changed.
+- After #3096 merged, closure head `dcaf6bd22f20edec92a37e0aa488794e083c6f98`
+  integrated exact `main` merge `0cf948ed1095fb3efe60975e1968143350c2e9b2`.
+  Its default profile passed coverage/core guardrails, diagnostics, CPython
+  differential, Python interop (`25/25`), Rust interop (`10/10`),
+  frontend/syntax, developer tooling (`32/32`), and benchmark execution. The
+  profile exited nonzero only in the independent performance area because the
+  two trend deferrals expired and two unchanged representative medians missed
+  by `0.55%` and `0.26%`. No receiver-place source or test failed, and no
+  performance policy was changed for closure.
 - Diagnostic-contract remediation published-head review pass 4:
   [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-4.md)
   independently verified the implementation, exact published head, tests,
@@ -1418,6 +1440,15 @@ Closure validation evidence:
   returned `SATISFIED` with zero actionable findings on exact PR head
   `5451d2434`; PR [#3096](https://github.com/sifr-lang/sifr/pull/3096) then
   merged as `0cf948ed1095fb3efe60975e1968143350c2e9b2`.
+- Final whole-phase review pass 6:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-6.md)
+  found zero implementation defects after independently rerunning `62`
+  lowering receiver/place/footprint tests, `42` codegen receiver/place tests,
+  both receiver E2E entrypoints, guardrails, formatting, and live semantic
+  probes. It returned `NOT SATISFIED` only because #3088 still published the
+  pre-#3096 head and stale performance-dependent body. The next record-only
+  revision publishes the reconciled closure head and the explicit independent
+  performance-task boundary before exact-head review.
 
 Focused diagnostic-contract validation includes:
 
