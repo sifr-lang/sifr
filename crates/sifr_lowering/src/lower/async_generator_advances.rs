@@ -5,7 +5,6 @@ use super::expressions::lower_expr;
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use ruff_text_size::{Ranged, TextRange};
-use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::ExprCall;
 use sifr_type_system::Type;
 use std::collections::HashMap;
@@ -116,13 +115,7 @@ fn begin_async_generator_advance(ctx: &mut LowerCtx, generator_name: &str, range
         .pending_generators
         .contains_key(generator_name)
     {
-        ctx.error_with_code_at(
-            DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW,
-            format!(
-                "async generator `{generator_name}` already has a pending anext() advance; await it before starting another advance"
-            ),
-            range,
-        );
+        super::ownership_diagnostics::pending_async_generator_advance(ctx, generator_name, range);
         return;
     }
     ctx.async_generator_advances
