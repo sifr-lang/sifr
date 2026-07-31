@@ -2,7 +2,7 @@
 
 ## Status
 
-The semantic implementation is complete and its closure record is under
+The semantic implementation and terminal closure review are complete under
 [#3088](https://github.com/sifr-lang/sifr/pull/3088). Item 1, canonical receiver
 metadata and inference, merged in
 [#3065](https://github.com/sifr-lang/sifr/pull/3065), with tracking follow-up
@@ -37,8 +37,9 @@ closed every finding and the terminal Opus verdict returned `SATISFIED` with
 zero actionable findings. All phase-owned implementation and diagnostic
 remediation is therefore merged on `main`. Closure PR
 [#3088](https://github.com/sifr-lang/sifr/pull/3088) contains only the archived
-phase record and review evidence; it becomes ready after a terminal whole-phase
-review returns `SATISFIED` with zero findings.
+phase record and review evidence. Terminal whole-phase published-head review
+pass 8 returned `SATISFIED` with zero actionable findings and approved #3088
+to leave draft and merge.
 
 The final integrated default profile reached and passed every functional lane,
 then failed only in the repository-wide performance area: two checked-in trend
@@ -52,8 +53,8 @@ active and does not expand this phase's scope.
 
 The defect predates M10 and was not introduced by the buffer implementation,
 but it violates Sifr's core guarantee: a program can compile and silently lose
-a source-visible mutation. The closure PR is not ready to merge until the
-review ledger below ends in an independent whole-phase `SATISFIED` verdict.
+a source-visible mutation. The closure requirement was an independent
+whole-phase `SATISFIED` verdict; terminal published-head pass 8 satisfies it.
 
 ## Origin and current behavior
 
@@ -1460,6 +1461,14 @@ Closure validation evidence:
   earlier validation-ledger sentences still expressed the historical
   performance run as a live #3088 prerequisite; this record-only revision
   converts them to historical evidence and names the active performance owner.
+- Final whole-phase terminal published-head review pass 8:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-8.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-8.md)
+  returned `SATISFIED` with zero actionable findings on exact published head
+  `0663e5488`. It verified every pass-7 finding closed, #3096 ancestry, clean
+  mergeability, PR body/archive consistency, link and whitespace integrity,
+  exclusion of the untracked performance artifact, and the absence of any live
+  performance precondition on #3088. It explicitly approved the closure PR to
+  leave draft and merge.
 
 Focused diagnostic-contract validation includes:
 
