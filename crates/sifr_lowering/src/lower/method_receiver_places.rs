@@ -587,8 +587,27 @@ pub(super) fn is_owned_temporary(expr: &HirExpr) -> bool {
 fn report_immutable_root(expr: &HirExpr, range: TextRange, ctx: &mut LowerCtx) {
     let name = root_binding_id(expr)
         .and_then(|id| ctx.scope.retained_binding(id))
-        .map_or_else(|| place_display(expr, ctx), |fact| fact.name.clone());
-    ownership_diagnostics::immutable_parameter_mutation(ctx, &name, range);
+        .map(|fact| fact.name.clone())
+        .or_else(|| root_binding_name(expr).map(str::to_string));
+    if let Some(name) = name {
+        ownership_diagnostics::immutable_parameter_mutation(ctx, &name, range);
+    } else {
+        ownership_diagnostics::unsupported_mutable_receiver_place(
+            ctx,
+            &place_display(expr, ctx),
+            range,
+        );
+    }
+}
+
+fn root_binding_name(expr: &HirExpr) -> Option<&str> {
+    match expr {
+        HirExpr::Name { name, .. } => Some(name),
+        HirExpr::FieldAccess { object, .. }
+        | HirExpr::Index { object, .. }
+        | HirExpr::Slice { object, .. } => root_binding_name(object),
+        _ => None,
+    }
 }
 
 fn place_display(expr: &HirExpr, ctx: &LowerCtx) -> String {

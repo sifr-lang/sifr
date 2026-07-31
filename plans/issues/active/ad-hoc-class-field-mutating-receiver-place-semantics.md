@@ -18,18 +18,21 @@ The first whole-phase review found missing structured `binding` arguments on
 `SIFR-OWN-0002` diagnostics and duplicated inherited-field storage rerooting.
 Both were closed in [#3087](https://github.com/sifr-lang/sifr/pull/3087), whose
 exact-head Claude Opus review returned `SATISFIED` with zero actionable
-findings. A later whole-phase review found that unsupported callable and
-recursive field values could still bypass the argument-footprint overlap
-check. Remediation PR [#3090](https://github.com/sifr-lang/sifr/pull/3090)
-closes that gap, gives all five `SIFR-OWN-0002` paths structured arguments,
-adds every native phase pass fixture to the create-PR manifest, and preserves
-precise field identity for statically resolvable unsupported field values.
-Overlap-remediation review pass 1 rejected a root-collapsing implementation;
-pass 2 independently accepted the corrected code and required this plan/status
-ledger refresh before returning `SATISFIED`. Closure PR
-[#3088](https://github.com/sifr-lang/sifr/pull/3088) remains pending until
-#3090 merges, the authoritative merge gate passes on the integrated head, and
-the final whole-phase review returns `SATISFIED`.
+findings. Later whole-phase reviews found and closed unsupported-field
+footprint gaps in [#3090](https://github.com/sifr-lang/sifr/pull/3090),
+callable-field precision in [#3092](https://github.com/sifr-lang/sifr/pull/3092),
+and nested index/slice footprint traversal in
+[#3094](https://github.com/sifr-lang/sifr/pull/3094). Each remediation reached
+a terminal zero-finding Opus review before merge.
+
+Whole-phase review pass 5 then found missing structured arguments for
+`SIFR-PROTO-0005`, `SIFR-PROTO-0006`, and the phase-adopted
+`SIFR-OWN-0005` helper, plus the absence of a live receiver/place
+registry-to-emitter guardrail. The focused diagnostic-contract remediation is
+in review. Closure PR [#3088](https://github.com/sifr-lang/sifr/pull/3088)
+remains draft until this remediation merges, the authoritative integrated
+merge gate exits 0 on an uncontended host, and a terminal whole-phase review
+returns `SATISFIED` with zero findings.
 
 The defect predates M10 and was not introduced by the buffer implementation,
 but it violates Sifr's core guarantee: a program can compile and silently lose
@@ -663,10 +666,34 @@ Reserve `SIFR-PROTO-0006`:
 - severity/category: `Error` / `PROTO`
 - owner: `sifr_lowering::lower::method_receiver_analysis`
 - template:
-  `method '{method}' cannot mutate its receiver because Rust trait '{trait_name}' fixes the receiver convention`
-- message+JSON arguments: `method`, `trait_name`
+  `class '{class_name}' method '{method}' cannot mutate its receiver because Rust trait '{trait_name}' fixes the receiver convention`
+- message+JSON arguments: `class_name`, `method`, `trait_name`
 - representative fixture:
   `crates/sifr/tests/e2e/fail/operator_receiver_mutation_rejected.sifr`
+
+The implementing `class_name` is part of the recovery identity. Fixed-receiver
+violations are emitted in source order so multiple classes with the same Rust
+trait method remain deterministic, and six or more same-dunder violations do
+not collapse under the five-per-similar-group recovery cap.
+
+### Diagnostic-contract remediation scope
+
+Whole-phase review pass 5 found that `SIFR-PROTO-0005`,
+`SIFR-PROTO-0006`, and the phase-owned field-receiver path for
+`SIFR-OWN-0005` omitted their registry-declared arguments. The focused
+remediation adopts and closes the older single-funnel `SIFR-OWN-0005` helper
+debt because this phase added a new caller and promised `binding` as the root
+parameter name. It also adds a live representative-fixture guardrail for all
+five receiver/place diagnostics owned here: `SIFR-OWN-0002`,
+`SIFR-OWN-0005`, `SIFR-OWN-0014`, `SIFR-PROTO-0005`, and
+`SIFR-PROTO-0006`.
+
+The guardrail is deliberately not generalized to every active registry code.
+An exploratory repository-wide run exposed 120 pre-existing missing-argument
+failures across 11 unrelated diagnostic families. Completing that migration
+belongs to the `diagnostics` owner as a separate diagnostics-program item;
+this receiver/place phase neither waives those failures nor expands into that
+unrelated migration.
 
 Add the registry constant and active entry, generate the error page/navigation
 with:
@@ -1131,3 +1158,35 @@ Current Item 2 validation evidence:
   that the stale `680/680` figure is absent, the pass-4 artifact and ledger
   entry match the review that occurred, and the exact reviewed documentation
   head `94acb685ccc53a40755683a74cda0c6baec91e8f` is internally consistent.
+- Diagnostic-contract remediation review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-1.md)
+  independently verified that the pass-5 structured-argument findings and the
+  five-code receiver/place emission guardrail were substantively closed, and
+  agreed that the 120 pre-existing unrelated source-fixture argument gaps
+  belong to a separate diagnostics-owner migration. It returned
+  `NOT SATISFIED` after finding that `SIFR-PROTO-0006` still emitted from
+  randomized `HashSet` order and lacked a class discriminator, so recovery
+  could nondeterministically omit one of six same-dunder errors. The response
+  widens the contract with `class_name`, emits in source order through a
+  responsibility-focused diagnostic helper, pins six-error recovery survival,
+  tests the phase-owned immutable field-receiver path and root `binding`
+  value, narrows the impossible missing-root fallback to `SIFR-OWN-0014`, and
+  records the guardrail scope and explicit test command.
+
+Focused diagnostic-contract validation includes:
+
+```bash
+cargo test -p sifr_lowering method_receiver_diagnostics_tests
+cargo test -p sifr test_receiver_place_representative_diagnostics_populate_declared_args
+cargo test -p sifr test_fixed_receiver_diagnostics_survive_similar_recovery_cap
+cargo test -p sifr_diagnostics registry_skeleton_is_internally_consistent
+cargo run -q -p sifr_diagnostics --bin gen-error-docs -- --check
+python3 scripts/check_docs_error_code_links.py
+python3 scripts/check_hir_maintainability_guardrails.py
+python3 scripts/check_file_size_guardrails.py
+cargo fmt --check
+```
+
+All commands above pass on the corrected remediation candidate; the explicit
+`crates/sifr` test lines name and execute both new rendered-diagnostic
+guardrails rather than relying on the filtered annotated fail suite.

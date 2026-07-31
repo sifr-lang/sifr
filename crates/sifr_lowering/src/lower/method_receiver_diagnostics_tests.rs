@@ -117,6 +117,10 @@ class Counter:
         .find(|error| error.code == Some(DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION))
         .expect("fixed receiver diagnostic should be present");
     assert_eq!(
+        error.args.get("class_name"),
+        Some(&DiagnosticArg::String("Counter".to_string()))
+    );
+    assert_eq!(
         error.args.get("method"),
         Some(&DiagnosticArg::String("__eq__".to_string()))
     );
@@ -124,4 +128,101 @@ class Counter:
         error.args.get("trait_name"),
         Some(&DiagnosticArg::String("PartialEq".to_string()))
     );
+}
+
+#[test]
+fn fixed_receiver_diagnostics_are_declaration_ordered_and_class_distinct() {
+    let source = r#"
+class Alpha:
+    value: int
+
+    def __eq__(self, other: Alpha) -> bool:
+        self.value += 1
+        return self.value == other.value
+
+class Bravo:
+    value: int
+
+    def __eq__(self, other: Bravo) -> bool:
+        self.value += 1
+        return self.value == other.value
+
+class Charlie:
+    value: int
+
+    def __eq__(self, other: Charlie) -> bool:
+        self.value += 1
+        return self.value == other.value
+
+class Delta:
+    value: int
+
+    def __eq__(self, other: Delta) -> bool:
+        self.value += 1
+        return self.value == other.value
+
+class Echo:
+    value: int
+
+    def __eq__(self, other: Echo) -> bool:
+        self.value += 1
+        return self.value == other.value
+
+class Foxtrot:
+    value: int
+
+    def __eq__(self, other: Foxtrot) -> bool:
+        self.value += 1
+        return self.value == other.value
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("fixed receiver mutations must fail"),
+        Err(errors) => errors,
+    };
+    let class_names = errors
+        .iter()
+        .filter(|error| error.code == Some(DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION))
+        .map(|error| match error.args.get("class_name") {
+            Some(DiagnosticArg::String(class_name)) => class_name.as_str(),
+            other => panic!("class_name argument should be populated: {other:?}"),
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        class_names,
+        ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot"]
+    );
+}
+
+#[test]
+fn immutable_parameter_field_receivers_report_root_binding_argument() {
+    let source = r#"
+class Helper:
+    items: list[int]
+
+    def bump(self) -> None:
+        self.items.append(1)
+
+class Owner:
+    helper: Helper
+
+def borrowed(owner: Owner) -> None:
+    owner.helper.bump()
+
+def owned(own owner: Owner) -> None:
+    owner.helper.bump()
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("immutable parameter field receivers must fail"),
+        Err(errors) => errors,
+    };
+    let diagnostics = errors
+        .iter()
+        .filter(|error| error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION))
+        .collect::<Vec<_>>();
+    assert_eq!(diagnostics.len(), 2, "{errors:?}");
+    assert!(diagnostics.iter().all(|error| {
+        error.args.get("binding") == Some(&DiagnosticArg::String("owner".to_string()))
+    }));
 }
