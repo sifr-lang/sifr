@@ -1,0 +1,12 @@
+# expect-error[col=17]: SIFR-OWN-0002
+class Node:
+    value: int
+    next: Node | None
+
+    def absorb(mut self, other: Node | None) -> None:
+        self.value += 1
+        self.next = other
+
+
+def conflict(mut node: Node) -> None:
+    node.absorb(node.next)

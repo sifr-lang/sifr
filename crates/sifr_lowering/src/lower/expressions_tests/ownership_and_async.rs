@@ -383,6 +383,10 @@ pub(super) fn test_async_generator_pending_anext_rejects_reentrant_advance() {
         e.message
             .contains("async generator `agen` already has a pending anext() advance")
             && e.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+            && matches!(
+                e.args.get("binding"),
+                Some(sifr_diagnostics::DiagnosticArg::String(binding)) if binding == "agen"
+            )
             && e.primary_range == Some(range_for_after(source, "second = anext(", "agen"))
     }));
 }
