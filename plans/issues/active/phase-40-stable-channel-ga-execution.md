@@ -89,8 +89,9 @@ Artifacts mapped to the Phase 40 exit gate:
 ### milestone_40_1: Canonical Release Plan and Qualification
 
 - The separately owned pinned algorithmic full-corpus follow-up linked under
-  `milestone_40_4` is remediated; release qualification now blocks on the full
-  corpus and taxonomy self-test, matching nightly.
+  `milestone_40_4` has remediated its 20 preserved failures; its closeout
+  validation and review remain in progress. Release qualification now blocks
+  on the full corpus and taxonomy self-test, matching nightly.
 - [x] Implement the non-mutating stable planner and canonical digest binding.
 - [x] Consume and register the separately delivered Rust-interop
   stable-candidate suite and claims artifact before qualification.
@@ -122,8 +123,9 @@ Artifacts mapped to the Phase 40 exit gate:
   preserved in
   [`ad-hoc-algorithmic-full-corpus-preexisting-failures.md`](./ad-hoc-algorithmic-full-corpus-preexisting-failures.md)
   after every preceding gate—including `performance_budget_checks` in `full`
-  mode—passed. The completed follow-up now keeps the full corpus and taxonomy
-  self-test blocking in both nightly and release qualification.
+  mode—passed. The follow-up has remediated those 20 failures and now keeps the
+  full corpus and taxonomy self-test blocking in both nightly and release
+  qualification; its closeout validation and review remain in progress.
 - Packaged-candidate generated-Rust preview is intentionally not a Phase 40
   prerequisite. The real `0.1.0` candidate serves initialization, diagnostics,
   and formatting, but the cold first-run generated-Rust qualification exceeded
