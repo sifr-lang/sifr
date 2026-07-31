@@ -1,5 +1,12 @@
 ## Review: diagnostics baseline sync (192c21778, `origin/main..HEAD`)
 
+> **Correction recorded after terminal review pass 2:** The retained code is
+> `SIFR-NAME-0002`, not `SIFR-NAME-0001`. The two removed downstream
+> expectations were stale false positives from before `defaultdict` was
+> type-modeled; the binding now has the modeled `__sifr_defaultdict_list` type
+> and the following index/append expression is well-typed. The poison-binding
+> and cascade-suppression explanation below is superseded by this correction.
+
 **Diff scope** — exactly one file, one hunk, no production code:
 `verification/areas/diagnostics/fixtures/diagnostics/e2e_bare_defaultdict_constructor_rejected/baselines/check-compact.stderr.txt:1-4` → count line `3 errors` → `1 error`, and deletion of the `SIFR-STDLIB-0001` (main.sifr:4:21) and `SIFR-TYPE-0002` (main.sifr:4:5) lines. `SIFR-NAME-0002 …:3:14 undefined function: 'defaultdict'` is retained unchanged.
 
