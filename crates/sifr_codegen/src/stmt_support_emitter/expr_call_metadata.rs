@@ -184,12 +184,13 @@ pub(crate) fn should_force_mutable_binding(
         ty: &Type,
         recursive_fields: &std::collections::HashSet<(String, String)>,
     ) -> bool {
-        let Type::Class { name, .. } = ty.resolve_alias() else {
+        let Type::Class { name, fields, .. } = ty.resolve_alias() else {
             return false;
         };
-        recursive_fields
-            .iter()
-            .any(|(owner_class, _)| owner_class == name)
+        fields.iter().any(|(field_name, field_ty)| {
+            crate::helpers::is_option_type(field_ty)
+                && recursive_fields.contains(&(name.clone(), field_name.clone()))
+        })
     }
 
     matches!(

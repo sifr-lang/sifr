@@ -143,6 +143,29 @@ def detachLeaf(own branch: Branch) -> Leaf | None:
 }
 
 #[test]
+fn test_recursive_container_local_binding_stays_immutable_without_option_take() {
+    let rust_code = generate_rust_from_source(
+        r#"class Tree:
+    value: int
+    children: list[Tree]
+
+def inspect(own tree: Tree) -> int:
+    local_tree: Tree = tree
+    return local_tree.value
+"#,
+    );
+
+    assert!(
+        rust_code.contains("let local_tree: Tree = tree;"),
+        "recursive container fields do not require a mutable local binding:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("let mut local_tree: Tree = tree;"),
+        "forced mutability should remain limited to optional recursive fields that can use .take():\n{rust_code}"
+    );
+}
+
+#[test]
 fn test_recursive_option_let_else_binding_is_mutable_for_child_moves() {
     let rust_code = generate_rust_from_source(
         r#"class Expr:
