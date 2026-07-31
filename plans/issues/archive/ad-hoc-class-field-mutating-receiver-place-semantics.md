@@ -546,6 +546,14 @@ invocation precision merged in
 [#3092](https://github.com/sifr-lang/sifr/pull/3092). Closure remains pending
 the terminal whole-phase `SATISFIED` review.
 
+Whole-phase review pass 4 found one remaining unchecked argument-footprint
+path: an index or slice with a non-name-rooted object could discard the object
+subtree, allowing a nested receiver read or move to escape overlap checking.
+The focused index/slice-footprint remediation is in progress on
+`codex/class-field-index-slice-footprint-remediation`; its implementation
+review pass 4 is `SATISFIED` with zero actionable findings, but it is not
+treated as phase evidence until its authoritative gate, PR, and merge complete.
+
 1. Add the canonical `Place`/projection extractor, argument footprint
    collector, prefix-overlap check, and receiver/argument validation.
 2. Add `SIFR-OWN-0014`, `SIFR-PROTO-0005`, and `SIFR-PROTO-0006`; reuse
@@ -879,24 +887,35 @@ Closure validation evidence:
   `9c99ef43b1aad12fcafe6b6d3742ce9afd24e475` after four Opus review rounds;
   exact integration-head pass 4 returned `SATISFIED` with no blocking or
   non-blocking findings.
-- Two authoritative default merge-profile attempts on integrated closure head
-  `260a0d22b2330c2b947fc7a095e150078cee7b27` passed every functional lane:
+- The default merge-profile attempt on post-#3092 closure head
+  `bda18f90ea277909d463a796a012836c03251961` passed coverage/core guardrails,
+  diagnostics, CPython differential, Python interop `25/25`, Rust interop
+  `10/10`, frontend/syntax guardrails, and developer tooling `32/32`. It then
+  stopped at the representative performance budget: project graph measured
+  `1501.33ms > 1357.524ms`, arithmetic `1390.325ms > 1334.139ms`, and JSON
+  diagnostics `1397.746ms > 1335.954ms`. The same contended run spent
+  `161854ms` in the read-only Python doctor and `686956ms` in Python interop,
+  so it is retained as functional evidence but is not a green merge gate or a
+  final performance measurement.
+- Before #3092, two authoritative default merge-profile attempts on closure
+  head `260a0d22b2330c2b947fc7a095e150078cee7b27` passed every functional lane:
   coverage and core guardrails, diagnostics, CPython differential, Python
   interop `25/25`, Rust interop `10/10`, frontend/syntax guardrails, and
   developer tooling `32/32`. Both reached the final representative performance
   step; the first ran beside an unrelated four-worker native corpus audit and
   missed three medians, while the second missed arithmetic by `11.368ms` and
   JSON diagnostics by `292.035ms`.
-- The repository's unchanged official subset gate then passed arithmetic at
+- At that pre-#3092 head, the repository's unchanged official subset gate
+  passed arithmetic at
   `1275.878ms < 1334.139ms` and JSON diagnostics at
   `1282.951ms < 1335.954ms`, each with the required five samples and
   `check_budgets.py --allow-subset`. No baseline, threshold, sample count,
   budget, or waiver changed.
-- A subsequent complete representative retry passed seven of eight enforced
-  variants and missed only JSON diagnostics by `3.961ms`; the accepted
-  five-sample JSON subset above is the final uncontended measurement for that
-  case. The whole-phase reviewer must assess this exact evidence before PR
-  #3088 becomes ready.
+- A subsequent pre-#3092 complete representative retry passed seven of eight
+  enforced variants and missed only JSON diagnostics by `3.961ms`; the accepted
+  five-sample JSON subset above remains historical evidence only. A final
+  uncontended measurement on the eventual post-remediation closure head is
+  required before PR #3088 becomes ready.
 
 ## Acceptance criteria
 
@@ -1220,3 +1239,18 @@ Closure validation evidence:
   byte-identical to the pass-3-approved head, every recorded count/hash was
   exact, and the authoritative create-PR gate passed at
   `36c1be77fa2a7a74c4b8441178eaf9902ba259c7`.
+- Final whole-phase review pass 4:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-4.md)
+  returned `NOT SATISFIED`. It found that `Index` and `Slice` footprint
+  collection did not traverse an unresolvable object base, so a nested call,
+  read, or move could disappear and leak a Rust borrow/move error instead of
+  `SIFR-OWN-0002`. The focused remediation above addresses that blocker and
+  adds reject/accept controls for unresolved bases and nested subscripts. The
+  review also required current-head merge-gate evidence to be distinguished
+  from the pre-#3092 performance record, which is corrected in the validation
+  ledger above.
+- Pass 4 also recorded a separate pre-existing match-lowering debt: a `match`
+  arm containing calls can still leak a native build failure. It is outside
+  this receiver-place phase, reproduces independently of its changes, and is
+  retained here alongside the other pre-existing value-codegen/CFG debts
+  rather than treated as a closure exception.
