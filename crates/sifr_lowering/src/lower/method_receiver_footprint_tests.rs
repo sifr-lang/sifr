@@ -143,10 +143,42 @@ class Coordinator:
 }
 
 #[test]
+fn nested_slice_argument_collects_inner_index_footprint() {
+    let source = r#"
+class Receiver:
+    values: list[int]
+    index: int
+
+    def replace(self, own values: list[int]) -> None:
+        self.values = values
+
+class Coordinator:
+    receiver: Receiver
+
+    def conflict_slice(self, other: tuple[list[int], list[int]]) -> None:
+        self.receiver.replace(other[self.receiver.index][:1])
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("nested slice expressions under the mutable receiver should overlap"),
+        Err(errors) => errors,
+    };
+
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+                && error.primary_range == Some(range_for(source, "other[self.receiver.index][:1]"))
+        }),
+        "{errors:?}"
+    );
+}
+
+#[test]
 fn nested_index_and_slice_arguments_accept_disjoint_inner_indexes() {
     let source = r#"
 class Receiver:
     value: int | None
+    values: list[int]
     index: int
 
     def update(self, value: int | None) -> int | None:
@@ -154,7 +186,7 @@ class Receiver:
         return self.value
 
     def replace(self, own values: list[int]) -> None:
-        pass
+        self.values = values
 
 class Source:
     index: int
