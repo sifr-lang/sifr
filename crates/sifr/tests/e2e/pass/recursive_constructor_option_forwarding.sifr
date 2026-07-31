@@ -1,0 +1,38 @@
+# Recursive constructor options forwarded from borrowed parameters must clone
+# before converting Option[TreeNode] into the boxed Rust field representation.
+
+class TreeNode:
+    val: int
+    left: TreeNode | None
+
+    def __init__(self, val: int, left: TreeNode | None):
+        self.val = val
+        self.left = left
+
+def wrap(node: TreeNode | None) -> TreeNode:
+    return TreeNode(5, node)
+
+def wrapNested(node: TreeNode | None) -> list[TreeNode]:
+    nodes: list[TreeNode] = []
+    nodes.append(TreeNode(6, node))
+    return nodes
+
+def childValue(node: TreeNode) -> int:
+    child_option: TreeNode | None = node.left
+    if child_option is not None:
+        child: TreeNode = child_option
+        return child.val
+    return -1
+
+def main():
+    direct_child: TreeNode = TreeNode(1, None)
+    direct: TreeNode = wrap(direct_child)
+    assert direct.val == 5
+    assert childValue(direct) == 1
+
+    nested_child: TreeNode = TreeNode(2, None)
+    nested: list[TreeNode] = wrapNested(nested_child)
+    assert len(nested) == 1
+    for parent in nested:
+        assert parent.val == 6
+        assert childValue(parent) == 2

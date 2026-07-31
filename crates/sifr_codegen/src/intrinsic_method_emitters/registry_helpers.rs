@@ -715,51 +715,7 @@ pub(super) fn registry_can_construct_error_from_message(ty_name: &str) -> bool {
     )
 }
 
-pub(super) fn registry_is_some_ctor(expr: &RustExpr) -> bool {
-    matches!(expr, RustExpr::Path(path) if path.len() == 1 && path[0] == "Some")
-        || matches!(expr, RustExpr::Ident(name) if name == "Some")
-}
-
 pub(super) fn registry_is_box_new_ctor(expr: &RustExpr) -> bool {
     matches!(expr, RustExpr::Path(path) if path.len() == 2 && path[0] == "Box" && path[1] == "new")
         || matches!(expr, RustExpr::Ident(name) if name == "Box::new")
-}
-
-pub(super) fn registry_is_some_expr(expr: &RustExpr) -> bool {
-    matches!(expr, RustExpr::FnCall { func, .. } if registry_is_some_ctor(func.as_ref()))
-}
-
-pub(super) fn registry_ensure_some_box_inner(expr: RustExpr) -> RustExpr {
-    match expr {
-        RustExpr::FnCall { func, args }
-            if registry_is_some_ctor(func.as_ref()) && args.len() == 1 =>
-        {
-            let mut args_iter = args.into_iter();
-            let Some(inner) = args_iter.next() else {
-                unreachable!("Some(_) call must have exactly one argument");
-            };
-            if matches!(&inner, RustExpr::FnCall { func, .. } if registry_is_box_new_ctor(func.as_ref()))
-            {
-                RustExpr::FnCall {
-                    func,
-                    args: vec![inner],
-                }
-            } else {
-                RustExpr::FnCall {
-                    func,
-                    args: vec![RustExpr::FnCall {
-                        func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
-                        args: vec![inner],
-                    }],
-                }
-            }
-        }
-        other => RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-            args: vec![RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
-                args: vec![other],
-            }],
-        },
-    }
 }
