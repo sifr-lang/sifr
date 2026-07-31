@@ -56,7 +56,7 @@ class Owner:
     def pick(self) -> Inner:
         return self.inner
 
-    def replace(self, values: list[int]) -> None:
+    def replace(self, own values: list[int]) -> None:
         self.values = values
 
     def conflict(self) -> None:
@@ -72,4 +72,40 @@ class Owner:
         error.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
             && error.primary_range == Some(range_for(source, "self.pick().values[:1]"))
     }));
+}
+
+#[test]
+fn index_and_slice_arguments_accept_disjoint_unresolved_bases() {
+    let source = r#"
+class Inner:
+    values: list[int]
+
+class Source:
+    inner: Inner
+
+    def snapshot(self) -> Inner:
+        return self.inner
+
+class Owner:
+    value: int | None
+    values: list[int]
+
+    def update(self, value: int | None) -> int | None:
+        self.value = value
+        return self.value
+
+    def replace(self, own values: list[int]) -> None:
+        self.values = values
+
+class Coordinator:
+    owner: Owner
+    source: Source
+
+    def apply(self) -> int | None:
+        self.owner.replace(self.source.snapshot().values[:1])
+        return self.owner.update(self.source.snapshot().values[0])
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    lower_module(parsed.suite())
+        .expect("disjoint unresolved index and slice bases should remain accepted");
 }

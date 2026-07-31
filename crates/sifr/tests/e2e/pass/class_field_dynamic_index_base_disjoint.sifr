@@ -1,0 +1,51 @@
+class Inner:
+    values: list[int]
+
+    def __init__(self, values: list[int]):
+        self.values = values
+
+
+class Source:
+    inner: Inner
+
+    def __init__(self, inner: Inner):
+        self.inner = inner
+
+    def snapshot(self) -> Inner:
+        return self.inner
+
+
+class Owner:
+    value: int | None
+    values: list[int]
+
+    def __init__(self):
+        self.value = None
+        self.values = []
+
+    def update(self, value: int | None) -> int | None:
+        self.value = value
+        return self.value
+
+    def replace(self, own values: list[int]) -> None:
+        self.values = values
+
+
+class Coordinator:
+    owner: Owner
+    source: Source
+
+    def __init__(self, owner: Owner, source: Source):
+        self.owner = owner
+        self.source = source
+
+    def apply(self) -> int | None:
+        self.owner.replace(self.source.snapshot().values[:1])
+        return self.owner.update(self.source.snapshot().values[0])
+
+
+def main() -> None:
+    coordinator: Coordinator = Coordinator(Owner(), Source(Inner([7, 9])))
+    assert coordinator.apply() == 7
+    assert coordinator.owner.value == 7
+    assert coordinator.owner.values == [7]

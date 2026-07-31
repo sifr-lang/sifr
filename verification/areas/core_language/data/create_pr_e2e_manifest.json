@@ -13,6 +13,7 @@
     "class_field_mutating_receiver_places",
     "class_field_mutating_receiver_contexts",
     "class_field_callable_invocation_disjoint_sibling",
+    "class_field_dynamic_index_base_disjoint",
     "constructor_mutating_receiver_places",
     "owned_temporary_mutable_receivers",
     "protocol_receiver_conformance_controls",
