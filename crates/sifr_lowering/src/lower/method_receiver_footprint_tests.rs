@@ -109,3 +109,65 @@ class Coordinator:
     lower_module(parsed.suite())
         .expect("disjoint unresolved index and slice bases should remain accepted");
 }
+
+#[test]
+fn nested_index_argument_collects_inner_index_footprint() {
+    let source = r#"
+class Receiver:
+    value: int | None
+    index: int
+
+    def update(self, value: int | None) -> int | None:
+        self.value = value
+        return self.value
+
+class Coordinator:
+    receiver: Receiver
+
+    def conflict_index(self, other: tuple[list[int], list[int]]) -> int | None:
+        return self.receiver.update(other[self.receiver.index][0])
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("nested index expressions under the mutable receiver should overlap"),
+        Err(errors) => errors,
+    };
+
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+                && error.primary_range == Some(range_for(source, "other[self.receiver.index][0]"))
+        }),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn nested_index_and_slice_arguments_accept_disjoint_inner_indexes() {
+    let source = r#"
+class Receiver:
+    value: int | None
+    index: int
+
+    def update(self, value: int | None) -> int | None:
+        self.value = value
+        return self.value
+
+    def replace(self, own values: list[int]) -> None:
+        pass
+
+class Source:
+    index: int
+
+class Coordinator:
+    receiver: Receiver
+    source: Source
+
+    def accepted(self, other: tuple[list[int], list[int]]) -> int | None:
+        self.receiver.replace(other[self.source.index][:1])
+        return self.receiver.update(other[self.source.index][0])
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    lower_module(parsed.suite())
+        .expect("disjoint nested index and slice footprints should remain accepted");
+}
