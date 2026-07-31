@@ -2,7 +2,7 @@
 
 ## Status
 
-Implementation complete; integrated closure candidate under
+Implementation closure is in progress under
 [#3088](https://github.com/sifr-lang/sifr/pull/3088). Item 1, canonical receiver
 metadata and inference, merged in
 [#3065](https://github.com/sifr-lang/sifr/pull/3065), with tracking follow-up
@@ -26,10 +26,16 @@ check. The correction merged in
 `SIFR-OWN-0002` paths structured arguments, adds every native phase pass
 fixture to the create-PR manifest, and preserves precise field identity for
 statically resolvable unsupported field values. Its exact-head review pass 5
-returned `SATISFIED` with no blocking or non-blocking findings. Closure PR
-[#3088](https://github.com/sifr-lang/sifr/pull/3088) remains pending only on
-the authoritative merge gate and terminal whole-phase review of this
-integrated archived-plan head.
+returned `SATISFIED` with no blocking or non-blocking findings.
+
+Terminal whole-phase review pass 3 then found one narrower over-rejection:
+invoking a callable class field inside a same-call argument recorded only the
+field's parent object place. The focused correction is under draft PR
+[#3092](https://github.com/sifr-lang/sifr/pull/3092); it must pass the
+authoritative create-PR gate, repeated exact-head Opus review, and merge before
+the integrated closure can receive a new terminal whole-phase review. Closure
+PR [#3088](https://github.com/sifr-lang/sifr/pull/3088) remains draft until
+that review returns `SATISFIED` and the final merge gate evidence is complete.
 
 The defect predates M10 and was not introduced by the buffer implementation,
 but it violates Sifr's core guarantee: a program can compile and silently lose
@@ -532,8 +538,10 @@ Status: **Merged** in
 [#3082](https://github.com/sifr-lang/sifr/pull/3082), with whole-phase
 correctness remediations merged in
 [#3087](https://github.com/sifr-lang/sifr/pull/3087) and
-[#3090](https://github.com/sifr-lang/sifr/pull/3090). Closure remains pending
-the terminal whole-phase `SATISFIED` review.
+[#3090](https://github.com/sifr-lang/sifr/pull/3090), with callable-field
+invocation precision under draft PR
+[#3092](https://github.com/sifr-lang/sifr/pull/3092). Closure remains pending
+that remediation and the terminal whole-phase `SATISFIED` review.
 
 1. Add the canonical `Place`/projection extractor, argument footprint
    collector, prefix-overlap check, and receiver/argument validation.
@@ -1102,7 +1110,9 @@ Closure validation evidence:
   file-size compliance. The remediation merged in
   [#3087](https://github.com/sifr-lang/sifr/pull/3087) as
   `a7a5df414b985cc95a9ad23c5b006caa84101f0d`.
-- Whole-phase review pass 2 returned `NOT SATISFIED` after finding that
+- Final whole-phase review pass 2:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-2.md)
+  returned `NOT SATISFIED` after finding that
   unsupported callable/recursive field values could bypass footprint
   collection and leak raw Rust borrow/move errors, that the fifth
   `SIFR-OWN-0002` path lacked its structured `binding`, and that native
@@ -1156,3 +1166,11 @@ Closure validation evidence:
   that the stale `680/680` figure is absent, the pass-4 artifact and ledger
   entry match the review that occurred, and the exact reviewed documentation
   head `94acb685ccc53a40755683a74cda0c6baec91e8f` is internally consistent.
+- Final whole-phase review pass 3:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-3.md)
+  returned `NOT SATISFIED`. It found that callable-field invocation inside a
+  same-call argument retained only the parent object footprint, causing a
+  root-only rejection of legal disjoint sibling fields. The focused correction
+  is under draft PR
+  [#3092](https://github.com/sifr-lang/sifr/pull/3092). Its non-blocking record
+  finding is closed by restoring the pass-2 artifact above.
