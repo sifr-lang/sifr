@@ -1204,6 +1204,17 @@ Current Item 2 validation evidence:
   maintainability guardrails; it accepted the structured arguments, recovery
   identity, HIR/rendered ordering distinction, OWN fallback contract,
   decomposition, prerequisite isolation, and tracking record.
+- The post-review taxonomy check rejected one stale comment that described the
+  five-code live-emission assertion as phase-scoped. The corrected exact head
+  describes it as receiver/place-scoped, and the focused taxonomy and format
+  checks pass.
+- The authoritative create-PR gate exits `0` on exact code head `efcbc3d5e`.
+  Every blocking lane passes, including Python interop (`19/19`), developer
+  tooling with the LSP protocol smoke (`18/18`), diagnostics, performance,
+  runtime-platform verification, and the E2E pass suite (`140/140`, report
+  signature `ac6d879686517f2c`). Its sole advisory is the non-blocking warm
+  wall-time target after cold cache population; no budget, threshold, waiver,
+  or validation rule changed.
 
 Focused diagnostic-contract validation includes:
 
