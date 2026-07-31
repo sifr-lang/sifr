@@ -88,6 +88,8 @@ mod method_diagnostics;
 mod method_receiver_analysis;
 #[cfg(test)]
 mod method_receiver_analysis_tests;
+#[cfg(test)]
+mod method_receiver_footprint_tests;
 mod method_receiver_places;
 mod min_max_validation;
 mod mod_impl;

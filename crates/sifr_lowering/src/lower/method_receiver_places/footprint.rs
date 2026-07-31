@@ -105,6 +105,7 @@ fn collect_footprint(expr: &HirExpr, ctx: &LowerCtx, footprint: &mut Vec<Footpri
             if let Some(root) = root_binding_id(object) {
                 footprint.push(Footprint::Dynamic(root));
             }
+            collect_footprint(object, ctx, footprint);
             collect_footprint(index, ctx, footprint);
         }
         HirExpr::Slice {
@@ -117,6 +118,7 @@ fn collect_footprint(expr: &HirExpr, ctx: &LowerCtx, footprint: &mut Vec<Footpri
             if let Some(root) = root_binding_id(object) {
                 footprint.push(Footprint::Dynamic(root));
             }
+            collect_footprint(object, ctx, footprint);
             for bound in [start, stop, step].into_iter().flatten() {
                 collect_footprint(bound, ctx, footprint);
             }
