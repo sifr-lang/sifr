@@ -279,6 +279,121 @@ def accepted(mut owner: Owner) -> None:
 }
 
 #[test]
+fn invoked_callable_field_footprint_rejects_receiver_prefix_overlap() {
+    let source = r#"
+class Owner:
+    value: int
+    callback: Callable[[int], int]
+
+    def update(self, value: int) -> int:
+        self.value = value
+        return self.value
+
+    def conflict(self) -> int:
+        return self.update(self.callback(2))
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("invoked callable field under the mutable receiver should overlap"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+            && error.primary_range == Some(range_for(source, "self.callback(2)"))
+    }));
+}
+
+#[test]
+fn invoked_callable_field_footprint_accepts_disjoint_sibling_place() {
+    let source = r#"
+class Helper:
+    value: int
+
+    def update(self, value: int) -> int:
+        self.value = value
+        return self.value
+
+class Owner:
+    helper: Helper
+    callback: Callable[[int], int]
+
+    def accepted(self) -> int:
+        return self.helper.update(self.callback(2))
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    lower_module(parsed.suite()).expect("invoked callable sibling should not overlap");
+}
+
+#[test]
+fn actual_method_shadowing_callable_field_stays_conservative() {
+    let source = r#"
+class Helper:
+    value: int
+
+    def update(self, value: int) -> int:
+        self.value = value
+        return self.value
+
+class Base:
+    value: int
+
+    def run(self, value: int) -> int:
+        self.value = value
+        return self.value
+
+class Child(Base):
+    helper: Helper
+    run: Callable[[int], int]
+
+    def conflict(self) -> int:
+        return self.helper.update(self.run(2))
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("actual method call should retain the conservative object footprint"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+            && error.primary_range == Some(range_for(source, "self.run(2)"))
+    }));
+}
+
+#[test]
+fn callable_field_on_dynamic_base_keeps_conservative_object_footprint() {
+    let source = r#"
+class Inner:
+    callback: Callable[[int], int]
+
+class Owner:
+    value: int
+    inner: Inner
+
+    def pick(self) -> Inner:
+        return self.inner
+
+    def update(self, value: int) -> int:
+        self.value = value
+        return self.value
+
+    def conflict(self) -> int:
+        return self.update(self.pick().callback(2))
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("dynamic callable-field base should conservatively overlap"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+            && error.primary_range == Some(range_for(source, "self.pick().callback(2)"))
+    }));
+}
+
+#[test]
 fn unsupported_recursive_field_footprint_accepts_disjoint_sibling_place() {
     let source = r#"
 class Inner:

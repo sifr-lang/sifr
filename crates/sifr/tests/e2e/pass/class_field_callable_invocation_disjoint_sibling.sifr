@@ -1,0 +1,31 @@
+class Helper:
+    value: int
+
+    def __init__(self):
+        self.value = 0
+
+    def update(self, value: int) -> int:
+        self.value = value
+        return self.value
+
+
+class Owner:
+    helper: Helper
+    callback: Callable[[int], int]
+
+    def __init__(self, callback: Callable[[int], int]):
+        self.helper = Helper()
+        self.callback = callback
+
+    def apply(self, value: int) -> int:
+        return self.helper.update(self.callback(value))
+
+
+def double(value: int) -> int:
+    return value * 2
+
+
+def main() -> None:
+    owner: Owner = Owner(double)
+    assert owner.apply(21) == 42
+    assert owner.helper.value == 42
