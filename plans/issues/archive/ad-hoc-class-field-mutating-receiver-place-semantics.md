@@ -30,12 +30,15 @@ returned `SATISFIED` with no blocking or non-blocking findings.
 
 Terminal whole-phase review pass 3 then found one narrower over-rejection:
 invoking a callable class field inside a same-call argument recorded only the
-field's parent object place. The focused correction is under draft PR
-[#3092](https://github.com/sifr-lang/sifr/pull/3092); it must pass the
-authoritative create-PR gate, repeated exact-head Opus review, and merge before
-the integrated closure can receive a new terminal whole-phase review. Closure
-PR [#3088](https://github.com/sifr-lang/sifr/pull/3088) remains draft until
-that review returns `SATISFIED` and the final merge gate evidence is complete.
+field's parent object place. The correction merged in
+[#3092](https://github.com/sifr-lang/sifr/pull/3092) as
+`9c99ef43b1aad12fcafe6b6d3742ce9afd24e475`; it preserves the callable
+field's exact identity, retains conservative fallback for dynamic bases, and
+locks actual-method shadowing and dynamic-base behavior with mutation-verified
+tests. Its exact integration-head review pass 4 returned `SATISFIED` with no
+blocking or non-blocking findings. Closure PR
+[#3088](https://github.com/sifr-lang/sifr/pull/3088) remains draft only until
+the integrated merge gate and a new terminal whole-phase review return green.
 
 The defect predates M10 and was not introduced by the buffer implementation,
 but it violates Sifr's core guarantee: a program can compile and silently lose
@@ -539,9 +542,9 @@ Status: **Merged** in
 correctness remediations merged in
 [#3087](https://github.com/sifr-lang/sifr/pull/3087) and
 [#3090](https://github.com/sifr-lang/sifr/pull/3090), with callable-field
-invocation precision under draft PR
+invocation precision merged in
 [#3092](https://github.com/sifr-lang/sifr/pull/3092). Closure remains pending
-that remediation and the terminal whole-phase `SATISFIED` review.
+the terminal whole-phase `SATISFIED` review.
 
 1. Add the canonical `Place`/projection extractor, argument footprint
    collector, prefix-overlap check, and receiver/argument validation.
@@ -857,6 +860,25 @@ Closure validation evidence:
   `44ab8ad38544fa5225d8d4f09ad3b5026d485c25` after five Opus review rounds;
   exact-head pass 5 returned `SATISFIED` with no blocking or non-blocking
   findings.
+- Callable-invocation remediation implementation/test head
+  `fb37126923131b51070548b0c6de05ea2e36271c` passed the full lowering suite
+  (`945 passed`, `1 ignored` before the subsequent #3091 merge), the full
+  annotated fail suite (`565 passed`), workspace Clippy with warnings denied,
+  formatting, HIR maintainability, and file-size guardrails. Four focused
+  tests cover true overlap, disjoint siblings, actual-method shadowing, and
+  dynamic-base fallback; the latter two were mutation-verified as uniquely
+  failing if their corresponding guard is removed.
+- Its merged-main integration head
+  `36c1be77fa2a7a74c4b8441178eaf9902ba259c7` passed the authoritative
+  create-PR gate with every blocking step and budget green: full lowering
+  `948 passed`, `1 ignored`, Python interop `19/19`, Rust interop `10/10`,
+  developer tooling `18/18`, generated-code quality `5/5`, runtime-platform
+  `28` variants with one declared capability skip, and E2E `139/139` with
+  signature `3313b4a3ff3d952c`.
+- Remediation PR #3092 merged as
+  `9c99ef43b1aad12fcafe6b6d3742ce9afd24e475` after four Opus review rounds;
+  exact integration-head pass 4 returned `SATISFIED` with no blocking or
+  non-blocking findings.
 - Two authoritative default merge-profile attempts on integrated closure head
   `260a0d22b2330c2b947fc7a095e150078cee7b27` passed every functional lane:
   coverage and core guardrails, diagnostics, CPython differential, Python
@@ -1171,6 +1193,30 @@ Closure validation evidence:
   returned `NOT SATISFIED`. It found that callable-field invocation inside a
   same-call argument retained only the parent object footprint, causing a
   root-only rejection of legal disjoint sibling fields. The focused correction
-  is under draft PR
-  [#3092](https://github.com/sifr-lang/sifr/pull/3092). Its non-blocking record
-  finding is closed by restoring the pass-2 artifact above.
+  merged in [#3092](https://github.com/sifr-lang/sifr/pull/3092). Its
+  non-blocking record finding is closed by restoring the pass-2 artifact above.
+- Callable-invocation remediation PR review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-1.md)
+  returned `SATISFIED` with no blocking findings after independently running
+  15 probes across synchronous/async, inherited, generic, nested, dynamic,
+  actual-method-shadowing, and mutable-argument shapes. Its two low
+  test-coverage observations were addressed with focused lowering regressions.
+- Callable-invocation remediation PR review pass 2:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-2.md)
+  mutation-verified that each added regression uniquely fails when its
+  corresponding implementation guard is removed and reran the lowering,
+  fail, Clippy, formatting, HIR, and file-size checks. The round ended without
+  the requested verdict after mistaking an unrelated corpus process for this
+  PR's gate, so it is retained as evidence but not treated as approval.
+- Callable-invocation remediation PR review pass 3:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-3.md)
+  returned `SATISFIED` with no blocking or non-blocking findings on exact
+  implementation/test head
+  `fb37126923131b51070548b0c6de05ea2e36271c`.
+- Callable-invocation remediation integration-head review pass 4:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-4.md)
+  returned `SATISFIED` with no blocking or non-blocking findings. It verified
+  the #3091 main merge was a disjoint clean union, the implementation remained
+  byte-identical to the pass-3-approved head, every recorded count/hash was
+  exact, and the authoritative create-PR gate passed at
+  `36c1be77fa2a7a74c4b8441178eaf9902ba259c7`.
