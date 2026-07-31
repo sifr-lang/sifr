@@ -445,6 +445,30 @@ fn extract_place(expr: &HirExpr, ctx: &LowerCtx) -> Result<Place, InvalidPlace> 
     }
 }
 
+fn extract_footprint_place(expr: &HirExpr, ctx: &LowerCtx) -> Option<Place> {
+    match expr {
+        HirExpr::Name {
+            binding_id: Some(root),
+            ..
+        } => Some(Place {
+            root: *root,
+            projections: Vec::new(),
+        }),
+        HirExpr::FieldAccess { object, field, .. } => {
+            let mut place = extract_footprint_place(object, ctx)?;
+            place
+                .projections
+                .push(PlaceProjection::Field(resolve_field_identity(
+                    object.ty(),
+                    field,
+                    ctx,
+                )));
+            Some(place)
+        }
+        _ => None,
+    }
+}
+
 fn resolve_field_identity(object_ty: &Type, field: &str, ctx: &LowerCtx) -> FieldIdentity {
     let Some((mut declaring, chain)) = nominal_class_and_parent_chain(object_ty) else {
         return FieldIdentity {
@@ -771,6 +795,16 @@ fn collect_footprint(expr: &HirExpr, ctx: &LowerCtx, footprint: &mut Vec<Footpri
                 collect_footprint(filter, ctx, footprint);
             }
         }
+        HirExpr::FieldAccess { object, .. } => {
+            if let Some(place) = extract_footprint_place(expr, ctx) {
+                footprint.push(Footprint::Place(place));
+            } else {
+                if let Some(root) = root_binding_id(object) {
+                    footprint.push(Footprint::Dynamic(root));
+                }
+                collect_footprint(object, ctx, footprint);
+            }
+        }
         HirExpr::IntLiteral(_)
         | HirExpr::LargeIntLiteral(_)
         | HirExpr::FloatLiteral(_)
@@ -778,8 +812,7 @@ fn collect_footprint(expr: &HirExpr, ctx: &LowerCtx, footprint: &mut Vec<Footpri
         | HirExpr::BoolLiteral(_)
         | HirExpr::NoneLiteral
         | HirExpr::Name { .. }
-        | HirExpr::EnumVariant { .. }
-        | HirExpr::FieldAccess { .. } => {}
+        | HirExpr::EnumVariant { .. } => {}
     }
 }
 

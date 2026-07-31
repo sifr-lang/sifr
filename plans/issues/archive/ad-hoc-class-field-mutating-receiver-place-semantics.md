@@ -2,24 +2,34 @@
 
 ## Status
 
-Implementation complete; closure candidate under
+Implementation complete; integrated closure candidate under
 [#3088](https://github.com/sifr-lang/sifr/pull/3088). Item 1, canonical receiver
 metadata and inference, merged in
 [#3065](https://github.com/sifr-lang/sifr/pull/3065), with tracking follow-up
 [#3066](https://github.com/sifr-lang/sifr/pull/3066). Item 2, checked place
 semantics and defect closure, merged in
-[#3082](https://github.com/sifr-lang/sifr/pull/3082). Upstream compatibility
-snapshots merged in
+[#3082](https://github.com/sifr-lang/sifr/pull/3082) after terminal exact-head
+review pass 12 returned `SATISFIED` with zero actionable findings. Upstream
+compatibility snapshots merged in
 [sifr-lang/leetcode#40](https://github.com/sifr-lang/leetcode/pull/40) and
 [sifr-lang/leetcode#41](https://github.com/sifr-lang/leetcode/pull/41).
 
-The first whole-phase review found two final implementation-quality issues:
-missing structured `binding` arguments on same-call `SIFR-OWN-0002`
-diagnostics and duplicated inherited-field storage rerooting. Both were closed
-in [#3087](https://github.com/sifr-lang/sifr/pull/3087), whose exact-head
-Claude Opus review returned `SATISFIED` with zero actionable findings. This
-archive move and ledger refresh remain subject to the final whole-phase review
-and merge of closure PR #3088.
+The first whole-phase review found missing structured `binding` arguments on
+`SIFR-OWN-0002` diagnostics and duplicated inherited-field storage rerooting.
+Both were closed in [#3087](https://github.com/sifr-lang/sifr/pull/3087), whose
+exact-head Claude Opus review returned `SATISFIED` with zero actionable
+findings. A later whole-phase review found that unsupported callable and
+recursive field values could still bypass the argument-footprint overlap
+check. The correction merged in
+[#3090](https://github.com/sifr-lang/sifr/pull/3090) as
+`44ab8ad38544fa5225d8d4f09ad3b5026d485c25`; it gives all five
+`SIFR-OWN-0002` paths structured arguments, adds every native phase pass
+fixture to the create-PR manifest, and preserves precise field identity for
+statically resolvable unsupported field values. Its exact-head review pass 5
+returned `SATISFIED` with no blocking or non-blocking findings. Closure PR
+[#3088](https://github.com/sifr-lang/sifr/pull/3088) remains pending only on
+the authoritative merge gate and terminal whole-phase review of this
+integrated archived-plan head.
 
 The defect predates M10 and was not introduced by the buffer implementation,
 but it violates Sifr's core guarantee: a program can compile and silently lose
@@ -327,6 +337,14 @@ have not been narrowed continue to receive the earlier ordinary
 unknown/optional-method type diagnostic. A narrowed optional/recursive storage
 place reaches the receiver-place validator and receives `SIFR-OWN-0014`.
 
+“Unsupported mutable place” applies to selecting the mutating receiver or a
+mutable argument; it does not discard statically resolved field identity while
+collecting another argument's read/borrow/move footprint. A callable or
+optional/recursive field value whose base is a known place retains its
+declaring-class field projection for overlap comparison. Only genuinely
+unresolvable bases and dynamic index/slice projections collapse to a
+conservative root footprint.
+
 If index, slice, or optional-field typing rejects the expression earlier with
 `SIFR-STDLIB-0001`, that existing diagnostic is the accepted boundary; this
 issue does not bypass ordinary type resolution merely to replace it with
@@ -365,8 +383,10 @@ footprint of every explicit argument, including nested calls and field reads:
 - an overlapping owned move is rejected with `SIFR-OWN-0002`;
 - a disjoint sibling place under the same root is accepted;
 - a non-place expression that contains an overlapping place read is rejected;
-- an unsupported/dynamic projection under the same root is conservatively
-  treated as overlapping.
+- a statically resolvable unsupported field value retains precise field
+  identity, so a disjoint sibling remains accepted;
+- a dynamic index/slice projection or genuinely unresolvable base under the
+  same root is conservatively treated as overlapping.
 
 The sole compiler-owned evaluation-order exception is a typed `defaultdict`
 list `extend` or set update-family call. Those lowerings insert the destination
@@ -508,6 +528,13 @@ counter deletion is claimed by Item 1.
 
 ### Item 2: Place checking, place emission, and defect closure
 
+Status: **Merged** in
+[#3082](https://github.com/sifr-lang/sifr/pull/3082), with whole-phase
+correctness remediations merged in
+[#3087](https://github.com/sifr-lang/sifr/pull/3087) and under review in
+[#3090](https://github.com/sifr-lang/sifr/pull/3090). Closure remains pending
+the integrated merge gate and terminal whole-phase `SATISFIED` review.
+
 1. Add the canonical `Place`/projection extractor, argument footprint
    collector, prefix-overlap check, and receiver/argument validation.
 2. Add `SIFR-OWN-0014`, `SIFR-PROTO-0005`, and `SIFR-PROTO-0006`; reuse
@@ -596,7 +623,8 @@ hand-maintained 900-line cap.
 
 ### Existing codes
 
-- `SIFR-OWN-0002`: use for every same-call overlapping place conflict.
+- `SIFR-OWN-0002`: use for every conflicting borrow, including same-call
+  overlapping place conflicts and pending async-generator advances.
   Populate the existing `binding` argument with the canonical source display
   of the conflicting place and point at the later conflicting receiver or
   argument. Regenerate/update `docs/errors/SIFR-OWN-0002.mdx` so its documented
@@ -809,6 +837,20 @@ Closure validation evidence:
 - Remediation PR #3087 merged as
   `a7a5df414b985cc95a9ad23c5b006caa84101f0d` after exact-head Claude Opus
   review returned `SATISFIED` with zero actionable findings.
+- Overlap-remediation exact implementation head
+  `92b38be705138643b23c37a425892df767beee5d` passed the create-PR gate,
+  including Python interop `19/19`, E2E `137/137` with signature
+  `eeeeb711211648b0`, full lowering (`941 passed`, `1 ignored`), full codegen
+  (`954 passed`), full annotated fail corpus (`564 passed`), formatting,
+  Clippy, and every documentation, HIR, and file-size guardrail.
+- The post-review manifest lane passed `138/138`, signature
+  `4ede7c71d86f381c`, after adding the seventh native phase pass fixture.
+- Remediation PR #3090 merged as
+  `44ab8ad38544fa5225d8d4f09ad3b5026d485c25` after five Opus review rounds;
+  exact-head pass 5 returned `SATISFIED` with no blocking or non-blocking
+  findings.
+- The authoritative default merge gate is rerun below on the integrated
+  closure head before PR #3088 becomes ready.
 
 ## Acceptance criteria
 
@@ -1044,3 +1086,57 @@ Closure validation evidence:
   file-size compliance. The remediation merged in
   [#3087](https://github.com/sifr-lang/sifr/pull/3087) as
   `a7a5df414b985cc95a9ad23c5b006caa84101f0d`.
+- Whole-phase review pass 2 returned `NOT SATISFIED` after finding that
+  unsupported callable/recursive field values could bypass footprint
+  collection and leak raw Rust borrow/move errors, that the fifth
+  `SIFR-OWN-0002` path lacked its structured `binding`, and that native
+  phase-fixture/evidence tracking remained incomplete. Remediation merged in
+  [#3090](https://github.com/sifr-lang/sifr/pull/3090) as
+  `44ab8ad38544fa5225d8d4f09ad3b5026d485c25`.
+- Overlap-remediation PR review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-1.md)
+  returned `NOT SATISFIED`: the first conservative fallback closed the missed
+  diagnostics but collapsed all fields under a root and rejected legal
+  callable/recursive sibling fields. The follow-up retains precise
+  `FieldIdentity` projections when the base place resolves statically.
+- Overlap-remediation PR review pass 2:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-2.md)
+  returned `NOT SATISFIED` on documentation of record only. It independently
+  accepted the corrected implementation, ran 21 targeted lowering tests,
+  reproduced both fail fixtures as structured `SIFR-OWN-0002`, and inspected
+  the exact-head create-PR pass at
+  `92b38be705138643b23c37a425892df767beee5d`; this revision aligns the overlap
+  rule and status/review ledger before pass 3.
+- Overlap-remediation PR review pass 3:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-3.md)
+  returned `SATISFIED` with no blocking findings. The reviewer independently
+  reproduced the callable/recursive overlap failures as structured
+  `SIFR-OWN-0002`, accepted disjoint sibling fields, verified the async
+  generator diagnostic arguments, ran the full lowering and codegen suites,
+  checked all documentation and maintainability guardrails, and inspected the
+  exact-head create-PR evidence. The non-blocking fixture-manifest cleanup then
+  passed the create-PR E2E lane at `138/138` with report signature
+  `4ede7c71d86f381c`.
+- That review also recorded separate, pre-existing value-codegen debt:
+  independently moving callable or recursive fields, and passing a class field
+  as a mutable free-function argument, can still reach Rust move/borrow errors.
+  These shapes reproduce on the untouched base and are not receiver/argument
+  overlap-analysis regressions; they remain follow-up compiler debt rather than
+  hidden closure exceptions for this phase.
+- Overlap-remediation PR review pass 4:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-4.md)
+  returned `SATISFIED` with no blocking findings after independently rerunning
+  the full lowering, codegen, diagnostics, and fail suites; the targeted
+  unsupported-field matrix; formatting, clippy, docs, HIR, and file-size
+  guardrails; both exact overlap fixtures; manifest integrity; and both
+  authoritative logs. Its only record-precision observation was that an older
+  `680/680` Item 2 pass-corpus figure had been left beside freshly updated
+  library counts. That stale figure is removed here; the current bounded E2E
+  evidence remains the independently verified `138/138` create-PR lane, and
+  the full pass corpus remains assigned to the integrated closure merge gate.
+- Overlap-remediation exact-head record review pass 5:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-5.md)
+  returned `SATISFIED` with no blocking or non-blocking findings. It confirmed
+  that the stale `680/680` figure is absent, the pass-4 artifact and ledger
+  entry match the review that occurred, and the exact reviewed documentation
+  head `94acb685ccc53a40755683a74cda0c6baec91e8f` is internally consistent.

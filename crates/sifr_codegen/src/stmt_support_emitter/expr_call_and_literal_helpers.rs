@@ -261,32 +261,19 @@ macro_rules! stmt_expr_constructor {
                                     )
                             );
                             let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
-                            if !crate::helpers::is_option_type(resolved_param) {
-                                if (is_recursive_ctor_field || is_recursive_container_param)
-                                    && !Self::is_box_new_call_expr_for_ir(lowered_arg)
-                                {
-                                    *lowered_arg = crate::RustExpr::FnCall {
-                                        func: Box::new(crate::RustExpr::Path(vec![
-                                            "Box".to_string(),
-                                            "new".to_string(),
-                                        ])),
-                                        args: vec![lowered_arg.clone()],
-                                    };
-                                }
+                            if crate::helpers::is_option_type(resolved_param) {
                                 continue;
                             }
-                            let needs_box_inner = param_ty.rust_type().starts_with("Option<Box<")
-                                || is_recursive_ctor_field;
-                            if !needs_box_inner || matches!(args[idx], HirExpr::NoneLiteral) {
-                                continue;
-                            }
-                            let arg_is_option = crate::helpers::is_option_type(args[idx].ty());
-                            if arg_is_option {
-                                *lowered_arg =
-                                    Self::ensure_option_box_inner_for_ir(lowered_arg.clone());
-                            } else {
-                                *lowered_arg =
-                                    Self::ensure_some_box_inner_for_ir(lowered_arg.clone());
+                            if (is_recursive_ctor_field || is_recursive_container_param)
+                                && !Self::is_box_new_call_expr_for_ir(lowered_arg)
+                            {
+                                *lowered_arg = crate::RustExpr::FnCall {
+                                    func: Box::new(crate::RustExpr::Path(vec![
+                                        "Box".to_string(),
+                                        "new".to_string(),
+                                    ])),
+                                    args: vec![lowered_arg.clone()],
+                                };
                             }
                         }
                     }
@@ -313,6 +300,11 @@ macro_rules! stmt_expr_constructor {
                 lowered_args.push(adapted_arg);
             }
             for (idx, lowered_arg) in lowered_args.iter_mut().enumerate() {
+                let Some((param_ty, convention)) =
+                    ctor_params.as_ref().and_then(|params| params.get(idx))
+                else {
+                    continue;
+                };
                 let is_recursive_ctor_field = $emitter
                     .class_field_order
                     .get(class_name)
@@ -336,15 +328,36 @@ macro_rules! stmt_expr_constructor {
                             Type::Class { name, .. } if name == class_name
                         )
                 );
+                if crate::helpers::is_option_type(
+                    crate::resolve_alias_type_for_plain_call(param_ty),
+                ) {
+                    if let Some(adapted) =
+                        $emitter.try_adapt_recursive_option_constructor_arg_for_ir(
+                            &crate::stmt_support_emitter::RecursiveOptionConstructorArgContext {
+                                ctor_class_name: Some(class_name.as_str()),
+                                index: idx,
+                                param_ty,
+                                arg: &args[idx],
+                                effective_arg_ty: args[idx].ty(),
+                                convention: *convention,
+                                borrowed_name_arg: false,
+                            },
+                            lowered_arg.clone(),
+                        )
+                    {
+                        *lowered_arg = adapted;
+                    }
+                    continue;
+                }
                 if (!is_recursive_ctor_field && !is_recursive_container_arg)
                     || matches!(args[idx], HirExpr::NoneLiteral)
                 {
                     continue;
                 }
                 let resolved_arg_ty = crate::resolve_alias_type_for_plain_call(args[idx].ty());
-                if crate::helpers::is_option_type(resolved_arg_ty) {
-                    *lowered_arg = Self::ensure_option_box_inner_for_ir(lowered_arg.clone());
-                } else if !Self::is_box_new_call_expr_for_ir(lowered_arg) {
+                if !crate::helpers::is_option_type(resolved_arg_ty)
+                    && !Self::is_box_new_call_expr_for_ir(lowered_arg)
+                {
                     *lowered_arg = crate::RustExpr::FnCall {
                         func: Box::new(crate::RustExpr::Path(vec![
                             "Box".to_string(),

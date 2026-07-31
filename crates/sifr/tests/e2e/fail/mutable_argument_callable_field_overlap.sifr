@@ -1,0 +1,12 @@
+# expect-error[col=18]: SIFR-OWN-0002
+class Owner:
+    value: int
+    callback: Callable[[int], int]
+
+
+def touch(mut owner: Owner, callback: Callable[[int], int]) -> None:
+    owner.value = callback(owner.value)
+
+
+def conflict(mut owner: Owner) -> None:
+    touch(owner, owner.callback)

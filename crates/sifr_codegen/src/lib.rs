@@ -86,6 +86,7 @@ mod module_prescan;
 mod nested_list_element;
 mod operator_protocol_emitters;
 mod operator_type_rendering;
+mod option_binding_mutability;
 mod output_helpers;
 mod place_emitter;
 mod preamble;

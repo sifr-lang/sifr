@@ -1,8 +1,7 @@
 use super::{
-    registry_can_construct_error_from_message, registry_ensure_some_box_inner,
-    registry_is_box_new_ctor, registry_is_some_expr, registry_is_string_like_type,
-    registry_iterable_to_vec_expr, registry_option_inner_type, HirExpr, ParamConvention,
-    RustEmitter, RustExpr, Type,
+    registry_can_construct_error_from_message, registry_is_box_new_ctor,
+    registry_is_string_like_type, registry_iterable_to_vec_expr, registry_option_inner_type,
+    HirExpr, ParamConvention, RustEmitter, RustExpr, Type,
 };
 impl RustEmitter {
     pub(crate) fn try_lower_registry_plain_call_with_signature(
@@ -115,21 +114,23 @@ impl RustEmitter {
                 }
             }
 
+            let mut recursive_option_adapted = false;
             if crate::helpers::is_option_type(resolved_param) {
-                let is_recursive_ctor_param = ctor_class_name
-                    .and_then(|class_name| {
-                        self.class_field_order
-                            .get(class_name)
-                            .and_then(|fields| fields.get(idx))
-                            .map(|field_name| {
-                                self.recursive_fields
-                                    .contains(&(class_name.to_owned(), field_name.clone()))
-                            })
-                    })
-                    .unwrap_or(false);
-                let needs_box_inner =
-                    param_ty.rust_type().starts_with("Option<Box<") || is_recursive_ctor_param;
-                if !arg_is_option && !matches!(arg, HirExpr::NoneLiteral) {
+                if let Some(adapted) = self.try_adapt_recursive_option_constructor_arg_for_ir(
+                    &crate::stmt_support_emitter::RecursiveOptionConstructorArgContext {
+                        ctor_class_name,
+                        index: idx,
+                        param_ty,
+                        arg,
+                        effective_arg_ty: &effective_arg_ty,
+                        convention: *convention,
+                        borrowed_name_arg,
+                    },
+                    lowered_arg.clone(),
+                ) {
+                    lowered_arg = adapted;
+                    recursive_option_adapted = true;
+                } else if !arg_is_option && !matches!(arg, HirExpr::NoneLiteral) {
                     let param_rust_type = param_ty.rust_type();
                     let param_is_owned_rust_value =
                         convention.is_owned() && !param_rust_type.starts_with('&');
@@ -143,16 +144,10 @@ impl RustEmitter {
                             args: vec![],
                         };
                     }
-                    lowered_arg = if needs_box_inner {
-                        registry_ensure_some_box_inner(lowered_arg)
-                    } else {
-                        RustExpr::FnCall {
-                            func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-                            args: vec![lowered_arg],
-                        }
+                    lowered_arg = RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                        args: vec![lowered_arg],
                     };
-                } else if needs_box_inner && registry_is_some_expr(&lowered_arg) {
-                    lowered_arg = registry_ensure_some_box_inner(lowered_arg);
                 }
             } else if arg_is_option {
                 if !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty) {
@@ -226,7 +221,7 @@ impl RustEmitter {
                 }
             }
 
-            if convention.is_owned() && borrowed_name_arg {
+            if convention.is_owned() && borrowed_name_arg && !recursive_option_adapted {
                 lowered_arg = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
                     method: "clone".to_string(),

@@ -25,13 +25,7 @@ pub(super) fn try_lower_loop_else_stmts(
             },
             // Else body executes outside this loop scope. Preserve enclosing
             // loop-else context for any break/continue lowering there.
-            then_body: try_lower_simple_stmt_block(
-                else_body,
-                in_loop_with_else,
-                bindings.mutated_vars,
-                bindings.borrowed_params,
-                ctx,
-            )?,
+            then_body: try_lower_simple_stmt_block(else_body, in_loop_with_else, bindings, ctx)?,
             else_body: None,
         },
     ])
@@ -68,8 +62,7 @@ pub(super) fn try_lower_simple_with_stmt(
     block.extend(try_lower_simple_stmt_block(
         body,
         in_loop_with_else,
-        bindings.mutated_vars,
-        bindings.borrowed_params,
+        bindings,
         ctx,
     )?);
 
@@ -124,8 +117,7 @@ pub(super) fn try_lower_simple_async_with_stmt(
     block.extend(try_lower_simple_stmt_block(
         body,
         in_loop_with_else,
-        bindings.mutated_vars,
-        bindings.borrowed_params,
+        bindings,
         ctx,
     )?);
     if let (true, Some(target)) = (
@@ -219,13 +211,8 @@ pub(super) fn try_lower_simple_match_stmt(
                 (None, Some(right)) => Some(right),
                 (None, None) => None,
             };
-            let mut body = try_lower_simple_stmt_block(
-                &arm.body,
-                in_loop_with_else,
-                bindings.mutated_vars,
-                bindings.borrowed_params,
-                ctx,
-            )?;
+            let mut body =
+                try_lower_simple_stmt_block(&arm.body, in_loop_with_else, bindings, ctx)?;
             if subject_is_borrowed_name {
                 let mut captures = Vec::new();
                 collect_capture_types(&arm.pattern, &mut captures);
