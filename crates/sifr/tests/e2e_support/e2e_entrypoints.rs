@@ -339,6 +339,135 @@ pub(crate) fn test_e2e_fail() {
 }
 
 #[test]
+fn test_receiver_place_representative_diagnostics_populate_declared_args() {
+    let repo_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("sifr crate should live under the workspace crates directory");
+    // Deliberately receiver/place-scoped: generalizing this to every active source fixture
+    // exposes many pre-existing argument gaps across unrelated families. The
+    // diagnostics owner must complete that separate migration before broadening it.
+    let codes = [
+        sifr_diagnostics::DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW,
+        sifr_diagnostics::DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION,
+        sifr_diagnostics::DiagnosticCode::OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE,
+        sifr_diagnostics::DiagnosticCode::PROTO_RECEIVER_CONVENTION_MISMATCH,
+        sifr_diagnostics::DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION,
+    ];
+
+    for code in codes {
+        let entry = sifr_diagnostics::codes::registry_entry(code.code())
+            .expect("active receiver-place diagnostic should be registered");
+        assert_eq!(
+            entry.state,
+            sifr_diagnostics::codes::DiagnosticState::Active,
+            "{} should remain active",
+            code.code()
+        );
+        let fixture = entry
+            .representative_fixture_path
+            .expect("active receiver-place diagnostic should declare a representative fixture");
+        let source = std::fs::read_to_string(repo_root.join(fixture))
+            .unwrap_or_else(|error| panic!("failed to read {fixture}: {error}"));
+        let errors = match sifr_driver::compile(&source) {
+            sifr_driver::CompileResult::Errors { errors } => errors,
+            sifr_driver::CompileResult::Success { .. } => {
+                panic!("{fixture} should emit {}", code.code())
+            }
+        };
+        let diagnostics = errors
+            .iter()
+            .filter(|diagnostic| diagnostic.code == code.code())
+            .collect::<Vec<_>>();
+        assert!(
+            !diagnostics.is_empty(),
+            "{fixture} did not emit {}",
+            code.code()
+        );
+
+        for diagnostic in diagnostics {
+            for declaration in entry.declared_args {
+                let arg = diagnostic.args.get(declaration.name).unwrap_or_else(|| {
+                    panic!(
+                        "{fixture} emitted {} without declared arg {}",
+                        code.code(),
+                        declaration.name
+                    )
+                });
+                if let sifr_diagnostics::DiagnosticArg::String(value) = arg {
+                    assert!(
+                        !value.trim().is_empty(),
+                        "{fixture} emitted {} with empty declared arg {}",
+                        code.code(),
+                        declaration.name
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn test_fixed_receiver_diagnostics_survive_similar_recovery_cap() {
+    let source = r#"
+class Zulu:
+    value: int
+    def __eq__(self, other: Zulu) -> bool:
+        self.value += 1
+        return self.value == other.value
+
+class Bravo:
+    value: int
+    def __eq__(self, other: Bravo) -> bool:
+        self.value += 1
+        return self.value == other.value
+
+class Charlie:
+    value: int
+    def __eq__(self, other: Charlie) -> bool:
+        self.value += 1
+        return self.value == other.value
+
+class Delta:
+    value: int
+    def __eq__(self, other: Delta) -> bool:
+        self.value += 1
+        return self.value == other.value
+
+class Echo:
+    value: int
+    def __eq__(self, other: Echo) -> bool:
+        self.value += 1
+        return self.value == other.value
+
+class Foxtrot:
+    value: int
+    def __eq__(self, other: Foxtrot) -> bool:
+        self.value += 1
+        return self.value == other.value
+"#;
+    let errors = match sifr_driver::compile(source) {
+        sifr_driver::CompileResult::Errors { errors } => errors,
+        sifr_driver::CompileResult::Success { .. } => {
+            panic!("fixed receiver mutations should fail")
+        }
+    };
+    let bounded = sifr_driver::apply_diagnostic_recovery_limits(&errors);
+    let class_names = bounded
+        .iter()
+        .filter(|diagnostic| diagnostic.code == "SIFR-PROTO-0006")
+        .map(|diagnostic| match diagnostic.args.get("class_name") {
+            Some(sifr_diagnostics::DiagnosticArg::String(class_name)) => class_name.as_str(),
+            other => panic!("class_name argument should be populated: {other:?}"),
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        class_names,
+        ["Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Zulu"]
+    );
+}
+
+#[test]
 pub(crate) fn test_decimal_fail_fixtures_do_not_emit_retired_pseudo_codes() {
     let fail_dir = Path::new("tests/e2e/fail");
     if !fail_dir.exists() {
