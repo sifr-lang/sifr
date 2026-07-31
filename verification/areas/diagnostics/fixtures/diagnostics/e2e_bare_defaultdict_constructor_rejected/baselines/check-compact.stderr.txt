@@ -1,4 +1,2 @@
-3 errors, 0 warnings, 0 notes
+1 error, 0 warnings, 0 notes
 E SIFR-NAME-0002 verification/areas/diagnostics/fixtures/diagnostics/e2e_bare_defaultdict_constructor_rejected/main.sifr:3:14 undefined function: 'defaultdict'
-E SIFR-STDLIB-0001 verification/areas/diagnostics/fixtures/diagnostics/e2e_bare_defaultdict_constructor_rejected/main.sifr:4:21 type 'Any' has no method 'append'
-E SIFR-TYPE-0002 verification/areas/diagnostics/fixtures/diagnostics/e2e_bare_defaultdict_constructor_rejected/main.sifr:4:5 cannot index type 'Unknown' with 'str'
