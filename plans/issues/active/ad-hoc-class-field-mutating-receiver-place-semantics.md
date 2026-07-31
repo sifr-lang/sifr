@@ -1125,3 +1125,9 @@ Current Item 2 validation evidence:
   library counts. That stale figure is removed here; the current bounded E2E
   evidence remains the independently verified `138/138` create-PR lane, and
   the full pass corpus remains assigned to the integrated closure merge gate.
+- Overlap-remediation exact-head record review pass 5:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-5.md)
+  returned `SATISFIED` with no blocking or non-blocking findings. It confirmed
+  that the stale `680/680` figure is absent, the pass-4 artifact and ledger
+  entry match the review that occurred, and the exact reviewed documentation
+  head `94acb685ccc53a40755683a74cda0c6baec91e8f` is internally consistent.
