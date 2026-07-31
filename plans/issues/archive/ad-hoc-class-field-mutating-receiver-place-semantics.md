@@ -2,36 +2,29 @@
 
 ## Status
 
-Implementation in progress for the urgent correctness follow-up identified
-during the M10 declaration-first Python interop milestone review. Claude Opus
-implementation-readiness pass 7 returned `SATISFIED`. Item 1, canonical
-receiver metadata and inference, merged in
-[#3065](https://github.com/sifr-lang/sifr/pull/3065) after implementation
-review pass 2 returned `SATISFIED`. Item 2, checked place semantics and defect
-closure, is under PR
-[#3082](https://github.com/sifr-lang/sifr/pull/3082), and exact-head PR review
-pass 8 returned `SATISFIED` with zero actionable findings after passes 6 and 7
-identified and drove localized constructor-check and evidence corrections.
-Exact-published-head pass 9 then returned `NOT SATISFIED` after an independent
-full-corpus probe found one missed same-call snapshot migration and one
-same-named nested-helper verifier collision. The corpus migration merged in
-[sifr-lang/leetcode#41](https://github.com/sifr-lang/leetcode/pull/41) after
-corpus review pass 2 returned `SATISFIED`; the lexical verifier correction and
-merged corpus repin are now under final Item 2 validation and re-review.
-Implementation review pass 5 returned `SATISFIED` after passes 1 through 4
-returned `NOT SATISFIED`. The remediation
-restores non-cloning shared field receivers, checks delegated fixed-trait
-mutation after receiver convergence, makes owned temporary proof exhaustive,
-rejects storage-selecting conditionals and re-materialized module constants,
-closes shared-receiver/mutable-argument overlap, restores mutable-borrow flow
-effects, applies the protected-root optimizer contract to production codegen,
-and migrates the LRU compatibility fixture to snapshot `self.head` before a
-mutable `self` call as required by same-call exclusivity.
+Implementation complete; closure candidate under
+[#3088](https://github.com/sifr-lang/sifr/pull/3088). Item 1, canonical receiver
+metadata and inference, merged in
+[#3065](https://github.com/sifr-lang/sifr/pull/3065), with tracking follow-up
+[#3066](https://github.com/sifr-lang/sifr/pull/3066). Item 2, checked place
+semantics and defect closure, merged in
+[#3082](https://github.com/sifr-lang/sifr/pull/3082). Upstream compatibility
+snapshots merged in
+[sifr-lang/leetcode#40](https://github.com/sifr-lang/leetcode/pull/40) and
+[sifr-lang/leetcode#41](https://github.com/sifr-lang/leetcode/pull/41).
+
+The first whole-phase review found two final implementation-quality issues:
+missing structured `binding` arguments on same-call `SIFR-OWN-0002`
+diagnostics and duplicated inherited-field storage rerooting. Both were closed
+in [#3087](https://github.com/sifr-lang/sifr/pull/3087), whose exact-head
+Claude Opus review returned `SATISFIED` with zero actionable findings. This
+archive move and ledger refresh remain subject to the final whole-phase review
+and merge of closure PR #3088.
 
 The defect predates M10 and was not introduced by the buffer implementation,
 but it violates Sifr's core guarantee: a program can compile and silently lose
-a source-visible mutation. This issue is not implementation-ready until the
-review ledger below ends in an independent `SATISFIED` verdict.
+a source-visible mutation. The closure PR is not ready to merge until the
+review ledger below ends in an independent whole-phase `SATISFIED` verdict.
 
 ## Origin and current behavior
 
@@ -55,8 +48,9 @@ class Owner:
         self.helper.bump()
 ```
 
-The current compiler can emit `self.helper.clone().bump()`. The call mutates a
-temporary clone, not `self.helper`, and the program observes no mutation.
+Before this phase, the compiler could emit `self.helper.clone().bump()`. The
+call mutated a temporary clone, not `self.helper`, and the program observed no
+mutation.
 
 The first independent review also reproduced these adjacent failures:
 
@@ -68,7 +62,7 @@ The first independent review also reproduced these adjacent failures:
 - `self.helper.absorb(self.stock)` preserves the mutable argument mutation but
   loses the receiver mutation.
 
-Current code already contains a partial, ambient workaround:
+The pre-phase code contained a partial, ambient workaround:
 
 - `RustEmitter::method_call_needs_field_clone_suppression` recognizes many of
   the affected receivers;
@@ -788,50 +782,33 @@ scripts/run_all_tests.sh
 
 CI is confirmatory; do not wait on CI instead of running the local gates.
 
-Current Item 2 validation evidence:
+Closure validation evidence:
 
-- focused lowering, codegen, scope, optimizer, pass-fixture, and fail-fixture
-  checks pass;
-- full lowering tests pass (`936 passed`, `1 ignored`), full codegen tests pass
-  (`953 passed`), the E2E pass suite passes (`680/680`, report signature
-  `8871ba51135353a4`), and the E2E fail test
-  passes with the complete annotated fail corpus;
-- formatting, workspace clippy with warnings denied, HIR maintainability,
-  file-size, diagnostic-doc links, and diff checks pass;
-- the post-review remediation create-PR profile passed its full Python interop
-  lane (`19/19`) and every other blocking lane except one contended LSP
-  `workspace/executeCommand` timeout; the exact `lsp-smoke` suite then passed
-  all `6/6` variants in isolation, including the same protocol smoke;
-- the representative performance suite has an official isolated green run
-  (`8/8`) with `CARGO_BUILD_JOBS=1`;
-- merge-profile pass 13 on exact head
-  `31af48ac8935b869cce4369f5c0c939c5c5b076f` passes every pre-performance
-  functional lane, including core/diagnostic guardrails, CPython differential,
-  all 25 Python interop variants, Rust interop, frontend guardrails, and all 32
-  developer-tooling variants;
-- whole-profile performance attempts were scheduler-contended by independently
-  running local compiler, E2E, release, and benchmark jobs. The three affected
-  exact-head cases were therefore remeasured in short uncontended windows and
-  checked with the repository's official `check_budgets.py --allow-subset`
-  gate: project check `1339.235ms < 1357.524ms` (`5` samples), arithmetic
-  check `1328.513ms < 1334.139ms` (`5` samples), and JSON diagnostics
-  `1317.663ms < 1335.954ms` (`5` samples). The official subset checker passes.
-  No budget, baseline, sample count, threshold, or waiver was changed.
-- the final default merge-gate attempt on exact published head `581b363aa`
-  passed every functional lane, including Python interop `25/25`, Rust
-  interop, frontend guardrails, and developer tooling `32/32`; its unchanged
-  performance budgets missed only under high-variance concurrent host load;
-- pass-9 remediation runs the complete `leetcode-full` corpus. Clean published
-  head `581b363aa` plus the migrated corpus passes `406/411`: the four
-  long-standing base failures plus the newly exposed same-named nested-helper
-  verifier collision. The current Item 2 candidate fixes that collision and
-  passes `407/411`; its four remaining failures reproduce identically on the
-  untouched Item 2 base compiler. Both `0189_rotate_array` and
-  `0297_serialize_and_deserialize_binary_tree` pass;
-- focused same-named nested-helper lowering, method-call verifier, formatting,
-  and lowering Clippy checks pass after the verifier correction. The rotated
-  array corpus fixture passes check, native build, and run, and its exact
-  reviewed head merged as corpus commit `e75af095`.
+- Item 2 exact reviewed head `774a00389c0340a981388a987d7049ffbd88edf4`
+  passed full lowering (`936 passed`, `1 ignored`), codegen (`953 passed`),
+  focused pass/fail fixtures, formatting, Clippy with warnings denied, and all
+  repository guardrails.
+- The Item 2 create-PR gate exited 0 with `131/131` E2E fixtures and report
+  signature `7c39b8c1dd4fec7c`. Its default-gate functional lanes passed; only
+  three representative timing thresholds missed during concurrent host load.
+- Item 2 merged as `fbbb69328ae6fe1e733ce25cb6e710aab75990dc`
+  after Claude Opus exact-head review pass 12 returned `SATISFIED` with zero
+  actionable findings.
+- The complete corpus candidate passed `407/411`; the four remaining failures
+  reproduced identically on the untouched Item 2 base compiler. The LRU and
+  Rotate Array compatibility snapshots pass check, native build, and run.
+- Remediation exact head `a26daa7a10a5efce4cc5e5881d395e224b492769`
+  passed lowering (`937 passed`, `1 ignored`), codegen (`954 passed`),
+  formatting, Clippy, HIR/docs/file-size guardrails, and focused diagnostic and
+  inherited-field end-to-end probes.
+- The remediation create-PR gate exited 0: Python interop `19/19`, Rust
+  interop `10/10`, generated-code quality `5/5`, runtime-platform `28`
+  variants with one declared capability skip, crate tests green, and E2E
+  `131/131` with report signature `7c39b8c1dd4fec7c`. Every blocking step and
+  timing budget passed.
+- Remediation PR #3087 merged as
+  `a7a5df414b985cc95a9ad23c5b006caa84101f0d` after exact-head Claude Opus
+  review returned `SATISFIED` with zero actionable findings.
 
 ## Acceptance criteria
 
@@ -1045,3 +1022,25 @@ Current Item 2 validation evidence:
   `defaultdict` in-place bucket methods now carry the checked backing-storage
   target, and only the explicitly materialized `extend`/set-update family may
   evaluate same-map arguments before taking the bucket borrow.
+- Item 2 terminal exact-head review pass 12:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-12.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-12.md)
+  returned `SATISFIED` with zero actionable findings. It independently
+  reproduced the lowering/codegen counts, exact create-PR gate, complete
+  checked-place and diagnostic matrix, corpus ancestry, upstream
+  reconciliation, and default-gate functional result. Item 2 merged in
+  [#3082](https://github.com/sifr-lang/sifr/pull/3082) as
+  `fbbb69328ae6fe1e733ce25cb6e710aab75990dc`.
+- Final whole-phase review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-1.md)
+  returned `NOT SATISFIED`. The implementation semantics were correct, but
+  `SIFR-OWN-0002` omitted its required structured `binding` argument,
+  inherited-field rerooting was duplicated, and the phase tracker was stale.
+- Whole-phase remediation review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-remediation-claude-opus-pr-review-pass-1.md)
+  returned `SATISFIED` with zero actionable findings. It independently
+  verified all four same-call diagnostic paths, canonical nested-place
+  metadata, shared inherited-field storage rerooting, value-read clone
+  preservation, uncloned mutating receivers, focused tests, Clippy, and
+  file-size compliance. The remediation merged in
+  [#3087](https://github.com/sifr-lang/sifr/pull/3087) as
+  `a7a5df414b985cc95a9ad23c5b006caa84101f0d`.

@@ -1662,7 +1662,7 @@ Delivery waves:
   verified all blockers closed and requested the authoritative merge gate plus
   a separate issue for the pre-existing class-field mutating-receiver clone
   defect. That defect and adjacent fail-closed parity gaps are tracked in
-  [`ad-hoc-class-field-mutating-receiver-place-semantics.md`](../active/ad-hoc-class-field-mutating-receiver-place-semantics.md).
+  [`ad-hoc-class-field-mutating-receiver-place-semantics.md`](ad-hoc-class-field-mutating-receiver-place-semantics.md).
   Pass 8 is retained as an explicitly invalid timer-only artifact and is not
   treated as review evidence. Fresh Fable High
   [pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-9.md)
