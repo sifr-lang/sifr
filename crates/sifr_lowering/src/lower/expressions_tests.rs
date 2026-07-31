@@ -22,6 +22,7 @@ mod empty_plain_dict_inference;
 mod exact_int_and_fixed_width;
 mod iteration_and_protocols;
 mod minmax_sorted_sum;
+mod nested_container_capture_refinement;
 mod ownership_and_async;
 mod support;
 mod task_runtime_rules_tests;

@@ -69,6 +69,8 @@ mod iterators_and_generators_codegen_tests;
 #[cfg(test)]
 mod multi_module_stdlib_feature_tests;
 #[cfg(test)]
+mod nested_container_capture_codegen_tests;
+#[cfg(test)]
 mod performance_codegen_tests;
 #[cfg(test)]
 mod performance_nested_mutation_codegen_tests;
