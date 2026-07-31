@@ -1,0 +1,18 @@
+# expect-error[col=28]: SIFR-OWN-0002
+class Inner:
+    values: list[int]
+
+
+class Owner:
+    value: int | None
+    inner: Inner
+
+    def pick(self) -> Inner:
+        return self.inner
+
+    def update(self, value: int | None) -> int | None:
+        self.value = value
+        return self.value
+
+    def conflict(self) -> int | None:
+        return self.update(self.pick().values[0])
