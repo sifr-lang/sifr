@@ -11,7 +11,8 @@ use super::function_flow::infer_function_return_type;
 use super::match_lowering::lower_match;
 use super::nested_function_state::{
     push_nested_function_captures, push_nested_function_mutations,
-    restore_nested_function_captures, restore_nested_function_mutations,
+    restore_container_specialization_patches, restore_nested_function_captures,
+    restore_nested_function_mutations, suspend_container_specialization_patches,
 };
 use super::nonlocal_support::{
     collect_declared_nonlocals, hir_body_calls_function, lower_nonlocal,
@@ -636,8 +637,7 @@ pub(in crate::lower) fn lower_stmt(
             // Deferred container patches belong to the lexical function that
             // discovered them. A same-named binding in this nested function
             // must neither consume nor clear an enclosing function's patch.
-            let enclosing_container_patches =
-                std::mem::take(&mut ctx.pending_container_specialization_patches);
+            let enclosing_container_patches = suspend_container_specialization_patches(ctx);
             ctx.enter_function_scope(declared_nonlocals.clone());
 
             // Define parameters in scope
@@ -746,7 +746,11 @@ pub(in crate::lower) fn lower_stmt(
             };
             ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
             ctx.exit_function_scope();
-            ctx.pending_container_specialization_patches = enclosing_container_patches;
+            restore_container_specialization_patches(
+                enclosing_container_patches,
+                func.name.as_str(),
+                ctx,
+            );
 
             if !declared_nonlocals.is_empty() && hir_body_calls_function(&body, func.name.as_str())
             {

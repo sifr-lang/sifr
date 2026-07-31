@@ -1,0 +1,41 @@
+def collect_joined(values: list[str]) -> list[str]:
+    collected = []
+
+    def append_joined(value: str):
+        collected.append("".join([value]))
+
+    for value in values:
+        append_joined(value)
+    return collected
+
+
+def collect_multilevel(value: str) -> list[str]:
+    collected = []
+
+    def middle():
+        def append_joined():
+            collected.append("".join([value]))
+
+        append_joined()
+
+    middle()
+    return collected
+
+
+def keep_shadowed_lists_independent() -> list[int]:
+    values = []
+
+    def inner_length() -> int:
+        values = []
+        values.append("inner")
+        return len(values)
+
+    values.append(1)
+    assert inner_length() == 1
+    return values
+
+
+def main():
+    assert collect_joined(["a", "b"]) == ["a", "b"]
+    assert collect_multilevel("nested") == ["nested"]
+    assert keep_shadowed_lists_independent() == [1]
