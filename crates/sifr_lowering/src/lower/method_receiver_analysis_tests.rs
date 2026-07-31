@@ -211,6 +211,54 @@ def conflict(mut owner: Owner) -> None:
 }
 
 #[test]
+fn unsupported_callable_field_footprint_rejects_same_root_overlap() {
+    let source = r#"
+class Owner:
+    callback: Callable[[int], int]
+
+def touch(mut owner: Owner, callback: Callable[[int], int]) -> None:
+    pass
+
+def conflict(mut owner: Owner) -> None:
+    touch(owner, owner.callback)
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("callable field under a mutable root should overlap"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+            && error.primary_range == Some(range_for(source, "owner.callback"))
+    }));
+}
+
+#[test]
+fn unsupported_recursive_field_footprint_rejects_same_root_overlap() {
+    let source = r#"
+class Node:
+    next: Node | None
+
+    def absorb(mut self, other: Node | None) -> None:
+        self.next = other
+
+def conflict(mut node: Node) -> None:
+    node.absorb(node.next)
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("recursive field under a mutable root should overlap"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW)
+            && error.primary_range == Some(range_for(source, "node.next"))
+    }));
+}
+
+#[test]
 fn receiver_inference_closes_transitive_delegation_and_attaches_call_metadata() {
     let source = r#"
 class Leaf:

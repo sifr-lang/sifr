@@ -18,7 +18,7 @@ pub(in crate::lower) fn double_mutable_borrow(
     func_name: &str,
     range: TextRange,
 ) {
-    same_call_borrow_conflict(
+    borrow_conflict(
         ctx,
         name,
         format!(
@@ -34,7 +34,7 @@ pub(in crate::lower) fn mutable_borrow_after_immutable(
     func_name: &str,
     range: TextRange,
 ) {
-    same_call_borrow_conflict(
+    borrow_conflict(
         ctx,
         name,
         format!(
@@ -50,7 +50,7 @@ pub(in crate::lower) fn immutable_borrow_after_mutable(
     func_name: &str,
     range: TextRange,
 ) {
-    same_call_borrow_conflict(
+    borrow_conflict(
         ctx,
         name,
         format!(
@@ -226,7 +226,7 @@ pub(in crate::lower) fn same_call_place_conflict(
     place: &str,
     range: TextRange,
 ) {
-    same_call_borrow_conflict(
+    borrow_conflict(
         ctx,
         place,
         format!("borrow conflict for {place} in the same call"),
@@ -234,7 +234,22 @@ pub(in crate::lower) fn same_call_place_conflict(
     );
 }
 
-fn same_call_borrow_conflict(ctx: &mut LowerCtx, binding: &str, message: String, range: TextRange) {
+pub(in crate::lower) fn pending_async_generator_advance(
+    ctx: &mut LowerCtx,
+    binding: &str,
+    range: TextRange,
+) {
+    borrow_conflict(
+        ctx,
+        binding,
+        format!(
+            "async generator `{binding}` already has a pending anext() advance; await it before starting another advance"
+        ),
+        range,
+    );
+}
+
+fn borrow_conflict(ctx: &mut LowerCtx, binding: &str, message: String, range: TextRange) {
     let mut args = BTreeMap::new();
     args.insert(
         "binding".to_string(),

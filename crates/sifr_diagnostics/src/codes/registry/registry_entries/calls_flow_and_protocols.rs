@@ -82,7 +82,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     active_entry!(
             "SIFR-OWN-0002",
             "OWN",
-            "Same-call borrow conflict.",
+            "Conflicting borrow.",
             Severity::Error,
             "crates/sifr/tests/e2e/fail/double_mut_borrow.sifr",
             "borrow conflict for {binding} in the same call",

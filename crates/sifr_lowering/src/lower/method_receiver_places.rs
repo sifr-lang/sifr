@@ -771,6 +771,12 @@ fn collect_footprint(expr: &HirExpr, ctx: &LowerCtx, footprint: &mut Vec<Footpri
                 collect_footprint(filter, ctx, footprint);
             }
         }
+        HirExpr::FieldAccess { object, .. } => {
+            if let Some(root) = root_binding_id(object) {
+                footprint.push(Footprint::Dynamic(root));
+            }
+            collect_footprint(object, ctx, footprint);
+        }
         HirExpr::IntLiteral(_)
         | HirExpr::LargeIntLiteral(_)
         | HirExpr::FloatLiteral(_)
@@ -778,8 +784,7 @@ fn collect_footprint(expr: &HirExpr, ctx: &LowerCtx, footprint: &mut Vec<Footpri
         | HirExpr::BoolLiteral(_)
         | HirExpr::NoneLiteral
         | HirExpr::Name { .. }
-        | HirExpr::EnumVariant { .. }
-        | HirExpr::FieldAccess { .. } => {}
+        | HirExpr::EnumVariant { .. } => {}
     }
 }
 
