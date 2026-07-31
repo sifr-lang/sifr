@@ -813,8 +813,8 @@ Current Item 2 validation evidence:
 
 - focused lowering, codegen, scope, optimizer, pass-fixture, and fail-fixture
   checks pass;
-- full lowering tests pass (`936 passed`, `1 ignored`), full codegen tests pass
-  (`953 passed`), the E2E pass suite passes (`680/680`, report signature
+- full lowering tests pass (`941 passed`, `1 ignored`), full codegen tests pass
+  (`954 passed`), the E2E pass suite passes (`680/680`, report signature
   `8871ba51135353a4`), and the E2E fail test
   passes with the complete annotated fail corpus;
 - formatting, workspace clippy with warnings denied, HIR maintainability,
@@ -1099,3 +1099,19 @@ Current Item 2 validation evidence:
   the exact-head create-PR pass at
   `92b38be705138643b23c37a425892df767beee5d`; this revision aligns the overlap
   rule and status/review ledger before pass 3.
+- Overlap-remediation PR review pass 3:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-3.md)
+  returned `SATISFIED` with no blocking findings. The reviewer independently
+  reproduced the callable/recursive overlap failures as structured
+  `SIFR-OWN-0002`, accepted disjoint sibling fields, verified the async
+  generator diagnostic arguments, ran the full lowering and codegen suites,
+  checked all documentation and maintainability guardrails, and inspected the
+  exact-head create-PR evidence. The non-blocking fixture-manifest cleanup then
+  passed the create-PR E2E lane at `138/138` with report signature
+  `4ede7c71d86f381c`.
+- That review also recorded separate, pre-existing value-codegen debt:
+  independently moving callable or recursive fields, and passing a class field
+  as a mutable free-function argument, can still reach Rust move/borrow errors.
+  These shapes reproduce on the untouched base and are not receiver/argument
+  overlap-analysis regressions; they remain follow-up compiler debt rather than
+  hidden closure exceptions for this phase.
