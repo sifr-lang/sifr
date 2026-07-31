@@ -259,6 +259,46 @@ def conflict(mut node: Node) -> None:
 }
 
 #[test]
+fn unsupported_callable_field_footprint_accepts_disjoint_sibling_place() {
+    let source = r#"
+class Inner:
+    value: int
+
+class Owner:
+    inner: Inner
+    callback: Callable[[int], int]
+
+def take(mut inner: Inner, callback: Callable[[int], int]) -> None:
+    pass
+
+def accepted(mut owner: Owner) -> None:
+    take(owner.inner, owner.callback)
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    lower_module(parsed.suite()).expect("disjoint callable sibling should not overlap");
+}
+
+#[test]
+fn unsupported_recursive_field_footprint_accepts_disjoint_sibling_place() {
+    let source = r#"
+class Inner:
+    value: int
+
+class Node:
+    inner: Inner
+    next: Node | None
+
+def take(mut inner: Inner, next: Node | None) -> None:
+    pass
+
+def accepted(mut node: Node) -> None:
+    take(node.inner, node.next)
+"#;
+    let parsed = parse_module(source).expect("source should parse");
+    lower_module(parsed.suite()).expect("disjoint recursive sibling should not overlap");
+}
+
+#[test]
 fn receiver_inference_closes_transitive_delegation_and_attaches_call_metadata() {
     let source = r#"
 class Leaf:

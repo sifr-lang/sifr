@@ -85,7 +85,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             "Conflicting borrow.",
             Severity::Error,
             "crates/sifr/tests/e2e/fail/double_mut_borrow.sifr",
-            "borrow conflict for {binding} in the same call",
+            "borrow conflict for {binding}",
             "sifr_lowering::lower",
             [arg!("binding")],
             ["binding"]

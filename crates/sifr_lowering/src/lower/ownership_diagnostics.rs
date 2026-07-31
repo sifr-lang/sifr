@@ -226,12 +226,7 @@ pub(in crate::lower) fn same_call_place_conflict(
     place: &str,
     range: TextRange,
 ) {
-    borrow_conflict(
-        ctx,
-        place,
-        format!("borrow conflict for {place} in the same call"),
-        range,
-    );
+    borrow_conflict(ctx, place, format!("borrow conflict for {place}"), range);
 }
 
 pub(in crate::lower) fn pending_async_generator_advance(
