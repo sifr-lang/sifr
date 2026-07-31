@@ -114,7 +114,7 @@ impl RustEmitter {
                 }
             }
 
-            let mut consumed_owned_borrowed_name = false;
+            let mut recursive_option_adapted = false;
             if crate::helpers::is_option_type(resolved_param) {
                 if let Some(adapted) = self.try_adapt_recursive_option_constructor_arg_for_ir(
                     &crate::stmt_support_emitter::RecursiveOptionConstructorArgContext {
@@ -128,8 +128,8 @@ impl RustEmitter {
                     },
                     lowered_arg.clone(),
                 ) {
-                    lowered_arg = adapted.expr;
-                    consumed_owned_borrowed_name = adapted.consumed_owned_borrowed_name;
+                    lowered_arg = adapted;
+                    recursive_option_adapted = true;
                 } else if !arg_is_option && !matches!(arg, HirExpr::NoneLiteral) {
                     let param_rust_type = param_ty.rust_type();
                     let param_is_owned_rust_value =
@@ -221,7 +221,7 @@ impl RustEmitter {
                 }
             }
 
-            if convention.is_owned() && borrowed_name_arg && !consumed_owned_borrowed_name {
+            if convention.is_owned() && borrowed_name_arg && !recursive_option_adapted {
                 lowered_arg = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
                     method: "clone".to_string(),

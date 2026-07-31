@@ -345,7 +345,7 @@ macro_rules! stmt_expr_constructor {
                             lowered_arg.clone(),
                         )
                     {
-                        *lowered_arg = adapted.expr;
+                        *lowered_arg = adapted;
                     }
                     continue;
                 }

@@ -1,11 +1,6 @@
 use super::{HirExpr, RustEmitter, RustExpr, Type};
 use sifr_type_system::ParamConvention;
 
-pub(crate) struct RecursiveOptionConstructorArg {
-    pub(crate) expr: RustExpr,
-    pub(crate) consumed_owned_borrowed_name: bool,
-}
-
 pub(crate) struct RecursiveOptionConstructorArgContext<'a> {
     pub(crate) ctor_class_name: Option<&'a str>,
     pub(crate) index: usize,
@@ -21,7 +16,7 @@ impl RustEmitter {
         &self,
         context: &RecursiveOptionConstructorArgContext<'_>,
         mut lowered_arg: RustExpr,
-    ) -> Option<RecursiveOptionConstructorArg> {
+    ) -> Option<RustExpr> {
         if !crate::helpers::is_option_type(crate::resolve_alias_type_for_plain_call(
             context.param_ty,
         )) {
@@ -43,10 +38,7 @@ impl RustEmitter {
             return None;
         }
         if matches!(context.arg, HirExpr::NoneLiteral) {
-            return Some(RecursiveOptionConstructorArg {
-                expr: lowered_arg,
-                consumed_owned_borrowed_name: false,
-            });
+            return Some(lowered_arg);
         }
 
         let arg_is_option = crate::helpers::is_option_type(context.effective_arg_ty);
@@ -84,10 +76,6 @@ impl RustEmitter {
             Self::ensure_some_box_inner_for_ir(inner)
         };
 
-        Some(RecursiveOptionConstructorArg {
-            expr,
-            consumed_owned_borrowed_name: context.convention.is_owned()
-                && context.borrowed_name_arg,
-        })
+        Some(expr)
     }
 }

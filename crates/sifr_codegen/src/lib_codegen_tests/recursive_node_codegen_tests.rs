@@ -191,6 +191,22 @@ def wrapBorrowedNested(node: TreeNode | None) -> list[TreeNode]:
     nodes: list[TreeNode] = []
     nodes.append(TreeNode(6, node))
     return nodes
+
+def wrapOwnedNested(own node: TreeNode | None) -> list[TreeNode]:
+    nodes: list[TreeNode] = []
+    nodes.append(TreeNode(7, node))
+    return nodes
+
+def wrapFieldNested(node: TreeNode) -> list[TreeNode]:
+    nodes: list[TreeNode] = []
+    nodes.append(TreeNode(8, node.left))
+    return nodes
+
+def wrapChild(child: TreeNode) -> TreeNode:
+    return TreeNode(9, child)
+
+def wrapKeyword(node: TreeNode | None) -> TreeNode:
+    return TreeNode(value=10, left=node)
 "#,
     );
 
@@ -224,10 +240,35 @@ def wrapBorrowedNested(node: TreeNode | None) -> list[TreeNode]:
         "nested constructors must use the same clone-before-map adaptation:\n{rust_code}"
     );
     assert!(
-        !rust_code.contains(
-            "node.map(|__sifr_option_value| Box::new(__sifr_option_value))"
-        ),
+        !rust_code.contains("TreeNode::new(5_i64, node.map(")
+            && !rust_code.contains("TreeNode::new(6_i64, node.map("),
         "borrowed optional parameters must never be moved by mapping before they are cloned:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains(
+            "nodes.push(TreeNode::new(7_i64, node.map(|__sifr_option_value| Box::new(__sifr_option_value))))"
+        ),
+        "owned optional parameters must map directly inside nested recursive constructors:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains(
+            "nodes.push(TreeNode::new(8_i64, (node.left).as_deref().cloned().map(|__sifr_option_value| Box::new(__sifr_option_value))))"
+        ),
+        "recursive optional field projections must map to boxed storage inside nested constructors:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("TreeNode::new(9_i64, Some(Box::new((child).clone())))"),
+        "non-option recursive values must receive exactly one Some(Box(_)) layer:\n{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("Some(Box::new((Some(Box::new((child).clone()))"),
+        "non-option recursive values must never be double boxed:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains(
+            "TreeNode::new(10_i64, (node).clone().map(|__sifr_option_value| Box::new(__sifr_option_value)))"
+        ),
+        "keyword recursive option arguments must use the same clone-before-map adaptation:\n{rust_code}"
     );
 }
 
