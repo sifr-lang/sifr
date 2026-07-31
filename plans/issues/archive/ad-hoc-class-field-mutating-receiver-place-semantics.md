@@ -36,7 +36,18 @@ field's parent object place. The correction merged in
 field's exact identity, retains conservative fallback for dynamic bases, and
 locks actual-method shadowing and dynamic-base behavior with mutation-verified
 tests. Its exact integration-head review pass 4 returned `SATISFIED` with no
-blocking or non-blocking findings. Closure PR
+blocking or non-blocking findings.
+
+Final whole-phase review pass 4 then found that `Index` and `Slice` argument
+footprints retained a conservative dynamic root but failed to recurse through
+an unresolvable object base. That omission could hide a nested overlapping
+call, read, or move until Rust compilation. The correction merged in
+[#3094](https://github.com/sifr-lang/sifr/pull/3094) as
+`b1b2bb23f47c854e74836bcb98bbb7f33ce3f4cc`; it preserves the dynamic-root
+fallback, recursively collects both object subtrees, and adds reject/accept
+coverage for unresolved and nested index/slice bases. After seven review
+rounds, terminal published-head pass 7 returned `SATISFIED` with no blocking
+or non-blocking findings. Closure PR
 [#3088](https://github.com/sifr-lang/sifr/pull/3088) remains draft only until
 the integrated merge gate and a new terminal whole-phase review return green.
 
@@ -887,6 +898,23 @@ Closure validation evidence:
   `9c99ef43b1aad12fcafe6b6d3742ce9afd24e475` after four Opus review rounds;
   exact integration-head pass 4 returned `SATISFIED` with no blocking or
   non-blocking findings.
+- Index/slice-footprint remediation implementation/test head
+  `a813b9971c8d2c20a5eb352e37f89b62adf33c37` passed six focused ownership
+  tests, full lowering (`954 passed`, `1 ignored`), the annotated fail suite
+  (`566/566`), its native pass fixture, Clippy with warnings denied,
+  formatting, HIR maintainability, and file-size guardrails.
+- Its authoritative create-PR retry at code-identical head
+  `01bf3aff14b925fe73e5cb08692021e1cc7e0af0` exited 0 with every blocking
+  step and budget green: Python interop `19/19`, Rust interop `10/10`,
+  developer tooling `18/18`, generated-code quality `5/5`, runtime-platform
+  `28` variants with one declared capability skip, and E2E `140/140` with
+  report signature `ac6d879686517f2c`. The first full-profile attempt's sole
+  failure was a transient LSP exit timeout; the focused official retry passed
+  `6/6`, and the same case passed inside the authoritative full retry.
+- Remediation PR #3094 merged as
+  `b1b2bb23f47c854e74836bcb98bbb7f33ce3f4cc` after seven Opus rounds;
+  terminal published-head pass 7 returned `SATISFIED` with no blocking or
+  non-blocking findings.
 - The default merge-profile attempt on post-#3092 closure head
   `bda18f90ea277909d463a796a012836c03251961` passed coverage/core guardrails,
   diagnostics, CPython differential, Python interop `25/25`, Rust interop
@@ -1249,6 +1277,35 @@ Closure validation evidence:
   review also required current-head merge-gate evidence to be distinguished
   from the pre-#3092 performance record, which is corrected in the validation
   ledger above.
+- Index/slice-footprint remediation PR review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-1.md)
+  returned `NOT SATISFIED`; the follow-up added accept-side controls for
+  disjoint unresolved index and slice bases plus a native E2E fixture.
+- Index/slice-footprint remediation PR review pass 2:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-2.md)
+  returned `NOT SATISFIED`; the follow-up pinned nested-index object traversal
+  in both reject and accept directions.
+- Index/slice-footprint remediation PR review pass 3:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-3.md)
+  returned `NOT SATISFIED`; the follow-up made the slice accept control live
+  under a mutable receiver and added an independent nested-slice rejection.
+- Index/slice-footprint remediation PR review pass 4:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-4.md)
+  returned `SATISFIED` with zero actionable findings on exact implementation
+  head `a813b9971c8d2c20a5eb352e37f89b62adf33c37`.
+- Index/slice-footprint remediation evidence review pass 5:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-5.md)
+  returned `NOT SATISFIED` on two record-only findings: the PR body still
+  called the gate/review pending, and the pass-4 lowering count was stale.
+- Index/slice-footprint remediation record review pass 6:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-6.md)
+  verified both pass-5 findings closed and returned `NOT SATISFIED` only for
+  two stale file-line counts in that review record; both were corrected.
+- Index/slice-footprint remediation terminal review pass 7:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-7.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-7.md)
+  returned `SATISFIED` with no blocking or non-blocking findings, verified all
+  prior findings closed, and confirmed PR #3094's implementation and gate
+  evidence remained exact through its published record-only head.
 - Pass 4 also recorded a separate pre-existing match-lowering debt: a `match`
   arm containing calls can still leak a native build failure. It is outside
   this receiver-place phase, reproduces independently of its changes, and is
