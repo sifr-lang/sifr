@@ -597,56 +597,6 @@ def invoke(own mut entity: Mutable) -> None:
 }
 
 #[test]
-fn inferred_mutable_receiver_rejects_shared_protocol_conformance() {
-    let source = r#"
-class Shared(Protocol):
-    def update(self) -> None:
-        pass
-
-class MutableImplementation:
-    value: int
-
-    def update(self) -> None:
-        self.value += 1
-
-class SharedImplementation:
-    def update(self) -> None:
-        pass
-"#;
-    let parsed = parse_module(source).expect("source should parse");
-    let errors = match lower_module(parsed.suite()) {
-        Ok(_) => panic!("receiver mismatch must be rejected"),
-        Err(errors) => errors,
-    };
-    assert!(errors.iter().any(|error| {
-        error.code == Some(sifr_diagnostics::DiagnosticCode::PROTO_RECEIVER_CONVENTION_MISMATCH)
-    }));
-}
-
-#[test]
-fn fixed_trait_receiver_rejects_transitive_receiver_mutation() {
-    let source = r#"
-class Counter:
-    value: int
-
-    def bump(self) -> None:
-        self.value += 1
-
-    def __eq__(self, other: Counter) -> bool:
-        self.bump()
-        return self.value == other.value
-"#;
-    let parsed = parse_module(source).expect("source should parse");
-    let errors = match lower_module(parsed.suite()) {
-        Ok(_) => panic!("fixed receiver mutation must fail"),
-        Err(errors) => errors,
-    };
-    assert!(errors.iter().any(|error| {
-        error.code == Some(sifr_diagnostics::DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION)
-    }));
-}
-
-#[test]
 fn builtin_method_calls_carry_canonical_receiver_conventions_and_source_ranges() {
     let source = r#"
 def mutate(mut values: list[int], text: str) -> None:

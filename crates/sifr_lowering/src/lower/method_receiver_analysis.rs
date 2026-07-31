@@ -1,9 +1,10 @@
 use super::{
     classes::{body_contains_receiver_mutation, fixed_trait_receiver_convention},
-    LowerCtx,
+    method_receiver_diagnostics, LowerCtx,
 };
 use crate::hir_nodes::{HirClass, HirClassKind, HirExpr, HirFunction, HirIteratorOp, MethodKind};
 use crate::scope::BindingKind;
+use ruff_text_size::TextRange;
 use sifr_ir::visit_hir_function_exprs_mut;
 use sifr_type_system::{FunctionType, ReceiverConvention, Type};
 use std::collections::{HashMap, HashSet};
@@ -12,6 +13,20 @@ use std::collections::{HashMap, HashSet};
 struct MethodKey {
     class: String,
     method: String,
+}
+
+struct FixedReceiverMutation {
+    class_name: String,
+    method: String,
+    trait_name: &'static str,
+    range: TextRange,
+}
+
+struct ProtocolReceiverMismatch {
+    class_name: String,
+    method: String,
+    protocol: String,
+    range: TextRange,
 }
 
 pub(super) fn infer_and_annotate_class_receivers(classes: &mut [HirClass], ctx: &mut LowerCtx) {
@@ -209,23 +224,35 @@ fn validate_fixed_receiver_mutations(
     mutable: &HashSet<MethodKey>,
     ctx: &mut LowerCtx,
 ) {
-    for key in fixed_receivers {
-        if !mutable.contains(key) {
-            continue;
-        }
-        let trait_name = fixed_trait_name(&key.method);
-        let range = ctx
-            .method_source_ranges
-            .get(&format!("{}.{}", key.class, key.method))
-            .copied()
-            .unwrap_or_default();
-        ctx.error_with_code_at(
-            sifr_diagnostics::DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION,
-            format!(
-                "method '{}' cannot mutate its receiver because Rust trait '{}' fixes the receiver convention",
-                key.method, trait_name
-            ),
-            range,
+    let mut violations = fixed_receivers
+        .iter()
+        .filter(|key| mutable.contains(*key))
+        .map(|key| FixedReceiverMutation {
+            class_name: key.class.clone(),
+            method: key.method.clone(),
+            trait_name: fixed_trait_name(&key.method),
+            range: ctx
+                .method_source_ranges
+                .get(&format!("{}.{}", key.class, key.method))
+                .copied()
+                .unwrap_or_default(),
+        })
+        .collect::<Vec<_>>();
+    violations.sort_by(|left, right| {
+        left.range
+            .start()
+            .cmp(&right.range.start())
+            .then_with(|| left.class_name.cmp(&right.class_name))
+            .then_with(|| left.method.cmp(&right.method))
+    });
+
+    for violation in violations {
+        method_receiver_diagnostics::fixed_receiver_mutation(
+            ctx,
+            &violation.class_name,
+            &violation.method,
+            violation.trait_name,
+            violation.range,
         );
     }
 }
@@ -276,22 +303,23 @@ fn validate_protocol_receiver_conventions(classes: &[HirClass], ctx: &mut LowerC
                         .get(&format!("{}.{}", class.name, method.name))
                         .copied()
                         .unwrap_or_default();
-                    mismatches.push((
-                        format!(
-                            "class '{}' method '{}' requires a mutable receiver but protocol '{}' declares a shared receiver",
-                            class.name, method.name, protocol_name
-                        ),
+                    mismatches.push(ProtocolReceiverMismatch {
+                        class_name: class.name.clone(),
+                        method: method.name.clone(),
+                        protocol: protocol_name.clone(),
                         range,
-                    ));
+                    });
                 }
             }
         }
     }
-    for (message, range) in mismatches {
-        ctx.error_with_code_at(
-            sifr_diagnostics::DiagnosticCode::PROTO_RECEIVER_CONVENTION_MISMATCH,
-            message,
-            range,
+    for mismatch in mismatches {
+        method_receiver_diagnostics::protocol_receiver_convention_mismatch(
+            ctx,
+            &mismatch.class_name,
+            &mismatch.method,
+            &mismatch.protocol,
+            mismatch.range,
         );
     }
 }

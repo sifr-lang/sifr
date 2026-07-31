@@ -18,48 +18,26 @@ The first whole-phase review found missing structured `binding` arguments on
 `SIFR-OWN-0002` diagnostics and duplicated inherited-field storage rerooting.
 Both were closed in [#3087](https://github.com/sifr-lang/sifr/pull/3087), whose
 exact-head Claude Opus review returned `SATISFIED` with zero actionable
-findings. A later whole-phase review found that unsupported callable and
-recursive field values could still bypass the argument-footprint overlap
-check. The correction merged in
-[#3090](https://github.com/sifr-lang/sifr/pull/3090) as
-`44ab8ad38544fa5225d8d4f09ad3b5026d485c25`; it gives all five
-`SIFR-OWN-0002` paths structured arguments, adds every native phase pass
-fixture to the create-PR manifest, and preserves precise field identity for
-statically resolvable unsupported field values. Its exact-head review pass 5
-returned `SATISFIED` with no blocking or non-blocking findings.
+findings. Later whole-phase reviews found and closed unsupported-field
+footprint gaps in [#3090](https://github.com/sifr-lang/sifr/pull/3090),
+callable-field precision in [#3092](https://github.com/sifr-lang/sifr/pull/3092),
+and nested index/slice footprint traversal in
+[#3094](https://github.com/sifr-lang/sifr/pull/3094). Each remediation reached
+a terminal zero-finding Opus review before merge.
 
-Terminal whole-phase review pass 3 then found one narrower over-rejection:
-invoking a callable class field inside a same-call argument recorded only the
-field's parent object place. The correction merged in
-[#3092](https://github.com/sifr-lang/sifr/pull/3092) as
-`9c99ef43b1aad12fcafe6b6d3742ce9afd24e475`; it preserves the callable
-field's exact identity, retains conservative fallback for dynamic bases, and
-locks actual-method shadowing and dynamic-base behavior with mutation-verified
-tests. Its exact integration-head review pass 4 returned `SATISFIED` with no
-blocking or non-blocking findings.
-
-Final whole-phase review pass 4 then found that `Index` and `Slice` argument
-footprints retained a conservative dynamic root but failed to recurse through
-an unresolvable object base. That omission could hide a nested overlapping
-call, read, or move until Rust compilation. The correction merged in
-[#3094](https://github.com/sifr-lang/sifr/pull/3094) as
-`b1b2bb23f47c854e74836bcb98bbb7f33ce3f4cc`; it preserves the dynamic-root
-fallback, recursively collects both object subtrees, and adds reject/accept
-coverage for unresolved and nested index/slice bases. After seven review
-rounds, terminal published-head pass 7 returned `SATISFIED` with no blocking
-or non-blocking findings.
-
-Whole-phase review pass 5 then found that the phase's reserved
-`SIFR-PROTO-0005` and `SIFR-PROTO-0006` emit sites omitted every declared
-message/JSON argument, and that the phase's new `SIFR-OWN-0005` path inherited
-an older helper that omitted its declared `binding`. It also required an
-emission-level guardrail so registry declarations cannot silently diverge from
-representative diagnostics again. A focused diagnostic-contract remediation
-is in progress; the pre-existing `SIFR-OWN-0005` helper debt is explicitly
-adopted by this phase because the phase added a new caller and promised the
-structured argument. Closure PR
-[#3088](https://github.com/sifr-lang/sifr/pull/3088) remains draft only until
-the integrated merge gate and a new terminal whole-phase review return green.
+Whole-phase review pass 5 then found missing structured arguments for
+`SIFR-PROTO-0005`, `SIFR-PROTO-0006`, and the phase-adopted
+`SIFR-OWN-0005` helper, plus the absence of a live receiver/place
+registry-to-emitter guardrail. The focused diagnostic-contract remediation
+merged in [#3096](https://github.com/sifr-lang/sifr/pull/3096) after terminal
+implementation and exact-record reviews both returned `SATISFIED`. Its
+diagnostics-baseline prerequisite merged in
+[#3095](https://github.com/sifr-lang/sifr/pull/3095) after five review rounds
+closed every finding and the terminal Opus verdict returned `SATISFIED` with
+zero actionable findings. Closure PR
+[#3088](https://github.com/sifr-lang/sifr/pull/3088)
+remains draft until the authoritative integrated merge gate exits 0 and a
+terminal whole-phase review returns `SATISFIED` with zero findings.
 
 The defect predates M10 and was not introduced by the buffer implementation,
 but it violates Sifr's core guarantee: a program can compile and silently lose
@@ -704,10 +682,35 @@ Reserve `SIFR-PROTO-0006`:
 - severity/category: `Error` / `PROTO`
 - owner: `sifr_lowering::lower::method_receiver_analysis`
 - template:
-  `method '{method}' cannot mutate its receiver because Rust trait '{trait_name}' fixes the receiver convention`
-- message+JSON arguments: `method`, `trait_name`
+  `class '{class_name}' method '{method}' cannot mutate its receiver because Rust trait '{trait_name}' fixes the receiver convention`
+- message+JSON arguments: `class_name`, `method`, `trait_name`
 - representative fixture:
   `crates/sifr/tests/e2e/fail/operator_receiver_mutation_rejected.sifr`
+
+The implementing `class_name` is part of the recovery identity. Lowering emits
+fixed-receiver violations deterministically in HIR source order, while the
+rendered stream may regroup them by recovery identity and does not promise
+declaration order. Six or more same-dunder violations remain distinct and do
+not collapse under the five-per-similar-group recovery cap.
+
+### Diagnostic-contract remediation scope
+
+Whole-phase review pass 5 found that `SIFR-PROTO-0005`,
+`SIFR-PROTO-0006`, and the phase-owned field-receiver path for
+`SIFR-OWN-0005` omitted their registry-declared arguments. The focused
+remediation adopts and closes the older single-funnel `SIFR-OWN-0005` helper
+debt because this phase added a new caller and promised `binding` as the root
+parameter name. It also adds a live representative-fixture guardrail for all
+five receiver/place diagnostics owned here: `SIFR-OWN-0002`,
+`SIFR-OWN-0005`, `SIFR-OWN-0014`, `SIFR-PROTO-0005`, and
+`SIFR-PROTO-0006`.
+
+The guardrail is deliberately not generalized to every active registry code.
+An exploratory repository-wide run exposed many pre-existing missing-argument
+failures across unrelated diagnostic families. Completing that migration
+belongs to the `diagnostics` owner as a separate diagnostics-program item;
+this receiver/place phase neither waives those failures nor expands into that
+unrelated migration.
 
 Add the registry constant and active entry, generate the error page/navigation
 with:
@@ -1342,3 +1345,90 @@ Closure validation evidence:
   this receiver-place phase, reproduces independently of its changes, and is
   retained here alongside the other pre-existing value-codegen/CFG debts
   rather than treated as a closure exception.
+- Diagnostic-contract remediation review pass 1:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-1.md)
+  independently verified that the pass-5 structured-argument findings and the
+  five-code receiver/place emission guardrail were substantively closed, and
+  agreed that the many pre-existing unrelated source-fixture argument gaps
+  belong to a separate diagnostics-owner migration. It returned
+  `NOT SATISFIED` after finding that `SIFR-PROTO-0006` still emitted from
+  randomized `HashSet` order and lacked a class discriminator, so recovery
+  could nondeterministically omit one of six same-dunder errors. The response
+  widens the contract with `class_name`, emits in source order through a
+  responsibility-focused diagnostic helper, pins six-error recovery survival,
+  tests the phase-owned immutable field-receiver path and root `binding`
+  value, narrows the impossible missing-root fallback to `SIFR-OWN-0014`, and
+  records the guardrail scope and explicit test command.
+- Diagnostic-contract remediation review pass 2:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-2.md)
+  verified every pass-1 finding closed and found no new Rust correctness,
+  recovery, or maintainability defect. It returned `NOT SATISFIED` because the
+  widened `SIFR-PROTO-0006` message left one compact diagnostics baseline
+  stale, which would deterministically fail the merge profile, and because the
+  source-order regression used alphabetically ordered classes. The response
+  updates the exact baseline, exercises non-alphabetical HIR declaration order,
+  distinguishes HIR emission order from recovery-grouped rendered order, and
+  adds the diagnostics baselines suite to the recorded evidence.
+- Diagnostics-baseline prerequisite
+  [#3095](https://github.com/sifr-lang/sifr/pull/3095) corrected the unrelated
+  stale bare-`defaultdict` expectation already present on `origin/main`. The
+  terminal pass-5 Opus review returned `SATISFIED` with zero actionable
+  findings. After integrating that merge, the authoritative diagnostics
+  baselines suite passes all `150` cases / `178` variants with zero failures,
+  including both the prerequisite fixture and the widened `SIFR-PROTO-0006`
+  class-identity message.
+- Diagnostic-contract remediation review pass 3:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-3.md)
+  returned `SATISFIED` with zero actionable findings. The reviewer independently
+  reran the full lowering suite (`957` passed, `1` ignored), annotated fail
+  suite, both rendered-envelope guardrails, all `178` diagnostics baseline
+  variants, registry/docs checks, formatting, workspace clippy, and both
+  maintainability guardrails; it accepted the structured arguments, recovery
+  identity, HIR/rendered ordering distinction, OWN fallback contract,
+  decomposition, prerequisite isolation, and tracking record.
+- The post-review taxonomy check rejected one stale comment that described the
+  five-code live-emission assertion as phase-scoped. The corrected exact head
+  describes it as receiver/place-scoped, and the focused taxonomy and format
+  checks pass.
+- The authoritative create-PR gate exits `0` on exact code head `efcbc3d5e`.
+  Every blocking lane passes, including Python interop (`19/19`), developer
+  tooling with the LSP protocol smoke (`18/18`), diagnostics, performance,
+  runtime-platform verification, and the E2E pass suite (`140/140`, report
+  signature `ac6d879686517f2c`). Its sole advisory is the non-blocking warm
+  wall-time target after cold cache population; no budget, threshold, waiver,
+  or validation rule changed.
+- Diagnostic-contract remediation published-head review pass 4:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-4.md)
+  independently verified the implementation, exact published head, tests,
+  prerequisite isolation, taxonomy correction, PR metadata, and validation
+  record. It returned `NOT SATISFIED` only because the exact count previously
+  attached to the intentionally scoped live-emitter guardrail was not
+  reproducible at this head. The response removes that brittle count from code
+  and tracking while retaining the verified separate-migration rationale.
+- Diagnostic-contract remediation terminal review pass 5:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-5.md)
+  returned `SATISFIED` with zero actionable findings. It verified the pass-4
+  correction, exact published head and PR metadata, every earlier diagnostic
+  contract conclusion, and prerequisite isolation. The reviewer independently
+  reran the full lowering suite (`957` passed, `1` ignored), all `39` E2E
+  entrypoint tests, all `178` diagnostics baseline variants, registry/docs
+  checks, formatting, workspace clippy, and both maintainability guardrails.
+
+Focused diagnostic-contract validation includes:
+
+```bash
+cargo test -p sifr_lowering method_receiver_diagnostics_tests
+cargo test -p sifr test_receiver_place_representative_diagnostics_populate_declared_args
+cargo test -p sifr test_fixed_receiver_diagnostics_survive_similar_recovery_cap
+cargo test -p sifr_diagnostics registry_skeleton_is_internally_consistent
+cargo run -q -p sifr_diagnostics --bin gen-error-docs -- --check
+uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines
+python3 scripts/check_docs_error_code_links.py
+python3 scripts/check_hir_maintainability_guardrails.py
+python3 scripts/check_file_size_guardrails.py
+cargo fmt --check
+```
+
+All commands above pass on the corrected remediation candidate; the explicit
+`crates/sifr` test lines name and execute both new rendered-diagnostic
+guardrails rather than relying on the filtered annotated fail suite.
