@@ -344,7 +344,7 @@ fn test_receiver_place_representative_diagnostics_populate_declared_args() {
         .parent()
         .and_then(Path::parent)
         .expect("sifr crate should live under the workspace crates directory");
-    // Deliberately phase-scoped: generalizing this to every active source fixture
+    // Deliberately receiver/place-scoped: generalizing this to every active source fixture
     // exposes 120 pre-existing argument gaps across 11 unrelated families. The
     // diagnostics owner must complete that separate migration before broadening it.
     let codes = [
