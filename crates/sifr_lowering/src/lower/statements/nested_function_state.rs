@@ -1,7 +1,38 @@
 use super::{LowerCtx, Type};
+use std::collections::HashMap;
 
 pub(super) type NestedCaptureSnapshot = Vec<(String, Option<Vec<(String, Type)>>)>;
 pub(super) type NestedMutationSnapshot = Vec<(String, Option<Vec<String>>)>;
+pub(super) type ContainerPatchSnapshot = HashMap<String, Type>;
+
+pub(super) fn suspend_container_specialization_patches(
+    ctx: &mut LowerCtx,
+) -> ContainerPatchSnapshot {
+    std::mem::take(&mut ctx.pending_container_specialization_patches)
+}
+
+pub(super) fn restore_container_specialization_patches(
+    enclosing: ContainerPatchSnapshot,
+    function_name: &str,
+    ctx: &mut LowerCtx,
+) {
+    let nested = std::mem::take(&mut ctx.pending_container_specialization_patches);
+    ctx.pending_container_specialization_patches = enclosing;
+
+    let captured_names: Vec<_> = ctx
+        .nested_function_captures
+        .get(function_name)
+        .into_iter()
+        .flatten()
+        .map(|(name, _)| name.clone())
+        .collect();
+    for name in captured_names {
+        if let Some(ty) = nested.get(&name) {
+            ctx.pending_container_specialization_patches
+                .insert(name, ty.clone());
+        }
+    }
+}
 
 pub(super) fn push_nested_function_captures(
     captures: &std::collections::HashMap<String, Vec<(String, Type)>>,
