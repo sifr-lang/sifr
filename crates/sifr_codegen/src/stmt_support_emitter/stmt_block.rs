@@ -101,7 +101,7 @@ impl RustEmitter {
                 };
                 let mut lowered = vec![RustStmt::Let {
                     mutable: self.mutated_vars.contains(name)
-                        || should_force_mutable_binding(&effective_ty),
+                        || should_force_mutable_binding(&effective_ty, &self.recursive_fields),
                     name: name.clone(),
                     ty: lowered_ty,
                     value: lowered_value,

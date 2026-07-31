@@ -156,7 +156,10 @@ pub(crate) fn should_omit_local_type_annotation(ty: &Type, value: &HirExpr) -> b
     }
 }
 
-pub(crate) fn should_force_mutable_binding(ty: &Type) -> bool {
+pub(crate) fn should_force_mutable_binding(
+    ty: &Type,
+    recursive_fields: &std::collections::HashSet<(String, String)>,
+) -> bool {
     fn class_has_next_protocol(ty: &Type) -> bool {
         let Type::Class { methods, .. } = ty.resolve_alias() else {
             return false;
@@ -177,18 +180,16 @@ pub(crate) fn should_force_mutable_binding(ty: &Type) -> bool {
         })
     }
 
-    fn class_has_recursive_option_field(ty: &Type) -> bool {
-        let Type::Class { name, fields, .. } = ty.resolve_alias() else {
+    fn class_has_recursive_option_field(
+        ty: &Type,
+        recursive_fields: &std::collections::HashSet<(String, String)>,
+    ) -> bool {
+        let Type::Class { name, .. } = ty.resolve_alias() else {
             return false;
         };
-        fields.iter().any(|(_, field_ty)| {
-            let Type::Union(members) = field_ty.resolve_alias() else {
-                return false;
-            };
-            members.iter().any(|member| {
-                matches!(member.resolve_alias(), Type::Class { name: field_name, .. } if field_name == name)
-            })
-        })
+        recursive_fields
+            .iter()
+            .any(|(owner_class, _)| owner_class == name)
     }
 
     matches!(
@@ -197,7 +198,7 @@ pub(crate) fn should_force_mutable_binding(ty: &Type) -> bool {
     ) || matches!(ty.resolve_alias(), Type::Iterator(_))
         || matches!(ty.resolve_alias(), Type::JoinSet(_, _))
         || class_has_next_protocol(ty)
-        || class_has_recursive_option_field(ty)
+        || class_has_recursive_option_field(ty, recursive_fields)
 }
 
 pub(crate) fn type_contains_any_or_unknown(ty: &Type) -> bool {

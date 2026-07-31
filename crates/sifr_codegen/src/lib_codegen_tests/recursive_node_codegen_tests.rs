@@ -107,6 +107,42 @@ def walk(own root: TreeNode | None) -> list[int]:
 }
 
 #[test]
+fn test_mutually_recursive_local_binding_is_mutable_for_child_moves() {
+    let rust_code = generate_rust_from_source(
+        r#"class Branch:
+    value: int
+    leaf: Leaf | None
+
+    def __init__(self, value: int, leaf: Leaf | None):
+        self.value = value
+        self.leaf = leaf
+
+class Leaf:
+    value: int
+    branch: Branch | None
+
+    def __init__(self, value: int, branch: Branch | None):
+        self.value = value
+        self.branch = branch
+
+def detachLeaf(own branch: Branch) -> Leaf | None:
+    local_branch: Branch = branch
+    next_leaf: Leaf | None = local_branch.leaf
+    return next_leaf
+"#,
+    );
+
+    assert!(
+        rust_code.contains("let mut local_branch: Branch = branch;"),
+        "mutually recursive local bindings must use the SCC registry when child reads take boxed fields:\n{rust_code}"
+    );
+    assert!(
+        rust_code.contains("local_branch.leaf.take().map(|__sifr_boxed_recursive_value|"),
+        "mutually recursive child reads should take the boxed field:\n{rust_code}"
+    );
+}
+
+#[test]
 fn test_recursive_option_let_else_binding_is_mutable_for_child_moves() {
     let rust_code = generate_rust_from_source(
         r#"class Expr:

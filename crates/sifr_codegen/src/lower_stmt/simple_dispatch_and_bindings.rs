@@ -57,7 +57,10 @@ pub(super) fn try_lower_simple_stmt_with_ctx_and_bindings(
             let lowered_value = try_lower_simple_let_value(effective_ty, value)?;
             Some(vec![RustStmt::Let {
                 mutable: bindings.mutated_vars.contains(name)
-                    || crate::stmt_support_emitter::should_force_mutable_binding(effective_ty),
+                    || crate::stmt_support_emitter::should_force_mutable_binding(
+                        effective_ty,
+                        bindings.recursive_fields,
+                    ),
                 name: name.clone(),
                 ty: if name == "_" || should_omit_local_type_annotation(effective_ty, value) {
                     None
