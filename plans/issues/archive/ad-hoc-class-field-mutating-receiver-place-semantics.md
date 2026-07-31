@@ -949,8 +949,9 @@ Closure validation evidence:
   (`1344.143ms > 1335.954ms`). A separate nightly profile started after this
   gate began and overlapped its compilation and measurement window, then its
   own unchanged three-case retries also failed the same host budgets. This
-  attempt is retained as integrated functional evidence but is not accepted
-  as a green merge gate; an exit-0 uncontended run remains required.
+  attempt was retained as integrated functional evidence rather than a green
+  merge gate. The later closure decision assigns the unresolved performance
+  measurement to the independent active performance issue.
 - The default merge-profile attempt on post-#3092 closure head
   `bda18f90ea277909d463a796a012836c03251961` passed coverage/core guardrails,
   diagnostics, CPython differential, Python interop `25/25`, Rust interop
@@ -977,9 +978,9 @@ Closure validation evidence:
   budget, or waiver changed.
 - A subsequent pre-#3092 complete representative retry passed seven of eight
   enforced variants and missed only JSON diagnostics by `3.961ms`; the accepted
-  five-sample JSON subset above remains historical evidence only. A final
-  uncontended measurement on the eventual post-remediation closure head is
-  required before PR #3088 becomes ready.
+  five-sample JSON subset above remains historical evidence only. The final
+  uncontended performance measurement remained pending and is now owned by
+  `adhoc_performance_budget_host_variance.md`, not by #3088 readiness.
 
 ## Acceptance criteria
 
@@ -1094,7 +1095,9 @@ Closure validation evidence:
   fresh slice temporaries while explicitly rejecting walrus bindings, deletes
   the final dead codegen receiver helper, documents guarded indexed-storage
   behavior, restores production optimizer execution and compiler-generated
-  fallback coverage, and requires an uncontended green authoritative gate.
+  fallback coverage, and at that review stage required an uncontended green
+  authoritative gate. The final closure boundary supersedes only that
+  performance precondition, not the review's semantic findings.
 - The fail-suite CFG panic-hook observation from review pass 2 is pre-existing:
   the exact detached base `b3495318dc59a79c678fe874619f993fed5deb4b`
   emits the same two `cfg.rs:300` incomplete-branch panics while its 537-fixture
@@ -1449,6 +1452,14 @@ Closure validation evidence:
   pre-#3096 head and stale performance-dependent body. The next record-only
   revision publishes the reconciled closure head and the explicit independent
   performance-task boundary before exact-head review.
+- Final whole-phase published-head review pass 7:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-7.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-7.md)
+  verified both pass-6 findings closed on published head `b42ed2aba`: #3096 is
+  integrated, #3088 is cleanly mergeable, and its body matches the independent
+  performance-task boundary. It returned `NOT SATISFIED` only because two
+  earlier validation-ledger sentences still expressed the historical
+  performance run as a live #3088 prerequisite; this record-only revision
+  converts them to historical evidence and names the active performance owner.
 
 Focused diagnostic-contract validation includes:
 
