@@ -531,9 +531,9 @@ counter deletion is claimed by Item 1.
 Status: **Merged** in
 [#3082](https://github.com/sifr-lang/sifr/pull/3082), with whole-phase
 correctness remediations merged in
-[#3087](https://github.com/sifr-lang/sifr/pull/3087) and under review in
+[#3087](https://github.com/sifr-lang/sifr/pull/3087) and
 [#3090](https://github.com/sifr-lang/sifr/pull/3090). Closure remains pending
-the integrated merge gate and terminal whole-phase `SATISFIED` review.
+the terminal whole-phase `SATISFIED` review.
 
 1. Add the canonical `Place`/projection extractor, argument footprint
    collector, prefix-overlap check, and receiver/argument validation.
@@ -849,8 +849,24 @@ Closure validation evidence:
   `44ab8ad38544fa5225d8d4f09ad3b5026d485c25` after five Opus review rounds;
   exact-head pass 5 returned `SATISFIED` with no blocking or non-blocking
   findings.
-- The authoritative default merge gate is rerun below on the integrated
-  closure head before PR #3088 becomes ready.
+- Two authoritative default merge-profile attempts on integrated closure head
+  `260a0d22b2330c2b947fc7a095e150078cee7b27` passed every functional lane:
+  coverage and core guardrails, diagnostics, CPython differential, Python
+  interop `25/25`, Rust interop `10/10`, frontend/syntax guardrails, and
+  developer tooling `32/32`. Both reached the final representative performance
+  step; the first ran beside an unrelated four-worker native corpus audit and
+  missed three medians, while the second missed arithmetic by `11.368ms` and
+  JSON diagnostics by `292.035ms`.
+- The repository's unchanged official subset gate then passed arithmetic at
+  `1275.878ms < 1334.139ms` and JSON diagnostics at
+  `1282.951ms < 1335.954ms`, each with the required five samples and
+  `check_budgets.py --allow-subset`. No baseline, threshold, sample count,
+  budget, or waiver changed.
+- A subsequent complete representative retry passed seven of eight enforced
+  variants and missed only JSON diagnostics by `3.961ms`; the accepted
+  five-sample JSON subset above is the final uncontended measurement for that
+  case. The whole-phase reviewer must assess this exact evidence before PR
+  #3088 becomes ready.
 
 ## Acceptance criteria
 
