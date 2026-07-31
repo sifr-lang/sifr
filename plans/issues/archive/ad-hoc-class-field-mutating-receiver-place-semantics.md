@@ -915,6 +915,18 @@ Closure validation evidence:
   `b1b2bb23f47c854e74836bcb98bbb7f33ce3f4cc` after seven Opus rounds;
   terminal published-head pass 7 returned `SATISFIED` with no blocking or
   non-blocking findings.
+- The first fully integrated default merge-profile attempt at closure head
+  `738402910a22932eb98c267be27fd919ab408821` passed coverage/core guardrails,
+  diagnostics, CPython differential `2/2`, Python interop `25/25`, Rust
+  interop `10/10`, frontend/syntax `4/4`, and developer tooling `32/32`.
+  Its representative benchmarks executed successfully, but budget checking
+  rejected project graph (`1394.933ms > 1357.524ms`), arithmetic
+  (`1378.214ms > 1334.139ms`), and JSON diagnostics
+  (`1344.143ms > 1335.954ms`). A separate nightly profile started after this
+  gate began and overlapped its compilation and measurement window, then its
+  own unchanged three-case retries also failed the same host budgets. This
+  attempt is retained as integrated functional evidence but is not accepted
+  as a green merge gate; an exit-0 uncontended run remains required.
 - The default merge-profile attempt on post-#3092 closure head
   `bda18f90ea277909d463a796a012836c03251961` passed coverage/core guardrails,
   diagnostics, CPython differential, Python interop `25/25`, Rust interop
