@@ -410,9 +410,9 @@ fn test_receiver_place_representative_diagnostics_populate_declared_args() {
 #[test]
 fn test_fixed_receiver_diagnostics_survive_similar_recovery_cap() {
     let source = r#"
-class Alpha:
+class Zulu:
     value: int
-    def __eq__(self, other: Alpha) -> bool:
+    def __eq__(self, other: Zulu) -> bool:
         self.value += 1
         return self.value == other.value
 
@@ -463,7 +463,7 @@ class Foxtrot:
         .collect::<Vec<_>>();
     assert_eq!(
         class_names,
-        ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot"]
+        ["Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Zulu"]
     );
 }
 

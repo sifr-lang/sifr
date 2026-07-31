@@ -671,9 +671,10 @@ Reserve `SIFR-PROTO-0006`:
 - representative fixture:
   `crates/sifr/tests/e2e/fail/operator_receiver_mutation_rejected.sifr`
 
-The implementing `class_name` is part of the recovery identity. Fixed-receiver
-violations are emitted in source order so multiple classes with the same Rust
-trait method remain deterministic, and six or more same-dunder violations do
+The implementing `class_name` is part of the recovery identity. Lowering emits
+fixed-receiver violations deterministically in HIR source order, while the
+rendered stream may regroup them by recovery identity and does not promise
+declaration order. Six or more same-dunder violations remain distinct and do
 not collapse under the five-per-similar-group recovery cap.
 
 ### Diagnostic-contract remediation scope
@@ -1172,6 +1173,16 @@ Current Item 2 validation evidence:
   tests the phase-owned immutable field-receiver path and root `binding`
   value, narrows the impossible missing-root fallback to `SIFR-OWN-0014`, and
   records the guardrail scope and explicit test command.
+- Diagnostic-contract remediation review pass 2:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-2.md)
+  verified every pass-1 finding closed and found no new Rust correctness,
+  recovery, or maintainability defect. It returned `NOT SATISFIED` because the
+  widened `SIFR-PROTO-0006` message left one compact diagnostics baseline
+  stale, which would deterministically fail the merge profile, and because the
+  source-order regression used alphabetically ordered classes. The response
+  updates the exact baseline, exercises non-alphabetical HIR declaration order,
+  distinguishes HIR emission order from recovery-grouped rendered order, and
+  adds the diagnostics baselines suite to the recorded evidence.
 
 Focused diagnostic-contract validation includes:
 
@@ -1181,6 +1192,7 @@ cargo test -p sifr test_receiver_place_representative_diagnostics_populate_decla
 cargo test -p sifr test_fixed_receiver_diagnostics_survive_similar_recovery_cap
 cargo test -p sifr_diagnostics registry_skeleton_is_internally_consistent
 cargo run -q -p sifr_diagnostics --bin gen-error-docs -- --check
+uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines
 python3 scripts/check_docs_error_code_links.py
 python3 scripts/check_hir_maintainability_guardrails.py
 python3 scripts/check_file_size_guardrails.py

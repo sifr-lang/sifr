@@ -133,10 +133,10 @@ class Counter:
 #[test]
 fn fixed_receiver_diagnostics_are_declaration_ordered_and_class_distinct() {
     let source = r#"
-class Alpha:
+class Zulu:
     value: int
 
-    def __eq__(self, other: Alpha) -> bool:
+    def __eq__(self, other: Zulu) -> bool:
         self.value += 1
         return self.value == other.value
 
@@ -190,7 +190,7 @@ class Foxtrot:
         .collect::<Vec<_>>();
     assert_eq!(
         class_names,
-        ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot"]
+        ["Zulu", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot"]
     );
 }
 
