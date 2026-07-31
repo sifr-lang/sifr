@@ -814,9 +814,8 @@ Current Item 2 validation evidence:
 - focused lowering, codegen, scope, optimizer, pass-fixture, and fail-fixture
   checks pass;
 - full lowering tests pass (`941 passed`, `1 ignored`), full codegen tests pass
-  (`954 passed`), the E2E pass suite passes (`680/680`, report signature
-  `8871ba51135353a4`), and the E2E fail test
-  passes with the complete annotated fail corpus;
+  (`954 passed`), and the E2E fail test passes with the complete annotated fail
+  corpus;
 - formatting, workspace clippy with warnings denied, HIR maintainability,
   file-size, diagnostic-doc links, and diff checks pass;
 - the post-review remediation create-PR profile passed its full Python interop
@@ -1115,3 +1114,14 @@ Current Item 2 validation evidence:
   These shapes reproduce on the untouched base and are not receiver/argument
   overlap-analysis regressions; they remain follow-up compiler debt rather than
   hidden closure exceptions for this phase.
+- Overlap-remediation PR review pass 4:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-4.md)
+  returned `SATISFIED` with no blocking findings after independently rerunning
+  the full lowering, codegen, diagnostics, and fail suites; the targeted
+  unsupported-field matrix; formatting, clippy, docs, HIR, and file-size
+  guardrails; both exact overlap fixtures; manifest integrity; and both
+  authoritative logs. Its only record-precision observation was that an older
+  `680/680` Item 2 pass-corpus figure had been left beside freshly updated
+  library counts. That stale figure is removed here; the current bounded E2E
+  evidence remains the independently verified `138/138` create-PR lane, and
+  the full pass corpus remains assigned to the integrated closure merge gate.
