@@ -214,9 +214,16 @@ pub(in crate::lower) fn immutable_parameter_mutation(
     name: &str,
     range: TextRange,
 ) {
-    ctx.error_with_code_at(
+    let mut args = BTreeMap::new();
+    args.insert(
+        "binding".to_string(),
+        DiagnosticArg::String(name.to_string()),
+    );
+    ctx.error_with_code_args_help_at(
         DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION,
         format!("cannot mutate through immutable parameter `{name}`: add `mut` to the parameter declaration"),
+        args,
+        None,
         range,
     );
 }

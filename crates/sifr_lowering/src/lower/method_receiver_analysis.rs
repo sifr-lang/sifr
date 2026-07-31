@@ -4,9 +4,10 @@ use super::{
 };
 use crate::hir_nodes::{HirClass, HirClassKind, HirExpr, HirFunction, HirIteratorOp, MethodKind};
 use crate::scope::BindingKind;
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_ir::visit_hir_function_exprs_mut;
 use sifr_type_system::{FunctionType, ReceiverConvention, Type};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct MethodKey {
@@ -219,12 +220,23 @@ fn validate_fixed_receiver_mutations(
             .get(&format!("{}.{}", key.class, key.method))
             .copied()
             .unwrap_or_default();
-        ctx.error_with_code_at(
-            sifr_diagnostics::DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION,
+        let mut args = BTreeMap::new();
+        args.insert(
+            "method".to_string(),
+            DiagnosticArg::String(key.method.clone()),
+        );
+        args.insert(
+            "trait_name".to_string(),
+            DiagnosticArg::String(trait_name.to_string()),
+        );
+        ctx.error_with_code_args_help_at(
+            DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION,
             format!(
                 "method '{}' cannot mutate its receiver because Rust trait '{}' fixes the receiver convention",
                 key.method, trait_name
             ),
+            args,
+            None,
             range,
         );
     }
@@ -282,15 +294,24 @@ fn validate_protocol_receiver_conventions(classes: &[HirClass], ctx: &mut LowerC
                             class.name, method.name, protocol_name
                         ),
                         range,
+                        class.name.clone(),
+                        method.name.clone(),
+                        protocol_name.clone(),
                     ));
                 }
             }
         }
     }
-    for (message, range) in mismatches {
-        ctx.error_with_code_at(
-            sifr_diagnostics::DiagnosticCode::PROTO_RECEIVER_CONVENTION_MISMATCH,
+    for (message, range, class_name, method, protocol) in mismatches {
+        let mut args = BTreeMap::new();
+        args.insert("class_name".to_string(), DiagnosticArg::String(class_name));
+        args.insert("method".to_string(), DiagnosticArg::String(method));
+        args.insert("protocol".to_string(), DiagnosticArg::String(protocol));
+        ctx.error_with_code_args_help_at(
+            DiagnosticCode::PROTO_RECEIVER_CONVENTION_MISMATCH,
             message,
+            args,
+            None,
             range,
         );
     }

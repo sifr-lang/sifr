@@ -339,6 +339,50 @@ pub(crate) fn test_e2e_fail() {
 }
 
 #[test]
+fn test_receiver_place_representative_diagnostics_populate_declared_args() {
+    let repo_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("sifr crate should live under the workspace crates directory");
+    let codes = [
+        sifr_diagnostics::DiagnosticCode::OWN_DOUBLE_MUTABLE_BORROW,
+        sifr_diagnostics::DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION,
+        sifr_diagnostics::DiagnosticCode::OWN_UNSUPPORTED_MUTABLE_RECEIVER_PLACE,
+        sifr_diagnostics::DiagnosticCode::PROTO_RECEIVER_CONVENTION_MISMATCH,
+        sifr_diagnostics::DiagnosticCode::PROTO_FIXED_RECEIVER_MUTATION,
+    ];
+
+    for code in codes {
+        let entry = sifr_diagnostics::codes::registry_entry(code.code())
+            .expect("active receiver-place diagnostic should be registered");
+        let fixture = entry
+            .representative_fixture_path
+            .expect("active receiver-place diagnostic should declare a representative fixture");
+        let source = std::fs::read_to_string(repo_root.join(fixture))
+            .unwrap_or_else(|error| panic!("failed to read {fixture}: {error}"));
+        let errors = match sifr_driver::compile(&source) {
+            sifr_driver::CompileResult::Errors { errors } => errors,
+            sifr_driver::CompileResult::Success { .. } => {
+                panic!("{fixture} should emit {}", code.code())
+            }
+        };
+        let diagnostic = errors
+            .iter()
+            .find(|diagnostic| diagnostic.code == code.code())
+            .unwrap_or_else(|| panic!("{fixture} did not emit {}", code.code()));
+
+        for declaration in entry.declared_args {
+            assert!(
+                diagnostic.args.contains_key(declaration.name),
+                "{fixture} emitted {} without declared arg {}",
+                code.code(),
+                declaration.name
+            );
+        }
+    }
+}
+
+#[test]
 pub(crate) fn test_decimal_fail_fixtures_do_not_emit_retired_pseudo_codes() {
     let fail_dir = Path::new("tests/e2e/fail");
     if !fail_dir.exists() {

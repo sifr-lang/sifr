@@ -1,6 +1,6 @@
 use crate::{lower_module, HirDiagnostic, HirModule};
 use ruff_text_size::{TextRange, TextSize};
-use sifr_diagnostics::DiagnosticCode;
+use sifr_diagnostics::{DiagnosticArg, DiagnosticCode};
 use sifr_python_parser::parse_module;
 use sifr_type_system::ParamConvention;
 
@@ -154,6 +154,8 @@ fn test_class_method_immutable_parameter_rejects_mutating_method() {
             error.message
                 == "cannot mutate through immutable parameter `other`: add `mut` to the parameter declaration"
                 && error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION)
+                && error.args.get("binding")
+                    == Some(&DiagnosticArg::String("other".to_string()))
                 && error.primary_range
                     == Some(range_for_after(source, "        other.items", "other.items"))
         }),
@@ -171,6 +173,8 @@ fn test_immutable_parameter_rejects_class_method_mut_borrow_argument() {
             error.message
                 == "cannot mutate through immutable parameter `other`: add `mut` to the parameter declaration"
                 && error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION)
+                && error.args.get("binding")
+                    == Some(&DiagnosticArg::String("other".to_string()))
                 && error.primary_range
                     == Some(range_for_after(source, "    receiver.merge(", "other"))
         }),
@@ -188,6 +192,8 @@ fn test_immutable_parameter_field_rejects_class_method_mut_borrow_argument() {
             error.message
                 == "cannot mutate through immutable parameter `depot`: add `mut` to the parameter declaration"
                 && error.code == Some(DiagnosticCode::OWN_IMMUTABLE_PARAMETER_MUTATION)
+                && error.args.get("binding")
+                    == Some(&DiagnosticArg::String("depot".to_string()))
                 && error.primary_range
                     == Some(range_for_after(source, "    receiver.merge(", "depot.stock"))
         }),
