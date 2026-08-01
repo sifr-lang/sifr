@@ -44,6 +44,16 @@ scripts/run_all_tests.sh                      # Merge gate — default
 
 CI mirrors these exact scripts — no CI-only behavior. Do not wait on CI; validate locally first.
 
+## Cargo build storage
+
+- Before a long Cargo gate, inspect free disk space and the current worktree's target size.
+- If the private target exceeds **20 GiB**, verify that no active process uses it.
+- Run `cargo clean` from the current worktree after that verification.
+- Clean a separate validation target only when the current worktree owns that target.
+- Do not clean a shared target or a target from another worktree.
+- Do not use the first cold-cache run as host-sensitive performance evidence.
+- If safe cleanup does not provide enough space, stop with `PAUSED_FOR_RESOURCES`.
+
 ## File-size guardrail
 
 Hand-maintained first-party source files must stay under **900 lines**. Markdown and MDX documentation (`*.md`, `*.mdx`), generated files, lockfiles, snapshots, baselines, `target/**`, and `third_party/**` are excluded.

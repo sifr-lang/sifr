@@ -1,100 +1,301 @@
 ---
 name: phase-closure-loop
-description: End-to-end execution loop for ad-hoc phases in Sifr: per-wave implementation, validation, PR/merge, external review pass-1/pass-2, then wave/milestone/phase closure cycles with the same review loop, notifications, and final closure bookkeeping.
+description: Close one bounded Sifr phase item with stable scope, reusable evidence, external review, and explicit terminal states.
 ---
 
 # Phase Closure Loop
 
-Use this skill when closing an ad-hoc phase using the enforced review-driven loop.
+Use this skill to implement or close one phase item.
 
-## Inputs
+One session owns one item, wave, PR, or closure task.
 
-- `PHASE_NAME`: human-readable phase slug (for prompts and status text)
-- `PHASE_DOC`: phase doc path under `plans/issues/`
-- `PHASE_EXEC_DOC`: execution ledger path under `plans/issues/`
-- `REVIEW_PREFIX`: review file prefix, for example:
-  - `phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision`
+Do not use one session to finish a complete multi-item phase.
 
-## Core Rules
+## Input
 
-- Work one part/wave at a time; do not skip ahead.
-- Before each PR, confirm demo/fixture behavior and run `$(pwd)/scripts/run_all_tests.sh`.
-- For each review pass, apply only valid findings, validate again, then PR+merge.
-- Do not self-review when external reviewer app is required.
-- Keep docs in sync (`plans/issues/`, `internal_docs/architecture.md`, `plans/roadmap.md`) as closure progresses.
+- `PHASE_DOC`: Phase document under `plans/issues/`.
 
-## Wave Loop (for each wave/part)
+If required information is absent, ask for clarification before you continue.
 
-1. Plan and checklist for the active wave.
-2. Implement root-cause fix (no shim/fallback shortcuts).
-3. Run targeted demos/fixtures for the wave.
-4. Run full validation:
-   - `$(pwd)/scripts/run_all_tests.sh`
-5. Open PR and merge for implementation.
-6. Trigger external review pass 1, wait for file, apply valid notes, revalidate, PR+merge.
-7. Run:
-   - `say "First review is done"`
-8. Trigger external review pass 2 (production-grade), wait for file, apply valid notes, revalidate, PR+merge.
-9. Run:
-   - `say "Second review is done"`
-10. Update execution/phase docs with artifacts, actions, validation evidence, and merged PR link.
+## Terminal States
 
-## Closure Cycles (same review loop)
+Every session must end in one of these states:
 
-After all waves are done, run these in order:
+- `DONE`: The item is merged and its records are complete.
+- `BLOCKED_EXTERNAL`: An external requirement prevents progress.
+- `PAUSED_FOR_RESOURCES`: A required machine resource is unavailable.
+- `NEEDS_RESCOPING`: New work exceeds the approved scope.
+- `SUPERSEDED_BY_EXTERNAL_MERGE`: Another actor merged or replaced the candidate.
 
-1. Wave closure:
-   - pass 1 (completion check) -> apply -> validate -> PR+merge
-   - pass 2 (production-grade check) -> apply -> validate -> PR+merge
-   - send Telegram closure update
-2. Milestone closure:
-   - pass 1 (completion check) -> apply -> validate -> PR+merge
-   - pass 2 (production-grade check) -> apply -> validate -> PR+merge
-   - send Telegram closure update
-3. Phase closure:
-   - pass 1 (completion check) -> apply -> validate -> PR+merge
-   - pass 2 (production-grade check) -> apply -> validate -> PR+merge
-   - finalize statuses and roadmap wording
-   - send Telegram closure update
+Record the evidence, owner, resume condition, and next action for each non-`DONE` state.
 
-When phase is fully closed, run:
-- `say "Now we review"`
+Stop after you record a terminal state.
 
-## Reviewer Trigger
+## Step 1: Establish Ownership
 
-Use the [talk-to-claude-opus](../talk-to-claude-opus/SKILL.md) skill for all external review passes.
+Verify that this session owns the worktree, branch, Git index, and candidate.
 
-Adjust prompt scope for the active stage: `wave`, `milestone closure`, `phase closure`, `pass 1`, `pass 2`.
+Verify that no other process can switch the branch or create a commit.
 
-If the target review file already exists, create a new filename with the same prefix and incremented suffix.
+Use private target, report, review, and temporary directories.
 
-## Telegram Status Command
+Do not share these directories with another session.
 
-```bash
-: "${SEND_TO_TELEGRAM_PROJECT:?Set SEND_TO_TELEGRAM_PROJECT to the send-to-telegram checkout path}"
-direnv exec "${SEND_TO_TELEGRAM_PROJECT}" uv run --project "${SEND_TO_TELEGRAM_PROJECT}" \
-  python "${SEND_TO_TELEGRAM_PROJECT}/send_to_telegram.py" "$(cat <<'MESSAGE'
-Status for phase ${PHASE_NAME}:
-<short status summary>
-MESSAGE
-)"
-```
+If another actor owns the item, use `BLOCKED_EXTERNAL`.
 
-Send at minimum:
+If another actor merged the candidate, use `SUPERSEDED_BY_EXTERNAL_MERGE`.
 
-- after wave closure completes
-- after milestone closure completes
-- after phase closure completes
-- immediately on blocker/failure
+## Step 2: Freeze the Scope
+
+Write the numbered acceptance criteria in `PHASE_DOC`.
+
+Write the non-goals in `PHASE_DOC`.
+
+Record `BASE_SHA`, `ALLOWED_PATHS`, and `ITEM_ID`.
+
+Classify each dependency as:
+
+- `implement`: This item owns the dependency.
+- `consume-only`: Another item owns the dependency.
+- `wait`: Work cannot start before the dependency is ready.
+
+Do not modify a `consume-only` dependency.
+
+If a new requirement changes the scope, use `NEEDS_RESCOPING`.
+
+Get explicit user approval before you add the requirement.
+
+## Step 3: Run the Preflight
+
+Verify these conditions before you modify files:
+
+- The branch and base commit are correct.
+- The worktree has no unrelated changes.
+- The worktree has enough disk space for the required gate.
+- No competing Sifr gate uses the host.
+- Each dependency has one owner.
+- Required credentials and permissions are available.
+- Required waivers remain valid through the estimated completion date.
+- Recovery procedures exist before an irreversible operation.
+
+If a resource is unavailable, use `PAUSED_FOR_RESOURCES`.
+
+If a credential or permission is unavailable, use `BLOCKED_EXTERNAL`.
+
+Do not start an irreversible operation after a failed preflight.
+
+## Step 4: Implement One Item
+
+Create a checklist for the active item.
+
+Implement the root-cause correction.
+
+Do not add a fallback path unless the user requests one.
+
+Do not implement work from a different item.
+
+Run the smallest relevant demos, fixtures, and tests after each change.
+
+Load the `sifr-demo-authoring` skill before you change `demos/`.
+
+Record the candidate SHA after the checklist is complete.
+
+## Step 5: Classify Unexpected Failures
+
+Classify each unexpected failure as:
+
+- A regression from the candidate.
+- An existing failure that is in scope.
+- A pre-existing failure that is out of scope.
+- An infrastructure or resource failure.
+- A dependency that another owner controls.
+
+Correct a regression from the candidate.
+
+Correct an existing in-scope failure.
+
+Record an out-of-scope failure and its owning issue.
+
+Do not absorb an out-of-scope failure into this item.
+
+Use a terminal state when an external failure prevents progress.
+
+## Step 6: Run Candidate Validation
+
+Select validation from the changed files.
+
+For compiler, runtime, workflow, schema, or lockfile changes:
+
+1. Run targeted tests.
+2. Run `scripts/run_all_tests.sh --profile create-pr`.
+3. Record the candidate SHA and validation inputs.
+
+For fixture-only changes, run the affected fixture suites.
+
+For documentation-only changes, run documentation and guardrail checks.
+
+For review-record-only changes, run mechanical documentation checks.
+
+Do not run a full compiler gate for a review-record-only change.
+
+Reuse evidence when implementation and validation inputs are unchanged.
+
+Do not repeat a failed performance gate on an unchanged candidate without new evidence.
+
+Use `PAUSED_FOR_RESOURCES` when host contention invalidates a performance result.
+
+Record successful validation against the candidate SHA.
+
+## Step 7: Run External Review
+
+Open one draft implementation PR for the validated candidate.
+
+Use the [talk-to-claude-opus](../talk-to-claude-opus/SKILL.md) skill.
+
+Ask the reviewer to inspect the exact base and candidate SHAs.
+
+Give the reviewer the acceptance criteria and changed paths.
+
+Tell the reviewer not to modify files.
+
+Tell the reviewer to classify each finding as:
+
+- A blocking regression.
+- A blocking in-scope omission.
+- A pre-existing issue.
+- An infrastructure issue.
+- A non-blocking suggestion.
+
+Only blocking regressions and blocking omissions can prevent approval.
+
+Keep the final review evidence outside the reviewed Git tree.
+
+Publish the evidence as a PR review, check, or immutable external artifact.
+
+Key the evidence by the candidate SHA.
+
+Do not commit the final review into the candidate that it approves.
+
+Record reviewer approval against the candidate SHA.
+
+## Step 8: Process Review Findings
+
+Apply all valid blocking findings in one batch.
+
+Run targeted validation after the batch.
+
+Run another external review only when code, tests, fixtures, workflows, schemas, or lockfiles change.
+
+Do not reopen approval for review records or status text.
+
+Convert non-blocking suggestions into follow-up items.
+
+If a second review finds a new mechanism-level defect, use `NEEDS_RESCOPING`.
+
+If the same finding returns twice, stop and request adjudication.
+
+A failed reviewer request is not a review pass.
+
+Retry one reviewer transport failure.
+
+After the second transport failure, use `BLOCKED_EXTERNAL`.
+
+## Step 9: Prepare the PR
+
+Verify that the candidate SHA still matches the validated and reviewed SHA.
+
+Verify that no relevant base change invalidates the evidence.
+
+If relevant base code changed, update the base and repeat the affected steps.
+
+Do not invalidate evidence for an unrelated base change.
+
+Do not open separate PRs for each review record.
+
+## Step 10: Run the Merge Gate
+
+Run `scripts/run_all_tests.sh` once on the final implementation candidate.
+
+Record the command, SHA, and result.
+
+Reuse the result after documentation-only updates.
+
+If the merge gate changes files, repeat the affected validation and review steps.
+
+Do not merge before the final candidate has successful validation and reviewer approval.
+
+## Step 11: Merge and Record the Result
+
+Merge the PR after the final candidate has successful validation and reviewer approval.
+
+Update `PHASE_DOC` with:
+
+- The merged PR link.
+- The final candidate SHA.
+- The validation evidence.
+- The external review evidence.
+- Deferred follow-up items.
+
+Update `internal_docs/architecture.md` only when architecture changed.
+
+Update `plans/roadmap.md` only when roadmap status changed.
+
+Do not run another external review for these record-only updates.
+
+Set the session state to `DONE` after all required records are complete.
+
+## Step 12: End the Session
+
+Create a handoff with:
+
+- The terminal state.
+- The branch, worktree, base SHA, and candidate SHA.
+- The merged or open PR.
+- The validation evidence.
+- The review evidence.
+- Dirty or untracked files.
+- External blockers.
+- Deferred findings.
+- The exact next action.
+- Commands that the next session must not repeat.
+
+Stop after the handoff.
+
+Start a new session for the next item or wave.
+
+## Phase Closure
+
+Close the phase only after all items are `DONE`.
+
+Reuse item-level validation and review evidence.
+
+Do not repeat wave, milestone, and phase reviews when code, tests, fixtures, workflows, schemas, and lockfiles are unchanged.
+
+Run mechanical documentation checks for closure-only changes.
+
+If phase closure changes code, tests, fixtures, workflows, schemas, or lockfiles, create a new bounded item.
+
+Use the normal item workflow for that new item.
 
 ## Completion Checklist
 
-- All wave implementation PRs merged
-- All wave pass-1/pass-2 review PRs merged
-- Wave closure pass-1/pass-2 merged
-- Milestone closure pass-1/pass-2 merged
-- Phase closure pass-1/pass-2 merged
-- Execution ledger checkboxes and status lines updated to final state
-- Roadmap wording updated to reflect closure
-- Telegram updates sent for wave/milestone/phase closure
-- `say "Now we review"` executed
+- The scope and non-goals are recorded.
+- One owner controls the worktree and candidate.
+- The PR is merged.
+- The final candidate passed the required validation.
+- External review approved the final candidate.
+- Final review evidence is outside the reviewed Git tree.
+- The phase document contains the PR and evidence.
+- Follow-up items contain all non-blocking suggestions.
+- The worktree has no unexplained artifacts.
+- The handoff contains the terminal state and next action.
+
+## Prohibited Patterns
+
+- Do not review a commit that only archives its own approval.
+- Do not rerun full validation after review-record-only changes.
+- Do not absorb unrelated gate failures.
+- Do not modify another owner’s worktree or dependency.
+- Do not let another process mutate the branch during validation.
+- Do not merge before the final candidate has validation and review evidence.
+- Do not continue after you record a terminal state.
