@@ -26,11 +26,20 @@ One session owns its worktree, branch, Git index, and temporary paths.
 
 Do not let another session mutate them during validation or review.
 
+## File-size guardrail
+
+Hand-maintained first-party source files must stay under 900 lines.
+
+Markdown, MDX, generated files, lockfiles, snapshots, baselines, `target/**`, and `third_party/**` are excluded.
+
+Run the file-size guardrail before you finish the item.
+
+If a touched file exceeds the limit, split it by responsibility and ownership boundary.
+
+Do not split a module alphabetically or by line-count chunks.
+
 ## Code Rules
 
-- Hand-maintained first-party source files must stay under 900 lines.
-- Generated files, lockfiles, snapshots, baselines, `target/**`, and `third_party/**` are excluded.
-- Split large modules by responsibility and ownership boundary.
 - Do not use data-dependent `.unwrap()` or `.expect()` in generated runtime code.
 - Use `assert!` only for programmer invariants.
 - Keep `Cargo.lock` changes intentional.
@@ -41,14 +50,30 @@ Do not let another session mutate them during validation or review.
 ## Commands
 
 ```bash
+# Build the compiler
+cargo build --release
+
 # Run a Sifr file
 cargo run -q -p sifr -- run <file>.sifr
+
+# Build, check, or emit a Sifr file
+cargo run -q -p sifr -- build <file>.sifr
+cargo run -q -p sifr -- check <file>.sifr
+cargo run -q -p sifr -- emit <file>.sifr
 
 # Unit tests without the slow E2E pass suite
 cargo test -p sifr -- --skip test_e2e_pass
 
+# Single test
+cargo test -p sifr -- <test_name>
+
 # E2E pass suite
 verification/runner/e2e/run_e2e_pass.sh
+
+# Linting
+cargo clippy --workspace -- -D warnings
+cargo fmt --check
+python3 scripts/check_hir_maintainability_guardrails.py
 
 # PR gate
 scripts/run_all_tests.sh --profile create-pr
@@ -69,12 +94,11 @@ Do not wait for CI instead of local validation.
 
 ## Cargo build storage
 
-- Before a long Cargo gate, inspect free disk space and the private target size.
-- If the private target exceeds 20 GiB, verify that no active process uses it.
-- Run `cargo clean` only for a target owned by the current worktree.
-- Do not clean shared targets or targets from other worktrees.
-- Do not use a cold-cache run as performance evidence.
-- If safe cleanup is insufficient, record the resource blocker and stop.
+- Before a long Cargo gate, inspect free disk space and the current worktree's target size.
+- If its private target exceeds **20 GiB** and no process uses it, run `cargo clean` in that worktree.
+- Do not clean a shared target or a target from another worktree.
+- Do not use the first cold-cache run as host-sensitive performance evidence.
+- If safe cleanup does not provide enough space, record the resource blocker and stop.
 
 ## Records
 
