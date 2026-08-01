@@ -4,6 +4,8 @@
 
 Sifr compiles Python syntax to Rust and produces native binaries.
 
+It enforces static types, `Result`/`Option` error handling, and compile-time ownership.
+
 The compiler must prevent user-triggered runtime panics.
 
 Pipeline: `sifr` CLI -> `sifr_driver` orchestrates `sifr_frontend` (parse/lower/type-check) -> `sifr_codegen` -> Cargo/`rustc` -> native binary.
@@ -16,7 +18,7 @@ Read `internal_docs/architecture.md` for architecture details.
 - Work on one item at a time.
 - Use `.cursor/skills/phase-closure-loop/SKILL.md` for phase items.
 - Solve root causes inside the approved scope (not superficial symptoms).
-- Do not add backward compatibility unless the user requests them.
+- Do not add backward compatibility unless the user requests it.
 - Do not add fallback paths unless the user requests them.
 - Do not absorb unrelated failures or externally owned dependencies.
 - Record an out-of-scope failure in its owning issue.
@@ -42,7 +44,8 @@ Do not split a module alphabetically or by line-count chunks.
 
 - Do not use data-dependent `.unwrap()` or `.expect()` in generated runtime code.
 - Use `assert!` only for programmer invariants.
-- Keep `Cargo.lock` changes intentional.
+- Workspace lints warn on `unsafe_code`, `print_stdout`, `print_stderr`, and `dbg_macro`.
+- `Cargo.lock` is tracked. Treat its diffs as intentional dependency changes.
 - Use `insta` for snapshot tests.
 - E2E fixtures run in lexical order.
 - Snapshot expectations follow declaration order.
