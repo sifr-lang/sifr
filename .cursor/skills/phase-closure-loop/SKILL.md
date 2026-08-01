@@ -43,19 +43,53 @@ Do not repeat a failed performance gate on an unchanged candidate without new ev
 
 1. Open one draft implementation PR.
 2. Use the [talk-to-claude-opus](../talk-to-claude-opus/SKILL.md) skill.
-3. Give the reviewer the exact base SHA, candidate SHA, scope, and acceptance criteria.
-4. Treat only regressions and in-scope omissions as blocking findings.
-5. Convert other findings into follow-up work.
-6. Apply valid blocking findings in one batch.
-7. Repeat review only when code, tests, fixtures, workflows, schemas, or lockfiles change.
+3. Give Claude the review prompt below.
+
+The prompt must include:
+
+- The exact base and candidate SHAs.
+- The changed paths.
+- The item scope and acceptance criteria.
+- Existing validation evidence.
+- Prior blocking findings for a remediation review.
+
+Tell Claude not to modify files.
+
+Tell Claude not to create new requirements.
+
+Tell Claude not to repeat broad validation that existing evidence covers.
+
+Require this response:
+
+```text
+Verdict: SATISFIED | NOT SATISFIED
+
+Blocking findings:
+- regression | in-scope omission: file and line, criterion, reason, correction
+
+Follow-up findings:
+- pre-existing issue | infrastructure issue | suggestion: reason
+```
+
+Only regressions and in-scope omissions can block approval.
+
+Convert follow-up findings into separate work.
+
+Apply valid blocking findings in one batch.
+
+Repeat review only when code, tests, fixtures, workflows, schemas, or lockfiles change.
 
 If a second review finds a new mechanism-level defect, stop and rescope the item.
 
 If the same finding returns twice, stop and request adjudication.
 
-Retry one reviewer transport failure.
+A timeout, API error, empty response, or incomplete response is not a review pass.
 
-If the retry fails, record the blocker and stop.
+After the initial request fails, retry up to two times with new temporary directories.
+
+If all three requests fail, record the blocker and stop.
+
+Do not create numbered review artifacts for failed requests.
 
 Publish final review evidence outside the reviewed Git tree.
 
