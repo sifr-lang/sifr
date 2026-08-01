@@ -1,74 +1,67 @@
 ---
-name: talk-to-claude
-description: Talk to Claude asynchronously about a specific task by asking it to write its response into a file, then wait for that file to appear.
+name: talk-to-claude-opus
+description: Send a read-only prompt to Claude Opus and return its response through an atomic temporary file.
 ---
 
-## Start Claude Conversation
+# Talk to Claude Opus
 
-Choose a target file under `./plans/reviews/active`, then run Claude CLI in the background and redirect its output there.
-
-Use an absolute path derived from `./plans/reviews/active` so the output location is exact.
-
-If you need the wait helper, set `TALK_TO_CLAUDE_PROJECT` to the local
-`talk-to-claude` checkout. Do not hard-code a personal absolute path.
-
-Authoritative launch command:
+Run one request with the prompt supplied by the calling workflow.
 
 ```bash
-PWD_NOW="$(pwd)"
-mkdir -p "${PWD_NOW}/plans/reviews/active"
-TARGET_FILE="${PWD_NOW}/plans/reviews/active/<conversation-file-name>.md"
-LOG_FILE="${TARGET_FILE%.md}.claude.log"
+CLAUDE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/sifr-claude.XXXXXX")"
+RESPONSE_TMP="${CLAUDE_DIR}/response.tmp"
+RESPONSE_FILE="${CLAUDE_DIR}/response.md"
+LOG_FILE="${CLAUDE_DIR}/claude.log"
+TIMEOUT_FILE="${CLAUDE_DIR}/timed-out"
 
-nohup claude --dangerously-skip-permissions --setting-sources project --model claude-opus-5 --effort medium -p "$(cat <<PROMPT
-${TOPIC_NAME}
+claude \
+  --permission-mode plan \
+  --setting-sources project \
+  --model claude-opus-5 \
+  --effort medium \
+  --no-session-persistence \
+  -p "$(cat <<'PROMPT'
+<prompt>
 PROMPT
-)" >"${TARGET_FILE}" 2>"${LOG_FILE}" &
+)" >"${RESPONSE_TMP}" 2>"${LOG_FILE}" &
 CLAUDE_PID=$!
+
+(
+  sleep 2400
+  touch "${TIMEOUT_FILE}"
+  kill -TERM "${CLAUDE_PID}" 2>/dev/null
+) &
+WATCHDOG_PID=$!
+
 wait "${CLAUDE_PID}"
-CLAUDE_EXIT_CODE=$?
-if [ "${CLAUDE_EXIT_CODE}" -ne 0 ] || [ ! -s "${TARGET_FILE}" ]; then
-  echo "Claude reviewer failed or produced an empty output. See ${LOG_FILE}" >&2
+CLAUDE_STATUS=$?
+kill "${WATCHDOG_PID}" 2>/dev/null || true
+wait "${WATCHDOG_PID}" 2>/dev/null || true
+
+if [ -f "${TIMEOUT_FILE}" ]; then
+  rm -f "${RESPONSE_TMP}"
+  echo "Claude timed out after 40 minutes. See ${LOG_FILE}" >&2
   exit 1
 fi
+
+if [ "${CLAUDE_STATUS}" -ne 0 ] || [ ! -s "${RESPONSE_TMP}" ]; then
+  rm -f "${RESPONSE_TMP}"
+  echo "Claude failed or produced empty output. See ${LOG_FILE}" >&2
+  exit 1
+fi
+
+mv "${RESPONSE_TMP}" "${RESPONSE_FILE}"
+printf 'CLAUDE_RESPONSE_FILE=%s\n' "${RESPONSE_FILE}"
 ```
 
-- Replace `<conversation-file-name>.md` with a concrete file name for the active topic.
-- Keep `--model claude-opus-5` and `--effort medium` as the default review
-  model and effort.
-- If the target file already exists, use a new filename with the same prefix and an incremented suffix.
-- Keep the `wait "${CLAUDE_PID}"` in the same shell invocation; detached `nohup ... &` can leave empty artifacts in Codex exec sessions.
-- Keep using the target file as the handoff artifact.
-- Include the task, constraints, validation commands, and changed files Claude should inspect in the prompt.
-- For review prompts, tell Claude not to modify files.
+The temporary file keeps incomplete output hidden.
 
-## Wait For Output File
+The atomic rename makes file existence a completion signal.
 
-Use the wait command below to block until Claude writes the target file:
+The response and log remain outside the Git tree.
 
-```bash
-PWD_NOW="$(pwd)"
-: "${TALK_TO_CLAUDE_PROJECT:?Set TALK_TO_CLAUDE_PROJECT to the talk-to-claude checkout path}"
-uv run --project "${TALK_TO_CLAUDE_PROJECT}" \
-  python "${TALK_TO_CLAUDE_PROJECT}/wait_for_review.py" "${PWD_NOW}/plans/reviews/active/<conversation-file-name>.md" \
-  --timeout-seconds 2400 \
-  --poll-seconds 10
-```
+Do not poll for the output file.
 
-- Max wait: 40 minutes.
-- If the file is still unavailable at timeout, stop and report blocker state.
+Use the command completion notification.
 
-## Debugging
-
-If Claude does not produce the file, inspect the per-conversation log:
-
-```bash
-PWD_NOW="$(pwd)"
-sed -n '1,200p' "${PWD_NOW}/plans/reviews/active/<conversation-file-name>.claude.log"
-```
-
-## After Claude Responds
-
-Read the review file, separate actionable findings from non-blocking
-suggestions, and act on the findings according to engineering judgment. If a
-recommendation is not worth taking, explain why briefly.
+Read `CLAUDE_RESPONSE_FILE` after the command succeeds.

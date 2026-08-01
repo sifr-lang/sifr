@@ -1,100 +1,148 @@
 ---
 name: phase-closure-loop
-description: End-to-end execution loop for ad-hoc phases in Sifr: per-wave implementation, validation, PR/merge, external review pass-1/pass-2, then wave/milestone/phase closure cycles with the same review loop, notifications, and final closure bookkeeping.
+description: Close one bounded Sifr phase item without scope drift, repeated evidence, or recursive review.
 ---
 
 # Phase Closure Loop
 
-Use this skill when closing an ad-hoc phase using the enforced review-driven loop.
+Use this skill with one phase document under `plans/issues/`.
 
-## Inputs
-
-- `PHASE_NAME`: human-readable phase slug (for prompts and status text)
-- `PHASE_DOC`: phase doc path under `plans/issues/`
-- `PHASE_EXEC_DOC`: execution ledger path under `plans/issues/`
-- `REVIEW_PREFIX`: review file prefix, for example:
-  - `phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision`
+Treat the phase document as the source of truth.
 
 ## Core Rules
 
-- Work one part/wave at a time; do not skip ahead.
-- Before each PR, confirm demo/fixture behavior and run `$(pwd)/scripts/run_all_tests.sh`.
-- For each review pass, apply only valid findings, validate again, then PR+merge.
-- Do not self-review when external reviewer app is required.
-- Keep docs in sync (`plans/issues/`, `internal_docs/architecture.md`, `plans/roadmap.md`) as closure progresses.
+- Work on one unfinished item or closure task.
+- Keep all changes inside that item's scope.
+- Do not modify another owner's dependency or worktree.
+- Stop after the item is merged, externally blocked, or needs new scope.
+- Start a new session for the next item.
 
-## Wave Loop (for each wave/part)
+## Execute the Item
 
-1. Plan and checklist for the active wave.
-2. Implement root-cause fix (no shim/fallback shortcuts).
-3. Run targeted demos/fixtures for the wave.
-4. Run full validation:
-   - `$(pwd)/scripts/run_all_tests.sh`
-5. Open PR and merge for implementation.
-6. Trigger external review pass 1, wait for file, apply valid notes, revalidate, PR+merge.
-7. Run:
-   - `say "First review is done"`
-8. Trigger external review pass 2 (production-grade), wait for file, apply valid notes, revalidate, PR+merge.
-9. Run:
-   - `say "Second review is done"`
-10. Update execution/phase docs with artifacts, actions, validation evidence, and merged PR link.
+1. Read the item, scope, dependencies, and acceptance criteria from the phase document.
+2. Verify that this session owns the worktree, branch, Git index, and temporary paths.
+3. Verify credentials and recovery steps before an irreversible external action.
+4. Implement the item under the rules in `AGENTS.md`.
+5. Run targeted tests and the required validation from `AGENTS.md`.
 
-## Closure Cycles (same review loop)
+For documentation-only or review-record-only changes, run only relevant documentation checks.
 
-After all waves are done, run these in order:
+Reuse validation evidence when implementation and validation inputs are unchanged.
 
-1. Wave closure:
-   - pass 1 (completion check) -> apply -> validate -> PR+merge
-   - pass 2 (production-grade check) -> apply -> validate -> PR+merge
-   - send Telegram closure update
-2. Milestone closure:
-   - pass 1 (completion check) -> apply -> validate -> PR+merge
-   - pass 2 (production-grade check) -> apply -> validate -> PR+merge
-   - send Telegram closure update
-3. Phase closure:
-   - pass 1 (completion check) -> apply -> validate -> PR+merge
-   - pass 2 (production-grade check) -> apply -> validate -> PR+merge
-   - finalize statuses and roadmap wording
-   - send Telegram closure update
+Do not repeat a failed performance gate on an unchanged candidate without new evidence.
 
-When phase is fully closed, run:
-- `say "Now we review"`
+## Handle Unexpected Failures
 
-## Reviewer Trigger
+- Correct regressions from the current item.
+- Correct existing failures only when they are inside the item scope.
+- Record out-of-scope failures in their owning issue.
+- Do not absorb unrelated failures into the current item.
+- If an external failure blocks the item, record it and stop.
 
-Use the [talk-to-claude-opus](../talk-to-claude-opus/SKILL.md) skill for all external review passes.
+## Review
 
-Adjust prompt scope for the active stage: `wave`, `milestone closure`, `phase closure`, `pass 1`, `pass 2`.
+1. Open one draft implementation PR.
+2. Use the [talk-to-claude-opus](../talk-to-claude-opus/SKILL.md) skill.
+3. Give Claude the review prompt below.
 
-If the target review file already exists, create a new filename with the same prefix and incremented suffix.
+The prompt must include:
 
-## Telegram Status Command
+- The exact base and candidate SHAs.
+- The changed paths.
+- The item scope and acceptance criteria.
+- Existing validation evidence.
+- Prior blocking findings for a remediation review.
 
-```bash
-: "${SEND_TO_TELEGRAM_PROJECT:?Set SEND_TO_TELEGRAM_PROJECT to the send-to-telegram checkout path}"
-direnv exec "${SEND_TO_TELEGRAM_PROJECT}" uv run --project "${SEND_TO_TELEGRAM_PROJECT}" \
-  python "${SEND_TO_TELEGRAM_PROJECT}/send_to_telegram.py" "$(cat <<'MESSAGE'
-Status for phase ${PHASE_NAME}:
-<short status summary>
-MESSAGE
-)"
+Tell Claude not to modify files.
+
+Tell Claude not to create new requirements.
+
+Tell Claude not to repeat broad validation that existing evidence covers.
+
+Require this response:
+
+```text
+Verdict: SATISFIED | NOT SATISFIED
+
+Blocking findings:
+- regression | in-scope omission: file and line, criterion, reason, correction
+
+Follow-up findings:
+- pre-existing issue | infrastructure issue | suggestion: reason
 ```
 
-Send at minimum:
+Only regressions and in-scope omissions can block approval.
 
-- after wave closure completes
-- after milestone closure completes
-- after phase closure completes
-- immediately on blocker/failure
+Convert follow-up findings into separate work.
 
-## Completion Checklist
+Apply valid blocking findings in one batch.
 
-- All wave implementation PRs merged
-- All wave pass-1/pass-2 review PRs merged
-- Wave closure pass-1/pass-2 merged
-- Milestone closure pass-1/pass-2 merged
-- Phase closure pass-1/pass-2 merged
-- Execution ledger checkboxes and status lines updated to final state
-- Roadmap wording updated to reflect closure
-- Telegram updates sent for wave/milestone/phase closure
-- `say "Now we review"` executed
+Repeat review only when code, tests, fixtures, workflows, schemas, or lockfiles change.
+
+If a second review finds a new mechanism-level defect, stop and rescope the item.
+
+If the same finding returns twice, stop and request adjudication.
+
+A timeout, API error, empty response, or incomplete response is not a review pass.
+
+After the initial request fails, retry up to two times with new temporary directories.
+
+If all three requests fail, record the blocker and stop.
+
+Do not create numbered review artifacts for failed requests.
+
+Publish final review evidence outside the reviewed Git tree.
+
+Key the review evidence by candidate SHA.
+
+Do not commit the final review into the commit that it approves.
+
+## Merge
+
+Verify that validation and reviewer approval cover the same final candidate SHA.
+
+If relevant implementation files change, repeat the affected validation and review.
+
+If relevant base code changes, update the base and repeat the affected work.
+
+Do not invalidate evidence for an unrelated base change.
+
+Run the merge gate once on the final implementation candidate.
+
+Do not rerun the merge gate after documentation-only or review-record-only changes.
+
+Merge the PR after validation and reviewer approval succeed.
+
+Update the phase document with:
+
+- The merged PR.
+- The final candidate SHA.
+- The validation evidence.
+- The review evidence.
+- Deferred follow-up work.
+
+Do not run another external review for this record-only update.
+
+## End the Session
+
+Record:
+
+- The current state.
+- The branch, candidate SHA, and PR.
+- The validation and review evidence.
+- The blocker, if one exists.
+- The exact next action.
+
+Stop after you record this handoff.
+
+## Close the Phase
+
+Close the phase after all items are merged.
+
+Reuse item-level validation and review evidence.
+
+Do not repeat wave, milestone, or phase reviews when implementation files are unchanged.
+
+Run relevant documentation checks for closure-only changes.
+
+If closure changes implementation files, treat it as a new item.
