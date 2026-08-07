@@ -35,8 +35,10 @@ pass.
   review. The first was rejected locally before Claude started because the
   prescribed cleanup command was disallowed; two fresh-directory retries
   started Claude CLI 2.1.220 but exited nonzero without an atomic response or
-  log output. No failed-request review artifact was published.
-- Exact next action: restore a functioning Claude Opus CLI request, repeat the
+  log output. A follow-up `claude auth status --json` check reports
+  `loggedIn: false` with `authMethod: none`, which identifies the external
+  blocker. No failed-request review artifact was published.
+- Exact next action: authenticate Claude CLI with `claude auth login`, repeat the
   read-only review of base `1cb731fcb67c520d35fcf2376a88b2d2a4b255b1`
   against implementation candidate `869c05d3eb7440cbcbaed38099e372768e61ccc7`,
   apply any valid blocking findings, and continue only after a `SATISFIED`
