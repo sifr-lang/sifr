@@ -1,4 +1,4 @@
-# AGENTS.md
+# [AGENTS.md](http://AGENTS.md)
 
 ## Project
 
@@ -14,7 +14,6 @@ Read `internal_docs/architecture.md` for architecture details.
 
 ## Work Boundaries
 
-- Follow `.cursor/skills/project-workflow/SKILL.md`.
 - Work on one item at a time.
 - Use `.cursor/skills/phase-closure-loop/SKILL.md` for phase items.
 - Solve root causes inside the approved scope (not superficial symptoms).
@@ -49,6 +48,8 @@ Do not split a module alphabetically or by line-count chunks.
 - Use `insta` for snapshot tests.
 - E2E fixtures run in lexical order.
 - Snapshot expectations follow declaration order.
+
+
 
 ## Commands
 
@@ -103,14 +104,19 @@ Do not wait for CI instead of local validation.
 - Do not use the first cold-cache run as host-sensitive performance evidence.
 - If safe cleanup does not provide enough space, record the resource blocker and stop.
 
+
+
 ## Records
 
 - Update the active issue after each merged item.
 - Update `internal_docs/architecture.md` only when architecture changes.
 - Update `plans/roadmap.md` only when roadmap status changes.
 
+
+
 ## Safety
 
 - Do not use destructive git operations unless explicitly requested.
 - Do not revert unrelated user changes.
 - If unexpected repo modifications appear, stop and ask before proceeding.
+
