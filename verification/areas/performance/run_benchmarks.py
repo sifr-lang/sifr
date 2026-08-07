@@ -14,11 +14,33 @@ import statistics
 import subprocess
 import sys
 import time
-from dataclasses import dataclass
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
-from trend_reports import TrendReportError, build_trend_report, run_self_test as run_trend_report_self_test
+from benchmark_manifest import (
+    RUNNER_VERSION,
+    BenchmarkCase,
+    BenchmarkError,
+    load_manifest,
+    select_cases,
+    validate_manifest,
+)
+from host_control import (
+    HostActivityMonitor,
+    HostControlError,
+    cache_state,
+    capture_host_snapshot,
+    controlled_policy,
+    evaluate_snapshot,
+    run_self_test as run_host_control_self_test,
+    wait_for_controlled_host,
+)
+from trend_reports import (
+    TrendReportError,
+    build_trend_report,
+    run_self_test as run_trend_report_self_test,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -28,9 +50,6 @@ DEFAULT_MANIFEST = PERF_DATA / "benchmark_manifest.json"
 DEFAULT_TREND_BASELINES = PERF_DATA / "trend" / "current.json"
 DEFAULT_OUTPUT_ROOT = REPO_ROOT / "target" / "performance"
 NEGATIVE_ROOT = PERF_ROOT / "negative_seeds"
-RUNNER_VERSION = 1
-COMMAND_KINDS = {"command", "frontend-query", "lsp-query"}
-COMMAND_MODES = {"check", "build", "fmt-check"}
 SIZE_METRIC_DEFAULTS = {
     "emitted_rust_lines": None,
     "emitted_rust_bytes": None,
@@ -38,10 +57,6 @@ SIZE_METRIC_DEFAULTS = {
 }
 _FRONTEND_BENCH_READY = False
 _SIFR_BINARY_READY = False
-
-
-class BenchmarkError(Exception):
-    pass
 
 
 def cargo_debug_dir() -> Path:
@@ -67,39 +82,6 @@ def sifr_binary() -> Path:
     return cargo_debug_dir() / executable_name("sifr")
 
 
-@dataclass(frozen=True)
-class BenchmarkCase:
-    raw: dict[str, Any]
-
-    @property
-    def id(self) -> str:
-        return str(self.raw["id"])
-
-    @property
-    def group(self) -> str:
-        return str(self.raw["group"])
-
-    @property
-    def kind(self) -> str:
-        return str(self.raw["kind"])
-
-    @property
-    def measured(self) -> int:
-        return int(self.raw["measured"])
-
-    @property
-    def warmups(self) -> int:
-        return int(self.raw["warmups"])
-
-    @property
-    def timeout_ms(self) -> int:
-        return int(self.raw["timeout_ms"])
-
-    @property
-    def stability_limit(self) -> float:
-        return float(self.raw.get("stability_limit", 0.10))
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", default=str(DEFAULT_MANIFEST))
@@ -114,6 +96,9 @@ def main() -> int:
     parser.add_argument("--trend-baselines", default=str(DEFAULT_TREND_BASELINES))
     parser.add_argument("--trend-json-out", default="")
     parser.add_argument("--json-out", default="")
+    parser.add_argument("--invocation-id", default="")
+    parser.add_argument("--require-controlled-host", action="store_true")
+    parser.add_argument("--controlled-host-timeout-seconds", type=float, default=180.0)
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
 
@@ -122,6 +107,10 @@ def main() -> int:
             run_self_test()
             print("performance benchmark runner self-test passed")
             return 0
+
+        json_out = (REPO_ROOT / args.json_out).resolve() if args.json_out else None
+        if json_out is not None:
+            invalidate_output(json_out)
 
         manifest = load_manifest(Path(args.manifest))
         cases = validate_manifest(manifest)
@@ -138,7 +127,15 @@ def main() -> int:
         if not selected:
             raise BenchmarkError("no benchmark cases selected")
 
-        run_report = run_cases(selected, Path(args.output_root), args.sample_scale)
+        invocation_id = args.invocation_id or f"standalone-{int(time.time())}-{os.getpid()}"
+        run_report = run_cases(
+            selected,
+            Path(args.output_root),
+            args.sample_scale,
+            invocation_id=invocation_id,
+            require_controlled_host=args.require_controlled_host,
+            controlled_host_timeout_seconds=args.controlled_host_timeout_seconds,
+        )
         evidence_path = write_run_report(run_report, Path(args.output_root))
         trend_report = build_trend_report(run_report, load_json(Path(args.trend_baselines)), RUNNER_VERSION)
         if args.trend_json_out:
@@ -146,28 +143,20 @@ def main() -> int:
             write_json(trend_path, trend_report)
         else:
             trend_path = write_trend_report(trend_report, Path(args.output_root))
-        if args.json_out:
-            write_json((REPO_ROOT / args.json_out).resolve(), run_report)
+        if json_out is not None:
+            write_json(json_out, run_report)
         if args.capture_baseline:
             validate_baseline_capture(run_report, {case.id: case for case in cases})
             baseline = baseline_from_run(run_report, manifest)
-            baseline_output = (
-                (REPO_ROOT / args.baseline_output).resolve()
-                if args.baseline_output
-                else PERF_DATA / "baselines.json"
-            )
+            baseline_output = (REPO_ROOT / args.baseline_output).resolve() if args.baseline_output else PERF_DATA / "baselines.json"
             write_json(baseline_output, baseline)
             print(f"performance baseline captured: {baseline_output.relative_to(REPO_ROOT)}")
         print(f"performance benchmarks passed: {evidence_path.relative_to(REPO_ROOT)}")
         print(f"performance trend report: {trend_path.relative_to(REPO_ROOT)}")
         return 0
-    except (BenchmarkError, TrendReportError) as error:
+    except (BenchmarkError, HostControlError, TrendReportError) as error:
         print(f"performance benchmark error: {error}", file=sys.stderr)
         return 1
-
-
-def load_manifest(path: Path) -> dict[str, Any]:
-    return load_json(path)
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -182,153 +171,99 @@ def load_json(path: Path) -> dict[str, Any]:
     return data
 
 
-def validate_manifest(manifest: dict[str, Any]) -> list[BenchmarkCase]:
-    if manifest.get("version") != 1:
-        raise BenchmarkError("benchmark manifest version must be 1")
-    if manifest.get("runner_version") != RUNNER_VERSION:
-        raise BenchmarkError(f"benchmark manifest runner_version must be {RUNNER_VERSION}")
-    cases_raw = manifest.get("cases")
-    if not isinstance(cases_raw, list):
-        raise BenchmarkError("benchmark manifest cases must be a list")
-
-    cases: list[BenchmarkCase] = []
-    ids: list[str] = []
-    budget_ids: list[str] = []
-    for raw in cases_raw:
-        if not isinstance(raw, dict):
-            raise BenchmarkError("benchmark manifest case entries must be objects")
-        validate_case(raw)
-        case = BenchmarkCase(raw)
-        cases.append(case)
-        ids.append(case.id)
-        budget_ids.append(str(raw["budget_id"]))
-
-    if ids != sorted(ids):
-        raise BenchmarkError("benchmark cases must be sorted lexicographically by id")
-    if len(ids) != len(set(ids)):
-        raise BenchmarkError("benchmark case ids must be unique")
-    if len(budget_ids) != len(set(budget_ids)):
-        raise BenchmarkError("benchmark budget ids must be unique")
-
-    required = manifest.get("required_groups", {})
-    if not isinstance(required, dict):
-        raise BenchmarkError("benchmark manifest required_groups must be an object")
-    by_group: dict[str, int] = {}
-    for case in cases:
-        by_group[case.group] = by_group.get(case.group, 0) + 1
-    for group, minimum in required.items():
-        if not isinstance(minimum, int) or minimum < 0:
-            raise BenchmarkError(f"required group {group!r} must have a non-negative integer threshold")
-        actual = by_group.get(group, 0)
-        if actual < minimum:
-            raise BenchmarkError(f"manifest group {group!r} has {actual} cases, need >= {minimum}")
-
-    return cases
-
-
-def validate_case(raw: dict[str, Any]) -> None:
-    required = {
-        "id",
-        "group",
-        "kind",
-        "source_path",
-        "warmups",
-        "measured",
-        "timeout_ms",
-        "budget_id",
-        "evidence_category",
-    }
-    missing = sorted(required - raw.keys())
-    if missing:
-        raise BenchmarkError(f"benchmark case is missing required fields: {missing}")
-    for field in ["id", "group", "kind", "source_path", "budget_id", "evidence_category"]:
-        if not isinstance(raw[field], str) or not raw[field]:
-            raise BenchmarkError(f"benchmark case field {field} must be a non-empty string")
-    if raw["kind"] not in COMMAND_KINDS:
-        raise BenchmarkError(f"benchmark case {raw['id']} has unsupported kind {raw['kind']!r}")
-    for field in ["warmups", "measured", "timeout_ms"]:
-        if not isinstance(raw[field], int) or raw[field] <= 0:
-            raise BenchmarkError(f"benchmark case {raw['id']} field {field} must be a positive integer")
-    if raw["kind"] == "command":
-        if raw.get("mode") not in COMMAND_MODES:
-            raise BenchmarkError(f"command benchmark {raw['id']} must use mode check, build, or fmt-check")
-        exit_codes = raw.get("expected_exit_codes")
-        if not isinstance(exit_codes, list) or not exit_codes or not all(isinstance(code, int) for code in exit_codes):
-            raise BenchmarkError(f"command benchmark {raw['id']} must define integer expected_exit_codes")
-        global_args = raw.get("global_args", [])
-        if not isinstance(global_args, list) or not all(isinstance(value, str) for value in global_args):
-            raise BenchmarkError(f"command benchmark {raw['id']} global_args must be a list of strings")
-    if raw["kind"] == "frontend-query":
-        if not isinstance(raw.get("scenario"), str) or not raw["scenario"]:
-            raise BenchmarkError(f"frontend query benchmark {raw['id']} must define scenario")
-    if raw["kind"] == "lsp-query":
-        if not isinstance(raw.get("scenario"), str) or not raw["scenario"]:
-            raise BenchmarkError(f"LSP query benchmark {raw['id']} must define scenario")
-        if raw.get("workspace_mode") not in {"isolated", "package"}:
-            raise BenchmarkError(
-                f"LSP query benchmark {raw['id']} must define workspace_mode as isolated or package"
-            )
-    path = REPO_ROOT / raw["source_path"]
-    if not path.exists():
-        raise BenchmarkError(f"benchmark case {raw['id']} input path does not exist: {raw['source_path']}")
-    if raw["kind"] == "lsp-query":
-        has_manifest = path.parent.joinpath("sifr.toml").is_file()
-        if raw["workspace_mode"] == "package" and not has_manifest:
-            raise BenchmarkError(f"package LSP benchmark {raw['id']} requires a sibling sifr.toml")
-        if raw["workspace_mode"] == "isolated" and has_manifest:
-            raise BenchmarkError(f"isolated LSP benchmark {raw['id']} cannot use a package source")
-
-
-def select_cases(
+def run_cases(
     cases: list[BenchmarkCase],
-    groups: set[str],
-    case_ids: set[str],
-    case_limit: int,
-) -> list[BenchmarkCase]:
-    selected = [
-        case
-        for case in cases
-        if (not groups or case.group in groups) and (not case_ids or case.id in case_ids)
-    ]
-    if case_ids:
-        known = {case.id for case in cases}
-        missing = sorted(case_ids - known)
-        if missing:
-            raise BenchmarkError(f"unknown benchmark case ids requested: {missing}")
-    if case_limit:
-        if case_limit < 0:
-            raise BenchmarkError("--case-limit must be non-negative")
-        selected = selected[:case_limit]
-    return selected
-
-
-def run_cases(cases: list[BenchmarkCase], output_root: Path, sample_scale: str) -> dict[str, Any]:
+    output_root: Path,
+    sample_scale: str,
+    *,
+    invocation_id: str,
+    require_controlled_host: bool,
+    controlled_host_timeout_seconds: float,
+) -> dict[str, Any]:
     run_id = f"bench-{int(time.time())}-{os.getpid()}"
     run_root = output_root / run_id
     run_root.mkdir(parents=True, exist_ok=True)
+    cache_before = current_cache_state()
+    if require_controlled_host:
+        admission = wait_for_controlled_host(controlled_host_timeout_seconds)
+    else:
+        snapshot = capture_host_snapshot(include_calibration=True)
+        admission = {
+            "status": "record-only",
+            "policy": controlled_policy(),
+            "accepted_snapshots": [snapshot],
+            "observation_count": 1,
+            "rejected_observation_count": 0,
+            "recent_rejected_observations": [],
+            "advisory_reasons": evaluate_snapshot(snapshot, enforce_load=True),
+        }
     results = []
     for case in cases:
         started = time.perf_counter()
         status = "pass"
         try:
-            result = run_case(case, run_root, sample_scale)
+            result = run_controlled_case(
+                case,
+                run_root,
+                sample_scale,
+                require_controlled_host=require_controlled_host,
+            )
         except Exception:
             status = "fail"
             raise
         finally:
             elapsed_ms = int((time.perf_counter() - started) * 1000.0)
-            print(
-                f"[sifr-case-timing] bucket=performance case={case.id} "
-                f"elapsed_ms={elapsed_ms} status={status}"
-            )
+            print(f"[sifr-case-timing] bucket=performance case={case.id} " f"elapsed_ms={elapsed_ms} status={status}")
         results.append(result)
     return {
         "schema_version": 1,
         "runner_version": RUNNER_VERSION,
         "run_id": run_id,
-        "metadata": host_metadata(),
+        "invocation_id": invocation_id,
+        "metadata": host_metadata()
+        | {
+            "host_control": admission,
+            "cache_state_before": cache_before,
+            "cache_state_after": current_cache_state(),
+        },
         "results": results,
     }
+
+
+def run_controlled_case(
+    case: BenchmarkCase,
+    run_root: Path,
+    sample_scale: str,
+    *,
+    require_controlled_host: bool,
+) -> dict[str, Any]:
+    attempts: list[dict[str, Any]] = []
+    for attempt_index in range(1, 4):
+        with HostActivityMonitor() as monitor:
+            result = run_case(case, run_root, sample_scale)
+        rejection_reasons = monitor.rejection_reasons() if require_controlled_host else []
+        coefficient_variation = float(result["metrics"]["coefficient_variation"])
+        if coefficient_variation > case.stability_limit:
+            rejection_reasons.append("unstable-samples")
+        rejection_reasons = sorted(set(rejection_reasons))
+        attempts.append(
+            {
+                "attempt": attempt_index,
+                "coefficient_variation": coefficient_variation,
+                "stability_limit": case.stability_limit,
+                "host_snapshots": monitor.snapshots,
+                "rejection_reasons": rejection_reasons,
+            }
+        )
+        if not rejection_reasons:
+            result["control"] = {
+                "status": "controlled" if require_controlled_host else "record-only",
+                "accepted_attempt": attempt_index,
+                "attempts": attempts,
+            }
+            return result
+    reasons = sorted({reason for attempt in attempts for reason in attempt["rejection_reasons"]})
+    raise BenchmarkError(f"benchmark {case.id} did not produce a stable controlled sample after 3 attempts: " f"{', '.join(reasons)}")
 
 
 def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str, Any]:
@@ -356,9 +291,7 @@ def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str
             raise BenchmarkError(f"benchmark {case.id} timed out after {case.timeout_ms}ms")
         expected_exit_codes = set(case.raw["expected_exit_codes"])
         if result["exit_code"] not in expected_exit_codes:
-            raise BenchmarkError(
-                f"benchmark {case.id} exited {result['exit_code']}, expected {sorted(expected_exit_codes)}"
-            )
+            raise BenchmarkError(f"benchmark {case.id} exited {result['exit_code']}, expected {sorted(expected_exit_codes)}")
 
     stats = sample_stats(samples)
     size_metrics = collect_build_size_metrics(shared_build_dir) if case.raw.get("mode") == "build" else SIZE_METRIC_DEFAULTS
@@ -468,7 +401,15 @@ def ensure_frontend_query_bench() -> None:
     if _FRONTEND_BENCH_READY and binary.exists():
         return
     result = run_subprocess(
-        ["cargo", "build", "-q", "-p", "sifr_frontend", "--bin", "frontend_query_bench"],
+        [
+            "cargo",
+            "build",
+            "-q",
+            "-p",
+            "sifr_frontend",
+            "--bin",
+            "frontend_query_bench",
+        ],
         180000,
     )
     if result["timed_out"]:
@@ -633,7 +574,13 @@ def validate_baseline_capture(run_report: dict[str, Any], cases_by_id: dict[str,
             raise BenchmarkError(f"baseline result {case_id} is missing numeric samples_ms")
         if not isinstance(metrics, dict):
             raise BenchmarkError(f"baseline result {case_id} is missing metrics")
-        for field in ["median_ms", "p95_ms", "mad_ms", "coefficient_variation", "peak_rss_bytes"]:
+        for field in [
+            "median_ms",
+            "p95_ms",
+            "mad_ms",
+            "coefficient_variation",
+            "peak_rss_bytes",
+        ]:
             if field not in metrics:
                 raise BenchmarkError(f"baseline result {case_id} is missing metric {field}")
         if not isinstance(cache, dict) or "hits" not in cache or "misses" not in cache:
@@ -642,8 +589,7 @@ def validate_baseline_capture(run_report: dict[str, Any], cases_by_id: dict[str,
         cv = float(metrics["coefficient_variation"])
         if cv > case.stability_limit:
             raise BenchmarkError(
-                f"baseline result {case_id} is unstable: coefficient_variation={cv:.6f} "
-                f"limit={case.stability_limit:.6f}"
+                f"baseline result {case_id} is unstable: coefficient_variation={cv:.6f} " f"limit={case.stability_limit:.6f}"
             )
 
 
@@ -675,6 +621,14 @@ def host_metadata() -> dict[str, Any]:
     }
 
 
+def current_cache_state() -> dict[str, Any]:
+    return cache_state(
+        REPO_ROOT,
+        cargo_debug_dir(),
+        ["sifr", "frontend_query_bench"],
+    )
+
+
 def write_run_report(report: dict[str, Any], output_root: Path) -> Path:
     evidence_dir = output_root / "evidence"
     evidence_dir.mkdir(parents=True, exist_ok=True)
@@ -696,10 +650,30 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def invalidate_output(path: Path) -> None:
+    try:
+        path.unlink(missing_ok=True)
+    except OSError as error:
+        raise BenchmarkError(f"failed to invalidate prior benchmark output {path}: {error}") from error
+
+
 def run_self_test() -> None:
     run_trend_report_self_test()
-    assert_fails(lambda: validate_manifest(load_manifest(NEGATIVE_ROOT / "malformed_manifest.json")), "missing required fields")
-    assert_fails(lambda: validate_manifest(load_manifest(NEGATIVE_ROOT / "missing_input_manifest.json")), "input path does not exist")
+    run_host_control_self_test()
+    with TemporaryDirectory(prefix="sifr-performance-output-self-test-") as raw:
+        stale_output = Path(raw) / "latest.json"
+        stale_output.write_text("stale\n", encoding="utf-8")
+        invalidate_output(stale_output)
+        if stale_output.exists():
+            raise BenchmarkError("benchmark output invalidation self-test retained stale evidence")
+    assert_fails(
+        lambda: validate_manifest(load_manifest(NEGATIVE_ROOT / "malformed_manifest.json")),
+        "missing required fields",
+    )
+    assert_fails(
+        lambda: validate_manifest(load_manifest(NEGATIVE_ROOT / "missing_input_manifest.json")),
+        "input path does not exist",
+    )
     manifest = load_manifest(DEFAULT_MANIFEST)
     cases = {case.id: case for case in validate_manifest(manifest)}
     assert_fails(

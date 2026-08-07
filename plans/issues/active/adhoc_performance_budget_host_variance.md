@@ -2,6 +2,25 @@
 
 Status: deferred follow-up; not a prerequisite for Phase 40.
 
+## Execution Plan
+
+| Milestone | Scope | Status |
+| --- | --- | --- |
+| M1: controlled measurement and provenance | Host/cache telemetry, controlled admission, stable-sample retries, and stale-result producer/checker binding | in progress |
+| M2: Python interop cold-cache budget | Classify cold versus warm aggregate execution and enforce a cache-aware create-PR step budget with deterministic policy tests | pending |
+| M3: qualification and closure | Five consecutive controlled representative verdicts, seeded-regression proof, final merge gate, full-phase review, and closure records | pending |
+
+Each implementation milestone uses one draft PR, exact-SHA validation, and
+repeated Claude Opus review under the phase-closure loop. Review and validation
+evidence is recorded only after the matching candidate merges.
+
+Out-of-scope validation failure: the pre-existing
+`legacy-baseline-environment-metadata` trend deferral expired on 2026-07-31 and
+now fails the performance `rules` suite. It is recorded under
+[#3100](https://github.com/sifr-lang/sifr/issues/3100); this phase does not
+extend the deferral or change the checked-in trend baseline to make the gate
+pass.
+
 ## Problem
 
 The representative performance budget is not stable enough on the current

@@ -45,6 +45,29 @@ run `check_budgets.py --allow-subset` against that result file. The subset
 covers single-file check, project check, single-file build, project build,
 incremental cache behavior, interactive diagnostics, and diagnostic architecture
 diagnostic/exit-code non-regression.
+
+Representative and full budget producers require a controlled host window
+before measuring. Admission requires three consecutive quiet snapshots on AC
+power on macOS, no thermal or CPU-power warning, no competing Cargo, rustc,
+benchmark, or Git indexing process, normalized one-minute load at or below
+`0.85`, and a stable fixed-work CPU-throughput calibration. The report records
+load, power, thermal state, direct CPU frequencies when the host exposes them,
+the unprivileged throughput proxy otherwise, memory-pressure counters, and the
+compiler/generated-artifact cache state. Per-case monitoring records pressure
+that appears after admission.
+
+Each case must produce samples whose coefficient of variation is within its
+manifest `stability_limit` (default `0.10`). An unstable or host-contaminated
+case is discarded and retried up to two times; exhausting the three controlled
+attempts fails the producer as host instability. Stable samples are compared
+to the unchanged governed budgets, so a uniform seeded slowdown still fails.
+The budget checker treats sample instability as non-waiverable.
+
+The profile adapter invalidates the fixed `*.budget.latest.json` path before
+production and binds producer and checker with a unique invocation id. If the
+producer fails, the checker is not run. A failed benchmark invocation therefore
+cannot feed a prior run to the budget diagnostic.
+
 Full-corpus benchmark execution and baseline refresh remain explicit:
 
 Refresh baselines intentionally after review:
