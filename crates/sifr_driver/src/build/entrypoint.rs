@@ -14,6 +14,7 @@ use super::python_bridges::package_bridge_lowering_options;
 use super::python_runtime::PackagePythonRuntime;
 use super::report::{BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport};
 use super::rust_interop::{PackageRustInteropContext, RustInteropModuleSource};
+use super::rust_interop_probe_policy::DirectProbePolicy;
 use super::single_file_interop_cache::{resolve_single_file_metadata, CompiledSingleFileMetadata};
 use super::sysroot_interop::attach_stdlib_rust_interop;
 use crate::diagnostics::{run_codegen_with_boundary, CompileResult, RenderedDiagnostic};
@@ -160,7 +161,7 @@ pub(crate) fn emit_project_entrypoint(main_file: &Path) -> CompileResult {
         Err(errors) => return CompileResult::Errors { errors },
     };
     plan.emit_frontend_diagnostics();
-    match plan.into_generated_binary_project() {
+    match plan.into_generated_binary_project_for_emit() {
         Ok(generated_project) => CompileResult::Success {
             rust_source: generated_project.emit_source_listing(),
         },
@@ -576,12 +577,22 @@ impl RootedEntrypointPlan {
     fn into_generated_binary_project(
         self,
     ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
-        self.into_generated_binary_project_with_probe_policy(false)
+        self.into_generated_binary_project_with_probe_policy(false, DirectProbePolicy::ExecuteAll)
+    }
+
+    fn into_generated_binary_project_for_emit(
+        self,
+    ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
+        self.into_generated_binary_project_with_probe_policy(
+            false,
+            DirectProbePolicy::DeferTrustedSysroot,
+        )
     }
 
     pub(super) fn into_generated_binary_project_with_probe_policy(
         self,
         allow_deferred_python_probes: bool,
+        direct_probe_policy: DirectProbePolicy,
     ) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
         let python_runtime = self.python_runtime.clone();
         let python_bridges = self.python_bridges.clone();
@@ -603,6 +614,7 @@ impl RootedEntrypointPlan {
             generated,
             rust_interop_context,
             &cargo_resolution,
+            direct_probe_policy,
         )?;
         let generated = apply_package_python_bridge_metadata(generated, python_bridges.as_ref());
         if allow_deferred_python_probes {

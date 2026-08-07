@@ -102,6 +102,7 @@ impl RustInteropResolver<'_> {
                 ))
                 .copied()
                 .unwrap_or((false, false)),
+            trusted_sysroot: sysroot_trust.is_some(),
             sysroot_runtime_crate,
             sysroot_vendor_dir: sysroot_trust.map(|trust| trust.vendor_dir.clone()),
             cargo_resolution: self.cargo_resolution.clone(),
