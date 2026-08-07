@@ -21,6 +21,27 @@ now fails the performance `rules` suite. It is recorded under
 extend the deferral or change the checked-in trend baseline to make the gate
 pass.
 
+### Current handoff
+
+- State: M1 implementation complete; external review blocked.
+- Branch: `codex/adhoc-performance-budget-host-variance`.
+- Implementation candidate: `869c05d3eb7440cbcbaed38099e372768e61ccc7`.
+- Draft PR: [#3101](https://github.com/sifr-lang/sifr/pull/3101).
+- Validation: manifest, benchmark-runner self-test, budget-policy self-test,
+  checked-in baseline budget gate, Python compile/lint, stale-producer probe,
+  diff check, and file-size guardrail passed. The broader rules-suite failure
+  is the pre-existing trend deferral tracked in #3100.
+- Review blocker: three `talk-to-claude-opus` attempts produced no valid
+  review. The first was rejected locally before Claude started because the
+  prescribed cleanup command was disallowed; two fresh-directory retries
+  started Claude CLI 2.1.220 but exited nonzero without an atomic response or
+  log output. No failed-request review artifact was published.
+- Exact next action: restore a functioning Claude Opus CLI request, repeat the
+  read-only review of base `1cb731fcb67c520d35fcf2376a88b2d2a4b255b1`
+  against implementation candidate `869c05d3eb7440cbcbaed38099e372768e61ccc7`,
+  apply any valid blocking findings, and continue only after a `SATISFIED`
+  verdict.
+
 ## Problem
 
 The representative performance budget is not stable enough on the current
