@@ -12,10 +12,14 @@ class PlannedNestedValue:
     value: uint32
 
 
+class PlannedStructuralError(Error):
+    message: str
+
+
 @rust.structural
 @rust(bridge.structural.roundtrip)
-def planned_structural_roundtrip(value: PlannedNestedValue) -> PlannedNestedValue: ...
+def planned_structural_roundtrip(value: PlannedNestedValue) -> Result[PlannedNestedValue, PlannedStructuralError | RustPanicError]: ...
 
-def verify_nested_recursive_structural_roundtrip() -> uint32:
-    result: PlannedNestedValue = planned_structural_roundtrip(PlannedNestedValue(0))
-    return result.value
+def verify_nested_recursive_structural_roundtrip() -> Result[PlannedNestedValue, PlannedStructuralError | RustPanicError]:
+    result: Result[PlannedNestedValue, PlannedStructuralError | RustPanicError] = planned_structural_roundtrip(PlannedNestedValue(0))
+    return result

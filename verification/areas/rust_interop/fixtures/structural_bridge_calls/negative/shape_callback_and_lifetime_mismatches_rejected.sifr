@@ -13,10 +13,14 @@ class PlannedMismatchValue:
     value: uint32
 
 
+class PlannedStructuralError(Error):
+    message: str
+
+
 @rust.structural
 @rust(bridge.structural.reject_mismatch)
-def planned_structural_mismatch(value: PlannedMismatchValue) -> PlannedMismatchValue: ...
+def planned_structural_mismatch(value: PlannedMismatchValue) -> Result[PlannedMismatchValue, PlannedStructuralError | RustPanicError]: ...
 
-def verify_shape_callback_and_lifetime_mismatches_rejected() -> uint32:
-    result: PlannedMismatchValue = planned_structural_mismatch(PlannedMismatchValue(0))
-    return result.value
+def verify_shape_callback_and_lifetime_mismatches_rejected() -> Result[PlannedMismatchValue, PlannedStructuralError | RustPanicError]:
+    result: Result[PlannedMismatchValue, PlannedStructuralError | RustPanicError] = planned_structural_mismatch(PlannedMismatchValue(0))
+    return result

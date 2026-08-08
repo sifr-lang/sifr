@@ -1744,7 +1744,7 @@ Track A is complete only when its inventory, all validator self-tests, the
 entire Rust-interop area, create-PR lane, merge lane, and stable-candidate gate
 pass locally.
 
-Closeout inventory:
+Closeout inventory as of the Track A closeout on 2026-07-30:
 
 - 36 fixture-matrix rows, 36 compatibility rows, and 36 schema-v2 fixture
   manifests;

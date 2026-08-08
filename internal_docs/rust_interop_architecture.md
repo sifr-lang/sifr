@@ -399,6 +399,11 @@ def transform[T: Structural](
 ) -> Result[T, TransformError | RustPanicError]: ...
 ```
 
+`@rust.structural` is the one deliberate bare-marker form in the Rust interop
+decorator grammar. It takes no arguments and must accompany exactly one normal
+`@rust(...)` target on the same function; `@rust.structural(...)`, a marker
+without a target, and duplicate markers are rejected as configuration errors.
+
 `Structural` is a compiler-owned capability marker, not a user-implementable
 protocol and not a runtime reflection base class. A concrete type satisfies it
 only when the compiler can generate the complete construction and projection
@@ -416,10 +421,10 @@ The marker makes the type variable legal only in these positions:
 
 An owned direct `T` parameter, a mutable `T` borrow, nested callback container,
 async declaration, method receiver, retained/thread-safe callback, opaque-class
-field, or ordinary unmarked `@rust(...)` generic remains unsupported in bridge
-version 2. A structural return must be inside `Result` with an ordinary error
-and `RustPanicError`; a structural call cannot use a no-panic trust waiver or a
-`panic = "abort"` generated-build profile.
+field, or ordinary unmarked `@rust(...)` generic is outside the structural Rust
+bridge contract. A structural return must be inside `Result` with an ordinary
+error and `RustPanicError`; a structural call cannot use a no-panic trust waiver
+or a `panic = "abort"` generated-build profile.
 
 The Rust API is owned by `sifr_runtime::interop::structural` and is the only
 stable interface a backend may use:
@@ -508,8 +513,9 @@ pub trait StructuralProject {
 `structural_construct` is the sole public construction entry. It compares
 `source.shape_identity()` with `T::shape_identity()` before reading or moving
 the root, then creates the private-constructor `ConstructToken` and delegates to
-`T::structural_construct_at(&mut source, source.root(), token)`. Recursive
-implementations pass that token while selecting child `NodeId` values.
+`T::structural_construct_at(&mut source, root, token)`, where `root` was read
+before the mutable borrow. Recursive implementations pass that token while
+selecting child `NodeId` values.
 `structural_construct_at` does not repeat a whole-shape identity comparison for
 a child; it checks that child's kind, arity, field/member identity, and ownership
 state. Backend code cannot create the token and therefore cannot bypass the root
