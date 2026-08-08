@@ -35,12 +35,14 @@ HARDENING_OK_RE = re.compile(
     r"\s+non_blocking_failures=(\d+)(?:,\s+skipped=(\d+))?$"
 )
 CACHE_DIR_RE = re.compile(r"^\s*cache_dir=(.+)$")
-LANE_STEP_RE = re.compile(
-    r"^\[sifr-lane-step\]\s+name=([A-Za-z0-9_.-]+)\s+elapsed_ms=(\d+)\s+status=(pass|fail)$"
-)
+LANE_STEP_RE = re.compile(r"^\[sifr-lane-step\]\s+name=([A-Za-z0-9_.-]+)\s+elapsed_ms=(\d+)\s+status=(pass|fail)$")
 LANE_STEP_BUDGET_RE = re.compile(
     r"^\[sifr-lane-step-budget\]\s+name=([A-Za-z0-9_.-]+)\s+elapsed_ms=(\d+)\s+"
     r"budget_ms=(\d+)\s+enforcement=(advisory|blocking)\s+status=(pass|fail)$"
+)
+LANE_STEP_CACHE_RE = re.compile(
+    r"^\[sifr-lane-step-cache\]\s+name=([A-Za-z0-9_.-]+)\s+state=(warm|cold)\s+"
+    r"reason=([a-z0-9-]+)\s+fingerprint=([0-9a-f]+)$"
 )
 CASE_TIMING_RE = re.compile(
     r"^\[sifr-case-timing\]\s+bucket=([A-Za-z0-9_-]+)\s+case=([A-Za-z0-9_.:/+-]+)"
@@ -189,6 +191,7 @@ def parse_log(path: Path) -> dict[str, Any]:
     suite_filters: list[dict[str, int | str]] = []
     lane_steps: list[dict[str, int | str]] = []
     lane_step_budgets: dict[str, dict[str, int | str]] = {}
+    lane_step_cache: dict[str, dict[str, str]] = {}
     case_timings: list[dict[str, int | str]] = []
     artifact_cache: dict[str, dict[str, Any]] = {}
     hardening_summary: dict[str, int] | None = None
@@ -214,6 +217,13 @@ def parse_log(path: Path) -> dict[str, Any]:
                 "budget_ms": int(match.group(3)),
                 "enforcement": match.group(4),
                 "status": match.group(5),
+            }
+            continue
+        if match := LANE_STEP_CACHE_RE.match(line):
+            lane_step_cache[match.group(1)] = {
+                "state": match.group(2),
+                "reason": match.group(3),
+                "fingerprint": match.group(4),
             }
             continue
         if match := CASE_TIMING_RE.match(line):
@@ -298,6 +308,7 @@ def parse_log(path: Path) -> dict[str, Any]:
     return {
         "lane_steps": lane_steps,
         "lane_step_budgets": lane_step_budgets,
+        "lane_step_cache": lane_step_cache,
         "case_timings": case_timings,
         "suite_filters": suite_filters,
         "artifact_cache": artifact_cache,
@@ -349,6 +360,7 @@ def summarize(args: argparse.Namespace) -> int:
     advisories = build_advisories(profile, warm_target_minutes, real_seconds, time_metrics, e2e_metrics)
     lane_steps = list(parsed_log["lane_steps"])
     lane_step_budgets = parsed_log["lane_step_budgets"]
+    lane_step_cache = parsed_log["lane_step_cache"]
     if isinstance(lane_step_budgets, dict):
         for step in lane_steps:
             budget = lane_step_budgets.get(str(step["name"]))
@@ -356,6 +368,11 @@ def summarize(args: argparse.Namespace) -> int:
                 step["budget_ms"] = int(budget["budget_ms"])
                 step["budget_enforcement"] = str(budget["enforcement"])
                 step["budget_status"] = str(budget["status"])
+            cache = lane_step_cache.get(str(step["name"]))
+            if isinstance(cache, dict):
+                step["cache_state"] = str(cache["state"])
+                step["cache_reason"] = str(cache["reason"])
+                step["cache_fingerprint"] = str(cache["fingerprint"])
     case_timings = list(parsed_log["case_timings"])
     slowest_cases = sorted(
         case_timings,
@@ -390,6 +407,7 @@ def summarize(args: argparse.Namespace) -> int:
         "advisories": advisories,
         "lane_steps": lane_steps,
         "lane_step_budgets": lane_step_budgets,
+        "lane_step_cache": lane_step_cache,
         "case_timings": case_timings,
         "suite_filters": parsed_log["suite_filters"],
         "artifact_cache": parsed_log["artifact_cache"],
@@ -453,9 +471,7 @@ def summarize(args: argparse.Namespace) -> int:
     if lane_steps:
         slowest_step = max(lane_steps, key=lambda step: int(step["elapsed_ms"]))
         print(
-            "  slowest_step="
-            f"{slowest_step['name']} {int(slowest_step['elapsed_ms'])}ms "
-            f"status={slowest_step['status']}"
+            f"  slowest_step={slowest_step['name']} {int(slowest_step['elapsed_ms'])}ms status={slowest_step['status']}"
         )
         slowest_steps = sorted(
             lane_steps,
@@ -464,11 +480,7 @@ def summarize(args: argparse.Namespace) -> int:
         )[:5]
         step_summaries = [
             f"{step['name']}={int(step['elapsed_ms'])}ms"
-            + (
-                f"/budget={int(step['budget_ms'])}ms/{step['budget_status']}"
-                if "budget_ms" in step
-                else ""
-            )
+            + (f"/budget={int(step['budget_ms'])}ms/{step['budget_status']}" if "budget_ms" in step else "")
             for step in slowest_steps
         ]
         print("  slowest_steps=" + " ".join(step_summaries))
@@ -480,8 +492,7 @@ def summarize(args: argparse.Namespace) -> int:
             if current is None or int(timing["elapsed_ms"]) > int(current["elapsed_ms"]):
                 by_bucket[bucket] = timing
         slowest_cases = [
-            f"{bucket}:{timing['case']}={int(timing['elapsed_ms'])}ms"
-            for bucket, timing in sorted(by_bucket.items())
+            f"{bucket}:{timing['case']}={int(timing['elapsed_ms'])}ms" for bucket, timing in sorted(by_bucket.items())
         ]
         print("  slowest_cases=" + " ".join(slowest_cases))
         top_cases = [
@@ -499,14 +510,9 @@ def summarize(args: argparse.Namespace) -> int:
             reason_suffix = ""
             miss_reasons = stats.get("miss_reasons")
             if isinstance(miss_reasons, dict) and miss_reasons:
-                reasons = ",".join(
-                    f"{reason}={count}"
-                    for reason, count in sorted(miss_reasons.items())
-                )
+                reasons = ",".join(f"{reason}={count}" for reason, count in sorted(miss_reasons.items()))
                 reason_suffix = f",miss_reasons={reasons}"
-            summaries.append(
-                f"{namespace}:hits={stats['hits']},misses={stats['misses']}{reason_suffix}"
-            )
+            summaries.append(f"{namespace}:hits={stats['hits']},misses={stats['misses']}{reason_suffix}")
         print("  generated_artifact_cache=" + " ".join(summaries))
     if e2e_cache_stats is not None:
         print(
