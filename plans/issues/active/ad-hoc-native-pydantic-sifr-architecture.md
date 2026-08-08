@@ -2087,9 +2087,10 @@ registry-owned `SIFR-INT-0009`.
   `bridge_version_mismatch` fixture/scenario and its matrix, tier, and
   stable-claim entries rather than retaining legacy acceptance evidence.
 - Delete the `bridge-version = 1` subsection and rewrite every remaining
-  version-keyed statement in `internal_docs/**`, `docs/**`, active plans, and
-  the roadmap. This explicitly includes `docs/packages/manifest.mdx`,
-  `docs/rust-interop.mdx`, the Blake3 and Reqwest interop guides, and
+  version-keyed statement in `internal_docs/**`, `docs/**`, active issues,
+  `plans/phases/**`, and the roadmap. This explicitly includes
+  `docs/packages/manifest.mdx`, `docs/rust-interop.mdx`, the Blake3 and Reqwest
+  interop guides, and
   `internal_docs/sifr_sysroot_and_stdlib_architecture.md`. Dated reviews, issue
   archives, and frozen release-candidate evidence remain immutable history.
 - Reject the removed field through an explicit diagnostic rather than relying

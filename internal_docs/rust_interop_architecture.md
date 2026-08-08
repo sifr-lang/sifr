@@ -374,9 +374,10 @@ stable-claim entries rather than preserving legacy acceptance evidence.
 
 The same cutover deletes this document's `bridge-version = 1` subsection above
 and rewrites every remaining version-keyed statement throughout
-`internal_docs/**`, `docs/**`, active plans, and the roadmap. Named public
-surfaces include `docs/packages/manifest.mdx`, `docs/rust-interop.mdx`, and the
-Blake3 and Reqwest interop guides; the other architecture surface includes
+`internal_docs/**`, `docs/**`, active issues, `plans/phases/**`, and the
+roadmap. Named public surfaces include `docs/packages/manifest.mdx`,
+`docs/rust-interop.mdx`, and the Blake3 and Reqwest interop guides; the other
+architecture surface includes
 `internal_docs/sifr_sysroot_and_stdlib_architecture.md`. Dated review records,
 issue archives, and frozen release-candidate evidence remain immutable history,
 not an active contract or fallback.

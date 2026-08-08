@@ -281,7 +281,7 @@ Status: merged in [PR #2726](https://github.com/sifr-lang/sifr/pull/2726); focus
 
 ### milestone_39_13: Ecosystem Certification and Closeout
 
-Status: merged in [PR #2728](https://github.com/sifr-lang/sifr/pull/2728); local `create-pr` validation passed with only the warm wall-time advisory, focused post-review validation passed for taxonomy, Rust interop matrix checks, and completion-quality helpers, and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-13-review-round5.md`. The verification-matrix hardening follow-up completed through [PR #3018](https://github.com/sifr-lang/sifr/pull/3018), [#3019](https://github.com/sifr-lang/sifr/pull/3019), [#3020](https://github.com/sifr-lang/sifr/pull/3020), [#3022](https://github.com/sifr-lang/sifr/pull/3022), and [#3023](https://github.com/sifr-lang/sifr/pull/3023); its final review and validation are recorded in the [archived closeout](../issues/archive/rust-interop-verification-matrix-hardening.md). The runtime/ecosystem follow-up subsequently resolved every Track A future-owned row through `certification_13`, leaving 72 passing and zero planned evidence directions for the 36 current rows.
+Status: merged in [PR #2728](https://github.com/sifr-lang/sifr/pull/2728); local `create-pr` validation passed with only the warm wall-time advisory, focused post-review validation passed for taxonomy, Rust interop matrix checks, and completion-quality helpers, and reviewer sign-off is recorded in `plans/reviews/active/rust-interop-milestone39-13-review-round5.md`. The verification-matrix hardening follow-up completed through [PR #3018](https://github.com/sifr-lang/sifr/pull/3018), [#3019](https://github.com/sifr-lang/sifr/pull/3019), [#3020](https://github.com/sifr-lang/sifr/pull/3020), [#3022](https://github.com/sifr-lang/sifr/pull/3022), and [#3023](https://github.com/sifr-lang/sifr/pull/3023); its final review and validation are recorded in the [archived closeout](../issues/archive/rust-interop-verification-matrix-hardening.md). The runtime/ecosystem follow-up subsequently resolved every Track A future-owned row through `certification_13`; at the 2026-07-30 Track A closeout, the 36-row inventory had 72 passing and zero planned evidence directions. The matrix later added two future-owned Native Pydantic-Sifr rows whose four directions remain planned.
 
 - Scope:
   - Certify representative packages across direct binding, local bridge, shared bridge, opaque handle, zero-copy, async, callbacks, build script, proc macro, native link, and locked/offline Cargo behavior.
@@ -437,19 +437,22 @@ Advanced gate:
   zero-copy contracts that the compatibility matrix marks as `supported` or
   `supported-through-bridge`.
 - No current Track A runtime/ecosystem row remains
-  `future-owned-by-separate-phase`; all 36 rows have passing positive and
+  `future-owned-by-separate-phase`; all 36 Track A rows have passing positive and
   negative evidence. Stable-release advertising remains bounded by
   `stable_support_claims.json` and its stable-candidate validator.
 - Verification tiers 3-4 and the compatibility matrix are backed by local
-  validation evidence for all current rows. The future-owned category remains
-  defined for later honest deferrals but is currently unused.
+  validation evidence for all Track A rows. The future-owned category now
+  contains the two Native Pydantic-Sifr rows owned by
+  `plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md`; their
+  evidence remains planned and they do not reopen the Track A closeout.
 
 Full Phase 39 exit:
 
 - Every Rust interop path lowers through structured metadata into generated Rust and Cargo build plans.
 - Every unsafe, build-time, native, blocking, CPU-heavy, callback, panic, and zero-copy hazard has a stable trust/diagnostic/verification surface.
 - The verification area contains positive and negative fixtures for every supported capability.
-- The compatibility matrix is backed by local validation evidence for every
-  current row; any later row must independently satisfy the same evidence and
-  ownership rules before it can become a stable claim.
+- At the Track A closeout, the compatibility matrix was backed by local
+  validation evidence for every Track A row. Any later row remains outside
+  stable claims until it independently satisfies the same evidence and
+  ownership rules.
 - Phase 27 non-regression remains green: panic-free user paths, no emitted data-dependent unwrap/expect/panic in user runtime paths, and stable diagnostics/renderer/exit-code behavior.
