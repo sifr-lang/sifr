@@ -3,10 +3,8 @@
 # evidence-status: planned
 # execution-kind: runtime-observed
 # expected-result: future-owned
-# future-owner: plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md
-
-# milestone_ps_2 replaces this planned marker with an executable generated
-# package round-trip only after the structural bridge contract is implemented.
+# The executable generated-package round-trip remains reserved until the
+# structural bridge contract is implemented.
 
 from sifr.meta import Structural
 

@@ -154,9 +154,9 @@ only. Remaining compiler-native stdlib glue is explicitly allowlisted in
 Rust interop Track A certification is complete. The active matrix
 `verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json`
 currently has 21 supported rows, 14 bridge-supported rows, 1
-unsupported-by-design row, and 2 future-owned Native Pydantic-Sifr rows. Those
-future rows are `structural_bridge_calls` and `bridge_version_field_removal`,
-owned by `plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md`.
+unsupported-by-design row, and 2 future-owned rows. Those future rows are
+`structural_bridge_calls` and `bridge_version_field_removal`, owned by the
+structural Rust bridge contract in `rust_interop_architecture.md`.
 Resource migrations must not claim stable support for a future-owned row until
 its positive and negative evidence pass and its stable-claim gate accepts it.
 

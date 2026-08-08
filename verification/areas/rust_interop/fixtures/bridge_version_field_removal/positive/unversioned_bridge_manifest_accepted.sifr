@@ -3,7 +3,6 @@
 # evidence-status: planned
 # execution-kind: compiler-diagnostic
 # expected-result: future-owned
-# future-owner: plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md
 # fixture-cargo: rust.bridge-version = absent
 
 @rust(bridge.version.unversioned, panic=trusted_no_panic)
