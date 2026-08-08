@@ -11,6 +11,7 @@ use super::rust_interop_digest::normalized_path_string;
 use super::rust_interop_probe::{
     execute_direct_cargo_probe, AsyncThreadAffinity, PendingRustBridgeProbe,
 };
+use super::rust_interop_probe_cache::ProbeCacheKeyCache;
 use super::rust_interop_sqlx_offline::combined_sqlx_offline_metadata_digest;
 use super::rust_interop_trust::{
     build_env_trust_entries, effective_panic_policy, EffectivePanicPolicy,
@@ -138,6 +139,7 @@ struct RustInteropResolver<'a> {
     async_runtime_policy_violations:
         HashMap<SifrPackageId, Vec<super::rust_interop_bridge_audit::AsyncRuntimeBridgeViolation>>,
     generated_bridge_import_cache: GeneratedBridgeImportCache,
+    probe_cache_key_cache: ProbeCacheKeyCache,
 }
 
 impl<'a> RustInteropResolver<'a> {
@@ -161,6 +163,7 @@ impl<'a> RustInteropResolver<'a> {
             async_contracts: HashMap::new(),
             async_runtime_policy_violations: HashMap::new(),
             generated_bridge_import_cache: GeneratedBridgeImportCache::default(),
+            probe_cache_key_cache: ProbeCacheKeyCache::default(),
         }
     }
 
@@ -732,7 +735,9 @@ impl<'a> RustInteropResolver<'a> {
     }
     fn execute_pending_direct_probes(&mut self) {
         for probe in self.pending_direct_probes.clone() {
-            if let Err(failure) = execute_direct_cargo_probe(&probe) {
+            if let Err(failure) =
+                execute_direct_cargo_probe(&probe, &mut self.probe_cache_key_cache)
+            {
                 self.push_diagnostic(
                     &probe.declaration,
                     probe.declaration.declaration.span,
