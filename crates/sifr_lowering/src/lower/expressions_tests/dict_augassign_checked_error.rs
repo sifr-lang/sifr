@@ -42,6 +42,46 @@ fn handled_plain_dict_augassign_carries_key_error_in_hir() {
 }
 
 #[test]
+fn proven_present_plain_dict_key_does_not_require_checked_error_handling() {
+    let source = "def solve(mut values: dict[str, int], key: str):\n    if key in values:\n        values[key] += 1\n";
+    let module = lower_source(source).expect("guarded dict augassign should lower without try");
+    let function = module
+        .functions
+        .iter()
+        .find(|function| function.name == "solve")
+        .expect("solve should lower");
+    let HirStmt::If { then_body, .. } = &function.body[0] else {
+        panic!("expected membership guard");
+    };
+    assert!(matches!(
+        &then_body[0],
+        HirStmt::SubscriptAugAssign {
+            missing_key_error: None,
+            ..
+        }
+    ));
+}
+
+#[test]
+fn preceding_subscript_assignment_proves_plain_dict_key_present() {
+    let source =
+        "def solve(mut values: dict[str, int], key: str):\n    values[key] = 0\n    values[key] += 1\n";
+    let module = lower_source(source).expect("assigned dict key should be proven present");
+    let function = module
+        .functions
+        .iter()
+        .find(|function| function.name == "solve")
+        .expect("solve should lower");
+    assert!(matches!(
+        &function.body[1],
+        HirStmt::SubscriptAugAssign {
+            missing_key_error: None,
+            ..
+        }
+    ));
+}
+
+#[test]
 fn annotated_defaultdict_keeps_factory_semantics_and_declared_shape() {
     let source = "from sifr.collections import defaultdict\n\ndef solve():\n    values: dict[str, int] = defaultdict(int)\n    values[\"missing\"] += 3\n";
     let module = lower_source_with_stdlib_collections(source)
