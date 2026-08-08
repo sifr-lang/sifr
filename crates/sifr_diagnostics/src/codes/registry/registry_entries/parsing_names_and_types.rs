@@ -654,6 +654,23 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
             []
         ),
     active_entry!(
+            "SIFR-INT-0009",
+            "INT",
+            "JSON or web-safe integer serialization boundary is missing or unsafe.",
+            Severity::Error,
+            "crates/sifr_frontend/src/const_specialization.rs",
+            "integer JSON boundary policy is unsafe at {path}: {boundary}",
+            "sifr_frontend::const_specialization",
+            [
+                arg!("path"),
+                arg!("boundary"),
+                json_arg!("profile"),
+                json_arg!("static_range"),
+                json_arg!("suggested_policy")
+            ],
+            ["path", "boundary", "profile", "static_range"]
+        ),
+    active_entry!(
             "SIFR-INT-0011",
             "INT",
             "Temporary bigint transition alias used.",

@@ -544,9 +544,17 @@ impl RootedEntrypointPlan {
             .module_diagnostics
             .remove("main")
             .unwrap_or_default();
+        let specialization_metadata = project_lowering
+            .external_defs
+            .take_module_specialization_metadata("main");
         let lowering_result = LoweringResult {
             module: main_module,
             flow_graph,
+            class_field_defaults: specialization_metadata.class_field_defaults,
+            declaration_metadata: specialization_metadata.declaration_metadata,
+            specialization_requests: specialization_metadata.specialization_requests,
+            specialization_outputs: specialization_metadata.specialization_outputs,
+            json_integer_boundary_requests: specialization_metadata.json_integer_boundary_requests,
             function_defaults: std::collections::HashMap::new(),
             function_varargs: std::collections::HashMap::new(),
             function_python_call_shapes: std::collections::HashMap::new(),

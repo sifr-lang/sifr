@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-META-0003 verification/areas/diagnostics/fixtures/diagnostics/meta_malformed_declaration/main.sifr:1:20 package fixture declared malformed specialization issue metadata_target: metadata target does not exist on the declaration

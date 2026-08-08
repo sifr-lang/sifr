@@ -1,0 +1,20 @@
+from sifr.meta import ConstPackageIssue, ConstSpecializationOutcome
+
+
+class ShapeArguments:
+    identity: str
+
+
+@const_eval
+@metadata("sifr.meta.issue_template", ("shape_derived", ["identity"]))
+def describe(shape: dict[str, str]) -> ConstSpecializationOutcome[str, ShapeArguments]:
+    identity: str | None = shape["canonical_identity"]
+    if identity is not None:
+        arguments: ShapeArguments = ShapeArguments("concrete shape")
+        issue: ConstPackageIssue[ShapeArguments] = ConstPackageIssue(
+            "fixture.meta", "shape_derived", "warning", arguments, ["shape retained"]
+        )
+        issues: list[ConstPackageIssue[ShapeArguments]] = [issue]
+        return ConstSpecializationOutcome("produced", identity, issues)
+    issues: list[ConstPackageIssue[ShapeArguments]] = []
+    return ConstSpecializationOutcome("failed", None, issues)

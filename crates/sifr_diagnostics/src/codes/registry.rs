@@ -51,6 +51,9 @@ impl DiagnosticCode {
     pub const TYPE_UNSUPPORTED_EXPRESSION_FORM: Self = Self::new("SIFR-TYPE-0012", Severity::Error);
     pub const TYPE_ARITHMETIC_OVERFLOW_RISK: Self = Self::new("SIFR-TYPE-0901", Severity::Warning);
     pub const TYPE_REVEAL_TYPE: Self = Self::new("SIFR-TYPE-0902", Severity::Note);
+    pub const META_SPECIALIZATION_FATAL: Self = Self::new("SIFR-META-0001", Severity::Error);
+    pub const META_SPECIALIZATION_WARNING: Self = Self::new("SIFR-META-0002", Severity::Warning);
+    pub const META_MALFORMED_DECLARATION: Self = Self::new("SIFR-META-0003", Severity::Error);
     pub const ASYNC_NO_SUSPEND: Self = Self::new("SIFR-ASYNC-0001", Severity::Error);
     pub const ASYNC_AWAIT_NO_SUSPEND: Self = Self::new("SIFR-ASYNC-0002", Severity::Error);
     pub const ASYNC_DIRECT_BLOCKING_IO_CALL: Self = Self::new("SIFR-ASYNC-0003", Severity::Error);
@@ -94,6 +97,7 @@ impl DiagnosticCode {
     pub const INT_EXACT_TO_FLOAT_REQUIRES_HANDLING: Self =
         Self::new("SIFR-INT-0006", Severity::Error);
     pub const INT_BOOL_INTEGER_COMPARISON: Self = Self::new("SIFR-INT-0007", Severity::Error);
+    pub const INT_JSON_BOUNDARY_POLICY: Self = Self::new("SIFR-INT-0009", Severity::Error);
     pub const INT_BIGINT_TRANSITION_ALIAS: Self = Self::new("SIFR-INT-0011", Severity::Warning);
 
     pub const IO_TEXT_OPEN_REQUIRES_ENCODING: Self = Self::new("SIFR-IO-0801", Severity::Error);
@@ -401,6 +405,11 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
         reserved_base: "SIFR-TYPE-0000",
     },
     DiagnosticFamily {
+        name: "META",
+        summary: "Deterministic package metaprogramming and const-specialization diagnostics.",
+        reserved_base: "SIFR-META-0000",
+    },
+    DiagnosticFamily {
         name: "ASYNC",
         summary: "Async effect, awaitability, and blocking-offload diagnostics.",
         reserved_base: "SIFR-ASYNC-0000",
@@ -680,6 +689,9 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
     DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK,
     DiagnosticCode::TYPE_REVEAL_TYPE,
+    DiagnosticCode::META_SPECIALIZATION_FATAL,
+    DiagnosticCode::META_SPECIALIZATION_WARNING,
+    DiagnosticCode::META_MALFORMED_DECLARATION,
     DiagnosticCode::ASYNC_NO_SUSPEND,
     DiagnosticCode::ASYNC_AWAIT_NO_SUSPEND,
     DiagnosticCode::ASYNC_DIRECT_BLOCKING_IO_CALL,
@@ -735,6 +747,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING,
     DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING,
     DiagnosticCode::INT_BOOL_INTEGER_COMPARISON,
+    DiagnosticCode::INT_JSON_BOUNDARY_POLICY,
     DiagnosticCode::INT_BIGINT_TRANSITION_ALIAS,
     DiagnosticCode::IO_TEXT_OPEN_REQUIRES_ENCODING,
     DiagnosticCode::IO_OPEN_MODE_REQUIRES_LITERAL,
@@ -853,42 +866,6 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::INTERNAL_RECOVERY_OMISSION_SUMMARY,
 ];
 
-#[must_use]
-pub fn registry_entry(id: &str) -> Option<&'static DiagnosticRegistryEntry> {
-    DIAGNOSTIC_REGISTRY.iter().find(|entry| entry.id == id)
-}
-
-pub fn active_registry_entries() -> impl Iterator<Item = &'static DiagnosticRegistryEntry> {
-    DIAGNOSTIC_REGISTRY
-        .iter()
-        .filter(|entry| entry.state == DiagnosticState::Active)
-}
-
-const fn reserved_family_base(id: &'static str, family: &'static str) -> DiagnosticRegistryEntry {
-    reserved_code(
-        id,
-        family,
-        "Reserved family base; not emitted as a diagnostic.",
-    )
-}
-
-const fn reserved_code(
-    id: &'static str,
-    family: &'static str,
-    summary: &'static str,
-) -> DiagnosticRegistryEntry {
-    DiagnosticRegistryEntry {
-        id,
-        family,
-        summary,
-        state: DiagnosticState::Reserved,
-        docs_path: "docs/errors/diagnostic-codes.md",
-        representative_fixture_path: None,
-        message_template: None,
-        owner_module: None,
-        declared_args: &[],
-        dedupe_args: &[],
-        declared_severity: None,
-        tooling: DiagnosticTooling::DEFAULT,
-    }
-}
+mod access;
+pub use access::{active_registry_entries, registry_entry};
+use access::{reserved_code, reserved_family_base};
