@@ -62,6 +62,18 @@ blocking performance metric. Latency mode keeps the existing load and
 unrelated-CPU limits for elapsed-time evidence. No existing elapsed-time
 threshold, waiver, or baseline is increased.
 
+The approved full-manifest work capture passed all 65 cases on implementation
+commit `64881055453937d596bff6d7d569a97beba7bd8a`. It produced work-budget
+artifact digest
+`c536e08e1b982d7a2d14d4961adbbcbbde1e3f114d88082deadee97e527f4ef6`
+and raw-evidence digest
+`c9cea6eef1d925c4436b8cfeebb6b783b5ac9503b04e04f5dabc514e3393840a`.
+The largest accepted instruction coefficient of variation was `0.017947`.
+One case rejected an unstable `0.021404` attempt and accepted its `0.006001`
+retry. The accepted retry observed unrelated CPU use between `193.2%` and
+`399.7%`. This result demonstrates that work mode does not require an idle
+desktop.
+
 ### M2 reproduced evidence
 
 On exact M1 candidate `28bca35551321b109e272c61ae52fe6201eb810d`,
