@@ -2082,10 +2082,13 @@ registry-owned `SIFR-INT-0009`.
   expectations, cache records, diagnostics, and generated-build assertions.
   Remove the Rust-interop fixture matrix's top-level `bridge_version` marker,
   the `check_fixture_matrix.py` and `_scenario_checks.py` assertions that
-  require it, `_scenario_registry.py`'s literal token, and
-  `runner/bridge_check.py`'s version parameter/default. Delete the complete
-  `bridge_version_mismatch` fixture/scenario and its matrix, tier, and
-  stable-claim entries rather than retaining legacy acceptance evidence.
+  require it, `_scenario_registry.py`'s literal token,
+  `_matrix_inventory.py`'s required-fixture entry, and
+  `runner/bridge_check.py`'s version parameter/default. Remove the
+  `rust_interop_plan.rs` module/cache fields, package-graph digest field, and
+  sysroot's synthesized `Some(1)`. Delete the complete `bridge_version_mismatch`
+  fixture/scenario and its matrix, tier, and stable-claim entries rather than
+  retaining legacy acceptance evidence.
 - Delete the `bridge-version = 1` subsection and rewrite every remaining
   version-keyed statement in `internal_docs/**`, `docs/**`, active issues,
   `plans/phases/**`, and the roadmap. This explicitly includes

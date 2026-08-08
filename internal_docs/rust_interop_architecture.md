@@ -367,9 +367,12 @@ and generated-build assertions. That inventory explicitly includes the
 top-level `bridge_version` marker in
 `verification/areas/rust_interop/data/rust_interop_fixture_matrix.json`, its
 `check_fixture_matrix.py` assertion, `_scenario_checks.py`'s manifest-field
-assertion, `_scenario_registry.py`'s literal token, and
-`runner/bridge_check.py`'s version parameter/default. The wave deletes the
-entire `bridge_version_mismatch` fixture/scenario and its matrix, tier, and
+assertion, `_scenario_registry.py`'s literal token, `_matrix_inventory.py`'s
+required-fixture entry, and `runner/bridge_check.py`'s version
+parameter/default. Compiler-side removal explicitly includes the
+`rust_interop_plan.rs` module/cache fields, the package-graph digest field, and
+the sysroot's synthesized `Some(1)`. The wave deletes the entire
+`bridge_version_mismatch` fixture/scenario and its matrix, tier, and
 stable-claim entries rather than preserving legacy acceptance evidence.
 
 The same cutover deletes this document's `bridge-version = 1` subsection above
@@ -1858,5 +1861,6 @@ Compatibility categories are:
   fallback path.
 - `future-owned-by-separate-phase`: documented separately because at least one
   evidence direction is not passing. Future-owned rows must reference a concrete
-  active issue or phase; the current active issue is
-  [`plans/issues/active/rust-interop-runtime-ecosystem-certification.md`](../plans/issues/active/rust-interop-runtime-ecosystem-certification.md).
+  active issue or phase for that row. The current future-owned rows
+  `structural_bridge_calls` and `bridge_version_field_removal` are owned by
+  [`plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md`](../plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md).
