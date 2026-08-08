@@ -177,7 +177,8 @@ impl<'a> DeterministicConstEvaluator<'a> {
                     .cloned()
                     .ok_or_else(|| unknown_binding(name))?;
                 let right = self.eval_expr(value, environment, depth)?;
-                let value = binary(op, left, right)?;
+                let binary_op = op.strip_suffix('=').unwrap_or(op);
+                let value = binary(binary_op, left, right)?;
                 environment.insert(name.clone(), value);
                 Ok(Control::Next)
             }
@@ -525,10 +526,12 @@ fn binary(op: &str, left: ConstValue, right: ConstValue) -> Result<ConstValue, C
             )
         }
         ("//", ConstValue::Integer(left), ConstValue::Integer(right)) => {
-            Ok(ConstValue::Integer(left / right))
+            let (quotient, _) = floor_div_mod(&left, right);
+            Ok(ConstValue::Integer(quotient))
         }
         ("%", ConstValue::Integer(left), ConstValue::Integer(right)) => {
-            Ok(ConstValue::Integer(left % right))
+            let (_, remainder) = floor_div_mod(&left, right);
+            Ok(ConstValue::Integer(remainder))
         }
         ("+", ConstValue::String(left), ConstValue::String(right)) => {
             Ok(ConstValue::String(left + &right))
@@ -542,6 +545,17 @@ fn binary(op: &str, left: ConstValue, right: ConstValue) -> Result<ConstValue, C
             "unsupported const binary operation",
         ),
     }
+}
+
+fn floor_div_mod(left: &BigInt, right: BigInt) -> (BigInt, BigInt) {
+    let zero = BigInt::from(0);
+    let mut quotient = left / &right;
+    let mut remainder = left % &right;
+    if remainder != zero && ((remainder < zero) != (right < zero)) {
+        quotient -= 1;
+        remainder += right;
+    }
+    (quotient, remainder)
 }
 
 fn compare(op: &str, left: &ConstValue, right: &ConstValue) -> Result<bool, ConstEvalError> {
@@ -729,6 +743,23 @@ mod tests {
             .evaluate_function("forever", Vec::new())
             .expect_err("step budget is enforced");
         assert_eq!(error.kind, ConstEvalErrorKind::StepLimit);
+    }
+
+    #[test]
+    fn augmented_assignment_preserves_floor_division_and_modulo_semantics() {
+        let lowered = lower(
+            "@const_eval\ndef arithmetic() -> tuple[int, int]:\n    quotient: int = -7\n    quotient += 0\n    quotient //= 3\n    remainder: int = -7\n    remainder %= 3\n    return (quotient, remainder)\n",
+        );
+        let value = DeterministicConstEvaluator::new(&lowered.module)
+            .evaluate_function("arithmetic", Vec::new())
+            .expect("const evaluation succeeds");
+        assert_eq!(
+            value,
+            ConstValue::Tuple(vec![
+                ConstValue::Integer(BigInt::from(-3)),
+                ConstValue::Integer(BigInt::from(2)),
+            ])
+        );
     }
 
     #[test]
