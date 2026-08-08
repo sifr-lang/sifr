@@ -48,6 +48,10 @@ Milestone delivery records:
   found augmented-assignment token handling and negative integer floor arithmetic
   omissions. Candidate `e23b80d94f67de3d3ced7dbcca7394efdf5ab6c1` corrected both;
   remediation review returned `SATISFIED` with no blocking findings.
+- The `milestone_ps_2` contract candidate also repairs a PS1 test-adapter escape:
+  the `cfg(test)` driver frontend adapter omitted five `LoweringResult` metadata
+  fields added by PS1. The adapter now propagates the complete result, and all
+  19 targeted `sifr_driver` Python-interop tests pass.
 - Deferred follow-up work: define an explicit typed package-side structural-shape
   contract before `ps_4`; align registry representative-fixture paths with diagnostic
   baselines; audit pre-epoch fractional timestamp reconstruction; disambiguate imported
@@ -2078,6 +2082,9 @@ registry-owned `SIFR-INT-0009`.
   Reject the removed field without a compatibility path, rewrite, or fallback.
   Replace the current `bridge_version_mismatch` evidence with passing
   `bridge_version_field_removal` evidence in the same implementation PR.
+- Promote `structural_bridge_calls` from future-owned to supported-through-bridge
+  only when both directions pass; remove it from the stable-support runtime
+  deferrals and update the public stable-claims documentation atomically.
 - Implement safe structural `Construct[T]`.
 - Implement allocation-free structural projection/visitation.
 - Implement typed callback adapter generation.

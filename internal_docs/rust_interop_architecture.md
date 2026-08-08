@@ -430,9 +430,11 @@ The Rust API is owned by `sifr_runtime::interop::structural` and is the only
 stable interface a backend may use:
 
 ```rust
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct ShapeIdentity([u8; 32]);
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NodeId(u32);
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct ConstructToken { /* private */ }
 pub struct StructuralNodeRef<'source> { /* private */ }
 pub struct StructuralEnter<'value> { /* private */ }
@@ -522,9 +524,12 @@ state. Backend code cannot create the token and therefore cannot bypass the root
 check or call the node-scoped entry directly.
 
 `ShapeIdentity`, `NodeId`, `ConstructToken`, node/event structs, scalar enums,
-visit control, and contract errors are non-exhaustive stable runtime types with
-private representation and public checked constructors/accessors where
-appropriate. Their serialized spelling is not an ABI. `StructuralEnter`
+visit control, and contract errors are stable runtime types with private
+representation and public checked constructors/accessors where appropriate.
+Public enums are Rust `#[non_exhaustive]` so downstream matches require a
+wildcard, while the compiler-owned accepted variant set is closed for this
+contract revision; adding a variant requires a contract and cache-identity
+update. Their serialized spelling is not an ABI. `StructuralEnter`
 identifies the aggregate kind, nominal/member identity, and child count.
 `StructuralEdge` identifies the next record field, sequence/tuple index,
 mapping key/value position, or active optional/union/refined member.

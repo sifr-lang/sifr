@@ -3,11 +3,14 @@
 ## Status
 
 Track A is complete through merged
-[PR #3083](https://github.com/sifr-lang/sifr/pull/3083). All 36 current
-compatibility rows have passing positive and negative evidence, and
-`certification_14` recorded the final inventory, stable-claim, validation,
-published-head review, and immutable merge identities. Track B remains dormant
-until the external structural Rust bridge package-resource substrate exists.
+[PR #3083](https://github.com/sifr-lang/sifr/pull/3083). All 36 compatibility
+rows in the 2026-07-30 Track A closeout had passing positive and negative
+evidence, and `certification_14` recorded that inventory, stable-claim,
+validation, published-head review, and immutable merge identities. The matrix
+now also carries the future-owned Native Pydantic-Sifr rows
+`structural_bridge_calls` and `bridge_version_field_removal`, whose four
+directions remain planned. Track B remains dormant until the external
+structural Rust bridge package-resource substrate exists.
 
 The verification-hardening dependency is complete through
 [`hardening_4`](../archive/rust-interop-verification-matrix-hardening.md#hardening_4-replace-lexical-rejection-context):
