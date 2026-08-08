@@ -60,9 +60,11 @@ measured case would contaminate the samples; the case coefficient of variation
 rejects frequency-driven in-window instability.
 Competing-work classification uses the actual executable or Python module/script
 identity, not arbitrary shell argument text that merely mentions Cargo or a
-benchmark. If all three attempts are rejected, their snapshots and reasons are
-persisted under the run's `control-failures/` directory before the producer
-exits.
+benchmark. A top-level `git fetch` is not rejected by itself; its CPU/disk-heavy
+`index-pack`, clone, or submodule work is rejected when that executable or
+subcommand appears. If all three attempts are rejected, their snapshots and
+reasons are persisted under the run's `control-failures/` directory before the
+producer exits.
 
 Each case must produce samples whose coefficient of variation is within its
 manifest `stability_limit` (default `0.10`). An unstable or host-contaminated

@@ -334,7 +334,7 @@ def process_category(command: str, args: str) -> str | None:
         return "benchmark"
     if executables & {"git", "git-index-pack"}:
         if "git-index-pack" in executables or any(
-            token in {"clone", "fetch", "index-pack", "submodule"}
+            token in {"clone", "index-pack", "submodule"}
             for token in argument_tokens[1:3]
         ):
             return "git"
@@ -418,6 +418,12 @@ def run_self_test() -> None:
         )
     if process_category("/usr/bin/cargo", "cargo test") != "cargo":
         raise HostControlError("host control self-test missed a Cargo process")
+    if process_category("/usr/bin/git", "git fetch --prune") is not None:
+        raise HostControlError(
+            "host control self-test classified a non-indexing Git fetch"
+        )
+    if process_category("/usr/bin/git", "git index-pack --stdin") != "git":
+        raise HostControlError("host control self-test missed Git indexing work")
     if (
         process_category(
             "/Users/example",
