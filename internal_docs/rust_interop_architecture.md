@@ -367,11 +367,24 @@ and generated-build assertions. That inventory explicitly includes the
 top-level `bridge_version` marker in
 `verification/areas/rust_interop/data/rust_interop_fixture_matrix.json`, its
 `check_fixture_matrix.py` assertion, `_scenario_checks.py`'s manifest-field
-assertion, and `runner/bridge_check.py`'s version parameter/default. The same
-wave deletes this document's `bridge-version = 1` subsection above and rewrites
-every remaining version-keyed architecture statement. A package that still
-declares `bridge-version` is rejected as an unknown removed field; Sifr does
-not rewrite it, select versioned glue, or provide a compatibility mode or
+assertion, `_scenario_registry.py`'s literal token, and
+`runner/bridge_check.py`'s version parameter/default. The wave deletes the
+entire `bridge_version_mismatch` fixture/scenario and its matrix, tier, and
+stable-claim entries rather than preserving legacy acceptance evidence.
+
+The same cutover deletes this document's `bridge-version = 1` subsection above
+and rewrites every remaining version-keyed statement throughout
+`internal_docs/**`, `docs/**`, active plans, and the roadmap. Named public
+surfaces include `docs/packages/manifest.mdx`, `docs/rust-interop.mdx`, and the
+Blake3 and Reqwest interop guides; the other architecture surface includes
+`internal_docs/sifr_sysroot_and_stdlib_architecture.md`. Dated review records,
+issue archives, and frozen release-candidate evidence remain immutable history,
+not an active contract or fallback.
+
+A package that still declares `bridge-version` is rejected through an
+explicitly added removed-field diagnostic; merely deleting the manifest reader,
+which would silently accept an unknown key, is insufficient. Sifr does not
+rewrite the field, select versioned glue, or provide a compatibility mode or
 fallback. The compiler release and managed-projection/source digests identify
 the one current bridge contract instead.
 
@@ -490,7 +503,6 @@ pub trait StructuralType {
 }
 
 pub trait StructuralConstruct: StructuralType + Sized {
-
     #[doc(hidden)]
     fn structural_construct_at<S: StructuralSource>(
         source: &mut S,
