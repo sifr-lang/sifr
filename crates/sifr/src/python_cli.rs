@@ -305,7 +305,7 @@ fn run_python_read_only_plan(
             graph: context.graph.clone(),
             source_map: context.source_map.clone(),
             python_runtime: context.runtime.clone(),
-            lock_mode: sifr_package::CargoLockMode::Normal,
+            lock_mode: sifr_package::CargoLockMode::Frozen,
         })?;
         declarations.extend(report.declarations.into_iter().map(|declaration| {
             PythonDeclarationReport {

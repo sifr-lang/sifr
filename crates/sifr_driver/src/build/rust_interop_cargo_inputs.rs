@@ -5,7 +5,7 @@ use super::rust_interop_digest::{
 use super::sysroot_interop::SysrootRustInteropTrust;
 use sifr_codegen::{RustBridgeSourceDigest, RustInteropCargoInputs};
 use sifr_package::{digest_package_graph, digest_package_source_map, TrustPolicy};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -159,6 +159,28 @@ pub(super) fn first_generated_bridge_import(source_root: &Path) -> Option<PathBu
         }
     }
     None
+}
+
+#[derive(Default)]
+pub(super) struct GeneratedBridgeImportCache {
+    imports_by_source_root: HashMap<PathBuf, Option<PathBuf>>,
+}
+
+impl GeneratedBridgeImportCache {
+    pub(super) fn inspect(&mut self, source_root: &Path) -> Option<PathBuf> {
+        self.inspect_with(source_root, first_generated_bridge_import)
+    }
+
+    fn inspect_with(
+        &mut self,
+        source_root: &Path,
+        inspect: impl FnOnce(&Path) -> Option<PathBuf>,
+    ) -> Option<PathBuf> {
+        self.imports_by_source_root
+            .entry(source_root.to_path_buf())
+            .or_insert_with(|| inspect(source_root))
+            .clone()
+    }
 }
 
 fn imports_generated_bridge_namespace(source: &str) -> bool {
@@ -445,6 +467,7 @@ fn tool_version(tool: &str) -> Option<String> {
 mod tests {
     use super::{
         combined_cargo_inputs, generated_bridge_module_path, imports_generated_bridge_namespace,
+        GeneratedBridgeImportCache,
     };
     use sifr_codegen::RustInteropCargoInputs;
 
@@ -474,6 +497,47 @@ mod tests {
         assert!(imports_generated_bridge_namespace(
             "use __sifr_bridge :: app :: TokenBridge;\n"
         ));
+    }
+
+    #[test]
+    fn generated_bridge_import_scanner_caches_each_backend_source_root() {
+        let mut cache = GeneratedBridgeImportCache::default();
+        let clean_root = std::path::Path::new("/backend/clean/src");
+        let importing_root = std::path::Path::new("/backend/importing/src");
+        let imported_path = importing_root.join("lib.rs");
+        let mut clean_inspections = 0;
+        let mut importing_inspections = 0;
+
+        assert_eq!(
+            cache.inspect_with(clean_root, |_| {
+                clean_inspections += 1;
+                None
+            }),
+            None
+        );
+        assert_eq!(
+            cache.inspect_with(clean_root, |_| {
+                clean_inspections += 1;
+                Some(clean_root.join("changed.rs"))
+            }),
+            None
+        );
+        assert_eq!(
+            cache.inspect_with(importing_root, |_| {
+                importing_inspections += 1;
+                Some(imported_path.clone())
+            }),
+            Some(imported_path.clone())
+        );
+        assert_eq!(
+            cache.inspect_with(importing_root, |_| {
+                importing_inspections += 1;
+                None
+            }),
+            Some(imported_path)
+        );
+        assert_eq!(clean_inspections, 1);
+        assert_eq!(importing_inspections, 1);
     }
 
     #[test]
