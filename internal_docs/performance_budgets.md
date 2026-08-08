@@ -59,10 +59,14 @@ them, the unprivileged throughput proxy otherwise, external CPU consumption and
 its top processes, memory-pressure counters, and the compiler/generated-artifact
 cache state. Per-case monitoring applies the same external-CPU limit and records
 pressure that appears after admission. The benchmark runner and its descendants
-are excluded, so measured work cannot reject itself. On hosts without direct
-frequency telemetry, the throughput calibration runs only during admission
-because running it inside a measured case would contaminate the samples; the case
-coefficient of variation rejects frequency-driven in-window instability.
+and ancestors are excluded, so measured work and its command launcher cannot
+reject the run. On macOS, `ps` supplies recent decayed CPU use. On Linux, `ps`
+supplies process-lifetime average CPU use; controlled Linux evidence must record
+that limitation until the runner provides interval sampling there. On hosts
+without direct frequency telemetry, the throughput calibration runs only during
+admission because running it inside a measured case would contaminate the
+samples; the case coefficient of variation rejects frequency-driven in-window
+instability.
 Competing-work classification uses the actual executable or Python module/script
 identity, not arbitrary shell argument text that merely mentions Cargo or a
 benchmark. A top-level `git fetch` is not rejected by itself; its CPU/disk-heavy

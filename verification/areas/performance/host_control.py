@@ -313,8 +313,23 @@ def memory_pressure_state() -> dict[str, Any]:
     return {"source": "unavailable"}
 
 
-def process_activity() -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    output = command_output(["ps", "-axo", "pid=,ppid=,pcpu=,comm=,args="])
+def process_activity(
+    output: str | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    if output is None:
+        output = command_output(["ps", "-axo", "pid=,ppid=,pcpu=,comm=,args="])
+    rows = parse_process_rows(output)
+    if not rows:
+        return [], {
+            "source": "unavailable",
+            "external_cpu_percent": None,
+            "max_external_cpu_percent": MAX_EXTERNAL_CPU_PERCENT,
+            "top_processes": [],
+        }
+    return summarize_process_activity(rows, os.getpid())
+
+
+def parse_process_rows(output: str) -> list[tuple[int, int, float, str, str]]:
     rows: list[tuple[int, int, float, str, str]] = []
     for line in output.splitlines():
         parts = line.strip().split(maxsplit=4)
@@ -325,14 +340,7 @@ def process_activity() -> tuple[list[dict[str, Any]], dict[str, Any]]:
         except ValueError:
             continue
         rows.append((int(parts[0]), int(parts[1]), cpu_percent, parts[3], parts[4]))
-    if not rows:
-        return [], {
-            "source": "unavailable",
-            "external_cpu_percent": None,
-            "max_external_cpu_percent": MAX_EXTERNAL_CPU_PERCENT,
-            "top_processes": [],
-        }
-    return summarize_process_activity(rows, os.getpid())
+    return rows
 
 
 def summarize_process_activity(
@@ -521,6 +529,24 @@ def run_self_test() -> None:
     if cpu_pressure["external_cpu_percent"] != 55.1:
         raise HostControlError(
             "host control self-test included related benchmark CPU activity"
+        )
+    parsed_rows = parse_process_rows(
+        "bad row\n"
+        "42 1 not-a-number /usr/bin/noop noop\n"
+        "43 1 12.5 /usr/bin/tool /usr/bin/tool --work\n"
+    )
+    if parsed_rows != [
+        (43, 1, 12.5, "/usr/bin/tool", "/usr/bin/tool --work")
+    ]:
+        raise HostControlError("host control self-test did not parse ps rows safely")
+    unavailable_competitors, unavailable_cpu = process_activity("")
+    if unavailable_competitors or unavailable_cpu["source"] != "unavailable":
+        raise HostControlError(
+            "host control self-test did not fail closed on empty ps output"
+        )
+    if executable_from_process("/truncated", "/usr/bin/tool --work") != "tool":
+        raise HostControlError(
+            "host control self-test did not prefer the argv executable"
         )
     if (
         process_category(
