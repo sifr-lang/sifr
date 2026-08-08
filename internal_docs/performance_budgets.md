@@ -50,14 +50,19 @@ Representative and full budget producers require a controlled host window
 before measuring. Admission requires three consecutive quiet snapshots on AC
 power on macOS, no thermal or CPU-power warning, no competing Cargo, rustc,
 benchmark, or Git indexing process, normalized one-minute load at or below
-`0.85`, and a stable fixed-work CPU-throughput calibration. The report records
-load, power, thermal state, direct CPU frequencies when the host exposes them,
-the unprivileged throughput proxy otherwise, memory-pressure counters, and the
-compiler/generated-artifact cache state. Per-case monitoring records pressure
-that appears after admission. On hosts without direct frequency telemetry, the
-throughput calibration runs only during admission because running it inside a
-measured case would contaminate the samples; the case coefficient of variation
-rejects frequency-driven in-window instability.
+`0.85`, no more than `50%` of one logical CPU consumed by unrelated processes,
+and a stable fixed-work CPU-throughput calibration. The unrelated-CPU limit is
+intentionally independent of logical CPU count because the governed command
+benchmarks are sensitive to contention for one performance core. The report
+records load, power, thermal state, direct CPU frequencies when the host exposes
+them, the unprivileged throughput proxy otherwise, external CPU consumption and
+its top processes, memory-pressure counters, and the compiler/generated-artifact
+cache state. Per-case monitoring applies the same external-CPU limit and records
+pressure that appears after admission. The benchmark runner and its descendants
+are excluded, so measured work cannot reject itself. On hosts without direct
+frequency telemetry, the throughput calibration runs only during admission
+because running it inside a measured case would contaminate the samples; the case
+coefficient of variation rejects frequency-driven in-window instability.
 Competing-work classification uses the actual executable or Python module/script
 identity, not arbitrary shell argument text that merely mentions Cargo or a
 benchmark. A top-level `git fetch` is not rejected by itself; its CPU/disk-heavy
