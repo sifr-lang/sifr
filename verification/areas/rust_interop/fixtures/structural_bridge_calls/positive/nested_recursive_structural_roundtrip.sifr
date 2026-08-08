@@ -1,0 +1,28 @@
+# fixture: structural_bridge_calls
+# evidence: positive/nested_recursive_structural_roundtrip
+# evidence-status: planned
+# execution-kind: runtime-observed
+# expected-result: future-owned
+# future-owner: plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md
+
+# milestone_ps_2 replaces this planned marker with an executable generated
+# package round-trip only after the structural bridge contract is implemented.
+
+from sifr.meta import Structural
+
+class PlannedNestedValue:
+    value: uint32
+    child: PlannedNestedValue | None
+
+
+class PlannedStructuralError(Error):
+    message: str
+
+
+@rust.structural
+@rust(bridge.structural.roundtrip)
+def planned_structural_roundtrip[T: Structural](value: T) -> Result[T, PlannedStructuralError | RustPanicError]: ...
+
+def verify_nested_recursive_structural_roundtrip() -> Result[PlannedNestedValue, PlannedStructuralError | RustPanicError]:
+    result: Result[PlannedNestedValue, PlannedStructuralError | RustPanicError] = planned_structural_roundtrip(PlannedNestedValue(0, None))
+    return result

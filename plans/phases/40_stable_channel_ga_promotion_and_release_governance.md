@@ -70,11 +70,12 @@ Phase 40 consumes these completed or canonical upstream contracts:
   [PR #3023](https://github.com/sifr-lang/sifr/pull/3023);
   certification prerequisites and the stable claims contract are merged through
   [PR #3026](https://github.com/sifr-lang/sifr/pull/3026);
-  the remaining Track A certifications subsequently resolved every current
-  deferred row with passing evidence and completed the final stable-gate
-  closeout. Track B remains dormant until an
-  external bridge-version 2 package-resource substrate exists and is not a
-  Phase 40 blocker while absent and unadvertised.
+  the remaining Track A certifications subsequently resolved every row that
+  was deferred before the 2026-07-30 Track A closeout with passing evidence and
+  completed that final stable-gate closeout. Later future-owned Native
+  Pydantic-Sifr structural rows are separately gated. Track B remains dormant
+  until an external structural Rust bridge package-resource substrate exists
+  and is not a Phase 40 blocker while absent and unadvertised.
 
 Phase 40 does not infer Rust ecosystem support from prose. It may advertise
 only the exact Rust interop surfaces accepted by the current compatibility
