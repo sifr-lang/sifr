@@ -102,16 +102,9 @@ hatch.
 
 ## Release Profile
 
-Release keeps the nightly generated-code surface except for the indexed,
-expiry-bound `GENC-NAN` divergence. The
-`generated_code_quality:release-full` suite runs every full-mode gate and every
-Clippy corpus entry. Its three governed entries—
-`e2e-018-cpython-math-semantic-corrections`,
-`e2e-027-error-mixed-builtin-stdlib`, and `stdlib-007-math`—must each reproduce
-exactly `clippy::zero_divided_by_zero` as an expected failure; a pass, changed
-lint, missing or expired record, or any other generated-code failure remains
-blocking. Nightly continues to select `generated_code_quality:full` without the
-divergence.
+Release and nightly both select `generated_code_quality:full`. Every full-mode
+gate and every Clippy corpus entry is blocking in both profiles, with no
+generated-code expected-failure divergence.
 
 ## Change-Aware Ownership
 

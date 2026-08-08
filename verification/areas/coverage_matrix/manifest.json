@@ -69,13 +69,6 @@
           "diagnostic_formats": []
         },
         {
-          "id": "generated_code_release_divergence",
-          "entry": "verification/areas/generated_code_quality/release_divergence_self_test.py",
-          "command": "area-check",
-          "expect_exit_code": 0,
-          "diagnostic_formats": []
-        },
-        {
           "id": "verification_taxonomy",
           "entry": "verification/areas/coverage_matrix/checks/verification_taxonomy.py",
           "command": "area-check",

@@ -82,8 +82,8 @@ lanes.
   generated-code quality, performance, distribution, CPython differential,
   sanitizer-full, ecosystem-broader, and module-full stdlib parity suites.
   Both profiles run the complete pinned algorithm corpus and taxonomy self-test.
-  Release uses the exact, expiry-bound `GENC-NAN` expected-failure record while
-  nightly retains unmodified full generated-code Clippy coverage.
+  Release and nightly both retain unmodified full generated-code Clippy
+  coverage.
 
 Crate test membership is data-owned by `crate_test_membership.suites` in each
 profile. The coverage matrix cross-checks that first-party compiler crates with
