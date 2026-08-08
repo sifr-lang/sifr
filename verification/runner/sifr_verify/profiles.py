@@ -49,9 +49,7 @@ PROFILE_STEP_NAMES = {
 PYTHON_INTEROP_CAPABILITY_MATRIX = (
     REPO_ROOT / "verification" / "areas" / "python_interop" / "declaration_capabilities.json"
 )
-RUST_INTEROP_MANIFEST = (
-    REPO_ROOT / "verification" / "areas" / "rust_interop" / "manifest.json"
-)
+RUST_INTEROP_MANIFEST = REPO_ROOT / "verification" / "areas" / "rust_interop" / "manifest.json"
 
 
 def profile_path(profile: str, profiles_dir: Path = PROFILES_DIR) -> Path:
@@ -70,7 +68,11 @@ def load_profile(profile: str, profiles_dir: Path = PROFILES_DIR) -> dict[str, A
     payload = load_json(path)
     if not isinstance(payload, dict):
         raise ProfileError(f"profile must be a JSON object: {path}")
-    validate_data(payload, load_schema("profile.schema.json"), source=str(path.relative_to(REPO_ROOT)))
+    validate_data(
+        payload,
+        load_schema("profile.schema.json"),
+        source=str(path.relative_to(REPO_ROOT)),
+    )
     if payload.get("name") != profile:
         raise ProfileError(f"profile name '{payload.get('name')}' must match file stem '{profile}'")
     validate_selected_area_suites(payload)
@@ -170,9 +172,7 @@ def validate_selected_area_suites(profile: dict[str, Any]) -> None:
         selected_suites = selection.get("suites", [])
         for suite in selected_suites:
             if suite not in area_suites[area]:
-                raise ProfileError(
-                    f"profile {profile.get('name')} selects unknown suite {area}:{suite}"
-                )
+                raise ProfileError(f"profile {profile.get('name')} selects unknown suite {area}:{suite}")
         if area == "python_interop" and profile.get("execution_mode") != "selected-areas-only":
             required_suites = _compiled_evidence_suites()
             missing = sorted(required_suites.difference(selected_suites))
@@ -191,14 +191,10 @@ def validate_selected_area_suites(profile: dict[str, Any]) -> None:
                 )
     if profile.get("execution_mode") != "selected-areas-only":
         selected_area_names = {
-            selection.get("area")
-            for selection in profile.get("selected_areas", [])
-            if isinstance(selection, dict)
+            selection.get("area") for selection in profile.get("selected_areas", []) if isinstance(selection, dict)
         }
         if "rust_interop" not in selected_area_names:
-            raise ProfileError(
-                f"profile {profile.get('name')} omits the required Rust interop area"
-            )
+            raise ProfileError(f"profile {profile.get('name')} omits the required Rust interop area")
 
 
 def required_rust_interop_suites() -> set[str]:
@@ -206,11 +202,7 @@ def required_rust_interop_suites() -> set[str]:
     suites = manifest.get("suites") if isinstance(manifest, dict) else None
     if not isinstance(suites, list) or not suites:
         raise ProfileError("Rust interop area manifest has no suites")
-    names = {
-        str(suite["name"])
-        for suite in suites
-        if isinstance(suite, dict) and isinstance(suite.get("name"), str)
-    }
+    names = {str(suite["name"]) for suite in suites if isinstance(suite, dict) and isinstance(suite.get("name"), str)}
     if len(names) != len(suites):
         raise ProfileError("Rust interop area manifest has invalid or duplicate suites")
     return names
@@ -300,14 +292,40 @@ def validate_step_budgets(profile: dict[str, Any]) -> None:
             raise ProfileError(f"profile {profile.get('name')} step_budgets has unknown step {step_name}")
         if not isinstance(budget, dict):
             raise ProfileError(f"profile {profile.get('name')} step budget {step_name} must be an object")
-        if set(budget) != {"budget_ms", "enforcement"}:
+        fixed_keys = {"budget_ms", "enforcement"}
+        cache_keys = {
+            "warm_budget_ms",
+            "cold_budget_ms",
+            "cache_classifier",
+            "enforcement",
+        }
+        if set(budget) not in {frozenset(fixed_keys), frozenset(cache_keys)}:
             raise ProfileError(
                 f"profile {profile.get('name')} step budget {step_name} "
-                "must contain only budget_ms and enforcement"
+                "must define either a fixed budget or warm/cold cache budgets"
             )
-        budget_ms = budget.get("budget_ms")
-        if isinstance(budget_ms, bool) or not isinstance(budget_ms, int) or budget_ms <= 0:
-            raise ProfileError(f"profile {profile.get('name')} step budget {step_name} has invalid budget_ms")
+        budget_keys = (
+            ["budget_ms"]
+            if "budget_ms" in budget
+            else [
+                "warm_budget_ms",
+                "cold_budget_ms",
+            ]
+        )
+        for budget_key in budget_keys:
+            budget_ms = budget.get(budget_key)
+            if isinstance(budget_ms, bool) or not isinstance(budget_ms, int) or budget_ms <= 0:
+                raise ProfileError(f"profile {profile.get('name')} step budget {step_name} has invalid {budget_key}")
+        if "cache_classifier" in budget:
+            if budget.get("cache_classifier") != "successful-input-receipt":
+                raise ProfileError(
+                    f"profile {profile.get('name')} step budget {step_name} has invalid cache_classifier"
+                )
+            if int(budget["cold_budget_ms"]) < int(budget["warm_budget_ms"]):
+                raise ProfileError(
+                    f"profile {profile.get('name')} step budget {step_name} "
+                    "cold budget must not be lower than warm budget"
+                )
         enforcement = budget.get("enforcement")
         if enforcement not in {"advisory", "blocking"}:
             raise ProfileError(f"profile {profile.get('name')} step budget {step_name} has invalid enforcement")
@@ -334,9 +352,7 @@ def workspace_package_names() -> set[str]:
     if not isinstance(packages, list):
         raise ProfileError("cargo metadata returned no packages while validating crate membership")
     _WORKSPACE_PACKAGE_NAMES = {
-        package["name"]
-        for package in packages
-        if isinstance(package, dict) and isinstance(package.get("name"), str)
+        package["name"] for package in packages if isinstance(package, dict) and isinstance(package.get("name"), str)
     }
     return _WORKSPACE_PACKAGE_NAMES
 
@@ -357,11 +373,7 @@ def crate_test_suites_for_mode(profile: dict[str, Any], mode: str) -> list[dict[
     suites = membership.get("suites") if isinstance(membership, dict) else None
     if not isinstance(suites, list) or not suites:
         raise ProfileError(f"profile {profile.get('name')} has no crate_test_membership suites")
-    return [
-        suite
-        for suite in suites
-        if isinstance(suite, dict) and mode in suite.get("modes", [])
-    ]
+    return [suite for suite in suites if isinstance(suite, dict) and mode in suite.get("modes", [])]
 
 
 def shell_exports(profile: dict[str, Any]) -> dict[str, Any]:
@@ -393,9 +405,9 @@ def shell_exports(profile: dict[str, Any]) -> dict[str, Any]:
         "RUN_HARDENING": "1" if hardening_suites else "0",
         "HARDENING_SUITES": ",".join(hardening_suites),
         "RUN_E2E_REPORT_DETERMINISM": "1" if "e2e_report_determinism" in extra_checks else "0",
-        "RUN_E2E_SEQUENTIAL_PARALLEL_EQUIVALENCE": "1"
-        if "e2e_sequential_parallel_equivalence" in extra_checks
-        else "0",
+        "RUN_E2E_SEQUENTIAL_PARALLEL_EQUIVALENCE": (
+            "1" if "e2e_sequential_parallel_equivalence" in extra_checks else "0"
+        ),
         "E2E_PROFILE": name,
         "E2E_FIXTURE_MANIFEST": "" if fixture_manifest is None else str(fixture_manifest),
         "E2E_SIFR_JOBS": e2e["sifr_jobs"],
@@ -436,10 +448,7 @@ def print_summary(requested_profile: str) -> None:
     print("  resource_classes=" + ", ".join(profile["resource_policy"]["classes"]))
     print("  matrix_suites=" + (", ".join(legacy["matrix_suites"]) if legacy["matrix_suites"] else "none"))
     print(f"  e2e={fixture_count_display} fixtures (manifest={fixture_manifest_display})")
-    print(
-        "  hardening_suites="
-        + (", ".join(legacy["hardening_suites"]) if legacy["hardening_suites"] else "none")
-    )
+    print("  hardening_suites=" + (", ".join(legacy["hardening_suites"]) if legacy["hardening_suites"] else "none"))
     print("  tooling_suites=" + (", ".join(legacy["tooling_suites"]) if legacy["tooling_suites"] else "none"))
     print(
         "  documentation_suites="
@@ -471,9 +480,7 @@ def build_profile_plan(profile_name: str) -> dict[str, Any]:
     e2e = legacy["e2e"]
     fixture_manifest = resolve_fixture_manifest(str(e2e.get("fixture_manifest", "")))
     fixture_selection = "full-corpus" if fixture_manifest is None else "manifest"
-    selected_fixture_count = (
-        full_pass_fixture_count() if fixture_manifest is None else fixture_count(fixture_manifest)
-    )
+    selected_fixture_count = full_pass_fixture_count() if fixture_manifest is None else fixture_count(fixture_manifest)
     return {
         "schema_version": 1,
         "profile": profile["name"],
@@ -542,7 +549,10 @@ def compare_plans(local_path: str, ci_path: str) -> int:
 
 def run_command(argv: list[str]) -> int:
     if not argv:
-        print("profiles command requires one of: profile, shell, summary, check, plan, compare-plans, run", file=sys.stderr)
+        print(
+            "profiles command requires one of: profile, shell, summary, check, plan, compare-plans, run",
+            file=sys.stderr,
+        )
         return 2
     command = argv[0]
     profile_name = _profile_arg(argv[1:]) if command in {"profile", "shell", "summary", "plan", "run"} else ""
@@ -599,11 +609,7 @@ def _path_arg(argv: list[str], flag: str) -> str:
 
 
 def _optional_arg(argv: list[str], flag: str) -> str | None:
-    values = [
-        argv[index + 1]
-        for index, value in enumerate(argv)
-        if value == flag and index + 1 < len(argv)
-    ]
+    values = [argv[index + 1] for index, value in enumerate(argv) if value == flag and index + 1 < len(argv)]
     if len(values) > 1:
         raise ProfileError(f"{flag} may be provided only once")
     return values[0] if values else None

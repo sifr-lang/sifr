@@ -6,8 +6,8 @@ Status: in progress.
 
 | Milestone | Scope | Status |
 | --- | --- | --- |
-| M1: controlled measurement and provenance | Host/cache telemetry, controlled admission, stable-sample retries, stale-result producer/checker binding, and governed trend-reference refresh | in progress |
-| M2: Python interop cold-cache budget | Classify cold versus warm aggregate execution and enforce a cache-aware create-PR step budget with deterministic policy tests | pending |
+| M1: controlled measurement and provenance | Host/cache telemetry, controlled admission, stable-sample retries, stale-result producer/checker binding, and governed trend-reference refresh | complete on draft PR #3101 |
+| M2: Python interop cold-cache budget | Classify cold versus warm aggregate execution and enforce a cache-aware create-PR step budget with deterministic policy tests | in progress |
 | M3: qualification and closure | Five consecutive controlled representative verdicts, seeded-regression proof, final merge gate, full-phase review, and closure records | pending |
 
 Each implementation milestone uses one draft PR, exact-SHA validation, and
@@ -24,23 +24,52 @@ evidence. Extending either expiry remains prohibited.
 
 ### Current handoff
 
-- State: the original M1 implementation is externally reviewed and satisfied;
-  the delegated trend-reference owner fix is in implementation.
+- State: M1 is externally reviewed and satisfied on the draft PR; M2 is in
+  implementation as a stacked milestone because the repository's create-PR
+  gate cannot merge M1 until this phase-owned Python-interop blocker closes.
 - Branch: `codex/adhoc-performance-budget-host-variance`.
 - Reviewed M1 implementation candidate:
-  `869c05d3eb7440cbcbaed38099e372768e61ccc7`.
+  `28bca35551321b109e272c61ae52fe6201eb810d`.
 - Draft PR: [#3101](https://github.com/sifr-lang/sifr/pull/3101).
-- Validation on the reviewed candidate: manifest, benchmark-runner self-test, budget-policy self-test,
-  checked-in baseline budget gate, Python compile/lint, stale-producer probe,
-  diff check, and file-size guardrail passed. The broader rules-suite failure
-  was the then-out-of-scope trend deferral now delegated into M1.
+- Validation on the reviewed candidate: all 65 governed benchmarks passed in
+  one approved controlled-host capture; the trend record contains no
+  deferrals and binds raw-evidence digest
+  `878fceea8e1eef6472b74b3e83e43c796d90f5215dba7c4c9bf03ca07b083d4d`.
+  Performance rules 6/6, manifest, runner self-tests, budget/trend policy,
+  Python compile/lint, maintainability, diff, and file-size checks passed.
 - Review: Claude Opus returned `SATISFIED` with no blocking findings for base
-  `1cb731fcb67c520d35fcf2376a88b2d2a4b255b1` against candidate
-  `869c05d3eb7440cbcbaed38099e372768e61ccc7`. External evidence SHA-256:
-  `51d7ab8f176bd1efa8756596f7727534b72ea1c29a2a06664fd593e705ee9baf`.
+  `01c43b9cd67df6174b44fbbf7d2328ac5a831cb7` against candidate
+  `28bca35551321b109e272c61ae52fe6201eb810d`. External evidence SHA-256:
+  `2d23bfbc49ca58cd39aea7945614edfbc9ad8f8bc7ec74ef9e44822b03f7eef1`.
 - Base update: merged current `origin/main` at
   `01c43b9cd67df6174b44fbbf7d2328ac5a831cb7`; the final owner-fix candidate
   requires a fresh exact-SHA review and validation round.
+
+### M2 reproduced evidence
+
+On exact M1 candidate `28bca35551321b109e272c61ae52fe6201eb810d`,
+the canonical create-PR profile passed every preceding lane and 18 of 19
+Python-interop variants, then failed only `readonly-check-doctor` at its fixed
+120-second subprocess timeout. The Python-interop step had run for 1,131.589
+seconds when it failed. An immediate unchanged aggregate replay again passed
+18 of 19, reproduced the same case at 120.479 seconds, and took 821.95 seconds;
+`callback-examples` alone varied to 341.399 seconds.
+
+M2 separates the functional hang guard from the performance budget. The doctor
+subprocess guard is 300 seconds. The create-PR aggregate keeps its 600-second
+warm budget and uses a 1,200-second cold budget only when an atomic receipt
+cannot prove a prior successful run for the exact source commit, tracked-tree
+state, selected suites, Cargo lock, Rust/Python toolchains, Sifr binary, and
+required cache artifacts. Failed, dirty-tree, unavailable-input, changed-input,
+or missing-cache runs cannot establish a warm receipt. The classification and
+selected budget are emitted in the machine lane report.
+
+Targeted validation passed `readonly-check-doctor` at 169.710 seconds. The
+complete unchanged 19-variant selection then passed 19/19 in 522.69 seconds;
+the doctor case took 170.125 seconds and `callback-examples` took 78.678
+seconds. Deterministic self-tests cover missing, exact, changed, invalid, and
+missing-artifact receipts, blocking cold overruns, report parsing, and the
+governed create-PR profile values.
 
 ## Problem
 
