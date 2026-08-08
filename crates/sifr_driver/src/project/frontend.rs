@@ -45,6 +45,11 @@ pub(crate) fn compile_frontend_modules(
         let LoweringResult {
             module,
             flow_graph,
+            class_field_defaults,
+            declaration_metadata,
+            specialization_requests,
+            specialization_outputs,
+            json_integer_boundary_requests,
             function_defaults,
             function_varargs,
             function_python_call_shapes,
@@ -56,6 +61,11 @@ pub(crate) fn compile_frontend_modules(
         let lowering_result = LoweringResult {
             module: module.clone(),
             flow_graph: flow_graph.clone(),
+            class_field_defaults,
+            declaration_metadata,
+            specialization_requests,
+            specialization_outputs,
+            json_integer_boundary_requests,
             function_defaults,
             function_varargs,
             function_python_call_shapes,
