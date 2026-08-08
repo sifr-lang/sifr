@@ -302,25 +302,31 @@ def qualify(args: argparse.Namespace) -> dict[str, Any]:
 
     environment = dict(os.environ)
     environment["SIFR_LSP_COMMAND"] = candidate_lsp_command(candidate_binary)
-    smoke = subprocess.run(
-        [
-            sys.executable,
-            str(
-                source_root
-                / "verification"
-                / "areas"
-                / "developer_tooling"
-                / "lsp_protocol_smoke.py"
-            ),
-            "--candidate-smoke",
-        ],
-        cwd=source_root,
-        env=environment,
-        check=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    try:
+        smoke = subprocess.run(
+            [
+                sys.executable,
+                str(
+                    source_root
+                    / "verification"
+                    / "areas"
+                    / "developer_tooling"
+                    / "lsp_protocol_smoke.py"
+                ),
+                "--candidate-smoke",
+            ],
+            cwd=source_root,
+            env=environment,
+            check=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=120,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise EditorQualificationError(
+            "exact candidate LSP smoke exceeded the governed 120s timeout"
+        ) from exc
     if smoke.returncode != 0:
         detail = (smoke.stderr or smoke.stdout).strip()
         raise EditorQualificationError(
