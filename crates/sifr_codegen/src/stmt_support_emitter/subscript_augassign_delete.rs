@@ -7,6 +7,7 @@ impl RustEmitter {
         op: &str,
         value: &HirExpr,
         object_ty: &Type,
+        missing_key_error: Option<&Type>,
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
         if !matches!(
             op,
@@ -156,7 +157,26 @@ impl RustEmitter {
                         args: vec![key_arg],
                     },
                     then_body: vec![lowered_body_stmt],
-                    else_body: None,
+                    else_body: missing_key_error.map(|error_ty| {
+                        let error = crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec![
+                                "KeyError".to_string(),
+                                "new".to_string(),
+                            ])),
+                            args: vec![crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Literal(
+                                    crate::RustLiteral::Str("key not found".to_string()),
+                                )),
+                                method: "to_string".to_string(),
+                                args: Vec::new(),
+                            }],
+                        };
+                        let error = self.coerce_error_type_for_ir(error_ty, error);
+                        vec![RustStmt::Return(Some(crate::RustExpr::FnCall {
+                            func: Box::new(crate::RustExpr::Path(vec!["Err".to_string()])),
+                            args: vec![error],
+                        }))]
+                    }),
                 }))
             }
             _ => Ok(None),
@@ -340,12 +360,19 @@ impl RustEmitter {
             op,
             value,
             object_ty,
+            missing_key_error,
         } = stmt
         else {
             return Ok(false);
         };
-        let Some(lowered) =
-            self.lower_subscript_augassign_stmt_for_ir(object, index, op, value, object_ty)?
+        let Some(lowered) = self.lower_subscript_augassign_stmt_for_ir(
+            object,
+            index,
+            op,
+            value,
+            object_ty,
+            missing_key_error.as_ref(),
+        )?
         else {
             return Ok(false);
         };

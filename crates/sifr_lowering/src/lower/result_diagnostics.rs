@@ -65,3 +65,12 @@ pub(in crate::lower) fn invalid_except_type(ctx: &mut LowerCtx, reason: &str, ra
         range,
     );
 }
+
+pub(in crate::lower) fn unhandled_dict_augassign_key_error(ctx: &mut LowerCtx, range: TextRange) {
+    ctx.error_with_code_at(
+        DiagnosticCode::RESULT_UNUSED_VALUE,
+        "plain dict augmented subscript assignment may fail with 'KeyError'; handle it inside try/except"
+            .to_string(),
+        range,
+    );
+}

@@ -256,10 +256,21 @@ fn collect_stmt_error_refs(
                 collect_stmt_error_refs(finalbody, referenced, builtin_error_classes);
             }
             HirStmt::SubscriptAssign { index, value, .. }
-            | HirStmt::SubscriptAugAssign { index, value, .. }
             | HirStmt::AttributeSubscriptAssign { index, value, .. } => {
                 collect_expr_error_refs(index, referenced, builtin_error_classes);
                 collect_expr_error_refs(value, referenced, builtin_error_classes);
+            }
+            HirStmt::SubscriptAugAssign {
+                index,
+                value,
+                missing_key_error,
+                ..
+            } => {
+                collect_expr_error_refs(index, referenced, builtin_error_classes);
+                collect_expr_error_refs(value, referenced, builtin_error_classes);
+                if let Some(error_ty) = missing_key_error {
+                    collect_type_error_refs(error_ty, referenced, builtin_error_classes);
+                }
             }
             HirStmt::NestedSubscriptAssign {
                 outer_index,

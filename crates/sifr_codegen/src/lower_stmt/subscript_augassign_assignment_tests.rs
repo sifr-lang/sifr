@@ -1,5 +1,16 @@
 use super::*;
 
+fn key_error_type() -> Type {
+    Type::Class {
+        identity: None,
+        type_args: Vec::new(),
+        name: "KeyError".to_string(),
+        fields: vec![("message".to_string(), Type::Str)],
+        methods: Vec::new(),
+        parent_class: Some("Error".to_string()),
+    }
+}
+
 #[test]
 fn lowers_simple_list_subscript_augassign_plus_equal_stmt() {
     let stmt = HirStmt::SubscriptAugAssign {
@@ -16,6 +27,7 @@ fn lowers_simple_list_subscript_augassign_plus_equal_stmt() {
             ty: Type::Int,
         },
         object_ty: Type::List(Box::new(Type::Int)),
+        missing_key_error: None,
     };
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("list subscript augassign lowered");
@@ -56,6 +68,7 @@ fn lowers_simple_string_list_subscript_augassign_plus_equal_stmt() {
             ty: Type::Str,
         },
         object_ty: Type::List(Box::new(Type::Str)),
+        missing_key_error: None,
     };
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("string list subscript augassign lowered");
@@ -110,6 +123,7 @@ fn lowers_simple_list_subscript_augassign_bitwise_and_shift_ops() {
                 ty: Type::Int,
             },
             object_ty: Type::List(Box::new(Type::Int)),
+            missing_key_error: None,
         };
         let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
             .expect("list subscript bitwise/shift augassign lowered");
@@ -154,6 +168,7 @@ fn lowers_simple_dict_subscript_augassign_with_name_key() {
             ty: Type::Int,
         },
         object_ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+        missing_key_error: None,
     };
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("dict subscript augassign lowered");
@@ -199,6 +214,7 @@ fn lowers_simple_dict_subscript_augassign_with_string_literal_key() {
         op: "-=".to_string(),
         value: HirExpr::IntLiteral(1),
         object_ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+        missing_key_error: None,
     };
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("dict subscript augassign lowered");
@@ -209,7 +225,8 @@ fn lowers_simple_dict_subscript_augassign_with_string_literal_key() {
             ..
         } if matches!(
             args.first(),
-            Some(RustExpr::Literal(RustLiteral::Str(key))) if key == "k"
+            Some(RustExpr::Ref { mutable: false, expr })
+                if matches!(expr.as_ref(), RustExpr::Literal(RustLiteral::Str(key)) if key == "k")
         )
     ));
 }
@@ -229,8 +246,92 @@ fn lowers_simple_alias_dict_subscript_augassign_stmt() {
             "IntMap",
             Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
         ),
+        missing_key_error: None,
     };
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("alias-dict subscript augassign lowered");
     assert!(matches!(lowered[0], RustStmt::IfLet { .. }));
+}
+
+#[test]
+fn checked_dict_subscript_augassign_returns_key_error_when_missing() {
+    let error_ty = key_error_type();
+    let stmt = HirStmt::SubscriptAugAssign {
+        object: "mapping".to_string(),
+        index: HirExpr::StringLiteral("missing".to_string()),
+        op: "+=".to_string(),
+        value: HirExpr::IntLiteral(1),
+        object_ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+        missing_key_error: Some(error_ty.clone()),
+    };
+    assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
+
+    let mut emitter = crate::RustEmitter::new();
+    let HirStmt::SubscriptAugAssign {
+        object,
+        index,
+        op,
+        value,
+        object_ty,
+        ..
+    } = &stmt
+    else {
+        panic!("expected subscript augassign");
+    };
+    let lowered = emitter
+        .lower_subscript_augassign_stmt_for_ir(object, index, op, value, object_ty, Some(&error_ty))
+        .expect("checked dict augassign lowering should succeed")
+        .expect("checked dict augassign should lower");
+    assert!(matches!(
+        lowered,
+        RustStmt::IfLet {
+            expr: RustExpr::MethodCall { args: key_args, .. },
+            then_body,
+            else_body: Some(else_body),
+            ..
+        } if matches!(key_args.as_slice(), [RustExpr::Ref { mutable: false, .. }])
+            && !then_body.is_empty()
+            && matches!(
+                else_body.as_slice(),
+                [RustStmt::Return(Some(RustExpr::FnCall { func, args }))]
+                    if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Err".to_string()])
+                        && matches!(
+                            args.as_slice(),
+                            [RustExpr::FnCall { func, .. }]
+                                if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["KeyError".to_string(), "new".to_string()])
+                        )
+            )
+    ));
+}
+
+#[test]
+fn annotated_defaultdict_alias_keeps_entry_insertion_codegen() {
+    let stmt = HirStmt::SubscriptAugAssign {
+        object: "mapping".to_string(),
+        index: HirExpr::StringLiteral("missing".to_string()),
+        op: "+=".to_string(),
+        value: HirExpr::IntLiteral(3),
+        object_ty: Type::alias(
+            "__sifr_defaultdict_int",
+            Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+        ),
+        missing_key_error: None,
+    };
+    let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+        .expect("defaultdict augassign should lower");
+    assert!(matches!(
+        &lowered[0],
+        RustStmt::Block(stmts)
+            if matches!(
+                stmts.first(),
+                Some(RustStmt::Let {
+                    value: RustExpr::MethodCall { receiver, method, .. },
+                    ..
+                }) if method == "or_insert"
+                    && matches!(
+                        receiver.as_ref(),
+                        RustExpr::MethodCall { method, .. } if method == "entry"
+                    )
+            )
+    ));
 }
