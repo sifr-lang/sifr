@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-META-0001 verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_fatal/main.sifr:4:2 package fixture.meta specialization failed: shape_rejected

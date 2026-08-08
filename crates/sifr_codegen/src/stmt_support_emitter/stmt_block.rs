@@ -369,10 +369,17 @@ impl RustEmitter {
                 op,
                 value,
                 object_ty,
+                missing_key_error,
             } = stmt
             {
-                let Some(lowered_stmt) = self
-                    .lower_subscript_augassign_stmt_for_ir(object, index, op, value, object_ty)?
+                let Some(lowered_stmt) = self.lower_subscript_augassign_stmt_for_ir(
+                    object,
+                    index,
+                    op,
+                    value,
+                    object_ty,
+                    missing_key_error.as_ref(),
+                )?
                 else {
                     return Ok(None);
                 };

@@ -874,7 +874,7 @@ pub(in crate::lower) fn collect_class_type(
         // Store field defaults for the auto-generated constructor
         if !field_defaults.is_empty() {
             ctx.function_defaults
-                .insert(class_name.clone(), field_defaults);
+                .insert(class_name.clone(), field_defaults.clone());
         }
     }
 
@@ -888,6 +888,11 @@ pub(in crate::lower) fn collect_class_type(
 
     if is_error {
         ctx.error_types.insert(class_name.clone());
+    }
+
+    if !field_defaults.is_empty() {
+        ctx.class_field_defaults
+            .insert(class_name.clone(), field_defaults);
     }
 
     ctx.class_types.insert(class_name, class_ty);

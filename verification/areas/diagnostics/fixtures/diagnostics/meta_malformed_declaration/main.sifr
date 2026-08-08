@@ -1,0 +1,3 @@
+@metadata("field", "missing", "fixture.description", "payload")
+class Model:
+    value: int

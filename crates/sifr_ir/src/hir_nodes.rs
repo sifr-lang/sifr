@@ -480,6 +480,7 @@ pub enum HirStmt {
         op: String,
         value: HirExpr,
         object_ty: Type,
+        missing_key_error: Option<Type>,
     },
     /// Augmented assignment on attribute: self.field += val
     AttributeAugAssign {
