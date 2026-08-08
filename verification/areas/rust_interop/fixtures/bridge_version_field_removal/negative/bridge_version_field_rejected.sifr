@@ -4,7 +4,6 @@
 # execution-kind: compiler-diagnostic
 # expected-result: future-owned-diagnostic
 # expected-diagnostic: SIFR-RUST-CARGO-0001
-# future-owner: plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md
 # fixture-cargo: rust.bridge-version = 1
 
 @rust(bridge.version.removed, panic=trusted_no_panic)

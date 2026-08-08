@@ -350,17 +350,16 @@ Bridge version 1 covers:
 
 ### Structural Rust bridge calls
 
-This section is the accepted contract owned by Native Pydantic-Sifr
-`milestone_ps_2`; it is specified before implementation and is not yet a
-supported compiler surface. The current compiler continues to reject
-`@rust.structural`. The future-owned `structural_bridge_calls` compatibility row
-remains non-passing until the implementation wave flips its positive and
-negative evidence atomically. The companion future-owned
+This section is the accepted structural bridge contract. It is specified before
+implementation and is not yet a supported compiler surface. The current
+compiler continues to reject `@rust.structural`. The future-owned
+`structural_bridge_calls` compatibility row remains non-passing until its
+positive and negative evidence pass atomically. The companion future-owned
 `bridge_version_field_removal` row governs removal of the versioned manifest
-schema in that same wave.
+schema at the same boundary.
 
 Once that row passes, the structural contract replaces the current versioned
-bridge schema. The implementation wave atomically removes `[rust]
+bridge schema. That change atomically removes `[rust]
 bridge-version` from the manifest schema, every in-repository package and
 fixture, managed projections, archive expectations, cache records, diagnostics,
 and generated-build assertions. That inventory explicitly includes the
@@ -371,14 +370,14 @@ assertion, `_scenario_registry.py`'s literal token, `_matrix_inventory.py`'s
 required-fixture entry, and `runner/bridge_check.py`'s version
 parameter/default. Compiler-side removal explicitly includes the
 `rust_interop_plan.rs` module/cache fields, the package-graph digest field, and
-the sysroot's synthesized `Some(1)`. The wave deletes the entire
+the sysroot's synthesized `Some(1)`. It deletes the entire
 `bridge_version_mismatch` fixture/scenario and its matrix, tier, and
 stable-claim entries rather than preserving legacy acceptance evidence.
 
 The same cutover deletes this document's `bridge-version = 1` subsection above
 and rewrites every remaining version-keyed statement throughout
-`internal_docs/**`, `docs/**`, active issues, `plans/phases/**`, and the
-roadmap. Named public surfaces include `docs/packages/manifest.mdx`,
+`internal_docs/**`, `docs/**`, and active planning records. Named public
+surfaces include `docs/packages/manifest.mdx`,
 `docs/rust-interop.mdx`, and the Blake3 and Reqwest interop guides; the other
 architecture surface includes
 `internal_docs/sifr_sysroot_and_stdlib_architecture.md`. Dated review records,
@@ -1860,7 +1859,7 @@ Compatibility categories are:
 - `unsupported-by-design`: passing diagnostics for a rejected surface with no
   fallback path.
 - `future-owned-by-separate-phase`: documented separately because at least one
-  evidence direction is not passing. Future-owned rows must reference a concrete
-  active issue or phase for that row. The current future-owned rows
-  `structural_bridge_calls` and `bridge_version_field_removal` are owned by
-  [`plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md`](../plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md).
+  evidence direction is not passing. Future-owned rows must reference their
+  durable technical owner. The current future-owned rows
+  `structural_bridge_calls` and `bridge_version_field_removal` are owned by the
+  structural Rust bridge section above.

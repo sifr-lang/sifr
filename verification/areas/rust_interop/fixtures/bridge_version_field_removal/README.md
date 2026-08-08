@@ -1,9 +1,8 @@
 # bridge_version_field_removal
 
-Future-owned Native Pydantic-Sifr `milestone_ps_2` evidence for removing the
-versioned Rust bridge manifest schema.
+Reserved evidence for removing the versioned Rust bridge manifest schema.
 
-The implementation wave replaces the current `bridge_version_mismatch` row:
+The completed evidence must establish that:
 
 - an unversioned `[rust]` manifest is accepted by the normal compiler manifest
   diagnostic path; and
