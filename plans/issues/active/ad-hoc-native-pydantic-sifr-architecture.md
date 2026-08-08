@@ -71,6 +71,21 @@ Milestone delivery records:
   round confirmed all prior construction, identity, callback, projection,
   cutover-inventory, ownership, and current-state findings closed and returned
   `SATISFIED` with no blocking findings.
+- The contract record accidentally leaked phase-delivery taxonomy into active
+  Rust-interop fixtures, compatibility rows, and durable architecture surfaces,
+  blocking the repository taxonomy guard on current `main`. The narrow repair
+  merged in [PR #3112](https://github.com/sifr-lang/sifr/pull/3112) at merge
+  commit `2452dca175d7b6b01068c40b3853c1d7b6d251f6`; its reviewed candidate was
+  `087a399fd0d89f3066af04a26d4185c03497283f`.
+- That repair moved the two future-owned compatibility rows to the exact durable
+  Rust-interop architecture owner without weakening concrete-path or existence
+  validation. Taxonomy and compatibility checks/self-tests, all 10 registered
+  Rust-interop cases, stable claims, stale drafts, tiers, and file-size/HIR
+  guardrails passed. Opus review round 3 returned `SATISFIED` with no actionable
+  findings. The create-PR profile then reached the externally owned Python
+  readonly/doctor timeout tracked by PR #3110; #3110 was blocked on this taxonomy
+  repair, so the fix merged to close the dependency cycle without absorbing its
+  code.
 - Deferred follow-up work: define an explicit typed package-side structural-shape
   contract before `ps_4`; align registry representative-fixture paths with diagnostic
   baselines; audit pre-epoch fractional timestamp reconstruction; disambiguate imported
