@@ -9,7 +9,8 @@ and closure pass 3 returned `SATISFIED` for the pre-manifest design. Passes 4
 through 16 returned `NEEDS REVISION` for the added conformance inventory.
 Pass 17 returned `SATISFIED` and re-approved `milestone_ps_0`. The complete
 architecture, conformance inventory, external-repository boundary, and demo
-ownership are approved; implementation has not started.
+ownership are approved. `milestone_ps_1` is implemented and merged; `milestone_ps_2`
+is the next compiler milestone.
 
 Review artifacts:
 
@@ -30,6 +31,29 @@ Review artifacts:
 - [`native-pydantic-sifr-architecture-opus5-review-pass-15.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-15.md)
 - [`native-pydantic-sifr-architecture-opus5-review-pass-16.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-16.md)
 - [`native-pydantic-sifr-architecture-opus5-review-pass-17.md`](../../reviews/active/native-pydantic-sifr-architecture-opus5-review-pass-17.md)
+
+Milestone delivery records:
+
+- `milestone_ps_1` merged in [PR #3104](https://github.com/sifr-lang/sifr/pull/3104)
+  at merge commit `7cc7f714e844e851a0ffe665fd18c669e0e21b99`; the reviewed candidate was
+  `e23b80d94f67de3d3ced7dbcca7394efdf5ab6c1`.
+- Validation passed workspace formatting/clippy, diagnostics/frontend/lowering/stdlib
+  suites, the non-E2E CLI suite, diagnostics rules and baselines, file-size and HIR
+  guardrails, two selected native E2E fixtures, and the positive/negative external
+  specialization fixtures. The one merge gate reached the CPython differential lane;
+  its first Sifr process timed out at 240 seconds under host-wide Cargo contention,
+  while the remaining cases passed. The exact timed-out fixture then passed directly
+  in 29.6 seconds with canonical output `[7,3,2,4,20]`.
+- Opus review of candidate `5b1601ded66556fe04b9674916153726b341b2c6`
+  found augmented-assignment token handling and negative integer floor arithmetic
+  omissions. Candidate `e23b80d94f67de3d3ced7dbcca7394efdf5ab6c1` corrected both;
+  remediation review returned `SATISFIED` with no blocking findings.
+- Deferred follow-up work: define an explicit typed package-side structural-shape
+  contract before `ps_4`; align registry representative-fixture paths with diagnostic
+  baselines; audit pre-epoch fractional timestamp reconstruction; disambiguate imported
+  structural metadata/default lookup from colliding local names; accept large negative
+  const bounds in integer-boundary decorators; and keep shared floor-arithmetic semantics
+  from drifting between frontend const evaluation and runtime execution.
 
 This document is the single planning source of truth for:
 
