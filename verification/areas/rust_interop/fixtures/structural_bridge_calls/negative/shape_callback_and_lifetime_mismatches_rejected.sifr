@@ -4,10 +4,8 @@
 # execution-kind: runtime-observed
 # expected-result: future-owned-diagnostic
 # expected-diagnostic: SIFR-RUST-TYPE-0001
-# future-owner: plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md
-
-# milestone_ps_2 replaces this planned marker with deliberate compiler and
-# Cargo-probe rejection evidence after the structural bridge is implemented.
+# Deliberate compiler and Cargo-probe rejection evidence remains reserved until
+# the structural bridge is implemented.
 
 from sifr.meta import Structural
 

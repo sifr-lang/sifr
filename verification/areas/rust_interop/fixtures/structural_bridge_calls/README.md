@@ -1,11 +1,9 @@
 # structural_bridge_calls
 
-Future-owned Native Pydantic-Sifr `milestone_ps_2` evidence for monomorphized
-structural Rust bridge calls.
+Reserved evidence for monomorphized structural Rust bridge calls.
 
 The row is intentionally planned while the structural contract is not yet
-implemented. The implementation wave must replace these planned evidence files
-with passing generated-package evidence that:
+implemented. The generated-package evidence must establish that the bridge:
 
 - round-trips nested generic and recursive values through a native opaque
   source with node-scoped construction and allocation-free projection; and
