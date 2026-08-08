@@ -320,19 +320,25 @@ def competing_processes() -> list[dict[str, Any]]:
 
 
 def process_category(command: str, args: str) -> str | None:
-    executable = Path(command).name.lower()
     argument_tokens = args.lower().split()
-    if executable in {"cargo", "rustc"}:
-        return executable
-    if executable in {"sifr", "frontend_query_bench"}:
+    executables = {Path(command).name.lower()}
+    if argument_tokens:
+        # macOS truncates ps(1)'s comm column, while args still begins with the
+        # exact executable path. Only inspect argv[0] so argument text cannot
+        # turn an unrelated shell/editor process into a false competitor.
+        executables.add(Path(argument_tokens[0]).name)
+    build_executables = executables & {"cargo", "rustc"}
+    if build_executables:
+        return sorted(build_executables)[0]
+    if executables & {"sifr", "frontend_query_bench"}:
         return "benchmark"
-    if executable in {"git", "git-index-pack"}:
-        if executable == "git-index-pack" or any(
+    if executables & {"git", "git-index-pack"}:
+        if "git-index-pack" in executables or any(
             token in {"clone", "fetch", "index-pack", "submodule"}
             for token in argument_tokens[1:3]
         ):
             return "git"
-    if executable.startswith("python"):
+    if any(executable.startswith("python") for executable in executables):
         script_names = {Path(token).name for token in argument_tokens}
         if "run_benchmarks.py" in script_names or "lsp_query_bench.py" in script_names:
             return "benchmark"
@@ -412,6 +418,16 @@ def run_self_test() -> None:
         )
     if process_category("/usr/bin/cargo", "cargo test") != "cargo":
         raise HostControlError("host control self-test missed a Cargo process")
+    if (
+        process_category(
+            "/Users/example",
+            "/Users/example/.rustup/toolchains/stable/bin/cargo check --quiet",
+        )
+        != "cargo"
+    ):
+        raise HostControlError(
+            "host control self-test missed Cargo with a truncated comm column"
+        )
     if (
         process_category(
             "/usr/bin/python3",
