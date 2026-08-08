@@ -1,0 +1,14 @@
+# fixture: bridge_version_field_removal
+# evidence: positive/unversioned_bridge_manifest_accepted
+# evidence-status: planned
+# execution-kind: compiler-diagnostic
+# expected-result: future-owned
+# future-owner: plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md
+# fixture-cargo: rust.bridge-version = absent
+
+@rust(bridge.version.unversioned, panic=trusted_no_panic)
+def planned_unversioned_bridge() -> uint32: ...
+
+def verify_unversioned_bridge_manifest_accepted() -> uint32:
+    result: uint32 = planned_unversioned_bridge()
+    return result

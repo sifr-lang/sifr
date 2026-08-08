@@ -145,13 +145,22 @@
       "negative_evidence": {"id": "unsupported_bridge_version_rejected", "status": "passing"}
     },
     {
-      "id": "bridge_v2_structural_calls",
+      "id": "bridge_version_field_removal",
+      "tier": 0,
+      "capability": "unversioned Rust bridge manifest contract",
+      "required_crates": [],
+      "execution_kind": "compiler-diagnostic",
+      "positive_evidence": {"id": "unversioned_bridge_manifest_accepted", "status": "planned"},
+      "negative_evidence": {"id": "bridge_version_field_rejected", "status": "planned"}
+    },
+    {
+      "id": "structural_bridge_calls",
       "tier": 2,
-      "capability": "bridge-version 2 monomorphized structural calls",
+      "capability": "monomorphized structural Rust bridge calls",
       "required_crates": [],
       "execution_kind": "runtime-observed",
       "positive_evidence": {"id": "nested_recursive_structural_roundtrip", "status": "planned"},
-      "negative_evidence": {"id": "shape_callback_lifetime_and_v1_rejected", "status": "planned"}
+      "negative_evidence": {"id": "shape_callback_and_lifetime_mismatches_rejected", "status": "planned"}
     },
     {
       "id": "panic_boundary",

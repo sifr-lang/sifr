@@ -348,28 +348,32 @@ Bridge version 1 covers:
 - `bridge` and `Self` namespace reservation,
 - managed projection file ownership.
 
-### Bridge version 2 structural calls
+### Structural Rust bridge calls
 
 This section is the accepted contract owned by Native Pydantic-Sifr
 `milestone_ps_2`; it is specified before implementation and is not yet a
 supported compiler surface. The current compiler continues to reject
-`bridge-version = 2`. The future-owned `bridge_v2_structural_calls`
-compatibility row remains non-passing until the implementation wave flips its
-positive and negative evidence atomically.
+`@rust.structural`. The future-owned `structural_bridge_calls` compatibility row
+remains non-passing until the implementation wave flips its positive and
+negative evidence atomically. The companion future-owned
+`bridge_version_field_removal` row governs removal of the versioned manifest
+schema in that same wave.
 
-Once that row passes, `bridge-version = 2` is the only supported bridge schema
-version and replaces version 1. The implementation wave atomically migrates
-every in-repository package, fixture, managed projection, archive expectation,
-and generated-build assertion to version 2, then removes version-1 acceptance
-and emission from the compiler and package tooling. A remaining
-`bridge-version = 1` declaration is rejected as unsupported; Sifr does not
-rewrite it, select version-1 glue, or provide a compatibility mode or fallback.
+Once that row passes, the structural contract replaces the current versioned
+bridge schema. The implementation wave atomically removes `[rust]
+bridge-version` from the manifest schema, every in-repository package and
+fixture, managed projections, archive expectations, cache records, diagnostics,
+and generated-build assertions. A package that still declares
+`bridge-version` is rejected as an unknown removed field; Sifr does not rewrite
+it, select versioned glue, or provide a compatibility mode or fallback. The
+compiler release and managed-projection/source digests identify the one current
+bridge contract instead.
 
-Version 2 retains the closed ordinary direct-value table as current language
-semantics and adds one general structural-call lane for monomorphized
-synchronous functions. It does not add tuple, set, arbitrary mapping, union
-payload, specialized scalar, or generic type-variable entries to the ordinary
-direct-value table.
+The structural contract retains the closed ordinary direct-value table as
+current language semantics and adds one general structural-call lane for
+monomorphized synchronous functions. It does not add tuple, set, arbitrary
+mapping, union payload, specialized scalar, or generic type-variable entries to
+the ordinary direct-value table.
 
 The Sifr marker is `sifr.meta.Structural`. A structural Rust declaration has
 exactly one concrete type variable bounded by that marker and is explicitly
@@ -518,7 +522,8 @@ appropriate. Their serialized spelling is not an ABI. `StructuralEnter`
 identifies the aggregate kind, nominal/member identity, and child count.
 `StructuralEdge` identifies the next record field, sequence/tuple index,
 mapping key/value position, or active optional/union/refined member.
-`VisitControl` has exactly `Continue` and `SkipChildren` in bridge version 2.
+`VisitControl` has exactly `Continue` and `SkipChildren` in the structural
+contract.
 `StructuralNodeRef` is a borrowed closed description of one node. Aggregate
 descriptions expose child `NodeId` values, declaration-order record fields,
 the active enum/union member, and recursive back-references; they never expose
@@ -554,7 +559,7 @@ enum/union members, refined bases, and numbered recursive back-references. It
 does not include Rust layout, process addresses, or build paths. A
 field/type/metadata change that changes the construction contract changes the
 identity. The leaf-crate version is the structural identity algorithm version
-and part of bridge version 2 and the interop cache key.
+and part of the interop cache key.
 
 Construction owns the source and performs a depth-first checked traversal.
 Owned scalar payloads move out once; fixed-width and copy scalars copy. Each
@@ -604,7 +609,7 @@ existing `SIFR-RUST-RESOLVE-*` / `SIFR-RUST-TYPE-*` families. No dynamic type
 registry, `Any`, layout descriptor, symbol lookup, or runtime reflection is
 permitted.
 
-Typed callbacks reuse `CallScopedCallbackBridge`; bridge version 2 does not add
+Typed callbacks reuse `CallScopedCallbackBridge`; the structural contract does not add
 an erased callback. For the example above, the Rust target receives exactly
 `CallScopedCallbackBridge<'call, (T,), Result<T, CallbackErrorBridge>>`. The
 backend constructs the callback argument with
@@ -633,8 +638,8 @@ generated construction/projection, visitor calls, and callback invocation.
 backend defects without exposing payloads. Generated structural code contains
 no data-dependent `unwrap`, `expect`, or assertion.
 
-The interop build plan and cache identity include bridge version, structural
-identity algorithm version, every concrete `ShapeIdentity`, required construct
+The interop build plan and cache identity include the compiler release,
+structural identity algorithm version, every concrete `ShapeIdentity`, required construct
 / project / callback modes, generated implementation digest, backend target and
 source digests, callback identities, panic strategy, target triple, features,
 and lock state. Source and installed packages materialize identical managed

@@ -73,7 +73,7 @@ Phase 40 consumes these completed or canonical upstream contracts:
   the remaining Track A certifications subsequently resolved every current
   deferred row with passing evidence and completed the final stable-gate
   closeout. Track B remains dormant until an
-  external bridge-version 2 package-resource substrate exists and is not a
+  external structural Rust bridge package-resource substrate exists and is not a
   Phase 40 blocker while absent and unadvertised.
 
 Phase 40 does not infer Rust ecosystem support from prose. It may advertise

@@ -171,17 +171,30 @@
       "notes": "Bridge version 1 is accepted; unsupported bridge versions are rejected deterministically."
     },
     {
-      "id": "bridge_v2_structural_calls",
-      "fixture": "bridge_v2_structural_calls",
+      "id": "bridge_version_field_removal",
+      "fixture": "bridge_version_field_removal",
+      "category": "future-owned-by-separate-phase",
+      "tier": 0,
+      "capability": "unversioned Rust bridge manifest contract",
+      "execution_kind": "compiler-diagnostic",
+      "required_crates": [],
+      "positive_evidence": {"id": "unversioned_bridge_manifest_accepted", "status": "planned"},
+      "negative_evidence": {"id": "bridge_version_field_rejected", "status": "planned"},
+      "future_owner": "plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md",
+      "notes": "Future-owned by Native Pydantic-Sifr milestone_ps_2; the implementation removes the bridge-version manifest field and version-specific tooling, accepts only unversioned bridge manifests, and rejects the removed field without rewrite, compatibility mode, or fallback."
+    },
+    {
+      "id": "structural_bridge_calls",
+      "fixture": "structural_bridge_calls",
       "category": "future-owned-by-separate-phase",
       "tier": 2,
-      "capability": "bridge-version 2 monomorphized structural calls",
+      "capability": "monomorphized structural Rust bridge calls",
       "execution_kind": "runtime-observed",
       "required_crates": [],
       "positive_evidence": {"id": "nested_recursive_structural_roundtrip", "status": "planned"},
-      "negative_evidence": {"id": "shape_callback_lifetime_and_v1_rejected", "status": "planned"},
+      "negative_evidence": {"id": "shape_callback_and_lifetime_mismatches_rejected", "status": "planned"},
       "future_owner": "plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md",
-      "notes": "Future-owned by Native Pydantic-Sifr milestone_ps_2; bridge version 2 remains rejected until nested recursive construction/projection/callback runtime evidence and deliberate shape, callback, lifetime, and removed version-1 rejection evidence pass together."
+      "notes": "Future-owned by Native Pydantic-Sifr milestone_ps_2; structural calls remain unavailable until nested recursive construction/projection/callback runtime evidence and deliberate shape, callback, and lifetime rejection evidence pass together."
     },
     {
       "id": "panic_boundary",

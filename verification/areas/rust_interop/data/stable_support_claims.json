@@ -4,7 +4,7 @@
   "source_compatibility_matrix": "verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json",
   "public_document": "docs/rust-interop.mdx",
   "runtime_deferrals": [
-    "bridge_v2_structural_calls"
+    "structural_bridge_calls"
   ],
   "claims": [
     {

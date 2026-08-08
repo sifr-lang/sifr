@@ -1,4 +1,4 @@
-# fixture: bridge_v2_structural_calls
+# fixture: structural_bridge_calls
 # evidence: positive/nested_recursive_structural_roundtrip
 # evidence-status: planned
 # execution-kind: runtime-observed
@@ -6,7 +6,7 @@
 # future-owner: plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md
 
 # milestone_ps_2 replaces this planned marker with an executable generated
-# package round-trip only after bridge version 2 is implemented.
+# package round-trip only after the structural bridge contract is implemented.
 
 class PlannedNestedValue:
     value: uint32

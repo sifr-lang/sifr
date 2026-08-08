@@ -212,11 +212,12 @@ and the compatibility matrix.
     and description, while embedding and obeying accepted language-wide
     contracts such as Sifr's locked integer JSON profiles. Serde, Schemars, and
     another validator are not parallel authorities.
-11. Rust bridge version 2 replaces version 1 and adds one general,
-    trait-bounded structural call contract. The implementation migrates all
-    in-repository bridge packages and removes version-1 acceptance/emission;
-    there is no compatibility mode, rewrite, shim, or fallback. Version 2 does
-    not add Pydantic-specific bridge types or container exceptions.
+11. The structural Rust bridge contract replaces the current versioned schema
+    and adds one general, trait-bounded structural call contract. The
+    implementation removes the `[rust] bridge-version` manifest field and all
+    version-specific compiler/tooling paths; there is no compatibility mode,
+    rewrite, shim, or fallback. The structural contract does not add
+    Pydantic-specific bridge types or container exceptions.
 12. Native decoding returns a validated value arena. The JSON parse tree and
     normalized arena are expected; no third copied bridge-object tree exists.
 13. Compiler-generated structural traits materialize a validated source into
@@ -399,7 +400,7 @@ Rust bridge implementation. Their gated prerequisites are:
   precision, timezone-aware `time`, and immutable `frozenset[T]`,
 - a native-backed compiled `re.Pattern` that preserves source and flags after
   the opaque-resource substrate exists, and
-- the bridge-version 2 structural call contract and certified ecosystem-owned
+- the structural Rust bridge call contract and certified ecosystem-owned
   opaque-resource support described below.
 
 C-like enums remain simple constants. In accordance with the accepted Sifr
@@ -408,9 +409,9 @@ unions of records. Core Schema tagged unions specialize that existing type
 model; they do not require associated-data enums or create a second permanent
 sum representation.
 
-### Rust bridge version 2: structural calls
+### Structural Rust bridge calls
 
-The existing bridge-compatible value table remains closed. Bridge version 2
+The existing bridge-compatible value table remains closed. The structural contract
 does not make tuple, set, arbitrary mapping, union payload, or specialized
 scalar values directly cross the boundary as ad hoc bridge types.
 
@@ -432,7 +433,7 @@ StructuralProject
     expose(self: &Self) -> StructuralView
 ```
 
-The names above are conceptual; the accepted bridge-version 2 design fixes the
+The names above are conceptual; the accepted structural bridge design fixes the
 actual Rust/Sifr surface. The essential contract is:
 
 - a native backend may call a generic function bounded by these compiler-owned
@@ -474,7 +475,7 @@ from `T: StructuralProject` through the call-scoped view and remains the sole
 driver of alias, exclusion, representation, and writer policy. This avoids
 per-field Sifr/Rust bridge calls and avoids a second generic output tree.
 
-Bridge version 2 must specify:
+The structural bridge contract must specify:
 
 - trait and opaque-resource ownership,
 - generated implementation placement,
@@ -1983,7 +1984,7 @@ companion repository depends on them:
 | --- | --- |
 | `ps_1` | approved `ps_0` architecture and compatibility-inventory contract, plus released Phase 40 compiler/tooling foundations |
 | `ps_2` | released `ps_1` compiler/sysroot containing compile-time specialization, deterministic const evaluation, `ConstSpecializationOutcome`/`ConstPackageIssue`, registry-owned `SIFR-META-*` and `SIFR-INT-0009`, field required/default metadata, recursive nominal shape identity, structural shape inspection, lossless microsecond/timezone temporal value types, and `frozenset[T]` |
-| `ps_3` | released `ps_2` compiler/sysroot containing the merged bridge-version 2 structural call contract, the already-passing stdlib `opaque_resource_core`, plus completed certification item `certification_pkg_resource_core` with passing `opaque_resource_package_core`, `callbacks_call_scoped`, `panic_boundary_wrapper_emission`, typed construction/projection, callback adapters, and native-backed compiled `re.Pattern` |
+| `ps_3` | released `ps_2` compiler/sysroot containing the merged structural Rust bridge call contract, the already-passing stdlib `opaque_resource_core`, plus completed certification item `certification_pkg_resource_core` with passing `opaque_resource_package_core`, `callbacks_call_scoped`, `panic_boundary_wrapper_emission`, typed construction/projection, callback adapters, and native-backed compiled `re.Pattern` |
 | `ps_4` and later | released Sifr compiler/sysroot containing the certified `ps_1` through `ps_3` contracts |
 
 The certification work is tracked by
@@ -2059,7 +2060,7 @@ registry-owned `SIFR-INT-0009`.
 
 ### milestone_ps_2: Construction, Projection and Typed Callbacks
 
-- Specify and merge bridge version 2's monomorphized structural call contract
+- Specify and merge the monomorphized structural Rust bridge call contract
   into `internal_docs/rust_interop_architecture.md` before implementation.
 - Consume the already-passing stdlib `opaque_resource_core`. This milestone
   creates general package-resource support but no Pydantic resource; after its
@@ -2070,11 +2071,13 @@ registry-owned `SIFR-INT-0009`.
 - Block on the certification issue's passing `callbacks_call_scoped`, including
   callback-invocation panic mapping, and `panic_boundary_wrapper_emission`
   rows; this phase does not privately take their ownership.
-- Implement the accepted bridge version 2 contract.
-- Atomically migrate every in-repository bridge manifest, fixture, managed
-  projection, archive expectation, and generated-build assertion from bridge
-  version 1 to version 2, then remove version-1 acceptance and emission. Reject
-  remaining version-1 declarations without a compatibility path or fallback.
+- Implement the accepted structural Rust bridge contract.
+- Atomically remove `[rust] bridge-version` from the manifest schema, every
+  in-repository bridge manifest and fixture, managed projections, archive
+  expectations, cache records, diagnostics, and generated-build assertions.
+  Reject the removed field without a compatibility path, rewrite, or fallback.
+  Replace the current `bridge_version_mismatch` evidence with passing
+  `bridge_version_field_removal` evidence in the same implementation PR.
 - Implement safe structural `Construct[T]`.
 - Implement allocation-free structural projection/visitation.
 - Implement typed callback adapter generation.
@@ -2098,13 +2101,13 @@ untyped callbacks.
 - Implement deterministic static schema-program emission support.
 - Implement sealed arena/document opaque resources and compact node indices.
 - Add generic signature probes, installed/source parity, cleanup,
-  bridge-version, and cache-key contracts.
+  removed-version-field, and cache-key contracts.
 - Prove exact integer, bytes, collection and error crossings.
 - Update Rust interop architecture and verification.
 
-Exit gate: the merged and certified bridge-version 2 contract lets a synthetic
-schema executor return a validated arena, construct a typed Sifr value, and
-pull a structural view for output through one monomorphized call.
+Exit gate: the merged and certified structural Rust bridge contract lets a
+synthetic schema executor return a validated arena, construct a typed Sifr
+value, and pull a structural view for output through one monomorphized call.
 
 ### milestone_ps_4: Companion Repository and Core Foundation
 
@@ -2309,7 +2312,7 @@ without a Sifr compiler source checkout.
   `check`, build, editor analysis, and every specializing frontend mode by the
   same package const implementation; build-like modes embed the result.
 - There is no runtime schema compiler or alternate dynamic adapter path.
-- Bridge version 2 is a merged, certified general structural contract with a
+- The structural Rust bridge is a merged, certified general contract with a
   non-Pydantic conformance consumer.
 - Package const specialization can emit bounded issues whose package reason is
   mapped to registry-owned `SIFR-META-*` diagnostics with identical CLI/LSP
