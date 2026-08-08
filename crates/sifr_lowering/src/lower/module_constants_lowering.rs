@@ -94,11 +94,37 @@ fn lower_annotated_module_constant_expr(
     if let Some(folded_value) = folded_value {
         return Some(folded_value);
     }
+    let hir_value = canonicalize_non_finite_float_constant(hir_value);
     if is_supported_annotated_module_constant_expr(&hir_value) {
         Some(hir_value)
     } else {
         reject_unsupported_private_declaration_constant(ctx, var_name, value_expr);
         None
+    }
+}
+
+fn canonicalize_non_finite_float_constant(value: HirExpr) -> HirExpr {
+    match evaluate_float_division_constant(&value) {
+        Some(folded) if !folded.is_finite() => HirExpr::FloatLiteral(folded),
+        _ => value,
+    }
+}
+
+fn evaluate_float_division_constant(value: &HirExpr) -> Option<f64> {
+    match value {
+        HirExpr::FloatLiteral(value) => Some(*value),
+        HirExpr::UnaryOp { op, operand, .. } if op == "+" => {
+            evaluate_float_division_constant(operand)
+        }
+        HirExpr::UnaryOp { op, operand, .. } if op == "-" => {
+            Some(-evaluate_float_division_constant(operand)?)
+        }
+        HirExpr::BinOp {
+            left, op, right, ..
+        } if op == "/" => {
+            Some(evaluate_float_division_constant(left)? / evaluate_float_division_constant(right)?)
+        }
+        _ => None,
     }
 }
 
@@ -277,13 +303,22 @@ mod tests {
     #[test]
     fn private_declarations_collect_annotated_scalar_module_constants() {
         let constants = lower_private_declaration_constants(
-            "pi: float = 3.141592653589793\ninf: float = 1.0 / 0.0\nflag: bool = True\n",
+            "pi: float = 3.141592653589793\ninf: float = 1.0 / 0.0\nnan: float = 0.0 / 0.0\nneg_inf: float = -1.0 / 0.0\nfinite: float = 1.0 / 2.0\nflag: bool = True\n",
         );
 
         assert!(constants.iter().any(|(name, ty, value)| name == "pi"
             && ty == &Type::Float
             && matches!(value, HirExpr::FloatLiteral(_))));
         assert!(constants.iter().any(|(name, ty, value)| name == "inf"
+            && ty == &Type::Float
+            && matches!(value, HirExpr::FloatLiteral(value) if value.is_infinite() && value.is_sign_positive())));
+        assert!(constants.iter().any(|(name, ty, value)| name == "nan"
+            && ty == &Type::Float
+            && matches!(value, HirExpr::FloatLiteral(value) if value.is_nan())));
+        assert!(constants.iter().any(|(name, ty, value)| name == "neg_inf"
+            && ty == &Type::Float
+            && matches!(value, HirExpr::FloatLiteral(value) if value.is_infinite() && value.is_sign_negative())));
+        assert!(constants.iter().any(|(name, ty, value)| name == "finite"
             && ty == &Type::Float
             && matches!(value, HirExpr::BinOp { .. })));
         assert!(constants.iter().any(|(name, ty, value)| name == "flag"
