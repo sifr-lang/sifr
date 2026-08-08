@@ -18,14 +18,6 @@ MAX_CALIBRATION_CV = 0.12
 DEFAULT_QUIET_SNAPSHOTS = 3
 DEFAULT_QUIET_INTERVAL_SECONDS = 1.0
 MONITOR_INTERVAL_SECONDS = 5.0
-COMPETING_COMMAND_MARKERS = (
-    "cargo ",
-    "rustc ",
-    "run_benchmarks.py",
-    "sifr_verify",
-    "git index-pack",
-    "git clone",
-)
 
 
 class HostControlError(Exception):
@@ -74,8 +66,13 @@ def evaluate_snapshot(snapshot: dict[str, Any], *, enforce_load: bool) -> list[s
     if isinstance(calibration_cv, int | float) and calibration_cv > MAX_CALIBRATION_CV:
         reasons.append("unstable-frequency-proxy")
     if enforce_load:
-        normalized_load = snapshot.get("load_average", {}).get("one_minute_per_logical_cpu")
-        if isinstance(normalized_load, int | float) and normalized_load > MAX_NORMALIZED_LOAD:
+        normalized_load = snapshot.get("load_average", {}).get(
+            "one_minute_per_logical_cpu"
+        )
+        if (
+            isinstance(normalized_load, int | float)
+            and normalized_load > MAX_NORMALIZED_LOAD
+        ):
             reasons.append("host-load")
     return sorted(set(reasons))
 
@@ -106,13 +103,18 @@ def wait_for_controlled_host(
                     "policy": controlled_policy(),
                     "accepted_snapshots": consecutive,
                     "observation_count": len(observations),
-                    "rejected_observation_count": sum(1 for item in observations if item["rejection_reasons"]),
-                    "recent_rejected_observations": [item for item in observations if item["rejection_reasons"]][-10:],
+                    "rejected_observation_count": sum(
+                        1 for item in observations if item["rejection_reasons"]
+                    ),
+                    "recent_rejected_observations": [
+                        item for item in observations if item["rejection_reasons"]
+                    ][-10:],
                 }
         if time.monotonic() >= deadline:
             last_reasons = reasons or ["quiet-window-not-established"]
             raise HostControlError(
-                "controlled host admission timed out after " f"{timeout_seconds:.0f}s: {', '.join(last_reasons)}"
+                "controlled host admission timed out after "
+                f"{timeout_seconds:.0f}s: {', '.join(last_reasons)}"
             )
         sleep_fn(interval_seconds)
 
@@ -140,7 +142,9 @@ class HostActivityMonitor:
 
     def __enter__(self) -> HostActivityMonitor:
         self.snapshots.append(capture_host_snapshot(include_calibration=True))
-        self._thread = threading.Thread(target=self._run, name="sifr-performance-host-monitor", daemon=True)
+        self._thread = threading.Thread(
+            target=self._run, name="sifr-performance-host-monitor", daemon=True
+        )
         self._thread.start()
         return self
 
@@ -161,14 +165,21 @@ class HostActivityMonitor:
         return sorted(reasons)
 
 
-def cache_state(repo_root: Path, cargo_debug_dir: Path, helper_names: list[str]) -> dict[str, Any]:
+def cache_state(
+    repo_root: Path, cargo_debug_dir: Path, helper_names: list[str]
+) -> dict[str, Any]:
     artifact_root = Path(tempfile.gettempdir()) / "sifr_generated_artifact_cache"
     artifact_entries = 0
     if artifact_root.is_dir():
         for namespace in artifact_root.iterdir():
             if namespace.is_dir():
-                artifact_entries += sum(1 for entry in namespace.iterdir() if entry.is_dir())
-    helpers = {name: cargo_debug_dir.joinpath(executable_name(name)).is_file() for name in helper_names}
+                artifact_entries += sum(
+                    1 for entry in namespace.iterdir() if entry.is_dir()
+                )
+    helpers = {
+        name: cargo_debug_dir.joinpath(executable_name(name)).is_file()
+        for name in helper_names
+    }
     return {
         "cargo_debug_dir": str(cargo_debug_dir),
         "helper_binaries": helpers,
@@ -194,7 +205,9 @@ def cpu_frequency_state(*, include_calibration: bool) -> dict[str, Any]:
 
 def direct_cpu_frequencies_khz() -> list[int]:
     values: list[int] = []
-    for path in sorted(Path("/sys/devices/system/cpu").glob("cpu*/cpufreq/scaling_cur_freq")):
+    for path in sorted(
+        Path("/sys/devices/system/cpu").glob("cpu*/cpufreq/scaling_cur_freq")
+    ):
         try:
             value = int(path.read_text(encoding="utf-8").strip())
         except (OSError, ValueError):
@@ -247,7 +260,9 @@ def thermal_state() -> dict[str, Any]:
         except (OSError, ValueError):
             continue
     return {
-        "status": "pressured" if temperatures and max(temperatures) >= 90.0 else "nominal",
+        "status": "pressured"
+        if temperatures and max(temperatures) >= 90.0
+        else "nominal",
         "source": "sysfs-thermal" if temperatures else "unavailable",
         "max_celsius": round(max(temperatures), 1) if temperatures else None,
     }
@@ -258,7 +273,9 @@ def power_state() -> dict[str, Any]:
         return {"source": "not-applicable", "required": False}
     output = command_output(["pmset", "-g", "batt"])
     return {
-        "source": "ac" if "AC Power" in output or "AC attached" in output else "battery",
+        "source": "ac"
+        if "AC Power" in output or "AC attached" in output
+        else "battery",
         "required": True,
     }
 
@@ -296,14 +313,37 @@ def competing_processes() -> list[dict[str, Any]]:
     for pid, _parent, command, args in rows:
         if pid in excluded:
             continue
-        haystack = f"{command} {args}".lower()
-        category = next((marker.strip() for marker in COMPETING_COMMAND_MARKERS if marker in haystack), None)
+        category = process_category(command, args)
         if category is not None:
             competitors.append({"pid": pid, "category": category})
     return competitors
 
 
-def related_process_ids(rows: list[tuple[int, int, str, str]], current_pid: int) -> set[int]:
+def process_category(command: str, args: str) -> str | None:
+    executable = Path(command).name.lower()
+    argument_tokens = args.lower().split()
+    if executable in {"cargo", "rustc"}:
+        return executable
+    if executable in {"sifr", "frontend_query_bench"}:
+        return "benchmark"
+    if executable in {"git", "git-index-pack"}:
+        if executable == "git-index-pack" or any(
+            token in {"clone", "fetch", "index-pack", "submodule"}
+            for token in argument_tokens[1:3]
+        ):
+            return "git"
+    if executable.startswith("python"):
+        script_names = {Path(token).name for token in argument_tokens}
+        if "run_benchmarks.py" in script_names or "lsp_query_bench.py" in script_names:
+            return "benchmark"
+        if "-m" in argument_tokens and "sifr_verify" in argument_tokens:
+            return "sifr_verify"
+    return None
+
+
+def related_process_ids(
+    rows: list[tuple[int, int, str, str]], current_pid: int
+) -> set[int]:
     parents = {pid: parent for pid, parent, _command, _args in rows}
     children: dict[int, list[int]] = {}
     for pid, parent, _command, _args in rows:
@@ -325,7 +365,9 @@ def related_process_ids(rows: list[tuple[int, int, str, str]], current_pid: int)
 
 def command_output(argv: list[str]) -> str:
     try:
-        completed = subprocess.run(argv, text=True, capture_output=True, timeout=5, check=False)
+        completed = subprocess.run(
+            argv, text=True, capture_output=True, timeout=5, check=False
+        )
     except (OSError, subprocess.TimeoutExpired):
         return ""
     return (completed.stdout or completed.stderr).strip()
@@ -356,6 +398,25 @@ def run_self_test() -> None:
         sleep_fn=lambda _seconds: None,
     )
     if admission["status"] != "controlled" or admission["observation_count"] != 4:
-        raise HostControlError("host control self-test did not require a complete quiet window")
+        raise HostControlError(
+            "host control self-test did not require a complete quiet window"
+        )
     if coefficient_variation([10.0, 10.0, 10.0]) != 0.0:
         raise HostControlError("host control calibration CV self-test failed")
+    if (
+        process_category("/bin/zsh", "/bin/zsh -c rg cargo run_benchmarks.py")
+        is not None
+    ):
+        raise HostControlError(
+            "host control self-test classified argument text as an executable"
+        )
+    if process_category("/usr/bin/cargo", "cargo test") != "cargo":
+        raise HostControlError("host control self-test missed a Cargo process")
+    if (
+        process_category(
+            "/usr/bin/python3",
+            "python3 verification/areas/performance/run_benchmarks.py",
+        )
+        != "benchmark"
+    ):
+        raise HostControlError("host control self-test missed the benchmark producer")

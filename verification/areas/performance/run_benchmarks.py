@@ -27,8 +27,11 @@ from benchmark_manifest import (
     validate_manifest,
 )
 from benchmark_baseline import baseline_from_run, validate_baseline_capture
+from controlled_sampling import (
+    run_controlled_case,
+    run_self_test as run_controlled_sampling_self_test,
+)
 from host_control import (
-    HostActivityMonitor,
     HostControlError,
     cache_state,
     capture_host_snapshot,
@@ -267,6 +270,8 @@ def run_cases(
                 run_root,
                 sample_scale,
                 require_controlled_host=require_controlled_host,
+                run_case_fn=run_case,
+                repo_root=REPO_ROOT,
             )
         except Exception:
             status = "fail"
@@ -291,49 +296,6 @@ def run_cases(
         },
         "results": results,
     }
-
-
-def run_controlled_case(
-    case: BenchmarkCase,
-    run_root: Path,
-    sample_scale: str,
-    *,
-    require_controlled_host: bool,
-) -> dict[str, Any]:
-    attempts: list[dict[str, Any]] = []
-    for attempt_index in range(1, 4):
-        with HostActivityMonitor() as monitor:
-            result = run_case(case, run_root, sample_scale)
-        rejection_reasons = (
-            monitor.rejection_reasons() if require_controlled_host else []
-        )
-        coefficient_variation = float(result["metrics"]["coefficient_variation"])
-        if coefficient_variation > case.stability_limit:
-            rejection_reasons.append("unstable-samples")
-        rejection_reasons = sorted(set(rejection_reasons))
-        attempts.append(
-            {
-                "attempt": attempt_index,
-                "coefficient_variation": coefficient_variation,
-                "stability_limit": case.stability_limit,
-                "host_snapshots": monitor.snapshots,
-                "rejection_reasons": rejection_reasons,
-            }
-        )
-        if not rejection_reasons:
-            result["control"] = {
-                "status": "controlled" if require_controlled_host else "record-only",
-                "accepted_attempt": attempt_index,
-                "attempts": attempts,
-            }
-            return result
-    reasons = sorted(
-        {reason for attempt in attempts for reason in attempt["rejection_reasons"]}
-    )
-    raise BenchmarkError(
-        f"benchmark {case.id} did not produce a stable controlled sample after 3 attempts: "
-        f"{', '.join(reasons)}"
-    )
 
 
 def run_case(case: BenchmarkCase, run_root: Path, sample_scale: str) -> dict[str, Any]:
@@ -753,6 +715,7 @@ def run_self_test() -> None:
             raise BenchmarkError(
                 "benchmark output invalidation self-test retained stale evidence"
             )
+        run_controlled_sampling_self_test(Path(raw))
     assert_fails(
         lambda: validate_manifest(
             load_manifest(NEGATIVE_ROOT / "malformed_manifest.json")
