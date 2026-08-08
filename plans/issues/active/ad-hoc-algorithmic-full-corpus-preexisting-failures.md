@@ -303,10 +303,10 @@ out-of-range `list.insert` can panic at runtime. Each class reproduces on the
 pre-Wave-5 base through ordinary concrete collection paths. They remain
 separately tracked compiler/runtime concerns and are not used to weaken this
 issue's native closeout gate.
-The missing-key wrong-result behavior is preserved in a separate correctness
-issue,
-[`ad-hoc-dict-missing-key-augassign-semantics.md`](./ad-hoc-dict-missing-key-augassign-semantics.md),
-rather than worked around here.
+The missing-key wrong-result behavior was corrected and closed in the separate
+[`ad-hoc-dict-missing-key-augassign-semantics.md`](../archive/ad-hoc-dict-missing-key-augassign-semantics.md)
+issue via [PR #3108](https://github.com/sifr-lang/sifr/pull/3108), rather than
+worked around here.
 
 ## Scope
 
