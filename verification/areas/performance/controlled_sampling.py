@@ -18,11 +18,19 @@ def run_controlled_case(
     *,
     require_controlled_host: bool,
     run_case_fn: Callable[[BenchmarkCase, Path, str], dict[str, Any]],
+    retry_admission_fn: Callable[[], dict[str, Any]] | None,
     monitor_factory: Callable[[], Any] = HostActivityMonitor,
     repo_root: Path | None = None,
 ) -> dict[str, Any]:
     attempts: list[dict[str, Any]] = []
     for attempt_index in range(1, 4):
+        retry_admission = None
+        if attempt_index > 1 and require_controlled_host:
+            if retry_admission_fn is None:
+                raise BenchmarkError(
+                    "controlled sampling retry requires host re-admission"
+                )
+            retry_admission = retry_admission_fn()
         attempt_root = run_root / "attempts" / str(attempt_index)
         with monitor_factory() as monitor:
             result = run_case_fn(case, attempt_root, sample_scale)
@@ -33,15 +41,16 @@ def run_controlled_case(
         if coefficient_variation > case.stability_limit:
             rejection_reasons.append("unstable-samples")
         rejection_reasons = sorted(set(rejection_reasons))
-        attempts.append(
-            {
-                "attempt": attempt_index,
-                "coefficient_variation": coefficient_variation,
-                "stability_limit": case.stability_limit,
-                "host_snapshots": monitor.snapshots,
-                "rejection_reasons": rejection_reasons,
-            }
-        )
+        attempt_evidence = {
+            "attempt": attempt_index,
+            "coefficient_variation": coefficient_variation,
+            "stability_limit": case.stability_limit,
+            "host_snapshots": monitor.snapshots,
+            "rejection_reasons": rejection_reasons,
+        }
+        if retry_admission is not None:
+            attempt_evidence["retry_admission"] = retry_admission
+        attempts.append(attempt_evidence)
         if not rejection_reasons:
             result["control"] = {
                 "status": "controlled" if require_controlled_host else "record-only",
@@ -90,17 +99,33 @@ def run_self_test(output_root: Path) -> None:
         def rejection_reasons(self) -> list[str]:
             return []
 
+    retry_admissions: list[dict[str, Any]] = []
+
+    def fake_retry_admission() -> dict[str, Any]:
+        admission = {"status": "controlled", "self_test": True}
+        retry_admissions.append(admission)
+        return admission
+
     accepted = run_controlled_case(
         case,
         output_root,
         "manifest",
         require_controlled_host=True,
         run_case_fn=fake_run,
+        retry_admission_fn=fake_retry_admission,
         monitor_factory=FakeMonitor,
     )
     if accepted["control"]["accepted_attempt"] != 2:
         raise BenchmarkError(
             "controlled retry self-test did not accept the stable retry"
+        )
+    if retry_admissions != [{"status": "controlled", "self_test": True}]:
+        raise BenchmarkError(
+            "controlled retry self-test did not reacquire the host exactly once"
+        )
+    if accepted["control"]["attempts"][1].get("retry_admission") != retry_admissions[0]:
+        raise BenchmarkError(
+            "controlled retry self-test did not record retry admission evidence"
         )
 
     def unstable_run(_case: BenchmarkCase, _root: Path, _scale: str) -> dict[str, Any]:
@@ -113,10 +138,15 @@ def run_self_test(output_root: Path) -> None:
             "manifest",
             require_controlled_host=True,
             run_case_fn=unstable_run,
+            retry_admission_fn=fake_retry_admission,
             monitor_factory=FakeMonitor,
         ),
         "after 3 attempts",
     )
+    if len(retry_admissions) != 3:
+        raise BenchmarkError(
+            "controlled retry exhaustion did not reacquire before both retries"
+        )
     if not output_root.joinpath("control-failures", f"{case.id}.json").is_file():
         raise BenchmarkError(
             "controlled retry self-test did not persist failure evidence"

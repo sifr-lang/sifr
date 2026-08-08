@@ -276,6 +276,11 @@ def run_cases(
                 sample_scale,
                 require_controlled_host=require_controlled_host,
                 run_case_fn=run_case,
+                retry_admission_fn=(
+                    (lambda: wait_for_controlled_host(controlled_host_timeout_seconds))
+                    if require_controlled_host
+                    else None
+                ),
                 repo_root=REPO_ROOT,
             )
         except Exception:

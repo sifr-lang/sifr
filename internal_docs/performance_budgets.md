@@ -54,7 +54,10 @@ benchmark, or Git indexing process, normalized one-minute load at or below
 load, power, thermal state, direct CPU frequencies when the host exposes them,
 the unprivileged throughput proxy otherwise, memory-pressure counters, and the
 compiler/generated-artifact cache state. Per-case monitoring records pressure
-that appears after admission.
+that appears after admission. On hosts without direct frequency telemetry, the
+throughput calibration runs only during admission because running it inside a
+measured case would contaminate the samples; the case coefficient of variation
+rejects frequency-driven in-window instability.
 Competing-work classification uses the actual executable or Python module/script
 identity, not arbitrary shell argument text that merely mentions Cargo or a
 benchmark. If all three attempts are rejected, their snapshots and reasons are
@@ -63,10 +66,12 @@ exits.
 
 Each case must produce samples whose coefficient of variation is within its
 manifest `stability_limit` (default `0.10`). An unstable or host-contaminated
-case is discarded and retried up to two times; exhausting the three controlled
-attempts fails the producer as host instability. Stable samples are compared
-to the unchanged governed budgets, so a uniform seeded slowdown still fails.
-The budget checker treats sample instability as non-waiverable.
+case is discarded and retried up to two times. Before each retry, the producer
+must reacquire the same complete controlled-host admission window; it does not
+spend another attempt inside known continuing contention. Exhausting the three
+controlled attempts fails the producer as host instability. Stable samples are
+compared to the unchanged governed budgets, so a uniform seeded slowdown still
+fails. The budget checker treats sample instability as non-waiverable.
 
 The profile adapter invalidates the fixed `*.budget.latest.json` path before
 production and binds producer and checker with a unique invocation id. If the
