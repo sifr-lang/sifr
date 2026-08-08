@@ -9,6 +9,7 @@ REQUIRED_FIXTURES = {
     "async_runtime_reqwest",
     "blocking_diagnostics",
     "bridge_type_matrix",
+    "bridge_v2_structural_calls",
     "bridge_version_mismatch",
     "callback_subscription_core",
     "callback_subscription_ecosystem",

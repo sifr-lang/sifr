@@ -28,6 +28,7 @@ fixtures = [
   "opaque_resource_core",
   "opaque_resource_matrix",
   "close_after_use",
+  "bridge_v2_structural_calls",
   "panic_boundary",
   "panic_boundary_wrapper_emission",
   "panic_abort_profile",

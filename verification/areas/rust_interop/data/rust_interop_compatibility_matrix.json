@@ -171,6 +171,19 @@
       "notes": "Bridge version 1 is accepted; unsupported bridge versions are rejected deterministically."
     },
     {
+      "id": "bridge_v2_structural_calls",
+      "fixture": "bridge_v2_structural_calls",
+      "category": "future-owned-by-separate-phase",
+      "tier": 2,
+      "capability": "bridge-version 2 monomorphized structural calls",
+      "execution_kind": "runtime-observed",
+      "required_crates": [],
+      "positive_evidence": {"id": "nested_recursive_structural_roundtrip", "status": "planned"},
+      "negative_evidence": {"id": "shape_callback_and_lifetime_mismatches_rejected", "status": "planned"},
+      "future_owner": "plans/issues/active/ad-hoc-native-pydantic-sifr-architecture.md",
+      "notes": "Future-owned by Native Pydantic-Sifr milestone_ps_2; bridge version 2 remains rejected until nested recursive construction/projection/callback runtime evidence and deliberate shape, callback, and lifetime rejection evidence pass together."
+    },
+    {
       "id": "panic_boundary",
       "fixture": "panic_boundary",
       "category": "supported",
