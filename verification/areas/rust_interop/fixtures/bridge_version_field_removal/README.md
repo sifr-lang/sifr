@@ -5,8 +5,8 @@ versioned Rust bridge manifest schema.
 
 The implementation wave replaces the current `bridge_version_mismatch` row:
 
-- an unversioned `[rust]` manifest is accepted and participates in normal
-  generated bridge checking; and
+- an unversioned `[rust]` manifest is accepted by the normal compiler manifest
+  diagnostic path; and
 - any `bridge-version` field is rejected as removed, with no rewrite,
   compatibility mode, versioned glue, or fallback.
 

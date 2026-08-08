@@ -434,7 +434,7 @@ StructuralConstruct
     construct[S: StructuralSource](source: own S) -> Result[Self, ContractError]
 
 StructuralProject
-    expose(self: &Self) -> StructuralView
+    project(self: &Self, visitor: StructuralVisitor) -> Result[None, VisitorError]
 ```
 
 The names above are conceptual; the accepted structural bridge design fixes the
@@ -450,7 +450,8 @@ actual Rust/Sifr surface. The essential contract is:
 - the backend crate never imports `crate::__sifr_bridge` types,
 - construction consumes a sealed `StructuralSource` carrying a declared
   structural-shape identity,
-- projection borrows the current typed value and exposes a call-scoped view,
+- projection borrows the current typed value and emits a call-scoped visitor
+  event stream,
   and
 - the existing bridge rejects all unsupported ordinary direct crossings as
   before.
@@ -2079,12 +2080,21 @@ registry-owned `SIFR-INT-0009`.
 - Atomically remove `[rust] bridge-version` from the manifest schema, every
   in-repository bridge manifest and fixture, managed projections, archive
   expectations, cache records, diagnostics, and generated-build assertions.
+  Remove the Rust-interop fixture matrix's top-level `bridge_version` marker,
+  the `check_fixture_matrix.py` and `_scenario_checks.py` assertions that
+  require it, and `runner/bridge_check.py`'s version parameter/default. Delete
+  the `bridge-version = 1` architecture subsection and rewrite all remaining
+  version-keyed architecture prose in that same wave.
   Reject the removed field without a compatibility path, rewrite, or fallback.
   Replace the current `bridge_version_mismatch` evidence with passing
   `bridge_version_field_removal` evidence in the same implementation PR.
 - Promote `structural_bridge_calls` from future-owned to supported-through-bridge
   only when both directions pass; remove it from the stable-support runtime
   deferrals and update the public stable-claims documentation atomically.
+- Add the compiler-owned `sifr.meta.Structural` marker, recognize
+  `@rust.structural` as the sole bare Rust marker, and diagnose marker arguments,
+  missing targets, duplicate markers, and invalid generic placement through
+  `SIFR-RUST-CONFIG-0001` / `SIFR-RUST-TYPE-*` with targeted tests.
 - Implement safe structural `Construct[T]`.
 - Implement allocation-free structural projection/visitation.
 - Implement typed callback adapter generation.
@@ -2107,8 +2117,8 @@ untyped callbacks.
 
 - Implement deterministic static schema-program emission support.
 - Implement sealed arena/document opaque resources and compact node indices.
-- Add generic signature probes, installed/source parity, cleanup,
-  removed-version-field, and cache-key contracts.
+- Add generic signature probes, installed/source parity, cleanup, and cache-key
+  contracts while consuming the already-passing unversioned-manifest contract.
 - Prove exact integer, bytes, collection and error crossings.
 - Update Rust interop architecture and verification.
 

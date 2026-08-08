@@ -9,10 +9,7 @@
 # milestone_ps_2 replaces this planned marker with deliberate compiler and
 # Cargo-probe rejection evidence after the structural bridge is implemented.
 
-from typing import TypeVar
 from sifr.meta import Structural
-
-T = TypeVar("T", bound=Structural)
 
 class PlannedMismatchValue:
     value: uint32
@@ -24,7 +21,7 @@ class PlannedStructuralError(Error):
 
 @rust.structural
 @rust(bridge.structural.reject_mismatch)
-def planned_structural_mismatch(value: T) -> Result[T, PlannedStructuralError | RustPanicError]: ...
+def planned_structural_mismatch[T: Structural](value: T) -> Result[T, PlannedStructuralError | RustPanicError]: ...
 
 def verify_shape_callback_and_lifetime_mismatches_rejected() -> Result[PlannedMismatchValue, PlannedStructuralError | RustPanicError]:
     result: Result[PlannedMismatchValue, PlannedStructuralError | RustPanicError] = planned_structural_mismatch(PlannedMismatchValue(0))

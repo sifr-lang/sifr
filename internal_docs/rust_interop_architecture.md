@@ -363,11 +363,17 @@ Once that row passes, the structural contract replaces the current versioned
 bridge schema. The implementation wave atomically removes `[rust]
 bridge-version` from the manifest schema, every in-repository package and
 fixture, managed projections, archive expectations, cache records, diagnostics,
-and generated-build assertions. A package that still declares
-`bridge-version` is rejected as an unknown removed field; Sifr does not rewrite
-it, select versioned glue, or provide a compatibility mode or fallback. The
-compiler release and managed-projection/source digests identify the one current
-bridge contract instead.
+and generated-build assertions. That inventory explicitly includes the
+top-level `bridge_version` marker in
+`verification/areas/rust_interop/data/rust_interop_fixture_matrix.json`, its
+`check_fixture_matrix.py` assertion, `_scenario_checks.py`'s manifest-field
+assertion, and `runner/bridge_check.py`'s version parameter/default. The same
+wave deletes this document's `bridge-version = 1` subsection above and rewrites
+every remaining version-keyed architecture statement. A package that still
+declares `bridge-version` is rejected as an unknown removed field; Sifr does
+not rewrite it, select versioned glue, or provide a compatibility mode or
+fallback. The compiler release and managed-projection/source digests identify
+the one current bridge contract instead.
 
 The structural contract retains the closed ordinary direct-value table as
 current language semantics and adds one general structural-call lane for
@@ -416,8 +422,8 @@ The marker makes the type variable legal only in these positions:
 
 - an owned return, which requires `StructuralConstruct`;
 - an immutable borrowed parameter, which requires `StructuralProject`; and
-- the input or output of a top-level call-scoped callback, which requires the
-  corresponding construction or projection capability.
+- the input of a top-level call-scoped callback, which requires
+  `StructuralConstruct`, or its output, which requires `StructuralProject`.
 
 An owned direct `T` parameter, a mutable `T` borrow, nested callback container,
 async declaration, method receiver, retained/thread-safe callback, opaque-class
@@ -479,8 +485,11 @@ pub fn structural_construct<T: StructuralConstruct, S: StructuralSource>(
     source: S,
 ) -> Result<T, StructuralContractError>;
 
-pub trait StructuralConstruct: Sized {
+pub trait StructuralType {
     fn shape_identity() -> ShapeIdentity;
+}
+
+pub trait StructuralConstruct: StructuralType + Sized {
 
     #[doc(hidden)]
     fn structural_construct_at<S: StructuralSource>(
@@ -502,9 +511,7 @@ pub trait StructuralVisitor<'value> {
     fn exit(&mut self, kind: StructuralKind) -> Result<(), Self::Error>;
 }
 
-pub trait StructuralProject {
-    fn shape_identity() -> ShapeIdentity;
-
+pub trait StructuralProject: StructuralType {
     fn structural_project<'value, V: StructuralVisitor<'value>>(
         &'value self,
         visitor: &mut V,
@@ -513,8 +520,9 @@ pub trait StructuralProject {
 ```
 
 `structural_construct` is the sole public construction entry. It compares
-`source.shape_identity()` with `T::shape_identity()` before reading or moving
-the root, then creates the private-constructor `ConstructToken` and delegates to
+`source.shape_identity()` with `<T as StructuralType>::shape_identity()` before
+reading or moving the root, then creates the private-constructor
+`ConstructToken` and delegates to
 `T::structural_construct_at(&mut source, root, token)`, where `root` was read
 before the mutable borrow. Recursive implementations pass that token while
 selecting child `NodeId` values.
@@ -548,7 +556,8 @@ sealed behind an opaque resource declared by that package. Sifr code cannot
 name a node, forge a source, call `take_scalar`, or construct a structural value
 from field parts. A source reports one root and one compiler-provided shape
 identity. `structural_construct` compares that identity with
-`T::shape_identity()` before reading or moving the root node. A mismatch, invalid node
+`<T as StructuralType>::shape_identity()` before reading or moving the root
+node. A mismatch, invalid node
 reference, wrong node kind, duplicate move, missing/extra field, or invalid
 active variant is a `StructuralContractError`, not a user validation error.
 Backend packages map that internal error to their declared stable outer error
@@ -560,8 +569,9 @@ binary-container, tuple, union, and nominal-record composition functions;
 `sifr_runtime::interop::structural` re-exports its `ShapeIdentity` and checked
 combinators. The compiler and runtime call that same leaf implementation rather
 than mirroring the algorithm. Runtime-owned generic implementations such as
-`list[T]` compute their identity by composing `T::shape_identity()` with the
-runtime-owned list tag. Generated nominal implementations return the
+`list[T]` compute their identity by composing
+`<T as StructuralType>::shape_identity()` with the runtime-owned list tag.
+Generated nominal implementations return the
 compiler-precomputed result produced by the same crate.
 
 The canonical input includes exact nominal and package identity, concrete type
@@ -592,6 +602,11 @@ and immediately emits the matching `exit`. If `enter`, `edge`, `scalar`, or a
 child returns an error, traversal stops and emits no synthetic exits after the
 error. Thus every successful or skipped aggregate stream is balanced, and the
 consumer can reconstruct its stack without node identities in `exit`.
+The `None` type is a scalar leaf with a `None` scalar variant. An absent
+`Optional[T]` is an `Optional` aggregate with zero children (`enter`, then
+`exit`); a present value has one active-member edge followed by the child
+stream. This distinction preserves the declared optional shape without
+inventing a child for absence.
 
 Generated implementations emit declaration-order record fields and stable
 member indices, borrow scalar payloads, and stream collection entries without

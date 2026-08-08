@@ -8,10 +8,7 @@
 # milestone_ps_2 replaces this planned marker with an executable generated
 # package round-trip only after the structural bridge contract is implemented.
 
-from typing import TypeVar
 from sifr.meta import Structural
-
-T = TypeVar("T", bound=Structural)
 
 class PlannedNestedValue:
     value: uint32
@@ -24,7 +21,7 @@ class PlannedStructuralError(Error):
 
 @rust.structural
 @rust(bridge.structural.roundtrip)
-def planned_structural_roundtrip(value: T) -> Result[T, PlannedStructuralError | RustPanicError]: ...
+def planned_structural_roundtrip[T: Structural](value: T) -> Result[T, PlannedStructuralError | RustPanicError]: ...
 
 def verify_nested_recursive_structural_roundtrip() -> Result[PlannedNestedValue, PlannedStructuralError | RustPanicError]:
     result: Result[PlannedNestedValue, PlannedStructuralError | RustPanicError] = planned_structural_roundtrip(PlannedNestedValue(0, None))
