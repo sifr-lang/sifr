@@ -1,16 +1,13 @@
 [workspace]
-members = [
-  "rust/version_bridge",
-]
 resolver = "2"
 
 [package]
-name = "bridge-version-package"
+name = "structural-bridge-runtime"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-version_bridge = { path = "rust/version_bridge" }
+sifr_runtime = { path = "../../../../../../../crates/sifr_runtime" }
 
 [package.metadata.sifr]
 manifest = "sifr.toml"

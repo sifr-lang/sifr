@@ -1,0 +1,14 @@
+# fixture: structural_bridge_calls
+# scenario-example: structural_bridge_runtime
+
+[package]
+name = "structural-bridge-runtime"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[source]
+root = "src"
+
+[rust]
+bridges = ["src/bridges"]
+direct-crate-bindings = true

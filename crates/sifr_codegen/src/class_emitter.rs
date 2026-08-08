@@ -4,7 +4,7 @@ use crate::{
     RustParam, RustStmt, RustType, RustTypeParam, Visibility,
 };
 use sifr_ir::{HirClass, HirFunction, HirModule, RustInteropDecoratorKind, RustInteropValue};
-use sifr_type_system::{source_class_rust_name, Type};
+use sifr_type_system::{class_rust_name, source_class_rust_name, Type};
 
 impl RustEmitter {
     fn process_child_drop_impl() -> RustItem {
@@ -574,7 +574,7 @@ impl RustEmitter {
                 // source-spellable name in the user's flat Rust namespace.
                 return;
             }
-            let class_name = source_class_rust_name(&class.name);
+            let class_name = class_rust_name(class.identity.as_deref(), &class.name);
             self.body_items.push(RustItem::TypeAlias {
                 name: class_name.clone(),
                 ty: RustType::Named(format!(
@@ -632,6 +632,7 @@ impl RustEmitter {
         });
         self.body_items
             .extend(Self::class_parent_deref_impls(class));
+        self.emit_structural_record_impls(class, module);
 
         let saved_class_name = self.current_class_name.clone();
         self.current_class_name = Some(class.name.clone());

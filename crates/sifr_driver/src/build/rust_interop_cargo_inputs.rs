@@ -61,7 +61,6 @@ pub(super) fn cargo_inputs(
         profile_codegen_settings: profile_codegen_settings(&package.package_root, "release"),
         cargo_version: tool_version("cargo"),
         rustc_version: tool_version("rustc"),
-        bridge_version: package.manifest.rust.bridge_version,
         trust_policy_digest,
         declared_build_env,
     }
@@ -120,7 +119,6 @@ fn sysroot_cargo_inputs(
         profile_codegen_settings: profile_codegen_settings(&trust.sysroot_root, "release"),
         cargo_version: tool_version("cargo"),
         rustc_version: tool_version("rustc"),
-        bridge_version: Some(1),
         trust_policy_digest,
         declared_build_env,
     }
@@ -524,7 +522,6 @@ mod tests {
             profile_codegen_settings: Vec::new(),
             cargo_version: Some("cargo 1.0.0".to_string()),
             rustc_version: Some("rustc 1.0.0".to_string()),
-            bridge_version: Some(1),
             trust_policy_digest: format!("{package_id}-trust"),
             declared_build_env: Vec::new(),
         }

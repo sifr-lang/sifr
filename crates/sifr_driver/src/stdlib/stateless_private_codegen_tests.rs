@@ -212,6 +212,13 @@ fn regex_private_declarations_codegen_through_sifr_stdlib() {
         .get("_sifr.regex")
         .expect("_sifr.regex should generate private Rust code");
 
+    assert!(private_code.rust.contains(
+        "type __SifrStdlib___sifr_x2eregex_x2eCompiledPattern = ::sifr_runtime::interop::Handle<::sifr_stdlib::regex::CompiledPattern>;"
+    ));
+    assert!(private_code
+        .rust
+        .contains("trait __SifrOpaque__SifrStdlib___sifr_x2eregex_x2eCompiledPatternMethods"));
+
     for name in [
         "re_match",
         "re_find",

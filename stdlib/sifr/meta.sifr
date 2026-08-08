@@ -1,6 +1,10 @@
 # sifr.meta — package-neutral deterministic specialization contracts
 
 
+class Structural:
+    pass
+
+
 class ConstIssueTemplate:
     package: str
     reason_code: str

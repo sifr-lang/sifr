@@ -153,12 +153,10 @@ only. Remaining compiler-native stdlib glue is explicitly allowlisted in
 
 Rust interop Track A certification is complete. The active matrix
 `verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json`
-currently has 21 supported rows, 14 bridge-supported rows, 1
-unsupported-by-design row, and 2 future-owned rows. Those future rows are
-`structural_bridge_calls` and `bridge_version_field_removal`, owned by the
-structural Rust bridge contract in `rust_interop_architecture.md`.
-Resource migrations must not claim stable support for a future-owned row until
-its positive and negative evidence pass and its stable-claim gate accepts it.
+currently has 21 supported rows, 15 bridge-supported rows, and 1
+unsupported-by-design row. The `structural_bridge_calls` and
+`bridge_version_field_removal` rows have passing positive and negative evidence
+and are included in the stable-claim inventory.
 
 ## Stdlib Rust Interop Adapter Policy
 
@@ -174,8 +172,8 @@ The compiler should not add per-declaration converter pipelines for the stdlib
 rewrite. Generated glue validates the single `@rust(...)` target signature,
 records the sysroot interop dependency and trust metadata, and lets
 `sifr_stdlib` own implementation adaptation. Sysroot stdlib interop uses
-`bridge-version = 1`; any future callee-injection form requires a new
-bridge-versioned design and must not add fallback conversion behavior to
+the one unversioned bridge contract; any future callee-injection form requires
+an explicit contract update and must not add fallback conversion behavior to
 sysroot interop declarations.
 
 Private stdlib declarations rely on the compiler-owned sysroot trust policy and

@@ -481,6 +481,7 @@ pub(super) fn signature_contract(
         },
         params,
         return_type,
+        structural_type_param: None,
         panic_error: sifr_codegen::RustBridgePanicErrorContract::None,
         span: span(),
     }
@@ -760,7 +761,6 @@ pub(super) fn package_context(
             trust,
             python: sifr_package::PythonConfig::default(),
             rust: RustInteropConfig {
-                bridge_version: Some(1),
                 bridges: Vec::new(),
                 direct_crate_bindings: true,
             },

@@ -801,7 +801,6 @@ def digest(input: bytes) -> bytes:
 
     assert_malformed(&errors);
 }
-
 #[test]
 fn rust_interop_rejects_prior_draft_keyword_syntax() {
     let errors = lower_errors(

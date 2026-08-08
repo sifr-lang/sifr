@@ -632,6 +632,8 @@ mod tests {
             name: "Holder".to_string(),
             identity: None,
             fields: vec![("err".to_string(), error_type("ParseError"))],
+            field_defaults: Vec::new(),
+            declaration_metadata: Vec::new(),
             methods: vec![HirFunction {
                 name: "check".to_string(),
                 params: vec![HirParam {

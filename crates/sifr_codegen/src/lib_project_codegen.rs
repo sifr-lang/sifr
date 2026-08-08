@@ -314,6 +314,8 @@ mod tests {
                 name: "Resource".to_string(),
                 identity: None,
                 fields: Vec::new(),
+                field_defaults: Vec::new(),
+                declaration_metadata: Vec::new(),
                 methods: vec![HirFunction {
                     name: "close".to_string(),
                     params: Vec::new(),

@@ -138,8 +138,8 @@ Direct bindings are for exact bridge-compatible Rust signatures. Anything that
 needs adaptation targets an adapter function owned by the package (`bridge.*`),
 a shared bridge crate, or a sysroot crate such as `sifr_stdlib`; sysroot stdlib
 adapters are still targeted through direct `@rust(sifr_stdlib.<path>)` bindings.
-Decorator-level converter pipelines are intentionally not part of bridge version
-1.
+Decorator-level converter pipelines are intentionally not part of the Rust
+bridge contract.
 
 If a Rust crate exposes unsupported lifetimes, borrowed returns, trait objects,
 generics, closure-valued APIs, or error types whose mapping needs more than
@@ -310,7 +310,6 @@ fast-tokenizer/
 
 ```toml
 [rust]
-bridge-version = 1
 bridges = ["src/bridges"]
 direct-crate-bindings = true
 
@@ -333,13 +332,14 @@ File ownership is fixed:
 - `src/lib.rs` is Sifr-managed for packages using local bridges. Pure packages keep the pure marker target; Rust-backed packages receive managed module declarations for bridges and generated bridge types.
 - `crate::__sifr_bridge` is generated and reserved. User code cannot define this namespace.
 
-Rust-backed package archives must include `sifr.toml`, Sifr source, `Cargo.toml`, declared `src/bridges/*.rs` files, Sifr-managed projection files, and the `[rust].bridge-version` value declared in `sifr.toml`. `sifr package` rejects archives whose managed projections, source digests, or bridge-version metadata do not match the interop build plan.
+Rust-backed package archives must include `sifr.toml`, Sifr source,
+`Cargo.toml`, declared `src/bridges/*.rs` files, and Sifr-managed projection
+files. `sifr package` rejects archives whose managed projections or source
+digests do not match the interop build plan.
 
 Backend crates are linked statically as ordinary Rust library crates. The supported backend crate type is `lib`; `cdylib`, `dylib`, and runtime-loaded backend crates are rejected for the Rust interop lane because they imply a dynamic ABI boundary.
 
-`bridge-version = 1` is the schema version for generated bridge modules, generated bridge type naming, decorator lowering, and runtime glue contracts. A package compiled by a compiler that does not support the declared bridge version fails during package validation.
-
-Bridge version 1 covers:
+The one generated bridge contract covers:
 
 - generated bridge type paths under `crate::__sifr_bridge::<module>::<Name>Bridge`,
 - closed enum `repr(u32)` discriminant rules,
@@ -350,16 +350,13 @@ Bridge version 1 covers:
 
 ### Structural Rust bridge calls
 
-This section is the accepted structural bridge contract. It is specified before
-implementation and is not yet a supported compiler surface. The current
-compiler continues to reject `@rust.structural`. The future-owned
-`structural_bridge_calls` compatibility row remains non-passing until its
-positive and negative evidence pass atomically. The companion future-owned
-`bridge_version_field_removal` row governs removal of the versioned manifest
-schema at the same boundary.
+This section is the supported structural bridge contract.
+`structural_bridge_calls` has passing nested construction, projection, typed
+callback, and deliberate-rejection evidence. The companion
+`bridge_version_field_removal` row passes at the same boundary.
 
-Once that row passes, the structural contract replaces the current versioned
-bridge schema. That change atomically removes `[rust]
+The structural contract replaced the versioned bridge schema. That cutover
+atomically removed `[rust]
 bridge-version` from the manifest schema, every in-repository package and
 fixture, managed projections, archive expectations, cache records, diagnostics,
 and generated-build assertions. That inventory explicitly includes the
@@ -370,12 +367,12 @@ assertion, `_scenario_registry.py`'s literal token, `_matrix_inventory.py`'s
 required-fixture entry, and `runner/bridge_check.py`'s version
 parameter/default. Compiler-side removal explicitly includes the
 `rust_interop_plan.rs` module/cache fields, the package-graph digest field, and
-the sysroot's synthesized `Some(1)`. It deletes the entire
+the sysroot's synthesized `Some(1)`. It deleted the entire
 `bridge_version_mismatch` fixture/scenario and its matrix, tier, and
 stable-claim entries rather than preserving legacy acceptance evidence.
 
-The same cutover deletes this document's `bridge-version = 1` subsection above
-and rewrites every remaining version-keyed statement throughout
+The same cutover deleted this document's `bridge-version = 1` subsection and
+rewrote every remaining version-keyed statement throughout
 `internal_docs/**`, `docs/**`, and active planning records. Named public
 surfaces include `docs/packages/manifest.mdx`,
 `docs/rust-interop.mdx`, and the Blake3 and Reqwest interop guides; the other
@@ -894,7 +891,13 @@ Every Sifr record, closed enum, and error type reachable across an `@rust` bound
 crate::__sifr_bridge::<sifr_module_path>::<Name>Bridge
 ```
 
-Generated bridge module paths use the same deterministic Rust module-name mangling as generated Sifr modules. Every Sifr module path maps bijectively to a Rust module path; keyword escapes, invalid-identifier escapes, package aliases, renamed imports, and nested public namespace segments are stable and included in `bridge-version`. Bridge authors may import generated bridge types directly, so changing this mangling is a bridge-versioned compatibility break.
+Generated bridge module paths use the same deterministic Rust module-name
+mangling as generated Sifr modules. Every Sifr module path maps bijectively to
+a Rust module path; keyword escapes, invalid-identifier escapes, package
+aliases, renamed imports, and nested public namespace segments are stable and
+included in the interop cache identity. Bridge authors may import generated
+bridge types directly, so changing this mangling requires an atomic compiler,
+projection, and cache-contract update.
 
 Generated record bridge structs preserve declared Sifr field order and expose generated constructors/accessors. When a bridge declaration needs layout-sensitive Rust access, the generated struct uses an explicit layout contract owned by the bridge schema; otherwise bridge authors must use accessors and must not rely on Rust default layout.
 
@@ -961,10 +964,10 @@ Shared bridge crates are ordinary Cargo dependencies and cannot import package-s
 
 ### Future Callee Injection
 
-Bridge version 1 does not support callee injection. Sifr source must not store,
-return, capture, or dynamically dispatch Rust functions; Rust functions are not
-Sifr values. Any future callee-injection form requires a new bridge-versioned
-design that proves its ownership, lifetime, panic, trust, and cache-key
+The Rust bridge does not support callee injection. Sifr source must not store,
+return, capture, or dynamically dispatch Rust functions; Rust functions are
+not Sifr values. Any future callee-injection form requires an explicit contract
+update that proves its ownership, lifetime, panic, trust, and cache-key
 behavior.
 
 The current stdlib rewrite does not require this extension. For migrated
@@ -1651,10 +1654,12 @@ The interop build cache key includes:
 - trust policy,
 - build-script/proc-macro/native evidence,
 - `rustc` and Cargo versions,
-- selected Sifr runtime metadata and bridge-version schema,
+- selected Sifr runtime metadata and generated bridge-contract digest,
 - declared build environment variables and their values when policy allows them.
 
-Any change to bridge declarations, local bridge code, Cargo lock state, selected features, target triple, profile, panic strategy, bridge version, or trust policy invalidates the relevant interop build plan.
+Any change to bridge declarations, local bridge code, Cargo lock state,
+selected features, target triple, profile, panic strategy, generated bridge
+contract, or trust policy invalidates the relevant interop build plan.
 
 ## Diagnostics
 
@@ -1730,7 +1735,8 @@ verification/areas/rust_interop/
     opaque_resource_core/         # stdlib-owned opaque-resource lifecycle
     opaque_resource_matrix/       # reqwest::Client, rusqlite, tokio-postgres, redis
     close_after_use/
-    bridge_version_mismatch/
+    bridge_version_field_removal/
+    structural_bridge_calls/
     panic_boundary/               # contract-only panic-to-error behavior
     panic_boundary_wrapper_emission/
     panic_abort_profile/          # contract-only abort-profile rejection
@@ -1859,7 +1865,6 @@ Compatibility categories are:
 - `unsupported-by-design`: passing diagnostics for a rejected surface with no
   fallback path.
 - `future-owned-by-separate-phase`: documented separately because at least one
-  evidence direction is not passing. Future-owned rows must reference their
-  durable technical owner. The current future-owned rows
-  `structural_bridge_calls` and `bridge_version_field_removal` are owned by the
-  structural Rust bridge section above.
+  evidence direction is not passing. Future-owned rows must reference a concrete
+  delivery plan or the exact durable architecture that reserves the contract.
+  There are no current future-owned rows.

@@ -14,7 +14,7 @@ use crate::{diagnostic_with_code, diagnostic_with_source_range_args_help};
 use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic};
 use sifr_lowering::{
     canonicalize_user_export_type, localize_user_import_function_type, localize_user_import_type,
-    ExternalDefs, HirDiagnostic, HirModule, LoweringResult,
+    ExternalDefs, HirDiagnostic, HirModule, LoweringResult, RustInteropDecoratorKind,
 };
 use sifr_python_ast::Stmt;
 use sifr_type_system::{FunctionType, ParamConvention, Type};
@@ -175,6 +175,7 @@ pub fn collect_module_exports(
     let mut class_exports = HashMap::new();
     let mut class_method_exports = ClassMethodExports::default();
     let mut class_type_param_exports = HashMap::new();
+    let mut rust_opaque_exports = std::collections::HashSet::new();
     let mut class_field_default_exports = HashMap::new();
     let mut const_exports = HashMap::new();
     let mut const_integer_value_exports = HashMap::new();
@@ -221,6 +222,13 @@ pub fn collect_module_exports(
 
     for class in &module.classes {
         if !class.name.starts_with('_') {
+            if class
+                .rust_interop
+                .iter()
+                .any(|declaration| declaration.kind == RustInteropDecoratorKind::Opaque)
+            {
+                rust_opaque_exports.insert(class.name.clone());
+            }
             class_method_exports.record_local(class);
             rust_callback_exports.record_class(class);
             let mut methods: Vec<(String, FunctionType)> = class
@@ -367,6 +375,13 @@ pub fn collect_module_exports(
             }
             if let Some(module_classes) = external_defs.classes.get(&import.module) {
                 if let Some(class_type) = module_classes.get(name) {
+                    if external_defs
+                        .rust_opaque_classes
+                        .get(&import.module)
+                        .is_some_and(|classes| classes.contains(name))
+                    {
+                        rust_opaque_exports.insert(local_name.clone());
+                    }
                     class_exports.insert(
                         local_name.clone(),
                         localize_user_import_type(class_type, &import.module, &class_aliases),
@@ -418,6 +433,11 @@ pub fn collect_module_exports(
     external_defs
         .classes
         .insert(module_name.to_string(), class_exports);
+    if !rust_opaque_exports.is_empty() {
+        external_defs
+            .rust_opaque_classes
+            .insert(module_name.to_string(), rust_opaque_exports);
+    }
     if !class_field_default_exports.is_empty() {
         external_defs
             .class_field_defaults

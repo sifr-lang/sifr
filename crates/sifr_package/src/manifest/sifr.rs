@@ -67,7 +67,6 @@ impl PythonConfig {
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct RustInteropConfig {
-    pub bridge_version: Option<u32>,
     pub bridges: Vec<PathBuf>,
     pub direct_crate_bindings: bool,
 }
@@ -203,7 +202,6 @@ impl SifrManifest {
         !self.trust.native.is_empty()
             || !self.trust.build_scripts.is_empty()
             || !self.trust.proc_macros.is_empty()
-            || self.rust.bridge_version.is_some()
             || !self.rust.bridges.is_empty()
             || self.rust.direct_crate_bindings
             || !self.trust.rust_build_scripts.is_empty()

@@ -56,6 +56,22 @@ fn register_imported_rust_consuming_methods(
     );
 }
 
+fn register_imported_rust_opaque_class(
+    ctx: &mut LowerCtx,
+    externals: &ExternalDefs,
+    module: &str,
+    source_name: &str,
+    local_name: &str,
+) {
+    if externals
+        .rust_opaque_classes
+        .get(module)
+        .is_some_and(|classes| classes.contains(source_name))
+    {
+        ctx.rust_opaque_classes.insert(local_name.to_string());
+    }
+}
+
 pub(in crate::lower) fn class_aliases_by_module(
     stmts: &[Stmt],
     externals: &ExternalDefs,
@@ -153,6 +169,9 @@ pub(in crate::lower) fn resolve_imports_early(
     externals: &ExternalDefs,
     ctx: &mut LowerCtx,
 ) {
+    ctx.local_structural_marker_declared = stmts
+        .iter()
+        .any(|stmt| matches!(stmt, Stmt::ClassDef(class) if class.name.as_str() == "Structural"));
     let aliases_by_module = class_aliases_by_module(stmts, externals, ctx);
     for stmt in stmts {
         if let Stmt::ImportFrom(import_from) = stmt {
@@ -183,6 +202,14 @@ pub(in crate::lower) fn resolve_imports_early(
                         .map(|asname| (alias.name.to_string(), asname.to_string()))
                 })
                 .collect();
+            if module_name == "sifr.meta"
+                && import_from
+                    .names
+                    .iter()
+                    .any(|alias| alias.name.as_str() == "Structural" && alias.asname.is_none())
+            {
+                ctx.canonical_structural_marker_imported = true;
+            }
             let local_name_for = |original: &str| -> String {
                 aliases
                     .iter()
@@ -217,6 +244,13 @@ pub(in crate::lower) fn resolve_imports_early(
                                 &local,
                             );
                             register_imported_rust_consuming_methods(
+                                ctx,
+                                externals,
+                                &module_key,
+                                name,
+                                &local,
+                            );
+                            register_imported_rust_opaque_class(
                                 ctx,
                                 externals,
                                 &module_key,

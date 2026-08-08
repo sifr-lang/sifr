@@ -152,6 +152,7 @@ pub use rust_interop_plan::{
     RustBridgeProbePlan, RustBridgeSourceDigest, RustGeneratedBridgeModule, RustInteropCargoInputs,
     RustInteropOwner, RustInteropPlan, RustInteropPlanDeclaration, RustInteropResolvedRoot,
     RustInteropResolvedTarget, RustInteropTrustRequirement, RustInteropTrustRequirementKind,
+    RustStructuralShapeIdentity,
 };
 mod rust_ir;
 pub use rust_ir::*;
@@ -162,6 +163,8 @@ pub use stdlib_rust_source::StdlibRustSource;
 mod stmt_support_emitter;
 mod string_char_cache;
 mod string_char_cache_scan;
+mod structural_identity_codegen;
+mod structural_impl_codegen;
 mod try_error_carrier;
 mod type_emitters;
 mod union_type_helpers;

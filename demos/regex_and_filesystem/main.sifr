@@ -1,6 +1,6 @@
 # Reference: parity_ext_regex_and_filesystem
 # Reference: python-source-parity-extension-waiver-reduction
-from sifr.re import finditer, compile, Match
+from sifr.re import finditer, compile, Match, Pattern
 from sifr.glob import iglob
 from sifr.pathlib import Path
 from sifr.io import write_text
@@ -18,7 +18,7 @@ def main():
             assert second.group() == "22"
         assert next(digits) is None
 
-        pat = compile("[a-z]+")
+        pat: Pattern = compile("[a-z]+")
         words: list[str] = []
         word_it: Iterator[Match] = pat.finditer("alpha 123 beta")
         for m in word_it:
