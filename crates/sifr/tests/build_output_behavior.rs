@@ -134,6 +134,11 @@ fn build_output_project_mode_reports_import_closure_counts() {
         "from helper import message\n\ndef main():\n    print(message())\n",
     );
     std::fs::write(
+        project.root.join("sifr.toml"),
+        "[source]\nroots = [\".\"]\n",
+    )
+    .expect("workspace manifest should be written");
+    std::fs::write(
         project.root.join("helper.sifr"),
         "def message() -> str:\n    return \"ok\"\n",
     )
@@ -142,7 +147,11 @@ fn build_output_project_mode_reports_import_closure_counts() {
     let output_dir_arg = output_dir.to_string_lossy().to_string();
     let main_arg = project.main.to_string_lossy().to_string();
 
-    let capture = run_sifr(&["build", &main_arg, "-o", &output_dir_arg], &project.root);
+    let invocation_cwd = std::env::temp_dir();
+    let capture = run_sifr(
+        &["build", &main_arg, "-o", &output_dir_arg],
+        &invocation_cwd,
+    );
 
     assert_eq!(capture.status_code, 0, "stderr:\n{}", capture.stderr);
     assert!(capture.stdout.is_empty());
