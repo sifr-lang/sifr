@@ -1,0 +1,12 @@
+from sifr.collections import frozenset
+
+
+def main():
+    first: frozenset[int] = frozenset({1, 2, 3})
+    second: frozenset[int] = frozenset({3, 4})
+    assert first.length() == 3
+    assert first.contains(2)
+    assert not first.contains(5)
+    assert first.union(second) == frozenset({1, 2, 3, 4})
+    assert first.intersection(second) == frozenset({3})
+    assert first.difference(second) == frozenset({1, 2})

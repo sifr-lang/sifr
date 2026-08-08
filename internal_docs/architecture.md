@@ -783,6 +783,14 @@ This rules is split across three workstreams: import semantics work (multi-file 
 - **No Sifr-native lockfile in package-management architecture:** there is no committed `sifr.lock`; reproducibility is derived from `Cargo.toml`, `Cargo.lock`, `sifr.toml`, selected Sifr source, compiler/toolchain inputs, and package feature/selector inputs.
 - **Interop package surfaces:** Python interop consumes externally managed `pyproject.toml`, `uv.lock`, and `.venv` metadata without forking package resolution. Rust interop consumes Cargo dependencies and bridge metadata through declaration-level Cargo integration. Both lanes must lower into the same package graph/import semantics instead of creating alternate resolvers.
 
+### 4.1 Deterministic Const Specialization and Structural Metadata
+
+Package-owned static derivation uses the package-neutral compiler contract documented in
+[`const_specialization.md`](const_specialization.md). Structural shapes, typed declaration
+metadata, bounded pure HIR evaluation, package issues, and integer JSON boundary verification are
+frontend authorities shared by CLI, build, tests, and editor analysis. This is compile-time data;
+Sifr does not expose runtime reflection or package-name-specific compiler branches.
+
 ### 5. CI Quality Gates
 
 **Rules for every PR:**

@@ -42,4 +42,10 @@ pub enum LoweringWarningDiagnostic {
     BigIntTransitionAlias {
         primary_range: Option<TextRange>,
     },
+    MetaPackageIssue {
+        package: String,
+        reason_code: String,
+        help: Option<String>,
+        primary_range: Option<TextRange>,
+    },
 }

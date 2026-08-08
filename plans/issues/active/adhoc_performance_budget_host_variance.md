@@ -170,6 +170,19 @@ The timed-out control also showed that `full/budget-subset` can read the prior
 it. The lane remains failed, so this does not create a false pass, but the stale
 secondary diagnostics should be corrected by this follow-up.
 
+During dict missing-key augassign closeout on exact reviewed source
+`b341b47f9f8e81baa0d7403979eb6551886e5568`, the create-PR profile passed all
+19 Python-interop variants but the aggregate step took 639.010 seconds against
+its 600-second budget while other worktrees contended for Cargo package-cache
+locks. The final merge profile later passed coverage, core, diagnostics, and
+all preceding selected checks before `bounded_int_arithmetic` hit the CPython
+differential runner's fixed 240-second Sifr timeout. The next three cases
+completed at 224.9, 66.8, and 38.6 seconds. An immediate isolated replay of the
+exact differential area passed both variants and all four cases at 36.3, 25.0,
+17.1, and 18.2 seconds respectively. The implementation does not change the
+differential fixtures, Rust-interoperability probe machinery, validation
+budgets, or performance baselines; no threshold or waiver was changed.
+
 ## Scope
 
 - Reproduce representative measurements across controlled warm and cold runs.

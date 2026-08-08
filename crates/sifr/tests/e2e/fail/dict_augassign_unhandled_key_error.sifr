@@ -1,0 +1,6 @@
+# expect-error: SIFR-RESULT-0001
+
+
+def main():
+    values: dict[int, int] = {1: 2}
+    values[1] += 3

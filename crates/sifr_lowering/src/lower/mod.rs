@@ -32,6 +32,7 @@ mod contextual_list_literal_specialization;
 mod control_flow_conditions;
 mod decimal_methods;
 mod declaration_hint_safety;
+mod declaration_metadata;
 mod default_args;
 mod defaultdict_refinement;
 #[cfg(test)]

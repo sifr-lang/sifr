@@ -477,6 +477,11 @@ Reserve the `SIFR-INT-*` family for integer-model diagnostics:
 | `SIFR-INT-0010` | bytearray/bytes construction or mutation requires fitting `uint8` |
 | `SIFR-INT-0011` | temporary `bigint` transition alias or stale public `bigint` usage |
 
+`SIFR-INT-0009` is active. The compiler-owned package-neutral
+`JsonIntegerBoundaryDescriptor` verifier and its source declaration surface are documented in
+[`const_specialization.md`](const_specialization.md); missing or unsafe compile-time policy fails
+before schema or serializer generation.
+
 ## Runtime and Codegen Rules
 
 The target runtime placement is a new workspace crate, `crates/sifr_runtime`, linked by generated projects through the codegen-emitted Cargo manifest. `SifrInt`, integer parsing/formatting helpers, arithmetic budget helpers, normalized integer hashing, and JSON integer profile helpers live there rather than being re-emitted into every generated Rust file.

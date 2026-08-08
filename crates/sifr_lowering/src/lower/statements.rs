@@ -72,7 +72,7 @@ pub(in crate::lower) use control_flow::*;
 mod while_loop;
 pub(in crate::lower) use while_loop::lower_while;
 
-fn record_try_error_types(ctx: &mut LowerCtx, error_type: &Type) {
+pub(in crate::lower) fn record_try_error_types(ctx: &mut LowerCtx, error_type: &Type) {
     match error_type.resolve_alias() {
         Type::Class { .. } => {
             ctx.try_block_error_types

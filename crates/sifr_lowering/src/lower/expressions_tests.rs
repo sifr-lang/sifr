@@ -18,6 +18,7 @@ mod contextual_empty_list_equality;
 mod control_flow_and_strings;
 mod defaultdict_augassign_refinement;
 mod defaultdict_order_independent_inference;
+mod dict_augassign_checked_error;
 mod empty_plain_dict_inference;
 mod exact_int_and_fixed_width;
 mod iteration_and_protocols;

@@ -320,6 +320,7 @@ fn project_stmt(stmt: &HirStmt) -> Value {
             op,
             value,
             object_ty,
+            missing_key_error,
         } => json!({
             "kind": "SubscriptAugAssign",
             "object": object,
@@ -327,6 +328,7 @@ fn project_stmt(stmt: &HirStmt) -> Value {
             "op": op,
             "value": project_expr(value),
             "object_ty": type_name(object_ty),
+            "missing_key_error": missing_key_error.as_ref().map(type_name),
         }),
         HirStmt::AttributeAugAssign {
             object,

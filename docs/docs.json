@@ -258,6 +258,14 @@
                 ]
               },
               {
+                "group": "META",
+                "pages": [
+                  "errors/SIFR-META-0001",
+                  "errors/SIFR-META-0002",
+                  "errors/SIFR-META-0003"
+                ]
+              },
+              {
                 "group": "ASYNC",
                 "pages": [
                   "errors/SIFR-ASYNC-0001",
@@ -420,6 +428,7 @@
                   "errors/SIFR-INT-0005",
                   "errors/SIFR-INT-0006",
                   "errors/SIFR-INT-0007",
+                  "errors/SIFR-INT-0009",
                   "errors/SIFR-INT-0011"
                 ]
               },
