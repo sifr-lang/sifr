@@ -212,9 +212,11 @@ and the compatibility matrix.
     and description, while embedding and obeying accepted language-wide
     contracts such as Sifr's locked integer JSON profiles. Serde, Schemars, and
     another validator are not parallel authorities.
-11. Rust bridge version 2 adds one general, trait-bounded structural call
-    contract. It does not add Pydantic-specific bridge types or container
-    exceptions.
+11. Rust bridge version 2 replaces version 1 and adds one general,
+    trait-bounded structural call contract. The implementation migrates all
+    in-repository bridge packages and removes version-1 acceptance/emission;
+    there is no compatibility mode, rewrite, shim, or fallback. Version 2 does
+    not add Pydantic-specific bridge types or container exceptions.
 12. Native decoding returns a validated value arena. The JSON parse tree and
     normalized arena are expected; no third copied bridge-object tree exists.
 13. Compiler-generated structural traits materialize a validated source into
@@ -2069,6 +2071,10 @@ registry-owned `SIFR-INT-0009`.
   callback-invocation panic mapping, and `panic_boundary_wrapper_emission`
   rows; this phase does not privately take their ownership.
 - Implement the accepted bridge version 2 contract.
+- Atomically migrate every in-repository bridge manifest, fixture, managed
+  projection, archive expectation, and generated-build assertion from bridge
+  version 1 to version 2, then remove version-1 acceptance and emission. Reject
+  remaining version-1 declarations without a compatibility path or fallback.
 - Implement safe structural `Construct[T]`.
 - Implement allocation-free structural projection/visitation.
 - Implement typed callback adapter generation.

@@ -5,8 +5,8 @@
     "negative": {
       "expected_diagnostic": "SIFR-RUST-TYPE-0001",
       "expected_result": "future-owned-diagnostic",
-      "id": "shape_callback_and_lifetime_mismatches_rejected",
-      "path": "negative/shape_callback_and_lifetime_mismatches_rejected.sifr",
+      "id": "shape_callback_lifetime_and_v1_rejected",
+      "path": "negative/shape_callback_lifetime_and_v1_rejected.sifr",
       "status": "planned"
     },
     "positive": {

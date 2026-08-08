@@ -151,7 +151,7 @@
       "required_crates": [],
       "execution_kind": "runtime-observed",
       "positive_evidence": {"id": "nested_recursive_structural_roundtrip", "status": "planned"},
-      "negative_evidence": {"id": "shape_callback_and_lifetime_mismatches_rejected", "status": "planned"}
+      "negative_evidence": {"id": "shape_callback_lifetime_and_v1_rejected", "status": "planned"}
     },
     {
       "id": "panic_boundary",

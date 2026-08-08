@@ -1,5 +1,5 @@
 # fixture: bridge_v2_structural_calls
-# evidence: negative/shape_callback_and_lifetime_mismatches_rejected
+# evidence: negative/shape_callback_lifetime_and_v1_rejected
 # evidence-status: planned
 # execution-kind: runtime-observed
 # expected-result: future-owned-diagnostic
@@ -8,6 +8,8 @@
 
 # milestone_ps_2 replaces this planned marker with deliberate compiler and
 # Cargo-probe rejection evidence only after bridge version 2 is implemented.
+# The final negative evidence includes rejection of bridge-version = 1 with no
+# rewrite, compatibility shim, legacy glue, or fallback.
 
 class PlannedMismatchValue:
     value: uint32
@@ -17,6 +19,6 @@ class PlannedMismatchValue:
 @rust(bridge.structural.reject_mismatch)
 def planned_structural_mismatch(value: PlannedMismatchValue) -> PlannedMismatchValue: ...
 
-def verify_shape_callback_and_lifetime_mismatches_rejected() -> uint32:
+def verify_shape_callback_lifetime_and_v1_rejected() -> uint32:
     result: PlannedMismatchValue = planned_structural_mismatch(PlannedMismatchValue(0))
     return result.value

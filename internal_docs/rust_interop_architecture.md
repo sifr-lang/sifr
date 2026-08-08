@@ -357,12 +357,18 @@ supported compiler surface. The current compiler continues to reject
 compatibility row remains non-passing until the implementation wave flips its
 positive and negative evidence atomically.
 
-Once that row passes, `bridge-version = 2` is a strict opt-in superset of bridge
-version 1. Version 1 packages continue to use the closed direct-value table
-below; version 2 does not silently reinterpret an existing declaration. Version
-2 adds a single general structural-call lane for monomorphized synchronous
-functions. It does not add tuple, set, arbitrary mapping, union payload,
-specialized scalar, or generic type-variable entries to the ordinary
+Once that row passes, `bridge-version = 2` is the only supported bridge schema
+version and replaces version 1. The implementation wave atomically migrates
+every in-repository package, fixture, managed projection, archive expectation,
+and generated-build assertion to version 2, then removes version-1 acceptance
+and emission from the compiler and package tooling. A remaining
+`bridge-version = 1` declaration is rejected as unsupported; Sifr does not
+rewrite it, select version-1 glue, or provide a compatibility mode or fallback.
+
+Version 2 retains the closed ordinary direct-value table as current language
+semantics and adds one general structural-call lane for monomorphized
+synchronous functions. It does not add tuple, set, arbitrary mapping, union
+payload, specialized scalar, or generic type-variable entries to the ordinary
 direct-value table.
 
 The Sifr marker is `sifr.meta.Structural`. A structural Rust declaration has

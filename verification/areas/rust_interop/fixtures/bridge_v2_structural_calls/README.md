@@ -10,6 +10,7 @@ evidence files with passing generated-package evidence that:
 - round-trips nested generic and recursive values through a native opaque
   source with node-scoped construction and allocation-free projection; and
 - rejects shape-identity, node ownership, callback signature, callback escape,
-  and projection lifetime violations deliberately.
+  projection lifetime violations, and all bridge-version 1 declarations
+  deliberately. There is no v1 compatibility mode or fallback.
 
 The row may become supported only when both directions pass atomically.
