@@ -316,6 +316,25 @@ pub(super) fn invalidate_rebound_binding_facts(ctx: &mut LowerCtx, name: &str) {
     ctx.clear_proven_nonzero_integer_binding(name);
 }
 
+fn explicit_binding_type(declared_type: &Type, value_type: &Type) -> Type {
+    let Type::Alias {
+        name,
+        type_args,
+        body: _,
+    } = value_type
+    else {
+        return declared_type.clone();
+    };
+    if !name.starts_with("__sifr_defaultdict_") || !matches!(declared_type, Type::Dict(_, _)) {
+        return declared_type.clone();
+    }
+    Type::Alias {
+        name: name.clone(),
+        type_args: type_args.clone(),
+        body: Box::new(declared_type.clone()),
+    }
+}
+
 pub(in crate::lower) fn lower_ann_assign(
     ann: &StmtAnnAssign,
     ctx: &mut LowerCtx,
@@ -427,6 +446,8 @@ pub(in crate::lower) fn lower_ann_assign(
         return None;
     };
 
+    let binding_type = explicit_binding_type(&declared_type, value.ty());
+
     if let Some(borrowed) =
         super::super::python_interop::python_context_borrow_in_owned_expr(&value, ctx)
     {
@@ -468,12 +489,12 @@ pub(in crate::lower) fn lower_ann_assign(
     ctx.pending_container_specialization_patches.remove(&name);
     if let Some(error_taint) = annotation_error_taint {
         ctx.scope
-            .define_poisoned_local(name.clone(), declared_type.clone(), true, error_taint);
+            .define_poisoned_local(name.clone(), binding_type.clone(), true, error_taint);
     } else {
         ctx.scope
-            .define_explicit_local(name.clone(), declared_type.clone());
+            .define_explicit_local(name.clone(), binding_type.clone());
     }
-    ctx.record_must_use_binding(&name, &declared_type);
+    ctx.record_must_use_binding(&name, &binding_type);
     if matches!(value.ty(), Type::Int | Type::LiteralInt(_))
         && value.ty().is_assignable_to(&declared_type)
     {
@@ -506,7 +527,7 @@ pub(in crate::lower) fn lower_ann_assign(
     record_async_generator_advance_binding(ctx, &name, &value);
     Some(HirStmt::Let {
         name,
-        ty: declared_type,
+        ty: binding_type,
         value,
         is_mutable: true,
     })

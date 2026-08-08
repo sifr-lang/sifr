@@ -1,0 +1,28 @@
+from sifr.collections import defaultdict
+
+
+def main():
+    present: dict[str, int] = {"ready": 4}
+    try:
+        present["ready"] += 3
+    except KeyError:
+        assert False
+    assert present["ready"] == 7
+
+    missing: dict[str, int] = {}
+    missing_caught = False
+    try:
+        missing["absent"] += 1
+    except KeyError as error:
+        assert error.message == "key not found"
+        missing_caught = True
+    assert missing_caught
+    assert len(missing) == 0
+
+    annotated: dict[str, int] = defaultdict(int)
+    annotated["new"] += 5
+    assert annotated["new"] == 5
+
+    inferred = defaultdict(int)
+    inferred["new"] += 2
+    assert inferred["new"] == 2

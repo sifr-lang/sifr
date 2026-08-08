@@ -29,6 +29,23 @@ fn invalid_subscript_target_shape(ctx: &mut LowerCtx, range: TextRange) {
     invalid_target_shape(ctx, AUGMENTED_SUBSCRIPT_TARGET_SIMPLE_NAME, range);
 }
 
+fn plain_dict_missing_key_error(object_ty: &Type, ctx: &mut LowerCtx) -> Option<Type> {
+    if !matches!(object_ty.resolve_alias(), Type::Dict(_, _))
+        || matches!(
+            object_ty,
+            Type::Alias { name, .. } if name.starts_with("__sifr_defaultdict_")
+        )
+    {
+        return None;
+    }
+    Some(
+        ctx.class_types
+            .get("KeyError")
+            .cloned()
+            .unwrap_or_else(|| super::fallback_error_type("KeyError")),
+    )
+}
+
 fn op_to_augassign_string(
     op: Operator,
     ctx: &mut LowerCtx,
@@ -293,12 +310,24 @@ pub(in crate::lower) fn lower_aug_assign(
                 rhs_range: aug.value.range(),
             },
         );
+        let missing_key_error = plain_dict_missing_key_error(&object_ty, ctx);
+        if let Some(error_ty) = &missing_key_error {
+            if ctx.in_try_block {
+                super::statements::record_try_error_types(ctx, error_ty);
+            } else {
+                super::result_diagnostics::unhandled_dict_augassign_key_error(
+                    ctx,
+                    aug.target.range(),
+                );
+            }
+        }
         return Some(HirStmt::SubscriptAugAssign {
             object: obj_name,
             index,
             op: op_str.to_string(),
             value,
             object_ty,
+            missing_key_error,
         });
     }
     let (name, name_range): (String, TextRange) = if let Expr::Name(n) = aug.target.as_ref() {

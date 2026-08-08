@@ -774,6 +774,7 @@ fn test_structured_stmt_path_handles_nested_subscript_augassign_inside_loop_if()
                 op: "*=".to_string(),
                 value: HirExpr::IntLiteral(2),
                 object_ty: Type::List(Box::new(Type::Int)),
+                missing_key_error: None,
             }],
             elif_clauses: vec![],
             else_body: None,
