@@ -5,7 +5,8 @@
 Complete on 2026-08-08 via implementation
 [PR #3108](https://github.com/sifr-lang/sifr/pull/3108). The final reviewed
 candidate was `b341b47f9f8e81baa0d7403979eb6551886e5568`; it merged as
-`d54fd5f3b1fc8efbc4cde81479159a62073686c0`.
+`d54fd5f3b1fc8efbc4cde81479159a62073686c0`. Record-only archival and tracker
+updates are carried by [PR #3109](https://github.com/sifr-lang/sifr/pull/3109).
 
 This non-blocking correctness follow-up was discovered while diagnosing
 [`ad-hoc-algorithmic-full-corpus-preexisting-failures.md`](../active/ad-hoc-algorithmic-full-corpus-preexisting-failures.md)
