@@ -41,6 +41,53 @@ def set_intersection(a: list[int], b: list[int]) -> list[int]:
     return _set_intersection_impl(_copy_int_list(a), _copy_int_list(b))
 
 
+class frozenset[T: Hashable]:
+    # Immutable set value. Construction copies the input so no mutable alias can change it.
+    _values: set[T]
+
+    def __init__(self, values: set[T]) -> None:
+        self._values = values.copy()
+
+    def __iter__(self) -> Iterable[T]:
+        return iter(self._values)
+
+    def __contains__(self, value: T) -> bool:
+        return value in self._values
+
+    def contains(self, value: T) -> bool:
+        return value in self._values
+
+    def __len__(self) -> int:
+        return len(self._values)
+
+    def length(self) -> int:
+        return len(self._values)
+
+    def copy(self) -> frozenset[T]:
+        return frozenset(self._values)
+
+    def union(self, other: frozenset[T]) -> frozenset[T]:
+        return frozenset(self._values.union(other._values))
+
+    def intersection(self, other: frozenset[T]) -> frozenset[T]:
+        return frozenset(self._values.intersection(other._values))
+
+    def difference(self, other: frozenset[T]) -> frozenset[T]:
+        return frozenset(self._values.difference(other._values))
+
+    def isdisjoint(self, other: frozenset[T]) -> bool:
+        return self._values.isdisjoint(other._values)
+
+    def issubset(self, other: frozenset[T]) -> bool:
+        return self._values.issubset(other._values)
+
+    def issuperset(self, other: frozenset[T]) -> bool:
+        return self._values.issuperset(other._values)
+
+    def __eq__(self, other: frozenset[T]) -> bool:
+        return self._values.issubset(other._values) and other._values.issubset(self._values)
+
+
 class Counter[T: Hashable]:
     # A multiset (bag) mapping elements to their counts.
     counts: dict[T, int]

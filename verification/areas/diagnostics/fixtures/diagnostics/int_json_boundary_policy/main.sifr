@@ -1,0 +1,3 @@
+@json_integer_boundary("value", None, "number", None, None)
+class UnsafeIntegerBoundary:
+    value: int

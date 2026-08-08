@@ -19,6 +19,7 @@ pub(in crate::lower) fn lower_module_impl(
     // Register built-in functions
     register_builtins(&mut ctx);
     integer_literal_diagnostics::validate_module_integer_literals(stmts, &mut ctx);
+    super::declaration_metadata::collect(stmts, &mut ctx);
     // Pass 0: Pre-register class names so signatures and other classes can reference classes
     // defined later in the file (e.g., LinkedNode, TreeNode, Node).
     for stmt in stmts {
@@ -845,6 +846,11 @@ pub(in crate::lower) fn lower_module_impl(
         Ok(LoweringResult {
             module,
             flow_graph,
+            class_field_defaults: ctx.class_field_defaults.clone(),
+            declaration_metadata: ctx.declaration_metadata.clone(),
+            specialization_requests: ctx.specialization_requests.clone(),
+            specialization_outputs: Vec::new(),
+            json_integer_boundary_requests: ctx.json_integer_boundary_requests.clone(),
             function_defaults: ctx.function_defaults.clone(),
             function_varargs: ctx.vararg_functions.clone(),
             function_python_call_shapes: ctx.python_call_shapes.clone(),

@@ -1,0 +1,6 @@
+from fixture.meta import reject
+
+
+@const_specialize("fixture.meta", "reject")
+class Model:
+    value: int

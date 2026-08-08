@@ -2134,6 +2134,46 @@
         "compact"
       ],
       "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "int_json_boundary_policy",
+      "code": "SIFR-INT-0009",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "meta_specialization_fatal",
+      "code": "SIFR-META-0001",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "meta_specialization_warning",
+      "code": "SIFR-META-0002",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "meta_malformed_declaration",
+      "code": "SIFR-META-0003",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
     }
   ],
   "merge_requirement": "stable active codes require rendered baseline coverage or documented diagnostic-baseline deferral",

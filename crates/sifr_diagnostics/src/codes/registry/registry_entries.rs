@@ -6,6 +6,7 @@ use super::DiagnosticRegistryEntry;
 
 mod calls_flow_and_protocols;
 mod formatting_and_lint;
+mod metaprogramming;
 mod package;
 mod parsing_names_and_types;
 mod project_and_backend;
@@ -16,6 +17,7 @@ mod rust_interop;
 const REGISTRY_GROUPS: &[&[DiagnosticRegistryEntry]] = &[
     reserved::ENTRIES,
     parsing_names_and_types::ENTRIES,
+    metaprogramming::ENTRIES,
     calls_flow_and_protocols::ENTRIES,
     project_and_backend::ENTRIES,
     formatting_and_lint::ENTRIES,
