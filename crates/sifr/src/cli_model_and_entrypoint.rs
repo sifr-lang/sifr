@@ -18,8 +18,6 @@ use sifr_diagnostics::{DiagnosticArg, DiagnosticCode, RenderedDiagnostic, Severi
 use sifr_driver::diagnostic_label_for_code_str;
 use sifr_driver::find_workspace_root;
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
-use sifr_python_ast::Stmt;
-use sifr_syntax::parse_module_suite;
 use std::collections::BTreeMap;
 use std::io::{self, Write as _};
 use std::panic::{catch_unwind, AssertUnwindSafe};
@@ -721,52 +719,10 @@ pub(super) fn resolve_compilation_mode(
     file: &Path,
 ) -> Result<CompilationMode, Vec<RenderedDiagnostic>> {
     if find_workspace_root(file)?.is_some() {
-        return Ok(CompilationMode::Project);
-    }
-
-    let is_project_entry =
-        file.file_stem().is_some_and(|stem| stem == "main") && has_local_project_imports(file);
-
-    if is_project_entry {
         Ok(CompilationMode::Project)
     } else {
         Ok(CompilationMode::SingleFile)
     }
-}
-
-pub(super) fn has_local_project_imports(file: &Path) -> bool {
-    let Some(parent) = file.parent() else {
-        return false;
-    };
-    let mut provider = DiskSourceProvider::new();
-    let Ok(source) = provider.read_file(file) else {
-        return false;
-    };
-    let suite = match parse_module_suite(source.as_str(), Some(&file.display().to_string())) {
-        Ok(suite) => suite,
-        _ => return false,
-    };
-
-    suite.iter().any(|stmt| {
-        let Stmt::ImportFrom(import_from) = stmt else {
-            return false;
-        };
-        if import_from.level > 1 {
-            return false;
-        }
-        let Some(module) = &import_from.module else {
-            return false;
-        };
-        let module_name = module.to_string();
-        if module_name == "typing"
-            || module_name == "enum"
-            || module_name.starts_with("sifr.")
-            || module_name.starts_with("_sifr.")
-        {
-            return false;
-        }
-        provider.is_file(&parent.join(format!("{module_name}.sifr")))
-    })
 }
 
 pub(super) fn read_source(file: &Path) -> String {

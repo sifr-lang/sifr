@@ -62,7 +62,13 @@ sifr check path/to/file.sifr
 sifr emit path/to/file.sifr
 ```
 
-When no `sifr.toml` exists in the current directory or a parent directory, these commands run in manifest-less mode with the file's parent directory as the source root and no package dependency graph. Inside a package, an explicit `.sifr` file must live under the selected package source root.
+When no `sifr.toml` exists in the file's directory or an ancestor directory,
+these commands run in manifest-less single-file mode with no package dependency
+graph. The resolver does not inspect the filename, source imports, or sibling
+modules. A local import therefore requires an explicit `sifr.toml` workspace.
+Inside a package, an explicit `.sifr` file must live under the selected package
+source root. A discovered malformed manifest is a hard diagnostic rather than
+a reason to fall back to manifest-less mode.
 
 ## Package Sessions And Commands
 

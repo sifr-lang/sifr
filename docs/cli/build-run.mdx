@@ -131,21 +131,24 @@ Cargo build.
 
 ## Single-file mode vs project mode
 
-Both `sifr run` and `sifr build` resolve the compilation mode automatically from the input file. The mode determines how imports are resolved.
+Both `sifr run` and `sifr build` select the compilation mode from the nearest
+ancestor `sifr.toml`. The mode determines how local imports are resolved.
 
-**Single-file mode** is used when:
-- The input filename is anything other than `main.sifr`.
-- The file is `main.sifr` but has no resolvable local imports.
+**Single-file mode** is used for every explicit `.sifr` file outside a
+workspace, regardless of its filename, imports, or neighboring files.
 
-**Project mode** is used when `main.sifr` contains at least one `from <module> import ...` statement where `<module>.sifr` exists in the same directory.
+**Project mode** is used for every valid entrypoint inside the nearest valid
+ancestor `sifr.toml` workspace, regardless of its filename or imports. A
+malformed discovered manifest is a hard diagnostic.
 
 <Tabs>
   <Tab title="Single-file mode">
-    A standalone file with no local module dependencies. Compiles in isolation.
+    A manifest-less file compiles in isolation. Local sibling imports require a
+    workspace manifest.
 
     ```bash
-    sifr run greet.sifr          # single-file — filename is not main
-    sifr run main.sifr           # single-file — no local imports present
+    sifr run greet.sifr          # single-file — no ancestor sifr.toml
+    sifr run main.sifr           # also single-file without sifr.toml
     ```
 
     ```python
@@ -155,17 +158,19 @@ Both `sifr run` and `sifr build` resolve the compilation mode automatically from
     ```
   </Tab>
   <Tab title="Project mode">
-    `main.sifr` imports a sibling module file — both files are compiled together.
+    A `sifr.toml` workspace compiles the entrypoint with its reachable local
+    modules.
 
     ```bash
-    sifr run main.sifr           # project mode — helper.sifr exists
-    sifr build main.sifr -o out/ # project mode — same resolver applies
+    sifr run main.sifr           # project mode — sifr.toml exists
+    sifr build main.sifr -o out/ # project mode — same workspace applies
     ```
 
     ```
     my_project/
+      sifr.toml
       main.sifr
-      helper.sifr       ← sibling module
+      helper.sifr
     ```
 
     ```python
@@ -179,5 +184,6 @@ Both `sifr run` and `sifr build` resolve the compilation mode automatically from
 </Tabs>
 
 <Tip>
-`sifr run` and `sifr build` use the same mode resolver for the same input path. You will never see a file run in project mode but build in single-file mode or vice versa.
+`sifr run`, `build`, `check`, `emit`, and `trace` use the same workspace
+boundary for an explicit input path.
 </Tip>

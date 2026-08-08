@@ -1,7 +1,7 @@
 # Reference: auto_detection
-# no local imports: should stay in single-file mode
+# no sifr.toml: every explicit file uses single-file mode
 from sifr.math import floor
 
 def main():
-    print("auto_detection auto-detection demo:")
+    print("auto_detection manifest-less single-file demo:")
     print(floor(3.9))
