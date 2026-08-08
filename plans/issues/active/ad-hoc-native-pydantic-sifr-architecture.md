@@ -52,6 +52,25 @@ Milestone delivery records:
   the `cfg(test)` driver frontend adapter omitted five `LoweringResult` metadata
   fields added by PS1. The adapter now propagates the complete result, and all
   19 targeted `sifr_driver` Python-interop tests pass.
+- The `milestone_ps_2` contract wave merged in
+  [PR #3107](https://github.com/sifr-lang/sifr/pull/3107) at merge commit
+  `44571561309afaabb7afb419804aa2cc00362193`; the reviewed candidate was
+  `77442349c745ae1ad6ad1592be129572e37fb65c`.
+- That wave accepted one unversioned structural Rust bridge contract and a
+  repository-wide atomic removal plan for `[rust] bridge-version`, with no
+  compatibility mode, rewrite, shim, fallback, or active `v2` name. It added
+  separately gated future-owned evidence for structural calls and removed-field
+  rejection without claiming implementation support.
+- Contract validation passed formatting, 19 focused driver tests, all 10
+  registered Rust-interop cases and their self-tests, the active-source naming
+  sweep, and file-size/lowering maintainability guardrails. Earlier create-PR
+  execution passed core, diagnostics, package, and stdlib lanes; its aggregate
+  Python lane reproduced a host-contention timeout for a scenario that passed
+  standalone.
+- Opus reviewed eight published remediation candidates. The final exact-SHA
+  round confirmed all prior construction, identity, callback, projection,
+  cutover-inventory, ownership, and current-state findings closed and returned
+  `SATISFIED` with no blocking findings.
 - Deferred follow-up work: define an explicit typed package-side structural-shape
   contract before `ps_4`; align registry representative-fixture paths with diagnostic
   baselines; audit pre-epoch fractional timestamp reconstruction; disambiguate imported
