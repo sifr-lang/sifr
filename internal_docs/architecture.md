@@ -1549,6 +1549,15 @@ per-invocation identity. Producer failure cannot fall through to stale
 `*.budget.latest.json` evidence. This classifies host instability separately
 from a stable product regression without changing the governed baselines.
 
+Approved trend-baseline refreshes use the same controlled producer but are a
+separate governance path from threshold-budget updates. A refresh is accepted
+only for a clean exact commit, the complete benchmark manifest, manifest sample
+counts, and the `compiler/performance` approval profile. The checked-in trend
+snapshot records environment metadata and an exact reference-capture receipt;
+raw host observations stay in content-addressed target evidence. This replaces
+expired freshness or metadata deferrals with measured evidence without
+weakening the blocking budget baseline.
+
 ### Adding Tests for New Features (Agent Workflow)
 
 When an AI agent adds a new language feature, it must:

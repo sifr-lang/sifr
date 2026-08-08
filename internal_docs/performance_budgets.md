@@ -68,7 +68,10 @@ production and binds producer and checker with a unique invocation id. If the
 producer fails, the checker is not run. A failed benchmark invocation therefore
 cannot feed a prior run to the budget diagnostic.
 
-Full-corpus benchmark execution and baseline refresh remain explicit:
+Full-corpus benchmark execution and baseline refresh remain explicit. Budget
+baselines and trend baselines are separate governed artifacts. Updating
+`data/baselines.json` changes blocking thresholds and uses the reviewed budget
+workflow:
 
 Refresh baselines intentionally after review:
 
@@ -76,6 +79,30 @@ Refresh baselines intentionally after review:
 python3 verification/areas/performance/run_benchmarks.py --capture-baseline
 python3 verification/areas/performance/check_budgets.py
 ```
+
+Updating `data/trend/current.json` does not change blocking budgets. It requires
+an owner-approved reference run from a clean exact commit, the complete
+manifest with manifest sample counts, and controlled-host admission and
+per-case monitoring:
+
+```bash
+SIFR_VALIDATION_PROFILE=approved-reference \
+SIFR_THERMAL_POLICY=controlled-host \
+python3 verification/areas/performance/run_benchmarks.py \
+  --capture-trend-baseline \
+  --require-controlled-host \
+  --reference-approval compiler/performance
+python3 verification/areas/performance/check_trend_policy.py
+```
+
+The trend snapshot is written only after the full run succeeds and passes the
+same stability validation used for budget capture. Its `reference_capture`
+receipt binds the clean source commit, invocation and run ids, controlled-host
+policy, observation counts, and the SHA-256 of the raw evidence under
+`target/performance/evidence/`. Per-case transient host snapshots remain in the
+raw evidence rather than bloating the checked-in trend snapshot. Expired
+metadata or freshness deferrals are removed only by this successful fresh
+capture; extending their dates is not a refresh.
 
 ## Threshold Rules
 

@@ -1,12 +1,12 @@
 # Ad Hoc Phase: Representative Performance Budget Stability
 
-Status: deferred follow-up; not a prerequisite for Phase 40.
+Status: in progress.
 
 ## Execution Plan
 
 | Milestone | Scope | Status |
 | --- | --- | --- |
-| M1: controlled measurement and provenance | Host/cache telemetry, controlled admission, stable-sample retries, and stale-result producer/checker binding | in progress |
+| M1: controlled measurement and provenance | Host/cache telemetry, controlled admission, stable-sample retries, stale-result producer/checker binding, and governed trend-reference refresh | in progress |
 | M2: Python interop cold-cache budget | Classify cold versus warm aggregate execution and enforce a cache-aware create-PR step budget with deterministic policy tests | pending |
 | M3: qualification and closure | Five consecutive controlled representative verdicts, seeded-regression proof, final merge gate, full-phase review, and closure records | pending |
 
@@ -14,35 +14,33 @@ Each implementation milestone uses one draft PR, exact-SHA validation, and
 repeated Claude Opus review under the phase-closure loop. Review and validation
 evidence is recorded only after the matching candidate merges.
 
-Out-of-scope validation failure: the pre-existing
-`legacy-baseline-environment-metadata` trend deferral expired on 2026-07-31 and
-now fails the performance `rules` suite. It is recorded under
-[#3100](https://github.com/sifr-lang/sifr/issues/3100); this phase does not
-extend the deferral or change the checked-in trend baseline to make the gate
-pass.
+On 2026-08-08 the performance owner delegated
+[#3100](https://github.com/sifr-lang/sifr/issues/3100) into this active phase
+after both the legacy metadata deferral and the approved-reference freshness
+deferral expired and blocked repository-wide create-PR gates. M1 therefore owns
+the root-cause closure: add an executable controlled, full-manifest trend
+refresh path and replace both deferrals with fresh environment and reference
+evidence. Extending either expiry remains prohibited.
 
 ### Current handoff
 
-- State: M1 implementation complete; external review blocked.
+- State: the original M1 implementation is externally reviewed and satisfied;
+  the delegated trend-reference owner fix is in implementation.
 - Branch: `codex/adhoc-performance-budget-host-variance`.
-- Implementation candidate: `869c05d3eb7440cbcbaed38099e372768e61ccc7`.
+- Reviewed M1 implementation candidate:
+  `869c05d3eb7440cbcbaed38099e372768e61ccc7`.
 - Draft PR: [#3101](https://github.com/sifr-lang/sifr/pull/3101).
-- Validation: manifest, benchmark-runner self-test, budget-policy self-test,
+- Validation on the reviewed candidate: manifest, benchmark-runner self-test, budget-policy self-test,
   checked-in baseline budget gate, Python compile/lint, stale-producer probe,
   diff check, and file-size guardrail passed. The broader rules-suite failure
-  is the pre-existing trend deferral tracked in #3100.
-- Review blocker: three `talk-to-claude-opus` attempts produced no valid
-  review. The first was rejected locally before Claude started because the
-  prescribed cleanup command was disallowed; two fresh-directory retries
-  started Claude CLI 2.1.220 but exited nonzero without an atomic response or
-  log output. A follow-up `claude auth status --json` check reports
-  `loggedIn: false` with `authMethod: none`, which identifies the external
-  blocker. No failed-request review artifact was published.
-- Exact next action: authenticate Claude CLI with `claude auth login`, repeat the
-  read-only review of base `1cb731fcb67c520d35fcf2376a88b2d2a4b255b1`
-  against implementation candidate `869c05d3eb7440cbcbaed38099e372768e61ccc7`,
-  apply any valid blocking findings, and continue only after a `SATISFIED`
-  verdict.
+  was the then-out-of-scope trend deferral now delegated into M1.
+- Review: Claude Opus returned `SATISFIED` with no blocking findings for base
+  `1cb731fcb67c520d35fcf2376a88b2d2a4b255b1` against candidate
+  `869c05d3eb7440cbcbaed38099e372768e61ccc7`. External evidence SHA-256:
+  `51d7ab8f176bd1efa8756596f7727534b72ea1c29a2a06664fd593e705ee9baf`.
+- Base update: merged current `origin/main` at
+  `01c43b9cd67df6174b44fbbf7d2328ac5a831cb7`; the final owner-fix candidate
+  requires a fresh exact-SHA review and validation round.
 
 ## Problem
 
@@ -182,6 +180,16 @@ exact differential area passed both variants and all four cases at 36.3, 25.0,
 17.1, and 18.2 seconds respectively. The implementation does not change the
 differential fixtures, Rust-interoperability probe machinery, validation
 budgets, or performance baselines; no threshold or waiver was changed.
+
+Two dependent create-PR gates then isolated the expired trend record as a
+repository-wide owner blocker. Draft PR #3106 passed all functional lanes,
+including Python 19/19, Rust interop 10/10, LSP 18/18, and benchmark execution,
+then failed only the two expired trend deferrals. Draft PR #3110 at exact head
+`2c57a16f` passed taxonomy, read-only Python verification in 56.5 seconds with
+zero mutations, Python interop 19/19 in 387.2 seconds, Rust interop 6.2/10, and
+LSP before failing only `legacy-baseline-environment-metadata`. These independent
+controls justify owner-side closure under #3100; they do not justify extending
+either deferral.
 
 ## Scope
 
