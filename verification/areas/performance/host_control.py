@@ -141,7 +141,7 @@ class HostActivityMonitor:
         self.snapshots: list[dict[str, Any]] = []
 
     def __enter__(self) -> HostActivityMonitor:
-        self.snapshots.append(capture_host_snapshot(include_calibration=True))
+        self.snapshots.append(capture_host_snapshot(include_calibration=False))
         self._thread = threading.Thread(
             target=self._run, name="sifr-performance-host-monitor", daemon=True
         )
@@ -152,7 +152,7 @@ class HostActivityMonitor:
         self._stop.set()
         if self._thread is not None:
             self._thread.join(timeout=max(1.0, self._interval_seconds * 2.0))
-        self.snapshots.append(capture_host_snapshot(include_calibration=True))
+        self.snapshots.append(capture_host_snapshot(include_calibration=False))
 
     def _run(self) -> None:
         while not self._stop.wait(self._interval_seconds):

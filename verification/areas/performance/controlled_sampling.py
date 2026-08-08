@@ -23,8 +23,9 @@ def run_controlled_case(
 ) -> dict[str, Any]:
     attempts: list[dict[str, Any]] = []
     for attempt_index in range(1, 4):
+        attempt_root = run_root / "attempts" / str(attempt_index)
         with monitor_factory() as monitor:
-            result = run_case_fn(case, run_root, sample_scale)
+            result = run_case_fn(case, attempt_root, sample_scale)
         rejection_reasons = (
             monitor.rejection_reasons() if require_controlled_host else []
         )

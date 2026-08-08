@@ -141,7 +141,7 @@ def main() -> int:
         )
         if not selected:
             raise BenchmarkError("no benchmark cases selected")
-        validate_capture_request(
+        reference_source_commit = validate_capture_request(
             capture_requested=args.capture_trend_baseline,
             capture_budget_baseline=args.capture_baseline,
             require_controlled_host=args.require_controlled_host,
@@ -192,6 +192,10 @@ def main() -> int:
                 f"performance baseline captured: {baseline_output.relative_to(REPO_ROOT)}"
             )
         if args.capture_trend_baseline:
+            if reference_source_commit is None:
+                raise TrendBaselineError(
+                    "approved trend baseline capture did not bind a source commit"
+                )
             validate_baseline_capture(run_report, {case.id: case for case in cases})
             trend_baseline = baseline_from_reference_run(
                 run_report,
@@ -199,6 +203,7 @@ def main() -> int:
                 evidence_path,
                 repo_root=REPO_ROOT,
                 approval_owner=args.reference_approval,
+                expected_source_commit=reference_source_commit,
             )
             trend_baseline_output = (
                 (REPO_ROOT / args.trend_baseline_output).resolve()
