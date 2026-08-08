@@ -12,7 +12,6 @@ import resource
 import subprocess
 import sys
 import time
-from collections.abc import Callable
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -56,6 +55,8 @@ from process_metrics import (
 from process_metrics import (
     run_self_test as run_process_metrics_self_test,
 )
+from query_processes import run_query_processes
+from query_processes import run_self_test as run_query_processes_self_test
 from trend_baseline import (
     TrendBaselineError,
     baseline_from_reference_run,
@@ -477,6 +478,7 @@ def run_frontend_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any
             str(iterations),
             str(case.raw.get("inner_repetitions", 100)),
         ],
+        run_subprocess,
     )
 
 
@@ -494,83 +496,8 @@ def run_lsp_query_case(case: BenchmarkCase, measured: int) -> dict[str, Any]:
             str(case.raw.get("inner_repetitions", 1)),
             str(case.raw["workspace_mode"]),
         ],
+        run_subprocess,
     )
-
-
-def run_query_processes(
-    case: BenchmarkCase,
-    measured: int,
-    label: str,
-    command_for_iterations: Callable[[int], list[str]],
-) -> dict[str, Any]:
-    warmups = case.warmups if measured == case.measured else 1
-    samples: list[float] = []
-    instruction_samples: list[int] = []
-    cycle_samples: list[int] = []
-    peak_rss_values: list[int] = []
-    hits: list[int] = []
-    misses: list[int] = []
-    diagnostics_counts: list[int] = []
-    for _ in range(measured):
-        result = run_subprocess(
-            command_for_iterations(warmups + 1), case.timeout_ms
-        )
-        if result["timed_out"]:
-            raise BenchmarkError(
-                f"{label} benchmark {case.id} timed out after {case.timeout_ms}ms"
-            )
-        if result["exit_code"] != 0:
-            raise BenchmarkError(
-                f"{label} benchmark {case.id} failed: {result['stderr_tail']}"
-            )
-        try:
-            payload = json.loads(result["stdout"])
-        except json.JSONDecodeError as error:
-            raise BenchmarkError(
-                f"{label} benchmark {case.id} emitted invalid JSON: {error}"
-            ) from error
-        process_samples = payload.get("samples_ms")
-        if not isinstance(process_samples, list) or len(process_samples) < warmups + 1:
-            raise BenchmarkError(
-                f"{label} benchmark {case.id} did not emit all requested samples_ms"
-            )
-        measured_sample = process_samples[-1]
-        if not isinstance(measured_sample, int | float):
-            raise BenchmarkError(
-                f"{label} benchmark {case.id} emitted a non-numeric measured sample"
-            )
-        samples.append(float(measured_sample))
-        if result["retired_instructions"] is not None:
-            instruction_samples.append(result["retired_instructions"])
-        if result["cycles_elapsed"] is not None:
-            cycle_samples.append(result["cycles_elapsed"])
-        if result["peak_rss_bytes"] is not None:
-            peak_rss_values.append(result["peak_rss_bytes"])
-        hits.append(int(payload.get("cache_hits", 0)))
-        misses.append(int(payload.get("cache_misses", 0)))
-        diagnostics_counts.append(int(payload.get("diagnostics_count", 0)))
-        if payload.get("timed_out"):
-            raise BenchmarkError(f"{label} benchmark {case.id} reported a timeout")
-    return {
-        "id": case.id,
-        "group": case.group,
-        "kind": case.kind,
-        "budget_id": case.raw["budget_id"],
-        "evidence_category": case.raw["evidence_category"],
-        "sample_count": len(samples),
-        "samples_ms": samples,
-        "samples_instructions": instruction_samples,
-        "metrics": latency_metrics(samples)
-        | work_metrics(instruction_samples, cycle_samples)
-        | {"peak_rss_bytes": max(peak_rss_values) if peak_rss_values else None}
-        | SIZE_METRIC_DEFAULTS,
-        "cache": {
-            "hits": min(hits, default=0),
-            "misses": max(misses, default=0),
-        },
-        "diagnostics_count": max(diagnostics_counts, default=0),
-        "timed_out": False,
-    }
 
 
 def ensure_frontend_query_bench() -> None:
@@ -772,6 +699,7 @@ def invalidate_output(path: Path) -> None:
 
 def run_self_test() -> None:
     run_process_metrics_self_test()
+    run_query_processes_self_test()
     run_work_baseline_self_test()
     run_trend_report_self_test()
     run_host_control_self_test()
