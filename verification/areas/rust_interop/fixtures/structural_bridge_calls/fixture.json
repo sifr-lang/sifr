@@ -1,0 +1,27 @@
+{
+  "capability": "monomorphized structural Rust bridge calls",
+  "diagnostic_family": "SIFR-RUST-TYPE-0001",
+  "evidence": {
+    "negative": {
+      "expected_diagnostic": "SIFR-RUST-TYPE-0001",
+      "expected_result": "future-owned-diagnostic",
+      "id": "shape_callback_and_lifetime_mismatches_rejected",
+      "path": "negative/shape_callback_and_lifetime_mismatches_rejected.sifr",
+      "status": "planned"
+    },
+    "positive": {
+      "expected_result": "future-owned",
+      "id": "nested_recursive_structural_roundtrip",
+      "path": "positive/nested_recursive_structural_roundtrip.sifr",
+      "status": "planned"
+    }
+  },
+  "execution_kind": "runtime-observed",
+  "features": {},
+  "id": "structural_bridge_calls",
+  "package_examples": {},
+  "required_crates": [],
+  "scenario_examples": {},
+  "schema_version": 2,
+  "tier": 2
+}

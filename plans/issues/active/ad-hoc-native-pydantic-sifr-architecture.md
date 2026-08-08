@@ -48,6 +48,29 @@ Milestone delivery records:
   found augmented-assignment token handling and negative integer floor arithmetic
   omissions. Candidate `e23b80d94f67de3d3ced7dbcca7394efdf5ab6c1` corrected both;
   remediation review returned `SATISFIED` with no blocking findings.
+- The `milestone_ps_2` contract candidate also repairs a PS1 test-adapter escape:
+  the `cfg(test)` driver frontend adapter omitted five `LoweringResult` metadata
+  fields added by PS1. The adapter now propagates the complete result, and all
+  19 targeted `sifr_driver` Python-interop tests pass.
+- The `milestone_ps_2` contract wave merged in
+  [PR #3107](https://github.com/sifr-lang/sifr/pull/3107) at merge commit
+  `44571561309afaabb7afb419804aa2cc00362193`; the reviewed candidate was
+  `77442349c745ae1ad6ad1592be129572e37fb65c`.
+- That wave accepted one unversioned structural Rust bridge contract and a
+  repository-wide atomic removal plan for `[rust] bridge-version`, with no
+  compatibility mode, rewrite, shim, fallback, or active `v2` name. It added
+  separately gated future-owned evidence for structural calls and removed-field
+  rejection without claiming implementation support.
+- Contract validation passed formatting, 19 focused driver tests, all 10
+  registered Rust-interop cases and their self-tests, the active-source naming
+  sweep, and file-size/lowering maintainability guardrails. Earlier create-PR
+  execution passed core, diagnostics, package, and stdlib lanes; its aggregate
+  Python lane reproduced a host-contention timeout for a scenario that passed
+  standalone.
+- Opus reviewed eight published remediation candidates. The final exact-SHA
+  round confirmed all prior construction, identity, callback, projection,
+  cutover-inventory, ownership, and current-state findings closed and returned
+  `SATISFIED` with no blocking findings.
 - Deferred follow-up work: define an explicit typed package-side structural-shape
   contract before `ps_4`; align registry representative-fixture paths with diagnostic
   baselines; audit pre-epoch fractional timestamp reconstruction; disambiguate imported
@@ -212,9 +235,12 @@ and the compatibility matrix.
     and description, while embedding and obeying accepted language-wide
     contracts such as Sifr's locked integer JSON profiles. Serde, Schemars, and
     another validator are not parallel authorities.
-11. Rust bridge version 2 adds one general, trait-bounded structural call
-    contract. It does not add Pydantic-specific bridge types or container
-    exceptions.
+11. The structural Rust bridge contract replaces the current versioned schema
+    and adds one general, trait-bounded structural call contract. The
+    implementation removes the `[rust] bridge-version` manifest field and all
+    version-specific compiler/tooling paths; there is no compatibility mode,
+    rewrite, shim, or fallback. The structural contract does not add
+    Pydantic-specific bridge types or container exceptions.
 12. Native decoding returns a validated value arena. The JSON parse tree and
     normalized arena are expected; no third copied bridge-object tree exists.
 13. Compiler-generated structural traits materialize a validated source into
@@ -397,7 +423,7 @@ Rust bridge implementation. Their gated prerequisites are:
   precision, timezone-aware `time`, and immutable `frozenset[T]`,
 - a native-backed compiled `re.Pattern` that preserves source and flags after
   the opaque-resource substrate exists, and
-- the bridge-version 2 structural call contract and certified ecosystem-owned
+- the structural Rust bridge call contract and certified ecosystem-owned
   opaque-resource support described below.
 
 C-like enums remain simple constants. In accordance with the accepted Sifr
@@ -406,9 +432,9 @@ unions of records. Core Schema tagged unions specialize that existing type
 model; they do not require associated-data enums or create a second permanent
 sum representation.
 
-### Rust bridge version 2: structural calls
+### Structural Rust bridge calls
 
-The existing bridge-compatible value table remains closed. Bridge version 2
+The existing bridge-compatible value table remains closed. The structural contract
 does not make tuple, set, arbitrary mapping, union payload, or specialized
 scalar values directly cross the boundary as ad hoc bridge types.
 
@@ -427,10 +453,10 @@ StructuralConstruct
     construct[S: StructuralSource](source: own S) -> Result[Self, ContractError]
 
 StructuralProject
-    expose(self: &Self) -> StructuralView
+    project(self: &Self, visitor: StructuralVisitor) -> Result[None, VisitorError]
 ```
 
-The names above are conceptual; the accepted bridge-version 2 design fixes the
+The names above are conceptual; the accepted structural bridge design fixes the
 actual Rust/Sifr surface. The essential contract is:
 
 - a native backend may call a generic function bounded by these compiler-owned
@@ -443,7 +469,8 @@ actual Rust/Sifr surface. The essential contract is:
 - the backend crate never imports `crate::__sifr_bridge` types,
 - construction consumes a sealed `StructuralSource` carrying a declared
   structural-shape identity,
-- projection borrows the current typed value and exposes a call-scoped view,
+- projection borrows the current typed value and emits a call-scoped visitor
+  event stream,
   and
 - the existing bridge rejects all unsupported ordinary direct crossings as
   before.
@@ -472,7 +499,7 @@ from `T: StructuralProject` through the call-scoped view and remains the sole
 driver of alias, exclusion, representation, and writer policy. This avoids
 per-field Sifr/Rust bridge calls and avoids a second generic output tree.
 
-Bridge version 2 must specify:
+The structural bridge contract must specify:
 
 - trait and opaque-resource ownership,
 - generated implementation placement,
@@ -1981,7 +2008,7 @@ companion repository depends on them:
 | --- | --- |
 | `ps_1` | approved `ps_0` architecture and compatibility-inventory contract, plus released Phase 40 compiler/tooling foundations |
 | `ps_2` | released `ps_1` compiler/sysroot containing compile-time specialization, deterministic const evaluation, `ConstSpecializationOutcome`/`ConstPackageIssue`, registry-owned `SIFR-META-*` and `SIFR-INT-0009`, field required/default metadata, recursive nominal shape identity, structural shape inspection, lossless microsecond/timezone temporal value types, and `frozenset[T]` |
-| `ps_3` | released `ps_2` compiler/sysroot containing the merged bridge-version 2 structural call contract, the already-passing stdlib `opaque_resource_core`, plus completed certification item `certification_pkg_resource_core` with passing `opaque_resource_package_core`, `callbacks_call_scoped`, `panic_boundary_wrapper_emission`, typed construction/projection, callback adapters, and native-backed compiled `re.Pattern` |
+| `ps_3` | released `ps_2` compiler/sysroot containing the merged structural Rust bridge call contract, the already-passing stdlib `opaque_resource_core`, plus completed certification item `certification_pkg_resource_core` with passing `opaque_resource_package_core`, `callbacks_call_scoped`, `panic_boundary_wrapper_emission`, typed construction/projection, callback adapters, and native-backed compiled `re.Pattern` |
 | `ps_4` and later | released Sifr compiler/sysroot containing the certified `ps_1` through `ps_3` contracts |
 
 The certification work is tracked by
@@ -2057,7 +2084,7 @@ registry-owned `SIFR-INT-0009`.
 
 ### milestone_ps_2: Construction, Projection and Typed Callbacks
 
-- Specify and merge bridge version 2's monomorphized structural call contract
+- Specify and merge the monomorphized structural Rust bridge call contract
   into `internal_docs/rust_interop_architecture.md` before implementation.
 - Consume the already-passing stdlib `opaque_resource_core`. This milestone
   creates general package-resource support but no Pydantic resource; after its
@@ -2068,7 +2095,40 @@ registry-owned `SIFR-INT-0009`.
 - Block on the certification issue's passing `callbacks_call_scoped`, including
   callback-invocation panic mapping, and `panic_boundary_wrapper_emission`
   rows; this phase does not privately take their ownership.
-- Implement the accepted bridge version 2 contract.
+- Implement the accepted structural Rust bridge contract.
+- Atomically remove `[rust] bridge-version` from the manifest schema, every
+  in-repository bridge manifest and fixture, managed projections, archive
+  expectations, cache records, diagnostics, and generated-build assertions.
+  Remove the Rust-interop fixture matrix's top-level `bridge_version` marker,
+  the `check_fixture_matrix.py` and `_scenario_checks.py` assertions that
+  require it, `_scenario_registry.py`'s literal token,
+  `_matrix_inventory.py`'s required-fixture entry, and
+  `runner/bridge_check.py`'s version parameter/default. Remove the
+  `rust_interop_plan.rs` module/cache fields, package-graph digest field, and
+  sysroot's synthesized `Some(1)`. Delete the complete `bridge_version_mismatch`
+  fixture/scenario and its matrix, tier, and stable-claim entries rather than
+  retaining legacy acceptance evidence.
+- Delete the `bridge-version = 1` subsection and rewrite every remaining
+  version-keyed statement in `internal_docs/**`, `docs/**`, active issues,
+  `plans/phases/**`, and the roadmap. This explicitly includes
+  `docs/packages/manifest.mdx`, `docs/rust-interop.mdx`, the Blake3 and Reqwest
+  interop guides, and
+  `internal_docs/sifr_sysroot_and_stdlib_architecture.md`. Dated reviews, issue
+  archives, and frozen release-candidate evidence remain immutable history.
+- Reject the removed field through an explicit diagnostic rather than relying
+  on the manifest parser's unknown-key behavior, and provide no compatibility
+  path, rewrite, shim, or fallback. Replace the current
+  `bridge_version_mismatch` evidence with passing
+  `bridge_version_field_removal` evidence in the same implementation PR. Bind
+  its positive side to a driver contract test and prove the repo-wide cutover
+  through the now-unversioned package/scenario examples.
+- Promote `structural_bridge_calls` from future-owned to supported-through-bridge
+  only when both directions pass; remove it from the stable-support runtime
+  deferrals and update the public stable-claims documentation atomically.
+- Add the compiler-owned `sifr.meta.Structural` marker, recognize
+  `@rust.structural` as the sole bare Rust marker, and diagnose marker arguments,
+  missing targets, duplicate markers, and invalid generic placement through
+  `SIFR-RUST-CONFIG-0001` / `SIFR-RUST-TYPE-*` with targeted tests.
 - Implement safe structural `Construct[T]`.
 - Implement allocation-free structural projection/visitation.
 - Implement typed callback adapter generation.
@@ -2091,14 +2151,14 @@ untyped callbacks.
 
 - Implement deterministic static schema-program emission support.
 - Implement sealed arena/document opaque resources and compact node indices.
-- Add generic signature probes, installed/source parity, cleanup,
-  bridge-version, and cache-key contracts.
+- Add generic signature probes, installed/source parity, cleanup, and cache-key
+  contracts while consuming the already-passing unversioned-manifest contract.
 - Prove exact integer, bytes, collection and error crossings.
 - Update Rust interop architecture and verification.
 
-Exit gate: the merged and certified bridge-version 2 contract lets a synthetic
-schema executor return a validated arena, construct a typed Sifr value, and
-pull a structural view for output through one monomorphized call.
+Exit gate: the merged and certified structural Rust bridge contract lets a
+synthetic schema executor return a validated arena, construct a typed Sifr
+value, and pull a structural view for output through one monomorphized call.
 
 ### milestone_ps_4: Companion Repository and Core Foundation
 
@@ -2303,7 +2363,7 @@ without a Sifr compiler source checkout.
   `check`, build, editor analysis, and every specializing frontend mode by the
   same package const implementation; build-like modes embed the result.
 - There is no runtime schema compiler or alternate dynamic adapter path.
-- Bridge version 2 is a merged, certified general structural contract with a
+- The structural Rust bridge is a merged, certified general contract with a
   non-Pydantic conformance consumer.
 - Package const specialization can emit bounded issues whose package reason is
   mapped to registry-owned `SIFR-META-*` diagnostics with identical CLI/LSP

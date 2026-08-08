@@ -3,7 +3,9 @@
   "role": "compatibility-derived-release-plan-input",
   "source_compatibility_matrix": "verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json",
   "public_document": "docs/rust-interop.mdx",
-  "runtime_deferrals": [],
+  "runtime_deferrals": [
+    "structural_bridge_calls"
+  ],
   "claims": [
     {
       "id": "direct_crate_crc32",
