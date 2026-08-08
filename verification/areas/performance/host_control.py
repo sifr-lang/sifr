@@ -9,9 +9,11 @@ import subprocess
 import tempfile
 import threading
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
+from process_metrics import parse_process_metrics
 
 MAX_NORMALIZED_LOAD = 0.85
 MAX_CALIBRATION_CV = 0.12
@@ -19,6 +21,7 @@ MAX_EXTERNAL_CPU_PERCENT = 50.0
 DEFAULT_QUIET_SNAPSHOTS = 3
 DEFAULT_QUIET_INTERVAL_SECONDS = 1.0
 MONITOR_INTERVAL_SECONDS = 5.0
+CONTROL_MODES = {"latency", "work"}
 
 
 class HostControlError(Exception):
@@ -47,13 +50,25 @@ def capture_host_snapshot(*, include_calibration: bool = True) -> dict[str, Any]
         "thermal": thermal,
         "power": power,
         "cpu_frequency_behavior": frequency,
+        "work_counter": (
+            work_counter_state()
+            if include_calibration
+            else {"source": "not-sampled"}
+        ),
         "competing_processes": competitors,
         "external_cpu_pressure": cpu_pressure,
         "memory_pressure": memory_pressure_state(),
     }
 
 
-def evaluate_snapshot(snapshot: dict[str, Any], *, enforce_load: bool) -> list[str]:
+def evaluate_snapshot(
+    snapshot: dict[str, Any],
+    *,
+    enforce_load: bool,
+    control_mode: str = "latency",
+    require_work_counter: bool = False,
+) -> list[str]:
+    validate_control_mode(control_mode)
     reasons: list[str] = []
     competitors = snapshot.get("competing_processes", [])
     if competitors:
@@ -66,18 +81,26 @@ def evaluate_snapshot(snapshot: dict[str, Any], *, enforce_load: bool) -> list[s
         reasons.append("not-on-ac-power")
     frequency = snapshot.get("cpu_frequency_behavior", {})
     calibration_cv = frequency.get("calibration_cv")
-    if isinstance(calibration_cv, int | float) and calibration_cv > MAX_CALIBRATION_CV:
+    if (
+        control_mode == "latency"
+        and isinstance(calibration_cv, int | float)
+        and calibration_cv > MAX_CALIBRATION_CV
+    ):
         reasons.append("unstable-frequency-proxy")
+    if require_work_counter and snapshot.get("work_counter", {}).get("source") != (
+        "darwin-rusage-instructions"
+    ):
+        reasons.append("retired-instructions-unavailable")
     cpu_pressure = snapshot.get("external_cpu_pressure", {})
     external_cpu_percent = cpu_pressure.get("external_cpu_percent")
     if cpu_pressure.get("source") != "ps":
         reasons.append("external-cpu-pressure-unavailable")
-    elif (
+    elif control_mode == "latency" and (
         isinstance(external_cpu_percent, int | float)
         and external_cpu_percent > MAX_EXTERNAL_CPU_PERCENT
     ):
         reasons.append("external-cpu-pressure")
-    if enforce_load:
+    if enforce_load and control_mode == "latency":
         normalized_load = snapshot.get("load_average", {}).get(
             "one_minute_per_logical_cpu"
         )
@@ -92,17 +115,24 @@ def evaluate_snapshot(snapshot: dict[str, Any], *, enforce_load: bool) -> list[s
 def wait_for_controlled_host(
     timeout_seconds: float,
     *,
+    control_mode: str = "latency",
     snapshot_fn: Callable[..., dict[str, Any]] = capture_host_snapshot,
     sleep_fn: Callable[[float], None] = time.sleep,
     quiet_snapshots: int = DEFAULT_QUIET_SNAPSHOTS,
     interval_seconds: float = DEFAULT_QUIET_INTERVAL_SECONDS,
 ) -> dict[str, Any]:
+    validate_control_mode(control_mode)
     deadline = time.monotonic() + timeout_seconds
     consecutive: list[dict[str, Any]] = []
     observations: list[dict[str, Any]] = []
     while True:
         snapshot = snapshot_fn(include_calibration=True)
-        reasons = evaluate_snapshot(snapshot, enforce_load=True)
+        reasons = evaluate_snapshot(
+            snapshot,
+            enforce_load=True,
+            control_mode=control_mode,
+            require_work_counter=control_mode == "work",
+        )
         observation = {"snapshot": snapshot, "rejection_reasons": reasons}
         observations.append(observation)
         if reasons:
@@ -112,7 +142,8 @@ def wait_for_controlled_host(
             if len(consecutive) >= quiet_snapshots:
                 return {
                     "status": "controlled",
-                    "policy": controlled_policy(),
+                    "mode": control_mode,
+                    "policy": controlled_policy(control_mode),
                     "accepted_snapshots": consecutive,
                     "observation_count": len(observations),
                     "rejected_observation_count": sum(
@@ -131,24 +162,36 @@ def wait_for_controlled_host(
         sleep_fn(interval_seconds)
 
 
-def controlled_policy() -> dict[str, Any]:
+def controlled_policy(control_mode: str = "latency") -> dict[str, Any]:
+    validate_control_mode(control_mode)
     return {
+        "mode": control_mode,
         "quiet_snapshots": DEFAULT_QUIET_SNAPSHOTS,
         "quiet_interval_seconds": DEFAULT_QUIET_INTERVAL_SECONDS,
         "max_one_minute_load_per_logical_cpu": MAX_NORMALIZED_LOAD,
         "max_frequency_proxy_cv": MAX_CALIBRATION_CV,
         "max_external_cpu_percent": MAX_EXTERNAL_CPU_PERCENT,
+        "external_cpu_limit_applied": control_mode == "latency",
+        "load_limit_applied": control_mode == "latency",
         "requires_ac_power_on_macos": True,
         "rejects_competing_build_processes": True,
         "rejects_thermal_pressure": True,
+        "wall_latency_qualified": control_mode == "latency",
+        "requires_retired_instructions": control_mode == "work",
     }
 
 
 class HostActivityMonitor:
     """Record host pressure that appears while one benchmark case is running."""
 
-    def __init__(self, interval_seconds: float = MONITOR_INTERVAL_SECONDS) -> None:
+    def __init__(
+        self,
+        interval_seconds: float = MONITOR_INTERVAL_SECONDS,
+        control_mode: str = "latency",
+    ) -> None:
+        validate_control_mode(control_mode)
         self._interval_seconds = interval_seconds
+        self._control_mode = control_mode
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
         self.snapshots: list[dict[str, Any]] = []
@@ -174,7 +217,13 @@ class HostActivityMonitor:
     def rejection_reasons(self) -> list[str]:
         reasons: set[str] = set()
         for snapshot in self.snapshots:
-            reasons.update(evaluate_snapshot(snapshot, enforce_load=False))
+            reasons.update(
+                evaluate_snapshot(
+                    snapshot,
+                    enforce_load=False,
+                    control_mode=self._control_mode,
+                )
+            )
         return sorted(reasons)
 
 
@@ -201,6 +250,23 @@ def cache_state(
         "generated_artifact_entries": artifact_entries,
         "cargo_lock_present": repo_root.joinpath("Cargo.lock").is_file(),
     }
+
+
+def work_counter_state() -> dict[str, Any]:
+    if platform.system() != "Darwin" or not Path("/usr/bin/time").is_file():
+        return {"source": "unavailable", "retired_instructions": None}
+    parsed = parse_process_metrics(
+        command_output(["/usr/bin/time", "-l", "/usr/bin/true"])
+    )
+    return {
+        "source": parsed["work_counter_source"],
+        "retired_instructions": parsed["retired_instructions"],
+    }
+
+
+def validate_control_mode(control_mode: str) -> None:
+    if control_mode not in CONTROL_MODES:
+        raise HostControlError(f"unsupported host control mode {control_mode!r}")
 
 
 def cpu_frequency_state(*, include_calibration: bool) -> dict[str, Any]:
@@ -454,6 +520,10 @@ def run_self_test() -> None:
         "thermal": {"status": "nominal"},
         "power": {"source": "ac", "required": True},
         "cpu_frequency_behavior": {"calibration_cv": 0.01},
+        "work_counter": {
+            "source": "darwin-rusage-instructions",
+            "retired_instructions": 100,
+        },
         "competing_processes": [],
         "external_cpu_pressure": {
             "source": "ps",
@@ -476,6 +546,26 @@ def run_self_test() -> None:
     ]:
         raise HostControlError(
             "host control self-test did not reject external CPU pressure"
+        )
+    if evaluate_snapshot(
+        cpu_pressured,
+        enforce_load=True,
+        control_mode="work",
+        require_work_counter=True,
+    ):
+        raise HostControlError(
+            "work control self-test rejected measurable external CPU pressure"
+        )
+    missing_counter = dict(nominal)
+    missing_counter["work_counter"] = {"source": "unavailable"}
+    if evaluate_snapshot(
+        missing_counter,
+        enforce_load=True,
+        control_mode="work",
+        require_work_counter=True,
+    ) != ["retired-instructions-unavailable"]:
+        raise HostControlError(
+            "work control self-test did not require retired instructions"
         )
     cpu_unavailable = dict(nominal)
     cpu_unavailable["external_cpu_pressure"] = {"source": "unavailable"}

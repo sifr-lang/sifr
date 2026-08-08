@@ -7,8 +7,8 @@ Status: in progress.
 | Milestone | Scope | Status |
 | --- | --- | --- |
 | M1: controlled measurement and provenance | Host/cache telemetry, controlled admission, stable-sample retries, stale-result producer/checker binding, and governed trend-reference refresh | complete on draft PR #3101 |
-| M2: Python interop cold-cache budget | Classify cold versus warm aggregate execution and enforce a cache-aware create-PR step budget with deterministic policy tests | in progress |
-| M3: qualification and closure | Five consecutive controlled representative verdicts, seeded-regression proof, final merge gate, full-phase review, and closure records | pending |
+| M2: Python interop cold-cache budget | Classify cold versus warm aggregate execution and enforce a cache-aware create-PR step budget with deterministic policy tests | complete on stacked PR #3115 |
+| M3: qualification and closure | Local retired-instruction budgets, five consecutive controlled verdicts, seeded-regression proof, final merge gate, review, and closure records | in progress on draft PR #3116 |
 
 Each implementation milestone uses one draft PR, exact-SHA validation, and
 repeated Claude Opus review under the phase-closure loop. Review and validation
@@ -24,10 +24,11 @@ evidence. Extending either expiry remains prohibited.
 
 ### Current handoff
 
-- State: M1 is externally reviewed and satisfied on the draft PR; M2 is in
-  implementation as a stacked milestone because the repository's create-PR
-  gate cannot merge M1 until this phase-owned Python-interop blocker closes.
-- Branch: `codex/adhoc-performance-budget-host-variance`.
+- State: M1 and M2 are complete on the stacked owner branch. M3 replaces the
+  desktop-idle blocker with local retired-instruction evidence. It preserves
+  the separate elapsed-time policy for quiet-host qualification.
+- Owner branch: `codex/adhoc-performance-budget-host-variance`.
+- M3 branch: `codex/adhoc-performance-budget-host-variance-m3`.
 - Reviewed M1 implementation candidate:
   `28bca35551321b109e272c61ae52fe6201eb810d`.
 - Draft PR: [#3101](https://github.com/sifr-lang/sifr/pull/3101).
@@ -44,6 +45,22 @@ evidence. Extending either expiry remains prohibited.
 - Base update: merged current `origin/main` at
   `01c43b9cd67df6174b44fbbf7d2328ac5a831cb7`; the final owner-fix candidate
   requires a fresh exact-SHA review and validation round.
+
+### M3 local-host decision
+
+The phase uses this Mac as the permanent performance host. macOS does not
+provide a user-space CPU reservation. Its `/usr/bin/time -l` command provides
+retired instructions and cycles for the benchmark process tree.
+
+An exploratory arithmetic control ran while unrelated CPU use reached
+`419.5%`. Its five elapsed samples were `1503.105` to `1527.412` milliseconds.
+The retired-instruction coefficient of variation was `0.000240`. An LSP
+diagnostics control also produced process-tree instruction evidence.
+
+M3 adds two controlled modes. Work mode uses retired instructions as the
+blocking performance metric. Latency mode keeps the existing load and
+unrelated-CPU limits for elapsed-time evidence. No existing elapsed-time
+threshold, waiver, or baseline is increased.
 
 ### M2 reproduced evidence
 

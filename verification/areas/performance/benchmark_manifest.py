@@ -50,6 +50,10 @@ class BenchmarkCase:
     def stability_limit(self) -> float:
         return float(self.raw.get("stability_limit", 0.10))
 
+    @property
+    def work_stability_limit(self) -> float:
+        return float(self.raw.get("work_stability_limit", 0.02))
+
 
 def load_manifest(path: Path) -> dict[str, Any]:
     try:

@@ -206,6 +206,8 @@ def run_profile_variants(suite_name: str) -> list[dict[str, Any]]:
         "--invocation-id",
         invocation_id,
         "--require-controlled-host",
+        "--controlled-host-mode",
+        "work",
     ]
     for case_id in REPRESENTATIVE_CASES:
         run_argv.extend(["--case", case_id])
