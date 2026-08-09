@@ -209,7 +209,22 @@ pub fn generate_rust_with_stdlib_for_module(
     stdlib_code: &StdlibCode,
     module_name: Option<&str>,
 ) -> CodegenResult {
+    generate_rust_with_stdlib_for_module_with_structural_policy(
+        module,
+        stdlib_code,
+        module_name,
+        crate::rust_interop_plan::module_uses_structural_interop(module),
+    )
+}
+
+pub(crate) fn generate_rust_with_stdlib_for_module_with_structural_policy(
+    module: &HirModule,
+    stdlib_code: &StdlibCode,
+    module_name: Option<&str>,
+    structural_interop_enabled: bool,
+) -> CodegenResult {
     let mut emitter = RustEmitter::new();
+    emitter.structural_interop_enabled = structural_interop_enabled;
     // Register stdlib generic classes so user code skips explicit type annotations
     emitter
         .generic_classes
