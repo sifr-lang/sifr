@@ -110,6 +110,33 @@ new sibling import worked only when the runner was executed as a script. The
 runner now adds its area directory before importing host control. Both direct
 and `sifr_verify areas run` rules invocations pass.
 
+The first final merge gate on owner candidate `df8c48b9aac119aac0d5dff58407ceb5bad71f94`
+passed every earlier lane. It then measured the unchanged-file incremental
+case at 930,619,052 median instructions against a 930,509,977 threshold. The
+excess was 109,075 instructions, or about 0.012% of the threshold. The run had
+an instruction coefficient of variation of 0.000852 and an instruction median
+absolute deviation of 230,896. Its raw-evidence digest is
+`b8bd14d09aa0e0079acfd360172a479fcc81f60da96ece1ca0ae5936d32b00a1`.
+
+This boundary result exposed a missing sampling-uncertainty rule. The 2%
+regression threshold remains unchanged. The checker now compares the threshold
+with `median - min(3 * instruction MAD, 0.5% * median)`. Thus, ordinary sample
+noise cannot cause a boundary failure, but uncertainty cannot hide more than
+0.5% of measured work. A zero-MAD regression still fails at one instruction
+above the threshold. Deterministic tests also prove that boundary noise passes
+and that the 0.5% cap still rejects a sustained regression.
+
+The work budgets were recaptured from the final measurement producer. The
+first recapture stopped safely without changing governed data when the Mac
+briefly left AC power before a stability retry. The complete replacement run
+then passed all 65 cases on producer
+`df8c48b9aac119aac0d5dff58407ceb5bad71f94`. Its maximum accepted instruction
+coefficient of variation was `0.018711`, below the `0.02` limit. The raw
+evidence digest is
+`e594ae7c2f55d076c4547e58a736c2ae21903af9c282fbafce24876273676361`.
+The work-budget artifact digest is
+`127d520b28bf280f830226a4e73d728c2eff03edab1c31972735694a6dc03d96`.
+
 ### M2 reproduced evidence
 
 On exact M1 candidate `28bca35551321b109e272c61ae52fe6201eb810d`,

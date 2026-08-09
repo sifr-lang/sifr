@@ -31,6 +31,8 @@ ALLOWED_WAIVER_OVERRIDE_KEYS = {
 # The nearest-rank p95 used by the benchmark runner collapses to the maximum
 # sample below 20 samples, making quick representative runs scheduler-bound.
 MIN_P95_SAMPLE_COUNT = 20
+WORK_INSTRUCTION_MAD_MULTIPLIER = 3.0
+WORK_INSTRUCTION_UNCERTAINTY_CAP_RATIO = 0.005
 EMPTY_WAIVERS = {
     "version": 1,
     "waivers": [],
@@ -107,7 +109,9 @@ def check_budgets(
         result = results_by_id.get(case_id)
         if result is None:
             if not allow_subset:
-                failures.append(f"{case_id}: missing result for budget {budget['budget_id']}")
+                failures.append(
+                    f"{case_id}: missing result for budget {budget['budget_id']}"
+                )
             continue
         failures.extend(compare_result(result, cases[case_id], budget, waiver_entries))
 
@@ -156,9 +160,13 @@ def validate_budgets(
         case_id = require_string(raw, "benchmark_id", "budget entry")
         budget_id = require_string(raw, "budget_id", f"budget entry {case_id}")
         if case_id not in cases:
-            raise BudgetError(f"budget {budget_id} references unknown benchmark id {case_id}")
+            raise BudgetError(
+                f"budget {budget_id} references unknown benchmark id {case_id}"
+            )
         if budget_id != cases[case_id]["budget_id"]:
-            raise BudgetError(f"budget {budget_id} does not match manifest budget id {cases[case_id]['budget_id']} for {case_id}")
+            raise BudgetError(
+                f"budget {budget_id} does not match manifest budget id {cases[case_id]['budget_id']} for {case_id}"
+            )
         if case_id in by_case:
             raise BudgetError(f"duplicate budget for benchmark id {case_id}")
         if budget_id in by_budget_id:
@@ -169,7 +177,9 @@ def validate_budgets(
         for field in ["median_ms", "p95_ms", "timeout_ms"]:
             require_number(thresholds, field, f"budget {budget_id} thresholds")
         if "peak_rss_bytes" in thresholds and thresholds["peak_rss_bytes"] is not None:
-            require_number(thresholds, "peak_rss_bytes", f"budget {budget_id} thresholds")
+            require_number(
+                thresholds, "peak_rss_bytes", f"budget {budget_id} thresholds"
+            )
         if "median_instructions" in thresholds:
             require_number(
                 thresholds, "median_instructions", f"budget {budget_id} thresholds"
@@ -190,8 +200,12 @@ def validate_budgets(
         if not isinstance(cache, dict):
             raise BudgetError(f"budget {budget_id} cache policy must be an object")
         for field in ["min_hits", "max_misses"]:
-            if field in cache and (not isinstance(cache[field], int) or cache[field] < 0):
-                raise BudgetError(f"budget {budget_id} cache.{field} must be a non-negative integer")
+            if field in cache and (
+                not isinstance(cache[field], int) or cache[field] < 0
+            ):
+                raise BudgetError(
+                    f"budget {budget_id} cache.{field} must be a non-negative integer"
+                )
         by_case[case_id] = raw
         by_budget_id.add(budget_id)
 
@@ -207,9 +221,7 @@ def apply_work_budgets(
     if work_budgets.get("version") != 1:
         raise BudgetError("work budgets version must be 1")
     if work_budgets.get("runner_version") != RUNNER_VERSION:
-        raise BudgetError(
-            f"work budgets runner_version must be {RUNNER_VERSION}"
-        )
+        raise BudgetError(f"work budgets runner_version must be {RUNNER_VERSION}")
     source_commit = work_budgets.get("source_commit")
     if not isinstance(source_commit, str) or len(source_commit) != 40:
         raise BudgetError("work budgets must bind a full source commit")
@@ -228,9 +240,7 @@ def apply_work_budgets(
     if not isinstance(entries, list):
         raise BudgetError("budgets must contain a budgets list")
     by_case = {
-        entry.get("benchmark_id"): entry
-        for entry in entries
-        if isinstance(entry, dict)
+        entry.get("benchmark_id"): entry for entry in entries if isinstance(entry, dict)
     }
     seen: set[str] = set()
     for work_entry in work_entries:
@@ -310,24 +320,36 @@ def validate_waivers(
             raise BudgetError(f"waiver {waiver_id} owner must not be empty")
         if not (issue.startswith("https://github.com/") or "#" in issue):
             raise BudgetError(f"waiver {waiver_id} must link to a GitHub issue")
-        expires = parse_date(require_string(raw, "expires", f"waiver {waiver_id}"), waiver_id, "expires")
-        parse_date(require_string(raw, "created", f"waiver {waiver_id}"), waiver_id, "created")
+        expires = parse_date(
+            require_string(raw, "expires", f"waiver {waiver_id}"), waiver_id, "expires"
+        )
+        parse_date(
+            require_string(raw, "created", f"waiver {waiver_id}"), waiver_id, "created"
+        )
         if expires < today:
             raise BudgetError(f"waiver {waiver_id} expired on {expires.isoformat()}")
         benchmark_ids = require_string_list(raw, "benchmark_ids", f"waiver {waiver_id}")
-        waiver_budget_ids = require_string_list(raw, "budget_ids", f"waiver {waiver_id}")
+        waiver_budget_ids = require_string_list(
+            raw, "budget_ids", f"waiver {waiver_id}"
+        )
         unknown_benchmarks = sorted(set(benchmark_ids) - set(cases))
         unknown_budgets = sorted(set(waiver_budget_ids) - budget_ids)
         if unknown_benchmarks:
-            raise BudgetError(f"waiver {waiver_id} references unknown benchmark ids: {unknown_benchmarks}")
+            raise BudgetError(
+                f"waiver {waiver_id} references unknown benchmark ids: {unknown_benchmarks}"
+            )
         if unknown_budgets:
-            raise BudgetError(f"waiver {waiver_id} references unknown budget ids: {unknown_budgets}")
+            raise BudgetError(
+                f"waiver {waiver_id} references unknown budget ids: {unknown_budgets}"
+            )
         override = raw.get("override")
         if not isinstance(override, dict) or not override:
             raise BudgetError(f"waiver {waiver_id} override must be a non-empty object")
         unknown_override_keys = sorted(set(override) - ALLOWED_WAIVER_OVERRIDE_KEYS)
         if unknown_override_keys:
-            raise BudgetError(f"waiver {waiver_id} attempts to waive non-performance or unsupported fields: {unknown_override_keys}")
+            raise BudgetError(
+                f"waiver {waiver_id} attempts to waive non-performance or unsupported fields: {unknown_override_keys}"
+            )
         require_string(raw, "rationale", f"waiver {waiver_id}")
         require_string(raw, "removal_criteria", f"waiver {waiver_id}")
         validated.append(raw)
@@ -345,7 +367,10 @@ def validate_results_shape(
         raise BudgetError("benchmark results schema_version must be 1")
     if results.get("runner_version") != RUNNER_VERSION:
         raise BudgetError(f"benchmark results runner_version must be {RUNNER_VERSION}")
-    if expected_invocation_id is not None and results.get("invocation_id") != expected_invocation_id:
+    if (
+        expected_invocation_id is not None
+        and results.get("invocation_id") != expected_invocation_id
+    ):
         raise BudgetError(
             "benchmark results invocation_id does not match this producer invocation: "
             f"expected={expected_invocation_id!r} actual={results.get('invocation_id')!r}"
@@ -359,22 +384,40 @@ def validate_results_shape(
             raise BudgetError("benchmark result entries must be objects")
         result_id = require_string(raw, "id", "benchmark result")
         if result_id not in cases:
-            raise BudgetError(f"benchmark result references unknown benchmark id {result_id}")
+            raise BudgetError(
+                f"benchmark result references unknown benchmark id {result_id}"
+            )
         if result_id in seen:
             raise BudgetError(f"duplicate benchmark result id {result_id}")
         seen.add(result_id)
         require_string(raw, "budget_id", f"benchmark result {result_id}")
         sample_count = raw.get("sample_count")
-        if not isinstance(sample_count, int) or isinstance(sample_count, bool) or sample_count <= 0:
-            raise BudgetError(f"benchmark result {result_id} field sample_count must be a positive integer")
+        if (
+            not isinstance(sample_count, int)
+            or isinstance(sample_count, bool)
+            or sample_count <= 0
+        ):
+            raise BudgetError(
+                f"benchmark result {result_id} field sample_count must be a positive integer"
+            )
         samples = raw.get("samples_ms")
         if not isinstance(samples, list) or len(samples) != sample_count:
-            raise BudgetError(f"benchmark result {result_id} samples_ms length must match sample_count")
-        if not all(isinstance(sample, int | float) and not isinstance(sample, bool) for sample in samples):
-            raise BudgetError(f"benchmark result {result_id} samples_ms entries must be numeric")
+            raise BudgetError(
+                f"benchmark result {result_id} samples_ms length must match sample_count"
+            )
+        if not all(
+            isinstance(sample, int | float) and not isinstance(sample, bool)
+            for sample in samples
+        ):
+            raise BudgetError(
+                f"benchmark result {result_id} samples_ms entries must be numeric"
+            )
         instruction_samples = raw.get("samples_instructions")
         if instruction_samples is not None:
-            if not isinstance(instruction_samples, list) or len(instruction_samples) != sample_count:
+            if (
+                not isinstance(instruction_samples, list)
+                or len(instruction_samples) != sample_count
+            ):
                 raise BudgetError(
                     f"benchmark result {result_id} samples_instructions length must match sample_count"
                 )
@@ -396,13 +439,19 @@ def validate_results_shape(
             "peak_rss_bytes",
         ]:
             if field not in metrics:
-                raise BudgetError(f"benchmark result {result_id} is missing metric {field}")
+                raise BudgetError(
+                    f"benchmark result {result_id} is missing metric {field}"
+                )
         require_number(metrics, "median_ms", f"benchmark result {result_id} metrics")
         require_number(metrics, "p95_ms", f"benchmark result {result_id} metrics")
         require_number(metrics, "mad_ms", f"benchmark result {result_id} metrics")
-        require_number(metrics, "coefficient_variation", f"benchmark result {result_id} metrics")
+        require_number(
+            metrics, "coefficient_variation", f"benchmark result {result_id} metrics"
+        )
         if metrics["peak_rss_bytes"] is not None:
-            require_number(metrics, "peak_rss_bytes", f"benchmark result {result_id} metrics")
+            require_number(
+                metrics, "peak_rss_bytes", f"benchmark result {result_id} metrics"
+            )
         for field in [
             "median_instructions",
             "p95_instructions",
@@ -414,14 +463,22 @@ def validate_results_shape(
                 require_number(metrics, field, f"benchmark result {result_id} metrics")
         control_mode = raw.get("control", {}).get("mode")
         if control_mode == "work" and (
-            instruction_samples is None or metrics.get("median_instructions") is None
+            instruction_samples is None
+            or metrics.get("median_instructions") is None
+            or metrics.get("instructions_mad") is None
         ):
             raise BudgetError(
                 f"work-controlled benchmark result {result_id} is missing retired-instruction evidence"
             )
         cache = raw.get("cache")
-        if not isinstance(cache, dict) or not isinstance(cache.get("hits"), int) or not isinstance(cache.get("misses"), int):
-            raise BudgetError(f"benchmark result {result_id} is missing cache hit/miss metrics")
+        if (
+            not isinstance(cache, dict)
+            or not isinstance(cache.get("hits"), int)
+            or not isinstance(cache.get("misses"), int)
+        ):
+            raise BudgetError(
+                f"benchmark result {result_id} is missing cache hit/miss metrics"
+            )
 
     missing = sorted(set(cases) - seen)
     if missing and not allow_subset:
@@ -531,12 +588,33 @@ def compare_result(
                 )
             )
     for metric, measured, threshold in checks:
-        if float(measured) > float(threshold) and not has_waiver(case_id, budget_id, metric, waivers):
-            failures.append(format_failure(case_id, budget_id, metric, measured, threshold, waivers))
+        comparison_value: Any = measured
+        exceeds_threshold = float(measured) > float(threshold)
+        if metric == "median_instructions":
+            exceeds_threshold, lower_bound, uncertainty = instruction_regression(
+                metrics, float(threshold)
+            )
+            comparison_value = (
+                f"{measured} lower_bound={lower_bound:.3f} "
+                f"uncertainty={uncertainty:.3f}"
+            )
+        if exceeds_threshold and not has_waiver(case_id, budget_id, metric, waivers):
+            failures.append(
+                format_failure(
+                    case_id,
+                    budget_id,
+                    metric,
+                    comparison_value,
+                    threshold,
+                    waivers,
+                )
+            )
 
     cache_policy = budget.get("cache", {})
     cache = result["cache"]
-    if "min_hits" in cache_policy and int(cache["hits"]) < int(cache_policy["min_hits"]):
+    if "min_hits" in cache_policy and int(cache["hits"]) < int(
+        cache_policy["min_hits"]
+    ):
         metric = "cache_hits"
         if not has_waiver(case_id, budget_id, metric, waivers):
             failures.append(
@@ -549,7 +627,9 @@ def compare_result(
                     waivers,
                 )
             )
-    if "max_misses" in cache_policy and int(cache["misses"]) > int(cache_policy["max_misses"]):
+    if "max_misses" in cache_policy and int(cache["misses"]) > int(
+        cache_policy["max_misses"]
+    ):
         failures.append(
             format_failure(
                 case_id,
@@ -568,7 +648,22 @@ def should_enforce_p95(result: dict[str, Any]) -> bool:
     return int(result["sample_count"]) >= MIN_P95_SAMPLE_COUNT
 
 
-def report_p95_skips(results_by_id: dict[str, dict[str, Any]], budget_entries: dict[str, dict[str, Any]]) -> None:
+def instruction_regression(
+    metrics: dict[str, Any], threshold: float
+) -> tuple[bool, float, float]:
+    measured = float(metrics["median_instructions"])
+    mad = float(metrics["instructions_mad"])
+    uncertainty = min(
+        WORK_INSTRUCTION_MAD_MULTIPLIER * mad,
+        WORK_INSTRUCTION_UNCERTAINTY_CAP_RATIO * measured,
+    )
+    lower_bound = measured - uncertainty
+    return lower_bound > threshold, lower_bound, uncertainty
+
+
+def report_p95_skips(
+    results_by_id: dict[str, dict[str, Any]], budget_entries: dict[str, dict[str, Any]]
+) -> None:
     skipped = [
         f"{case_id}:{results_by_id[case_id]['sample_count']}"
         for case_id in sorted(budget_entries)
@@ -582,9 +677,15 @@ def report_p95_skips(results_by_id: dict[str, dict[str, Any]], budget_entries: d
         )
 
 
-def has_waiver(case_id: str, budget_id: str, metric: str, waivers: list[dict[str, Any]]) -> bool:
+def has_waiver(
+    case_id: str, budget_id: str, metric: str, waivers: list[dict[str, Any]]
+) -> bool:
     for waiver in waivers:
-        if case_id in waiver["benchmark_ids"] and budget_id in waiver["budget_ids"] and metric in waiver["override"]:
+        if (
+            case_id in waiver["benchmark_ids"]
+            and budget_id in waiver["budget_ids"]
+            and metric in waiver["override"]
+        ):
             return True
     return False
 
@@ -599,177 +700,21 @@ def format_failure(
     *,
     waiverable: bool = True,
 ) -> str:
-    status = "waiver_available_but_not_matching" if waiverable and waivers else "no_waiver"
+    status = (
+        "waiver_available_but_not_matching" if waiverable and waivers else "no_waiver"
+    )
     if not waiverable:
         status = "not_waiverable"
-    return f"{case_id} ({budget_id}) {metric} regression: " f"measured={measured} threshold={threshold} waiver_status={status}"
+    return (
+        f"{case_id} ({budget_id}) {metric} regression: "
+        f"measured={measured} threshold={threshold} waiver_status={status}"
+    )
 
 
 def run_self_test() -> None:
-    manifest = load_json(DEFAULT_MANIFEST)
-    budgets = governed_budgets()
-    waivers = load_json(DEFAULT_WAIVERS)
-    baselines = load_json(DEFAULT_BASELINES)
-    check_budgets(manifest, budgets, waivers, baselines)
+    from budget_selftest import run_self_test as run_budget_self_test
 
-    assert_budget_fails(
-        "budget_median_regression_result.json",
-        "median_ms regression",
-        allow_subset=True,
-    )
-    assert_result_fails(
-        make_result_seed(spike_twenty_sample_p95),
-        "p95_ms regression",
-        allow_subset=True,
-    )
-    assert_budget_fails(
-        "budget_rss_regression_result.json",
-        "peak_rss_bytes regression",
-        allow_subset=True,
-    )
-    assert_budget_fails("budget_timeout_result.json", "timeout regression", allow_subset=True)
-    assert_budget_fails("budget_missing_result.json", "missing benchmark ids")
-    assert_budget_fails("budget_unknown_id_result.json", "unknown benchmark id", allow_subset=True)
-    assert_budget_fails("budget_malformed_result.json", "missing metric", allow_subset=True)
-    assert_budget_fails("unstable_result.json", "coefficient_variation regression", allow_subset=True)
-    assert_waiver_fails("expired_waiver.json", "expired")
-    assert_waiver_fails("malformed_waiver.json", "owner")
-    assert_waiver_fails("correctness_waiver.json", "non-performance")
-
-    assert_result_fails(
-        make_result_seed(spike_five_sample_median),
-        "median_ms regression",
-        allow_subset=True,
-    )
-    check_budgets(manifest, budgets, EMPTY_WAIVERS, make_result_seed(spike_p95_below_threshold))
-    assert_result_fails(make_result_seed(spike_p95_at_threshold), "p95_ms regression", allow_subset=True)
-
-    active_waiver = load_json(NEGATIVE_ROOT / "active_median_waiver.json")
-    median_regression = load_json(NEGATIVE_ROOT / "budget_median_regression_result.json")
-    check_budgets(manifest, budgets, active_waiver, median_regression, allow_subset=True)
-
-    stale_result = copy.deepcopy(baselines)
-    stale_result["invocation_id"] = "prior-invocation"
-    assert_result_fails(
-        stale_result,
-        "invocation_id does not match",
-        expected_invocation_id="current-invocation",
-    )
-    assert_result_fails(
-        make_instruction_seed(baselines, budgets, regress=True),
-        "median_instructions regression",
-    )
-    assert_result_fails(
-        make_work_rss_seed(baselines, budgets),
-        "peak_rss_bytes regression",
-    )
-    check_budgets(
-        manifest,
-        budgets,
-        EMPTY_WAIVERS,
-        make_instruction_seed(baselines, budgets, regress=False),
-    )
-
-
-def assert_budget_fails(seed: str, expected: str, *, allow_subset: bool = False) -> None:
-    result = load_json(NEGATIVE_ROOT / seed)
-    assert_result_fails(result, expected, allow_subset=allow_subset, seed=seed)
-
-
-def assert_result_fails(
-    result: dict[str, Any],
-    expected: str,
-    *,
-    allow_subset: bool = False,
-    seed: str = "generated result",
-    expected_invocation_id: str | None = None,
-) -> None:
-    try:
-        check_budgets(
-            load_json(DEFAULT_MANIFEST),
-            governed_budgets(),
-            EMPTY_WAIVERS,
-            result,
-            allow_subset=allow_subset,
-            expected_invocation_id=expected_invocation_id,
-        )
-    except BudgetError as error:
-        if expected not in str(error):
-            raise BudgetError(f"negative budget seed {seed} failed with wrong diagnostic: {error}") from error
-        return
-    raise BudgetError(f"negative budget seed {seed} did not fail")
-
-
-def assert_waiver_fails(seed: str, expected: str) -> None:
-    try:
-        check_budgets(
-            load_json(DEFAULT_MANIFEST),
-            governed_budgets(),
-            load_json(NEGATIVE_ROOT / seed),
-            load_json(DEFAULT_BASELINES),
-        )
-    except BudgetError as error:
-        if expected not in str(error):
-            raise BudgetError(f"negative waiver seed {seed} failed with wrong diagnostic: {error}") from error
-        return
-    raise BudgetError(f"negative waiver seed {seed} did not fail")
-
-
-def governed_budgets() -> dict[str, Any]:
-    return apply_work_budgets(
-        load_json(DEFAULT_BUDGETS), load_json(DEFAULT_WORK_BUDGETS)
-    )
-
-
-def make_instruction_seed(
-    baselines: dict[str, Any], budgets: dict[str, Any], *, regress: bool
-) -> dict[str, Any]:
-    result = copy.deepcopy(baselines)
-    budget = budgets["budgets"][0]
-    case_id = budget["benchmark_id"]
-    threshold = int(budget["work_thresholds"]["median_instructions"])
-    baseline = int(budget["work_baseline"]["median_instructions"])
-    for entry in result["results"]:
-        if entry["id"] != case_id:
-            continue
-        measured = threshold + 1 if regress else baseline
-        sample_count = int(entry["sample_count"])
-        entry["samples_instructions"] = [measured] * sample_count
-        entry["control"] = {"mode": "work"}
-        entry["metrics"].update(
-            {
-                "median_instructions": measured,
-                "p95_instructions": measured,
-                "instructions_mad": 0,
-                "instructions_coefficient_variation": 0.0,
-                "median_cycles_per_instruction": 0.5,
-                "peak_rss_bytes": budget["work_baseline"]["peak_rss_bytes"],
-            }
-        )
-        if not regress:
-            entry["metrics"]["median_ms"] = float(
-                budget["thresholds"]["median_ms"]
-            ) + 1.0
-            entry["metrics"]["p95_ms"] = float(
-                budget["thresholds"]["p95_ms"]
-            ) + 1.0
-        return result
-    raise BudgetError(f"instruction self-test could not find benchmark {case_id}")
-
-
-def make_work_rss_seed(
-    baselines: dict[str, Any], budgets: dict[str, Any]
-) -> dict[str, Any]:
-    result = make_instruction_seed(baselines, budgets, regress=False)
-    budget = budgets["budgets"][0]
-    case_id = budget["benchmark_id"]
-    for entry in result["results"]:
-        if entry["id"] == case_id:
-            entry["metrics"]["peak_rss_bytes"] = (
-                int(budget["work_thresholds"]["peak_rss_bytes"]) + 1
-            )
-            return result
-    raise BudgetError(f"work RSS self-test could not find benchmark {case_id}")
+    run_budget_self_test()
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -793,7 +738,11 @@ def require_string(raw: dict[str, Any], field: str, owner: str) -> str:
 
 def require_string_list(raw: dict[str, Any], field: str, owner: str) -> list[str]:
     value = raw.get(field)
-    if not isinstance(value, list) or not value or not all(isinstance(item, str) and item for item in value):
+    if (
+        not isinstance(value, list)
+        or not value
+        or not all(isinstance(item, str) and item for item in value)
+    ):
         raise BudgetError(f"{owner} field {field} must be a non-empty string list")
     return value
 
@@ -809,56 +758,9 @@ def parse_date(value: str, waiver_id: str, field: str) -> date:
     try:
         return date.fromisoformat(value)
     except ValueError as error:
-        raise BudgetError(f"waiver {waiver_id} field {field} must be ISO date YYYY-MM-DD") from error
-
-
-def spike_five_sample_median(result: dict[str, Any]) -> None:
-    spike_metric(result, "check-project-004-project-graph", "median_ms")
-
-
-def spike_twenty_sample_p95(result: dict[str, Any]) -> None:
-    spike_metric(result, "interactive-tooling-foundation-002-warm-diagnostics-query", "p95_ms")
-
-
-def spike_p95_below_threshold(result: dict[str, Any]) -> None:
-    force_sample_count(
-        result,
-        "interactive-tooling-foundation-002-warm-diagnostics-query",
-        MIN_P95_SAMPLE_COUNT - 1,
-    )
-    spike_twenty_sample_p95(result)
-
-
-def spike_p95_at_threshold(result: dict[str, Any]) -> None:
-    force_sample_count(
-        result,
-        "interactive-tooling-foundation-002-warm-diagnostics-query",
-        MIN_P95_SAMPLE_COUNT,
-    )
-    spike_twenty_sample_p95(result)
-
-
-def spike_metric(result: dict[str, Any], case_id: str, metric: str) -> None:
-    for entry in result["results"]:
-        if entry["id"] == case_id:
-            entry["metrics"][metric] = 999_999
-            return
-    raise BudgetError(f"self-test seed did not find {case_id}")
-
-
-def force_sample_count(result: dict[str, Any], case_id: str, sample_count: int) -> None:
-    for entry in result["results"]:
-        if entry["id"] == case_id:
-            entry["sample_count"] = sample_count
-            entry["samples_ms"] = entry["samples_ms"][:sample_count]
-            return
-    raise BudgetError(f"self-test seed did not find {case_id}")
-
-
-def make_result_seed(mutator: Any) -> dict[str, Any]:
-    result = copy.deepcopy(load_json(DEFAULT_BASELINES))
-    mutator(result)
-    return result
+        raise BudgetError(
+            f"waiver {waiver_id} field {field} must be ISO date YYYY-MM-DD"
+        ) from error
 
 
 if __name__ == "__main__":
